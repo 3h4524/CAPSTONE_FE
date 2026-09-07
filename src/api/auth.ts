@@ -10,3 +10,8 @@ export const loginRequest = async (payload: LoginPayload): Promise<LoginResult> 
   const { data } = await api.post<LoginResult>("/api/auth/login", payload);
   return data;
 };
+
+export const googleLoginRequest = async (idToken: string): Promise<LoginResult> => {
+  const { data } = await api.post<LoginResult>("/api/auth/google", { idToken });
+  return data;
+};

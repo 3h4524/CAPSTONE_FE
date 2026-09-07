@@ -1,7 +1,6 @@
 import Image from "next/image";
 
 import { Container } from "@/components/commons/layout/container";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { WORKFLOW_CONTENT, WORKFLOW_STEPS } from "@/data/landing-content";
 
@@ -10,9 +9,9 @@ export const WorkflowSection = () => {
     <section id="workflow" className="scroll-mt-16 py-16 md:py-24">
       <Container>
         <div className="mx-auto mb-12 max-w-2xl text-center">
-          <Badge variant="outline" className="mb-4 tracking-widest uppercase">
+          <span className="text-primary mb-4 block text-xs font-semibold tracking-widest uppercase">
             {WORKFLOW_CONTENT.eyebrow}
-          </Badge>
+          </span>
           <h2 className="font-display text-3xl font-bold tracking-tight text-balance md:text-4xl">
             {WORKFLOW_CONTENT.title}
           </h2>

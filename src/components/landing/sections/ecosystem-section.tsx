@@ -1,5 +1,4 @@
 import { Container } from "@/components/commons/layout/container";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ECOSYSTEM_CONTENT, ECOSYSTEM_FEATURES } from "@/data/landing-content";
 
@@ -8,9 +7,9 @@ export const EcosystemSection = () => {
     <section id="features" className="bg-muted/40 scroll-mt-16 border-y py-16 md:py-24">
       <Container className="grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-14">
         <div className="flex flex-col items-start gap-4 self-start lg:sticky lg:top-24">
-          <Badge variant="outline" className="tracking-widest uppercase">
+          <span className="text-primary text-xs font-semibold tracking-widest uppercase">
             {ECOSYSTEM_CONTENT.eyebrow}
-          </Badge>
+          </span>
           <h2 className="font-display text-3xl font-bold tracking-tight text-balance md:text-4xl">
             {ECOSYSTEM_CONTENT.title}
           </h2>

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 
 import { GlobalPopup } from "@/components/commons/popup/global-popup";
 import { GlobalToast } from "@/components/commons/toast/global-toast";
@@ -14,6 +14,12 @@ import "@/styles/globals.css";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const display = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
   display: "swap",
 });
 
@@ -34,7 +40,7 @@ export default function RootLayout({
       <head>
         <OrganizationJsonLd />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${display.variable} font-sans antialiased`}>
         <ReactQueryProvider>{children}</ReactQueryProvider>
         <GlobalToast />
         <GlobalPopup />

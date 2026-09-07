@@ -5,25 +5,25 @@
 
 :root {
   color-scheme: light;
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #f7f9ff;
+  --foreground: #161c22;
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #161c22;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #2563eb;
+  --popover-foreground: #161c22;
+  --primary: #273750;
   --primary-foreground: #ffffff;
-  --secondary: #06b6d4;
+  --secondary: #7d562d;
   --secondary-foreground: #ffffff;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #8b5cf6;
+  --muted: #e9eef6;
+  --muted-foreground: #44474d;
+  --accent: #47330e;
   --accent-foreground: #ffffff;
-  --destructive: #ef4444;
+  --destructive: #ba1a1a;
   --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #2563eb;
+  --border: #dde3eb;
+  --input: #c5c6ce;
+  --ring: #273750;
   --success: #dcfce7;
   --success-foreground: #166534;
   --warning: #fef3c7;
@@ -44,7 +44,7 @@
   --radius: 0.75rem;
   --logo-background: #4338ca;
 
-  --hero-gradient: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+  --hero-gradient: linear-gradient(135deg, rgba(39, 55, 80, 0.08) 0%, rgba(125, 86, 45, 0.08) 100%);
   --primary-blue: #2563eb;
   --success-background: #dcfce7;
   --success-text: #166534;
@@ -91,6 +91,7 @@
   --color-primary-blue: var(--primary-blue);
   --color-success-background: var(--success-background);
   --color-success-text: var(--success-text);
+  --font-display: var(--font-display);
 }
 
 @layer base {

@@ -1,12 +1,13 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Activity,
-  BookOpen,
   ChartColumn,
-  HeartHandshake,
+  Clapperboard,
+  FileText,
+  Layers,
   PiggyBank,
   Rocket,
-  Users,
+  Sparkles,
+  Store,
 } from "lucide-react";
 
 export interface Benefit {
@@ -41,9 +42,9 @@ export interface Faq {
 }
 
 export const NAV_LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "Workflow", href: "#workflow" },
-  { label: "FAQ", href: "#faq" },
+  { label: "Features", href: "/#features" },
+  { label: "Workflow", href: "/#workflow" },
+  { label: "FAQ", href: "/#faq" },
 ] as const;
 
 export const HERO_CONTENT = {
@@ -55,7 +56,7 @@ export const HERO_CONTENT = {
 } as const;
 
 export const HERO_IMAGE = {
-  src: "/images/landing/hero-dashboard.jpg",
+  src: "/images/landing/hero-dashboard.webp",
   alt: "APCS Studio dashboard showing AI design generation progress and product mockup thumbnails",
 } as const;
 
@@ -84,61 +85,84 @@ export const BENEFITS: Benefit[] = [
 ];
 
 export const ECOSYSTEM_CONTENT = {
-  eyebrow: "Comprehensive Ecosystem",
-  title: "Everything you need for professional operations",
+  eyebrow: "Features",
+  title: "Everything you need to launch POD listings",
   description:
-    "Catalogs, team workflows, and revenue analytics unified in one platform.",
+    "Designs, videos, listing copy, batch runs, and publishing unified in one AI workflow.",
+  cta: { label: "Explore all features", href: "/features" },
 } as const;
 
 export const ECOSYSTEM_FEATURES: EcosystemFeature[] = [
   {
-    icon: BookOpen,
-    title: "Digital Catalog",
-    description: "Update seasonal products in seconds without recreating listings.",
+    icon: Sparkles,
+    title: "AI Design Generation",
+    description:
+      "Turn product ideas and prompts into original, print-ready designs and mockups in minutes.",
   },
   {
-    icon: Activity,
-    title: "Real-time Analytics",
-    description: "Spot best-sellers, peak hours, and repeat customers.",
+    icon: Clapperboard,
+    title: "Video Creation",
+    description:
+      "Auto-generate promo videos and mockup showcases from your designs for listings and socials.",
   },
   {
-    icon: Users,
-    title: "Team Management",
-    description: "Role-based access, performance tracking, and visual scheduling.",
+    icon: FileText,
+    title: "Etsy Listing Content",
+    description:
+      "Get SEO-ready titles, descriptions, tags, and attributes tuned for Etsy search.",
   },
   {
-    icon: HeartHandshake,
-    title: "Customer Loyalty",
-    description: "Automated points and rewards that bring buyers back.",
+    icon: Layers,
+    title: "Batch Processing",
+    description:
+      "Upload once via CSV and generate hundreds of designs, videos, and listings in a single run.",
+  },
+  {
+    icon: Store,
+    title: "Platform Integrations",
+    description:
+      "Push approved listings straight to Etsy and other marketplaces in one click, assets included.",
   },
 ];
 
 export const WORKFLOW_CONTENT = {
-  eyebrow: "Workflow",
-  title: "Deploy in 3 simple steps",
-  description: "Keep your current setup. Your team can operate starting today.",
+  eyebrow: "How it works",
+  title: "From product idea to published listing in 4 steps",
+  description:
+    "Upload once. APCS runs the AI workflow, scores SEO, and publishes everywhere.",
 } as const;
 
 export const WORKFLOW_STEPS: WorkflowStep[] = [
   {
     index: "01",
     title: "Upload Product Info",
-    description: "Drop in product details or CSV files to start batch processing.",
-    imageSrc: "/images/landing/workflow-upload.jpg",
+    description:
+      "Drop in your product idea, niche, and details, single item or bulk CSV, to kick off the workflow.",
+    imageSrc: "/images/landing/workflow-upload.webp",
     imageAlt: "Spreadsheet data transforming into a stream of particles",
   },
   {
     index: "02",
-    title: "AI Generates Content",
-    description: "AI creates designs, videos, and listings from your data.",
-    imageSrc: "/images/landing/workflow-ai.jpg",
+    title: "AI Generates Assets",
+    description:
+      "The connected AI workflow creates designs, mockup images, promo video, and full listing copy with titles, descriptions, and tags.",
+    imageSrc: "/images/landing/workflow-ai.webp",
     imageAlt: "AI generating designs and apparel mockups on glass panels",
   },
   {
     index: "03",
-    title: "Publish to Etsy",
-    description: "Package every asset and push your listings live in one click.",
-    imageSrc: "/images/landing/workflow-etsy.jpg",
+    title: "Review SEO Score",
+    description:
+      "Every listing gets an SEO score with clear fixes. Approve only when titles, tags, and copy are ready to rank.",
+    imageSrc: "/images/landing/seo-score.webp",
+    imageAlt: "Dashboard showing SEO scores and listing quality checks",
+  },
+  {
+    index: "04",
+    title: "Publish Everywhere",
+    description:
+      "Push approved listings live to Etsy and other platforms in one click, assets included.",
+    imageSrc: "/images/landing/workflow-etsy.webp",
     imageAlt: "Storefront icon with growth charts and publish notifications",
   },
 ];

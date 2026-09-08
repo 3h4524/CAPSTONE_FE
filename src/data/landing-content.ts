@@ -10,6 +10,8 @@ import {
   Store,
 } from "lucide-react";
 
+import type { NavItem } from "@/types/navigation";
+
 export interface Benefit {
   icon: LucideIcon;
   title: string;
@@ -41,11 +43,11 @@ export interface Faq {
   answer: string;
 }
 
-export const NAV_LINKS = [
-  { label: "Features", href: "/#features" },
-  { label: "Workflow", href: "/#workflow" },
-  { label: "FAQ", href: "/#faq" },
-] as const;
+export const NAV_LINKS: NavItem[] = [
+  { label: "Features", href: "/features", kind: "route" },
+  { label: "Workflow", href: "workflow", kind: "section" },
+  { label: "FAQ", href: "faq", kind: "section" },
+];
 
 export const HERO_CONTENT = {
   title: "Scale Your POD Empire at AI Speed",

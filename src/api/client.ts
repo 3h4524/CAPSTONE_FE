@@ -25,6 +25,10 @@ export const tokenStorage = {
     window.localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   },
 
+  setAccessToken: (accessToken: string): void => {
+    window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  },
+
   clearTokens: (): void => {
     window.localStorage.removeItem(ACCESS_TOKEN_KEY);
     window.localStorage.removeItem(REFRESH_TOKEN_KEY);

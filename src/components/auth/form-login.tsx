@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 
+import { AuthSocialDivider } from "@/components/auth/auth-social-divider";
 import { FormInputField } from "@/components/commons/forms/form-input-field";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/hooks/mutations/use-login";
@@ -55,6 +56,8 @@ export const FormLogin = () => {
           {isPending ? "Signing in..." : "Sign in"}
         </Button>
       </form>
+
+      <AuthSocialDivider mode="signin" />
 
       <p className="text-muted-foreground text-center text-sm">
         Don&apos;t have an account?{" "}

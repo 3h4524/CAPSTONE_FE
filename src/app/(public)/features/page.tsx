@@ -1,9 +1,18 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 
-import { Container } from "@/components/commons/layout/container";
-import { Button } from "@/components/ui/button";
+import { Reveal } from "@/components/commons/animations/reveal";
+import { CtaSection } from "@/components/features/sections/cta-section";
+import { DuoSection } from "@/components/features/sections/duo-section";
+import { PlatformsSection } from "@/components/features/sections/platforms-section";
+import { ShowcaseSection } from "@/components/features/sections/showcase-section";
+import { SpotlightSection } from "@/components/features/sections/spotlight-section";
+import {
+  BATCH_FEATURE,
+  DESIGN_FEATURE,
+  LISTING_FEATURE,
+  PLATFORMS_FEATURE,
+  VIDEO_FEATURE,
+} from "@/data/features-content";
 import { getPageMetadata } from "@/data/metadata";
 
 export const generateMetadata = (): Metadata =>
@@ -16,26 +25,20 @@ export const generateMetadata = (): Metadata =>
 
 const FeaturesPage = () => {
   return (
-    <main className="py-16 md:py-24">
-      <Container className="mx-auto flex max-w-2xl flex-col items-center gap-6 text-center">
-        <span className="text-primary text-xs font-semibold tracking-widest uppercase">
-          Features
-        </span>
-        <h1 className="font-display text-4xl font-bold tracking-tight text-balance md:text-5xl">
-          A closer look at every APCS feature
-        </h1>
-        <p className="text-muted-foreground text-lg leading-relaxed">
-          Detailed breakdowns of AI design generation, video creation, Etsy
-          listing content, batch processing, and platform integrations are
-          coming soon.
-        </p>
-        <Button variant="outline" size="lg" asChild>
-          <Link href="/">
-            <ArrowLeft aria-hidden="true" />
-            Back to home
-          </Link>
-        </Button>
-      </Container>
+    <main className="flex flex-col">
+      <Reveal>
+        <SpotlightSection feature={DESIGN_FEATURE} />
+      </Reveal>
+      <Reveal>
+        <ShowcaseSection feature={VIDEO_FEATURE} />
+      </Reveal>
+      <Reveal>
+        <DuoSection listing={LISTING_FEATURE} batch={BATCH_FEATURE} />
+      </Reveal>
+      <Reveal>
+        <PlatformsSection feature={PLATFORMS_FEATURE} />
+      </Reveal>
+      <CtaSection />
     </main>
   );
 };

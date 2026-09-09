@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 
@@ -15,8 +16,18 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { NAV_LINKS } from "@/data/landing-content";
+import { useNavigation } from "@/hooks/use-navigation";
+import { cn } from "@/utils/cn";
 
 export const SiteHeader = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { handleNavClick, isItemActive } = useNavigation();
+
+  const handleMobileNavClick = (item: (typeof NAV_LINKS)[number]) => {
+    setIsMobileMenuOpen(false);
+    handleNavClick(item);
+  };
+
   return (
     <header className="bg-background/90 sticky top-0 z-50 border-b backdrop-blur-xl">
       <Container className="flex h-16 items-center justify-between gap-4">
@@ -24,15 +35,24 @@ export const SiteHeader = () => {
           APCS
         </Link>
         <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors focus-visible:underline focus-visible:outline-none"
-            >
-              {link.label}
-            </a>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const isActive = isItemActive(link);
+            return (
+              <button
+                key={link.label}
+                type="button"
+                onClick={() => handleNavClick(link)}
+                className={cn(
+                  "cursor-pointer text-sm font-medium transition-colors focus-visible:underline focus-visible:outline-none",
+                  isActive
+                    ? "text-primary font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {link.label}
+              </button>
+            );
+          })}
         </nav>
         <div className="hidden items-center gap-5 md:flex">
           <a
@@ -42,10 +62,10 @@ export const SiteHeader = () => {
             Login
           </a>
           <Button variant="defaultWithTextWhite" size="sm" asChild>
-            <a href="#signup">Get Started</a>
+            <Link href="/#signup">Get Started</Link>
           </Button>
         </div>
-        <Sheet>
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button
               variant="ghost"
@@ -64,16 +84,24 @@ export const SiteHeader = () => {
               </SheetDescription>
             </SheetHeader>
             <nav className="flex flex-col gap-1 px-4" aria-label="Mobile">
-              {NAV_LINKS.map((link) => (
-                <SheetClose key={link.href} asChild>
-                  <a
-                    href={link.href}
-                    className="hover:bg-muted focus-visible:ring-ring rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              {NAV_LINKS.map((link) => {
+                const isActive = isItemActive(link);
+                return (
+                  <button
+                    key={link.label}
+                    type="button"
+                    onClick={() => handleMobileNavClick(link)}
+                    className={cn(
+                      "focus-visible:ring-ring rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                      isActive
+                        ? "bg-muted text-primary font-semibold"
+                        : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                    )}
                   >
                     {link.label}
-                  </a>
-                </SheetClose>
-              ))}
+                  </button>
+                );
+              })}
               <SheetClose asChild>
                 <a
                   href="#"
@@ -85,15 +113,15 @@ export const SiteHeader = () => {
             </nav>
             <div className="mt-auto p-4">
               <SheetClose asChild>
-                <a
-                  href="#signup"
+                <Link
+                  href="/#signup"
                   className={buttonVariants({
                     variant: "defaultWithTextWhite",
                     className: "w-full",
                   })}
                 >
                   Get Started
-                </a>
+                </Link>
               </SheetClose>
             </div>
           </SheetContent>

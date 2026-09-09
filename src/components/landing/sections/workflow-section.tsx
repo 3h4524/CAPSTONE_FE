@@ -19,9 +19,9 @@ export const WorkflowSection = () => {
             {WORKFLOW_CONTENT.description}
           </p>
         </div>
-        <ol className="relative grid list-none gap-6 p-0 md:grid-cols-3">
+        <ol className="relative grid list-none gap-6 p-0 sm:grid-cols-2 xl:grid-cols-4">
           <div
-            className="bg-border absolute top-12 right-[18%] left-[18%] hidden h-px md:block"
+            className="bg-border absolute top-12 right-[12%] left-[12%] hidden h-px xl:block"
             aria-hidden="true"
           />
           {WORKFLOW_STEPS.map((step) => (
@@ -42,7 +42,7 @@ export const WorkflowSection = () => {
                     alt={step.imageAlt}
                     fill
                     loading="lazy"
-                    sizes="(max-width: 768px) 100vw, 33vw"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
                     className="object-cover"
                   />
                 </div>

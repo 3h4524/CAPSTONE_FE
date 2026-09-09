@@ -1,6 +1,11 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+
 import { Container } from "@/components/commons/layout/container";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ECOSYSTEM_CONTENT, ECOSYSTEM_FEATURES } from "@/data/landing-content";
+import { cn } from "@/utils/cn";
 
 export const EcosystemSection = () => {
   return (
@@ -16,12 +21,21 @@ export const EcosystemSection = () => {
           <p className="text-muted-foreground max-w-xl leading-relaxed">
             {ECOSYSTEM_CONTENT.description}
           </p>
+          <Button variant="outline" asChild>
+            <Link href={ECOSYSTEM_CONTENT.cta.href}>
+              {ECOSYSTEM_CONTENT.cta.label}
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </Button>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          {ECOSYSTEM_FEATURES.map((feature) => (
+          {ECOSYSTEM_FEATURES.map((feature, index) => (
             <Card
               key={feature.title}
-              className="gap-3 p-5 transition-transform duration-300 motion-safe:hover:-translate-y-1"
+              className={cn(
+                "gap-3 p-5 transition-transform duration-300 motion-safe:hover:-translate-y-1",
+                index === ECOSYSTEM_FEATURES.length - 1 && "sm:col-span-2"
+              )}
             >
               <div className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-md">
                 <feature.icon

@@ -47,3 +47,12 @@ export type ResetPasswordPayload = {
 export const resetPasswordRequest = async (payload: ResetPasswordPayload): Promise<void> => {
   await api.post("/api/auth/reset-password", payload);
 };
+
+export type ChangePasswordPayload = {
+  currentPassword: string;
+  newPassword: string;
+};
+
+export const changePasswordRequest = async (payload: ChangePasswordPayload): Promise<void> => {
+  await api.post("/api/auth/change-password", payload);
+};

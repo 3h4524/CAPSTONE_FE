@@ -1,5 +1,5 @@
 import { api } from "@/api/client";
-import type { RegisterResult, LoginResult } from "@/types/auth";
+import type { LoginResult,RegisterResult } from "@/types/auth";
 
 export type RegisterPayload = {
   email: string;
@@ -33,4 +33,17 @@ export const loginRequest = async (payload: LoginPayload): Promise<LoginResult> 
 export const googleLoginRequest = async (idToken: string): Promise<LoginResult> => {
   const { data } = await api.post<LoginResult>("/api/auth/google", { idToken });
   return data;
+};
+
+export const forgotPasswordRequest = async (email: string): Promise<void> => {
+  await api.post("/api/auth/forgot-password", { email });
+};
+
+export type ResetPasswordPayload = {
+  token: string;
+  newPassword: string;
+};
+
+export const resetPasswordRequest = async (payload: ResetPasswordPayload): Promise<void> => {
+  await api.post("/api/auth/reset-password", payload);
 };

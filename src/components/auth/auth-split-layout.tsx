@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import Image from "next/image";
+import type { ReactNode } from "react";
 
 type AuthSplitLayoutProps = {
   title: string;
@@ -7,6 +7,11 @@ type AuthSplitLayoutProps = {
   imageSrc: string;
   imageAlt: string;
   children: ReactNode;
+  /** Optional caption overlaid on the image, bottom-anchored over a gradient scrim. */
+  imageCaption?: {
+    title: string;
+    description: string;
+  };
 };
 
 export const AuthSplitLayout = ({
@@ -15,6 +20,7 @@ export const AuthSplitLayout = ({
   imageSrc,
   imageAlt,
   children,
+  imageCaption,
 }: AuthSplitLayoutProps) => {
   return (
     <main className="flex min-h-[75vh] items-center justify-center px-4 py-10 sm:py-16">
@@ -28,6 +34,12 @@ export const AuthSplitLayout = ({
         </div>
         <div className="relative hidden lg:block">
           <Image src={imageSrc} alt={imageAlt} fill className="object-cover" sizes="50vw" />
+          {imageCaption && (
+            <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 via-black/20 to-transparent p-8 pt-16">
+              <p className="font-display text-lg font-semibold text-white">{imageCaption.title}</p>
+              <p className="mt-1 text-sm text-white/85">{imageCaption.description}</p>
+            </div>
+          )}
         </div>
       </div>
     </main>

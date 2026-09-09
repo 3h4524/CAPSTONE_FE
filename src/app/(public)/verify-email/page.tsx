@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
+import type { Metadata } from "next";
 
 import { VerifyEmailStatus } from "@/components/auth/verify-email-status";
 import { SITE_CONFIG } from "@/constants/site";

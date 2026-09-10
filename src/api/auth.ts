@@ -35,6 +35,11 @@ export const googleLoginRequest = async (idToken: string): Promise<LoginResult> 
   return data;
 };
 
+export const meRequest = async (): Promise<AuthenticatedUser> => {
+  const { data } = await api.get<AuthenticatedUser>("/api/auth/me");
+  return data;
+};
+
 export const forgotPasswordRequest = async (email: string): Promise<void> => {
   await api.post("/api/auth/forgot-password", { email });
 };

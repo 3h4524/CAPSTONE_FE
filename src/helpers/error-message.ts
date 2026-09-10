@@ -5,6 +5,9 @@ type ErrorWithResponse = {
     data?: {
       message?: unknown;
       error?: unknown;
+      // ASP.NET Core ProblemDetails shape (RFC 7807) used by the backend for every error response.
+      detail?: unknown;
+      title?: unknown;
     };
   };
 };
@@ -20,7 +23,11 @@ const extractRawMessage = (error: unknown): string | undefined => {
 
   if (typeof error === "object" && error !== null) {
     const withResponse = error as ErrorWithResponse;
-    const payloadMessage = withResponse.response?.data?.message ?? withResponse.response?.data?.error;
+    const payloadMessage =
+      withResponse.response?.data?.detail ??
+      withResponse.response?.data?.message ??
+      withResponse.response?.data?.error ??
+      withResponse.response?.data?.title;
     if (typeof payloadMessage === "string" && payloadMessage.trim()) {
       return payloadMessage;
     }

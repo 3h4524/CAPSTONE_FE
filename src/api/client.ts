@@ -1,62 +1,36 @@
 import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 
-const ACCESS_TOKEN_KEY = "access_token";
-const AUTH_HEADER = "Authorization";
-const BEARER_PREFIX = "Bearer ";
+import { useAuthStore } from "@/stores/auth";
+
 const UNAUTHORIZED_STATUS = 401;
-// The refresh token itself lives only in the HttpOnly cookie the backend sets on login/refresh
-// (never in the response body), so the browser sends it automatically via withCredentials.
+// Both tokens live only in HttpOnly cookies the backend sets on login/refresh (never in the
+// response body, never in a header client JS can read), so the browser attaches and renews
+// them automatically via withCredentials — this client never touches a token directly.
 const REFRESH_ENDPOINT = "/api/auth/refresh";
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & { _retried?: boolean };
 
-type RefreshResponse = {
-  accessToken: string;
-};
-
-export const tokenStorage = {
-  getAccessToken: (): string | null =>
-    typeof window === "undefined" ? null : window.localStorage.getItem(ACCESS_TOKEN_KEY),
-
-  setAccessToken: (accessToken: string): void => {
-    window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  },
-
-  clearTokens: (): void => {
-    window.localStorage.removeItem(ACCESS_TOKEN_KEY);
-  },
-};
-
 export const api: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
-  // Required so the browser attaches/accepts the HttpOnly refresh-token cookie cross-origin.
+  // Required so the browser attaches/accepts the HttpOnly token cookies cross-origin.
   withCredentials: true,
 });
 
-api.interceptors.request.use((config) => {
-  const accessToken = tokenStorage.getAccessToken();
-  if (accessToken) {
-    config.headers.set(AUTH_HEADER, `${BEARER_PREFIX}${accessToken}`);
-  }
-  return config;
-});
+let refreshPromise: Promise<void> | null = null;
 
-let refreshPromise: Promise<string> | null = null;
-
-const requestNewAccessToken = async (): Promise<string> => {
+const requestNewAccessToken = async (): Promise<void> => {
   // Uses the bare axios client (not `api`) so a failed refresh never re-enters `api`'s own
-  // 401-retry interceptor below and deadlocks waiting on itself.
-  const response = await axios.post<RefreshResponse>(REFRESH_ENDPOINT, undefined, {
+  // 401-retry interceptor below and deadlocks waiting on itself. The response carries no
+  // token (it arrives as a Set-Cookie header instead) — success alone means the cookie renewed.
+  await axios.post(REFRESH_ENDPOINT, undefined, {
     baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
     withCredentials: true,
   });
-  const accessToken = response.data.accessToken;
-
-  tokenStorage.setAccessToken(accessToken);
-  return accessToken;
 };
 
-const refreshAccessTokenOnce = (): Promise<string> => {
+// Exported so the app-mount silent refresh (see AuthProvider) can reuse the same in-flight
+// dedup as the 401-retry path below, instead of racing it with a second /refresh call.
+export const refreshAccessTokenOnce = (): Promise<void> => {
   refreshPromise ??= requestNewAccessToken().finally(() => {
     refreshPromise = null;
   });
@@ -79,11 +53,11 @@ api.interceptors.response.use(
     originalConfig._retried = true;
 
     try {
-      const accessToken = await refreshAccessTokenOnce();
-      originalConfig.headers.set(AUTH_HEADER, `${BEARER_PREFIX}${accessToken}`);
+      await refreshAccessTokenOnce();
+      // The renewed access-token cookie is attached by the browser automatically.
       return api(originalConfig);
     } catch {
-      tokenStorage.clearTokens();
+      useAuthStore.getState().clearSession();
       return Promise.reject(error);
     }
   }

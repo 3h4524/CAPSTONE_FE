@@ -1,11 +1,12 @@
 import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 
 const ACCESS_TOKEN_KEY = "access_token";
-const REFRESH_TOKEN_KEY = "refresh_token";
 const AUTH_HEADER = "Authorization";
 const BEARER_PREFIX = "Bearer ";
 const UNAUTHORIZED_STATUS = 401;
-const REFRESH_ENDPOINT = "/auth/refresh";
+// The refresh token itself lives only in the HttpOnly cookie the backend sets on login/refresh
+// (never in the response body), so the browser sends it automatically via withCredentials.
+const REFRESH_ENDPOINT = "/api/auth/refresh";
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & { _retried?: boolean };
 
@@ -17,26 +18,19 @@ export const tokenStorage = {
   getAccessToken: (): string | null =>
     typeof window === "undefined" ? null : window.localStorage.getItem(ACCESS_TOKEN_KEY),
 
-  getRefreshToken: (): string | null =>
-    typeof window === "undefined" ? null : window.localStorage.getItem(REFRESH_TOKEN_KEY),
-
-  setTokens: (accessToken: string, refreshToken: string): void => {
-    window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-    window.localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-  },
-
   setAccessToken: (accessToken: string): void => {
     window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
   },
 
   clearTokens: (): void => {
     window.localStorage.removeItem(ACCESS_TOKEN_KEY);
-    window.localStorage.removeItem(REFRESH_TOKEN_KEY);
   },
 };
 
 export const api: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  // Required so the browser attaches/accepts the HttpOnly refresh-token cookie cross-origin.
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
@@ -50,15 +44,15 @@ api.interceptors.request.use((config) => {
 let refreshPromise: Promise<string> | null = null;
 
 const requestNewAccessToken = async (): Promise<string> => {
-  const refreshToken = tokenStorage.getRefreshToken();
-  if (!refreshToken) {
-    throw new Error("Missing refresh token");
-  }
-
-  const response = await axios.post<RefreshResponse>(REFRESH_ENDPOINT, { refreshToken });
+  // Uses the bare axios client (not `api`) so a failed refresh never re-enters `api`'s own
+  // 401-retry interceptor below and deadlocks waiting on itself.
+  const response = await axios.post<RefreshResponse>(REFRESH_ENDPOINT, undefined, {
+    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    withCredentials: true,
+  });
   const accessToken = response.data.accessToken;
 
-  tokenStorage.setTokens(accessToken, refreshToken);
+  tokenStorage.setAccessToken(accessToken);
   return accessToken;
 };
 

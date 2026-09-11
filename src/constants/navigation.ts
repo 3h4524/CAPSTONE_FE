@@ -1,24 +1,8 @@
-import {
-  CreditCard,
-  LayoutDashboard,
-  type LucideIcon,
-  Settings,
-  Workflow,
-} from "lucide-react";
+import { CreditCard, LayoutDashboard, Settings, Workflow } from "lucide-react";
 
-export type NavItemConfig = {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  disabled?: boolean;
-};
+import type { AppNavSection } from "@/types/navigation";
 
-export type NavSectionConfig = {
-  label: string;
-  items: NavItemConfig[];
-};
-
-export const NAV_SECTIONS: NavSectionConfig[] = [
+export const NAV_SECTIONS: AppNavSection[] = [
   {
     label: "OVERVIEW",
     items: [{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboard }],
@@ -35,3 +19,11 @@ export const NAV_SECTIONS: NavSectionConfig[] = [
     ],
   },
 ];
+
+export const ROUTE_TITLES = {
+  dashboard: "Dashboard",
+  profile: "Profile",
+  workflows: "Workflows",
+  settings: "Settings",
+  billing: "Billing",
+} as const;

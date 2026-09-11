@@ -4,10 +4,10 @@ import { Fragment } from "react";
 
 import { AccountMenu } from "@/components/commons/layout/app-shell/account/account-menu";
 import { Separator } from "@/components/ui/separator";
+import { NAV_SECTIONS } from "@/constants/navigation";
 import { useSidebarStore } from "@/stores/sidebar";
 import { cn } from "@/utils/cn";
 
-import { NAV_SECTIONS } from "./app-navigation";
 import { CollapseToggle } from "./collapse-toggle";
 import { NavSection } from "./nav-section";
 

@@ -9,12 +9,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { AppNavItem } from "@/types/navigation";
 import { cn } from "@/utils/cn";
 
-import type { NavItemConfig } from "./app-navigation";
-
 type NavItemProps = {
-  item: NavItemConfig;
+  item: AppNavItem;
   collapsed: boolean;
 };
 

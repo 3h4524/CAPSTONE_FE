@@ -12,9 +12,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { NAV_SECTIONS } from "@/constants/navigation";
 import { useLogout } from "@/hooks/mutations/use-logout";
 
-import { NAV_SECTIONS } from "./app-navigation";
 import { NavSection } from "./nav-section";
 
 type AppSidebarMobileProps = {

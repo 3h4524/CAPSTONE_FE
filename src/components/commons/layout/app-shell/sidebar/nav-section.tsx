@@ -1,10 +1,11 @@
 "use client";
 
-import type { NavSectionConfig } from "./app-navigation";
+import type { AppNavSection } from "@/types/navigation";
+
 import { NavItem } from "./nav-item";
 
 type NavSectionProps = {
-  section: NavSectionConfig;
+  section: AppNavSection;
   collapsed: boolean;
 };
 

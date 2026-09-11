@@ -4,11 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { AppNavItem } from "@/types/navigation";
 import { cn } from "@/utils/cn";
 
@@ -20,7 +16,8 @@ type NavItemProps = {
 export const NavItem = ({ item, collapsed }: NavItemProps) => {
   const pathname = usePathname();
   const Icon = item.icon;
-  const isActive = !item.disabled && (pathname === item.href || pathname.startsWith(item.href + "/"));
+  const isActive =
+    !item.disabled && (pathname === item.href || pathname.startsWith(item.href + "/"));
 
   if (item.disabled) {
     return (
@@ -47,7 +44,7 @@ export const NavItem = ({ item, collapsed }: NavItemProps) => {
     );
   }
 
-  const linkButton = (
+  const LinkButton = (
     <Button
       variant="ghost"
       asChild
@@ -67,11 +64,11 @@ export const NavItem = ({ item, collapsed }: NavItemProps) => {
   if (collapsed) {
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{linkButton}</TooltipTrigger>
+        <TooltipTrigger asChild>{LinkButton}</TooltipTrigger>
         <TooltipContent side="right">{item.label}</TooltipContent>
       </Tooltip>
     );
   }
 
-  return linkButton;
+  return LinkButton;
 };

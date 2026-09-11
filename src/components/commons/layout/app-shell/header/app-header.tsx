@@ -14,7 +14,7 @@ export const AppHeader = ({ onMobileMenu }: AppHeaderProps) => {
       <div className="flex h-16 items-center gap-2 px-4 lg:px-6">
         <MobileMenuButton onClick={onMobileMenu} />
         <HeaderTitle />
-        <div className="mx-auto hidden w-full max-w-lg flex-1 px-2 md:block">
+        <div className="mx-auto hidden w-full max-w-lg min-w-0 flex-1 px-2 md:block">
           <GlobalSearchTrigger />
         </div>
         <NotificationBell />

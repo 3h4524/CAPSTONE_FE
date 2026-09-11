@@ -29,11 +29,7 @@ export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
   const user = useUserStore((state) => state.user);
   const { mutate: logout, isPending } = useLogout();
 
-  const handleLogout = () =>
-    logout(undefined, {
-      onSuccess: () => router.replace("/login"),
-      onError: () => router.replace("/login"),
-    });
+  const handleLogout = () => logout(undefined, { onSettled: () => router.replace("/login") });
 
   return (
     <DropdownMenu>

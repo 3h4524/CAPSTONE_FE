@@ -16,6 +16,7 @@ export const useProfile = () =>
   useQuery({
     queryKey: PROFILE_QUERY_KEY,
     queryFn: getProfileRequest,
+    suppressErrorToast: true,
     onError: (error) => {
       if (getResponseStatus(error) !== 401) {
         showToast("error", "Could not load your profile.");

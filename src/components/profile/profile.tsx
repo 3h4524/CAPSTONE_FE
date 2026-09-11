@@ -58,7 +58,7 @@ export const Profile = () => {
   useEffect(() => {
     if (isError && getResponseStatus(profileError) === 401) {
       clearUser();
-      router.push("/login");
+      router.replace("/login");
     }
   }, [isError, profileError, clearUser, router]);
 

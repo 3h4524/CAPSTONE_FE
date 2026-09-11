@@ -6,11 +6,11 @@ import { getErrorMessage } from "@/helpers/error-message";
 import { Log } from "@/helpers/log";
 import { showToast } from "@/helpers/toast";
 import { useMutation } from "@/hooks/mutations/use-mutation";
+import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useUserStore } from "@/stores/user";
-import { useQueryClient } from "@tanstack/react-query";
 
 export const useLogout = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useAppQueryClient();
 
   return useMutation<void, void>({
     mutationFn: logoutRequest,

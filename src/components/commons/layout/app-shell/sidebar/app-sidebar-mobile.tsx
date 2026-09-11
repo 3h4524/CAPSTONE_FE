@@ -26,11 +26,7 @@ export const AppSidebarMobile = ({ open, onOpenChange }: AppSidebarMobileProps) 
   const router = useRouter();
   const { mutate: logout, isPending } = useLogout();
 
-  const handleLogout = () =>
-    logout(undefined, {
-      onSuccess: () => router.replace("/login"),
-      onError: () => router.replace("/login"),
-    });
+  const handleLogout = () => logout(undefined, { onSettled: () => router.replace("/login") });
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

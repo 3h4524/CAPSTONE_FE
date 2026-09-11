@@ -13,11 +13,11 @@ export const GlobalSearchTrigger = () => {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className="hidden w-full md:inline-flex">
+        <span className="flex w-full">
           <Button type="button" variant="outline" disabled className="w-full justify-start">
             <Search />
             <span className="text-muted-foreground">Search...</span>
-            <kbd className="text-muted-foreground text-xs">⌘K</kbd>
+            <kbd className="text-muted-foreground ml-auto text-xs">⌘K</kbd>
           </Button>
         </span>
       </TooltipTrigger>

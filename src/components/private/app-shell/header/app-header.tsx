@@ -1,5 +1,3 @@
-"use client";
-
 import { AccountMenu } from "@/components/private/app-shell/account/account-menu";
 import { GlobalSearchTrigger } from "@/components/private/app-shell/header/global-search-trigger";
 import { HeaderTitle } from "@/components/private/app-shell/header/header-title";

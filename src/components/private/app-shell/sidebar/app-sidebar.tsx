@@ -22,8 +22,13 @@ export const AppSidebar = () => {
       )}
     >
       <div
-        className={cn("flex items-center p-3", isCollapsed ? "justify-center" : "justify-end")}
+        className={cn("flex items-center p-3", isCollapsed ? "justify-center" : "justify-between")}
       >
+        <span
+          className={cn("font-display text-lg font-bold tracking-tight", isCollapsed && "hidden")}
+        >
+          APCS
+        </span>
         <CollapseToggle />
       </div>
       <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-3" aria-label="Primary">

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { AppShell } from "@/components/private/app-shell/app-shell";
+import { AppShell } from "@/components/commons/layout/app-shell/app-shell";
 
 type PrivateLayoutProps = {
   children: ReactNode;

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { KeyRound, LogOut, User } from "lucide-react";
 
-import { UserAvatar } from "@/components/private/app-shell/account/user-avatar";
+import { UserAvatar } from "@/components/commons/layout/app-shell/account/user-avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { ContentArea } from "@/components/private/app-shell/content-area";
-import { AppHeader } from "@/components/private/app-shell/header/app-header";
-import { AppSidebar } from "@/components/private/app-shell/sidebar/app-sidebar";
-import { AppSidebarMobile } from "@/components/private/app-shell/sidebar/app-sidebar-mobile";
-import { UserHydrator } from "@/components/private/app-shell/user-hydrator";
+import { ContentArea } from "@/components/commons/layout/app-shell/content-area";
+import { AppHeader } from "@/components/commons/layout/app-shell/header/app-header";
+import { AppSidebar } from "@/components/commons/layout/app-shell/sidebar/app-sidebar";
+import { AppSidebarMobile } from "@/components/commons/layout/app-shell/sidebar/app-sidebar-mobile";
+import { UserHydrator } from "@/components/commons/layout/app-shell/user-hydrator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 type AppShellProps = {

@@ -2,7 +2,7 @@
 
 import { Fragment } from "react";
 
-import { AccountMenu } from "@/components/private/app-shell/account/account-menu";
+import { AccountMenu } from "@/components/commons/layout/app-shell/account/account-menu";
 import { Separator } from "@/components/ui/separator";
 import { useSidebarStore } from "@/stores/sidebar";
 import { cn } from "@/utils/cn";

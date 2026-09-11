@@ -1,6 +1,6 @@
 "use client";
 
-import { NotificationList } from "@/components/private/app-shell/notifications/notification-list";
+import { NotificationList } from "@/components/commons/layout/app-shell/notifications/notification-list";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuContent } from "@/components/ui/dropdown-menu";
 

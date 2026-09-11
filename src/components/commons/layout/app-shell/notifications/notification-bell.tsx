@@ -2,7 +2,7 @@
 
 import { Bell } from "lucide-react";
 
-import { NotificationDropdown } from "@/components/private/app-shell/notifications/notification-dropdown";
+import { NotificationDropdown } from "@/components/commons/layout/app-shell/notifications/notification-dropdown";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { DashboardEmptyState } from "@/components/private/dashboard/dashboard-empty-state";
+import { DashboardEmptyState } from "@/components/dashboard/dashboard-empty-state";
 
 const DashboardPage = () => {
   return (

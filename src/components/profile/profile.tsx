@@ -8,19 +8,21 @@ import { AvatarCard } from "@/components/profile/avatar-card";
 import { PersonalForm } from "@/components/profile/personal-form";
 import { PreferencesForm } from "@/components/profile/preferences-form";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { DEFAULT_LANGUAGE, DEFAULT_THEME, DEFAULT_TIMEZONE } from "@/constants/profile";
 import { toFormValues } from "@/helpers/profile-form";
 import { getResponseStatus } from "@/helpers/response-status";
 import { useUpdateProfile } from "@/hooks/mutations/use-update-profile";
 import { useProfile } from "@/hooks/queries/use-profile";
-import { type ProfileFormValues, profileSchema } from "@/schemas/profile";
+import type { ProfileFormValues } from "@/schemas/profile";
+import { profileSchema } from "@/schemas/profile";
+import { useUserStore } from "@/stores/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 export const Profile = () => {
   const router = useRouter();
   const { data, isError, error: profileError } = useProfile();
   const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile();
+  const clearUser = useUserStore((state) => state.clearUser);
 
   const {
     register,
@@ -45,6 +47,8 @@ export const Profile = () => {
     },
   });
 
+  const fullName = watch("fullName");
+
   useEffect(() => {
     if (data) {
       reset(toFormValues(data));
@@ -53,18 +57,20 @@ export const Profile = () => {
 
   useEffect(() => {
     if (isError && getResponseStatus(profileError) === 401) {
+      clearUser();
       router.push("/login");
     }
-  }, [isError, profileError, router]);
+  }, [isError, profileError, clearUser, router]);
 
   if (isError && !data) {
     if (getResponseStatus(profileError) !== 401) {
-      throw profileError;
+      throw profileError instanceof Error
+        ? profileError
+        : new Error("Could not load your profile.", { cause: profileError });
     }
     return null;
   }
 
-  const fullName = watch("fullName");
   const avatarUrl = data?.avatarUrl ?? null;
   const email = data?.email ?? "";
 
@@ -80,11 +86,13 @@ export const Profile = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Card className="gap-0 overflow-hidden py-0">
+      <div>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-4">
           <div className="space-y-0.5">
-            <CardTitle className="text-base">Profile</CardTitle>
-            <CardDescription>Manage your personal and workspace details.</CardDescription>
+            <h1 className="text-base leading-none font-semibold">Profile</h1>
+            <p className="text-muted-foreground text-sm">
+              Manage your personal and workspace details.
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -111,7 +119,7 @@ export const Profile = () => {
             <PreferencesForm control={control} errors={errors} />
           </div>
         </div>
-      </Card>
+      </div>
     </form>
   );
 };

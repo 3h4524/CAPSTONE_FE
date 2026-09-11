@@ -1,9 +1,8 @@
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const ProfileLoading = () => {
   return (
-    <Card className="gap-0 overflow-hidden py-0">
+    <div>
       <div className="flex items-center justify-between border-b px-6 py-4">
         <div className="space-y-1.5">
           <Skeleton className="h-5 w-24" />
@@ -39,7 +38,7 @@ const ProfileLoading = () => {
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

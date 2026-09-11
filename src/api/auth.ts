@@ -56,3 +56,7 @@ export type ChangePasswordPayload = {
 export const changePasswordRequest = async (payload: ChangePasswordPayload): Promise<void> => {
   await api.post("/api/auth/change-password", payload);
 };
+
+export const logoutRequest = async (): Promise<void> => {
+  await api.post("/api/auth/logout");
+};

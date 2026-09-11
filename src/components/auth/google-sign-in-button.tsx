@@ -14,10 +14,14 @@ const loadGoogleScript = (): Promise<void> => {
   }
 
   scriptLoadPromise ??= new Promise((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${GOOGLE_SCRIPT_SRC}"]`);
+    const existing = document.querySelector<HTMLScriptElement>(
+      `script[src="${GOOGLE_SCRIPT_SRC}"]`
+    );
     if (existing) {
       existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () => reject(new Error("Failed to load Google Identity Services")));
+      existing.addEventListener("error", () =>
+        reject(new Error("Failed to load Google Identity Services"))
+      );
       return;
     }
 
@@ -36,11 +40,16 @@ const loadGoogleScript = (): Promise<void> => {
 type GoogleSignInButtonProps = {
   text: "signin_with" | "signup_with";
   clientId: string;
+  onTwoFactorRequired?: (tempToken: string, expiresAtUtc: string) => void;
 };
 
-export const GoogleSignInButton = ({ text, clientId }: GoogleSignInButtonProps) => {
+export const GoogleSignInButton = ({
+  text,
+  clientId,
+  onTwoFactorRequired,
+}: GoogleSignInButtonProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { mutate: googleLogin } = useGoogleLogin();
+  const { mutate: googleLogin } = useGoogleLogin(onTwoFactorRequired);
 
   useEffect(() => {
     const container = containerRef.current;

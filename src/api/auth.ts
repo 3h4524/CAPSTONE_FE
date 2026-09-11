@@ -1,5 +1,11 @@
 import { api } from "@/api/client";
-import type { LoginResult,RegisterResult } from "@/types/auth";
+import type {
+  AdminTwoFactorPayload,
+  AdminTwoFactorResponse,
+  AuthenticatedUser,
+  LoginResult,
+  RegisterResult,
+} from "@/types/auth";
 
 export type RegisterPayload = {
   email: string;
@@ -30,6 +36,22 @@ export const loginRequest = async (payload: LoginPayload): Promise<LoginResult> 
   return data;
 };
 
+export const verifyAdminTwoFactorRequest = async (
+  payload: AdminTwoFactorPayload
+): Promise<LoginResult> => {
+  const { data } = await api.post<LoginResult>("/api/auth/admin/verify-2fa", payload);
+  return data;
+};
+
+export const resendAdminTwoFactorRequest = async (
+  tempToken: string
+): Promise<AdminTwoFactorResponse> => {
+  const { data } = await api.post<AdminTwoFactorResponse>("/api/auth/admin/resend-otp", {
+    tempToken,
+  });
+  return data;
+};
+
 export const googleLoginRequest = async (idToken: string): Promise<LoginResult> => {
   const { data } = await api.post<LoginResult>("/api/auth/google", { idToken });
   return data;
@@ -55,4 +77,13 @@ export type ChangePasswordPayload = {
 
 export const changePasswordRequest = async (payload: ChangePasswordPayload): Promise<void> => {
   await api.post("/api/auth/change-password", payload);
+};
+
+export const currentUserRequest = async (): Promise<AuthenticatedUser> => {
+  const { data } = await api.get<AuthenticatedUser>("/api/auth/me");
+  return data;
+};
+
+export const logoutRequest = async (): Promise<void> => {
+  await api.post("/api/auth/logout");
 };

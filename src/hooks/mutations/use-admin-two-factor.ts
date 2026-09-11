@@ -2,28 +2,24 @@
 
 import { useRouter } from "next/navigation";
 
-import { loginRequest } from "@/api/auth";
+import { verifyAdminTwoFactorRequest } from "@/api/auth";
 import { tokenStorage } from "@/api/client";
 import { showToast } from "@/helpers/toast";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 
-export const useLogin = () => {
+export const useAdminTwoFactor = () => {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: loginRequest,
+    mutationFn: verifyAdminTwoFactorRequest,
     onSuccess: (result) => {
-      if (result.requiresTwoFactor) {
-        return;
-      }
-
       if (!result.accessToken || !result.user) {
         return;
       }
 
       tokenStorage.setAccessToken(result.accessToken);
-      showToast("success", `Welcome back, ${result.user.fullName}`);
-      router.push("/");
+      showToast("success", `Welcome, ${result.user.fullName}`);
+      router.push("/admin/dashboard");
     },
   });
 };

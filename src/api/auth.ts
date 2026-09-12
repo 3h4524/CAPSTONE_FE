@@ -1,5 +1,5 @@
 import { api } from "@/api/client";
-import type { LoginResult,RegisterResult } from "@/types/auth";
+import type { AuthenticatedUser, LoginResult, RegisterResult } from "@/types/auth";
 
 export type RegisterPayload = {
   email: string;
@@ -55,4 +55,9 @@ export type ChangePasswordPayload = {
 
 export const changePasswordRequest = async (payload: ChangePasswordPayload): Promise<void> => {
   await api.post("/api/auth/change-password", payload);
+};
+
+export const getCurrentUserRequest = async (): Promise<AuthenticatedUser> => {
+  const { data } = await api.get<AuthenticatedUser>("/api/auth/me");
+  return data;
 };

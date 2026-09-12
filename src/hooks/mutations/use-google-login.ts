@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 
 import { googleLoginRequest } from "@/api/auth";
 import { tokenStorage } from "@/api/client";
+import { getSafeReturnUrl } from "@/helpers/auth-return-url";
 import { showToast } from "@/helpers/toast";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useAppQueryClient } from "@/hooks/use-query-client";
@@ -23,7 +24,7 @@ export const useGoogleLogin = () => {
       useUserStore
         .getState()
         .setUser({ email: result.user.email, fullName: result.user.fullName, avatarUrl: null });
-      router.push("/dashboard");
+      router.push(getSafeReturnUrl());
     },
   });
 };

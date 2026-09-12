@@ -1,26 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 
-import { tokenStorage } from "@/api/client";
 import { FormInputField } from "@/components/commons/forms/form-input-field";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/helpers/error-message";
 import { useChangePassword } from "@/hooks/mutations/use-change-password";
 import { type ChangePasswordFormValues, changePasswordSchema } from "@/schemas/auth";
+import { useAuthStore } from "@/stores/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 export const FormChangePassword = () => {
-  // localStorage is only readable on the client, so this starts unknown and resolves after
-  // mount rather than risking a server/client hydration mismatch.
-  const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
+  // isHydrated flips to true only after the app-mount silent refresh resolves, so this waits
+  // instead of flashing "not signed in" while that check is still in flight.
+  const isHydrated = useAuthStore((state) => state.isHydrated);
+  const isSignedIn = useAuthStore((state) => Boolean(state.user));
   const { mutate: changePassword, isPending, isError, error } = useChangePassword();
-
-  useEffect(() => {
-    setIsSignedIn(Boolean(tokenStorage.getAccessToken()));
-  }, []);
 
   const {
     register,
@@ -36,7 +32,7 @@ export const FormChangePassword = () => {
     },
   });
 
-  if (isSignedIn === null) {
+  if (!isHydrated) {
     return null;
   }
 

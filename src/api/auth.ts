@@ -1,5 +1,5 @@
 import { api } from "@/api/client";
-import type { AuthenticatedUser, LoginResult,RegisterResult } from "@/types/auth";
+import type { AuthenticatedUser, LoginResult, RegisterResult } from "@/types/auth";
 
 export type RegisterPayload = {
   email: string;

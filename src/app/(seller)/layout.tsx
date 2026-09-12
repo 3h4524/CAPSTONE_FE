@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { Sidebar } from "@/components/commons/layout/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuthStore } from "@/stores/auth";
 
@@ -39,12 +38,11 @@ const SellerLayout = ({ children }: SellerLayoutProps) => {
     return null;
   }
 
-  return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1">{children}</main>
-    </div>
-  );
+  // No sidebar here — feat/private-app-shell owns the real app shell and isn't merged into
+  // this branch yet (it still predates the cookie-auth migration, which would reopen the same
+  // tokenStorage-vs-cookie conflict just resolved). This layout only keeps the Seller-role gate
+  // until the subscription page moves under that shell.
+  return <>{children}</>;
 };
 
 export default SellerLayout;

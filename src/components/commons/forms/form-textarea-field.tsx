@@ -1,3 +1,5 @@
+"use client";
+
 import type { FieldError, UseFormRegisterReturn } from "react-hook-form";
 
 import { Badge } from "@/components/ui/badge";

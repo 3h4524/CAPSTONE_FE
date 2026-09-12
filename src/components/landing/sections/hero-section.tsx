@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { Container } from "@/components/commons/layout/container";
@@ -18,15 +19,13 @@ export const HeroSection = () => {
           </p>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             <Button variant="defaultWithTextWhite" size="lg" asChild>
-              <a href={HERO_CONTENT.primaryCta.href}>
-                {HERO_CONTENT.primaryCta.label}
-              </a>
+              <Link href={HERO_CONTENT.primaryCta.href}>{HERO_CONTENT.primaryCta.label}</Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
-              <a href={HERO_CONTENT.secondaryCta.href}>
+              <Link href={HERO_CONTENT.secondaryCta.href}>
                 {HERO_CONTENT.secondaryCta.label}
                 <ArrowRight aria-hidden="true" />
-              </a>
+              </Link>
             </Button>
           </div>
         </div>

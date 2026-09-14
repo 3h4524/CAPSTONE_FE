@@ -6,6 +6,7 @@ import { GlobalToast } from "@/components/commons/toast/global-toast";
 import { OrganizationJsonLd } from "@/components/seo/organization-json-ld";
 import { SITE_CONFIG } from "@/constants/site";
 import { getSiteMetadata } from "@/data/metadata";
+import { AuthProvider } from "@/providers/global/auth-provider";
 import { ReactQueryProvider } from "@/providers/global/query-client-provider";
 import { GoogleAnalytics } from "@next/third-parties/google";
 
@@ -41,7 +42,9 @@ export default function RootLayout({
         <OrganizationJsonLd />
       </head>
       <body className={`${inter.variable} ${display.variable} font-sans antialiased`}>
-        <ReactQueryProvider>{children}</ReactQueryProvider>
+        <ReactQueryProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ReactQueryProvider>
         <GlobalToast />
         <GlobalPopup />
         {process.env.GOOGLE_ANALYTICS_MEASUREMENT_ID && (

@@ -51,9 +51,8 @@ export const NAV_LINKS: NavItem[] = [
 
 export const HERO_CONTENT = {
   title: "Scale Your POD Empire at AI Speed",
-  description:
-    "Turn product ideas into designs, copy, and Etsy-ready listings in minutes with AI.",
-  primaryCta: { label: "Get started for free", href: "#signup" },
+  description: "Turn product ideas into designs, copy, and Etsy-ready listings in minutes with AI.",
+  primaryCta: { label: "Get started for free", href: "login" },
   secondaryCta: { label: "See how it works", href: "#workflow" },
 } as const;
 
@@ -73,15 +72,13 @@ export const BENEFITS: Benefit[] = [
   {
     icon: PiggyBank,
     title: "Save Costs",
-    description:
-      "Reduce overhead and run lean while keeping every listing professional.",
+    description: "Reduce overhead and run lean while keeping every listing professional.",
     isFeatured: false,
   },
   {
     icon: ChartColumn,
     title: "Smart Management",
-    description:
-      "Track revenue, queues, and operational performance in real time.",
+    description: "Track revenue, queues, and operational performance in real time.",
     isFeatured: false,
   },
 ];
@@ -110,8 +107,7 @@ export const ECOSYSTEM_FEATURES: EcosystemFeature[] = [
   {
     icon: FileText,
     title: "Etsy Listing Content",
-    description:
-      "Get SEO-ready titles, descriptions, tags, and attributes tuned for Etsy search.",
+    description: "Get SEO-ready titles, descriptions, tags, and attributes tuned for Etsy search.",
   },
   {
     icon: Layers,
@@ -130,8 +126,7 @@ export const ECOSYSTEM_FEATURES: EcosystemFeature[] = [
 export const WORKFLOW_CONTENT = {
   eyebrow: "How it works",
   title: "From product idea to published listing in 4 steps",
-  description:
-    "Upload once. APCS runs the AI workflow, scores SEO, and publishes everywhere.",
+  description: "Upload once. APCS runs the AI workflow, scores SEO, and publishes everywhere.",
 } as const;
 
 export const WORKFLOW_STEPS: WorkflowStep[] = [
@@ -206,13 +201,11 @@ export const FAQS: Faq[] = [
   },
   {
     question: "Do I need additional hardware?",
-    answer:
-      "No. APCS runs on the web, so your existing computer is enough to manage generation.",
+    answer: "No. APCS runs on the web, so your existing computer is enough to manage generation.",
   },
   {
     question: "Does the plan cover everything?",
-    answer:
-      "The package includes storage, security, and feature updates with no hidden costs.",
+    answer: "The package includes storage, security, and feature updates with no hidden costs.",
   },
   {
     question: "How does support work?",
@@ -223,8 +216,7 @@ export const FAQS: Faq[] = [
 
 export const CTA_CONTENT = {
   title: "Ready to build your Print-on-Demand portfolio?",
-  description:
-    "Join creators automating their workflow with professional AI generation.",
+  description: "Join creators automating their workflow with professional AI generation.",
   primaryCta: { label: "Get started for free", href: "#signup" },
 } as const;
 

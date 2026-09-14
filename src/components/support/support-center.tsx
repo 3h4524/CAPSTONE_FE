@@ -86,7 +86,7 @@ export function SupportCenter() {
 
   if (authQuery.isError) {
     return (
-      <main className="flex min-h-dvh items-center justify-center bg-[#f5f7fb] p-6">
+      <main className="flex min-h-[60vh] items-center justify-center p-6">
         <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-[0_18px_50px_rgba(39,55,80,0.08)]">
           <LifeBuoy className="mx-auto size-8 text-slate-400" aria-hidden="true" />
           <h1 className="font-display mt-4 text-2xl font-semibold tracking-tight">Unable to open Support</h1>
@@ -100,29 +100,8 @@ export function SupportCenter() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#f5f7fb] text-[#161c22]">
-      <main className="mx-auto w-full max-w-[1280px] px-4 pt-8 pb-12 sm:px-6 sm:pt-11 lg:px-8 lg:pt-14">
-        <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="flex items-center gap-2.5 text-[11px] font-bold tracking-[0.16em] text-[#273750]">
-              <span className="h-px w-5 bg-[#273750]" aria-hidden="true" />
-              HELP
-            </p>
-            <h1 className="font-display mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-[42px] sm:leading-none">
-              Support
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-              Ask for help and keep every conversation attached to your workspace.
-            </p>
-          </div>
-          <Button
-            className="min-h-11 self-start rounded-lg px-5 shadow-[0_10px_24px_rgba(39,55,80,0.22)] hover:-translate-y-0.5 sm:self-auto"
-            onClick={() => openComposer()}
-          >
-            <Plus aria-hidden="true" />New ticket
-          </Button>
-        </header>
-
+    <div className="flex flex-1 flex-col text-[#161c22]">
+      <main className="mx-auto w-full max-w-[1280px] px-2 pt-2 pb-6 sm:px-4">
         <section
           className="mt-8 grid gap-5 rounded-[22px] border border-slate-200/90 bg-white px-5 py-6 shadow-[0_16px_45px_rgba(39,55,80,0.055)] sm:px-7 lg:grid-cols-[44px_minmax(280px,0.72fr)_minmax(360px,1.28fr)] lg:items-center lg:gap-x-5 lg:gap-y-4"
           aria-labelledby="support-help-heading"
@@ -180,21 +159,26 @@ export function SupportCenter() {
                 Support tickets
               </h2>
             </div>
-            <div className="inline-flex self-start rounded-full border border-slate-300 bg-white p-0.5" role="group" aria-label="Filter tickets">
-              {(["all", "open", "resolved"] as const).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  aria-pressed={view === item}
-                  className={cn(
-                    "min-h-8 rounded-full px-3.5 text-sm font-medium text-slate-600 capitalize transition-colors focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none",
-                    view === item && "bg-[#eef2fa] font-semibold text-[#273750]"
-                  )}
-                  onClick={() => selectView(item)}
-                >
-                  {item}
-                </button>
-              ))}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="inline-flex self-start rounded-full border border-slate-300 bg-white p-0.5" role="group" aria-label="Filter tickets">
+                {(["all", "open", "resolved"] as const).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    aria-pressed={view === item}
+                    className={cn(
+                      "min-h-8 rounded-full px-3.5 text-sm font-medium text-slate-600 capitalize transition-colors focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none",
+                      view === item && "bg-[#eef2fa] font-semibold text-[#273750]"
+                    )}
+                    onClick={() => selectView(item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+              <Button className="min-h-10 self-start px-4 sm:self-auto" onClick={() => openComposer()}>
+                <Plus aria-hidden="true" />New ticket
+              </Button>
             </div>
           </div>
 
@@ -347,7 +331,7 @@ function TicketListSkeleton() {
 
 function SupportCenterSkeleton() {
   return (
-    <main className="mx-auto min-h-dvh max-w-[1280px] space-y-8 bg-[#f5f7fb] px-4 py-12 sm:px-6 lg:px-8">
+    <main className="mx-auto w-full max-w-[1280px] space-y-8 px-2 py-6 sm:px-4">
       <div className="space-y-3"><Skeleton className="h-3 w-20" /><Skeleton className="h-11 w-52" /><Skeleton className="h-5 w-[min(100%,520px)]" /></div>
       <Skeleton className="h-40 w-full rounded-[22px]" />
       <Skeleton className="h-[420px] w-full rounded-[22px]" />

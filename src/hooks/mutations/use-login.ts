@@ -19,6 +19,7 @@ export const useLogin = () => {
 
   return useMutation<LoginResult, LoginPayload>({
     mutationFn: loginRequest,
+    suppressErrorToast: true,
     onSuccess: (result) => {
       queryClient.clear();
       setAuthUser(result.user);

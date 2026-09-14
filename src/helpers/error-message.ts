@@ -17,10 +17,6 @@ const extractRawMessage = (error: unknown): string | undefined => {
     return error;
   }
 
-  if (error instanceof Error && error.message.trim()) {
-    return error.message;
-  }
-
   if (typeof error === "object" && error !== null) {
     const withResponse = error as ErrorWithResponse;
     const payloadMessage =
@@ -32,7 +28,7 @@ const extractRawMessage = (error: unknown): string | undefined => {
       return payloadMessage;
     }
 
-    if ("message" in error) {
+    if (!withResponse.response && "message" in error) {
       const message = (error as { message?: unknown }).message;
       if (typeof message === "string" && message.trim()) {
         return message;
@@ -40,9 +36,16 @@ const extractRawMessage = (error: unknown): string | undefined => {
     }
   }
 
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
   return undefined;
 };
 
-export const getErrorMessage = (error: unknown, fallback: string = DEFAULT_ERROR_MESSAGE): string => {
+export const getErrorMessage = (
+  error: unknown,
+  fallback: string = DEFAULT_ERROR_MESSAGE
+): string => {
   return extractRawMessage(error) ?? fallback;
 };

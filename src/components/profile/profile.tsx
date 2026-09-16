@@ -15,14 +15,14 @@ import { useUpdateProfile } from "@/hooks/mutations/use-update-profile";
 import { useProfile } from "@/hooks/queries/use-profile";
 import type { ProfileFormValues } from "@/schemas/profile";
 import { profileSchema } from "@/schemas/profile";
-import { useUserStore } from "@/stores/user";
+import { useAuthStore } from "@/stores/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 export const Profile = () => {
   const router = useRouter();
   const { data, isError, error: profileError } = useProfile();
   const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile();
-  const clearUser = useUserStore((state) => state.clearUser);
+  const clearSession = useAuthStore((state) => state.clearSession);
 
   const {
     register,
@@ -57,10 +57,10 @@ export const Profile = () => {
 
   useEffect(() => {
     if (isError && getResponseStatus(profileError) === 401) {
-      clearUser();
+      clearSession();
       router.replace("/login");
     }
-  }, [isError, profileError, clearUser, router]);
+  }, [isError, profileError, clearSession, router]);
 
   if (isError && !data) {
     if (getResponseStatus(profileError) !== 401) {

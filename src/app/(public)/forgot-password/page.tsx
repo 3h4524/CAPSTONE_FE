@@ -17,7 +17,7 @@ const ForgotPasswordPage = () => {
     <AuthSplitLayout
       title="Forgot Password?"
       description="Don't worry, enter your email and we'll send you instructions to reset your password."
-      imageSrc="/images/landing/auth.jpg"
+      imageSrc="/images/landing/auth.webp"
       imageAlt="Designer reviewing AI-generated product designs next to a laptop and printed t-shirts"
       imageCaption={{
         title: "Your creative studio, anywhere.",

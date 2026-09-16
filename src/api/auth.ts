@@ -1,5 +1,11 @@
 import { api } from "@/api/client";
-import type { AuthenticatedUser, LoginResult, RegisterResult } from "@/types/auth";
+import type {
+  AdminTwoFactorPayload,
+  AdminTwoFactorResponse,
+  AuthenticatedUser,
+  LoginResult,
+  RegisterResult,
+} from "@/types/auth";
 
 export type RegisterPayload = {
   email: string;
@@ -27,6 +33,22 @@ export type LoginPayload = {
 
 export const loginRequest = async (payload: LoginPayload): Promise<LoginResult> => {
   const { data } = await api.post<LoginResult>("/api/auth/login", payload);
+  return data;
+};
+
+export const verifyAdminTwoFactorRequest = async (
+  payload: AdminTwoFactorPayload
+): Promise<LoginResult> => {
+  const { data } = await api.post<LoginResult>("/api/auth/admin/verify-2fa", payload);
+  return data;
+};
+
+export const resendAdminTwoFactorRequest = async (
+  tempToken: string
+): Promise<AdminTwoFactorResponse> => {
+  const { data } = await api.post<AdminTwoFactorResponse>("/api/auth/admin/resend-otp", {
+    tempToken,
+  });
   return data;
 };
 
@@ -64,9 +86,4 @@ export const changePasswordRequest = async (payload: ChangePasswordPayload): Pro
 
 export const logoutRequest = async (): Promise<void> => {
   await api.post("/api/auth/logout");
-};
-
-export const getCurrentUserRequest = async (): Promise<AuthenticatedUser> => {
-  const { data } = await api.get<AuthenticatedUser>("/api/auth/me");
-  return data;
 };

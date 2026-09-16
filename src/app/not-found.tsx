@@ -3,11 +3,12 @@ import Link from "next/link";
 
 import { Container } from "@/components/commons/layout/container";
 import { Button } from "@/components/ui/button";
+import { getPageMetadata } from "@/data/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = getPageMetadata({
   title: "404",
   robots: { index: false, follow: false },
-};
+});
 
 export default function NotFound() {
   return (

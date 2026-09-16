@@ -86,23 +86,26 @@ export const getSiteMetadata = (): Metadata => {
  */
 export const getPageMetadata = ({
   title,
-  description,
+  description = SITE_CONFIG.description,
   pathname,
+  robots,
 }: {
   title: string;
-  description: string;
-  pathname: string;
+  description?: string;
+  pathname?: string;
+  robots?: Metadata["robots"];
 }): Metadata => {
-  const canonical = getAbsoluteUrl(pathname);
+  const canonical = pathname ? getAbsoluteUrl(pathname) : undefined;
 
   return {
     title,
     description,
-    alternates: { canonical },
+    ...(robots ? { robots } : null),
+    ...(canonical ? { alternates: { canonical } } : null),
     openGraph: {
       title,
       description,
-      url: canonical,
+      ...(canonical ? { url: canonical } : null),
     },
     twitter: {
       title,

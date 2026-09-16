@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { KeyRound, LogOut, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 
 import { UserAvatar } from "@/components/commons/layout/app-shell/account/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -50,9 +50,7 @@ export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
               {user ? (
                 <>
                   <span className="block truncate text-sm font-medium">{user.fullName}</span>
-                  <span className="text-muted-foreground block truncate text-xs">
-                    {user.email}
-                  </span>
+                  <span className="text-muted-foreground block truncate text-xs">{user.email}</span>
                 </>
               ) : (
                 <Spinner className="size-4" aria-label="Loading account" />
@@ -71,11 +69,6 @@ export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
             <User />
             <span>Profile</span>
           </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled>
-          <KeyRound />
-          <span>API Keys</span>
-          <span className="text-muted-foreground ml-auto text-xs">Coming soon</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} disabled={isPending}>

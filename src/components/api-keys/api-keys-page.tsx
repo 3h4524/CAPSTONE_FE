@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Trash2,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import { apiKeyKeys, validateApiKey } from "@/api/api-keys";
 import { apiKeyError, ConnectionDialog } from "@/components/api-keys/connection-dialog";
@@ -28,11 +27,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { showToast } from "@/helpers/toast";
+import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useApiKeys } from "@/hooks/queries/use-api-keys";
-import { useCurrentUser } from "@/hooks/queries/use-current-user";
+import { useAppQueryClient } from "@/hooks/use-query-client";
+import { useAuthStore } from "@/stores/auth";
 import type { ApiKeyConnection } from "@/types/api-keys";
 import { cn } from "@/utils/cn";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 function ConnectionRow({
   connection,
@@ -170,42 +171,44 @@ function ConnectionRow({
 }
 
 export function ApiKeysPage() {
-  const cache = useQueryClient();
+  const queryClient = useAppQueryClient();
   const [dialog, setDialog] = useState<{
     connection?: ApiKeyConnection;
     deleting?: boolean;
   } | null>(null);
   const validation = useMutation({
     mutationFn: validateApiKey,
-    onSuccess: () => toast.success("Connection validated."),
-    onError: (error) => toast.error(apiKeyError(error)),
+    onSuccess: () => showToast("success", "Connection validated."),
+    onError: (error) => showToast("error", apiKeyError(error)),
     onSettled: () => {
-      void cache.invalidateQueries({ queryKey: apiKeyKeys.all });
+      void queryClient.invalidateQueries({ queryKey: apiKeyKeys.all });
     },
   });
   const router = useRouter();
-  const auth = useCurrentUser();
-  const user = auth.data;
+  const user = useAuthStore((state) => state.user);
+  const isHydrated = useAuthStore((state) => state.isHydrated);
   const isSeller = user?.roles.includes("Seller") ?? false;
-  const query = useApiKeys(auth.isSuccess && isSeller ? user?.id : undefined);
+  const query = useApiKeys(isHydrated && isSeller ? user?.id : undefined);
   const [now, setNow] = useState(() => Date.now());
   const [guideOpen, setGuideOpen] = useState(false);
-  const error = auth.isError ? auth.error : query.error;
+  const error = query.error;
   const status = axios.isAxiosError(error) ? error.response?.status : undefined;
 
   useEffect(() => {
-    if (status === 401) router.replace("/login?returnUrl=%2Fapi-keys");
-  }, [router, status]);
+    if (isHydrated && !user) {
+      router.replace("/login?returnUrl=%2Fapi-keys");
+    }
+  }, [isHydrated, user, router]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(timer);
   }, []);
 
-  const forbidden = status === 403 || (auth.isSuccess && !isSeller);
-  const failed = auth.isError || query.isError;
-  const loading = auth.isPending || (isSeller && query.isPending);
-  const data = !failed && !forbidden && auth.isSuccess ? query.data : undefined;
+  const forbidden = status === 403 || (isHydrated && !isSeller);
+  const failed = query.isError;
+  const loading = !isHydrated || (isSeller && query.isPending);
+  const data = !failed && !forbidden && user ? query.data : undefined;
 
   return (
     <div className="w-full min-w-0 p-4 sm:p-6">
@@ -253,8 +256,8 @@ export function ApiKeysPage() {
           <Button
             variant="outline"
             className="mt-4"
-            onClick={() => void (auth.isError ? auth.refetch() : query.refetch())}
-            disabled={auth.isFetching || query.isFetching}
+            onClick={() => void query.refetch()}
+            disabled={query.isFetching}
           >
             <RefreshCw className="size-4" />
             Retry

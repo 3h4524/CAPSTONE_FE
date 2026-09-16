@@ -3,9 +3,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { Check, KeyRound, Loader2, ShieldCheck } from "lucide-react";
-import { toast } from "sonner";
 
-import { apiKeyKeys, deleteApiKey, listApiKeyProviders, saveApiKey } from "@/api/api-keys";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,8 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { showToast } from "@/helpers/toast";
+import { useSaveApiKey } from "@/hooks/mutations/use-save-api-key";
+import { useApiKeyProviders } from "@/hooks/queries/use-api-key-providers";
 import type { ApiKeyConnection } from "@/types/api-keys";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function apiKeyError(error: unknown): string {
   if (axios.isAxiosError(error)) {
@@ -51,13 +51,7 @@ export function ConnectionDialog({
   connections: ApiKeyConnection[];
   onClose: () => void;
 }) {
-  const cache = useQueryClient();
-  const providers = useQuery({
-    queryKey: ["api-key-providers"],
-    queryFn: ({ signal }) => listApiKeyProviders(signal),
-    enabled: !deleting,
-    retry: false,
-  });
+  const providers = useApiKeyProviders(!deleting);
   const [provider, setProvider] = useState(connection?.provider.toLowerCase() ?? "");
   const [name, setName] = useState(connection?.label ?? "");
   const [environment, setEnvironment] = useState(connection?.environment ?? "Production");
@@ -70,32 +64,36 @@ export function ConnectionDialog({
       item.provider.toLowerCase() === provider &&
       item.status === "Connected"
   );
-  const mutation = useMutation({
-    mutationFn: async () => {
-      if (deleting && connection) await deleteApiKey(connection.id);
-      else
-        await saveApiKey(connection?.id, {
-          provider,
-          name,
-          environment: environment || null,
-          apiKey: key || null,
-          confirmed,
-        });
-    },
-    onSuccess: () => {
-      setKey("");
-      toast.success(
-        deleting
-          ? "API key deleted."
-          : connection
-            ? "API key updated."
-            : "MSG52 — API key added and validated successfully."
-      );
-      void cache.invalidateQueries({ queryKey: apiKeyKeys.all });
-      onClose();
-    },
-  });
+  const mutation = useSaveApiKey();
   const busy = mutation.isPending;
+
+  const handleSubmit = () => {
+    mutation.mutate(
+      {
+        connectionId: connection?.id,
+        deleting,
+        provider,
+        name,
+        environment: environment || null,
+        apiKey: key || null,
+        confirmed,
+      },
+      {
+        onSuccess: () => {
+          setKey("");
+          showToast(
+            "success",
+            deleting
+              ? "API key deleted."
+              : connection
+                ? "API key updated."
+                : "MSG52 — API key added and validated successfully."
+          );
+          onClose();
+        },
+      }
+    );
+  };
   return (
     <Dialog
       open
@@ -127,7 +125,7 @@ export function ConnectionDialog({
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            if (!busy) mutation.mutate();
+            if (!busy) handleSubmit();
           }}
           className="space-y-4"
         >

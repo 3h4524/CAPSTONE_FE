@@ -8,6 +8,7 @@ import { PageLoading } from "@/components/commons/layout/page-loading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { showToast } from "@/helpers/toast";
 import { useUsageOverview } from "@/hooks/queries/use-usage-overview";
 
 const ranges = [
@@ -39,7 +40,7 @@ export function UsagePage() {
       anchor.click();
       URL.revokeObjectURL(url);
     } catch {
-      window.alert("We couldn't export your usage details. Please try again.");
+      showToast("error", "We couldn't export your usage details. Please try again.");
     }
   };
   if (isLoading) return <PageLoading label="Loading usage" />;

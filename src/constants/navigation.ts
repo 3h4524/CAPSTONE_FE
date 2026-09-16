@@ -16,7 +16,7 @@ export const NAV_SECTIONS: AppNavSection[] = [
     items: [
       { label: "Support", href: "/support", icon: LifeBuoy },
       { label: "Settings", href: "/settings", icon: Settings, disabled: true },
-      { label: "Billing", href: "/billing", icon: CreditCard, disabled: true },
+      { label: "Billing", href: "/subscription", icon: CreditCard },
     ],
   },
 ];

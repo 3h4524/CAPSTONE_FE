@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { CurrentSubscription } from "@/types/subscription";
 
@@ -10,9 +11,15 @@ const formatDate = (isoDate: string) =>
 
 type CurrentPlanCardProps = {
   subscription: CurrentSubscription | null;
+  onCancelScheduledDowngrade: () => void;
+  isCancellingScheduledDowngrade: boolean;
 };
 
-export const CurrentPlanCard = ({ subscription }: CurrentPlanCardProps) => {
+export const CurrentPlanCard = ({
+  subscription,
+  onCancelScheduledDowngrade,
+  isCancellingScheduledDowngrade,
+}: CurrentPlanCardProps) => {
   return (
     <Card>
       <CardContent className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -33,6 +40,23 @@ export const CurrentPlanCard = ({ subscription }: CurrentPlanCardProps) => {
               ? subscription.shortDescription
               : "You currently do not have an active subscription. Choose a plan below to unlock credits and features."}
           </p>
+          {subscription?.scheduledPlanName && subscription.scheduledPlanEffectiveDate && (
+            <div className="border-warning bg-warning/10 flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-sm">
+              <span>
+                Downgrading to <strong>{subscription.scheduledPlanName}</strong> on{" "}
+                {formatDate(subscription.scheduledPlanEffectiveDate)}.
+              </span>
+              <Button
+                variant="link"
+                size="sm"
+                className="h-auto p-0"
+                onClick={onCancelScheduledDowngrade}
+                disabled={isCancellingScheduledDowngrade}
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
         </div>
         <div className="text-right">
           <p className="text-2xl font-bold">

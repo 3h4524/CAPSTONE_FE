@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, Download } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useDownloadInvoice } from "@/hooks/mutations/use-download-invoice";
 import type { RecentInvoice } from "@/types/subscription";
 import { cn } from "@/utils/cn";
 
@@ -29,6 +32,8 @@ type RecentInvoicesTableProps = {
 };
 
 export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
+  const { mutate: downloadInvoice, isPending, variables } = useDownloadInvoice();
+
   return (
     <section className="space-y-4">
       <Card>
@@ -55,27 +60,47 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
                   <TableHead className="bg-muted/60">Date</TableHead>
                   <TableHead className="bg-muted/60">Plan</TableHead>
                   <TableHead className="bg-muted/60">Amount</TableHead>
-                  <TableHead className="bg-muted/60 last:rounded-r-md">Status</TableHead>
+                  <TableHead className="bg-muted/60">Status</TableHead>
+                  <TableHead className="bg-muted/60 last:rounded-r-md" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoices.map((invoice) => (
-                  <TableRow key={invoice.invoiceId}>
-                    <TableCell className="text-primary font-medium">{invoice.invoiceNumber}</TableCell>
-                    <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
-                    <TableCell>{invoice.planName}</TableCell>
-                    <TableCell>{formatCurrency(invoice.totalAmount)}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={STATUS_BADGE_VARIANT[invoice.status] ?? "secondary"}
-                        className={cn(STATUS_BADGE_CLASS[invoice.status])}
-                      >
-                        {invoice.status === "paid" && <Check className="size-3" />}
-                        {invoice.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {invoices.map((invoice) => {
+                  const isDownloadingThisRow = isPending && variables?.invoiceId === invoice.invoiceId;
+                  return (
+                    <TableRow key={invoice.invoiceId}>
+                      <TableCell className="text-primary font-medium">{invoice.invoiceNumber}</TableCell>
+                      <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
+                      <TableCell>{invoice.planName}</TableCell>
+                      <TableCell>{formatCurrency(invoice.totalAmount)}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={STATUS_BADGE_VARIANT[invoice.status] ?? "secondary"}
+                          className={cn(STATUS_BADGE_CLASS[invoice.status])}
+                        >
+                          {invoice.status === "paid" && <Check className="size-3" />}
+                          {invoice.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={isDownloadingThisRow}
+                          onClick={() =>
+                            downloadInvoice({
+                              invoiceId: invoice.invoiceId,
+                              invoiceNumber: invoice.invoiceNumber,
+                            })
+                          }
+                          aria-label={`Download invoice ${invoice.invoiceNumber}`}
+                        >
+                          {isDownloadingThisRow ? <Spinner className="size-4" /> : <Download className="size-4" />}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

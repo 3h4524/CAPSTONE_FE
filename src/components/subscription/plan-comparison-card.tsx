@@ -10,28 +10,55 @@ const formatCurrency = (amount: number) =>
 type PlanComparisonCardProps = {
   plan: AvailablePlan;
   hasActivePaidPlan: boolean;
+  // Null when there's no active paid plan, or that plan's own card (currentPlanPrice is only
+  // used to decide Upgrade vs Downgrade for every *other* card).
+  currentPlanPrice: number | null;
   onBuyClick: (plan: AvailablePlan) => void;
-  onUnavailableClick: () => void;
+  onUpgradeClick: (plan: AvailablePlan) => void;
+  onDowngradeClick: (plan: AvailablePlan) => void;
 };
 
 export const PlanComparisonCard = ({
   plan,
   hasActivePaidPlan,
+  currentPlanPrice,
   onBuyClick,
-  onUnavailableClick,
+  onUpgradeClick,
+  onDowngradeClick,
 }: PlanComparisonCardProps) => {
-  const ctaLabel = plan.isCurrentPlan ? "Current plan" : hasActivePaidPlan ? "Upgrade" : `Buy ${plan.name}`;
+  // BR107/BR113: tier level is monthly-price ordering, matching the backend's own rule.
+  const isHigherTier = currentPlanPrice !== null && plan.monthlyPriceUsd > currentPlanPrice;
+  const isLowerTier = currentPlanPrice !== null && plan.monthlyPriceUsd < currentPlanPrice;
+  // Same price as the current plan but a different plan — neither Upgrade nor Downgrade applies,
+  // and Buy is rejected server-side while a paid plan is active. Shouldn't happen with real
+  // pricing, but disable rather than guess.
+  const isUnavailable = hasActivePaidPlan && !plan.isCurrentPlan && !isHigherTier && !isLowerTier;
+
+  const ctaLabel = plan.isCurrentPlan
+    ? "Current plan"
+    : !hasActivePaidPlan
+      ? `Buy ${plan.name}`
+      : isHigherTier
+        ? "Upgrade"
+        : isLowerTier
+          ? "Downgrade"
+          : "Unavailable";
 
   const handleClick = () => {
-    if (plan.isCurrentPlan) {
+    if (plan.isCurrentPlan || isUnavailable) {
       return;
     }
-    if (hasActivePaidPlan) {
-      // Upgrade/Downgrade are out of this scope; MSG57 is shown instead of opening checkout.
-      onUnavailableClick();
+    if (!hasActivePaidPlan) {
+      onBuyClick(plan);
       return;
     }
-    onBuyClick(plan);
+    if (isHigherTier) {
+      onUpgradeClick(plan);
+      return;
+    }
+    if (isLowerTier) {
+      onDowngradeClick(plan);
+    }
   };
 
   return (
@@ -64,7 +91,7 @@ export const PlanComparisonCard = ({
         <Button
           className="w-full"
           variant={plan.isCurrentPlan ? "outline" : "default"}
-          disabled={plan.isCurrentPlan}
+          disabled={plan.isCurrentPlan || isUnavailable}
           onClick={handleClick}
         >
           {ctaLabel}

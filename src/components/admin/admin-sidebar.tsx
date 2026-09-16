@@ -3,6 +3,8 @@
 import {
   BarChart3,
   BriefcaseBusiness,
+  ChevronLeft,
+  ChevronRight,
   CreditCard,
   Headphones,
   LayoutDashboard,
@@ -18,6 +20,8 @@ type AdminSidebarProps = {
   onLogout: () => void;
   isMobileOpen?: boolean;
   onClose?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 };
 
 const primaryNavigation = [
@@ -38,6 +42,8 @@ const AdminSidebar = ({
   onLogout,
   isMobileOpen = false,
   onClose,
+  isCollapsed = false,
+  onToggleCollapse,
 }: AdminSidebarProps) => (
   <>
     {isMobileOpen && (
@@ -50,29 +56,39 @@ const AdminSidebar = ({
     )}
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-56 shrink-0 flex-col border-r border-slate-200 bg-white transition-transform lg:static lg:z-auto lg:flex",
+        "fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:overflow-y-auto",
+        isCollapsed ? "w-20" : "w-56",
         isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}
     >
-      <div className="flex h-[72px] items-center gap-2 border-b border-slate-100 px-6">
-        <div className="flex size-7 items-center justify-center rounded-md bg-slate-950 text-[11px] font-bold text-white">
-          A
-        </div>
-        <span className="font-display text-sm font-bold tracking-tight text-slate-900">APCS</span>
-        <span className="ml-auto rounded bg-slate-100 px-1.5 py-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">
-          Admin
-        </span>
+      <div
+        className={cn(
+          "relative flex h-[72px] items-center border-b border-slate-100 px-3.5",
+          isCollapsed ? "justify-center" : "justify-between"
+        )}
+      >
+        {!isCollapsed && <div className="text-base font-bold tracking-tight text-slate-900">APCS</div>}
+        <button
+          type="button"
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={cn(
+            "flex h-5 w-5 items-center justify-center rounded-[4px] border border-slate-300 bg-slate-50 text-slate-500 transition hover:bg-slate-100"
+          )}
+          onClick={onToggleCollapse ?? onClose}
+        >
+          {isCollapsed ? <ChevronRight className="size-3" /> : <ChevronLeft className="size-3" />}
+        </button>
       </div>
 
       <nav className="flex-1 space-y-7 px-3 py-6">
-        <SidebarGroup label="Overview">
-          <SidebarItems items={primaryNavigation} activeItem={activeItem} />
+        <SidebarGroup label="Overview" isCollapsed={isCollapsed}>
+          <SidebarItems items={primaryNavigation} activeItem={activeItem} isCollapsed={isCollapsed} />
         </SidebarGroup>
-        <SidebarGroup label="Finance & Analytics">
-          <SidebarItems items={secondaryNavigation.slice(0, 1)} activeItem={activeItem} />
+        <SidebarGroup label="Finance & Analytics" isCollapsed={isCollapsed}>
+          <SidebarItems items={secondaryNavigation.slice(0, 1)} activeItem={activeItem} isCollapsed={isCollapsed} />
         </SidebarGroup>
-        <SidebarGroup label="System">
-          <SidebarItems items={secondaryNavigation.slice(1)} activeItem={activeItem} />
+        <SidebarGroup label="System" isCollapsed={isCollapsed}>
+          <SidebarItems items={secondaryNavigation.slice(1)} activeItem={activeItem} isCollapsed={isCollapsed} />
         </SidebarGroup>
       </nav>
 
@@ -80,27 +96,37 @@ const AdminSidebar = ({
         <button
           type="button"
           onClick={onLogout}
-          className="group flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-slate-50"
+          title={isCollapsed ? "Logout" : undefined}
+          className={cn(
+            "group flex w-full items-center rounded-lg py-2 transition-colors hover:bg-slate-50",
+            isCollapsed ? "justify-center px-0" : "gap-3 px-2 text-left"
+          )}
         >
-          <div className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-700">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-700">
             {getInitials(fullName)}
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-slate-800">{fullName}</p>
-            <p className="text-[10px] text-slate-400">Super Admin</p>
-          </div>
-          <LogOut className="size-3.5 text-slate-300 transition-colors group-hover:text-slate-700" />
+          {!isCollapsed && (
+            <>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-slate-800">{fullName}</p>
+                <p className="text-[10px] text-slate-400">Super Admin</p>
+              </div>
+              <LogOut className="size-3.5 shrink-0 text-slate-300 transition-colors group-hover:text-slate-700" />
+            </>
+          )}
         </button>
       </div>
     </aside>
   </>
 );
 
-const SidebarGroup = ({ label, children }: { label: string; children: React.ReactNode }) => (
+const SidebarGroup = ({ label, isCollapsed, children }: { label: string; isCollapsed?: boolean; children: React.ReactNode }) => (
   <div>
-    <p className="px-3 pb-2 text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">
-      {label}
-    </p>
+    {!isCollapsed && (
+      <p className="px-3 pb-2 text-[9px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+        {label}
+      </p>
+    )}
     {children}
   </div>
 );
@@ -108,9 +134,11 @@ const SidebarGroup = ({ label, children }: { label: string; children: React.Reac
 const SidebarItems = ({
   items,
   activeItem,
+  isCollapsed,
 }: {
   items: Array<{ label: string; icon: typeof Users; count?: string; tone?: string }>;
   activeItem: string;
+  isCollapsed?: boolean;
 }) => (
   <div className="space-y-0.5">
     {items.map(({ label, icon: Icon, count, tone }) => {
@@ -119,22 +147,24 @@ const SidebarItems = ({
         <button
           type="button"
           key={label}
+          title={isCollapsed ? label : undefined}
           className={cn(
-            "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-xs transition-colors",
+            "flex w-full items-center rounded-md py-2.5 text-left text-xs transition-colors",
+            isCollapsed ? "justify-center px-0" : "gap-3 px-3",
             active
               ? "bg-slate-100 font-semibold text-slate-900"
               : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
           )}
         >
           <Icon
-            className={cn("size-3.5", active ? "text-slate-700" : "text-slate-400")}
+            className={cn("size-3.5 shrink-0", active ? "text-slate-700" : "text-slate-400")}
             strokeWidth={1.8}
           />
-          <span className="flex-1">{label}</span>
-          {count && (
+          {!isCollapsed && <span className="flex-1 truncate">{label}</span>}
+          {!isCollapsed && count && (
             <span
               className={cn(
-                "rounded-full px-1.5 py-0.5 text-[9px] font-bold",
+                "shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold",
                 tone === "amber" && "bg-amber-50 text-amber-600",
                 tone === "rose" && "bg-rose-50 text-rose-500",
                 !tone && "bg-slate-100 text-slate-400"

@@ -19,7 +19,7 @@ const AdminMetricCard = ({
 }: AdminMetricCardProps) => (
   <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-[0_2px_8px_rgba(15,23,42,0.02)] sm:p-5">
     <div className="flex items-start justify-between gap-3">
-      <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-slate-400">{label}</p>
+      <p className="text-[9px] font-bold tracking-[0.13em] text-slate-400 uppercase">{label}</p>
       <span className="flex size-5 items-center justify-center rounded bg-slate-50 text-slate-400">
         <Icon className="size-3" />
       </span>

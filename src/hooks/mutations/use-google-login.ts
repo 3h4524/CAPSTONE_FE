@@ -3,16 +3,22 @@
 import { useRouter } from "next/navigation";
 
 import { googleLoginRequest } from "@/api/auth";
-import { tokenStorage } from "@/api/client";
+import { getSafeReturnUrl } from "@/helpers/auth-return-url";
 import { showToast } from "@/helpers/toast";
 import { useMutation } from "@/hooks/mutations/use-mutation";
+import { useAppQueryClient } from "@/hooks/use-query-client";
+import { useAuthStore } from "@/stores/auth";
+import { useUserStore } from "@/stores/user";
+import type { LoginResult } from "@/types/auth";
 
 type GoogleTwoFactorHandler = (tempToken: string, expiresAtUtc: string) => void;
 
 export const useGoogleLogin = (onTwoFactorRequired?: GoogleTwoFactorHandler) => {
   const router = useRouter();
+  const queryClient = useAppQueryClient();
+  const setAuthUser = useAuthStore((state) => state.setUser);
 
-  return useMutation({
+  return useMutation<LoginResult, string>({
     mutationFn: googleLoginRequest,
     onSuccess: (result) => {
       if (result.requiresTwoFactor && result.tempToken && result.twoFactorExpiresAtUtc) {
@@ -24,9 +30,13 @@ export const useGoogleLogin = (onTwoFactorRequired?: GoogleTwoFactorHandler) => 
         return;
       }
 
-      tokenStorage.setAccessToken(result.accessToken);
+      setAuthUser(result.user);
       showToast("success", `Welcome, ${result.user.fullName}`);
-      router.push("/");
+      useUserStore
+        .getState()
+        .setUser({ email: result.user.email, fullName: result.user.fullName, avatarUrl: null });
+      queryClient.clear();
+      router.push(getSafeReturnUrl());
     },
   });
 };

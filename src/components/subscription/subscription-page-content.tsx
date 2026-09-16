@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Spinner } from "@/components/ui/spinner";
+import { PageLoading } from "@/components/commons/layout/page-loading";
 import { useSubscriptionOverview } from "@/hooks/queries/use-subscription-overview";
 import type { AvailablePlan } from "@/types/subscription";
 
@@ -17,11 +17,7 @@ export const SubscriptionPageContent = () => {
   const [checkoutPlan, setCheckoutPlan] = useState<AvailablePlan | null>(null);
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center py-16">
-        <Spinner className="size-8" />
-      </div>
-    );
+    return <PageLoading label="Loading subscription" />;
   }
 
   if (isError || !data) {

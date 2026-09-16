@@ -1,11 +1,7 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoading } from "@/components/commons/layout/page-loading";
 
 const SupportLoading = () => {
-  return (
-    <main className="mx-auto w-full max-w-6xl">
-      <Skeleton className="h-[560px] rounded-2xl" />
-    </main>
-  );
+  return <PageLoading label="Loading support" />;
 };
 
 export default SupportLoading;

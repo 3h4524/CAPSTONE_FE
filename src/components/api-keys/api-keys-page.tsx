@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { apiKeyKeys, validateApiKey } from "@/api/api-keys";
 import { apiKeyError, ConnectionDialog } from "@/components/api-keys/connection-dialog";
 import { relativeTime } from "@/components/api-keys/relative-time";
+import { PageLoading } from "@/components/commons/layout/page-loading";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,7 +28,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useApiKeys } from "@/hooks/queries/use-api-keys";
 import { useCurrentUser } from "@/hooks/queries/use-current-user";
 import type { ApiKeyConnection } from "@/types/api-keys";
@@ -261,11 +261,7 @@ export function ApiKeysPage() {
           </Button>
         </div>
       ) : loading ? (
-        <div role="status" aria-label="Loading API keys" className="space-y-4">
-          <Skeleton className="h-20 rounded-xl" />
-          <Skeleton className="h-80 rounded-xl" />
-          <span className="sr-only">Loading API keys…</span>
-        </div>
+        <PageLoading label="Loading API keys" />
       ) : data ? (
         <>
           <section

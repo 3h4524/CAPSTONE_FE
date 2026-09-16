@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Spinner } from "@/components/ui/spinner";
+import { PageLoading } from "@/components/commons/layout/page-loading";
 import { showToast } from "@/helpers/toast";
 import { useCancelScheduledDowngrade } from "@/hooks/mutations/use-cancel-scheduled-downgrade";
 import { useDowngrade } from "@/hooks/mutations/use-downgrade";
@@ -68,11 +68,7 @@ export const SubscriptionPageContent = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center py-16">
-        <Spinner className="size-8" />
-      </div>
-    );
+    return <PageLoading label="Loading subscription" />;
   }
 
   if (isError || !data) {

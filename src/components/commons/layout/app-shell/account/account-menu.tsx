@@ -14,9 +14,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { useLogout } from "@/hooks/mutations/use-logout";
-import { useUserStore } from "@/stores/user";
+import { useAuthStore } from "@/stores/auth";
 import { cn } from "@/utils/cn";
 
 type AccountMenuProps = {
@@ -26,7 +26,7 @@ type AccountMenuProps = {
 
 export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
   const router = useRouter();
-  const user = useUserStore((state) => state.user);
+  const user = useAuthStore((state) => state.user);
   const { mutate: logout, isPending } = useLogout();
 
   const handleLogout = () => logout(undefined, { onSettled: () => router.replace("/login") });
@@ -55,7 +55,7 @@ export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
                   </span>
                 </>
               ) : (
-                <Skeleton className="h-4 w-24" />
+                <Spinner className="size-4" aria-label="Loading account" />
               )}
             </span>
           )}

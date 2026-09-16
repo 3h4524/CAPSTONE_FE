@@ -14,11 +14,12 @@ import {
   Search,
 } from "lucide-react";
 
+import { PageLoading } from "@/components/commons/layout/page-loading";
+import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { CreateTicketDialog } from "@/components/support/create-ticket-dialog";
 import { TicketPriorityBadge, TicketStatusBadge } from "@/components/support/ticket-badges";
 import { TicketDetailDialog } from "@/components/support/ticket-detail-dialog";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CATEGORY_LABELS } from "@/constants/support";
 import { useCurrentUser } from "@/hooks/queries/use-current-user";
 import { useSupportTickets } from "@/hooks/queries/use-support-tickets";
@@ -81,7 +82,7 @@ export function SupportCenter() {
   };
 
   if (authQuery.isPending) {
-    return <SupportCenterSkeleton />;
+    return <PageLoading label="Loading support" />;
   }
 
   if (authQuery.isError) {
@@ -183,7 +184,7 @@ export function SupportCenter() {
           </div>
 
           {ticketsQuery.isPending ? (
-            <TicketListSkeleton />
+            <SectionLoading label="Loading tickets" />
           ) : ticketsQuery.isError ? (
             <div className="flex min-h-72 flex-col items-center justify-center border-t border-slate-200 p-8 text-center">
               <LifeBuoy className="size-8 text-slate-400" aria-hidden="true" />
@@ -309,33 +310,6 @@ function TicketCards({ tickets, onOpen }: { tickets: SupportTicketSummary[]; onO
         </li>
       ))}
     </ul>
-  );
-}
-
-function TicketListSkeleton() {
-  return (
-    <div className="border-t border-slate-200">
-      <div className="hidden h-10 grid-cols-[2fr_1fr_0.75fr_0.9fr_0.7fr] items-center gap-4 bg-[#f7f9fd] px-7 md:grid">
-        {["Ticket", "Category", "Priority", "Status", "Updated"].map((label) => <span key={label} className="text-[11px] font-semibold text-slate-500">{label}</span>)}
-      </div>
-      {[1, 2, 3, 4].map((item) => (
-        <div key={item} className="flex min-h-16 items-center gap-5 border-t border-slate-200 px-5 py-3 first:border-t-0 sm:px-7">
-          <div className="flex-1 space-y-2"><Skeleton className="h-4 w-2/3 max-w-80" /><Skeleton className="h-3 w-24" /></div>
-          <Skeleton className="hidden h-6 w-20 md:block" />
-          <Skeleton className="h-6 w-16" />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SupportCenterSkeleton() {
-  return (
-    <main className="mx-auto w-full max-w-[1280px] space-y-8 px-2 py-6 sm:px-4">
-      <div className="space-y-3"><Skeleton className="h-3 w-20" /><Skeleton className="h-11 w-52" /><Skeleton className="h-5 w-[min(100%,520px)]" /></div>
-      <Skeleton className="h-40 w-full rounded-[22px]" />
-      <Skeleton className="h-[420px] w-full rounded-[22px]" />
-    </main>
   );
 }
 

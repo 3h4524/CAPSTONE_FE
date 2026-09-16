@@ -3,16 +3,16 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { Spinner } from "@/components/ui/spinner";
+import { PageLoading } from "@/components/commons/layout/page-loading";
 import { useAuthStore } from "@/stores/auth";
 
 const SELLER_ROLE = "Seller";
 
-type SellerLayoutProps = {
+type SubscriptionLayoutProps = {
   children: React.ReactNode;
 };
 
-const SellerLayout = ({ children }: SellerLayoutProps) => {
+const SubscriptionLayout = ({ children }: SubscriptionLayoutProps) => {
   const router = useRouter();
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const user = useAuthStore((state) => state.user);
@@ -27,22 +27,14 @@ const SellerLayout = ({ children }: SellerLayoutProps) => {
   }, [isHydrated, isSeller, router]);
 
   if (!isHydrated) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Spinner className="size-8" />
-      </div>
-    );
+    return <PageLoading label="Loading subscription" />;
   }
 
   if (!isSeller) {
     return null;
   }
 
-  // No sidebar here — feat/private-app-shell owns the real app shell and isn't merged into
-  // this branch yet (it still predates the cookie-auth migration, which would reopen the same
-  // tokenStorage-vs-cookie conflict just resolved). This layout only keeps the Seller-role gate
-  // until the subscription page moves under that shell.
   return <>{children}</>;
 };
 
-export default SellerLayout;
+export default SubscriptionLayout;

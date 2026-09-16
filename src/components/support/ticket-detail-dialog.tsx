@@ -4,12 +4,12 @@ import { useState } from "react";
 import { Download, MessageSquareText, Paperclip, Send, Star, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
+import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { TicketPriorityBadge, TicketStatusBadge } from "@/components/support/ticket-badges";
 import { TicketDropzone } from "@/components/support/ticket-dropzone";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { CATEGORY_LABELS } from "@/constants/support";
@@ -35,7 +35,7 @@ export function TicketDetailDialog({ ticketId, onClose }: TicketDetailDialogProp
         className="flex max-h-[calc(100dvh-16px)] w-[calc(100%-16px)] max-w-[600px] flex-col gap-0 overflow-hidden rounded-2xl border-slate-200 bg-white p-0 shadow-2xl duration-200 motion-reduce:animate-none motion-reduce:transition-none"
       >
         {detailQuery.isPending ? (
-          <TicketDetailSkeleton />
+          <SectionLoading label="Loading ticket details" />
         ) : detailQuery.isError || !detailQuery.data ? (
           <div className="flex min-h-64 flex-col items-center justify-center gap-4 p-8 text-center">
             <MessageSquareText className="size-8 text-slate-400" aria-hidden="true" />
@@ -251,19 +251,6 @@ function RatingPanel({ rating, pending, onRate }: { rating: number | null; pendi
         ))}
       </div>
       {rating ? <p className="mt-1 text-sm font-medium text-emerald-700">You rated this ticket {rating}/5.</p> : null}
-    </div>
-  );
-}
-
-function TicketDetailSkeleton() {
-  return (
-    <div className="space-y-5 p-6" aria-label="Loading ticket details">
-      <DialogTitle className="sr-only">Loading ticket details</DialogTitle>
-      <Skeleton className="h-4 w-48" />
-      <Skeleton className="h-7 w-4/5" />
-      <Skeleton className="h-24 w-full" />
-      <Skeleton className="h-24 w-full" />
-      <Skeleton className="h-28 w-full" />
     </div>
   );
 }

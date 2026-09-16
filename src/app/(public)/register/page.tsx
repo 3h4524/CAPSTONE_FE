@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { AuthSplitLayout } from "@/components/auth/auth-split-layout";
 import { FormRegister } from "@/components/auth/form-register";
+import { SignedInRedirect } from "@/components/auth/signed-in-redirect";
 import { SITE_CONFIG } from "@/constants/site";
 import { getPageMetadata } from "@/data/metadata";
 
@@ -21,6 +22,7 @@ const RegisterPage = () => {
       imageAlt="Designer reviewing AI-generated product designs next to a laptop and printed t-shirts"
     >
       <FormRegister />
+      <SignedInRedirect />
     </AuthSplitLayout>
   );
 };

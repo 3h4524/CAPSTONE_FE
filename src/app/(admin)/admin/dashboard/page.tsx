@@ -8,12 +8,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useExportAdminDashboardReport } from "@/hooks/mutations/use-export-admin-dashboard-report";
 import { useLogout } from "@/hooks/mutations/use-logout";
 import { useAdminDashboardMetrics } from "@/hooks/queries/use-admin-dashboard-metrics";
-import { useCurrentUser } from "@/hooks/queries/use-current-user";
+import { useAuthStore } from "@/stores/auth";
 
 const AdminDashboardPage = () => {
   const router = useRouter();
   const [timeRange, setTimeRange] = useState("Month");
-  const { data: user, isLoading: isUserLoading, isError: isUserError } = useCurrentUser();
+  const user = useAuthStore((state) => state.user);
+  const isHydrated = useAuthStore((state) => state.isHydrated);
   const { data: metrics, isLoading: isMetricsLoading } = useAdminDashboardMetrics(
     timeRange.toLowerCase()
   );
@@ -23,11 +24,11 @@ const AdminDashboardPage = () => {
   const isAdmin = Boolean(user?.roles.some((role) => role.toLowerCase() === "admin"));
 
   useEffect(() => {
-    if (isUserLoading) {
+    if (!isHydrated) {
       return;
     }
 
-    if (isUserError || !user) {
+    if (!user) {
       router.replace("/login");
       return;
     }
@@ -35,13 +36,13 @@ const AdminDashboardPage = () => {
     if (!isAdmin) {
       router.replace("/");
     }
-  }, [isUserLoading, isUserError, user, isAdmin, router]);
+  }, [isHydrated, user, isAdmin, router]);
 
   const handleLogout = () => logout(undefined, { onSettled: () => router.replace("/login") });
 
   const handleExport = () => exportReport(timeRange.toLowerCase());
 
-  if (isUserLoading || isMetricsLoading) {
+  if (!isHydrated || isMetricsLoading) {
     return (
       <main className="bg-muted/30 min-h-screen px-6 py-10">
         <div className="mx-auto max-w-5xl space-y-8">

@@ -65,14 +65,24 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
     setStep("done");
   }, [status, queryClient]);
 
+  // Refreshes Recent Invoices / Current Plan so the cancelled invoice doesn't keep showing
+  // "pending" until the next manual page reload.
+  const cancelOutstandingCheckout = () => {
+    if (result) {
+      cancelCheckoutRequest(result.invoiceId)
+        .then(() => queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_OVERVIEW_QUERY_KEY }))
+        .catch(() => {
+          // Best-effort: the checkout simply stays outstanding until it expires on PayOS's side.
+        });
+    }
+  };
+
   const handleClose = (open: boolean) => {
     if (open) {
       return;
     }
-    if (step === "paying" && result) {
-      cancelCheckoutRequest(result.invoiceId).catch(() => {
-        // Best-effort: the checkout simply stays outstanding until it expires on PayOS's side.
-      });
+    if (step === "paying") {
+      cancelOutstandingCheckout();
     }
     onClose();
     resetState();
@@ -97,11 +107,7 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
   };
 
   const handleCancelPayment = () => {
-    if (result) {
-      cancelCheckoutRequest(result.invoiceId).catch(() => {
-        // Best-effort cleanup.
-      });
-    }
+    cancelOutstandingCheckout();
     showToast("info", "Payment cancelled.");
     onClose();
     resetState();

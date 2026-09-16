@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
+import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { getErrorMessage } from "@/helpers/error-message";
@@ -73,11 +74,7 @@ export const CheckoutStepPayment = ({
   }
 
   if (isCreatingCheckout || !pendingCheckout) {
-    return (
-      <div className="flex justify-center py-12">
-        <Spinner className="size-6" />
-      </div>
-    );
+    return <SectionLoading label="Preparing payment" className="py-12" />;
   }
 
   if (status && status.status === "failed") {

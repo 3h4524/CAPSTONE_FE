@@ -17,7 +17,7 @@ const RegisterPage = () => {
     <AuthSplitLayout
       title="Start your POD empire."
       description="Join us to start your creative journey."
-      imageSrc="/images/landing/auth.jpg"
+      imageSrc="/images/landing/auth.webp"
       imageAlt="Designer reviewing AI-generated product designs next to a laptop and printed t-shirts"
     >
       <FormRegister />

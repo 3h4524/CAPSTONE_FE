@@ -18,7 +18,7 @@ const ResetPasswordPage = () => {
     <AuthSplitLayout
       title="Reset Password"
       description="Please enter your new password below."
-      imageSrc="/images/landing/auth.jpg"
+      imageSrc="/images/landing/auth.webp"
       imageAlt="Designer reviewing AI-generated product designs next to a laptop and printed t-shirts"
       imageCaption={{
         title: "Your creative studio, anywhere.",

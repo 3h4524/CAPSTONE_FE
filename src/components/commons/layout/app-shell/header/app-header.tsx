@@ -1,7 +1,6 @@
 import { GlobalSearchTrigger } from "@/components/commons/layout/app-shell/header/global-search-trigger";
 import { HeaderTitle } from "@/components/commons/layout/app-shell/header/header-title";
 import { MobileMenuButton } from "@/components/commons/layout/app-shell/header/mobile-menu-button";
-import { NewBatchButton } from "@/components/commons/layout/app-shell/header/new-batch-button";
 import { NotificationBell } from "@/components/commons/layout/app-shell/notifications/notification-bell";
 
 type AppHeaderProps = {
@@ -18,7 +17,6 @@ export const AppHeader = ({ onMobileMenu }: AppHeaderProps) => {
           <GlobalSearchTrigger />
         </div>
         <NotificationBell />
-        <NewBatchButton />
       </div>
     </header>
   );

@@ -33,7 +33,7 @@ export const AuthSplitLayout = ({
           {children}
         </div>
         <div className="relative hidden lg:block">
-          <Image src={imageSrc} alt={imageAlt} fill className="object-cover" sizes="50vw" />
+          <Image src={imageSrc} alt={imageAlt} fill className="object-contain" sizes="50vw" />
           {imageCaption && (
             <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 via-black/20 to-transparent p-8 pt-16">
               <p className="font-display text-lg font-semibold text-white">{imageCaption.title}</p>

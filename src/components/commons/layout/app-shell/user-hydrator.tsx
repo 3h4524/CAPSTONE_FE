@@ -5,26 +5,26 @@ import { useRouter } from "next/navigation";
 
 import { getResponseStatus } from "@/helpers/response-status";
 import { useProfile } from "@/hooks/queries/use-profile";
-import { useUserStore } from "@/stores/user";
+import { useAuthStore } from "@/stores/auth";
 
 export const UserHydrator = () => {
   const router = useRouter();
   const { data, isError, error } = useProfile();
-  const setUser = useUserStore((state) => state.setUser);
-  const clearUser = useUserStore((state) => state.clearUser);
+  const setAvatarUrl = useAuthStore((state) => state.setAvatarUrl);
+  const clearSession = useAuthStore((state) => state.clearSession);
 
   useEffect(() => {
     if (data) {
-      setUser({ email: data.email, fullName: data.fullName, avatarUrl: data.avatarUrl });
+      setAvatarUrl(data.avatarUrl);
     }
-  }, [data, setUser]);
+  }, [data, setAvatarUrl]);
 
   useEffect(() => {
     if (isError && getResponseStatus(error) === 401) {
-      clearUser();
+      clearSession();
       router.replace("/login");
     }
-  }, [isError, error, clearUser, router]);
+  }, [isError, error, clearSession, router]);
 
   return null;
 };

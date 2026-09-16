@@ -39,9 +39,8 @@ const SellerLayout = ({ children }: SellerLayoutProps) => {
   }
 
   // No sidebar here — feat/private-app-shell owns the real app shell and isn't merged into
-  // this branch yet (it still predates the cookie-auth migration, which would reopen the same
-  // tokenStorage-vs-cookie conflict just resolved). This layout only keeps the Seller-role gate
-  // until the subscription page moves under that shell.
+  // this branch yet. This layout only keeps the Seller-role gate until the subscription page
+  // moves under that shell.
   return <>{children}</>;
 };
 

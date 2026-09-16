@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { useLogout } from "@/hooks/mutations/use-logout";
 import { useAuthStore } from "@/stores/auth";
 import { cn } from "@/utils/cn";
@@ -55,7 +55,7 @@ export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
                   </span>
                 </>
               ) : (
-                <Skeleton className="h-4 w-24" />
+                <Spinner className="size-4" aria-label="Loading account" />
               )}
             </span>
           )}

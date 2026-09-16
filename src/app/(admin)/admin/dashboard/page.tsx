@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AdminDashboardShell } from "@/components/admin/admin-dashboard-shell";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoading } from "@/components/commons/layout/page-loading";
 import { useExportAdminDashboardReport } from "@/hooks/mutations/use-export-admin-dashboard-report";
 import { useLogout } from "@/hooks/mutations/use-logout";
 import { useAdminDashboardMetrics } from "@/hooks/queries/use-admin-dashboard-metrics";
@@ -43,22 +43,7 @@ const AdminDashboardPage = () => {
   const handleExport = () => exportReport(timeRange.toLowerCase());
 
   if (!isHydrated || isMetricsLoading) {
-    return (
-      <main className="bg-muted/30 min-h-screen px-6 py-10">
-        <div className="mx-auto max-w-5xl space-y-8">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-9 w-64" />
-            <Skeleton className="h-4 w-80" />
-          </div>
-          <section className="grid gap-4 md:grid-cols-3">
-            <Skeleton className="h-24 rounded-xl" />
-            <Skeleton className="h-24 rounded-xl" />
-            <Skeleton className="h-24 rounded-xl" />
-          </section>
-        </div>
-      </main>
-    );
+    return <PageLoading label="Loading dashboard" />;
   }
 
   if (!user || !isAdmin) {

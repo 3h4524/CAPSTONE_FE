@@ -25,6 +25,7 @@
 | 6 | Tooling, quality gates & testing | [`06-tooling-and-testing.md`](./06-tooling-and-testing.md) |
 | 7 | Git workflow, commit conventions & security | [`07-git-and-security.md`](./07-git-and-security.md) |
 | 8 | Cấm kỵ tổng hợp + post-implementation compliance check | [`08-forbidden-and-compliance.md`](./08-forbidden-and-compliance.md) |
+| 9 | Metadata: 1 loại duy nhất qua `getPageMetadata` | [`09-metadata.md`](./09-metadata.md) |
 
 ---
 
@@ -86,6 +87,7 @@ Folder `schemas/`, `stores/` sẽ được thêm khi có form/state thực tế.
 9. Mọi form dùng **RHF + zod** ngay từ đầu. Nút pending chỉ `disabled`, text BẤT BIẾN.
 10. Component organization: **screen-based** — 1 màn hình = 1 folder; dùng chung → `commons/<sub>/`; folder đông file → chia sub-folder.
 11. Mutation: ưu tiên `mutate()` không async; `onSuccess`/`onError` truyền tại call-site.
-12. **Loading luôn skeleton** (shadcn `Skeleton`) cho list/table/card/detail.
+12. **Loading**: route-level dùng `PageLoading`; loading cục bộ trong trang dùng `SectionLoading` (circle). Spinner chỉ cho action nhỏ (nút pending, icon trong nút).
 13. **Không cần SEO → không SSR** — trang là client component.
 14. **Query/Mutation luôn là custom hook wrapper** — component CẤM gọi `useQuery`/`useMutation` trực tiếp.
+15. **Metadata 1 loại duy nhất**: `export const metadata = getPageMetadata({...})` trong `page.tsx`; title bare, route cần login thêm `robots` noindex.

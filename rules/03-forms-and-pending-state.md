@@ -61,17 +61,12 @@ const onSubmit = (values: ProductFormValues) => {
 ## 6. Loading list/data
 
 - Dùng loading state của query hook.
-- **Loading UI mặc định = skeleton** — dùng shadcn `Skeleton` cho list/table/card/detail/page.
+- Route-level (file `loading.tsx`, gate chờ session) dùng `PageLoading`.
+- Loading cục bộ trong trang (list/table/card/detail, dialog, dropdown) dùng `SectionLoading`
+  (`components/commons/loading/section-loading.tsx`, circle).
 - Spinner chỉ dùng cho action nhỏ gọn (nút, icon action).
 
 ```tsx
-// ✅ Đúng — skeleton theo layout data
-{isPending ? (
-  <div className="space-y-2">
-    <Skeleton className="h-4 w-2/3" />
-    <Skeleton className="h-4 w-1/2" />
-  </div>
-) : (
-  <ProductList items={data} />
-)}
+// ✅ Đúng — loading cục bộ bằng SectionLoading
+{isPending ? <SectionLoading label="Loading products" /> : <ProductList items={data} />}
 ```

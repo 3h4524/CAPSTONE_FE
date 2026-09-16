@@ -2,7 +2,7 @@
 
 ## 1. shadcn/ui primitives — BẮT BUỘC
 
-- Dự án có shadcn/ui → **mọi UI building block bắt buộc dùng shadcn primitives** (`Button`, `Input`, `Dialog`, `Select`, `Card`, `Table`, `Skeleton`, `Form`...).
+- Dự án có shadcn/ui → **mọi UI building block bắt buộc dùng shadcn primitives** (`Button`, `Input`, `Dialog`, `Select`, `Card`, `Table`, `Form`...).
 - **CẤM** tự viết component UI từ scratch hoặc dùng thư viện khác khi shadcn đã có sẵn.
 - Thiếu component → install qua `npx shadcn@latest add <component>`.
 

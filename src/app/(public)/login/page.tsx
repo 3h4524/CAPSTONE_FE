@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { AuthSplitLayout } from "@/components/auth/auth-split-layout";
 import { FormLogin } from "@/components/auth/form-login";
-import { SignedInRedirect } from "@/components/auth/signed-in-redirect";
+import { GuestGuard } from "@/components/auth/guest-guard";
 import { SITE_CONFIG } from "@/constants/site";
 import { getPageMetadata } from "@/data/metadata";
 
@@ -13,7 +13,13 @@ export const generateMetadata = (): Metadata =>
     pathname: "/login",
   });
 
-const LoginPage = () => {
+type LoginPageProps = {
+  searchParams: Promise<{ returnUrl?: string }>;
+};
+
+const LoginPage = async ({ searchParams }: LoginPageProps) => {
+  const { returnUrl } = await searchParams;
+
   return (
     <AuthSplitLayout
       title="Welcome back."
@@ -22,7 +28,7 @@ const LoginPage = () => {
       imageAlt="Designer reviewing AI-generated product designs next to a laptop and printed t-shirts"
     >
       <FormLogin />
-      <SignedInRedirect />
+      <GuestGuard returnUrl={returnUrl} />
     </AuthSplitLayout>
   );
 };

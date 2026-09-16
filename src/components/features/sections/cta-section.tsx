@@ -17,10 +17,15 @@ export const CtaSection = () => {
             {FEATURES_CTA_CONTENT.description}
           </p>
           <div className="mt-2 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <Button variant="secondary" size="lg" asChild>
-              <Link href={FEATURES_CTA_CONTENT.primaryCta.href}>
+            <Button
+              variant="defaultWithTextWhite"
+              size="lg"
+              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+              asChild
+            >
+              <a href={FEATURES_CTA_CONTENT.primaryCta.href}>
                 {FEATURES_CTA_CONTENT.primaryCta.label}
-              </Link>
+              </a>
             </Button>
             <Button
               variant="outline"

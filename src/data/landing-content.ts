@@ -217,7 +217,7 @@ export const FAQS: Faq[] = [
 export const CTA_CONTENT = {
   title: "Ready to build your Print-on-Demand portfolio?",
   description: "Join creators automating their workflow with professional AI generation.",
-  primaryCta: { label: "Get started for free", href: "#signup" },
+  primaryCta: { label: "Get started for free", href: "/register" },
 } as const;
 
 export const FOOTER_CONTENT = {

@@ -1,70 +1,58 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, ShieldCheck } from "lucide-react";
 
-import { currentUserRequest, logoutRequest } from "@/api/auth";
-import { tokenStorage } from "@/api/client";
 import { Button } from "@/components/ui/button";
-import { showToast } from "@/helpers/toast";
-import type { AuthenticatedUser } from "@/types/auth";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useLogout } from "@/hooks/mutations/use-logout";
+import { useCurrentUser } from "@/hooks/queries/use-current-user";
 
 const AdminDashboardPage = () => {
   const router = useRouter();
-  const [user, setUser] = useState<AuthenticatedUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { data: user, isLoading, isError } = useCurrentUser();
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+
+  const isAdmin = Boolean(user?.roles.some((role) => role.toLowerCase() === "admin"));
 
   useEffect(() => {
-    let isMounted = true;
-
-    currentUserRequest()
-      .then((currentUser) => {
-        if (!isMounted) {
-          return;
-        }
-
-        if (!currentUser.roles.some((role) => role.toLowerCase() === "admin")) {
-          router.replace("/");
-          return;
-        }
-
-        setUser(currentUser);
-      })
-      .catch(() => {
-        tokenStorage.clearTokens();
-        router.replace("/login");
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [router]);
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      await logoutRequest();
-    } finally {
-      tokenStorage.clearTokens();
-      showToast("success", "You have been signed out.");
-      router.replace("/login");
+    if (isLoading) {
+      return;
     }
-  };
+
+    if (isError || !user) {
+      router.replace("/login");
+      return;
+    }
+
+    if (!isAdmin) {
+      router.replace("/");
+    }
+  }, [isLoading, isError, user, isAdmin, router]);
+
+  const handleLogout = () => logout(undefined, { onSettled: () => router.replace("/login") });
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center">Loading dashboard...</main>
+      <main className="bg-muted/30 min-h-screen px-6 py-10">
+        <div className="mx-auto max-w-5xl space-y-8">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-9 w-64" />
+            <Skeleton className="h-4 w-80" />
+          </div>
+          <section className="grid gap-4 md:grid-cols-3">
+            <Skeleton className="h-24 rounded-xl" />
+            <Skeleton className="h-24 rounded-xl" />
+            <Skeleton className="h-24 rounded-xl" />
+          </section>
+        </div>
+      </main>
     );
   }
 
-  if (!user) {
+  if (!user || !isAdmin) {
     return null;
   }
 
@@ -82,7 +70,7 @@ const AdminDashboardPage = () => {
           </div>
           <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut}>
             <LogOut className="size-4" />
-            {isLoggingOut ? "Signing out..." : "Sign out"}
+            Sign out
           </Button>
         </header>
 

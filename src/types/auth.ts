@@ -12,8 +12,6 @@ export type AuthenticatedUser = {
 };
 
 export type LoginResult = {
-  accessToken?: string;
-  expiresAtUtc?: string;
   user?: AuthenticatedUser;
   requiresTwoFactor?: boolean;
   tempToken?: string;

@@ -84,11 +84,6 @@ export const changePasswordRequest = async (payload: ChangePasswordPayload): Pro
   await api.post("/api/auth/change-password", payload);
 };
 
-export const currentUserRequest = async (): Promise<AuthenticatedUser> => {
-  const { data } = await api.get<AuthenticatedUser>("/api/auth/me");
-  return data;
-};
-
 export const logoutRequest = async (): Promise<void> => {
   await api.post("/api/auth/logout");
 };

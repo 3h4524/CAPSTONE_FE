@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUserStore } from "@/stores/user";
+import { useAuthStore } from "@/stores/auth";
 import { cn } from "@/utils/cn";
 import { getInitials } from "@/utils/get-initials";
 
@@ -18,7 +18,7 @@ const SKELETON_SIZES = {
 } as const;
 
 export const UserAvatar = ({ size = "default", className }: UserAvatarProps) => {
-  const user = useUserStore((state) => state.user);
+  const user = useAuthStore((state) => state.user);
 
   if (!user) {
     return <Skeleton className={cn("rounded-full", SKELETON_SIZES[size], className)} />;

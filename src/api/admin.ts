@@ -1,4 +1,4 @@
-import type { AdminDashboardMetricsDto } from "@/types/admin";
+import type { AdminDashboardMetricsDto, AdminUserDto, GetUsersRequest, PagedResult } from "@/types/admin";
 
 import { api } from "./client";
 
@@ -46,4 +46,36 @@ export const exportAdminDashboardReport = async (
   anchor.click();
   window.URL.revokeObjectURL(downloadUrl);
   anchor.remove();
+};
+
+export const getAdminUsers = async (
+  request: GetUsersRequest
+): Promise<PagedResult<AdminUserDto>> => {
+  const params = new URLSearchParams();
+  if (request.pageIndex) params.append("pageIndex", request.pageIndex.toString());
+  if (request.pageSize) params.append("pageSize", request.pageSize.toString());
+  if (request.searchTerm) params.append("searchTerm", request.searchTerm);
+  if (request.role) params.append("role", request.role);
+  if (request.plan) params.append("plan", request.plan);
+  if (request.status) params.append("status", request.status);
+  if (request.sortBy) params.append("sortBy", request.sortBy);
+  if (request.sortDesc !== undefined) params.append("sortDesc", request.sortDesc.toString());
+
+  const { data } = await api.get<PagedResult<AdminUserDto>>(
+    `/api/admin/users?${params.toString()}`
+  );
+  return data;
+};
+
+export const suspendAdminUser = async (id: string): Promise<void> => {
+  await api.post(`/api/admin/users/${id}/suspend`);
+};
+
+export const unlockAdminUser = async (id: string): Promise<void> => {
+  await api.post(`/api/admin/users/${id}/unlock`);
+};
+
+export const getAdminPlans = async (): Promise<string[]> => {
+  const { data } = await api.get<string[]>("/api/admin/users/plans");
+  return data;
 };

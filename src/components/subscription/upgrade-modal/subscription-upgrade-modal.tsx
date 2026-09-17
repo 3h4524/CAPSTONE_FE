@@ -38,7 +38,7 @@ type SubscriptionUpgradeModalProps = {
   onClose: () => void;
 };
 
-// Unlike Buy, an Upgrade always resolves in one call (UC62): the backend either applies it
+// Unlike Buy, an Upgrade always resolves in one call: the backend either applies it
 // immediately (credit fully covers the difference) or hands back a PayOS QR for the remainder.
 // Confirming re-fires the same mutation is avoided by gating on step, same as the checkout modal.
 export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeModalProps) => {

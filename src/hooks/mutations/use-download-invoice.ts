@@ -6,6 +6,6 @@ import { useMutation } from "@/hooks/mutations/use-mutation";
 export const useDownloadInvoice = () =>
   useMutation({
     mutationFn: downloadInvoiceRequest,
-    // MSG65/MSG66 verbatim text (not found / generation failed) already surfaces via the
+    // Not-found and generation errors already surface via the
     // default error toast — no inline UI needed for a background download action.
   });

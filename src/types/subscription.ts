@@ -8,7 +8,7 @@ export type CurrentSubscription = {
   price: number;
   startDate: string;
   renewalDate: string;
-  // Set when a downgrade is scheduled (BR114); null when nothing is scheduled.
+  // Set when a downgrade is scheduled; null when nothing is scheduled.
   scheduledPlanName: string | null;
   scheduledPlanEffectiveDate: string | null;
 };
@@ -90,7 +90,7 @@ export type CheckoutStatus = {
   renewalDate: string | null;
 };
 
-// The result of UC62 Upgrade Subscription.
+// The result of upgrading a subscription.
 export type UpgradeResult = {
   // False means the prorated credit fully covered the new plan's price — the upgrade already
   // took effect immediately and none of the PayOS fields below are populated.
@@ -105,7 +105,7 @@ export type UpgradeResult = {
   amountVnd: number | null;
 };
 
-// The result of UC63 Downgrade Subscription — scheduled only, current plan is untouched.
+// The result of downgrading a subscription — scheduled only, current plan is untouched.
 export type DowngradeResult = {
   targetPlanId: string;
   targetPlanName: string;

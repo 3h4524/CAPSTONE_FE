@@ -26,7 +26,7 @@ export const PlanComparisonCard = ({
   onUpgradeClick,
   onDowngradeClick,
 }: PlanComparisonCardProps) => {
-  // BR107/BR113: tier level is monthly-price ordering, matching the backend's own rule.
+  // Tier level is monthly-price ordering, matching the backend's own rule.
   const isHigherTier = currentPlanPrice !== null && plan.monthlyPriceUsd > currentPlanPrice;
   const isLowerTier = currentPlanPrice !== null && plan.monthlyPriceUsd < currentPlanPrice;
   // Same price as the current plan but a different plan — neither Upgrade nor Downgrade applies,

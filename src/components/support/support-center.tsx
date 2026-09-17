@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import {
@@ -11,7 +11,6 @@ import {
   LifeBuoy,
   Plus,
   RefreshCw,
-  Search,
 } from "lucide-react";
 
 import { PageLoading } from "@/components/commons/layout/page-loading";
@@ -20,6 +19,15 @@ import { CreateTicketDialog } from "@/components/support/create-ticket-dialog";
 import { TicketPriorityBadge, TicketStatusBadge } from "@/components/support/ticket-badges";
 import { TicketDetailDialog } from "@/components/support/ticket-detail-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { CATEGORY_LABELS } from "@/constants/support";
 import { useCurrentUser } from "@/hooks/queries/use-current-user";
 import { useSupportTickets } from "@/hooks/queries/use-support-tickets";
@@ -27,7 +35,60 @@ import type { SupportTicketSummary, TicketStatus } from "@/types/support";
 import { cn } from "@/utils/cn";
 
 const PAGE_SIZE = 8;
-const HELP_TOPICS = ["Connect an Etsy shop", "Fix an API key", "Understand credits"] as const;
+
+type HelpTopic = {
+  id: string;
+  title: string;
+  description: string;
+  steps: readonly string[];
+  note: string;
+  ticketSubject: string;
+};
+
+const HELP_TOPICS: readonly HelpTopic[] = [
+  {
+    id: "connect-etsy",
+    title: "Connect an Etsy shop",
+    description:
+      "Connect your Etsy shop so APCS can prepare and publish listings from your workspace.",
+    steps: [
+      "Open API keys from the Workspace menu and select Add API key.",
+      "Choose Etsy and start the connection flow.",
+      "Sign in to the correct Etsy account and approve the requested permissions.",
+      "Return to APCS and confirm that the connection status is Connected.",
+    ],
+    note: "Use the Etsy account that owns the shop you want APCS to publish to.",
+    ticketSubject: "Help connecting an Etsy shop",
+  },
+  {
+    id: "fix-api-key",
+    title: "Fix an API key",
+    description:
+      "A key usually needs attention when it expired, was revoked, or no longer has the permissions APCS requires.",
+    steps: [
+      "Open API keys and find the provider that needs attention.",
+      "Confirm the key is still active in the provider account and has the required permissions.",
+      "Select Edit, paste the replacement key, and save your changes.",
+      "Run the connection check again and confirm the status is Connected.",
+    ],
+    note: "For security, APCS only displays the masked credential. Never include a full API key in a support ticket.",
+    ticketSubject: "API key connection needs attention",
+  },
+  {
+    id: "understand-credits",
+    title: "Understand credits",
+    description:
+      "Your plan includes an allowance used by generation and publishing activity in the workspace.",
+    steps: [
+      "Open Usage to review images, videos, listings, and estimated provider costs.",
+      "Use the date-range selector to compare activity across different periods.",
+      "Check Credit allowance to see the amount used, the plan limit, and the reset date.",
+      "Open Billing if you need to review or change the subscription attached to the workspace.",
+    ],
+    note: "Usage data can take a short time to appear after a workflow finishes.",
+    ticketSubject: "Question about credits or usage",
+  },
+] as const;
 
 type TicketView = "all" | "open" | "resolved";
 
@@ -36,10 +97,9 @@ export function SupportCenter() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const authQuery = useCurrentUser();
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [view, setView] = useState<TicketView>("all");
-  const [helpQuery, setHelpQuery] = useState("");
+  const [selectedHelpTopic, setSelectedHelpTopic] = useState<HelpTopic | null>(null);
   const [draftSubject, setDraftSubject] = useState("");
 
   const status = view === "all" ? undefined : view as TicketStatus;
@@ -76,11 +136,6 @@ export function SupportCenter() {
     setPageNumber(1);
   };
 
-  const selectHelpTopic = (topic: string) => {
-    setHelpQuery(topic);
-    requestAnimationFrame(() => searchInputRef.current?.focus());
-  };
-
   if (authQuery.isPending) {
     return <PageLoading label="Loading support" />;
   }
@@ -101,59 +156,51 @@ export function SupportCenter() {
   }
 
   return (
-    <div className="flex flex-1 flex-col text-[#161c22]">
-      <main className="mx-auto w-full max-w-[1280px] px-2 pt-2 pb-6 sm:px-4">
+    <div className="w-full min-w-0 p-4 text-[#161c22] sm:p-6">
+      <header className="mb-6">
+        <h1 className="font-display text-3xl font-semibold tracking-tight">Support center</h1>
+        <p className="mt-1 max-w-2xl text-sm text-slate-600">
+          Find setup guidance, contact the support team, and track your requests.
+        </p>
+      </header>
+
+      <div>
         <section
-          className="mt-8 grid gap-5 rounded-[22px] border border-slate-200/90 bg-white px-5 py-6 shadow-[0_16px_45px_rgba(39,55,80,0.055)] sm:px-7 lg:grid-cols-[44px_minmax(280px,0.72fr)_minmax(360px,1.28fr)] lg:items-center lg:gap-x-5 lg:gap-y-4"
+          className="rounded-xl border border-slate-200 bg-white px-5 py-5 shadow-sm sm:px-6"
           aria-labelledby="support-help-heading"
         >
-          <span className="flex size-11 items-center justify-center rounded-xl bg-[#f3f6fc] text-[#273750]">
-            <LifeBuoy className="size-[18px]" aria-hidden="true" />
-          </span>
-          <div>
-            <h2 id="support-help-heading" className="font-display text-xl font-semibold tracking-tight">
-              How can we help?
-            </h2>
-            <p className="mt-1 max-w-md text-sm leading-5 text-slate-600">
-              Search setup notes or send a ticket with enough context for the team to investigate.
-            </p>
+          <div className="flex items-start gap-4">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#eef2fa] text-[#273750]">
+              <LifeBuoy className="size-[18px]" aria-hidden="true" />
+            </span>
+            <div>
+              <h2 id="support-help-heading" className="font-display text-xl font-semibold tracking-tight">
+                How can we help?
+              </h2>
+              <p className="mt-1 max-w-xl text-sm leading-5 text-slate-600">
+                Choose a quick guide for the questions sellers ask most often.
+              </p>
+            </div>
           </div>
-          <form
-            className="relative lg:self-start"
-            onSubmit={(event) => {
-              event.preventDefault();
-              openComposer(helpQuery.trim());
-            }}
-          >
-            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
-            <label htmlFor="support-help-search" className="sr-only">Search help or start a support request</label>
-            <input
-              ref={searchInputRef}
-              id="support-help-search"
-              type="search"
-              value={helpQuery}
-              onChange={(event) => setHelpQuery(event.target.value)}
-              placeholder="Search help articles"
-              className="min-h-12 w-full rounded-xl border border-slate-200 bg-white pr-4 pl-10 text-sm text-slate-800 shadow-xs transition-[border-color,box-shadow] outline-none placeholder:text-slate-500 focus:border-[#273750] focus:ring-3 focus:ring-[#273750]/15"
-            />
-          </form>
-          <div className="flex flex-wrap gap-2 lg:col-start-2 lg:col-end-4" aria-label="Popular help topics">
+
+          <div className="mt-5 flex flex-wrap gap-2 sm:pl-[60px]" aria-label="Popular help topics">
             {HELP_TOPICS.map((topic) => (
               <button
-                key={topic}
+                key={topic.id}
                 type="button"
-                className="group inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-[border-color,background-color,color] hover:border-slate-300 hover:bg-[#f7f9fd] hover:text-[#273750] focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none"
-                onClick={() => selectHelpTopic(topic)}
+                aria-haspopup="dialog"
+                className="group inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-[border-color,background-color,color,transform] hover:-translate-y-0.5 hover:border-slate-300 hover:bg-[#f7f9fd] hover:text-[#273750] focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none active:translate-y-0"
+                onClick={() => setSelectedHelpTopic(topic)}
               >
-                {topic}
+                {topic.title}
                 <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
               </button>
             ))}
           </div>
         </section>
 
-        <section className="mt-5 overflow-hidden rounded-[22px] border border-slate-200/90 bg-white shadow-[0_16px_45px_rgba(39,55,80,0.055)]" aria-labelledby="support-tickets-heading">
-          <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+        <section className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm" aria-labelledby="support-tickets-heading">
+          <div className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[10px] font-bold tracking-[0.16em] text-slate-500">YOUR REQUESTS</p>
               <h2 id="support-tickets-heading" className="font-display mt-1 text-xl font-semibold tracking-tight">
@@ -161,15 +208,17 @@ export function SupportCenter() {
               </h2>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="inline-flex self-start rounded-full border border-slate-300 bg-white p-0.5" role="group" aria-label="Filter tickets">
+              <div className="border-border bg-background inline-flex self-start rounded-full border p-0.5" role="group" aria-label="Filter tickets">
                 {(["all", "open", "resolved"] as const).map((item) => (
                   <button
                     key={item}
                     type="button"
                     aria-pressed={view === item}
                     className={cn(
-                      "min-h-8 rounded-full px-3.5 text-sm font-medium text-slate-600 capitalize transition-colors focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none",
-                      view === item && "bg-[#eef2fa] font-semibold text-[#273750]"
+                      "min-h-8 rounded-full px-3.5 text-sm font-medium capitalize transition-colors focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none",
+                      view === item
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                     onClick={() => selectView(item)}
                   >
@@ -230,13 +279,67 @@ export function SupportCenter() {
             </>
           )}
         </section>
-      </main>
+      </div>
+
+      <Dialog
+        open={selectedHelpTopic !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedHelpTopic(null);
+        }}
+      >
+        {selectedHelpTopic ? (
+          <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
+            <DialogHeader>
+              <p className="text-[10px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                Quick guide
+              </p>
+              <DialogTitle className="font-display text-xl tracking-tight">
+                {selectedHelpTopic.title}
+              </DialogTitle>
+              <DialogDescription className="leading-5">
+                {selectedHelpTopic.description}
+              </DialogDescription>
+            </DialogHeader>
+
+            <ol className="space-y-3" aria-label={`Steps for ${selectedHelpTopic.title}`}>
+              {selectedHelpTopic.steps.map((step, index) => (
+                <li key={step} className="flex gap-3 text-sm leading-5 text-slate-700">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-[#eef2fa] text-xs font-semibold text-[#273750]">
+                    {index + 1}
+                  </span>
+                  <span className="pt-0.5">{step}</span>
+                </li>
+              ))}
+            </ol>
+
+            <div className="rounded-lg border border-slate-200 bg-[#f7f9fd] px-4 py-3 text-xs leading-5 text-slate-600">
+              <span className="font-semibold text-slate-800">Good to know:</span>{" "}
+              {selectedHelpTopic.note}
+            </div>
+
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline">Close</Button>
+              </DialogClose>
+              <Button
+                onClick={() => {
+                  const subject = selectedHelpTopic.ticketSubject;
+                  setSelectedHelpTopic(null);
+                  openComposer(subject);
+                }}
+              >
+                <Plus aria-hidden="true" />Create support ticket
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        ) : null}
+      </Dialog>
 
       <CreateTicketDialog
         open={composeOpen}
         initialSubject={draftSubject}
         onClose={closeModal}
-        onCreated={(id) => router.replace(`/support?ticket=${id}`, { scroll: false })}
+        onCreated={closeModal}
       />
       <TicketDetailDialog ticketId={ticketId} onClose={closeModal} />
     </div>

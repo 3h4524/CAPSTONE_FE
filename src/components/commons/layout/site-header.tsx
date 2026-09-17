@@ -55,33 +55,26 @@ export const SiteHeader = () => {
           })}
         </nav>
         <div className="hidden items-center gap-5 md:flex">
-          <a
-            href="#"
+          <Link
+            href="login"
             className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors focus-visible:underline focus-visible:outline-none"
           >
             Login
-          </a>
+          </Link>
           <Button variant="defaultWithTextWhite" size="sm" asChild>
-            <Link href="/#signup">Get Started</Link>
+            <Link href="/register">Get Started</Link>
           </Button>
         </div>
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              aria-label="Open menu"
-            >
+            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
               <Menu />
             </Button>
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
               <SheetTitle className="font-display text-left">APCS</SheetTitle>
-              <SheetDescription className="sr-only">
-                Site navigation
-              </SheetDescription>
+              <SheetDescription className="sr-only">Site navigation</SheetDescription>
             </SheetHeader>
             <nav className="flex flex-col gap-1 px-4" aria-label="Mobile">
               {NAV_LINKS.map((link) => {
@@ -103,18 +96,18 @@ export const SiteHeader = () => {
                 );
               })}
               <SheetClose asChild>
-                <a
-                  href="#"
+                <Link
+                  href="login"
                   className="hover:bg-muted focus-visible:ring-ring rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
                 >
                   Login
-                </a>
+                </Link>
               </SheetClose>
             </nav>
             <div className="mt-auto p-4">
               <SheetClose asChild>
                 <Link
-                  href="/#signup"
+                  href="register"
                   className={buttonVariants({
                     variant: "defaultWithTextWhite",
                     className: "w-full",

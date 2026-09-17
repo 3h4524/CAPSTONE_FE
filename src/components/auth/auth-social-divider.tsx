@@ -6,6 +6,7 @@ import { GoogleSignInButton } from "./google-sign-in-button";
 
 type AuthSocialDividerProps = {
   mode: "signin" | "signup";
+  onTwoFactorRequired?: (tempToken: string, expiresAtUtc: string) => void;
 };
 
 const LABELS = {
@@ -13,7 +14,7 @@ const LABELS = {
   signup: "Sign up with Google",
 } as const;
 
-export const AuthSocialDivider = ({ mode }: AuthSocialDividerProps) => {
+export const AuthSocialDivider = ({ mode, onTwoFactorRequired }: AuthSocialDividerProps) => {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
   return (
@@ -28,6 +29,7 @@ export const AuthSocialDivider = ({ mode }: AuthSocialDividerProps) => {
         <GoogleSignInButton
           clientId={clientId}
           text={mode === "signup" ? "signup_with" : "signin_with"}
+          onTwoFactorRequired={onTwoFactorRequired}
         />
       ) : (
         // No client ID configured for this environment, so the flow cannot work: the button

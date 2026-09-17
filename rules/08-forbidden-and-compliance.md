@@ -46,12 +46,13 @@ Trước khi xem task là xong, phải **verify code vừa viết tuân thủ to
 - [ ] 1 file = 1 component; không logic nghiệp vụ trong component
 - [ ] Component nằm đúng folder màn hình; dùng chung → commons/<sub>/; folder đông file có sub-folder
 - [ ] UI dùng shadcn primitives — cấm tự viết/thay thư viện khác
-- [ ] Loading data dùng skeleton (không spinner cho vùng data lớn)
+- [ ] Loading route-level dùng `PageLoading`; loading cục bộ dùng `SectionLoading` (circle)
 - [ ] Trang không cần SEO → client component, không SSR
 - [ ] Form dùng RHF + zod; schema ở src/schemas/
 - [ ] Không `any`, `as any`, `@ts-ignore`, cast string → enum
 - [ ] Mutation dùng `mutate()` (không async); onSuccess/onError tại call-site
 - [ ] Mutation/Query nằm trong custom hook wrapper
+- [ ] Metadata 1 loại duy nhất (`getPageMetadata`); title bare; route cần login có `robots` noindex
 - [ ] Hook được destructure khi dùng, alias khi nhiều hook
 - [ ] Mutation ưu tiên cập nhật cache/state — không refetch
 - [ ] Nút pending chỉ `disabled`, text bất biến

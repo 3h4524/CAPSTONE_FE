@@ -1,4 +1,3 @@
-import { showToast } from "@/helpers/toast";
 import type { AvailablePlan } from "@/types/subscription";
 
 import { PlanComparisonCard } from "./plan-comparison-card";
@@ -7,13 +6,18 @@ type AvailablePlansSectionProps = {
   plans: AvailablePlan[];
   hasActivePaidPlan: boolean;
   onBuyClick: (plan: AvailablePlan) => void;
+  onUpgradeClick: (plan: AvailablePlan) => void;
+  onDowngradeClick: (plan: AvailablePlan) => void;
 };
 
-export const AvailablePlansSection = ({ plans, hasActivePaidPlan, onBuyClick }: AvailablePlansSectionProps) => {
-  const handleUnavailableClick = () => {
-    // MSG57 verbatim.
-    showToast("info", "You already have an active paid plan. Please use Upgrade or Downgrade instead.");
-  };
+export const AvailablePlansSection = ({
+  plans,
+  hasActivePaidPlan,
+  onBuyClick,
+  onUpgradeClick,
+  onDowngradeClick,
+}: AvailablePlansSectionProps) => {
+  const currentPlanPrice = plans.find((plan) => plan.isCurrentPlan)?.monthlyPriceUsd ?? null;
 
   return (
     <section className="space-y-4">
@@ -34,8 +38,10 @@ export const AvailablePlansSection = ({ plans, hasActivePaidPlan, onBuyClick }: 
             key={plan.planId}
             plan={plan}
             hasActivePaidPlan={hasActivePaidPlan}
+            currentPlanPrice={currentPlanPrice}
             onBuyClick={onBuyClick}
-            onUnavailableClick={handleUnavailableClick}
+            onUpgradeClick={onUpgradeClick}
+            onDowngradeClick={onDowngradeClick}
           />
         ))}
       </div>

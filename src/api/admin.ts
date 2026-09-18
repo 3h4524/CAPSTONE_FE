@@ -1,4 +1,4 @@
-import type { AdminDashboardMetricsDto, AdminUserDto, GetUsersRequest, PagedResult } from "@/types/admin";
+import type { AdminDashboardMetricsDto, AdminUserDto, GetUsersRequest, PagedResult, UpdateAdminUserRequest } from "@/types/admin";
 
 import { api } from "./client";
 
@@ -73,6 +73,18 @@ export const suspendAdminUser = async (id: string): Promise<void> => {
 
 export const unlockAdminUser = async (id: string): Promise<void> => {
   await api.post(`/api/admin/users/${id}/unlock`);
+};
+
+export const updateAdminUser = async (
+  id: string,
+  request: UpdateAdminUserRequest
+): Promise<AdminUserDto> => {
+  const { data } = await api.put<AdminUserDto>(`/api/admin/users/${id}`, request);
+  return data;
+};
+
+export const sendResetPasswordLink = async (id: string): Promise<void> => {
+  await api.post(`/api/admin/users/${id}/send-reset-password`);
 };
 
 export const getAdminPlans = async (): Promise<string[]> => {

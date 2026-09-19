@@ -79,7 +79,7 @@ export default function AdminUsersPage() {
   });
 
   const suspendMutation = useMutation({
-    mutationFn: (params: { id: string, durationDays: number | null }) => suspendAdminUser(params),
+    mutationFn: (params: { id: string, durationDays: number | null, reason: string }) => suspendAdminUser(params),
     onSuccess: () => {
       toast.success("Account suspended successfully");
       queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
@@ -497,7 +497,7 @@ export default function AdminUsersPage() {
           user={userToBan}
           isOpen={isBanModalOpen}
           onClose={() => setIsBanModalOpen(false)}
-          onConfirm={(durationDays) => userToBan && suspendMutation.mutate({ id: userToBan.id, durationDays })}
+          onConfirm={(durationDays, reason) => userToBan && suspendMutation.mutate({ id: userToBan.id, durationDays, reason })}
           isLoading={suspendMutation.isPending}
         />
       </>

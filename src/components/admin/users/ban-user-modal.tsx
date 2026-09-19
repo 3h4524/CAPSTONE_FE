@@ -56,8 +56,8 @@ export const BanUserModal = ({
         <div className="relative p-8 pb-6">
           <div className="flex flex-col items-center text-center">
             <div className="flex size-24 items-center justify-center rounded-full border border-slate-100 bg-white p-1.5 shadow-sm">
-              <div className="flex h-full w-full items-center justify-center rounded-full bg-rose-50">
-                <ShieldAlert className="size-10 text-rose-600" />
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-900">
+                <ShieldAlert className="size-10 text-white" />
               </div>
             </div>
 
@@ -70,29 +70,29 @@ export const BanUserModal = ({
           </div>
 
           <div className="mt-8 flex flex-col gap-5">
-            <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-3 text-sm text-rose-800">
+            <div className="rounded-xl border border-slate-200 bg-slate-100/60 p-3 text-sm text-slate-700">
               <div className="flex gap-2">
-                <AlertTriangle className="size-5 shrink-0 text-rose-600" />
+                <AlertTriangle className="size-5 shrink-0 text-slate-600" />
                 <p>
                   Suspending this account will immediately revoke all active sessions. The user will not be able to log in until the suspension period ends.
                 </p>
               </div>
             </div>
 
-            <div className="space-y-4 rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm">
+            <div className="space-y-4 rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
               <div>
                 <Label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Suspension Reason</Label>
                 <Textarea 
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Briefly explain the reason for suspension (required)"
-                  className="resize-none border-slate-200 text-sm focus-visible:ring-rose-400"
+                  className="resize-none border-slate-200 text-sm focus-visible:ring-slate-400"
                   rows={3}
                 />
               </div>
             </div>
 
-            <div className="space-y-4 rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm">
+            <div className="space-y-4 rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
               <div>
                 <Label className="mb-3 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Suspension Duration</Label>
                 <RadioGroup 
@@ -105,14 +105,25 @@ export const BanUserModal = ({
                       key={option.value}
                       htmlFor={`ban-${option.value}`}
                       className={cn(
-                        "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors hover:bg-slate-50",
-                        selectedDuration === option.value ? "border-rose-200 bg-rose-50/50" : "border-slate-100"
+                        "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors",
+                        selectedDuration === option.value 
+                          ? "border-slate-900 bg-slate-900 text-white shadow-sm" 
+                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                       )}
                     >
-                      <RadioGroupItem value={option.value} id={`ban-${option.value}`} className="mt-0.5 text-rose-600 focus:ring-rose-600" />
+                      <RadioGroupItem 
+                        value={option.value} 
+                        id={`ban-${option.value}`} 
+                        className={cn(
+                          "mt-0.5", 
+                          selectedDuration === option.value ? "border-white text-white" : "text-slate-900"
+                        )} 
+                      />
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-semibold text-slate-900">{option.label}</span>
-                        <span className="text-xs text-slate-500">{option.description}</span>
+                        <span className="text-sm font-semibold">{option.label}</span>
+                        <span className={cn("text-xs", selectedDuration === option.value ? "text-slate-300" : "text-slate-500")}>
+                          {option.description}
+                        </span>
                       </div>
                     </Label>
                   ))}
@@ -124,17 +135,16 @@ export const BanUserModal = ({
           <div className="mt-8 flex gap-3">
             <Button 
               variant="outline" 
-              className="flex-1 rounded-xl" 
+              className="h-11 flex-1 rounded-xl border-slate-200 font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900" 
               onClick={onClose} 
               disabled={isLoading}
             >
               Cancel
             </Button>
             <Button 
-              variant="destructive" 
+              className="h-11 flex-1 gap-2 rounded-xl bg-slate-900 font-semibold text-white shadow-sm transition-all hover:bg-slate-800"
               onClick={handleConfirm} 
               disabled={isLoading}
-              className="flex-1 gap-2 rounded-xl bg-rose-600 hover:bg-rose-700"
             >
               <Clock className="size-4" />
               {isLoading ? "Suspending..." : "Confirm Suspension"}

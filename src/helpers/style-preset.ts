@@ -1,3 +1,5 @@
+import type { StylePreset } from "@/types/style-presets";
+
 export const toRecommendationLines = (recommendations: string[]) => recommendations.join("\n");
 
 export const fromRecommendationLines = (text: string) =>
@@ -19,3 +21,6 @@ export const previewFallbackFor = (id: string) => {
   const hash = [...id].reduce((total, char) => total + char.charCodeAt(0), 0);
   return PREVIEW_FALLBACKS[hash % PREVIEW_FALLBACKS.length];
 };
+
+export const sortPresetList = (presets: StylePreset[]) =>
+  [...presets].sort((left, right) => right.usageCount - left.usageCount || left.name.localeCompare(right.name));

@@ -7,4 +7,5 @@ export interface StylePreset {
   recommendations: string[];
   isSystemTemplate: boolean;
   isMine: boolean;
+  usageCount: number;
 }

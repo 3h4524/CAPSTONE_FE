@@ -12,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import type { AdminUserDto } from "@/types/admin";
 import { cn } from "@/utils/cn";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 interface BanUserModalProps {
   user: AdminUserDto | null;
@@ -52,28 +52,24 @@ export const BanUserModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-hidden p-0 sm:max-w-[480px]">
-        {/* Gradient Header */}
-        <div className="relative flex h-32 w-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-rose-900 to-rose-700">
-          <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
-          <div className="absolute inset-0 bg-rose-900/50 backdrop-blur-sm"></div>
-        </div>
-
-        <div className="relative -mt-10 px-6 pb-6">
-          <div className="mx-auto flex size-20 items-center justify-center rounded-2xl bg-white shadow-md">
-            <div className="flex size-16 items-center justify-center rounded-xl bg-rose-50">
-              <ShieldAlert className="size-8 text-rose-600" />
+      <DialogContent className="max-h-[90vh] max-w-[480px] [scrollbar-width:none] overflow-y-auto rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden">
+        <div className="relative p-8 pb-6">
+          <div className="flex flex-col items-center text-center">
+            <div className="flex size-24 items-center justify-center rounded-full border border-slate-100 bg-white p-1.5 shadow-sm">
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-rose-50">
+                <ShieldAlert className="size-10 text-rose-600" />
+              </div>
             </div>
+
+            <DialogTitle className="mt-5 text-2xl font-bold tracking-tight text-slate-900">
+              Suspend User Account
+            </DialogTitle>
+            <p className="mt-1 text-sm font-medium text-slate-500">
+              You are about to suspend <span className="font-bold text-slate-800">{user.fullName}</span> ({user.email}).
+            </p>
           </div>
 
-          <DialogTitle className="mt-5 text-center text-2xl font-bold tracking-tight text-slate-900">
-            Suspend User Account
-          </DialogTitle>
-          <p className="mt-1 text-center text-sm font-medium text-slate-500">
-            You are about to suspend <span className="font-bold text-slate-800">{user.fullName}</span> ({user.email}).
-          </p>
-
-          <div className="mt-6 flex flex-col gap-4">
+          <div className="mt-8 flex flex-col gap-5">
             <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-3 text-sm text-rose-800">
               <div className="flex gap-2">
                 <AlertTriangle className="size-5 shrink-0 text-rose-600" />
@@ -83,48 +79,52 @@ export const BanUserModal = ({
               </div>
             </div>
 
-            <div className="space-y-3">
-              <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Suspension Reason</Label>
-              <Textarea 
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Briefly explain the reason for suspension (required)"
-                className="resize-none focus-visible:ring-rose-400"
-                rows={3}
-              />
+            <div className="space-y-4 rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm">
+              <div>
+                <Label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Suspension Reason</Label>
+                <Textarea 
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Briefly explain the reason for suspension (required)"
+                  className="resize-none border-slate-200 text-sm focus-visible:ring-rose-400"
+                  rows={3}
+                />
+              </div>
             </div>
 
-            <div className="space-y-3">
-              <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Suspension Duration</Label>
-              <RadioGroup 
-                value={selectedDuration} 
-                onValueChange={setSelectedDuration}
-                className="flex flex-col gap-2"
-              >
-                {banOptions.map((option) => (
-                  <Label
-                    key={option.value}
-                    htmlFor={`ban-${option.value}`}
-                    className={cn(
-                      "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors hover:bg-slate-50",
-                      selectedDuration === option.value ? "border-rose-200 bg-rose-50/50" : "border-slate-100"
-                    )}
-                  >
-                    <RadioGroupItem value={option.value} id={`ban-${option.value}`} className="mt-0.5 text-rose-600 focus:ring-rose-600" />
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-semibold text-slate-900">{option.label}</span>
-                      <span className="text-xs text-slate-500">{option.description}</span>
-                    </div>
-                  </Label>
-                ))}
-              </RadioGroup>
+            <div className="space-y-4 rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm">
+              <div>
+                <Label className="mb-3 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Suspension Duration</Label>
+                <RadioGroup 
+                  value={selectedDuration} 
+                  onValueChange={setSelectedDuration}
+                  className="flex flex-col gap-2"
+                >
+                  {banOptions.map((option) => (
+                    <Label
+                      key={option.value}
+                      htmlFor={`ban-${option.value}`}
+                      className={cn(
+                        "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors hover:bg-slate-50",
+                        selectedDuration === option.value ? "border-rose-200 bg-rose-50/50" : "border-slate-100"
+                      )}
+                    >
+                      <RadioGroupItem value={option.value} id={`ban-${option.value}`} className="mt-0.5 text-rose-600 focus:ring-rose-600" />
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm font-semibold text-slate-900">{option.label}</span>
+                        <span className="text-xs text-slate-500">{option.description}</span>
+                      </div>
+                    </Label>
+                  ))}
+                </RadioGroup>
+              </div>
             </div>
           </div>
 
-          <div className="mt-6 flex gap-3">
+          <div className="mt-8 flex gap-3">
             <Button 
               variant="outline" 
-              className="flex-1" 
+              className="flex-1 rounded-xl" 
               onClick={onClose} 
               disabled={isLoading}
             >
@@ -134,7 +134,7 @@ export const BanUserModal = ({
               variant="destructive" 
               onClick={handleConfirm} 
               disabled={isLoading}
-              className="flex-1 gap-2 bg-rose-600 hover:bg-rose-700"
+              className="flex-1 gap-2 rounded-xl bg-rose-600 hover:bg-rose-700"
             >
               <Clock className="size-4" />
               {isLoading ? "Suspending..." : "Confirm Suspension"}

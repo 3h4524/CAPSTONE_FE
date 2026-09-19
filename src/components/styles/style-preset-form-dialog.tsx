@@ -1,16 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
-import { X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { FormInputField } from "@/components/commons/forms/form-input-field";
 import { FormTextareaField } from "@/components/commons/forms/form-textarea-field";
+import { StylePresetImageDropzone } from "@/components/styles/style-preset-image-dropzone";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { fromRecommendationLines, toRecommendationLines } from "@/helpers/style-preset";
 import { useCreateStylePreset } from "@/hooks/mutations/use-create-style-preset";
@@ -117,31 +114,16 @@ export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetForm
               <FormTextareaField id="style-description" label="Description" placeholder="When this style shines and what it suits." registration={register("description")} error={errors.description} required rows={3} />
               <FormTextareaField id="style-modifiers" label="Prompt keywords" placeholder="Keywords appended to the image prompt." registration={register("styleModifiers")} error={errors.styleModifiers} required rows={2} />
               <FormTextareaField id="style-recommendations" label="Recommendations" placeholder="One use case per line." registration={register("recommendationsText")} error={errors.recommendationsText} rows={3} />
-              <div className="space-y-2">
-                <Label htmlFor="style-preview">Preview image</Label>
-                {shownPreview && (
-                  <div className="relative w-fit">
-                    <Image src={shownPreview} alt="Style preview" width={320} height={180} unoptimized className="aspect-video w-64 rounded-lg object-cover ring-1 ring-slate-200 ring-inset" />
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="icon"
-                      aria-label="Remove preview image"
-                      className="absolute top-1 right-1 size-7"
-                      onClick={() => {
-                        setPreviewFile(null);
-                        setPreviewRemoved(true);
-                      }}
-                    >
-                      <X aria-hidden="true" />
-                    </Button>
-                  </div>
-                )}
-                <Input id="style-preview" type="file" accept="image/*" onChange={(event) => pickFile(event.target.files?.[0])} />
-                {fileError && (
-                  <p role="alert" className="text-sm text-red-600">{fileError}</p>
-                )}
-              </div>
+              <StylePresetImageDropzone
+                previewUrl={shownPreview}
+                error={fileError}
+                disabled={pending}
+                onSelect={pickFile}
+                onRemove={() => {
+                  setPreviewFile(null);
+                  setPreviewRemoved(true);
+                }}
+              />
             </div>
           </ScrollArea>
           <DialogFooter className="gap-2 pt-4">

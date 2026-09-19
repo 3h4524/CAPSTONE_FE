@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   BarChart3,
   BriefcaseBusiness,
@@ -9,14 +11,23 @@ import {
   Headphones,
   LayoutDashboard,
   LogOut,
+  User,
   Users,
 } from "lucide-react";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/utils/cn";
 
 type AdminSidebarProps = {
-  activeItem?: string;
   fullName: string;
+  email?: string;
   onLogout: () => void;
   isMobileOpen?: boolean;
   onClose?: () => void;
@@ -25,20 +36,20 @@ type AdminSidebarProps = {
 };
 
 const primaryNavigation = [
-  { label: "Dashboard", icon: LayoutDashboard },
-  { label: "Users", icon: Users, count: "1.2k" },
-  { label: "Subscriptions", icon: CreditCard },
+  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
 ];
 
 const secondaryNavigation = [
-  { label: "Revenue & Reports", icon: BarChart3 },
-  { label: "Batch Jobs", icon: BriefcaseBusiness, count: "24 active", tone: "amber" },
-  { label: "Support Tickets", icon: Headphones, count: "7 open", tone: "rose" },
+  { label: "Revenue & Reports", href: "/admin/reports", icon: BarChart3 },
+  { label: "Batch Jobs", href: "/admin/batch-jobs", icon: BriefcaseBusiness, count: "24 active", tone: "amber" },
+  { label: "Support Tickets", href: "/admin/support-tickets", icon: Headphones, count: "7 open", tone: "rose" },
 ];
 
 const AdminSidebar = ({
-  activeItem = "Dashboard",
   fullName,
+  email = "admin@example.com",
   onLogout,
   isMobileOpen = false,
   onClose,
@@ -82,39 +93,59 @@ const AdminSidebar = ({
 
       <nav className="flex-1 space-y-7 px-3 py-6">
         <SidebarGroup label="Overview" isCollapsed={isCollapsed}>
-          <SidebarItems items={primaryNavigation} activeItem={activeItem} isCollapsed={isCollapsed} />
+          <SidebarItems items={primaryNavigation} isCollapsed={isCollapsed} />
         </SidebarGroup>
         <SidebarGroup label="Finance & Analytics" isCollapsed={isCollapsed}>
-          <SidebarItems items={secondaryNavigation.slice(0, 1)} activeItem={activeItem} isCollapsed={isCollapsed} />
+          <SidebarItems items={secondaryNavigation.slice(0, 1)} isCollapsed={isCollapsed} />
         </SidebarGroup>
         <SidebarGroup label="System" isCollapsed={isCollapsed}>
-          <SidebarItems items={secondaryNavigation.slice(1)} activeItem={activeItem} isCollapsed={isCollapsed} />
+          <SidebarItems items={secondaryNavigation.slice(1)} isCollapsed={isCollapsed} />
         </SidebarGroup>
       </nav>
 
       <div className="border-t border-slate-100 p-4">
-        <button
-          type="button"
-          onClick={onLogout}
-          title={isCollapsed ? "Logout" : undefined}
-          className={cn(
-            "group flex w-full items-center rounded-lg py-2 transition-colors hover:bg-slate-50",
-            isCollapsed ? "justify-center px-0" : "gap-3 px-2 text-left"
-          )}
-        >
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-700">
-            {getInitials(fullName)}
-          </div>
-          {!isCollapsed && (
-            <>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-slate-800">{fullName}</p>
-                <p className="text-[10px] text-slate-400">Super Admin</p>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              title={isCollapsed ? "Profile" : undefined}
+              className={cn(
+                "group flex w-full items-center rounded-lg py-2 transition-colors hover:bg-slate-50 focus:outline-none",
+                isCollapsed ? "justify-center px-0" : "gap-3 px-2 text-left"
+              )}
+            >
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-bold text-white">
+                {getInitials(fullName)}
               </div>
-              <LogOut className="size-3.5 shrink-0 text-slate-300 transition-colors group-hover:text-slate-700" />
-            </>
-          )}
-        </button>
+              {!isCollapsed && (
+                <>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold text-slate-800">{fullName}</p>
+                    <p className="truncate text-[10px] text-slate-500">{email}</p>
+                  </div>
+                </>
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm leading-none font-medium">{fullName}</p>
+                <p className="text-xs leading-none text-slate-500">{email}</p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <User className="mr-2 size-4" />
+              <span>Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onLogout}>
+              <LogOut className="mr-2 size-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   </>
@@ -133,29 +164,30 @@ const SidebarGroup = ({ label, isCollapsed, children }: { label: string; isColla
 
 const SidebarItems = ({
   items,
-  activeItem,
   isCollapsed,
 }: {
-  items: Array<{ label: string; icon: typeof Users; count?: string; tone?: string }>;
-  activeItem: string;
+  items: Array<{ label: string; href: string; icon: typeof Users; count?: string; tone?: string }>;
   isCollapsed?: boolean;
-}) => (
-  <div className="space-y-0.5">
-    {items.map(({ label, icon: Icon, count, tone }) => {
-      const active = label === activeItem;
-      return (
-        <button
-          type="button"
-          key={label}
-          title={isCollapsed ? label : undefined}
-          className={cn(
-            "flex w-full items-center rounded-md py-2.5 text-left text-xs transition-colors",
-            isCollapsed ? "justify-center px-0" : "gap-3 px-3",
-            active
-              ? "bg-slate-100 font-semibold text-slate-900"
-              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-          )}
-        >
+}) => {
+  const pathname = usePathname();
+  
+  return (
+    <div className="space-y-0.5">
+      {items.map(({ label, href, icon: Icon, count, tone }) => {
+        const active = pathname?.startsWith(href);
+        return (
+          <Link
+            href={href}
+            key={label}
+            title={isCollapsed ? label : undefined}
+            className={cn(
+              "flex w-full items-center rounded-md py-2.5 text-left text-xs transition-colors",
+              isCollapsed ? "justify-center px-0" : "gap-3 px-3",
+              active
+                ? "bg-slate-100 font-semibold text-slate-900"
+                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+            )}
+          >
           <Icon
             className={cn("size-3.5 shrink-0", active ? "text-slate-700" : "text-slate-400")}
             strokeWidth={1.8}
@@ -173,11 +205,12 @@ const SidebarItems = ({
               {count}
             </span>
           )}
-        </button>
-      );
-    })}
-  </div>
-);
+          </Link>
+        );
+      })}
+    </div>
+  );
+};
 
 const getInitials = (name: string) =>
   name

@@ -34,7 +34,6 @@ interface EditUserModalProps {
 const ROLES = [
   { id: "Admin", label: "Admin" },
   { id: "Seller", label: "Seller" },
-  { id: "User", label: "User" },
 ];
 
 export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => {
@@ -59,7 +58,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
         birthday: user.birthday ? user.birthday.split("T")[0] : null,
         avatarUrl: user.avatarUrl,
         accountStatus: user.accountStatus.toLowerCase(),
-        roles: user.roles.length > 0 ? [user.roles[0]] : ["User"],
+        roles: user.roles.length > 0 ? [user.roles[0]] : [],
       });
       setIsEditingAvatar(false);
     }
@@ -105,6 +104,16 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
       return;
     }
 
+    if (formData.birthday) {
+      const selectedDate = new Date(formData.birthday);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate >= today) {
+        toast.error("Birthday must be in the past");
+        return;
+      }
+    }
+
     const submitData = {
       ...formData,
       birthday: formData.birthday || null,
@@ -114,7 +123,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
     updateMutation.mutate(submitData);
   };
 
-  const activeRole = formData.roles[0] || "User";
+  const activeRole = formData.roles[0] || "";
   const isSeller = activeRole.toLowerCase() === "seller";
 
   return (
@@ -211,6 +220,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
                   id="birthday"
                   name="birthday"
                   type="date"
+                  max={new Date(Date.now() - 86400000).toISOString().split('T')[0]}
                   value={formData.birthday || ""}
                   onChange={handleChange}
                   className="h-10 border-slate-200 text-sm focus-visible:ring-slate-400"

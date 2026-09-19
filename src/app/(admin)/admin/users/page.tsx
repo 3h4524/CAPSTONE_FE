@@ -404,7 +404,7 @@ export default function AdminUsersPage() {
                           <Users className="size-4 text-slate-400" />
                           <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Role</span>
                         </div>
-                        <span className="text-sm font-semibold text-slate-900">{selectedUser.roles.join(", ") || "User"}</span>
+                        <span className="text-sm font-semibold text-slate-900">{selectedUser.roles.join(", ") || "None"}</span>
                       </div>
                     </div>
 

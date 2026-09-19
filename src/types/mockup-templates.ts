@@ -8,6 +8,8 @@ export interface MockupTemplate {
   outputWidthPx: number;
   outputHeightPx: number;
   usageCount: number;
+  isSystemTemplate: boolean;
+  isMine: boolean;
 }
 
 export interface BatchMockupSelection {

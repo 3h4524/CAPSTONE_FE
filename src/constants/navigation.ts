@@ -2,6 +2,7 @@ import {
   Activity,
   CreditCard,
   KeyRound,
+  Layers,
   LayoutDashboard,
   LifeBuoy,
   Palette,
@@ -21,6 +22,7 @@ export const NAV_SECTIONS: AppNavSection[] = [
     items: [
       { label: "Workflows", href: "/workflows", icon: Workflow, disabled: true },
       { label: "My Styles", href: "/styles", icon: Palette },
+      { label: "My Mock-ups", href: "/my-mockups", icon: Layers },
       { label: "API keys", href: "/api-keys", icon: KeyRound },
       { label: "Usage", href: "/usage", icon: Activity },
     ],
@@ -43,6 +45,7 @@ export const ROUTE_TITLES = {
   support: "Support",
   workflows: "Workflows",
   styles: "My Styles",
+  "my-mockups": "My Mock-ups",
   settings: "Settings",
   billing: "Billing",
 } as const;

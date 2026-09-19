@@ -5,4 +5,6 @@ export interface StylePreset {
   styleModifiers: string;
   previewImageUrl: string | null;
   recommendations: string[];
+  isSystemTemplate: boolean;
+  isMine: boolean;
 }

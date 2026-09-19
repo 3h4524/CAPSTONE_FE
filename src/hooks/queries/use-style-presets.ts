@@ -3,7 +3,7 @@
 import { listStyleArtPresets, stylePresetKeys } from "@/api/style-presets";
 import { useQuery } from "@/hooks/queries/use-query";
 
-export const useStylePresets = (open: boolean) =>
+export const useStylePresets = (open = true) =>
   useQuery({
     queryKey: stylePresetKeys.list(),
     queryFn: () => listStyleArtPresets(),

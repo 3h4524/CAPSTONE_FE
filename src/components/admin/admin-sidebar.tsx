@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   BarChart3,
   BriefcaseBusiness,
@@ -25,9 +26,9 @@ type AdminSidebarProps = {
 };
 
 const primaryNavigation = [
-  { label: "Dashboard", icon: LayoutDashboard },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/admin/dashboard" },
   { label: "Users", icon: Users, count: "1.2k" },
-  { label: "Subscriptions", icon: CreditCard },
+  { label: "Subscriptions", icon: CreditCard, href: "/admin/subscription-plans" },
 ];
 
 const secondaryNavigation = [
@@ -136,26 +137,22 @@ const SidebarItems = ({
   activeItem,
   isCollapsed,
 }: {
-  items: Array<{ label: string; icon: typeof Users; count?: string; tone?: string }>;
+  items: Array<{ label: string; icon: typeof Users; count?: string; tone?: string; href?: string }>;
   activeItem: string;
   isCollapsed?: boolean;
 }) => (
   <div className="space-y-0.5">
-    {items.map(({ label, icon: Icon, count, tone }) => {
+    {items.map(({ label, icon: Icon, count, tone, href }) => {
       const active = label === activeItem;
-      return (
-        <button
-          type="button"
-          key={label}
-          title={isCollapsed ? label : undefined}
-          className={cn(
-            "flex w-full items-center rounded-md py-2.5 text-left text-xs transition-colors",
-            isCollapsed ? "justify-center px-0" : "gap-3 px-3",
-            active
-              ? "bg-slate-100 font-semibold text-slate-900"
-              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-          )}
-        >
+      const className = cn(
+        "flex w-full items-center rounded-md py-2.5 text-left text-xs transition-colors",
+        isCollapsed ? "justify-center px-0" : "gap-3 px-3",
+        active
+          ? "bg-slate-100 font-semibold text-slate-900"
+          : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+      );
+      const content = (
+        <>
           <Icon
             className={cn("size-3.5 shrink-0", active ? "text-slate-700" : "text-slate-400")}
             strokeWidth={1.8}
@@ -173,6 +170,20 @@ const SidebarItems = ({
               {count}
             </span>
           )}
+        </>
+      );
+
+      if (href) {
+        return (
+          <Link key={label} href={href} title={isCollapsed ? label : undefined} className={className}>
+            {content}
+          </Link>
+        );
+      }
+
+      return (
+        <button type="button" key={label} title={isCollapsed ? label : undefined} className={className}>
+          {content}
         </button>
       );
     })}

@@ -7,7 +7,7 @@ import { useAppQueryClient } from "@/hooks/use-query-client";
 
 export type UpdateStylePresetVariables = SaveStylePresetInput & { id: string };
 
-export const useUpdateStylePreset = (onSaved: () => void) => {
+export const useUpdateStylePreset = () => {
   const queryClient = useAppQueryClient();
 
   return useMutation({
@@ -15,7 +15,6 @@ export const useUpdateStylePreset = (onSaved: () => void) => {
     onSuccess: async (preset) => {
       await queryClient.invalidateQueries({ queryKey: stylePresetKeys.all });
       showToast("success", `${preset.name} was saved.`);
-      onSaved();
     },
   });
 };

@@ -11,11 +11,12 @@ import { cn } from "@/utils/cn";
 
 type StylePresetListItemProps = {
   preset: StylePreset;
+  busy?: boolean;
   onEdit: (preset: StylePreset) => void;
   onDelete: (preset: StylePreset) => void;
 };
 
-export const StylePresetListItem = ({ preset, onEdit, onDelete }: StylePresetListItemProps) => (
+export const StylePresetListItem = ({ preset, busy = false, onEdit, onDelete }: StylePresetListItemProps) => (
   <Card className="overflow-hidden">
     {preset.previewImageUrl ? (
       <Image
@@ -39,11 +40,11 @@ export const StylePresetListItem = ({ preset, onEdit, onDelete }: StylePresetLis
       <p className="text-muted-foreground line-clamp-2 text-sm">{preset.description}</p>
       {preset.isMine && (
         <div className="mt-1 flex gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => onEdit(preset)}>
+          <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => onEdit(preset)}>
             <Pencil aria-hidden="true" />
             Edit
           </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={() => onDelete(preset)}>
+          <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => onDelete(preset)}>
             <Trash2 aria-hidden="true" />
             Delete
           </Button>

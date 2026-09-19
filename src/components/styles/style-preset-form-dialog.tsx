@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { fromRecommendationLines, toRecommendationLines } from "@/helpers/style-preset";
 import { useCreateStylePreset } from "@/hooks/mutations/use-create-style-preset";
 import { useUpdateStylePreset } from "@/hooks/mutations/use-update-style-preset";
 import { type StylePresetFormValues,stylePresetSchema } from "@/schemas/style-preset";
@@ -19,14 +20,6 @@ import type { StylePreset } from "@/types/style-presets";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const MAX_PREVIEW_BYTES = 5 * 1024 * 1024;
-
-const toRecommendationLines = (recommendations: string[]) => recommendations.join("\n");
-
-const fromRecommendationLines = (text: string) =>
-  text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
 
 type StylePresetFormDialogProps = {
   open: boolean;
@@ -39,8 +32,8 @@ export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetForm
   const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null);
   const [previewRemoved, setPreviewRemoved] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
-  const createPreset = useCreateStylePreset(onClose);
-  const updatePreset = useUpdateStylePreset(onClose);
+  const { mutate: createPreset, isPending: isCreating } = useCreateStylePreset();
+  const { mutate: updatePreset, isPending: isUpdating } = useUpdateStylePreset();
 
   const {
     register,
@@ -75,7 +68,7 @@ export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetForm
   }, [previewFile]);
 
   const creating = preset === null;
-  const pending = creating ? createPreset.isPending : updatePreset.isPending;
+  const pending = isCreating || isUpdating;
   const shownPreview = previewObjectUrl ?? (previewRemoved ? null : preset?.previewImageUrl ?? null);
 
   const pickFile = (file: File | undefined) => {
@@ -106,8 +99,8 @@ export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetForm
       preview: previewFile,
       deletePreview: previewRemoved,
     };
-    if (creating) createPreset.mutate(input);
-    else updatePreset.mutate({ id: preset.id, ...input });
+    if (creating) createPreset(input, { onSuccess: onClose });
+    else updatePreset({ id: preset.id, ...input }, { onSuccess: onClose });
   });
 
   return (

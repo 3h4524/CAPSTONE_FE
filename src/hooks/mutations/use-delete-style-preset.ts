@@ -5,7 +5,7 @@ import { showToast } from "@/helpers/toast";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useAppQueryClient } from "@/hooks/use-query-client";
 
-export const useDeleteStylePreset = (onDeleted: () => void) => {
+export const useDeleteStylePreset = () => {
   const queryClient = useAppQueryClient();
 
   return useMutation({
@@ -13,7 +13,6 @@ export const useDeleteStylePreset = (onDeleted: () => void) => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: stylePresetKeys.all });
       showToast("success", "The art style was deleted.");
-      onDeleted();
     },
   });
 };

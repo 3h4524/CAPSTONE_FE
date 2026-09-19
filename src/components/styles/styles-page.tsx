@@ -16,7 +16,7 @@ export const StylesPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPreset, setEditingPreset] = useState<StylePreset | null>(null);
   const { data: presets, isPending: isLoadingPresets, isError: isPresetsError, refetch: refetchPresets } = useStylePresets();
-  const { mutate: deletePreset, isPending: isDeleting } = useDeleteStylePreset(() => undefined);
+  const { mutate: deletePreset, isPending: isDeleting } = useDeleteStylePreset();
   const openPopup = usePopupStore((state) => state.openPopup);
 
   const openCreate = () => {
@@ -70,7 +70,7 @@ export const StylesPage = () => {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {presets.map((preset) => (
-            <StylePresetListItem key={preset.id} preset={preset} onEdit={openEdit} onDelete={askDelete} />
+            <StylePresetListItem key={preset.id} preset={preset} busy={isDeleting} onEdit={openEdit} onDelete={askDelete} />
           ))}
         </div>
       )}

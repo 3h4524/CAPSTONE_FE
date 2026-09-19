@@ -44,7 +44,7 @@ type SubscriptionUpgradeModalProps = {
 export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeModalProps) => {
   const [step, setStep] = useState<UpgradeStep>("confirm");
   const [result, setResult] = useState<UpgradeResult | null>(null);
-  const { mutate: upgrade, isPending, isError, error } = useUpgrade();
+  const { mutate: upgrade, isPending, isError, error, reset: resetUpgrade } = useUpgrade();
   const { data: status } = useCheckoutStatus(step === "paying" ? (result?.invoiceId ?? null) : null);
   const queryClient = useQueryClient();
   const hasResolvedRef = useRef(false);
@@ -53,6 +53,7 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
     setStep("confirm");
     setResult(null);
     hasResolvedRef.current = false;
+    resetUpgrade();
   };
 
   useEffect(() => {
@@ -149,7 +150,7 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
               </p>
             )}
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={onClose} disabled={isPending}>
+              <Button variant="ghost" onClick={() => handleClose(false)} disabled={isPending}>
                 Not now
               </Button>
               <Button onClick={handleConfirm} disabled={isPending}>

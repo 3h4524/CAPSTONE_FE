@@ -67,8 +67,8 @@ export const getAdminUsers = async (
   return data;
 };
 
-export const suspendAdminUser = async (id: string): Promise<void> => {
-  await api.post(`/api/admin/users/${id}/suspend`);
+export const suspendAdminUser = async (params: { id: string, durationDays: number | null }): Promise<void> => {
+  await api.post(`/api/admin/users/${params.id}/suspend`, { durationDays: params.durationDays });
 };
 
 export const unlockAdminUser = async (id: string): Promise<void> => {

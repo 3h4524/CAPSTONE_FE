@@ -23,6 +23,7 @@ import {
   unlockAdminUser} from "@/api/admin";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminUsersTable } from "@/components/admin/users/admin-users-table";
+import { BanUserModal } from "@/components/admin/users/ban-user-modal";
 import { EditUserModal } from "@/components/admin/users/edit-user-modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,6 +59,8 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<AdminUserDto | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isBanModalOpen, setIsBanModalOpen] = useState(false);
+  const [userToBan, setUserToBan] = useState<AdminUserDto | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
   const { data: result, isLoading, isError } = useQuery({
@@ -76,10 +79,11 @@ export default function AdminUsersPage() {
   });
 
   const suspendMutation = useMutation({
-    mutationFn: suspendAdminUser,
+    mutationFn: (params: { id: string, durationDays: number | null }) => suspendAdminUser(params),
     onSuccess: () => {
       toast.success("Account suspended successfully");
       queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
+      setIsBanModalOpen(false);
     },
     onError: () => toast.error("Failed to suspend account"),
   });
@@ -156,6 +160,11 @@ export default function AdminUsersPage() {
   const handleEditUser = (user: AdminUserDto) => {
     setSelectedUser(user);
     setIsEditModalOpen(true);
+  };
+
+  const handleSuspendUser = (user: AdminUserDto) => {
+    setUserToBan(user);
+    setIsBanModalOpen(true);
   };
 
   return (
@@ -313,7 +322,7 @@ export default function AdminUsersPage() {
                     users={result.items}
                     onView={handleViewUser}
                     onEdit={handleEditUser}
-                    onSuspend={(user) => suspendMutation.mutate(user.id)}
+                    onSuspend={handleSuspendUser}
                     onUnlock={(user) => unlockMutation.mutate(user.id)}
                     onCopyId={handleCopyId}
                   />
@@ -464,7 +473,10 @@ export default function AdminUsersPage() {
                       <Button
                         variant="outline"
                         className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-rose-600 shadow-sm transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
-                        onClick={() => suspendMutation.mutate(selectedUser.id)}
+                        onClick={() => {
+                          setIsViewModalOpen(false);
+                          handleSuspendUser(selectedUser);
+                        }}
                       >
                         Suspend User
                       </Button>
@@ -480,6 +492,13 @@ export default function AdminUsersPage() {
           user={selectedUser}
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
+        />
+        <BanUserModal
+          user={userToBan}
+          isOpen={isBanModalOpen}
+          onClose={() => setIsBanModalOpen(false)}
+          onConfirm={(durationDays) => userToBan && suspendMutation.mutate({ id: userToBan.id, durationDays })}
+          isLoading={suspendMutation.isPending}
         />
       </>
     </AdminShell>

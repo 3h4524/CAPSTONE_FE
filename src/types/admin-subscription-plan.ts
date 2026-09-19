@@ -17,8 +17,10 @@ export type AdminSubscriptionPlan = {
   prioritySupport: boolean;
   isActive: boolean;
   sortOrder: number;
-  // Used to preview whether a delete will hard-delete or soft-deactivate the plan.
   activeSubscriberCount: number;
+  // False when any subscription (active or historical) ever referenced this plan — Delete is
+  // permanent-only and is blocked in that case; deactivate via the "Plan is active" toggle instead.
+  canDelete: boolean;
   createdAt: string | null;
   updatedAt: string | null;
 };
@@ -46,7 +48,3 @@ export type SubscriptionPlanInput = {
 export type CreateSubscriptionPlanInput = SubscriptionPlanInput & { tier: string };
 
 export type UpdateSubscriptionPlanInput = SubscriptionPlanInput;
-
-export type DeleteSubscriptionPlanResult = {
-  hardDeleted: boolean;
-};

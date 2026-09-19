@@ -2,7 +2,6 @@ import { api } from "@/api/client";
 import type {
   AdminSubscriptionPlan,
   CreateSubscriptionPlanInput,
-  DeleteSubscriptionPlanResult,
   UpdateSubscriptionPlanInput,
 } from "@/types/admin-subscription-plan";
 
@@ -45,9 +44,6 @@ export const deleteAdminSubscriptionPlan = async ({
 }: {
   id: string;
   reason: string;
-}): Promise<DeleteSubscriptionPlanResult> => {
-  const { data } = await api.delete<DeleteSubscriptionPlanResult>(`/api/admin/subscription-plans/${id}`, {
-    data: { reason },
-  });
-  return data;
+}): Promise<void> => {
+  await api.delete(`/api/admin/subscription-plans/${id}`, { data: { reason } });
 };

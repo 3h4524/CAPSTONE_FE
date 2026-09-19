@@ -1,6 +1,6 @@
 "use client";
 
-import { TriangleAlert } from "lucide-react";
+import { ShieldAlert, TriangleAlert } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,35 @@ export function DeletePlanDialog({ open, plan, onClose }: DeletePlanDialogProps)
 
   const priceLabel = `$${plan.monthlyPriceUsd.toFixed(2)}/mo`;
 
+  if (!plan.canDelete) {
+    return (
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="w-[calc(100%-20px)] max-w-[480px] rounded-[24px] p-0">
+          <DialogHeader className="items-start gap-3 px-6 pt-7 pb-2 text-left">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+              <ShieldAlert className="size-[18px]" aria-hidden="true" />
+            </div>
+            <DialogTitle className="font-display text-xl tracking-[-0.02em]">
+              Can&apos;t delete {plan.name}
+            </DialogTitle>
+            <DialogDescription className="leading-5 text-slate-600">
+              One or more Sellers have subscribed to this plan at some point, so it can&apos;t be
+              permanently deleted. If you want to hide it from new Sellers instead, open{" "}
+              <strong>Edit</strong> and turn off <strong>&quot;Plan is active&quot;</strong> —
+              existing subscribers keep full access either way.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-end px-6 pb-6">
+            <Button type="button" onClick={onClose}>
+              Got it
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="w-[calc(100%-20px)] max-w-[480px] rounded-[24px] p-0">
@@ -64,21 +93,8 @@ export function DeletePlanDialog({ open, plan, onClose }: DeletePlanDialogProps)
             Delete Subscription Plan?
           </DialogTitle>
           <DialogDescription className="leading-5 text-slate-600">
-            You are about to delete the <strong>{plan.name}</strong> ({priceLabel}).
-            {plan.activeSubscriberCount > 0 ? (
-              <>
-                {" "}
-                It has <strong>{plan.activeSubscriberCount}</strong> active subscriber
-                {plan.activeSubscriberCount === 1 ? "" : "s"}, so it will be deactivated and
-                hidden from new Sellers instead of deleted — existing subscribers keep access.
-              </>
-            ) : (
-              <>
-                {" "}
-                If no Seller has ever subscribed to this plan, it will be permanently deleted.
-                Otherwise it will be deactivated and hidden from new Sellers. This cannot be undone.
-              </>
-            )}
+            You are about to permanently delete <strong>{plan.name}</strong> ({priceLabel}). This
+            plan has no subscribers, so it will be removed entirely. This cannot be undone.
           </DialogDescription>
         </DialogHeader>
 

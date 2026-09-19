@@ -10,12 +10,9 @@ export const useDeleteSubscriptionPlan = (onDeleted?: () => void) => {
 
   return useMutation({
     mutationFn: deleteAdminSubscriptionPlan,
-    onSuccess: async (result) => {
+    onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: adminSubscriptionPlanKeys.all });
-      showToast(
-        "success",
-        result.hardDeleted ? "The plan was permanently deleted." : "The plan was deactivated."
-      );
+      showToast("success", "The plan was permanently deleted.");
       onDeleted?.();
     },
   });

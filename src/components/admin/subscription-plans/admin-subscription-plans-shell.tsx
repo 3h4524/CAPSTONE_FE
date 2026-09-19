@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { AdminSubscriptionPlan } from "@/types/admin-subscription-plan";
+import { cn } from "@/utils/cn";
 
 type AdminSubscriptionPlansShellProps = {
   fullName: string;
@@ -131,7 +132,7 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
                                   aria-label={`Delete ${plan.name}`}
                                   onClick={() => setDeletePlan(plan)}
                                 >
-                                  <Trash2 className="size-3.5 text-rose-500" />
+                                  <Trash2 className={cn("size-3.5", plan.canDelete ? "text-rose-500" : "text-slate-400")} />
                                 </Button>
                               </div>
                             </TableCell>

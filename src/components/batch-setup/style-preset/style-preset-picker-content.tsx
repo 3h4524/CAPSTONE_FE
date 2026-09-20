@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { showToast } from "@/helpers/toast";
 import type { StylePreset } from "@/types/style-presets";
 
-export const NO_STYLE_VALUE = "none";
+const NO_STYLE_VALUE = "none";
 
 type StylePresetPickerContentProps = {
   presets: StylePreset[];

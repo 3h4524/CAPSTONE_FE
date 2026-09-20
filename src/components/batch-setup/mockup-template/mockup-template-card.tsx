@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 import { Checkbox } from "@/components/ui/checkbox";
-import { previewFallbackFor } from "@/helpers/style-preset";
+import { previewFallbackFor } from "@/helpers/preview-fallback";
 import type { MockupTemplate } from "@/types/mockup-templates";
 import { cn } from "@/utils/cn";
 

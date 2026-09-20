@@ -15,37 +15,3 @@ export const getBatchMockupSelection = async (batchJobId: string, signal?: Abort
 
 export const applyBatchMockupTemplates = async (batchJobId: string, templateIds: string[]): Promise<BatchMockupSelection> =>
   (await api.put<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { templateIds })).data;
-
-export type SaveMockupTemplateInput = {
-  name: string;
-  productType: string;
-  printAreaConfig: string;
-  outputWidthPx: number;
-  outputHeightPx: number;
-  baseImage: File | null;
-  preview: File | null;
-  deletePreview?: boolean;
-};
-
-const toTemplateForm = (input: SaveMockupTemplateInput) => {
-  const form = new FormData();
-  form.append("name", input.name);
-  form.append("productType", input.productType);
-  form.append("printAreaConfig", input.printAreaConfig);
-  form.append("outputWidthPx", String(input.outputWidthPx));
-  form.append("outputHeightPx", String(input.outputHeightPx));
-  if (input.baseImage) form.append("baseImage", input.baseImage);
-  if (input.preview) form.append("preview", input.preview);
-  if (input.deletePreview) form.append("deletePreview", "true");
-  return form;
-};
-
-export const createMockupTemplate = async (input: SaveMockupTemplateInput): Promise<MockupTemplate> =>
-  (await api.post<MockupTemplate>("/api/mockup-templates", toTemplateForm(input))).data;
-
-export const updateMockupTemplate = async (id: string, input: SaveMockupTemplateInput): Promise<MockupTemplate> =>
-  (await api.put<MockupTemplate>(`/api/mockup-templates/${id}`, toTemplateForm(input))).data;
-
-export const deleteMockupTemplate = async (id: string) => {
-  await api.delete(`/api/mockup-templates/${id}`);
-};

@@ -38,3 +38,6 @@ export const updateStylePreset = async (id: string, input: SaveStylePresetInput)
 export const deleteStylePreset = async (id: string) => {
   await api.delete(`/api/style-art-presets/${id}`);
 };
+
+export const quickCreateStylePreset = async (name: string): Promise<StylePreset> =>
+  (await api.post<StylePreset>("/api/style-art-presets/quick", { name })).data;

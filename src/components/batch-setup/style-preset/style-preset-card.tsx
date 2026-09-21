@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 import { RadioGroupItem } from "@/components/ui/radio-group";
-import { previewFallbackFor } from "@/helpers/style-preset";
+import { previewFallbackFor } from "@/helpers/preview-fallback";
 import { cn } from "@/utils/cn";
 
 type StylePresetCardProps = {

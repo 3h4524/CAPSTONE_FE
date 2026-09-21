@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/utils/cn";
 
 type StylePresetImageDropzoneProps = {
+  label?: string;
   previewUrl: string | null;
   error: string | null;
   disabled?: boolean;
@@ -16,13 +17,13 @@ type StylePresetImageDropzoneProps = {
   onRemove: () => void;
 };
 
-export const StylePresetImageDropzone = ({ previewUrl, error, disabled = false, onSelect, onRemove }: StylePresetImageDropzoneProps) => {
+export const StylePresetImageDropzone = ({ label = "Preview image", previewUrl, error, disabled = false, onSelect, onRemove }: StylePresetImageDropzoneProps) => {
   const inputId = useId();
   const [dragging, setDragging] = useState(false);
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={inputId}>Preview image</Label>
+      <Label htmlFor={inputId}>{label}</Label>
       <div className={cn("flex flex-col gap-3", previewUrl && "sm:flex-row sm:items-stretch")}>
         {previewUrl && (
           <div className="relative w-fit sm:w-1/2">

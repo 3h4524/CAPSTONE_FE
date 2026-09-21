@@ -4,6 +4,7 @@ import {
   KeyRound,
   LayoutDashboard,
   LifeBuoy,
+  Palette,
   Settings,
   Workflow,
 } from "lucide-react";
@@ -19,6 +20,7 @@ export const NAV_SECTIONS: AppNavSection[] = [
     label: "WORKSPACE",
     items: [
       { label: "Workflows", href: "/workflows", icon: Workflow, disabled: true },
+      { label: "My Styles", href: "/styles", icon: Palette },
       { label: "API keys", href: "/api-keys", icon: KeyRound },
       { label: "Usage", href: "/usage", icon: Activity },
     ],
@@ -40,6 +42,7 @@ export const ROUTE_TITLES = {
   usage: "Usage",
   support: "Support",
   workflows: "Workflows",
+  styles: "My Styles",
   settings: "Settings",
   billing: "Billing",
 } as const;

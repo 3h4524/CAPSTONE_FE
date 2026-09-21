@@ -5,9 +5,10 @@ import { Bell, ChevronDown, Command, Menu, Search } from "lucide-react";
 type AdminTopbarProps = {
   fullName: string;
   onMenuClick: () => void;
+  pageTitle?: string;
 };
 
-const AdminTopbar = ({ fullName, onMenuClick }: AdminTopbarProps) => (
+const AdminTopbar = ({ fullName, onMenuClick, pageTitle = "Dashboard" }: AdminTopbarProps) => (
   <header className="sticky top-0 z-20 border-b border-slate-200 bg-[#f8fafc]">
     <div className="flex h-[52px] items-center justify-between gap-4 border-b border-slate-200 bg-white/80 px-4 sm:px-7">
       <div className="flex items-center gap-3">
@@ -24,7 +25,7 @@ const AdminTopbar = ({ fullName, onMenuClick }: AdminTopbarProps) => (
           <span>Admin</span>
           <span className="text-slate-300">/</span>
           <span className="text-[12px] font-medium tracking-normal text-slate-700 lowercase">
-            Dashboard
+            {pageTitle}
           </span>
         </div>
       </div>

@@ -43,7 +43,17 @@ export type AdminUserDto = {
   plan: string;
   totalJobs: number;
   monthlyApiCost: number;
+  birthday: string | null;
   createdAt: string;
+};
+
+export type UpdateAdminUserRequest = {
+  fullName: string;
+  email: string;
+  birthday: string | null;
+  avatarUrl: string | null;
+  accountStatus: string;
+  roles: string[];
 };
 
 export type GetUsersRequest = {

@@ -23,6 +23,7 @@ import {
   unlockAdminUser} from "@/api/admin";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminUsersTable } from "@/components/admin/users/admin-users-table";
+import { EditUserModal } from "@/components/admin/users/edit-user-modal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -56,6 +57,7 @@ export default function AdminUsersPage() {
 
   const [selectedUser, setSelectedUser] = useState<AdminUserDto | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   const { data: result, isLoading, isError } = useQuery({
@@ -149,6 +151,11 @@ export default function AdminUsersPage() {
   const handleViewUser = (user: AdminUserDto) => {
     setSelectedUser(user);
     setIsViewModalOpen(true);
+  };
+
+  const handleEditUser = (user: AdminUserDto) => {
+    setSelectedUser(user);
+    setIsEditModalOpen(true);
   };
 
   return (
@@ -305,7 +312,7 @@ export default function AdminUsersPage() {
                   <AdminUsersTable
                     users={result.items}
                     onView={handleViewUser}
-                    onEdit={(user) => { /* eslint-disable-line no-console */ console.log("Edit", user); }}
+                    onEdit={handleEditUser}
                     onSuspend={(user) => suspendMutation.mutate(user.id)}
                     onUnlock={(user) => unlockMutation.mutate(user.id)}
                     onCopyId={handleCopyId}
@@ -397,7 +404,7 @@ export default function AdminUsersPage() {
                           <Users className="size-4 text-slate-400" />
                           <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Role</span>
                         </div>
-                        <span className="text-sm font-semibold text-slate-900">{selectedUser.roles.join(", ") || "User"}</span>
+                        <span className="text-sm font-semibold text-slate-900">{selectedUser.roles.join(", ") || "None"}</span>
                       </div>
                     </div>
 
@@ -443,7 +450,14 @@ export default function AdminUsersPage() {
                     <Button variant="outline" className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900" onClick={() => setIsViewModalOpen(false)}>
                       Close
                     </Button>
-                    <Button variant="outline" className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900">
+                    <Button 
+                      variant="outline" 
+                      className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900"
+                      onClick={() => {
+                        setIsViewModalOpen(false);
+                        if (selectedUser) handleEditUser(selectedUser);
+                      }}
+                    >
                       Edit User
                     </Button>
                     {selectedUser.accountStatus.toLowerCase() !== "suspended" && (
@@ -461,6 +475,12 @@ export default function AdminUsersPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <EditUserModal
+          user={selectedUser}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+        />
       </>
     </AdminShell>
   );

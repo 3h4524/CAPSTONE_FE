@@ -39,7 +39,7 @@ export const SubscriptionCheckoutModal = ({ plan, onClose }: SubscriptionCheckou
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [result, setResult] = useState<CheckoutStatus | null>(null);
   const [pendingCheckout, setPendingCheckout] = useState<PendingCheckout | null>(null);
-  const { mutate: checkout, isPending: isCreatingCheckout, isError, error } = useCheckout();
+  const { mutate: checkout, isPending: isCreatingCheckout, isError, error, reset: resetCheckout } = useCheckout();
   const hasRequestedRef = useRef(false);
   const queryClient = useQueryClient();
 
@@ -57,6 +57,7 @@ export const SubscriptionCheckoutModal = ({ plan, onClose }: SubscriptionCheckou
     setResult(null);
     setPendingCheckout(null);
     hasRequestedRef.current = false;
+    resetCheckout();
   };
 
   // Fully closing the modal (X icon, clicking outside, or the explicit Cancel payment button)

@@ -128,7 +128,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-[480px] [scrollbar-width:none] overflow-y-auto rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden">
+      <DialogContent className="max-h-[90vh] max-w-[480px] overflow-y-auto rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden">
         <div className="relative p-8 pb-6">
           
           {/* Header & Avatar: Matching View Detail exactly */}

@@ -48,7 +48,6 @@ const EMPTY_VALUES: SubscriptionPlanFormValues = {
   whiteLabelExportEnabled: false,
   prioritySupport: false,
   isActive: true,
-  sortOrder: 0,
 };
 
 const toFormValues = (plan: AdminSubscriptionPlan | null): SubscriptionPlanFormValues =>
@@ -70,7 +69,6 @@ const toFormValues = (plan: AdminSubscriptionPlan | null): SubscriptionPlanFormV
         whiteLabelExportEnabled: plan.whiteLabelExportEnabled,
         prioritySupport: plan.prioritySupport,
         isActive: plan.isActive,
-        sortOrder: plan.sortOrder,
       }
     : EMPTY_VALUES;
 
@@ -153,25 +151,15 @@ export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
                 <Field label="Plan name" htmlFor="plan-name" error={errors.name?.message}>
                   <Input id="plan-name" aria-invalid={Boolean(errors.name)} {...register("name")} />
                 </Field>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Tier slug" htmlFor="plan-tier" error={errors.tier?.message}>
-                    <Input
-                      id="plan-tier"
-                      placeholder="e.g. creator"
-                      disabled={isEditing}
-                      aria-invalid={Boolean(errors.tier)}
-                      {...register("tier")}
-                    />
-                  </Field>
-                  <Field label="Sort order" htmlFor="plan-sort-order" error={errors.sortOrder?.message}>
-                    <Input
-                      id="plan-sort-order"
-                      type="number"
-                      aria-invalid={Boolean(errors.sortOrder)}
-                      {...register("sortOrder", { valueAsNumber: true })}
-                    />
-                  </Field>
-                </div>
+                <Field label="Tier slug" htmlFor="plan-tier" error={errors.tier?.message}>
+                  <Input
+                    id="plan-tier"
+                    placeholder="e.g. creator"
+                    disabled={isEditing}
+                    aria-invalid={Boolean(errors.tier)}
+                    {...register("tier")}
+                  />
+                </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Monthly price (USD)" htmlFor="plan-monthly-price" error={errors.monthlyPriceUsd?.message}>
                     <Input

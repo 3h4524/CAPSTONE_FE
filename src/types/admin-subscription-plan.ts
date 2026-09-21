@@ -16,7 +16,6 @@ export type AdminSubscriptionPlan = {
   whiteLabelExportEnabled: boolean;
   prioritySupport: boolean;
   isActive: boolean;
-  sortOrder: number;
   activeSubscriberCount: number;
   // False when any subscription (active or historical) ever referenced this plan — Delete is
   // permanent-only and is blocked in that case; deactivate via the "Plan is active" toggle instead.
@@ -42,7 +41,6 @@ export type SubscriptionPlanInput = {
   whiteLabelExportEnabled: boolean;
   prioritySupport: boolean;
   isActive: boolean;
-  sortOrder: number;
 };
 
 export type CreateSubscriptionPlanInput = SubscriptionPlanInput & { tier: string };

@@ -28,7 +28,6 @@ export const subscriptionPlanFormSchema = z.object({
   whiteLabelExportEnabled: z.boolean(),
   prioritySupport: z.boolean(),
   isActive: z.boolean(),
-  sortOrder: z.number().int(),
 });
 
 export type SubscriptionPlanFormValues = z.infer<typeof subscriptionPlanFormSchema>;

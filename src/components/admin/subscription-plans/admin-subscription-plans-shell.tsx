@@ -47,7 +47,6 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
     <div className="h-screen overflow-hidden bg-[#f8fafc] text-slate-900">
       <div className="flex h-screen">
         <AdminSidebar
-          activeItem="Subscriptions"
           fullName={fullName}
           onLogout={onLogout}
           isMobileOpen={isMobileSidebarOpen}

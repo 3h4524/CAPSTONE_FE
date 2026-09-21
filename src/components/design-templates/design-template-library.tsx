@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import axios from "axios";
 import {
   ChevronLeft,
   ChevronRight,
@@ -31,9 +30,9 @@ import {
 import { showToast } from "@/helpers/toast";
 import { useCloneDesignTemplate } from "@/hooks/mutations/use-clone-design-template";
 import { useDeleteDesignTemplate } from "@/hooks/mutations/use-delete-design-template";
-import { useCurrentUser } from "@/hooks/queries/use-current-user";
 import { useDesignTemplateOptions } from "@/hooks/queries/use-design-template-options";
 import { useDesignTemplates } from "@/hooks/queries/use-design-templates";
+import { useAuthStore } from "@/stores/auth";
 import type {
   DesignTemplateFilters,
   DesignTemplateScope,
@@ -67,7 +66,7 @@ export function DesignTemplateLibrary() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const authQuery = useCurrentUser();
+  const user = useAuthStore((state) => state.user);
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get("search") ?? "");
   const [scope, setScope] = useState<DesignTemplateScope>(readScope(searchParams.get("scope")));
@@ -76,7 +75,7 @@ export function DesignTemplateLibrary() {
   const [pageNumber, setPageNumber] = useState(readPage(searchParams.get("pageNumber")));
   const [deletingTemplate, setDeletingTemplate] = useState<DesignTemplateSummary | null>(null);
 
-  const optionsQuery = useDesignTemplateOptions(authQuery.isSuccess);
+  const optionsQuery = useDesignTemplateOptions(Boolean(user));
   const filters = useMemo<DesignTemplateFilters>(
     () => ({
       pageNumber,
@@ -88,11 +87,11 @@ export function DesignTemplateLibrary() {
     }),
     [artStyle, debouncedSearch, niche, pageNumber, scope]
   );
-  const templatesQuery = useDesignTemplates(filters, authQuery.isSuccess);
+  const templatesQuery = useDesignTemplates(filters, Boolean(user));
   const cloneMutation = useCloneDesignTemplate();
   const deleteMutation = useDeleteDesignTemplate();
   const detailId = searchParams.get("template");
-  const retrying = authQuery.isFetching || templatesQuery.isFetching;
+  const retrying = optionsQuery.isFetching || templatesQuery.isFetching;
   const isSystemTab = scope === "system";
 
   useEffect(() => {
@@ -104,13 +103,6 @@ export function DesignTemplateLibrary() {
     return () => window.clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
-
-  useEffect(() => {
-    if (authQuery.isError && axios.isAxiosError(authQuery.error) && authQuery.error.response?.status === 401) {
-      const returnUrl = `${pathname}${searchParams.size ? `?${searchParams.toString()}` : ""}`;
-      router.replace(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
-    }
-  }, [authQuery.error, authQuery.isError, pathname, router, searchParams]);
 
   const updateUrl = (updates: Record<string, string | null>) => {
     const next = new URLSearchParams(searchParams.toString());
@@ -175,11 +167,7 @@ export function DesignTemplateLibrary() {
   };
 
   const retryLibrary = async () => {
-    if (authQuery.isError) {
-      const authResult = await authQuery.refetch();
-      if (authResult.isError) return;
-    }
-
+    await optionsQuery.refetch();
     await templatesQuery.refetch();
   };
 
@@ -325,11 +313,11 @@ export function DesignTemplateLibrary() {
           role="tabpanel"
           aria-labelledby={`${scope}-templates-tab`}
         >
-          {templatesQuery.isPending || authQuery.isPending ? (
+          {templatesQuery.isPending || optionsQuery.isPending ? (
             <section className="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading templates">
               {Array.from({ length: 6 }, (_, index) => <DesignTemplateCardSkeleton key={index} />)}
             </section>
-          ) : templatesQuery.isError || authQuery.isError ? (
+          ) : templatesQuery.isError || optionsQuery.isError ? (
             <section className="mt-7 flex min-h-80 flex-col items-center justify-center rounded-[22px] border border-slate-200 bg-white p-8 text-center">
               <Layers3 className="size-9 text-slate-400" aria-hidden="true" />
               <h2 className="font-display mt-4 text-xl font-semibold">The library could not be loaded</h2>

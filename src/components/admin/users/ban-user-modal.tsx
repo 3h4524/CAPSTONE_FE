@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { AlertTriangle, Clock, ShieldAlert } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import type { AdminUserDto } from "@/types/admin";
 import { cn } from "@/utils/cn";
-import { toast } from "sonner";
 
 interface BanUserModalProps {
   user: AdminUserDto | null;
@@ -52,7 +52,7 @@ export const BanUserModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-[480px] [scrollbar-width:none] overflow-y-auto rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden">
+      <DialogContent className="max-h-[90vh] max-w-[480px] overflow-y-auto rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden">
         <div className="relative p-8 pb-6">
           <div className="flex flex-col items-center text-center">
             <div className="flex size-24 items-center justify-center rounded-full border border-slate-100 bg-white p-1.5 shadow-sm">

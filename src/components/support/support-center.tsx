@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import axios from "axios";
+import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
   ChevronLeft,
@@ -94,7 +93,7 @@ type TicketView = "all" | "open" | "resolved";
 export function SupportCenter() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const authQuery = useCurrentUser();
+  const user = useAuthStore((state) => state.user);
   const [pageNumber, setPageNumber] = useState(1);
   const [view, setView] = useState<TicketView>("all");
   const [selectedHelpTopic, setSelectedHelpTopic] = useState<HelpTopic | null>(null);
@@ -126,25 +125,6 @@ export function SupportCenter() {
     setView(nextView);
     setPageNumber(1);
   };
-
-  if (authQuery.isPending) {
-    return <PageLoading label="Loading support" />;
-  }
-
-  if (authQuery.isError) {
-    return (
-      <main className="flex min-h-[60vh] items-center justify-center p-6">
-        <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-[0_18px_50px_rgba(39,55,80,0.08)]">
-          <LifeBuoy className="mx-auto size-8 text-slate-400" aria-hidden="true" />
-          <h1 className="font-display mt-4 text-2xl font-semibold tracking-tight">Unable to open Support</h1>
-          <p className="mt-2 text-sm text-slate-600">Check your connection, then try again.</p>
-          <Button className="mt-5 min-h-11" onClick={() => authQuery.refetch()}>
-            <RefreshCw aria-hidden="true" />Try again
-          </Button>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <div className="w-full min-w-0 p-4 text-[#161c22] sm:p-6">

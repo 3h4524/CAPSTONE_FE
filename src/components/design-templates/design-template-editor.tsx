@@ -39,10 +39,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { showToast } from "@/helpers/toast";
 import { useCreateDesignTemplate } from "@/hooks/mutations/use-create-design-template";
 import { useUpdateDesignTemplate } from "@/hooks/mutations/use-update-design-template";
-import { useCurrentUser } from "@/hooks/queries/use-current-user";
 import { useDesignTemplate } from "@/hooks/queries/use-design-template";
 import { useDesignTemplateOptions } from "@/hooks/queries/use-design-template-options";
 import { type DesignTemplateFormValues, designTemplateSchema } from "@/schemas/design-template";
+import { useAuthStore } from "@/stores/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 type DesignTemplateEditorProps = {
@@ -63,9 +63,9 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
   const isEditing = Boolean(templateId);
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
   const [previewImageFailed, setPreviewImageFailed] = useState(false);
-  const authQuery = useCurrentUser();
-  const optionsQuery = useDesignTemplateOptions(authQuery.isSuccess);
-  const templateQuery = useDesignTemplate(templateId ?? null, authQuery.isSuccess && isEditing);
+  const user = useAuthStore((state) => state.user);
+  const optionsQuery = useDesignTemplateOptions(Boolean(user));
+  const templateQuery = useDesignTemplate(templateId ?? null, Boolean(user) && isEditing);
   const createMutation = useCreateDesignTemplate();
   const updateMutation = useUpdateDesignTemplate();
   const form = useForm<DesignTemplateFormValues>({
@@ -82,7 +82,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
   const missingSubject = basePrompt.length > 0 && !basePrompt.includes("{subject}");
   const saving = createMutation.isPending || updateMutation.isPending;
   const loading =
-    authQuery.isPending || optionsQuery.isPending || (isEditing && templateQuery.isPending);
+    !user || optionsQuery.isPending || (isEditing && templateQuery.isPending);
 
   useEffect(() => {
     const template = templateQuery.data;
@@ -200,7 +200,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
     );
   }
 
-  if (authQuery.isError || optionsQuery.isError || (isEditing && templateQuery.isError)) {
+  if (optionsQuery.isError || (isEditing && templateQuery.isError)) {
     return (
       <main className="flex min-h-[65vh] items-center justify-center p-6 text-center">
         <div className="max-w-md rounded-[22px] border border-slate-200 bg-white p-8 shadow-[0_18px_50px_rgba(39,55,80,0.08)]">

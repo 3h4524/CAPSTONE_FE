@@ -10,6 +10,7 @@ export const useSupportTicket = (id: string | null) =>
     queryKey: supportTicketKeys.detail(id ?? "closed"),
     queryFn: () => getSupportTicket(id as string),
     enabled: Boolean(id),
+    staleTime: 0,
     refetchOnWindowFocus: true,
     refetchInterval: (query) => {
       if (typeof document !== "undefined" && document.hidden) {

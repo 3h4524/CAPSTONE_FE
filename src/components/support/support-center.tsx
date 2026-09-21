@@ -13,7 +13,6 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-import { PageLoading } from "@/components/commons/layout/page-loading";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { CreateTicketDialog } from "@/components/support/create-ticket-dialog";
 import { TicketPriorityBadge, TicketStatusBadge } from "@/components/support/ticket-badges";
@@ -29,8 +28,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { CATEGORY_LABELS } from "@/constants/support";
-import { useCurrentUser } from "@/hooks/queries/use-current-user";
 import { useSupportTickets } from "@/hooks/queries/use-support-tickets";
+import { useAuthStore } from "@/stores/auth";
 import type { SupportTicketSummary, TicketStatus } from "@/types/support";
 import { cn } from "@/utils/cn";
 
@@ -94,7 +93,6 @@ type TicketView = "all" | "open" | "resolved";
 
 export function SupportCenter() {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const authQuery = useCurrentUser();
   const [pageNumber, setPageNumber] = useState(1);
@@ -107,16 +105,9 @@ export function SupportCenter() {
     () => ({ pageNumber, pageSize: PAGE_SIZE, status }),
     [pageNumber, status]
   );
-  const ticketsQuery = useSupportTickets(filters, authQuery.isSuccess);
+  const ticketsQuery = useSupportTickets(filters, Boolean(user));
   const composeOpen = searchParams.get("compose") === "1";
   const ticketId = searchParams.get("ticket");
-
-  useEffect(() => {
-    if (authQuery.isError && axios.isAxiosError(authQuery.error) && authQuery.error.response?.status === 401) {
-      const returnUrl = `${pathname}${searchParams.size ? `?${searchParams.toString()}` : ""}`;
-      router.replace(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
-    }
-  }, [authQuery.error, authQuery.isError, pathname, router, searchParams]);
 
   const openTicket = (id: string) => {
     const params = new URLSearchParams();

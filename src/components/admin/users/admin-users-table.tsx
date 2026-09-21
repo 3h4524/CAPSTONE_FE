@@ -17,7 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import type { AdminUserDto } from "@/types/admin";
 import { cn } from "@/utils/cn";
 
-interface AdminUsersTableProps {
+type AdminUsersTableProps = {
   users: AdminUserDto[];
   onView: (user: AdminUserDto) => void;
   onEdit: (user: AdminUserDto) => void;

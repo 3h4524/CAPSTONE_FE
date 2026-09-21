@@ -13,7 +13,6 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import {
   getAdminDashboardMetrics,
@@ -39,6 +38,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import { showToast } from "@/helpers/toast";
 import type { AdminUserDto, GetUsersRequest } from "@/types/admin";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -81,20 +82,20 @@ export default function AdminUsersPage() {
   const suspendMutation = useMutation({
     mutationFn: (params: { id: string, durationDays: number | null, reason: string }) => suspendAdminUser(params),
     onSuccess: () => {
-      toast.success("Account suspended successfully");
+      showToast("success", "Account suspended successfully");
       queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
       setIsBanModalOpen(false);
     },
-    onError: () => toast.error("Failed to suspend account"),
+    onError: () => showToast("error", "Failed to suspend account"),
   });
 
   const unlockMutation = useMutation({
     mutationFn: unlockAdminUser,
     onSuccess: () => {
-      toast.success("Account unlocked successfully");
+      showToast("success", "Account unlocked successfully");
       queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
     },
-    onError: () => toast.error("Failed to unlock account"),
+    onError: () => showToast("error", "Failed to unlock account"),
   });
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,7 +104,7 @@ export default function AdminUsersPage() {
 
   const handleCopyId = (id: string) => {
     navigator.clipboard.writeText(id);
-    toast.success("User ID copied to clipboard");
+    showToast("success", "User ID copied to clipboard");
   };
 
   const handlePageChange = (newIndex: number) => {
@@ -113,12 +114,12 @@ export default function AdminUsersPage() {
   const handleExportCSV = async () => {
     try {
       setIsExporting(true);
-      
+
       const exportRequest = { ...request, pageIndex: 1, pageSize: 999999 };
       const data = await getAdminUsers(exportRequest);
-      
+
       if (!data || data.items.length === 0) {
-        toast.error("No data found to export.");
+        showToast("error", "No data found to export.");
         return;
       }
 
@@ -129,7 +130,7 @@ export default function AdminUsersPage() {
         const roles = `"${u.roles.join(", ")}"`;
         const date = new Date(u.createdAt).toLocaleDateString();
         const cost = u.monthlyApiCost.toFixed(2);
-        
+
         return [u.id, name, email, roles, u.plan, u.accountStatus, date, u.totalJobs, cost].join(",");
       });
 
@@ -143,10 +144,10 @@ export default function AdminUsersPage() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      
-      toast.success(`Exported ${data.items.length} users successfully!`);
+
+      showToast("success", `Exported ${data.items.length} users successfully!`);
     } catch {
-      toast.error("An error occurred while exporting data.");
+      showToast("error", "An error occurred while exporting data.");
     } finally {
       setIsExporting(false);
     }
@@ -190,8 +191,12 @@ export default function AdminUsersPage() {
                 onClick={handleExportCSV}
                 disabled={(!result || result.items.length === 0) || isExporting}
               >
-                <Download className="h-4 w-4" />
-                {isExporting ? "Exporting..." : "Export CSV"}
+                {isExporting ? (
+                  <Spinner aria-hidden="true" className="h-4 w-4" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                Export CSV
               </Button>
             </div>
           </div>
@@ -242,7 +247,6 @@ export default function AdminUsersPage() {
           </div>
 
           <div className="flex flex-col gap-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm">
-            {/* Top Filters & Search */}
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-3">
                 <div className="relative w-72">
@@ -302,7 +306,6 @@ export default function AdminUsersPage() {
 
 
 
-            {/* Data Table */}
             <div className="mt-2">
               {isLoading ? (
                 <div className="flex h-64 items-center justify-center text-sm text-slate-500">
@@ -361,7 +364,6 @@ export default function AdminUsersPage() {
         <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
           <DialogContent className="max-w-[480px] overflow-hidden rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl">
             <div className="relative p-8">
-              {/* Header: Clean & Centered */}
               <div className="flex flex-col items-center text-center">
                 <div className="flex size-24 items-center justify-center rounded-full border border-slate-100 bg-white p-1.5 shadow-sm">
                   <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-900 text-3xl font-bold text-white">
@@ -392,9 +394,7 @@ export default function AdminUsersPage() {
 
               {selectedUser && (
                 <div className="mt-8 flex flex-col gap-6">
-                  {/* Info Blocks */}
                   <div className="flex flex-col gap-4">
-                    {/* Row 1: ID & Role */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                         <div className="mb-2 flex items-center gap-2">
@@ -417,7 +417,6 @@ export default function AdminUsersPage() {
                       </div>
                     </div>
 
-                    {/* Row 2: Plan & Date */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                         <div className="mb-2 flex items-center gap-2">
@@ -435,7 +434,6 @@ export default function AdminUsersPage() {
                       </div>
                     </div>
 
-                    {/* Row 3: Jobs & Cost */}
                     <div className="flex items-center justify-between rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                       <div>
                         <div className="mb-1 flex items-center gap-2">
@@ -454,13 +452,12 @@ export default function AdminUsersPage() {
                     </div>
                   </div>
 
-                  {/* Footer Actions */}
                   <div className="mt-2 flex items-center justify-center gap-3">
                     <Button variant="outline" className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900" onClick={() => setIsViewModalOpen(false)}>
                       Close
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900"
                       onClick={() => {
                         setIsViewModalOpen(false);

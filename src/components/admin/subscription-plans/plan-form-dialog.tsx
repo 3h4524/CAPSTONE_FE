@@ -74,9 +74,9 @@ const toFormValues = (plan: AdminSubscriptionPlan | null): SubscriptionPlanFormV
 
 export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
   const isEditing = plan !== null;
-  const createMutation = useCreateSubscriptionPlan(onClose);
-  const updateMutation = useUpdateSubscriptionPlan(onClose);
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const { mutate: createPlan, isPending: isCreating } = useCreateSubscriptionPlan(onClose);
+  const { mutate: updatePlan, isPending: isUpdating } = useUpdateSubscriptionPlan(onClose);
+  const isPending = isCreating || isUpdating;
 
   const {
     register,
@@ -101,14 +101,14 @@ export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
     const description = values.description?.trim() ? values.description.trim() : null;
 
     if (isEditing) {
-      updateMutation.mutate({
+      updatePlan({
         id: plan.id,
         input: { ...values, description, annualPriceUsd },
       });
       return;
     }
 
-    createMutation.mutate({ ...values, tier, description, annualPriceUsd });
+    createPlan({ ...values, tier, description, annualPriceUsd });
   });
 
   return (

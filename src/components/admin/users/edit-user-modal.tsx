@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { Activity, Calendar, Camera, Loader2, Mail, ShieldAlert, ShieldCheck, UserCircle2, Zap } from "lucide-react";
-import { toast } from "sonner";
 
 import { sendResetPasswordLink, updateAdminUser } from "@/api/admin";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,11 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getErrorMessage } from "@/helpers/error-message";
+import { showToast } from "@/helpers/toast";
 import type { AdminUserDto, UpdateAdminUserRequest } from "@/types/admin";
 import { cn } from "@/utils/cn";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface EditUserModalProps {
+type EditUserModalProps = {
   user: AdminUserDto | null;
   isOpen: boolean;
   onClose: () => void;
@@ -65,25 +66,24 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
   }, [user, isOpen]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: UpdateAdminUserRequest) => updateAdminUser(user!.id, data),
+    mutationFn: (data: UpdateAdminUserRequest) => updateAdminUser(user?.id ?? "", data),
     onSuccess: () => {
-      toast.success("User updated successfully");
+      showToast("success", "User updated successfully");
       queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
       onClose();
     },
     onError: (error: unknown) => {
-      const err = error as { response?: { data?: { title?: string } } };
-      toast.error(err?.response?.data?.title || "Failed to update user");
+      showToast("error", getErrorMessage(error));
     },
   });
 
   const resetPasswordMutation = useMutation({
-    mutationFn: () => sendResetPasswordLink(user!.id),
+    mutationFn: () => sendResetPasswordLink(user?.id ?? ""),
     onSuccess: () => {
-      toast.success("Reset password link sent to user's email");
+      showToast("success", "Reset password link sent to user's email");
     },
     onError: () => {
-      toast.error("Failed to send reset password link");
+      showToast("error", "Failed to send reset password link");
     },
   });
 
@@ -100,7 +100,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
 
   const handleSave = () => {
     if (!formData.fullName || !formData.email) {
-      toast.error("Full Name and Email are required");
+      showToast("error", "Full Name and Email are required");
       return;
     }
 
@@ -109,7 +109,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (selectedDate >= today) {
-        toast.error("Birthday must be in the past");
+        showToast("error", "Birthday must be in the past");
         return;
       }
     }
@@ -130,8 +130,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-[480px] overflow-y-auto rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden">
         <div className="relative p-8 pb-6">
-          
-          {/* Header & Avatar: Matching View Detail exactly */}
+
           <div className="flex flex-col items-center text-center">
             <div className="group relative cursor-pointer">
               <div className="flex size-24 items-center justify-center rounded-full border border-slate-100 bg-white p-1.5 shadow-sm">
@@ -143,7 +142,6 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
                 </Avatar>
               </div>
 
-              {/* Overlay Edit Button */}
               <div
                 className="absolute inset-0 m-1.5 flex items-center justify-center rounded-full bg-black/50 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100"
                 onClick={() => setIsEditingAvatar(!isEditingAvatar)}
@@ -162,7 +160,6 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
 
           <div className="mt-8 flex flex-col gap-5">
 
-            {/* Avatar URL Edit Field */}
             {isEditingAvatar && (
               <div className="animate-in fade-in slide-in-from-top-2 rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm">
                 <div className="mb-2 flex items-center gap-2">
@@ -180,7 +177,6 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
               </div>
             )}
 
-            {/* General Info Block */}
             <div className="space-y-4 rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
               <div>
                 <div className="mb-2 flex items-center gap-2">
@@ -248,7 +244,6 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
               </div>
             </div>
 
-            {/* Role Block */}
             <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-3 flex items-center gap-2">
                 <ShieldAlert className="size-4 text-slate-400" />
@@ -276,7 +271,6 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
               </div>
             </div>
 
-            {/* Seller Info Block */}
             {isSeller && (
               <div className="flex items-center justify-between rounded-2xl border border-indigo-100/60 bg-indigo-50/30 p-4 shadow-sm transition-shadow hover:shadow-md">
                 <div>
@@ -296,7 +290,6 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
               </div>
             )}
 
-            {/* Password Reset Block */}
             <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-3 flex items-center gap-2">
                 <ShieldCheck className="size-4 text-slate-400" />
@@ -324,18 +317,17 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
 
           </div>
 
-          {/* Footer Actions */}
           <div className="mt-8 flex items-center justify-center gap-3">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onClose} 
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
               className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900"
             >
               Cancel
             </Button>
-            <Button 
-              onClick={handleSave} 
+            <Button
+              onClick={handleSave}
               disabled={updateMutation.isPending}
               className="h-11 flex-1 rounded-xl bg-slate-900 font-semibold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-[0.98]"
             >

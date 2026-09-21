@@ -25,7 +25,7 @@ type DeletePlanDialogProps = {
 };
 
 export function DeletePlanDialog({ open, plan, onClose }: DeletePlanDialogProps) {
-  const mutation = useDeleteSubscriptionPlan(onClose);
+  const { mutate: deletePlan, isPending: isDeleting } = useDeleteSubscriptionPlan(onClose);
   const {
     register,
     handleSubmit,
@@ -48,7 +48,7 @@ export function DeletePlanDialog({ open, plan, onClose }: DeletePlanDialogProps)
   }
 
   const submit = handleSubmit((values) => {
-    mutation.mutate({ id: plan.id, reason: values.reason });
+    deletePlan({ id: plan.id, reason: values.reason });
   });
 
   const priceLabel = `$${plan.monthlyPriceUsd.toFixed(2)}/mo`;
@@ -117,11 +117,11 @@ export function DeletePlanDialog({ open, plan, onClose }: DeletePlanDialogProps)
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isDeleting}>
               Cancel
             </Button>
-            <Button type="submit" variant="destructive" disabled={mutation.isPending}>
-              {mutation.isPending ? <Spinner aria-hidden="true" /> : null}
+            <Button type="submit" variant="destructive" disabled={isDeleting}>
+              {isDeleting ? <Spinner aria-hidden="true" /> : null}
               Permanently delete
             </Button>
           </div>

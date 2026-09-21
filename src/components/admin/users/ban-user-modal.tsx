@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { AlertTriangle, Clock, ShieldAlert } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -10,11 +9,13 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { showToast } from "@/helpers/toast";
 import type { AdminUserDto } from "@/types/admin";
 import { cn } from "@/utils/cn";
 
-interface BanUserModalProps {
+type BanUserModalProps = {
   user: AdminUserDto | null;
   isOpen: boolean;
   onClose: () => void;
@@ -43,7 +44,7 @@ export const BanUserModal = ({
 
   const handleConfirm = () => {
     if (!reason.trim()) {
-      toast.error("Please provide a reason for suspension");
+      showToast("error", "Please provide a reason for suspension");
       return;
     }
     const durationDays = selectedDuration === "permanent" ? null : parseInt(selectedDuration, 10);
@@ -146,8 +147,12 @@ export const BanUserModal = ({
               onClick={handleConfirm} 
               disabled={isLoading}
             >
-              <Clock className="size-4" />
-              {isLoading ? "Suspending..." : "Confirm Suspension"}
+              {isLoading ? (
+                <Spinner aria-hidden="true" className="size-4" />
+              ) : (
+                <Clock className="size-4" />
+              )}
+              Confirm Suspension
             </Button>
           </div>
         </div>

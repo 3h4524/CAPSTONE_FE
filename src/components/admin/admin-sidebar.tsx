@@ -38,7 +38,7 @@ type AdminSidebarProps = {
 const primaryNavigation = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Users", href: "/admin/users", icon: Users },
-  { label: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
+  { label: "Subscriptions", href: "/admin/subscription-plans", icon: CreditCard },
 ];
 
 const secondaryNavigation = [
@@ -170,7 +170,7 @@ const SidebarItems = ({
   isCollapsed?: boolean;
 }) => {
   const pathname = usePathname();
-  
+
   return (
     <div className="space-y-0.5">
       {items.map(({ label, href, icon: Icon, count, tone }) => {
@@ -188,23 +188,23 @@ const SidebarItems = ({
                 : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
             )}
           >
-          <Icon
-            className={cn("size-3.5 shrink-0", active ? "text-slate-700" : "text-slate-400")}
-            strokeWidth={1.8}
-          />
-          {!isCollapsed && <span className="flex-1 truncate">{label}</span>}
-          {!isCollapsed && count && (
-            <span
-              className={cn(
-                "shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold",
-                tone === "amber" && "bg-amber-50 text-amber-600",
-                tone === "rose" && "bg-rose-50 text-rose-500",
-                !tone && "bg-slate-100 text-slate-400"
-              )}
-            >
-              {count}
-            </span>
-          )}
+            <Icon
+              className={cn("size-3.5 shrink-0", active ? "text-slate-700" : "text-slate-400")}
+              strokeWidth={1.8}
+            />
+            {!isCollapsed && <span className="flex-1 truncate">{label}</span>}
+            {!isCollapsed && count && (
+              <span
+                className={cn(
+                  "shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold",
+                  tone === "amber" && "bg-amber-50 text-amber-600",
+                  tone === "rose" && "bg-rose-50 text-rose-500",
+                  !tone && "bg-slate-100 text-slate-400"
+                )}
+              >
+                {count}
+              </span>
+            )}
           </Link>
         );
       })}

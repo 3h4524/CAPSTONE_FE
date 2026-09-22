@@ -2,9 +2,12 @@ import {
   Activity,
   CreditCard,
   KeyRound,
+  Layers3,
   LayoutDashboard,
   LifeBuoy,
+  Palette,
   Settings,
+  WandSparkles,
   Workflow,
 } from "lucide-react";
 
@@ -18,7 +21,10 @@ export const NAV_SECTIONS: AppNavSection[] = [
   {
     label: "WORKSPACE",
     items: [
-      { label: "Workflows", href: "/workflows", icon: Workflow, disabled: true },
+      { label: "Workflows", href: "/workflows", icon: Workflow },
+      { label: "Batches", href: "/batches", icon: Layers3 },
+      { label: "My Styles", href: "/styles", icon: Palette },
+      { label: "Design templates", href: "/design-templates", icon: WandSparkles },
       { label: "API keys", href: "/api-keys", icon: KeyRound },
       { label: "Usage", href: "/usage", icon: Activity },
     ],
@@ -35,11 +41,14 @@ export const NAV_SECTIONS: AppNavSection[] = [
 
 export const ROUTE_TITLES = {
   dashboard: "Dashboard",
+  "design-templates": "Design templates",
   profile: "Profile",
   "api-keys": "API keys",
   usage: "Usage",
   support: "Support",
   workflows: "Workflows",
+  batches: "Batches",
+  styles: "My Styles",
   settings: "Settings",
   billing: "Billing",
 } as const;

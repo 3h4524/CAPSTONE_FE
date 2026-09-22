@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
@@ -15,7 +16,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
+import { getResponseStatus } from "@/helpers/response-status";
 import { useLogout } from "@/hooks/mutations/use-logout";
+import { useProfile } from "@/hooks/queries/use-profile";
 import { useAuthStore } from "@/stores/auth";
 import { cn } from "@/utils/cn";
 
@@ -26,13 +29,27 @@ type AccountMenuProps = {
 
 export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
+  const setAvatarUrl = useAuthStore((state) => state.setAvatarUrl);
+  const clearSession = useAuthStore((state) => state.clearSession);
+  const profileQuery = useProfile(open);
   const { mutate: logout, isPending } = useLogout();
+
+  useEffect(() => {
+    if (profileQuery.data) setAvatarUrl(profileQuery.data.avatarUrl);
+  }, [profileQuery.data, setAvatarUrl]);
+
+  useEffect(() => {
+    if (profileQuery.isError && getResponseStatus(profileQuery.error) === 401) {
+      clearSession();
+    }
+  }, [clearSession, profileQuery.error, profileQuery.isError]);
 
   const handleLogout = () => logout(undefined, { onSettled: () => router.replace("/login") });
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           type="button"
@@ -64,14 +81,14 @@ export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
           {user?.email ?? ""}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild className="focus:bg-muted focus:text-primary">
           <Link href="/profile">
             <User />
             <span>Profile</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout} disabled={isPending}>
+        <DropdownMenuItem className="focus:bg-muted focus:text-primary" onClick={handleLogout} disabled={isPending}>
           <LogOut />
           <span>Log out</span>
         </DropdownMenuItem>

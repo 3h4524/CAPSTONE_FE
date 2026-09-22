@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { AlertTriangle, Clock, ShieldAlert } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import type { AdminUserDto } from "@/types/admin";
 import { cn } from "@/utils/cn";
-import { toast } from "sonner";
+
 
 interface BanUserModalProps {
   user: AdminUserDto | null;

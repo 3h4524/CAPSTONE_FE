@@ -10,6 +10,9 @@ export function ReactQueryProvider({ children }: { children: React.ReactNode }) 
       new QueryClient({
         defaultOptions: {
           queries: {
+            // Reuse recently fetched page data during client-side navigation. Mutations
+            // invalidate their affected keys so edits still appear immediately.
+            staleTime: 30_000,
             refetchOnWindowFocus: false,
           },
         },

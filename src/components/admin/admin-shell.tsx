@@ -11,9 +11,10 @@ import { useAuthStore } from "@/stores/auth";
 
 type AdminShellProps = {
   children: React.ReactNode;
+  pageTitle?: string;
 };
 
-export const AdminShell = ({ children }: AdminShellProps) => {
+export const AdminShell = ({ children, pageTitle }: AdminShellProps) => {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const isHydrated = useAuthStore((state) => state.isHydrated);
@@ -50,7 +51,7 @@ export const AdminShell = ({ children }: AdminShellProps) => {
         />
         <div className="min-w-0 flex-1 overflow-hidden">
           <div className="h-screen overflow-y-auto">
-            <AdminTopbar fullName={user.fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} />
+            <AdminTopbar fullName={user.fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} pageTitle={pageTitle} />
             <main className="mx-auto max-w-[1440px] px-4 py-6 sm:px-7 sm:py-8">
               {children}
             </main>

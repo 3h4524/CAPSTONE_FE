@@ -267,7 +267,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
   },
 };
 
-const DEFAULT_ROW_GAP = 150;
+const DEFAULT_ROW_GAP = 280;
 
 const DEFAULT_BRANCH_OFFSET = 130;
 

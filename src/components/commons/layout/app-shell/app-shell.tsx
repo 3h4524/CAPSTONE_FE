@@ -22,6 +22,14 @@ export const AppShell = ({ children }: AppShellProps) => {
     setMobileOpen(false);
   }, [pathname]);
 
+  if (pathname?.startsWith("/workflows")) {
+    return (
+      <TooltipProvider>
+        <div className="bg-muted/40 flex h-dvh overflow-hidden">{children}</div>
+      </TooltipProvider>
+    );
+  }
+
   return (
     <TooltipProvider>
       <div className="bg-muted/40 flex h-screen overflow-hidden">

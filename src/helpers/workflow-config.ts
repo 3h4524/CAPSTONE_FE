@@ -11,6 +11,9 @@ export const readBoolean = (value: unknown): boolean => value === true;
 export const readStringArray = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 
+export const readInstructionsPreview = (config: WorkflowNodeConfig): string =>
+  readString(config.instructions).trim();
+
 export const isWorkflowNodeType = (value: string): value is WorkflowNodeType =>
   Object.hasOwn(WORKFLOW_NODE_DEFINITIONS, value);
 

@@ -8,6 +8,7 @@ import { EditorPanelSheets } from "@/components/workflows/toolbar/editor-panel-s
 import { WorkflowActionsMenu } from "@/components/workflows/toolbar/workflow-actions-menu";
 import { WorkflowMetaDialog } from "@/components/workflows/toolbar/workflow-meta-dialog";
 import { WorkflowSwitcher } from "@/components/workflows/toolbar/workflow-switcher";
+import { WorkflowBackButton } from "@/components/workflows/workflow-back-button";
 import { NEW_WORKFLOW_NAME, STARTER_WORKFLOW_DEFINITION } from "@/constants/workflow";
 import { showToast } from "@/helpers/toast";
 import { getCopyName, toWorkflowDefinition, validateWorkflow } from "@/helpers/workflow-graph";
@@ -134,6 +135,7 @@ export const WorkflowToolbar = ({
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-b bg-white px-3 py-2">
+      <WorkflowBackButton />
       <EditorPanelSheets />
       <WorkflowSwitcher
         workflows={workflows}

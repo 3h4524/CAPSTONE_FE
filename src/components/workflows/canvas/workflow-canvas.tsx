@@ -2,7 +2,7 @@
 
 import type { DragEvent } from "react";
 
-import { WorkflowNodeCard } from "@/components/workflows/nodes/workflow-node-card";
+import { NodeView } from "@/components/workflows/nodes/node-view";
 import { WORKFLOW_DND_MIME } from "@/constants/workflow";
 import { isWorkflowNodeType } from "@/helpers/workflow-config";
 import { createWorkflowNode, isConnectionAllowed } from "@/helpers/workflow-graph";
@@ -19,7 +19,7 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 
-const NODE_TYPES: NodeTypes = { workflow: WorkflowNodeCard };
+const NODE_TYPES: NodeTypes = { workflow: NodeView };
 
 const DEFAULT_EDGE_OPTIONS = { type: "smoothstep" };
 

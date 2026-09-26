@@ -2,7 +2,7 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NodePaletteItem } from "@/components/workflows/palette/node-palette-item";
-import { WORKFLOW_CATEGORIES, WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
+import { NODE_CARD_WIDTHS, WORKFLOW_CATEGORIES, WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
 import { createWorkflowNode } from "@/helpers/workflow-graph";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { WorkflowNodeDefinition } from "@/types/workflow";
@@ -24,7 +24,7 @@ export const NodePalette = ({ onNodeAdded }: NodePaletteProps) => {
   const addAtViewportCenter = (definition: WorkflowNodeDefinition) => {
     const center = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
     const offset = (nodeCount % 5) * 24;
-    addNode(createWorkflowNode(definition.type, { x: center.x - 112 + offset, y: center.y - 40 + offset }));
+    addNode(createWorkflowNode(definition.type, { x: center.x - NODE_CARD_WIDTHS[definition.type] / 2 + offset, y: center.y - 40 + offset }));
     onNodeAdded?.();
   };
 
@@ -46,7 +46,7 @@ export const NodePalette = ({ onNodeAdded }: NodePaletteProps) => {
                   <NodePaletteItem
                     key={definition.type}
                     definition={definition}
-                    accentClassName={category.accentClassName}
+                    iconClassName={category.iconClassName}
                     disabled={isLocked || (definition.type === "product-input" && hasInputNode)}
                     onAdd={addAtViewportCenter}
                   />

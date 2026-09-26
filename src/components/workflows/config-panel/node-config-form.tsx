@@ -43,10 +43,8 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-start gap-3 border-b px-4 py-3">
-        <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", category?.accentClassName)}>
-          <Icon className="size-4" aria-hidden="true" />
-        </span>
+      <div className="flex items-start gap-2.5 border-b px-4 py-3">
+        <Icon className={cn("mt-0.5 size-5 shrink-0", category?.iconClassName)} aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-sm font-semibold text-slate-900">{node.data.label}</h2>
           <p className="text-muted-foreground mt-0.5 text-xs">{definition.description}</p>

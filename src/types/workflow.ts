@@ -113,4 +113,5 @@ export interface WorkflowCategoryDefinition {
   id: WorkflowNodeCategory;
   label: string;
   accentClassName: string;
+  iconClassName: string;
 }

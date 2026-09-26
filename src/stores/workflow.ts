@@ -34,6 +34,7 @@ type WorkflowEditorState = {
   onEdgesChange: (changes: EdgeChange<WorkflowEdge>[]) => void;
   connect: OnConnect;
   addNode: (node: WorkflowNode) => void;
+  renameNode: (nodeId: string, label: string) => void;
   updateNodeConfig: (nodeId: string, config: WorkflowNodeConfig) => void;
   removeNode: (nodeId: string) => void;
   selectNode: (nodeId: string | null) => void;
@@ -99,6 +100,14 @@ export const useWorkflowStore = create<WorkflowEditorState>((set) => ({
     set((state) => ({
       nodes: state.nodes.map((node) =>
         node.id === nodeId ? { ...node, data: { ...node.data, config } } : node
+      ),
+      isDirty: true,
+    })),
+
+  renameNode: (nodeId, label) =>
+    set((state) => ({
+      nodes: state.nodes.map((node) =>
+        node.id === nodeId ? { ...node, data: { ...node.data, label } } : node
       ),
       isDirty: true,
     })),

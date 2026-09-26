@@ -2,17 +2,19 @@
 
 import type { ReactNode } from "react";
 
+import { NodeName } from "@/components/workflows/nodes/node-name";
+import { WORKFLOW_CATEGORIES } from "@/constants/workflow";
 import { getWorkflowNodeDefinition } from "@/helpers/workflow-config";
 import type { WorkflowNodeData, WorkflowNodeStatus } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 import { Handle, Position } from "@xyflow/react";
 
-const STATUS_RINGS: Record<WorkflowNodeStatus, string> = {
-  idle: "ring-white/10",
-  running: "ring-indigo-400",
-  success: "ring-emerald-400",
-  failed: "ring-rose-400",
-  skipped: "ring-slate-500",
+const STATUS_BORDERS: Record<WorkflowNodeStatus, string> = {
+  idle: "border-slate-200",
+  running: "border-indigo-400 shadow-indigo-100",
+  success: "border-emerald-400",
+  failed: "border-rose-400",
+  skipped: "border-slate-300 opacity-70",
 };
 
 const STATUS_PILLS: Record<
@@ -25,26 +27,33 @@ const STATUS_PILLS: Record<
   skipped: { className: "bg-slate-200 text-slate-600", label: "Skipped" },
 };
 
-const HANDLE_CLASS_NAME = "size-4! rounded-full! border-2! border-white! bg-indigo-500!";
+const HANDLE_CLASS_NAME = "size-3! rounded-full! border-2! border-white! bg-indigo-500!";
 
 type NodeShellProps = {
+  nodeId: string;
   data: WorkflowNodeData;
   selected?: boolean;
   widthClassName: "w-60" | "w-72";
+  bodyClassName?: string;
   children?: ReactNode;
 };
 
-export const NodeShell = ({ data, selected, widthClassName, children }: NodeShellProps) => {
+export const NodeShell = ({ nodeId, data, selected, widthClassName, bodyClassName, children }: NodeShellProps) => {
   const definition = getWorkflowNodeDefinition(data.type);
   if (!definition) return null;
-  const Icon = definition.icon;
+  const category = WORKFLOW_CATEGORIES.find((item) => item.id === definition.category);
   const pill = data.status === "idle" ? null : STATUS_PILLS[data.status];
 
   return (
     <div className={cn("flex flex-col gap-1.5", widthClassName)}>
       <div className="flex items-center gap-1.5 px-0.5">
-        <Icon className="size-3.5 shrink-0 text-slate-500" aria-hidden="true" />
-        <p className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-700">{data.label}</p>
+        <NodeName
+          nodeId={nodeId}
+          label={data.label}
+          fallbackLabel={definition.label}
+          Icon={definition.icon}
+          iconClassName={category?.iconClassName}
+        />
         {pill && (
           <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold", pill.className)}>
             {pill.label}
@@ -53,10 +62,11 @@ export const NodeShell = ({ data, selected, widthClassName, children }: NodeShel
       </div>
       <div
         className={cn(
-          "relative rounded-xl bg-slate-900 text-slate-100 shadow-lg ring-1 transition-shadow",
-          STATUS_RINGS[data.status],
+          "relative rounded-xl border-2 bg-white shadow-sm transition-shadow",
+          STATUS_BORDERS[data.status],
           data.status === "running" && "animate-pulse",
-          selected && "ring-2 ring-indigo-400"
+          selected && "ring-primary/30 ring-4",
+          bodyClassName
         )}
       >
         {definition.hasInput && <Handle type="target" position={Position.Top} className={HANDLE_CLASS_NAME} />}

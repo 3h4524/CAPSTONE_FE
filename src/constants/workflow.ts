@@ -59,10 +59,10 @@ const PUBLISH_FIELDS = [
 ] as const;
 
 export const WORKFLOW_CATEGORIES: WorkflowCategoryDefinition[] = [
-  { id: "trigger", label: "Trigger", accentClassName: "bg-sky-100 text-sky-700" },
-  { id: "ai", label: "AI generation", accentClassName: "bg-violet-100 text-violet-700" },
-  { id: "review", label: "Review", accentClassName: "bg-amber-100 text-amber-700" },
-  { id: "output", label: "Output", accentClassName: "bg-emerald-100 text-emerald-700" },
+  { id: "trigger", label: "Trigger", accentClassName: "bg-sky-100 text-sky-700", iconClassName: "text-sky-600" },
+  { id: "ai", label: "AI generation", accentClassName: "bg-violet-100 text-violet-700", iconClassName: "text-violet-600" },
+  { id: "review", label: "Review", accentClassName: "bg-amber-100 text-amber-700", iconClassName: "text-amber-600" },
+  { id: "output", label: "Output", accentClassName: "bg-emerald-100 text-emerald-700", iconClassName: "text-emerald-600" },
 ];
 
 export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDefinition> = {
@@ -280,29 +280,27 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
   },
 };
 
-const DEFAULT_ROW_GAP = 280;
+const DEFAULT_BRANCH_X = 170;
 
-const DEFAULT_BRANCH_OFFSET = 170;
-
-const pipelineNode = (id: string, type: WorkflowNodeType, row: number, branch = 0) => ({
+const pipelineNode = (id: string, type: WorkflowNodeType, x: number, y: number) => ({
   id,
   type,
   label: WORKFLOW_NODE_DEFINITIONS[type].label,
-  position: { x: branch * DEFAULT_BRANCH_OFFSET, y: row * DEFAULT_ROW_GAP },
+  position: { x, y },
   config: { ...WORKFLOW_NODE_DEFINITIONS[type].defaultConfig },
 });
 
 export const DEFAULT_WORKFLOW_DEFINITION: WorkflowDefinition = {
   version: 1,
   nodes: [
-    pipelineNode("input", "product-input", 0),
-    pipelineNode("prompt", "prompt-synthesis", 1),
-    pipelineNode("design", "design-image", 2),
-    pipelineNode("approval", "approval-gate", 3),
-    pipelineNode("mockup", "apply-mockup", 4),
-    pipelineNode("video", "generate-video", 5, -1),
-    pipelineNode("listing", "generate-listing", 5, 1),
-    pipelineNode("export", "export-zip", 6),
+    pipelineNode("input", "product-input", 0, 0),
+    pipelineNode("prompt", "prompt-synthesis", 0, 200),
+    pipelineNode("design", "design-image", 0, 400),
+    pipelineNode("approval", "approval-gate", 0, 700),
+    pipelineNode("mockup", "apply-mockup", 0, 910),
+    pipelineNode("video", "generate-video", -DEFAULT_BRANCH_X, 1190),
+    pipelineNode("listing", "generate-listing", DEFAULT_BRANCH_X, 1190),
+    pipelineNode("export", "export-zip", 0, 1490),
   ],
   edges: [
     { id: "input-prompt", source: "input", target: "prompt" },
@@ -319,7 +317,7 @@ export const DEFAULT_WORKFLOW_DEFINITION: WorkflowDefinition = {
 
 export const STARTER_WORKFLOW_DEFINITION: WorkflowDefinition = {
   version: 1,
-  nodes: [pipelineNode("input", "product-input", 0)],
+  nodes: [pipelineNode("input", "product-input", 0, 0)],
   edges: [],
   viewport: { x: 0, y: 0, zoom: 1 },
 };

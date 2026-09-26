@@ -14,7 +14,7 @@ export const NodeSummary = ({ lines, tone = "slate" }: NodeSummaryProps) => {
       {lines.map((line, index) => (
         <p
           key={`${index}-${line}`}
-          className={cn("truncate text-xs", tone === "amber" ? "text-amber-200/90" : "text-slate-400")}
+          className={cn("truncate text-xs", tone === "amber" ? "text-amber-700" : "text-slate-500")}
         >
           {line}
         </p>

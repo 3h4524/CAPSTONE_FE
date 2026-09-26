@@ -14,6 +14,14 @@ export const readStringArray = (value: unknown): string[] =>
 export const readInstructionsPreview = (config: WorkflowNodeConfig): string =>
   readString(config.instructions).trim();
 
+const MAX_NODE_LABEL_LENGTH = 60;
+
+export const sanitizeNodeLabel = (value: string, fallback: string): string => {
+  const normalized = value.trim().replace(/\s+/g, " ");
+  if (!normalized) return fallback;
+  return normalized.slice(0, MAX_NODE_LABEL_LENGTH);
+};
+
 export const isWorkflowNodeType = (value: string): value is WorkflowNodeType =>
   Object.hasOwn(WORKFLOW_NODE_DEFINITIONS, value);
 

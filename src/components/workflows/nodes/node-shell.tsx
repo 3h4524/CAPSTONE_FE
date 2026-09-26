@@ -55,7 +55,7 @@ export const NodeShell = ({ nodeId, data, selected, widthClassName, bodyClassNam
           iconClassName={category?.iconClassName}
         />
         {pill && (
-          <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold", pill.className)}>
+          <span className={cn("ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold", pill.className)}>
             {pill.label}
           </span>
         )}

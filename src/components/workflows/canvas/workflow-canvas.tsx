@@ -21,7 +21,7 @@ import {
 
 const NODE_TYPES: NodeTypes = { workflow: NodeView };
 
-const DEFAULT_EDGE_OPTIONS = { type: "smoothstep" };
+const DEFAULT_EDGE_OPTIONS = { type: "default" };
 
 const DELETE_KEYS = ["Backspace", "Delete"];
 

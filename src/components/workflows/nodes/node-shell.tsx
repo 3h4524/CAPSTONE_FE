@@ -2,70 +2,67 @@
 
 import type { ReactNode } from "react";
 
-import { StatusBadge } from "@/components/commons/data-display/status-badge";
-import { Card } from "@/components/ui/card";
-import { WORKFLOW_CATEGORIES, WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
+import { getWorkflowNodeDefinition } from "@/helpers/workflow-config";
 import type { WorkflowNodeData, WorkflowNodeStatus } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 import { Handle, Position } from "@xyflow/react";
 
-const STATUS_BORDERS: Record<WorkflowNodeStatus, string> = {
-  idle: "border-slate-200",
-  running: "border-indigo-400 shadow-indigo-100",
-  success: "border-emerald-400",
-  failed: "border-rose-400",
-  skipped: "border-slate-300 opacity-70",
+const STATUS_RINGS: Record<WorkflowNodeStatus, string> = {
+  idle: "ring-white/10",
+  running: "ring-indigo-400",
+  success: "ring-emerald-400",
+  failed: "ring-rose-400",
+  skipped: "ring-slate-500",
 };
 
-const STATUS_BADGES: Record<Exclude<WorkflowNodeStatus, "idle">, { status: string; label: string }> = {
-  running: { status: "processing", label: "Running" },
-  success: { status: "completed", label: "Done" },
-  failed: { status: "failed", label: "Failed" },
-  skipped: { status: "closed", label: "Skipped" },
+const STATUS_PILLS: Record<
+  Exclude<WorkflowNodeStatus, "idle">,
+  { className: string; label: string }
+> = {
+  running: { className: "bg-indigo-100 text-indigo-700", label: "Running" },
+  success: { className: "bg-emerald-100 text-emerald-700", label: "Done" },
+  failed: { className: "bg-rose-100 text-rose-700", label: "Failed" },
+  skipped: { className: "bg-slate-200 text-slate-600", label: "Skipped" },
 };
 
-const HANDLE_CLASS_NAME = "size-3! border-2! border-white! bg-slate-500!";
+const HANDLE_CLASS_NAME = "size-4! rounded-full! border-2! border-white! bg-indigo-500!";
 
 type NodeShellProps = {
   data: WorkflowNodeData;
   selected?: boolean;
-  widthClassName: string;
+  widthClassName: "w-60" | "w-72";
   children?: ReactNode;
 };
 
 export const NodeShell = ({ data, selected, widthClassName, children }: NodeShellProps) => {
-  const definition = WORKFLOW_NODE_DEFINITIONS[data.type];
-  const category = WORKFLOW_CATEGORIES.find((item) => item.id === definition.category);
+  const definition = getWorkflowNodeDefinition(data.type);
+  if (!definition) return null;
   const Icon = definition.icon;
-  const badge = data.status === "idle" ? null : STATUS_BADGES[data.status];
+  const pill = data.status === "idle" ? null : STATUS_PILLS[data.status];
 
   return (
-    <Card
-      className={cn(
-        "gap-0 rounded-xl border-2 bg-white py-0 shadow-sm transition-shadow",
-        widthClassName,
-        STATUS_BORDERS[data.status],
-        data.status === "running" && "animate-pulse",
-        selected && "ring-primary/30 ring-4"
-      )}
-    >
-      {definition.hasInput && <Handle type="target" position={Position.Top} className={HANDLE_CLASS_NAME} />}
-      <div className="flex items-center gap-3 p-3">
-        <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", category?.accentClassName)}>
-          <Icon className="size-4" aria-hidden="true" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-muted-foreground text-[11px] font-semibold tracking-wide uppercase">{category?.label}</p>
-          <p className="truncate text-sm font-semibold text-slate-900">{data.label}</p>
-        </div>
-        {badge && (
-          <StatusBadge status={badge.status} className="shrink-0 px-2 py-0.5 text-[11px]">
-            {badge.label}
-          </StatusBadge>
+    <div className={cn("flex flex-col gap-1.5", widthClassName)}>
+      <div className="flex items-center gap-1.5 px-0.5">
+        <Icon className="size-3.5 shrink-0 text-slate-500" aria-hidden="true" />
+        <p className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-700">{data.label}</p>
+        {pill && (
+          <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold", pill.className)}>
+            {pill.label}
+          </span>
         )}
       </div>
-      {children}
-      {definition.hasOutput && <Handle type="source" position={Position.Bottom} className={HANDLE_CLASS_NAME} />}
-    </Card>
+      <div
+        className={cn(
+          "relative rounded-xl bg-slate-900 text-slate-100 shadow-lg ring-1 transition-shadow",
+          STATUS_RINGS[data.status],
+          data.status === "running" && "animate-pulse",
+          selected && "ring-2 ring-indigo-400"
+        )}
+      >
+        {definition.hasInput && <Handle type="target" position={Position.Top} className={HANDLE_CLASS_NAME} />}
+        {children}
+        {definition.hasOutput && <Handle type="source" position={Position.Bottom} className={HANDLE_CLASS_NAME} />}
+      </div>
+    </div>
   );
 };

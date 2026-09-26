@@ -3,7 +3,7 @@
 import type { DragEvent } from "react";
 
 import { NodeView } from "@/components/workflows/nodes/node-view";
-import { WORKFLOW_DND_MIME } from "@/constants/workflow";
+import { NODE_CARD_WIDTHS, WORKFLOW_DND_MIME } from "@/constants/workflow";
 import { isWorkflowNodeType } from "@/helpers/workflow-config";
 import { createWorkflowNode, isConnectionAllowed } from "@/helpers/workflow-graph";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -51,7 +51,7 @@ export const WorkflowCanvas = () => {
     const type = event.dataTransfer.getData(WORKFLOW_DND_MIME);
     if (isRunning || !isWorkflowNodeType(type)) return;
     const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
-    addNode(createWorkflowNode(type, { x: position.x - 112, y: position.y - 40 }));
+    addNode(createWorkflowNode(type, { x: position.x - NODE_CARD_WIDTHS[type] / 2, y: position.y - 40 }));
   };
 
   const validateConnection = (connection: Connection | Edge) => isConnectionAllowed(connection, edges);

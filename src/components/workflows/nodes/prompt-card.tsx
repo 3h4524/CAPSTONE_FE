@@ -1,31 +1,36 @@
 "use client";
 
 import { NodeShell } from "@/components/workflows/nodes/node-shell";
-import { readInstructionsPreview, summarizeNodeConfig } from "@/helpers/workflow-config";
+import { NodeSummary } from "@/components/workflows/nodes/node-summary";
+import { WORKFLOW_CATEGORIES } from "@/constants/workflow";
+import {
+  getWorkflowNodeDefinition,
+  readInstructionsPreview,
+  summarizeNodeConfig,
+} from "@/helpers/workflow-config";
 import type { WorkflowNode } from "@/types/workflow";
+import { cn } from "@/utils/cn";
 import type { NodeProps } from "@xyflow/react";
 
 export const PromptCard = ({ data, selected }: NodeProps<WorkflowNode>) => {
   const instructions = readInstructionsPreview(data.config);
   const summary = summarizeNodeConfig(data.type, data.config).slice(0, 2);
+  const category = WORKFLOW_CATEGORIES.find(
+    (item) => item.id === getWorkflowNodeDefinition(data.type)?.category
+  );
 
   return (
     <NodeShell data={data} selected={selected} widthClassName="w-60">
-      {(instructions || summary.length > 0) && (
-        <div className="space-y-1 border-t px-3 py-2">
-          {instructions ? (
-            <p className="line-clamp-3 border-l-2 border-violet-300 pl-2 text-xs text-slate-600 italic">
-              {instructions}
-            </p>
-          ) : (
-            summary.map((line) => (
-              <p key={line} className="text-muted-foreground truncate text-xs">
-                {line}
-              </p>
-            ))
-          )}
-        </div>
-      )}
+      <div className="space-y-2 p-3">
+        <p className={cn("line-clamp-4 text-xs leading-relaxed", instructions ? "text-slate-200" : "text-slate-500")}>
+          {instructions || "No prompt configured yet."}
+        </p>
+        <NodeSummary lines={summary} />
+      </div>
+      <div className="flex items-center justify-between border-t border-white/10 px-3 py-1.5">
+        <p className="text-[11px] font-medium text-slate-500">{category?.label}</p>
+        <p className="text-[11px] text-slate-500">{instructions ? `${instructions.length} chars` : "Empty"}</p>
+      </div>
     </NodeShell>
   );
 };

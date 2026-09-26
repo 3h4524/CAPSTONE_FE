@@ -1,5 +1,5 @@
 import { WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
-import type { WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
+import type { WorkflowNodeConfig, WorkflowNodeDefinition, WorkflowNodeType } from "@/types/workflow";
 
 export const readString = (value: unknown): string => (typeof value === "string" ? value : "");
 
@@ -17,8 +17,13 @@ export const readInstructionsPreview = (config: WorkflowNodeConfig): string =>
 export const isWorkflowNodeType = (value: string): value is WorkflowNodeType =>
   Object.hasOwn(WORKFLOW_NODE_DEFINITIONS, value);
 
-export const summarizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNodeConfig): string[] =>
-  WORKFLOW_NODE_DEFINITIONS[type].fields.flatMap((field) => {
+export const getWorkflowNodeDefinition = (type: string): WorkflowNodeDefinition | undefined =>
+  isWorkflowNodeType(type) ? WORKFLOW_NODE_DEFINITIONS[type] : undefined;
+
+export const summarizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNodeConfig): string[] => {
+  const definition = getWorkflowNodeDefinition(type);
+  if (!definition) return [];
+  return definition.fields.flatMap((field) => {
     const value = config[field.name];
 
     switch (field.kind) {
@@ -42,3 +47,4 @@ export const summarizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNode
         return [];
     }
   });
+};

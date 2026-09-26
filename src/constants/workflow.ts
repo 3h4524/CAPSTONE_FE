@@ -27,6 +27,19 @@ export const DEFAULT_WORKFLOW_NAME = "Etsy POD pipeline";
 
 export const NEW_WORKFLOW_NAME = "Untitled workflow";
 
+export const NODE_CARD_WIDTHS: Record<WorkflowNodeType, number> = {
+  "product-input": 240,
+  "prompt-synthesis": 240,
+  "design-image": 288,
+  "approval-gate": 240,
+  "apply-mockup": 288,
+  "generate-video": 288,
+  "generate-listing": 240,
+  "export-zip": 240,
+  "publish-etsy": 240,
+  "publish-printify": 240,
+};
+
 const PRODUCT_TYPE_OPTIONS: WorkflowOption[] = [
   { value: "tshirt", label: "T-shirt" },
   { value: "hoodie", label: "Hoodie" },
@@ -269,7 +282,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
 
 const DEFAULT_ROW_GAP = 280;
 
-const DEFAULT_BRANCH_OFFSET = 130;
+const DEFAULT_BRANCH_OFFSET = 170;
 
 const pipelineNode = (id: string, type: WorkflowNodeType, row: number, branch = 0) => ({
   id,

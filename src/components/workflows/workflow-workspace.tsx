@@ -122,7 +122,7 @@ export const WorkflowWorkspace = () => {
   const isEditorReady = workflow !== undefined && workflow.id === loadedWorkflowId;
 
   return (
-    <div className="flex h-dvh min-h-[560px] flex-1 flex-col">
+    <div className="flex min-h-[560px] flex-1 flex-col">
       <WorkflowToolbar
         workflows={workflows}
         activeWorkflowId={activeWorkflowId}

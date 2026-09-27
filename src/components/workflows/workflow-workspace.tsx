@@ -67,13 +67,20 @@ export const WorkflowWorkspace = () => {
   }, [workflow, loadedWorkflowId, loadWorkflow]);
 
   useEffect(() => {
-    if (!workflowName) return;
-    const previousTitle = document.title;
-    document.title = `${workflowName} | ${SITE_CONFIG.name}`;
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [workflowName]);
+    if (workflows && workflows.length === 0 && loadedWorkflowId) resetEditor();
+  }, [workflows, loadedWorkflowId, resetEditor]);
+
+  const titleName = activeWorkflowId ? workflowName : "";
+
+  useEffect(() => {
+    const desiredTitle = titleName ? `${titleName} | ${SITE_CONFIG.name}` : `Workflows | ${SITE_CONFIG.name}`;
+    document.title = desiredTitle;
+    const observer = new MutationObserver(() => {
+      if (document.title !== desiredTitle) document.title = desiredTitle;
+    });
+    observer.observe(document.head, { childList: true, characterData: true, subtree: true });
+    return () => observer.disconnect();
+  }, [titleName]);
 
   useEffect(() => () => resetEditor(), [resetEditor]);
 

@@ -27,7 +27,7 @@ const STATUS_PILLS: Record<
   skipped: { className: "bg-slate-200 text-slate-600", label: "Skipped" },
 };
 
-const HANDLE_CLASS_NAME = "size-3! rounded-full! border-2! border-white! bg-indigo-500!";
+const HANDLE_CLASS_NAME = "size-4! rounded-full! border-2! border-white! bg-indigo-500!";
 
 type NodeShellProps = {
   nodeId: string;

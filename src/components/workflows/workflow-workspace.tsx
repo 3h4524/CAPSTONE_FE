@@ -11,6 +11,7 @@ import { WorkflowCanvas } from "@/components/workflows/canvas/workflow-canvas";
 import { NodeConfigPanel } from "@/components/workflows/config-panel/node-config-panel";
 import { NodePalette } from "@/components/workflows/palette/node-palette";
 import { WorkflowToolbar } from "@/components/workflows/toolbar/workflow-toolbar";
+import { SITE_CONFIG } from "@/constants/site";
 import { DEFAULT_WORKFLOW_DEFINITION, DEFAULT_WORKFLOW_NAME } from "@/constants/workflow";
 import { showToast } from "@/helpers/toast";
 import { resolveActiveWorkflowId } from "@/helpers/workflow-graph";
@@ -30,6 +31,7 @@ export const WorkflowWorkspace = () => {
   const hasAutoCreatedRef = useRef(false);
   const openPopup = usePopupStore((state) => state.openPopup);
   const loadedWorkflowId = useWorkflowStore((state) => state.workflowId);
+  const workflowName = useWorkflowStore((state) => state.name);
   const isDirty = useWorkflowStore((state) => state.isDirty);
   const loadWorkflow = useWorkflowStore((state) => state.loadWorkflow);
   const resetEditor = useWorkflowStore((state) => state.reset);
@@ -63,6 +65,15 @@ export const WorkflowWorkspace = () => {
   useEffect(() => {
     if (workflow && workflow.id !== loadedWorkflowId) loadWorkflow(workflow);
   }, [workflow, loadedWorkflowId, loadWorkflow]);
+
+  useEffect(() => {
+    if (!workflowName) return;
+    const previousTitle = document.title;
+    document.title = `${workflowName} | ${SITE_CONFIG.name}`;
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [workflowName]);
 
   useEffect(() => () => resetEditor(), [resetEditor]);
 

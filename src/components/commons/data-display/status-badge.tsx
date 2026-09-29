@@ -16,6 +16,10 @@ const statusStyles: Record<string, string> = {
   published: "border-emerald-200 bg-emerald-50 text-emerald-800",
   resolved: "border-emerald-200 bg-emerald-50 text-emerald-800",
   failed: "border-rose-200 bg-rose-50 text-rose-800",
+  running: "border-indigo-200 bg-indigo-50 text-indigo-800",
+  generating_image: "border-indigo-200 bg-indigo-50 text-indigo-800",
+  image_review_required: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  partially_completed: "border-amber-200 bg-amber-50 text-amber-800",
   open: "border-slate-200 bg-slate-100 text-slate-700",
   closed: "border-slate-200 bg-slate-100 text-slate-700",
 };

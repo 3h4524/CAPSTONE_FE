@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 const DashboardPage = () => {
   return (
-    <div className="flex flex-1 flex-col p-6">
+    <div className="w-full min-w-0 p-4 sm:p-6">
       <DashboardEmptyState />
     </div>
   );

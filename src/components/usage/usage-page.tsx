@@ -45,7 +45,7 @@ export function UsagePage() {
   if (isLoading) return <PageLoading label="Loading usage" />;
   if (isError || !data)
     return (
-      <div className="space-y-2 p-6">
+      <div className="w-full min-w-0 space-y-2 p-4 sm:p-6">
         <h1 className="text-base font-semibold">Usage is temporarily unavailable</h1>
         <p className="text-muted-foreground text-sm">
           We couldn&apos;t load your usage details. Please refresh the page and try again.
@@ -54,7 +54,7 @@ export function UsagePage() {
     );
   const max = Math.max(...chart.map((item) => Math.max(item.images, item.videos)), 1);
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className="w-full min-w-0 space-y-6 p-4 sm:p-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-muted-foreground text-xs">Seller &gt; Usage</p>

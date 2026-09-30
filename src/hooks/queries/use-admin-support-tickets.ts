@@ -20,7 +20,6 @@ export const useAdminSupportTickets = (filters: AdminTicketFilters) => {
     queryKey: adminSupportTicketsKeys.list(filters),
     queryFn: () => getAdminSupportTickets(filters),
     placeholderData: (previousData) => previousData,
-    refetchInterval: 5000, // Poll every 5s for near real-time updates
   });
 };
 
@@ -29,6 +28,5 @@ export const useAdminSupportTicketDetail = (id?: string) => {
     queryKey: adminSupportTicketsKeys.detail(id!),
     queryFn: () => getAdminSupportTicket(id!),
     enabled: Boolean(id),
-    refetchInterval: 5000, // Poll every 5s for near real-time updates
   });
 };

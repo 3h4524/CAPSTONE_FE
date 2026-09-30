@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download, MessageSquareText, Paperclip, Send, Star, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
@@ -9,15 +9,16 @@ import { TicketPriorityBadge, TicketStatusBadge } from "@/components/support/tic
 import { TicketDropzone } from "@/components/support/ticket-dropzone";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { CATEGORY_LABELS } from "@/constants/support";
 import { useRateSupportTicket } from "@/hooks/mutations/use-rate-support-ticket";
 import { useReplySupportTicket } from "@/hooks/mutations/use-reply-support-ticket";
 import { useSupportTicket } from "@/hooks/queries/use-support-ticket";
+import { useSupportHub } from "@/hooks/use-support-hub";
 import { type ReplySupportTicketFormValues,replySupportTicketSchema } from "@/schemas/support-ticket";
 import type { SupportTicketAttachment, SupportTicketDetail } from "@/types/support";
+import { cn } from "@/utils/cn";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 type TicketDetailDialogProps = {
@@ -27,12 +28,13 @@ type TicketDetailDialogProps = {
 
 export function TicketDetailDialog({ ticketId, onClose }: TicketDetailDialogProps) {
   const detailQuery = useSupportTicket(ticketId);
+  useSupportHub(ticketId ?? undefined);
 
   return (
     <Dialog open={Boolean(ticketId)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="flex max-h-[calc(100dvh-16px)] w-[calc(100%-16px)] max-w-[600px] flex-col gap-0 overflow-hidden rounded-2xl border-slate-200 bg-white p-0 shadow-2xl duration-200 motion-reduce:animate-none motion-reduce:transition-none"
+        className="flex h-[calc(100dvh-40px)] max-h-[720px] w-[calc(100%-40px)] max-w-[840px] flex-col gap-0 overflow-hidden rounded-2xl border-slate-200 bg-white p-0 shadow-2xl duration-200 motion-reduce:animate-none motion-reduce:transition-none"
       >
         {detailQuery.isPending ? (
           <SectionLoading label="Loading ticket details" />
@@ -66,15 +68,24 @@ function TicketDetailContent({
   refetch: () => Promise<{ data?: SupportTicketDetail }>;
 }) {
   const [files, setFiles] = useState<File[]>([]);
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<ReplySupportTicketFormValues>({
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<ReplySupportTicketFormValues>({
     resolver: zodResolver(replySupportTicketSchema),
     defaultValues: { replyText: "" },
   });
+  const replyTextValue = watch("replyText");
   const replyMutation = useReplySupportTicket(ticket.id, () => {
     reset();
     setFiles([]);
   });
   const ratingMutation = useRateSupportTicket(ticket.id);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [ticket]);
 
   const download = async (attachment: SupportTicketAttachment) => {
     let target = attachment;
@@ -109,8 +120,8 @@ function TicketDetailContent({
         </Button>
       </DialogHeader>
 
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="space-y-3 bg-white px-5 py-4 sm:px-6">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto bg-white">
+        <div className="space-y-6 px-5 py-6 sm:px-6">
           <ConversationItem
             author="You"
             initials={getInitials(ticket.requesterName)}
@@ -132,47 +143,73 @@ function TicketDetailContent({
             />
           ))}
         </div>
-      </ScrollArea>
+      </div>
 
-      <div className="shrink-0 border-t border-slate-100 bg-white px-5 py-4 sm:px-6">
+      <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-5 py-5 sm:px-6">
         {canReply ? (
           <form
-            className="space-y-3"
+            className="flex flex-col"
             onSubmit={handleSubmit((values) => replyMutation.mutate({
               id: ticket.id,
               replyText: values.replyText,
               attachments: files,
             }))}
           >
-            <label htmlFor="ticket-reply" className="text-sm font-semibold text-slate-700">Add a reply</label>
-            <Textarea
-              id="ticket-reply"
-              placeholder="Write a message..."
-              className="min-h-24 resize-y bg-white"
-              aria-invalid={Boolean(errors.replyText)}
-              {...register("replyText")}
-            />
-            {errors.replyText ? <p role="alert" className="text-destructive text-xs">{errors.replyText.message}</p> : null}
-            {files.length > 0 ? <TicketDropzone files={files} onChange={setFiles} disabled={replyMutation.isPending} /> : null}
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <label className="focus-within:ring-ring/30 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-2 text-sm font-medium text-slate-600 focus-within:ring-3">
-                  <Paperclip className="size-4" aria-hidden="true" /> Attach
-                  <input
-                    type="file"
-                    multiple
-                    className="sr-only"
-                    accept=".jpg,.jpeg,.png,.webp,.pdf,.txt,.log"
-                    onChange={(event) => setFiles(Array.from(event.target.files ?? []).slice(0, 5))}
-                  />
-                </label>
-                <span className="hidden text-xs text-slate-500 sm:inline">Typical response within one business day</span>
-              </div>
-              <Button type="submit" className="min-h-11 px-5 hover:translate-y-0" disabled={replyMutation.isPending}>
-                {replyMutation.isPending ? <Spinner aria-hidden="true" /> : <Send aria-hidden="true" />}
-                Send reply
-              </Button>
+            <div className="mb-3 flex items-center justify-between">
+              <label htmlFor="ticket-reply" className="text-[15px] font-semibold text-slate-900">Add a reply</label>
             </div>
+            
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all focus-within:ring-1 focus-within:ring-slate-300">
+              {files.length > 0 && (
+                <div className="p-4 pb-0">
+                  <TicketDropzone files={files} onChange={setFiles} disabled={replyMutation.isPending} />
+                </div>
+              )}
+              <Textarea
+                id="ticket-reply"
+                placeholder="Write a message..."
+                className="min-h-[100px] resize-none border-none bg-transparent p-4 text-[15px] shadow-none focus-visible:ring-0"
+                aria-invalid={Boolean(errors.replyText)}
+                {...register("replyText")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    if (!replyMutation.isPending && (replyTextValue.trim() || files.length > 0)) {
+                      handleSubmit((values) => replyMutation.mutate({
+                        id: ticket.id,
+                        replyText: values.replyText,
+                        attachments: files,
+                      }))(e as unknown as React.BaseSyntheticEvent);
+                    }
+                  }
+                }}
+              />
+              <div className="flex items-center justify-between border-t border-slate-100 bg-white p-3">
+                <div className="flex items-center gap-3">
+                  <label className="flex h-9 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-100">
+                    <Paperclip className="size-4" aria-hidden="true" /> 
+                    Attach
+                    <input
+                      type="file"
+                      multiple
+                      className="sr-only"
+                      accept=".jpg,.jpeg,.png,.webp,.pdf,.txt,.log"
+                      onChange={(event) => {
+                        setFiles(Array.from(event.target.files ?? []).slice(0, 5));
+                        event.target.value = "";
+                        document.getElementById("ticket-reply")?.focus();
+                      }}
+                    />
+                  </label>
+                  <span className="hidden text-xs text-slate-500 sm:inline">Typical response within 1 business day</span>
+                </div>
+                <Button type="submit" className="h-10 gap-2 rounded-lg bg-[#1e293b] px-6 font-medium text-white shadow-sm hover:bg-slate-800" disabled={replyMutation.isPending || (!replyTextValue.trim() && files.length === 0)}>
+                  {replyMutation.isPending ? <Spinner aria-hidden="true" className="size-4" /> : <Send aria-hidden="true" className="size-4" />}
+                  Send reply
+                </Button>
+              </div>
+            </div>
+            {errors.replyText ? <p role="alert" className="text-destructive mt-2 text-xs">{errors.replyText.message}</p> : null}
           </form>
         ) : ticket.status === "resolved" ? (
           <RatingPanel
@@ -206,28 +243,55 @@ function ConversationItem({
   support?: boolean;
 }) {
   return (
-    <article className={`rounded-xl border p-3.5 ${support ? "border-blue-100 bg-[#edf4ff]" : "border-slate-100 bg-[#f6f8fc]"}`}>
-      <div className="flex items-start gap-3">
-        <div className="text-primary flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#dbe7fb] text-xs font-bold">{initials}</div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-semibold">{author}</p>
-            <time className="shrink-0 text-xs text-slate-500" dateTime={createdAt}>{formatTime(createdAt)}</time>
-          </div>
-          <p className="mt-1 text-sm leading-6 whitespace-pre-wrap text-slate-700">{message}</p>
-          {attachments.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {attachments.map((attachment) => (
-                <Button key={attachment.id} type="button" variant="outline" size="sm" className="max-w-full hover:translate-y-0" onClick={() => onDownload(attachment)}>
-                  <Download aria-hidden="true" />
-                  <span className="truncate">{attachment.fileName}</span>
-                </Button>
-              ))}
+    <div className={cn("flex w-full gap-4", !support && "flex-row-reverse")}>
+      <div className={cn("mt-1 flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold", support ? "bg-slate-200 text-slate-700" : "bg-blue-100 text-blue-700")}>
+        {initials}
+      </div>
+      <div className={cn("flex max-w-[85%] flex-col", !support ? "items-end" : "items-start")}>
+        <div className={cn("mb-1.5 flex items-baseline gap-2", !support && "flex-row-reverse")}>
+          <span className="text-[15px] font-bold text-slate-900">{author}</span>
+          <span className="text-[13px] font-medium text-slate-500">{formatTime(createdAt)}</span>
+        </div>
+        <div 
+          className={cn(
+            "rounded-2xl p-4 text-left text-[15px] leading-relaxed whitespace-pre-wrap shadow-[0_1px_2px_rgba(0,0,0,0.05)]",
+            !support 
+              ? "rounded-tr-sm bg-[#eff6ff] text-slate-800" 
+              : "rounded-tl-sm border border-slate-100 bg-white text-slate-800"
+          )}
+        >
+          {message}
+          {attachments.length > 0 && (
+            <div className="mt-4 flex flex-col gap-3">
+              {attachments.map((attachment) => {
+                const isImage = attachment.mimeType?.includes("image") || attachment.fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                return isImage ? (
+                  <div key={attachment.id} className="relative max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-sm">
+                    <a href={attachment.downloadUrl} target="_blank" rel="noreferrer" className="block max-h-[250px] overflow-hidden bg-slate-50">
+                      <img src={attachment.downloadUrl} alt={attachment.fileName} className="w-full object-cover transition-opacity hover:opacity-90" />
+                    </a>
+                    <div className="flex items-center justify-between border-t border-slate-100 bg-white p-3">
+                       <div className="flex flex-col">
+                         <span className="max-w-[200px] truncate text-[13px] font-semibold text-slate-900">{attachment.fileName}</span>
+                         <span className="text-[11px] font-medium tracking-wide text-slate-500">Attachment</span>
+                       </div>
+                       <Button type="button" variant="ghost" size="icon" className="size-8" onClick={() => onDownload(attachment)}>
+                          <Download className="size-4" />
+                       </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button key={attachment.id} type="button" variant="outline" size="sm" className="max-w-full bg-white text-slate-700 hover:translate-y-0" onClick={() => onDownload(attachment)}>
+                    <Download className="size-4" aria-hidden="true" />
+                    <span className="truncate">{attachment.fileName}</span>
+                  </Button>
+                );
+              })}
             </div>
-          ) : null}
+          )}
         </div>
       </div>
-    </article>
+    </div>
   );
 }
 

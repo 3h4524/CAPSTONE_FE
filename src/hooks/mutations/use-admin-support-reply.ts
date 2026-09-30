@@ -14,7 +14,6 @@ import type {
 type ReplyAdminTicketParams = {
   id: string;
   replyText: string;
-  isInternalNote: boolean;
   attachments?: File[];
 };
 

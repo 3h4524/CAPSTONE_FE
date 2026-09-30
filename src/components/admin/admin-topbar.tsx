@@ -31,13 +31,7 @@ const AdminTopbar = ({ fullName, onMenuClick, pageTitle = "Dashboard" }: AdminTo
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
-        <div className="hidden h-8 w-52 items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 md:flex">
-          <Search className="size-3.5 text-slate-400" />
-          <span className="flex-1 text-[10px] text-slate-400">Search workspace...</span>
-          <span className="flex items-center gap-0.5 rounded border border-slate-200 bg-white px-1 py-0.5 text-[9px] font-medium text-slate-400">
-            <Command className="size-2.5" /> K
-          </span>
-        </div>
+
 
         <button
           type="button"
@@ -48,15 +42,7 @@ const AdminTopbar = ({ fullName, onMenuClick, pageTitle = "Dashboard" }: AdminTo
           <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-rose-400" />
         </button>
 
-        <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 shadow-sm">
-          <div className="flex size-6 items-center justify-center rounded-md bg-slate-900 text-[9px] font-bold text-white">
-            AM
-          </div>
-          <span className="hidden text-[11px] font-medium text-slate-700 sm:inline">
-            {fullName}
-          </span>
-          <ChevronDown className="size-3.5 text-slate-400" />
-        </div>
+
       </div>
     </div>
   </header>

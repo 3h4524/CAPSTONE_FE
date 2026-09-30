@@ -13,7 +13,7 @@ export const createSupportTicketSchema = z.object({
 });
 
 export const replySupportTicketSchema = z.object({
-  replyText: z.string().trim().min(1, "Write a message before sending.").max(5000),
+  replyText: z.string().trim().max(5000),
 });
 
 export type CreateSupportTicketFormValues = z.infer<typeof createSupportTicketSchema>;

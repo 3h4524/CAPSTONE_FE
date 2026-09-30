@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { formatDistanceToNow } from "date-fns";
+
 import { Filter, Headphones, Search } from "lucide-react";
 
 import type { AdminTicketFilters } from "@/api/admin-support";
@@ -21,6 +21,7 @@ const TABS: { label: string; value: TicketStatus | "all" }[] = [
   { label: "Open", value: "open" },
   { label: "In Progress", value: "in_progress" },
   { label: "Resolved", value: "resolved" },
+  { label: "Closed", value: "closed" },
 ];
 
 export const TicketListPanel = ({
@@ -30,6 +31,7 @@ export const TicketListPanel = ({
   onSelectTicket,
 }: TicketListPanelProps) => {
   const [searchTerm, setSearchTerm] = useState(filters.searchTerm || "");
+  const [localReadState, setLocalReadState] = useState<Record<string, string>>({});
 
   // Debounce search
   useEffect(() => {
@@ -42,6 +44,20 @@ export const TicketListPanel = ({
   }, [searchTerm, filters, onFiltersChange]);
 
   const { data, isLoading, isError } = useAdminSupportTickets(filters);
+
+  // Auto-mark selected ticket as read when new data comes in
+  useEffect(() => {
+    if (selectedTicketId && data) {
+      const selectedTicket = data.items.find(t => t.id === selectedTicketId);
+      if (selectedTicket && typeof window !== "undefined") {
+        const storedTime = localStorage.getItem(`read_ticket_${selectedTicket.id}`);
+        if (storedTime !== selectedTicket.updatedAtUtc) {
+          localStorage.setItem(`read_ticket_${selectedTicket.id}`, selectedTicket.updatedAtUtc);
+          setLocalReadState(prev => ({ ...prev, [selectedTicket.id]: selectedTicket.updatedAtUtc }));
+        }
+      }
+    }
+  }, [selectedTicketId, data]);
 
   const getPriorityDot = (priority: TicketPriority) => {
     switch (priority) {
@@ -74,6 +90,11 @@ export const TicketListPanel = ({
             <Input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  onFiltersChange({ ...filters, searchTerm, pageIndex: 1 });
+                }
+              }}
               placeholder="Search tickets..."
               className="h-9 border-slate-200 bg-slate-50 pl-9 text-[13px] shadow-none focus-visible:ring-1 focus-visible:ring-slate-300"
             />
@@ -84,7 +105,7 @@ export const TicketListPanel = ({
         </div>
 
         {/* Tabs (Underline style) */}
-        <div className="flex gap-6">
+        <div className="scrollbar-hide flex gap-4 overflow-x-auto">
           {TABS.map((tab) => {
             const isActive =
               (tab.value === "all" && !filters.status) || filters.status === tab.value;
@@ -99,7 +120,7 @@ export const TicketListPanel = ({
                   })
                 }
                 className={cn(
-                  "flex items-center gap-1.5 border-b-2 pb-3 text-[13px] font-semibold transition-colors",
+                  "flex items-center gap-1.5 whitespace-nowrap border-b-2 pb-3 text-[13px] font-semibold transition-colors",
                   isActive
                     ? "border-blue-600 text-slate-900"
                     : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
@@ -130,33 +151,68 @@ export const TicketListPanel = ({
           <div className="divide-y divide-slate-100/60">
             {data.items.map((ticket) => {
               const isSelected = selectedTicketId === ticket.id;
+              const isReadLocally = isSelected || (typeof window !== "undefined" && localStorage.getItem(`read_ticket_${ticket.id}`) === ticket.updatedAtUtc) || localReadState[ticket.id] === ticket.updatedAtUtc;
+              const hasUnread = ticket.hasUnreadMessages && !isReadLocally;
               return (
                 <button
                   key={ticket.id}
-                  onClick={() => onSelectTicket(ticket.id)}
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      localStorage.setItem(`read_ticket_${ticket.id}`, ticket.updatedAtUtc);
+                      setLocalReadState(prev => ({ ...prev, [ticket.id]: ticket.updatedAtUtc }));
+                    }
+                    onSelectTicket(ticket.id);
+                  }}
                   className={cn(
-                    "w-full border-l-[3px] p-4 text-left transition-colors hover:bg-slate-50",
-                    isSelected ? "border-l-blue-600 bg-blue-50/50" : "border-l-transparent"
+                    "w-full border-l-2 p-4 text-left transition-colors hover:bg-slate-50",
+                    isSelected ? "border-l-blue-600 bg-slate-50" : "border-l-transparent bg-white"
                   )}
                 >
                   <div className="mb-1.5 flex items-start justify-between gap-2">
-                    <span className="line-clamp-1 text-[14px] font-bold text-slate-900">
-                      {ticket.subject}
-                    </span>
-                    <span className={cn("shrink-0 text-[12px] font-medium", isSelected ? "text-blue-600" : "text-slate-500")}>
-                      {formatDistanceToNow(new Date(ticket.createdAtUtc), { addSuffix: true })}
+                    <div className="flex items-center gap-2">
+                      <span className={cn("line-clamp-1 text-[14px]", hasUnread || isSelected ? "font-bold text-slate-900" : "font-semibold text-slate-700")}>
+                        {ticket.subject}
+                      </span>
+                      {hasUnread && (
+                        <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-rose-600 shadow-sm">
+                          New
+                        </span>
+                      )}
+                    </div>
+                    <span className={cn("shrink-0 text-[12px] font-medium", hasUnread ? "text-slate-700 font-bold" : "text-slate-500")}>
+                      {formatRelativeDate(ticket.updatedAtUtc || ticket.createdAtUtc)}
                     </span>
                   </div>
+                  
+                  {ticket.lastMessageSnippet && (
+                    <p className={cn("mb-2 truncate text-left text-[13px]", hasUnread ? "text-slate-800 font-medium" : "text-slate-500")}>
+                      {ticket.lastMessageSnippet}
+                    </p>
+                  )}
                   
                   <div className="mb-2 text-[12px] text-slate-500">
                     #{ticket.ticketNumber} • <span className="capitalize">{ticket.category.replace("_", " ")}</span>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <div className={cn("flex items-center gap-1.5 text-[12px] font-medium", ticket.priority === "urgent" ? "text-rose-600" : "text-blue-600")}>
-                      <div className={cn("size-2 rounded-full", getPriorityDot(ticket.priority))} />
-                      <span className="capitalize">{ticket.priority}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={cn("flex items-center gap-1.5 text-[12px] font-medium", ticket.priority === "urgent" ? "text-rose-600" : "text-slate-600")}>
+                        <div className={cn("size-2 rounded-full", getPriorityDot(ticket.priority))} />
+                        <span className="capitalize">{ticket.priority}</span>
+                      </div>
                     </div>
+                    {ticket.assignedToName ? (
+                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+                        <div className="flex size-5 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
+                          {ticket.assignedToName.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="truncate max-w-[100px]">{ticket.assignedToName}</span>
+                      </div>
+                    ) : (
+                      <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                        Unassigned
+                      </div>
+                    )}
                   </div>
                 </button>
               );
@@ -192,3 +248,13 @@ export const TicketListPanel = ({
     </div>
   );
 };
+
+function formatRelativeDate(value: string) {
+  const date = new Date(value);
+  const differenceMinutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60_000));
+  if (differenceMinutes < 1) return "Just now";
+  if (differenceMinutes < 60) return `${differenceMinutes} min ago`;
+  if (differenceMinutes < 1_440) return `${Math.floor(differenceMinutes / 60)} hr ago`;
+  if (differenceMinutes < 2_880) return "Yesterday";
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
+}

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { format } from "date-fns";
-import { Calendar, CheckCircle2, Copy, Download, FileText, Folder, Headphones, Image as ImageIcon, Lock, Mail, MoreVertical, Paperclip, Send, Smile, User, X } from "lucide-react";
+import { Calendar, CheckCircle2, Copy, Download, FileText, Folder, Headphones, Lock, Mail, Maximize2, Minimize2, MoreVertical, Paperclip, Send, Star, User, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -10,20 +10,23 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useReplyAdminTicket, useUpdateAdminTicketStatus } from "@/hooks/mutations/use-admin-support-reply";
 import { useAdminSupportTicketDetail } from "@/hooks/queries/use-admin-support-tickets";
+import { useSupportHub } from "@/hooks/use-support-hub";
 import type { TicketStatus } from "@/types/support";
 import { cn } from "@/utils/cn";
 
 type TicketDetailPanelProps = {
   ticketId: string | null;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 };
 
-export const TicketDetailPanel = ({ ticketId }: TicketDetailPanelProps) => {
+export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: TicketDetailPanelProps) => {
   const { data: ticket, isLoading, isError } = useAdminSupportTicketDetail(ticketId || undefined);
+  useSupportHub(ticketId || undefined);
   const { mutate: sendReply, isPending: isSending } = useReplyAdminTicket();
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateAdminTicketStatus();
   
   const [replyText, setReplyText] = useState("");
-  const [isInternal, setIsInternal] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
   
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -43,7 +46,6 @@ export const TicketDetailPanel = ({ ticketId }: TicketDetailPanelProps) => {
       {
         id: ticketId,
         replyText: replyText.trim(),
-        isInternalNote: isInternal,
         attachments,
       },
       {
@@ -59,6 +61,8 @@ export const TicketDetailPanel = ({ ticketId }: TicketDetailPanelProps) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
       setAttachments((prev) => [...prev, ...newFiles]);
+      e.target.value = "";
+      document.getElementById("admin-reply")?.focus();
     }
   };
 
@@ -104,14 +108,22 @@ export const TicketDetailPanel = ({ ticketId }: TicketDetailPanelProps) => {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-white">
       {/* Header */}
-      <div className="z-10 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+      <div className="z-10 flex flex-col items-start justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] sm:flex-row sm:items-center">
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-xl font-bold text-slate-900">{ticket.subject}</h2>
             <span className="text-sm font-medium text-slate-500">#{ticket.ticketNumber}</span>
-            <button className="text-slate-400 transition-colors hover:text-slate-600"><Copy className="size-4" /></button>
+            <button 
+              onClick={() => {
+                navigator.clipboard.writeText(ticket.ticketNumber);
+                toast.success("Copied ticket ID");
+              }}
+              className="text-slate-400 transition-colors hover:text-slate-600"
+            >
+              <Copy className="size-4" />
+            </button>
           </div>
-          <div className="flex items-center gap-6 text-sm text-slate-600">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 sm:gap-6">
             <div className="flex items-center gap-2">
               <Folder className="size-4 text-slate-400" />
               <span className="capitalize">{ticket.category.replace("_", " ")}</span>
@@ -122,7 +134,7 @@ export const TicketDetailPanel = ({ ticketId }: TicketDetailPanelProps) => {
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="size-4 text-slate-400" />
-              <span>{format(new Date(ticket.createdAtUtc), "MMM d, yyyy 'at' h:mm a")}</span>
+              <span>{formatRelativeDate(ticket.createdAtUtc)}</span>
             </div>
           </div>
         </div>
@@ -146,9 +158,17 @@ export const TicketDetailPanel = ({ ticketId }: TicketDetailPanelProps) => {
               <SelectItem value="closed">Closed</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" className="size-9 rounded-full border-slate-200 text-slate-500 shadow-sm">
-             <MoreVertical className="size-4" />
-          </Button>
+          {onToggleExpand && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onToggleExpand}
+              className="hidden h-9 w-9 text-slate-500 shadow-none md:flex"
+              title={isExpanded ? "Collapse" : "Expand"}
+            >
+              {isExpanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -166,7 +186,7 @@ export const TicketDetailPanel = ({ ticketId }: TicketDetailPanelProps) => {
             <div className="mb-1.5 flex items-baseline gap-2">
               <span className="text-[15px] font-bold text-slate-900">{ticket.requesterName}</span>
               <span className="text-[13px] font-medium text-slate-500">
-                {format(new Date(ticket.createdAtUtc), "MMM d, yyyy 'at' h:mm a")}
+                {formatRelativeDate(ticket.createdAtUtc)}
               </span>
             </div>
             <div className="rounded-2xl rounded-tl-sm border border-slate-100 bg-white p-4 text-[15px] leading-relaxed whitespace-pre-wrap text-slate-800 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
@@ -225,21 +245,14 @@ export const TicketDetailPanel = ({ ticketId }: TicketDetailPanelProps) => {
                 <div className={cn("mb-1.5 flex items-baseline gap-2", isAdmin && "flex-row-reverse")}>
                   <span className="text-[15px] font-bold text-slate-900">{reply.authorName}</span>
                   <span className="text-[13px] font-medium text-slate-500">
-                    {format(new Date(reply.createdAtUtc), "MMM d, yyyy 'at' h:mm a")}
+                    {formatRelativeDate(reply.createdAtUtc)}
                   </span>
-                  {reply.isInternalNote && (
-                    <Badge variant="secondary" className="border-transparent bg-amber-100 px-1.5 text-[10px] font-bold tracking-wider text-amber-800 uppercase hover:bg-amber-100">
-                      Internal Note
-                    </Badge>
-                  )}
                 </div>
                 <div 
                   className={cn(
                     "rounded-2xl p-4 text-[15px] leading-relaxed whitespace-pre-wrap",
                     isAdmin 
-                      ? reply.isInternalNote 
-                        ? "rounded-tr-sm border border-amber-200/50 bg-amber-50 text-amber-900 shadow-sm" 
-                        : "rounded-tr-sm bg-[#eff6ff] text-slate-800"
+                      ? "rounded-tr-sm bg-[#eff6ff] text-slate-800"
                       : "rounded-tl-sm border border-slate-100 bg-white text-slate-800 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
                   )}
                 >
@@ -289,23 +302,7 @@ export const TicketDetailPanel = ({ ticketId }: TicketDetailPanelProps) => {
 
       {/* Reply Box */}
       {ticket.status !== "closed" && ticket.status !== "resolved" ? (
-        <div className="border-t border-slate-200 bg-slate-50 p-6">
-          {/* Tabs */}
-          <div className="mb-4 flex items-center gap-6 px-2">
-            <button 
-              onClick={() => setIsInternal(false)}
-              className={cn("flex items-center gap-2 pb-1.5 text-[15px] font-semibold transition-colors", !isInternal ? "border-b-2 border-slate-900 text-slate-900" : "text-slate-500 hover:text-slate-700")}
-            >
-              <Mail className="size-4" /> Reply
-            </button>
-            <button 
-              onClick={() => setIsInternal(true)}
-              className={cn("flex items-center gap-2 pb-1.5 text-[15px] font-semibold transition-colors", isInternal ? "border-b-2 border-amber-600 text-amber-600" : "text-slate-500 hover:text-slate-700")}
-            >
-              <Lock className="size-4" /> Internal Note
-            </button>
-          </div>
-
+        <div className="border-t border-slate-200 bg-slate-50 p-4">
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all focus-within:ring-1 focus-within:ring-slate-300">
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-2 p-4 pb-0">
@@ -319,37 +316,61 @@ export const TicketDetailPanel = ({ ticketId }: TicketDetailPanelProps) => {
               </div>
             )}
             <Textarea
+              id="admin-reply"
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               placeholder="Type a reply..."
-              className="min-h-[120px] resize-none border-none bg-transparent p-4 text-[15px] focus-visible:ring-0"
+              className="min-h-[60px] resize-none border-none bg-transparent p-3 text-[14px] focus-visible:ring-0"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (!isSending && (replyText.trim() || attachments.length > 0)) {
+                    handleSend();
+                  }
+                }
+              }}
             />
-            <div className="flex items-center justify-between border-t border-slate-100 bg-white p-3">
+            <div className="flex items-center justify-between border-t border-slate-100 bg-white p-2">
               <div className="flex items-center gap-1 text-slate-400">
                 <Button variant="ghost" size="icon" className="size-9 rounded-full hover:bg-slate-100" onClick={() => fileInputRef.current?.click()}>
                   <Paperclip className="size-5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="size-9 rounded-full hover:bg-slate-100" onClick={() => fileInputRef.current?.click()}>
-                  <ImageIcon className="size-5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="size-9 rounded-full hover:bg-slate-100">
-                  <Smile className="size-5" />
                 </Button>
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" multiple accept="image/*,.pdf,.doc,.docx,.txt" />
               </div>
               <Button 
                 onClick={handleSend} 
                 disabled={isSending || (!replyText.trim() && attachments.length === 0)}
-                className={cn("h-10 gap-2 rounded-lg px-6 font-medium shadow-sm", isInternal ? "bg-amber-600 text-white hover:bg-amber-700" : "bg-[#1e293b] text-white hover:bg-slate-800")}
+                className="h-8 gap-2 rounded-lg px-5 text-sm font-medium shadow-sm bg-[#1e293b] text-white hover:bg-slate-800"
               >
                 {isSending ? <Spinner className="size-4" /> : <Send className="size-4" />}
-                {isInternal ? "Add Note" : "Send Reply"}
+                Send Reply
               </Button>
             </div>
           </div>
         </div>
       ) : (
-        <div className="border-t border-slate-200 bg-slate-50 px-6 py-4 text-center">
+        <div className="border-t border-slate-200 bg-slate-50 px-6 py-6 text-center">
+          {ticket.satisfactionRating ? (
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-slate-900">Customer Satisfaction</h3>
+              <div className="mt-2 flex items-center justify-center gap-1">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <Star
+                    key={value}
+                    className={cn(
+                      "size-5",
+                      value <= ticket.satisfactionRating!
+                        ? "fill-amber-400 text-amber-400"
+                        : "fill-slate-100 text-slate-200"
+                    )}
+                  />
+                ))}
+              </div>
+              <p className="mt-2 text-xs font-medium text-emerald-600">Rated {ticket.satisfactionRating}/5</p>
+            </div>
+          ) : ticket.status === "resolved" ? (
+            <div className="mb-4 text-sm text-slate-500">Waiting for customer to rate the support experience.</div>
+          ) : null}
           <div className="flex items-center justify-center gap-2 text-xs font-medium text-slate-500">
             <CheckCircle2 className="size-4 text-slate-400" />
             <span>This ticket is {ticket.status}. No further replies can be added.</span>
@@ -358,4 +379,14 @@ export const TicketDetailPanel = ({ ticketId }: TicketDetailPanelProps) => {
       )}
     </div>
   );
+}
+
+function formatRelativeDate(value: string) {
+  const date = new Date(value);
+  const differenceMinutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60_000));
+  if (differenceMinutes < 1) return "Just now";
+  if (differenceMinutes < 60) return `${differenceMinutes} min ago`;
+  if (differenceMinutes < 1_440) return `${Math.floor(differenceMinutes / 60)} hr ago`;
+  if (differenceMinutes < 2_880) return "Yesterday";
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
 };

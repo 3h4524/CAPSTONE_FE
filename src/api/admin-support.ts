@@ -54,12 +54,10 @@ export const updateAdminSupportTicketStatus = async (params: {
 export const replyAdminSupportTicket = async (params: {
   id: string;
   replyText: string;
-  isInternalNote: boolean;
   attachments?: File[];
 }): Promise<SupportTicketReply> => {
   const formData = new FormData();
   formData.append("replyText", params.replyText);
-  formData.append("isInternalNote", params.isInternalNote.toString());
 
   if (params.attachments && params.attachments.length > 0) {
     params.attachments.forEach((file) => {

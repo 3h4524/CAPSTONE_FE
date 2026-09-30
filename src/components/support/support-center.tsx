@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
@@ -88,7 +88,7 @@ const HELP_TOPICS: readonly HelpTopic[] = [
   },
 ] as const;
 
-type TicketView = "all" | "open" | "resolved";
+type TicketView = "all" | "open" | "in_progress" | "resolved" | "closed";
 
 export function SupportCenter() {
   const router = useRouter();
@@ -98,6 +98,7 @@ export function SupportCenter() {
   const [view, setView] = useState<TicketView>("all");
   const [selectedHelpTopic, setSelectedHelpTopic] = useState<HelpTopic | null>(null);
   const [draftSubject, setDraftSubject] = useState("");
+  const [localReadState, setLocalReadState] = useState<Record<string, string>>({});
 
   const status = view === "all" ? undefined : view as TicketStatus;
   const filters = useMemo(
@@ -107,6 +108,16 @@ export function SupportCenter() {
   const ticketsQuery = useSupportTickets(filters, Boolean(user));
   const composeOpen = searchParams.get("compose") === "1";
   const ticketId = searchParams.get("ticket");
+
+  useEffect(() => {
+    if (ticketId && ticketsQuery.data?.items) {
+      const ticket = ticketsQuery.data.items.find(t => t.id === ticketId);
+      if (ticket && typeof window !== "undefined") {
+        localStorage.setItem(`read_ticket_${ticket.id}`, ticket.updatedAtUtc);
+        setLocalReadState(prev => prev[ticket.id] === ticket.updatedAtUtc ? prev : { ...prev, [ticket.id]: ticket.updatedAtUtc });
+      }
+    }
+  }, [ticketId, ticketsQuery.data?.items]);
 
   const openTicket = (id: string) => {
     const params = new URLSearchParams();
@@ -180,7 +191,7 @@ export function SupportCenter() {
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="border-border bg-background inline-flex self-start rounded-full border p-0.5" role="group" aria-label="Filter tickets">
-                {(["all", "open", "resolved"] as const).map((item) => (
+                {(["all", "open", "in_progress", "resolved", "closed"] as const).map((item) => (
                   <button
                     key={item}
                     type="button"
@@ -193,7 +204,7 @@ export function SupportCenter() {
                     )}
                     onClick={() => selectView(item)}
                   >
-                    {item}
+                    {item.replace("_", " ")}
                   </button>
                 ))}
               </div>
@@ -229,8 +240,8 @@ export function SupportCenter() {
             </div>
           ) : (
             <>
-              <TicketTable tickets={ticketsQuery.data.items} onOpen={openTicket} />
-              <TicketCards tickets={ticketsQuery.data.items} onOpen={openTicket} />
+              <TicketTable tickets={ticketsQuery.data.items} onOpen={openTicket} selectedTicketId={ticketId} localReadState={localReadState} setLocalReadState={setLocalReadState} />
+              <TicketCards tickets={ticketsQuery.data.items} onOpen={openTicket} selectedTicketId={ticketId} localReadState={localReadState} setLocalReadState={setLocalReadState} />
               <div className="flex min-h-14 items-center justify-between gap-3 border-t border-slate-200 px-5 py-2 sm:px-7">
                 <p className="text-xs text-slate-500">
                   Showing {ticketsQuery.data.items.length} of {ticketsQuery.data.totalCount} ticket{ticketsQuery.data.totalCount === 1 ? "" : "s"}
@@ -317,7 +328,7 @@ export function SupportCenter() {
   );
 }
 
-function TicketTable({ tickets, onOpen }: { tickets: SupportTicketSummary[]; onOpen: (id: string) => void }) {
+function TicketTable({ tickets, onOpen, selectedTicketId, localReadState, setLocalReadState }: { tickets: SupportTicketSummary[]; onOpen: (id: string) => void; selectedTicketId: string | null; localReadState: Record<string, string>; setLocalReadState: React.Dispatch<React.SetStateAction<Record<string, string>>> }) {
   return (
     <div className="hidden overflow-x-auto border-t border-slate-200 md:block">
       <table className="w-full min-w-[760px] border-collapse text-left text-sm">
@@ -331,47 +342,87 @@ function TicketTable({ tickets, onOpen }: { tickets: SupportTicketSummary[]; onO
           </tr>
         </thead>
         <tbody>
-          {tickets.map((ticket) => (
+          {tickets.map((ticket) => {
+            const isSelected = selectedTicketId === ticket.id;
+            const isReadLocally = isSelected || (typeof window !== "undefined" && localStorage.getItem(`read_ticket_${ticket.id}`) === ticket.updatedAtUtc) || localReadState[ticket.id] === ticket.updatedAtUtc;
+            const hasUnread = ticket.hasUnreadMessages && !isReadLocally;
+            return (
             <tr
               key={ticket.id}
               role="button"
               tabIndex={0}
               aria-label={`Open ${ticket.subject}`}
               className="group cursor-pointer border-t border-slate-200 transition-colors first:border-t-0 hover:bg-[#eef2f8] focus-visible:bg-[#eef2f8] focus-visible:outline-none focus-visible:[&>td]:ring-3 focus-visible:[&>td]:ring-[#273750]/20 focus-visible:[&>td]:ring-inset"
-              onClick={() => onOpen(ticket.id)}
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  localStorage.setItem(`read_ticket_${ticket.id}`, ticket.updatedAtUtc);
+                  setLocalReadState(prev => ({ ...prev, [ticket.id]: ticket.updatedAtUtc }));
+                }
+                onOpen(ticket.id);
+              }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
+                  if (typeof window !== "undefined") {
+                    localStorage.setItem(`read_ticket_${ticket.id}`, ticket.updatedAtUtc);
+                    setLocalReadState(prev => ({ ...prev, [ticket.id]: ticket.updatedAtUtc }));
+                  }
                   onOpen(ticket.id);
                 }
               }}
             >
               <td className="border-l-[3px] border-l-transparent px-7 py-3.5 transition-[border-color] group-hover:border-l-slate-400 group-focus-visible:border-l-slate-400">
-                <span className="block max-w-[430px] truncate font-semibold text-slate-900 group-hover:text-[#273750]">{ticket.subject}</span>
-                <span className="mt-1 block text-[11px] text-slate-500">{ticket.ticketNumber}</span>
+                <div className="flex items-center gap-2">
+                  <span className={cn("block max-w-[430px] truncate group-hover:text-[#273750]", hasUnread ? "font-bold text-slate-900" : "font-semibold text-slate-900")}>{ticket.subject}</span>
+                  {hasUnread && (
+                    <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-rose-600 shadow-sm">New</span>
+                  )}
+                </div>
+                <span className="mt-1 block text-[11px] text-slate-500">
+                  #{ticket.ticketNumber} {ticket.lastMessageSnippet && <span className={cn("ml-1", hasUnread ? "text-slate-800 font-semibold" : "")}>• {ticket.lastMessageSnippet}</span>}
+                </span>
               </td>
               <td className="px-4 py-3.5 text-slate-600">{CATEGORY_LABELS[ticket.category]}</td>
               <td className="px-4 py-3.5"><TicketPriorityBadge priority={ticket.priority} /></td>
               <td className="px-4 py-3.5"><TicketStatusBadge status={ticket.status} /></td>
               <td className="px-4 py-3.5 text-xs text-slate-600"><time dateTime={ticket.updatedAtUtc}>{formatRelativeDate(ticket.updatedAtUtc)}</time></td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>
   );
 }
 
-function TicketCards({ tickets, onOpen }: { tickets: SupportTicketSummary[]; onOpen: (id: string) => void }) {
+function TicketCards({ tickets, onOpen, selectedTicketId, localReadState, setLocalReadState }: { tickets: SupportTicketSummary[]; onOpen: (id: string) => void; selectedTicketId: string | null; localReadState: Record<string, string>; setLocalReadState: React.Dispatch<React.SetStateAction<Record<string, string>>> }) {
   return (
     <ul className="divide-y divide-slate-200 border-t border-slate-200 md:hidden">
-      {tickets.map((ticket) => (
+      {tickets.map((ticket) => {
+        const isSelected = selectedTicketId === ticket.id;
+        const isReadLocally = isSelected || (typeof window !== "undefined" && localStorage.getItem(`read_ticket_${ticket.id}`) === ticket.updatedAtUtc) || localReadState[ticket.id] === ticket.updatedAtUtc;
+        const hasUnread = ticket.hasUnreadMessages && !isReadLocally;
+        return (
         <li key={ticket.id}>
-          <button type="button" className="group w-full border-l-[3px] border-l-transparent px-5 py-4 text-left transition-[border-color,background-color] hover:border-l-slate-400 hover:bg-[#eef2f8] focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none focus-visible:ring-inset" onClick={() => onOpen(ticket.id)}>
+          <button type="button" className="group w-full border-l-[3px] border-l-transparent px-5 py-4 text-left transition-[border-color,background-color] hover:border-l-slate-400 hover:bg-[#eef2f8] focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none focus-visible:ring-inset" onClick={() => {
+            if (typeof window !== "undefined") {
+              localStorage.setItem(`read_ticket_${ticket.id}`, ticket.updatedAtUtc);
+              setLocalReadState(prev => ({ ...prev, [ticket.id]: ticket.updatedAtUtc }));
+            }
+            onOpen(ticket.id);
+          }}>
             <span className="flex items-start justify-between gap-4">
               <span className="min-w-0">
-                <span className="block truncate font-semibold text-slate-900">{ticket.subject}</span>
-                <span className="mt-1 block text-[11px] text-slate-500">{ticket.ticketNumber} · {CATEGORY_LABELS[ticket.category]}</span>
+                <div className="flex items-center gap-2">
+                  <span className={cn("block truncate", hasUnread ? "font-bold text-slate-900" : "font-semibold text-slate-900")}>{ticket.subject}</span>
+                  {hasUnread && (
+                    <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-rose-600 shadow-sm">New</span>
+                  )}
+                </div>
+                <span className="mt-1 block text-[11px] text-slate-500">
+                  {ticket.ticketNumber} · {CATEGORY_LABELS[ticket.category]}
+                  {ticket.lastMessageSnippet && <span className={cn("block truncate mt-0.5", hasUnread ? "text-slate-800 font-semibold" : "text-slate-400")}>{ticket.lastMessageSnippet}</span>}
+                </span>
               </span>
               <ChevronRight className="mt-0.5 size-4 shrink-0 text-slate-400" aria-hidden="true" />
             </span>
@@ -382,7 +433,8 @@ function TicketCards({ tickets, onOpen }: { tickets: SupportTicketSummary[]; onO
             </span>
           </button>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }

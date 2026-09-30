@@ -5,16 +5,17 @@ import { usePathname } from "next/navigation";
 import {
   BarChart3,
   BriefcaseBusiness,
-  ChevronLeft,
-  ChevronRight,
   CreditCard,
   Headphones,
   LayoutDashboard,
   LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
   User,
   Users,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,8 +44,8 @@ const primaryNavigation = [
 
 const secondaryNavigation = [
   { label: "Revenue & Reports", href: "/admin/reports", icon: BarChart3 },
-  { label: "Batch Jobs", href: "/admin/batch-jobs", icon: BriefcaseBusiness, count: "24 active", tone: "amber" },
-  { label: "Support Tickets", href: "/admin/support-tickets", icon: Headphones, count: "7 open", tone: "rose" },
+  { label: "Batch Jobs", href: "/admin/batch-jobs", icon: BriefcaseBusiness, tone: "amber" },
+  { label: "Support Tickets", href: "/admin/support-tickets", icon: Headphones, tone: "rose" },
 ];
 
 const AdminSidebar = ({
@@ -79,16 +80,16 @@ const AdminSidebar = ({
         )}
       >
         {!isCollapsed && <div className="text-base font-bold tracking-tight text-slate-900">APCS</div>}
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={cn(
-            "flex h-5 w-5 items-center justify-center rounded-[4px] border border-slate-300 bg-slate-50 text-slate-500 transition hover:bg-slate-100"
-          )}
+          className="size-8 text-slate-500 hover:text-slate-900"
           onClick={onToggleCollapse ?? onClose}
         >
-          {isCollapsed ? <ChevronRight className="size-3" /> : <ChevronLeft className="size-3" />}
-        </button>
+          {isCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+        </Button>
       </div>
 
       <nav className="flex-1 space-y-7 px-3 py-6">
@@ -152,13 +153,13 @@ const AdminSidebar = ({
 );
 
 const SidebarGroup = ({ label, isCollapsed, children }: { label: string; isCollapsed?: boolean; children: React.ReactNode }) => (
-  <div>
+  <div className="flex flex-col gap-1">
     {!isCollapsed && (
-      <p className="px-3 pb-2 text-[9px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+      <p className="text-muted-foreground px-3 pb-1 text-xs font-medium tracking-wider uppercase">
         {label}
       </p>
     )}
-    {children}
+    <div className="flex flex-col gap-1">{children}</div>
   </div>
 );
 
@@ -172,43 +173,31 @@ const SidebarItems = ({
   const pathname = usePathname();
 
   return (
-    <div className="space-y-0.5">
-      {items.map(({ label, href, icon: Icon, count, tone }) => {
+    <>
+      {items.map(({ label, href, icon: Icon }) => {
         const active = pathname?.startsWith(href);
         return (
-          <Link
-            href={href}
+          <Button
             key={label}
-            title={isCollapsed ? label : undefined}
+            variant="ghost"
+            asChild
             className={cn(
-              "flex w-full items-center rounded-md py-2.5 text-left text-xs transition-colors",
-              isCollapsed ? "justify-center px-0" : "gap-3 px-3",
-              active
-                ? "bg-slate-100 font-semibold text-slate-900"
-                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+              "w-full",
+              isCollapsed ? "justify-center px-0" : "justify-start gap-3 px-3",
+              active ? "bg-muted text-primary font-semibold" : "text-muted-foreground font-medium hover:bg-slate-100 hover:text-slate-900"
             )}
           >
-            <Icon
-              className={cn("size-3.5 shrink-0", active ? "text-slate-700" : "text-slate-400")}
-              strokeWidth={1.8}
-            />
-            {!isCollapsed && <span className="flex-1 truncate">{label}</span>}
-            {!isCollapsed && count && (
-              <span
-                className={cn(
-                  "shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold",
-                  tone === "amber" && "bg-amber-50 text-amber-600",
-                  tone === "rose" && "bg-rose-50 text-rose-500",
-                  !tone && "bg-slate-100 text-slate-400"
-                )}
-              >
-                {count}
-              </span>
-            )}
-          </Link>
+            <Link
+              href={href}
+              title={isCollapsed ? label : undefined}
+            >
+              <Icon className="size-4 shrink-0" strokeWidth={2} />
+              {!isCollapsed && <span className="flex-1 truncate">{label}</span>}
+            </Link>
+          </Button>
         );
       })}
-    </div>
+    </>
   );
 };
 

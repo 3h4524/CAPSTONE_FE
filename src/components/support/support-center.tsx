@@ -375,11 +375,11 @@ function TicketTable({ tickets, onOpen, selectedTicketId, localReadState, setLoc
                 <div className="flex items-center gap-2">
                   <span className={cn("block max-w-[430px] truncate group-hover:text-[#273750]", hasUnread ? "font-bold text-slate-900" : "font-semibold text-slate-900")}>{ticket.subject}</span>
                   {hasUnread && (
-                    <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-rose-600 shadow-sm">New</span>
+                    <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] leading-none font-bold text-rose-600 uppercase shadow-sm">New</span>
                   )}
                 </div>
                 <span className="mt-1 block text-[11px] text-slate-500">
-                  #{ticket.ticketNumber} {ticket.lastMessageSnippet && <span className={cn("ml-1", hasUnread ? "text-slate-800 font-semibold" : "")}>• {ticket.lastMessageSnippet}</span>}
+                  #{ticket.ticketNumber} {ticket.lastMessageSnippet && <span className={cn("ml-1", hasUnread ? "font-semibold text-slate-800" : "")}>• {ticket.lastMessageSnippet}</span>}
                 </span>
               </td>
               <td className="px-4 py-3.5 text-slate-600">{CATEGORY_LABELS[ticket.category]}</td>
@@ -416,12 +416,12 @@ function TicketCards({ tickets, onOpen, selectedTicketId, localReadState, setLoc
                 <div className="flex items-center gap-2">
                   <span className={cn("block truncate", hasUnread ? "font-bold text-slate-900" : "font-semibold text-slate-900")}>{ticket.subject}</span>
                   {hasUnread && (
-                    <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-rose-600 shadow-sm">New</span>
+                    <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] leading-none font-bold text-rose-600 uppercase shadow-sm">New</span>
                   )}
                 </div>
                 <span className="mt-1 block text-[11px] text-slate-500">
                   {ticket.ticketNumber} · {CATEGORY_LABELS[ticket.category]}
-                  {ticket.lastMessageSnippet && <span className={cn("block truncate mt-0.5", hasUnread ? "text-slate-800 font-semibold" : "text-slate-400")}>{ticket.lastMessageSnippet}</span>}
+                  {ticket.lastMessageSnippet && <span className={cn("mt-0.5 block truncate", hasUnread ? "font-semibold text-slate-800" : "text-slate-400")}>{ticket.lastMessageSnippet}</span>}
                 </span>
               </span>
               <ChevronRight className="mt-0.5 size-4 shrink-0 text-slate-400" aria-hidden="true" />

@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Calendar, CheckCircle2, Copy, Download, FileText, Folder, Headphones, Lock, Mail, Maximize2, Minimize2, MoreVertical, Paperclip, Send, Star, User, X } from "lucide-react";
+import { Calendar, CheckCircle2, Copy, Download, FileText, Folder, Headphones, Maximize2, Minimize2, Paperclip, Send, Star, User, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
@@ -198,6 +197,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
                     return isImage ? (
                       <div key={file.id} className="relative max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                         <a href={file.downloadUrl} target="_blank" rel="noreferrer" className="block max-h-[250px] overflow-hidden bg-slate-50">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={file.downloadUrl} alt={file.fileName} className="w-full object-cover transition-opacity hover:opacity-90" />
                         </a>
                         <div className="flex items-center justify-between border-t border-slate-100 bg-white p-3">
@@ -264,6 +264,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
                         return isImage ? (
                           <div key={file.id} className="relative max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-sm">
                             <a href={file.downloadUrl} target="_blank" rel="noreferrer" className="block max-h-[250px] overflow-hidden bg-slate-50">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={file.downloadUrl} alt={file.fileName} className="w-full object-cover transition-opacity hover:opacity-90" />
                             </a>
                             <div className="flex items-center justify-between border-t border-slate-100 bg-white p-3">
@@ -340,7 +341,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
               <Button 
                 onClick={handleSend} 
                 disabled={isSending || (!replyText.trim() && attachments.length === 0)}
-                className="h-8 gap-2 rounded-lg px-5 text-sm font-medium shadow-sm bg-[#1e293b] text-white hover:bg-slate-800"
+                className="h-8 gap-2 rounded-lg bg-[#1e293b] px-5 text-sm font-medium text-white shadow-sm hover:bg-slate-800"
               >
                 {isSending ? <Spinner className="size-4" /> : <Send className="size-4" />}
                 Send Reply

@@ -268,6 +268,7 @@ function ConversationItem({
                 return isImage ? (
                   <div key={attachment.id} className="relative max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-sm">
                     <a href={attachment.downloadUrl} target="_blank" rel="noreferrer" className="block max-h-[250px] overflow-hidden bg-slate-50">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={attachment.downloadUrl} alt={attachment.fileName} className="w-full object-cover transition-opacity hover:opacity-90" />
                     </a>
                     <div className="flex items-center justify-between border-t border-slate-100 bg-white p-3">

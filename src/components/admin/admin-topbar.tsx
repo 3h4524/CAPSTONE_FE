@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, ChevronDown, Command, Menu, Search } from "lucide-react";
+import { Bell, Menu } from "lucide-react";
 
 type AdminTopbarProps = {
   fullName: string;
@@ -8,7 +8,7 @@ type AdminTopbarProps = {
   pageTitle?: string;
 };
 
-const AdminTopbar = ({ fullName, onMenuClick, pageTitle = "Dashboard" }: AdminTopbarProps) => (
+const AdminTopbar = ({ onMenuClick, pageTitle = "Dashboard" }: AdminTopbarProps) => (
   <header className="sticky top-0 z-20 border-b border-slate-200 bg-[#f8fafc]">
     <div className="flex h-[52px] items-center justify-between gap-4 border-b border-slate-200 bg-white/80 px-4 sm:px-7">
       <div className="flex items-center gap-3">

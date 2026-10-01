@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-
 import { Filter, Headphones, Search } from "lucide-react";
 
 import type { AdminTicketFilters } from "@/api/admin-support";
@@ -120,7 +119,7 @@ export const TicketListPanel = ({
                   })
                 }
                 className={cn(
-                  "flex items-center gap-1.5 whitespace-nowrap border-b-2 pb-3 text-[13px] font-semibold transition-colors",
+                  "flex items-center gap-1.5 border-b-2 pb-3 text-[13px] font-semibold whitespace-nowrap transition-colors",
                   isActive
                     ? "border-blue-600 text-slate-900"
                     : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
@@ -174,18 +173,18 @@ export const TicketListPanel = ({
                         {ticket.subject}
                       </span>
                       {hasUnread && (
-                        <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-rose-600 shadow-sm">
+                        <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] leading-none font-bold text-rose-600 uppercase shadow-sm">
                           New
                         </span>
                       )}
                     </div>
-                    <span className={cn("shrink-0 text-[12px] font-medium", hasUnread ? "text-slate-700 font-bold" : "text-slate-500")}>
+                    <span className={cn("shrink-0 text-[12px] font-medium", hasUnread ? "font-bold text-slate-700" : "text-slate-500")}>
                       {formatRelativeDate(ticket.updatedAtUtc || ticket.createdAtUtc)}
                     </span>
                   </div>
                   
                   {ticket.lastMessageSnippet && (
-                    <p className={cn("mb-2 truncate text-left text-[13px]", hasUnread ? "text-slate-800 font-medium" : "text-slate-500")}>
+                    <p className={cn("mb-2 truncate text-left text-[13px]", hasUnread ? "font-medium text-slate-800" : "text-slate-500")}>
                       {ticket.lastMessageSnippet}
                     </p>
                   )}
@@ -206,7 +205,7 @@ export const TicketListPanel = ({
                         <div className="flex size-5 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
                           {ticket.assignedToName.charAt(0).toUpperCase()}
                         </div>
-                        <span className="truncate max-w-[100px]">{ticket.assignedToName}</span>
+                        <span className="max-w-[100px] truncate">{ticket.assignedToName}</span>
                       </div>
                     ) : (
                       <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-500">

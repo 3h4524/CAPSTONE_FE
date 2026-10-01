@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { toast } from "sonner";
 
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { supportTicketKeys } from "@/api/support-tickets";
 import { adminSupportTicketsKeys } from "@/hooks/queries/use-admin-support-tickets";
 import type { SupportTicketReply } from "@/types/support";
@@ -59,13 +60,13 @@ export const useSupportHub = (ticketId?: string) => {
     });
 
     // Bắt sự kiện Noti toàn cầu (Cho cái Chuông)
-    connection.on("ReceiveNotification", (id: string) => {
+    connection.on("ReceiveNotification", (_id: string) => {
       // Xóa cache của trang danh sách để cập nhật trạng thái nếu cần
       queryClient.invalidateQueries({ queryKey: [...supportTicketKeys.all, "list"] });
     });
 
     // Bắt sự kiện Noti dành riêng cho Admin (Để update list realtime)
-    connection.on("ReceiveAdminNotification", (id: string) => {
+    connection.on("ReceiveAdminNotification", (_id: string) => {
       queryClient.invalidateQueries({ queryKey: adminSupportTicketsKeys.lists() });
     });
 

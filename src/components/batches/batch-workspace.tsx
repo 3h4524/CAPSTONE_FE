@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Download, FileSpreadsheet, Layers3, MoreHorizontal, Pencil, Plus, Search, Trash2, Upload } from "lucide-react";
 import { useForm } from "react-hook-form";
 
+import { BatchJobHistoryMenu } from "@/components/batches/batch-job-history-menu";
 import { StatusBadge } from "@/components/commons/data-display/status-badge";
 import { TruncatedTooltip } from "@/components/commons/data-display/truncated-tooltip";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { smoothScrollTo } from "@/helpers/smooth-scroll";
 import { useApproveBatch } from "@/hooks/mutations/use-approve-batch";
 import { useCreateBatch } from "@/hooks/mutations/use-create-batch";
 import { useDeleteBatch } from "@/hooks/mutations/use-delete-batch";
@@ -23,7 +25,6 @@ import { useDeleteBatchProduct } from "@/hooks/mutations/use-delete-batch-produc
 import { useImportBatchProducts } from "@/hooks/mutations/use-import-batch-products";
 import { useSaveBatchProduct } from "@/hooks/mutations/use-save-batch-product";
 import { useUpdateBatch } from "@/hooks/mutations/use-update-batch";
-import { useBatchJobs } from "@/hooks/queries/use-batch-jobs";
 import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useBatches } from "@/hooks/queries/use-batches";
 import { type BatchFormValues, batchSchema, type ProductFormValues, productSchema, productTypes } from "@/schemas/batches";
@@ -74,11 +75,16 @@ export const BatchWorkspace = () => {
   const [fileError, setFileError] = useState("");
   const [importResult, setImportResult] = useState<{ importedCount: number; errors: Array<{ row: number; name: string; message: string }> } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
+  // Bumped on every explicit batch pick, so re-clicking the already-selected card scrolls too.
+  const [revealTick, setRevealTick] = useState(0);
+  useEffect(() => {
+    if (revealTick > 0 && detailRef.current) smoothScrollTo(detailRef.current);
+  }, [revealTick]);
   const createBatch = useCreateBatch();
   const updateBatch = useUpdateBatch();
   const deleteBatch = useDeleteBatch();
   const router = useRouter();
-  const latestJob = useBatchJobs(selectedBatch?.id).data?.[0];
   const approveBatch = useApproveBatch();
   const saveProduct = useSaveBatchProduct();
   const importProducts = useImportBatchProducts();
@@ -130,6 +136,7 @@ export const BatchWorkspace = () => {
       const created = await createBatch.mutateAsync(input);
       setSelectedBatch(created);
       setBatchPage(1);
+      setRevealTick((tick) => tick + 1);
     }
     setBatchDialog(false);
     setEditingBatch(null);
@@ -230,7 +237,7 @@ export const BatchWorkspace = () => {
           <div className="flex items-center justify-between"><h2 className="text-base font-semibold tracking-tight">Your batches</h2><span className="bg-card inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium shadow-sm"><span className="text-foreground font-semibold tabular-nums">{batchCount}</span><span className="text-muted-foreground">batches</span></span></div>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {visibleBatches.map((batch) => <Card key={batch.id} className={`hover:border-primary/50 h-full gap-0 overflow-hidden rounded-xl border py-0 shadow-sm transition-colors ${selectedBatch?.id === batch.id ? "border-primary bg-primary/[0.03]" : ""}`}>
-              <button type="button" onClick={() => { setSelectedBatch(batch); setSearch(""); setFilter("all"); setPage(1); }} className="focus-visible:ring-ring w-full rounded-t-xl text-left focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset">
+              <button type="button" onClick={() => { setSelectedBatch(batch); setSearch(""); setFilter("all"); setPage(1); setRevealTick((tick) => tick + 1); }} className="focus-visible:ring-ring w-full rounded-t-xl text-left focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset">
                 <CardContent className="space-y-3 p-4"><div className="flex items-start justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg"><Layers3 className="size-4" /></span><h3 className="truncate font-semibold">{batch.name}</h3></div><StatusBadge status={batch.status} className="shrink-0 capitalize">{batch.status}</StatusBadge></div><p className="text-muted-foreground line-clamp-1 min-h-5 text-sm">{batch.description || "No description"}</p>
                   <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-2 border-t pt-3 text-sm"><span><span className="text-foreground font-medium">{batch.productCount}</span> {batch.productCount === 1 ? "product" : "products"}</span>{batch.defaultNiche && <span className="bg-muted inline-flex max-w-full items-center gap-1.5 truncate rounded-md px-2 py-1"><span className="text-muted-foreground shrink-0 text-xs">Default niche</span><span className="text-foreground truncate">{batch.defaultNiche}</span></span>}</div>
                 </CardContent>
@@ -242,7 +249,7 @@ export const BatchWorkspace = () => {
         </section>
       )}
 
-      {selectedBatch && <Card className="gap-0 overflow-hidden rounded-xl py-0 shadow-sm"><CardHeader className="bg-muted/20 border-b px-4 py-4 sm:px-5"><div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center"><div><div className="flex items-center gap-2"><CardTitle className="text-xl">{selectedBatch.name}</CardTitle><StatusBadge status={selectedBatch.status} className="capitalize">{selectedBatch.status}</StatusBadge></div><p className="text-muted-foreground mt-1 text-sm">Review products, then approve pending items to create a design generation job.</p></div><div className="flex flex-wrap gap-2">{latestJob && <Button variant="outline" onClick={() => router.push(`/batch-jobs/${latestJob.id}`)}>View latest job</Button>}<Button variant="outline" onClick={() => { setImportDialog(true); setFileError(""); setImportResult(null); }}><Upload className="mr-2 size-4" />Import Excel</Button><Button variant="outline" onClick={() => openProduct()}><Plus className="mr-2 size-4" />Add product</Button>{pendingProductCount > 0 && <Button onClick={() => setApproveDialog(true)}><CheckCircle2 className="mr-2 size-4" />Approve &amp; queue ({pendingProductCount})</Button>}</div></div></CardHeader>
+      {selectedBatch && <Card ref={detailRef} className="gap-0 overflow-hidden rounded-xl py-0 shadow-sm"><CardHeader className="bg-muted/20 border-b px-4 py-4 sm:px-5"><div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center"><div><div className="flex items-center gap-2"><CardTitle className="text-xl">{selectedBatch.name}</CardTitle><StatusBadge status={selectedBatch.status} className="capitalize">{selectedBatch.status}</StatusBadge></div><p className="text-muted-foreground mt-1 text-sm">Review products, then approve pending items to create a design generation job.</p></div><div className="flex flex-wrap gap-2"><BatchJobHistoryMenu batchId={selectedBatch.id} /><Button variant="outline" onClick={() => { setImportDialog(true); setFileError(""); setImportResult(null); }}><Upload className="mr-2 size-4" />Import Excel</Button><Button variant="outline" onClick={() => openProduct()}><Plus className="mr-2 size-4" />Add product</Button>{pendingProductCount > 0 && <Button onClick={() => setApproveDialog(true)}><CheckCircle2 className="mr-2 size-4" />Approve &amp; queue ({pendingProductCount})</Button>}</div></div></CardHeader>
         <CardContent className="space-y-5 p-4 md:p-6">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">{statuses.map((status) => { const count = (productsQuery.data ?? []).filter((product) => statusLabel(product.status).toLowerCase() === status).length; return <button key={status} type="button" onClick={() => { setFilter(filter === status ? "all" : status); setPage(1); }} className={`hover:bg-muted/50 rounded-lg border p-4 text-left transition-colors ${filter === status ? "border-primary bg-primary/[0.03]" : ""}`}><span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{statusLabel(status)}</span><span className="mt-1 block text-2xl font-semibold">{count}</span></button>; })}</div>
           <div className="flex flex-col gap-3 sm:flex-row"><div className="relative min-w-0 flex-1"><Search className="text-muted-foreground absolute top-2.5 left-3 size-4"/><Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search products, niche or keywords" className="pl-9" aria-label="Search products"/></div><Select value={filter} onValueChange={(value) => { setFilter(value ?? "all"); setPage(1); }}><SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All statuses"/></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{statuses.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select></div>

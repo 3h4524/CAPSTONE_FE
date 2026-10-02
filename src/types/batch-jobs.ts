@@ -11,6 +11,7 @@ export type BatchJobProductResult = {
   id: string;
   productId: string | null;
   productName: string;
+  productType: string;
   sequence: number;
   status: string;
   errorMessage: string | null;

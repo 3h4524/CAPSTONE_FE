@@ -12,13 +12,14 @@ import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
 
 type MockupTemplatePickerDialogProps = {
   batchJobId: string;
-  productType?: string;
+  /** Product types in the batch job (lowercase) with how many products each has. */
+  productTypeCounts?: Record<string, number>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-export const MockupTemplatePickerDialog = ({ batchJobId, productType, open, onOpenChange }: MockupTemplatePickerDialogProps) => {
-  const { data: templates, isPending: isLoadingTemplates, isError: isTemplatesError, refetch: refetchTemplates } = useMockupTemplates(productType, open);
+export const MockupTemplatePickerDialog = ({ batchJobId, productTypeCounts, open, onOpenChange }: MockupTemplatePickerDialogProps) => {
+  const { data: templates, isPending: isLoadingTemplates, isError: isTemplatesError, refetch: refetchTemplates } = useMockupTemplates(undefined, open);
   const { data: selection, isPending: isLoadingSelection } = useBatchMockupSelection(batchJobId, open);
   const { mutate: applyMockups, isPending: isApplying } = useApplyMockupTemplates();
 
@@ -30,7 +31,9 @@ export const MockupTemplatePickerDialog = ({ batchJobId, productType, open, onOp
       <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-4xl flex-col overflow-hidden">
         <DialogHeader className="text-left">
           <DialogTitle>Choose mock-up templates</DialogTitle>
-          <DialogDescription>Tick the mock-ups every design in this batch will be rendered on.</DialogDescription>
+          <DialogDescription>
+            Tick at least one template for each product type in this job. Each design is rendered on every selected template of its own type.
+          </DialogDescription>
         </DialogHeader>
         {loading ? (
           <SectionLoading label="Loading mock-up templates" />
@@ -51,6 +54,7 @@ export const MockupTemplatePickerDialog = ({ batchJobId, productType, open, onOp
             templates={templates}
             initialIds={selection?.templateIds ?? []}
             pending={isApplying}
+            productTypeCounts={productTypeCounts}
             onApply={(templateIds) => applyMockups({ batchJobId, templateIds }, { onSuccess: close })}
             onClose={close}
           />

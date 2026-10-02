@@ -3,11 +3,15 @@
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 
+import { MockupTemplatePickerDialog } from "@/components/batch-setup/mockup-template/mockup-template-picker-dialog";
+import { MockupTemplateTrigger } from "@/components/batch-setup/mockup-template/mockup-template-trigger";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { countProductTypes, productTypeLabel } from "@/helpers/mockup-template";
 import { useStartBatchJob } from "@/hooks/mutations/use-start-batch-job";
+import { useBatchMockupSelection } from "@/hooks/queries/use-batch-mockup-selection";
 import { useDesignTemplates } from "@/hooks/queries/use-design-templates";
 import { useStylePresets } from "@/hooks/queries/use-style-presets";
 import { useSubscriptionOverview } from "@/hooks/queries/use-subscription-overview";
@@ -26,12 +30,18 @@ export const GenerationSetup = ({ job }: { job: BatchJobDetail }) => {
   const [styleId, setStyleId] = useState(NO_STYLE);
   const [variations, setVariations] = useState("1");
   const [aspectRatio, setAspectRatio] = useState("1:1");
+  const [mockupPickerOpen, setMockupPickerOpen] = useState(false);
 
   const systemTemplates = useDesignTemplates({ scope: "system", pageNumber: 1, pageSize: MAX_TEMPLATE_PAGE_SIZE });
   const personalTemplates = useDesignTemplates({ scope: "personal", pageNumber: 1, pageSize: MAX_TEMPLATE_PAGE_SIZE });
   const styles = useStylePresets();
   const overview = useSubscriptionOverview();
   const start = useStartBatchJob();
+  const mockupSelection = useBatchMockupSelection(job.id);
+  const productTypeCounts = countProductTypes(job.products);
+  const productTypeSummary = Object.entries(productTypeCounts)
+    .map(([type, count]) => `${count} ${productTypeLabel(type)}`)
+    .join(", ");
 
   const templates = [...(personalTemplates.data?.items ?? []), ...(systemTemplates.data?.items ?? [])];
   const variationCount = Number(variations);
@@ -133,6 +143,18 @@ export const GenerationSetup = ({ job }: { job: BatchJobDetail }) => {
           </div>
         </div>
 
+        <div className="space-y-2">
+          <Label>Mock-up templates (optional)</Label>
+          <MockupTemplateTrigger
+            selectedCount={mockupSelection.data?.templateIds.length ?? 0}
+            onOpen={() => setMockupPickerOpen(true)}
+          />
+          <p className="text-muted-foreground text-xs">
+            {productTypeSummary && <>This job has {productTypeSummary}. Pick at least one template for each type. </>}
+            You can also choose or change them after the job finishes, then generate mock-ups for every product at once.
+          </p>
+        </div>
+
         <div className="bg-muted/40 rounded-lg border p-4 text-sm">
           <p className="font-medium">Estimated usage</p>
           <p className="text-muted-foreground mt-1">
@@ -154,6 +176,12 @@ export const GenerationSetup = ({ job }: { job: BatchJobDetail }) => {
           </Button>
         </div>
       </CardContent>
+      <MockupTemplatePickerDialog
+        batchJobId={job.id}
+        productTypeCounts={productTypeCounts}
+        open={mockupPickerOpen}
+        onOpenChange={setMockupPickerOpen}
+      />
     </Card>
   );
 };

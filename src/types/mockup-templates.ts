@@ -16,3 +16,29 @@ export interface BatchMockupSelection {
   batchJobId: string;
   templateIds: string[];
 }
+
+export interface MockupPrintArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface MockupImage {
+  id: string;
+  productId: string;
+  designImageId: string;
+  mockupTemplateId: string;
+  mockupImageUrl: string;
+  mockupWidthPx: number;
+  mockupHeightPx: number;
+  approvalStatus: string;
+}
+
+export interface GenerateAllMockupsResult {
+  generatedCount: number;
+  noDesignImageCount: number;
+  noCompatibleTemplateCount: number;
+  errors: string[];
+  images: MockupImage[];
+}

@@ -1,5 +1,5 @@
 import { WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
-import { readBoolean } from "@/helpers/workflow-config";
+import { normalizeNodeConfig } from "@/helpers/workflow-config";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type {
   WorkflowDefinition,
@@ -72,10 +72,7 @@ const hasApprovalUpstream = (node: WorkflowNode, nodes: WorkflowNode[], edges: W
   const ancestors = collectReachable([node.id], buildAdjacency(edges, "backward"));
   return nodes.some(
     (candidate) =>
-      candidate.id !== node.id &&
-      ancestors.has(candidate.id) &&
-      (candidate.data.type === "approval-gate" ||
-        (candidate.data.type === "design-image" && readBoolean(candidate.data.config.autoApprove)))
+      candidate.id !== node.id && ancestors.has(candidate.id) && candidate.data.type === "approval-gate"
   );
 };
 
@@ -114,7 +111,7 @@ export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
       issues.push({
         id: `approval-${node.id}`,
         nodeId: node.id,
-        message: `${node.data.label} needs an Approval gate (or auto-approved designs) before it.`,
+        message: `${node.data.label} needs an Approval gate node before it.`,
       });
     }
   });
@@ -139,7 +136,12 @@ export const toWorkflowNodes = (definition: WorkflowDefinition): WorkflowNode[] 
     id: node.id,
     type: "workflow",
     position: node.position,
-    data: { type: node.type, label: node.label, config: node.config, status: "idle" },
+    data: {
+      type: node.type,
+      label: node.label,
+      config: normalizeNodeConfig(node.type, node.config),
+      status: "idle",
+    },
   }));
 
 export const toWorkflowEdges = (definition: WorkflowDefinition): WorkflowEdge[] =>

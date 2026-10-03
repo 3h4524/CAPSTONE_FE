@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-import { productTypes } from "@/schemas/batches";
 import type { WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
 
 const wholeNumber = (label: string, min: number, max: number) =>
@@ -12,7 +11,6 @@ const wholeNumber = (label: string, min: number, max: number) =>
 
 export const productInputConfigSchema = z.object({
   batchId: z.string().min(1, "Choose the batch that feeds this workflow."),
-  productType: z.enum(productTypes, { error: "Choose a product type." }),
 });
 
 export const promptSynthesisConfigSchema = z.object({
@@ -24,7 +22,6 @@ export const promptSynthesisConfigSchema = z.object({
 export const designImageConfigSchema = z.object({
   model: z.enum(["leonardo", "sdxl"], { error: "Choose an image model." }),
   variants: wholeNumber("number of variants", 1, 4),
-  autoApprove: z.boolean(),
 });
 
 export const approvalGateConfigSchema = z.object({

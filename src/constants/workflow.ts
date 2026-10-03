@@ -16,7 +16,6 @@ import type {
   WorkflowDefinition,
   WorkflowNodeDefinition,
   WorkflowNodeType,
-  WorkflowOption,
 } from "@/types/workflow";
 
 export const WORKFLOW_DND_MIME = "application/x-apcs-workflow-node";
@@ -39,15 +38,6 @@ export const NODE_CARD_WIDTHS: Record<WorkflowNodeType, number> = {
   "publish-etsy": 240,
   "publish-printify": 240,
 };
-
-const PRODUCT_TYPE_OPTIONS: WorkflowOption[] = [
-  { value: "tshirt", label: "T-shirt" },
-  { value: "hoodie", label: "Hoodie" },
-  { value: "mug", label: "Mug" },
-  { value: "poster", label: "Poster" },
-  { value: "tote_bag", label: "Tote bag" },
-  { value: "phone_case", label: "Phone case" },
-];
 
 const PUBLISH_FIELDS = [
   {
@@ -74,11 +64,8 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "trigger",
     hasInput: false,
     hasOutput: true,
-    defaultConfig: { batchId: "", productType: "tshirt" },
-    fields: [
-      { kind: "source-select", name: "batchId", label: "Batch", source: "batches" },
-      { kind: "select", name: "productType", label: "Product type", options: PRODUCT_TYPE_OPTIONS },
-    ],
+    defaultConfig: { batchId: "" },
+    fields: [{ kind: "source-select", name: "batchId", label: "Batch", source: "batches" }],
   },
   "prompt-synthesis": {
     type: "prompt-synthesis",
@@ -113,7 +100,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { model: "leonardo", variants: 2, autoApprove: false },
+    defaultConfig: { model: "leonardo", variants: 2 },
     fields: [
       {
         kind: "select",
@@ -125,12 +112,6 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         ],
       },
       { kind: "number", name: "variants", label: "Variants per product", min: 1, max: 4 },
-      {
-        kind: "switch",
-        name: "autoApprove",
-        label: "Auto-approve designs",
-        description: "Skip manual review and send every variation downstream.",
-      },
     ],
   },
   "approval-gate": {

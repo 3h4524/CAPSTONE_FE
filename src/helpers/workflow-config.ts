@@ -28,6 +28,15 @@ export const isWorkflowNodeType = (value: string): value is WorkflowNodeType =>
 export const getWorkflowNodeDefinition = (type: string): WorkflowNodeDefinition | undefined =>
   isWorkflowNodeType(type) ? WORKFLOW_NODE_DEFINITIONS[type] : undefined;
 
+export const normalizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNodeConfig): WorkflowNodeConfig => {
+  const definition = WORKFLOW_NODE_DEFINITIONS[type];
+  const normalized: WorkflowNodeConfig = {};
+  definition.fields.forEach((field) => {
+    if (field.name in config) normalized[field.name] = config[field.name];
+  });
+  return normalized;
+};
+
 export const summarizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNodeConfig): string[] => {
   const definition = getWorkflowNodeDefinition(type);
   if (!definition) return [];

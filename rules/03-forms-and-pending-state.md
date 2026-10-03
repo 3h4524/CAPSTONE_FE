@@ -69,4 +69,19 @@ const onSubmit = (values: ProductFormValues) => {
 ```tsx
 // ✅ Đúng — loading cục bộ bằng SectionLoading
 {isPending ? <SectionLoading label="Loading products" /> : <ProductList items={data} />}
+
+## 7. Nút save + validation
+
+- Nút save/submit chỉ enable khi form có thay đổi: `disabled={!isDirty || isPending}` (`isDirty` từ `form.formState`).
+- **CẤM** disable nút vì form chưa valid (`disabled={!isValid}`, `disabled={!!errors.x}`). Action luôn bấm được để user nhận feedback.
+- Bấm submit mà invalid: lỗi inline dưới từng field (RHF + `FormMessage`/`FieldError` tự render), toast tổng quát nếu cần, và focus vào field lỗi đầu tiên (`shouldFocusError` mặc định của `handleSubmit` — không tắt).
+
+```tsx
+// ✅ Đúng
+const { formState: { isDirty } } = form;
+<Button type="submit" disabled={!isDirty || isPending}>Lưu thay đổi</Button>
+
+// ❌ Sai — chặn user vì chưa valid
+<Button type="submit" disabled={!isValid || isPending}>Lưu thay đổi</Button>
+```
 ```

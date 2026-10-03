@@ -19,6 +19,9 @@ export type SupportTicketSummary = {
   satisfactionRating: number | null;
   createdAtUtc: string;
   updatedAtUtc: string;
+  lastMessageSnippet?: string;
+  hasUnreadMessages?: boolean;
+  assignedToName?: string;
 };
 
 export type SupportTicketAttachment = {

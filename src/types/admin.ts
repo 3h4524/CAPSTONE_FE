@@ -5,6 +5,7 @@ export type MonthlyRevenueDto = {
 };
 
 export type SupportTicketDto = {
+  id: string;
   userName: string;
   userEmail: string;
   issue: string;

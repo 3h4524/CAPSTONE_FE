@@ -184,8 +184,8 @@ export function DesignTemplateLibrary() {
   const data = templatesQuery.data;
 
   return (
-    <div className="flex flex-1 flex-col text-[#161c22]">
-      <main className="mx-auto w-full max-w-[1380px] px-4 pt-8 pb-10 sm:px-6 lg:px-8">
+    <div className="w-full min-w-0 p-4 text-[#161c22] sm:p-6">
+      <main className="w-full min-w-0">
         <header className="grid gap-6 border-b border-slate-200 pb-7 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
             <p className="text-[11px] font-bold tracking-[0.17em] text-slate-500 uppercase">Creative library</p>

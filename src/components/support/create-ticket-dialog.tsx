@@ -116,7 +116,7 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
                     control={control}
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger id="support-category" className="min-h-12 rounded-xl border-slate-300 bg-white px-3.5 focus-visible:border-[#273750] focus-visible:ring-[#273750]/15" aria-invalid={Boolean(errors.category)}>
+                        <SelectTrigger id="support-category" className="min-h-12 w-full rounded-xl border-slate-300 bg-white px-3.5 focus-visible:border-[#273750] focus-visible:ring-[#273750]/15" aria-invalid={Boolean(errors.category)}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -134,7 +134,7 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
                     control={control}
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger id="support-priority" className="min-h-12 rounded-xl border-slate-300 bg-white px-3.5 whitespace-nowrap focus-visible:border-[#273750] focus-visible:ring-[#273750]/15 [&>span:first-child]:truncate" aria-invalid={Boolean(errors.priority)}>
+                        <SelectTrigger id="support-priority" className="min-h-12 w-full rounded-xl border-slate-300 bg-white px-3.5 whitespace-nowrap focus-visible:border-[#273750] focus-visible:ring-[#273750]/15 [&>span:first-child]:truncate" aria-invalid={Boolean(errors.priority)}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -194,7 +194,7 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="min-w-0 space-y-1.5">
       <label htmlFor={htmlFor} className="text-sm font-semibold text-slate-700">{label}</label>
       {children}
       {error ? <p role="alert" className="text-destructive text-xs">{error}</p> : null}

@@ -11,9 +11,5 @@ export const metadata: Metadata = getPageMetadata({
 });
 
 export default function SupportPage() {
-  return (
-    <div className="flex flex-1 flex-col">
-      <SupportCenter />
-    </div>
-  );
+  return <SupportCenter />;
 }

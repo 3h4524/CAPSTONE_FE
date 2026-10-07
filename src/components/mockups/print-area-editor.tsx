@@ -128,9 +128,12 @@ const Handles = ({ className }: { className: string }) => (
   </>
 );
 
-// The box around the opaque part of a mask image, in a photo of the given size.
-const boundsFromMask = (maskUrl: string, size: { width: number; height: number }) =>
-  new Promise<Bounds | null>((resolve) => {
+type Size = { width: number; height: number };
+type GarmentMask = Size & { alpha: Uint8ClampedArray };
+
+// A mask image's opacity, read small: enough to box the garment and to tell what lies off it.
+const loadGarmentMask = (maskUrl: string) =>
+  new Promise<GarmentMask | null>((resolve) => {
     const mask = new window.Image();
     mask.crossOrigin = "anonymous";
     mask.onerror = () => resolve(null);
@@ -145,35 +148,72 @@ const boundsFromMask = (maskUrl: string, size: { width: number; height: number }
         const ctx = canvas.getContext("2d");
         if (!ctx) return resolve(null);
         ctx.drawImage(mask, 0, 0, w, h);
-        const alpha = ctx.getImageData(0, 0, w, h).data;
-        let left = w;
-        let top = h;
-        let right = -1;
-        let bottom = -1;
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            if (alpha[(y * w + x) * 4 + 3] < 128) continue;
-            if (x < left) left = x;
-            if (x > right) right = x;
-            if (y < top) top = y;
-            if (y > bottom) bottom = y;
-          }
-        }
-        if (right < left || bottom < top) return resolve(null);
-        const kx = size.width / w;
-        const ky = size.height / h;
-        resolve({
-          x: Math.round(left * kx),
-          y: Math.round(top * ky),
-          width: Math.round((right - left + 1) * kx),
-          height: Math.round((bottom - top + 1) * ky),
-        });
+        const pixels = ctx.getImageData(0, 0, w, h).data;
+        const alpha = new Uint8ClampedArray(w * h);
+        for (let i = 0; i < alpha.length; i++) alpha[i] = pixels[i * 4 + 3];
+        resolve({ width: w, height: h, alpha });
       } catch {
         resolve(null);
       }
     };
     mask.src = maskUrl;
   });
+
+// The box around the opaque part of a mask, in a photo of the given size.
+const boundsOfMask = (mask: GarmentMask, size: Size): Bounds | null => {
+  let left = mask.width;
+  let top = mask.height;
+  let right = -1;
+  let bottom = -1;
+  for (let y = 0; y < mask.height; y++) {
+    for (let x = 0; x < mask.width; x++) {
+      if (mask.alpha[y * mask.width + x] < 128) continue;
+      if (x < left) left = x;
+      if (x > right) right = x;
+      if (y < top) top = y;
+      if (y > bottom) bottom = y;
+    }
+  }
+  if (right < left || bottom < top) return null;
+  const kx = size.width / mask.width;
+  const ky = size.height / mask.height;
+  return {
+    x: Math.round(left * kx),
+    y: Math.round(top * ky),
+    width: Math.round((right - left + 1) * kx),
+    height: Math.round((bottom - top + 1) * ky),
+  };
+};
+
+// How much of a box (in the photo's pixels) lies off the garment, 0..1.
+const shareOffGarment = (mask: GarmentMask, box: Bounds, size: Size) => {
+  const kx = mask.width / size.width;
+  const ky = mask.height / size.height;
+  const left = Math.floor(box.x * kx);
+  const top = Math.floor(box.y * ky);
+  const right = Math.max(left + 1, Math.ceil((box.x + box.width) * kx));
+  const bottom = Math.max(top + 1, Math.ceil((box.y + box.height) * ky));
+  let off = 0;
+  for (let y = top; y < bottom; y++) {
+    for (let x = left; x < right; x++) {
+      if (x < 0 || y < 0 || x >= mask.width || y >= mask.height || mask.alpha[y * mask.width + x] < 128) off++;
+    }
+  }
+  return off / ((right - left) * (bottom - top));
+};
+
+// Where a design lands in a print area: fitted inside it and centered, as the composite places it.
+const fitInside = (box: Bounds, design: Size): Bounds => {
+  const scale = Math.min(box.width / design.width, box.height / design.height);
+  const width = design.width * scale;
+  const height = design.height * scale;
+  return { x: box.x + (box.width - width) / 2, y: box.y + (box.height - height) / 2, width, height };
+};
+
+// Below this share, being off the garment is only the mask's soft edge.
+const OFF_GARMENT_TOLERANCE = 0.02;
+// The print-area box's border, which its contents sit inside of.
+const BOX_BORDER_PX = 2;
 
 // Drag-to-draw / move / resize print-area picker, in the photo's own pixels. A second mode lets the
 // user correct the garment box that center-snapping is measured against.
@@ -183,6 +223,9 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
   const dragRef = useRef<DragState | null>(null);
   const [natural, setNatural] = useState<{ width: number; height: number } | null>(null);
   const [garmentBounds, setGarmentBounds] = useState<Bounds | null>(null);
+  // Kept with the URL it was read from, so a mask of another photo is never applied to this one.
+  const [loadedMask, setLoadedMask] = useState<{ url: string; mask: GarmentMask } | null>(null);
+  const [overlaySize, setOverlaySize] = useState<Size | null>(null);
   const [editingGarment, setEditingGarment] = useState(false);
   const [snap, setSnap] = useState({ h: false, v: false });
   const [, forceRender] = useState(0);
@@ -202,8 +245,11 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
   useEffect(() => {
     if (!garmentMaskUrl || !natural) return;
     let cancelled = false;
-    void boundsFromMask(garmentMaskUrl, natural).then((bounds) => {
-      if (!cancelled && bounds) setGarmentBounds(bounds);
+    void loadGarmentMask(garmentMaskUrl).then((mask) => {
+      if (cancelled || !mask) return;
+      setLoadedMask({ url: garmentMaskUrl, mask });
+      const bounds = boundsOfMask(mask, natural);
+      if (bounds) setGarmentBounds(bounds);
     });
     return () => {
       cancelled = true;
@@ -234,6 +280,13 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
   const scale = natural && imgRef.current ? imgRef.current.clientWidth / natural.width || 1 : 1;
   const guideBounds: Bounds = garmentBounds ?? { x: 0, y: 0, width: natural?.width ?? 0, height: natural?.height ?? 0 };
   const centerTarget = { centerX: guideBounds.x + guideBounds.width / 2, centerY: guideBounds.y + guideBounds.height / 2 };
+
+  // The composite cuts the design to the garment, so what lies off it is shown cut and called out.
+  const garmentMask = garmentMaskUrl && loadedMask?.url === garmentMaskUrl ? loadedMask.mask : null;
+  const printed = overlayImageUrl && overlaySize ? fitInside(value, overlaySize) : value;
+  const offGarment = garmentMask && natural && !editingGarment ? shareOffGarment(garmentMask, printed, natural) : 0;
+  const isOffGarment = offGarment > OFF_GARMENT_TOLERANCE;
+  const printedThing = overlayImageUrl ? "design" : "print area";
 
   const interactive = editingGarment || !disabled;
   const activeRect: Bounds = editingGarment ? guideBounds : value;
@@ -362,18 +415,44 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
           <div
             data-rect={editingGarment ? undefined : ""}
             className={cn(
-              "border-primary absolute overflow-hidden border-2",
-              !overlayImageUrl && "bg-primary/15",
+              "absolute overflow-hidden border-2",
+              isOffGarment ? "border-amber-500" : "border-primary",
+              !overlayImageUrl && (isOffGarment ? "bg-amber-500/15" : "bg-primary/15"),
               editingGarment ? "pointer-events-none opacity-40" : disabled ? "cursor-default" : "cursor-move"
             )}
             style={boxStyle(value)}
           >
             {overlayImageUrl && (
-              // object-contain mirrors Cloudinary's c_fit transformation.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={overlayImageUrl} alt="" draggable={false} className="pointer-events-none absolute inset-0 size-full object-contain" />
+              // Masked with the garment, positioned as the whole photo, so the design shows cut where the composite cuts it.
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={
+                  garmentMaskUrl
+                    ? {
+                        maskImage: `url(${garmentMaskUrl})`,
+                        WebkitMaskImage: `url(${garmentMaskUrl})`,
+                        maskRepeat: "no-repeat",
+                        WebkitMaskRepeat: "no-repeat",
+                        maskSize: `${natural.width * scale}px ${natural.height * scale}px`,
+                        WebkitMaskSize: `${natural.width * scale}px ${natural.height * scale}px`,
+                        maskPosition: `${-(value.x * scale + BOX_BORDER_PX)}px ${-(value.y * scale + BOX_BORDER_PX)}px`,
+                        WebkitMaskPosition: `${-(value.x * scale + BOX_BORDER_PX)}px ${-(value.y * scale + BOX_BORDER_PX)}px`,
+                      }
+                    : undefined
+                }
+              >
+                {/* object-contain mirrors Cloudinary's c_fit transformation. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={overlayImageUrl}
+                  alt=""
+                  draggable={false}
+                  className="absolute inset-0 size-full object-contain"
+                  onLoad={(event) => setOverlaySize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })}
+                />
+              </div>
             )}
-            {!disabled && !editingGarment && <Handles className="border-primary" />}
+            {!disabled && !editingGarment && <Handles className={isOffGarment ? "border-amber-500" : "border-primary"} />}
           </div>
         )}
         {garmentBounds && (
@@ -404,6 +483,13 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
           />
         )}
       </div>
+      {isOffGarment && (
+        <p role="status" className="text-xs text-amber-700">
+          {offGarment > 1 - OFF_GARMENT_TOLERANCE
+            ? `The ${printedThing} is entirely off the garment, so nothing of it would be printed. Move it onto the garment.`
+            : `Part of the ${printedThing} is off the garment. Mock-ups cut it off at the garment’s edge.`}
+        </p>
+      )}
       {natural && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-muted-foreground text-xs">

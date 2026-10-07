@@ -4,24 +4,29 @@ import { useState } from "react";
 
 import { MockupTemplateCard } from "@/components/batch-setup/mockup-template/mockup-template-card";
 import { MockupTemplateDetail } from "@/components/batch-setup/mockup-template/mockup-template-detail";
+import { GarmentColorPicker } from "@/components/mockups/garment-color-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
+import { MAX_GARMENT_COLORS } from "@/helpers/garment-colors";
 import { MAX_MOCKUP_SELECTION, productTypeLabel } from "@/helpers/mockup-template";
 import type { MockupTemplate } from "@/types/mockup-templates";
 
 type MockupTemplatePickerContentProps = {
   templates: MockupTemplate[];
   initialIds: string[];
+  initialColors: string[];
   pending: boolean;
   /** Product types in the batch job (lowercase) with how many products each has. */
   productTypeCounts?: Record<string, number>;
-  onApply: (selectedIds: string[]) => void;
+  onApply: (selectedIds: string[], garmentColors: string[]) => void;
   onClose: () => void;
 };
 
-export const MockupTemplatePickerContent = ({ templates, initialIds, pending, productTypeCounts, onApply, onClose }: MockupTemplatePickerContentProps) => {
+export const MockupTemplatePickerContent = ({ templates, initialIds, initialColors, pending, productTypeCounts, onApply, onClose }: MockupTemplatePickerContentProps) => {
   const [draftIds, setDraftIds] = useState(initialIds);
+  const [draftColors, setDraftColors] = useState(initialColors);
+  const recolorSelected = templates.some((template) => template.allowRecolor && draftIds.includes(template.id));
   const focusedTemplate = templates.find((template) => draftIds.includes(template.id)) ?? null;
   const tooMany = draftIds.length > MAX_MOCKUP_SELECTION;
 
@@ -76,6 +81,28 @@ export const MockupTemplatePickerContent = ({ templates, initialIds, pending, pr
           <MockupTemplateDetail template={focusedTemplate} />
         </div>
       </div>
+      {recolorSelected && (
+        <div className="space-y-2 rounded-lg border p-3">
+          <div>
+            <p className="text-sm font-medium">Garment colors</p>
+            <p className="text-muted-foreground text-xs">
+              Recolorable templates get one mock-up per color (up to {MAX_GARMENT_COLORS}). None keeps the photo’s own color.
+            </p>
+          </div>
+          <GarmentColorPicker
+            selected={draftColors}
+            max={MAX_GARMENT_COLORS}
+            disabled={pending}
+            onToggle={(hex) =>
+              setDraftColors((previous) =>
+                previous.some((value) => value.toLowerCase() === hex.toLowerCase())
+                  ? previous.filter((value) => value.toLowerCase() !== hex.toLowerCase())
+                  : [...previous, hex]
+              )
+            }
+          />
+        </div>
+      )}
       <p className="text-muted-foreground text-xs" aria-live="polite">
         {draftIds.length} of {MAX_MOCKUP_SELECTION} selected
         {tooMany
@@ -88,7 +115,7 @@ export const MockupTemplatePickerContent = ({ templates, initialIds, pending, pr
       </p>
       <DialogFooter className="gap-2">
         <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button type="button" disabled={pending || draftIds.length === 0 || tooMany} onClick={() => onApply(draftIds)}>
+        <Button type="button" disabled={pending || draftIds.length === 0 || tooMany} onClick={() => onApply(draftIds, recolorSelected ? draftColors : [])}>
           Apply mock-ups
         </Button>
       </DialogFooter>

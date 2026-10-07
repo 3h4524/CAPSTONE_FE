@@ -20,6 +20,12 @@ type PrintAreaEditorProps = {
   disabled?: boolean;
   /** The design image, previewed live inside the box for visual centering. */
   overlayImageUrl?: string;
+  /** Previews a garment recolor: the color multiplied onto the photo through the garment mask. */
+  garmentTint?: { color: string; maskUrl: string };
+  /** The photo's real size, when the image shown is a smaller preview of it; coordinates stay in real pixels. */
+  pixelSize?: { width: number; height: number };
+  /** The garment mask the server made for this photo; when given, the garment box comes from it. */
+  garmentMaskUrl?: string;
 };
 
 const clamp = (value: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, value));
@@ -122,9 +128,56 @@ const Handles = ({ className }: { className: string }) => (
   </>
 );
 
+// The box around the opaque part of a mask image, in a photo of the given size.
+const boundsFromMask = (maskUrl: string, size: { width: number; height: number }) =>
+  new Promise<Bounds | null>((resolve) => {
+    const mask = new window.Image();
+    mask.crossOrigin = "anonymous";
+    mask.onerror = () => resolve(null);
+    mask.onload = () => {
+      try {
+        const scale = Math.min(1, 256 / Math.max(mask.naturalWidth, mask.naturalHeight)) || 1;
+        const w = Math.max(1, Math.round(mask.naturalWidth * scale));
+        const h = Math.max(1, Math.round(mask.naturalHeight * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return resolve(null);
+        ctx.drawImage(mask, 0, 0, w, h);
+        const alpha = ctx.getImageData(0, 0, w, h).data;
+        let left = w;
+        let top = h;
+        let right = -1;
+        let bottom = -1;
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            if (alpha[(y * w + x) * 4 + 3] < 128) continue;
+            if (x < left) left = x;
+            if (x > right) right = x;
+            if (y < top) top = y;
+            if (y > bottom) bottom = y;
+          }
+        }
+        if (right < left || bottom < top) return resolve(null);
+        const kx = size.width / w;
+        const ky = size.height / h;
+        resolve({
+          x: Math.round(left * kx),
+          y: Math.round(top * ky),
+          width: Math.round((right - left + 1) * kx),
+          height: Math.round((bottom - top + 1) * ky),
+        });
+      } catch {
+        resolve(null);
+      }
+    };
+    mask.src = maskUrl;
+  });
+
 // Drag-to-draw / move / resize print-area picker, in the photo's own pixels. A second mode lets the
 // user correct the garment box that center-snapping is measured against.
-export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, overlayImageUrl }: PrintAreaEditorProps) => {
+export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, overlayImageUrl, garmentTint, pixelSize, garmentMaskUrl }: PrintAreaEditorProps) => {
   const wrapRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -134,11 +187,28 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
   const [snap, setSnap] = useState({ h: false, v: false });
   const [, forceRender] = useState(0);
 
-  useEffect(() => {
+  // Reset while rendering, not in an effect: an effect also runs right after mount, where it can
+  // land after an already-cached photo's load event and wipe the size that event just measured.
+  const [shownUrl, setShownUrl] = useState(imageUrl);
+  if (shownUrl !== imageUrl) {
+    setShownUrl(imageUrl);
     setNatural(null);
     setGarmentBounds(null);
     setEditingGarment(false);
-  }, [imageUrl]);
+  }
+
+  // The server's mask knows the garment exactly; guessing it from the photo's colors fails once the
+  // background is a backdrop nearly as light as the garment.
+  useEffect(() => {
+    if (!garmentMaskUrl || !natural) return;
+    let cancelled = false;
+    void boundsFromMask(garmentMaskUrl, natural).then((bounds) => {
+      if (!cancelled && bounds) setGarmentBounds(bounds);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [garmentMaskUrl, natural]);
 
   useEffect(() => {
     const img = imgRef.current;
@@ -260,10 +330,34 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
           crossOrigin="anonymous" // required to read pixels back for garment detection
           onLoad={(event) => {
             const img = event.currentTarget;
-            setNatural({ width: img.naturalWidth, height: img.naturalHeight });
-            setGarmentBounds(detectGarmentBounds(img));
+            const size = pixelSize ?? { width: img.naturalWidth, height: img.naturalHeight };
+            const detected = detectGarmentBounds(img);
+            const kx = size.width / img.naturalWidth;
+            const ky = size.height / img.naturalHeight;
+            setNatural(size);
+            setGarmentBounds(
+              detected && {
+                x: Math.round(detected.x * kx),
+                y: Math.round(detected.y * ky),
+                width: Math.round(detected.width * kx),
+                height: Math.round(detected.height * ky),
+              }
+            );
           }}
         />
+        {natural && garmentTint && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-lg mix-blend-multiply"
+            style={{
+              backgroundColor: garmentTint.color,
+              maskImage: `url(${garmentTint.maskUrl})`,
+              WebkitMaskImage: `url(${garmentTint.maskUrl})`,
+              maskSize: "100% 100%",
+              WebkitMaskSize: "100% 100%",
+            }}
+          />
+        )}
         {natural && (
           <div
             data-rect={editingGarment ? undefined : ""}

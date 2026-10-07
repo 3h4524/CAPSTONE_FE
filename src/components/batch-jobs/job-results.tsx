@@ -5,6 +5,7 @@ import Image from "next/image";
 
 import { MockupTemplatePickerDialog } from "@/components/batch-setup/mockup-template/mockup-template-picker-dialog";
 import { StatusBadge } from "@/components/commons/data-display/status-badge";
+import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
 import { MockupGenerateDialog } from "@/components/mockups/mockup-generate-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ export const JobResults = ({ job }: { job: BatchJobDetail }) => {
   const [mockupResult, setMockupResult] = useState<GenerateAllMockupsResult | null>(null);
   const [mockupPickerOpen, setMockupPickerOpen] = useState(false);
   const selectedTemplateCount = mockupSelection.data?.templateIds.length ?? 0;
+  const selectedColorCount = mockupSelection.data?.garmentColors.length ?? 0;
   const productNameById = new Map(job.products.map((product) => [product.productId, product.productName]));
 
   return (
@@ -183,7 +185,9 @@ export const JobResults = ({ job }: { job: BatchJobDetail }) => {
                   ? "You can choose templates once this job finishes generating images."
                   : selectedTemplateCount === 0
                     ? "Choose the product photos to composite these designs onto."
-                    : `${selectedTemplateCount} mock-up template${selectedTemplateCount === 1 ? "" : "s"} selected.`}
+                    : `${selectedTemplateCount} mock-up template${selectedTemplateCount === 1 ? "" : "s"}${
+                        selectedColorCount > 0 ? ` and ${selectedColorCount} garment color${selectedColorCount === 1 ? "" : "s"}` : ""
+                      } selected.`}
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button type="button" variant="outline" disabled={active} onClick={() => setMockupPickerOpen(true)}>
@@ -232,8 +236,9 @@ export const JobResults = ({ job }: { job: BatchJobDetail }) => {
                           unoptimized
                           className="bg-muted aspect-square w-full object-cover transition group-hover:scale-105"
                         />
-                        <p className="text-muted-foreground truncate p-2 text-xs">
-                          {productNameById.get(mockupImage.productId) ?? "Product"}
+                        <p className="text-muted-foreground flex items-center gap-1.5 p-2 text-xs">
+                          {mockupImage.garmentColor && <GarmentColorSwatch hex={mockupImage.garmentColor} />}
+                          <span className="truncate">{productNameById.get(mockupImage.productId) ?? "Product"}</span>
                         </p>
                       </a>
                     ))}

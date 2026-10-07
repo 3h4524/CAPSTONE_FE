@@ -53,9 +53,10 @@ export const MockupTemplatePickerDialog = ({ batchJobId, productTypeCounts, open
           <MockupTemplatePickerContent
             templates={templates}
             initialIds={selection?.templateIds ?? []}
+            initialColors={selection?.garmentColors ?? []}
             pending={isApplying}
             productTypeCounts={productTypeCounts}
-            onApply={(templateIds) => applyMockups({ batchJobId, templateIds }, { onSuccess: close })}
+            onApply={(templateIds, garmentColors) => applyMockups({ batchJobId, templateIds, garmentColors }, { onSuccess: close })}
             onClose={close}
           />
         )}

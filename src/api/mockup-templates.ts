@@ -1,5 +1,5 @@
 import { api } from "@/api/client";
-import type { BatchMockupSelection, GenerateAllMockupsResult, MockupImage, MockupTemplate } from "@/types/mockup-templates";
+import type { BatchMockupSelection, GarmentMaskPreview, GenerateAllMockupsResult, MockupImage, MockupTemplate } from "@/types/mockup-templates";
 
 export const mockupTemplateKeys = {
   all: ["mockup-templates"] as const,
@@ -13,8 +13,8 @@ export const listMockupTemplates = async (productType?: string, signal?: AbortSi
 export const getBatchMockupSelection = async (batchJobId: string, signal?: AbortSignal): Promise<BatchMockupSelection> =>
   (await api.get<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { signal })).data;
 
-export const applyBatchMockupTemplates = async (batchJobId: string, templateIds: string[]): Promise<BatchMockupSelection> =>
-  (await api.put<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { templateIds })).data;
+export const applyBatchMockupTemplates = async (batchJobId: string, templateIds: string[], garmentColors: string[] = []): Promise<BatchMockupSelection> =>
+  (await api.put<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { templateIds, garmentColors })).data;
 
 export type SaveMockupTemplateInput = {
   name: string;
@@ -24,6 +24,8 @@ export type SaveMockupTemplateInput = {
   width: number;
   height: number;
   baseImage: File | null;
+  allowRecolor: boolean;
+  garmentColor: string | null;
 };
 
 const toTemplateForm = (input: SaveMockupTemplateInput) => {
@@ -35,6 +37,8 @@ const toTemplateForm = (input: SaveMockupTemplateInput) => {
   form.append("width", String(input.width));
   form.append("height", String(input.height));
   if (input.baseImage) form.append("baseImage", input.baseImage);
+  form.append("allowRecolor", String(input.allowRecolor));
+  if (input.garmentColor) form.append("garmentColor", input.garmentColor);
   return form;
 };
 
@@ -55,6 +59,7 @@ export type GenerateMockupImageInput = {
   y?: number;
   width?: number;
   height?: number;
+  garmentColor?: string;
 };
 
 export const generateMockupImage = async (designImageId: string, input: GenerateMockupImageInput): Promise<MockupImage> =>
@@ -62,3 +67,10 @@ export const generateMockupImage = async (designImageId: string, input: Generate
 
 export const generateAllBatchMockups = async (batchJobId: string): Promise<GenerateAllMockupsResult> =>
   (await api.post<GenerateAllMockupsResult>(`/api/batch-jobs/${batchJobId}/mockups/generate`)).data;
+
+// Analyzes a base photo that is not saved yet, so its recolor can be previewed straight away.
+export const previewGarmentMask = async (baseImage: File, signal?: AbortSignal): Promise<GarmentMaskPreview> => {
+  const form = new FormData();
+  form.append("baseImage", baseImage);
+  return (await api.post<GarmentMaskPreview>("/api/mockup-templates/garment-mask-preview", form, { signal })).data;
+};

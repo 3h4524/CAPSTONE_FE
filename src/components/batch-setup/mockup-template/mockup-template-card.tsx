@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 
+import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
 import { Checkbox } from "@/components/ui/checkbox";
 import { previewFallbackFor } from "@/helpers/preview-fallback";
 import type { MockupTemplate } from "@/types/mockup-templates";
@@ -31,7 +32,10 @@ export const MockupTemplateCard = ({ template, selected, onToggle }: MockupTempl
     )}
     <span className="min-w-0">
       <span className="block truncate text-sm font-semibold text-slate-900">{template.name}</span>
-      <span className="text-muted-foreground mt-0.5 line-clamp-2 block text-xs">{template.productType}</span>
+      <span className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-xs">
+        {template.garmentColor && <GarmentColorSwatch hex={template.garmentColor} />}
+        <span className="line-clamp-2">{template.productType}</span>
+      </span>
     </span>
   </label>
 );

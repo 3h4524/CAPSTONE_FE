@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 import { SectionLoading } from "@/components/commons/loading/section-loading";
+import { GarmentColorPicker } from "@/components/mockups/garment-color-picker";
 import { PrintAreaEditor } from "@/components/mockups/print-area-editor";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -33,6 +34,7 @@ export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, prod
   const [advanced, setAdvanced] = useState(false);
   const [position, setPosition] = useState<MockupPrintArea>({ x: 0, y: 0, width: 100, height: 100 });
   const [result, setResult] = useState<MockupImage | null>(null);
+  const [garmentColor, setGarmentColor] = useState<string | null>(null);
 
   const selectedTemplate = templates?.find((template) => template.id === templateId) ?? null;
 
@@ -46,6 +48,7 @@ export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, prod
   useEffect(() => {
     if (!selectedTemplate) return;
     setPosition(parsePrintArea(selectedTemplate.printAreaConfig) ?? { x: 0, y: 0, width: 100, height: 100 });
+    setGarmentColor(selectedTemplate.garmentColor);
   }, [selectedTemplate]);
 
   const close = () => onOpenChange(false);
@@ -53,7 +56,7 @@ export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, prod
   const submit = () => {
     if (!designImageId || !templateId) return;
     generate(
-      { designImageId, input: { mockupTemplateId: templateId, ...(advanced ? position : {}) } },
+      { designImageId, input: { mockupTemplateId: templateId, ...(advanced ? position : {}), ...(garmentColor ? { garmentColor } : {}) } },
       { onSuccess: setResult }
     );
   };
@@ -113,15 +116,33 @@ export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, prod
               <Switch checked={advanced} onCheckedChange={setAdvanced} disabled={!selectedTemplate} />
             </div>
 
+            {selectedTemplate?.allowRecolor && selectedTemplate.garmentMaskUrl && (
+              <div className="space-y-2 rounded-lg border p-3">
+                <div>
+                  <p className="text-sm font-medium">Garment color</p>
+                  <p className="text-muted-foreground text-xs">None keeps the photo’s own color.</p>
+                </div>
+                <GarmentColorPicker
+                  selected={garmentColor ? [garmentColor] : []}
+                  onToggle={(hex) => setGarmentColor((current) => (current?.toLowerCase() === hex.toLowerCase() ? null : hex))}
+                />
+              </div>
+            )}
+
             {selectedTemplate && (
               <div className="space-y-3">
                 <PrintAreaEditor
                   imageUrl={selectedTemplate.baseImageUrl}
                   overlayImageUrl={designImageUrl ?? undefined}
+                  garmentMaskUrl={selectedTemplate.garmentMaskUrl ?? undefined}
+                  garmentTint={garmentColor && selectedTemplate.garmentMaskUrl ? { color: garmentColor, maskUrl: selectedTemplate.garmentMaskUrl } : undefined}
                   value={position}
                   onChange={setPosition}
                   disabled={!advanced}
                 />
+                {selectedTemplate.realisticPrintReady && (
+                  <p className="text-muted-foreground text-xs">The result also follows the fabric’s folds and shadows.</p>
+                )}
               </div>
             )}
           </div>

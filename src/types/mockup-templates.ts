@@ -10,11 +10,16 @@ export interface MockupTemplate {
   usageCount: number;
   isSystemTemplate: boolean;
   isMine: boolean;
+  realisticPrintReady: boolean;
+  allowRecolor: boolean;
+  garmentMaskUrl: string | null;
+  garmentColor: string | null;
 }
 
 export interface BatchMockupSelection {
   batchJobId: string;
   templateIds: string[];
+  garmentColors: string[];
 }
 
 export interface MockupPrintArea {
@@ -33,6 +38,7 @@ export interface MockupImage {
   mockupWidthPx: number;
   mockupHeightPx: number;
   approvalStatus: string;
+  garmentColor: string | null;
 }
 
 export interface GenerateAllMockupsResult {
@@ -41,4 +47,10 @@ export interface GenerateAllMockupsResult {
   noCompatibleTemplateCount: number;
   errors: string[];
   images: MockupImage[];
+}
+
+export interface GarmentMaskPreview {
+  recolorable: boolean;
+  reason: string | null;
+  maskDataUrl: string | null;
 }

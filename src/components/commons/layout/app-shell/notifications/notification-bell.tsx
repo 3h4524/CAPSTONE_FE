@@ -5,9 +5,14 @@ import { Bell } from "lucide-react";
 import { NotificationDropdown } from "@/components/commons/layout/app-shell/notifications/notification-dropdown";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useNotifications } from "@/hooks/queries/use-notifications";
+import { useNotificationHub } from "@/hooks/use-notification-hub";
 
 export const NotificationBell = () => {
-  const unreadCount = 0;
+  useNotificationHub();
+  const { data: notifications } = useNotifications();
+  
+  const unreadCount = notifications?.filter(n => !n.isRead).length ?? 0;
 
   return (
     <DropdownMenu>

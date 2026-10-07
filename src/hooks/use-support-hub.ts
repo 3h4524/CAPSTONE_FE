@@ -59,16 +59,7 @@ export const useSupportHub = (ticketId?: string) => {
       }
     });
 
-    // Bắt sự kiện Noti toàn cầu (Cho cái Chuông)
-    connection.on("ReceiveNotification", (_id: string) => {
-      // Xóa cache của trang danh sách để cập nhật trạng thái nếu cần
-      queryClient.invalidateQueries({ queryKey: [...supportTicketKeys.all, "list"] });
-    });
-
-    // Bắt sự kiện Noti dành riêng cho Admin (Để update list realtime)
-    connection.on("ReceiveAdminNotification", (_id: string) => {
-      queryClient.invalidateQueries({ queryKey: adminSupportTicketsKeys.lists() });
-    });
+        // (Sự kiện Notification toàn cầu đã được chuyển sang NotificationHub)
 
     // 3. Khởi động sợi cáp
     const startConnection = async () => {
@@ -96,7 +87,6 @@ export const useSupportHub = (ticketId?: string) => {
       }
       // Lưu ý: Không đóng hẳn connection (connection.stop) để giữ sợi cáp cho Noti toàn cục
       connection.off("ReceiveNewMessage");
-      connection.off("ReceiveNotification");
     };
   }, [ticketId, queryClient]);
 

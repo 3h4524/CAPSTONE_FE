@@ -113,7 +113,7 @@ export function SupportCenter() {
     if (ticketId && ticketsQuery.data?.items) {
       const ticket = ticketsQuery.data.items.find(t => t.id === ticketId);
       if (ticket && typeof window !== "undefined") {
-        localStorage.setItem(`read_ticket_${ticket.id}`, ticket.updatedAtUtc);
+        localStorage.setItem(`read_ticket_seller_${ticket.id}`, ticket.updatedAtUtc);
         setLocalReadState(prev => prev[ticket.id] === ticket.updatedAtUtc ? prev : { ...prev, [ticket.id]: ticket.updatedAtUtc });
       }
     }
@@ -344,7 +344,7 @@ function TicketTable({ tickets, onOpen, selectedTicketId, localReadState, setLoc
         <tbody>
           {tickets.map((ticket) => {
             const isSelected = selectedTicketId === ticket.id;
-            const isReadLocally = isSelected || (typeof window !== "undefined" && localStorage.getItem(`read_ticket_${ticket.id}`) === ticket.updatedAtUtc) || localReadState[ticket.id] === ticket.updatedAtUtc;
+            const isReadLocally = isSelected || (typeof window !== "undefined" && localStorage.getItem(`read_ticket_seller_${ticket.id}`) === ticket.updatedAtUtc) || localReadState[ticket.id] === ticket.updatedAtUtc;
             const hasUnread = ticket.hasUnreadMessages && !isReadLocally;
             return (
             <tr
@@ -355,7 +355,7 @@ function TicketTable({ tickets, onOpen, selectedTicketId, localReadState, setLoc
               className="group cursor-pointer border-t border-slate-200 transition-colors first:border-t-0 hover:bg-[#eef2f8] focus-visible:bg-[#eef2f8] focus-visible:outline-none focus-visible:[&>td]:ring-3 focus-visible:[&>td]:ring-[#273750]/20 focus-visible:[&>td]:ring-inset"
               onClick={() => {
                 if (typeof window !== "undefined") {
-                  localStorage.setItem(`read_ticket_${ticket.id}`, ticket.updatedAtUtc);
+                  localStorage.setItem(`read_ticket_seller_${ticket.id}`, ticket.updatedAtUtc);
                   setLocalReadState(prev => ({ ...prev, [ticket.id]: ticket.updatedAtUtc }));
                 }
                 onOpen(ticket.id);
@@ -364,7 +364,7 @@ function TicketTable({ tickets, onOpen, selectedTicketId, localReadState, setLoc
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
                   if (typeof window !== "undefined") {
-                    localStorage.setItem(`read_ticket_${ticket.id}`, ticket.updatedAtUtc);
+                    localStorage.setItem(`read_ticket_seller_${ticket.id}`, ticket.updatedAtUtc);
                     setLocalReadState(prev => ({ ...prev, [ticket.id]: ticket.updatedAtUtc }));
                   }
                   onOpen(ticket.id);
@@ -400,13 +400,13 @@ function TicketCards({ tickets, onOpen, selectedTicketId, localReadState, setLoc
     <ul className="divide-y divide-slate-200 border-t border-slate-200 md:hidden">
       {tickets.map((ticket) => {
         const isSelected = selectedTicketId === ticket.id;
-        const isReadLocally = isSelected || (typeof window !== "undefined" && localStorage.getItem(`read_ticket_${ticket.id}`) === ticket.updatedAtUtc) || localReadState[ticket.id] === ticket.updatedAtUtc;
+        const isReadLocally = isSelected || (typeof window !== "undefined" && localStorage.getItem(`read_ticket_seller_${ticket.id}`) === ticket.updatedAtUtc) || localReadState[ticket.id] === ticket.updatedAtUtc;
         const hasUnread = ticket.hasUnreadMessages && !isReadLocally;
         return (
         <li key={ticket.id}>
           <button type="button" className="group w-full border-l-[3px] border-l-transparent px-5 py-4 text-left transition-[border-color,background-color] hover:border-l-slate-400 hover:bg-[#eef2f8] focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none focus-visible:ring-inset" onClick={() => {
             if (typeof window !== "undefined") {
-              localStorage.setItem(`read_ticket_${ticket.id}`, ticket.updatedAtUtc);
+              localStorage.setItem(`read_ticket_seller_${ticket.id}`, ticket.updatedAtUtc);
               setLocalReadState(prev => ({ ...prev, [ticket.id]: ticket.updatedAtUtc }));
             }
             onOpen(ticket.id);

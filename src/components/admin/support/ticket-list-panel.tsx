@@ -49,9 +49,9 @@ export const TicketListPanel = ({
     if (selectedTicketId && data) {
       const selectedTicket = data.items.find(t => t.id === selectedTicketId);
       if (selectedTicket && typeof window !== "undefined") {
-        const storedTime = localStorage.getItem(`read_ticket_${selectedTicket.id}`);
+        const storedTime = localStorage.getItem(`read_ticket_admin_${selectedTicket.id}`);
         if (storedTime !== selectedTicket.updatedAtUtc) {
-          localStorage.setItem(`read_ticket_${selectedTicket.id}`, selectedTicket.updatedAtUtc);
+          localStorage.setItem(`read_ticket_admin_${selectedTicket.id}`, selectedTicket.updatedAtUtc);
           setLocalReadState(prev => ({ ...prev, [selectedTicket.id]: selectedTicket.updatedAtUtc }));
         }
       }
@@ -150,14 +150,14 @@ export const TicketListPanel = ({
           <div className="divide-y divide-slate-100/60">
             {data.items.map((ticket) => {
               const isSelected = selectedTicketId === ticket.id;
-              const isReadLocally = isSelected || (typeof window !== "undefined" && localStorage.getItem(`read_ticket_${ticket.id}`) === ticket.updatedAtUtc) || localReadState[ticket.id] === ticket.updatedAtUtc;
+              const isReadLocally = isSelected || (typeof window !== "undefined" && localStorage.getItem(`read_ticket_admin_${ticket.id}`) === ticket.updatedAtUtc) || localReadState[ticket.id] === ticket.updatedAtUtc;
               const hasUnread = ticket.hasUnreadMessages && !isReadLocally;
               return (
                 <button
                   key={ticket.id}
                   onClick={() => {
                     if (typeof window !== "undefined") {
-                      localStorage.setItem(`read_ticket_${ticket.id}`, ticket.updatedAtUtc);
+                      localStorage.setItem(`read_ticket_admin_${ticket.id}`, ticket.updatedAtUtc);
                       setLocalReadState(prev => ({ ...prev, [ticket.id]: ticket.updatedAtUtc }));
                     }
                     onSelectTicket(ticket.id);

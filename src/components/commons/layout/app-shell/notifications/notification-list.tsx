@@ -3,29 +3,23 @@
 import { NotificationEmptyState } from "@/components/commons/layout/app-shell/notifications/notification-empty-state";
 import { NotificationItem } from "@/components/commons/layout/app-shell/notifications/notification-item";
 
-type NotificationEntry = {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  read: boolean;
+import { NotificationDto } from "@/types/notification";
+
+type NotificationListProps = {
+  notifications: NotificationDto[];
 };
 
-export const NotificationList = () => {
-  const items: NotificationEntry[] = [];
-
-  if (items.length === 0) {
+export const NotificationList = ({ notifications }: NotificationListProps) => {
+  if (notifications.length === 0) {
     return <NotificationEmptyState />;
   }
 
   return (
     <div className="flex flex-col">
-      {items.map((item) => (
+      {notifications.map((item) => (
         <NotificationItem
           key={item.id}
-          title={item.title}
-          description={item.description}
-          time={item.time}
+          notification={item}
         />
       ))}
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
+import { NotificationBell } from "@/components/commons/layout/app-shell/notifications/notification-bell";
 
 type AdminTopbarProps = {
   fullName: string;
@@ -33,14 +34,7 @@ const AdminTopbar = ({ onMenuClick, pageTitle = "Dashboard" }: AdminTopbarProps)
       <div className="flex items-center gap-2 sm:gap-3">
 
 
-        <button
-          type="button"
-          className="relative rounded-md border border-slate-200 bg-white p-2 text-slate-500 shadow-sm"
-          aria-label="Notifications"
-        >
-          <Bell className="size-3.5" />
-          <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-rose-400" />
-        </button>
+        <NotificationBell />
 
 
       </div>

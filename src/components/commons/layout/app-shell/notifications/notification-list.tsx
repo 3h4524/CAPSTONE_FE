@@ -2,8 +2,7 @@
 
 import { NotificationEmptyState } from "@/components/commons/layout/app-shell/notifications/notification-empty-state";
 import { NotificationItem } from "@/components/commons/layout/app-shell/notifications/notification-item";
-
-import { NotificationDto } from "@/types/notification";
+import type { NotificationDto } from "@/types/notification";
 
 type NotificationListProps = {
   notifications: NotificationDto[];

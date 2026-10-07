@@ -1,12 +1,12 @@
 "use client";
 
-import { Bell } from "lucide-react";
-
-import { NotificationDto } from "@/types/notification";
-import { useMarkNotificationAsRead } from "@/hooks/queries/use-notifications";
+import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
-import { useRouter } from "next/navigation";
+import { Bell } from "lucide-react";
+
+import { useMarkNotificationAsRead } from "@/hooks/queries/use-notifications";
+import type { NotificationDto } from "@/types/notification";
 
 type NotificationItemProps = {
   notification: NotificationDto;
@@ -45,19 +45,19 @@ export const NotificationItem = ({ notification }: NotificationItemProps) => {
 
   return (
     <div 
-      className={`flex items-start gap-3 px-3 py-3 cursor-pointer hover:bg-muted/50 transition-colors border-b last:border-b-0 ${!notification.isRead ? "bg-muted/20" : ""}`}
+      className={`hover:bg-muted/50 flex cursor-pointer items-start gap-3 border-b px-3 py-3 transition-colors last:border-b-0 ${!notification.isRead ? "bg-muted/20" : ""}`}
       onClick={handleClick}
     >
       <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-full">
         <Bell className="size-4" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className={`block truncate text-sm ${!notification.isRead ? "font-bold text-foreground" : "font-medium text-foreground/80"}`}>{notification.title}</span>
-        <span className="text-muted-foreground block line-clamp-2 text-xs mt-0.5">{notification.message}</span>
-        <span className="text-primary/70 block text-[11px] font-medium mt-1">{timeAgo}</span>
+        <span className={`block truncate text-sm ${!notification.isRead ? "text-foreground font-bold" : "text-foreground/80 font-medium"}`}>{notification.title}</span>
+        <span className="text-muted-foreground mt-0.5 line-clamp-2 block text-xs">{notification.message}</span>
+        <span className="text-primary/70 mt-1 block text-[11px] font-medium">{timeAgo}</span>
       </span>
       {!notification.isRead && (
-        <span className="flex size-2 shrink-0 rounded-full bg-blue-500 mt-2" />
+        <span className="mt-2 flex size-2 shrink-0 rounded-full bg-blue-500" />
       )}
     </div>
   );

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
-import { useQueryClient } from "@tanstack/react-query";
-import { notificationKeys } from "@/hooks/queries/use-notifications";
+
 import { notificationApi } from "@/api/notifications";
 import { supportTicketKeys } from "@/api/support-tickets";
 import { adminSupportTicketsKeys } from "@/hooks/queries/use-admin-support-tickets";
-import { NotificationDto } from "@/types/notification";
+import { notificationKeys } from "@/hooks/queries/use-notifications";
+import type { NotificationDto } from "@/types/notification";
+import type { HubConnection} from "@microsoft/signalr";
+import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import { useQueryClient } from "@tanstack/react-query";
 
 let sharedConnection: HubConnection | null = null;
 let connectionCount = 0;
@@ -35,6 +37,7 @@ export const useNotificationHub = () => {
           
           if (notification.actionUrl && currentUrl.includes(notification.actionUrl)) {
             // Bỏ qua việc kêu chuông và tự động đánh dấu đã đọc (Trải nghiệm UX tốt hơn)
+            // eslint-disable-next-line no-console
             notificationApi.markAsRead(notification.id).catch(console.error);
           } else {
             // Invalidate danh sách để chuông tự động lấy số lượng mới (hiện chấm đỏ)
@@ -50,6 +53,7 @@ export const useNotificationHub = () => {
           await sharedConnection.start();
           if (mounted) setIsConnected(true);
         } catch (err) {
+          // eslint-disable-next-line no-console
           console.error("SignalR NotificationHub Connection Error: ", err);
         }
       } else {

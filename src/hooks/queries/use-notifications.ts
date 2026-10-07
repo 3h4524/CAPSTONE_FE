@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notificationApi } from "@/api/notifications";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const notificationKeys = {
   all: ["notifications"] as const,

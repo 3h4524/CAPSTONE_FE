@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu } from "lucide-react";
+
 import { NotificationBell } from "@/components/commons/layout/app-shell/notifications/notification-bell";
 
 type AdminTopbarProps = {

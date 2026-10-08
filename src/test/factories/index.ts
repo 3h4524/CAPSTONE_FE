@@ -3,12 +3,16 @@ import type { ApiKeyConnection, ApiKeyOverview } from "@/types/api-keys";
 import type { AuthenticatedUser } from "@/types/auth";
 import type { Batch } from "@/types/batches";
 import type { DesignTemplateDetail, DesignTemplateSummary } from "@/types/design-template";
+import type { MockupTemplate } from "@/types/mockup-templates";
 import type { Profile } from "@/types/profile";
+import type { StylePreset } from "@/types/style-presets";
 import type { AvailablePlan, SubscriptionOverview } from "@/types/subscription";
 import type { PagedResult, SupportTicketSummary } from "@/types/support";
-import type { WorkflowEdge, WorkflowNode, WorkflowSummary } from "@/types/workflow";
+import type { WorkflowDetail, WorkflowEdge, WorkflowNode, WorkflowSummary } from "@/types/workflow";
 
-export const buildAuthenticatedUser = (overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUser => ({
+export const buildAuthenticatedUser = (
+  overrides: Partial<AuthenticatedUser> = {}
+): AuthenticatedUser => ({
   id: "user-1",
   email: "seller@apcs.test",
   fullName: "Nhat Nguyen",
@@ -106,6 +110,46 @@ export const buildWorkflowSummary = (
   description: "Designs queued for the spring drop.",
   nodeCount: 4,
   updatedAt: "2026-01-10T09:30:00Z",
+  ...overrides,
+});
+
+export const buildWorkflowDetail = (overrides: Partial<WorkflowDetail> = {}): WorkflowDetail => ({
+  ...buildWorkflowSummary(),
+  definition: {
+    version: 1,
+    nodes: [],
+    edges: [],
+    viewport: { x: 0, y: 0, zoom: 1 },
+  },
+  createdAt: "2026-01-09T08:00:00Z",
+  ...overrides,
+});
+
+export const buildStylePreset = (overrides: Partial<StylePreset> = {}): StylePreset => ({
+  id: "style-1",
+  name: "Vintage Botanical",
+  description: "Soft watercolour washes on warm paper.",
+  styleModifiers: "watercolour, muted palette",
+  previewImageUrl: null,
+  recommendations: ["Keep the background light"],
+  isSystemTemplate: true,
+  isMine: false,
+  usageCount: 12,
+  ...overrides,
+});
+
+export const buildMockupTemplate = (overrides: Partial<MockupTemplate> = {}): MockupTemplate => ({
+  id: "mockup-1",
+  name: "Ceramic mug",
+  productType: "mug",
+  baseImageUrl: "https://cdn.apcs.test/mockups/mug-front.png",
+  previewImageUrl: null,
+  printAreaConfig: '{"x":0.1,"y":0.1}',
+  outputWidthPx: 1024,
+  outputHeightPx: 1024,
+  usageCount: 8,
+  isSystemTemplate: true,
+  isMine: false,
   ...overrides,
 });
 

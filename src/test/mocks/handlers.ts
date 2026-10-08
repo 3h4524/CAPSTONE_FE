@@ -3,8 +3,13 @@ import { http, HttpResponse } from "msw";
 import {
   buildApiKeyOverview,
   buildAvailablePlan,
+  buildBatch,
+  buildCheckoutStatus,
+  buildDesignTemplate,
   buildDesignTemplateSummary,
+  buildMockupTemplate,
   buildPagedResult,
+  buildProfile,
   buildSessionUser,
   buildSupportTicket,
 } from "@/test/factories";
@@ -36,6 +41,22 @@ export const handlers = [
 
   http.get(resolveApiUrl("/api/api-keys"), () =>
     HttpResponse.json(buildApiKeyOverview())
+  ),
+
+  http.get(resolveApiUrl("/api/profile"), () => HttpResponse.json(buildProfile())),
+
+  http.get(resolveApiUrl("/api/batches"), () => HttpResponse.json([buildBatch()])),
+
+  http.get(resolveApiUrl("/api/mockup-templates"), () =>
+    HttpResponse.json([buildMockupTemplate()])
+  ),
+
+  http.get(resolveApiUrl("/api/subscriptions/checkout/:invoiceId/status"), () =>
+    HttpResponse.json(buildCheckoutStatus())
+  ),
+
+  http.get(resolveApiUrl("/api/design-templates/:id"), ({ params }) =>
+    HttpResponse.json(buildDesignTemplate({ id: String(params.id) }))
   ),
 
   http.get(resolveApiUrl("/api/design-templates"), () =>

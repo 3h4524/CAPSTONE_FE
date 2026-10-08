@@ -3,10 +3,17 @@ import type { ApiKeyConnection, ApiKeyOverview } from "@/types/api-keys";
 import type { AuthenticatedUser } from "@/types/auth";
 import type { Batch } from "@/types/batches";
 import type { DesignTemplateDetail, DesignTemplateSummary } from "@/types/design-template";
+import type { MockupTemplate } from "@/types/mockup-templates";
 import type { Profile } from "@/types/profile";
-import type { AvailablePlan, SubscriptionOverview } from "@/types/subscription";
+import type { AvailablePlan, CheckoutStatus, SubscriptionOverview } from "@/types/subscription";
 import type { PagedResult, SupportTicketSummary } from "@/types/support";
-import type { WorkflowEdge, WorkflowNode, WorkflowSummary } from "@/types/workflow";
+import type {
+  WorkflowDefinition,
+  WorkflowDetail,
+  WorkflowEdge,
+  WorkflowNode,
+  WorkflowSummary,
+} from "@/types/workflow";
 
 export const buildAuthenticatedUser = (overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUser => ({
   id: "user-1",
@@ -106,6 +113,64 @@ export const buildWorkflowSummary = (
   description: "Designs queued for the spring drop.",
   nodeCount: 4,
   updatedAt: "2026-01-10T09:30:00Z",
+  ...overrides,
+});
+
+export const buildWorkflowDefinition = (
+  overrides: Partial<WorkflowDefinition> = {}
+): WorkflowDefinition => ({
+  version: 1,
+  nodes: [
+    {
+      id: "node-1",
+      type: "product-input",
+      label: "Product input",
+      position: { x: 0, y: 0 },
+      config: { batchId: "batch-1" },
+    },
+    {
+      id: "node-2",
+      type: "design-image",
+      label: "Design image",
+      position: { x: 320, y: 0 },
+      config: { model: "sdxl", variants: 3 },
+    },
+  ],
+  edges: [{ id: "edge-1", source: "node-1", target: "node-2" }],
+  viewport: { x: 0, y: 0, zoom: 1 },
+  ...overrides,
+});
+
+export const buildWorkflowDetail = (overrides: Partial<WorkflowDetail> = {}): WorkflowDetail => {
+  const definition = overrides.definition ?? buildWorkflowDefinition();
+  return {
+    ...buildWorkflowSummary({ nodeCount: definition.nodes.length }),
+    createdAt: "2026-01-10T09:30:00Z",
+    definition,
+    ...overrides,
+  };
+};
+
+export const buildMockupTemplate = (overrides: Partial<MockupTemplate> = {}): MockupTemplate => ({
+  id: "mockup-1",
+  name: "Ceramic mug front",
+  productType: "mug",
+  baseImageUrl: "https://cdn.apcs.test/mockups/mug-front.png",
+  previewImageUrl: null,
+  printAreaConfig: '{"width":180,"height":180}',
+  outputWidthPx: 2000,
+  outputHeightPx: 2000,
+  usageCount: 0,
+  isSystemTemplate: true,
+  isMine: false,
+  ...overrides,
+});
+
+export const buildCheckoutStatus = (overrides: Partial<CheckoutStatus> = {}): CheckoutStatus => ({
+  status: "pending",
+  planName: "Starter",
+  invoiceNumber: "INV-0001",
+  renewalDate: null,
   ...overrides,
 });
 

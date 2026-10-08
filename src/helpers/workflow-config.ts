@@ -30,11 +30,7 @@ export const getWorkflowNodeDefinition = (type: string): WorkflowNodeDefinition 
 
 export const normalizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNodeConfig): WorkflowNodeConfig => {
   const definition = WORKFLOW_NODE_DEFINITIONS[type];
-  const normalized: WorkflowNodeConfig = {};
-  definition.fields.forEach((field) => {
-    if (field.name in config) normalized[field.name] = config[field.name];
-  });
-  return normalized;
+  return { ...definition.defaultConfig, ...config };
 };
 
 export const summarizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNodeConfig): string[] => {
@@ -61,6 +57,10 @@ export const summarizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNode
       case "switch":
         return readBoolean(value) ? [field.label] : [];
       case "textarea":
+      case "text":
+      case "product-select":
+      case "video-modes":
+      case "video-formats":
         return [];
     }
   });

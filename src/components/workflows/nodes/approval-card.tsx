@@ -26,7 +26,7 @@ export const ApprovalCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =>
           {isAuto ? "Auto-approve" : "Manual review"}
         </span>
         <NodeSummary lines={summary} tone="amber" />
-        {!isAuto && <p className="text-[11px] leading-snug text-amber-700">Designs pause here until approved.</p>}
+        {!isAuto && <p className="text-[11px] leading-snug text-amber-700">{data.type === "review-video" ? "Approve the exact video version before export." : "Approve current mockup revisions before rendering."}</p>}
       </div>
     </NodeShell>
   );

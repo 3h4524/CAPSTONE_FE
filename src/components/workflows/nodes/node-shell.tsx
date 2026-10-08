@@ -15,6 +15,9 @@ const STATUS_BORDERS: Record<WorkflowNodeStatus, string> = {
   success: "border-emerald-400",
   failed: "border-rose-400",
   skipped: "border-slate-300 opacity-70",
+  waiting_for_input: "border-amber-400",
+  waiting_for_review: "border-amber-400",
+  cancelled: "border-slate-300 opacity-70",
 };
 
 const STATUS_PILLS: Record<
@@ -25,6 +28,9 @@ const STATUS_PILLS: Record<
   success: { className: "bg-emerald-100 text-emerald-700", label: "Done" },
   failed: { className: "bg-rose-100 text-rose-700", label: "Failed" },
   skipped: { className: "bg-slate-200 text-slate-600", label: "Skipped" },
+  waiting_for_input: { className: "bg-amber-100 text-amber-800", label: "Needs input" },
+  waiting_for_review: { className: "bg-amber-100 text-amber-800", label: "Needs review" },
+  cancelled: { className: "bg-slate-200 text-slate-600", label: "Cancelled" },
 };
 
 const HANDLE_CLASS_NAME = "size-4! rounded-full! border-2! border-white! bg-indigo-500!";
@@ -64,13 +70,14 @@ export const NodeShell = ({ nodeId, data, selected, widthClassName, bodyClassNam
         className={cn(
           "relative rounded-xl border-2 bg-white shadow-sm transition-shadow",
           STATUS_BORDERS[data.status],
-          data.status === "running" && "animate-pulse",
+          data.status === "running" && "motion-safe:animate-pulse",
           selected && "ring-primary/30 ring-4",
           bodyClassName
         )}
       >
         {definition.hasInput && <Handle type="target" position={Position.Top} className={HANDLE_CLASS_NAME} />}
         {children}
+        {data.stage && <p className="px-3 pb-3 text-xs" role="status">{data.stage} · {data.progress ?? 0}%</p>}
         {definition.hasOutput && <Handle type="source" position={Position.Bottom} className={HANDLE_CLASS_NAME} />}
       </div>
     </div>

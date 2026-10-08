@@ -4,11 +4,18 @@ import { useEffect } from "react";
 import { Trash2, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { VideoTemplateCards } from "@/components/workflows/config-panel/fields/video-template-cards";
 import { NodeConfigField } from "@/components/workflows/config-panel/node-config-field";
+import { MockupPanel } from "@/components/workflows/media/mockup-panel";
+import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
+import { StoryboardPanel } from "@/components/workflows/media/storyboard-panel";
+import { VideoReviewPanel } from "@/components/workflows/media/video-review-panel";
 import { WORKFLOW_CATEGORIES, WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
+import { readString } from "@/helpers/workflow-config";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { WorkflowNode, WorkflowNodeConfig } from "@/types/workflow";
@@ -24,6 +31,7 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
   const category = WORKFLOW_CATEGORIES.find((item) => item.id === definition.category);
   const Icon = definition.icon;
   const isRunning = useWorkflowStore((state) => state.isRunning);
+  const waitingReview = useWorkflowStore(state => state.nodes.some(n => n.data.status === "waiting_for_review"));
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const removeNode = useWorkflowStore((state) => state.removeNode);
   const selectNode = useWorkflowStore((state) => state.selectNode);
@@ -33,13 +41,24 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
     defaultValues: node.data.config,
     mode: "onChange",
   });
-  const { control, trigger, watch } = form;
+  const { control, trigger, watch, setValue } = form;
+  const videoTemplate = readString(watch("template")) || "auto";
+  const videoFields = definition.fields.filter(field => field.name === "mode" || field.name === "outputFormat" || field.name === "durationSeconds");
+  const advancedVideoFields = definition.fields.filter(field => field.name === "textOverlay" || field.name === "standardOptions.transition");
 
   useEffect(() => {
     void trigger();
-    const subscription = watch((values) => updateNodeConfig(node.id, { ...values }));
+    const subscription = watch((values, { name }) => {
+      if (!name) return;
+      const root = name.split(".")[0];
+      const current = useWorkflowStore.getState().nodes.find(n => n.id === node.id);
+      if (root && current) {
+        updateNodeConfig(node.id, { ...current.data.config, [root]: values[root] });
+        if (root === "batchId" && current.data.config.batchId !== values.batchId) setValue("productId", "", { shouldDirty: true, shouldValidate: true });
+      }
+    });
     return () => subscription.unsubscribe();
-  }, [node.id, trigger, watch, updateNodeConfig]);
+  }, [node.id, trigger, watch, updateNodeConfig, setValue]);
 
   return (
     <div className="flex h-full flex-col">
@@ -56,13 +75,35 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
       <ScrollArea className="min-h-0 flex-1">
         <Form {...form}>
           <form onSubmit={(event) => event.preventDefault()} className="p-4">
-            <fieldset disabled={isRunning} className="space-y-5">
-              {definition.fields.map((field) => (
-                <NodeConfigField key={field.name} field={field} control={control} />
-              ))}
+            <fieldset disabled={isRunning && !(waitingReview && node.data.type === "generate-video")} className="space-y-5">
+              {node.data.type === "generate-video" ? <>
+                {videoFields.filter(field => field.name === "mode").map(field => <NodeConfigField key={field.name} field={field} control={control} />)}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Video template</p>
+                  <VideoTemplateCards value={videoTemplate} disabled={isRunning && !waitingReview} onChange={(code, version) => {
+                    setValue("template", code, { shouldDirty: true, shouldValidate: true });
+                    setValue("templateVersion", version, { shouldDirty: true, shouldValidate: true });
+                  }} />
+                </div>
+                {videoFields.filter(field => field.name !== "mode").map(field => <NodeConfigField key={field.name} field={field} control={control} />)}
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="advanced-video">
+                    <AccordionTrigger>Caption and transition</AccordionTrigger>
+                    <AccordionContent className="space-y-5">
+                      {advancedVideoFields.map(field => <NodeConfigField key={field.name} field={field} control={control} />)}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </> : definition.fields.map(field => <NodeConfigField key={field.name} field={field} control={control} />)}
             </fieldset>
           </form>
         </Form>
+        <div className="space-y-4 px-4 pb-4"><RunStatusPanel />
+          {node.data.type === "apply-mockup" && <MockupPanel review={false} />}
+          {node.data.type === "approval-gate" && <MockupPanel review />}
+          {node.data.type === "generate-video" && <StoryboardPanel node={node} />}
+          {(node.data.type === "review-video" || node.data.type === "generate-video") && <VideoReviewPanel />}
+        </div>
       </ScrollArea>
       <div className="border-t p-4">
         <Button

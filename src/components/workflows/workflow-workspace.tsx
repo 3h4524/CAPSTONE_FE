@@ -22,7 +22,7 @@ import { usePopupStore } from "@/stores/popup";
 import { useWorkflowStore } from "@/stores/workflow";
 
 const DEFAULT_WORKFLOW_DESCRIPTION =
-  "Products flow through prompt synthesis, design generation, approval, mock-ups, video and listing content.";
+  "One product → uploaded mockups → mockup approval → Standard video → video review → ZIP.";
 
 export const WorkflowWorkspace = () => {
   const router = useRouter();

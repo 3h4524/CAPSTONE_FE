@@ -15,6 +15,7 @@ import { uuid } from "@/utils/uuid";
 import type { Connection, Viewport } from "@xyflow/react";
 
 const APPROVAL_REQUIRED_TYPES: WorkflowNodeType[] = ["generate-video", "generate-listing"];
+export const STANDARD_PIPELINE: WorkflowNodeType[] = ["product-input", "apply-mockup", "approval-gate", "generate-video", "review-video", "export-zip"];
 
 const buildAdjacency = (edges: WorkflowEdge[], direction: "forward" | "backward") => {
   const adjacency = new Map<string, string[]>();
@@ -39,11 +40,17 @@ const collectReachable = (startIds: string[], adjacency: Map<string, string[]>) 
 
 export const isConnectionAllowed = (
   connection: Connection | WorkflowEdge,
-  edges: WorkflowEdge[]
+  edges: WorkflowEdge[],
+  nodes?: WorkflowNode[]
 ): boolean => {
   const { source, target } = connection;
   if (!source || !target || source === target) return false;
   if (edges.some((edge) => edge.source === source && edge.target === target)) return false;
+  if (nodes) {
+    const from = nodes.find(n => n.id === source)?.data.type;
+    const to = nodes.find(n => n.id === target)?.data.type;
+    if (from && to && STANDARD_PIPELINE.includes(from) && STANDARD_PIPELINE.includes(to) && STANDARD_PIPELINE.indexOf(to) !== STANDARD_PIPELINE.indexOf(from) + 1) return false;
+  }
   return !collectReachable([target], buildAdjacency(edges, "forward")).has(source);
 };
 
@@ -78,6 +85,14 @@ const hasApprovalUpstream = (node: WorkflowNode, nodes: WorkflowNode[], edges: W
 
 export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
   const issues: WorkflowIssue[] = [];
+  if (nodes.length !== 6 || edges.length !== 5 || STANDARD_PIPELINE.some(type => nodes.filter(n => n.data.type === type).length !== 1))
+    issues.push({ id: "mvp-pipeline", nodeId: null, message: "Standard MVP needs exactly Product Input → Apply Mockup → Mockup Approval → Generate Video → Review Video → Export ZIP." });
+  for (let i = 1; i < STANDARD_PIPELINE.length; i++) {
+    const previous = nodes.find(n => n.data.type === STANDARD_PIPELINE[i - 1]);
+    const current = nodes.find(n => n.data.type === STANDARD_PIPELINE[i]);
+    if (previous && current && edges.filter(e => e.source === previous.id && e.target === current.id).length !== 1)
+      issues.push({ id: `required-edge-${i}`, nodeId: current.id, message: `${current.data.label} must follow ${previous.data.label}.` });
+  }
   const inputNodes = nodes.filter((node) => node.data.type === "product-input");
 
   if (inputNodes.length === 0) {
@@ -152,7 +167,7 @@ export const toWorkflowDefinition = (
   edges: WorkflowEdge[],
   viewport: Viewport
 ): WorkflowDefinition => ({
-  version: 1,
+  version: 2,
   nodes: nodes.map((node) => ({
     id: node.id,
     type: node.data.type,
@@ -170,6 +185,7 @@ export const toWorkflowSummary = (workflow: WorkflowDetail): WorkflowSummary => 
   description: workflow.description,
   nodeCount: workflow.nodeCount,
   updatedAt: workflow.updatedAt,
+  revision: workflow.revision,
 });
 
 export const sortWorkflowSummaries = (workflows: WorkflowSummary[]) =>

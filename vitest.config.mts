@@ -47,13 +47,17 @@ export default defineConfig({
       exclude: ["src/**/*.d.ts", "src/test/**", "src/app/**"],
       reporter: ["text", "html"],
       thresholds: {
-        // Wave 1 ships smoke tests for a handful of modules only, so a floor over the whole
-        // (untouched) src/ tree is red from day one and trains the team to ignore the gate. Raise
-        // these to lines 50 / branches 40 / functions 50 once Wave 2 covers schemas, helpers and
-        // stores, then keep climbing toward the BE-parity 80 / 70.
-        lines: 0,
-        branches: 0,
-        functions: 0,
+        // Global floor is a ratchet over the whole src/ tree. Most of it is components with no
+        // tests yet, so this can only move up. Real enforcement lives in the per-glob rules below.
+        lines: 12,
+        branches: 8,
+        functions: 11,
+        // Pure business logic is cheap to test and holds the rules that matter, so it is gated
+        // per directory. Ratchet these up as the gaps close; they are floors, not targets.
+        "src/schemas/**": { lines: 95, branches: 95, functions: 85 },
+        "src/helpers/**": { lines: 87, branches: 88, functions: 92 },
+        "src/utils/**": { lines: 75, branches: 68, functions: 65 },
+        "src/stores/**": { lines: 90, branches: 88, functions: 90 },
       },
     },
   },

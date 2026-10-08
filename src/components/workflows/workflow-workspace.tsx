@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { WorkflowCanvas } from "@/components/workflows/canvas/workflow-canvas";
 import { NodeConfigPanel } from "@/components/workflows/config-panel/node-config-panel";
 import { NodePalette } from "@/components/workflows/palette/node-palette";
+import { ResizableAside } from "@/components/workflows/resizable-aside";
 import { WorkflowToolbar } from "@/components/workflows/toolbar/workflow-toolbar";
 import { SITE_CONFIG } from "@/constants/site";
 import { DEFAULT_WORKFLOW_DEFINITION, DEFAULT_WORKFLOW_NAME } from "@/constants/workflow";
@@ -83,6 +84,22 @@ export const WorkflowWorkspace = () => {
   }, [titleName]);
 
   useEffect(() => () => resetEditor(), [resetEditor]);
+
+  // /workflows?batch=<id> (from the Batches page) points the Product input at that batch, once.
+  const requestedBatchId = searchParams.get("batch");
+  const appliedBatchRef = useRef<string | null>(null);
+  const isEditorLoaded = workflow !== undefined && workflow.id === loadedWorkflowId;
+  useEffect(() => {
+    if (!requestedBatchId || !isEditorLoaded || appliedBatchRef.current === requestedBatchId) return;
+    appliedBatchRef.current = requestedBatchId;
+    const { nodes, updateNodeConfig } = useWorkflowStore.getState();
+    const input = nodes.find((node) => node.data.type === "product-input");
+    if (input) updateNodeConfig(input.id, { ...input.data.config, batchId: requestedBatchId });
+    const params = new URLSearchParams(window.location.search);
+    params.delete("batch");
+    const query = params.toString();
+    router.replace(query ? `/workflows?${query}` : "/workflows");
+  }, [requestedBatchId, isEditorLoaded, router]);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -164,9 +181,16 @@ export const WorkflowWorkspace = () => {
             <SectionLoading label="Loading workflow" className="h-full" />
           )}
         </div>
-        <aside className="hidden w-80 shrink-0 border-l xl:block">
+        <ResizableAside
+          label="the node panel"
+          storageKey="apcs.workflows.panel-width"
+          defaultWidth={320}
+          minWidth={288}
+          maxWidth={760}
+          reservedWidth={640}
+        >
           <NodeConfigPanel />
-        </aside>
+        </ResizableAside>
       </div>
     </div>
   );

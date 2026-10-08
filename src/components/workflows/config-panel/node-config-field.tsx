@@ -6,7 +6,7 @@ import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessa
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { MockupTemplatePicker } from "@/components/workflows/config-panel/fields/mockup-template-picker";
+import { MockupSelectionField } from "@/components/workflows/config-panel/fields/mockup-selection-field";
 import { OptionSelect } from "@/components/workflows/config-panel/fields/option-select";
 import { SourceSelect } from "@/components/workflows/config-panel/fields/source-select";
 import { readBoolean, readNumber, readString, readStringArray } from "@/helpers/workflow-config";
@@ -86,16 +86,26 @@ export const NodeConfigField = ({ field, control }: NodeConfigFieldProps) => (
         case "source-select":
           return (
             <FormItem>
-              <FormLabel required>{field.label}</FormLabel>
-              <SourceSelect source={field.source} label={field.label} value={readString(controller.value)} onChange={controller.onChange} />
+              <FormLabel required={!field.optional}>{field.label}</FormLabel>
+              <SourceSelect
+                source={field.source}
+                label={field.label}
+                value={readString(controller.value)}
+                noneLabel={field.noneLabel}
+                onChange={controller.onChange}
+              />
               <FormMessage />
             </FormItem>
           );
-        case "mockup-templates":
+        case "mockup-selection":
           return (
             <FormItem>
               <FormLabel required>{field.label}</FormLabel>
-              <MockupTemplatePicker value={readStringArray(controller.value)} onChange={controller.onChange} />
+              <MockupSelectionField
+                templateColorsName={field.templateColorsName}
+                value={readStringArray(controller.value)}
+                onChange={controller.onChange}
+              />
               <FormMessage />
             </FormItem>
           );

@@ -16,7 +16,8 @@ export type WorkflowNodeType =
 
 export type WorkflowNodeCategory = "trigger" | "ai" | "review" | "output";
 
-export type WorkflowNodeStatus = "idle" | "running" | "success" | "failed" | "skipped";
+/** "waiting" is a step that needs the person: the run is paused until they act. */
+export type WorkflowNodeStatus = "idle" | "running" | "waiting" | "success" | "failed" | "skipped";
 
 export type WorkflowNodeConfig = Record<string, unknown>;
 
@@ -91,8 +92,16 @@ export type WorkflowOptionSource = "batches" | "design-templates" | "style-prese
 
 export type WorkflowField =
   | { kind: "select"; name: string; label: string; options: WorkflowOption[] }
-  | { kind: "source-select"; name: string; label: string; source: WorkflowOptionSource }
-  | { kind: "mockup-templates"; name: string; label: string }
+  | {
+      kind: "source-select";
+      name: string;
+      label: string;
+      source: WorkflowOptionSource;
+      /** The value may stay empty; `noneLabel` is the choice that clears it. */
+      optional?: boolean;
+      noneLabel?: string;
+    }
+  | { kind: "mockup-selection"; name: string; templateColorsName: string; label: string }
   | { kind: "number"; name: string; label: string; min: number; max: number; unit?: string }
   | { kind: "switch"; name: string; label: string; description: string }
   | { kind: "textarea"; name: string; label: string; placeholder: string };

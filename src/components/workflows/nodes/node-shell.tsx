@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { NodeName } from "@/components/workflows/nodes/node-name";
 import { WORKFLOW_CATEGORIES } from "@/constants/workflow";
 import { getWorkflowNodeDefinition } from "@/helpers/workflow-config";
+import { isRunnableNode } from "@/helpers/workflow-run";
 import type { WorkflowNodeData, WorkflowNodeStatus } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 import { Handle, Position } from "@xyflow/react";
@@ -12,6 +13,7 @@ import { Handle, Position } from "@xyflow/react";
 const STATUS_BORDERS: Record<WorkflowNodeStatus, string> = {
   idle: "border-slate-200",
   running: "border-indigo-400 shadow-indigo-100",
+  waiting: "border-amber-400 shadow-amber-100",
   success: "border-emerald-400",
   failed: "border-rose-400",
   skipped: "border-slate-300 opacity-70",
@@ -22,6 +24,7 @@ const STATUS_PILLS: Record<
   { className: string; label: string }
 > = {
   running: { className: "bg-indigo-100 text-indigo-700", label: "Running" },
+  waiting: { className: "bg-amber-100 text-amber-800", label: "Needs review" },
   success: { className: "bg-emerald-100 text-emerald-700", label: "Done" },
   failed: { className: "bg-rose-100 text-rose-700", label: "Failed" },
   skipped: { className: "bg-slate-200 text-slate-600", label: "Skipped" },
@@ -57,6 +60,11 @@ export const NodeShell = ({ nodeId, data, selected, widthClassName, bodyClassNam
         {pill && (
           <span className={cn("ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold", pill.className)}>
             {pill.label}
+          </span>
+        )}
+        {!pill && !isRunnableNode(data.type) && (
+          <span className="ml-auto shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+            Coming soon
           </span>
         )}
       </div>

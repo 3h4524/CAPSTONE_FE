@@ -15,7 +15,7 @@ import { getCopyName, toWorkflowDefinition, validateWorkflow } from "@/helpers/w
 import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
 import { useDeleteWorkflow } from "@/hooks/mutations/use-delete-workflow";
 import { useUpdateWorkflow } from "@/hooks/mutations/use-update-workflow";
-import { useWorkflowRunSimulation } from "@/hooks/use-workflow-run-simulation";
+import { useWorkflowRun } from "@/hooks/use-workflow-run";
 import type { WorkflowMetaFormValues } from "@/schemas/workflow";
 import { usePopupStore } from "@/stores/popup";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -50,7 +50,7 @@ export const WorkflowToolbar = ({
   const { mutate: createWorkflow, isPending: isCreating } = useCreateWorkflow();
   const { mutate: updateWorkflow, isPending: isSaving } = useUpdateWorkflow();
   const { mutate: deleteWorkflow, isPending: isDeleting } = useDeleteWorkflow();
-  const { isRunning, start: startRun, cancel: cancelRun } = useWorkflowRunSimulation();
+  const { isRunning, start: startRun, cancel: cancelRun } = useWorkflowRun(activeWorkflowId, isEditorReady);
 
   const isBusy = !isEditorReady || isRunning || isCreating || isSaving || isDeleting;
 
@@ -152,14 +152,14 @@ export const WorkflowToolbar = ({
           <span className="hidden sm:inline">Validate</span>
         </Button>
         {isRunning ? (
-          <Button type="button" variant="outline" size="sm" className="px-3" onClick={cancelRun}>
+          <Button type="button" variant="outline" size="sm" className="px-3" onClick={() => void cancelRun()}>
             <Square aria-hidden="true" />
             <span className="hidden sm:inline">Stop</span>
           </Button>
         ) : (
-          <Button type="button" variant="outline" size="sm" className="px-3" onClick={startRun} disabled={isBusy}>
+          <Button type="button" variant="outline" size="sm" className="px-3" onClick={() => void startRun()} disabled={isBusy}>
             <Play aria-hidden="true" />
-            <span className="hidden sm:inline">Run demo</span>
+            <span className="hidden sm:inline">Run</span>
           </Button>
         )}
         <Button type="button" size="sm" className="px-4" onClick={() => saveWorkflow()} disabled={isBusy || !isDirty}>

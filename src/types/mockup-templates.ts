@@ -19,7 +19,10 @@ export interface MockupTemplate {
 export interface BatchMockupSelection {
   batchJobId: string;
   templateIds: string[];
+  /** Colors shared by recolorable templates that have none of their own (older selections only). */
   garmentColors: string[];
+  /** Colors chosen per template, keyed by template id. */
+  templateColors?: Record<string, string[]>;
 }
 
 export interface MockupPrintArea {
@@ -45,6 +48,8 @@ export interface GenerateAllMockupsResult {
   generatedCount: number;
   noDesignImageCount: number;
   noCompatibleTemplateCount: number;
+  /** Products whose designs exist but none is approved yet (jobs that need approval). */
+  noApprovedImageCount?: number;
   errors: string[];
   images: MockupImage[];
 }

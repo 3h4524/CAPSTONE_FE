@@ -53,7 +53,8 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
           <X aria-hidden="true" />
         </Button>
       </div>
-      <ScrollArea className="min-h-0 flex-1">
+      {/* Radix lays the content out as a table that grows to its widest line; block keeps it inside the panel. */}
+      <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:block!">
         <Form {...form}>
           <form onSubmit={(event) => event.preventDefault()} className="p-4">
             <fieldset disabled={isRunning} className="space-y-5">

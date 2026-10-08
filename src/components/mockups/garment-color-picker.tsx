@@ -13,6 +13,8 @@ type GarmentColorPickerProps = {
   onToggle: (hex: string) => void;
   disabled?: boolean;
   max?: number;
+  /** Smaller swatches and input, for a picker repeated once per template. */
+  compact?: boolean;
 };
 
 export const GarmentColorSwatch = ({ hex, className }: { hex: string; className?: string }) => (
@@ -23,7 +25,7 @@ export const GarmentColorSwatch = ({ hex, className }: { hex: string; className?
   />
 );
 
-export const GarmentColorPicker = ({ selected, onToggle, disabled = false, max }: GarmentColorPickerProps) => {
+export const GarmentColorPicker = ({ selected, onToggle, disabled = false, max, compact = false }: GarmentColorPickerProps) => {
   const [custom, setCustom] = useState("");
   const isSelected = (hex: string) => selected.some((value) => value.toLowerCase() === hex.toLowerCase());
   const full = max !== undefined && selected.length >= max;
@@ -51,12 +53,13 @@ export const GarmentColorPicker = ({ selected, onToggle, disabled = false, max }
               disabled={disabled || (!active && full)}
               onClick={() => onToggle(hex)}
               className={cn(
-                "flex size-8 items-center justify-center rounded-full border border-slate-300 transition disabled:opacity-40",
+                "flex items-center justify-center rounded-full border border-slate-300 transition disabled:opacity-40",
+                compact ? "size-6" : "size-8",
                 active && "ring-primary ring-2 ring-offset-2"
               )}
               style={{ backgroundColor: hex }}
             >
-              {active && <Check className="size-4 text-white mix-blend-difference" aria-hidden="true" />}
+              {active && <Check className={cn("text-white mix-blend-difference", compact ? "size-3.5" : "size-4")} aria-hidden="true" />}
             </button>
           );
         })}
@@ -75,9 +78,16 @@ export const GarmentColorPicker = ({ selected, onToggle, disabled = false, max }
           maxLength={7}
           disabled={disabled || full}
           aria-label="Custom garment color"
-          className="h-8 w-32"
+          className={cn("w-32", compact ? "h-7 text-xs" : "h-8")}
         />
-        <Button type="button" variant="outline" size="sm" disabled={disabled || full || !isGarmentColor(customHex)} onClick={addCustom}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={compact ? "h-7 text-xs" : undefined}
+          disabled={disabled || full || !isGarmentColor(customHex)}
+          onClick={addCustom}
+        >
           Add color
         </Button>
       </div>

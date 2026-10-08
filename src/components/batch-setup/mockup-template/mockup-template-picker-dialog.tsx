@@ -14,11 +14,13 @@ type MockupTemplatePickerDialogProps = {
   batchJobId: string;
   /** Product types in the batch job (lowercase) with how many products each has. */
   productTypeCounts?: Record<string, number>;
+  /** A generated design of this job, shown inside each template's print area in the preview. */
+  sampleDesignUrl?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-export const MockupTemplatePickerDialog = ({ batchJobId, productTypeCounts, open, onOpenChange }: MockupTemplatePickerDialogProps) => {
+export const MockupTemplatePickerDialog = ({ batchJobId, productTypeCounts, sampleDesignUrl, open, onOpenChange }: MockupTemplatePickerDialogProps) => {
   const { data: templates, isPending: isLoadingTemplates, isError: isTemplatesError, refetch: refetchTemplates } = useMockupTemplates(undefined, open);
   const { data: selection, isPending: isLoadingSelection } = useBatchMockupSelection(batchJobId, open);
   const { mutate: applyMockups, isPending: isApplying } = useApplyMockupTemplates();
@@ -54,9 +56,12 @@ export const MockupTemplatePickerDialog = ({ batchJobId, productTypeCounts, open
             templates={templates}
             initialIds={selection?.templateIds ?? []}
             initialColors={selection?.garmentColors ?? []}
+            initialTemplateColors={selection?.templateColors}
             pending={isApplying}
             productTypeCounts={productTypeCounts}
-            onApply={(templateIds, garmentColors) => applyMockups({ batchJobId, templateIds, garmentColors }, { onSuccess: close })}
+            sampleDesignUrl={sampleDesignUrl}
+            // The shared list is replaced by each template's own colors, so it is cleared here.
+            onApply={(templateIds, templateColors) => applyMockups({ batchJobId, templateIds, garmentColors: [], templateColors }, { onSuccess: close })}
             onClose={close}
           />
         )}

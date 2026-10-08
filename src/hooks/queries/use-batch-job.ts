@@ -11,6 +11,7 @@ export const useBatchJob = (batchJobId: string) =>
   useQuery({
     queryKey: batchJobKeys.detail(batchJobId),
     queryFn: () => getBatchJob(batchJobId),
+    enabled: batchJobId.length > 0,
     refetchInterval: (query) =>
       ACTIVE_STATUSES.includes(query.state.data?.status ?? "") ? POLL_INTERVAL_MS : false,
   });

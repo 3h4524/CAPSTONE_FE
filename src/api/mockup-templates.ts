@@ -13,8 +13,13 @@ export const listMockupTemplates = async (productType?: string, signal?: AbortSi
 export const getBatchMockupSelection = async (batchJobId: string, signal?: AbortSignal): Promise<BatchMockupSelection> =>
   (await api.get<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { signal })).data;
 
-export const applyBatchMockupTemplates = async (batchJobId: string, templateIds: string[], garmentColors: string[] = []): Promise<BatchMockupSelection> =>
-  (await api.put<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { templateIds, garmentColors })).data;
+export const applyBatchMockupTemplates = async (
+  batchJobId: string,
+  templateIds: string[],
+  garmentColors: string[] = [],
+  templateColors: Record<string, string[]> = {}
+): Promise<BatchMockupSelection> =>
+  (await api.put<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { templateIds, garmentColors, templateColors })).data;
 
 export type SaveMockupTemplateInput = {
   name: string;

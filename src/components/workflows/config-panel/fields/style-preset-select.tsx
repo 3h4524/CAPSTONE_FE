@@ -6,10 +6,11 @@ import { useStylePresets } from "@/hooks/queries/use-style-presets";
 type StylePresetSelectProps = {
   value: string;
   placeholder: string;
+  noneLabel?: string;
   onChange: (value: string) => void;
 };
 
-export const StylePresetSelect = ({ value, placeholder, onChange }: StylePresetSelectProps) => {
+export const StylePresetSelect = ({ value, placeholder, noneLabel, onChange }: StylePresetSelectProps) => {
   const { data: presets, isPending, isError, refetch } = useStylePresets();
   const options = (presets ?? []).map((preset) => ({ value: preset.id, label: preset.name }));
 
@@ -18,6 +19,7 @@ export const StylePresetSelect = ({ value, placeholder, onChange }: StylePresetS
       value={value}
       options={options}
       placeholder={placeholder}
+      noneLabel={noneLabel}
       onChange={onChange}
       isLoading={isPending}
       isError={isError}

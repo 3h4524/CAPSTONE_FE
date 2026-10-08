@@ -15,13 +15,13 @@ export const productInputConfigSchema = z.object({
 
 export const promptSynthesisConfigSchema = z.object({
   designTemplateId: z.string().min(1, "Choose a design template."),
-  stylePresetId: z.string().min(1, "Choose an art style."),
+  stylePresetId: z.string(),
   instructions: z.string().trim().max(500, "Keep instructions under 500 characters."),
 });
 
 export const designImageConfigSchema = z.object({
-  model: z.enum(["leonardo", "sdxl"], { error: "Choose an image model." }),
   variants: wholeNumber("number of variants", 1, 4),
+  aspectRatio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"], { error: "Choose an aspect ratio." }),
 });
 
 export const approvalGateConfigSchema = z.object({
@@ -33,6 +33,12 @@ export const applyMockupConfigSchema = z.object({
     .array(z.string())
     .min(1, "Choose at least one mock-up template.")
     .max(5, "Choose up to 5 mock-up templates."),
+  templateColors: z.record(
+    z.string(),
+    z
+      .array(z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Garment colors must look like #RRGGBB."))
+      .max(5, "Choose up to 5 garment colors per template.")
+  ),
 });
 
 export const generateVideoConfigSchema = z.object({

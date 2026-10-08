@@ -9,10 +9,11 @@ type SourceSelectProps = {
   source: WorkflowOptionSource;
   label: string;
   value: string;
+  noneLabel?: string;
   onChange: (value: string) => void;
 };
 
-export const SourceSelect = ({ source, label, value, onChange }: SourceSelectProps) => {
+export const SourceSelect = ({ source, label, value, noneLabel, onChange }: SourceSelectProps) => {
   const placeholder = `Choose ${label.toLowerCase()}`;
 
   switch (source) {
@@ -21,6 +22,6 @@ export const SourceSelect = ({ source, label, value, onChange }: SourceSelectPro
     case "design-templates":
       return <DesignTemplateSelect value={value} placeholder={placeholder} onChange={onChange} />;
     case "style-presets":
-      return <StylePresetSelect value={value} placeholder={placeholder} onChange={onChange} />;
+      return <StylePresetSelect value={value} placeholder={placeholder} noneLabel={noneLabel} onChange={onChange} />;
   }
 };

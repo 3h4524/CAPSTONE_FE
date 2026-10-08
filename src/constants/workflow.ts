@@ -39,6 +39,19 @@ export const NODE_CARD_WIDTHS: Record<WorkflowNodeType, number> = {
   "publish-printify": 240,
 };
 
+// The ratios the image-generation API accepts.
+const ASPECT_RATIO_OPTIONS = ["1:1", "16:9", "9:16", "4:3", "3:4"].map((ratio) => ({ value: ratio, label: ratio }));
+
+// Steps a run can execute against the batch-job API; the other node types are laid out on the
+// canvas but have no backend yet, so a run skips them.
+export const RUNNABLE_NODE_TYPES: WorkflowNodeType[] = [
+  "product-input",
+  "prompt-synthesis",
+  "design-image",
+  "approval-gate",
+  "apply-mockup",
+];
+
 const PUBLISH_FIELDS = [
   {
     kind: "switch",
@@ -83,7 +96,14 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         label: "Design template",
         source: "design-templates",
       },
-      { kind: "source-select", name: "stylePresetId", label: "Art style", source: "style-presets" },
+      {
+        kind: "source-select",
+        name: "stylePresetId",
+        label: "Art style",
+        source: "style-presets",
+        optional: true,
+        noneLabel: "No style",
+      },
       {
         kind: "textarea",
         name: "instructions",
@@ -100,18 +120,10 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { model: "leonardo", variants: 2 },
+    defaultConfig: { variants: 2, aspectRatio: "1:1" },
     fields: [
-      {
-        kind: "select",
-        name: "model",
-        label: "Image model",
-        options: [
-          { value: "leonardo", label: "Leonardo.ai" },
-          { value: "sdxl", label: "Stable Diffusion XL" },
-        ],
-      },
       { kind: "number", name: "variants", label: "Variants per product", min: 1, max: 4 },
+      { kind: "select", name: "aspectRatio", label: "Aspect ratio", options: ASPECT_RATIO_OPTIONS },
     ],
   },
   "approval-gate": {
@@ -143,8 +155,17 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { mockupTemplateIds: [] },
-    fields: [{ kind: "mockup-templates", name: "mockupTemplateIds", label: "Mock-up templates" }],
+    // Colors are chosen per template in `templateColors`; a template without any is made in its own color.
+    // (Workflows saved with the old shared `garmentColors` list lose it when they load.)
+    defaultConfig: { mockupTemplateIds: [], templateColors: {} },
+    fields: [
+      {
+        kind: "mockup-selection",
+        name: "mockupTemplateIds",
+        templateColorsName: "templateColors",
+        label: "Mock-up templates",
+      },
+    ],
   },
   "generate-video": {
     type: "generate-video",

@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ApprovalReviewPanel } from "@/components/workflows/run/approval-review-panel";
 import { readStringArray } from "@/helpers/workflow-config";
 import { countApprovals, DESIGNS_READY_STATUSES } from "@/helpers/workflow-run";
-import { applySelectionAndGenerateMockups } from "@/hooks/use-workflow-run";
+import { applySelectionAndGenerateMockups } from "@/hooks/use-batch-run";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { WorkflowNode } from "@/types/workflow";
 import { useQueryClient } from "@tanstack/react-query";
@@ -35,7 +35,7 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
   const productNameById = new Map(job.products.map((product) => [product.productId, product.productName]));
   const designsReady = DESIGNS_READY_STATUSES.includes(job.status);
   const showsMockups = node.data.type === "apply-mockup";
-  const showsApproval = node.data.type === "approval-gate";
+  const showsApproval = node.data.type === "design-approval";
   const approvedCount = countApprovals(job).approved;
   const needsApproval = job.requireApproval === true;
   const chosenTemplateCount = readStringArray(node.data.config.mockupTemplateIds).length;

@@ -15,7 +15,7 @@ import { getCopyName, toWorkflowDefinition, validateWorkflow } from "@/helpers/w
 import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
 import { useDeleteWorkflow } from "@/hooks/mutations/use-delete-workflow";
 import { useUpdateWorkflow } from "@/hooks/mutations/use-update-workflow";
-import { useWorkflowRun } from "@/hooks/use-workflow-run";
+import { useWorkflowExecution } from "@/hooks/use-workflow-execution";
 import type { WorkflowMetaFormValues } from "@/schemas/workflow";
 import { usePopupStore } from "@/stores/popup";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -50,9 +50,9 @@ export const WorkflowToolbar = ({
   const { mutate: createWorkflow, isPending: isCreating } = useCreateWorkflow();
   const { mutate: updateWorkflow, isPending: isSaving } = useUpdateWorkflow();
   const { mutate: deleteWorkflow, isPending: isDeleting } = useDeleteWorkflow();
-  const { isRunning, start: startRun, cancel: cancelRun } = useWorkflowRun(activeWorkflowId, isEditorReady);
+  const { isRunning, start: startRun, cancel: cancelRun, isPending: isRunPending } = useWorkflowExecution(activeWorkflowId, isEditorReady);
 
-  const isBusy = !isEditorReady || isRunning || isCreating || isSaving || isDeleting;
+  const isBusy = !isEditorReady || isRunning || isCreating || isSaving || isDeleting || isRunPending;
 
   const buildCurrentInput = (meta?: WorkflowMetaFormValues): SaveWorkflowInput => {
     const { nodes, edges } = useWorkflowStore.getState();
@@ -60,6 +60,7 @@ export const WorkflowToolbar = ({
       name: meta?.name ?? name,
       description: meta?.description ?? description,
       definition: toWorkflowDefinition(nodes, edges, getViewport()),
+      expectedRevision: useWorkflowStore.getState().revision,
     };
   };
 
@@ -123,7 +124,7 @@ export const WorkflowToolbar = ({
       description: "This removes the workflow and its canvas permanently.",
       positiveLabel: "Delete",
       onPositive: () =>
-        deleteWorkflow(activeWorkflowId, {
+        deleteWorkflow({ id: activeWorkflowId, revision: useWorkflowStore.getState().revision }, {
           onSuccess: () => {
             const nextWorkflow = workflows.find((item) => item.id !== activeWorkflowId);
             onOpenWorkflow(nextWorkflow?.id ?? null);

@@ -33,15 +33,16 @@ export const isWorkflowNodeType = (value: string): value is WorkflowNodeType =>
 export const getWorkflowNodeDefinition = (type: string): WorkflowNodeDefinition | undefined =>
   isWorkflowNodeType(type) ? WORKFLOW_NODE_DEFINITIONS[type] : undefined;
 
+// A field named "standardOptions.transition" edits a value inside the `standardOptions` key.
 const getFieldKeys = (field: WorkflowField): string[] =>
-  field.kind === "mockup-selection" ? [field.name, field.templateColorsName] : [field.name];
+  (field.kind === "mockup-selection" ? [field.name, field.templateColorsName] : [field.name]).map((name) => name.split(".")[0]);
 
-// Keeps only the keys the node still declares, over its defaults, so a workflow saved before a
-// field existed (or after one was removed) still loads into a config the schema accepts.
+// Keeps only the keys the node still declares (in its fields or its defaults), over its defaults, so a
+// workflow saved before a key existed (or after one was removed) still loads into a config the schema accepts.
 export const normalizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNodeConfig): WorkflowNodeConfig => {
   const definition = WORKFLOW_NODE_DEFINITIONS[type];
   const normalized: WorkflowNodeConfig = { ...definition.defaultConfig };
-  definition.fields.flatMap(getFieldKeys).forEach((key) => {
+  new Set([...Object.keys(definition.defaultConfig), ...definition.fields.flatMap(getFieldKeys)]).forEach((key) => {
     if (key in config) normalized[key] = config[key];
   });
   return normalized;
@@ -77,6 +78,10 @@ export const summarizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNode
       case "switch":
         return readBoolean(value) ? [field.label] : [];
       case "textarea":
+      case "text":
+      case "product-select":
+      case "video-modes":
+      case "video-formats":
         return [];
     }
   });

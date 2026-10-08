@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBatchJobs } from "@/hooks/queries/use-batch-jobs";
+import { BATCH_JOB_PARAM } from "@/hooks/use-batch-run";
 import { useWorkflowStore } from "@/stores/workflow";
 
 const formatDate = (value: string | null) =>
@@ -19,7 +20,7 @@ type PreviousRunsSelectProps = {
 // products. It never changes what Run does: that always generates for the batch's pending products.
 export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
   const router = useRouter();
-  const openRunId = useSearchParams().get("run");
+  const openRunId = useSearchParams().get(BATCH_JOB_PARAM);
   const isRunning = useWorkflowStore((state) => state.isRunning);
   const { data: jobs } = useBatchJobs(batchId || undefined);
 
@@ -34,7 +35,7 @@ export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
 
   const openRunById = (jobId: string) => {
     const params = new URLSearchParams(window.location.search);
-    params.set("run", jobId);
+    params.set(BATCH_JOB_PARAM, jobId);
     router.replace(`/workflows?${params.toString()}`);
   };
 

@@ -14,8 +14,8 @@ import {
 } from "@/helpers/workflow-run";
 import { useSetImageApproval } from "@/hooks/mutations/use-set-image-approval";
 import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
+import { applySelectionAndGenerateMockups } from "@/hooks/use-batch-run";
 import { useAppQueryClient } from "@/hooks/use-query-client";
-import { applySelectionAndGenerateMockups } from "@/hooks/use-workflow-run";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { BatchJobDetail, ImageApprovalStatus } from "@/types/batch-jobs";

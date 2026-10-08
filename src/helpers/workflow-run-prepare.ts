@@ -13,6 +13,9 @@ const IMAGE_QUOTA_CODE = "image_generation";
 // A problem the user can fix; its message is shown as is.
 export class RunBlockedError extends Error {}
 
+// Every product of the batch already has its designs. Not a problem when the run only needs to go on to the video.
+export class NothingPendingError extends RunBlockedError {}
+
 export type PreparedRun = {
   batchJobId: string;
   /** The batch already had a running job: it is shown instead of starting another (one active job per batch). */
@@ -43,7 +46,7 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
   });
   const pending = products.filter((product) => product.status === "pending");
   if (pending.length === 0) {
-    throw new RunBlockedError(
+    throw new NothingPendingError(
       "This batch has no pending products. Add products to it, or open an earlier run from the Jobs menu on the Batches page."
     );
   }

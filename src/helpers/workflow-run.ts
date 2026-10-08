@@ -1,4 +1,4 @@
-import { RUNNABLE_NODE_TYPES } from "@/constants/workflow";
+import { BATCH_RUN_NODE_TYPES, RUNNABLE_NODE_TYPES, VIDEO_RUN_NODE_TYPES } from "@/constants/workflow";
 import { readNumber, readString, readStringArray, readTemplateColors } from "@/helpers/workflow-config";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type { MockupState, RunStep } from "@/stores/workflow-run";
@@ -21,11 +21,24 @@ export type RunPlan = {
   variationCount: number;
   aspectRatio: string;
   mockup: MockupSelection | null;
-  /** true when the Approval gate is set to manual review: mock-ups wait until the designs are approved. */
+  /** true when Design approval is set to manual review: mock-ups wait until the designs are approved. */
   requireApproval: boolean;
 };
 
 export const isRunnableNode = (type: WorkflowNodeType) => RUNNABLE_NODE_TYPES.includes(type);
+
+/** A step of the part the canvas runs as a batch job: designs, their approval and the mock-ups. */
+export const isBatchRunNode = (type: WorkflowNodeType) => BATCH_RUN_NODE_TYPES.includes(type);
+
+/** A step of the part the server runs for one product: mock-up approval, video, video review and the ZIP. */
+export const isVideoRunNode = (type: WorkflowNodeType) => VIDEO_RUN_NODE_TYPES.includes(type);
+
+/** The workflow generates designs, so a run starts with a batch job. */
+export const hasBatchSteps = (nodes: WorkflowNode[]) =>
+  nodes.some((node) => node.data.type === "prompt-synthesis" || node.data.type === "design-image");
+
+/** The workflow makes a video, so a run includes the server's video run. */
+export const hasVideoSteps = (nodes: WorkflowNode[]) => nodes.some((node) => node.data.type === "generate-video");
 
 const findByType = (nodes: WorkflowNode[], type: WorkflowNodeType) => nodes.filter((node) => node.data.type === type);
 
@@ -47,9 +60,9 @@ const SINGLE_NODE_LABELS: Partial<Record<WorkflowNodeType, string>> = {
   "design-image": "Design image",
 };
 
-// A run drives one batch job: Product input -> Prompt synthesis -> Design image, then optionally
-// Approval gate -> Apply mock-up. This checks the graph has exactly that shape and valid settings;
-// the other node types are skipped, not rejected.
+// The batch part of a run drives one batch job: Product input -> Prompt synthesis -> Design image, then
+// optionally Design approval -> Apply mock-up. This checks the graph has exactly that shape and valid
+// settings; the video steps are checked by the server when its run starts, and the rest are skipped.
 export const validateRunnable = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
   const issues: WorkflowIssue[] = [];
 
@@ -62,7 +75,7 @@ export const validateRunnable = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
       issues.push({ id: `run-extra-${node.id}`, nodeId: node.id, message: `A run supports one ${SINGLE_NODE_LABELS[type]} node.` })
     );
   });
-  (["approval-gate", "apply-mockup"] as WorkflowNodeType[]).forEach((type) => {
+  (["design-approval", "apply-mockup"] as WorkflowNodeType[]).forEach((type) => {
     findByType(nodes, type)
       .slice(1)
       .forEach((node) => issues.push({ id: `run-extra-${node.id}`, nodeId: node.id, message: `A run supports one ${node.data.label} node.` }));
@@ -70,7 +83,7 @@ export const validateRunnable = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
   if (issues.length > 0) return issues;
 
   nodes
-    .filter((node) => isRunnableNode(node.data.type))
+    .filter((node) => isBatchRunNode(node.data.type))
     .forEach((node) => {
       const parsed = workflowNodeConfigSchemas[node.data.type].safeParse(node.data.config);
       if (!parsed.success) {
@@ -92,7 +105,17 @@ export const validateRunnable = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
   if (mockup && !reachableFrom(design.id, edges).has(mockup.id)) {
     issues.push({ id: "run-mockup-link", nodeId: mockup.id, message: "Connect Apply mock-up after Design image." });
   }
+  const missingTemplates = findMissingMockupTemplates(nodes);
+  if (missingTemplates) issues.push(missingTemplates);
   return issues;
+};
+
+// The mock-ups of generated designs need a template to be placed on. (A workflow that only makes a video
+// from uploaded mock-ups has no designs to place, so its Apply mock-up node may stay empty.)
+export const findMissingMockupTemplates = (nodes: WorkflowNode[]): WorkflowIssue | null => {
+  const [mockup] = findByType(nodes, "apply-mockup");
+  if (!mockup || !hasBatchSteps(nodes) || readStringArray(mockup.data.config.mockupTemplateIds).length > 0) return null;
+  return { id: `run-templates-${mockup.id}`, nodeId: mockup.id, message: `${mockup.data.label}: Choose at least one mock-up template.` };
 };
 
 // Reads the settings of an already validated graph.
@@ -111,15 +134,16 @@ export const extractRunPlan = (nodes: WorkflowNode[]): RunPlan => {
     mockup: mockup
       ? extractMockupSelection(mockup)
       : null,
-    // Without an Approval gate the designs flow straight through, exactly as with Auto-approve.
-    requireApproval: findByType(nodes, "approval-gate").length > 0 && readString(config("approval-gate").mode) === "manual",
+    // Without a Design approval step the designs flow straight through, exactly as with Auto-approve.
+    requireApproval: findByType(nodes, "design-approval").length > 0 && readString(config("design-approval").mode) === "manual",
   };
 };
 
 export type RunSnapshot = { step: RunStep; job: BatchJobDetail | null; mockupState: MockupState };
 
-// Every status comes from the run's state: the job on the server once it exists, the runner's own
-// step before that. Nodes the API cannot run are skipped as soon as a run exists.
+// The statuses the batch part of a run gives its nodes: from the job on the server once it exists, from
+// the runner's own step before that. Nodes no backend can run are skipped as soon as a run exists.
+// The video steps are left out: the server's video run reports those.
 export const deriveNodeStatuses = (nodes: WorkflowNode[], run: RunSnapshot): Record<string, WorkflowNodeStatus> => {
   const hasRun = run.step !== "idle" || run.job !== null;
   const status = run.job?.status ?? "";
@@ -142,11 +166,11 @@ export const deriveNodeStatuses = (nodes: WorkflowNode[], run: RunSnapshot): Rec
         if (designsReady) return "success";
         if (status === "failed") return "failed";
         return run.step === "watching" && !run.job ? "running" : "idle";
-      case "approval-gate":
+      case "design-approval":
         if (designsReady) {
           // Paused until the person approves designs and asks for the mock-ups (or, with no mock-up step, has reviewed them all).
           const waiting = run.job?.requireApproval === true && run.mockupState === "idle" && (hasMockupNode || countApprovals(run.job).pending > 0);
-          return waiting ? "waiting" : "success";
+          return waiting ? "waiting_for_review" : "success";
         }
         return status === "failed" ? "skipped" : "idle";
       case "apply-mockup":
@@ -160,7 +184,9 @@ export const deriveNodeStatuses = (nodes: WorkflowNode[], run: RunSnapshot): Rec
     }
   };
 
-  return Object.fromEntries(nodes.map((node) => [node.id, statusOf(node.data.type)]));
+  return Object.fromEntries(
+    nodes.filter((node) => !isVideoRunNode(node.data.type)).map((node) => [node.id, statusOf(node.data.type)])
+  );
 };
 
 export const isRunBusy = (run: RunSnapshot) =>
@@ -214,4 +240,18 @@ export const estimateMockupCount = (job: BatchJobDetail, selection: MockupSelect
       const colors = template.allowRecolor ? Math.max(1, (selection.templateColors[template.id] ?? []).length) : 1;
       return total + (approvedByType[template.productType.toLowerCase()] ?? 0) * colors;
     }, 0);
+};
+
+// The status the server's video run gives a step, as the canvas shows it.
+export const toCanvasStatus = (status: string): WorkflowNodeStatus => {
+  switch (status) {
+    case "running": return "running";
+    case "succeeded": return "success";
+    case "failed": return "failed";
+    case "waiting_for_input": return "waiting_for_input";
+    case "waiting_for_review": return "waiting_for_review";
+    case "cancelled": return "cancelled";
+    case "skipped": return "skipped";
+    default: return "idle";
+  }
 };

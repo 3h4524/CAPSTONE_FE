@@ -7,13 +7,21 @@ import { NodeSummary } from "@/components/workflows/nodes/node-summary";
 import { readString, summarizeNodeConfig } from "@/helpers/workflow-config";
 import { countApprovals } from "@/helpers/workflow-run";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
-import type { WorkflowNode } from "@/types/workflow";
+import type { WorkflowNode, WorkflowNodeType } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 import type { NodeProps } from "@xyflow/react";
 
+// What each review step waits for while it is on manual review.
+const MANUAL_HINTS: Partial<Record<WorkflowNodeType, string>> = {
+  "design-approval": "Designs pause here until approved.",
+  "approval-gate": "Approve current mockup revisions before rendering.",
+  "review-video": "Approve the exact video version before export.",
+};
+
 export const ApprovalCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
   const job = useWorkflowRunStore((state) => state.job);
-  const counts = job?.requireApproval === true ? countApprovals(job) : null;
+  // The counts are of designs, so only Design approval shows them.
+  const counts = data.type === "design-approval" && job?.requireApproval === true ? countApprovals(job) : null;
   const summary = summarizeNodeConfig(data.type, data.config).slice(0, 2);
   const isAuto = readString(data.config.mode) === "auto";
 
@@ -35,7 +43,7 @@ export const ApprovalCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =>
             {counts.approved} approved · {counts.rejected} rejected · {counts.pending} to review
           </p>
         ) : (
-          !isAuto && <p className="text-[11px] leading-snug text-amber-700">Designs pause here until approved.</p>
+          !isAuto && <p className="text-[11px] leading-snug text-amber-700">{MANUAL_HINTS[data.type] ?? "Paused here until approved."}</p>
         )}
       </div>
     </NodeShell>

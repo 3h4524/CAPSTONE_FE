@@ -10,7 +10,7 @@ import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { WorkflowNode, WorkflowNodeType } from "@/types/workflow";
 
-const RESULT_NODE_TYPES: WorkflowNodeType[] = ["design-image", "approval-gate", "apply-mockup"];
+const RESULT_NODE_TYPES: WorkflowNodeType[] = ["design-image", "design-approval", "apply-mockup"];
 
 type PanelView = "results" | "settings";
 

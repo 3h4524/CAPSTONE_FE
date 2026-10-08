@@ -18,16 +18,22 @@ import {
   isRunBusy,
   validateRunnable,
 } from "@/helpers/workflow-run";
-import { prepareRun, RunBlockedError } from "@/helpers/workflow-run-prepare";
+import { NothingPendingError, prepareRun, RunBlockedError } from "@/helpers/workflow-run-prepare";
 import { useBatchJob } from "@/hooks/queries/use-batch-job";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 
+// The batch job a reloaded page follows. (`run` in the same URL is the video run.)
+export const BATCH_JOB_PARAM = "job";
+
+/** How a start ended: the batch job is under way, there was nothing left to generate, or something has to be fixed first. */
+export type BatchRunOutcome = "started" | "nothing-pending" | "blocked";
+
 const setRunParam = (router: ReturnType<typeof useRouter>, batchJobId: string | null) => {
   const params = new URLSearchParams(window.location.search);
-  if (batchJobId) params.set("run", batchJobId);
-  else params.delete("run");
+  if (batchJobId) params.set(BATCH_JOB_PARAM, batchJobId);
+  else params.delete(BATCH_JOB_PARAM);
   const query = params.toString();
   router.replace(query ? `/workflows?${query}` : "/workflows");
 };
@@ -85,23 +91,20 @@ export const applySelectionAndGenerateMockups = async (batchJobId: string, query
   await generateRunMockups(batchJobId);
 };
 
-// Runs the open workflow against the real batch-job API: approve the batch, save the mock-up
-// selection, start image generation, follow the job, then composite the mock-ups. The job on the
-// server drives every node's status; the job id lives in the URL (?run=) so a reload picks it up.
-export const useWorkflowRun = (activeWorkflowId: string | null, isEditorReady: boolean) => {
+// Runs the design and mock-up steps of the open workflow against the batch-job API: approve the batch,
+// save the mock-up selection, start image generation, follow the job, then composite the mock-ups. The job
+// on the server drives the status of those steps; its id lives in the URL (?job=) so a reload picks it up.
+export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: boolean) => {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const runParam = useSearchParams().get("run");
+  const runParam = useSearchParams().get(BATCH_JOB_PARAM);
   const batchJobId = useWorkflowRunStore((state) => state.batchJobId);
   const step = useWorkflowRunStore((state) => state.step);
   const job = useWorkflowRunStore((state) => state.job);
   const mockupState = useWorkflowRunStore((state) => state.mockupState);
   const nodeSignature = useWorkflowStore((state) => state.nodes.map((node) => `${node.id}:${node.data.type}`).join("|"));
   const hasMockupNode = useWorkflowStore((state) => state.nodes.some((node) => node.data.type === "apply-mockup"));
-  const isRunning = useWorkflowStore((state) => state.isRunning);
-  const setRunning = useWorkflowStore((state) => state.setRunning);
   const setNodeStatus = useWorkflowStore((state) => state.setNodeStatus);
-  const resetStatuses = useWorkflowStore((state) => state.resetStatuses);
   const selectNode = useWorkflowStore((state) => state.selectNode);
   const autoMockupJobs = useRef(new Set<string>());
   const previousStatus = useRef<string | null>(null);
@@ -132,15 +135,13 @@ export const useWorkflowRun = (activeWorkflowId: string | null, isEditorReady: b
   useEffect(() => {
     if (!isEditorReady) return;
     const { nodes } = useWorkflowStore.getState();
+    // Only the steps this part runs: the video steps get their status from the video run.
     const statuses = deriveNodeStatuses(nodes, { step, job, mockupState });
     nodes.forEach((node) => {
-      if (node.data.status !== statuses[node.id]) setNodeStatus(node.id, statuses[node.id]);
+      const status = statuses[node.id];
+      if (status && node.data.status !== status) setNodeStatus(node.id, status);
     });
   }, [isEditorReady, nodeSignature, step, job, mockupState, setNodeStatus]);
-
-  useEffect(() => {
-    setRunning(isRunBusy({ step, job, mockupState }));
-  }, [step, job, mockupState, setRunning]);
 
   // A retry puts the job back to work, so its mock-ups are made again once it finishes.
   useEffect(() => {
@@ -154,8 +155,8 @@ export const useWorkflowRun = (activeWorkflowId: string | null, isEditorReady: b
     if (previousStatus.current && ACTIVE_JOB_STATUSES.includes(previousStatus.current) && status && FINISHED_JOB_STATUSES.includes(status)) {
       const needsReview = useWorkflowRunStore.getState().job?.requireApproval === true;
       if (needsReview && status !== "failed") {
-        // Open the Approval gate so the designs to review are in front of the person.
-        const gate = useWorkflowStore.getState().nodes.find((node) => node.data.type === "approval-gate");
+        // Open Design approval so the designs to review are in front of the person.
+        const gate = useWorkflowStore.getState().nodes.find((node) => node.data.type === "design-approval");
         if (gate) selectNode(gate.id);
         showToast("info", "Designs are ready. Approve the ones you want, then continue to the mock-ups.");
       } else if (status === "completed") showToast("success", "Image generation finished.");
@@ -178,25 +179,28 @@ export const useWorkflowRun = (activeWorkflowId: string | null, isEditorReady: b
     void generateRunMockups(job.id, { onlyIfSelected: true });
   }, [isEditorReady, hasMockupNode, job, step, mockupState]);
 
-  const start = async () => {
-    if (!activeWorkflowId) return;
+  // `videoFollows`: the run goes on to the video afterwards, so a batch whose designs are all made is not an error.
+  const start = async (options: { videoFollows?: boolean } = {}): Promise<BatchRunOutcome> => {
+    if (!activeWorkflowId) return "blocked";
     const { nodes, edges } = useWorkflowStore.getState();
     const issues = validateRunnable(nodes, edges);
     if (issues.length > 0) {
       showToast("error", issues[0].message);
       selectNode(issues[0].nodeId);
-      return;
+      return "blocked";
     }
 
     const plan = extractRunPlan(nodes);
     const run = useWorkflowRunStore.getState();
+    // The job that is open now, put back if this run turns out to have nothing to generate.
+    const { workflowId, batchJobId: openJobId, step: openStep, job: openJob, mockupState: openMockupState, mockupResult: openMockupResult } = run;
     const token = ++activeRunToken;
     const isStopped = () => token !== activeRunToken;
     run.begin(activeWorkflowId);
 
     try {
       const prepared = await prepareRun(plan, queryClient);
-      if (isStopped()) return;
+      if (isStopped()) return "blocked";
       useWorkflowRunStore.setState({ batchJobId: prepared.batchJobId });
       if (prepared.attached) {
         showToast("info", "This batch already has a running job. Showing its progress.");
@@ -212,7 +216,7 @@ export const useWorkflowRun = (activeWorkflowId: string | null, isEditorReady: b
           );
         }
         // Stopping before this point leaves a draft job that the next run reuses; after it, the job is running.
-        if (isStopped()) return;
+        if (isStopped()) return "blocked";
         run.setStep("starting");
         await startBatchJob({
           batchJobId: prepared.batchJobId,
@@ -232,10 +236,16 @@ export const useWorkflowRun = (activeWorkflowId: string | null, isEditorReady: b
         queryClient.invalidateQueries({ queryKey: batchJobKeys.byBatch(plan.batchId) }),
         queryClient.invalidateQueries({ queryKey: batchKeys.all }),
       ]);
+      return "started";
     } catch (error) {
-      if (isStopped()) return;
+      if (isStopped()) return "blocked";
+      if (error instanceof NothingPendingError && options.videoFollows) {
+        useWorkflowRunStore.setState({ workflowId, batchJobId: openJobId, step: openStep, job: openJob, mockupState: openMockupState, mockupResult: openMockupResult });
+        return "nothing-pending";
+      }
       useWorkflowRunStore.getState().reset();
       showToast("error", error instanceof RunBlockedError ? error.message : getErrorMessage(error));
+      return "blocked";
     }
   };
 
@@ -256,11 +266,9 @@ export const useWorkflowRun = (activeWorkflowId: string | null, isEditorReady: b
 
     activeRunToken += 1;
     useWorkflowRunStore.getState().reset();
-    resetStatuses();
-    setRunning(false);
     setRunParam(router, null);
     showToast("info", "Run stopped.");
   };
 
-  return { isRunning, start, cancel };
+  return { isBusy: isRunBusy({ step, job, mockupState }), start, cancel };
 };

@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { Film, ImageIcon } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 
 import { NodeShell } from "@/components/workflows/nodes/node-shell";
 import { NodeSummary } from "@/components/workflows/nodes/node-summary";
+import { VideoNodePreview } from "@/components/workflows/nodes/video-node-preview";
 import { summarizeNodeConfig } from "@/helpers/workflow-config";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { WorkflowNode } from "@/types/workflow";
@@ -14,7 +15,6 @@ const MAX_THUMBNAILS = 4;
 
 export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
   const summary = summarizeNodeConfig(data.type, data.config).slice(0, 2);
-  const PreviewIcon = data.type === "generate-video" ? Film : ImageIcon;
   // Select the stored objects and derive the list here: a selector that builds a new array on every
   // call never settles under zustand 5 and loops until React gives up.
   const job = useWorkflowRunStore((state) => state.job);
@@ -35,11 +35,13 @@ export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
   return (
     <NodeShell nodeId={id} data={data} selected={selected} widthClassName="w-72">
       <div className="p-2.5 pb-2">
-        {shown.length > 0 ? (
+        {data.type === "generate-video" ? (
+          <VideoNodePreview />
+        ) : shown.length > 0 ? (
           <div className="space-y-1.5">
             <div className="grid grid-cols-4 gap-1.5">
-              {shown.map((url) => (
-                <div key={url} className="relative aspect-square overflow-hidden rounded-md bg-slate-100">
+              {shown.map((url, index) => (
+                <div key={`${index}:${url}`} className="relative aspect-square overflow-hidden rounded-md bg-slate-100">
                   <Image src={url} alt="" fill sizes="64px" unoptimized className="object-cover" />
                 </div>
               ))}
@@ -48,7 +50,7 @@ export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
           </div>
         ) : (
           <div className="flex aspect-video flex-col items-center justify-center gap-1.5 rounded-lg bg-slate-100 text-slate-400">
-            <PreviewIcon className="size-7" aria-hidden="true" />
+            <ImageIcon className="size-7" aria-hidden="true" />
             <p className="text-[11px] font-medium">Preview appears after run</p>
           </div>
         )}

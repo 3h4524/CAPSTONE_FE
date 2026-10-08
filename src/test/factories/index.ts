@@ -6,13 +6,17 @@ import type { DesignTemplateDetail, DesignTemplateSummary } from "@/types/design
 import type { MockupTemplate } from "@/types/mockup-templates";
 import type { Profile } from "@/types/profile";
 import type { StylePreset } from "@/types/style-presets";
-import type { AvailablePlan, SubscriptionOverview } from "@/types/subscription";
+import type { AvailablePlan, CheckoutStatus, SubscriptionOverview } from "@/types/subscription";
 import type { PagedResult, SupportTicketSummary } from "@/types/support";
-import type { WorkflowDetail, WorkflowEdge, WorkflowNode, WorkflowSummary } from "@/types/workflow";
+import type {
+  WorkflowDefinition,
+  WorkflowDetail,
+  WorkflowEdge,
+  WorkflowNode,
+  WorkflowSummary,
+} from "@/types/workflow";
 
-export const buildAuthenticatedUser = (
-  overrides: Partial<AuthenticatedUser> = {}
-): AuthenticatedUser => ({
+export const buildAuthenticatedUser = (overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUser => ({
   id: "user-1",
   email: "seller@apcs.test",
   fullName: "Nhat Nguyen",
@@ -113,17 +117,40 @@ export const buildWorkflowSummary = (
   ...overrides,
 });
 
-export const buildWorkflowDetail = (overrides: Partial<WorkflowDetail> = {}): WorkflowDetail => ({
-  ...buildWorkflowSummary(),
-  definition: {
-    version: 1,
-    nodes: [],
-    edges: [],
-    viewport: { x: 0, y: 0, zoom: 1 },
-  },
-  createdAt: "2026-01-09T08:00:00Z",
+export const buildWorkflowDefinition = (
+  overrides: Partial<WorkflowDefinition> = {}
+): WorkflowDefinition => ({
+  version: 1,
+  nodes: [
+    {
+      id: "node-1",
+      type: "product-input",
+      label: "Product input",
+      position: { x: 0, y: 0 },
+      config: { batchId: "batch-1" },
+    },
+    {
+      id: "node-2",
+      type: "design-image",
+      label: "Design image",
+      position: { x: 320, y: 0 },
+      config: { model: "sdxl", variants: 3 },
+    },
+  ],
+  edges: [{ id: "edge-1", source: "node-1", target: "node-2" }],
+  viewport: { x: 0, y: 0, zoom: 1 },
   ...overrides,
 });
+
+export const buildWorkflowDetail = (overrides: Partial<WorkflowDetail> = {}): WorkflowDetail => {
+  const definition = overrides.definition ?? buildWorkflowDefinition();
+  return {
+    ...buildWorkflowSummary({ nodeCount: definition.nodes.length }),
+    createdAt: "2026-01-10T09:30:00Z",
+    definition,
+    ...overrides,
+  };
+};
 
 export const buildStylePreset = (overrides: Partial<StylePreset> = {}): StylePreset => ({
   id: "style-1",
@@ -140,16 +167,24 @@ export const buildStylePreset = (overrides: Partial<StylePreset> = {}): StylePre
 
 export const buildMockupTemplate = (overrides: Partial<MockupTemplate> = {}): MockupTemplate => ({
   id: "mockup-1",
-  name: "Ceramic mug",
+  name: "Ceramic mug front",
   productType: "mug",
   baseImageUrl: "https://cdn.apcs.test/mockups/mug-front.png",
   previewImageUrl: null,
-  printAreaConfig: '{"x":0.1,"y":0.1}',
-  outputWidthPx: 1024,
-  outputHeightPx: 1024,
-  usageCount: 8,
+  printAreaConfig: '{"width":180,"height":180}',
+  outputWidthPx: 2000,
+  outputHeightPx: 2000,
+  usageCount: 0,
   isSystemTemplate: true,
   isMine: false,
+  ...overrides,
+});
+
+export const buildCheckoutStatus = (overrides: Partial<CheckoutStatus> = {}): CheckoutStatus => ({
+  status: "pending",
+  planName: "Starter",
+  invoiceNumber: "INV-0001",
+  renewalDate: null,
   ...overrides,
 });
 

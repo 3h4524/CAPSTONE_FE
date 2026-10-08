@@ -24,7 +24,7 @@ export default tseslint.config(
     ],
   },
   {
-    files: ["**/*.{js,jsx,ts,tsx}"],
+    files: ["**/*.{js,jsx,mjs,cjs,mts,ts,tsx}"],
     languageOptions: {
       parserOptions: {
         ecmaVersion: 2020,
@@ -131,13 +131,13 @@ export default tseslint.config(
   },
   // Allow default export in config files
   {
-    files: [
-      "**/*.config.{js,ts,mjs,cjs}",
-      "eslint.config.{js,ts,mjs}",
-      "next.config.{js,ts,mjs}",
-      "postcss.config.{js,ts,mjs}",
-      "tailwind.config.{js,ts,mjs}",
-      "**/i18n/request.{js,ts}",
+files: [
+      "**/*.config.{js,ts,mjs,cjs,mts,cts}",
+      "eslint.config.{js,ts,mjs,cjs,mts,cts}",
+      "next.config.{js,ts,mjs,cjs,mts,cts}",
+      "postcss.config.{js,ts,mjs,cjs,mts,cts}",
+      "tailwind.config.{js,ts,mjs,cjs,mts,cts}",
+      "**/i18n/request.{js,ts,mjs,mts}",
     ],
     rules: {
       "import/no-default-export": "off",

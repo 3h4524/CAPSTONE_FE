@@ -22,6 +22,10 @@ export const importBatchProducts = async (batchId: string, products: BatchProduc
   (await api.post<BatchProductImportResult>(`/api/batches/${batchId}/products/import`, { products })).data;
 export const updateBatchProduct = async ({ batchId, productId, ...input }: SaveProductInput & { batchId: string; productId: string }): Promise<Product> =>
   (await api.put<Product>(`/api/batches/${batchId}/products/${productId}`, input)).data;
+// Sets products back to pending. Without ids, every product of the batch that can be reset.
+export const resetBatchProducts = async ({ batchId, productIds }: { batchId: string; productIds: string[] | null }): Promise<{ resetCount: number }> =>
+  (await api.post<{ resetCount: number }>(`/api/batches/${batchId}/products/reset`, { productIds })).data;
+
 export const deleteBatchProduct = async ({ batchId, productId }: { batchId: string; productId: string }): Promise<void> => {
   await api.delete(`/api/batches/${batchId}/products/${productId}`);
 };

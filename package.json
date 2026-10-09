@@ -11,13 +11,16 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node .next/standalone/server.js",
+    "start": "next start",
     "lint": "eslint . --fix --max-warnings=0 && tsc --noEmit",
     "test": "vitest run",
     "test:node": "tsx --test tests/*.test.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:workflow-ui": "playwright test"
+    "test:workflow-ui": "playwright test",
+    "test:e2e": "playwright test --config e2e/playwright.config.ts",
+    "test:e2e:ui": "playwright test --ui --config e2e/playwright.config.ts",
+    "test:e2e:public": "playwright test --project=public --config e2e/playwright.config.ts"
   },
   "dependencies": {
     "@apcs/video-composition": "file:packages/video-composition",
@@ -55,6 +58,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@eslint/js": "9.32.0",
     "@next/eslint-plugin-next": "^16.0.1",
     "@playwright/test": "1.64.0",

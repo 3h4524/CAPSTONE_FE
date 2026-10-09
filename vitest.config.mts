@@ -31,6 +31,9 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: false,
+    // Vitest's default glob would also collect the Playwright specs under e2e/ and run them in
+    // jsdom, where every Playwright fixture is undefined.
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
     setupFiles: ["./src/test/setup.ts"],
     // Explicit even though Vitest 5 already defaults to true: mocks registered at module scope or
     // in beforeAll otherwise lose their call history between tests.

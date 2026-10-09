@@ -24,7 +24,7 @@ export default tseslint.config(
     ],
   },
   {
-    files: ["**/*.{js,jsx,ts,tsx}"],
+    files: ["**/*.{js,jsx,mjs,cjs,mts,ts,tsx}"],
     languageOptions: {
       parserOptions: {
         ecmaVersion: 2020,
@@ -113,6 +113,15 @@ export default tseslint.config(
       "tailwindcss/no-unnecessary-arbitrary-value": "warn",
     },
   },
+  // Playwright keeps shared helpers in e2e/support/ and the specs in per-project folders, so a spec
+  // has to reach upward to reach them. The '@/' alias only maps into src/, which must not contain
+  // E2E helpers, so the parent-relative import is the only option here.
+  {
+    files: ["e2e/**/*.ts"],
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
   // Allow default export in Next.js convention files
   {
     files: [
@@ -131,13 +140,13 @@ export default tseslint.config(
   },
   // Allow default export in config files
   {
-    files: [
-      "**/*.config.{js,ts,mjs,cjs}",
-      "eslint.config.{js,ts,mjs}",
-      "next.config.{js,ts,mjs}",
-      "postcss.config.{js,ts,mjs}",
-      "tailwind.config.{js,ts,mjs}",
-      "**/i18n/request.{js,ts}",
+files: [
+      "**/*.config.{js,ts,mjs,cjs,mts,cts}",
+      "eslint.config.{js,ts,mjs,cjs,mts,cts}",
+      "next.config.{js,ts,mjs,cjs,mts,cts}",
+      "postcss.config.{js,ts,mjs,cjs,mts,cts}",
+      "tailwind.config.{js,ts,mjs,cjs,mts,cts}",
+      "**/i18n/request.{js,ts,mjs,mts}",
     ],
     rules: {
       "import/no-default-export": "off",

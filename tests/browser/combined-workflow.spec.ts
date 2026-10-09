@@ -50,9 +50,16 @@ const videoRun: WorkflowRun = {
   })),
 };
 
-type Fixtures = { workflow?: ReturnType<typeof workflow>; products?: unknown[]; assets?: MockupAsset[] };
+// What the job's mock-ups look like once they are made.
+const madeMockups = {
+  generatedCount: 0, noDesignImageCount: 0, noCompatibleTemplateCount: 0, noApprovedImageCount: 0, errors: [],
+  images: [{ id: "mockup-1", productId, designImageId: "design-1", mockupTemplateId: templateId, mockupImageUrl: "/fixture-mockup.svg?mockup=1", mockupWidthPx: 600, mockupHeightPx: 900, approvalStatus: "pending", garmentColor: null }],
+};
+const noMockups = { ...madeMockups, images: [] };
 
-const mockApi = async (page: Page, { workflow: current = workflow(), products = [], assets = [] }: Fixtures = {}) => {
+type Fixtures = { workflow?: ReturnType<typeof workflow>; products?: unknown[]; assets?: MockupAsset[]; jobMockups?: typeof madeMockups; batches?: unknown[]; jobs?: unknown[] };
+
+const mockApi = async (page: Page, { workflow: current = workflow(), products = [], assets = [], jobMockups = noMockups, batches = [], jobs = [] }: Fixtures = {}) => {
   const origin = new URL(test.info().project.use.baseURL ?? "http://127.0.0.1:3101").origin;
   const requests: { method: string; path: string; body: unknown }[] = [];
   await page.route("**/api/**", async route => {
@@ -67,6 +74,10 @@ const mockApi = async (page: Page, { workflow: current = workflow(), products = 
     else if (path === `/api/workflows/${workflowId}/runs` || path === `/api/workflow-runs/${runId}`) json = videoRun;
     else if (path === `/api/batch-jobs/${jobId}`) json = batchJob;
     else if (path === `/api/batch-jobs/${jobId}/mockups`) json = { batchJobId: jobId, templateIds: [templateId], garmentColors: [], templateColors: {} };
+    else if (path === `/api/batch-jobs/${jobId}/mockups/images`) json = jobMockups;
+    else if (path === "/api/batches") json = batches;
+    else if (path === `/api/batches/${batchId}/jobs`) json = jobs;
+    else if (path === `/api/batches/${batchId}/products/reset`) json = { resetCount: 1 };
     else if (path === `/api/batches/${batchId}/products`) json = products;
     else if (path === `/api/products/${productId}/mockup-assets`) json = assets;
     else if (path === `/api/products/${productId}/mockup-assets/import-generated`) json = { importedCount: 2, failedCount: 0, mockups: [mockupAsset("ad48d15b-57b9-47b9-84cc-d30a0fb6ad59"), mockupAsset("bd48d15b-57b9-47b9-84cc-d30a0fb6ad59")] };
@@ -151,4 +162,64 @@ test("Run asks for the video's product before anything starts", async ({ page })
   await expect(page.getByText("Choose the product for the video in Product input.")).toBeVisible();
   await expect(page.getByText("Product for the video", { exact: true })).toBeVisible();
   expect(requests).toEqual([]);
+});
+
+test("a reloaded page shows the mock-ups a reviewed job already has", async ({ page }) => {
+  const requests = await mockApi(page, { jobMockups: madeMockups });
+  await page.goto(`/workflows?id=${workflowId}&job=${jobId}`);
+  // The designs were reviewed and their mock-ups made before the reload: nothing is waiting any more.
+  await expect(node(page, "mockup")).toContainText("Done");
+  await expect(node(page, "design-approval")).toContainText("Done");
+  await expect(node(page, "design-approval")).not.toContainText("Needs review");
+  // They are only read, never made again behind the person's back.
+  expect(requests).toEqual([]);
+});
+
+test("a reloaded page carries on to the video once the mock-ups are there", async ({ page }) => {
+  const requests = await mockApi(page, { jobMockups: madeMockups });
+  await page.goto(`/workflows?id=${workflowId}&job=${jobId}&then=video`);
+  await expect(page).toHaveURL(new RegExp(`run=${runId}`));
+  await expect(page).not.toHaveURL(/then=video/);
+  expect(requests.map(r => `${r.method} ${r.path}`)).toEqual([
+    `POST /api/products/${productId}/mockup-assets/import-generated`,
+    `POST /api/workflows/${workflowId}/runs`,
+  ]);
+  await expect(node(page, "approval")).toContainText("Needs input");
+});
+
+test("the note that the video is next waits while the designs are still to be reviewed", async ({ page }) => {
+  const requests = await mockApi(page);
+  await page.goto(`/workflows?id=${workflowId}&job=${jobId}&then=video`);
+  await expect(node(page, "design-approval")).toContainText("Needs review");
+  await expect(page).toHaveURL(/then=video/);
+  expect(requests).toEqual([]);
+});
+
+test("the Batches page sets a failed product back to pending and opens a job on the canvas", async ({ page }) => {
+  const failedId = "1f0e8d7c-6b5a-4f3e-9d2c-1b0a9f8e7d6c";
+  const product = (id: string, name: string, status: string) => ({ id, batchId, name, productType: "tshirt", niche: null, keywords: [], productDescription: null, sourceNotes: null, status, createdAt: null });
+  const requests = await mockApi(page, {
+    batches: [{ id: batchId, name: "Summer drop", description: null, defaultNiche: null, defaultProductType: null, status: "processing", createdAt: "2026-10-05T00:00:00Z", productCount: 2 }],
+    products: [product(failedId, "Lake Day Tee", "failed"), product(productId, "Vintage Fishing Club", "approved")],
+    jobs: [
+      { id: "draft-job", status: "draft", totalProducts: 1, processedProducts: 0, failedProducts: 0, createdAt: "2026-10-06T00:00:00Z", startedAt: null, workflowId: null },
+      { id: jobId, status: "partially_completed", totalProducts: 2, processedProducts: 2, failedProducts: 1, createdAt: "2026-10-05T00:00:00Z", startedAt: "2026-10-05T00:00:00Z", workflowId },
+    ],
+  });
+  await page.goto("/batches");
+  await page.getByRole("button", { name: /Summer drop/ }).first().click();
+
+  await expect(page.getByRole("button", { name: "Reset failed (1)" })).toBeVisible();
+  // Only the failed product offers it: the approved one has designs in use.
+  await expect(page.getByRole("button", { name: "Reset to pending" })).toHaveCount(1);
+  await page.getByRole("button", { name: "Reset to pending" }).click();
+  await expect(page.getByText("Set “Lake Day Tee” back to pending?")).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "Reset to pending" }).click();
+  await expect(page.getByText("1 product is pending again. Run the workflow to generate new designs.")).toBeVisible();
+  expect(requests).toEqual([{ method: "POST", path: `/api/batches/${batchId}/products/reset`, body: { productIds: [failedId] } }]);
+
+  // A draft has nothing to show, so only the started job is listed, and it opens in the workflow it ran from.
+  await page.getByRole("button", { name: "Jobs (1)" }).click();
+  await page.getByRole("menuitem", { name: /Job #1/ }).click();
+  await expect(page).toHaveURL(new RegExp(`/workflows\\?job=${jobId}&id=${workflowId}`));
 });

@@ -1,20 +1,12 @@
-import type { Metadata } from "next";
-
-import { BatchJobView } from "@/components/batch-jobs/batch-job-view";
-import { getPageMetadata } from "@/data/metadata";
-
-export const metadata: Metadata = getPageMetadata({
-  title: "Batch job",
-  description: "Configure image generation and follow the progress of a batch job.",
-  pathname: "/batches",
-  robots: { index: false, follow: false },
-});
+import { redirect } from "next/navigation";
 
 type BatchJobPageProps = {
   params: Promise<{ jobId: string }>;
 };
 
+// A job is shown on the workflow canvas, where its designs are also reviewed. This address stays so that
+// links made before the canvas took over still open the job.
 export default async function BatchJobPage({ params }: BatchJobPageProps) {
   const { jobId } = await params;
-  return <BatchJobView batchJobId={jobId} />;
+  redirect(`/workflows?job=${encodeURIComponent(jobId)}`);
 }

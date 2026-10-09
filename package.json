@@ -11,11 +11,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node .next/standalone/server.js",
+    "start": "next start",
     "lint": "eslint . --fix --max-warnings=0 && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:public": "playwright test --project=public"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -49,8 +52,10 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@eslint/js": "9.32.0",
     "@next/eslint-plugin-next": "^16.0.1",
+    "@playwright/test": "1.64.0",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.19",
     "@testing-library/dom": "10.4.2",

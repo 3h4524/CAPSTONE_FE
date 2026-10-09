@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+import { AUTH_STATE_PATH } from "./e2e/support/auth";
+
 const E2E_BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:4010";
 const E2E_API_BASE_URL = process.env.E2E_API_BASE_URL ?? "http://localhost:5191";
 const IS_CI = !!process.env.CI;
@@ -34,12 +36,13 @@ export default defineConfig({
     },
     {
       // Private routes need a live backend: the auth guard keeps spinning instead of redirecting
-      // when /api/auth/me never resolves. `storageState` is applied per spec (see e2e/support/auth)
-      // rather than here, so a missing seller session skips instead of failing context creation.
+      // when /api/auth/me never resolves. auth.setup.ts always writes the state file (empty when no
+      // seller is configured) because an absent file aborts context creation rather than skipping;
+      // e2e/support/auth's marker file is what tells the specs whether the session is real.
       name: "authenticated",
       testMatch: /private\//,
       dependencies: ["setup"],
-      use: { ...devices["Desktop Chrome"] },
+      use: { ...devices["Desktop Chrome"], storageState: AUTH_STATE_PATH },
     },
   ],
   webServer: {
@@ -50,6 +53,10 @@ export default defineConfig({
     env: {
       PORT: new URL(E2E_BASE_URL).port || "4010",
       NEXT_PUBLIC_API_BASE_URL: E2E_API_BASE_URL,
+      // Blanked so the build does not pick up a developer .env: an unset value keeps the Google
+      // button on its disabled placeholder, which is the state e2e/public/google-absent asserts.
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: "",
+      GOOGLE_ANALYTICS_MEASUREMENT_ID: "",
     },
   },
 });

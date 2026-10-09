@@ -24,9 +24,6 @@ export const countProductTypes = (products: { productType?: string | null }[]) =
     return counts;
   }, {});
 
-export const selectionLabel = (count: number) =>
-  count === 0 ? "Select mock-ups" : `${count} mock-up${count === 1 ? "" : "s"} selected`;
-
 // Mirrors the backend's MockupRules.ParsePrintArea shape: {"x":..,"y":..,"width":..,"height":..}.
 export const parsePrintArea = (json: string): MockupPrintArea | null => {
   try {

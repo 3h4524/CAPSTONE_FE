@@ -5,12 +5,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBatchJobs } from "@/hooks/queries/use-batch-jobs";
-import { BATCH_JOB_PARAM } from "@/hooks/use-batch-run";
+import { BATCH_JOB_PARAM, NEXT_PART_PARAM } from "@/hooks/use-batch-run";
 import { useWorkflowStore } from "@/stores/workflow";
 
 const formatDate = (value: string | null) =>
   value ? new Date(value).toLocaleString([], { dateStyle: "short", timeStyle: "short" }) : "";
 const statusText = (status: string) => status.replaceAll("_", " ");
+
+// Where a run was started, when it was not from the workflow that is open. Runs from before this was
+// recorded, or started outside a workflow, have nothing to say.
+const runOrigin = (runWorkflowId: string | null | undefined, openWorkflowId: string | null) =>
+  !runWorkflowId || !openWorkflowId ? "" : runWorkflowId === openWorkflowId ? " · this workflow" : " · another workflow";
 
 type PreviousRunsSelectProps = {
   batchId: string;
@@ -22,6 +27,7 @@ export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
   const router = useRouter();
   const openRunId = useSearchParams().get(BATCH_JOB_PARAM);
   const isRunning = useWorkflowStore((state) => state.isRunning);
+  const workflowId = useWorkflowStore((state) => state.workflowId);
   const { data: jobs } = useBatchJobs(batchId || undefined);
 
   // Numbered like the Jobs menu on the Batches page (oldest is #1) so the two lists agree. Drafts
@@ -36,6 +42,8 @@ export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
   const openRunById = (jobId: string) => {
     const params = new URLSearchParams(window.location.search);
     params.set(BATCH_JOB_PARAM, jobId);
+    // Looking at an earlier run starts nothing after it.
+    params.delete(NEXT_PART_PARAM);
     router.replace(`/workflows?${params.toString()}`);
   };
 
@@ -55,7 +63,7 @@ export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
               <span className="flex flex-col">
                 <span className="capitalize">{`Run #${number} · ${statusText(job.status)}`}</span>
                 <span className="text-muted-foreground text-xs">
-                  {`${job.totalProducts} ${job.totalProducts === 1 ? "product" : "products"} · ${formatDate(job.startedAt ?? job.createdAt)}`}
+                  {`${job.totalProducts} ${job.totalProducts === 1 ? "product" : "products"} · ${formatDate(job.startedAt ?? job.createdAt)}${runOrigin(job.workflowId, workflowId)}`}
                 </span>
               </span>
             </SelectItem>

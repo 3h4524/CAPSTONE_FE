@@ -37,6 +37,8 @@ export type BatchJobDetail = {
   products: BatchJobProductResult[];
   /** null for jobs started before approval existed. */
   requireApproval?: boolean | null;
+  /** The workflow the job was started from; null when it was started outside one. */
+  workflowId?: string | null;
 };
 
 export type BatchJobSummary = {
@@ -47,6 +49,8 @@ export type BatchJobSummary = {
   failedProducts: number;
   createdAt: string | null;
   startedAt: string | null;
+  /** The workflow the job was started from; null when it was started outside one, or before this was recorded. */
+  workflowId?: string | null;
 };
 
 export type StartBatchJobInput = {
@@ -58,6 +62,8 @@ export type StartBatchJobInput = {
   instructions?: string;
   /** true holds the finished designs for approval before mock-ups; false approves them automatically. */
   requireApproval?: boolean;
+  /** The workflow the job is started from, recorded on the job. */
+  workflowId?: string;
 };
 
 export type StartBatchJobResult = { batchJobId: string; queuedProductCount: number; status: string };

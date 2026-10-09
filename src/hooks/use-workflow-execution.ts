@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { importGeneratedMockups } from "@/api/generated-mockups";
 import { videoWorkflowKeys } from "@/api/video-workflow";
@@ -8,7 +9,7 @@ import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
 import { hasBatchSteps, hasVideoSteps } from "@/helpers/workflow-run";
-import { useBatchRun } from "@/hooks/use-batch-run";
+import { NEXT_PART_PARAM, useBatchRun } from "@/hooks/use-batch-run";
 import { useVideoRunSync, useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
@@ -43,10 +44,13 @@ const startVideoRun = async (queryClient: QueryClient, startRun: () => void) => 
 // whichever is working.
 export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorReady: boolean) => {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const videoIsNext = useSearchParams().get(NEXT_PART_PARAM) === "video";
   const batch = useBatchRun(activeWorkflowId, isEditorReady);
   const video = useWorkflowRuntime();
   const hasBatchRun = useWorkflowRunStore((state) => state.step !== "idle" || state.job !== null);
   const mockupState = useWorkflowRunStore((state) => state.mockupState);
+  const batchJobId = useWorkflowRunStore((state) => state.batchJobId);
   const setRunning = useWorkflowStore((state) => state.setRunning);
   const selectNode = useWorkflowStore((state) => state.selectNode);
   useVideoRunSync(hasBatchRun);
@@ -56,8 +60,8 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     setRunning(isRunning);
   }, [isRunning, setRunning]);
 
-  // Set by a Run that includes the video: once this run's mock-ups are made, the video part follows.
-  const videoFollows = useRef(false);
+  // The job whose video part was started from here, so it is started once however often the page re-renders.
+  const videoStartedFor = useRef<string | null>(null);
   // Set when this page started the video run, so only that run points the person to Mockup Approval.
   const announceWaiting = useRef(false);
   const startVideo = useRef(video.startRun);
@@ -65,12 +69,16 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     startVideo.current = video.startRun;
   });
 
+  // A Run that includes the video leaves a note in the URL. Once the mock-ups of its batch job are made the
+  // video part follows, also on a page that was reloaded in the meantime.
   useEffect(() => {
-    if (!videoFollows.current || mockupState !== "done") return;
-    videoFollows.current = false;
+    if (!videoIsNext || mockupState !== "done" || !batchJobId || video.runId) return;
+    if (videoStartedFor.current === batchJobId) return;
+    videoStartedFor.current = batchJobId;
     announceWaiting.current = true;
+    // The note leaves the URL together with the video run entering it (see useWorkflowRuntime).
     void startVideoRun(queryClient, () => startVideo.current());
-  }, [mockupState, queryClient]);
+  }, [videoIsNext, mockupState, batchJobId, video.runId, queryClient]);
 
   const videoStatus = video.run?.status;
   useEffect(() => {
@@ -101,8 +109,8 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     video.closeRun();
 
     if (hasBatchSteps(nodes) || !wantsVideo) {
+      // When it starts a job, the note that the video is next goes into the URL with the job.
       const outcome = await batch.start({ videoFollows: wantsVideo });
-      if (outcome === "started") videoFollows.current = wantsVideo;
       if (outcome !== "nothing-pending") return;
     }
     announceWaiting.current = true;
@@ -110,9 +118,17 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   };
 
   const cancel = () => {
-    videoFollows.current = false;
-    if (video.isRunning && !batch.isBusy) video.cancelRun();
-    else void batch.cancel();
+    if (video.isRunning && !batch.isBusy) {
+      video.cancelRun();
+      return;
+    }
+    // Stopping the designs also drops the video that was to follow them.
+    const query = new URLSearchParams(window.location.search);
+    if (query.has(NEXT_PART_PARAM)) {
+      query.delete(NEXT_PART_PARAM);
+      router.replace(`/workflows?${query.toString()}`, { scroll: false });
+    }
+    void batch.cancel();
   };
 
   return { isRunning, isPending: video.isPending, start, cancel };

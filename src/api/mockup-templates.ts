@@ -70,6 +70,10 @@ export type GenerateMockupImageInput = {
 export const generateMockupImage = async (designImageId: string, input: GenerateMockupImageInput): Promise<MockupImage> =>
   (await api.post<MockupImage>(`/api/design-images/${designImageId}/mockups`, input)).data;
 
+// The mock-ups the job already has for its selected templates. Makes none, so it is safe when a page opens.
+export const getBatchJobMockups = async (batchJobId: string): Promise<GenerateAllMockupsResult> =>
+  (await api.get<GenerateAllMockupsResult>(`/api/batch-jobs/${batchJobId}/mockups/images`)).data;
+
 export const generateAllBatchMockups = async (batchJobId: string): Promise<GenerateAllMockupsResult> =>
   (await api.post<GenerateAllMockupsResult>(`/api/batch-jobs/${batchJobId}/mockups/generate`)).data;
 

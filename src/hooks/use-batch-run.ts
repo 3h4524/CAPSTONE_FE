@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { batchJobKeys, cancelBatchJob, startBatchJob } from "@/api/batch-jobs";
 import { batchKeys } from "@/api/batches";
-import { applyBatchMockupTemplates, generateAllBatchMockups, getBatchMockupSelection, mockupTemplateKeys } from "@/api/mockup-templates";
+import { applyBatchMockupTemplates, generateAllBatchMockups, getBatchJobMockups, getBatchMockupSelection, mockupTemplateKeys } from "@/api/mockup-templates";
 import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
 import {
@@ -27,13 +27,19 @@ import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 // The batch job a reloaded page follows. (`run` in the same URL is the video run.)
 export const BATCH_JOB_PARAM = "job";
 
+// Set to "video" while a run still has to go on to the video once its mock-ups are made, so a page that
+// was reloaded in between carries on. Removed when the video part starts.
+export const NEXT_PART_PARAM = "then";
+
 /** How a start ended: the batch job is under way, there was nothing left to generate, or something has to be fixed first. */
 export type BatchRunOutcome = "started" | "nothing-pending" | "blocked";
 
-const setRunParam = (router: ReturnType<typeof useRouter>, batchJobId: string | null) => {
+const setRunParam = (router: ReturnType<typeof useRouter>, batchJobId: string | null, videoFollows = false) => {
   const params = new URLSearchParams(window.location.search);
   if (batchJobId) params.set(BATCH_JOB_PARAM, batchJobId);
   else params.delete(BATCH_JOB_PARAM);
+  if (batchJobId && videoFollows) params.set(NEXT_PART_PARAM, "video");
+  else params.delete(NEXT_PART_PARAM);
   const query = params.toString();
   router.replace(query ? `/workflows?${query}` : "/workflows");
 };
@@ -61,6 +67,21 @@ export const generateRunMockups = async (batchJobId: string, options: { onlyIfSe
     if (useWorkflowRunStore.getState().batchJobId !== batchJobId) return;
     useWorkflowRunStore.getState().setMockupState("failed");
     showToast("error", getErrorMessage(error));
+  }
+};
+
+// Shows the mock-ups a job already has, without making any: after a reload the page knows nothing of them,
+// and a job whose designs need approval must not have its mock-ups made until the person asks.
+export const restoreRunMockups = async (batchJobId: string) => {
+  try {
+    const result = await getBatchJobMockups(batchJobId);
+    const run = useWorkflowRunStore.getState();
+    // Nothing made yet: the designs are still waiting for the review to finish.
+    if (run.batchJobId !== batchJobId || run.mockupState !== "idle" || result.images.length === 0) return;
+    run.setMockupResult(result);
+    run.setMockupState("done");
+  } catch {
+    // Not being able to show them changes nothing: the panel can still ask for the mock-ups.
   }
 };
 
@@ -171,12 +192,13 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
 
   useEffect(() => {
     if (!isEditorReady || !hasMockupNode || !job || step !== "watching") return;
-    // A job that needs approval waits: the mock-ups are asked for once the designs are reviewed.
-    if (job.requireApproval === true) return;
     if (!DESIGNS_READY_STATUSES.includes(job.status) || mockupState !== "idle") return;
     if (autoMockupJobs.current.has(job.id)) return;
     autoMockupJobs.current.add(job.id);
-    void generateRunMockups(job.id, { onlyIfSelected: true });
+    // A job that needs approval waits: its mock-ups are made once the designs are reviewed. The ones made
+    // before a reload are only shown again.
+    if (job.requireApproval === true) void restoreRunMockups(job.id);
+    else void generateRunMockups(job.id, { onlyIfSelected: true });
   }, [isEditorReady, hasMockupNode, job, step, mockupState]);
 
   // `videoFollows`: the run goes on to the video afterwards, so a batch whose designs are all made is not an error.
@@ -226,11 +248,12 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
           aspectRatio: plan.aspectRatio,
           ...(plan.instructions ? { instructions: plan.instructions } : {}),
           requireApproval: plan.requireApproval,
+          workflowId: activeWorkflowId,
         });
         showToast("success", "Image generation started.");
       }
       run.setStep("watching");
-      setRunParam(router, prepared.batchJobId);
+      setRunParam(router, prepared.batchJobId, options.videoFollows);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: batchJobKeys.detail(prepared.batchJobId) }),
         queryClient.invalidateQueries({ queryKey: batchJobKeys.byBatch(plan.batchId) }),

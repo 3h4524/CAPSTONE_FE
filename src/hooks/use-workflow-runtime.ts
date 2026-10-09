@@ -7,6 +7,7 @@ import { isBatchRunNode, isVideoRunNode, toCanvasStatus } from "@/helpers/workfl
 import { useStartWorkflowRun } from "@/hooks/mutations/use-start-workflow-run";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { useWorkflowRun } from "@/hooks/queries/use-workflow-run";
+import { NEXT_PART_PARAM } from "@/hooks/use-batch-run";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { WorkflowNodeData } from "@/types/workflow";
 import { uuid } from "@/utils/uuid";
@@ -34,6 +35,8 @@ export const useWorkflowRuntime = () => {
       const query = new URLSearchParams(window.location.search);
       query.set("id", result.workflowId);
       query.set(VIDEO_RUN_PARAM, result.id);
+      // The video part has started, so the note that it was still to come goes.
+      query.delete(NEXT_PART_PARAM);
       router.replace(`/workflows?${query.toString()}`, { scroll: false });
     } });
   };

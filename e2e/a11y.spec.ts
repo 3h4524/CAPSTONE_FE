@@ -22,6 +22,14 @@ const assertNoBlockingViolations = async (
 };
 
 test.describe("accessibility", () => {
+  // /features wraps its sections in Reveal, which starts every section at opacity 0 and fades it in
+  // on scroll. axe samples whatever frame it lands on, so an animating section reads as a
+  // near-background foreground colour and reports a contrast violation that the settled page does
+  // not have. `reduce` makes Reveal render its children statically, which both skips the animation
+  // and reveals the below-the-fold sections the whileInView animation would otherwise leave at
+  // opacity 0.
+  test.use({ reducedMotion: "reduce" });
+
   for (const route of ["/", "/features"]) {
     test(`no serious or critical violations on ${route}`, async ({ page }, testInfo) => {
       await page.goto(route);

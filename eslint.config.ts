@@ -113,6 +113,15 @@ export default tseslint.config(
       "tailwindcss/no-unnecessary-arbitrary-value": "warn",
     },
   },
+  // Playwright keeps shared helpers in e2e/support/ and the specs in per-project folders, so a spec
+  // has to reach upward to reach them. The '@/' alias only maps into src/, which must not contain
+  // E2E helpers, so the parent-relative import is the only option here.
+  {
+    files: ["e2e/**/*.ts"],
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
   // Allow default export in Next.js convention files
   {
     files: [

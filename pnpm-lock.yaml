@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@apcs/video-composition':
-        specifier: file:../CAPSTONE_BE/shared/video-composition
-        version: file:../CAPSTONE_BE/shared/video-composition(react@19.2.8)(remotion@4.0.533(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
+        specifier: file:packages/video-composition
+        version: file:packages/video-composition(react@19.2.8)(remotion@4.0.533(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.9.1(ajv@8.17.1)(react-hook-form@7.86.0(react@19.2.8))(zod@4.1.13)
@@ -190,8 +190,8 @@ packages:
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
 
-  '@apcs/video-composition@file:../CAPSTONE_BE/shared/video-composition':
-    resolution: {directory: ../CAPSTONE_BE/shared/video-composition, type: directory}
+  '@apcs/video-composition@file:packages/video-composition':
+    resolution: {directory: packages/video-composition, type: directory}
     peerDependencies:
       react: ^19.2.0
       remotion: 4.0.533
@@ -3506,7 +3506,7 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@apcs/video-composition@file:../CAPSTONE_BE/shared/video-composition(react@19.2.8)(remotion@4.0.533(react-dom@19.2.8(react@19.2.8))(react@19.2.8))':
+  '@apcs/video-composition@file:packages/video-composition(react@19.2.8)(remotion@4.0.533(react-dom@19.2.8(react@19.2.8))(react@19.2.8))':
     dependencies:
       react: 19.2.8
       remotion: 4.0.533(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

@@ -8,7 +8,7 @@ import { videoWorkflowKeys } from "@/api/video-workflow";
 import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
-import { hasBatchSteps, hasVideoSteps } from "@/helpers/workflow-run";
+import { hasBatchSteps, hasListingSteps, hasVideoSteps } from "@/helpers/workflow-run";
 import { NEXT_PART_PARAM, useBatchRun } from "@/hooks/use-batch-run";
 import { useVideoRunSync, useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -92,6 +92,22 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   const start = async () => {
     const { nodes, isDirty } = useWorkflowStore.getState();
     const wantsVideo = hasVideoSteps(nodes);
+    const listingOnly = hasListingSteps(nodes) && !hasBatchSteps(nodes) && !wantsVideo;
+    if (listingOnly) {
+      if (isDirty) {
+        showToast("warning", "Save your configuration before running.");
+        return;
+      }
+      const input = findNode("product-input");
+      if (input && !readString(input.data.config.productId)) {
+        showToast("error", "Choose the product for listing content in Product input.");
+        selectNode(input.id);
+        return;
+      }
+      video.closeRun();
+      video.startRun();
+      return;
+    }
     if (wantsVideo) {
       // The video run is made from the saved workflow, for one product.
       if (isDirty) {

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { showToast } from "@/helpers/toast";
-import { isBatchRunNode, isVideoRunNode, toCanvasStatus } from "@/helpers/workflow-run";
+import { isBatchRunNode, isServerRunNode, toCanvasStatus } from "@/helpers/workflow-run";
 import { useStartWorkflowRun } from "@/hooks/mutations/use-start-workflow-run";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { useWorkflowRun } from "@/hooks/queries/use-workflow-run";
@@ -66,7 +66,7 @@ export const useVideoRunSync = (hasBatchRun: boolean) => {
         const type = node.data.type;
         const step = run?.nodes.find(n => n.nodeId === node.id);
         let next: Pick<WorkflowNodeData, "status" | "stage" | "progress"> | null = null;
-        if (isVideoRunNode(type)) next = step ? { status: toCanvasStatus(step.status), stage: step.stage, progress: step.progress } : { status: "idle", stage: null, progress: 0 };
+        if (isServerRunNode(type)) next = step ? { status: toCanvasStatus(step.status), stage: step.stage, progress: step.progress } : { status: "idle", stage: null, progress: 0 };
         // Without a batch job these steps show what the video run recorded, and nothing once it is closed.
         else if (!hasBatchRun && isBatchRunNode(type)) next = { status: step ? toCanvasStatus(step.status) : "idle", stage: null, progress: 0 };
         if (!next || (next.status === node.data.status && (next.stage ?? null) === (node.data.stage ?? null) && (next.progress ?? 0) === (node.data.progress ?? 0))) return node;

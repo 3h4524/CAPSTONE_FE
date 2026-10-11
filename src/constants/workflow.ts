@@ -237,12 +237,12 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
   "generate-video": {
     type: "generate-video",
     label: "Generate Video",
-    description: "Silent Standard Showcase with square, portrait and landscape output. AI modes are coming later.",
+    description: "Mix AI Shot with Standard scenes or generate a full AI video with Veo.",
     icon: Film,
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { mode: "standard", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "tall", durationSeconds: 12, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" }, fallbackToStandard: true },
+    defaultConfig: { mode: "standard", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "tall", durationSeconds: 12, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" }, aiShotOptions: { coverage: "single_scene", concept: "product_cinematic", sceneIndex: 0, mockupId: null, prompt: null, rightsConfirmed: false, fullSceneMockupIds: null }, fallbackToStandard: true },
     fields: [
       { kind: "video-modes", name: "mode", label: "Video mode" },
       { kind: "video-formats", name: "outputFormat", label: "Output format" },

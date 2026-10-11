@@ -1,4 +1,4 @@
-import { RUN_ORDER, WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
+import { DUPLICATE_NODE_OFFSET, RUN_ORDER, WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
 import { normalizeNodeConfig, readString } from "@/helpers/workflow-config";
 import { findMissingMockupTemplates, isRunnableNode } from "@/helpers/workflow-run";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
@@ -181,6 +181,38 @@ export const createWorkflowNode = (type: WorkflowNodeType, position: WorkflowPos
     status: "idle",
   },
 });
+
+export const duplicateWorkflowSelection = (
+  nodes: WorkflowNode[],
+  edges: WorkflowEdge[],
+  selectedIds: string[]
+): { nodes: WorkflowNode[]; edges: WorkflowEdge[]; addedNodeIds: string[] } => {
+  const selected = new Set(selectedIds);
+  const nextIdByOldId = new Map<string, string>();
+  const duplicatedNodes: WorkflowNode[] = [];
+  const addedNodeIds: string[] = [];
+  nodes.forEach((node) => {
+    if (!selected.has(node.id)) return;
+    const nextId = uuid();
+    nextIdByOldId.set(node.id, nextId);
+    addedNodeIds.push(nextId);
+    duplicatedNodes.push({
+      ...node,
+      id: nextId,
+      position: { x: node.position.x + DUPLICATE_NODE_OFFSET, y: node.position.y + DUPLICATE_NODE_OFFSET },
+      selected: true,
+      data: { ...node.data, config: { ...node.data.config }, status: "idle" },
+    });
+  });
+  const duplicatedEdges: WorkflowEdge[] = [];
+  edges.forEach((edge) => {
+    const nextSource = nextIdByOldId.get(edge.source);
+    const nextTarget = nextIdByOldId.get(edge.target);
+    if (!nextSource || !nextTarget) return;
+    duplicatedEdges.push({ ...edge, id: uuid(), source: nextSource, target: nextTarget, selected: false });
+  });
+  return { nodes: duplicatedNodes, edges: duplicatedEdges, addedNodeIds };
+};
 
 export const toWorkflowNodes = (definition: WorkflowDefinition): WorkflowNode[] =>
   definition.nodes.map((node) => ({

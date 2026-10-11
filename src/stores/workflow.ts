@@ -114,7 +114,7 @@ const pushHistory = (
   return pushSnapshot(state, takeSnapshot(state), kind);
 };
 
-const haveNodePositionsChanged = (before: WorkflowNode[], after: WorkflowNode[]) => {
+const hasNodePositionsChanged = (before: WorkflowNode[], after: WorkflowNode[]) => {
   if (before.length !== after.length) return true;
   return after.some((node, index) => {
     const previous = before[index];
@@ -302,7 +302,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
     set((state) => {
       const stashed = dragSnapshot;
       dragSnapshot = null;
-      if (!stashed || !haveNodePositionsChanged(stashed.nodes, state.nodes)) return state;
+      if (!stashed || !hasNodePositionsChanged(stashed.nodes, state.nodes)) return state;
       return pushSnapshot(state, stashed, "structure");
     }),
 

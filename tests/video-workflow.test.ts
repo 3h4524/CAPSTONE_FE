@@ -46,6 +46,20 @@ test("rejects unsupported or more than four scene motions", () => {
 test("manual selection requires a mockup", () => assert.equal(generateVideoConfigSchema.safeParse({ ...config, assetSelection: "manual" }).success, false));
 test("duplicate source IDs are rejected", () => assert.equal(generateVideoConfigSchema.safeParse({ ...config, selectedMockupIds: [mockup, mockup] }).success, false));
 test("duplicate scene IDs are rejected", () => assert.equal(generateVideoConfigSchema.safeParse({ ...config, sceneOrder: [mockup, mockup] }).success, false));
+test("AI Shot accepts one mixed scene and full 8/15-second videos", () => {
+  const aiShotOptions = { coverage: "single_scene", concept: "product_cinematic", sceneIndex: 0, mockupId: null, prompt: null, rightsConfirmed: false, fullSceneMockupIds: null };
+  assert.equal(generateVideoConfigSchema.safeParse({ ...config, mode: "ai_shot", aiShotOptions }).success, true);
+  assert.equal(generateVideoConfigSchema.safeParse({ ...config, mode: "ai_shot", durationSeconds: 8, aiShotOptions: { ...aiShotOptions, coverage: "full_video" } }).success, true);
+  assert.equal(generateVideoConfigSchema.safeParse({ ...config, mode: "ai_shot", durationSeconds: 15, aiShotOptions: { ...aiShotOptions, coverage: "full_video" } }).success, true);
+  assert.equal(generateVideoConfigSchema.safeParse({ ...config, mode: "ai_shot", durationSeconds: 12, aiShotOptions: { ...aiShotOptions, coverage: "full_video" } }).success, false);
+  assert.equal(generateVideoConfigSchema.safeParse({ ...config, mode: "ai_shot", durationSeconds: 8, aiShotOptions }).success, false);
+});
+test("human AI templates need explicit image rights and AI Background is removed", () => {
+  const options = { coverage: "single_scene", concept: "lifestyle_motion", sceneIndex: 0, mockupId: mockup, prompt: null, rightsConfirmed: false, fullSceneMockupIds: null };
+  assert.equal(generateVideoConfigSchema.safeParse({ ...config, mode: "ai_shot", aiShotOptions: options }).success, false);
+  assert.equal(generateVideoConfigSchema.safeParse({ ...config, mode: "ai_shot", aiShotOptions: { ...options, rightsConfirmed: true } }).success, true);
+  assert.equal(generateVideoConfigSchema.safeParse({ ...config, mode: "ai_background" }).success, false);
+});
 test("assets form is independent of an invalid duration", () => assert.deepEqual(videoAssetSelectionSchema.parse({ ...config, durationSeconds: 0 }), { assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [] }));
 test("scene reorder does not mutate the original", () => { const original = ["hero", "detail", "variant"]; assert.deepEqual(moveScene(original, 1, -1), ["detail", "hero", "variant"]); assert.deepEqual(original, ["hero", "detail", "variant"]); });
 test("out-of-range scene reorder preserves order", () => assert.deepEqual(moveScene(["hero", "detail"], 0, -1), ["hero", "detail"]));

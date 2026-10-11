@@ -9,6 +9,7 @@ import { NODE_CARD_WIDTHS, WORKFLOW_DND_MIME } from "@/constants/workflow";
 import { isWorkflowNodeType } from "@/helpers/workflow-config";
 import { createWorkflowNode, isConnectionAllowed } from "@/helpers/workflow-graph";
 import { useCanvasShortcuts } from "@/hooks/use-canvas-shortcuts";
+import { useWorkflowSave } from "@/hooks/use-workflow-save";
 import { useWorkflowStore } from "@/stores/workflow";
 import {
   Background,
@@ -39,8 +40,11 @@ export const WorkflowCanvas = () => {
   const addNode = useWorkflowStore((state) => state.addNode);
   const selectNodes = useWorkflowStore((state) => state.selectNodes);
   const clearSelection = useWorkflowStore((state) => state.clearSelection);
+  const beginNodeDrag = useWorkflowStore((state) => state.beginNodeDrag);
+  const commitNodeDrag = useWorkflowStore((state) => state.commitNodeDrag);
+  const { saveWorkflow } = useWorkflowSave();
 
-  useCanvasShortcuts();
+  useCanvasShortcuts({ saveWorkflow });
 
   const runningNodeIds = new Set(
     nodes.filter((node) => node.data.status === "running").map((node) => node.id)
@@ -80,6 +84,8 @@ export const WorkflowCanvas = () => {
         isValidConnection={validateConnection}
         onSelectionChange={({ nodes: selectedNodes }) => selectNodes(selectedNodes.map((node) => node.id))}
         onPaneClick={clearCanvasSelection}
+        onNodeDragStart={beginNodeDrag}
+        onNodeDragStop={commitNodeDrag}
         onDragOver={allowDrop}
         onDrop={dropNode}
         nodesDraggable={!isRunning}

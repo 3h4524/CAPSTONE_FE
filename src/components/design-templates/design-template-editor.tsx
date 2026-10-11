@@ -188,7 +188,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
   if (loading) {
     return (
       <main
-        className="mx-auto w-full max-w-[1180px] px-4 py-10 sm:px-6 lg:px-8"
+        className="w-full min-w-0 p-4 sm:p-6"
         aria-label="Loading template editor"
       >
         <div className="h-10 w-64 animate-pulse rounded bg-slate-200" />
@@ -202,7 +202,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
 
   if (optionsQuery.isError || (isEditing && templateQuery.isError)) {
     return (
-      <main className="flex min-h-[65vh] items-center justify-center p-6 text-center">
+      <main className="flex min-h-[65vh] w-full min-w-0 items-center justify-center p-4 text-center sm:p-6">
         <div className="max-w-md rounded-[22px] border border-slate-200 bg-white p-8 shadow-[0_18px_50px_rgba(39,55,80,0.08)]">
           <Layers3 className="mx-auto size-8 text-slate-400" aria-hidden="true" />
           <h1 className="font-display mt-4 text-2xl font-semibold">Editor could not be loaded</h1>
@@ -223,7 +223,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1180px] px-4 pt-7 pb-12 sm:px-6 lg:px-8">
+    <main className="w-full min-w-0 p-4 sm:p-6">
       <button
         type="button"
         className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-950 focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"

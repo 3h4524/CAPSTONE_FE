@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 
-import { MockupTemplateHost } from "@/components/batch-setup/mockup-template/mockup-template-host";
+import { MockupTemplatesPage } from "@/components/mockups/mockup-templates-page";
 import { getPageMetadata } from "@/data/metadata";
 
 export const metadata: Metadata = getPageMetadata({
   title: "Mock-up Templates",
-  description: "Temporary host to verify the mock-up template picker.",
+  description: "Browse system mock-ups and manage the product photos you uploaded.",
   pathname: "/mockups",
   robots: { index: false, follow: false },
 });
 
 export default function Page() {
-  return <MockupTemplateHost />;
+  return <MockupTemplatesPage />;
 }

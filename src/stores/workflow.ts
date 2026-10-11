@@ -22,6 +22,7 @@ const DIRTY_EDGE_CHANGES = new Set<EdgeChange["type"]>(["remove", "add", "replac
 
 type WorkflowEditorState = {
   workflowId: string | null;
+  revision: number;
   name: string;
   description: string;
   nodes: WorkflowNode[];
@@ -47,6 +48,7 @@ type WorkflowEditorState = {
 
 const INITIAL_STATE = {
   workflowId: null,
+  revision: 0,
   name: "",
   description: "",
   nodes: [],
@@ -63,6 +65,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set) => ({
     set({
       ...INITIAL_STATE,
       workflowId: workflow.id,
+      revision: workflow.revision,
       name: workflow.name,
       description: workflow.description,
       nodes: toWorkflowNodes(workflow.definition),
@@ -141,7 +144,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set) => ({
   setRunning: (isRunning) => set({ isRunning }),
 
   markSaved: (workflow) =>
-    set({ name: workflow.name, description: workflow.description, isDirty: false }),
+    set({ name: workflow.name, description: workflow.description, revision: workflow.revision, isDirty: false }),
 
   reset: () => set(INITIAL_STATE),
 }));

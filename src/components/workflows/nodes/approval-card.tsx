@@ -5,11 +5,23 @@ import { ShieldCheck } from "lucide-react";
 import { NodeShell } from "@/components/workflows/nodes/node-shell";
 import { NodeSummary } from "@/components/workflows/nodes/node-summary";
 import { readString, summarizeNodeConfig } from "@/helpers/workflow-config";
-import type { WorkflowNode } from "@/types/workflow";
+import { countApprovals } from "@/helpers/workflow-run";
+import { useWorkflowRunStore } from "@/stores/workflow-run";
+import type { WorkflowNode, WorkflowNodeType } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 import type { NodeProps } from "@xyflow/react";
 
+// What each review step waits for while it is on manual review.
+const MANUAL_HINTS: Partial<Record<WorkflowNodeType, string>> = {
+  "design-approval": "Designs pause here until approved.",
+  "approval-gate": "Approve current mockup revisions before rendering.",
+  "review-video": "Approve the exact video version before export.",
+};
+
 export const ApprovalCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
+  const job = useWorkflowRunStore((state) => state.job);
+  // The counts are of designs, so only Design approval shows them.
+  const counts = data.type === "design-approval" && job?.requireApproval === true ? countApprovals(job) : null;
   const summary = summarizeNodeConfig(data.type, data.config).slice(0, 2);
   const isAuto = readString(data.config.mode) === "auto";
 
@@ -26,7 +38,13 @@ export const ApprovalCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =>
           {isAuto ? "Auto-approve" : "Manual review"}
         </span>
         <NodeSummary lines={summary} tone="amber" />
-        {!isAuto && <p className="text-[11px] leading-snug text-amber-700">Designs pause here until approved.</p>}
+        {counts ? (
+          <p className="text-[11px] leading-snug text-amber-800">
+            {counts.approved} approved · {counts.rejected} rejected · {counts.pending} to review
+          </p>
+        ) : (
+          !isAuto && <p className="text-[11px] leading-snug text-amber-700">{MANUAL_HINTS[data.type] ?? "Paused here until approved."}</p>
+        )}
       </div>
     </NodeShell>
   );

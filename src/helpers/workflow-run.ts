@@ -1,5 +1,5 @@
 import { BATCH_RUN_NODE_TYPES, RUNNABLE_NODE_TYPES, VIDEO_RUN_NODE_TYPES } from "@/constants/workflow";
-import { readNumber, readString, readStringArray, readTemplateColors } from "@/helpers/workflow-config";
+import { readNumber, readString, readStringArray, readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type { MockupState, RunStep } from "@/stores/workflow-run";
 import type { BatchJobDetail } from "@/types/batch-jobs";
@@ -11,7 +11,12 @@ export const FINISHED_JOB_STATUSES = ["completed", "partially_completed", "faile
 export const DESIGNS_READY_STATUSES = ["completed", "partially_completed"];
 
 /** What a run sends to the job as its mock-up selection. */
-export type MockupSelection = { templateIds: string[]; garmentColors: string[]; templateColors: Record<string, string[]> };
+export type MockupSelection = {
+  templateIds: string[];
+  garmentColors: string[];
+  templateColors: Record<string, string[]>;
+  templateBackgrounds: Record<string, string>;
+};
 
 export type RunPlan = {
   batchId: string;
@@ -196,14 +201,17 @@ export const isRunBusy = (run: RunSnapshot) =>
   run.mockupState === "running";
 
 // The mock-up selection of an Apply mock-up node: its templates, the colors each template was given and the
-// shared list older workflows were saved with. Colors of a template that is no longer selected are left out,
-// since the backend rejects a color list for a template that is not part of the selection.
+// shared list older workflows were saved with, and the background each template is put on. What belongs to a
+// template that is no longer selected is left out, since the backend rejects it.
 export const extractMockupSelection = (config: WorkflowNodeConfig): MockupSelection => {
   const templateIds = readStringArray(config.mockupTemplateIds);
   const templateColors = Object.fromEntries(
     Object.entries(readTemplateColors(config.templateColors)).filter(([id, colors]) => templateIds.includes(id) && colors.length > 0)
   );
-  return { templateIds, garmentColors: [], templateColors };
+  const templateBackgrounds = Object.fromEntries(
+    Object.entries(readTemplateBackgrounds(config.templateBackgrounds)).filter(([id]) => templateIds.includes(id))
+  );
+  return { templateIds, garmentColors: [], templateColors, templateBackgrounds };
 };
 
 export type ApprovalCounts = { pending: number; approved: number; rejected: number };

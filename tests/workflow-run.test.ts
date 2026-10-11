@@ -153,7 +153,7 @@ test("steps connect to the next step on the canvas, so no approval is skipped", 
 
 test("a loaded config keeps what the node declares and drops the rest", () => {
   const mockup = normalizeNodeConfig("apply-mockup", { mockupTemplateIds: [id], garmentColors: ["#111111"], artworkGroupKey: "summer" });
-  assert.deepEqual(mockup, { mockupTemplateIds: [id], templateColors: {}, mockupIds: [], artworkGroupKey: "summer" });
+  assert.deepEqual(mockup, { mockupTemplateIds: [id], templateColors: {}, templateBackgrounds: {}, mockupIds: [], artworkGroupKey: "summer" });
 
   const video = normalizeNodeConfig("generate-video", { template: "design_detail", standardOptions: { motionPreset: "zoom", crop: "safe", transition: "cut" }, withMusic: true });
   assert.equal(video.template, "design_detail");
@@ -165,17 +165,17 @@ test("a loaded config keeps what the node declares and drops the rest", () => {
 });
 
 test("the mock-up selection sends colors only for the templates that are selected", () => {
-  const selection = extractMockupSelection({ mockupTemplateIds: [id], templateColors: { [id]: ["#1F2A44"], [other]: ["#B22222"], empty: [] } });
-  assert.deepEqual(selection, { templateIds: [id], garmentColors: [], templateColors: { [id]: ["#1F2A44"] } });
+  const selection = extractMockupSelection({ mockupTemplateIds: [id], templateColors: { [id]: ["#1F2A44"], [other]: ["#B22222"], empty: [] }, templateBackgrounds: { [id]: "#EDE6DA", [other]: "#22262E" } });
+  assert.deepEqual(selection, { templateIds: [id], garmentColors: [], templateColors: { [id]: ["#1F2A44"] }, templateBackgrounds: { [id]: "#EDE6DA" } });
 });
 
 test("approvals are counted per design and estimate the mock-ups they make", () => {
   assert.deepEqual(countApprovals(job({})), { pending: 1, approved: 1, rejected: 1 });
   const approved = job({}, [product("p1", "tshirt", [image("a", "approved"), image("b", "approved"), image("x", "rejected")]), product("p2", "mug", [image("c", "approved")])]);
   const templates = [{ id: "t1", productType: "tshirt", allowRecolor: true }, { id: "m1", productType: "mug", allowRecolor: false }, { id: "h1", productType: "hoodie", allowRecolor: true }];
-  assert.equal(estimateMockupCount(approved, { templateIds: ["t1", "m1"], garmentColors: [], templateColors: { t1: ["#1", "#2"] } }, templates), 5);
-  assert.equal(estimateMockupCount(approved, { templateIds: ["t1"], garmentColors: [], templateColors: {} }, templates), 2);
-  assert.equal(estimateMockupCount(approved, { templateIds: ["h1"], garmentColors: [], templateColors: {} }, templates), 0);
+  assert.equal(estimateMockupCount(approved, { templateIds: ["t1", "m1"], garmentColors: [], templateColors: { t1: ["#1", "#2"] }, templateBackgrounds: {} }, templates), 5);
+  assert.equal(estimateMockupCount(approved, { templateIds: ["t1"], garmentColors: [], templateColors: {}, templateBackgrounds: {} }, templates), 2);
+  assert.equal(estimateMockupCount(approved, { templateIds: ["h1"], garmentColors: [], templateColors: {}, templateBackgrounds: {} }, templates), 0);
 });
 
 test("artwork groups keyed by an id are numbered, named ones keep their name", () => {

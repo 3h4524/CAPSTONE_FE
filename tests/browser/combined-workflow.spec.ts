@@ -57,9 +57,9 @@ const madeMockups = {
 };
 const noMockups = { ...madeMockups, images: [] };
 
-type Fixtures = { workflow?: ReturnType<typeof workflow>; products?: unknown[]; assets?: MockupAsset[]; jobMockups?: typeof madeMockups; batches?: unknown[]; jobs?: unknown[] };
+type Fixtures = { workflow?: ReturnType<typeof workflow>; products?: unknown[]; assets?: MockupAsset[]; jobMockups?: typeof madeMockups; batches?: unknown[]; jobs?: unknown[]; templates?: unknown[] };
 
-const mockApi = async (page: Page, { workflow: current = workflow(), products = [], assets = [], jobMockups = noMockups, batches = [], jobs = [] }: Fixtures = {}) => {
+const mockApi = async (page: Page, { workflow: current = workflow(), products = [], assets = [], jobMockups = noMockups, batches = [], jobs = [], templates = [] }: Fixtures = {}) => {
   const origin = new URL(test.info().project.use.baseURL ?? "http://127.0.0.1:3101").origin;
   const requests: { method: string; path: string; body: unknown }[] = [];
   await page.route("**/api/**", async route => {
@@ -75,6 +75,7 @@ const mockApi = async (page: Page, { workflow: current = workflow(), products = 
     else if (path === `/api/batch-jobs/${jobId}`) json = batchJob;
     else if (path === `/api/batch-jobs/${jobId}/mockups`) json = { batchJobId: jobId, templateIds: [templateId], garmentColors: [], templateColors: {} };
     else if (path === `/api/batch-jobs/${jobId}/mockups/images`) json = jobMockups;
+    else if (path === "/api/mockup-templates") json = templates;
     else if (path === "/api/batches") json = batches;
     else if (path === `/api/batches/${batchId}/jobs`) json = jobs;
     else if (path === `/api/batches/${batchId}/products/reset`) json = { resetCount: 1 };
@@ -242,4 +243,30 @@ test("the Batches page counts every product under one status, the ones in review
   await page.getByRole("button", { name: /^Review\s*1$/ }).click();
   await expect(page.getByRole("cell", { name: "Product 4", exact: true })).toBeVisible();
   await expect(page.getByRole("cell", { name: /^Product \d$/ })).toHaveCount(1);
+});
+
+test("Apply mock-up puts a template on another background", async ({ page }) => {
+  const template = {
+    id: templateId, name: "Classic Tee", productType: "tshirt", baseImageUrl: "/fixture-mockup.svg", previewImageUrl: null,
+    printAreaConfig: JSON.stringify({ x: 150, y: 250, width: 300, height: 300, unit: "px" }), outputWidthPx: 600, outputHeightPx: 900,
+    usageCount: 3, isSystemTemplate: false, isMine: true, realisticPrintReady: true, allowRecolor: false,
+    garmentMaskUrl: "/fixture-mockup.svg?mask=1", garmentColor: null, allowBackground: true,
+  };
+  const requests = await mockApi(page, { templates: [template] });
+  await page.goto(`/workflows?id=${workflowId}`);
+  await node(page, "mockup").click({ position: { x: 80, y: 40 } });
+  await page.getByRole("button", { name: "Change templates" }).click();
+
+  // Nothing chosen keeps the photo's own background.
+  await expect(page.getByText("Background for Classic Tee")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Original" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Charcoal background" }).click();
+  await expect(page.getByTestId("mockup-preview")).toHaveCSS("background-color", "rgb(34, 38, 46)");
+  await page.getByRole("button", { name: "Apply mock-ups" }).click();
+  await expect(page.getByTitle("Background: Charcoal")).toBeVisible();
+
+  // The choice is part of the workflow that is saved.
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect.poll(() => requests.filter(r => r.method === "PUT").length).toBe(1);
+  expect(JSON.stringify(requests.find(r => r.method === "PUT")!.body)).toContain(`"templateBackgrounds":{"${templateId}":"#22262E"}`);
 });

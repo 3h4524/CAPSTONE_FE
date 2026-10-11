@@ -14,6 +14,8 @@ export interface MockupTemplate {
   allowRecolor: boolean;
   garmentMaskUrl: string | null;
   garmentColor: string | null;
+  /** Whether a run may put the garment on another background (the photo has been analyzed). */
+  allowBackground?: boolean;
 }
 
 export interface BatchMockupSelection {
@@ -23,6 +25,8 @@ export interface BatchMockupSelection {
   garmentColors: string[];
   /** Colors chosen per template, keyed by template id. */
   templateColors?: Record<string, string[]>;
+  /** Background color chosen per template, keyed by template id. */
+  templateBackgrounds?: Record<string, string>;
 }
 
 export interface MockupPrintArea {
@@ -42,6 +46,8 @@ export interface MockupImage {
   mockupHeightPx: number;
   approvalStatus: string;
   garmentColor: string | null;
+  /** '#RRGGBB' when the mock-up was put on a replaced background. */
+  backgroundColor?: string | null;
 }
 
 export interface GenerateAllMockupsResult {

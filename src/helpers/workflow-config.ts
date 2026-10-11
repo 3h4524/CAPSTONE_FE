@@ -11,6 +11,11 @@ export const readTemplateColors = (value: unknown): Record<string, string[]> =>
     ? Object.fromEntries(Object.entries(value).map(([templateId, colors]) => [templateId, readStringArray(colors)]))
     : {};
 
+export const readTemplateBackgrounds = (value: unknown): Record<string, string> =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+    ? Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === "string"))
+    : {};
+
 export const readBoolean = (value: unknown): boolean => value === true;
 
 export const readStringArray = (value: unknown): string[] =>
@@ -35,7 +40,7 @@ export const getWorkflowNodeDefinition = (type: string): WorkflowNodeDefinition 
 
 // A field named "standardOptions.transition" edits a value inside the `standardOptions` key.
 const getFieldKeys = (field: WorkflowField): string[] =>
-  (field.kind === "mockup-selection" ? [field.name, field.templateColorsName] : [field.name]).map((name) => name.split(".")[0]);
+  (field.kind === "mockup-selection" ? [field.name, field.templateColorsName, field.templateBackgroundsName] : [field.name]).map((name) => name.split(".")[0]);
 
 // Keeps only the keys the node still declares (in its fields or its defaults), over its defaults, so a
 // workflow saved before a key existed (or after one was removed) still loads into a config the schema accepts.
@@ -69,6 +74,7 @@ export const summarizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNode
         return [
           `${count} ${field.label.toLowerCase()}`,
           ...(colors > 0 ? [`${colors} garment color${colors === 1 ? "" : "s"}`] : []),
+          ...(Object.keys(readTemplateBackgrounds(config[field.templateBackgroundsName])).length > 0 ? ["Custom background"] : []),
         ];
       }
       case "number": {

@@ -43,6 +43,7 @@ export const applyMockupConfigSchema = z.object({
       .array(z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Garment colors must look like #RRGGBB."))
       .max(5, "Choose up to 5 garment colors per template.")
   ),
+  templateBackgrounds: z.record(z.string(), z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Background colors must look like #RRGGBB.")),
   mockupIds: z.array(z.string().uuid()).max(8),
   artworkGroupKey: z.string().max(100),
 });

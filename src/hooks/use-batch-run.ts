@@ -96,7 +96,7 @@ export const saveRunMockupSelection = async (batchJobId: string): Promise<boolea
     return false;
   }
   try {
-    await applyBatchMockupTemplates(batchJobId, selection.templateIds, selection.garmentColors, selection.templateColors);
+    await applyBatchMockupTemplates(batchJobId, selection.templateIds, selection.garmentColors, selection.templateColors, selection.templateBackgrounds);
     return true;
   } catch (error) {
     showToast("error", getErrorMessage(error));
@@ -234,7 +234,8 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
             prepared.batchJobId,
             plan.mockup.templateIds,
             plan.mockup.garmentColors,
-            plan.mockup.templateColors
+            plan.mockup.templateColors,
+            plan.mockup.templateBackgrounds
           );
         }
         // Stopping before this point leaves a draft job that the next run reuses; after it, the job is running.

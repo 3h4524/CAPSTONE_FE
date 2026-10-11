@@ -185,13 +185,15 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     hasOutput: true,
     // Colors are chosen per template in `templateColors`; a template without any is made in its own color.
     // (Workflows saved with the old shared `garmentColors` list lose it when they load.)
+    // `templateBackgrounds` holds the background color of the templates that do not keep their photo's own.
     // `mockupIds` and `artworkGroupKey` are the video's choice among the finished mock-ups, made at Mockup Approval.
-    defaultConfig: { mockupTemplateIds: [], templateColors: {}, mockupIds: [], artworkGroupKey: "" },
+    defaultConfig: { mockupTemplateIds: [], templateColors: {}, templateBackgrounds: {}, mockupIds: [], artworkGroupKey: "" },
     fields: [
       {
         kind: "mockup-selection",
         name: "mockupTemplateIds",
         templateColorsName: "templateColors",
+        templateBackgroundsName: "templateBackgrounds",
         label: "Mock-up templates",
       },
     ],

@@ -110,6 +110,7 @@ export const NodeConfigField = ({ field, control }: NodeConfigFieldProps) => (
               <FormLabel required>{field.label}</FormLabel>
               <MockupSelectionField
                 templateColorsName={field.templateColorsName}
+                templateBackgroundsName={field.templateBackgroundsName}
                 value={readStringArray(controller.value)}
                 onChange={controller.onChange}
               />

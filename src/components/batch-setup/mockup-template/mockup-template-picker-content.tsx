@@ -5,6 +5,7 @@ import { useState } from "react";
 import { MockupTemplateCard } from "@/components/batch-setup/mockup-template/mockup-template-card";
 import { MockupTemplateDetail } from "@/components/batch-setup/mockup-template/mockup-template-detail";
 import { GarmentColorPicker } from "@/components/mockups/garment-color-picker";
+import { MockupBackgroundPicker } from "@/components/mockups/mockup-background-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
@@ -15,6 +16,7 @@ import {
   resolveTemplateColors,
   type TemplateColors,
 } from "@/helpers/garment-colors";
+import type { TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
 import { MAX_MOCKUP_SELECTION, productTypeLabel } from "@/helpers/mockup-template";
 import type { MockupTemplate } from "@/types/mockup-templates";
 
@@ -25,12 +27,14 @@ type MockupTemplatePickerContentProps = {
   initialColors?: string[];
   /** Colors picked per template, keyed by template id. */
   initialTemplateColors?: TemplateColors;
+  /** Background picked per template, keyed by template id. */
+  initialTemplateBackgrounds?: TemplateBackgrounds;
   pending: boolean;
   /** Product types in the batch job (lowercase) with how many products each has. */
   productTypeCounts?: Record<string, number>;
   /** A generated design shown inside each template's print area in the preview. */
   sampleDesignUrl?: string | null;
-  onApply: (selectedIds: string[], templateColors: TemplateColors) => void;
+  onApply: (selectedIds: string[], templateColors: TemplateColors, templateBackgrounds: TemplateBackgrounds) => void;
   onClose: () => void;
 };
 
@@ -39,6 +43,7 @@ export const MockupTemplatePickerContent = ({
   initialIds,
   initialColors = [],
   initialTemplateColors,
+  initialTemplateBackgrounds = {},
   pending,
   productTypeCounts,
   sampleDesignUrl,
@@ -49,6 +54,7 @@ export const MockupTemplatePickerContent = ({
   const [draftColors, setDraftColors] = useState<TemplateColors>(() =>
     resolveTemplateColors(templates, initialIds, initialTemplateColors, initialColors)
   );
+  const [draftBackgrounds, setDraftBackgrounds] = useState<TemplateBackgrounds>(initialTemplateBackgrounds);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const tooMany = draftIds.length > MAX_MOCKUP_SELECTION;
 
@@ -91,7 +97,14 @@ export const MockupTemplatePickerContent = ({
     listed[0] ??
     null;
 
+  const setBackground = (templateId: string, hex: string | null) =>
+    setDraftBackgrounds((previous) => {
+      const { [templateId]: _removed, ...rest } = previous;
+      return hex ? { ...rest, [templateId]: hex } : rest;
+    });
+
   // Colors only apply to recolorable templates that are ticked; a template with none made in its own color.
+  // A background likewise only goes with a ticked template whose garment can be lifted off its photo.
   const apply = () =>
     onApply(
       draftIds,
@@ -100,6 +113,11 @@ export const MockupTemplatePickerContent = ({
           .filter((template) => template.allowRecolor && draftIds.includes(template.id))
           .map((template) => [template.id, draftColors[template.id] ?? []] as const)
           .filter(([, colors]) => colors.length > 0)
+      ),
+      Object.fromEntries(
+        templates
+          .filter((template) => template.allowBackground && draftIds.includes(template.id) && draftBackgrounds[template.id])
+          .map((template) => [template.id, draftBackgrounds[template.id]] as const)
       )
     );
 
@@ -170,6 +188,21 @@ export const MockupTemplatePickerContent = ({
                             )}
                           </div>
                         )}
+                        {selected && template.allowBackground && (
+                          <div className="ml-4 space-y-2 rounded-lg border border-dashed p-3">
+                            <p className="text-xs font-medium text-slate-900">Background for {template.name}</p>
+                            <MockupBackgroundPicker
+                              value={draftBackgrounds[template.id] ?? null}
+                              disabled={pending}
+                              onChange={(hex) => setBackground(template.id, hex)}
+                            />
+                            <p className="text-muted-foreground text-xs">
+                              {draftBackgrounds[template.id]
+                                ? "The garment is lifted off the photo and put on this color."
+                                : "Original keeps the photo's own background."}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     );
                   })
@@ -183,6 +216,7 @@ export const MockupTemplatePickerContent = ({
             key={focusedTemplate?.id ?? "none"}
             template={focusedTemplate}
             colors={focusedTemplate ? (draftColors[focusedTemplate.id] ?? []) : []}
+            background={focusedTemplate?.allowBackground ? (draftBackgrounds[focusedTemplate.id] ?? null) : null}
             designUrl={sampleDesignUrl}
           />
         </div>

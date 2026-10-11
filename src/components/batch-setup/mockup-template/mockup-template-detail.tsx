@@ -15,12 +15,14 @@ type MockupTemplateDetailProps = {
   template: MockupTemplate | null;
   /** The garment colors picked for this template; the preview can show each of them. */
   colors?: string[];
+  /** The background picked for this template; null keeps the photo's own. */
+  background?: string | null;
   /** A generated design to show inside the print area. */
   designUrl?: string | null;
 };
 
 // Give this component a `key` of the template id so the chosen preview color resets per template.
-export const MockupTemplateDetail = ({ template, colors = [], designUrl }: MockupTemplateDetailProps) => {
+export const MockupTemplateDetail = ({ template, colors = [], background = null, designUrl }: MockupTemplateDetailProps) => {
   const [colorIndex, setColorIndex] = useState(0);
 
   if (!template) {
@@ -38,7 +40,7 @@ export const MockupTemplateDetail = ({ template, colors = [], designUrl }: Mocku
   return (
     <ScrollArea className="h-full [&>[data-radix-scroll-area-viewport]>div]:block!">
       <div className="flex flex-col gap-4 rounded-xl bg-slate-50 p-5" aria-live="polite">
-        <MockupTemplatePreview template={template} color={previewColor} designUrl={designUrl} />
+        <MockupTemplatePreview template={template} color={previewColor} background={background} designUrl={designUrl} />
         <div>
           <p className="font-semibold text-slate-900">{template.name}</p>
           <div className="mt-2 flex flex-wrap gap-1.5">

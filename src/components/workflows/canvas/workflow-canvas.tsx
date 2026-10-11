@@ -54,7 +54,7 @@ export const WorkflowCanvas = () => {
     addNode(createWorkflowNode(type, { x: position.x - NODE_CARD_WIDTHS[type] / 2, y: position.y - 40 }));
   };
 
-  const validateConnection = (connection: Connection | Edge) => isConnectionAllowed(connection, edges);
+  const validateConnection = (connection: Connection | Edge) => isConnectionAllowed(connection, edges, nodes);
 
   return (
     <ReactFlow
@@ -72,7 +72,7 @@ export const WorkflowCanvas = () => {
       onDrop={dropNode}
       nodesDraggable={!isRunning}
       nodesConnectable={!isRunning}
-      elementsSelectable={!isRunning}
+      elementsSelectable
       deleteKeyCode={isRunning ? null : DELETE_KEYS}
       fitView
       fitViewOptions={{ padding: 0.2, maxZoom: 1 }}

@@ -34,7 +34,7 @@ export const ValidationIssues = () => {
           {issues.length === 0 ? (
             <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">
               <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-              Every step is connected and configured. Run the demo to preview the flow.
+              Every step is connected and configured. Press Run to start the batch.
             </div>
           ) : (
             <ul className="space-y-2" aria-label="Workflow issues">

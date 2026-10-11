@@ -9,8 +9,8 @@ export const useDeleteWorkflow = () => {
   const queryClient = useAppQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => deleteWorkflow(id),
-    onSuccess: (_, id) => {
+    mutationFn: ({ id, revision }: { id: string; revision: number }) => deleteWorkflow(id, revision),
+    onSuccess: (_, { id }) => {
       queryClient.setQueryData<WorkflowSummary[]>(workflowKeys.list(), (previous) =>
         (previous ?? []).filter((item) => item.id !== id)
       );

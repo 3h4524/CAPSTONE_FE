@@ -223,3 +223,23 @@ test("the Batches page sets a failed product back to pending and opens a job on 
   await page.getByRole("menuitem", { name: /Job #1/ }).click();
   await expect(page).toHaveURL(new RegExp(`/workflows\\?job=${jobId}&id=${workflowId}`));
 });
+
+test("the Batches page counts every product under one status, the ones in review included", async ({ page }) => {
+  const productStatuses = ["pending", "queued", "generating_image", "image_review_required", "approved", "failed"];
+  await mockApi(page, {
+    batches: [{ id: batchId, name: "Summer drop", description: null, defaultNiche: null, defaultProductType: null, status: "draft", createdAt: "2026-10-05T00:00:00Z", productCount: productStatuses.length }],
+    products: productStatuses.map((status, index) => ({ id: `00000000-0000-4000-8000-00000000000${index + 1}`, batchId, name: `Product ${index + 1}`, productType: "tshirt", niche: null, keywords: [], productDescription: null, sourceNotes: null, status, createdAt: null })),
+  });
+  await page.goto("/batches");
+  await page.getByRole("button", { name: /Summer drop/ }).first().click();
+
+  // A product whose image is being made is Processing, and one waiting for approval has a counter of its own.
+  for (const label of ["Pending", "Queued", "Processing", "Review", "Completed", "Failed"]) {
+    await expect(page.getByRole("button", { name: new RegExp(`^${label}\\s*1$`) })).toBeVisible();
+  }
+
+  // A counter is also a filter.
+  await page.getByRole("button", { name: /^Review\s*1$/ }).click();
+  await expect(page.getByRole("cell", { name: "Product 4", exact: true })).toBeVisible();
+  await expect(page.getByRole("cell", { name: /^Product \d$/ })).toHaveCount(1);
+});

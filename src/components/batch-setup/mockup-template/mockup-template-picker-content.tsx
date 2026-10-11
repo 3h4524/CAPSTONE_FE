@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { Pencil } from "lucide-react";
 
 import { MockupTemplateCard } from "@/components/batch-setup/mockup-template/mockup-template-card";
 import { MockupTemplateDetail } from "@/components/batch-setup/mockup-template/mockup-template-detail";
 import { GarmentColorPicker } from "@/components/mockups/garment-color-picker";
 import { MockupBackgroundPicker } from "@/components/mockups/mockup-background-picker";
+import { MockupTemplateFormDialog } from "@/components/mockups/mockup-template-form-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
@@ -56,6 +58,8 @@ export const MockupTemplatePickerContent = ({
   );
   const [draftBackgrounds, setDraftBackgrounds] = useState<TemplateBackgrounds>(initialTemplateBackgrounds);
   const [focusedId, setFocusedId] = useState<string | null>(null);
+  // The template being edited stays set while its dialog closes, so the form does not flash empty.
+  const [editing, setEditing] = useState<{ template: MockupTemplate; open: boolean } | null>(null);
   const tooMany = draftIds.length > MAX_MOCKUP_SELECTION;
 
   const toggleId = (id: string) => {
@@ -152,13 +156,31 @@ export const MockupTemplatePickerContent = ({
                     const ownColor = defaultTemplateColors(template)[0];
                     return (
                       <div key={template.id} className="flex flex-col gap-2">
-                        <MockupTemplateCard
-                          template={template}
-                          selected={selected}
-                          onToggle={toggleId}
-                          onFocusTemplate={setFocusedId}
-                          colors={colors}
-                        />
+                        <div className="flex items-start gap-1">
+                          <div className="min-w-0 flex-1">
+                            <MockupTemplateCard
+                              template={template}
+                              selected={selected}
+                              onToggle={toggleId}
+                              onFocusTemplate={setFocusedId}
+                              colors={colors}
+                            />
+                          </div>
+                          {/* Only the seller's own templates can be changed; the list refreshes when the edit is saved. */}
+                          {template.isMine && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={`Edit ${template.name}`}
+                              title="Edit this template"
+                              disabled={pending}
+                              onClick={() => setEditing({ template, open: true })}
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                          )}
+                        </div>
                         {selected && template.allowRecolor && (
                           <div className="ml-4 space-y-2 rounded-lg border border-dashed p-3">
                             <p className="text-xs font-medium text-slate-900">Garment colors for {template.name}</p>
@@ -237,6 +259,11 @@ export const MockupTemplatePickerContent = ({
           Apply mock-ups
         </Button>
       </DialogFooter>
+      <MockupTemplateFormDialog
+        open={editing?.open ?? false}
+        template={editing?.template ?? null}
+        onClose={() => setEditing((current) => (current ? { ...current, open: false } : null))}
+      />
     </>
   );
 };

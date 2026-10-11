@@ -257,6 +257,13 @@ test("Apply mock-up puts a template on another background", async ({ page }) => 
   await node(page, "mockup").click({ position: { x: 80, y: 40 } });
   await page.getByRole("button", { name: "Change templates" }).click();
 
+  // The seller's own template can be edited without leaving the picker.
+  await page.getByRole("button", { name: "Edit Classic Tee" }).click();
+  await expect(page.getByRole("heading", { name: "Edit Classic Tee" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancel" }).last().click();
+  await expect(page.getByRole("heading", { name: "Edit Classic Tee" })).toBeHidden();
+  await expect(page.getByRole("heading", { name: "Choose mock-up templates" })).toBeVisible();
+
   // Nothing chosen keeps the photo's own background.
   await expect(page.getByText("Background for Classic Tee")).toBeVisible();
   await expect(page.getByRole("button", { name: "Original" })).toHaveAttribute("aria-pressed", "true");

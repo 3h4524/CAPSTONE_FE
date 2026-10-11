@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Play, Save, ShieldCheck, Square } from "lucide-react";
+import { Play, Redo2, Save, ShieldCheck, Square, Undo2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { EditorPanelSheets } from "@/components/workflows/toolbar/editor-panel-sheets";
@@ -11,16 +11,15 @@ import { WorkflowMetaDialog } from "@/components/workflows/toolbar/workflow-meta
 import { WorkflowSwitcher } from "@/components/workflows/toolbar/workflow-switcher";
 import { NEW_WORKFLOW_NAME, STARTER_WORKFLOW_DEFINITION } from "@/constants/workflow";
 import { showToast } from "@/helpers/toast";
-import { getCopyName, toWorkflowDefinition, validateWorkflow } from "@/helpers/workflow-graph";
+import { getCopyName, validateWorkflow } from "@/helpers/workflow-graph";
 import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
 import { useDeleteWorkflow } from "@/hooks/mutations/use-delete-workflow";
-import { useUpdateWorkflow } from "@/hooks/mutations/use-update-workflow";
 import { useWorkflowExecution } from "@/hooks/use-workflow-execution";
+import { useWorkflowSave } from "@/hooks/use-workflow-save";
 import type { WorkflowMetaFormValues } from "@/schemas/workflow";
 import { usePopupStore } from "@/stores/popup";
 import { useWorkflowStore } from "@/stores/workflow";
-import type { SaveWorkflowInput, WorkflowSummary } from "@/types/workflow";
-import { useReactFlow } from "@xyflow/react";
+import type { WorkflowSummary } from "@/types/workflow";
 
 type MetaDialogMode = "create" | "rename";
 
@@ -40,43 +39,21 @@ export const WorkflowToolbar = ({
   guardUnsavedChanges,
 }: WorkflowToolbarProps) => {
   const [metaDialogMode, setMetaDialogMode] = useState<MetaDialogMode | null>(null);
-  const { getViewport } = useReactFlow();
   const openPopup = usePopupStore((state) => state.openPopup);
   const name = useWorkflowStore((state) => state.name);
   const description = useWorkflowStore((state) => state.description);
   const isDirty = useWorkflowStore((state) => state.isDirty);
+  const canUndo = useWorkflowStore((state) => state.past.length > 0);
+  const canRedo = useWorkflowStore((state) => state.future.length > 0);
   const selectNode = useWorkflowStore((state) => state.selectNode);
-  const markSaved = useWorkflowStore((state) => state.markSaved);
+  const undo = useWorkflowStore((state) => state.undo);
+  const redo = useWorkflowStore((state) => state.redo);
+  const { saveWorkflow, buildSaveInput, isSaving } = useWorkflowSave();
   const { mutate: createWorkflow, isPending: isCreating } = useCreateWorkflow();
-  const { mutate: updateWorkflow, isPending: isSaving } = useUpdateWorkflow();
   const { mutate: deleteWorkflow, isPending: isDeleting } = useDeleteWorkflow();
   const { isRunning, start: startRun, cancel: cancelRun, isPending: isRunPending } = useWorkflowExecution(activeWorkflowId, isEditorReady);
 
   const isBusy = !isEditorReady || isRunning || isCreating || isSaving || isDeleting || isRunPending;
-
-  const buildCurrentInput = (meta?: WorkflowMetaFormValues): SaveWorkflowInput => {
-    const { nodes, edges } = useWorkflowStore.getState();
-    return {
-      name: meta?.name ?? name,
-      description: meta?.description ?? description,
-      definition: toWorkflowDefinition(nodes, edges, getViewport()),
-      expectedRevision: useWorkflowStore.getState().revision,
-    };
-  };
-
-  const saveWorkflow = (meta?: WorkflowMetaFormValues) => {
-    if (!activeWorkflowId) return;
-    updateWorkflow(
-      { id: activeWorkflowId, input: buildCurrentInput(meta) },
-      {
-        onSuccess: (saved) => {
-          markSaved(saved);
-          setMetaDialogMode(null);
-          showToast("success", `${saved.name} was saved.`);
-        },
-      }
-    );
-  };
 
   const validateCurrentWorkflow = () => {
     const { nodes, edges } = useWorkflowStore.getState();
@@ -88,7 +65,7 @@ export const WorkflowToolbar = ({
 
   const submitMeta = (values: WorkflowMetaFormValues) => {
     if (metaDialogMode === "rename") {
-      saveWorkflow(values);
+      saveWorkflow(values, { onSaved: () => setMetaDialogMode(null) });
       return;
     }
     createWorkflow(
@@ -104,7 +81,7 @@ export const WorkflowToolbar = ({
   };
 
   const duplicateWorkflow = () => {
-    const input = buildCurrentInput();
+    const input = buildSaveInput();
     const copyName = getCopyName(name, workflows.map((item) => item.name));
     createWorkflow(
       { ...input, name: copyName },
@@ -148,6 +125,12 @@ export const WorkflowToolbar = ({
         onCreate={() => guardUnsavedChanges(() => setMetaDialogMode("create"))}
       />
       <div className="ml-auto flex items-center gap-2">
+        <Button type="button" variant="ghost" size="icon-sm" aria-label="Undo" title="Undo" onClick={undo} disabled={isBusy || !canUndo}>
+          <Undo2 aria-hidden="true" />
+        </Button>
+        <Button type="button" variant="ghost" size="icon-sm" aria-label="Redo" title="Redo" onClick={redo} disabled={isBusy || !canRedo}>
+          <Redo2 aria-hidden="true" />
+        </Button>
         <Button type="button" variant="ghost" size="sm" className="px-3" onClick={validateCurrentWorkflow} disabled={isBusy}>
           <ShieldCheck aria-hidden="true" />
           <span className="hidden sm:inline">Validate</span>

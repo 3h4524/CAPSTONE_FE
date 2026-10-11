@@ -17,7 +17,7 @@
     "test:workflow-ui": "playwright test"
   },
   "dependencies": {
-    "@apcs/video-composition": "file:../CAPSTONE_BE/shared/video-composition",
+    "@apcs/video-composition": "file:packages/video-composition",
     "@hookform/resolvers": "^5.2.2",
     "@microsoft/signalr": "^10.0.11",
     "@next/third-parties": "^16.1.3",

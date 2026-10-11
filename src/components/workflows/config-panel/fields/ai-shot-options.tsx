@@ -1,10 +1,10 @@
 "use client";
 
-import { useWorkflowStore } from "@/stores/workflow";
-import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
-import { readString } from "@/helpers/workflow-config";
-import type { GenerateVideoConfig } from "@/types/video-workflow";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { readString } from "@/helpers/workflow-config";
+import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
+import { useWorkflowStore } from "@/stores/workflow";
+import type { GenerateVideoConfig } from "@/types/video-workflow";
 
 type Options = NonNullable<GenerateVideoConfig["aiShotOptions"]>;
 const defaults: Options = { coverage: "single_scene", concept: "product_cinematic", sceneIndex: 0, mockupId: null, prompt: null, rightsConfirmed: false, fullSceneMockupIds: null };
@@ -67,7 +67,7 @@ export function AiShotOptions({ nodeId, disabled, onDurationChange }: { nodeId: 
       </label>)}</div>}
     {sourceAssets.length === 0 && <p className="text-xs text-amber-800">Approve a suitable {needsPerson ? "Lifestyle image showing an adult" : options.concept === "material_detail" ? "detail image" : "mockup"} first.</p>}
     <label className="block space-y-1 text-xs font-medium">Optional motion direction
-      <textarea disabled={disabled} maxLength={300} value={options.prompt ?? ""} onChange={event => update({ prompt: event.target.value || null })} placeholder="E.g. slow dolly left; keep the print unchanged" className="min-h-18 w-full rounded-md border bg-background p-2 text-sm font-normal" />
+      <textarea disabled={disabled} maxLength={300} value={options.prompt ?? ""} onChange={event => update({ prompt: event.target.value || null })} placeholder="E.g. slow dolly left; keep the print unchanged" className="bg-background min-h-18 w-full rounded-md border p-2 text-sm font-normal" />
     </label>
     {needsPerson && <label className="flex items-start gap-2 text-xs leading-5"><input type="checkbox" disabled={disabled} checked={options.rightsConfirmed} onChange={event => update({ rightsConfirmed: event.target.checked })} className="mt-1" /><span>I have rights to use this image of an adult person for AI video generation. The person must already be visible in the approved Lifestyle image.</span></label>}
     <p className="text-muted-foreground text-xs">AI motion can alter product details. Inspect the finished clip before approval. Output is silent; source audio is removed.</p>

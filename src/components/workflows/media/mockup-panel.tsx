@@ -15,8 +15,8 @@ import { readString, readStringArray } from "@/helpers/workflow-config";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
-import { useWorkflowStore } from "@/stores/workflow";
 import { generateVideoConfigSchema } from "@/schemas/workflow";
+import { useWorkflowStore } from "@/stores/workflow";
 
 export const MockupPanel = ({ review }: { review: boolean }) => {
   const input = useWorkflowStore(state => state.nodes.find(n => n.data.type === "product-input"));

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { toWorkflowEdges, toWorkflowNodes } from "@/helpers/workflow-graph";
+import { duplicateWorkflowSelection, toWorkflowEdges, toWorkflowNodes } from "@/helpers/workflow-graph";
 import type {
   WorkflowDetail,
   WorkflowEdge,
@@ -27,7 +27,7 @@ type WorkflowEditorState = {
   description: string;
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
-  selectedNodeId: string | null;
+  selectedNodeIds: string[];
   isDirty: boolean;
   isRunning: boolean;
   loadWorkflow: (workflow: WorkflowDetail) => void;
@@ -39,6 +39,11 @@ type WorkflowEditorState = {
   updateNodeConfig: (nodeId: string, config: WorkflowNodeConfig) => void;
   removeNode: (nodeId: string) => void;
   selectNode: (nodeId: string | null) => void;
+  selectNodes: (nodeIds: string[]) => void;
+  selectAllNodes: () => void;
+  clearSelection: () => void;
+  removeSelectedNodes: () => void;
+  duplicateSelectedNodes: () => void;
   setNodeStatus: (nodeId: string, status: WorkflowNodeStatus) => void;
   resetStatuses: () => void;
   setRunning: (isRunning: boolean) => void;
@@ -53,7 +58,7 @@ const INITIAL_STATE = {
   description: "",
   nodes: [],
   edges: [],
-  selectedNodeId: null,
+  selectedNodeIds: [],
   isDirty: false,
   isRunning: false,
 };
@@ -78,8 +83,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set) => ({
       return {
         nodes: applyNodeChanges(changes, state.nodes),
         isDirty: state.isDirty || changes.some((change) => DIRTY_NODE_CHANGES.has(change.type)),
-        selectedNodeId:
-          state.selectedNodeId && removedIds.has(state.selectedNodeId) ? null : state.selectedNodeId,
+        selectedNodeIds: state.selectedNodeIds.filter((id) => !removedIds.has(id)),
       };
     }),
 
@@ -95,7 +99,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set) => ({
   addNode: (node) =>
     set((state) => ({
       nodes: [...state.nodes.map((item) => ({ ...item, selected: false })), { ...node, selected: true }],
-      selectedNodeId: node.id,
+      selectedNodeIds: [node.id],
       isDirty: true,
     })),
 
@@ -119,15 +123,68 @@ export const useWorkflowStore = create<WorkflowEditorState>((set) => ({
     set((state) => ({
       nodes: state.nodes.filter((node) => node.id !== nodeId),
       edges: state.edges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId),
-      selectedNodeId: state.selectedNodeId === nodeId ? null : state.selectedNodeId,
+      selectedNodeIds: state.selectedNodeIds.filter((id) => id !== nodeId),
       isDirty: true,
     })),
 
   selectNode: (nodeId) =>
     set((state) => ({
-      selectedNodeId: nodeId,
+      selectedNodeIds: nodeId ? [nodeId] : [],
       nodes: state.nodes.map((node) => ({ ...node, selected: node.id === nodeId })),
     })),
+
+  selectNodes: (nodeIds) =>
+    set((state) => {
+      const nextIds = state.nodes.filter((node) => nodeIds.includes(node.id)).map((node) => node.id);
+      const isUnchanged =
+        nextIds.length === state.selectedNodeIds.length &&
+        nextIds.every((id) => state.selectedNodeIds.includes(id));
+      if (isUnchanged) return state;
+      return {
+        selectedNodeIds: nextIds,
+        nodes: state.nodes.map((node) => ({ ...node, selected: nextIds.includes(node.id) })),
+      };
+    }),
+
+  selectAllNodes: () =>
+    set((state) => ({
+      selectedNodeIds: state.nodes.map((node) => node.id),
+      nodes: state.nodes.map((node) => ({ ...node, selected: true })),
+    })),
+
+  clearSelection: () =>
+    set((state) => {
+      if (state.selectedNodeIds.length === 0) return state;
+      return {
+        selectedNodeIds: [],
+        nodes: state.nodes.map((node) => ({ ...node, selected: false })),
+      };
+    }),
+
+  removeSelectedNodes: () =>
+    set((state) => {
+      if (state.selectedNodeIds.length === 0) return state;
+      const removedIds = new Set(state.selectedNodeIds);
+      return {
+        nodes: state.nodes.filter((node) => !removedIds.has(node.id)),
+        edges: state.edges.filter((edge) => !removedIds.has(edge.source) && !removedIds.has(edge.target)),
+        selectedNodeIds: [],
+        isDirty: true,
+      };
+    }),
+
+  duplicateSelectedNodes: () =>
+    set((state) => {
+      if (state.selectedNodeIds.length === 0) return state;
+      const duplicated = duplicateWorkflowSelection(state.nodes, state.edges, state.selectedNodeIds);
+      if (duplicated.addedNodeIds.length === 0) return state;
+      return {
+        nodes: [...state.nodes.map((node) => ({ ...node, selected: false })), ...duplicated.nodes],
+        edges: [...state.edges, ...duplicated.edges],
+        selectedNodeIds: duplicated.addedNodeIds,
+        isDirty: true,
+      };
+    }),
 
   setNodeStatus: (nodeId, status) =>
     set((state) => ({

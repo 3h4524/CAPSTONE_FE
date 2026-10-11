@@ -2,10 +2,13 @@
 
 import type { DragEvent } from "react";
 
+import { SelectionToolbar } from "@/components/workflows/canvas/selection-toolbar";
+import { ShortcutCheatsheet } from "@/components/workflows/canvas/shortcut-cheatsheet";
 import { NodeView } from "@/components/workflows/nodes/node-view";
 import { NODE_CARD_WIDTHS, WORKFLOW_DND_MIME } from "@/constants/workflow";
 import { isWorkflowNodeType } from "@/helpers/workflow-config";
 import { createWorkflowNode, isConnectionAllowed } from "@/helpers/workflow-graph";
+import { useCanvasShortcuts } from "@/hooks/use-canvas-shortcuts";
 import { useWorkflowStore } from "@/stores/workflow";
 import {
   Background,
@@ -34,7 +37,10 @@ export const WorkflowCanvas = () => {
   const onEdgesChange = useWorkflowStore((state) => state.onEdgesChange);
   const connect = useWorkflowStore((state) => state.connect);
   const addNode = useWorkflowStore((state) => state.addNode);
-  const selectNode = useWorkflowStore((state) => state.selectNode);
+  const selectNodes = useWorkflowStore((state) => state.selectNodes);
+  const clearSelection = useWorkflowStore((state) => state.clearSelection);
+
+  useCanvasShortcuts();
 
   const runningNodeIds = new Set(
     nodes.filter((node) => node.data.status === "running").map((node) => node.id)
@@ -56,32 +62,42 @@ export const WorkflowCanvas = () => {
 
   const validateConnection = (connection: Connection | Edge) => isConnectionAllowed(connection, edges, nodes);
 
+  const clearCanvasSelection = () => {
+    clearSelection();
+    window.getSelection()?.removeAllRanges();
+  };
+
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={displayedEdges}
-      nodeTypes={NODE_TYPES}
-      defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onConnect={connect}
-      isValidConnection={validateConnection}
-      onNodeClick={(_, node) => selectNode(node.id)}
-      onPaneClick={() => selectNode(null)}
-      onDragOver={allowDrop}
-      onDrop={dropNode}
-      nodesDraggable={!isRunning}
-      nodesConnectable={!isRunning}
-      elementsSelectable
-      deleteKeyCode={isRunning ? null : DELETE_KEYS}
-      fitView
-      fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
-      minZoom={0.3}
-      maxZoom={1.5}
-    >
-      <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
-      <Controls showInteractive={false} />
-      <MiniMap pannable zoomable className="hidden! md:block!" />
-    </ReactFlow>
+    <div className="relative h-full w-full">
+      <ReactFlow
+        nodes={nodes}
+        edges={displayedEdges}
+        nodeTypes={NODE_TYPES}
+        defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={connect}
+        isValidConnection={validateConnection}
+        onSelectionChange={({ nodes: selectedNodes }) => selectNodes(selectedNodes.map((node) => node.id))}
+        onPaneClick={clearCanvasSelection}
+        onDragOver={allowDrop}
+        onDrop={dropNode}
+        nodesDraggable={!isRunning}
+        nodesConnectable={!isRunning}
+        elementsSelectable
+        selectionKeyCode="Shift"
+        deleteKeyCode={isRunning ? null : DELETE_KEYS}
+        fitView
+        fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
+        minZoom={0.3}
+        maxZoom={1.5}
+      >
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
+        <Controls showInteractive={false} />
+        <MiniMap pannable zoomable className="hidden! md:block!" />
+      </ReactFlow>
+      <SelectionToolbar />
+      <ShortcutCheatsheet />
+    </div>
   );
 };

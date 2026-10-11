@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { MultiSelectPanel } from "@/components/workflows/config-panel/multi-select-panel";
 import { NodeConfigForm } from "@/components/workflows/config-panel/node-config-form";
 import { ValidationIssues } from "@/components/workflows/config-panel/validation-issues";
 import { RunResultsPanel } from "@/components/workflows/run/run-results-panel";
@@ -45,7 +46,11 @@ const SelectedNodePanel = ({ node }: { node: WorkflowNode }) => {
 };
 
 export const NodeConfigPanel = () => {
-  const selectedNode = useWorkflowStore((state) => state.nodes.find((node) => node.id === state.selectedNodeId));
+  const selectedNodeIds = useWorkflowStore((state) => state.selectedNodeIds);
+  const nodes = useWorkflowStore((state) => state.nodes);
+  const selectedNodes = nodes.filter((node) => selectedNodeIds.includes(node.id));
 
-  return selectedNode ? <SelectedNodePanel key={selectedNode.id} node={selectedNode} /> : <ValidationIssues />;
+  if (selectedNodes.length > 1) return <MultiSelectPanel nodes={selectedNodes} />;
+  const [activeNode] = selectedNodes;
+  return activeNode ? <SelectedNodePanel key={activeNode.id} node={activeNode} /> : <ValidationIssues />;
 };

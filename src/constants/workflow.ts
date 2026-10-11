@@ -20,6 +20,24 @@ import type {
 
 export const WORKFLOW_DND_MIME = "application/x-apcs-workflow-node";
 
+export const DUPLICATE_NODE_OFFSET = 48;
+
+export const HISTORY_LIMIT = 50;
+
+export const HISTORY_GROUP_WINDOW_MS = 1500;
+
+export const WORKFLOW_CANVAS_SHORTCUTS: { action: string; keys: string[] }[] = [
+  { action: "Select multiple nodes", keys: ["Ctrl/⌘", "Click"] },
+  { action: "Box select nodes", keys: ["Shift", "Drag"] },
+  { action: "Select all nodes", keys: ["Ctrl/⌘", "A"] },
+  { action: "Duplicate selected nodes", keys: ["Ctrl/⌘", "D"] },
+  { action: "Delete selected nodes", keys: ["Del"] },
+  { action: "Undo", keys: ["Ctrl/⌘", "Z"] },
+  { action: "Redo", keys: ["Ctrl/⌘", "Y"] },
+  { action: "Save workflow", keys: ["Ctrl/⌘", "S"] },
+  { action: "Clear selection", keys: ["Esc"] },
+];
+
 export const WORKFLOW_MOCK_STORAGE_KEY = "apcs.workflows.mock";
 
 export const DEFAULT_WORKFLOW_NAME = "Etsy POD pipeline";

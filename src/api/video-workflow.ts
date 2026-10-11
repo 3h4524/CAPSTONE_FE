@@ -1,6 +1,6 @@
 import { api } from "@/api/client";
 import type { MockupMetadataFormValues } from "@/schemas/video-workflow";
-import type { GenerateVideoConfig, MockupAsset, PromoVideo, RunAction, VideoStoryboard, VideoTemplateCatalogItem, WorkflowCapabilities, WorkflowRun } from "@/types/video-workflow";
+import type { AiShotQuote, GenerateVideoConfig, MockupAsset, PromoVideo, RunAction, VideoStoryboard, VideoTemplateCatalogItem, WorkflowCapabilities, WorkflowRun } from "@/types/video-workflow";
 
 export const videoWorkflowKeys = {
   capabilities: () => ["workflow-capabilities"] as const,
@@ -14,6 +14,7 @@ export const listVideoTemplates = async () => (await api.get<VideoTemplateCatalo
 export const startWorkflowRun = async ({ workflowId, revision, key }: { workflowId: string; revision: number; key: string }) => (await api.post<WorkflowRun>(`/api/workflows/${workflowId}/runs`, { expectedWorkflowRevision: revision, idempotencyKey: key })).data;
 export const getWorkflowRun = async (id: string) => (await api.get<WorkflowRun>(`/api/workflow-runs/${id}`)).data;
 export const actOnWorkflowRun = async ({ runId, ...action }: RunAction & { runId: string }) => (await api.post<WorkflowRun>(`/api/workflow-runs/${runId}/actions`, action)).data;
+export const quoteAiShot = async (runId: string, config?: GenerateVideoConfig, regenerate = false) => (await api.post<AiShotQuote>(`/api/workflow-runs/${runId}/ai-shot-quote`, { config, regenerate })).data;
 export const listMockupAssets = async (id: string) => (await api.get<MockupAsset[]>(`/api/products/${id}/mockup-assets`)).data;
 export const uploadMockupAsset = async ({ productId, file }: { productId: string; file: File }) => (await api.postForm<MockupAsset>(`/api/products/${productId}/mockup-assets`, { file })).data;
 export const updateMockupAsset = async ({ id, expectedRevision, ...values }: MockupMetadataFormValues & { id: string; expectedRevision: number }) => (await api.put<MockupAsset>(`/api/mockup-assets/${id}`, { ...values, expectedRevision })).data;

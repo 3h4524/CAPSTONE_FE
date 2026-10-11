@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { VideoTemplateCards } from "@/components/workflows/config-panel/fields/video-template-cards";
+import { AiShotOptions } from "@/components/workflows/config-panel/fields/ai-shot-options";
 import { NodeConfigField } from "@/components/workflows/config-panel/node-config-field";
 import { MockupPanel } from "@/components/workflows/media/mockup-panel";
 import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
@@ -91,6 +92,7 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
                   }} />
                 </div>
                 {videoFields.filter(field => field.name !== "mode").map(field => <NodeConfigField key={field.name} field={field} control={control} />)}
+                <AiShotOptions nodeId={node.id} disabled={isRunning && !waitingReview} onDurationChange={seconds => setValue("durationSeconds", seconds, { shouldDirty: true, shouldValidate: true })} />
                 <Accordion type="single" collapsible>
                   <AccordionItem value="advanced-video">
                     <AccordionTrigger>Caption and transition</AccordionTrigger>

@@ -16,7 +16,7 @@ export const useNotifications = () => {
 
 export const useMarkNotificationAsRead = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => notificationApi.markAsRead(id),
     onSuccess: () => {
@@ -27,7 +27,7 @@ export const useMarkNotificationAsRead = () => {
 
 export const useMarkAllNotificationsAsRead = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: () => notificationApi.markAllAsRead(),
     onSuccess: () => {

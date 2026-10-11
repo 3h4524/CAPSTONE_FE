@@ -12,7 +12,7 @@ import { useAuthStore } from "@/stores/auth";
 
 const AdminDashboardPage = () => {
   const router = useRouter();
-  const [timeRange, setTimeRange] = useState("Month");
+  const [timeRange, setTimeRange] = useState("Year");
   const user = useAuthStore((state) => state.user);
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const { data: metrics, isLoading: isMetricsLoading } = useAdminDashboardMetrics(

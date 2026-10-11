@@ -1,4 +1,5 @@
 import { WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
+import { DEFAULT_BACKGROUND_KEY, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
 import type { WorkflowField, WorkflowNodeConfig, WorkflowNodeDefinition, WorkflowNodeType } from "@/types/workflow";
 
 export const readString = (value: unknown): string => (typeof value === "string" ? value : "");
@@ -11,9 +12,23 @@ export const readTemplateColors = (value: unknown): Record<string, string[]> =>
     ? Object.fromEntries(Object.entries(value).map(([templateId, colors]) => [templateId, readStringArray(colors)]))
     : {};
 
-export const readTemplateBackgrounds = (value: unknown): Record<string, string> =>
-  typeof value === "object" && value !== null && !Array.isArray(value)
-    ? Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === "string"))
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
+
+// A template saved with one plain color (before backgrounds went per garment color) has it as its default.
+export const readTemplateBackgrounds = (value: unknown): TemplateBackgrounds =>
+  isRecord(value)
+    ? Object.fromEntries(
+        Object.entries(value)
+          .map(([templateId, backgrounds]): [string, Record<string, string>] => [
+            templateId,
+            typeof backgrounds === "string"
+              ? { [DEFAULT_BACKGROUND_KEY]: backgrounds }
+              : isRecord(backgrounds)
+                ? Object.fromEntries(Object.entries(backgrounds).filter((entry): entry is [string, string] => typeof entry[1] === "string"))
+                : {},
+          ])
+          .filter(([, backgrounds]) => Object.keys(backgrounds).length > 0)
+      )
     : {};
 
 export const readBoolean = (value: unknown): boolean => value === true;

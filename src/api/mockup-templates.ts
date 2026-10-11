@@ -18,7 +18,7 @@ export const applyBatchMockupTemplates = async (
   templateIds: string[],
   garmentColors: string[] = [],
   templateColors: Record<string, string[]> = {},
-  templateBackgrounds: Record<string, string> = {}
+  templateBackgrounds: Record<string, Record<string, string>> = {}
 ): Promise<BatchMockupSelection> =>
   (await api.put<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { templateIds, garmentColors, templateColors, templateBackgrounds })).data;
 

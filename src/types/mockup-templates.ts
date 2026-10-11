@@ -25,8 +25,8 @@ export interface BatchMockupSelection {
   garmentColors: string[];
   /** Colors chosen per template, keyed by template id. */
   templateColors?: Record<string, string[]>;
-  /** Background color chosen per template, keyed by template id. */
-  templateBackgrounds?: Record<string, string>;
+  /** Background colors chosen per template, keyed by template id and then by garment color or "default". */
+  templateBackgrounds?: Record<string, Record<string, string>>;
 }
 
 export interface MockupPrintArea {

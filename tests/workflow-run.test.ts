@@ -165,8 +165,11 @@ test("a loaded config keeps what the node declares and drops the rest", () => {
 });
 
 test("the mock-up selection sends colors only for the templates that are selected", () => {
-  const selection = extractMockupSelection({ mockupTemplateIds: [id], templateColors: { [id]: ["#1F2A44"], [other]: ["#B22222"], empty: [] }, templateBackgrounds: { [id]: "#EDE6DA", [other]: "#22262E" } });
-  assert.deepEqual(selection, { templateIds: [id], garmentColors: [], templateColors: { [id]: ["#1F2A44"] }, templateBackgrounds: { [id]: "#EDE6DA" } });
+  const selection = extractMockupSelection({ mockupTemplateIds: [id], templateColors: { [id]: ["#1F2A44"], [other]: ["#B22222"], empty: [] }, templateBackgrounds: { [id]: { "#1f2a44": "#EDE6DA", "#B22222": "#FFFFFF" }, [other]: "#22262E" } });
+  assert.deepEqual(selection, { templateIds: [id], garmentColors: [], templateColors: { [id]: ["#1F2A44"] }, templateBackgrounds: { [id]: { "#1F2A44": "#EDE6DA" } } });
+  // A background saved as one plain color is the default of the template, whatever its garment color.
+  assert.deepEqual(extractMockupSelection({ mockupTemplateIds: [id], templateColors: {}, templateBackgrounds: { [id]: "#22262E" } }).templateBackgrounds, { [id]: { default: "#22262E" } });
+  assert.deepEqual(extractMockupSelection({ mockupTemplateIds: [id], templateColors: { [id]: ["#FFFFFF", "#111111"] }, templateBackgrounds: { [id]: { default: "#22262E", "#111111": "#FFFFFF" } } }).templateBackgrounds, { [id]: { "#FFFFFF": "#22262E", "#111111": "#FFFFFF" } });
 });
 
 test("approvals are counted per design and estimate the mock-ups they make", () => {

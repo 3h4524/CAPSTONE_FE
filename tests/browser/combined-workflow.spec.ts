@@ -245,11 +245,11 @@ test("the Batches page counts every product under one status, the ones in review
   await expect(page.getByRole("cell", { name: /^Product \d$/ })).toHaveCount(1);
 });
 
-test("Apply mock-up puts a template on another background", async ({ page }) => {
+test("Apply mock-up puts each garment color of a template on a background of its own", async ({ page }) => {
   const template = {
     id: templateId, name: "Classic Tee", productType: "tshirt", baseImageUrl: "/fixture-mockup.svg", previewImageUrl: null,
     printAreaConfig: JSON.stringify({ x: 150, y: 250, width: 300, height: 300, unit: "px" }), outputWidthPx: 600, outputHeightPx: 900,
-    usageCount: 3, isSystemTemplate: false, isMine: true, realisticPrintReady: true, allowRecolor: false,
+    usageCount: 3, isSystemTemplate: false, isMine: true, realisticPrintReady: true, allowRecolor: true,
     garmentMaskUrl: "/fixture-mockup.svg?mask=1", garmentColor: null, allowBackground: true,
   };
   const requests = await mockApi(page, { templates: [template] });
@@ -264,16 +264,28 @@ test("Apply mock-up puts a template on another background", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "Edit Classic Tee" })).toBeHidden();
   await expect(page.getByRole("heading", { name: "Choose mock-up templates" })).toBeVisible();
 
-  // Nothing chosen keeps the photo's own background.
+  // With no garment color picked there is one background, and nothing chosen keeps the photo's own.
   await expect(page.getByText("Background for Classic Tee")).toBeVisible();
   await expect(page.getByRole("button", { name: "Original" })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Charcoal background" }).click();
   await expect(page.getByTestId("mockup-preview")).toHaveCSS("background-color", "rgb(34, 38, 46)");
+
+  // Two garment colors: each gets its own row, starting from what was chosen so far.
+  await page.getByRole("button", { name: "White", exact: true }).click();
+  await page.getByRole("button", { name: "Black", exact: true }).click();
+  const forWhite = page.getByRole("group", { name: "Background for White" });
+  const forBlack = page.getByRole("group", { name: "Background for Black" });
+  await expect(forWhite.getByRole("button", { name: "Charcoal background" })).toHaveAttribute("aria-pressed", "true");
+  await expect(forBlack.getByRole("button", { name: "Charcoal background" })).toHaveAttribute("aria-pressed", "true");
+  await forBlack.getByRole("button", { name: "White background" }).click();
+  // Changing one leaves the other as it was.
+  await expect(forWhite.getByRole("button", { name: "Charcoal background" })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Apply mock-ups" }).click();
   await expect(page.getByTitle("Background: Charcoal")).toBeVisible();
+  await expect(page.getByTitle("Background: White")).toBeVisible();
 
   // The choice is part of the workflow that is saved.
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect.poll(() => requests.filter(r => r.method === "PUT").length).toBe(1);
-  expect(JSON.stringify(requests.find(r => r.method === "PUT")!.body)).toContain(`"templateBackgrounds":{"${templateId}":"#22262E"}`);
+  expect(JSON.stringify(requests.find(r => r.method === "PUT")!.body)).toContain(`"templateBackgrounds":{"${templateId}":{"#FFFFFF":"#22262E","#1A1A1A":"#FFFFFF"}}`);
 });

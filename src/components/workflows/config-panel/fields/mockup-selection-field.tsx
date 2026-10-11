@@ -80,7 +80,8 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
                   {colors.map((hex) => (
                     <GarmentColorSwatch key={hex} hex={hex} />
                   ))}
-                  {template.allowBackground && templateBackgrounds[template.id] && <MockupBackgroundSwatch hex={templateBackgrounds[template.id]} />}
+                  {template.allowBackground &&
+                    [...new Set(Object.values(templateBackgrounds[template.id] ?? {}))].map((hex) => <MockupBackgroundSwatch key={hex} hex={hex} />)}
                 </span>
                 <span className="text-muted-foreground shrink-0">{template.productType}</span>
               </li>

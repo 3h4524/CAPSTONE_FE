@@ -1,4 +1,5 @@
 import { BATCH_RUN_NODE_TYPES, RUNNABLE_NODE_TYPES, VIDEO_RUN_NODE_TYPES } from "@/constants/workflow";
+import { backgroundKeys, backgroundsFor, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
 import { readNumber, readString, readStringArray, readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type { MockupState, RunStep } from "@/stores/workflow-run";
@@ -15,7 +16,7 @@ export type MockupSelection = {
   templateIds: string[];
   garmentColors: string[];
   templateColors: Record<string, string[]>;
-  templateBackgrounds: Record<string, string>;
+  templateBackgrounds: TemplateBackgrounds;
 };
 
 export type RunPlan = {
@@ -208,8 +209,12 @@ export const extractMockupSelection = (config: WorkflowNodeConfig): MockupSelect
   const templateColors = Object.fromEntries(
     Object.entries(readTemplateColors(config.templateColors)).filter(([id, colors]) => templateIds.includes(id) && colors.length > 0)
   );
+  // Written out for the garment colors the template has now, so a color that was unticked takes no background along.
   const templateBackgrounds = Object.fromEntries(
-    Object.entries(readTemplateBackgrounds(config.templateBackgrounds)).filter(([id]) => templateIds.includes(id))
+    Object.entries(readTemplateBackgrounds(config.templateBackgrounds))
+      .filter(([id]) => templateIds.includes(id))
+      .map(([id, byColor]) => [id, backgroundsFor(byColor, backgroundKeys(templateColors[id] ?? []))] as const)
+      .filter(([, byColor]) => Object.keys(byColor).length > 0)
   );
   return { templateIds, garmentColors: [], templateColors, templateBackgrounds };
 };

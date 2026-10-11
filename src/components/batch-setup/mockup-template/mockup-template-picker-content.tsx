@@ -5,7 +5,7 @@ import { Pencil } from "lucide-react";
 
 import { MockupTemplateCard } from "@/components/batch-setup/mockup-template/mockup-template-card";
 import { MockupTemplateDetail } from "@/components/batch-setup/mockup-template/mockup-template-detail";
-import { GarmentColorPicker } from "@/components/mockups/garment-color-picker";
+import { GarmentColorPicker, GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
 import { MockupBackgroundPicker } from "@/components/mockups/mockup-background-picker";
 import { MockupTemplateFormDialog } from "@/components/mockups/mockup-template-form-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ import {
   resolveTemplateColors,
   type TemplateColors,
 } from "@/helpers/garment-colors";
-import type { TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
+import { backgroundKeys, backgroundsFor, DEFAULT_BACKGROUND_KEY, resolveBackground, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
 import { MAX_MOCKUP_SELECTION, productTypeLabel } from "@/helpers/mockup-template";
 import type { MockupTemplate } from "@/types/mockup-templates";
 
@@ -29,7 +29,7 @@ type MockupTemplatePickerContentProps = {
   initialColors?: string[];
   /** Colors picked per template, keyed by template id. */
   initialTemplateColors?: TemplateColors;
-  /** Background picked per template, keyed by template id. */
+  /** Backgrounds picked per template, keyed by template id and then by garment color. */
   initialTemplateBackgrounds?: TemplateBackgrounds;
   pending: boolean;
   /** Product types in the batch job (lowercase) with how many products each has. */
@@ -101,10 +101,14 @@ export const MockupTemplatePickerContent = ({
     listed[0] ??
     null;
 
-  const setBackground = (templateId: string, hex: string | null) =>
+  // The garment colors a template's backgrounds are chosen for: the ones ticked for it, or one default.
+  const backgroundKeysOf = (template: MockupTemplate) => backgroundKeys(template.allowRecolor ? (draftColors[template.id] ?? []) : []);
+
+  // The other colors are written out first, so changing one never changes what the rest were showing.
+  const setBackground = (template: MockupTemplate, key: string, hex: string | null) =>
     setDraftBackgrounds((previous) => {
-      const { [templateId]: _removed, ...rest } = previous;
-      return hex ? { ...rest, [templateId]: hex } : rest;
+      const { [key]: _replaced, ...others } = backgroundsFor(previous[template.id], backgroundKeysOf(template));
+      return { ...previous, [template.id]: hex ? { ...others, [key]: hex } : others };
     });
 
   // Colors only apply to recolorable templates that are ticked; a template with none made in its own color.
@@ -120,8 +124,9 @@ export const MockupTemplatePickerContent = ({
       ),
       Object.fromEntries(
         templates
-          .filter((template) => template.allowBackground && draftIds.includes(template.id) && draftBackgrounds[template.id])
-          .map((template) => [template.id, draftBackgrounds[template.id]] as const)
+          .filter((template) => template.allowBackground && draftIds.includes(template.id))
+          .map((template) => [template.id, backgroundsFor(draftBackgrounds[template.id], backgroundKeysOf(template))] as const)
+          .filter(([, backgrounds]) => Object.keys(backgrounds).length > 0)
       )
     );
 
@@ -213,15 +218,24 @@ export const MockupTemplatePickerContent = ({
                         {selected && template.allowBackground && (
                           <div className="ml-4 space-y-2 rounded-lg border border-dashed p-3">
                             <p className="text-xs font-medium text-slate-900">Background for {template.name}</p>
-                            <MockupBackgroundPicker
-                              value={draftBackgrounds[template.id] ?? null}
-                              disabled={pending}
-                              onChange={(hex) => setBackground(template.id, hex)}
-                            />
+                            {backgroundKeysOf(template).map((key, _index, keys) => (
+                              <div key={key} className="space-y-1.5" role="group" aria-label={key === DEFAULT_BACKGROUND_KEY ? "Background" : `Background for ${garmentColorName(key)}`}>
+                                {/* With several garment colors, each gets a background of its own. */}
+                                {keys.length > 1 && (
+                                  <p className="flex items-center gap-1.5 text-xs text-slate-700">
+                                    <GarmentColorSwatch hex={key} />
+                                    {garmentColorName(key)} garment
+                                  </p>
+                                )}
+                                <MockupBackgroundPicker
+                                  value={resolveBackground(draftBackgrounds[template.id], key)}
+                                  disabled={pending}
+                                  onChange={(hex) => setBackground(template, key, hex)}
+                                />
+                              </div>
+                            ))}
                             <p className="text-muted-foreground text-xs">
-                              {draftBackgrounds[template.id]
-                                ? "The garment is lifted off the photo and put on this color."
-                                : "Original keeps the photo's own background."}
+                              Original keeps the photo&apos;s own background; a color lifts the garment off the photo and puts it on that color.
                             </p>
                           </div>
                         )}
@@ -238,7 +252,7 @@ export const MockupTemplatePickerContent = ({
             key={focusedTemplate?.id ?? "none"}
             template={focusedTemplate}
             colors={focusedTemplate ? (draftColors[focusedTemplate.id] ?? []) : []}
-            background={focusedTemplate?.allowBackground ? (draftBackgrounds[focusedTemplate.id] ?? null) : null}
+            backgrounds={focusedTemplate?.allowBackground ? draftBackgrounds[focusedTemplate.id] : undefined}
             designUrl={sampleDesignUrl}
           />
         </div>

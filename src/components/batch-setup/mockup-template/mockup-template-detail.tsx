@@ -7,6 +7,7 @@ import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { garmentColorName } from "@/helpers/garment-colors";
+import { backgroundKeys, resolveBackground } from "@/helpers/mockup-backgrounds";
 import { parsePrintArea } from "@/helpers/mockup-template";
 import type { MockupTemplate } from "@/types/mockup-templates";
 import { cn } from "@/utils/cn";
@@ -15,14 +16,14 @@ type MockupTemplateDetailProps = {
   template: MockupTemplate | null;
   /** The garment colors picked for this template; the preview can show each of them. */
   colors?: string[];
-  /** The background picked for this template; null keeps the photo's own. */
-  background?: string | null;
+  /** The backgrounds picked for this template, by garment color; the preview shows the one of the color it is in. */
+  backgrounds?: Record<string, string>;
   /** A generated design to show inside the print area. */
   designUrl?: string | null;
 };
 
 // Give this component a `key` of the template id so the chosen preview color resets per template.
-export const MockupTemplateDetail = ({ template, colors = [], background = null, designUrl }: MockupTemplateDetailProps) => {
+export const MockupTemplateDetail = ({ template, colors = [], backgrounds, designUrl }: MockupTemplateDetailProps) => {
   const [colorIndex, setColorIndex] = useState(0);
 
   if (!template) {
@@ -35,7 +36,9 @@ export const MockupTemplateDetail = ({ template, colors = [], background = null,
   }
 
   const area = parsePrintArea(template.printAreaConfig);
-  const previewColor = colors[Math.min(colorIndex, colors.length - 1)] ?? template.garmentColor;
+  const pickedColor = colors[Math.min(colorIndex, colors.length - 1)];
+  const previewColor = pickedColor ?? template.garmentColor;
+  const background = resolveBackground(backgrounds, backgroundKeys(pickedColor ? [pickedColor] : [])[0]);
 
   return (
     <ScrollArea className="h-full [&>[data-radix-scroll-area-viewport]>div]:block!">

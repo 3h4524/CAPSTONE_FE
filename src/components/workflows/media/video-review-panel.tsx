@@ -16,6 +16,8 @@ import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { useRunVideos } from "@/hooks/queries/use-run-videos";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { generateVideoConfigSchema } from "@/schemas/workflow";
+import { confirmAiShot } from "@/helpers/confirm-ai-shot";
+import { getErrorMessage } from "@/helpers/error-message";
 import { useWorkflowStore } from "@/stores/workflow";
 
 export const VideoReviewPanel = () => {
@@ -42,17 +44,27 @@ export const VideoReviewPanel = () => {
         mockupIds: readStringArray(mockup?.data.config.mockupIds),
         artworkGroupKey: readString(mockup?.data.config.artworkGroupKey),
       });
-      action({ runId: run.id, expectedRevision: run.revision, action: "rerender", config: parsed.data, expectedStoryboardFingerprint: storyboard.fingerprint });
-    } catch {
-      // The preview mutation reports the actionable error and rerender stays blocked.
-    }
+      const token = await confirmAiShot(run.id, parsed.data);
+      if (token === null) return;
+      action({ runId: run.id, expectedRevision: run.revision, action: "rerender", config: parsed.data, expectedStoryboardFingerprint: storyboard.fingerprint, aiShotQuoteToken: token });
+    } catch (error) { showToast("error", getErrorMessage(error)); }
+  };
+  const regenerate = async () => {
+    if (!run || !generate) return;
+    const parsed = generateVideoConfigSchema.safeParse(generate.data.config);
+    if (!parsed.success) { showToast("warning", parsed.error.issues[0]?.message ?? "Check AI Shot settings."); return; }
+    try {
+      const token = await confirmAiShot(run.id, parsed.data, true);
+      if (token === null) return;
+      action({ runId: run.id, expectedRevision: run.revision, action: "regenerate_ai_shot", config: parsed.data, aiShotQuoteToken: token });
+    } catch (error) { showToast("error", getErrorMessage(error)); }
   };
   if (!runId) return <p className="text-muted-foreground text-sm">Run the workflow to create a video.</p>;
   if (isPending) return <SectionLoading label="Loading video versions" />;
   if (!video) return <p className="text-muted-foreground text-sm">No video candidate yet. Complete Mockup Approval first.</p>;
   return <div className="space-y-4">
     <Select value={video.id} onValueChange={setViewedId}><SelectTrigger aria-label="Video version"><SelectValue /></SelectTrigger><SelectContent>{videos?.map(v => <SelectItem key={v.id} value={v.id}>Version {v.version} · {v.approvalStatus}</SelectItem>)}</SelectContent></Select>
-    <div className="flex flex-wrap gap-2"><Badge>Standard</Badge><Badge variant="outline">{video.template}</Badge><Badge variant="secondary">{video.status}</Badge></div>
+    <div className="flex flex-wrap gap-2"><Badge>{video.mode === "ai_shot" ? "AI Shot" : "Standard"}</Badge><Badge variant="outline">{video.template}</Badge><Badge variant="secondary">{video.status}</Badge></div>
     {video.previewUrl && <VideoPreviewFrame width={video.width} height={video.height} maxHeightRem={34}>
       <video key={video.id} controls preload="metadata" poster={video.thumbnailUrl ?? undefined} className="size-full bg-black"><source src={video.previewUrl} type="video/mp4" /><track kind="captions" /></video>
     </VideoPreviewFrame>}
@@ -61,7 +73,8 @@ export const VideoReviewPanel = () => {
       <Button type="button" size="sm" variant="outline" disabled={!canReview || isActing || video.approvalStatus === "rejected"} onClick={() => run && action({ runId: run.id, expectedRevision: run.revision, action: "reject_video", videoId: video.id, reviewRevision: video.reviewRevision })}>Reject</Button>
       <Button type="button" size="sm" variant="outline" disabled={isDownloading || !video.previewUrl} onClick={() => download({ id: video.id, zip: false }, { onSuccess: url => window.location.assign(url) })}>Download MP4</Button>
       <Button type="button" size="sm" variant="ghost" disabled={!canReview} onClick={() => generate && useWorkflowStore.getState().selectNode(generate.id)}>Edit configuration</Button>
-      <Button type="button" size="sm" variant="outline" disabled={!canReview || isActing || isPreviewing} onClick={rerender}>{isPreviewing ? "Checking storyboard…" : "Re-render"}</Button></div>
+      <Button type="button" size="sm" variant="outline" disabled={!canReview || isActing || isPreviewing} onClick={rerender}>{isPreviewing ? "Checking storyboard…" : "Re-render"}</Button>
+      {video.mode === "ai_shot" && <Button type="button" size="sm" variant="outline" disabled={!canReview || isActing} onClick={regenerate}>Regenerate AI clips</Button>}</div>
     {!canReview && <p className="text-muted-foreground text-xs">Only the current review candidate can be approved. Previous versions remain available.</p>}
     {video.scenes.map(scene => <VideoSceneCard key={scene.sceneOrder} scene={scene} asset={assets?.find(a => a.id === scene.mockupId)} />)}
   </div>;

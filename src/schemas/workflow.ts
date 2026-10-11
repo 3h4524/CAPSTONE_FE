@@ -57,7 +57,7 @@ export const applyMockupConfigSchema = z.object({
 });
 
 export const generateVideoConfigSchema = z.object({
-  mode: z.enum(["standard", "ai_background", "ai_shot"]),
+  mode: z.enum(["standard", "ai_shot"]),
   target: z.literal("etsy"),
   template: z.enum(["auto", "product_showcase", "design_detail", "variant_showcase"], {
     error: "Choose a video template.",
@@ -72,13 +72,29 @@ export const generateVideoConfigSchema = z.object({
   standardOptions: z.object({ motionPreset: z.enum(["varied", "gentle", "contain_gentle", "static", "pan", "zoom", "zoom_out", "pan_left", "pan_up", "pan_down", "diagonal_up_right", "diagonal_up_left", "diagonal_down_right", "diagonal_down_left"]), crop: z.literal("safe"), transition: z.enum(["fade", "cut"]) }),
   sceneMotionPresets: z.array(z.enum(["gentle", "contain_gentle", "static", "pan", "zoom", "zoom_out", "pan_left", "pan_up", "pan_down", "diagonal_up_right", "diagonal_up_left", "diagonal_down_right", "diagonal_down_left"]).nullable()).max(4).optional(),
   fallbackToStandard: z.boolean(),
-}).refine(value => value.assetSelection !== "manual" || value.selectedMockupIds.length > 0, { path: ["selectedMockupIds"], message: "Choose at least one approved mockup." });
+  aiShotOptions: z.object({
+    coverage: z.enum(["single_scene", "full_video"]),
+    concept: z.enum(["product_cinematic", "material_detail", "lifestyle_motion", "product_in_use"]),
+    sceneIndex: z.number().int().min(0).max(3),
+    mockupId: z.string().uuid().nullable(),
+    prompt: z.string().trim().max(300).nullable(),
+    rightsConfirmed: z.boolean(),
+    fullSceneMockupIds: z.array(z.string().uuid()).max(2).nullable(),
+  }).optional(),
+}).superRefine((value, ctx) => {
+  if (value.assetSelection === "manual" && value.selectedMockupIds.length === 0) ctx.addIssue({ code: "custom", path: ["selectedMockupIds"], message: "Choose at least one approved mockup." });
+  if (value.mode !== "ai_shot") return;
+  if (!value.aiShotOptions) { ctx.addIssue({ code: "custom", path: ["aiShotOptions"], message: "Choose AI Shot settings." }); return; }
+  if (value.aiShotOptions.coverage === "full_video" && ![8, 15].includes(value.durationSeconds)) ctx.addIssue({ code: "custom", path: ["durationSeconds"], message: "Full AI video must be 8 or 15 seconds." });
+  if (value.aiShotOptions.coverage === "single_scene" && value.durationSeconds < 12) ctx.addIssue({ code: "custom", path: ["durationSeconds"], message: "Mixed AI and Standard video needs 12–15 seconds." });
+  if (["lifestyle_motion", "product_in_use"].includes(value.aiShotOptions.concept) && !value.aiShotOptions.rightsConfirmed) ctx.addIssue({ code: "custom", path: ["aiShotOptions", "rightsConfirmed"], message: "Confirm image rights for the visible adult person." });
+});
 
 export const videoAssetSelectionSchema = z.object({
-  assetSelection: generateVideoConfigSchema.shape.assetSelection,
-  selectedMockupIds: generateVideoConfigSchema.shape.selectedMockupIds,
-  sceneOrder: generateVideoConfigSchema.shape.sceneOrder,
-  sceneMotionPresets: generateVideoConfigSchema.shape.sceneMotionPresets,
+  assetSelection: z.enum(["automatic", "manual"]),
+  selectedMockupIds: z.array(z.string().uuid()).max(8),
+  sceneOrder: z.array(z.string().uuid()).max(4),
+  sceneMotionPresets: z.array(z.enum(["gentle", "contain_gentle", "static", "pan", "zoom", "zoom_out", "pan_left", "pan_up", "pan_down", "diagonal_up_right", "diagonal_up_left", "diagonal_down_right", "diagonal_down_left"]).nullable()).max(4).optional(),
 }).refine(value => value.assetSelection !== "manual" || value.selectedMockupIds.length > 0, { path: ["selectedMockupIds"], message: "Choose at least one approved mockup." });
 
 export const generateListingConfigSchema = z.object({

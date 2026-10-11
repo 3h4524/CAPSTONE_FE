@@ -57,7 +57,7 @@ export const BATCH_RUN_NODE_TYPES: WorkflowNodeType[] = [
 
 export const VIDEO_RUN_NODE_TYPES: WorkflowNodeType[] = ["approval-gate", "generate-video", "review-video", "export-zip"];
 
-export const RUNNABLE_NODE_TYPES: WorkflowNodeType[] = [...BATCH_RUN_NODE_TYPES, ...VIDEO_RUN_NODE_TYPES];
+export const RUNNABLE_NODE_TYPES: WorkflowNodeType[] = [...BATCH_RUN_NODE_TYPES, ...VIDEO_RUN_NODE_TYPES, "generate-listing"];
 
 // The order the steps of a run must be connected in (the backend checks the same order).
 export const RUN_ORDER: WorkflowNodeType[] = [

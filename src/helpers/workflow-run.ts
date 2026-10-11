@@ -33,6 +33,11 @@ export const isBatchRunNode = (type: WorkflowNodeType) => BATCH_RUN_NODE_TYPES.i
 /** A step of the part the server runs for one product: mock-up approval, video, video review and the ZIP. */
 export const isVideoRunNode = (type: WorkflowNodeType) => VIDEO_RUN_NODE_TYPES.includes(type);
 
+/** A server-executed node that is recorded in a WorkflowRun. */
+export const isServerRunNode = (type: WorkflowNodeType) => isVideoRunNode(type) || type === "generate-listing";
+
+export const hasListingSteps = (nodes: WorkflowNode[]) => nodes.some((node) => node.data.type === "generate-listing");
+
 /** The workflow generates designs, so a run starts with a batch job. */
 export const hasBatchSteps = (nodes: WorkflowNode[]) =>
   nodes.some((node) => node.data.type === "prompt-synthesis" || node.data.type === "design-image");
@@ -65,6 +70,18 @@ const SINGLE_NODE_LABELS: Partial<Record<WorkflowNodeType, string>> = {
 // settings; the video steps are checked by the server when its run starts, and the rest are skipped.
 export const validateRunnable = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
   const issues: WorkflowIssue[] = [];
+
+  const listingOnly = hasListingSteps(nodes) && !hasBatchSteps(nodes) && !hasVideoSteps(nodes);
+  if (listingOnly) {
+    const inputs = findByType(nodes, "product-input");
+    const listings = findByType(nodes, "generate-listing");
+    if (inputs.length !== 1) issues.push({ id: "run-missing-product-input", nodeId: null, message: "Add one Product input node to run the workflow." });
+    if (listings.length !== 1) issues.push({ id: "run-missing-generate-listing", nodeId: null, message: "Add one Listing content node to run the workflow." });
+    if (issues.length > 0) return issues;
+    if (!readString(inputs[0].data.config.productId)) issues.push({ id: "run-product", nodeId: inputs[0].id, message: "Choose a product in Product input." });
+    if (!reachableFrom(inputs[0].id, edges).has(listings[0].id)) issues.push({ id: "run-listing-link", nodeId: listings[0].id, message: "Connect Listing content after Product input." });
+    return issues;
+  }
 
   (Object.keys(SINGLE_NODE_LABELS) as WorkflowNodeType[]).forEach((type) => {
     const found = findByType(nodes, type);

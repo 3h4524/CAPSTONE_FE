@@ -15,6 +15,7 @@ import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
 import { StoryboardPanel } from "@/components/workflows/media/storyboard-panel";
 import { VideoReviewPanel } from "@/components/workflows/media/video-review-panel";
 import { VideoSourcesHeader } from "@/components/workflows/media/video-sources-header";
+import { ListingContentResultPanel } from "@/components/workflows/config-panel/listing-content-result";
 import { WORKFLOW_CATEGORIES, WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
 import { readString } from "@/helpers/workflow-config";
 import { hasVideoSteps, isVideoRunNode } from "@/helpers/workflow-run";
@@ -104,6 +105,7 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
           </form>
         </Form>
         <div className="space-y-4 px-4 pb-4">{isVideoRunNode(node.data.type) && <RunStatusPanel />}
+          {node.data.type === "generate-listing" && <ListingContentResultPanel />}
           {node.data.type === "apply-mockup" && hasVideo && <>
             <VideoSourcesHeader description="Choose which of this product's mock-ups the video may use, or upload finished mock-up photos. Leave all unchecked to let the video pick." />
             <MockupPanel review={false} />

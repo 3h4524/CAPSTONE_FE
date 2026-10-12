@@ -17,6 +17,7 @@ export const actOnWorkflowRun = async ({ runId, ...action }: RunAction & { runId
 export const quoteAiShot = async (runId: string, config?: GenerateVideoConfig, regenerate = false) => (await api.post<AiShotQuote>(`/api/workflow-runs/${runId}/ai-shot-quote`, { config, regenerate })).data;
 export const listMockupAssets = async (id: string) => (await api.get<MockupAsset[]>(`/api/products/${id}/mockup-assets`)).data;
 export const uploadMockupAsset = async ({ productId, file }: { productId: string; file: File }) => (await api.postForm<MockupAsset>(`/api/products/${productId}/mockup-assets`, { file })).data;
+export const generateLifestyleMockup = async ({ productId, garmentMockupId, file }: { productId: string; garmentMockupId: string; file: File }) => (await api.postForm<MockupAsset>(`/api/products/${productId}/mockup-assets/lifestyle`, { garmentMockupId, file })).data;
 export const updateMockupAsset = async ({ id, expectedRevision, ...values }: MockupMetadataFormValues & { id: string; expectedRevision: number }) => (await api.put<MockupAsset>(`/api/mockup-assets/${id}`, { ...values, expectedRevision })).data;
 export const reviewMockupAsset = async ({ id, revision, approved }: { id: string; revision: number; approved: boolean }) => (await api.post<MockupAsset>(`/api/mockup-assets/${id}/review`, { expectedRevision: revision, approved })).data;
 export const listRunVideos = async (id: string) => (await api.get<PromoVideo[]>(`/api/workflow-runs/${id}/videos`)).data;

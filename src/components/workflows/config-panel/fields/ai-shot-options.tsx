@@ -15,7 +15,7 @@ const concepts = [
   ["product_in_use", "Product in use — adult person uses the item"],
 ] as const;
 
-export function AiShotOptions({ nodeId, disabled, onDurationChange }: { nodeId: string; disabled: boolean; onDurationChange: (seconds: number) => void }) {
+export function AiShotOptions({ nodeId, disabled, onChange }: { nodeId: string; disabled: boolean; onChange: (options: Options, seconds?: number) => void }) {
   const node = useWorkflowStore(state => state.nodes.find(n => n.id === nodeId));
   const productId = useWorkflowStore(state => readString(state.nodes.find(n => n.data.type === "product-input")?.data.config.productId));
   const { data: allAssets = [] } = useMockupAssets(productId);
@@ -24,10 +24,12 @@ export function AiShotOptions({ nodeId, disabled, onDurationChange }: { nodeId: 
   const options = { ...defaults, ...(node.data.config.aiShotOptions as Partial<Options> | undefined) };
   const duration = Number(node.data.config.durationSeconds ?? 12);
   const update = (changes: Partial<Options>, nextDuration?: number) => {
+    const next = { ...options, ...changes };
     useWorkflowStore.getState().updateNodeConfig(nodeId, {
-      ...node.data.config, aiShotOptions: { ...options, ...changes }, ...(nextDuration === undefined ? {} : { durationSeconds: nextDuration }),
+      ...node.data.config, aiShotOptions: next, ...(nextDuration === undefined ? {} : { durationSeconds: nextDuration }),
     });
-    if (nextDuration !== undefined) onDurationChange(nextDuration);
+    // The form validates its own copy; without this it keeps checking the previous coverage.
+    onChange(next, nextDuration);
   };
   const needsPerson = options.concept === "lifestyle_motion" || options.concept === "product_in_use";
   const sourceAssets = needsPerson ? assets.filter(asset => asset.role === "Lifestyle")

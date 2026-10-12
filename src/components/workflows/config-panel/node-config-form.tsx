@@ -93,7 +93,11 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
                   }} />
                 </div>
                 {videoFields.filter(field => field.name !== "mode").map(field => <NodeConfigField key={field.name} field={field} control={control} />)}
-                <AiShotOptions nodeId={node.id} disabled={isRunning && !waitingReview} onDurationChange={seconds => setValue("durationSeconds", seconds, { shouldDirty: true, shouldValidate: true })} />
+                <AiShotOptions nodeId={node.id} disabled={isRunning && !waitingReview} onChange={(options, seconds) => {
+                  setValue("aiShotOptions", options, { shouldDirty: true });
+                  if (seconds !== undefined) setValue("durationSeconds", seconds, { shouldDirty: true });
+                  void trigger();
+                }} />
                 <Accordion type="single" collapsible>
                   <AccordionItem value="advanced-video">
                     <AccordionTrigger>Caption and transition</AccordionTrigger>

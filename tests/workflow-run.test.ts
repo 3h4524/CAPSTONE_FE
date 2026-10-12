@@ -115,7 +115,7 @@ test("steps no backend runs are skipped once a run exists", () => {
   assert.equal(deriveNodeStatuses(nodes, { step: "idle", job: null, mockupState: "idle" })["listing"], "idle");
 });
 
-test("a video needs its product, its six steps and nothing that cannot run", () => {
+test("a video needs its product and its six steps", () => {
   const { nodes, edges } = configured();
   byType(nodes, "product-input").data.config = { batchId: id, productId: "" };
   assert.equal(validateWorkflow(nodes, edges).some((issue) => issue.message.includes("Choose the product for the video")), true);
@@ -123,9 +123,25 @@ test("a video needs its product, its six steps and nothing that cannot run", () 
   const noReview = without(configured(), "review-video");
   assert.equal(validateWorkflow(noReview.nodes, noReview.edges).some((issue) => issue.id === "mvp-pipeline"), true);
 
-  const withListing = configured();
-  withListing.nodes.push({ ...byType(withListing.nodes, "export-zip"), id: "listing", data: { type: "generate-listing", label: "Listing content", status: "idle", config: WORKFLOW_NODE_DEFINITIONS["generate-listing"].defaultConfig } });
-  assert.equal(validateWorkflow(withListing.nodes, withListing.edges).some((issue) => issue.id === "video-unsupported-listing"), true);
+});
+
+test("listing content needs no approval, hanging off a step or between two", () => {
+  const listing = (graph: ReturnType<typeof configured>) => {
+    graph.nodes.push({ ...byType(graph.nodes, "export-zip"), id: "listing", data: { type: "generate-listing", label: "Listing content", status: "idle", config: WORKFLOW_NODE_DEFINITIONS["generate-listing"].defaultConfig } });
+    return graph;
+  };
+  const edge = (source: string, target: string) => ({ id: `${source}-${target}`, source, target }) as WorkflowEdge;
+  const issuesOf = (graph: ReturnType<typeof configured>) => validateWorkflow(graph.nodes, graph.edges).filter((issue) => issue.id.startsWith("approval-") || issue.id.startsWith("required-edge-") || issue.id === "video-extra-edges");
+
+  const hanging = listing(configured());
+  hanging.edges.push(edge(byType(hanging.nodes, "product-input").id, "listing"));
+  assert.deepEqual(issuesOf(hanging), []);
+
+  const between = listing(configured());
+  const input = byType(between.nodes, "product-input").id;
+  const prompt = byType(between.nodes, "prompt-synthesis").id;
+  between.edges = [...between.edges.filter((item) => !(item.source === input && item.target === prompt)), edge(input, "listing"), edge("listing", prompt)];
+  assert.deepEqual(issuesOf(between), []);
 });
 
 test("a workflow without video steps is not held to the video rules", () => {

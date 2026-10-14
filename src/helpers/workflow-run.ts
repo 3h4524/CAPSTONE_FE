@@ -236,6 +236,24 @@ export const extractMockupSelection = (config: WorkflowNodeConfig): MockupSelect
   return { templateIds, garmentColors: [], templateColors, templateBackgrounds };
 };
 
+// A template is only ever used for products of its own type, and the backend refuses one that no product of
+// the job can use. So the templates chosen for other types (their products were made in an earlier run, or
+// are not in this job) are left out of what the job is given. On the node they stay until the templates are
+// chosen again, when the picker drops them.
+export const narrowMockupSelection = (
+  selection: MockupSelection,
+  templates: { id: string; productType: string }[],
+  productTypes: Record<string, number>
+): MockupSelection => {
+  const templateIds = selection.templateIds.filter((id) => {
+    const type = templates.find((template) => template.id === id)?.productType.toLowerCase();
+    // A template that is not known here is kept, so the backend still reports it as missing.
+    return type === undefined || type in productTypes;
+  });
+  const kept = <T>(byTemplate: Record<string, T>) => Object.fromEntries(Object.entries(byTemplate).filter(([id]) => templateIds.includes(id)));
+  return { ...selection, templateIds, templateColors: kept(selection.templateColors), templateBackgrounds: kept(selection.templateBackgrounds) };
+};
+
 export type ApprovalCounts = { pending: number; approved: number; rejected: number };
 
 // How the generated designs of a job stand: waiting for a decision, approved, or rejected.

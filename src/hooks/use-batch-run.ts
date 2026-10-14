@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { batchJobKeys, cancelBatchJob, startBatchJob } from "@/api/batch-jobs";
 import { batchKeys } from "@/api/batches";
-import { applyBatchMockupTemplates, generateAllBatchMockups, getBatchJobMockups, getBatchMockupSelection, mockupTemplateKeys } from "@/api/mockup-templates";
+import { applyBatchMockupTemplates, generateAllBatchMockups, getBatchJobMockups, getBatchMockupSelection, listMockupTemplates, mockupTemplateKeys } from "@/api/mockup-templates";
 import { getErrorMessage } from "@/helpers/error-message";
+import { countProductTypes } from "@/helpers/mockup-template";
 import { showToast } from "@/helpers/toast";
 import {
   ACTIVE_JOB_STATUSES,
@@ -16,6 +17,7 @@ import {
   extractRunPlan,
   FINISHED_JOB_STATUSES,
   isRunBusy,
+  narrowMockupSelection,
   validateRunnable,
 } from "@/helpers/workflow-run";
 import { NothingPendingError, prepareRun, RunBlockedError } from "@/helpers/workflow-run-prepare";
@@ -90,12 +92,21 @@ export const restoreRunMockups = async (batchJobId: string) => {
 // Returns false, after telling the user why, when nothing was saved.
 export const saveRunMockupSelection = async (batchJobId: string): Promise<boolean> => {
   const config = useWorkflowStore.getState().nodes.find((node) => node.data.type === "apply-mockup")?.data.config;
-  const selection = extractMockupSelection(config ?? {});
+  let selection = extractMockupSelection(config ?? {});
   if (selection.templateIds.length === 0) {
     showToast("error", "Choose at least one mock-up template in the node's Settings first.");
     return false;
   }
   try {
+    // The job takes only the templates its own products can use (see narrowMockupSelection).
+    const job = useWorkflowRunStore.getState().job;
+    if (job?.id === batchJobId) {
+      selection = narrowMockupSelection(selection, await listMockupTemplates(), countProductTypes(job.products));
+      if (selection.templateIds.length === 0) {
+        showToast("error", "None of the chosen mock-up templates is for this run's products. Choose a template for them in the node's Settings first.");
+        return false;
+      }
+    }
     await applyBatchMockupTemplates(batchJobId, selection.templateIds, selection.garmentColors, selection.templateColors, selection.templateBackgrounds);
     return true;
   } catch (error) {

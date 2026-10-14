@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { Pencil } from "lucide-react";
 
+import { MockupBackgroundChoice } from "@/components/batch-setup/mockup-template/mockup-background-choice";
 import { MockupTemplateCard } from "@/components/batch-setup/mockup-template/mockup-template-card";
 import { MockupTemplateDetail } from "@/components/batch-setup/mockup-template/mockup-template-detail";
-import { GarmentColorPicker, GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
-import { MockupBackgroundPicker } from "@/components/mockups/mockup-background-picker";
+import { GarmentColorPicker } from "@/components/mockups/garment-color-picker";
 import { MockupTemplateFormDialog } from "@/components/mockups/mockup-template-form-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import {
   resolveTemplateColors,
   type TemplateColors,
 } from "@/helpers/garment-colors";
-import { backgroundKeys, backgroundsFor, DEFAULT_BACKGROUND_KEY, resolveBackground, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
+import { backgroundKeys, backgroundsFor, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
 import { MAX_MOCKUP_SELECTION, productTypeLabel } from "@/helpers/mockup-template";
 import type { MockupTemplate } from "@/types/mockup-templates";
 
@@ -52,12 +52,24 @@ export const MockupTemplatePickerContent = ({
   onApply,
   onClose,
 }: MockupTemplatePickerContentProps) => {
-  const [draftIds, setDraftIds] = useState(initialIds);
+  // The selection starts from what this run can use. A template ticked earlier for a product type the run has
+  // none of (its products were made in an earlier run) is not listed below, so it could never be unticked;
+  // one that was deleted since is not listed anywhere. Both are left out, and applying removes them.
+  const usable = (id: string) => {
+    const template = templates.find((item) => item.id === id);
+    return template !== undefined && (!productTypeCounts || template.productType.toLowerCase() in productTypeCounts);
+  };
+  const [draftIds, setDraftIds] = useState(() => initialIds.filter(usable));
+  const leftOut = templates.filter((template) => initialIds.includes(template.id) && !usable(template.id));
   const [draftColors, setDraftColors] = useState<TemplateColors>(() =>
     resolveTemplateColors(templates, initialIds, initialTemplateColors, initialColors)
   );
   const [draftBackgrounds, setDraftBackgrounds] = useState<TemplateBackgrounds>(initialTemplateBackgrounds);
   const [focusedId, setFocusedId] = useState<string | null>(null);
+  // The garment color each template is shown in. The preview and the background choice both follow it, so
+  // switching the color in either one shows the same garment and the background that goes with it.
+  const [shownColors, setShownColors] = useState<Record<string, string>>({});
+  const showColor = (templateId: string, hex: string) => setShownColors((previous) => ({ ...previous, [templateId]: hex }));
   // The template being edited stays set while its dialog closes, so the form does not flash empty.
   const [editing, setEditing] = useState<{ template: MockupTemplate; open: boolean } | null>(null);
   const tooMany = draftIds.length > MAX_MOCKUP_SELECTION;
@@ -100,6 +112,13 @@ export const MockupTemplatePickerContent = ({
     listed.find((template) => draftIds.includes(template.id)) ??
     listed[0] ??
     null;
+
+  // A color that was unticked since falls back to the first one still ticked.
+  const shownColorOf = (template: MockupTemplate) => {
+    const colors = template.allowRecolor ? (draftColors[template.id] ?? []) : [];
+    const chosen = shownColors[template.id]?.toLowerCase();
+    return colors.find((hex) => hex.toLowerCase() === chosen) ?? colors[0];
+  };
 
   // The garment colors a template's backgrounds are chosen for: the ones ticked for it, or one default.
   const backgroundKeysOf = (template: MockupTemplate) => backgroundKeys(template.allowRecolor ? (draftColors[template.id] ?? []) : []);
@@ -216,28 +235,19 @@ export const MockupTemplatePickerContent = ({
                           </div>
                         )}
                         {selected && template.allowBackground && (
-                          <div className="ml-4 space-y-2 rounded-lg border border-dashed p-3">
-                            <p className="text-xs font-medium text-slate-900">Background for {template.name}</p>
-                            {backgroundKeysOf(template).map((key, _index, keys) => (
-                              <div key={key} className="space-y-1.5" role="group" aria-label={key === DEFAULT_BACKGROUND_KEY ? "Background" : `Background for ${garmentColorName(key)}`}>
-                                {/* With several garment colors, each gets a background of its own. */}
-                                {keys.length > 1 && (
-                                  <p className="flex items-center gap-1.5 text-xs text-slate-700">
-                                    <GarmentColorSwatch hex={key} />
-                                    {garmentColorName(key)} garment
-                                  </p>
-                                )}
-                                <MockupBackgroundPicker
-                                  value={resolveBackground(draftBackgrounds[template.id], key)}
-                                  disabled={pending}
-                                  onChange={(hex) => setBackground(template, key, hex)}
-                                />
-                              </div>
-                            ))}
-                            <p className="text-muted-foreground text-xs">
-                              Original keeps the photo&apos;s own background; a color lifts the garment off the photo and puts it on that color.
-                            </p>
-                          </div>
+                          <MockupBackgroundChoice
+                            template={template}
+                            colors={template.allowRecolor ? colors : []}
+                            shownColor={shownColorOf(template)}
+                            backgrounds={draftBackgrounds[template.id]}
+                            disabled={pending}
+                            onShowColor={(hex) => {
+                              showColor(template.id, hex);
+                              // The preview moves to this template, so the garment is seen on the background being chosen.
+                              setFocusedId(template.id);
+                            }}
+                            onChange={(key, hex) => setBackground(template, key, hex)}
+                          />
                         )}
                       </div>
                     );
@@ -249,11 +259,12 @@ export const MockupTemplatePickerContent = ({
         </div>
         <div className="hidden min-h-0 md:block">
           <MockupTemplateDetail
-            key={focusedTemplate?.id ?? "none"}
             template={focusedTemplate}
             colors={focusedTemplate ? (draftColors[focusedTemplate.id] ?? []) : []}
             backgrounds={focusedTemplate?.allowBackground ? draftBackgrounds[focusedTemplate.id] : undefined}
             designUrl={sampleDesignUrl}
+            shownColor={focusedTemplate ? shownColorOf(focusedTemplate) : undefined}
+            onShowColor={(hex) => focusedTemplate && showColor(focusedTemplate.id, hex)}
           />
         </div>
       </div>
@@ -267,6 +278,11 @@ export const MockupTemplatePickerContent = ({
               ? ` — no mock-up will be made for: ${uncovered.map((group) => productTypeLabel(group.type)).join(", ")}.`
               : ""}
       </p>
+      {leftOut.length > 0 && (
+        <p className="text-muted-foreground text-xs">
+          Removed from the selection, as this run has no product of that type: {leftOut.map((template) => template.name).join(", ")}.
+        </p>
+      )}
       <DialogFooter className="gap-2">
         <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
         <Button type="button" disabled={pending || draftIds.length === 0 || tooMany} onClick={apply}>

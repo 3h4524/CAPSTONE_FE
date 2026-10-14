@@ -14,6 +14,7 @@ import {
   hasBatchSteps,
   hasVideoSteps,
   isRunBusy,
+  narrowMockupSelection,
   type RunSnapshot,
   validateRunnable,
 } from "@/helpers/workflow-run";
@@ -142,6 +143,31 @@ test("listing content needs no approval, hanging off a step or between two", () 
   const prompt = byType(between.nodes, "prompt-synthesis").id;
   between.edges = [...between.edges.filter((item) => !(item.source === input && item.target === prompt)), edge(input, "listing"), edge("listing", prompt)];
   assert.deepEqual(issuesOf(between), []);
+});
+
+test("a job is given only the chosen templates its own products can use", () => {
+  const templates = [{ id: "hoodie-template", productType: "Hoodie" }, { id: "tshirt-template", productType: "tshirt" }];
+  const selection = {
+    templateIds: ["hoodie-template", "tshirt-template"],
+    garmentColors: [],
+    templateColors: { "hoodie-template": ["#2B4FA3"], "tshirt-template": ["#FFFFFF"] },
+    templateBackgrounds: { "hoodie-template": { default: "#EEEEEE" } },
+  };
+
+  // The hoodies were made in an earlier run: only a T-shirt is waiting now.
+  const narrowed = narrowMockupSelection(selection, templates, { tshirt: 1 });
+  assert.deepEqual(narrowed.templateIds, ["tshirt-template"]);
+  assert.deepEqual(narrowed.templateColors, { "tshirt-template": ["#FFFFFF"] });
+  assert.deepEqual(narrowed.templateBackgrounds, {});
+  // What is chosen on the node is left as it was.
+  assert.deepEqual(selection.templateIds, ["hoodie-template", "tshirt-template"]);
+
+  // Both types waiting: nothing is left out.
+  assert.deepEqual(narrowMockupSelection(selection, templates, { tshirt: 1, hoodie: 2 }).templateIds, ["hoodie-template", "tshirt-template"]);
+  // Nothing chosen fits: the caller sees an empty selection and stops the run with a message.
+  assert.deepEqual(narrowMockupSelection(selection, templates, { mug: 1 }).templateIds, []);
+  // A template the list does not know is kept, so the backend reports it as missing.
+  assert.deepEqual(narrowMockupSelection({ ...selection, templateIds: ["gone"] }, templates, { tshirt: 1 }).templateIds, ["gone"]);
 });
 
 test("a workflow without video steps is not held to the video rules", () => {

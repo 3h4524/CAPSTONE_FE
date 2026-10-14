@@ -4,7 +4,7 @@ import { approveBatch, batchKeys, listBatchProducts } from "@/api/batches";
 import { listMockupTemplates, mockupTemplateKeys } from "@/api/mockup-templates";
 import { getSubscriptionOverviewRequest } from "@/api/subscription";
 import { countProductTypes, productTypeLabel } from "@/helpers/mockup-template";
-import { ACTIVE_JOB_STATUSES, type RunPlan } from "@/helpers/workflow-run";
+import { ACTIVE_JOB_STATUSES, narrowMockupSelection, type RunPlan } from "@/helpers/workflow-run";
 import { SUBSCRIPTION_OVERVIEW_QUERY_KEY } from "@/hooks/queries/use-subscription-overview";
 import type { QueryClient } from "@tanstack/react-query";
 
@@ -75,15 +75,17 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
       queryFn: () => listMockupTemplates(),
       ...fresh,
     });
-    plan.mockup.templateIds.forEach((id) => {
-      const template = templates.find((item) => item.id === id);
-      if (!template) throw new RunBlockedError("A selected mock-up template no longer exists. Choose the templates again.");
-      if (!(template.productType.toLowerCase() in productTypes)) {
-        throw new RunBlockedError(
-          `${template.name} is a ${productTypeLabel(template.productType)} template, but this batch has no ${productTypeLabel(template.productType)} products.`
-        );
-      }
-    });
+    if (plan.mockup.templateIds.some((id) => !templates.some((template) => template.id === id))) {
+      throw new RunBlockedError("A selected mock-up template no longer exists. Choose the templates again.");
+    }
+    // The run makes mock-ups for the pending products only. A template still chosen for a type whose products
+    // were made earlier is simply not used; the run is stopped only when nothing chosen fits what is waiting.
+    const usable = narrowMockupSelection(plan.mockup, templates, productTypes);
+    if (plan.mockup.templateIds.length > 0 && usable.templateIds.length === 0) {
+      const waiting = Object.keys(productTypes).map(productTypeLabel).join(", ");
+      throw new RunBlockedError(`None of the chosen mock-up templates is for the products waiting in this batch (${waiting}). Choose a template for them in Apply mock-up.`);
+    }
+    plan.mockup = usable;
   }
 
   const keys = await queryClient.fetchQuery({ queryKey: apiKeyKeys.all, queryFn: () => listApiKeys(), ...fresh });

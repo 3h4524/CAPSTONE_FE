@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 import { MockupTemplatePreview } from "@/components/batch-setup/mockup-template/mockup-template-preview";
 import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
 import { Badge } from "@/components/ui/badge";
@@ -20,11 +18,12 @@ type MockupTemplateDetailProps = {
   backgrounds?: Record<string, string>;
   /** A generated design to show inside the print area. */
   designUrl?: string | null;
+  /** The garment color to show the template in; the first picked one when it is not among them. */
+  shownColor?: string;
+  onShowColor?: (hex: string) => void;
 };
 
-// Give this component a `key` of the template id so the chosen preview color resets per template.
-export const MockupTemplateDetail = ({ template, colors = [], backgrounds, designUrl }: MockupTemplateDetailProps) => {
-  const [colorIndex, setColorIndex] = useState(0);
+export const MockupTemplateDetail = ({ template, colors = [], backgrounds, designUrl, shownColor, onShowColor }: MockupTemplateDetailProps) => {
 
   if (!template) {
     return (
@@ -36,7 +35,7 @@ export const MockupTemplateDetail = ({ template, colors = [], backgrounds, desig
   }
 
   const area = parsePrintArea(template.printAreaConfig);
-  const pickedColor = colors[Math.min(colorIndex, colors.length - 1)];
+  const pickedColor = colors.find((hex) => hex.toLowerCase() === shownColor?.toLowerCase()) ?? colors[0];
   const previewColor = pickedColor ?? template.garmentColor;
   const background = resolveBackground(backgrounds, backgroundKeys(pickedColor ? [pickedColor] : [])[0]);
 
@@ -56,14 +55,14 @@ export const MockupTemplateDetail = ({ template, colors = [], backgrounds, desig
           <div>
             <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Preview color</p>
             <div className="mt-2 flex flex-wrap gap-2">
-              {colors.map((hex, index) => (
+              {colors.map((hex) => (
                 <button
                   key={hex}
                   type="button"
                   aria-label={`Preview in ${garmentColorName(hex)}`}
-                  aria-pressed={index === colorIndex}
-                  onClick={() => setColorIndex(index)}
-                  className={cn("rounded-full p-0.5", index === colorIndex && "ring-primary ring-2")}
+                  aria-pressed={hex === pickedColor}
+                  onClick={() => onShowColor?.(hex)}
+                  className={cn("rounded-full p-0.5", hex === pickedColor && "ring-primary ring-2")}
                 >
                   <GarmentColorSwatch hex={hex} className="size-5" />
                 </button>

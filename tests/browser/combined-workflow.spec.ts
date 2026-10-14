@@ -270,19 +270,36 @@ test("Apply mock-up puts each garment color of a template on a background of its
   await page.getByRole("button", { name: "Charcoal background" }).click();
   await expect(page.getByTestId("mockup-preview")).toHaveCSS("background-color", "rgb(34, 38, 46)");
 
-  // Two garment colors: each gets its own row, starting from what was chosen so far.
+  // Two garment colors: still one background choice, for the garment color the template is shown in. Each
+  // color starts from what was chosen so far.
   await page.getByRole("button", { name: "White", exact: true }).click();
   await page.getByRole("button", { name: "Black", exact: true }).click();
-  const forWhite = page.getByRole("group", { name: "Background for White" });
-  const forBlack = page.getByRole("group", { name: "Background for Black" });
-  await expect(forWhite.getByRole("button", { name: "Charcoal background" })).toHaveAttribute("aria-pressed", "true");
-  await expect(forBlack.getByRole("button", { name: "Charcoal background" })).toHaveAttribute("aria-pressed", "true");
-  await forBlack.getByRole("button", { name: "White background" }).click();
-  // Changing one leaves the other as it was.
-  await expect(forWhite.getByRole("button", { name: "Charcoal background" })).toHaveAttribute("aria-pressed", "true");
+  const forWhite = page.getByRole("button", { name: "Background for the White garment" });
+  const forBlack = page.getByRole("button", { name: "Background for the Black garment" });
+  const charcoal = page.getByRole("button", { name: "Charcoal background" });
+  await expect(charcoal).toHaveCount(1);
+  await expect(forWhite).toHaveAttribute("aria-pressed", "true");
+  await expect(charcoal).toHaveAttribute("aria-pressed", "true");
+
+  // Switching the garment color switches the background being chosen, and the preview with it.
+  await forBlack.click();
+  await expect(forBlack).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Preview in Black" })).toHaveAttribute("aria-pressed", "true");
+  await expect(charcoal).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "White background" }).click();
+  await expect(page.getByTestId("mockup-preview")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+
+  // The preview's own color switch does the same; changing one color left the other as it was.
+  await page.getByRole("button", { name: "Preview in White" }).click();
+  await expect(forWhite).toHaveAttribute("aria-pressed", "true");
+  await expect(charcoal).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("mockup-preview")).toHaveCSS("background-color", "rgb(34, 38, 46)");
   await page.getByRole("button", { name: "Apply mock-ups" }).click();
-  await expect(page.getByTitle("Background: Charcoal")).toBeVisible();
-  await expect(page.getByTitle("Background: White")).toBeVisible();
+  // The node lists the template with its garment colors; the backgrounds stay in the picker.
+  const chosen = page.getByLabel("Selected mock-up templates");
+  await expect(chosen.getByTitle("White", { exact: true })).toBeVisible();
+  await expect(chosen.getByTitle("Black", { exact: true })).toBeVisible();
+  await expect(chosen.getByTitle(/^Background:/)).toHaveCount(0);
 
   // The choice is part of the workflow that is saved.
   await page.getByRole("button", { name: "Save", exact: true }).click();

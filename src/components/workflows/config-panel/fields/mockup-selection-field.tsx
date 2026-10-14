@@ -6,7 +6,6 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { MockupTemplatePickerContent } from "@/components/batch-setup/mockup-template/mockup-template-picker-content";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
-import { MockupBackgroundSwatch } from "@/components/mockups/mockup-background-picker";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { defaultTemplateColors, type TemplateColors } from "@/helpers/garment-colors";
@@ -80,10 +79,12 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
                   {colors.map((hex) => (
                     <GarmentColorSwatch key={hex} hex={hex} />
                   ))}
-                  {template.allowBackground &&
-                    [...new Set(Object.values(templateBackgrounds[template.id] ?? {}))].map((hex) => <MockupBackgroundSwatch key={hex} hex={hex} />)}
                 </span>
-                <span className="text-muted-foreground shrink-0">{template.productType}</span>
+                <span className="text-muted-foreground shrink-0">
+                  {template.productType}
+                  {/* Chosen for a product type the next run has nothing to make for: kept, but not used. */}
+                  {productTypeCounts && !(template.productType.toLowerCase() in productTypeCounts) && " · not used in this run"}
+                </span>
               </li>
             );
           })}

@@ -187,7 +187,8 @@ export const createWorkflowNode = (type: WorkflowNodeType, position: WorkflowPos
 export const duplicateWorkflowSelection = (
   nodes: WorkflowNode[],
   edges: WorkflowEdge[],
-  selectedIds: string[]
+  selectedIds: string[],
+  offset = DUPLICATE_NODE_OFFSET
 ): { nodes: WorkflowNode[]; edges: WorkflowEdge[]; addedNodeIds: string[] } => {
   const selected = new Set(selectedIds);
   const nextIdByOldId = new Map<string, string>();
@@ -201,7 +202,7 @@ export const duplicateWorkflowSelection = (
     duplicatedNodes.push({
       ...node,
       id: nextId,
-      position: { x: node.position.x + DUPLICATE_NODE_OFFSET, y: node.position.y + DUPLICATE_NODE_OFFSET },
+      position: { x: node.position.x + offset, y: node.position.y + offset },
       selected: true,
       data: { ...node.data, config: { ...node.data.config }, status: "idle" },
     });

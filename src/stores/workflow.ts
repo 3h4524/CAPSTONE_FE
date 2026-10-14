@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { HISTORY_GROUP_WINDOW_MS, HISTORY_LIMIT } from "@/constants/workflow";
+import { DUPLICATE_NODE_OFFSET, HISTORY_GROUP_WINDOW_MS, HISTORY_LIMIT } from "@/constants/workflow";
 import { duplicateWorkflowSelection, toWorkflowEdges, toWorkflowNodes } from "@/helpers/workflow-graph";
 import type {
   WorkflowDetail,
@@ -29,6 +29,13 @@ type HistorySnapshot = {
   selectedNodeIds: string[];
 };
 
+/** Nodes copied with Ctrl+C, the connections between them, and how often they were pasted since. */
+type NodeClipboard = {
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+  pastes: number;
+};
+
 type WorkflowEditorState = {
   workflowId: string | null;
   revision: number;
@@ -43,6 +50,7 @@ type WorkflowEditorState = {
   lastHistoryAt: number;
   isDirty: boolean;
   isRunning: boolean;
+  clipboard: NodeClipboard | null;
   loadWorkflow: (workflow: WorkflowDetail) => void;
   onNodesChange: (changes: NodeChange<WorkflowNode>[]) => void;
   onEdgesChange: (changes: EdgeChange<WorkflowEdge>[]) => void;
@@ -57,6 +65,8 @@ type WorkflowEditorState = {
   clearSelection: () => void;
   removeSelectedNodes: () => void;
   duplicateSelectedNodes: () => void;
+  copySelectedNodes: () => void;
+  pasteNodes: () => void;
   undo: () => void;
   redo: () => void;
   beginNodeDrag: () => void;
@@ -129,6 +139,8 @@ const hasNodePositionsChanged = (before: WorkflowNode[], after: WorkflowNode[]) 
 
 export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
   ...INITIAL_STATE,
+  // Not part of INITIAL_STATE: opening another workflow keeps it, so copied nodes can be pasted there.
+  clipboard: null,
 
   loadWorkflow: (workflow) => {
     dragSnapshot = null;
@@ -259,6 +271,33 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
         nodes: [...state.nodes.map((node) => ({ ...node, selected: false })), ...duplicated.nodes],
         edges: [...state.edges, ...duplicated.edges],
         selectedNodeIds: duplicated.addedNodeIds,
+        isDirty: true,
+        ...pushHistory(state, "structure", false),
+      };
+    }),
+
+  copySelectedNodes: () =>
+    set((state) => {
+      const copied = new Set(state.selectedNodeIds);
+      const nodes = state.nodes.filter((node) => copied.has(node.id));
+      if (nodes.length === 0) return state;
+      // Only the connections inside the selection come along, as with duplicating.
+      const edges = state.edges.filter((edge) => copied.has(edge.source) && copied.has(edge.target));
+      return { clipboard: { nodes, edges, pastes: 0 } };
+    }),
+
+  pasteNodes: () =>
+    set((state) => {
+      const { clipboard } = state;
+      if (!clipboard || clipboard.nodes.length === 0) return state;
+      // Each paste lands one step further than the last, so pasting twice does not stack the copies.
+      const pastes = clipboard.pastes + 1;
+      const pasted = duplicateWorkflowSelection(clipboard.nodes, clipboard.edges, clipboard.nodes.map((node) => node.id), DUPLICATE_NODE_OFFSET * pastes);
+      return {
+        nodes: [...state.nodes.map((node) => ({ ...node, selected: false })), ...pasted.nodes],
+        edges: [...state.edges, ...pasted.edges],
+        selectedNodeIds: pasted.addedNodeIds,
+        clipboard: { ...clipboard, pastes },
         isDirty: true,
         ...pushHistory(state, "structure", false),
       };

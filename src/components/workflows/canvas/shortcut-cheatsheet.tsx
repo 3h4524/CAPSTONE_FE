@@ -29,7 +29,7 @@ export const ShortcutCheatsheet = () => (
     <DialogContent className="w-[calc(100%-2rem)] max-w-sm">
       <DialogHeader className="text-left">
         <DialogTitle>Canvas shortcuts</DialogTitle>
-        <DialogDescription>Select, duplicate and clear nodes without leaving the keyboard.</DialogDescription>
+        <DialogDescription>Select, copy, duplicate and clear nodes without leaving the keyboard.</DialogDescription>
       </DialogHeader>
       <ul className="space-y-2.5">
         {WORKFLOW_CANVAS_SHORTCUTS.map((shortcut) => (

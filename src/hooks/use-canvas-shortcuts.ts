@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 
+import { showToast } from "@/helpers/toast";
 import { useWorkflowStore } from "@/stores/workflow";
 
 const CANVAS_SELECTOR = ".react-flow";
@@ -25,7 +26,7 @@ export const useCanvasShortcuts = ({ saveWorkflow }: CanvasShortcutsProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented) return;
-      const { clearSelection, duplicateSelectedNodes, isRunning, redo, selectAllNodes, undo } =
+      const { clearSelection, clipboard, copySelectedNodes, duplicateSelectedNodes, isRunning, pasteNodes, redo, selectAllNodes, selectedNodeIds, undo } =
         useWorkflowStore.getState();
       const modifier = event.ctrlKey || event.metaKey;
       if (modifier && event.key.toLowerCase() === "s") {
@@ -37,6 +38,18 @@ export const useCanvasShortcuts = ({ saveWorkflow }: CanvasShortcutsProps) => {
       if (modifier && event.key.toLowerCase() === "a" && !isOutsideCanvas(event.target)) {
         event.preventDefault();
         selectAllNodes();
+        return;
+      }
+      // With no node selected, or with text selected on the page, Ctrl+C copies as it always does.
+      if (modifier && event.key.toLowerCase() === "c" && !isOutsideCanvas(event.target) && selectedNodeIds.length > 0 && !window.getSelection()?.toString()) {
+        event.preventDefault();
+        copySelectedNodes();
+        showToast("success", `Copied ${selectedNodeIds.length} node${selectedNodeIds.length === 1 ? "" : "s"}. Paste them with Ctrl+V.`);
+        return;
+      }
+      if (modifier && event.key.toLowerCase() === "v" && !isOutsideCanvas(event.target) && clipboard) {
+        event.preventDefault();
+        if (!isRunning) pasteNodes();
         return;
       }
       if (modifier && event.key.toLowerCase() === "d" && !isOutsideCanvas(event.target)) {

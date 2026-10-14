@@ -23,6 +23,53 @@ const fresh = () => {
   return useWorkflowStore.getState();
 };
 
+test("pasting copied nodes adds fresh copies a step further each time, and undo removes them", () => {
+  const before = fresh();
+  const [first, second] = before.nodes;
+  assert.ok(first && second);
+  useWorkflowStore.getState().selectNodes([first.id, second.id]);
+  useWorkflowStore.getState().copySelectedNodes();
+  // Copying changes nothing on the canvas.
+  assert.equal(useWorkflowStore.getState().nodes.length, before.nodes.length);
+  assert.equal(useWorkflowStore.getState().isDirty, false);
+
+  useWorkflowStore.getState().pasteNodes();
+  const pasted = useWorkflowStore.getState();
+  assert.equal(pasted.nodes.length, before.nodes.length + 2);
+  assert.equal(pasted.selectedNodeIds.length, 2);
+  assert.ok(pasted.selectedNodeIds.every((id) => id !== first.id && id !== second.id));
+  const copyOfFirst = pasted.nodes.find((node) => pasted.selectedNodeIds.includes(node.id) && node.data.type === first.data.type)!;
+  assert.deepEqual(copyOfFirst.position, { x: first.position.x + 48, y: first.position.y + 48 });
+  // The connection between the two copied nodes comes along, between the copies.
+  assert.ok(pasted.edges.some((edge) => edge.source === pasted.selectedNodeIds[0] && edge.target === pasted.selectedNodeIds[1]));
+  assert.equal(pasted.isDirty, true);
+
+  useWorkflowStore.getState().pasteNodes();
+  const again = useWorkflowStore.getState();
+  const secondCopy = again.nodes.find((node) => again.selectedNodeIds.includes(node.id) && node.data.type === first.data.type)!;
+  assert.deepEqual(secondCopy.position, { x: first.position.x + 96, y: first.position.y + 96 });
+
+  useWorkflowStore.getState().undo();
+  useWorkflowStore.getState().undo();
+  assert.equal(useWorkflowStore.getState().nodes.length, before.nodes.length);
+});
+
+test("copied nodes can be pasted into another workflow, and copying nothing keeps them", () => {
+  const before = fresh();
+  const [first] = before.nodes;
+  assert.ok(first);
+  useWorkflowStore.getState().selectNodes([first.id]);
+  useWorkflowStore.getState().copySelectedNodes();
+  useWorkflowStore.getState().clearSelection();
+  useWorkflowStore.getState().copySelectedNodes();
+
+  useWorkflowStore.getState().loadWorkflow(detail("-other"));
+  const other = useWorkflowStore.getState().nodes.length;
+  useWorkflowStore.getState().pasteNodes();
+  assert.equal(useWorkflowStore.getState().nodes.length, other + 1);
+  assert.equal(useWorkflowStore.getState().workflowId, "workflow-other");
+});
+
 test("undo removes an added node and redo brings it back", () => {
   const before = fresh().nodes.length;
   const added = createWorkflowNode("design-image", { x: 0, y: 0 });

@@ -30,6 +30,8 @@ export const WORKFLOW_CANVAS_SHORTCUTS: { action: string; keys: string[] }[] = [
   { action: "Select multiple nodes", keys: ["Ctrl/⌘", "Click"] },
   { action: "Box select nodes", keys: ["Shift", "Drag"] },
   { action: "Select all nodes", keys: ["Ctrl/⌘", "A"] },
+  { action: "Copy selected nodes", keys: ["Ctrl/⌘", "C"] },
+  { action: "Paste copied nodes", keys: ["Ctrl/⌘", "V"] },
   { action: "Duplicate selected nodes", keys: ["Ctrl/⌘", "D"] },
   { action: "Delete selected nodes", keys: ["Del"] },
   { action: "Undo", keys: ["Ctrl/⌘", "Z"] },

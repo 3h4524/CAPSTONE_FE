@@ -1,9 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import { Pencil } from "lucide-react";
 
 import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
-import type { GenerateAllMockupsResult } from "@/types/mockup-templates";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import type { GenerateAllMockupsResult, MockupImage, RemovedMockupSlot } from "@/types/mockup-templates";
 import { cn } from "@/utils/cn";
 
 type MockupResultsGridProps = {
@@ -11,12 +14,21 @@ type MockupResultsGridProps = {
   productNameById: Map<string | null, string>;
   /** Column classes of the image grid; a side panel passes fewer columns. */
   columnsClassName?: string;
+  /** Changes one mock-up of a batch job alone; offered on each mock-up when given. */
+  onEdit?: (image: MockupImage) => void;
+  /** Puts back a mock-up that was removed for its product alone. */
+  onRestore?: (slot: RemovedMockupSlot) => void;
+  /** Turns the edit and restore buttons off, while the job's mock-ups are being made. */
+  disabled?: boolean;
 };
 
 export const MockupResultsGrid = ({
   result,
   productNameById,
   columnsClassName = "grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4",
+  onEdit,
+  onRestore,
+  disabled = false,
 }: MockupResultsGridProps) => (
   <div className="space-y-4">
     <p className="text-muted-foreground text-sm">
@@ -34,29 +46,60 @@ export const MockupResultsGrid = ({
     )}
     {result.images.length > 0 && (
       <div className={cn("grid", columnsClassName)}>
-        {result.images.map((mockupImage) => (
-          <a
-            key={mockupImage.id}
-            href={mockupImage.mockupImageUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="group block overflow-hidden rounded-lg border"
-          >
-            <Image
-              src={mockupImage.mockupImageUrl}
-              alt={productNameById.get(mockupImage.productId) ?? "Mock-up"}
-              width={mockupImage.mockupWidthPx}
-              height={mockupImage.mockupHeightPx}
-              unoptimized
-              className="bg-muted aspect-square w-full object-cover transition group-hover:scale-105"
-            />
-            <p className="text-muted-foreground flex items-center gap-1.5 p-2 text-xs">
-              {mockupImage.garmentColor && <GarmentColorSwatch hex={mockupImage.garmentColor} />}
-              <span className="truncate">{productNameById.get(mockupImage.productId) ?? "Product"}</span>
-            </p>
-          </a>
-        ))}
+        {result.images.map((mockupImage) => {
+          const productName = productNameById.get(mockupImage.productId) ?? "Product";
+          return (
+            <div key={mockupImage.id} className="group overflow-hidden rounded-lg border">
+              <a href={mockupImage.mockupImageUrl} target="_blank" rel="noreferrer" className="block overflow-hidden">
+                <Image
+                  src={mockupImage.mockupImageUrl}
+                  alt={productNameById.get(mockupImage.productId) ?? "Mock-up"}
+                  width={mockupImage.mockupWidthPx}
+                  height={mockupImage.mockupHeightPx}
+                  unoptimized
+                  className="bg-muted aspect-square w-full object-cover transition group-hover:scale-105"
+                />
+              </a>
+              <div className="text-muted-foreground flex items-center gap-1.5 p-2 text-xs">
+                {mockupImage.garmentColor && <GarmentColorSwatch hex={mockupImage.garmentColor} />}
+                <span className="min-w-0 flex-1 truncate">{productName}</span>
+                {mockupImage.override && <Badge variant="secondary">Edited</Badge>}
+                {onEdit && mockupImage.slotKey && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Edit this mock-up of ${productName}`}
+                    title="Edit this mock-up only"
+                    disabled={disabled}
+                    onClick={() => onEdit(mockupImage)}
+                  >
+                    <Pencil aria-hidden="true" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
+    )}
+    {onRestore && result.removed && result.removed.length > 0 && (
+      <section className="space-y-1.5 rounded-lg border border-dashed p-3 text-xs" aria-label="Removed mock-ups">
+        <p className="font-medium text-slate-700">Removed for single products</p>
+        <ul className="space-y-1">
+          {result.removed.map((slot) => (
+            <li key={slot.slotKey} className="flex items-center gap-1.5">
+              {slot.garmentColor && <GarmentColorSwatch hex={slot.garmentColor} />}
+              <span className="text-muted-foreground min-w-0 flex-1 truncate">
+                {productNameById.get(slot.productId) ?? "Product"} · {slot.templateName}
+              </span>
+              <Button type="button" variant="link" size="sm" className="h-auto px-0 text-xs" disabled={disabled} onClick={() => onRestore(slot)}>
+                Restore
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </section>
     )}
   </div>
 );

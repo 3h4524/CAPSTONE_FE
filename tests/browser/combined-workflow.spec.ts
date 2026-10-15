@@ -51,11 +51,20 @@ const videoRun: WorkflowRun = {
 };
 
 // What the job's mock-ups look like once they are made.
+const slotKey = "design1.template1.own";
 const madeMockups = {
   generatedCount: 0, noDesignImageCount: 0, noCompatibleTemplateCount: 0, noApprovedImageCount: 0, errors: [],
-  images: [{ id: "mockup-1", productId, designImageId: "design-1", mockupTemplateId: templateId, mockupImageUrl: "/fixture-mockup.svg?mockup=1", mockupWidthPx: 600, mockupHeightPx: 900, approvalStatus: "pending", garmentColor: null }],
+  images: [{ id: "mockup-1", productId, designImageId: "design-1", mockupTemplateId: templateId, mockupImageUrl: "/fixture-mockup.svg?mockup=1", mockupWidthPx: 600, mockupHeightPx: 900, approvalStatus: "pending", garmentColor: null, slotKey } as Record<string, unknown>],
+  removed: [] as unknown[],
 };
 const noMockups = { ...madeMockups, images: [] };
+// The same mock-up once it was made its own way, and once it was removed for its product.
+const editedMockups = {
+  ...madeMockups,
+  images: [{ ...madeMockups.images[0], id: "mockup-2", garmentColor: "#1A1A1A", backgroundColor: "#22262E",
+    override: { mockupTemplateId: templateId, garmentColor: "#1A1A1A", backgroundColor: "#22262E", printArea: null, removed: false } }],
+};
+const removedMockups = { ...madeMockups, images: [], removed: [{ slotKey, productId, designImageId: "design-1", mockupTemplateId: templateId, templateName: "Classic Tee", garmentColor: null }] };
 
 type Fixtures = { workflow?: ReturnType<typeof workflow>; products?: unknown[]; assets?: MockupAsset[]; jobMockups?: typeof madeMockups; batches?: unknown[]; jobs?: unknown[]; templates?: unknown[] };
 
@@ -75,6 +84,9 @@ const mockApi = async (page: Page, { workflow: current = workflow(), products = 
     else if (path === `/api/batch-jobs/${jobId}`) json = batchJob;
     else if (path === `/api/batch-jobs/${jobId}/mockups`) json = { batchJobId: jobId, templateIds: [templateId], garmentColors: [], templateColors: {} };
     else if (path === `/api/batch-jobs/${jobId}/mockups/images`) json = jobMockups;
+    else if (path === `/api/batch-jobs/${jobId}/mockups/overrides`)
+      json = (request.postDataJSON() as { override?: { removed?: boolean } }).override?.removed ? removedMockups : editedMockups;
+    else if (path.startsWith(`/api/batch-jobs/${jobId}/mockups/overrides/`)) json = madeMockups;
     else if (path === "/api/mockup-templates") json = templates;
     else if (path === "/api/batches") json = batches;
     else if (path === `/api/batches/${batchId}/jobs`) json = jobs;
@@ -243,6 +255,45 @@ test("the Batches page counts every product under one status, the ones in review
   await page.getByRole("button", { name: /^Review\s*1$/ }).click();
   await expect(page.getByRole("cell", { name: "Product 4", exact: true })).toBeVisible();
   await expect(page.getByRole("cell", { name: /^Product \d$/ })).toHaveCount(1);
+});
+
+test("one mock-up of the job can be made its own way, removed and put back", async ({ page }) => {
+  const template = {
+    id: templateId, name: "Classic Tee", productType: "tshirt", baseImageUrl: "/fixture-mockup.svg", previewImageUrl: null,
+    printAreaConfig: JSON.stringify({ x: 150, y: 250, width: 300, height: 300, unit: "px" }), outputWidthPx: 600, outputHeightPx: 900,
+    usageCount: 3, isSystemTemplate: false, isMine: true, realisticPrintReady: true, allowRecolor: true,
+    garmentMaskUrl: "/fixture-mockup.svg?mask=1", garmentColor: null, allowBackground: true,
+  };
+  const requests = await mockApi(page, { jobMockups: madeMockups, templates: [template] });
+  await page.goto(`/workflows?id=${workflowId}&job=${jobId}`);
+  await node(page, "mockup").click({ position: { x: 80, y: 40 } });
+
+  // Each of the job's mock-ups can be changed on its own.
+  await page.getByRole("button", { name: "Edit this mock-up of Vintage Fishing Club" }).click();
+  const dialog = page.getByRole("dialog", { name: "Edit this mock-up" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Black", exact: true }).click();
+  await dialog.getByRole("button", { name: "Charcoal background" }).click();
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
+
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText("Edited", { exact: true })).toBeVisible();
+  const saved = requests.find(r => r.method === "PUT" && r.path.endsWith("/mockups/overrides"))!;
+  // Left where the template puts it, the design keeps following the template's print area.
+  expect(saved.body).toEqual({
+    slotKey, replacedMockupImageId: "mockup-1",
+    override: { mockupTemplateId: templateId, garmentColor: "#1A1A1A", backgroundColor: "#22262E", printArea: null, removed: false },
+  });
+
+  // Removed for this product alone, it is listed and can be put back.
+  await page.getByRole("button", { name: "Edit this mock-up of Vintage Fishing Club" }).click();
+  await expect(dialog.getByRole("button", { name: "Use the job’s settings" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Remove this mock-up" }).click();
+  const removedList = page.getByRole("region", { name: "Removed mock-ups" });
+  await expect(removedList).toContainText("Vintage Fishing Club · Classic Tee");
+  await removedList.getByRole("button", { name: "Restore" }).click();
+  await expect(removedList).toBeHidden();
+  expect(requests.some(r => r.method === "DELETE" && r.path === `/api/batch-jobs/${jobId}/mockups/overrides/${slotKey}`)).toBe(true);
 });
 
 test("Apply mock-up puts each garment color of a template on a background of its own", async ({ page }) => {

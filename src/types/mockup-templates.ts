@@ -48,6 +48,33 @@ export interface MockupImage {
   garmentColor: string | null;
   /** '#RRGGBB' when the mock-up was put on a replaced background. */
   backgroundColor?: string | null;
+  /** In a batch job's results, which of the job's mock-ups this is: what a change to it alone is saved under. */
+  slotKey?: string | null;
+  /** In a batch job's results, how this mock-up is made apart from the job's settings, when it is. */
+  override?: MockupOverride | null;
+}
+
+/** How one mock-up of a batch job is made instead of by the job's settings. The job keeps it. */
+export interface MockupOverride {
+  mockupTemplateId: string;
+  /** null keeps the template's own garment color. */
+  garmentColor: string | null;
+  /** null keeps the photo's own background. */
+  backgroundColor: string | null;
+  /** null uses the template's own print area. */
+  printArea: MockupPrintArea | null;
+  /** true when no mock-up is made there at all. */
+  removed?: boolean;
+}
+
+/** A mock-up the job's settings would make that was removed for its product alone. */
+export interface RemovedMockupSlot {
+  slotKey: string;
+  productId: string;
+  designImageId: string;
+  mockupTemplateId: string;
+  templateName: string;
+  garmentColor: string | null;
 }
 
 export interface GenerateAllMockupsResult {
@@ -58,6 +85,7 @@ export interface GenerateAllMockupsResult {
   noApprovedImageCount?: number;
   errors: string[];
   images: MockupImage[];
+  removed?: RemovedMockupSlot[] | null;
 }
 
 export interface GarmentMaskPreview {

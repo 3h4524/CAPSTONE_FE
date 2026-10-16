@@ -274,6 +274,11 @@ test("one mock-up of the job can be made its own way, removed and put back", asy
   await expect(dialog).toBeVisible();
   await dialog.getByRole("button", { name: "Black", exact: true }).click();
   await dialog.getByRole("button", { name: "Charcoal background" }).click();
+  // The position preview shows the garment on the chosen background before anything is saved.
+  await expect(dialog.getByTestId("print-area-photo")).toHaveCSS("background-color", "rgb(34, 38, 46)");
+  await dialog.getByRole("button", { name: "Original" }).click();
+  await expect(dialog.getByTestId("print-area-photo")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await dialog.getByRole("button", { name: "Charcoal background" }).click();
   await dialog.getByRole("button", { name: "Save", exact: true }).click();
 
   await expect(dialog).toBeHidden();

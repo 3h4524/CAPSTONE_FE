@@ -26,6 +26,11 @@ type PrintAreaEditorProps = {
   pixelSize?: { width: number; height: number };
   /** The garment mask the server made for this photo; when given, the garment box comes from it. */
   garmentMaskUrl?: string;
+  /**
+   * Previews the garment lifted off the photo onto this color, as a mock-up with a replaced background shows it.
+   * Needs `garmentMaskUrl`; the finished mock-up is cut with a mask of its own, so the edge may differ slightly.
+   */
+  background?: string | null;
 };
 
 const clamp = (value: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, value));
@@ -217,7 +222,7 @@ const BOX_BORDER_PX = 2;
 
 // Drag-to-draw / move / resize print-area picker, in the photo's own pixels. A second mode lets the
 // user correct the garment box that center-snapping is measured against.
-export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, overlayImageUrl, garmentTint, pixelSize, garmentMaskUrl }: PrintAreaEditorProps) => {
+export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, overlayImageUrl, garmentTint, pixelSize, garmentMaskUrl, background }: PrintAreaEditorProps) => {
   const wrapRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -361,12 +366,19 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
   };
 
   const boxStyle = (b: Bounds) => ({ left: b.x * scale, top: b.y * scale, width: b.width * scale, height: b.height * scale });
+  // The photo shown only through the garment mask, over the background color. Only what is drawn changes: the garment
+  // detection reads the photo's own pixels.
+  const cutOut = background && garmentMaskUrl
+    ? { maskImage: `url(${garmentMaskUrl})`, WebkitMaskImage: `url(${garmentMaskUrl})`, maskSize: "100% 100%", WebkitMaskSize: "100% 100%" }
+    : undefined;
 
   return (
     <div className="space-y-1.5">
       <div
         ref={wrapRef}
-        className={cn("relative inline-block max-w-full leading-none", interactive ? "cursor-crosshair" : "cursor-default")}
+        className={cn("relative inline-block max-w-full rounded-lg leading-none", interactive ? "cursor-crosshair" : "cursor-default")}
+        style={cutOut ? { backgroundColor: background ?? undefined } : undefined}
+        data-testid="print-area-photo"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={endDrag}
@@ -380,6 +392,7 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
           alt="Mock-up base photo"
           className="block max-h-105 max-w-full rounded-lg ring-1 ring-slate-200 select-none ring-inset"
           draggable={false}
+          style={cutOut}
           crossOrigin="anonymous" // required to read pixels back for garment detection
           onLoad={(event) => {
             const img = event.currentTarget;

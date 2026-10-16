@@ -157,6 +157,7 @@ export const MockupImageEditDialog = ({ batchJobId, image, productName, productT
                     overlayImageUrl={designImageUrl ?? undefined}
                     garmentMaskUrl={template.garmentMaskUrl ?? undefined}
                     garmentTint={garmentColor && template.garmentMaskUrl ? { color: garmentColor, maskUrl: template.garmentMaskUrl } : undefined}
+                    background={template.allowBackground ? background : null}
                     value={area}
                     onChange={(next) => setMoved({ templateId, area: next })}
                     disabled={busy}

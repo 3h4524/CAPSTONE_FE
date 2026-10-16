@@ -11,6 +11,7 @@ import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
 import { readString, readStringArray } from "@/helpers/workflow-config";
 import { useReviewMockupAsset } from "@/hooks/mutations/use-review-mockup-asset";
+import { useUploadMockupAsset } from "@/hooks/mutations/use-upload-mockup-asset";
 import { useAiVideoTemplates } from "@/hooks/queries/use-ai-video-templates";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { useAppQueryClient } from "@/hooks/use-query-client";
@@ -112,10 +113,14 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
   onChange: (scenes: AiVideoSceneOptions[], seconds: number, sharedInstructions?: string | null) => void;
 }) {
   const dragIndex = useRef<number | null>(null);
+  const referenceFileInput = useRef<HTMLInputElement | null>(null);
+  const referenceUploadSceneIndex = useRef<number | null>(null);
+  const referenceUploadSourceId = useRef<string | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [selectedForMove, setSelectedForMove] = useState<number | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const [preparingSceneIndex, setPreparingSceneIndex] = useState<number | null>(null);
+  const [uploadingReferenceSceneIndex, setUploadingReferenceSceneIndex] = useState<number | null>(null);
   const node = useWorkflowStore(state => state.nodes.find(item => item.id === nodeId));
   const productId = useWorkflowStore(state => readString(state.nodes.find(item => item.data.type === "product-input")?.data.config.productId));
   const applyMockupNode = useWorkflowStore(state => state.nodes.find(item => item.data.type === "apply-mockup"));
@@ -123,6 +128,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
   const { data: allAssets = [], isPending: areAssetsLoading } = useMockupAssets(productId);
   const queryClient = useAppQueryClient();
   const { mutate: reviewStudioFrame, isPending: isReviewingStudioFrame } = useReviewMockupAsset();
+  const { mutate: uploadReference, isPending: isUploadingReference } = useUploadMockupAsset();
   const chosenMockupIds = readStringArray(applyMockupNode?.data.config.mockupIds);
   const artworkGroupKey = readString(applyMockupNode?.data.config.artworkGroupKey);
   const sharedInstructions = typeof node?.data.config.aiGlobalInstructions === "string" ? node.data.config.aiGlobalInstructions : null;
@@ -242,6 +248,33 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
     }
   };
   const changeScene = (index: number, changes: Partial<AiVideoSceneOptions>) => update(scenes.map((scene, position) => position === index ? { ...scene, ...changes } : scene));
+  const chooseReferenceFile = (sceneIndex: number, sourceId: string | undefined) => {
+    referenceUploadSceneIndex.current = sceneIndex;
+    referenceUploadSourceId.current = sourceId ?? null;
+    referenceFileInput.current?.click();
+  };
+  const handleReferenceFile = (file: File | undefined) => {
+    const sceneIndex = referenceUploadSceneIndex.current;
+    const sourceId = referenceUploadSourceId.current;
+    referenceUploadSceneIndex.current = null;
+    referenceUploadSourceId.current = null;
+    if (!file || sceneIndex === null || !productId) return;
+    setUploadingReferenceSceneIndex(sceneIndex);
+    uploadReference({ productId, file }, {
+      onSuccess: asset => {
+        const scene = scenes[sceneIndex];
+        if (!scene) return;
+        const referenceMockupIds = [...normalizeReferenceIds(scene.studioReferenceMockupIds), asset.id].slice(0, 3);
+        changeScene(sceneIndex, { mockupId: scene.mockupId ?? sourceId, studioReferenceMockupIds: referenceMockupIds, studioFrameId: null });
+        showToast("success", "Reference uploaded. Review and approve it before creating the keyframe.");
+        setUploadingReferenceSceneIndex(null);
+      },
+      onError: error => {
+        showToast("error", getErrorMessage(error));
+        setUploadingReferenceSceneIndex(null);
+      },
+    });
+  };
   const changeStudioReference = (index: number, referenceIndex: number, mockupId: string | null) => {
     const scene = scenes[index];
     if (!scene) return;
@@ -271,6 +304,11 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
   };
 
   return <section className="space-y-3 rounded-lg border border-violet-200 bg-violet-50/40 p-3" aria-label="AI scene setup">
+    <input ref={referenceFileInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={event => {
+      const file = event.currentTarget.files?.[0];
+      event.currentTarget.value = "";
+      handleReferenceFile(file);
+    }} />
     <div className="space-y-2">
       <div><p className="text-sm font-semibold">Scenes</p><p className="text-muted-foreground mt-1 text-xs">Set each scene separately. Drag the grip, or select a grip then a destination scene to reorder.</p></div>
       <div className="bg-background grid grid-cols-[auto_minmax(3rem,1fr)_auto] items-center gap-3 rounded-md border px-3 py-2" aria-label={`Total video duration ${totalSeconds} of 30 seconds`}>
@@ -298,6 +336,8 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
       const sceneFrame = allAssets.find(asset => asset.id === scene.studioFrameId);
       const studioLayout = normalizeStudioLayout(scene.studioLayout);
       const sceneReferenceIds = normalizeReferenceIds(scene.studioReferenceMockupIds);
+      const referenceAssets = sceneReferenceIds.map(referenceId => allAssets.find(asset => asset.id === referenceId));
+      const referencesReady = referenceAssets.every(asset => asset?.approvalStatus === "approved" && asset.approvedRevision === asset.revision && !isStudioFrame(asset));
       const needsRightsConfirmation = Boolean(template?.requiresLifestyle);
       const outputAspect = outputFormat === "landscape" ? "16:9" : outputFormat === "square" ? "1:1" : "9:16";
       const reusableStudioFrames = allAssets.filter(frame => {
@@ -441,27 +481,21 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
                   <div><p className="text-xs font-semibold">Reference images <span className="text-muted-foreground font-normal">(optional, up to 3)</span></p><p className="text-muted-foreground mt-1 text-xs leading-relaxed">Attach visual context for the keyframe, then explain how AI should use each image in Custom keyframe direction. The product image above remains authoritative for product and artwork details.</p></div>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {sceneReferenceIds.map((referenceId, referenceIndex) => {
-                      const referenceAsset = allOriginalApproved.find(asset => asset.id === referenceId);
-                      const unavailableIds = new Set(sceneReferenceIds.filter((_, position) => position !== referenceIndex));
-                      const choices = allOriginalApproved.filter(asset => asset.id !== selectedSource?.id && !unavailableIds.has(asset.id));
-                      return <div key={`${referenceId}-${referenceIndex}`} className="flex min-w-0 items-center gap-1">
-                        <Select disabled={disabled} value={referenceId} onValueChange={value => changeStudioReference(index, referenceIndex, value)}>
-                          <SelectTrigger className="min-w-0 flex-1" aria-label={`Scene ${index + 1} reference image ${referenceIndex + 1}`}>
-                            {referenceAsset ? <span className="flex min-w-0 items-center gap-2"><Image src={referenceAsset.previewUrl} alt="" width={32} height={32} unoptimized className="bg-background size-8 shrink-0 rounded border object-contain" /><span className="truncate">Reference {referenceIndex + 1}</span></span> : <SelectValue />}
-                          </SelectTrigger>
-                          <SelectContent>{choices.map(asset => <MockupOption key={asset.id} asset={asset} />)}</SelectContent>
-                        </Select>
-                        <Button type="button" variant="ghost" size="icon-sm" disabled={disabled} aria-label={`Remove reference image ${referenceIndex + 1}`} onClick={() => changeStudioReference(index, referenceIndex, null)}><X aria-hidden="true" /></Button>
+                      const referenceAsset = referenceAssets[referenceIndex];
+                      return <div key={`${referenceId}-${referenceIndex}`} className="bg-background min-w-0 rounded-md border p-2">
+                        <div className="flex items-center gap-2">
+                          {referenceAsset && <Image src={referenceAsset.previewUrl} alt={`Reference ${referenceIndex + 1}`} width={44} height={44} unoptimized className="size-11 shrink-0 rounded border object-contain" />}
+                          <div className="min-w-0 flex-1"><p className="truncate text-xs font-medium">Reference {referenceIndex + 1}</p><p className="text-muted-foreground text-[11px]">{referenceAsset ? `${referenceAsset.approvalStatus} | ${referenceAsset.width}x${referenceAsset.height}` : "Image unavailable"}</p></div>
+                          <Button type="button" variant="ghost" size="icon-sm" disabled={disabled} aria-label={`Remove reference image ${referenceIndex + 1}`} onClick={() => changeStudioReference(index, referenceIndex, null)}><X aria-hidden="true" /></Button>
+                        </div>
+                        {referenceAsset?.approvalStatus === "pending" && <div className="mt-2 flex gap-2"><Button type="button" size="sm" disabled={disabled || isReviewingStudioFrame} onClick={() => reviewStudioFrame({ id: referenceAsset.id, revision: referenceAsset.revision, approved: true })}>Approve</Button><Button type="button" size="sm" variant="outline" disabled={disabled || isReviewingStudioFrame} onClick={() => reviewStudioFrame({ id: referenceAsset.id, revision: referenceAsset.revision, approved: false })}>Reject</Button></div>}
                       </div>;
                     })}
-                    {sceneReferenceIds.length < 3 && <Select key={`add-reference-${sceneReferenceIds.length}`} disabled={disabled || allOriginalApproved.every(asset => asset.id === selectedSource?.id || sceneReferenceIds.includes(asset.id))} onValueChange={value => changeStudioReference(index, sceneReferenceIds.length, value)}>
-                      <SelectTrigger className="border-dashed" aria-label={`Add reference image ${sceneReferenceIds.length + 1}`}><span className="flex items-center gap-2"><Plus className="size-4" aria-hidden="true" /> Add reference image</span></SelectTrigger>
-                      <SelectContent>{allOriginalApproved.filter(asset => asset.id !== selectedSource?.id && !sceneReferenceIds.includes(asset.id)).map(asset => <MockupOption key={asset.id} asset={asset} />)}</SelectContent>
-                    </Select>}
+                    {sceneReferenceIds.length < 3 && <Button type="button" variant="outline" className="h-auto min-h-16 border-dashed" disabled={disabled || !productId || isUploadingReference} onClick={() => chooseReferenceFile(index, selectedSource?.id)}><Plus className="size-4" aria-hidden="true" /> {isUploadingReference && uploadingReferenceSceneIndex === index ? "Uploading..." : "Add reference image"}</Button>}
                   </div>
-                  <p className="text-muted-foreground text-[11px] leading-relaxed">References work with every keyframe template. Only current approved images are listed; upload and approve new images in Apply Mockup first.</p>
+                  <p className="text-muted-foreground text-[11px] leading-relaxed">JPEG, PNG or static WebP, up to 20 MB each. References work with every keyframe template and must be approved before use.</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2"><Button type="button" size="sm" variant="outline" disabled={disabled || !selectedSource || preparingSceneIndex !== null || needsRightsConfirmation && !scene.rightsConfirmed} onClick={() => void prepareStudioFrame(index)}>{preparingSceneIndex === index ? "Checking keyframe..." : "Use or create matching keyframe"}</Button>{sceneFrame && <Button type="button" size="sm" variant="ghost" disabled={disabled || !selectedSource || preparingSceneIndex !== null || needsRightsConfirmation && !scene.rightsConfirmed} onClick={() => void prepareStudioFrame(index, true)}>{preparingSceneIndex === index ? "Preparing..." : "Generate another"}</Button>}</div>
+                <div className="flex flex-wrap items-center gap-2"><Button type="button" size="sm" variant="outline" disabled={disabled || !selectedSource || !referencesReady || preparingSceneIndex !== null || needsRightsConfirmation && !scene.rightsConfirmed} onClick={() => void prepareStudioFrame(index)}>{preparingSceneIndex === index ? "Checking keyframe..." : "Use or create matching keyframe"}</Button>{sceneFrame && <Button type="button" size="sm" variant="ghost" disabled={disabled || !selectedSource || !referencesReady || preparingSceneIndex !== null || needsRightsConfirmation && !scene.rightsConfirmed} onClick={() => void prepareStudioFrame(index, true)}>{preparingSceneIndex === index ? "Preparing..." : "Generate another"}</Button>}</div>
                 <p className="text-muted-foreground text-xs">A matching approved keyframe uses no new image call. New keyframes need approval before they can be used.</p>
                 {template?.requiresDetail && selectedSource && !hasUsableDetail(selectedSource) && <p className="rounded-md border border-blue-200 bg-blue-50 p-2 text-xs leading-relaxed text-blue-900">This image can be used directly. Mark an artwork/detail region for a tighter automatic crop, or create an approved close-up keyframe for the clearest macro detail. Review generated keyframes because fine print may be reinterpreted.</p>}
               </div>

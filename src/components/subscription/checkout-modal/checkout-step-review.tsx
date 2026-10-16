@@ -3,9 +3,9 @@ import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { AvailablePlan, BillingCycle } from "@/types/subscription";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+const formatCurrency = (amount: number) => formatCurrencyVnd(amount);
 
 const formatDate = (date: Date) =>
   date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
@@ -64,7 +64,7 @@ export const CheckoutStepReview = ({
           </div>
           <p className="text-xl font-bold whitespace-nowrap">
             {formatCurrency(plan.monthlyPriceUsd)}
-            <span className="text-muted-foreground text-sm font-normal">/mo</span>
+            <span className="text-muted-foreground text-sm font-normal">/tháng</span>
           </p>
         </div>
         {plan.description && <p className="text-muted-foreground mt-2 text-sm">{plan.description}</p>}

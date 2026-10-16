@@ -9,9 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useDownloadInvoice } from "@/hooks/mutations/use-download-invoice";
 import type { RecentInvoice } from "@/types/subscription";
 import { cn } from "@/utils/cn";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+const formatCurrency = (amount: number) => formatCurrencyVnd(amount);
 
 const formatDate = (isoDate: string) =>
   new Date(isoDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });

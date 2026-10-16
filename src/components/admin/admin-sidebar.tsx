@@ -46,7 +46,7 @@ const primaryNavigation = [
 ];
 
 const secondaryNavigation = [
-  { label: "Revenue & Reports", href: "/admin/reports", icon: BarChart3 },
+  { label: "Revenue & Reports", href: "/admin/revenue", icon: BarChart3 },
   { label: "Batch Jobs", href: "/admin/batch-jobs", icon: BriefcaseBusiness, tone: "amber" },
   { label: "Support Tickets", href: "/admin/support-tickets", icon: Headphones, tone: "rose" },
 ];

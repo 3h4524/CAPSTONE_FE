@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 export function GlobalToast() {
   return (
     <Toaster
+      position="top-right"
       className="toaster group whitespace-pre-line"
       toastOptions={{
         classNames: {

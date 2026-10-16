@@ -70,7 +70,7 @@ export default function AdminUsersPage() {
 
   const { data: metrics } = useQuery({
     queryKey: ["adminMetrics"],
-    queryFn: () => getAdminDashboardMetrics("month"),
+    queryFn: () => getAdminDashboardMetrics("year"),
   });
 
   const { data: plansData } = useQuery({
@@ -173,11 +173,7 @@ export default function AdminUsersPage() {
         <div className="flex h-full flex-col gap-6 p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="mb-1 flex items-center space-x-2 text-sm text-slate-500">
-                <span>Admin</span>
-                <span>/</span>
-                <span className="font-medium text-slate-900">Users</span>
-              </div>
+
               <h1 className="text-2xl font-bold tracking-tight text-slate-900">Users Management</h1>
               <p className="mt-1 text-sm text-slate-500">
                 Search, filter, and manage registered user accounts.

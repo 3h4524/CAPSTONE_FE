@@ -115,7 +115,7 @@ const DocumentDetail = ({ detail, chunks, onActivate, isActivating }: { detail: 
     </div>
     {detail.ingestionError && <div className="my-4 rounded-lg bg-rose-50 p-3 text-xs leading-5 text-rose-700">{detail.ingestionError}</div>}
     {detail.status !== "ready" && detail.status !== "processing" && <Button type="button" variant="outline" className="mt-4 w-full" onClick={onActivate} disabled={isActivating}><Check className="size-4" /> Activate this version</Button>}
-    <div className="mt-5"><p className="text-xs font-bold text-slate-900">Chunk preview</p><div className="mt-3 max-h-[480px] space-y-2 overflow-y-auto pr-1">{chunks.map((chunk) => <details key={chunk.id} className="rounded-lg border border-slate-100 bg-slate-50/60 p-3"><summary className="cursor-pointer text-xs font-semibold text-slate-700">Chunk {chunk.chunkIndex + 1}<span className="ml-2 text-[10px] font-normal text-slate-400">{chunk.tokenCount} tokens</span></summary><p className="mt-3 whitespace-pre-wrap text-[11px] leading-5 text-slate-600">{chunk.content}</p></details>)}</div></div>
+    <div className="mt-5"><p className="text-xs font-bold text-slate-900">Chunk preview</p><div className="mt-3 max-h-[480px] space-y-2 overflow-y-auto pr-1">{chunks.map((chunk) => <details key={chunk.id} className="rounded-lg border border-slate-100 bg-slate-50/60 p-3"><summary className="cursor-pointer text-xs font-semibold text-slate-700">Chunk {chunk.chunkIndex + 1}<span className="ml-2 text-[10px] font-normal text-slate-400">{chunk.tokenCount} tokens</span></summary><p className="mt-3 text-[11px] leading-5 whitespace-pre-wrap text-slate-600">{chunk.content}</p></details>)}</div></div>
   </div>
 );
 

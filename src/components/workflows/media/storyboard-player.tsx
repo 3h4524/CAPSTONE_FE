@@ -1,10 +1,11 @@
 "use client";
 
+import Image from "next/image";
+
 import { StandardVideoPreview } from "@/components/workflows/media/standard-video-composition";
 import { VideoPreviewFrame } from "@/components/workflows/media/video-preview-frame";
 import type { MockupAsset, VideoStoryboard } from "@/types/video-workflow";
 import { Player } from "@remotion/player";
-import Image from "next/image";
 
 export const StoryboardPlayer = ({ board, assets }: { board: VideoStoryboard; assets: MockupAsset[] }) => {
   const sources = Object.fromEntries(board.scenes.map(scene => {
@@ -17,7 +18,7 @@ export const StoryboardPlayer = ({ board, assets }: { board: VideoStoryboard; as
     <p className="text-xs font-medium">Storyboard only · AI motion appears after Veo generation</p>
     <div className="grid grid-cols-2 gap-2">{board.scenes.map(scene => {
       const source = sources[scene.mockupId];
-      return <div key={scene.sceneOrder} className="rounded-md border bg-muted/40 p-2"><Image src={source.url} alt={`Source for scene ${scene.sceneOrder + 1}`} width={source.width} height={source.height} unoptimized className="h-24 w-full object-contain" /><p className="mt-1 text-xs">Scene {scene.sceneOrder + 1} · {scene.generationStrategy === "ai_shot" ? "AI Shot" : "Standard"} · {(scene.durationFrames / 30).toFixed(1)}s</p></div>;
+      return <div key={scene.sceneOrder} className="bg-muted/40 rounded-md border p-2"><Image src={source.url} alt={`Source for scene ${scene.sceneOrder + 1}`} width={source.width} height={source.height} unoptimized className="h-24 w-full object-contain" /><p className="mt-1 text-xs">Scene {scene.sceneOrder + 1} · {scene.generationStrategy === "ai_shot" ? "AI Shot" : "Standard"} · {(scene.durationFrames / 30).toFixed(1)}s</p></div>;
     })}</div>
   </div>;
   return <VideoPreviewFrame width={board.width} height={board.height}>

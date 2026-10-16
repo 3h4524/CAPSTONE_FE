@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VideoPreviewFrame } from "@/components/workflows/media/video-preview-frame";
 import { VideoSceneCard } from "@/components/workflows/media/video-scene-card";
+import { confirmAiShot } from "@/helpers/confirm-ai-shot";
+import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
 import { readString, readStringArray } from "@/helpers/workflow-config";
 import { useMediaDownload } from "@/hooks/mutations/use-media-download";
@@ -16,8 +18,6 @@ import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { useRunVideos } from "@/hooks/queries/use-run-videos";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { generateVideoConfigSchema } from "@/schemas/workflow";
-import { confirmAiShot } from "@/helpers/confirm-ai-shot";
-import { getErrorMessage } from "@/helpers/error-message";
 import { useWorkflowStore } from "@/stores/workflow";
 
 export const VideoReviewPanel = () => {

@@ -8,15 +8,15 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { VideoTemplateCards } from "@/components/workflows/config-panel/fields/video-template-cards";
 import { AiShotOptions } from "@/components/workflows/config-panel/fields/ai-shot-options";
+import { VideoTemplateCards } from "@/components/workflows/config-panel/fields/video-template-cards";
+import { ListingContentResultPanel } from "@/components/workflows/config-panel/listing-content-result";
 import { NodeConfigField } from "@/components/workflows/config-panel/node-config-field";
 import { MockupPanel } from "@/components/workflows/media/mockup-panel";
 import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
 import { StoryboardPanel } from "@/components/workflows/media/storyboard-panel";
 import { VideoReviewPanel } from "@/components/workflows/media/video-review-panel";
 import { VideoSourcesHeader } from "@/components/workflows/media/video-sources-header";
-import { ListingContentResultPanel } from "@/components/workflows/config-panel/listing-content-result";
 import { WORKFLOW_CATEGORIES, WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
 import { readString } from "@/helpers/workflow-config";
 import { hasVideoSteps, isVideoRunNode } from "@/helpers/workflow-run";

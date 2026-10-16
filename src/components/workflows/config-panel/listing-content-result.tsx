@@ -7,9 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { showToast } from "@/helpers/toast";
+import { readString } from "@/helpers/workflow-config";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
-import { readString } from "@/helpers/workflow-config";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { ListingContentResult, ListingSeoFeedback, ListingSeoScoreResult } from "@/types/listing-content";
 

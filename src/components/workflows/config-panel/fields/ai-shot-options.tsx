@@ -175,7 +175,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
     if (!node || rawScenes.length === 0 || areAssetsLoading || !productId) return;
     const normalizedScenes = rawScenes.map(scene => {
       const template = catalog.find(item => item.code === scene.templateCode);
-      const sceneSources = scene.startFrameMode === "studio" ? originalApproved : approved;
+      const sceneSources = scene.startFrameMode === "studio" ? originalApproved : [...originalApproved, ...approvedFrames];
       const validMockupId = scene.mockupId && sceneSources.some(asset => asset.id === scene.mockupId) ? scene.mockupId : null;
       const migrated = scene.startFrameMode == null && scene.templateCode === "cinematic_product_showcase"
         ? { ...scene, mockupId: validMockupId, startFrameMode: legacyStudioMode ? "studio" as const : "direct" as const,
@@ -197,7 +197,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
     const seconds = normalizedScenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
     useWorkflowStore.getState().updateNodeConfig(nodeId, { ...node.data.config, mode: "ai_shot", aiScenes: normalizedScenes, durationSeconds: seconds });
     onChange(normalizedScenes, seconds, sharedInstructions);
-  }, [node, nodeId, rawScenes, catalog, onChange, sharedInstructions, legacyStudioMode, originalApproved, areAssetsLoading, productId]);
+  }, [node, nodeId, rawScenes, catalog, onChange, sharedInstructions, legacyStudioMode, originalApproved, approvedFrames, areAssetsLoading, productId]);
 
   if (!node) return null;
   const update = (next: AiVideoSceneOptions[], nextSharedInstructions: string | null = sharedInstructions) => {
@@ -405,7 +405,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
               }
             }}><GripVertical aria-hidden="true" /></Button>
             <Button type="button" variant="ghost" size="icon-sm" aria-label={`Copy scene ${index + 1}`} title="Copy scene" disabled={disabled || !canDuplicate} onClick={() => copyScene(index)}><Copy aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove scene ${index + 1}`} disabled={disabled || scenes.length <= 1} onClick={() => update(scenes.filter((_, position) => position !== index))} className="text-destructive hover:text-destructive"><Trash2 aria-hidden="true" /></Button>
+            <Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove scene ${index + 1}`} disabled={disabled || scenes.length <= 1} onClick={() => removeScene(index)} className="text-destructive hover:text-destructive"><Trash2 aria-hidden="true" /></Button>
           </div>
         </header>
         <label className="block space-y-1 text-xs font-medium">AI template

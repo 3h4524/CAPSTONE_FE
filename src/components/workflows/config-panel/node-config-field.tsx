@@ -12,6 +12,7 @@ import { ProductSelect } from "@/components/workflows/config-panel/fields/produc
 import { SourceSelect } from "@/components/workflows/config-panel/fields/source-select";
 import { VideoModeCards } from "@/components/workflows/config-panel/fields/video-mode-cards";
 import { VideoOutputFormatCards } from "@/components/workflows/config-panel/fields/video-output-format-cards";
+import { getVideoOutputFormat } from "@/helpers/video-output-formats";
 import { readBoolean, readNumber, readString, readStringArray } from "@/helpers/workflow-config";
 import type { WorkflowField, WorkflowNodeConfig } from "@/types/workflow";
 
@@ -28,7 +29,7 @@ export const NodeConfigField = ({ field, control }: NodeConfigFieldProps) => (
       switch (field.kind) {
         case "product-select": return <FormItem><FormLabel>{field.label}</FormLabel><ProductSelect value={readString(controller.value)} onChange={controller.onChange} />{field.description && <FormDescription className="text-xs">{field.description}</FormDescription>}<FormMessage /></FormItem>;
         case "video-modes": return <FormItem><FormLabel>{field.label}</FormLabel><VideoModeCards value={readString(controller.value)} onChange={controller.onChange} /><FormMessage /></FormItem>;
-        case "video-formats": return <FormItem><FormLabel>{field.label}</FormLabel><VideoOutputFormatCards value={readString(controller.value) || "tall"} onChange={controller.onChange} /><FormMessage /></FormItem>;
+        case "video-formats": return <FormItem><FormLabel>{field.label}</FormLabel><VideoOutputFormatCards value={getVideoOutputFormat(controller.value).value} onChange={controller.onChange} /><FormMessage /></FormItem>;
         case "text": return <FormItem><FormLabel>{field.label}</FormLabel><FormControl><Input value={readString(controller.value)} onChange={controller.onChange} /></FormControl><FormMessage /></FormItem>;
         case "switch":
           return (

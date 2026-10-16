@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useWorkflowCapabilities } from "@/hooks/queries/use-workflow-capabilities";
 import { cn } from "@/utils/cn";
 
-const LABELS: Record<string, string> = { standard: "Standard Showcase", ai_shot: "AI Shot" };
+const LABELS: Record<string, string> = { standard: "Standard Showcase", ai_shot: "AI Scene Video" };
 export const VideoModeCards = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
   const { data: capabilities, isPending, isError, refetch } = useWorkflowCapabilities();
   if (isPending) return <SectionLoading label="Loading video modes" />;

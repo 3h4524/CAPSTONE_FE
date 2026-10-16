@@ -12,6 +12,8 @@ type MockupTemplatePreviewProps = {
   template: MockupTemplate;
   /** The garment color to show; ignored for templates that cannot be recolored. */
   color?: string | null;
+  /** The background to show the garment on; needs the template's garment mask. */
+  background?: string | null;
   /** A generated design to place in the print area; without one the area is only outlined. */
   designUrl?: string | null;
   className?: string;
@@ -21,15 +23,24 @@ const percent = (value: number, total: number) => `${(value / total) * 100}%`;
 
 // The template's own photo with its print area outlined and, when known, a real design placed in it,
 // so a seller can see what the garment looks like and where the artwork would land.
-export const MockupTemplatePreview = ({ template, color, designUrl, className }: MockupTemplatePreviewProps) => {
+export const MockupTemplatePreview = ({ template, color, background, designUrl, className }: MockupTemplatePreviewProps) => {
   const [photoFailed, setPhotoFailed] = useState(false);
   const area = parsePrintArea(template.printAreaConfig);
   const width = template.outputWidthPx || 1;
   const height = template.outputHeightPx || 1;
   const tint = color && template.allowRecolor && template.garmentMaskUrl ? { color, maskUrl: template.garmentMaskUrl } : null;
+  // An approximation of the finished mock-up: the photo is shown through the garment mask, over the chosen color.
+  const cutOut =
+    background && template.garmentMaskUrl
+      ? { maskImage: `url(${template.garmentMaskUrl})`, WebkitMaskImage: `url(${template.garmentMaskUrl})`, maskSize: "100% 100%", WebkitMaskSize: "100% 100%" }
+      : undefined;
 
   return (
-    <div className={cn("relative w-full overflow-hidden rounded-lg bg-slate-100", className)} style={{ aspectRatio: `${width} / ${height}` }}>
+    <div
+      className={cn("relative w-full overflow-hidden rounded-lg bg-slate-100", className)}
+      style={{ aspectRatio: `${width} / ${height}`, backgroundColor: cutOut ? (background ?? undefined) : undefined }}
+      data-testid="mockup-preview"
+    >
       {photoFailed ? (
         <span aria-hidden="true" className={cn("absolute inset-0 bg-linear-to-br", previewFallbackFor(template.id))} />
       ) : (
@@ -40,6 +51,7 @@ export const MockupTemplatePreview = ({ template, color, designUrl, className }:
           unoptimized
           sizes="320px"
           className="object-cover"
+          style={cutOut}
           onError={() => setPhotoFailed(true)}
         />
       )}

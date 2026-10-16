@@ -2,24 +2,40 @@
 
 import { FileText, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 
-import { evaluateListingSeo, generateListingContent } from "@/api/listing-content";
+import { evaluateListingSeo, generateListingContent, getListingContent } from "@/api/listing-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { showToast } from "@/helpers/toast";
-import { useMutation } from "@/hooks/mutations/use-mutation";
-import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { readString } from "@/helpers/workflow-config";
+import { useMutation } from "@/hooks/mutations/use-mutation";
+import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
+import { useQuery } from "@/hooks/queries/use-query";
+import { useAppQueryClient } from "@/hooks/use-query-client";
+import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { ListingContentResult, ListingSeoFeedback, ListingSeoScoreResult } from "@/types/listing-content";
 
 export const ListingContentResultPanel = () => {
   const productId = useWorkflowStore((state) => readString(state.nodes.find((node) => node.data.type === "product-input")?.data.config.productId));
   const isRunning = useWorkflowStore((state) => state.isRunning);
-  const { run } = useWorkflowRuntime();
+  const { run, isRunning: runIsOpen } = useWorkflowRuntime();
+  const client = useAppQueryClient();
+  // The newest listing of the product. A run only knows the one it wrote itself, so without this a page that
+  // is reloaded would show that one again after the listing was regenerated here.
+  const { data: saved } = useQuery<ListingContentResult>({
+    queryKey: ["listing-content", productId],
+    queryFn: () => getListingContent(productId),
+    enabled: Boolean(productId),
+    // A product without a listing yet answers 404, which is not a problem to report.
+    suppressErrorToast: true,
+  });
   const mutation = useMutation<ListingContentResult, { productId: string; seoFeedback?: ListingSeoFeedback }>({
     mutationFn: ({ productId: id, seoFeedback }) => generateListingContent(id, seoFeedback),
-    onSuccess: () => showToast("success", "Listing content generated successfully."),
+    onSuccess: (listing, variables) => {
+      client.setQueryData(["listing-content", variables.productId], listing);
+      showToast("success", "Listing content generated successfully.");
+    },
   });
   const seoMutation = useMutation<ListingSeoScoreResult, string>({
     mutationFn: evaluateListingSeo,
@@ -34,8 +50,18 @@ export const ListingContentResultPanel = () => {
     mutation.mutate({ productId, seoFeedback: seoMutation.data ?? undefined });
   };
 
-  const workflowOutput = run?.nodes.find((node) => node.nodeType === "generate-listing")?.output as Partial<ListingContentResult> | undefined;
-  const result = mutation.data ?? (workflowOutput?.title ? workflowOutput as ListingContentResult : undefined);
+  const { mutate: act, isPending: isRetrying } = useWorkflowRunAction();
+  const listingStep = run?.nodes.find((node) => node.nodeType === "generate-listing");
+  const workflowOutput = listingStep?.output as Partial<ListingContentResult> | undefined;
+  // The listing failing does not stop the video, so it is written again from here while the run goes on.
+  const failedInRun = listingStep?.status === "failed" && !mutation.data;
+  const fromRun = workflowOutput?.title && (!productId || run?.productId === productId) ? workflowOutput as ListingContentResult : undefined;
+  const stored = saved && fromRun ? (saved.versionNumber >= fromRun.versionNumber ? saved : fromRun) : saved ?? fromRun;
+  const result = mutation.data ?? stored;
+  // While the designs and mock-ups are being made, the run that follows is about to write the listing itself,
+  // and two listings written at once for a product would clash. Once that run exists its listing is done, so
+  // regenerating here is safe again and does not affect the video.
+  const waitingForRunToStart = isRunning && !runIsOpen;
   const seo = seoMutation.data;
 
   const evaluateSeo = () => {
@@ -64,13 +90,32 @@ export const ListingContentResultPanel = () => {
             Generate content for the product selected in Product input.
           </p>
         </div>
-        <Button type="button" size="sm" onClick={generate} disabled={isRunning || mutation.isPending}>
+        <Button type="button" size="sm" onClick={generate} disabled={waitingForRunToStart || mutation.isPending || isRetrying}>
           {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           {mutation.isPending ? "Generating…" : result ? "Regenerate" : "Generate"}
         </Button>
       </div>
 
       {!productId && <p className="text-muted-foreground text-xs">Select a product in the Product input node first.</p>}
+      {waitingForRunToStart && <p className="text-muted-foreground text-xs">Available once the designs and mock-ups are done: the run writes the listing itself then.</p>}
+      {failedInRun && run && (
+        <div className="space-y-2 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+          <p className="text-xs text-red-800">{listingStep?.errorMessage ?? "Listing content could not be generated."}</p>
+          {run.status !== "cancelled" && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={isRetrying || mutation.isPending || run.status === "running"}
+              onClick={() => act({ runId: run.id, expectedRevision: run.revision, action: "retry_listing" })}
+            >
+              {isRetrying ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+              {isRetrying ? "Generating…" : "Try again"}
+            </Button>
+          )}
+          {run.status === "running" && <p className="text-muted-foreground text-xs">Available once the video step is waiting for you or has finished.</p>}
+        </div>
+      )}
       {result && (
         <div className="space-y-4">
           <div className="rounded-md border bg-white p-3">

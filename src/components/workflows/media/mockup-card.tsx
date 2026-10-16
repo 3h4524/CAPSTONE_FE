@@ -20,7 +20,7 @@ export const MockupCard = ({ asset, artworkGroups, selected, selectable, onSelec
     {selectable && <label className="flex min-h-11 items-center gap-2 text-sm"><Checkbox checked={selected} onCheckedChange={checked => onSelect(asset.id, checked === true)} />Use in this run</label>}
     {asset.warnings.map(w => <p key={w} className="text-xs text-amber-700">{w}</p>)}
     <div className="flex flex-wrap gap-2">{review && <><Button type="button" size="sm" disabled={isPending || asset.approvalStatus === "approved"} onClick={() => approve({ id: asset.id, revision: asset.revision, approved: true })}>Approve mockup</Button><Button type="button" size="sm" variant="outline" disabled={isPending || asset.approvalStatus === "rejected"} onClick={() => approve({ id: asset.id, revision: asset.revision, approved: false })}>Reject</Button></>}
-      <Button type="button" size="sm" variant="ghost" onClick={() => setShowMetadata(v => !v)} aria-expanded={showMetadata}>Adjust image</Button></div>
-    {showMetadata && <MockupMetadataForm key={`${asset.id}-${asset.revision}`} asset={asset} artworkGroups={artworkGroups} />}
+      {asset.sourceType !== "ai_generated" && <Button type="button" size="sm" variant="ghost" onClick={() => setShowMetadata(v => !v)} aria-expanded={showMetadata}>Adjust image</Button>}</div>
+    {showMetadata && asset.sourceType !== "ai_generated" && <MockupMetadataForm key={`${asset.id}-${asset.revision}`} asset={asset} artworkGroups={artworkGroups} />}
   </CardContent></Card>;
 };

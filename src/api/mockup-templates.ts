@@ -1,5 +1,5 @@
 import { api } from "@/api/client";
-import type { BatchMockupSelection, GarmentMaskPreview, GenerateAllMockupsResult, MockupImage, MockupTemplate } from "@/types/mockup-templates";
+import type { BatchMockupSelection, GarmentMaskPreview, GenerateAllMockupsResult, MockupImage, MockupOverride, MockupTemplate } from "@/types/mockup-templates";
 
 export const mockupTemplateKeys = {
   all: ["mockup-templates"] as const,
@@ -17,9 +17,10 @@ export const applyBatchMockupTemplates = async (
   batchJobId: string,
   templateIds: string[],
   garmentColors: string[] = [],
-  templateColors: Record<string, string[]> = {}
+  templateColors: Record<string, string[]> = {},
+  templateBackgrounds: Record<string, Record<string, string>> = {}
 ): Promise<BatchMockupSelection> =>
-  (await api.put<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { templateIds, garmentColors, templateColors })).data;
+  (await api.put<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { templateIds, garmentColors, templateColors, templateBackgrounds })).data;
 
 export type SaveMockupTemplateInput = {
   name: string;
@@ -76,6 +77,21 @@ export const getBatchJobMockups = async (batchJobId: string): Promise<GenerateAl
 
 export const generateAllBatchMockups = async (batchJobId: string): Promise<GenerateAllMockupsResult> =>
   (await api.post<GenerateAllMockupsResult>(`/api/batch-jobs/${batchJobId}/mockups/generate`)).data;
+
+// Makes one of the job's mock-ups its own way; the answer is the job's mock-ups made again.
+export const saveMockupOverride = async (
+  batchJobId: string,
+  input: { slotKey: string; override: MockupOverride; replacedMockupImageId?: string | null }
+): Promise<GenerateAllMockupsResult> =>
+  (await api.put<GenerateAllMockupsResult>(`/api/batch-jobs/${batchJobId}/mockups/overrides`, input)).data;
+
+// Puts one of the job's mock-ups back on the job's settings, or back at all when it was removed.
+export const resetMockupOverride = async (batchJobId: string, slotKey: string, replacedMockupImageId?: string | null): Promise<GenerateAllMockupsResult> =>
+  (
+    await api.delete<GenerateAllMockupsResult>(`/api/batch-jobs/${batchJobId}/mockups/overrides/${encodeURIComponent(slotKey)}`, {
+      params: replacedMockupImageId ? { replacedMockupImageId } : undefined,
+    })
+  ).data;
 
 // Analyzes a base photo that is not saved yet, so its recolor can be previewed straight away.
 export const previewGarmentMask = async (baseImage: File, signal?: AbortSignal): Promise<GarmentMaskPreview> => {

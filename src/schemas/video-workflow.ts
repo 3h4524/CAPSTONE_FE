@@ -6,3 +6,5 @@ export const mockupMetadataSchema = z.object({ role: z.enum(["Hero", "ArtworkDet
 export type MockupMetadataFormValues = z.infer<typeof mockupMetadataSchema>;
 export const mockupUploadSchema = z.object({ file: z.instanceof(File).refine(f => f.size > 0 && f.size <= 20 * 1024 * 1024, "Image must be at most 20 MB.").refine(f => ["image/jpeg", "image/png", "image/webp"].includes(f.type), "Choose JPEG, PNG or static WebP.") });
 export type MockupUploadFormValues = z.infer<typeof mockupUploadSchema>;
+export const lifestyleMockupSchema = z.object({ garmentMockupId: z.string().uuid("Choose the product mockup to wear."), file: z.instanceof(File, { error: "Choose a photo of an adult." }).refine(f => f.size > 0 && f.size <= 8 * 1024 * 1024, "Photo must be at most 8 MB.").refine(f => ["image/jpeg", "image/png", "image/webp"].includes(f.type), "Choose JPEG, PNG or static WebP.") });
+export type LifestyleMockupFormValues = z.infer<typeof lifestyleMockupSchema>;

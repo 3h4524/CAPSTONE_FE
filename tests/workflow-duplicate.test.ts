@@ -30,6 +30,11 @@ test("duplicateWorkflowSelection copies the selected nodes with fresh ids and of
   assert.ok(copies.every((copy) => copy.selected));
 });
 
+test("duplicateWorkflowSelection can place the copies further away", () => {
+  const { nodes: copies } = duplicateWorkflowSelection([node("a", 100)], [], ["a"], 3 * DUPLICATE_NODE_OFFSET);
+  assert.deepEqual(copies.map((copy) => copy.position), [{ x: 100 + 3 * DUPLICATE_NODE_OFFSET, y: 3 * DUPLICATE_NODE_OFFSET }]);
+});
+
 test("duplicateWorkflowSelection resets status and detaches config from the original", () => {
   const original = node("a", 0, {
     selected: true,

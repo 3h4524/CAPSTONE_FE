@@ -80,7 +80,6 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
     requestPreview(requestId);
   };
   const sceneMotions = Array.isArray(node.data.config.sceneMotionPresets) ? node.data.config.sceneMotionPresets : [];
-  const isAiSceneMode = readString(node.data.config.mode) === "ai_shot";
   const setSceneMotion = (index: number, value: string) => {
     const current = useWorkflowStore.getState().nodes.find(n => n.id === node.id);
     if (!current) return;
@@ -112,7 +111,7 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
       </p>
       <p className="text-muted-foreground text-center text-xs">{board.template.replaceAll("_", " ")} · {board.aspectRatio} · {board.width} × {board.height} · {board.durationSeconds}s · {board.scenes.length} scenes</p>
     </>}
-    {isAiSceneMode ? <div className="space-y-3">{board?.scenes.map(scene => <VideoSceneCard key={scene.sceneOrder} scene={scene} asset={assets.find(asset => asset.id === scene.mockupId)} />)}</div> : <Accordion type="single" collapsible>
+    <Accordion type="single" collapsible>
       <AccordionItem value="scene-editor">
         <AccordionTrigger>Edit scenes</AccordionTrigger>
         <AccordionContent className="space-y-4">
@@ -130,6 +129,6 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
           </div>)}
         </AccordionContent>
       </AccordionItem>
-    </Accordion>}
+    </Accordion>
   </div>;
 };

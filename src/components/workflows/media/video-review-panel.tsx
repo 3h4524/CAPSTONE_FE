@@ -52,7 +52,7 @@ export const VideoReviewPanel = () => {
   const regenerate = async () => {
     if (!run || !generate) return;
     const parsed = generateVideoConfigSchema.safeParse(generate.data.config);
-    if (!parsed.success) { showToast("warning", parsed.error.issues[0]?.message ?? "Check AI scene settings."); return; }
+    if (!parsed.success) { showToast("warning", parsed.error.issues[0]?.message ?? "Check AI Shot settings."); return; }
     try {
       const token = await confirmAiShot(run.id, parsed.data, true);
       if (token === null) return;
@@ -64,7 +64,7 @@ export const VideoReviewPanel = () => {
   if (!video) return <p className="text-muted-foreground text-sm">No video candidate yet. Complete Mockup Approval first.</p>;
   return <div className="space-y-4">
     <Select value={video.id} onValueChange={setViewedId}><SelectTrigger aria-label="Video version"><SelectValue /></SelectTrigger><SelectContent>{videos?.map(v => <SelectItem key={v.id} value={v.id}>Version {v.version} · {v.approvalStatus}</SelectItem>)}</SelectContent></Select>
-    <div className="flex flex-wrap gap-2"><Badge>{video.mode === "ai_shot" ? "AI Scene Video" : "Standard"}</Badge><Badge variant="outline">{video.template}</Badge><Badge variant="secondary">{video.status}</Badge></div>
+    <div className="flex flex-wrap gap-2"><Badge>{video.mode === "ai_shot" ? "AI Shot" : "Standard"}</Badge><Badge variant="outline">{video.template}</Badge><Badge variant="secondary">{video.status}</Badge></div>
     {video.previewUrl && <VideoPreviewFrame width={video.width} height={video.height} maxHeightRem={34}>
       <video key={video.id} controls preload="metadata" poster={video.thumbnailUrl ?? undefined} className="size-full bg-black"><source src={video.previewUrl} type="video/mp4" /><track kind="captions" /></video>
     </VideoPreviewFrame>}

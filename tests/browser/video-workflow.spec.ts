@@ -26,8 +26,8 @@ const templates: VideoTemplateCatalogItem[] = [
   { code: "variant_showcase", version: 2, name: "Variant Showcase", description: "Compare approved variants.", previewVideoUrl: "/video-templates/variant-showcase-v2.mp4", defaultDurationSeconds: 12, defaultTransition: "fade", defaultMotionPreset: "varied", requirements: { minimumAssets: 2, requiresDetail: false, minimumVariants: 2 } },
 ];
 const storyboard: VideoStoryboard = {
-  template: "product_showcase", templateVersion: 2, outputFormat: "portrait", width: 1080, height: 1920,
-  aspectRatio: "9:16", durationSeconds: 12, productType: "tshirt",
+  template: "product_showcase", templateVersion: 2, outputFormat: "tall", width: 1080, height: 2160,
+  aspectRatio: "1:2", durationSeconds: 12, productType: "tshirt",
   fingerprint: "storybook-fixture-fingerprint",
   scenes: [0, 1].map(sceneOrder => ({
     mockupId: mockupAsset.id, sourceRevision: 1, sourceHash: "a".repeat(64), role: "Hero", sceneOrder,
@@ -55,7 +55,7 @@ test.beforeEach(async ({ page }) => {
         json = { ...storyboard, template: "design_detail", fingerprint: "stale-product-template-response" };
       } else json = storyboard;
     }
-    else if (path.endsWith("/videos")) json = [{ id: videoId, version: 2, approvalStatus: "pending" }, { id: oldVideoId, version: 1, approvalStatus: "rejected" }].map(v => ({ ...v, runId, mode: "standard", template: "product_showcase", outputFormat: "portrait", width: 1080, height: 1920, aspectRatio: "9:16", reviewRevision: v.version + 2, status: "completed", previewUrl: "https://res.cloudinary.com/apcs-ui-fixture/video.mp4", thumbnailUrl: null, qa: { fullDecode: true }, scenes: [] }));
+    else if (path.endsWith("/videos")) json = [{ id: videoId, version: 2, approvalStatus: "pending" }, { id: oldVideoId, version: 1, approvalStatus: "rejected" }].map(v => ({ ...v, runId, mode: "standard", template: "product_showcase", outputFormat: "tall", width: 1080, height: 2160, aspectRatio: "1:2", reviewRevision: v.version + 2, status: "completed", previewUrl: "https://res.cloudinary.com/apcs-ui-fixture/video.mp4", thumbnailUrl: null, qa: { fullDecode: true }, scenes: [] }));
     await route.fulfill({ json, headers: { "access-control-allow-origin": "http://127.0.0.1:3101", "access-control-allow-credentials": "true" } });
   });
 });
@@ -71,7 +71,7 @@ test("template cards are keyboard selectable and storyboard edits remain availab
   await expect(page.getByRole("radio", { name: /Design Detail/ })).toBeDisabled();
   await expect(page.getByText("Add an Artwork Detail image or mark a detail region.")).toBeVisible();
   await expect(page.locator('video[src="/video-templates/product-showcase-v2.mp4"]')).not.toHaveAttribute("autoplay");
-  await expect(page.getByText("product showcase · 9:16 · 1080 × 1920 · 12s · 2 scenes", { exact: true })).toBeVisible();
+  await expect(page.getByText("product showcase · 1:2 · 1080 × 2160 · 12s · 2 scenes", { exact: true })).toBeVisible();
   const delayedProductRequest = page.waitForRequest(request => request.url().endsWith(`/api/products/${productId}/video-storyboard`) && request.postDataJSON()?.config?.template === "product_showcase");
   const delayedProductResponse = page.waitForResponse(response => response.url().endsWith(`/api/products/${productId}/video-storyboard`) && response.request().postDataJSON()?.config?.template === "product_showcase");
   await productTemplate.focus();
@@ -82,8 +82,8 @@ test("template cards are keyboard selectable and storyboard edits remain availab
   await page.getByRole("radio", { name: /^Recommended automatically/ }).click();
   await freshAutoResponse;
   await delayedProductResponse;
-  await expect(page.getByText("product showcase · 9:16 · 1080 × 1920 · 12s · 2 scenes", { exact: true })).toBeVisible();
-  await expect(page.getByText("design detail · 9:16 · 1080 × 1920 · 12s · 2 scenes", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("product showcase · 1:2 · 1080 × 2160 · 12s · 2 scenes", { exact: true })).toBeVisible();
+  await expect(page.getByText("design detail · 1:2 · 1080 × 2160 · 12s · 2 scenes", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Play video" })).toBeVisible();
   await page.getByRole("spinbutton").fill("2");
   await expect(page.getByText("The video duration must be at least 3.")).toBeVisible();

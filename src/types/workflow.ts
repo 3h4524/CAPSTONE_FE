@@ -6,9 +6,11 @@ export type WorkflowNodeType =
   | "product-input"
   | "prompt-synthesis"
   | "design-image"
-  | "approval-gate"
+  | "design-approval"
   | "apply-mockup"
+  | "approval-gate"
   | "generate-video"
+  | "review-video"
   | "generate-listing"
   | "export-zip"
   | "publish-etsy"
@@ -16,7 +18,8 @@ export type WorkflowNodeType =
 
 export type WorkflowNodeCategory = "trigger" | "ai" | "review" | "output";
 
-export type WorkflowNodeStatus = "idle" | "running" | "success" | "failed" | "skipped";
+/** The two "waiting" statuses are steps that need the person: the run is paused until they act. */
+export type WorkflowNodeStatus = "idle" | "running" | "success" | "failed" | "skipped" | "waiting_for_input" | "waiting_for_review" | "cancelled";
 
 export type WorkflowNodeConfig = Record<string, unknown>;
 
@@ -40,7 +43,7 @@ export interface WorkflowDefinitionEdge {
 }
 
 export interface WorkflowDefinition {
-  version: 1;
+  version: 2;
   nodes: WorkflowDefinitionNode[];
   edges: WorkflowDefinitionEdge[];
   viewport: Viewport;
@@ -52,6 +55,7 @@ export interface WorkflowSummary {
   description: string;
   nodeCount: number;
   updatedAt: string;
+  revision: number;
 }
 
 export interface WorkflowDetail extends WorkflowSummary {
@@ -60,6 +64,7 @@ export interface WorkflowDetail extends WorkflowSummary {
 }
 
 export interface SaveWorkflowInput {
+  expectedRevision?: number;
   name: string;
   description: string;
   definition: WorkflowDefinition;
@@ -70,6 +75,8 @@ export type WorkflowNodeData = {
   label: string;
   config: WorkflowNodeConfig;
   status: WorkflowNodeStatus;
+  stage?: string | null;
+  progress?: number;
 };
 
 export type WorkflowNode = Node<WorkflowNodeData, "workflow">;
@@ -91,8 +98,20 @@ export type WorkflowOptionSource = "batches" | "design-templates" | "style-prese
 
 export type WorkflowField =
   | { kind: "select"; name: string; label: string; options: WorkflowOption[] }
-  | { kind: "source-select"; name: string; label: string; source: WorkflowOptionSource }
-  | { kind: "mockup-templates"; name: string; label: string }
+  | {
+      kind: "source-select";
+      name: string;
+      label: string;
+      source: WorkflowOptionSource;
+      /** The value may stay empty; `noneLabel` is the choice that clears it. */
+      optional?: boolean;
+      noneLabel?: string;
+    }
+  | { kind: "product-select"; name: string; label: string; description?: string }
+  | { kind: "video-modes"; name: string; label: string }
+  | { kind: "video-formats"; name: string; label: string }
+  | { kind: "text"; name: string; label: string }
+  | { kind: "mockup-selection"; name: string; templateColorsName: string; label: string }
   | { kind: "number"; name: string; label: string; min: number; max: number; unit?: string }
   | { kind: "switch"; name: string; label: string; description: string }
   | { kind: "textarea"; name: string; label: string; placeholder: string };

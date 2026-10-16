@@ -20,6 +20,7 @@ export interface AiVideoSceneOptions {
   studioLayout?: "hanging_window" | "flat_lay" | "none" | null;
   studioFrameId?: string | null;
   studioPrompt?: string | null;
+  studioReferenceHashes?: string[] | null;
 }
 export interface AiVideoTemplateDefinition {
   code: string;
@@ -42,7 +43,7 @@ export interface WorkflowCapabilities { definitionVersion: number; nodes: { type
 export interface Region { x: number; y: number; width: number; height: number }
 export interface MockupRegions { focalPoint: { x: number; y: number } | null; product: Region | null; artwork: Region | null; detail: Region | null }
 export interface MockupAsset { id: string; productId: string; sourceType: string; role: string; artworkGroupKey: string | null; variantKey: string | null; revision: number; approvalStatus: string; approvedRevision: number | null; width: number; height: number; regions: MockupRegions; previewUrl: string; warnings: string[] }
-export interface AiStudioFrameRequest { sourceMockupId: string; layout: "hanging_window" | "flat_lay" | "none"; outputFormat: string; customPrompt?: string | null; regenerate?: boolean; expectedFingerprint?: string; confirmedEstimatedCostUsd?: number }
+export interface AiStudioFrameRequest { sourceMockupId: string; layout: "hanging_window" | "flat_lay" | "none"; outputFormat: string; customPrompt?: string | null; templateCode?: string | null; references?: File[]; referenceRightsConfirmed?: boolean; regenerate?: boolean; expectedFingerprint?: string; confirmedEstimatedCostUsd?: number }
 export interface AiStudioFrameQuote { fingerprint: string; promptVersion: number; estimatedCostUsd: number; existingFrame: MockupAsset | null; note: string }
 export interface AiStudioFrameGeneration { frame: MockupAsset; reused: boolean; estimatedCostUsd: number }
 export type SceneMotion = "gentle" | "contain_gentle" | "static" | "pan" | "zoom" | "zoom_out" | "pan_left" | "pan_up" | "pan_down" | "diagonal_up_right" | "diagonal_up_left" | "diagonal_down_right" | "diagonal_down_left";

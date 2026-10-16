@@ -15,13 +15,16 @@ const AdminDashboardPage = () => {
   const [timeRange, setTimeRange] = useState("Year");
   const user = useAuthStore((state) => state.user);
   const isHydrated = useAuthStore((state) => state.isHydrated);
-  const { data: metrics, isLoading: isMetricsLoading } = useAdminDashboardMetrics(
-    timeRange.toLowerCase()
-  );
   const { mutate: logout } = useLogout();
   const { mutate: exportReport, isPending: isExporting } = useExportAdminDashboardReport();
 
   const isAdmin = Boolean(user?.roles.some((role) => role.toLowerCase() === "admin"));
+  const canLoadMetrics = isHydrated && isAdmin;
+
+  const { data: metrics, isLoading: isMetricsLoading } = useAdminDashboardMetrics(
+    timeRange.toLowerCase(),
+    canLoadMetrics
+  );
 
   useEffect(() => {
     if (!isHydrated) {
@@ -42,7 +45,7 @@ const AdminDashboardPage = () => {
 
   const handleExport = () => exportReport(timeRange.toLowerCase());
 
-  if (!isHydrated || isMetricsLoading) {
+  if (!isHydrated || (canLoadMetrics && isMetricsLoading)) {
     return <PageLoading label="Loading dashboard" />;
   }
 

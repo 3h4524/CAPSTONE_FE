@@ -21,7 +21,7 @@ export const ingestRagDocument = async (payload: RagIngestRequest) => {
   return data;
 };
 
-export type RagDocumentStatus = "processing" | "ready" | "superseded" | "failed";
+export type RagDocumentStatus = "queued" | "processing" | "ready" | "superseded" | "failed";
 
 export type RagAdminDocument = {
   id: string;

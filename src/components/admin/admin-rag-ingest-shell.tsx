@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { CheckCircle2, FileText, Loader2, Upload } from "lucide-react";
+import { CheckCircle2, FileText, Loader2, RotateCcw, Upload } from "lucide-react";
 
 import { ingestRagDocument, type RagIngestRequest } from "@/api/rag";
 import { AdminRagDocumentsPanel } from "@/components/admin/admin-rag-documents-panel";
@@ -9,6 +9,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { showToast } from "@/helpers/toast";
 import { useMutation } from "@/hooks/mutations/use-mutation";
@@ -31,6 +32,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<"ingest" | "documents">("ingest");
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [fileName, setFileName] = useState("");
   const [title, setTitle] = useState("");
   const [sourceType, setSourceType] = useState("manual");
@@ -50,6 +52,12 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
   });
 
   const handleFile = async (file: File) => {
+    const extension = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`;
+    if (!ACCEPTED_FILES.split(",").includes(extension)) {
+      showToast("error", "Use a TXT, MD, CSV, JSON, or HTML file.");
+      return;
+    }
+
     try {
       setContent(await file.text());
       setFileName(file.name);
@@ -58,6 +66,18 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
     } catch {
       showToast("error", "Could not read this file.");
     }
+  };
+
+  const resetForm = () => {
+    setIsDraggingFile(false);
+    setFileName("");
+    setTitle("");
+    setSourceType("manual");
+    setSourceUrl("");
+    setVersion("");
+    setLanguage("en");
+    setContentType("listing");
+    setContent("");
   };
 
   const submit = () => {
@@ -99,15 +119,33 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
 
               {activeTab === "documents" ? <div className="mt-6"><AdminRagDocumentsPanel onIngest={() => setActiveTab("ingest")} /></div> : <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
                 <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-                  <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                    <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
                     <div><h2 className="text-sm font-bold text-slate-900">Document content</h2><p className="mt-1 text-xs text-slate-400">Plain text is sent to the RAG ingestion pipeline.</p></div>
-                    <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()}><Upload className="size-3.5" /> Choose file</Button>
-                    <input ref={inputRef} type="file" accept={ACCEPTED_FILES} className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleFile(file); event.target.value = ""; }} />
+                      <div className="flex gap-2">
+                        <Button type="button" variant="ghost" size="sm" onClick={resetForm} disabled={mutation.isPending}><RotateCcw className="size-3.5" /> Reset</Button>
+                        <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()}><Upload className="size-3.5" /> Choose file</Button>
+                      </div>
                   </div>
 
-                  <button type="button" onClick={() => inputRef.current?.click()} className={cn("mt-5 flex min-h-28 w-full flex-col items-center justify-center rounded-lg border border-dashed px-4 text-center transition-colors hover:border-slate-400 hover:bg-slate-50", fileName ? "border-emerald-200 bg-emerald-50/40" : "border-slate-300 bg-slate-50/60")}>
-                    {fileName ? <><CheckCircle2 className="size-6 text-emerald-500" /><span className="mt-2 max-w-full truncate text-xs font-semibold text-slate-700">{fileName}</span><span className="mt-1 text-[11px] text-slate-400">Click to replace</span></> : <><FileText className="size-6 text-slate-400" /><span className="mt-2 text-xs font-semibold text-slate-600">Drop a document here or browse</span><span className="mt-1 text-[11px] text-slate-400">TXT, MD, CSV, JSON, or HTML</span></>}
-                  </button>
+                  <label
+                    htmlFor="rag-file-input"
+                    className={cn("mt-5 flex min-h-28 w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 text-center transition-all hover:border-slate-400 hover:bg-slate-50", isDraggingFile && "cursor-copy scale-[1.01] border-primary bg-primary/5 ring-2 ring-primary/20", fileName ? "border-emerald-200 bg-emerald-50/40" : "border-slate-300 bg-slate-50/60")}
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = "copy";
+                      setIsDraggingFile(true);
+                    }}
+                    onDragLeave={() => setIsDraggingFile(false)}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      setIsDraggingFile(false);
+                      const file = event.dataTransfer.files?.[0];
+                      if (file) void handleFile(file);
+                    }}
+                  >
+                    {isDraggingFile ? <><Upload className="size-6 animate-bounce text-primary" /><span className="mt-2 text-xs font-semibold text-primary">Release to upload</span><span className="mt-1 text-[11px] text-slate-400">Your document will be loaded here</span></> : fileName ? <><CheckCircle2 className="size-6 text-emerald-500" /><span className="mt-2 max-w-full truncate text-xs font-semibold text-slate-700">{fileName}</span><span className="mt-1 text-[11px] text-slate-400">Click to replace</span></> : <><FileText className="size-6 text-slate-400" /><span className="mt-2 text-xs font-semibold text-slate-600">Drop a document here or browse</span><span className="mt-1 text-[11px] text-slate-400">TXT, MD, CSV, JSON, or HTML</span></>}
+                    <input id="rag-file-input" ref={inputRef} type="file" accept={ACCEPTED_FILES} className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleFile(file); event.target.value = ""; }} />
+                  </label>
 
                   <label className="mt-5 block text-xs font-semibold text-slate-700" htmlFor="rag-content">Content <span className="text-rose-500">*</span></label>
                   <Textarea id="rag-content" value={content} onChange={(event) => setContent(event.target.value)} placeholder="Paste or review the document content…" className="mt-2 min-h-[300px] resize-y text-sm leading-6" />
@@ -119,7 +157,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                   <p className="mt-1 text-xs leading-5 text-slate-400">These fields help retrieval target the right knowledge.</p>
                   <div className="mt-5 space-y-4">
                     <Field label="Title" required><Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Shipping policy" /></Field>
-                    <Field label="Content type" required><select value={contentType} onChange={(event) => setContentType(event.target.value as RagIngestRequest["contentType"])} className="border-input focus:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm outline-none focus:ring-2">{CONTENT_TYPES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+                    <Field label="Content type" required><Select value={contentType} onValueChange={(value) => setContentType(value as RagIngestRequest["contentType"])}><SelectTrigger className="w-full"><SelectValue placeholder="Select content type" /></SelectTrigger><SelectContent>{CONTENT_TYPES.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select></Field>
                     <Field label="Source type"><Input value={sourceType} onChange={(event) => setSourceType(event.target.value)} placeholder="manual, file, url…" /></Field>
                     <Field label="Source URL"><Input type="url" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://…" /></Field>
                     <div className="grid grid-cols-2 gap-3"><Field label="Language"><Input value={language} onChange={(event) => setLanguage(event.target.value)} placeholder="en" /></Field><Field label="Version"><Input value={version} onChange={(event) => setVersion(event.target.value)} placeholder="v1" /></Field></div>

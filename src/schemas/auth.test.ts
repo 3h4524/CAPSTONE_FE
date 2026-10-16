@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { loginSchema, registerSchema } from "@/schemas/auth";
+import {
+  changePasswordSchema,
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  resendVerificationSchema,
+  resetPasswordSchema,
+} from "@/schemas/auth";
 
 const validLogin = { email: "seller@apcs.test", password: "Valid1234" };
 
@@ -130,5 +137,218 @@ describe("registerSchema", () => {
 
     expect(result.success).toBe(true);
     expect(result.success && result.data).toEqual(validRegister);
+  });
+
+  it("rejects a password without a lowercase letter", () => {
+    const result = registerSchema.safeParse({
+      ...validRegister,
+      password: "UPPERCASE1",
+      confirmPassword: "UPPERCASE1",
+    });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Password must contain at least one lowercase letter");
+  });
+
+  it("rejects a password longer than 128 characters", () => {
+    const longPassword = `Aa1${"a".repeat(126)}`;
+    const result = registerSchema.safeParse({
+      ...validRegister,
+      password: longPassword,
+      confirmPassword: longPassword,
+    });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Password must be at most 128 characters");
+  });
+});
+
+describe("forgotPasswordSchema", () => {
+  it("rejects empty input", () => {
+    const result = forgotPasswordSchema.safeParse({ email: "" });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Please enter a valid email address");
+  });
+
+  it("rejects an invalid email", () => {
+    const result = forgotPasswordSchema.safeParse({ email: "not-an-email" });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Please enter a valid email address");
+  });
+
+  it("accepts a valid email", () => {
+    const result = forgotPasswordSchema.safeParse({ email: "seller@apcs.test" });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data).toEqual({ email: "seller@apcs.test" });
+  });
+});
+
+describe("resendVerificationSchema", () => {
+  it("rejects empty input", () => {
+    const result = resendVerificationSchema.safeParse({ email: "" });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Please enter a valid email address");
+  });
+
+  it("rejects an invalid email", () => {
+    const result = resendVerificationSchema.safeParse({ email: "seller@" });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Please enter a valid email address");
+  });
+
+  it("accepts a valid email", () => {
+    const result = resendVerificationSchema.safeParse({ email: "seller@apcs.test" });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data).toEqual({ email: "seller@apcs.test" });
+  });
+});
+
+const validReset = { newPassword: "Valid1234", confirmPassword: "Valid1234" };
+
+describe("resetPasswordSchema", () => {
+  it("rejects empty input", () => {
+    const result = resetPasswordSchema.safeParse({ newPassword: "", confirmPassword: "" });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toEqual(
+      expect.arrayContaining(["Please confirm your password"])
+    );
+  });
+
+  it("rejects a password below the minimum length", () => {
+    const result = resetPasswordSchema.safeParse({
+      newPassword: "Aa1",
+      confirmPassword: "Aa1",
+    });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Password must be at least 8 characters");
+  });
+
+  it("rejects a password without an uppercase letter", () => {
+    const result = resetPasswordSchema.safeParse({
+      newPassword: "lowercase1",
+      confirmPassword: "lowercase1",
+    });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Password must contain at least one uppercase letter");
+  });
+
+  it("rejects a password without a lowercase letter", () => {
+    const result = resetPasswordSchema.safeParse({
+      newPassword: "UPPERCASE1",
+      confirmPassword: "UPPERCASE1",
+    });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Password must contain at least one lowercase letter");
+  });
+
+  it("rejects a password without a digit", () => {
+    const result = resetPasswordSchema.safeParse({
+      newPassword: "NoDigitsHere",
+      confirmPassword: "NoDigitsHere",
+    });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Password must contain at least one digit");
+  });
+
+  it("rejects mismatched confirmation", () => {
+    const result = resetPasswordSchema.safeParse({
+      ...validReset,
+      confirmPassword: "Different1",
+    });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Passwords do not match");
+  });
+
+  it("accepts a valid payload", () => {
+    const result = resetPasswordSchema.safeParse(validReset);
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data).toEqual(validReset);
+  });
+});
+
+const validChange = {
+  currentPassword: "OldValid123",
+  newPassword: "NewValid123",
+  confirmNewPassword: "NewValid123",
+};
+
+describe("changePasswordSchema", () => {
+  it("rejects empty input", () => {
+    const result = changePasswordSchema.safeParse({
+      currentPassword: "",
+      newPassword: "",
+      confirmNewPassword: "",
+    });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toEqual(
+      expect.arrayContaining([
+        "Please enter your current password",
+        "Please confirm your new password",
+      ])
+    );
+  });
+
+  it("rejects a new password below the minimum length", () => {
+    const result = changePasswordSchema.safeParse({
+      ...validChange,
+      newPassword: "Aa1",
+      confirmNewPassword: "Aa1",
+    });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Password must be at least 8 characters");
+  });
+
+  it("rejects a new password without an uppercase letter", () => {
+    const result = changePasswordSchema.safeParse({
+      ...validChange,
+      newPassword: "lowercase1",
+      confirmNewPassword: "lowercase1",
+    });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Password must contain at least one uppercase letter");
+  });
+
+  it("rejects a new password without a digit", () => {
+    const result = changePasswordSchema.safeParse({
+      ...validChange,
+      newPassword: "NoDigitsHere",
+      confirmNewPassword: "NoDigitsHere",
+    });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Password must contain at least one digit");
+  });
+
+  it("rejects mismatched confirmation", () => {
+    const result = changePasswordSchema.safeParse({
+      ...validChange,
+      confirmNewPassword: "Different1",
+    });
+
+    expect(result.success).toBe(false);
+    expect(issueMessages(result)).toContain("Passwords do not match");
+  });
+
+  it("accepts a valid payload", () => {
+    const result = changePasswordSchema.safeParse(validChange);
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data).toEqual(validChange);
   });
 });

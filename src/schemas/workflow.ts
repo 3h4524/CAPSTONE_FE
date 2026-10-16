@@ -98,6 +98,7 @@ export const generateVideoConfigSchema = z.object({
     studioLayout: z.enum(["hanging_window", "flat_lay", "none"]).nullable().optional(),
     studioFrameId: z.string().uuid().nullable().optional(),
     studioPrompt: z.string().trim().max(500, "Keep keyframe directions under 500 characters.").nullable().optional(),
+    studioReferenceMockupIds: z.array(z.string().uuid()).max(3).nullable().optional(),
   })).max(4).optional(),
   aiGlobalInstructions: z.string().trim().max(500, "Keep shared AI scene direction under 500 characters.").nullable().optional(),
   aiStudioMode: z.enum(["direct", "studio"]).catch("direct").default("direct"),

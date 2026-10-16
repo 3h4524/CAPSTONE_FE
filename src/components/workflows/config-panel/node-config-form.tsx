@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AiShotOptions } from "@/components/workflows/config-panel/fields/ai-shot-options";
-import { VideoTemplateCards } from "@/components/workflows/config-panel/fields/video-template-cards";
 import { ListingContentResultPanel } from "@/components/workflows/config-panel/listing-content-result";
 import { NodeConfigField } from "@/components/workflows/config-panel/node-config-field";
 import { MockupPanel } from "@/components/workflows/media/mockup-panel";
@@ -18,7 +17,7 @@ import { StoryboardPanel } from "@/components/workflows/media/storyboard-panel";
 import { VideoReviewPanel } from "@/components/workflows/media/video-review-panel";
 import { VideoSourcesHeader } from "@/components/workflows/media/video-sources-header";
 import { WORKFLOW_CATEGORIES, WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
-import { readString } from "@/helpers/workflow-config";
+import { getVideoOutputFormat } from "@/helpers/video-output-formats";
 import { hasVideoSteps, isVideoRunNode } from "@/helpers/workflow-run";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -48,8 +47,7 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
     mode: "onChange",
   });
   const { control, trigger, watch, setValue } = form;
-  const videoTemplate = readString(watch("template")) || "auto";
-  const videoFields = definition.fields.filter(field => field.name === "mode" || field.name === "outputFormat" || field.name === "durationSeconds");
+  const videoFields = definition.fields.filter(field => field.name === "outputFormat");
   const advancedVideoFields = definition.fields.filter(field => field.name === "textOverlay" || field.name === "standardOptions.transition");
 
   useEffect(() => {
@@ -65,6 +63,15 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
     });
     return () => subscription.unsubscribe();
   }, [node.id, trigger, watch, updateNodeConfig, setValue]);
+
+  useEffect(() => {
+    if (node.data.type !== "generate-video") return;
+    const currentFormat = node.data.config.outputFormat;
+    const normalizedFormat = getVideoOutputFormat(currentFormat).value;
+    if (currentFormat !== normalizedFormat) {
+      updateNodeConfig(node.id, { ...node.data.config, outputFormat: normalizedFormat });
+    }
+  }, [node.id, node.data.config, node.data.type, updateNodeConfig]);
 
   return (
     <div className="flex h-full flex-col">
@@ -84,20 +91,7 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
           <form onSubmit={(event) => event.preventDefault()} className="p-4">
             <fieldset disabled={isRunning && !(waitingReview && node.data.type === "generate-video")} className="space-y-5">
               {node.data.type === "generate-video" ? <>
-                {videoFields.filter(field => field.name === "mode").map(field => <NodeConfigField key={field.name} field={field} control={control} />)}
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Video template</p>
-                  <VideoTemplateCards value={videoTemplate} disabled={isRunning && !waitingReview} onChange={(code, version) => {
-                    setValue("template", code, { shouldDirty: true, shouldValidate: true });
-                    setValue("templateVersion", version, { shouldDirty: true, shouldValidate: true });
-                  }} />
-                </div>
-                {videoFields.filter(field => field.name !== "mode").map(field => <NodeConfigField key={field.name} field={field} control={control} />)}
-                <AiShotOptions nodeId={node.id} disabled={isRunning && !waitingReview} onChange={(options, seconds) => {
-                  setValue("aiShotOptions", options, { shouldDirty: true });
-                  if (seconds !== undefined) setValue("durationSeconds", seconds, { shouldDirty: true });
-                  void trigger();
-                }} />
+                {videoFields.map(field => <NodeConfigField key={field.name} field={field} control={control} />)}
                 <Accordion type="single" collapsible>
                   <AccordionItem value="advanced-video">
                     <AccordionTrigger>Caption and transition</AccordionTrigger>
@@ -106,6 +100,13 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
+                <AiShotOptions nodeId={node.id} disabled={isRunning && !waitingReview} onChange={(scenes, seconds, sharedInstructions) => {
+                  setValue("mode", "ai_shot", { shouldDirty: true, shouldValidate: true });
+                  setValue("aiScenes", scenes, { shouldDirty: true, shouldValidate: true });
+                  setValue("aiGlobalInstructions", sharedInstructions ?? null, { shouldDirty: true, shouldValidate: true });
+                  setValue("durationSeconds", seconds, { shouldDirty: true, shouldValidate: true });
+                  void trigger();
+                }} />
               </> : definition.fields.map(field => <NodeConfigField key={field.name} field={field} control={control} />)}
             </fieldset>
           </form>

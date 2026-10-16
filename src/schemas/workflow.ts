@@ -63,8 +63,8 @@ export const generateVideoConfigSchema = z.object({
     error: "Choose a video template.",
   }),
   templateVersion: z.number().int().min(1).max(2).optional(),
-  outputFormat: z.enum(["square", "portrait", "tall", "landscape"]).default("tall"),
-  durationSeconds: wholeNumber("video duration", 3, 15),
+  outputFormat: z.enum(["square", "portrait", "landscape"]).catch("portrait").default("portrait"),
+  durationSeconds: wholeNumber("video duration", 3, 30),
   assetSelection: z.enum(["automatic", "manual"]),
   selectedMockupIds: z.array(z.string().uuid()).max(8).refine(ids => new Set(ids).size === ids.length, "Select each mockup once."),
   sceneOrder: z.array(z.string().uuid()).max(4).refine(ids => new Set(ids).size === ids.length, "Use each mockup once in the scene order."),
@@ -81,10 +81,43 @@ export const generateVideoConfigSchema = z.object({
     rightsConfirmed: z.boolean(),
     fullSceneMockupIds: z.array(z.string().uuid()).max(2).nullable(),
   }).optional(),
+  aiScenes: z.array(z.object({
+    mode: z.enum(["ai"]).default("ai"),
+    mockupId: z.string().uuid().nullable(),
+    templateCode: z.string().min(1),
+    durationSeconds: z.union([z.literal(4), z.literal(6), z.literal(8)]),
+    framing: z.string().min(1),
+    cameraAngle: z.string().min(1),
+    cameraMovement: z.string().min(1),
+    subjectMotion: z.string().min(1),
+    motionIntensity: z.string().min(1),
+    lighting: z.string().min(1),
+    extraInstructions: z.string().trim().max(500, "Keep scene instructions under 500 characters.").nullable(),
+    rightsConfirmed: z.boolean(),
+    startFrameMode: z.enum(["direct", "studio"]).nullable().optional(),
+    studioLayout: z.enum(["hanging_window", "flat_lay", "none"]).nullable().optional(),
+    studioFrameId: z.string().uuid().nullable().optional(),
+    studioPrompt: z.string().trim().max(500, "Keep keyframe directions under 500 characters.").nullable().optional(),
+  })).max(4).optional(),
+  aiGlobalInstructions: z.string().trim().max(500, "Keep shared AI scene direction under 500 characters.").nullable().optional(),
+  aiStudioMode: z.enum(["direct", "studio"]).catch("direct").default("direct"),
+  aiStudioLayout: z.enum(["hanging_window", "flat_lay"]).catch("hanging_window").default("hanging_window"),
+  aiStudioSourceMockupId: z.string().uuid().nullable().optional(),
+  aiStudioFrameId: z.string().uuid().nullable().optional(),
 }).superRefine((value, ctx) => {
   if (value.assetSelection === "manual" && value.selectedMockupIds.length === 0) ctx.addIssue({ code: "custom", path: ["selectedMockupIds"], message: "Choose at least one approved mockup." });
   if (value.mode !== "ai_shot") return;
-  if (!value.aiShotOptions) { ctx.addIssue({ code: "custom", path: ["aiShotOptions"], message: "Choose AI Shot settings." }); return; }
+  if (value.aiScenes?.length) {
+    if (value.aiScenes.length > 4) ctx.addIssue({ code: "custom", path: ["aiScenes"], message: "Use up to four AI scenes." });
+    const total = value.aiScenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
+    if (total > 30) ctx.addIssue({ code: "custom", path: ["aiScenes"], message: "AI video scenes can total up to 30 seconds." });
+    if (value.durationSeconds !== total) ctx.addIssue({ code: "custom", path: ["durationSeconds"], message: "Total duration is calculated from the scene durations." });
+    if (value.aiScenes.some(scene => ["lifestyle_in_use", "creator_pov_ugc", "everyday_story_moment"].includes(scene.templateCode) && !scene.rightsConfirmed)) {
+      ctx.addIssue({ code: "custom", path: ["aiScenes"], message: "Confirm image rights for every scene featuring a person." });
+    }
+    return;
+  }
+  if (!value.aiShotOptions) { ctx.addIssue({ code: "custom", path: ["aiShotOptions"], message: "Configure at least one AI video scene." }); return; }
   if (value.aiShotOptions.coverage === "full_video" && ![8, 15].includes(value.durationSeconds)) ctx.addIssue({ code: "custom", path: ["durationSeconds"], message: "Full AI video must be 8 or 15 seconds." });
   if (value.aiShotOptions.coverage === "single_scene" && value.durationSeconds < 12) ctx.addIssue({ code: "custom", path: ["durationSeconds"], message: "Mixed AI and Standard video needs 12–15 seconds." });
   if (["lifestyle_motion", "product_in_use"].includes(value.aiShotOptions.concept) && !value.aiShotOptions.rightsConfirmed) ctx.addIssue({ code: "custom", path: ["aiShotOptions", "rightsConfirmed"], message: "Confirm image rights for the visible adult person." });

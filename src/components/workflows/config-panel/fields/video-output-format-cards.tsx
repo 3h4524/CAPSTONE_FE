@@ -4,7 +4,7 @@ import { VIDEO_OUTPUT_FORMATS } from "@/helpers/video-output-formats";
 import { cn } from "@/utils/cn";
 
 export const VideoOutputFormatCards = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
-  <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Video output format">
+  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Video output format">
     {VIDEO_OUTPUT_FORMATS.map(format => {
       const selected = value === format.value;
       return <button key={format.value} type="button" role="radio" aria-checked={selected} onClick={() => onChange(format.value)}

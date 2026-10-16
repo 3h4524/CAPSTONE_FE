@@ -40,7 +40,7 @@ type AdminSidebarProps = {
 
 const primaryNavigation = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-  { label: "RAG Ingest", href: "/admin/rag-ingest", icon: Database },
+  { label: "RAG Knowledge Base", href: "/admin/rag-ingest", icon: Database },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Subscriptions", href: "/admin/subscription-plans", icon: CreditCard },
 ];

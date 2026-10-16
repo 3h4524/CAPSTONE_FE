@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { CheckCircle2, FileText, Loader2, Upload } from "lucide-react";
 
 import { ingestRagDocument, type RagIngestRequest } from "@/api/rag";
+import { AdminRagDocumentsPanel } from "@/components/admin/admin-rag-documents-panel";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
   const inputRef = useRef<HTMLInputElement>(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState<"ingest" | "documents">("ingest");
   const [fileName, setFileName] = useState("");
   const [title, setTitle] = useState("");
   const [sourceType, setSourceType] = useState("manual");
@@ -81,15 +83,21 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
         <AdminSidebar fullName={fullName} onLogout={onLogout} activeItem="RAG Ingest" isMobileOpen={isMobileSidebarOpen} onClose={() => setIsMobileSidebarOpen(false)} isCollapsed={isSidebarCollapsed} onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)} />
         <div className="min-w-0 flex-1 overflow-hidden">
           <div className="h-screen overflow-y-auto">
-            <AdminTopbar fullName={fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} pageTitle="RAG Ingest" />
+            <AdminTopbar fullName={fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} pageTitle="RAG Knowledge Base" />
             <main className="mx-auto max-w-[1180px] px-4 py-6 sm:px-7 sm:py-8">
-              <div>
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <div>
                 <p className="text-[10px] font-bold tracking-[0.16em] text-slate-400 uppercase">Knowledge base</p>
-                <h1 className="font-display mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">Ingest a document</h1>
-                <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">Upload structured knowledge for the RAG assistant. Review the extracted text and metadata before it is chunked and embedded.</p>
+                <h1 className="font-display mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">RAG Knowledge Base</h1>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">Ingest documents, review versions, and control which knowledge is active for retrieval.</p>
+                </div>
+                <div className="flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+                  <Button type="button" size="sm" variant={activeTab === "ingest" ? "default" : "ghost"} onClick={() => setActiveTab("ingest")}>Ingest document</Button>
+                  <Button type="button" size="sm" variant={activeTab === "documents" ? "default" : "ghost"} onClick={() => setActiveTab("documents")}>Documents & versions</Button>
+                </div>
               </div>
 
-              <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+              {activeTab === "documents" ? <div className="mt-6"><AdminRagDocumentsPanel onIngest={() => setActiveTab("ingest")} /></div> : <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
                 <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                   <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
                     <div><h2 className="text-sm font-bold text-slate-900">Document content</h2><p className="mt-1 text-xs text-slate-400">Plain text is sent to the RAG ingestion pipeline.</p></div>
@@ -118,7 +126,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                   </div>
                   <div className="mt-6 border-t border-slate-100 pt-5"><Button type="button" className="w-full" onClick={submit} disabled={mutation.isPending || !content.trim() || !title.trim()}>{mutation.isPending ? <><Loader2 className="size-4 animate-spin" /> Ingesting…</> : <><Upload className="size-4" /> Ingest document</>}</Button><p className="mt-3 text-center text-[11px] leading-4 text-slate-400">The document will be chunked and embedded for semantic search.</p></div>
                 </aside>
-              </div>
+              </div>}
             </main>
           </div>
         </div>

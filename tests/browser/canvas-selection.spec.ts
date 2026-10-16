@@ -81,6 +81,24 @@ test("ctrl-d duplicates the selected nodes", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "2 nodes selected" })).toBeVisible();
 });
 
+test("ctrl-c and ctrl-v copy and paste the selected nodes", async ({ page }) => {
+  await expect(page.locator(".react-flow__node")).toHaveCount(9);
+  await node(page, "design").click();
+  await page.keyboard.down("Control");
+  await node(page, "mockup").click();
+  await page.keyboard.up("Control");
+  await page.keyboard.press("Control+c");
+  await expect(page.getByText("Copied 2 nodes.")).toBeVisible();
+  await expect(page.locator(".react-flow__node")).toHaveCount(9);
+  await page.keyboard.press("Control+v");
+  await expect(page.locator(".react-flow__node")).toHaveCount(11);
+  await expect(page.getByRole("heading", { name: "2 nodes selected" })).toBeVisible();
+  await page.keyboard.press("Control+v");
+  await expect(page.locator(".react-flow__node")).toHaveCount(13);
+  await page.keyboard.press("Control+z");
+  await expect(page.locator(".react-flow__node")).toHaveCount(11);
+});
+
 test("clicking the canvas background clears the selection", async ({ page }) => {
   await node(page, "input").click();
   await expect(page.getByRole("heading", { name: "Product input" })).toBeVisible();
@@ -92,6 +110,8 @@ test("the shortcut cheatsheet lists the canvas keys", async ({ page }) => {
   await page.getByRole("button", { name: "Canvas shortcuts" }).click();
   await expect(page.getByRole("dialog")).toContainText("Select all nodes");
   await expect(page.getByRole("dialog")).toContainText("Duplicate selected nodes");
+  await expect(page.getByRole("dialog")).toContainText("Copy selected nodes");
+  await expect(page.getByRole("dialog")).toContainText("Paste copied nodes");
   await page.screenshot({ path: ".next/workflow-ui-results/canvas-selection.png", fullPage: true });
 });
 

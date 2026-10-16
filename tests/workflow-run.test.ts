@@ -14,6 +14,7 @@ import {
   hasBatchSteps,
   hasVideoSteps,
   isRunBusy,
+  narrowMockupSelection,
   type RunSnapshot,
   validateRunnable,
 } from "@/helpers/workflow-run";
@@ -115,7 +116,7 @@ test("steps no backend runs are skipped once a run exists", () => {
   assert.equal(deriveNodeStatuses(nodes, { step: "idle", job: null, mockupState: "idle" })["listing"], "idle");
 });
 
-test("a video needs its product, its six steps and nothing that cannot run", () => {
+test("a video needs its product and its six steps", () => {
   const { nodes, edges } = configured();
   byType(nodes, "product-input").data.config = { batchId: id, productId: "" };
   assert.equal(validateWorkflow(nodes, edges).some((issue) => issue.message.includes("Choose the product for the video")), true);
@@ -123,9 +124,50 @@ test("a video needs its product, its six steps and nothing that cannot run", () 
   const noReview = without(configured(), "review-video");
   assert.equal(validateWorkflow(noReview.nodes, noReview.edges).some((issue) => issue.id === "mvp-pipeline"), true);
 
-  const withListing = configured();
-  withListing.nodes.push({ ...byType(withListing.nodes, "export-zip"), id: "listing", data: { type: "generate-listing", label: "Listing content", status: "idle", config: WORKFLOW_NODE_DEFINITIONS["generate-listing"].defaultConfig } });
-  assert.equal(validateWorkflow(withListing.nodes, withListing.edges).some((issue) => issue.id === "video-unsupported-listing"), true);
+});
+
+test("listing content needs no approval, hanging off a step or between two", () => {
+  const listing = (graph: ReturnType<typeof configured>) => {
+    graph.nodes.push({ ...byType(graph.nodes, "export-zip"), id: "listing", data: { type: "generate-listing", label: "Listing content", status: "idle", config: WORKFLOW_NODE_DEFINITIONS["generate-listing"].defaultConfig } });
+    return graph;
+  };
+  const edge = (source: string, target: string) => ({ id: `${source}-${target}`, source, target }) as WorkflowEdge;
+  const issuesOf = (graph: ReturnType<typeof configured>) => validateWorkflow(graph.nodes, graph.edges).filter((issue) => issue.id.startsWith("approval-") || issue.id.startsWith("required-edge-") || issue.id === "video-extra-edges");
+
+  const hanging = listing(configured());
+  hanging.edges.push(edge(byType(hanging.nodes, "product-input").id, "listing"));
+  assert.deepEqual(issuesOf(hanging), []);
+
+  const between = listing(configured());
+  const input = byType(between.nodes, "product-input").id;
+  const prompt = byType(between.nodes, "prompt-synthesis").id;
+  between.edges = [...between.edges.filter((item) => !(item.source === input && item.target === prompt)), edge(input, "listing"), edge("listing", prompt)];
+  assert.deepEqual(issuesOf(between), []);
+});
+
+test("a job is given only the chosen templates its own products can use", () => {
+  const templates = [{ id: "hoodie-template", productType: "Hoodie" }, { id: "tshirt-template", productType: "tshirt" }];
+  const selection = {
+    templateIds: ["hoodie-template", "tshirt-template"],
+    garmentColors: [],
+    templateColors: { "hoodie-template": ["#2B4FA3"], "tshirt-template": ["#FFFFFF"] },
+    templateBackgrounds: { "hoodie-template": { default: "#EEEEEE" } },
+  };
+
+  // The hoodies were made in an earlier run: only a T-shirt is waiting now.
+  const narrowed = narrowMockupSelection(selection, templates, { tshirt: 1 });
+  assert.deepEqual(narrowed.templateIds, ["tshirt-template"]);
+  assert.deepEqual(narrowed.templateColors, { "tshirt-template": ["#FFFFFF"] });
+  assert.deepEqual(narrowed.templateBackgrounds, {});
+  // What is chosen on the node is left as it was.
+  assert.deepEqual(selection.templateIds, ["hoodie-template", "tshirt-template"]);
+
+  // Both types waiting: nothing is left out.
+  assert.deepEqual(narrowMockupSelection(selection, templates, { tshirt: 1, hoodie: 2 }).templateIds, ["hoodie-template", "tshirt-template"]);
+  // Nothing chosen fits: the caller sees an empty selection and stops the run with a message.
+  assert.deepEqual(narrowMockupSelection(selection, templates, { mug: 1 }).templateIds, []);
+  // A template the list does not know is kept, so the backend reports it as missing.
+  assert.deepEqual(narrowMockupSelection({ ...selection, templateIds: ["gone"] }, templates, { tshirt: 1 }).templateIds, ["gone"]);
 });
 
 test("a workflow without video steps is not held to the video rules", () => {
@@ -153,7 +195,7 @@ test("steps connect to the next step on the canvas, so no approval is skipped", 
 
 test("a loaded config keeps what the node declares and drops the rest", () => {
   const mockup = normalizeNodeConfig("apply-mockup", { mockupTemplateIds: [id], garmentColors: ["#111111"], artworkGroupKey: "summer" });
-  assert.deepEqual(mockup, { mockupTemplateIds: [id], templateColors: {}, mockupIds: [], artworkGroupKey: "summer" });
+  assert.deepEqual(mockup, { mockupTemplateIds: [id], templateColors: {}, templateBackgrounds: {}, mockupIds: [], artworkGroupKey: "summer" });
 
   const video = normalizeNodeConfig("generate-video", { template: "design_detail", standardOptions: { motionPreset: "zoom", crop: "safe", transition: "cut" }, withMusic: true });
   assert.equal(video.template, "design_detail");
@@ -165,17 +207,20 @@ test("a loaded config keeps what the node declares and drops the rest", () => {
 });
 
 test("the mock-up selection sends colors only for the templates that are selected", () => {
-  const selection = extractMockupSelection({ mockupTemplateIds: [id], templateColors: { [id]: ["#1F2A44"], [other]: ["#B22222"], empty: [] } });
-  assert.deepEqual(selection, { templateIds: [id], garmentColors: [], templateColors: { [id]: ["#1F2A44"] } });
+  const selection = extractMockupSelection({ mockupTemplateIds: [id], templateColors: { [id]: ["#1F2A44"], [other]: ["#B22222"], empty: [] }, templateBackgrounds: { [id]: { "#1f2a44": "#EDE6DA", "#B22222": "#FFFFFF" }, [other]: "#22262E" } });
+  assert.deepEqual(selection, { templateIds: [id], garmentColors: [], templateColors: { [id]: ["#1F2A44"] }, templateBackgrounds: { [id]: { "#1F2A44": "#EDE6DA" } } });
+  // A background saved as one plain color is the default of the template, whatever its garment color.
+  assert.deepEqual(extractMockupSelection({ mockupTemplateIds: [id], templateColors: {}, templateBackgrounds: { [id]: "#22262E" } }).templateBackgrounds, { [id]: { default: "#22262E" } });
+  assert.deepEqual(extractMockupSelection({ mockupTemplateIds: [id], templateColors: { [id]: ["#FFFFFF", "#111111"] }, templateBackgrounds: { [id]: { default: "#22262E", "#111111": "#FFFFFF" } } }).templateBackgrounds, { [id]: { "#FFFFFF": "#22262E", "#111111": "#FFFFFF" } });
 });
 
 test("approvals are counted per design and estimate the mock-ups they make", () => {
   assert.deepEqual(countApprovals(job({})), { pending: 1, approved: 1, rejected: 1 });
   const approved = job({}, [product("p1", "tshirt", [image("a", "approved"), image("b", "approved"), image("x", "rejected")]), product("p2", "mug", [image("c", "approved")])]);
   const templates = [{ id: "t1", productType: "tshirt", allowRecolor: true }, { id: "m1", productType: "mug", allowRecolor: false }, { id: "h1", productType: "hoodie", allowRecolor: true }];
-  assert.equal(estimateMockupCount(approved, { templateIds: ["t1", "m1"], garmentColors: [], templateColors: { t1: ["#1", "#2"] } }, templates), 5);
-  assert.equal(estimateMockupCount(approved, { templateIds: ["t1"], garmentColors: [], templateColors: {} }, templates), 2);
-  assert.equal(estimateMockupCount(approved, { templateIds: ["h1"], garmentColors: [], templateColors: {} }, templates), 0);
+  assert.equal(estimateMockupCount(approved, { templateIds: ["t1", "m1"], garmentColors: [], templateColors: { t1: ["#1", "#2"] }, templateBackgrounds: {} }, templates), 5);
+  assert.equal(estimateMockupCount(approved, { templateIds: ["t1"], garmentColors: [], templateColors: {}, templateBackgrounds: {} }, templates), 2);
+  assert.equal(estimateMockupCount(approved, { templateIds: ["h1"], garmentColors: [], templateColors: {}, templateBackgrounds: {} }, templates), 0);
 });
 
 test("artwork groups keyed by an id are numbered, named ones keep their name", () => {

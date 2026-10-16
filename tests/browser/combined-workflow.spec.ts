@@ -51,15 +51,24 @@ const videoRun: WorkflowRun = {
 };
 
 // What the job's mock-ups look like once they are made.
+const slotKey = "design1.template1.own";
 const madeMockups = {
   generatedCount: 0, noDesignImageCount: 0, noCompatibleTemplateCount: 0, noApprovedImageCount: 0, errors: [],
-  images: [{ id: "mockup-1", productId, designImageId: "design-1", mockupTemplateId: templateId, mockupImageUrl: "/fixture-mockup.svg?mockup=1", mockupWidthPx: 600, mockupHeightPx: 900, approvalStatus: "pending", garmentColor: null }],
+  images: [{ id: "mockup-1", productId, designImageId: "design-1", mockupTemplateId: templateId, mockupImageUrl: "/fixture-mockup.svg?mockup=1", mockupWidthPx: 600, mockupHeightPx: 900, approvalStatus: "pending", garmentColor: null, slotKey } as Record<string, unknown>],
+  removed: [] as unknown[],
 };
 const noMockups = { ...madeMockups, images: [] };
+// The same mock-up once it was made its own way, and once it was removed for its product.
+const editedMockups = {
+  ...madeMockups,
+  images: [{ ...madeMockups.images[0], id: "mockup-2", garmentColor: "#1A1A1A", backgroundColor: "#22262E",
+    override: { mockupTemplateId: templateId, garmentColor: "#1A1A1A", backgroundColor: "#22262E", printArea: null, removed: false } }],
+};
+const removedMockups = { ...madeMockups, images: [], removed: [{ slotKey, productId, designImageId: "design-1", mockupTemplateId: templateId, templateName: "Classic Tee", garmentColor: null }] };
 
-type Fixtures = { workflow?: ReturnType<typeof workflow>; products?: unknown[]; assets?: MockupAsset[]; jobMockups?: typeof madeMockups; batches?: unknown[]; jobs?: unknown[] };
+type Fixtures = { workflow?: ReturnType<typeof workflow>; products?: unknown[]; assets?: MockupAsset[]; jobMockups?: typeof madeMockups; batches?: unknown[]; jobs?: unknown[]; templates?: unknown[] };
 
-const mockApi = async (page: Page, { workflow: current = workflow(), products = [], assets = [], jobMockups = noMockups, batches = [], jobs = [] }: Fixtures = {}) => {
+const mockApi = async (page: Page, { workflow: current = workflow(), products = [], assets = [], jobMockups = noMockups, batches = [], jobs = [], templates = [] }: Fixtures = {}) => {
   const origin = new URL(test.info().project.use.baseURL ?? "http://127.0.0.1:3101").origin;
   const requests: { method: string; path: string; body: unknown }[] = [];
   await page.route("**/api/**", async route => {
@@ -75,6 +84,10 @@ const mockApi = async (page: Page, { workflow: current = workflow(), products = 
     else if (path === `/api/batch-jobs/${jobId}`) json = batchJob;
     else if (path === `/api/batch-jobs/${jobId}/mockups`) json = { batchJobId: jobId, templateIds: [templateId], garmentColors: [], templateColors: {} };
     else if (path === `/api/batch-jobs/${jobId}/mockups/images`) json = jobMockups;
+    else if (path === `/api/batch-jobs/${jobId}/mockups/overrides`)
+      json = (request.postDataJSON() as { override?: { removed?: boolean } }).override?.removed ? removedMockups : editedMockups;
+    else if (path.startsWith(`/api/batch-jobs/${jobId}/mockups/overrides/`)) json = madeMockups;
+    else if (path === "/api/mockup-templates") json = templates;
     else if (path === "/api/batches") json = batches;
     else if (path === `/api/batches/${batchId}/jobs`) json = jobs;
     else if (path === `/api/batches/${batchId}/products/reset`) json = { resetCount: 1 };
@@ -222,4 +235,130 @@ test("the Batches page sets a failed product back to pending and opens a job on 
   await page.getByRole("button", { name: "Jobs (1)" }).click();
   await page.getByRole("menuitem", { name: /Job #1/ }).click();
   await expect(page).toHaveURL(new RegExp(`/workflows\\?job=${jobId}&id=${workflowId}`));
+});
+
+test("the Batches page counts every product under one status, the ones in review included", async ({ page }) => {
+  const productStatuses = ["pending", "queued", "generating_image", "image_review_required", "approved", "failed"];
+  await mockApi(page, {
+    batches: [{ id: batchId, name: "Summer drop", description: null, defaultNiche: null, defaultProductType: null, status: "draft", createdAt: "2026-10-05T00:00:00Z", productCount: productStatuses.length }],
+    products: productStatuses.map((status, index) => ({ id: `00000000-0000-4000-8000-00000000000${index + 1}`, batchId, name: `Product ${index + 1}`, productType: "tshirt", niche: null, keywords: [], productDescription: null, sourceNotes: null, status, createdAt: null })),
+  });
+  await page.goto("/batches");
+  await page.getByRole("button", { name: /Summer drop/ }).first().click();
+
+  // A product whose image is being made is Processing, and one waiting for approval has a counter of its own.
+  for (const label of ["Pending", "Queued", "Processing", "Review", "Completed", "Failed"]) {
+    await expect(page.getByRole("button", { name: new RegExp(`^${label}\\s*1$`) })).toBeVisible();
+  }
+
+  // A counter is also a filter.
+  await page.getByRole("button", { name: /^Review\s*1$/ }).click();
+  await expect(page.getByRole("cell", { name: "Product 4", exact: true })).toBeVisible();
+  await expect(page.getByRole("cell", { name: /^Product \d$/ })).toHaveCount(1);
+});
+
+test("one mock-up of the job can be made its own way, removed and put back", async ({ page }) => {
+  const template = {
+    id: templateId, name: "Classic Tee", productType: "tshirt", baseImageUrl: "/fixture-mockup.svg", previewImageUrl: null,
+    printAreaConfig: JSON.stringify({ x: 150, y: 250, width: 300, height: 300, unit: "px" }), outputWidthPx: 600, outputHeightPx: 900,
+    usageCount: 3, isSystemTemplate: false, isMine: true, realisticPrintReady: true, allowRecolor: true,
+    garmentMaskUrl: "/fixture-mockup.svg?mask=1", garmentColor: null, allowBackground: true,
+  };
+  const requests = await mockApi(page, { jobMockups: madeMockups, templates: [template] });
+  await page.goto(`/workflows?id=${workflowId}&job=${jobId}`);
+  await node(page, "mockup").click({ position: { x: 80, y: 40 } });
+
+  // Each of the job's mock-ups can be changed on its own.
+  await page.getByRole("button", { name: "Edit this mock-up of Vintage Fishing Club" }).click();
+  const dialog = page.getByRole("dialog", { name: "Edit this mock-up" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Black", exact: true }).click();
+  await dialog.getByRole("button", { name: "Charcoal background" }).click();
+  // The position preview shows the garment on the chosen background before anything is saved.
+  await expect(dialog.getByTestId("print-area-photo")).toHaveCSS("background-color", "rgb(34, 38, 46)");
+  await dialog.getByRole("button", { name: "Original" }).click();
+  await expect(dialog.getByTestId("print-area-photo")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await dialog.getByRole("button", { name: "Charcoal background" }).click();
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
+
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText("Edited", { exact: true })).toBeVisible();
+  const saved = requests.find(r => r.method === "PUT" && r.path.endsWith("/mockups/overrides"))!;
+  // Left where the template puts it, the design keeps following the template's print area.
+  expect(saved.body).toEqual({
+    slotKey, replacedMockupImageId: "mockup-1",
+    override: { mockupTemplateId: templateId, garmentColor: "#1A1A1A", backgroundColor: "#22262E", printArea: null, removed: false },
+  });
+
+  // Removed for this product alone, it is listed and can be put back.
+  await page.getByRole("button", { name: "Edit this mock-up of Vintage Fishing Club" }).click();
+  await expect(dialog.getByRole("button", { name: "Use the job’s settings" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Remove this mock-up" }).click();
+  const removedList = page.getByRole("region", { name: "Removed mock-ups" });
+  await expect(removedList).toContainText("Vintage Fishing Club · Classic Tee");
+  await removedList.getByRole("button", { name: "Restore" }).click();
+  await expect(removedList).toBeHidden();
+  expect(requests.some(r => r.method === "DELETE" && r.path === `/api/batch-jobs/${jobId}/mockups/overrides/${slotKey}`)).toBe(true);
+});
+
+test("Apply mock-up puts each garment color of a template on a background of its own", async ({ page }) => {
+  const template = {
+    id: templateId, name: "Classic Tee", productType: "tshirt", baseImageUrl: "/fixture-mockup.svg", previewImageUrl: null,
+    printAreaConfig: JSON.stringify({ x: 150, y: 250, width: 300, height: 300, unit: "px" }), outputWidthPx: 600, outputHeightPx: 900,
+    usageCount: 3, isSystemTemplate: false, isMine: true, realisticPrintReady: true, allowRecolor: true,
+    garmentMaskUrl: "/fixture-mockup.svg?mask=1", garmentColor: null, allowBackground: true,
+  };
+  const requests = await mockApi(page, { templates: [template] });
+  await page.goto(`/workflows?id=${workflowId}`);
+  await node(page, "mockup").click({ position: { x: 80, y: 40 } });
+  await page.getByRole("button", { name: "Change templates" }).click();
+
+  // The seller's own template can be edited without leaving the picker.
+  await page.getByRole("button", { name: "Edit Classic Tee" }).click();
+  await expect(page.getByRole("heading", { name: "Edit Classic Tee" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancel" }).last().click();
+  await expect(page.getByRole("heading", { name: "Edit Classic Tee" })).toBeHidden();
+  await expect(page.getByRole("heading", { name: "Choose mock-up templates" })).toBeVisible();
+
+  // With no garment color picked there is one background, and nothing chosen keeps the photo's own.
+  await expect(page.getByText("Background for Classic Tee")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Original" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Charcoal background" }).click();
+  await expect(page.getByTestId("mockup-preview")).toHaveCSS("background-color", "rgb(34, 38, 46)");
+
+  // Two garment colors: still one background choice, for the garment color the template is shown in. Each
+  // color starts from what was chosen so far.
+  await page.getByRole("button", { name: "White", exact: true }).click();
+  await page.getByRole("button", { name: "Black", exact: true }).click();
+  const forWhite = page.getByRole("button", { name: "Background for the White garment" });
+  const forBlack = page.getByRole("button", { name: "Background for the Black garment" });
+  const charcoal = page.getByRole("button", { name: "Charcoal background" });
+  await expect(charcoal).toHaveCount(1);
+  await expect(forWhite).toHaveAttribute("aria-pressed", "true");
+  await expect(charcoal).toHaveAttribute("aria-pressed", "true");
+
+  // Switching the garment color switches the background being chosen, and the preview with it.
+  await forBlack.click();
+  await expect(forBlack).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Preview in Black" })).toHaveAttribute("aria-pressed", "true");
+  await expect(charcoal).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "White background" }).click();
+  await expect(page.getByTestId("mockup-preview")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+
+  // The preview's own color switch does the same; changing one color left the other as it was.
+  await page.getByRole("button", { name: "Preview in White" }).click();
+  await expect(forWhite).toHaveAttribute("aria-pressed", "true");
+  await expect(charcoal).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("mockup-preview")).toHaveCSS("background-color", "rgb(34, 38, 46)");
+  await page.getByRole("button", { name: "Apply mock-ups" }).click();
+  // The node lists the template with its garment colors; the backgrounds stay in the picker.
+  const chosen = page.getByLabel("Selected mock-up templates");
+  await expect(chosen.getByTitle("White", { exact: true })).toBeVisible();
+  await expect(chosen.getByTitle("Black", { exact: true })).toBeVisible();
+  await expect(chosen.getByTitle(/^Background:/)).toHaveCount(0);
+
+  // The choice is part of the workflow that is saved.
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect.poll(() => requests.filter(r => r.method === "PUT").length).toBe(1);
+  expect(JSON.stringify(requests.find(r => r.method === "PUT")!.body)).toContain(`"templateBackgrounds":{"${templateId}":{"#FFFFFF":"#22262E","#1A1A1A":"#FFFFFF"}}`);
 });

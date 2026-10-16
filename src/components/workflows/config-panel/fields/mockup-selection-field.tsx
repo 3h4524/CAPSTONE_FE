@@ -9,8 +9,9 @@ import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { defaultTemplateColors, type TemplateColors } from "@/helpers/garment-colors";
+import type { TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
 import { countProductTypes } from "@/helpers/mockup-template";
-import { readTemplateColors } from "@/helpers/workflow-config";
+import { readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
 import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -20,6 +21,8 @@ import type { WorkflowNodeConfig } from "@/types/workflow";
 type MockupSelectionFieldProps = {
   /** Config key of the colors chosen per template. */
   templateColorsName: string;
+  /** Config key of the background chosen per template. */
+  templateBackgroundsName: string;
   value: string[];
   onChange: (templateIds: string[]) => void;
 };
@@ -31,10 +34,11 @@ const useWorkflowBatchId = () =>
     return typeof batchId === "string" ? batchId : "";
   });
 
-export const MockupSelectionField = ({ templateColorsName, value, onChange }: MockupSelectionFieldProps) => {
+export const MockupSelectionField = ({ templateColorsName, templateBackgroundsName, value, onChange }: MockupSelectionFieldProps) => {
   const [open, setOpen] = useState(false);
   const { control, setValue } = useFormContext<WorkflowNodeConfig>();
   const templateColors = readTemplateColors(useWatch({ control, name: templateColorsName }));
+  const templateBackgrounds = readTemplateBackgrounds(useWatch({ control, name: templateBackgroundsName }));
   const batchId = useWorkflowBatchId();
   const runJob = useWorkflowRunStore((state) => state.job);
   // A generated design of the batch's latest run, shown in each template's print area while choosing.
@@ -55,9 +59,10 @@ export const MockupSelectionField = ({ templateColorsName, value, onChange }: Mo
           ? countProductTypes(products)
           : undefined;
 
-  const apply = (templateIds: string[], colorsByTemplate: TemplateColors) => {
+  const apply = (templateIds: string[], colorsByTemplate: TemplateColors, backgroundsByTemplate: TemplateBackgrounds) => {
     onChange(templateIds);
     setValue(templateColorsName, colorsByTemplate, { shouldDirty: true, shouldValidate: true });
+    setValue(templateBackgroundsName, backgroundsByTemplate, { shouldDirty: true, shouldValidate: true });
     setOpen(false);
   };
 
@@ -75,7 +80,11 @@ export const MockupSelectionField = ({ templateColorsName, value, onChange }: Mo
                     <GarmentColorSwatch key={hex} hex={hex} />
                   ))}
                 </span>
-                <span className="text-muted-foreground shrink-0">{template.productType}</span>
+                <span className="text-muted-foreground shrink-0">
+                  {template.productType}
+                  {/* Chosen for a product type the next run has nothing to make for: kept, but not used. */}
+                  {productTypeCounts && !(template.productType.toLowerCase() in productTypeCounts) && " · not used in this run"}
+                </span>
               </li>
             );
           })}
@@ -100,6 +109,7 @@ export const MockupSelectionField = ({ templateColorsName, value, onChange }: Mo
               templates={templates}
               initialIds={value}
               initialTemplateColors={templateColors}
+              initialTemplateBackgrounds={templateBackgrounds}
               pending={false}
               productTypeCounts={productTypeCounts && Object.keys(productTypeCounts).length > 0 ? productTypeCounts : undefined}
               sampleDesignUrl={sampleDesignUrl}

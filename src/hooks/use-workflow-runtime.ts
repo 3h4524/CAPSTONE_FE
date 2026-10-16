@@ -31,6 +31,9 @@ export const useWorkflowRuntime = () => {
     if (!state.workflowId) return;
     if (state.isDirty) { showToast("warning", "Save your configuration before running."); return; }
     start({ workflowId: state.workflowId, revision: state.revision, key: uuid() }, { onSuccess: result => {
+      // The listing is written while the run starts. Failing it does not stop a video, so it is easy to miss.
+      if (result.nodes.some(node => node.nodeType === "generate-listing" && node.status === "failed"))
+        showToast("warning", `Listing content could not be generated. Open the Listing content node to try again${result.status === "failed" ? "." : "; the video steps go on."}`);
       // The other parameters stay: the batch job that made the designs is still open beside the new run.
       const query = new URLSearchParams(window.location.search);
       query.set("id", result.workflowId);

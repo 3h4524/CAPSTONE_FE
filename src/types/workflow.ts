@@ -111,7 +111,7 @@ export type WorkflowField =
   | { kind: "video-modes"; name: string; label: string }
   | { kind: "video-formats"; name: string; label: string }
   | { kind: "text"; name: string; label: string }
-  | { kind: "mockup-selection"; name: string; templateColorsName: string; label: string }
+  | { kind: "mockup-selection"; name: string; templateColorsName: string; templateBackgroundsName: string; label: string }
   | { kind: "number"; name: string; label: string; min: number; max: number; unit?: string }
   | { kind: "switch"; name: string; label: string; description: string }
   | { kind: "textarea"; name: string; label: string; placeholder: string };

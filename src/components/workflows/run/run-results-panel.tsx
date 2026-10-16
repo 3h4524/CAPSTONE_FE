@@ -2,17 +2,22 @@
 
 import { useState } from "react";
 
+import { resetMockupOverride } from "@/api/mockup-templates";
 import { GeneratedImagesGrid, type MockupPreviewTarget } from "@/components/batch-jobs/generated-images-grid";
 import { JobProgressCard } from "@/components/batch-jobs/job-progress-card";
+import { MockupImageEditDialog } from "@/components/batch-jobs/mockup-image-edit-dialog";
 import { MockupResultsGrid } from "@/components/batch-jobs/mockup-results-grid";
 import { MockupGenerateDialog } from "@/components/mockups/mockup-generate-dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ApprovalReviewPanel } from "@/components/workflows/run/approval-review-panel";
+import { showToast } from "@/helpers/toast";
 import { readStringArray } from "@/helpers/workflow-config";
 import { countApprovals, DESIGNS_READY_STATUSES } from "@/helpers/workflow-run";
+import { useMutation } from "@/hooks/mutations/use-mutation";
 import { applySelectionAndGenerateMockups } from "@/hooks/use-batch-run";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
+import type { GenerateAllMockupsResult, MockupImage } from "@/types/mockup-templates";
 import type { WorkflowNode } from "@/types/workflow";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -27,6 +32,15 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
   const mockupState = useWorkflowRunStore((state) => state.mockupState);
   const mockupResult = useWorkflowRunStore((state) => state.mockupResult);
   const [previewTarget, setPreviewTarget] = useState<MockupPreviewTarget | null>(null);
+  // The mock-up being changed on its own, apart from the job's settings.
+  const [editing, setEditing] = useState<MockupImage | null>(null);
+  const restore = useMutation<GenerateAllMockupsResult, { jobId: string; slotKey: string }>({
+    mutationFn: ({ jobId, slotKey }) => resetMockupOverride(jobId, slotKey),
+    onSuccess: (result) => {
+      useWorkflowRunStore.getState().setMockupResult(result);
+      showToast("success", "Mock-up restored.");
+    },
+  });
 
   if (!job) {
     return <p className="text-muted-foreground p-4 text-sm">Results appear here once the run has started.</p>;
@@ -43,6 +57,13 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
   // Saves what the node currently has chosen first: the job keeps the selection it was last given,
   // so generating without saving would repeat the old templates and change nothing.
   const regenerateMockups = () => applySelectionAndGenerateMockups(job.id, queryClient);
+  const editingProduct = editing ? job.products.find((product) => product.productId === editing.productId) : undefined;
+  const editingDesignUrl = editingProduct?.images.find((image) => image.id === editing?.designImageId)?.imageUrl ?? null;
+  const showEdited = (result: GenerateAllMockupsResult) => {
+    useWorkflowRunStore.getState().setMockupResult(result);
+    setEditing(null);
+    showToast("success", "Mock-up updated. The job keeps this change when its mock-ups are made again.");
+  };
 
   return (
     <ScrollArea className="h-full [&>[data-radix-scroll-area-viewport]>div]:block!">
@@ -72,7 +93,16 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
             {designsReady && needsApproval && approvedCount === 0 && (
               <p className="text-muted-foreground text-xs">Approve at least one design in the Approval gate first.</p>
             )}
-            {mockupResult && <MockupResultsGrid result={mockupResult} productNameById={productNameById} columnsClassName={PANEL_GRID} />}
+            {mockupResult && (
+              <MockupResultsGrid
+                result={mockupResult}
+                productNameById={productNameById}
+                columnsClassName={PANEL_GRID}
+                onEdit={designsReady ? setEditing : undefined}
+                onRestore={designsReady ? (slot) => restore.mutate({ jobId: job.id, slotKey: slot.slotKey }) : undefined}
+                disabled={mockupState === "running" || restore.isPending}
+              />
+            )}
           </section>
         ) : (
           <section className="space-y-3" aria-label="Generated images">
@@ -92,6 +122,15 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
         productName={previewTarget?.productName ?? ""}
         productType={previewTarget?.productType ?? ""}
         onOpenChange={(nextOpen) => !nextOpen && setPreviewTarget(null)}
+      />
+      <MockupImageEditDialog
+        batchJobId={job.id}
+        image={editing}
+        productName={editingProduct?.productName ?? "Product"}
+        productType={editingProduct?.productType ?? ""}
+        designImageUrl={editingDesignUrl}
+        onOpenChange={(nextOpen) => !nextOpen && setEditing(null)}
+        onSaved={showEdited}
       />
     </ScrollArea>
   );

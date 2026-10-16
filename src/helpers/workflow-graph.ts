@@ -15,12 +15,12 @@ import type {
 import { uuid } from "@/utils/uuid";
 import type { Connection, Viewport } from "@xyflow/react";
 
-const APPROVAL_REQUIRED_TYPES: WorkflowNodeType[] = ["generate-video", "generate-listing"];
+// A listing is written from the product's own details, so only the video waits for an approval.
+const APPROVAL_REQUIRED_TYPES: WorkflowNodeType[] = ["generate-video"];
 // The steps a video needs, each exactly once. The design steps may sit before Apply mock-up.
 export const STANDARD_PIPELINE: WorkflowNodeType[] = ["product-input", "apply-mockup", "approval-gate", "generate-video", "review-video", "export-zip"];
 // A workflow with one of these is making a video, so it has to be the whole video pipeline.
 const VIDEO_ONLY_TYPES: WorkflowNodeType[] = ["approval-gate", "generate-video", "review-video"];
-const APPROVAL_TYPES: WorkflowNodeType[] = ["design-approval", "approval-gate"];
 
 const runOrderOf = (type: WorkflowNodeType) => RUN_ORDER.indexOf(type);
 
@@ -92,8 +92,8 @@ const hasApprovalUpstream = (node: WorkflowNode, nodes: WorkflowNode[], edges: W
     (candidate) =>
       candidate.id !== node.id &&
       ancestors.has(candidate.id) &&
-      // The video is made from approved mock-ups; a listing may follow either approval.
-      (node.data.type === "generate-video" ? candidate.data.type === "approval-gate" : APPROVAL_TYPES.includes(candidate.data.type))
+      // The video is made from approved mock-ups.
+      candidate.data.type === "approval-gate"
   );
 };
 
@@ -113,7 +113,9 @@ const validateVideoPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): Wo
   for (let i = 1; i < line.length; i++) {
     const previous = line[i - 1];
     const current = line[i];
-    if (previous.data.type !== current.data.type && edges.filter(e => e.source === previous.id && e.target === current.id).length !== 1)
+    // Listing content waits for no approval, so it may also sit between two steps of the line.
+    const throughListing = nodes.some(node => node.data.type === "generate-listing" && edges.some(e => e.source === previous.id && e.target === node.id) && edges.some(e => e.source === node.id && e.target === current.id));
+    if (previous.data.type !== current.data.type && edges.filter(e => e.source === previous.id && e.target === current.id).length + (throughListing ? 1 : 0) !== 1)
       issues.push({ id: `required-edge-${current.id}`, nodeId: current.id, message: `${current.data.label} must follow ${previous.data.label}.` });
   }
   if (issues.length === 0 && edges.length !== nodes.length - 1)
@@ -162,7 +164,7 @@ export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
       issues.push({
         id: `approval-${node.id}`,
         nodeId: node.id,
-        message: `${node.data.label} needs ${node.data.type === "generate-video" ? "a Mockup Approval" : "an approval"} step before it.`,
+        message: `${node.data.label} needs a Mockup Approval step before it.`,
       });
     }
   });
@@ -185,7 +187,8 @@ export const createWorkflowNode = (type: WorkflowNodeType, position: WorkflowPos
 export const duplicateWorkflowSelection = (
   nodes: WorkflowNode[],
   edges: WorkflowEdge[],
-  selectedIds: string[]
+  selectedIds: string[],
+  offset = DUPLICATE_NODE_OFFSET
 ): { nodes: WorkflowNode[]; edges: WorkflowEdge[]; addedNodeIds: string[] } => {
   const selected = new Set(selectedIds);
   const nextIdByOldId = new Map<string, string>();
@@ -199,7 +202,7 @@ export const duplicateWorkflowSelection = (
     duplicatedNodes.push({
       ...node,
       id: nextId,
-      position: { x: node.position.x + DUPLICATE_NODE_OFFSET, y: node.position.y + DUPLICATE_NODE_OFFSET },
+      position: { x: node.position.x + offset, y: node.position.y + offset },
       selected: true,
       data: { ...node.data, config: { ...node.data.config }, status: "idle" },
     });

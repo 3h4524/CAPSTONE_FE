@@ -19,13 +19,17 @@ export const RunStatusPanel = () => {
   const aiMode = useWorkflowStore(state => state.nodes.find(n => n.data.type === "generate-video")?.data.config.mode === "ai_shot");
   const retry = async (regenerate = false) => {
     if (!run) return;
+    // Only the ZIP failed: the approved video is packaged again as it is, with nothing to change or confirm.
+    if (!regenerate && exportStep?.status === "failed") { action({ runId: run.id, expectedRevision: run.revision, action: "retry" }); return; }
     const videoNode = useWorkflowStore.getState().nodes.find(n => n.data.type === "generate-video");
     const parsed = generateVideoConfigSchema.safeParse(videoNode?.data.config);
     if (!parsed.success) { showToast("warning", parsed.error.issues[0]?.message ?? "Check video settings."); return; }
     try {
       const token = await confirmAiShot(run.id, parsed.data, regenerate);
       if (token === null) return;
-      action({ runId: run.id, expectedRevision: run.revision, action: regenerate ? "regenerate_ai_shot" : "retry", aiShotQuoteToken: token });
+      // The settings on the canvas go with the request: the cost just confirmed was worked out from them, and a
+      // change made after the failure (another source, another motion direction) is what the retry should use.
+      action({ runId: run.id, expectedRevision: run.revision, action: regenerate ? "regenerate_ai_shot" : "retry", config: parsed.data, aiShotQuoteToken: token });
     } catch (error) { showToast("error", getErrorMessage(error)); }
   };
   if (isError) return <Button type="button" variant="outline" onClick={() => refetch()}>Reload run</Button>;

@@ -30,6 +30,8 @@ export const WORKFLOW_CANVAS_SHORTCUTS: { action: string; keys: string[] }[] = [
   { action: "Select multiple nodes", keys: ["Ctrl/⌘", "Click"] },
   { action: "Box select nodes", keys: ["Shift", "Drag"] },
   { action: "Select all nodes", keys: ["Ctrl/⌘", "A"] },
+  { action: "Copy selected nodes", keys: ["Ctrl/⌘", "C"] },
+  { action: "Paste copied nodes", keys: ["Ctrl/⌘", "V"] },
   { action: "Duplicate selected nodes", keys: ["Ctrl/⌘", "D"] },
   { action: "Delete selected nodes", keys: ["Del"] },
   { action: "Undo", keys: ["Ctrl/⌘", "Z"] },
@@ -203,13 +205,15 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     hasOutput: true,
     // Colors are chosen per template in `templateColors`; a template without any is made in its own color.
     // (Workflows saved with the old shared `garmentColors` list lose it when they load.)
+    // `templateBackgrounds` holds the background color of the templates that do not keep their photo's own.
     // `mockupIds` and `artworkGroupKey` are the video's choice among the finished mock-ups, made at Mockup Approval.
-    defaultConfig: { mockupTemplateIds: [], templateColors: {}, mockupIds: [], artworkGroupKey: "" },
+    defaultConfig: { mockupTemplateIds: [], templateColors: {}, templateBackgrounds: {}, mockupIds: [], artworkGroupKey: "" },
     fields: [
       {
         kind: "mockup-selection",
         name: "mockupTemplateIds",
         templateColorsName: "templateColors",
+        templateBackgroundsName: "templateBackgrounds",
         label: "Mock-up templates",
       },
     ],
@@ -237,12 +241,12 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
   "generate-video": {
     type: "generate-video",
     label: "Generate Video",
-    description: "Mix AI Shot with Standard scenes or generate a full AI video with Veo.",
+    description: "Build a video from individually configured AI scenes.",
     icon: Film,
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { mode: "standard", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "tall", durationSeconds: 12, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" }, aiShotOptions: { coverage: "single_scene", concept: "product_cinematic", sceneIndex: 0, mockupId: null, prompt: null, rightsConfirmed: false, fullSceneMockupIds: null }, fallbackToStandard: true },
+    defaultConfig: { mode: "ai_shot", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "portrait", durationSeconds: 4, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" }, fallbackToStandard: true, aiStudioMode: "direct", aiStudioLayout: "hanging_window", aiStudioSourceMockupId: null, aiStudioFrameId: null },
     fields: [
       { kind: "video-modes", name: "mode", label: "Video mode" },
       { kind: "video-formats", name: "outputFormat", label: "Output format" },

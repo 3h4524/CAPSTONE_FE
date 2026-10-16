@@ -1,5 +1,6 @@
 import { BATCH_RUN_NODE_TYPES, RUNNABLE_NODE_TYPES, VIDEO_RUN_NODE_TYPES } from "@/constants/workflow";
-import { readNumber, readString, readStringArray, readTemplateColors } from "@/helpers/workflow-config";
+import { backgroundKeys, backgroundsFor, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
+import { readNumber, readString, readStringArray, readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type { MockupState, RunStep } from "@/stores/workflow-run";
 import type { BatchJobDetail } from "@/types/batch-jobs";
@@ -11,7 +12,12 @@ export const FINISHED_JOB_STATUSES = ["completed", "partially_completed", "faile
 export const DESIGNS_READY_STATUSES = ["completed", "partially_completed"];
 
 /** What a run sends to the job as its mock-up selection. */
-export type MockupSelection = { templateIds: string[]; garmentColors: string[]; templateColors: Record<string, string[]> };
+export type MockupSelection = {
+  templateIds: string[];
+  garmentColors: string[];
+  templateColors: Record<string, string[]>;
+  templateBackgrounds: TemplateBackgrounds;
+};
 
 export type RunPlan = {
   batchId: string;
@@ -213,14 +219,39 @@ export const isRunBusy = (run: RunSnapshot) =>
   run.mockupState === "running";
 
 // The mock-up selection of an Apply mock-up node: its templates, the colors each template was given and the
-// shared list older workflows were saved with. Colors of a template that is no longer selected are left out,
-// since the backend rejects a color list for a template that is not part of the selection.
+// shared list older workflows were saved with, and the background each template is put on. What belongs to a
+// template that is no longer selected is left out, since the backend rejects it.
 export const extractMockupSelection = (config: WorkflowNodeConfig): MockupSelection => {
   const templateIds = readStringArray(config.mockupTemplateIds);
   const templateColors = Object.fromEntries(
     Object.entries(readTemplateColors(config.templateColors)).filter(([id, colors]) => templateIds.includes(id) && colors.length > 0)
   );
-  return { templateIds, garmentColors: [], templateColors };
+  // Written out for the garment colors the template has now, so a color that was unticked takes no background along.
+  const templateBackgrounds = Object.fromEntries(
+    Object.entries(readTemplateBackgrounds(config.templateBackgrounds))
+      .filter(([id]) => templateIds.includes(id))
+      .map(([id, byColor]) => [id, backgroundsFor(byColor, backgroundKeys(templateColors[id] ?? []))] as const)
+      .filter(([, byColor]) => Object.keys(byColor).length > 0)
+  );
+  return { templateIds, garmentColors: [], templateColors, templateBackgrounds };
+};
+
+// A template is only ever used for products of its own type, and the backend refuses one that no product of
+// the job can use. So the templates chosen for other types (their products were made in an earlier run, or
+// are not in this job) are left out of what the job is given. On the node they stay until the templates are
+// chosen again, when the picker drops them.
+export const narrowMockupSelection = (
+  selection: MockupSelection,
+  templates: { id: string; productType: string }[],
+  productTypes: Record<string, number>
+): MockupSelection => {
+  const templateIds = selection.templateIds.filter((id) => {
+    const type = templates.find((template) => template.id === id)?.productType.toLowerCase();
+    // A template that is not known here is kept, so the backend still reports it as missing.
+    return type === undefined || type in productTypes;
+  });
+  const kept = <T>(byTemplate: Record<string, T>) => Object.fromEntries(Object.entries(byTemplate).filter(([id]) => templateIds.includes(id)));
+  return { ...selection, templateIds, templateColors: kept(selection.templateColors), templateBackgrounds: kept(selection.templateBackgrounds) };
 };
 
 export type ApprovalCounts = { pending: number; approved: number; rejected: number };

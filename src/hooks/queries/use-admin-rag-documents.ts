@@ -8,4 +8,7 @@ export const useAdminRagDocuments = (params: { status?: string; sourceId?: strin
     queryKey: ragAdminDocumentsKey(params.status, params.sourceId),
     queryFn: () => getAdminRagDocuments(params),
     retry: false,
+    refetchInterval: (query) =>
+      query.state.data?.some((document) => document.status === "queued" || document.status === "processing") ? 3000 : false,
+    refetchIntervalInBackground: true,
   });

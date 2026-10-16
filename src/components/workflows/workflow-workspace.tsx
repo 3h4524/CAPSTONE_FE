@@ -21,6 +21,7 @@ import { useWorkflow } from "@/hooks/queries/use-workflow";
 import { useWorkflows } from "@/hooks/queries/use-workflows";
 import { usePopupStore } from "@/stores/popup";
 import { useWorkflowStore } from "@/stores/workflow";
+import { useWorkflowRunStore } from "@/stores/workflow-run";
 
 const DEFAULT_WORKFLOW_DESCRIPTION =
   "A batch → designs → design approval → mock-ups → mock-up approval → Standard video → video review → ZIP.";
@@ -36,6 +37,12 @@ export const WorkflowWorkspace = () => {
   const isDirty = useWorkflowStore((state) => state.isDirty);
   const loadWorkflow = useWorkflowStore((state) => state.loadWorkflow);
   const resetEditor = useWorkflowStore((state) => state.reset);
+  const productId = useWorkflowStore((state) => {
+    const input = state.nodes.find((node) => node.data.type === "product-input");
+    return typeof input?.data.config.productId === "string" ? input.data.config.productId : "";
+  });
+  const resetProductDependentState = useWorkflowStore((state) => state.resetProductDependentState);
+  const previousProductId = useRef(productId);
 
   const {
     data: workflows,
@@ -66,6 +73,22 @@ export const WorkflowWorkspace = () => {
   useEffect(() => {
     if (workflow && workflow.id !== loadedWorkflowId) loadWorkflow(workflow);
   }, [workflow, loadedWorkflowId, loadWorkflow]);
+
+  useEffect(() => {
+    if (previousProductId.current === productId) return;
+    const changedFromAnotherProduct = Boolean(previousProductId.current) && previousProductId.current !== productId;
+    previousProductId.current = productId;
+    if (!changedFromAnotherProduct) return;
+
+    // Designs and mock-ups belong to the product that started the run.
+    useWorkflowRunStore.getState().reset();
+    resetProductDependentState();
+    const params = new URLSearchParams(window.location.search);
+    params.delete("job");
+    params.delete("then");
+    const query = params.toString();
+    router.replace(query ? `/workflows?${query}` : "/workflows", { scroll: false });
+  }, [productId, resetProductDependentState, router]);
 
   useEffect(() => {
     if (workflows && workflows.length === 0 && loadedWorkflowId) resetEditor();

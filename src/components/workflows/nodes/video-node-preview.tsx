@@ -5,9 +5,10 @@ import { useSearchParams } from "next/navigation";
 import { Film } from "lucide-react";
 
 import { useRunVideos } from "@/hooks/queries/use-run-videos";
+import { useWorkflowStore } from "@/stores/workflow";
 
 export const VideoNodePreview = () => {
-  const runId = useSearchParams().get("run");
+  const runId = useSearchParams().get("run") ?? useWorkflowStore(state => state.videoRunId);
   const { data: videos } = useRunVideos(runId);
   const video = videos?.[0];
   return <div className="relative flex aspect-video flex-col items-center justify-center gap-1.5 overflow-hidden rounded-lg bg-slate-100 text-slate-400">

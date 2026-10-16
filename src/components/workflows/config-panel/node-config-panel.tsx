@@ -48,9 +48,13 @@ const SelectedNodePanel = ({ node }: { node: WorkflowNode }) => {
 export const NodeConfigPanel = () => {
   const selectedNodeIds = useWorkflowStore((state) => state.selectedNodeIds);
   const nodes = useWorkflowStore((state) => state.nodes);
+  const productId = useWorkflowStore((state) => {
+    const input = state.nodes.find((node) => node.data.type === "product-input");
+    return typeof input?.data.config.productId === "string" ? input.data.config.productId : "";
+  });
   const selectedNodes = nodes.filter((node) => selectedNodeIds.includes(node.id));
 
   if (selectedNodes.length > 1) return <MultiSelectPanel nodes={selectedNodes} />;
   const [activeNode] = selectedNodes;
-  return activeNode ? <SelectedNodePanel key={activeNode.id} node={activeNode} /> : <ValidationIssues />;
+  return activeNode ? <SelectedNodePanel key={`${activeNode.id}:${productId}`} node={activeNode} /> : <ValidationIssues />;
 };

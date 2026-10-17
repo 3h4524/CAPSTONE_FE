@@ -47,6 +47,7 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
     mode: "onChange",
   });
   const { control, trigger, watch, setValue } = form;
+  const videoMode = watch("mode");
   const videoFields = definition.fields.filter(field => field.name === "outputFormat");
   const advancedVideoFields = definition.fields.filter(field => field.name === "textOverlay" || field.name === "standardOptions.transition");
 
@@ -67,11 +68,12 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
   useEffect(() => {
     if (node.data.type !== "generate-video") return;
     const currentFormat = node.data.config.outputFormat;
-    const normalizedFormat = getVideoOutputFormat(currentFormat).value;
+    const normalizedFormat = getVideoOutputFormat(currentFormat, node.data.config.mode).value;
     if (currentFormat !== normalizedFormat) {
+      setValue("outputFormat", normalizedFormat, { shouldDirty: true, shouldValidate: true });
       updateNodeConfig(node.id, { ...node.data.config, outputFormat: normalizedFormat });
     }
-  }, [node.id, node.data.config, node.data.type, updateNodeConfig]);
+  }, [node.id, node.data.config, node.data.type, updateNodeConfig, setValue]);
 
   return (
     <div className="flex h-full flex-col">
@@ -91,7 +93,7 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
           <form onSubmit={(event) => event.preventDefault()} className="p-4">
             <fieldset disabled={isRunning && !(waitingReview && node.data.type === "generate-video")} className="space-y-5">
               {node.data.type === "generate-video" ? <>
-                {videoFields.map(field => <NodeConfigField key={field.name} field={field} control={control} />)}
+                {videoFields.map(field => <NodeConfigField key={field.name} field={field} control={control} videoMode={String(videoMode ?? "ai_shot")} />)}
                 <Accordion type="single" collapsible>
                   <AccordionItem value="advanced-video">
                     <AccordionTrigger>Caption and transition</AccordionTrigger>
@@ -100,13 +102,13 @@ export const NodeConfigForm = ({ node }: NodeConfigFormProps) => {
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
-                <AiShotOptions nodeId={node.id} disabled={isRunning && !waitingReview} onChange={(scenes, seconds, sharedInstructions) => {
+                {videoMode === "ai_shot" && <AiShotOptions nodeId={node.id} disabled={isRunning && !waitingReview} onChange={(scenes, seconds, sharedInstructions) => {
                   setValue("mode", "ai_shot", { shouldDirty: true, shouldValidate: true });
                   setValue("aiScenes", scenes, { shouldDirty: true, shouldValidate: true });
                   setValue("aiGlobalInstructions", sharedInstructions ?? null, { shouldDirty: true, shouldValidate: true });
                   setValue("durationSeconds", seconds, { shouldDirty: true, shouldValidate: true });
                   void trigger();
-                }} />
+                }} />}
               </> : definition.fields.map(field => <NodeConfigField key={field.name} field={field} control={control} />)}
             </fieldset>
           </form>

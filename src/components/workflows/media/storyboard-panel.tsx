@@ -38,6 +38,8 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
   const [board, setBoard] = useState<VideoStoryboard | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const sequence = useRef(0);
+  const outputSeconds = board ? (board.outputDurationFrames ?? board.durationSeconds * 30) / 30 : 0;
+  const aiClipSeconds = board?.aiShots?.reduce((total, shot) => total + shot.durationSeconds, 0);
   const approvedRevisionKey = useMemo(() => assets.map(asset =>
     `${asset.id}:${asset.revision}:${asset.approvalStatus}:${asset.approvedRevision}`
   ).join("|"), [assets]);
@@ -94,25 +96,34 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
     useWorkflowStore.getState().updateNodeConfig(node.id, resetVideoTemplateConfig(current.data.config));
   };
 
-  return <div className="space-y-4">
-    <div className="flex items-center justify-between gap-2">
-      <div>
-        <h3 className="text-sm font-semibold">Storyboard preview</h3>
-        <p className="text-muted-foreground text-xs">Updates automatically after your settings change.</p>
+  return <section className="bg-card overflow-hidden rounded-xl border" aria-labelledby="storyboard-preview-title">
+    <header className="flex items-start justify-between gap-4 p-4">
+      <div className="min-w-0 space-y-1">
+        <h3 id="storyboard-preview-title" className="text-base font-semibold">Storyboard preview</h3>
+        <p className="text-muted-foreground text-xs leading-relaxed">Review the source frame and order of every scene before running the workflow.</p>
       </div>
-      <Button type="button" variant="ghost" size="icon-sm" aria-label="Refresh storyboard preview" disabled={isPending || !productId} onClick={refresh}>
+      <Button type="button" variant="ghost" size="icon" aria-label="Refresh storyboard preview" title="Refresh preview" disabled={isPending || !productId} onClick={refresh}>
         <RefreshCw className={isPending ? "size-4 animate-spin" : "size-4"} aria-hidden="true" />
       </Button>
+    </header>
+    <div className="space-y-4 px-4 pb-4">
+      {previewError && <p className="rounded-lg bg-amber-50 p-3 text-xs leading-relaxed text-amber-800 dark:bg-amber-950/40 dark:text-amber-200" role="status">{previewError}</p>}
+      {!board && isPending && <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-label="Loading storyboard preview" role="status">
+        {[0, 1, 2].map(item => <div key={item} className="bg-muted/60 aspect-[4/5] animate-pulse rounded-lg" />)}
+        <span className="sr-only">Loading storyboard preview</span>
+      </div>}
+      {board && <>
+        <StoryboardPlayer board={board} assets={assets} />
+        <dl className="bg-muted/35 grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg p-3 sm:grid-cols-4">
+          <div><dt className="text-muted-foreground text-[11px]">Scenes</dt><dd className="mt-0.5 text-xs font-semibold">{board.scenes.length}</dd></div>
+          <div><dt className="text-muted-foreground text-[11px]">Format</dt><dd className="mt-0.5 text-xs font-semibold">{board.aspectRatio} · {board.width} × {board.height}</dd></div>
+          {aiClipSeconds != null && <div><dt className="text-muted-foreground text-[11px]">AI footage</dt><dd className="mt-0.5 text-xs font-semibold tabular-nums">{aiClipSeconds.toFixed(1)}s</dd></div>}
+          <div><dt className="text-muted-foreground text-[11px]">Final duration</dt><dd className="mt-0.5 text-xs font-semibold tabular-nums">{outputSeconds.toFixed(1)}s</dd></div>
+        </dl>
+        {isAiSceneMode && <p className="text-muted-foreground text-xs leading-relaxed">These are source frames. Motion previews appear in each scene while Veo is generating, and the joined result appears below when all scenes are ready.</p>}
+      </>}
     </div>
-    {previewError && <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800" role="status">{previewError}</p>}
-    {board && <>
-      <StoryboardPlayer board={board} assets={assets} />
-      <p className="text-muted-foreground bg-muted/50 rounded-md px-3 py-2 text-xs leading-5">
-        Full-image motion keeps the complete source visible. Choose an output ratio close to the source image to reduce empty bands.
-      </p>
-      <p className="text-muted-foreground text-center text-xs">{board.template.replaceAll("_", " ")} · {board.aspectRatio} · {board.width} × {board.height} · {board.durationSeconds}s · {board.scenes.length} scenes</p>
-    </>}
-    {isAiSceneMode ? <div className="space-y-3">{board?.scenes.map(scene => <VideoSceneCard key={scene.sceneOrder} scene={scene} asset={assets.find(asset => asset.id === scene.mockupId)} />)}</div> : <Accordion type="single" collapsible>
+    {!isAiSceneMode && <div className="px-4 pb-4"><Accordion type="single" collapsible>
       <AccordionItem value="scene-editor">
         <AccordionTrigger>Edit scenes</AccordionTrigger>
         <AccordionContent className="space-y-4">
@@ -130,6 +141,6 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
           </div>)}
         </AccordionContent>
       </AccordionItem>
-    </Accordion>}
-  </div>;
+    </Accordion></div>}
+  </section>;
 };

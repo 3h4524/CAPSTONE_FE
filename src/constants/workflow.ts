@@ -246,13 +246,16 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { mode: "ai_shot", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "portrait", durationSeconds: 4, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" }, fallbackToStandard: true, aiStudioMode: "direct", aiStudioLayout: "hanging_window", aiStudioSourceMockupId: null, aiStudioFrameId: null },
+    defaultConfig: { mode: "ai_shot", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "portrait", durationSeconds: 4, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "none" }, fallbackToStandard: true, aiStudioMode: "direct", aiStudioLayout: "hanging_window", aiStudioSourceMockupId: null, aiStudioFrameId: null },
     fields: [
       { kind: "video-modes", name: "mode", label: "Video mode" },
       { kind: "video-formats", name: "outputFormat", label: "Output format" },
       { kind: "number", name: "durationSeconds", label: "Duration", min: 3, max: 15, unit: "s" },
       { kind: "textarea", name: "textOverlay", label: "Text overlay", placeholder: "Optional short caption (120 characters)" },
-      { kind: "select", name: "standardOptions.transition", label: "Transition", options: [{ value: "fade", label: "Fade" }, { value: "cut", label: "Cut" }] },
+      { kind: "select", name: "standardOptions.transition", label: "Transition", options: [
+        { value: "none", label: "None" }, { value: "fade", label: "Fade" }, { value: "swipe", label: "Swipe" },
+        { value: "zoom", label: "Zoom" }, { value: "flash", label: "Flash" }, { value: "whip_pan", label: "Whip pan" }, { value: "blur", label: "Blur" },
+      ] },
     ],
   },
   "review-video": { type: "review-video", label: "Review Video", description: "Approve the exact video version before export.", icon: CheckCircle2, category: "review", hasInput: true, hasOutput: true, defaultConfig: {}, fields: [] },

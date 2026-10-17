@@ -1,9 +1,9 @@
 import { quoteAiShot } from "@/api/video-workflow";
 import type { GenerateVideoConfig } from "@/types/video-workflow";
 
-export async function confirmAiShot(runId: string, config: GenerateVideoConfig, regenerate = false): Promise<string | null> {
+export async function confirmAiShot(runId: string, config: GenerateVideoConfig, regenerate = false, sceneOrder?: number): Promise<string | null> {
   if (config.mode !== "ai_shot") return "";
-  const quote = await quoteAiShot(runId, config, regenerate);
+  const quote = await quoteAiShot(runId, config, regenerate, sceneOrder);
   const cost = quote.estimatedCostUsd.toFixed(2);
   const question = quote.newClips === 0
     ? "All AI clips can be reused. No new Veo generation is expected. Continue rendering?"

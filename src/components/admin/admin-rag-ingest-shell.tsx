@@ -129,7 +129,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
 
                   <label
                     htmlFor="rag-file-input"
-                    className={cn("mt-5 flex min-h-28 w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 text-center transition-all hover:border-slate-400 hover:bg-slate-50", isDraggingFile && "cursor-copy scale-[1.01] border-primary bg-primary/5 ring-2 ring-primary/20", fileName ? "border-emerald-200 bg-emerald-50/40" : "border-slate-300 bg-slate-50/60")}
+                    className={cn("mt-5 flex min-h-28 w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 text-center transition-all hover:border-slate-400 hover:bg-slate-50", isDraggingFile && "border-primary bg-primary/5 ring-primary/20 scale-[1.01] cursor-copy ring-2", fileName ? "border-emerald-200 bg-emerald-50/40" : "border-slate-300 bg-slate-50/60")}
                     onDragOver={(event) => {
                       event.preventDefault();
                       event.dataTransfer.dropEffect = "copy";
@@ -143,7 +143,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                       if (file) void handleFile(file);
                     }}
                   >
-                    {isDraggingFile ? <><Upload className="size-6 animate-bounce text-primary" /><span className="mt-2 text-xs font-semibold text-primary">Release to upload</span><span className="mt-1 text-[11px] text-slate-400">Your document will be loaded here</span></> : fileName ? <><CheckCircle2 className="size-6 text-emerald-500" /><span className="mt-2 max-w-full truncate text-xs font-semibold text-slate-700">{fileName}</span><span className="mt-1 text-[11px] text-slate-400">Click to replace</span></> : <><FileText className="size-6 text-slate-400" /><span className="mt-2 text-xs font-semibold text-slate-600">Drop a document here or browse</span><span className="mt-1 text-[11px] text-slate-400">TXT, MD, CSV, JSON, or HTML</span></>}
+                    {isDraggingFile ? <><Upload className="text-primary size-6 animate-bounce" /><span className="text-primary mt-2 text-xs font-semibold">Release to upload</span><span className="mt-1 text-[11px] text-slate-400">Your document will be loaded here</span></> : fileName ? <><CheckCircle2 className="size-6 text-emerald-500" /><span className="mt-2 max-w-full truncate text-xs font-semibold text-slate-700">{fileName}</span><span className="mt-1 text-[11px] text-slate-400">Click to replace</span></> : <><FileText className="size-6 text-slate-400" /><span className="mt-2 text-xs font-semibold text-slate-600">Drop a document here or browse</span><span className="mt-1 text-[11px] text-slate-400">TXT, MD, CSV, JSON, or HTML</span></>}
                     <input id="rag-file-input" ref={inputRef} type="file" accept={ACCEPTED_FILES} className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleFile(file); event.target.value = ""; }} />
                   </label>
 

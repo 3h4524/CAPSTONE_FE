@@ -67,6 +67,10 @@ export const normalizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNode
     if (config[key] === null && typeof normalized[key] === "string") return;
     if (key in config) normalized[key] = config[key];
   });
+  if (type === "generate-video" && normalized.standardOptions && typeof normalized.standardOptions === "object") {
+    const options = normalized.standardOptions as Record<string, unknown>;
+    if (options.transition === "cut") normalized.standardOptions = { ...options, transition: "none" };
+  }
   return normalized;
 };
 

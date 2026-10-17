@@ -1,6 +1,9 @@
 "use client";
 
+import { ImagePlus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
 import { showToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
 import { useImportGeneratedMockups } from "@/hooks/mutations/use-import-generated-mockups";
@@ -13,7 +16,7 @@ const NO_PRODUCTS: BatchJobProductResult[] = [];
 
 // Sits above the list of mock-ups a video can use. The mock-ups made by Apply mock-up are not in that list
 // until they are stored as images, which this does for the product the video is for.
-export const VideoSourcesHeader = ({ description }: { description: string }) => {
+export const VideoSourcesHeader = () => {
   const configuredProductId = useWorkflowStore((state) =>
     readString(state.nodes.find((node) => node.data.type === "product-input")?.data.config.productId)
   );
@@ -46,36 +49,35 @@ export const VideoSourcesHeader = ({ description }: { description: string }) => 
     showToast("info", `The video is now for ${name}. Save, then Run to start it.`);
   };
 
+  if (!productId) return null;
+
   return (
-    <div className="space-y-2 border-t pt-4">
-      <div>
-        <h3 className="text-sm font-semibold">Mock-ups for the video</h3>
-        <p className="text-muted-foreground mt-0.5 text-xs">{description}</p>
-      </div>
-      {productId && otherJobProducts.length > 0 && (
-        <div className="space-y-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
-          <p>
-            {`These are the mock-ups of the product chosen for the video in Product input. The open run made its mock-ups for ${otherJobProducts.map((product) => product.productName).join(", ")}${run ? ": choose that product in Product input and Run again to use them." : "."}`}
-          </p>
-          {/* A started video run keeps its product, so the switch is offered only before the video part starts. */}
-          {!run && (
-            <div className="flex flex-wrap gap-2">
-              {otherJobProducts.map((product) =>
-                product.productId ? (
-                  <Button key={product.id} type="button" size="sm" variant="outline" disabled={isPending} onClick={() => chooseForVideo(product.productId!, product.productName)}>
-                    {`Use ${product.productName} for the video`}
-                  </Button>
-                ) : null
-              )}
-            </div>
-          )}
-        </div>
+    <div className="space-y-2">
+      {otherJobProducts.length > 0 && (
+        <PanelNotice
+          tone="warning"
+          action={
+            // A started video run keeps its product, so the switch is offered only before the video part starts.
+            !run && (
+              <div className="flex flex-wrap gap-2">
+                {otherJobProducts.map((product) =>
+                  product.productId ? (
+                    <Button key={product.id} type="button" size="sm" variant="outline" className="h-7 bg-white px-3 text-xs hover:translate-y-0" disabled={isPending} onClick={() => chooseForVideo(product.productId!, product.productName)}>
+                      {`Use ${product.productName} for the video`}
+                    </Button>
+                  ) : null
+                )}
+              </div>
+            )
+          }
+        >
+          {`These are the mock-ups of the product chosen for the video in Product input. The open run made its mock-ups for ${otherJobProducts.map((product) => product.productName).join(", ")}${run ? ": choose that product in Product input and Run again to use them." : "."}`}
+        </PanelNotice>
       )}
-      {productId && (
-        <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => addGenerated(productId)}>
-          {isPending ? "Adding mock-ups…" : "Add this product's mock-ups"}
-        </Button>
-      )}
+      <Button type="button" variant="outline" size="sm" className="w-full hover:translate-y-0" disabled={isPending} onClick={() => addGenerated(productId)}>
+        <ImagePlus aria-hidden="true" />
+        {isPending ? "Adding mock-ups…" : "Add this product's mock-ups"}
+      </Button>
     </div>
   );
 };

@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { ImageIcon, Images, Shirt } from "lucide-react";
 
 import { resetMockupOverride } from "@/api/mockup-templates";
 import { GeneratedImagesGrid, type MockupPreviewTarget } from "@/components/batch-jobs/generated-images-grid";
 import { JobProgressCard } from "@/components/batch-jobs/job-progress-card";
 import { MockupImageEditDialog } from "@/components/batch-jobs/mockup-image-edit-dialog";
 import { MockupResultsGrid } from "@/components/batch-jobs/mockup-results-grid";
+import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { MockupGenerateDialog } from "@/components/mockups/mockup-generate-dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PanelEmptyState } from "@/components/workflows/config-panel/layout/panel-empty-state";
+import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
 import { ApprovalReviewPanel } from "@/components/workflows/run/approval-review-panel";
 import { showToast } from "@/helpers/toast";
 import { readStringArray } from "@/helpers/workflow-config";
@@ -43,7 +47,11 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
   });
 
   if (!job) {
-    return <p className="text-muted-foreground p-4 text-sm">Results appear here once the run has started.</p>;
+    return (
+      <div className="p-5">
+        <PanelEmptyState icon={Images} title="Results appear here once the run has started." description="Press Run to generate this batch, or open an earlier run in Product input." />
+      </div>
+    );
   }
 
   const productNameById = new Map(job.products.map((product) => [product.productId, product.productName]));
@@ -67,31 +75,38 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
 
   return (
     <ScrollArea className="h-full [&>[data-radix-scroll-area-viewport]>div]:block!">
-      <div className="@container space-y-5 p-4">
+      <div className="@container space-y-6 p-5">
         <JobProgressCard job={job} bare />
         {showsApproval ? (
           <ApprovalReviewPanel job={job} />
         ) : showsMockups ? (
-          <section className="space-y-3" aria-label="Mock-ups">
+          <section className="space-y-3 border-t pt-5" aria-label="Mock-ups">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold">Mock-ups</h3>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-slate-900">Mock-ups</h3>
+                <p className="text-muted-foreground mt-0.5 text-xs">
+                  Uses the {chosenTemplateCount} template{chosenTemplateCount === 1 ? "" : "s"} chosen in this node&apos;s Settings.
+                </p>
+              </div>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
+                className="h-8 shrink-0 px-3 hover:translate-y-0"
                 disabled={!designsReady || mockupState === "running" || (needsApproval && approvedCount === 0)}
                 onClick={() => void regenerateMockups()}
               >
                 {mockupState === "running" ? "Generating…" : mockupResult ? "Apply & regenerate" : "Generate"}
               </Button>
             </div>
-            <p className="text-muted-foreground text-xs">
-              Uses the {chosenTemplateCount} template{chosenTemplateCount === 1 ? "" : "s"} chosen in this node&apos;s Settings.
-            </p>
-            {mockupState === "failed" && <p role="alert" className="text-destructive text-xs">Mock-ups could not be generated. Try again.</p>}
-            {!designsReady && <p className="text-muted-foreground text-xs">Mock-ups are made once the design images are ready.</p>}
+            {mockupState === "failed" && <PanelNotice tone="error">Mock-ups could not be generated. Try again.</PanelNotice>}
+            {!designsReady && <PanelNotice>Mock-ups are made once the design images are ready.</PanelNotice>}
             {designsReady && needsApproval && approvedCount === 0 && (
-              <p className="text-muted-foreground text-xs">Approve at least one design in the Approval gate first.</p>
+              <PanelNotice tone="warning">Approve at least one design in the Approval gate first.</PanelNotice>
+            )}
+            {designsReady && !mockupResult && mockupState === "running" && <SectionLoading label="Generating mock-ups" className="py-8" />}
+            {designsReady && !mockupResult && (mockupState === "idle" || mockupState === "done") && !(needsApproval && approvedCount === 0) && (
+              <PanelEmptyState icon={Shirt} title="No mock-ups yet" description="Generate them from the approved designs and the chosen templates." />
             )}
             {mockupResult && (
               <MockupResultsGrid
@@ -105,12 +120,12 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
             )}
           </section>
         ) : (
-          <section className="space-y-3" aria-label="Generated images">
-            <h3 className="text-sm font-semibold">Generated images</h3>
+          <section className="space-y-3 border-t pt-5" aria-label="Generated images">
+            <h3 className="text-sm font-semibold text-slate-900">Generated images</h3>
             {job.products.some((product) => product.images.length > 0) ? (
               <GeneratedImagesGrid products={job.products} onPreview={setPreviewTarget} columnsClassName={PANEL_GRID} />
             ) : (
-              <p className="text-muted-foreground text-xs">No images yet.</p>
+              <PanelEmptyState icon={ImageIcon} title="No images yet." description="Designs show up here as each product finishes." />
             )}
           </section>
         )}

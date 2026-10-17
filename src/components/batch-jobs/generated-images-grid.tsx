@@ -29,8 +29,8 @@ export const GeneratedImagesGrid = ({
       .map((product) => (
         <div key={product.id}>
           <div className="mb-3 flex items-center gap-2">
-            <h3 className="min-w-0 truncate font-medium">{product.productName}</h3>
-            {product.productType && <Badge variant="secondary">{productTypeLabel(product.productType)}</Badge>}
+            <h4 className="min-w-0 truncate text-sm font-medium text-slate-900">{product.productName}</h4>
+            {product.productType && <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700">{productTypeLabel(product.productType)}</Badge>}
           </div>
           <div className={cn("grid", columnsClassName)}>
             {/* Numbered by position: older rows were stored with duplicate variation indexes. */}

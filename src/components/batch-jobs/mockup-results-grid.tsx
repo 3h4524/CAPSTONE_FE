@@ -63,7 +63,7 @@ export const MockupResultsGrid = ({
               <div className="text-muted-foreground flex items-center gap-1.5 p-2 text-xs">
                 {mockupImage.garmentColor && <GarmentColorSwatch hex={mockupImage.garmentColor} />}
                 <span className="min-w-0 flex-1 truncate">{productName}</span>
-                {mockupImage.override && <Badge variant="secondary">Edited</Badge>}
+                {mockupImage.override && <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700">Edited</Badge>}
                 {onEdit && mockupImage.slotKey && (
                   <Button
                     type="button"

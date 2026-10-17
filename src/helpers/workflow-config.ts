@@ -36,7 +36,13 @@ export const readBoolean = (value: unknown): boolean => value === true;
 export const readStringArray = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 
-export const readInstructionsPreview = (config: WorkflowNodeConfig): string =>
+/** "16:9" as [16, 9], for drawing the ratio's shape; anything else draws a square. */
+export const parseAspectRatio = (ratio: string): [number, number] => {
+  const [width, height] = ratio.split(":").map(Number);
+  return width && height ? [width, height] : [1, 1];
+};
+
+export const readInstructionsPreview =(config: WorkflowNodeConfig): string =>
   readString(config.instructions).trim();
 
 const MAX_NODE_LABEL_LENGTH = 60;

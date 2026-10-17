@@ -157,6 +157,8 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         name: "instructions",
         label: "Extra instructions",
         placeholder: "Anything the prompt should always include or avoid.",
+        description: "Added to every design prompt this step writes.",
+        maxLength: 500,
       },
     ],
   },
@@ -171,7 +173,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     defaultConfig: { variants: 2, aspectRatio: "1:1" },
     fields: [
       { kind: "number", name: "variants", label: "Variants per product", min: 1, max: 4 },
-      { kind: "select", name: "aspectRatio", label: "Aspect ratio", options: ASPECT_RATIO_OPTIONS },
+      { kind: "select", name: "aspectRatio", label: "Aspect ratio", options: ASPECT_RATIO_OPTIONS, display: "ratios" },
     ],
   },
   "design-approval": {
@@ -188,9 +190,10 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         kind: "select",
         name: "mode",
         label: "Approval mode",
+        display: "cards",
         options: [
-          { value: "manual", label: "Manual review" },
-          { value: "auto", label: "Approve automatically" },
+          { value: "manual", label: "Manual review", description: "The run pauses so you can approve or reject each design." },
+          { value: "auto", label: "Approve automatically", description: "Every generated design goes straight to the mock-ups." },
         ],
       },
     ],
@@ -232,8 +235,9 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         kind: "select",
         name: "mode",
         label: "Approval mode",
+        display: "cards",
         options: [
-          { value: "manual", label: "Manual review" },
+          { value: "manual", label: "Manual review", description: "The video waits until you approve the mock-ups it may use." },
         ],
       },
     ],

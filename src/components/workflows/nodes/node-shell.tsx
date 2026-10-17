@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { NodeName } from "@/components/workflows/nodes/node-name";
 import { WORKFLOW_CATEGORIES } from "@/constants/workflow";
+import { NODE_STATUS_PILLS } from "@/constants/workflow-status";
 import { getWorkflowNodeDefinition } from "@/helpers/workflow-config";
 import { isRunnableNode } from "@/helpers/workflow-run";
 import type { WorkflowNodeData, WorkflowNodeStatus } from "@/types/workflow";
@@ -21,19 +22,6 @@ const STATUS_BORDERS: Record<WorkflowNodeStatus, string> = {
   cancelled: "border-slate-300 opacity-70",
 };
 
-const STATUS_PILLS: Record<
-  Exclude<WorkflowNodeStatus, "idle">,
-  { className: string; label: string }
-> = {
-  running: { className: "bg-indigo-100 text-indigo-700", label: "Running" },
-  success: { className: "bg-emerald-100 text-emerald-700", label: "Done" },
-  failed: { className: "bg-rose-100 text-rose-700", label: "Failed" },
-  skipped: { className: "bg-slate-200 text-slate-600", label: "Skipped" },
-  waiting_for_input: { className: "bg-amber-100 text-amber-800", label: "Needs input" },
-  waiting_for_review: { className: "bg-amber-100 text-amber-800", label: "Needs review" },
-  cancelled: { className: "bg-slate-200 text-slate-600", label: "Cancelled" },
-};
-
 const HANDLE_CLASS_NAME = "size-4! rounded-full! border-2! border-white! bg-indigo-500!";
 
 type NodeShellProps = {
@@ -49,7 +37,7 @@ export const NodeShell = ({ nodeId, data, selected, widthClassName, bodyClassNam
   const definition = getWorkflowNodeDefinition(data.type);
   if (!definition) return null;
   const category = WORKFLOW_CATEGORIES.find((item) => item.id === definition.category);
-  const pill = data.status === "idle" ? null : STATUS_PILLS[data.status];
+  const pill = data.status === "idle" ? null : NODE_STATUS_PILLS[data.status];
 
   return (
     <div className={cn("flex flex-col gap-1.5", widthClassName)}>

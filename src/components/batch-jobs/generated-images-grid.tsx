@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 
+import { ImageLightbox } from "@/components/commons/data-display/image-lightbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { designLightboxImages } from "@/helpers/lightbox-images";
 import { productTypeLabel } from "@/helpers/mockup-template";
 import type { BatchJobProductResult } from "@/types/batch-jobs";
 import { cn } from "@/utils/cn";
@@ -22,11 +25,14 @@ export const GeneratedImagesGrid = ({
   products,
   onPreview,
   columnsClassName = "grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4",
-}: GeneratedImagesGridProps) => (
-  <div className="space-y-6">
-    {products
-      .filter((product) => product.images.length > 0)
-      .map((product) => (
+}: GeneratedImagesGridProps) => {
+  const [viewing, setViewing] = useState<number | null>(null);
+  const productsWithImages = products.filter((product) => product.images.length > 0);
+  const gallery = designLightboxImages(productsWithImages);
+
+  return (
+    <div className="space-y-6">
+      {productsWithImages.map((product) => (
         <div key={product.id}>
           <div className="mb-3 flex items-center gap-2">
             <h4 className="min-w-0 truncate text-sm font-medium text-slate-900">{product.productName}</h4>
@@ -36,7 +42,14 @@ export const GeneratedImagesGrid = ({
             {/* Numbered by position: older rows were stored with duplicate variation indexes. */}
             {product.images.map((image, position) => (
               <div key={image.id} className="overflow-hidden rounded-lg border">
-                <a href={image.imageUrl} target="_blank" rel="noreferrer" className="group block">
+                {/* Opens the design large on the page rather than in a new tab. */}
+                <Button
+                  type="button"
+                  variant="none"
+                  aria-label={`View ${product.productName}, variation ${position + 1} larger`}
+                  onClick={() => setViewing(gallery.findIndex((item) => item.id === image.id))}
+                  className="group block h-auto w-full cursor-zoom-in overflow-hidden rounded-none p-0 hover:translate-y-0"
+                >
                   <Image
                     src={image.imageUrl}
                     alt={`${product.productName}, variation ${position + 1}`}
@@ -45,7 +58,7 @@ export const GeneratedImagesGrid = ({
                     unoptimized
                     className="bg-muted aspect-square w-full object-cover transition group-hover:scale-105"
                   />
-                </a>
+                </Button>
                 <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 p-2">
                   <p className="text-muted-foreground text-xs whitespace-nowrap">Variation {position + 1}</p>
                   <Button
@@ -65,5 +78,7 @@ export const GeneratedImagesGrid = ({
           </div>
         </div>
       ))}
-  </div>
-);
+      <ImageLightbox images={gallery} index={viewing} onIndexChange={setViewing} />
+    </div>
+  );
+};

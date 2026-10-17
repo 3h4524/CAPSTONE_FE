@@ -17,7 +17,7 @@ export const PreloadedVideo = ({ src, poster, label }: { src: string; poster?: s
     const request = new XMLHttpRequest();
     let objectUrl: string | undefined;
 
-    const useStreamingFallback = () => {
+    const streamInstead = () => {
       setPlaybackUrl(sourceUrl);
       setLoadState("streaming");
       setProgress(undefined);
@@ -32,7 +32,7 @@ export const PreloadedVideo = ({ src, poster, label }: { src: string; poster?: s
     };
     request.onload = () => {
       if (request.status < 200 || request.status >= 300 || !(request.response instanceof Blob) || request.response.size === 0) {
-        useStreamingFallback();
+        streamInstead();
         return;
       }
       objectUrl = URL.createObjectURL(request.response);
@@ -40,8 +40,8 @@ export const PreloadedVideo = ({ src, poster, label }: { src: string; poster?: s
       setProgress(100);
       setLoadState("ready");
     };
-    request.onerror = useStreamingFallback;
-    request.ontimeout = useStreamingFallback;
+    request.onerror = streamInstead;
+    request.ontimeout = streamInstead;
     request.timeout = 2 * 60_000;
     request.send();
 

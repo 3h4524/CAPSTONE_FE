@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React from "react";
@@ -21,14 +22,14 @@ export function IntegrationHealthCards({
             key={i}
             className="flex flex-row items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
           >
-            <div className="flex items-center gap-4 min-w-0">
+            <div className="flex min-w-0 items-center gap-4">
               <div className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-slate-100 dark:bg-slate-800" />
               <div className="space-y-2">
                 <div className="h-5 w-16 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
                 <div className="h-3.5 w-24 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
               </div>
             </div>
-            <div className="h-5 w-14 self-start animate-pulse rounded-full bg-slate-100 dark:bg-slate-800" />
+            <div className="h-5 w-14 animate-pulse self-start rounded-full bg-slate-100 dark:bg-slate-800" />
           </div>
         ))}
       </div>
@@ -73,7 +74,7 @@ export function IntegrationHealthCards({
       {/* Etsy Integration */}
       <div className="flex flex-row items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
         {/* Left: Circular Logo & Stats */}
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex min-w-0 items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-50 text-orange-600 dark:bg-orange-950/50 dark:text-orange-400">
             <img
               src="/icons/stat-etsy.png"
@@ -104,7 +105,7 @@ export function IntegrationHealthCards({
       {/* Printify Integration */}
       <div className="flex flex-row items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
         {/* Left: Circular Logo & Stats */}
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex min-w-0 items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
             <img
               src="/icons/stat-printify.png"
@@ -135,7 +136,7 @@ export function IntegrationHealthCards({
       {/* Social Media Channels */}
       <div className="flex flex-row items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
         {/* Left: Circular Logo & Stats */}
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex min-w-0 items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
             <img
               src="/icons/stat-social.png"
@@ -166,7 +167,7 @@ export function IntegrationHealthCards({
       {/* Sync Incidents */}
       <div className="flex flex-row items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
         {/* Left: Circular Logo & Stats */}
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex min-w-0 items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400">
             <img
               src="/icons/stat-error.png"
@@ -203,7 +204,7 @@ export function IntegrationHealthCards({
             <span
               className={`h-1.5 w-1.5 rounded-full ${
                 integrationStatus.failedIntegrationsCount > 0
-                  ? "bg-rose-500 animate-pulse"
+                  ? "animate-pulse bg-rose-500"
                   : "bg-emerald-500"
               }`}
             />

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Activity, BarChart2, Calendar, TrendingUp } from "lucide-react";
+import { BarChart2, Calendar } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -133,7 +133,7 @@ export function DailyJobsBarChart({
               <CardTitle className="text-xs font-bold tracking-wider text-slate-800 uppercase dark:text-slate-200">
                 Daily Batch Job Volume
               </CardTitle>
-              <span className="inline-flex items-center rounded-sm border border-slate-300 bg-slate-100 px-1.5 py-0.2 font-mono text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              <span className="py-0.2 inline-flex items-center rounded-sm border border-slate-300 bg-slate-100 px-1.5 font-mono text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                 {dailyJobs.length} DAYS
               </span>
             </div>

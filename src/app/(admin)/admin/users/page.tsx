@@ -25,7 +25,6 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminUsersTable } from "@/components/admin/users/admin-users-table";
 import { BanUserModal } from "@/components/admin/users/ban-user-modal";
 import { EditUserModal } from "@/components/admin/users/edit-user-modal";
-import { formatCurrencyVnd } from "@/utils/format-currency";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { AdminUserDto, GetUsersRequest } from "@/types/admin";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function AdminUsersPage() {

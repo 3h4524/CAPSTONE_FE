@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AlertCircle, CheckCircle2, ShieldCheck } from "lucide-react";
+import { AlertCircle, ShieldCheck } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -27,27 +27,27 @@ export function RecentErrorsTable({
     const lower = type.toLowerCase();
     if (lower.includes("rate") || lower.includes("limit")) {
       return (
-        <span className="inline-flex items-center rounded-xs border border-amber-300 bg-amber-50 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+        <span className="inline-flex items-center rounded-xs border border-amber-300 bg-amber-50 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider text-amber-800 uppercase dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
           Rate Limit
         </span>
       );
     }
     if (lower.includes("oauth") || lower.includes("auth")) {
       return (
-        <span className="inline-flex items-center rounded-xs border border-purple-300 bg-purple-50 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-purple-800 dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-300">
+        <span className="inline-flex items-center rounded-xs border border-purple-300 bg-purple-50 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider text-purple-800 uppercase dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-300">
           Auth / Token
         </span>
       );
     }
     if (lower.includes("timeout") || lower.includes("network")) {
       return (
-        <span className="inline-flex items-center rounded-xs border border-orange-300 bg-orange-50 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-orange-800 dark:border-orange-800 dark:bg-orange-950/40 dark:text-orange-300">
+        <span className="inline-flex items-center rounded-xs border border-orange-300 bg-orange-50 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider text-orange-800 uppercase dark:border-orange-800 dark:bg-orange-950/40 dark:text-orange-300">
           Timeout
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center rounded-xs border border-rose-300 bg-rose-50 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
+      <span className="inline-flex items-center rounded-xs border border-rose-300 bg-rose-50 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider text-rose-800 uppercase dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
         {type || "Exception"}
       </span>
     );
@@ -105,7 +105,7 @@ export function RecentErrorsTable({
             <div className="rounded-md bg-emerald-50 p-2.5 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
               <ShieldCheck className="h-5 w-5" />
             </div>
-            <p className="mt-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+            <p className="mt-2 text-xs font-bold tracking-wider text-slate-800 uppercase dark:text-slate-200">
               All Systems Functioning Normally
             </p>
             <p className="mt-0.5 text-[11px] text-slate-400">
@@ -115,17 +115,17 @@ export function RecentErrorsTable({
         ) : (
           <Table>
             <TableHeader className="bg-slate-50/80 dark:bg-slate-800/40">
-              <TableRow className="border-b border-slate-200/90 dark:border-slate-800 hover:bg-transparent">
-                <TableHead className="w-[170px] text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              <TableRow className="border-b border-slate-200/90 hover:bg-transparent dark:border-slate-800">
+                <TableHead className="w-[170px] text-[10px] font-bold tracking-wider text-slate-600 uppercase dark:text-slate-400">
                   Timestamp
                 </TableHead>
-                <TableHead className="w-[160px] text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <TableHead className="w-[160px] text-[10px] font-bold tracking-wider text-slate-600 uppercase dark:text-slate-400">
                   Component / Job
                 </TableHead>
-                <TableHead className="w-[140px] text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <TableHead className="w-[140px] text-[10px] font-bold tracking-wider text-slate-600 uppercase dark:text-slate-400">
                   Classification
                 </TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <TableHead className="text-[10px] font-bold tracking-wider text-slate-600 uppercase dark:text-slate-400">
                   Message
                 </TableHead>
               </TableRow>

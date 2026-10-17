@@ -1,7 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-
 import { getSystemStatisticsOverview } from "@/api/system-statistics";
 import type { StatisticsFilterDto } from "@/types/system-statistics";
+import { useQuery } from "@tanstack/react-query";
 
 export const statisticsKeys = {
   all: ["system-statistics"] as const,

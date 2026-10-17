@@ -44,14 +44,14 @@ export function StatisticsHeader({
           <select
             value={timeRange}
             onChange={(e) => onTimeRangeChange(e.target.value)}
-            className="cursor-pointer bg-transparent text-xs font-semibold text-slate-700 uppercase tracking-wider outline-none dark:text-slate-200"
+            className="cursor-pointer bg-transparent text-xs font-semibold tracking-wider text-slate-700 uppercase outline-none dark:text-slate-200"
             aria-label="Select time range"
           >
             {timeOptions.map((opt) => (
               <option
                 key={opt.value}
                 value={opt.value}
-                className="dark:bg-slate-900 text-xs normal-case"
+                className="text-xs normal-case dark:bg-slate-900"
               >
                 {opt.label}
               </option>

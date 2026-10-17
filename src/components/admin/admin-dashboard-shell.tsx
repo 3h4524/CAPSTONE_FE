@@ -16,8 +16,8 @@ import { AdminRevenueChart } from "@/components/admin/admin-revenue-chart";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { Button } from "@/components/ui/button";
-import { formatCurrencyVnd } from "@/utils/format-currency";
 import type { AdminDashboardMetricsDto } from "@/types/admin";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 
 type AdminDashboardShellProps = {
   fullName: string;

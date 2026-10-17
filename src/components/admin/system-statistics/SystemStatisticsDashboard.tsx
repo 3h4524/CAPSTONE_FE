@@ -20,7 +20,7 @@ export function SystemStatisticsDashboard() {
   const [timeRange, setTimeRange] = useState<string>("30d");
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
-  const { data, isLoading, isError, refetch, isFetching } =
+  const { data, isLoading, isError, refetch } =
     useSystemStatisticsOverview({
       timeRange,
     });
@@ -114,7 +114,7 @@ export function SystemStatisticsDashboard() {
                     Third-party marketplace and channel sync reliability
                   </p>
                 </div>
-                <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <span className="font-mono text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                   Real-time telemetry
                 </span>
               </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useMemo } from "react";
@@ -84,7 +85,7 @@ export function PipelineStageBreakdown({
 
   if (isLoading) {
     return (
-      <Card className="flex flex-col gap-0 py-0 border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
+      <Card className="flex flex-col gap-0 border border-slate-200/80 bg-white py-0 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
         <CardHeader className="border-b border-slate-100/80 px-5 py-3.5 dark:border-slate-800/80">
           <div className="h-5 w-44 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
           <div className="mt-1 h-3.5 w-60 animate-pulse rounded bg-slate-100 dark:bg-slate-800/60" />

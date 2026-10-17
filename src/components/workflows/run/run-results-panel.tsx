@@ -67,10 +67,15 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
   const regenerateMockups = () => applySelectionAndGenerateMockups(job.id, queryClient);
   const editingProduct = editing ? job.products.find((product) => product.productId === editing.productId) : undefined;
   const editingDesignUrl = editingProduct?.images.find((image) => image.id === editing?.designImageId)?.imageUrl ?? null;
-  const showEdited = (result: GenerateAllMockupsResult) => {
+  const showEdited = (result: GenerateAllMockupsResult, changedCount: number) => {
     useWorkflowRunStore.getState().setMockupResult(result);
     setEditing(null);
-    showToast("success", "Mock-up updated. The job keeps this change when its mock-ups are made again.");
+    showToast(
+      "success",
+      changedCount > 1
+        ? `${changedCount} mock-ups updated. The job keeps these changes when its mock-ups are made again.`
+        : "Mock-up updated. The job keeps this change when its mock-ups are made again."
+    );
   };
 
   return (
@@ -141,6 +146,7 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
       <MockupImageEditDialog
         batchJobId={job.id}
         image={editing}
+        images={mockupResult?.images ?? []}
         productName={editingProduct?.productName ?? "Product"}
         productType={editingProduct?.productType ?? ""}
         designImageUrl={editingDesignUrl}

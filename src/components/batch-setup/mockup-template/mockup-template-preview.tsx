@@ -24,7 +24,10 @@ const percent = (value: number, total: number) => `${(value / total) * 100}%`;
 // The template's own photo with its print area outlined and, when known, a real design placed in it,
 // so a seller can see what the garment looks like and where the artwork would land.
 export const MockupTemplatePreview = ({ template, color, background, designUrl, className }: MockupTemplatePreviewProps) => {
-  const [photoFailed, setPhotoFailed] = useState(false);
+  // Kept per photo: the panel reuses this preview for every template pointed at, and one broken photo
+  // must not leave the fallback over the next template's working one.
+  const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null);
+  const photoFailed = failedPhotoUrl === template.baseImageUrl;
   const area = parsePrintArea(template.printAreaConfig);
   const width = template.outputWidthPx || 1;
   const height = template.outputHeightPx || 1;
@@ -42,7 +45,8 @@ export const MockupTemplatePreview = ({ template, color, background, designUrl, 
       data-testid="mockup-preview"
     >
       {photoFailed ? (
-        <span aria-hidden="true" className={cn("absolute inset-0 bg-linear-to-br", previewFallbackFor(template.id))} />
+        // Without the photo, a chosen background is still shown (behind the garment's tinted shape).
+        !cutOut && <span aria-hidden="true" className={cn("absolute inset-0 bg-linear-to-br", previewFallbackFor(template.id))} />
       ) : (
         <Image
           src={template.baseImageUrl}
@@ -52,7 +56,7 @@ export const MockupTemplatePreview = ({ template, color, background, designUrl, 
           sizes="320px"
           className="object-cover"
           style={cutOut}
-          onError={() => setPhotoFailed(true)}
+          onError={() => setFailedPhotoUrl(template.baseImageUrl)}
         />
       )}
       {tint && (

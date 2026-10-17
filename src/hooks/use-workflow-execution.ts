@@ -9,7 +9,7 @@ import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
 import { hasBatchSteps, hasListingSteps, hasVideoSteps } from "@/helpers/workflow-run";
-import { NEXT_PART_PARAM, useBatchRun } from "@/hooks/use-batch-run";
+import { BATCH_JOB_PARAM, NEXT_PART_PARAM, useBatchRun } from "@/hooks/use-batch-run";
 import { useVideoRunSync, useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
@@ -45,7 +45,9 @@ const startVideoRun = async (queryClient: QueryClient, startRun: () => void) => 
 export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorReady: boolean) => {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const videoIsNext = useSearchParams().get(NEXT_PART_PARAM) === "video";
+  const params = useSearchParams();
+  const videoIsNext = params.get(NEXT_PART_PARAM) === "video";
+  const openJobId = params.get(BATCH_JOB_PARAM);
   const batch = useBatchRun(activeWorkflowId, isEditorReady);
   const video = useWorkflowRuntime();
   const hasBatchRun = useWorkflowRunStore((state) => state.step !== "idle" || state.job !== null);
@@ -65,9 +67,21 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   // Set when this page started the video run, so only that run points the person to Mockup Approval.
   const announceWaiting = useRef(false);
   const startVideo = useRef(video.startRun);
+  const closeVideo = useRef(video.closeRun);
   useEffect(() => {
     startVideo.current = video.startRun;
+    closeVideo.current = video.closeRun;
   });
+
+  // A video run is made for one product, not for a batch job, so opening another job stops following it
+  // (it goes on on the server) and the video steps start clean. A Run closes the old one itself before its
+  // job enters the URL, and a reloaded page keeps both.
+  const shownJobId = useRef(openJobId);
+  useEffect(() => {
+    if (openJobId === shownJobId.current) return;
+    shownJobId.current = openJobId;
+    if (openJobId) closeVideo.current();
+  }, [openJobId]);
 
   // A Run that includes the video leaves a note in the URL. Once the mock-ups of its batch job are made the
   // video part follows, also on a page that was reloaded in the meantime.
@@ -75,10 +89,23 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     if (!videoIsNext || mockupState !== "done" || !batchJobId || video.runId) return;
     if (videoStartedFor.current === batchJobId) return;
     videoStartedFor.current = batchJobId;
+    // The video is made for the product chosen in Product input. When this job made nothing for it, the video
+    // would show none of the mock-ups just made, so it waits for the person to choose one of the job's products.
+    const videoProductId = readString(findNode("product-input")?.data.config.productId);
+    const jobProducts = useWorkflowRunStore.getState().job?.products ?? [];
+    if (videoProductId && jobProducts.length > 0 && !jobProducts.some((product) => product.productId === videoProductId)) {
+      const query = new URLSearchParams(window.location.search);
+      query.delete(NEXT_PART_PARAM);
+      router.replace(`/workflows?${query.toString()}`, { scroll: false });
+      const input = findNode("product-input");
+      if (input) selectNode(input.id);
+      showToast("warning", `The video was not started: its product is not in this run. Choose ${jobProducts.length === 1 ? jobProducts[0].productName : "one of this run's products"} for the video in Product input, save, then Run again.`);
+      return;
+    }
     announceWaiting.current = true;
     // The note leaves the URL together with the video run entering it (see useWorkflowRuntime).
     void startVideoRun(queryClient, () => startVideo.current());
-  }, [videoIsNext, mockupState, batchJobId, video.runId, queryClient]);
+  }, [videoIsNext, mockupState, batchJobId, video.runId, queryClient, router, selectNode]);
 
   const videoStatus = video.run?.status;
   useEffect(() => {

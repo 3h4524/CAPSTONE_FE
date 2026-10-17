@@ -80,12 +80,25 @@ export const WorkflowWorkspace = () => {
     previousProductId.current = productId;
     if (!changedFromAnotherProduct) return;
 
-    // Designs and mock-ups belong to the product that started the run.
-    useWorkflowRunStore.getState().reset();
-    resetProductDependentState();
     const params = new URLSearchParams(window.location.search);
-    params.delete("job");
+    // A product the open job made designs for keeps that job on the canvas: only what was chosen for the
+    // video belongs to the product before.
+    if (useWorkflowRunStore.getState().job?.products.some((product) => product.productId === productId)) {
+      useWorkflowStore.setState((state) => ({
+        nodes: state.nodes.map((node) => node.data.type === "apply-mockup"
+          ? { ...node, data: { ...node.data, config: { ...node.data.config, mockupIds: [], artworkGroupKey: "" } } }
+          : node),
+        videoRunId: null,
+      }));
+    } else {
+      // Designs and mock-ups belong to the product that started the run.
+      useWorkflowRunStore.getState().reset();
+      resetProductDependentState();
+      params.delete("job");
+    }
     params.delete("then");
+    // The store forgets the video run too, but the URL would still bring it back.
+    params.delete("run");
     const query = params.toString();
     router.replace(query ? `/workflows?${query}` : "/workflows", { scroll: false });
   }, [productId, resetProductDependentState, router]);

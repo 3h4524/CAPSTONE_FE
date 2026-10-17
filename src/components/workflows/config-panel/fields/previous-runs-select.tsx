@@ -40,6 +40,8 @@ export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
   const openRun = startedRuns.find(({ job }) => job.id === openRunId);
 
   const openRunById = (jobId: string) => {
+    // The list answers "" when its value stops matching an item, which is no run to open.
+    if (!jobId) return;
     const params = new URLSearchParams(window.location.search);
     params.set(BATCH_JOB_PARAM, jobId);
     // Looking at an earlier run starts nothing after it.

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useBatchJobs } from "@/hooks/queries/use-batch-jobs";
 import { BATCH_JOB_PARAM } from "@/hooks/use-batch-run";
+import { useWorkflowStore } from "@/stores/workflow";
 import type { BatchJobSummary } from "@/types/batch-jobs";
 
 const formatDate = (value: string | null) => (value ? new Date(value).toLocaleString() : "—");
@@ -35,6 +36,8 @@ export const BatchJobHistoryMenu = ({ batchId }: { batchId: string }) => {
   const openOnCanvas = (job: BatchJobSummary) => {
     const query = new URLSearchParams({ [BATCH_JOB_PARAM]: job.id });
     if (job.workflowId) query.set("id", job.workflowId);
+    // The canvas would otherwise still follow the video run kept from the last visit.
+    useWorkflowStore.getState().setVideoRunId(null);
     router.push(`/workflows?${query.toString()}`);
   };
 

@@ -33,13 +33,24 @@ export const MockupPanel = ({ review }: { review: boolean }) => {
     const difference = (assets?.filter(asset => asset.artworkGroupKey === right).length ?? 0) - (assets?.filter(asset => asset.artworkGroupKey === left).length ?? 0);
     return difference || left.localeCompare(right);
   })[0];
-  const activeGroup = artworkGroups.length > 1 ? configuredGroup || suggestedGroup : artworkGroups[0];
-  const visibleAssets = artworkGroups.length > 1 ? assets?.filter(asset => asset.artworkGroupKey === activeGroup) : assets;
+  const activeGroup = artworkGroups.includes(configuredGroup) ? configuredGroup : suggestedGroup;
+  const visibleAssets = activeGroup ? assets?.filter(asset => asset.artworkGroupKey === activeGroup) : assets;
 
   useEffect(() => {
-    if (!mockup || artworkGroups.length < 2 || !suggestedGroup || artworkGroups.includes(configuredGroup)) return;
-    useWorkflowStore.getState().updateNodeConfig(mockup.id, { ...mockup.data.config, artworkGroupKey: suggestedGroup, mockupIds: [] });
-  }, [artworkGroups, configuredGroup, mockup, suggestedGroup]);
+    if (!mockup || isPending || !assets) return;
+    const nextGroup = artworkGroups.includes(configuredGroup) ? configuredGroup : suggestedGroup ?? "";
+    const validIds = new Set(assets
+      .filter(asset => !nextGroup || asset.artworkGroupKey === nextGroup)
+      .map(asset => asset.id));
+    const nextSelected = selected.filter(id => validIds.has(id));
+    const selectionChanged = nextSelected.length !== selected.length || nextSelected.some((id, index) => id !== selected[index]);
+    if (nextGroup === configuredGroup && !selectionChanged) return;
+    useWorkflowStore.getState().updateNodeConfig(mockup.id, {
+      ...mockup.data.config,
+      artworkGroupKey: nextGroup,
+      mockupIds: nextSelected,
+    });
+  }, [artworkGroups, assets, configuredGroup, isPending, mockup, selected, suggestedGroup]);
 
   const selectArtworkGroup = (group: string) => {
     if (!mockup) return;

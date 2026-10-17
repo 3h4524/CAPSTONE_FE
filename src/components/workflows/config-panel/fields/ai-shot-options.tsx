@@ -128,19 +128,23 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
   const { mutate: reviewStudioFrame, isPending: isReviewingStudioFrame } = useReviewMockupAsset();
   const chosenMockupIds = readStringArray(applyMockupNode?.data.config.mockupIds);
   const artworkGroupKey = readString(applyMockupNode?.data.config.artworkGroupKey);
+  const availableAssetIds = new Set(allAssets.map(asset => asset.id));
+  const availableArtworkGroups = new Set(allAssets.map(asset => asset.artworkGroupKey).filter((group): group is string => Boolean(group)));
+  const effectiveChosenMockupIds = chosenMockupIds.filter(id => availableAssetIds.has(id));
+  const effectiveArtworkGroupKey = availableArtworkGroups.has(artworkGroupKey) ? artworkGroupKey : "";
   const sharedInstructions = typeof node?.data.config.aiGlobalInstructions === "string" ? node.data.config.aiGlobalInstructions : null;
   const legacyStudioMode = node?.data.config.aiStudioMode === "studio";
   const currentApproved = allAssets.filter(asset => asset.approvalStatus === "approved" && asset.approvedRevision === asset.revision);
   const allOriginalApproved = currentApproved.filter(asset => !isStudioFrame(asset));
-  const originalApproved = currentApproved.filter(asset => !isStudioFrame(asset))
-    .filter(asset => chosenMockupIds.length === 0 || chosenMockupIds.includes(asset.id))
-    .filter(asset => !artworkGroupKey || asset.artworkGroupKey === artworkGroupKey);
+  const originalApproved = allOriginalApproved
+    .filter(asset => effectiveChosenMockupIds.length === 0 || effectiveChosenMockupIds.includes(asset.id))
+    .filter(asset => !effectiveArtworkGroupKey || asset.artworkGroupKey === effectiveArtworkGroupKey);
   const approvedFrames = currentApproved.filter(asset => {
     const metadata = studioMetadata(asset);
     const source = metadata && allOriginalApproved.find(candidate => candidate.id === metadata.sourceMockupId);
-    const sourceAllowed = source && (originalApproved.some(candidate => candidate.id === source.id) || chosenMockupIds.includes(asset.id));
+    const sourceAllowed = source && (originalApproved.some(candidate => candidate.id === source.id) || effectiveChosenMockupIds.includes(asset.id));
     return Boolean(metadata && source && sourceAllowed && source.revision === metadata.sourceRevision &&
-      (!artworkGroupKey || asset.artworkGroupKey === artworkGroupKey));
+      (!effectiveArtworkGroupKey || asset.artworkGroupKey === effectiveArtworkGroupKey));
   });
   const approved = [...originalApproved, ...approvedFrames];
   const rawScenes = (node?.data.config.aiScenes as AiVideoSceneOptions[] | undefined) ?? EMPTY_SCENES;
@@ -492,7 +496,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
           </div>}
         </section>
         {!hasRequiredSource && <p className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs leading-relaxed text-amber-900">
-          {template?.requiresLifestyle ? "Choose an approved product image. You may attach optional approved reference images and describe their use in the keyframe direction." : template?.requiresDetail ? "Choose any approved mockup or keyframe. Marking an artwork/detail region is optional; without one, the scene uses the full selected image, so a close-up keyframe gives the clearest detail." : "Approve at least one product image before generating this scene."} {chosenMockupIds.length > 0 || artworkGroupKey ? "Also check that the image is included in Apply Mockup's allowed images and selected artwork group." : ""}
+          {template?.requiresLifestyle ? "Choose an approved product image. You may attach optional approved reference images and describe their use in the keyframe direction." : template?.requiresDetail ? "Choose any approved mockup or keyframe. Marking an artwork/detail region is optional; without one, the scene uses the full selected image, so a close-up keyframe gives the clearest detail." : "Approve at least one product image before generating this scene."} {effectiveChosenMockupIds.length > 0 || effectiveArtworkGroupKey ? "Also check that the image is included in Apply Mockup's allowed images and selected artwork group." : ""}
         </p>}
         {needsRightsConfirmation && <label className="flex items-start gap-2 text-xs leading-5"><input type="checkbox" disabled={disabled} checked={scene.rightsConfirmed} onChange={event => changeScene(index, { rightsConfirmed: event.target.checked, studioFrameId: null })} className="mt-1" /><span>I have the rights to use people visible in the selected product and reference images.</span></label>}
         <details className="group bg-muted/20 rounded-md border p-2">

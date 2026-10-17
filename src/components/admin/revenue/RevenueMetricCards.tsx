@@ -4,7 +4,8 @@ import React from "react";
 import { CreditCard,DollarSign, TrendingUp, Users } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { MetricDetail,RevenueMetricsDto } from "@/types/revenue";
+import type { MetricDetail, RevenueMetricsDto } from "@/types/revenue";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 
 interface RevenueMetricCardsProps {
   metrics?: RevenueMetricsDto;
@@ -12,10 +13,9 @@ interface RevenueMetricCardsProps {
 }
 
 export function RevenueMetricCards({ metrics, isLoading }: RevenueMetricCardsProps) {
-  const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(val);
+  const formatCurrency = (val: number) => formatCurrencyVnd(val);
 
-  const formatNumber = (val: number) => new Intl.NumberFormat("en-US").format(val);
+  const formatNumber = (val: number) => new Intl.NumberFormat("vi-VN").format(val);
 
   const renderMetric = (
     title: string,

@@ -16,6 +16,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { AdminUserDto } from "@/types/admin";
 import { cn } from "@/utils/cn";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 
 interface AdminUsersTableProps {
   users: AdminUserDto[];
@@ -58,7 +59,7 @@ export const AdminUsersTable = ({
               JOBS
             </TableHead>
             <TableHead className="w-32 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase">
-              API COST/MO
+              PLAN PRICE
             </TableHead>
             <TableHead className="w-28 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase">
               ACTIONS
@@ -155,8 +156,8 @@ export const AdminUsersTable = ({
                 <TableCell className="text-center font-medium text-slate-700">
                   {user.totalJobs}
                 </TableCell>
-                <TableCell className="text-center text-slate-600">
-                  ${user.monthlyApiCost.toFixed(2)}
+                <TableCell className="text-center font-medium text-slate-600">
+                  {formatCurrencyVnd(user.monthlyApiCost)}
                 </TableCell>
                 <TableCell className="text-center">
                   <DropdownMenu>

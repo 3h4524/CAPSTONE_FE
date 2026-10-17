@@ -161,24 +161,27 @@ export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
                   />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Monthly price (USD)" htmlFor="plan-monthly-price" error={errors.monthlyPriceUsd?.message}>
+                  <Field label="Monthly price (nghìn VNĐ)" htmlFor="plan-monthly-price" error={errors.monthlyPriceUsd?.message}>
                     <Input
                       id="plan-monthly-price"
                       type="number"
-                      step="0.01"
+                      step="1"
+                      placeholder="e.g. 250 (= 250.000 ₫)"
                       aria-invalid={Boolean(errors.monthlyPriceUsd)}
                       {...register("monthlyPriceUsd", { valueAsNumber: true })}
                     />
+                    <p className="mt-1 text-[11px] text-slate-400">Đơn vị: nghìn đồng (ví dụ: nhập 50 là 50.000 ₫)</p>
                   </Field>
-                  <Field label="Annual price (USD)" htmlFor="plan-annual-price" error={errors.annualPriceUsd?.message}>
+                  <Field label="Annual price (nghìn VNĐ)" htmlFor="plan-annual-price" error={errors.annualPriceUsd?.message}>
                     <Input
                       id="plan-annual-price"
                       type="number"
-                      step="0.01"
-                      placeholder="Optional"
+                      step="1"
+                      placeholder="Optional, e.g. 2500 (= 2.500.000 ₫)"
                       aria-invalid={Boolean(errors.annualPriceUsd)}
                       {...register("annualPriceUsd", { setValueAs: (v) => (v === "" ? undefined : Number(v)) })}
                     />
+                    <p className="mt-1 text-[11px] text-slate-400">Tùy chọn, tính theo nghìn đồng</p>
                   </Field>
                 </div>
                 <Field label="Description" htmlFor="plan-description" error={errors.description?.message}>

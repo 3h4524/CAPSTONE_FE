@@ -14,4 +14,7 @@ export const useRunSceneVideos = (runId: string | null) => useQuery({
     const clips = query.state.data;
     return clips?.length && clips.every(clip => FINISHED_SCENE_STATUSES.includes(clip.status)) ? false : 2_000;
   },
+  refetchIntervalInBackground: true,
+  refetchOnWindowFocus: "always",
+  refetchOnReconnect: "always",
 });

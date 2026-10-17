@@ -93,9 +93,9 @@ function isStudioFrame(asset: MockupAsset) {
   return Boolean(studioMetadata(asset));
 }
 
-type StudioFrameMetadata = { sourceMockupId: string; sourceRevision: number; layout: string; aspectRatio: string; promptVersion: number; customPrompt?: string | null; templateCode?: string | null; references?: { contentHash: string }[] | null };
+type StudioFrameMetadata = NonNullable<MockupAsset["regions"]["studioFrame"]>;
 function studioMetadata(asset: MockupAsset): StudioFrameMetadata | undefined {
-  return (asset.regions as typeof asset.regions & { studioFrame?: StudioFrameMetadata }).studioFrame;
+  return asset.regions.studioFrame ?? undefined;
 }
 const normalizeStudioLayout = (_layout: string | null | undefined): "none" => "none";
 const normalizeReferenceHashes = (referenceHashes: AiVideoSceneOptions["studioReferenceHashes"]) => [...(referenceHashes ?? [])];
@@ -238,19 +238,29 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
       const withFrameDefaults = migrated.templateCode === "cinematic_product_showcase"
         ? { ...migrated, studioLayout: normalizeStudioLayout(migrated.studioLayout) }
         : migrated;
-      return template ? normalizeTemplateSettings(withFrameDefaults, template) : { ...withFrameDefaults, mode: "ai" as const };
+      const selectedFrame = withFrameDefaults.studioFrameId
+        ? allAssets.find(asset => asset.id === withFrameDefaults.studioFrameId)
+        : undefined;
+      const frameReferenceHashes = selectedFrame
+        ? studioMetadata(selectedFrame)?.references?.map(reference => reference.contentHash) ?? []
+        : [];
+      const withRecoveredReferences = (withFrameDefaults.studioReferenceHashes?.length ?? 0) === 0 && frameReferenceHashes.length > 0
+        ? { ...withFrameDefaults, studioReferenceHashes: frameReferenceHashes }
+        : withFrameDefaults;
+      return template ? normalizeTemplateSettings(withRecoveredReferences, template) : { ...withRecoveredReferences, mode: "ai" as const };
     });
     const needsNormalization = node.data.config.mode !== "ai_shot" || rawScenes.some((scene, index) =>
       scene.mode !== "ai" || TEMPLATE_SETTING_FIELDS.some(field => scene[field] !== normalizedScenes[index]?.[field]) ||
       scene.templateCode === "cinematic_product_showcase" && scene.startFrameMode == null ||
       scene.templateCode === "cinematic_product_showcase" && scene.studioLayout !== normalizedScenes[index]?.studioLayout ||
-      scene.mockupId !== normalizedScenes[index]?.mockupId,
+      scene.mockupId !== normalizedScenes[index]?.mockupId ||
+      (scene.studioReferenceHashes ?? []).join("|") !== (normalizedScenes[index]?.studioReferenceHashes ?? []).join("|"),
     );
     if (!needsNormalization) return;
     const seconds = normalizedScenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
     useWorkflowStore.getState().updateNodeConfig(nodeId, { ...node.data.config, mode: "ai_shot", aiScenes: normalizedScenes, durationSeconds: seconds });
     onChange(normalizedScenes, seconds, sharedInstructions);
-  }, [node, nodeId, rawScenes, catalog, onChange, sharedInstructions, legacyStudioMode, originalApproved, approvedFrames, areAssetsLoading, productId]);
+  }, [node, nodeId, rawScenes, catalog, onChange, sharedInstructions, legacyStudioMode, originalApproved, approvedFrames, allAssets, areAssetsLoading, productId]);
 
   if (!node) return null;
   const update = (next: AiVideoSceneOptions[], nextSharedInstructions: string | null = sharedInstructions) => {
@@ -450,7 +460,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
         (selectedSource && reusableStudioFrames.some(frame => studioMetadata(frame)?.sourceMockupId === selectedSource.id)),
       );
       const matchingReusableFrame = selectedSourceFrame ?? reusableStudioFrames.find(frame => studioMetadata(frame)?.sourceMockupId === selectedSource?.id);
-      const frameIsCurrentAndApproved = Boolean(sceneFrame?.approvalStatus === "approved" && sceneFrame.approvedRevision === sceneFrame.revision && reusableStudioFrames.some(frame => frame.id === sceneFrame.id));
+      const frameIsCurrentAndApproved = Boolean(sceneFrame?.approvalStatus === "approved" && sceneFrame.approvedRevision === sceneFrame.revision);
       const keyframeToUse = frameIsCurrentAndApproved || pendingFrameMatches ? sceneFrame : matchingReusableFrame ?? (sceneFrame?.approvalStatus !== "rejected" ? sceneFrame : undefined);
       const keyframeCanBeUsed = Boolean(keyframeToUse?.approvalStatus === "approved" && keyframeToUse.approvedRevision === keyframeToUse.revision && (keyframeToUse.id !== sceneFrame?.id || frameIsCurrentAndApproved));
       const existingAssetValue = selectedSourceFrame ? `frame:${selectedSourceFrame.id}` : selectedSourceValue;

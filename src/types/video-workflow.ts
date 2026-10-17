@@ -41,7 +41,19 @@ export interface VideoStoryboard { template: string; templateVersion: number; du
 export interface VideoModeCapability { mode: string; enabled: boolean; availability: string; description: string; supportsFallback: boolean; estimatedCostRange: { currency: string; minimum: number; maximum: number; note: string } | null }
 export interface WorkflowCapabilities { definitionVersion: number; nodes: { type: string; enabled: boolean; description: string }[]; videoModes: VideoModeCapability[] }
 export interface Region { x: number; y: number; width: number; height: number }
-export interface MockupRegions { focalPoint: { x: number; y: number } | null; product: Region | null; artwork: Region | null; detail: Region | null }
+export interface AiStudioFrameMetadata {
+  fingerprint: string;
+  sourceMockupId: string;
+  sourceHash: string;
+  sourceRevision: number;
+  layout: string;
+  aspectRatio: string;
+  promptVersion: number;
+  customPrompt?: string | null;
+  templateCode?: string | null;
+  references?: { contentHash: string }[] | null;
+}
+export interface MockupRegions { focalPoint: { x: number; y: number } | null; product: Region | null; artwork: Region | null; detail: Region | null; studioFrame?: AiStudioFrameMetadata | null }
 export interface MockupAsset { id: string; productId: string; sourceType: string; role: string; artworkGroupKey: string | null; variantKey: string | null; revision: number; approvalStatus: string; approvedRevision: number | null; width: number; height: number; regions: MockupRegions; previewUrl: string; warnings: string[] }
 export interface AiStudioFrameRequest { sourceMockupId: string; layout: "hanging_window" | "flat_lay" | "none"; outputFormat: string; customPrompt?: string | null; templateCode?: string | null; references?: File[]; referenceRightsConfirmed?: boolean; regenerate?: boolean; expectedFingerprint?: string; confirmedEstimatedCostUsd?: number }
 export interface AiStudioFrameQuote { fingerprint: string; promptVersion: number; estimatedCostUsd: number; existingFrame: MockupAsset | null; note: string }

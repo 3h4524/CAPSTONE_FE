@@ -5,6 +5,7 @@ import { Check, Download, Film, RotateCcw, X } from "lucide-react";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PreloadedVideo } from "@/components/workflows/media/preloaded-video";
 import { VideoPreviewFrame } from "@/components/workflows/media/video-preview-frame";
 import { confirmAiShot } from "@/helpers/confirm-ai-shot";
 import { getErrorMessage } from "@/helpers/error-message";
@@ -67,7 +68,7 @@ export const VideoReviewPanel = () => {
     </header>
     <div className="space-y-4 px-4 pb-4">
       {video.previewUrl ? <VideoPreviewFrame width={video.width} height={video.height} maxHeightRem={34}>
-        <video key={video.id} controls preload="metadata" poster={video.thumbnailUrl ?? undefined} className="size-full bg-black"><source src={video.previewUrl} type="video/mp4" /><track kind="captions" /></video>
+        <PreloadedVideo key={video.id} src={video.previewUrl} poster={video.thumbnailUrl ?? undefined} label={`Final video version ${video.version}`} />
       </VideoPreviewFrame> : <div className="bg-muted/35 text-muted-foreground flex min-h-40 flex-col items-center justify-center gap-2 rounded-lg px-4 text-center">
         <Film className="size-5" aria-hidden="true" />
         <p className="text-xs leading-relaxed">The joined preview is being prepared.</p>

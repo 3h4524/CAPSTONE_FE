@@ -59,8 +59,6 @@ export function SystemStatisticsDashboard() {
           onTimeRangeChange={setTimeRange}
           onExport={handleExportCSV}
           isExporting={isExporting}
-          onRefresh={() => refetch()}
-          isRefreshing={isFetching}
         />
 
         {isError ? (
@@ -107,13 +105,18 @@ export function SystemStatisticsDashboard() {
 
             {/* Integration Status Section */}
             <div className="mb-6">
-              <div className="mb-3">
-                <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                  Integration Health & Service Gateways
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Third-party marketplace and channel sync reliability
-                </p>
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xs font-bold tracking-wider text-slate-800 uppercase dark:text-slate-200">
+                    Integration Health & Service Gateways
+                  </h2>
+                  <p className="mt-0.5 text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                    Third-party marketplace and channel sync reliability
+                  </p>
+                </div>
+                <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Real-time telemetry
+                </span>
               </div>
               <IntegrationHealthCards
                 integrationStatus={data?.integrationStatus}

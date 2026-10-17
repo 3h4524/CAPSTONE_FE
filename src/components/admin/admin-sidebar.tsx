@@ -7,6 +7,7 @@ import {
   BarChart3,
   BriefcaseBusiness,
   CreditCard,
+  Database,
   Headphones,
   LayoutDashboard,
   LogOut,
@@ -30,6 +31,7 @@ import { cn } from "@/utils/cn";
 type AdminSidebarProps = {
   fullName: string;
   email?: string;
+  activeItem?: string;
   onLogout: () => void;
   isMobileOpen?: boolean;
   onClose?: () => void;
@@ -39,6 +41,7 @@ type AdminSidebarProps = {
 
 const primaryNavigation = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "RAG Knowledge Base", href: "/admin/rag-ingest", icon: Database },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Subscriptions", href: "/admin/subscription-plans", icon: CreditCard },
 ];

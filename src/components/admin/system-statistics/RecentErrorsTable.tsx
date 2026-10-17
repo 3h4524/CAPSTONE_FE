@@ -27,27 +27,27 @@ export function RecentErrorsTable({
     const lower = type.toLowerCase();
     if (lower.includes("rate") || lower.includes("limit")) {
       return (
-        <span className="inline-flex items-center rounded border border-amber-200/80 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/40 dark:text-amber-300">
+        <span className="inline-flex items-center rounded-xs border border-amber-300 bg-amber-50 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
           Rate Limit
         </span>
       );
     }
     if (lower.includes("oauth") || lower.includes("auth")) {
       return (
-        <span className="inline-flex items-center rounded border border-purple-200/80 bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-800 dark:border-purple-800/40 dark:bg-purple-950/40 dark:text-purple-300">
+        <span className="inline-flex items-center rounded-xs border border-purple-300 bg-purple-50 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-purple-800 dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-300">
           Auth / Token
         </span>
       );
     }
     if (lower.includes("timeout") || lower.includes("network")) {
       return (
-        <span className="inline-flex items-center rounded border border-orange-200/80 bg-orange-50 px-2 py-0.5 text-[11px] font-medium text-orange-800 dark:border-orange-800/40 dark:bg-orange-950/40 dark:text-orange-300">
+        <span className="inline-flex items-center rounded-xs border border-orange-300 bg-orange-50 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-orange-800 dark:border-orange-800 dark:bg-orange-950/40 dark:text-orange-300">
           Timeout
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center rounded border border-rose-200/80 bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-800 dark:border-rose-800/40 dark:bg-rose-950/40 dark:text-rose-300">
+      <span className="inline-flex items-center rounded-xs border border-rose-300 bg-rose-50 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
         {type || "Exception"}
       </span>
     );
@@ -70,20 +70,20 @@ export function RecentErrorsTable({
   };
 
   return (
-    <Card className="border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
-      <CardHeader className="border-b border-slate-100/80 pb-4 dark:border-slate-800/80">
+    <Card className="rounded-lg border border-slate-200/90 bg-white shadow-none dark:border-slate-800 dark:bg-slate-900">
+      <CardHeader className="border-b border-slate-200/90 pb-3.5 dark:border-slate-800">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-              Recent Operational Errors
+            <CardTitle className="text-xs font-bold tracking-wider text-slate-800 uppercase dark:text-slate-200">
+              Recent Operational Errors & Incidents
             </CardTitle>
-            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              Audit log of exceptions, rate limits, and external service failures
+            <p className="mt-0.5 text-[11px] font-medium text-slate-400 dark:text-slate-500">
+              Audit log of exceptions, rate limits, and external service gateway failures
             </p>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/70 bg-slate-50 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-            Top 10 incidents
+          <span className="inline-flex items-center gap-1.5 rounded-sm border border-slate-300 bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
+            TOP 10 INCIDENTS
           </span>
         </div>
       </CardHeader>
@@ -102,30 +102,30 @@ export function RecentErrorsTable({
           </div>
         ) : recentErrors.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-10 text-center">
-            <div className="rounded-full bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
-              <ShieldCheck className="h-6 w-6" />
+            <div className="rounded-md bg-emerald-50 p-2.5 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+              <ShieldCheck className="h-5 w-5" />
             </div>
-            <p className="mt-3 text-sm font-semibold text-slate-800 dark:text-slate-200">
+            <p className="mt-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
               All Systems Functioning Normally
             </p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-0.5 text-[11px] text-slate-400">
               No runtime errors, rate limits, or integration exceptions recorded in this timeframe.
             </p>
           </div>
         ) : (
           <Table>
-            <TableHeader className="bg-slate-50/70 dark:bg-slate-800/40">
-              <TableRow className="border-b border-slate-100 dark:border-slate-800 hover:bg-transparent">
-                <TableHead className="w-[170px] text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <TableHeader className="bg-slate-50/80 dark:bg-slate-800/40">
+              <TableRow className="border-b border-slate-200/90 dark:border-slate-800 hover:bg-transparent">
+                <TableHead className="w-[170px] text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                   Timestamp
                 </TableHead>
-                <TableHead className="w-[160px] text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                <TableHead className="w-[160px] text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                   Component / Job
                 </TableHead>
-                <TableHead className="w-[130px] text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                <TableHead className="w-[140px] text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                   Classification
                 </TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                   Message
                 </TableHead>
               </TableRow>
@@ -134,13 +134,13 @@ export function RecentErrorsTable({
               {recentErrors.map((err) => (
                 <TableRow
                   key={err.id}
-                  className="border-b border-slate-100 text-xs transition-colors hover:bg-slate-50/80 dark:border-slate-800/70 dark:hover:bg-slate-800/40"
+                  className="border-b border-slate-100 text-xs transition-colors hover:bg-slate-50/70 dark:border-slate-800/70 dark:hover:bg-slate-800/40"
                 >
-                  <TableCell className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                  <TableCell className="font-mono text-[11px] font-medium text-slate-500 dark:text-slate-400">
                     {formatDate(err.timestamp)}
                   </TableCell>
-                  <TableCell className="font-mono text-[11px] text-slate-700 dark:text-slate-300">
-                    <span className="rounded border border-slate-200/80 bg-slate-50 px-1.5 py-0.5 dark:border-slate-700 dark:bg-slate-800">
+                  <TableCell className="font-mono text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                    <span className="rounded-xs border border-slate-200 bg-slate-50 px-1.5 py-0.5 dark:border-slate-700 dark:bg-slate-800">
                       {err.source || "Batch Engine"}
                     </span>
                   </TableCell>
@@ -151,7 +151,7 @@ export function RecentErrorsTable({
                   >
                     <div className="flex items-center gap-1.5">
                       <AlertCircle className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                      <span className="truncate">{err.message}</span>
+                      <span className="truncate font-medium">{err.message}</span>
                     </div>
                   </TableCell>
                 </TableRow>

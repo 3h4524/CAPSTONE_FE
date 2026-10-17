@@ -15,7 +15,7 @@ interface StepConfig {
   step: string;
   badge: string;
   icon: React.ReactNode;
-  barGradient: string;
+  barColor: string;
   percentageBadge: string;
 }
 
@@ -30,8 +30,8 @@ const STEP_DETAILS: Record<string, StepConfig> = {
         className="h-5 w-5 object-contain"
       />
     ),
-    barGradient: "bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500",
-    percentageBadge: "border-blue-200/80 bg-blue-50/90 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300",
+    barColor: "bg-[#0f172a] dark:bg-slate-100",
+    percentageBadge: "border-slate-300 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
   },
   "Mock-up Rendering": {
     step: "02",
@@ -43,8 +43,8 @@ const STEP_DETAILS: Record<string, StepConfig> = {
         className="h-5 w-5 object-contain dark:brightness-200"
       />
     ),
-    barGradient: "bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-500 dark:to-violet-500",
-    percentageBadge: "border-indigo-200/80 bg-indigo-50/90 text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300",
+    barColor: "bg-[#334155] dark:bg-slate-300",
+    percentageBadge: "border-slate-300 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
   },
   "Video Rendering": {
     step: "03",
@@ -56,8 +56,8 @@ const STEP_DETAILS: Record<string, StepConfig> = {
         className="h-5 w-5 object-contain"
       />
     ),
-    barGradient: "bg-gradient-to-r from-violet-600 to-purple-600 dark:from-violet-500 dark:to-purple-500",
-    percentageBadge: "border-violet-200/80 bg-violet-50/90 text-violet-700 dark:border-violet-900/50 dark:bg-violet-950/40 dark:text-violet-300",
+    barColor: "bg-[#c2410c] dark:bg-orange-500",
+    percentageBadge: "border-orange-300/80 bg-orange-50 text-[#c2410c] dark:border-orange-900/60 dark:bg-orange-950/40 dark:text-orange-300",
   },
   "Listing Generation": {
     step: "04",
@@ -69,8 +69,8 @@ const STEP_DETAILS: Record<string, StepConfig> = {
         className="h-5 w-5 object-contain"
       />
     ),
-    barGradient: "bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-500 dark:to-teal-500",
-    percentageBadge: "border-emerald-200/80 bg-emerald-50/90 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300",
+    barColor: "bg-[#15803d] dark:bg-emerald-500",
+    percentageBadge: "border-emerald-300/80 bg-emerald-50 text-[#15803d] dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300",
   },
 };
 
@@ -104,40 +104,40 @@ export function PipelineStageBreakdown({
   const isEmpty = pipelineStages.length === 0 || totalAssets === 0;
 
   return (
-    <Card className="flex flex-col gap-0 py-0 border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
-      <CardHeader className="border-b border-slate-100/80 px-5 py-3.5 dark:border-slate-800/80">
+    <Card className="flex flex-col gap-0 rounded-lg border border-slate-200/90 bg-white py-0 shadow-none dark:border-slate-800 dark:bg-slate-900">
+      <CardHeader className="border-b border-slate-200/90 px-4.5 py-3.5 dark:border-slate-800">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <CardTitle className="text-xs font-bold tracking-wider text-slate-800 uppercase dark:text-slate-200">
               Pipeline Stage Breakdown
             </CardTitle>
-            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              End-to-end asset generation pipeline throughput
+            <p className="mt-0.5 text-[11px] font-medium text-slate-400 dark:text-slate-500">
+              End-to-end generative asset throughput
             </p>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-slate-50/90 px-2.5 py-0.5 shadow-2xs dark:border-slate-800 dark:bg-slate-800/80">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
-              {totalAssets.toLocaleString()} total
+          <div className="flex items-center gap-1.5 rounded-sm border border-slate-300 bg-slate-100 px-2 py-0.5 dark:border-slate-700 dark:bg-slate-800">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+            <span className="font-mono text-[11px] font-bold text-slate-800 dark:text-slate-200">
+              {totalAssets.toLocaleString()} TOTAL
             </span>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="px-5 py-4">
+      <CardContent className="px-4.5 py-4">
         {isEmpty ? (
           <div className="flex h-[300px] items-center justify-center text-xs text-slate-400">
             No generative assets recorded in this period.
           </div>
         ) : (
-          <div className="relative space-y-1">
+          <div className="relative space-y-1.5">
             {pipelineStages.map((stage, index) => {
               const details = STEP_DETAILS[stage.stageName] ?? {
                 step: `0${index + 1}`,
                 badge: "Pipeline Stage",
                 icon: <Layers className="h-5 w-5 text-slate-500" />,
-                barGradient: "bg-gradient-to-r from-slate-600 to-slate-700",
-                percentageBadge: "border-slate-200/80 bg-slate-50/90 text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-300",
+                barColor: "bg-slate-800",
+                percentageBadge: "border-slate-300 bg-slate-100 text-slate-700",
               };
 
               const isLast = index === pipelineStages.length - 1;
@@ -145,21 +145,21 @@ export function PipelineStageBreakdown({
               return (
                 <div key={stage.stageName} className="group relative">
                   {/* Step Card */}
-                  <div className="relative rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900/90 dark:hover:border-slate-700">
+                  <div className="relative rounded-md border border-slate-200/90 bg-white p-3 shadow-none transition-all hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/90 dark:hover:border-slate-700">
                     <div className="flex items-center justify-between">
                       {/* Left: Step number, icon in white frame, and name */}
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200/80 bg-slate-50/80 font-mono text-[11px] font-bold text-slate-600 shadow-2xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                          {details.step}
-                        </div>
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white p-1.5 shadow-2xs transition-transform duration-200 group-hover:scale-105 dark:border-slate-700/80 dark:bg-slate-800">
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-mono text-xs font-bold text-slate-400 dark:text-slate-500">
+                          {index + 1}.
+                        </span>
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-800">
                           {details.icon}
                         </div>
                         <div>
                           <div className="text-xs font-bold tracking-tight text-slate-900 dark:text-slate-100">
                             {stage.stageName}
                           </div>
-                          <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
                             {details.badge}
                           </span>
                         </div>
@@ -167,23 +167,23 @@ export function PipelineStageBreakdown({
 
                       {/* Right: Count and Percentage Badge */}
                       <div className="flex items-center justify-end gap-2.5">
-                        <div className="font-mono text-sm font-bold text-slate-900 dark:text-slate-100">
+                        <div className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100">
                           {stage.count.toLocaleString()}
                         </div>
                         <span
-                          className={`inline-flex items-center rounded-md border px-2 py-0.5 font-mono text-[11px] font-semibold shadow-2xs ${details.percentageBadge}`}
+                          className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 font-mono text-[10px] font-bold ${details.percentageBadge}`}
                         >
                           {stage.percentage.toFixed(1)}%
                         </span>
                       </div>
                     </div>
 
-                    {/* Proportional Progress Track */}
-                    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    {/* Proportional Solid Bar Track */}
+                    <div className="mt-2.5 h-2 w-full overflow-hidden rounded-xs bg-slate-100 dark:bg-slate-800">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ease-out shadow-xs ${details.barGradient}`}
+                        className={`h-full transition-all duration-500 ease-out ${details.barColor}`}
                         style={{
-                          width: `${stage.percentage}%`,
+                          width: `${Math.max(stage.percentage, 2)}%`,
                         }}
                       />
                     </div>
@@ -191,9 +191,9 @@ export function PipelineStageBreakdown({
 
                   {/* Flow Arrow Connector between steps */}
                   {!isLast && (
-                    <div className="my-1.5 flex justify-center">
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-200/90 bg-white text-slate-400 shadow-2xs transition-colors group-hover:border-slate-300 dark:border-slate-800 dark:bg-slate-850 dark:text-slate-500">
-                        <ArrowDown className="h-3 w-3 stroke-[2.5]" />
+                    <div className="my-1 flex justify-center">
+                      <div className="flex h-4 w-4 items-center justify-center text-slate-300 dark:text-slate-600">
+                        <ArrowDown className="h-3 w-3 stroke-[2]" />
                       </div>
                     </div>
                   )}

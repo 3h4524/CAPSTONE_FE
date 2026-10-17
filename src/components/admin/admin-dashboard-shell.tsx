@@ -96,11 +96,11 @@ const AdminDashboardContent = ({ fullName, onLogout, metrics, timeRange, onTimeR
                   icon={DollarSign}
                 />
                 <AdminMetricCard
-                  label="Active Batch Jobs"
-                  value={metrics?.activeBatchJobs.toLocaleString() ?? "-"}
+                  label="Total Batch Jobs"
+                  value={metrics ? (metrics.totalBatchJobs ?? 0).toLocaleString() : "-"}
                   change=""
                   trend="up"
-                  note="Rendering queue"
+                  note={`${metrics?.activeBatchJobs ?? 0} active in queue`}
                   icon={BriefcaseBusiness}
                 />
                 <AdminMetricCard

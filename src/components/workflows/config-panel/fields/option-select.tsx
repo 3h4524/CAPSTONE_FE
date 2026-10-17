@@ -15,7 +15,12 @@ type OptionSelectProps = {
   isError?: boolean;
   emptyMessage?: string;
   onRetry?: () => void;
+  /** Adds a choice that clears the value, for fields that may stay empty. */
+  noneLabel?: string;
 };
+
+// Radix Select rejects an empty item value, so "no choice" travels as this marker.
+const NONE_VALUE = "__none__";
 
 export const OptionSelect = ({
   value,
@@ -26,6 +31,7 @@ export const OptionSelect = ({
   isError = false,
   emptyMessage = "No options available yet.",
   onRetry,
+  noneLabel,
 }: OptionSelectProps) => {
   if (isLoading) return <SectionLoading label="Loading options" className="justify-start p-2" />;
 
@@ -40,18 +46,22 @@ export const OptionSelect = ({
     );
   }
 
-  if (options.length === 0) {
+  if (options.length === 0 && !noneLabel) {
     return <p className="text-muted-foreground rounded-lg border border-dashed px-3 py-2 text-xs">{emptyMessage}</p>;
   }
 
   return (
-    <Select value={value || undefined} onValueChange={onChange}>
+    <Select
+      value={value || (noneLabel ? NONE_VALUE : undefined)}
+      onValueChange={(next) => onChange(next === NONE_VALUE ? "" : next)}
+    >
       <FormControl>
         <SelectTrigger className="w-full">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
       </FormControl>
       <SelectContent>
+        {noneLabel && <SelectItem value={NONE_VALUE}>{noneLabel}</SelectItem>}
         {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
         ))}

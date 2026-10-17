@@ -6,6 +6,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -124,36 +125,36 @@ export function DailyJobsBarChart({
   };
 
   return (
-    <Card className="border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
-      <CardHeader className="border-b border-slate-100/80 pb-4 dark:border-slate-800/80">
+    <Card className="rounded-lg border border-slate-200/90 bg-white shadow-none dark:border-slate-800 dark:bg-slate-900">
+      <CardHeader className="border-b border-slate-200/90 pb-3.5 dark:border-slate-800">
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <div className="flex items-center gap-2">
-              <CardTitle className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              <CardTitle className="text-xs font-bold tracking-wider text-slate-800 uppercase dark:text-slate-200">
                 Daily Batch Job Volume
               </CardTitle>
-              <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                {dailyJobs.length} days
+              <span className="inline-flex items-center rounded-sm border border-slate-300 bg-slate-100 px-1.5 py-0.2 font-mono text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                {dailyJobs.length} DAYS
               </span>
             </div>
-            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-0.5 text-[11px] font-medium text-slate-400 dark:text-slate-500">
               Execution frequency and operational workload over time
             </p>
           </div>
 
           {!isEmpty && (
-            <div className="flex items-center gap-3 text-xs">
-              <div className="flex items-center gap-1.5 rounded-md border border-slate-200/70 bg-slate-50/70 px-2.5 py-1 text-slate-600 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300">
-                <Activity className="h-3.5 w-3.5 text-slate-400" />
+            <div className="flex items-center gap-2.5 text-xs">
+              <div className="flex items-center gap-1.5 rounded-sm border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <span className="h-1.5 w-1.5 rounded-xs bg-[#1e293b] dark:bg-slate-200" />
                 <span>
-                  Avg: <strong className="font-semibold text-slate-800 dark:text-slate-200">{stats.avg}</strong> /day
+                  Avg: <strong className="font-mono font-bold text-slate-900 dark:text-slate-100">{stats.avg}</strong> /day
                 </span>
               </div>
               {stats.peak.count > 0 && (
-                <div className="hidden items-center gap-1.5 rounded-md border border-slate-200/70 bg-slate-50/70 px-2.5 py-1 text-slate-600 sm:flex dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300">
-                  <TrendingUp className="h-3.5 w-3.5 text-slate-400" />
+                <div className="flex items-center gap-1.5 rounded-sm border border-orange-300/80 bg-orange-50 px-2 py-0.5 text-[11px] font-medium text-[#c2410c] dark:border-orange-900/60 dark:bg-orange-950/40 dark:text-orange-300">
+                  <span className="h-1.5 w-1.5 rounded-xs bg-[#c2410c]" />
                   <span>
-                    Peak: <strong className="font-semibold text-slate-800 dark:text-slate-200">{stats.peak.count}</strong>
+                    Peak: <strong className="font-mono font-bold text-[#c2410c] dark:text-orange-300">{stats.peak.count}</strong>
                   </span>
                 </div>
               )}
@@ -162,11 +163,11 @@ export function DailyJobsBarChart({
         </div>
       </CardHeader>
 
-      <CardContent className="pt-6">
+      <CardContent className="pt-5">
         <div className="h-[320px] w-full">
           {isEmpty ? (
             <div className="flex h-full flex-col items-center justify-center gap-2.5 text-center">
-              <div className="rounded-full bg-slate-100 p-3 text-slate-400 dark:bg-slate-800">
+              <div className="rounded-md bg-slate-100 p-3 text-slate-400 dark:bg-slate-800">
                 <BarChart2 className="h-6 w-6" />
               </div>
               <div>
@@ -184,23 +185,17 @@ export function DailyJobsBarChart({
                 data={dailyJobs}
                 margin={{ top: 10, right: 10, left: -15, bottom: 0 }}
               >
-                <defs>
-                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#334155" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="#475569" stopOpacity={0.8} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid
-                  strokeDasharray="3 3"
+                  strokeDasharray="2 2"
                   vertical={false}
-                  stroke="#f1f5f9"
-                  className="stroke-slate-100 dark:stroke-slate-800/60"
+                  stroke="#e2e8f0"
+                  className="stroke-slate-200/80 dark:stroke-slate-800"
                 />
                 <XAxis
                   dataKey="dateLabel"
-                  axisLine={false}
+                  axisLine={{ stroke: "#cbd5e1" }}
                   tickLine={false}
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  tick={{ fontSize: 10, fill: "#64748b", fontWeight: 500 }}
                   dy={8}
                   tickFormatter={(val) => {
                     try {
@@ -213,29 +208,39 @@ export function DailyJobsBarChart({
                 />
                 <YAxis
                   allowDecimals={false}
-                  axisLine={false}
+                  axisLine={{ stroke: "#cbd5e1" }}
                   tickLine={false}
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  tick={{ fontSize: 10, fill: "#64748b", fontWeight: 500 }}
                 />
                 <Tooltip
-                  cursor={{ fill: "rgba(148, 163, 184, 0.08)" }}
+                  cursor={{ fill: "rgba(15, 23, 42, 0.04)" }}
                   content={<CustomTooltip />}
                 />
                 {stats.avg > 0 && (
                   <ReferenceLine
                     y={stats.avg}
                     stroke="#94a3b8"
-                    strokeDasharray="4 4"
+                    strokeDasharray="3 3"
                     strokeWidth={1}
                   />
                 )}
                 <Bar
                   dataKey="count"
                   name="Jobs"
-                  fill="url(#barGradient)"
-                  radius={[3, 3, 0, 0]}
-                  maxBarSize={32}
-                />
+                  radius={[2, 2, 0, 0]}
+                  maxBarSize={30}
+                >
+                  {dailyJobs.map((entry, index) => {
+                    const isPeak = entry.count === stats.peak.count && stats.peak.count > 0;
+                    return (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={isPeak ? "#c2410c" : "#1e293b"}
+                        className={isPeak ? "transition-opacity hover:opacity-90" : "transition-opacity hover:opacity-85"}
+                      />
+                    );
+                  })}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}

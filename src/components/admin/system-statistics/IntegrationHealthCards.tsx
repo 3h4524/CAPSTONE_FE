@@ -1,12 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
 
-import { Card, CardContent } from "@/components/ui/card";
 import type { IntegrationStatusDto } from "@/types/system-statistics";
 
 interface IntegrationHealthCardsProps {
@@ -22,74 +17,53 @@ export function IntegrationHealthCards({
     return (
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <Card
+          <div
             key={i}
-            className="border border-slate-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900"
+            className="flex flex-row items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
           >
-            <div className="flex items-center justify-between pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
-                <div className="h-3.5 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-slate-100 dark:bg-slate-800" />
+              <div className="space-y-2">
+                <div className="h-5 w-16 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+                <div className="h-3.5 w-24 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
               </div>
-              <div className="h-2 w-2 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
             </div>
-            <div className="h-7 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-            <div className="mt-3 h-4 w-32 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
-          </Card>
+            <div className="h-5 w-14 self-start animate-pulse rounded-full bg-slate-100 dark:bg-slate-800" />
+          </div>
         ))}
       </div>
     );
   }
 
-  const renderStatusDot = (rate: number, total: number) => {
+  const renderStatusBadge = (rate: number, total: number) => {
     if (total === 0) {
       return (
-        <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
-          <span className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+          <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
           Inactive
         </span>
       );
     }
     if (rate >= 95) {
       return (
-        <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Healthy
+          {rate.toFixed(1)}%
         </span>
       );
     }
     if (rate >= 80) {
       return (
-        <span className="flex items-center gap-1.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
           <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-          Degraded
+          {rate.toFixed(1)}%
         </span>
       );
     }
     return (
-      <span className="flex items-center gap-1.5 text-[11px] font-medium text-rose-600 dark:text-rose-400">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-medium text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
         <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-        Critical
-      </span>
-    );
-  };
-
-  const renderGrowth = (growth: number, total: number) => {
-    if (total === 0 && growth === 0) {
-      return <span className="text-slate-400">0% vs prev</span>;
-    }
-    if (growth >= 0) {
-      return (
-        <span className="inline-flex items-center font-medium text-emerald-600 dark:text-emerald-400">
-          <TrendingUp className="mr-0.5 h-3 w-3" />
-          +{growth}% vs prev
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center font-medium text-rose-600 dark:text-rose-400">
-        <TrendingDown className="mr-0.5 h-3 w-3" />
-        {growth}% vs prev
+        {rate.toFixed(1)}%
       </span>
     );
   };
@@ -97,178 +71,146 @@ export function IntegrationHealthCards({
   return (
     <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {/* Etsy Integration */}
-      <Card className="border border-slate-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white p-1 shadow-2xs transition-transform duration-200 hover:scale-105 dark:border-slate-700/80 dark:bg-slate-800">
-              <img
-                src="/icons/stat-etsy.png"
-                alt="Etsy Sync"
-                className="h-5 w-5 object-contain"
-              />
-            </div>
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              Etsy Sync
-            </span>
+      <div className="flex flex-row items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
+        {/* Left: Circular Logo & Stats */}
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-50 text-orange-600 dark:bg-orange-950/50 dark:text-orange-400">
+            <img
+              src="/icons/stat-etsy.png"
+              alt="Etsy Sync"
+              className="h-6 w-6 object-contain"
+            />
           </div>
-          {renderStatusDot(
+
+          <div className="flex min-w-0 flex-col justify-center">
+            <span className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-slate-100">
+              {integrationStatus.etsyTotal.toLocaleString()}
+            </span>
+            <p className="mt-0.5 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+              Etsy Marketplace
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Status Badge */}
+        <div className="shrink-0 self-start pt-0.5">
+          {renderStatusBadge(
             integrationStatus.etsySuccessRate,
             integrationStatus.etsyTotal
           )}
         </div>
-
-        <div className="mt-4 flex items-baseline gap-1.5">
-          <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {integrationStatus.etsyTotal.toLocaleString()}
-          </span>
-          <span className="text-xs text-slate-400">uploads</span>
-        </div>
-
-        <div className="mt-3 flex items-center justify-between border-t border-slate-100/90 pt-2.5 text-[11px] dark:border-slate-800/80">
-          <span className="text-slate-500 dark:text-slate-400">
-            {integrationStatus.etsyTotal > 0
-              ? `${integrationStatus.etsySuccessRate.toFixed(1)}% success`
-              : "No activity yet"}
-          </span>
-          {renderGrowth(
-            integrationStatus.etsyGrowthPercentage,
-            integrationStatus.etsyTotal
-          )}
-        </div>
-      </Card>
+      </div>
 
       {/* Printify Integration */}
-      <Card className="border border-slate-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white p-1 shadow-2xs transition-transform duration-200 hover:scale-105 dark:border-slate-700/80 dark:bg-slate-800">
-              <img
-                src="/icons/stat-printify.png"
-                alt="Printify Sync"
-                className="h-5 w-5 object-contain rounded-sm"
-              />
-            </div>
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              Printify Sync
-            </span>
+      <div className="flex flex-row items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
+        {/* Left: Circular Logo & Stats */}
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+            <img
+              src="/icons/stat-printify.png"
+              alt="Printify Sync"
+              className="h-6 w-6 object-contain"
+            />
           </div>
-          {renderStatusDot(
+
+          <div className="flex min-w-0 flex-col justify-center">
+            <span className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-slate-100">
+              {integrationStatus.printifyTotal.toLocaleString()}
+            </span>
+            <p className="mt-0.5 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+              Printify Fulfillment
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Status Badge */}
+        <div className="shrink-0 self-start pt-0.5">
+          {renderStatusBadge(
             integrationStatus.printifySuccessRate,
             integrationStatus.printifyTotal
           )}
         </div>
-
-        <div className="mt-4 flex items-baseline gap-1.5">
-          <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {integrationStatus.printifyTotal.toLocaleString()}
-          </span>
-          <span className="text-xs text-slate-400">uploads</span>
-        </div>
-
-        <div className="mt-3 flex items-center justify-between border-t border-slate-100/90 pt-2.5 text-[11px] dark:border-slate-800/80">
-          <span className="text-slate-500 dark:text-slate-400">
-            {integrationStatus.printifyTotal > 0
-              ? `${integrationStatus.printifySuccessRate.toFixed(1)}% success`
-              : "No activity yet"}
-          </span>
-          {renderGrowth(
-            integrationStatus.printifyGrowthPercentage,
-            integrationStatus.printifyTotal
-          )}
-        </div>
-      </Card>
+      </div>
 
       {/* Social Media Channels */}
-      <Card className="border border-slate-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white p-1.5 shadow-2xs transition-transform duration-200 hover:scale-105 dark:border-slate-700/80 dark:bg-slate-800">
-              <img
-                src="/icons/stat-social.png"
-                alt="Social Media"
-                className="h-5 w-5 object-contain"
-              />
-            </div>
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              Social Media
-            </span>
+      <div className="flex flex-row items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
+        {/* Left: Circular Logo & Stats */}
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+            <img
+              src="/icons/stat-social.png"
+              alt="Social Media"
+              className="h-6 w-6 object-contain"
+            />
           </div>
-          {renderStatusDot(
+
+          <div className="flex min-w-0 flex-col justify-center">
+            <span className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-slate-100">
+              {integrationStatus.socialMediaTotal.toLocaleString()}
+            </span>
+            <p className="mt-0.5 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+              Social Media Shares
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Status Badge */}
+        <div className="shrink-0 self-start pt-0.5">
+          {renderStatusBadge(
             integrationStatus.socialMediaSuccessRate,
             integrationStatus.socialMediaTotal
           )}
         </div>
+      </div>
 
-        <div className="mt-4 flex items-baseline gap-1.5">
-          <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {integrationStatus.socialMediaTotal.toLocaleString()}
-          </span>
-          <span className="text-xs text-slate-400">shares</span>
-        </div>
-
-        <div className="mt-3 flex items-center justify-between border-t border-slate-100/90 pt-2.5 text-[11px] dark:border-slate-800/80">
-          <span className="text-slate-500 dark:text-slate-400">
-            {integrationStatus.socialMediaTotal > 0
-              ? `${integrationStatus.socialMediaSuccessRate.toFixed(1)}% success`
-              : "No activity yet"}
-          </span>
-          {renderGrowth(
-            integrationStatus.socialMediaGrowthPercentage,
-            integrationStatus.socialMediaTotal
-          )}
-        </div>
-      </Card>
-
-      {/* Failed Integrations */}
-      <Card className="border border-slate-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white p-1.5 shadow-2xs transition-transform duration-200 hover:scale-105 dark:border-slate-700/80 dark:bg-slate-800">
-              <img
-                src="/icons/stat-error.png"
-                alt="Sync Errors"
-                className="h-5 w-5 object-contain"
-              />
-            </div>
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              Sync Errors
-            </span>
+      {/* Sync Incidents */}
+      <div className="flex flex-row items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
+        {/* Left: Circular Logo & Stats */}
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400">
+            <img
+              src="/icons/stat-error.png"
+              alt="Sync Incidents"
+              className="h-6 w-6 object-contain"
+            />
           </div>
+
+          <div className="flex min-w-0 flex-col justify-center">
+            <span
+              className={`text-xl font-bold tracking-tight sm:text-2xl ${
+                integrationStatus.failedIntegrationsCount > 0
+                  ? "text-rose-600 dark:text-rose-400"
+                  : "text-slate-900 dark:text-slate-100"
+              }`}
+            >
+              {integrationStatus.failedIntegrationsCount}
+            </span>
+            <p className="mt-0.5 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+              Sync Incidents
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Status Badge */}
+        <div className="shrink-0 self-start pt-0.5">
           <span
-            className={`flex items-center gap-1.5 text-[11px] font-medium ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
               integrationStatus.failedIntegrationsCount > 0
-                ? "text-rose-600 dark:text-rose-400"
-                : "text-slate-400"
+                ? "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
             }`}
           >
             <span
               className={`h-1.5 w-1.5 rounded-full ${
                 integrationStatus.failedIntegrationsCount > 0
-                  ? "bg-rose-500"
+                  ? "bg-rose-500 animate-pulse"
                   : "bg-emerald-500"
               }`}
             />
-            {integrationStatus.failedIntegrationsCount > 0
-              ? "Errors logged"
-              : "Zero errors"}
+            {integrationStatus.failedIntegrationsCount > 0 ? "Action Req" : "Optimal"}
           </span>
         </div>
-
-        <div className="mt-4 flex items-baseline gap-1.5">
-          <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {integrationStatus.failedIntegrationsCount.toLocaleString()}
-          </span>
-          <span className="text-xs text-slate-400">failed calls</span>
-        </div>
-
-        <div className="mt-3 flex items-center justify-between border-t border-slate-100/90 pt-2.5 text-[11px] text-slate-400 dark:border-slate-800/80">
-          <span>
-            {integrationStatus.failedIntegrationsCount > 0
-              ? "Requires channel review"
-              : "All endpoints operational"}
-          </span>
-        </div>
-      </Card>
+      </div>
     </div>
   );
 }

@@ -28,6 +28,7 @@ export type AdminDashboardMetricsDto = {
   totalRevenue: number;
   recurringRevenue: number;
   activeBatchJobs: number;
+  totalBatchJobs?: number;
   pendingTickets: number;
   revenueChart: MonthlyRevenueDto[];
   latestTickets: SupportTicketDto[];

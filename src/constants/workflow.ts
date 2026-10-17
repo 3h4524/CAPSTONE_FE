@@ -20,6 +20,26 @@ import type {
 
 export const WORKFLOW_DND_MIME = "application/x-apcs-workflow-node";
 
+export const DUPLICATE_NODE_OFFSET = 48;
+
+export const HISTORY_LIMIT = 50;
+
+export const HISTORY_GROUP_WINDOW_MS = 1500;
+
+export const WORKFLOW_CANVAS_SHORTCUTS: { action: string; keys: string[] }[] = [
+  { action: "Select multiple nodes", keys: ["Ctrl/⌘", "Click"] },
+  { action: "Box select nodes", keys: ["Shift", "Drag"] },
+  { action: "Select all nodes", keys: ["Ctrl/⌘", "A"] },
+  { action: "Copy selected nodes", keys: ["Ctrl/⌘", "C"] },
+  { action: "Paste copied nodes", keys: ["Ctrl/⌘", "V"] },
+  { action: "Duplicate selected nodes", keys: ["Ctrl/⌘", "D"] },
+  { action: "Delete selected nodes", keys: ["Del"] },
+  { action: "Undo", keys: ["Ctrl/⌘", "Z"] },
+  { action: "Redo", keys: ["Ctrl/⌘", "Y"] },
+  { action: "Save workflow", keys: ["Ctrl/⌘", "S"] },
+  { action: "Clear selection", keys: ["Esc"] },
+];
+
 export const WORKFLOW_MOCK_STORAGE_KEY = "apcs.workflows.mock";
 
 export const DEFAULT_WORKFLOW_NAME = "Etsy POD pipeline";
@@ -30,14 +50,47 @@ export const NODE_CARD_WIDTHS: Record<WorkflowNodeType, number> = {
   "product-input": 240,
   "prompt-synthesis": 240,
   "design-image": 288,
-  "approval-gate": 240,
+  "design-approval": 240,
   "apply-mockup": 288,
+  "approval-gate": 240,
   "generate-video": 288,
+  "review-video": 288,
   "generate-listing": 240,
   "export-zip": 240,
   "publish-etsy": 240,
   "publish-printify": 240,
 };
+
+// The ratios the image-generation API accepts.
+const ASPECT_RATIO_OPTIONS = ["1:1", "16:9", "9:16", "4:3", "3:4"].map((ratio) => ({ value: ratio, label: ratio }));
+
+// A run has two parts. The canvas drives the first as a batch job: designs, their approval and the
+// mock-ups. The server then runs the second for one product: mock-up approval, video, video review
+// and the ZIP. The remaining node types are laid out on the canvas but have no backend yet.
+export const BATCH_RUN_NODE_TYPES: WorkflowNodeType[] = [
+  "product-input",
+  "prompt-synthesis",
+  "design-image",
+  "design-approval",
+  "apply-mockup",
+];
+
+export const VIDEO_RUN_NODE_TYPES: WorkflowNodeType[] = ["approval-gate", "generate-video", "review-video", "export-zip"];
+
+export const RUNNABLE_NODE_TYPES: WorkflowNodeType[] = [...BATCH_RUN_NODE_TYPES, ...VIDEO_RUN_NODE_TYPES, "generate-listing"];
+
+// The order the steps of a run must be connected in (the backend checks the same order).
+export const RUN_ORDER: WorkflowNodeType[] = [
+  "product-input",
+  "prompt-synthesis",
+  "design-image",
+  "design-approval",
+  "apply-mockup",
+  "approval-gate",
+  "generate-video",
+  "review-video",
+  "export-zip",
+];
 
 const PUBLISH_FIELDS = [
   {
@@ -64,8 +117,16 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "trigger",
     hasInput: false,
     hasOutput: true,
-    defaultConfig: { batchId: "" },
-    fields: [{ kind: "source-select", name: "batchId", label: "Batch", source: "batches" }],
+    defaultConfig: { batchId: "", productId: "" },
+    fields: [
+      { kind: "source-select", name: "batchId", label: "Batch", source: "batches" },
+      {
+        kind: "product-select",
+        name: "productId",
+        label: "Product for the video",
+        description: "Designs and mock-ups are made for the whole batch. The video is made for this one product.",
+      },
+    ],
   },
   "prompt-synthesis": {
     type: "prompt-synthesis",
@@ -83,7 +144,14 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         label: "Design template",
         source: "design-templates",
       },
-      { kind: "source-select", name: "stylePresetId", label: "Art style", source: "style-presets" },
+      {
+        kind: "source-select",
+        name: "stylePresetId",
+        label: "Art style",
+        source: "style-presets",
+        optional: true,
+        noneLabel: "No style",
+      },
       {
         kind: "textarea",
         name: "instructions",
@@ -100,24 +168,16 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { model: "leonardo", variants: 2 },
+    defaultConfig: { variants: 2, aspectRatio: "1:1" },
     fields: [
-      {
-        kind: "select",
-        name: "model",
-        label: "Image model",
-        options: [
-          { value: "leonardo", label: "Leonardo.ai" },
-          { value: "sdxl", label: "Stable Diffusion XL" },
-        ],
-      },
       { kind: "number", name: "variants", label: "Variants per product", min: 1, max: 4 },
+      { kind: "select", name: "aspectRatio", label: "Aspect ratio", options: ASPECT_RATIO_OPTIONS },
     ],
   },
-  "approval-gate": {
-    type: "approval-gate",
-    label: "Approval gate",
-    description: "Only approved designs continue to video and listing steps.",
+  "design-approval": {
+    type: "design-approval",
+    label: "Design approval",
+    description: "Only approved designs get mock-ups.",
     icon: CheckCircle2,
     category: "review",
     hasInput: true,
@@ -143,39 +203,59 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { mockupTemplateIds: [] },
-    fields: [{ kind: "mockup-templates", name: "mockupTemplateIds", label: "Mock-up templates" }],
+    // Colors are chosen per template in `templateColors`; a template without any is made in its own color.
+    // (Workflows saved with the old shared `garmentColors` list lose it when they load.)
+    // `templateBackgrounds` holds the background color of the templates that do not keep their photo's own.
+    // `mockupIds` and `artworkGroupKey` are the video's choice among the finished mock-ups, made at Mockup Approval.
+    defaultConfig: { mockupTemplateIds: [], templateColors: {}, templateBackgrounds: {}, mockupIds: [], artworkGroupKey: "" },
+    fields: [
+      {
+        kind: "mockup-selection",
+        name: "mockupTemplateIds",
+        templateColorsName: "templateColors",
+        templateBackgroundsName: "templateBackgrounds",
+        label: "Mock-up templates",
+      },
+    ],
+  },
+  "approval-gate": {
+    type: "approval-gate",
+    label: "Mockup Approval",
+    description: "Review each mockup at its current revision before rendering.",
+    icon: CheckCircle2,
+    category: "review",
+    hasInput: true,
+    hasOutput: true,
+    defaultConfig: { mode: "manual" },
+    fields: [
+      {
+        kind: "select",
+        name: "mode",
+        label: "Approval mode",
+        options: [
+          { value: "manual", label: "Manual review" },
+        ],
+      },
+    ],
   },
   "generate-video": {
     type: "generate-video",
-    label: "Promo video",
-    description: "Render a 15–30 second promotional video from the mock-ups.",
+    label: "Generate Video",
+    description: "Build a video from individually configured AI scenes.",
     icon: Film,
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { template: "slideshow", durationSeconds: 20, withMusic: true },
+    defaultConfig: { mode: "ai_shot", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "portrait", durationSeconds: 4, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" }, fallbackToStandard: true, aiStudioMode: "direct", aiStudioLayout: "hanging_window", aiStudioSourceMockupId: null, aiStudioFrameId: null },
     fields: [
-      {
-        kind: "select",
-        name: "template",
-        label: "Video template",
-        options: [
-          { value: "slideshow", label: "Slideshow" },
-          { value: "showcase", label: "Showcase" },
-          { value: "lifestyle-reel", label: "Lifestyle reel" },
-          { value: "vertical-story", label: "Vertical story 9:16" },
-        ],
-      },
-      { kind: "number", name: "durationSeconds", label: "Duration", min: 15, max: 30, unit: "s" },
-      {
-        kind: "switch",
-        name: "withMusic",
-        label: "Background music",
-        description: "Add a royalty-free track from the music library.",
-      },
+      { kind: "video-modes", name: "mode", label: "Video mode" },
+      { kind: "video-formats", name: "outputFormat", label: "Output format" },
+      { kind: "number", name: "durationSeconds", label: "Duration", min: 3, max: 15, unit: "s" },
+      { kind: "textarea", name: "textOverlay", label: "Text overlay", placeholder: "Optional short caption (120 characters)" },
+      { kind: "select", name: "standardOptions.transition", label: "Transition", options: [{ value: "fade", label: "Fade" }, { value: "cut", label: "Cut" }] },
     ],
   },
+  "review-video": { type: "review-video", label: "Review Video", description: "Approve the exact video version before export.", icon: CheckCircle2, category: "review", hasInput: true, hasOutput: true, defaultConfig: {}, fields: [] },
   "generate-listing": {
     type: "generate-listing",
     label: "Listing content",
@@ -221,21 +301,8 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "output",
     hasInput: true,
     hasOutput: false,
-    defaultConfig: { includeVideo: true, includeListingCsv: true },
-    fields: [
-      {
-        kind: "switch",
-        name: "includeVideo",
-        label: "Include videos",
-        description: "Add the rendered promo videos to the package.",
-      },
-      {
-        kind: "switch",
-        name: "includeListingCsv",
-        label: "Include listing CSV",
-        description: "Add a CSV with titles, tags and descriptions.",
-      },
-    ],
+    defaultConfig: {},
+    fields: [],
   },
   "publish-etsy": {
     type: "publish-etsy",
@@ -261,8 +328,6 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
   },
 };
 
-const DEFAULT_BRANCH_X = 170;
-
 const pipelineNode = (id: string, type: WorkflowNodeType, x: number, y: number) => ({
   id,
   type,
@@ -272,32 +337,33 @@ const pipelineNode = (id: string, type: WorkflowNodeType, x: number, y: number) 
 });
 
 export const DEFAULT_WORKFLOW_DEFINITION: WorkflowDefinition = {
-  version: 1,
+  version: 2,
   nodes: [
     pipelineNode("input", "product-input", 0, 0),
-    pipelineNode("prompt", "prompt-synthesis", 0, 200),
-    pipelineNode("design", "design-image", 0, 400),
-    pipelineNode("approval", "approval-gate", 0, 700),
-    pipelineNode("mockup", "apply-mockup", 0, 910),
-    pipelineNode("video", "generate-video", -DEFAULT_BRANCH_X, 1190),
-    pipelineNode("listing", "generate-listing", DEFAULT_BRANCH_X, 1190),
-    pipelineNode("export", "export-zip", 0, 1490),
+    pipelineNode("prompt", "prompt-synthesis", 0, 220),
+    pipelineNode("design", "design-image", 0, 420),
+    pipelineNode("design-approval", "design-approval", 0, 720),
+    pipelineNode("mockup", "apply-mockup", 0, 930),
+    pipelineNode("approval", "approval-gate", 0, 1210),
+    pipelineNode("video", "generate-video", 0, 1410),
+    pipelineNode("review", "review-video", 0, 1690),
+    pipelineNode("export", "export-zip", 0, 1930),
   ],
   edges: [
     { id: "input-prompt", source: "input", target: "prompt" },
     { id: "prompt-design", source: "prompt", target: "design" },
-    { id: "design-approval", source: "design", target: "approval" },
-    { id: "approval-mockup", source: "approval", target: "mockup" },
-    { id: "mockup-video", source: "mockup", target: "video" },
-    { id: "mockup-listing", source: "mockup", target: "listing" },
-    { id: "video-export", source: "video", target: "export" },
-    { id: "listing-export", source: "listing", target: "export" },
+    { id: "design-design-approval", source: "design", target: "design-approval" },
+    { id: "design-approval-mockup", source: "design-approval", target: "mockup" },
+    { id: "mockup-approval", source: "mockup", target: "approval" },
+    { id: "approval-video", source: "approval", target: "video" },
+    { id: "video-review", source: "video", target: "review" },
+    { id: "review-export", source: "review", target: "export" },
   ],
   viewport: { x: 0, y: 0, zoom: 1 },
 };
 
 export const STARTER_WORKFLOW_DEFINITION: WorkflowDefinition = {
-  version: 1,
+  version: 2,
   nodes: [pipelineNode("input", "product-input", 0, 0)],
   edges: [],
   viewport: { x: 0, y: 0, zoom: 1 },

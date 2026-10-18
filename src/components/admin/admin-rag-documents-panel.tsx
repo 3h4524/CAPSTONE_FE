@@ -7,15 +7,16 @@ import type { RagAdminDocument } from "@/api/rag";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useActivateAdminRagDocument } from "@/hooks/mutations/use-activate-admin-rag-document";
 import { useAdminRagDocument } from "@/hooks/queries/use-admin-rag-document";
 import { useAdminRagDocuments } from "@/hooks/queries/use-admin-rag-documents";
-import { useAppQueryClient } from "@/hooks/use-query-client";
 import { cn } from "@/utils/cn";
 
 const STATUS_OPTIONS = [
   ["", "All statuses"],
+  ["queued", "Queued"],
   ["ready", "Ready"],
   ["processing", "Processing"],
   ["superseded", "Superseded"],
@@ -33,11 +34,12 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
   const documentsQuery = useAdminRagDocuments({ status: status || undefined, sourceId: sourceId || undefined });
   const detailQuery = useAdminRagDocument(selectedId);
   const activateMutation = useActivateAdminRagDocument();
-  const queryClient = useAppQueryClient();
 
-  const refresh = () => {
-    void queryClient.invalidateQueries({ queryKey: ["admin", "rag", "documents"] });
-    if (selectedId) void queryClient.invalidateQueries({ queryKey: ["admin", "rag", "document", selectedId] });
+  const refresh = async () => {
+    await Promise.all([
+      documentsQuery.refetch(),
+      selectedId ? detailQuery.refetch() : Promise.resolve(),
+    ]);
   };
 
   return (
@@ -59,9 +61,10 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row">
           <Input value={sourceId} onChange={(event) => setSourceId(event.target.value)} placeholder="Filter by source ID" className="sm:max-w-xs" />
-          <select value={status} onChange={(event) => setStatus(event.target.value)} className="border-input h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-slate-300">
-            {STATUS_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
+          <Select value={status || "all"} onValueChange={(value) => setStatus(value === "all" ? "" : value)}>
+            <SelectTrigger className="w-full sm:w-[162px]"><SelectValue placeholder="All statuses" /></SelectTrigger>
+            <SelectContent>{STATUS_OPTIONS.map(([value, label]) => <SelectItem key={value || "all"} value={value || "all"}>{label}</SelectItem>)}</SelectContent>
+          </Select>
           <span className="self-center text-xs text-slate-400">{documentsQuery.data?.length ?? 0} documents</span>
         </div>
       </section>
@@ -114,12 +117,12 @@ const DocumentDetail = ({ detail, chunks, onActivate, isActivating }: { detail: 
       <Meta label="Updated" value={formatDate(detail.updatedAt)} />
     </div>
     {detail.ingestionError && <div className="my-4 rounded-lg bg-rose-50 p-3 text-xs leading-5 text-rose-700">{detail.ingestionError}</div>}
-    {detail.status !== "ready" && detail.status !== "processing" && <Button type="button" variant="outline" className="mt-4 w-full" onClick={onActivate} disabled={isActivating}><Check className="size-4" /> Activate this version</Button>}
+    {detail.status !== "ready" && detail.status !== "processing" && detail.status !== "queued" && <Button type="button" variant="outline" className="mt-4 w-full" onClick={onActivate} disabled={isActivating}><Check className="size-4" /> Activate this version</Button>}
     <div className="mt-5"><p className="text-xs font-bold text-slate-900">Chunk preview</p><div className="mt-3 max-h-[480px] space-y-2 overflow-y-auto pr-1">{chunks.map((chunk) => <details key={chunk.id} className="rounded-lg border border-slate-100 bg-slate-50/60 p-3"><summary className="cursor-pointer text-xs font-semibold text-slate-700">Chunk {chunk.chunkIndex + 1}<span className="ml-2 text-[10px] font-normal text-slate-400">{chunk.tokenCount} tokens</span></summary><p className="mt-3 text-[11px] leading-5 whitespace-pre-wrap text-slate-600">{chunk.content}</p></details>)}</div></div>
   </div>
 );
 
-const StatusBadge = ({ status }: { status: RagAdminDocument["status"] }) => <Badge variant={status === "ready" ? "default" : status === "failed" ? "destructive" : "outline"} className={cn("text-[10px]", status === "ready" && "bg-emerald-600 hover:bg-emerald-600", status === "processing" && "text-amber-700", status === "superseded" && "text-slate-500")}>{status}</Badge>;
+const StatusBadge = ({ status }: { status: RagAdminDocument["status"] }) => <Badge variant={status === "ready" ? "default" : status === "failed" ? "destructive" : "outline"} className={cn("text-[10px]", status === "ready" && "bg-emerald-600 hover:bg-emerald-600", (status === "queued" || status === "processing") && "text-amber-700", status === "superseded" && "text-slate-500")}>{status}</Badge>;
 const Meta = ({ label, value }: { label: string; value: string }) => <div><p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">{label}</p><p className="mt-1 truncate text-xs font-medium text-slate-700">{value}</p></div>;
 const PanelMessage = ({ text }: { text: string }) => <div className="flex min-h-40 items-center justify-center px-5 text-center text-xs text-slate-400">{text}</div>;
 const formatDate = (value: string) => new Date(value).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });

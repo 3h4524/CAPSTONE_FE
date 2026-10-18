@@ -17,10 +17,12 @@ import { DEFAULT_WORKFLOW_DEFINITION, DEFAULT_WORKFLOW_NAME } from "@/constants/
 import { showToast } from "@/helpers/toast";
 import { resolveActiveWorkflowId } from "@/helpers/workflow-graph";
 import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
+import { useLatestWorkflowRun } from "@/hooks/queries/use-latest-workflow-run";
 import { useWorkflow } from "@/hooks/queries/use-workflow";
 import { useWorkflows } from "@/hooks/queries/use-workflows";
 import { usePopupStore } from "@/stores/popup";
 import { useWorkflowStore } from "@/stores/workflow";
+import { useWorkflowRunStore } from "@/stores/workflow-run";
 
 const DEFAULT_WORKFLOW_DESCRIPTION =
   "A batch → designs → design approval → mock-ups → mock-up approval → Standard video → video review → ZIP.";
@@ -30,12 +32,19 @@ export const WorkflowWorkspace = () => {
   const searchParams = useSearchParams();
   const requestedId = searchParams.get("id");
   const hasAutoCreatedRef = useRef(false);
+  const restoredRunForWorkflow = useRef<string | null>(null);
   const openPopup = usePopupStore((state) => state.openPopup);
   const loadedWorkflowId = useWorkflowStore((state) => state.workflowId);
   const workflowName = useWorkflowStore((state) => state.name);
   const isDirty = useWorkflowStore((state) => state.isDirty);
   const loadWorkflow = useWorkflowStore((state) => state.loadWorkflow);
   const resetEditor = useWorkflowStore((state) => state.reset);
+  const productId = useWorkflowStore((state) => {
+    const input = state.nodes.find((node) => node.data.type === "product-input");
+    return typeof input?.data.config.productId === "string" ? input.data.config.productId : "";
+  });
+  const resetProductDependentState = useWorkflowStore((state) => state.resetProductDependentState);
+  const previousProductId = useRef(productId);
 
   const {
     data: workflows,
@@ -50,6 +59,7 @@ export const WorkflowWorkspace = () => {
     isError: isWorkflowError,
     refetch: refetchWorkflow,
   } = useWorkflow(activeWorkflowId);
+  const { data: latestRun } = useLatestWorkflowRun(activeWorkflowId);
 
   const createDefaultWorkflow = () =>
     createWorkflow(
@@ -66,6 +76,42 @@ export const WorkflowWorkspace = () => {
   useEffect(() => {
     if (workflow && workflow.id !== loadedWorkflowId) loadWorkflow(workflow);
   }, [workflow, loadedWorkflowId, loadWorkflow]);
+
+  useEffect(() => {
+    if (!workflow || workflow.id !== loadedWorkflowId || latestRun === undefined || restoredRunForWorkflow.current === workflow.id) return;
+    restoredRunForWorkflow.current = workflow.id;
+    const state = useWorkflowStore.getState();
+    if (!searchParams.get("run") && !state.videoRunId && latestRun?.workflowId === workflow.id) state.setVideoRunId(latestRun.id);
+  }, [workflow, loadedWorkflowId, latestRun, searchParams]);
+
+  useEffect(() => {
+    if (previousProductId.current === productId) return;
+    const changedFromAnotherProduct = Boolean(previousProductId.current) && previousProductId.current !== productId;
+    previousProductId.current = productId;
+    if (!changedFromAnotherProduct) return;
+
+    const params = new URLSearchParams(window.location.search);
+    // A product the open job made designs for keeps that job on the canvas: only what was chosen for the
+    // video belongs to the product before.
+    if (useWorkflowRunStore.getState().job?.products.some((product) => product.productId === productId)) {
+      useWorkflowStore.setState((state) => ({
+        nodes: state.nodes.map((node) => node.data.type === "apply-mockup"
+          ? { ...node, data: { ...node.data, config: { ...node.data.config, mockupIds: [], artworkGroupKey: "" } } }
+          : node),
+        videoRunId: null,
+      }));
+    } else {
+      // Designs and mock-ups belong to the product that started the run.
+      useWorkflowRunStore.getState().reset();
+      resetProductDependentState();
+      params.delete("job");
+    }
+    params.delete("then");
+    // The store forgets the video run too, but the URL would still bring it back.
+    params.delete("run");
+    const query = params.toString();
+    router.replace(query ? `/workflows?${query}` : "/workflows", { scroll: false });
+  }, [productId, resetProductDependentState, router]);
 
   useEffect(() => {
     if (workflows && workflows.length === 0 && loadedWorkflowId) resetEditor();

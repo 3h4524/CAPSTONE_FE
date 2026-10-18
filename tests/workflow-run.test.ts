@@ -34,6 +34,7 @@ const configured = () => {
   set("product-input", { batchId: id, productId: id });
   set("prompt-synthesis", { designTemplateId: id });
   set("apply-mockup", { mockupTemplateIds: [id] });
+  set("generate-video", { aiScenes: [{ mockupId: id, templateCode: "cinematic_product_showcase", durationSeconds: 4, framing: "medium", cameraAngle: "three_quarter", cameraMovement: "push_in", subjectMotion: "none", motionIntensity: "subtle", lighting: "soft_studio", extraInstructions: null, rightsConfirmed: false }] });
   return { nodes, edges: toWorkflowEdges(DEFAULT_WORKFLOW_DEFINITION) };
 };
 
@@ -199,8 +200,8 @@ test("a loaded config keeps what the node declares and drops the rest", () => {
 
   const video = normalizeNodeConfig("generate-video", { template: "design_detail", standardOptions: { motionPreset: "zoom", crop: "safe", transition: "cut" }, withMusic: true });
   assert.equal(video.template, "design_detail");
-  assert.deepEqual(video.standardOptions, { motionPreset: "zoom", crop: "safe", transition: "cut" });
-  assert.equal(video.durationSeconds, 12);
+  assert.deepEqual(video.standardOptions, { motionPreset: "zoom", crop: "safe", transition: "none" });
+  assert.equal(video.durationSeconds, 4);
   assert.equal("withMusic" in video, false);
 
   assert.deepEqual(normalizeNodeConfig("product-input", { batchId: id }), { batchId: id, productId: "" });

@@ -5,9 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { Film } from "lucide-react";
 
 import { useRunVideos } from "@/hooks/queries/use-run-videos";
+import { useWorkflowStore } from "@/stores/workflow";
 
 export const VideoNodePreview = () => {
-  const runId = useSearchParams().get("run");
+  // Both hooks are always called: `??` would skip the second one while the URL has a run, and React fails when it comes back.
+  const urlRunId = useSearchParams().get("run");
+  const storedRunId = useWorkflowStore(state => state.videoRunId);
+  const runId = urlRunId ?? storedRunId;
   const { data: videos } = useRunVideos(runId);
   const video = videos?.[0];
   return <div className="relative flex aspect-video flex-col items-center justify-center gap-1.5 overflow-hidden rounded-lg bg-slate-100 text-slate-400">

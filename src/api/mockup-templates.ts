@@ -85,6 +85,13 @@ export const saveMockupOverride = async (
 ): Promise<GenerateAllMockupsResult> =>
   (await api.put<GenerateAllMockupsResult>(`/api/batch-jobs/${batchJobId}/mockups/overrides`, input)).data;
 
+// Makes several of the job's mock-ups their own way in one save, all or none; the answer is the job's mock-ups made once.
+export const saveMockupOverrides = async (
+  batchJobId: string,
+  overrides: { slotKey: string; override: MockupOverride; replacedMockupImageId?: string | null }[]
+): Promise<GenerateAllMockupsResult> =>
+  (await api.put<GenerateAllMockupsResult>(`/api/batch-jobs/${batchJobId}/mockups/overrides/bulk`, { overrides })).data;
+
 // Puts one of the job's mock-ups back on the job's settings, or back at all when it was removed.
 export const resetMockupOverride = async (batchJobId: string, slotKey: string, replacedMockupImageId?: string | null): Promise<GenerateAllMockupsResult> =>
   (

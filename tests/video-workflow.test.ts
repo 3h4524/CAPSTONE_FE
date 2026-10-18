@@ -26,7 +26,10 @@ const template = (overrides: Partial<VideoTemplateCatalogItem> = {}): VideoTempl
 });
 
 for (const duration of [3, 12, 15]) test(`accepts duration ${duration}`, () => assert.equal(generateVideoConfigSchema.parse({ ...config, durationSeconds: duration }).durationSeconds, duration));
-for (const duration of [2, 16, 3.5]) test(`rejects duration ${duration}`, () => assert.equal(generateVideoConfigSchema.safeParse({ ...config, durationSeconds: duration }).success, false));
+for (const transition of ["none", "fade", "swipe", "zoom", "flash", "whip_pan", "blur", "cut"])
+  test(`accepts transition ${transition}`, () => assert.equal(generateVideoConfigSchema.parse({ ...config, standardOptions: { ...config.standardOptions, transition } }).standardOptions.transition, transition));
+for (const duration of [2, 31, 3.5]) test(`rejects duration ${duration}`, () => assert.equal(generateVideoConfigSchema.safeParse({ ...config, durationSeconds: duration }).success, false));
+test("accepts the 30-second video duration limit", () => assert.equal(generateVideoConfigSchema.parse({ ...config, durationSeconds: 30 }).durationSeconds, 30));
 for (const template of ["auto", "product_showcase", "design_detail", "variant_showcase"]) test(`preserves template ${template}`, () => assert.equal(generateVideoConfigSchema.parse({ ...config, template }).template, template));
 for (const motionPreset of ["gentle", "contain_gentle", "static", "zoom", "zoom_out", "pan", "pan_left", "pan_up", "pan_down", "diagonal_up_right", "diagonal_up_left", "diagonal_down_right", "diagonal_down_left"])
   test(`accepts motion ${motionPreset}`, () => assert.equal(generateVideoConfigSchema.parse({ ...config, standardOptions: { ...config.standardOptions, motionPreset } }).standardOptions.motionPreset, motionPreset));
@@ -37,7 +40,8 @@ test("new workflows default to varied motion", () => {
   assert.equal(options?.motionPreset, "varied");
   assert.equal(videoNode?.config.template, "auto");
   assert.equal(videoNode?.config.templateVersion, 2);
-  assert.equal(videoNode?.config.durationSeconds, 12);
+  assert.equal(videoNode?.config.durationSeconds, 4);
+  assert.equal((videoNode?.config.standardOptions as { transition: string } | undefined)?.transition, "none");
 });
 test("rejects unsupported or more than four scene motions", () => {
   assert.equal(generateVideoConfigSchema.safeParse({ ...config, sceneMotionPresets: ["spin"] }).success, false);
@@ -115,6 +119,8 @@ test("valid configured default workflow has no graph errors", () => {
   prompt.data.config = { ...prompt.data.config, designTemplateId: mockup };
   const mockups = nodes.find(n => n.data.type === "apply-mockup")!;
   mockups.data.config = { ...mockups.data.config, mockupTemplateIds: [mockup] };
+  const video = nodes.find(n => n.data.type === "generate-video")!;
+  video.data.config = { ...video.data.config, aiScenes: [{ mockupId: mockup, templateCode: "cinematic_product_showcase", durationSeconds: 4, framing: "medium", cameraAngle: "three_quarter", cameraMovement: "push_in", subjectMotion: "none", motionIntensity: "subtle", lighting: "soft_studio", extraInstructions: null, rightsConfirmed: false }] };
   assert.deepEqual(validateWorkflow(nodes, toWorkflowEdges(DEFAULT_WORKFLOW_DEFINITION)), []);
   assert.equal(toWorkflowDefinition(nodes, toWorkflowEdges(DEFAULT_WORKFLOW_DEFINITION), { x: 0, y: 0, zoom: 1 }).version, 2);
 });

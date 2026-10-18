@@ -92,12 +92,25 @@ export interface WorkflowIssue {
 export interface WorkflowOption {
   value: string;
   label: string;
+  /** One line under the label, shown when the options are laid out as cards. */
+  description?: string;
+  /** A short second line under the label in a dropdown list, such as a count or a category. */
+  hint?: string;
+  /** A thumbnail shown before the label in a dropdown. */
+  imageUrl?: string | null;
 }
 
 export type WorkflowOptionSource = "batches" | "design-templates" | "style-presets";
 
 export type WorkflowField =
-  | { kind: "select"; name: string; label: string; options: WorkflowOption[] }
+  | {
+      kind: "select";
+      name: string;
+      label: string;
+      options: WorkflowOption[];
+      /** How the panel lays the options out: a dropdown (default), cards with descriptions, or ratio shapes. */
+      display?: "dropdown" | "cards" | "ratios";
+    }
   | {
       kind: "source-select";
       name: string;
@@ -114,7 +127,7 @@ export type WorkflowField =
   | { kind: "mockup-selection"; name: string; templateColorsName: string; templateBackgroundsName: string; label: string }
   | { kind: "number"; name: string; label: string; min: number; max: number; unit?: string }
   | { kind: "switch"; name: string; label: string; description: string }
-  | { kind: "textarea"; name: string; label: string; placeholder: string };
+  | { kind: "textarea"; name: string; label: string; placeholder: string; description?: string; maxLength?: number };
 
 export interface WorkflowNodeDefinition {
   type: WorkflowNodeType;

@@ -38,6 +38,7 @@ type NodeClipboard = {
 
 type WorkflowEditorState = {
   workflowId: string | null;
+  videoRunId: string | null;
   revision: number;
   name: string;
   description: string;
@@ -73,6 +74,8 @@ type WorkflowEditorState = {
   commitNodeDrag: () => void;
   setNodeStatus: (nodeId: string, status: WorkflowNodeStatus) => void;
   resetStatuses: () => void;
+  resetProductDependentState: () => void;
+  setVideoRunId: (runId: string | null) => void;
   setRunning: (isRunning: boolean) => void;
   markSaved: (workflow: WorkflowDetail) => void;
   reset: () => void;
@@ -80,6 +83,7 @@ type WorkflowEditorState = {
 
 const INITIAL_STATE = {
   workflowId: null,
+  videoRunId: null,
   revision: 0,
   name: "",
   description: "",
@@ -356,6 +360,18 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
     set((state) => ({
       nodes: state.nodes.map((node) => ({ ...node, data: { ...node.data, status: "idle" } })),
     })),
+
+  resetProductDependentState: () =>
+    set((state) => ({
+      nodes: state.nodes.map((node) => {
+        if (node.data.type !== "apply-mockup") return { ...node, data: { ...node.data, status: "idle" } };
+        return { ...node, data: { ...node.data, status: "idle", config: { ...node.data.config, mockupIds: [], artworkGroupKey: "" } } };
+      }),
+      isDirty: true,
+      videoRunId: null,
+    })),
+
+  setVideoRunId: (videoRunId) => set({ videoRunId }),
 
   setRunning: (isRunning) => set({ isRunning }),
 

@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { AdminSubscriptionPlan } from "@/types/admin-subscription-plan";
 import { cn } from "@/utils/cn";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 
 type AdminSubscriptionPlansShellProps = {
   fullName: string;
@@ -21,8 +22,7 @@ type AdminSubscriptionPlansShellProps = {
   isLoading: boolean;
 };
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }).format(amount);
+const formatCurrency = (amount: number) => formatCurrencyVnd(amount);
 
 const formatLimit = (value: number) => (value === -1 ? "Unlimited" : value.toLocaleString());
 
@@ -106,7 +106,7 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
                               <div className="font-medium text-slate-800">{plan.name}</div>
                               <div className="text-muted-foreground text-xs">{plan.tier}</div>
                             </TableCell>
-                            <TableCell>{formatCurrency(plan.monthlyPriceUsd)}/mo</TableCell>
+                            <TableCell>{formatCurrency(plan.monthlyPriceUsd)}/tháng</TableCell>
                             <TableCell>
                               <Badge variant={plan.isActive ? "default" : "secondary"}>
                                 {plan.isActive ? "Active" : "Inactive"}

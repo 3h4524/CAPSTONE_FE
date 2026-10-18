@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { AdminUserDto, GetUsersRequest } from "@/types/admin";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function AdminUsersPage() {
@@ -122,13 +123,13 @@ export default function AdminUsersPage() {
         return;
       }
 
-      const headers = ["ID", "Name", "Email", "Role", "Plan", "Status", "Joined At", "Active Jobs", "API Cost ($)"];
+      const headers = ["ID", "Name", "Email", "Role", "Plan", "Status", "Joined At", "Active Jobs", "Plan Price (VND)"];
       const csvContent = data.items.map(u => {
         const name = `"${u.fullName.replace(/"/g, '""')}"`;
         const email = `"${u.email}"`;
         const roles = `"${u.roles.join(", ")}"`;
         const date = new Date(u.createdAt).toLocaleDateString();
-        const cost = u.monthlyApiCost.toFixed(2);
+        const cost = Math.round(u.monthlyApiCost * 1000).toString();
         
         return [u.id, name, email, roles, u.plan, u.accountStatus, date, u.totalJobs, cost].join(",");
       });
@@ -220,7 +221,7 @@ export default function AdminUsersPage() {
               </div>
               <div className="mt-2">
                 <p className="text-2xl font-bold text-slate-900">
-                  ${(metrics?.totalRevenue || 0).toLocaleString()}
+                  {formatCurrencyVnd(metrics?.totalRevenue || 0)}
                 </p>
                 <p className="mt-1 text-xs text-slate-400">+5.2% from last month</p>
               </div>
@@ -443,9 +444,9 @@ export default function AdminUsersPage() {
                       <div className="h-10 w-px bg-slate-100"></div>
                       <div className="text-right">
                         <div className="mb-1 flex items-center justify-end gap-2">
-                          <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">API Cost</span>
+                          <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Plan Price</span>
                         </div>
-                        <span className="text-xl font-bold text-slate-900">${selectedUser.monthlyApiCost.toFixed(2)}</span>
+                        <span className="text-xl font-bold text-slate-900">{formatCurrencyVnd(selectedUser.monthlyApiCost)}</span>
                       </div>
                     </div>
                   </div>

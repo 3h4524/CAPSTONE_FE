@@ -17,6 +17,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { Button } from "@/components/ui/button";
 import type { AdminDashboardMetricsDto } from "@/types/admin";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 
 type AdminDashboardShellProps = {
   fullName: string;
@@ -88,18 +89,18 @@ const AdminDashboardContent = ({ fullName, onLogout, metrics, timeRange, onTimeR
                 />
                 <AdminMetricCard
                   label={`Total Revenue (${timeRange})`}
-                  value={`$${metrics?.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}`}
+                  value={metrics ? formatCurrencyVnd(metrics.totalRevenue) : "0 ₫"}
                   change=""
                   trend="up"
-                  note={`MRR: $${metrics?.recurringRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}`}
+                  note={`MRR: ${metrics ? formatCurrencyVnd(metrics.recurringRevenue) : "0 ₫"}`}
                   icon={DollarSign}
                 />
                 <AdminMetricCard
-                  label="Active Batch Jobs"
-                  value={metrics?.activeBatchJobs.toLocaleString() ?? "-"}
+                  label="Total Batch Jobs"
+                  value={metrics ? (metrics.totalBatchJobs ?? 0).toLocaleString() : "-"}
                   change=""
                   trend="up"
-                  note="Rendering queue"
+                  note={`${metrics?.activeBatchJobs ?? 0} active in queue`}
                   icon={BriefcaseBusiness}
                 />
                 <AdminMetricCard

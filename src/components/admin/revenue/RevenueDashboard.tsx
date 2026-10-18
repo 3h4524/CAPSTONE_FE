@@ -45,10 +45,10 @@ export function RevenueDashboard() {
         return;
       }
 
-      const headers = ["Invoice No", "Customer Name", "Customer Email", "Plan", "Payment Date", "Amount ($)"];
+      const headers = ["Invoice No", "Customer Name", "Customer Email", "Plan", "Payment Date", "Amount (VND)"];
       const csvContent = data.items.map(i => {
         const date = i.paymentDate ? new Date(i.paymentDate).toLocaleDateString() : 'N/A';
-        const cost = i.amount.toFixed(2);
+        const cost = Math.round(i.amount * 1000).toString();
         
         return [
           i.invoiceNumber, 

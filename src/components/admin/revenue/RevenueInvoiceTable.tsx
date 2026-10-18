@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription,CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { RevenueInvoiceDto } from "@/types/revenue";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 
 interface RevenueInvoiceTableProps {
   data?: {
@@ -31,8 +32,7 @@ export function RevenueInvoiceTable({
   onExportClick,
   isExporting
 }: RevenueInvoiceTableProps) {
-  const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(val);
+  const formatCurrency = (val: number) => formatCurrencyVnd(val);
 
   const totalPages = data ? Math.ceil(data.totalCount / data.pageSize) : 0;
 

@@ -56,7 +56,7 @@ const AdminRevenueChart = ({ revenueChart = [], timeRange, onTimeRangeChange }: 
       </div>
 
       <div className="mt-5 flex items-center justify-between">
-        <p className="text-[10px] font-semibold text-slate-500 capitalize">{timeRange}ly Breakdown ($USD)</p>
+        <p className="text-[10px] font-semibold text-slate-500 capitalize">{timeRange}ly Breakdown (VND)</p>
         <div className="flex items-center gap-3 text-[9px] text-slate-400">
           <span className="flex items-center gap-1">
             <i className="size-1.5 rounded-full bg-slate-900" /> Subscriptions

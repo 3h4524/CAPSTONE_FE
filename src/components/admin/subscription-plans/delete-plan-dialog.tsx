@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useDeleteSubscriptionPlan } from "@/hooks/mutations/use-delete-subscription-plan";
 import { deletePlanFormSchema,type DeletePlanFormValues } from "@/schemas/subscription-plan";
 import type { AdminSubscriptionPlan } from "@/types/admin-subscription-plan";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 type DeletePlanDialogProps = {
@@ -51,7 +52,7 @@ export function DeletePlanDialog({ open, plan, onClose }: DeletePlanDialogProps)
     mutation.mutate({ id: plan.id, reason: values.reason });
   });
 
-  const priceLabel = `$${plan.monthlyPriceUsd.toFixed(2)}/mo`;
+  const priceLabel = `${formatCurrencyVnd(plan.monthlyPriceUsd)}/tháng`;
 
   if (!plan.canDelete) {
     return (

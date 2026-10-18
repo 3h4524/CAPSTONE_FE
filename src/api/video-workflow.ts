@@ -1,12 +1,16 @@
+import axios from "axios";
+
 import { api } from "@/api/client";
 import type { MockupMetadataFormValues } from "@/schemas/video-workflow";
-import type { AiSceneVideo, AiShotQuote, AiStudioFrameGeneration, AiStudioFrameQuote, AiStudioFrameRequest, AiVideoTemplateDefinition, GenerateVideoConfig, MockupAsset, PromoVideo, RunAction, VideoStoryboard, VideoTemplateCatalogItem, WorkflowCapabilities, WorkflowRun } from "@/types/video-workflow";
+import type { AiSceneVideo, AiShotQuote, AiStudioFrameGeneration, AiStudioFrameQuote, AiStudioFrameRequest, AiVideoTemplateDefinition, GenerateVideoConfig, MockupAsset, PromoVideo, RunAction, VideoRunSummary, VideoStoryboard, VideoTemplateCatalogItem, WorkflowCapabilities, WorkflowRun } from "@/types/video-workflow";
 
 export const videoWorkflowKeys = {
   capabilities: () => ["workflow-capabilities"] as const,
   templates: () => ["video-templates"] as const,
   aiTemplates: () => ["ai-video-templates"] as const,
   run: (id: string | null) => ["workflow-runs", id] as const,
+  latestRun: (workflowId: string | null) => ["workflow-runs", "latest", workflowId] as const,
+  videoRuns: (workflowId: string | null) => ["workflow-runs", "videos", workflowId] as const,
   assets: (id: string) => ["mockup-assets", id] as const,
   videos: (id: string | null) => ["workflow-videos", id] as const,
   sceneVideos: (id: string | null) => ["workflow-scene-videos", id] as const,
@@ -16,6 +20,16 @@ export const listVideoTemplates = async () => (await api.get<VideoTemplateCatalo
 export const listAiVideoTemplates = async () => (await api.get<AiVideoTemplateDefinition[]>("/api/workflows/ai-video-templates")).data;
 export const startWorkflowRun = async ({ workflowId, revision, key }: { workflowId: string; revision: number; key: string }) => (await api.post<WorkflowRun>(`/api/workflows/${workflowId}/runs`, { expectedWorkflowRevision: revision, idempotencyKey: key })).data;
 export const getWorkflowRun = async (id: string) => (await api.get<WorkflowRun>(`/api/workflow-runs/${id}`)).data;
+export const getLatestWorkflowRun = async (workflowId: string): Promise<WorkflowRun | null> => {
+  try {
+    return (await api.get<WorkflowRun>(`/api/workflows/${workflowId}/runs/latest`)).data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) return null;
+    throw error;
+  }
+};
+export const listWorkflowVideoRuns = async (workflowId: string) =>
+  (await api.get<VideoRunSummary[]>(`/api/workflows/${workflowId}/video-runs`)).data;
 export const actOnWorkflowRun = async ({ runId, ...action }: RunAction & { runId: string }) => (await api.post<WorkflowRun>(`/api/workflow-runs/${runId}/actions`, action)).data;
 export const quoteAiShot = async (runId: string, config?: GenerateVideoConfig, regenerate = false, sceneOrder?: number) => (await api.post<AiShotQuote>(`/api/workflow-runs/${runId}/ai-shot-quote`, { config, regenerate, sceneOrder })).data;
 export const listMockupAssets = async (id: string) => (await api.get<MockupAsset[]>(`/api/products/${id}/mockup-assets`)).data;

@@ -65,5 +65,6 @@ export interface PromoVideo { id: string; runId: string; mode: string; template:
 export interface AiSceneVideo { sceneOrder: number; status: string; previewUrl: string | null; failure: string | null }
 export interface WorkflowNodeRun { id: string; nodeId: string; nodeType: string; status: string; attempt: number; stage: string | null; progress: number; errorMessage: string | null; output: Record<string, unknown> }
 export interface WorkflowRun { id: string; workflowId: string; productId: string; status: string; revision: number; workflowRevision: number; createdAt: string; errorMessage: string | null; nodes: WorkflowNodeRun[] }
+export interface VideoRunSummary { id: string; status: string; createdAt: string; videoCount: number; latestVersion: number }
 export interface RunAction { expectedRevision: number; action: "cancel" | "resume_mockups" | "approve_video" | "reject_video" | "rerender" | "retry" | "regenerate_ai_shot" | "retry_listing"; videoId?: string; reviewRevision?: number; config?: GenerateVideoConfig; expectedStoryboardFingerprint?: string; aiShotQuoteToken?: string; sceneOrder?: number }
 export interface AiShotQuote { token: string; estimatedCostUsd: number; newClips: number; expiresAtUtc: string; model: string; note: string }

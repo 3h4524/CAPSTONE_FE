@@ -17,6 +17,7 @@ import { DEFAULT_WORKFLOW_DEFINITION, DEFAULT_WORKFLOW_NAME } from "@/constants/
 import { showToast } from "@/helpers/toast";
 import { resolveActiveWorkflowId } from "@/helpers/workflow-graph";
 import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
+import { useLatestWorkflowRun } from "@/hooks/queries/use-latest-workflow-run";
 import { useWorkflow } from "@/hooks/queries/use-workflow";
 import { useWorkflows } from "@/hooks/queries/use-workflows";
 import { usePopupStore } from "@/stores/popup";
@@ -31,6 +32,7 @@ export const WorkflowWorkspace = () => {
   const searchParams = useSearchParams();
   const requestedId = searchParams.get("id");
   const hasAutoCreatedRef = useRef(false);
+  const restoredRunForWorkflow = useRef<string | null>(null);
   const openPopup = usePopupStore((state) => state.openPopup);
   const loadedWorkflowId = useWorkflowStore((state) => state.workflowId);
   const workflowName = useWorkflowStore((state) => state.name);
@@ -57,6 +59,7 @@ export const WorkflowWorkspace = () => {
     isError: isWorkflowError,
     refetch: refetchWorkflow,
   } = useWorkflow(activeWorkflowId);
+  const { data: latestRun } = useLatestWorkflowRun(activeWorkflowId);
 
   const createDefaultWorkflow = () =>
     createWorkflow(
@@ -73,6 +76,13 @@ export const WorkflowWorkspace = () => {
   useEffect(() => {
     if (workflow && workflow.id !== loadedWorkflowId) loadWorkflow(workflow);
   }, [workflow, loadedWorkflowId, loadWorkflow]);
+
+  useEffect(() => {
+    if (!workflow || workflow.id !== loadedWorkflowId || latestRun === undefined || restoredRunForWorkflow.current === workflow.id) return;
+    restoredRunForWorkflow.current = workflow.id;
+    const state = useWorkflowStore.getState();
+    if (!searchParams.get("run") && !state.videoRunId && latestRun?.workflowId === workflow.id) state.setVideoRunId(latestRun.id);
+  }, [workflow, loadedWorkflowId, latestRun, searchParams]);
 
   useEffect(() => {
     if (previousProductId.current === productId) return;

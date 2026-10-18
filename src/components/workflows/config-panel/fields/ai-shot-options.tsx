@@ -228,13 +228,14 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
     if (!node || rawScenes.length === 0 || areAssetsLoading || !productId) return;
     const normalizedScenes = rawScenes.map(scene => {
       const template = catalog.find(item => item.code === scene.templateCode);
-      const sceneSources = scene.startFrameMode === "studio" ? originalApproved : [...originalApproved, ...approvedFrames];
-      const validMockupId = scene.mockupId && sceneSources.some(asset => asset.id === scene.mockupId) ? scene.mockupId : null;
+      // Asset availability is runtime state, not configuration. Preserve the saved source ID so a
+      // temporary fetch failure or an approval/filter change cannot silently erase the scene setup.
+      const savedMockupId = scene.mockupId;
       const migrated = scene.startFrameMode == null && scene.templateCode === "cinematic_product_showcase"
-        ? { ...scene, mockupId: validMockupId, startFrameMode: legacyStudioMode ? "studio" as const : "direct" as const,
+        ? { ...scene, mockupId: savedMockupId, startFrameMode: legacyStudioMode ? "studio" as const : "direct" as const,
           studioLayout: scene.studioLayout ?? (node.data.config.aiStudioLayout === "flat_lay" ? "flat_lay" as const : "hanging_window" as const),
           studioFrameId: scene.studioFrameId ?? (legacyStudioMode ? readString(node.data.config.aiStudioFrameId) || null : null) }
-        : { ...scene, mockupId: validMockupId };
+        : { ...scene, mockupId: savedMockupId };
       const withFrameDefaults = migrated.templateCode === "cinematic_product_showcase"
         ? { ...migrated, studioLayout: normalizeStudioLayout(migrated.studioLayout) }
         : migrated;
@@ -401,9 +402,9 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
     }} />
     <div className="space-y-2">
       <div><p className="text-sm font-semibold">Scenes</p><p className="text-muted-foreground mt-1 text-xs">Set each scene separately. Drag the grip, or select a grip then a destination scene to reorder.</p></div>
-      <div className="bg-background grid grid-cols-[auto_minmax(3rem,1fr)_auto] items-center gap-3 rounded-md border px-3 py-2" aria-label={`AI clip duration ${totalSeconds} of 30 seconds`}>
-        <p className="text-foreground text-sm font-semibold whitespace-nowrap tabular-nums">AI clips {totalSeconds}s / 30s</p>
-        <div role="progressbar" aria-label="AI clip duration" aria-valuemin={0} aria-valuemax={30} aria-valuenow={Math.min(totalSeconds, 30)} aria-valuetext={`${totalSeconds} of 30 seconds`} className="bg-muted h-2 min-w-0 overflow-hidden rounded-full">
+      <div className="bg-background grid grid-cols-[auto_minmax(3rem,1fr)_auto] items-center gap-3 rounded-md border px-3 py-2" aria-label={`Total video duration: ${totalSeconds} of 30 seconds`}>
+        <p className="text-foreground text-sm font-semibold whitespace-nowrap tabular-nums">Total duration {totalSeconds}s / 30s</p>
+        <div role="progressbar" aria-label="Total video duration" aria-valuemin={0} aria-valuemax={30} aria-valuenow={Math.min(totalSeconds, 30)} aria-valuetext={`${totalSeconds} of 30 seconds`} className="bg-muted h-2 min-w-0 overflow-hidden rounded-full">
           <div className="h-full rounded-full bg-teal-600 transition-[width] duration-200" style={{ width: `${Math.min((totalSeconds / 30) * 100, 100)}%` }} />
         </div>
         <span className="text-muted-foreground text-xs whitespace-nowrap tabular-nums">{scenes.length} {scenes.length === 1 ? "scene" : "scenes"}</span>
@@ -538,7 +539,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
             <Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove scene ${index + 1}`} disabled={disabled || scenes.length <= 1} onClick={() => removeScene(index)} className="text-destructive hover:text-destructive"><Trash2 aria-hidden="true" /></Button>
           </div>
         </header>
-        <label className="block space-y-1 text-xs font-medium">AI template
+        <label className="flex flex-col gap-2 text-xs font-medium"><span>AI template</span>
           <Select disabled={disabled || isPending || catalog.length === 0} value={scene.templateCode} onValueChange={value => {
             const nextTemplate = catalog.find(item => item.code === value);
             if (!nextTemplate) return;
@@ -565,7 +566,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
         <section className="space-y-4 rounded-md border p-3" aria-label={`Scene ${index + 1} start frame`}>
           <div className="grid items-end gap-3 min-[480px]:grid-cols-[minmax(0,1fr)_13rem]">
             <div><p className="text-sm font-semibold">Start frame</p><p className="text-muted-foreground mt-1 max-w-md text-xs leading-relaxed">Choose an approved asset or create a custom keyframe for this scene.</p></div>
-            <label className="block space-y-1 text-xs font-medium">Frame source
+            <label className="flex flex-col gap-2 text-xs font-medium"><span>Frame source</span>
               <Select disabled={disabled} value={selectedSourceFrame ? "direct" : scene.startFrameMode ?? "direct"} onValueChange={value => persistScene(index, {
                 startFrameMode: value as "direct" | "studio",
                 studioFrameId: null,
@@ -577,7 +578,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
             </label>
           </div>
           {scene.startFrameMode !== "studio" || selectedSourceFrame ? <div className="min-w-0 space-y-3">
-            <label className="block space-y-1 text-xs font-medium">Choose an approved product image or keyframe <span className="text-muted-foreground font-normal">(required)</span>
+            <label className="flex flex-col gap-2 text-xs font-medium"><span>Choose an approved product image or keyframe <span className="text-muted-foreground font-normal">(required)</span></span>
               <Select disabled={disabled || (!hasRequiredSource && reusableStudioFrames.length === 0)} value={existingAssetValue} onValueChange={value => {
                 if (value.startsWith("frame:")) {
                   const frame = reusableStudioFrames.find(item => item.id === value.slice(6));
@@ -604,7 +605,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
             </figure>}
           </div> : <div className="space-y-4">
             {selectedSource?.role === "Lifestyle" && <p className="text-muted-foreground text-xs">The approved people and setting stay in the image.</p>}
-            <label className="block space-y-1.5 text-xs font-medium">Approved product image <span className="text-muted-foreground font-normal">(required)</span>
+            <label className="flex flex-col gap-2 text-xs font-medium"><span>Approved product image <span className="text-muted-foreground font-normal">(required)</span></span>
               <Select disabled={disabled || !hasRequiredSource} value={selectedSourceValue} onValueChange={value => {
                 persistScene(index, { mockupId: value, studioFrameId: null,
                   studioReferenceHashes: [] });
@@ -672,7 +673,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {template && Object.entries(template.allowedSettings).map(([key, choices]) => {
               const field = key as TemplateSettingField;
-              return <label key={key} className="block space-y-1 text-xs font-medium">{SETTING_LABELS[key] ?? key}
+              return <label key={key} className="flex flex-col gap-2 text-xs font-medium"><span>{SETTING_LABELS[key] ?? key}</span>
                 <Select disabled={disabled} value={scene[field]} onValueChange={value => changeScene(index, { [field]: value })}>
                   <SelectTrigger aria-label={`Scene ${index + 1} ${SETTING_LABELS[key] ?? key}`}><SelectValue /></SelectTrigger><SelectContent>{choices.map(choice => <SelectItem key={choice} value={choice}>{labelFor(choice)}</SelectItem>)}</SelectContent>
                 </Select>

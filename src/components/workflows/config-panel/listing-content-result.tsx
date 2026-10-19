@@ -18,6 +18,10 @@ import type { ListingContentResult, ListingSeoFeedback, ListingSeoScoreResult } 
 
 export const ListingContentResultPanel = () => {
   const productId = useWorkflowStore((state) => readString(state.nodes.find((node) => node.data.type === "product-input")?.data.config.productId));
+  const listingNodeId = useWorkflowStore(
+    (state) => state.nodes.find((node) => node.data.type === "generate-listing")?.id
+  );
+  const setNodeRuntime = useWorkflowStore((state) => state.setNodeRuntime);
   const isRunning = useWorkflowStore((state) => state.isRunning);
   const { run, isRunning: runIsOpen } = useWorkflowRuntime();
   const client = useAppQueryClient();
@@ -32,9 +36,34 @@ export const ListingContentResultPanel = () => {
   });
   const mutation = useMutation<ListingContentResult, { productId: string; seoFeedback?: ListingSeoFeedback }>({
     mutationFn: ({ productId: id, seoFeedback }) => generateListingContent(id, seoFeedback),
+    onMutate: () => {
+      if (listingNodeId) {
+        setNodeRuntime(listingNodeId, {
+          status: "running",
+          stage: "Regenerating listing content",
+          progress: 0,
+        });
+      }
+    },
     onSuccess: (listing, variables) => {
       client.setQueryData(["listing-content", variables.productId], listing);
+      if (listingNodeId) {
+        setNodeRuntime(listingNodeId, {
+          status: "success",
+          stage: "Generated",
+          progress: 100,
+        });
+      }
       showToast("success", "Listing content generated successfully.");
+    },
+    onSettled: (_listing, error) => {
+      if (error && listingNodeId) {
+        setNodeRuntime(listingNodeId, {
+          status: "failed",
+          stage: "Generation failed",
+          progress: 0,
+        });
+      }
     },
   });
   const seoMutation = useMutation<ListingSeoScoreResult, string>({

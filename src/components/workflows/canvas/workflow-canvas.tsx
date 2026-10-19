@@ -49,7 +49,10 @@ export const WorkflowCanvas = () => {
   const runningNodeIds = new Set(
     nodes.filter((node) => node.data.status === "running").map((node) => node.id)
   );
-  const displayedEdges = edges.map((edge) => ({ ...edge, animated: runningNodeIds.has(edge.target) }));
+  const displayedEdges = edges.map((edge) => ({
+    ...edge,
+    animated: runningNodeIds.has(edge.target),
+  }));
 
   const allowDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -61,10 +64,13 @@ export const WorkflowCanvas = () => {
     const type = event.dataTransfer.getData(WORKFLOW_DND_MIME);
     if (isRunning || !isWorkflowNodeType(type)) return;
     const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
-    addNode(createWorkflowNode(type, { x: position.x - NODE_CARD_WIDTHS[type] / 2, y: position.y - 40 }));
+    addNode(
+      createWorkflowNode(type, { x: position.x - NODE_CARD_WIDTHS[type] / 2, y: position.y - 40 })
+    );
   };
 
-  const validateConnection = (connection: Connection | Edge) => isConnectionAllowed(connection, edges, nodes);
+  const validateConnection = (connection: Connection | Edge) =>
+    isConnectionAllowed(connection, edges, nodes);
 
   const clearCanvasSelection = () => {
     clearSelection();
@@ -82,7 +88,9 @@ export const WorkflowCanvas = () => {
         onEdgesChange={onEdgesChange}
         onConnect={connect}
         isValidConnection={validateConnection}
-        onSelectionChange={({ nodes: selectedNodes }) => selectNodes(selectedNodes.map((node) => node.id))}
+        onSelectionChange={({ nodes: selectedNodes }) =>
+          selectNodes(selectedNodes.map((node) => node.id))
+        }
         onPaneClick={clearCanvasSelection}
         onNodeDragStart={beginNodeDrag}
         onNodeDragStop={commitNodeDrag}
@@ -90,6 +98,8 @@ export const WorkflowCanvas = () => {
         onDrop={dropNode}
         nodesDraggable={!isRunning}
         nodesConnectable={!isRunning}
+        connectOnClick={!isRunning}
+        connectionRadius={44}
         elementsSelectable
         selectionKeyCode="Shift"
         deleteKeyCode={isRunning ? null : DELETE_KEYS}

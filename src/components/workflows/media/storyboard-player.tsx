@@ -20,15 +20,15 @@ export const StoryboardPlayer = ({ board, assets }: { board: VideoStoryboard; as
       return <li key={scene.sceneOrder} className="bg-muted/40 min-w-0 overflow-hidden rounded-lg">
         <div className="bg-muted/70 relative flex items-center justify-center" style={{ aspectRatio: `${source.width} / ${source.height}` }}>
           <Image src={source.url} alt={`Source frame for scene ${scene.sceneOrder + 1}`} width={source.width} height={source.height} unoptimized className="size-full object-contain" />
-          <span className="bg-background/95 absolute top-2 left-2 rounded-md px-2 py-1 text-xs font-semibold">Scene {scene.sceneOrder + 1}</span>
+          <span className="bg-background/95 absolute top-2 left-2 rounded-md px-2 py-1 text-xs font-semibold">Scene {scene.sceneOrder + 1} · {scene.generationStrategy === "standard" ? "Standard" : "AI video"}</span>
           <span className="bg-background/95 text-muted-foreground absolute top-2 right-2 rounded-md px-2 py-1 text-xs tabular-nums">{(scene.durationFrames / 30).toFixed(1)}s</span>
         </div>
         <div className="space-y-1 px-3 py-2.5">
-          <p className="truncate text-xs font-semibold capitalize" title={scene.aiTemplateCode?.replaceAll("_", " ") ?? "AI video scene"}>
-            {scene.aiTemplateCode?.replaceAll("_", " ") ?? "AI video scene"}
+          <p className="truncate text-xs font-semibold capitalize" title={scene.aiTemplateCode?.replaceAll("_", " ") ?? "Standard camera move"}>
+            {scene.aiTemplateCode?.replaceAll("_", " ") ?? "Camera move"}
           </p>
           <p className="text-muted-foreground truncate text-xs capitalize">
-            {scene.aiSettings?.cameraMovement?.replaceAll("_", " ") ?? "AI motion"}
+            {scene.aiSettings?.cameraMovement?.replaceAll("_", " ") ?? scene.motion.replaceAll("_", " ")}
           </p>
         </div>
       </li>;

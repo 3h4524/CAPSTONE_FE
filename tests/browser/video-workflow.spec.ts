@@ -7,6 +7,7 @@ const runId = "650bb1e2-e1a2-4215-a710-02e593b67769";
 const productId = "8346cc30-bc31-49b0-8f56-759092539a0a";
 const videoId = "c3c7c3c3-d40c-42c9-962f-006805811cd6";
 const oldVideoId = "f3c7c3c3-d40c-42c9-962f-006805811cd6";
+const generatedFrameId = "e5e7f7d4-f08c-48f4-a4a1-a42d54d509c5";
 const definition = structuredClone(DEFAULT_WORKFLOW_DEFINITION);
 definition.nodes.find(n => n.type === "product-input")!.config = { batchId: productId, productId };
 const workflow = { id: workflowId, name: "Standard video test", description: "One product", nodeCount: 6, revision: 4, createdAt: "2026-10-05T00:00:00Z", updatedAt: "2026-10-05T00:00:00Z", definition };
@@ -19,6 +20,14 @@ const mockupAsset: MockupAsset = {
   artworkGroupKey: productId, variantKey: null, revision: 1, approvalStatus: "approved", approvedRevision: 1,
   width: 600, height: 900, previewUrl: "/fixture-mockup.svg", warnings: [],
   regions: { focalPoint: { x: 0.5, y: 0.5 }, product: null, artwork: null, detail: null },
+};
+const generatedFrameFixture: MockupAsset = {
+  ...mockupAsset, id: generatedFrameId, sourceType: "ai_generated", role: "VideoScene", revision: 1,
+  approvalStatus: "pending", approvedRevision: null,
+  regions: { focalPoint: null, product: null, artwork: null, detail: null, studioFrame: {
+    fingerprint: "b".repeat(64), sourceMockupId: mockupAsset.id, sourceHash: "a".repeat(64), sourceRevision: 1,
+    layout: "none", aspectRatio: "9:16", promptVersion: 1,
+  } },
 };
 const templates: VideoTemplateCatalogItem[] = [
   { code: "product_showcase", version: 2, name: "Product Showcase", description: "Lead with the complete product.", previewVideoUrl: "/video-templates/product-showcase-v2.mp4", defaultDurationSeconds: 12, defaultTransition: "fade", defaultMotionPreset: "varied", requirements: { minimumAssets: 1, requiresDetail: false, minimumVariants: 0 } },
@@ -38,6 +47,7 @@ const storyboard: VideoStoryboard = {
 const currentRun: WorkflowRun = { id: runId, workflowId, productId, status: "waiting_for_review", revision: 8, workflowRevision: 4, createdAt: workflow.createdAt, errorMessage: null, nodes: definition.nodes.map(n => ({ id: n.id, nodeId: n.id, nodeType: n.type, status: n.type === "review-video" ? "waiting_for_review" : n.type === "export-zip" ? "pending" : "succeeded", attempt: 1, stage: null, progress: 100, errorMessage: null, output: n.type === "review-video" ? { videoId } : {} })) };
 
 test.beforeEach(async ({ page }) => {
+  let activeFrame: MockupAsset | null = null;
   await page.route("**/api/**", async route => {
     const path = new URL(route.request().url()).pathname;
     let json: unknown = [];
@@ -47,7 +57,17 @@ test.beforeEach(async ({ page }) => {
     else if (path === "/api/workflows") json = [workflow];
     else if (path === `/api/workflows/${workflowId}`) json = workflow;
     else if (path === `/api/workflow-runs/${runId}` || path === `/api/workflow-runs/${runId}/actions`) json = currentRun;
-    else if (path === `/api/products/${productId}/mockup-assets`) json = [mockupAsset];
+    else if (path === `/api/products/${productId}/mockup-assets`) json = activeFrame ? [mockupAsset, activeFrame] : [mockupAsset];
+    else if (path === `/api/products/${productId}/studio-keyframe/quote`) json = { fingerprint: "b".repeat(64), promptVersion: 1, estimatedCostUsd: 0.02, existingFrame: null, note: "New keyframe" };
+    else if (path === `/api/products/${productId}/studio-keyframe/generate`) {
+      activeFrame = generatedFrameFixture;
+      json = { frame: activeFrame, reused: false, estimatedCostUsd: 0.02 };
+    }
+    else if (path === `/api/mockup-assets/${generatedFrameId}/review`) {
+      const request = route.request().postDataJSON() as { approved: boolean };
+      activeFrame = { ...generatedFrameFixture, approvalStatus: request.approved ? "approved" : "rejected", approvedRevision: request.approved ? generatedFrameFixture.revision : null };
+      json = activeFrame;
+    }
     else if (path === `/api/products/${productId}/video-storyboard`) {
       const request = route.request().postDataJSON() as { config?: { template?: string } };
       if (request.config?.template === "product_showcase") {
@@ -56,40 +76,55 @@ test.beforeEach(async ({ page }) => {
       } else json = storyboard;
     }
     else if (path.endsWith("/videos")) json = [{ id: videoId, version: 2, approvalStatus: "pending" }, { id: oldVideoId, version: 1, approvalStatus: "rejected" }].map(v => ({ ...v, runId, mode: "standard", template: "product_showcase", outputFormat: "portrait", width: 1080, height: 1920, aspectRatio: "9:16", reviewRevision: v.version + 2, status: "completed", previewUrl: "https://res.cloudinary.com/apcs-ui-fixture/video.mp4", thumbnailUrl: null, qa: { fullDecode: true }, scenes: [] }));
-    await route.fulfill({ json, headers: { "access-control-allow-origin": "http://127.0.0.1:3101", "access-control-allow-credentials": "true" } });
+    await route.fulfill({ json, headers: { "access-control-allow-origin": route.request().headers().origin ?? "http://127.0.0.1:3101", "access-control-allow-credentials": "true" } });
   });
 });
 
-test("template cards are keyboard selectable and storyboard edits remain available", async ({ page }) => {
+test("Standard mode and camera framing are configured per scene", async ({ page }) => {
   await page.goto(`/workflows?id=${workflowId}`);
   await page.locator('.react-flow__node[data-id="video"]').click({ position: { x: 80, y: 70 } });
-  await expect(page.getByRole("button", { name: /^Standard Showcase/ })).toBeEnabled();
-  await expect(page.getByRole("button", { name: /^AI Background/ })).toBeDisabled();
-  await expect(page.getByRole("button", { name: /^AI Shot/ })).toBeDisabled();
-  const productTemplate = page.getByRole("radio", { name: /^Product Showcase Suggested/ });
-  await expect(productTemplate).toBeEnabled();
-  await expect(page.getByRole("radio", { name: /Design Detail/ })).toBeDisabled();
-  await expect(page.getByText("Add an Artwork Detail image or mark a detail region.")).toBeVisible();
-  await expect(page.locator('video[src="/video-templates/product-showcase-v2.mp4"]')).not.toHaveAttribute("autoplay");
-  await expect(page.getByText("product showcase · 9:16 · 1080 × 1920 · 12s · 2 scenes", { exact: true })).toBeVisible();
-  const delayedProductRequest = page.waitForRequest(request => request.url().endsWith(`/api/products/${productId}/video-storyboard`) && request.postDataJSON()?.config?.template === "product_showcase");
-  const delayedProductResponse = page.waitForResponse(response => response.url().endsWith(`/api/products/${productId}/video-storyboard`) && response.request().postDataJSON()?.config?.template === "product_showcase");
-  await productTemplate.focus();
-  await productTemplate.press("Enter");
-  await expect(productTemplate).toHaveAttribute("aria-checked", "true");
-  await delayedProductRequest;
-  const freshAutoResponse = page.waitForResponse(response => response.url().endsWith(`/api/products/${productId}/video-storyboard`) && response.request().postDataJSON()?.config?.template === "auto");
-  await page.getByRole("radio", { name: /^Recommended automatically/ }).click();
-  await freshAutoResponse;
-  await delayedProductResponse;
-  await expect(page.getByText("product showcase · 9:16 · 1080 × 1920 · 12s · 2 scenes", { exact: true })).toBeVisible();
-  await expect(page.getByText("design detail · 9:16 · 1080 × 1920 · 12s · 2 scenes", { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Play video" })).toBeVisible();
-  await page.getByRole("spinbutton").fill("2");
-  await expect(page.getByText("The video duration must be at least 3.")).toBeVisible();
-  await page.getByRole("button", { name: "Edit scenes" }).click();
-  await expect(page.getByRole("button", { name: "Apply scene changes" })).toBeVisible();
-  await page.screenshot({ path: ".next/workflow-ui-results/video-modes.png", fullPage: true });
+  await expect(page.getByRole("group", { name: "Video mode" })).toHaveCount(0);
+  await expect(page.getByText("Standard template")).toHaveCount(0);
+  const generationMode = page.getByRole("combobox", { name: "Scene 1 generation mode" });
+  await generationMode.click();
+  await page.getByRole("option", { name: "Standard", exact: true }).click();
+
+  const motion = page.getByRole("combobox", { name: "Scene 1 Standard camera movement" });
+  await expect(motion).toBeVisible();
+  await motion.click();
+  await page.getByRole("option", { name: "Pan left", exact: true }).click();
+  await expect(motion).toContainText("Pan left");
+  await page.getByText("Advanced · first and last frame").click();
+  await expect(page.getByRole("slider", { name: "Scene 1 first frame zoom" })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Scene 1 last frame anchor" })).toBeVisible();
+  await page.screenshot({ path: ".next/workflow-ui-results/per-scene-standard.png", fullPage: true });
+});
+
+test("a Standard scene cannot use its new keyframe until it is reviewed and approved", async ({ page }) => {
+  page.on("dialog", dialog => dialog.accept());
+  await page.goto(`/workflows?id=${workflowId}`);
+  await page.locator('.react-flow__node[data-id="video"]').click({ position: { x: 80, y: 70 } });
+  await page.getByRole("combobox", { name: "Scene 1 generation mode" }).click();
+  await page.getByRole("option", { name: "Standard", exact: true }).click();
+  await page.getByRole("combobox", { name: "Scene 1 start frame source" }).click();
+  await page.getByRole("option", { name: "Create new keyframe", exact: true }).click();
+  await page.getByRole("combobox", { name: "Scene 1 mockup source for new keyframe" }).click();
+  await page.getByRole("option", { name: /Hero/ }).click();
+  await page.getByRole("button", { name: "Create keyframe" }).click();
+  await expect(page.getByText("Review and approve this image before generating video.")).toBeVisible();
+  const useKeyframe = page.getByRole("button", { name: "Use keyframe for this scene" });
+  await expect(useKeyframe).toBeDisabled();
+
+  const reviewRequest = page.waitForRequest(request => request.url().endsWith(`/api/mockup-assets/${generatedFrameId}/review`));
+  await page.getByRole("button", { name: "Approve", exact: true }).click();
+  expect((await reviewRequest).postDataJSON()).toEqual({ expectedRevision: 1, approved: true });
+  await expect(useKeyframe).toBeEnabled();
+  const storyboardRequest = page.waitForRequest(request => request.url().endsWith(`/api/products/${productId}/video-storyboard`) &&
+    (request.postDataJSON() as { config?: { aiScenes?: { studioFrameId?: string }[] } }).config?.aiScenes?.[0]?.studioFrameId === generatedFrameId);
+  await useKeyframe.click();
+  const payload = (await storyboardRequest).postDataJSON() as { config: { aiScenes: { mode: string; studioFrameId: string }[] } };
+  expect(payload.config.aiScenes[0]?.mode).toBe("standard");
+  expect(payload.config.aiScenes[0]?.studioFrameId).toBe(generatedFrameId);
 });
 
 test("mockup region editor supports drawing, keyboard movement and hides a single artwork group", async ({ page }) => {

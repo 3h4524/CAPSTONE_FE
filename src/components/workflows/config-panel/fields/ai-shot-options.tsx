@@ -13,6 +13,7 @@ import { confirmAiShot } from "@/helpers/confirm-ai-shot";
 import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
 import { getVideoOutputFormat } from "@/helpers/video-output-formats";
+import { createFramingCrop, type CropAnchor } from "@/helpers/video-scenes";
 import { readString, readStringArray } from "@/helpers/workflow-config";
 import { useReviewMockupAsset } from "@/hooks/mutations/use-review-mockup-asset";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
@@ -24,7 +25,7 @@ import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowSave } from "@/hooks/use-workflow-save";
 import { generateVideoConfigSchema } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
-import type { AiSceneVideo, AiVideoSceneOptions, AiVideoTemplateDefinition, GenerateVideoConfig, MockupAsset } from "@/types/video-workflow";
+import type { AiSceneVideo, AiVideoSceneOptions, AiVideoTemplateDefinition, GenerateVideoConfig, MockupAsset, Region } from "@/types/video-workflow";
 
 type LegacyOptions = NonNullable<GenerateVideoConfig["aiShotOptions"]>;
 const BASE_SCENE: AiVideoSceneOptions = {
@@ -50,6 +51,80 @@ const VALUE_LABELS: Record<string, string> = {
   subtle: "Subtle", balanced: "Balanced", soft_studio: "Soft studio", bright_clean: "Bright and clean",
   cool_modern: "Cool modern", moody_cinematic: "Moody cinematic", warm_natural: "Warm natural", golden_hour: "Golden hour",
 };
+const STANDARD_MOTION_OPTIONS = [
+  ["gentle", "Soft push-in"], ["zoom", "Push in"], ["zoom_out", "Pull back"],
+  ["pan_left", "Pan left"], ["pan_up", "Move up"], ["pan_down", "Move down"],
+  ["pan", "Pan right"], ["static", "Static"], ["contain_gentle", "Gentle full-frame motion"],
+  ["custom", "Custom first and last frame"],
+] as const;
+const FULL_FRAME: Region = { x: 0, y: 0, width: 1, height: 1 };
+
+function getStandardBaseCrop(asset: MockupAsset | undefined, aspectRatio: string): Region {
+  if (!asset) return FULL_FRAME;
+  const [aspectWidth, aspectHeight] = aspectRatio.split(":").map(Number);
+  const outputRatio = (aspectWidth || 9) / (aspectHeight || 16);
+  const sourceRatio = asset.width / Math.max(1, asset.height);
+  const height = sourceRatio < outputRatio ? sourceRatio / outputRatio : 1;
+  const width = sourceRatio > outputRatio ? outputRatio / sourceRatio : 1;
+  const focal = asset.regions.focalPoint ?? { x: 0.5, y: 0.5 };
+  return { x: Math.min(Math.max(focal.x - width / 2, 0), 1 - width), y: Math.min(Math.max(focal.y - height / 2, 0), 1 - height), width, height };
+}
+
+function cropZoom(base: Region, crop: Region | null | undefined) {
+  return Math.max(1, Math.min(1.2, base.width / Math.max(0.001, crop?.width ?? base.width)));
+}
+
+function cropAnchor(base: Region, crop: Region | null | undefined): CropAnchor {
+  if (!crop) return "center";
+  const epsilon = 0.002;
+  if (crop.x <= base.x + epsilon && crop.x + crop.width < base.x + base.width - epsilon) return "left";
+  if (crop.x + crop.width >= base.x + base.width - epsilon && crop.x > base.x + epsilon) return "right";
+  if (crop.y <= base.y + epsilon && crop.y + crop.height < base.y + base.height - epsilon) return "top";
+  if (crop.y + crop.height >= base.y + base.height - epsilon && crop.y > base.y + epsilon) return "bottom";
+  return "center";
+}
+
+function StandardSceneMotionControls({ scene, sceneNumber, baseCrop, disabled, onChange }: {
+  scene: AiVideoSceneOptions;
+  sceneNumber: number;
+  baseCrop: Region;
+  disabled: boolean;
+  onChange: (changes: Partial<AiVideoSceneOptions>) => void;
+}) {
+  const endpoint = (name: "standardStartCrop" | "standardEndCrop", label: string, crop: Region | null | undefined) => {
+    const anchor = cropAnchor(baseCrop, crop);
+    const zoom = cropZoom(baseCrop, crop);
+    return <div className="grid gap-2 rounded-md border p-2 sm:grid-cols-[minmax(6rem,1fr)_minmax(7rem,1fr)_minmax(7rem,1fr)] sm:items-center">
+      <span className="text-xs font-medium">{label}</span>
+      <label className="flex items-center gap-2 text-[11px] font-medium"><span className="shrink-0">Zoom</span><input type="range" min={1} max={1.2} step={0.05} value={zoom} disabled={disabled} aria-label={`Scene ${sceneNumber} ${label.toLowerCase()} zoom`}
+        onChange={event => onChange({ standardMotionPreset: "custom", standardBaseCrop: baseCrop, [name]: createFramingCrop(baseCrop, Number(event.currentTarget.value), anchor) })} className="accent-primary h-2 min-w-0 flex-1" /><span className="w-8 text-right tabular-nums">{zoom.toFixed(2)}x</span></label>
+      <label className="flex items-center gap-2 text-[11px] font-medium"><span>Anchor</span><Select disabled={disabled} value={anchor} onValueChange={value => onChange({ standardMotionPreset: "custom", standardBaseCrop: baseCrop, [name]: createFramingCrop(baseCrop, zoom, value as CropAnchor) })}>
+        <SelectTrigger aria-label={`Scene ${sceneNumber} ${label.toLowerCase()} anchor`} className="h-8"><SelectValue /></SelectTrigger><SelectContent>
+          {(["center", "left", "right", "top", "bottom"] as const).map(value => <SelectItem key={value} value={value}>{value === "center" ? "Center" : value[0]!.toUpperCase() + value.slice(1)}</SelectItem>)}
+        </SelectContent></Select></label>
+    </div>;
+  };
+  return <div className="space-y-3 rounded-md border p-3" aria-label={`Scene ${sceneNumber} Standard camera motion`}>
+    <label className="flex flex-col gap-2 text-xs font-medium"><span>Camera movement</span>
+      <Select disabled={disabled} value={scene.standardMotionPreset ?? "gentle"} onValueChange={value => onChange({
+        standardMotionPreset: value as AiVideoSceneOptions["standardMotionPreset"],
+        ...(value !== "custom" ? { standardBaseCrop: null, standardStartCrop: null, standardEndCrop: null } : {}),
+      })}>
+        <SelectTrigger aria-label={`Scene ${sceneNumber} Standard camera movement`}><SelectValue /></SelectTrigger><SelectContent>
+          {STANDARD_MOTION_OPTIONS.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </label>
+    <details className="group rounded-md border p-2">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-semibold">Advanced · first and last frame<ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden="true" /></summary>
+      <div className="mt-3 space-y-2">
+        <p className="text-muted-foreground text-[11px] leading-relaxed">Set a simple zoom and anchor for each endpoint. The renderer moves smoothly between them.</p>
+        {endpoint("standardStartCrop", "First frame", scene.standardStartCrop)}
+        {endpoint("standardEndCrop", "Last frame", scene.standardEndCrop)}
+      </div>
+    </details>
+  </div>;
+}
 
 function convertLegacy(legacy: LegacyOptions | undefined, definition?: AiVideoTemplateDefinition, legacyDuration = 4): AiVideoSceneOptions[] {
   const templateCode = legacy?.concept === "material_detail" ? "macro_detail_reveal"
@@ -69,7 +144,7 @@ function convertLegacy(legacy: LegacyOptions | undefined, definition?: AiVideoTe
 const labelFor = (value: string) => VALUE_LABELS[value] ?? value.replaceAll("_", " ");
 
 function normalizeTemplateSettings(scene: AiVideoSceneOptions, template: AiVideoTemplateDefinition): AiVideoSceneOptions {
-  let normalized = { ...scene, mode: "ai" as const };
+  let normalized: AiVideoSceneOptions = { ...scene, mode: "ai" };
   for (const field of TEMPLATE_SETTING_FIELDS) {
     const choices = template.allowedSettings[field] ?? [];
     if (choices.length === 0 || choices.includes(normalized[field])) continue;
@@ -197,8 +272,9 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
       correctArtworkGroup);
   });
   const approved = [...originalApproved, ...approvedFrames];
-  const scenes = rawScenes.map(scene => {
-    const template = catalog.find(item => item.code === scene.templateCode);
+  const scenes: AiVideoSceneOptions[] = rawScenes.map(scene => {
+    const mode: AiVideoSceneOptions["mode"] = scene.mode === "standard" ? "standard" : "ai";
+    const template = mode === "ai" ? catalog.find(item => item.code === scene.templateCode) : undefined;
     const migrated = scene.startFrameMode == null && scene.templateCode === "cinematic_product_showcase"
       ? { ...scene, startFrameMode: legacyStudioMode ? "studio" as const : "direct" as const,
         studioLayout: scene.studioLayout ?? (node?.data.config.aiStudioLayout === "flat_lay" ? "flat_lay" as const : "hanging_window" as const),
@@ -207,17 +283,50 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
     const withFrameDefaults = migrated.templateCode === "cinematic_product_showcase"
       ? { ...migrated, studioLayout: normalizeStudioLayout(migrated.studioLayout) }
       : migrated;
-    return template ? normalizeTemplateSettings(withFrameDefaults, template) : { ...withFrameDefaults, mode: "ai" as const };
+    return template ? normalizeTemplateSettings(withFrameDefaults, template) : { ...withFrameDefaults, mode };
   });
-  const outputFormat = getVideoOutputFormat(node?.data.config.outputFormat, "ai_shot").value;
+  const outputMode = scenes.length > 0
+    ? scenes.every(scene => scene.mode === "standard") ? "standard" : "ai_shot"
+    : node?.data.config.mode;
+  const outputFormat = getVideoOutputFormat(node?.data.config.outputFormat, outputMode).value;
 
   useEffect(() => {
     if (!node || scenes.length > 0) return;
     const legacy = node.data.config.aiShotOptions as LegacyOptions | undefined;
-    const legacyTemplateCode = legacy?.concept === "material_detail" ? "macro_detail_reveal"
-      : legacy?.concept === "lifestyle_motion" ? "lifestyle_in_use"
-        : legacy?.concept === "product_in_use" ? "creator_pov_ugc" : "cinematic_product_showcase";
-    const migrated = convertLegacy(legacy, catalog.find(item => item.code === legacyTemplateCode), Number(node.data.config.durationSeconds ?? 4));
+    let migrated: AiVideoSceneOptions[];
+    if (node.data.config.mode === "standard" && !legacy) {
+      const configuredIds = readStringArray(node.data.config.sceneOrder);
+      const selectedIds = readStringArray(node.data.config.selectedMockupIds);
+      const ids = (configuredIds.length ? configuredIds : selectedIds).slice(0, 4);
+      const standardConfigs = Array.isArray(node.data.config.standardScenes) ? node.data.config.standardScenes : [];
+      const motionPresets = Array.isArray(node.data.config.sceneMotionPresets) ? node.data.config.sceneMotionPresets : [];
+      const targetDuration = Math.min(30, Math.max(8, Number(node.data.config.durationSeconds ?? 12)));
+      const targetCount = ids.length ? Math.min(4, Math.max(ids.length, Math.ceil(targetDuration / 8))) : 1;
+      const durationTarget = ids.length ? targetDuration : 4;
+      const sceneIds = ids.length ? Array.from({ length: targetCount }, (_, index) => ids[index % ids.length]!) : Array.from({ length: targetCount }, () => null);
+      const durations = Array.from({ length: targetCount }, () => 4);
+      for (let remaining = Math.max(0, durationTarget - durations.reduce((sum, value) => sum + value, 0)), index = 0; remaining >= 2; index = (index + 1) % targetCount) {
+        if (durations[index]! >= 8) {
+          if (durations.every(value => value >= 8)) break;
+          continue;
+        }
+        durations[index]! += 2;
+        remaining -= 2;
+      }
+      migrated = sceneIds.map((id, index): AiVideoSceneOptions => {
+        const framing = standardConfigs.find((item): item is { mockupId: string; baseCrop?: Region | null; startCrop?: Region | null; endCrop?: Region | null } =>
+          typeof item === "object" && item !== null && "mockupId" in item && item.mockupId === id);
+        const motion = motionPresets[index];
+        return { ...BASE_SCENE, mode: "standard", mockupId: id, durationSeconds: durations[index] as 4 | 6 | 8,
+          standardMotionPreset: typeof motion === "string" ? motion as AiVideoSceneOptions["standardMotionPreset"] : "gentle",
+          standardBaseCrop: framing?.baseCrop ?? null, standardStartCrop: framing?.startCrop ?? null, standardEndCrop: framing?.endCrop ?? null };
+      });
+    } else {
+      const legacyTemplateCode = legacy?.concept === "material_detail" ? "macro_detail_reveal"
+        : legacy?.concept === "lifestyle_motion" ? "lifestyle_in_use"
+          : legacy?.concept === "product_in_use" ? "creator_pov_ugc" : "cinematic_product_showcase";
+      migrated = convertLegacy(legacy, catalog.find(item => item.code === legacyTemplateCode), Number(node.data.config.durationSeconds ?? 4));
+    }
     const seconds = migrated.reduce((sum, scene) => sum + scene.durationSeconds, 0);
     const { aiShotOptions: _old, ...cleanConfig } = node.data.config;
     useWorkflowStore.getState().updateNodeConfig(nodeId, { ...cleanConfig, mode: "ai_shot", aiScenes: migrated, durationSeconds: seconds });
@@ -226,8 +335,9 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
 
   useEffect(() => {
     if (!node || rawScenes.length === 0 || areAssetsLoading || !productId) return;
-    const normalizedScenes = rawScenes.map(scene => {
-      const template = catalog.find(item => item.code === scene.templateCode);
+    const normalizedScenes: AiVideoSceneOptions[] = rawScenes.map(scene => {
+      const mode: AiVideoSceneOptions["mode"] = scene.mode === "standard" ? "standard" : "ai";
+      const template = mode === "ai" ? catalog.find(item => item.code === scene.templateCode) : undefined;
       // Asset availability is runtime state, not configuration. Preserve the saved source ID so a
       // temporary fetch failure or an approval/filter change cannot silently erase the scene setup.
       const savedMockupId = scene.mockupId;
@@ -248,10 +358,10 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
       const withRecoveredReferences = (withFrameDefaults.studioReferenceHashes?.length ?? 0) === 0 && frameReferenceHashes.length > 0
         ? { ...withFrameDefaults, studioReferenceHashes: frameReferenceHashes }
         : withFrameDefaults;
-      return template ? normalizeTemplateSettings(withRecoveredReferences, template) : { ...withRecoveredReferences, mode: "ai" as const };
+      return template ? normalizeTemplateSettings(withRecoveredReferences, template) : { ...withRecoveredReferences, mode };
     });
     const needsNormalization = node.data.config.mode !== "ai_shot" || rawScenes.some((scene, index) =>
-      scene.mode !== "ai" || TEMPLATE_SETTING_FIELDS.some(field => scene[field] !== normalizedScenes[index]?.[field]) ||
+      scene.mode !== normalizedScenes[index]?.mode || scene.mode !== "standard" && TEMPLATE_SETTING_FIELDS.some(field => scene[field] !== normalizedScenes[index]?.[field]) ||
       scene.templateCode === "cinematic_product_showcase" && scene.startFrameMode == null ||
       scene.templateCode === "cinematic_product_showcase" && scene.studioLayout !== normalizedScenes[index]?.studioLayout ||
       scene.mockupId !== normalizedScenes[index]?.mockupId ||
@@ -309,6 +419,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
         const frame = quote.existingFrame;
         queryClient.setQueryData<MockupAsset[]>(videoWorkflowKeys.assets(productId), old => [frame, ...(old ?? []).filter(asset => asset.id !== frame.id)]);
         persistScene(sceneIndex, { startFrameMode: "studio", mockupId: source.id, studioLayout: layout, studioFrameId: frame.id,
+          standardBaseCrop: null, standardStartCrop: null, standardEndCrop: null,
           studioReferenceHashes: studioMetadata(frame)?.references?.map(reference => reference.contentHash) ?? [] });
         showToast("success", frame.approvalStatus === "approved" && frame.approvedRevision === frame.revision
           ? "Matching approved keyframe selected. No new image was generated."
@@ -322,6 +433,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
       const frame = result.frame;
       queryClient.setQueryData<MockupAsset[]>(videoWorkflowKeys.assets(productId), old => [frame, ...(old ?? []).filter(asset => asset.id !== frame.id)]);
       persistScene(sceneIndex, { startFrameMode: "studio", mockupId: source.id, studioLayout: layout, studioFrameId: frame.id,
+        standardBaseCrop: null, standardStartCrop: null, standardEndCrop: null,
         studioReferenceHashes: studioMetadata(frame)?.references?.map(reference => reference.contentHash) ?? [] });
       showToast("success", `Keyframe created. Review and approve it before generating video; estimated image cost: $${result.estimatedCostUsd.toFixed(2)} USD.`);
     } catch (error) {
@@ -370,6 +482,8 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
     setAnnouncement(`Scene moved to position ${nextIndex + 1} of ${scenes.length}.`);
   };
   const totalSeconds = scenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
+  const aiSceneSeconds = scenes.reduce((sum, scene) => sum + (scene.mode === "ai" ? scene.durationSeconds : 0), 0);
+  const hasAiScenes = aiSceneSeconds > 0;
   const copyScene = (index: number) => {
     const scene = scenes[index];
     if (!scene || scenes.length >= 4 || totalSeconds + scene.durationSeconds > 30) return;
@@ -378,7 +492,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
       files.splice(index + 1, 0, [...(files[index] ?? [])]);
       return Object.fromEntries(files.map((value, position) => [position, value]));
     });
-    update([...scenes.slice(0, index + 1), { ...scene, mode: "ai" }, ...scenes.slice(index + 1)]);
+    update([...scenes.slice(0, index + 1), { ...scene, mode: "ai" as const }, ...scenes.slice(index + 1)]);
   };
   const removeScene = (index: number) => {
     setReferenceFilesByScene(current => {
@@ -391,10 +505,11 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
   const addScene = () => {
     if (scenes.length >= 4 || scenes.reduce((sum, scene) => sum + scene.durationSeconds, 0) + 4 > 30) return;
     const definition = catalog.find(item => item.code === "cinematic_product_showcase");
-    update([...scenes, { ...BASE_SCENE, ...(definition?.defaults ?? {}), mockupId: null, extraInstructions: null, rightsConfirmed: false }]);
+    const nextScene: AiVideoSceneOptions = { ...BASE_SCENE, ...(definition?.defaults ?? {}), mode: "ai", mockupId: null, extraInstructions: null, rightsConfirmed: false };
+    update([...scenes, nextScene]);
   };
 
-  return <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label="AI scene setup">
+  return <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label="Scene setup">
     <input ref={referenceFileInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={event => {
       const file = event.currentTarget.files?.[0];
       event.currentTarget.value = "";
@@ -410,15 +525,15 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
         <span className="text-muted-foreground text-xs whitespace-nowrap tabular-nums">{scenes.length} {scenes.length === 1 ? "scene" : "scenes"}</span>
       </div>
     </div>
-    <label className="block space-y-1 text-xs font-medium">Shared direction for all scenes <span className="text-muted-foreground font-normal">(optional, up to 500 characters)</span>
-      <textarea disabled={disabled} maxLength={500} value={sharedInstructions ?? ""} onChange={event => update(scenes, event.target.value.trim() ? event.target.value : null)} placeholder="E.g. maintain a warm, premium studio look throughout; keep the artwork facing the camera." className="bg-background min-h-16 w-full rounded-md border p-2 text-sm font-normal" />
-      <span className="text-muted-foreground block text-right text-[11px] font-normal">{sharedInstructions?.length ?? 0}/500  |  appended before product-preservation guardrails</span>
-    </label>
-    {isPending && <p className="text-muted-foreground text-xs">Loading AI scene templates... </p>}
-    {isError && <div className="flex items-center justify-between gap-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900"><span>Could not load the AI template catalog. Your scene settings are preserved.</span><Button type="button" variant="outline" size="sm" onClick={() => void refetch()}>Retry</Button></div>}
+      {hasAiScenes && <label className="block space-y-1 text-xs font-medium">Shared direction for AI scenes <span className="text-muted-foreground font-normal">(optional, up to 500 characters)</span>
+        <textarea disabled={disabled} maxLength={500} value={sharedInstructions ?? ""} onChange={event => update(scenes, event.target.value.trim() ? event.target.value : null)} placeholder="E.g. maintain a warm, premium studio look throughout; keep the artwork facing the camera." className="bg-background min-h-16 w-full rounded-md border p-2 text-sm font-normal" />
+        <span className="text-muted-foreground block text-right text-[11px] font-normal">{sharedInstructions?.length ?? 0}/500  |  appended before product-preservation guardrails</span>
+      </label>}
+    {hasAiScenes && isPending && <p className="text-muted-foreground text-xs">Loading AI scene templates... </p>}
+    {hasAiScenes && isError && <div className="flex items-center justify-between gap-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900"><span>Could not load the AI template catalog. Your scene settings are preserved.</span><Button type="button" variant="outline" size="sm" onClick={() => void refetch()}>Retry</Button></div>}
     <div className="sr-only" role="status" aria-live="polite">{announcement}</div>
     {scenes.map((scene, index) => {
-      const template = catalog.find(item => item.code === scene.templateCode);
+      const template = scene.mode === "standard" ? undefined : catalog.find(item => item.code === scene.templateCode);
       const sources = scene.startFrameMode === "studio" ? originalApproved : approved;
       const hasRequiredSource = sources.length > 0;
       const selectedSource = scene.mockupId ? sources.find(asset => asset.id === scene.mockupId) : undefined;
@@ -489,6 +604,9 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
           mockupId: metadata?.sourceMockupId ?? selectedSource?.id ?? scene.mockupId,
           studioLayout: (metadata?.layout as "hanging_window" | "flat_lay" | "none" | undefined) ?? studioLayout,
           studioFrameId: keyframeToUse.id,
+          standardBaseCrop: null,
+          standardStartCrop: null,
+          standardEndCrop: null,
           studioReferenceHashes: metadata?.references?.map(reference => reference.contentHash) ?? [],
         });
         showToast("success", keyframeToUse.approvalStatus === "pending"
@@ -504,9 +622,12 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
       }} className={`bg-background space-y-3 rounded-lg border p-3 transition-colors ${dragOverIndex === index || selectedForMove === index ? "border-primary ring-primary/20 ring-2" : ""}`}>
         <header className="flex items-center gap-2">
           <h3 className="bg-background flex size-7 items-center justify-center rounded-md border text-sm font-semibold tabular-nums"><span className="sr-only">Scene </span>{index + 1}</h3>
-          <Select disabled={disabled} value={scene.mode ?? "ai"} onValueChange={value => changeScene(index, { mode: value as "ai" })}>
+          <Select disabled={disabled} value={scene.mode ?? "ai"} onValueChange={value => changeScene(index, {
+            mode: value as "ai" | "standard",
+            ...(value === "standard" ? { standardMotionPreset: scene.standardMotionPreset ?? "gentle" } : {}),
+          })}>
               <SelectTrigger className="h-8 w-28 shrink-0" aria-label={`Scene ${index + 1} generation mode`}><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="ai">AI video</SelectItem><SelectItem value="standard" disabled>Standard</SelectItem></SelectContent>
+              <SelectContent><SelectItem value="ai">AI video</SelectItem><SelectItem value="standard">Standard</SelectItem></SelectContent>
           </Select>
           <div className="flex max-w-56 min-w-0 flex-1 items-center gap-1">
             <Button type="button" variant="ghost" size="icon-sm" aria-label={`Decrease scene ${index + 1} duration`} disabled={disabled || scene.durationSeconds <= 4} onClick={() => changeScene(index, { durationSeconds: Math.max(4, scene.durationSeconds - 2) as 4 | 6 | 8 })}><Minus aria-hidden="true" /></Button>
@@ -539,7 +660,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
             <Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove scene ${index + 1}`} disabled={disabled || scenes.length <= 1} onClick={() => removeScene(index)} className="text-destructive hover:text-destructive"><Trash2 aria-hidden="true" /></Button>
           </div>
         </header>
-        <label className="flex flex-col gap-2 text-xs font-medium"><span>AI template</span>
+        {scene.mode !== "standard" && <label className="flex flex-col gap-2 text-xs font-medium"><span>AI template</span>
           <Select disabled={disabled || isPending || catalog.length === 0} value={scene.templateCode} onValueChange={value => {
             const nextTemplate = catalog.find(item => item.code === value);
             if (!nextTemplate) return;
@@ -561,8 +682,11 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
           }}>
             <SelectTrigger aria-label={`Scene ${index + 1} AI template`}><SelectValue /></SelectTrigger><SelectContent>{catalog.map(item => <SelectItem key={item.code} value={item.code}>{item.name}</SelectItem>)}</SelectContent>
           </Select>
-        </label>
+        </label>}
                 {template && <p className="text-muted-foreground text-xs leading-relaxed">{template.description}</p>}
+        {scene.mode === "standard" && <StandardSceneMotionControls scene={scene} sceneNumber={index + 1}
+          baseCrop={scene.standardBaseCrop ?? getStandardBaseCrop(selectedSourceFrame ?? selectedSource, outputAspect)} disabled={disabled}
+          onChange={changes => changeScene(index, changes)} />}
         <section className="space-y-4 rounded-md border p-3" aria-label={`Scene ${index + 1} start frame`}>
           <div className="grid items-end gap-3 min-[480px]:grid-cols-[minmax(0,1fr)_13rem]">
             <div><p className="text-sm font-semibold">Start frame</p><p className="text-muted-foreground mt-1 max-w-md text-xs leading-relaxed">Choose an approved asset or create a custom keyframe for this scene.</p></div>
@@ -570,6 +694,9 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
               <Select disabled={disabled} value={selectedSourceFrame ? "direct" : scene.startFrameMode ?? "direct"} onValueChange={value => persistScene(index, {
                 startFrameMode: value as "direct" | "studio",
                 studioFrameId: null,
+                standardBaseCrop: null,
+                standardStartCrop: null,
+                standardEndCrop: null,
                 studioLayout,
               })}>
                 <SelectTrigger aria-label={`Scene ${index + 1} start frame source`}><SelectValue /></SelectTrigger>
@@ -583,8 +710,8 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
                 if (value.startsWith("frame:")) {
                   const frame = reusableStudioFrames.find(item => item.id === value.slice(6));
                   const metadata = frame && studioMetadata(frame);
-                  persistScene(index, { startFrameMode: "studio", mockupId: metadata?.sourceMockupId ?? null, studioFrameId: value.slice(6), ...(metadata && { studioLayout: metadata.layout as "hanging_window" | "flat_lay" | "none" }) });
-                } else persistScene(index, { startFrameMode: "direct", mockupId: value, studioFrameId: null });
+                  persistScene(index, { startFrameMode: "studio", mockupId: metadata?.sourceMockupId ?? null, studioFrameId: value.slice(6), standardBaseCrop: null, standardStartCrop: null, standardEndCrop: null, ...(metadata && { studioLayout: metadata.layout as "hanging_window" | "flat_lay" | "none" }) });
+                } else persistScene(index, { startFrameMode: "direct", mockupId: value, studioFrameId: null, standardBaseCrop: null, standardStartCrop: null, standardEndCrop: null });
               }}>
                 <SelectTrigger className="w-full" aria-label={`Scene ${index + 1} approved mockup`} aria-required="true"><SelectValue placeholder="Select an approved image" /></SelectTrigger><SelectContent>
                   {sources.map(asset => <MockupOption key={asset.id} asset={asset} />)}
@@ -608,7 +735,7 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
             <label className="flex flex-col gap-2 text-xs font-medium"><span>Approved product image <span className="text-muted-foreground font-normal">(required)</span></span>
               <Select disabled={disabled || !hasRequiredSource} value={selectedSourceValue} onValueChange={value => {
                 persistScene(index, { mockupId: value, studioFrameId: null,
-                  studioReferenceHashes: [] });
+                  standardBaseCrop: null, standardStartCrop: null, standardEndCrop: null, studioReferenceHashes: [] });
               }}>
                 <SelectTrigger aria-label={`Scene ${index + 1} mockup source for new keyframe`} aria-required="true"><SelectValue placeholder="Select an image" /></SelectTrigger><SelectContent>{sources.map(asset => <MockupOption key={asset.id} asset={asset} />)}</SelectContent>
               </Select>
@@ -659,16 +786,18 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
             {template?.requiresDetail && selectedSource && !hasUsableDetail(selectedSource) && <p className="rounded-md border border-blue-200 bg-blue-50 p-2 text-xs leading-relaxed text-blue-900">This image can be used directly. Mark an artwork/detail region for a tighter automatic crop, or create an approved close-up keyframe for the clearest detail. Review generated keyframes because fine print may be reinterpreted.</p>}
           </div>}
         </section>
-        <div className="flex justify-center py-1" aria-hidden="true">
-          <ArrowDown className="text-primary size-4" strokeWidth={2.25} />
-        </div>
-        <SceneVideoResult sceneNumber={index + 1} clip={sceneVideo} runStarted={Boolean(sceneRunId)} waitingForGeneration={waitingForVideoGeneration}
-          canRegenerate={canRegenerateScene} isRegenerating={regeneratingSceneIndex === index} onRegenerate={() => void regenerateScene(index)} />
+        {scene.mode !== "standard" && <>
+          <div className="flex justify-center py-1" aria-hidden="true">
+            <ArrowDown className="text-primary size-4" strokeWidth={2.25} />
+          </div>
+          <SceneVideoResult sceneNumber={index + 1} clip={sceneVideo} runStarted={Boolean(sceneRunId)} waitingForGeneration={waitingForVideoGeneration}
+            canRegenerate={canRegenerateScene} isRegenerating={regeneratingSceneIndex === index} onRegenerate={() => void regenerateScene(index)} />
+        </>}
         {!hasRequiredSource && <p className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs leading-relaxed text-amber-900">
           {template?.requiresLifestyle ? "Choose an approved product image. You may attach optional approved reference images and describe their use in the keyframe direction." : template?.requiresDetail ? "Choose any approved mockup or keyframe. Marking an artwork/detail region is optional; without one, the scene uses the full selected image, so a close-up keyframe gives the clearest detail." : "Approve at least one product image before generating this scene."} {effectiveChosenMockupIds.length > 0 || effectiveArtworkGroupKey ? "Also check that the image is included in Apply Mockup's allowed images and selected artwork group." : ""}
         </p>}
         {needsRightsConfirmation && <label className="flex items-start gap-2 text-xs leading-5"><input type="checkbox" disabled={disabled} checked={scene.rightsConfirmed} onChange={event => changeScene(index, { rightsConfirmed: event.target.checked, studioFrameId: null })} className="mt-1" /><span>I have the rights to use people visible in the selected product and reference images.</span></label>}
-        <details className="group bg-muted/20 rounded-md border p-2">
+        {scene.mode !== "standard" && <details className="group bg-muted/20 rounded-md border p-2">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-semibold">Advanced camera, motion and lighting<ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden="true" /></summary>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {template && Object.entries(template.allowedSettings).map(([key, choices]) => {
@@ -684,14 +813,14 @@ export function AiShotOptions({ nodeId, disabled, onChange }: {
             </label>
             {template?.basePrompt && <div className="sm:col-span-2"><details className="text-xs"><summary className="text-muted-foreground cursor-pointer">View compiled prompt building blocks  |  v{template.promptVersion}</summary><p className="text-muted-foreground mt-2 font-semibold">Template prompt</p><p className="bg-muted mt-1 rounded p-2 leading-relaxed">{template.basePrompt}</p>{template.commonPrompt && <><p className="text-muted-foreground mt-2 font-semibold">Shared product-preservation rules</p><p className="bg-muted mt-1 rounded p-2 leading-relaxed">{template.commonPrompt}</p></>}</details></div>}
           </div>
-        </details>
+        </details>}
       </article>;
     })}
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <p className="text-muted-foreground text-xs">Estimated generation ${(totalSeconds * 0.1).toFixed(2)} USD</p>
-      <Button type="button" variant="outline" size="sm" disabled={disabled || scenes.length >= 4 || totalSeconds + 4 > 30 || catalog.length === 0} onClick={addScene}><Plus aria-hidden="true" /> Add scene</Button>
+      {hasAiScenes ? <p className="text-muted-foreground text-xs">Estimated AI footage ${(aiSceneSeconds * 0.1).toFixed(2)} USD</p> : <span />}
+      <Button type="button" variant="outline" size="sm" disabled={disabled || scenes.length >= 4 || totalSeconds + 4 > 30} onClick={addScene}><Plus aria-hidden="true" /> Add scene</Button>
     </div>
-    <p className="text-muted-foreground text-xs leading-relaxed">The estimate assumes every clip is new; the final quote accounts for reusable scenes and is confirmed before rendering. Macro scenes use a marked artwork crop when needed. Every keyframe template can combine its approved product source with up to three optional visual references. Review every generated scene for product fidelity.</p>
+    <p className="text-muted-foreground text-xs leading-relaxed">The AI estimate assumes each AI clip is new; the final quote accounts for reusable clips before rendering. Standard scenes use smooth camera movement between the selected framing points. Keyframes can combine an approved product source with up to three visual references. Review AI clips and every generated keyframe for product fidelity.</p>
     <Dialog open={previewFrame !== null} onOpenChange={open => { if (!open) setPreviewFrame(null); }}>
       <DialogContent showCloseButton={false} className="h-[90dvh] w-[calc(100%-2rem)] max-w-4xl border-0 bg-transparent p-0 shadow-none">
         <button type="button" aria-label="Close image preview" onClick={() => setPreviewFrame(null)}

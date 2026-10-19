@@ -245,16 +245,14 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
   "generate-video": {
     type: "generate-video",
     label: "Generate Video",
-    description: "Build a video from individually configured AI scenes.",
+    description: "Build a video from scenes configured individually for AI or Standard motion.",
     icon: Film,
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { mode: "ai_shot", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "portrait", durationSeconds: 4, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "none" }, fallbackToStandard: true, aiStudioMode: "direct", aiStudioLayout: "hanging_window", aiStudioSourceMockupId: null, aiStudioFrameId: null },
+    defaultConfig: { mode: "ai_shot", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "portrait", durationSeconds: 4, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], standardScenes: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "none" }, fallbackToStandard: true, aiStudioMode: "direct", aiStudioLayout: "hanging_window", aiStudioSourceMockupId: null, aiStudioFrameId: null },
     fields: [
-      { kind: "video-modes", name: "mode", label: "Video mode" },
       { kind: "video-formats", name: "outputFormat", label: "Output format" },
-      { kind: "number", name: "durationSeconds", label: "Duration", min: 3, max: 15, unit: "s" },
       { kind: "textarea", name: "textOverlay", label: "Text overlay", placeholder: "Optional short caption (120 characters)" },
       { kind: "select", name: "standardOptions.transition", label: "Transition", options: [
         { value: "none", label: "None" }, { value: "fade", label: "Fade" }, { value: "swipe", label: "Swipe" },

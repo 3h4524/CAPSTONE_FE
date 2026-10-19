@@ -43,6 +43,9 @@ type NodeConfigFormProps = {
   showHeader?: boolean;
 };
 
+const isAiSceneConfig = (scene: unknown) => typeof scene === "object" && scene !== null &&
+  "mode" in scene && scene.mode !== "standard";
+
 export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps) => {
   const definition = WORKFLOW_NODE_DEFINITIONS[node.data.type];
   const isRunning = useWorkflowStore((state) => state.isRunning);
@@ -61,6 +64,11 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
   });
   const { control, trigger, watch, setValue } = form;
   const videoMode = watch("mode");
+  const watchedScenes = watch("aiScenes");
+  const configuredScenes = Array.isArray(watchedScenes) ? watchedScenes : [];
+  const outputMode = configuredScenes.length
+    ? configuredScenes.some(isAiSceneConfig) ? "ai_shot" : "standard"
+    : videoMode;
   const videoFields = definition.fields.filter(field => field.name === "outputFormat");
   const advancedVideoFields = definition.fields.filter(field => field.name === "textOverlay" || field.name === "standardOptions.transition");
   const { grouped, rest } = groupPanelFields(definition.fields, NODE_PANEL_SECTIONS[node.data.type]);
@@ -83,7 +91,11 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
   useEffect(() => {
     if (node.data.type !== "generate-video") return;
     const currentFormat = node.data.config.outputFormat;
-    const normalizedFormat = getVideoOutputFormat(currentFormat, node.data.config.mode).value;
+    const sceneModes = node.data.config.aiScenes;
+    const effectiveMode = Array.isArray(sceneModes) && sceneModes.length > 0
+      ? sceneModes.some(isAiSceneConfig) ? "ai_shot" : "standard"
+      : node.data.config.mode;
+    const normalizedFormat = getVideoOutputFormat(currentFormat, effectiveMode).value;
     if (currentFormat !== normalizedFormat) {
       setValue("outputFormat", normalizedFormat, { shouldDirty: true, shouldValidate: true });
       updateNodeConfig(node.id, { ...node.data.config, outputFormat: normalizedFormat });
@@ -109,7 +121,7 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
             <fieldset disabled={settingsLocked} className="min-w-0 [&>section:first-child]:border-t-0">
               {node.data.type === "generate-video" ? (
                 <div className="space-y-6 px-5 py-5">
-                  {videoFields.map(field => <NodeConfigField key={field.name} field={field} control={control} videoMode={String(videoMode ?? "ai_shot")} />)}
+                  {videoFields.map(field => <NodeConfigField key={field.name} field={field} control={control} videoMode={String(outputMode ?? "ai_shot")} />)}
                   <Accordion type="single" collapsible>
                     <AccordionItem value="advanced-video">
                       <AccordionTrigger>Caption and transition</AccordionTrigger>
@@ -118,13 +130,13 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
-                  {videoMode === "ai_shot" && <AiShotOptions nodeId={node.id} disabled={isRunning && !waitingReview} onChange={(scenes, seconds, sharedInstructions) => {
+                  <AiShotOptions nodeId={node.id} disabled={isRunning && !waitingReview} onChange={(scenes, seconds, sharedInstructions) => {
                     setValue("mode", "ai_shot", { shouldDirty: true, shouldValidate: true });
                     setValue("aiScenes", scenes, { shouldDirty: true, shouldValidate: true });
                     setValue("aiGlobalInstructions", sharedInstructions ?? null, { shouldDirty: true, shouldValidate: true });
                     setValue("durationSeconds", seconds, { shouldDirty: true, shouldValidate: true });
                     void trigger();
-                  }} />}
+                  }} />
                 </div>
               ) : (
                 <>

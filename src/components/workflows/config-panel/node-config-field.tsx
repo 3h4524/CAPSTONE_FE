@@ -12,7 +12,6 @@ import { MockupSelectionField } from "@/components/workflows/config-panel/fields
 import { OptionSelect } from "@/components/workflows/config-panel/fields/option-select";
 import { ProductSelect } from "@/components/workflows/config-panel/fields/product-select";
 import { SourceSelect } from "@/components/workflows/config-panel/fields/source-select";
-import { VideoModeCards } from "@/components/workflows/config-panel/fields/video-mode-cards";
 import { VideoOutputFormatCards } from "@/components/workflows/config-panel/fields/video-output-format-cards";
 import { getVideoOutputFormat } from "@/helpers/video-output-formats";
 import { parseAspectRatio, readBoolean, readNumber, readString, readStringArray } from "@/helpers/workflow-config";
@@ -46,7 +45,6 @@ export const NodeConfigField = ({ field, control, videoMode }: NodeConfigFieldPr
               <FormMessage />
             </FormItem>
           );
-        case "video-modes": return <FormItem><FormLabel>{field.label}</FormLabel><VideoModeCards value={readString(controller.value)} onChange={controller.onChange} /><FormMessage /></FormItem>;
         case "video-formats": return <FormItem><FormLabel>{field.label}</FormLabel><VideoOutputFormatCards mode={videoMode} value={getVideoOutputFormat(controller.value, videoMode).value} onChange={controller.onChange} /><FormMessage /></FormItem>;
         case "text": return <FormItem><FormLabel>{field.label}</FormLabel><FormControl><Input value={readString(controller.value)} onChange={controller.onChange} /></FormControl><FormMessage /></FormItem>;
         case "switch":
@@ -63,8 +61,9 @@ export const NodeConfigField = ({ field, control, videoMode }: NodeConfigFieldPr
           );
         case "number": {
           const value = readNumber(controller.value);
-          if (field.max - field.min < MAX_BUTTON_CHOICES) {
-            const choices = Array.from({ length: field.max - field.min + 1 }, (_, index) => {
+          const max = field.name === "durationSeconds" ? (videoMode === "standard" ? 30 : 15) : field.max;
+          if (max - field.min < MAX_BUTTON_CHOICES) {
+            const choices = Array.from({ length: max - field.min + 1 }, (_, index) => {
               const amount = String(field.min + index);
               return { value: amount, label: amount };
             });
@@ -90,14 +89,14 @@ export const NodeConfigField = ({ field, control, videoMode }: NodeConfigFieldPr
                 <Input
                   type="number"
                   min={field.min}
-                  max={field.max}
+                  max={max}
                   step={1}
                   value={value ?? ""}
                   onChange={(event) => controller.onChange(event.target.valueAsNumber)}
                   onBlur={controller.onBlur}
                 />
               </FormControl>
-              <FormDescription className={DESCRIPTION_CLASS}>Between {field.min} and {field.max}.</FormDescription>
+              <FormDescription className={DESCRIPTION_CLASS}>Between {field.min} and {max}.</FormDescription>
               <FormMessage />
             </FormItem>
           );

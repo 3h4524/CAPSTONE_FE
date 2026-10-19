@@ -121,7 +121,6 @@ export type WorkflowField =
       noneLabel?: string;
     }
   | { kind: "product-select"; name: string; label: string; description?: string }
-  | { kind: "video-modes"; name: string; label: string }
   | { kind: "video-formats"; name: string; label: string }
   | { kind: "text"; name: string; label: string }
   | { kind: "mockup-selection"; name: string; templateColorsName: string; templateBackgroundsName: string; label: string }

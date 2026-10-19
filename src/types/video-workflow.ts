@@ -4,7 +4,7 @@ import type { generateVideoConfigSchema } from "@/schemas/workflow";
 
 export type GenerateVideoConfig = z.infer<typeof generateVideoConfigSchema>;
 export interface AiVideoSceneOptions {
-  mode: "ai";
+  mode: "ai" | "standard";
   mockupId: string | null;
   templateCode: string;
   durationSeconds: 4 | 6 | 8;
@@ -21,6 +21,10 @@ export interface AiVideoSceneOptions {
   studioFrameId?: string | null;
   studioPrompt?: string | null;
   studioReferenceHashes?: string[] | null;
+  standardMotionPreset?: SceneMotion | null;
+  standardBaseCrop?: Region | null;
+  standardStartCrop?: Region | null;
+  standardEndCrop?: Region | null;
 }
 export interface AiVideoTemplateDefinition {
   code: string;
@@ -58,7 +62,7 @@ export interface MockupAsset { id: string; productId: string; sourceType: string
 export interface AiStudioFrameRequest { sourceMockupId: string; layout: "hanging_window" | "flat_lay" | "none"; outputFormat: string; customPrompt?: string | null; templateCode?: string | null; references?: File[]; referenceRightsConfirmed?: boolean; regenerate?: boolean; expectedFingerprint?: string; confirmedEstimatedCostUsd?: number }
 export interface AiStudioFrameQuote { fingerprint: string; promptVersion: number; estimatedCostUsd: number; existingFrame: MockupAsset | null; note: string }
 export interface AiStudioFrameGeneration { frame: MockupAsset; reused: boolean; estimatedCostUsd: number }
-export type SceneMotion = "gentle" | "contain_gentle" | "static" | "pan" | "zoom" | "zoom_out" | "pan_left" | "pan_up" | "pan_down" | "diagonal_up_right" | "diagonal_up_left" | "diagonal_down_right" | "diagonal_down_left";
+export type SceneMotion = "gentle" | "contain_gentle" | "static" | "pan" | "zoom" | "zoom_out" | "pan_left" | "pan_up" | "pan_down" | "diagonal_up_right" | "diagonal_up_left" | "diagonal_down_right" | "diagonal_down_left" | "custom";
 export type VideoTransition = "none" | "fade" | "swipe" | "zoom" | "flash" | "whip_pan" | "blur" | "cut";
 export interface ScenePlan { mockupId: string; sourceRevision: number; sourceHash: string; role: string; sceneOrder: number; durationFrames: number; crop: Region; endCrop: Region; motion: SceneMotion; transition: VideoTransition; text: string; generationStrategy: string; warnings: string[]; aiTemplateCode?: string | null; promptVersion?: number | null; compiledPrompt?: string | null; aiSettings?: AiVideoSceneOptions | null; sourceCrop?: Region | null; aiProviderKey?: string | null; aiModelKey?: string | null; aiModelName?: string | null }
 export interface PromoVideo { id: string; runId: string; mode: string; template: string; version: number; reviewRevision: number; status: string; approvalStatus: string; previewUrl: string | null; thumbnailUrl: string | null; qa: Record<string, unknown>; scenes: ScenePlan[]; outputFormat: string; width: number; height: number; aspectRatio: string }

@@ -113,7 +113,6 @@ export const summarizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNode
       case "textarea":
       case "text":
       case "product-select":
-      case "video-modes":
       case "video-formats":
         return [];
     }

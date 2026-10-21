@@ -19,6 +19,7 @@ export interface RevenueMetricsDto {
 export interface RevenueTrendPointDto {
   dateLabel: string;
   amount: number;
+  planBreakdown?: Record<string, number>;
 }
 
 export interface RevenueByPlanDto {
@@ -30,6 +31,7 @@ export interface RevenueByPlanDto {
 export interface RevenueChartDto {
   trend: RevenueTrendPointDto[];
   byPlan: RevenueByPlanDto[];
+  availablePlans?: string[];
 }
 
 export interface RevenueInvoiceDto {

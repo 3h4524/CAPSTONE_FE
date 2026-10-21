@@ -56,7 +56,7 @@ export function RevenueMetricCards({
       strokeColor: "#3b82f6",
       metric: metrics?.totalRevenue,
       isCurrency: true,
-      tooltip: "Tổng doanh thu gộp thu được từ tất cả hóa đơn thanh toán thành công trong kỳ đã chọn.",
+      tooltip: "Gross revenue collected from all successful invoice payments in the selected period.",
     },
     {
       title: "Net Revenue",
@@ -66,7 +66,7 @@ export function RevenueMetricCards({
       strokeColor: "#10b981",
       metric: metrics?.netRevenue ?? metrics?.totalNetRevenue,
       isCurrency: true,
-      tooltip: "Doanh thu thuần thực nhận sau khi khấu trừ các khoản hoàn tiền (Gross Revenue - Refunds).",
+      tooltip: "Net revenue retained after deducting refunds (Gross Revenue − Refunds) in the selected period.",
     },
     {
       title: "MRR",
@@ -76,7 +76,7 @@ export function RevenueMetricCards({
       strokeColor: "#6366f1",
       metric: metrics?.subscriptionMrr,
       isCurrency: true,
-      tooltip: "Monthly Recurring Revenue: Doanh thu định kỳ hàng tháng từ các gói thuê bao (Subscription) đang hoạt động.",
+      tooltip: "Monthly Recurring Revenue: Current monthly recurring revenue snapshot from all active subscriptions.",
     },
     {
       title: "ARR",
@@ -86,7 +86,7 @@ export function RevenueMetricCards({
       strokeColor: "#f59e0b",
       metric: metrics?.arr,
       isCurrency: true,
-      tooltip: "Annual Recurring Revenue: Doanh thu định kỳ hàng năm dự phóng theo quy chuẩn tài chính SaaS (MRR × 12 tháng).",
+      tooltip: "Annual Recurring Revenue: Projected annualized recurring revenue snapshot based on SaaS standard (MRR × 12 months).",
     },
     {
       title: "Active Subscribers",
@@ -96,7 +96,7 @@ export function RevenueMetricCards({
       strokeColor: "#14b8a6",
       metric: metrics?.activeSubscribers,
       isCurrency: false,
-      tooltip: "Số lượng khách hàng đang có gói thuê bao hoạt động trong kỳ đã chọn.",
+      tooltip: "Total unique customers with an active paid subscription in the selected period.",
     },
     {
       title: "Refund Amount",
@@ -107,7 +107,7 @@ export function RevenueMetricCards({
       metric: metrics?.refundAmount,
       isCurrency: true,
       invertTrend: true,
-      tooltip: "Tổng số tiền đã hoàn trả cho khách hàng trong kỳ đã chọn.",
+      tooltip: "Total monetary value refunded to customers during the selected period.",
     },
   ];
 
@@ -178,19 +178,25 @@ export function RevenueMetricCards({
                     >
                       {config.icon}
                     </div>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="group/title flex cursor-help items-center gap-1">
-                          <span className="text-xs font-semibold tracking-tight text-slate-600 transition-colors group-hover/title:text-slate-900 dark:text-slate-300 dark:group-hover/title:text-slate-100">
-                            {config.title}
-                          </span>
-                          <HelpCircle className="h-3 w-3 text-slate-400 opacity-60 transition-opacity group-hover/title:opacity-100 dark:text-slate-500" />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="max-w-xs text-xs font-normal">
-                        {config.tooltip}
-                      </TooltipContent>
-                    </Tooltip>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs font-semibold tracking-tight text-slate-600 dark:text-slate-300">
+                        {config.title}
+                      </span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={`About ${config.title}`}
+                            className="inline-flex cursor-pointer text-slate-400 transition-colors hover:text-slate-600 focus:outline-none dark:text-slate-500 dark:hover:text-slate-300"
+                          >
+                            <HelpCircle className="h-3 w-3" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs text-xs font-normal">
+                          {config.tooltip}
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   </div>
 
                   {/* Mini Sparkline */}

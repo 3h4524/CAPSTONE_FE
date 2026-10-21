@@ -22,6 +22,48 @@ export function RevenueFilterBar({
     onFilterChange({ ...filter, [key]: value, page: 1 });
   };
 
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  const todayStr = `${y}-${m}-${d}`;
+  const firstDayOfMonthStr = `${y}-${m}-01`;
+  const firstDayOfYearStr = `${y}-01-01`;
+
+  // Determine active preset based on current date range
+  const isDaily = filter.startDate === todayStr && filter.endDate === todayStr;
+  const isMonthly = filter.startDate === firstDayOfMonthStr && filter.endDate === todayStr;
+  const isYearly = filter.startDate === firstDayOfYearStr && filter.endDate === todayStr;
+
+  const handlePresetSelect = (preset: "Daily" | "Monthly" | "Yearly") => {
+    if (preset === "Daily") {
+      onFilterChange({
+        ...filter,
+        startDate: todayStr,
+        endDate: todayStr,
+        granularity: "Day",
+        page: 1,
+      });
+    } else if (preset === "Monthly") {
+      onFilterChange({
+        ...filter,
+        startDate: firstDayOfMonthStr,
+        endDate: todayStr,
+        granularity: "Day",
+        page: 1,
+      });
+    } else {
+      // Yearly
+      onFilterChange({
+        ...filter,
+        startDate: firstDayOfYearStr,
+        endDate: todayStr,
+        granularity: "Month",
+        page: 1,
+      });
+    }
+  };
+
   return (
     <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       {/* Title & Subtitle */}
@@ -54,35 +96,29 @@ export function RevenueFilterBar({
           />
         </div>
 
-        {/* Group by: Segmented Pill */}
+        {/* Period Preset Segmented Pill */}
         <div className="flex items-center gap-1 rounded-xl border border-slate-200/90 bg-slate-50/80 p-1 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
           <span className="px-2 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-            Group by:
+            Period:
           </span>
-          {(["Day", "Month", "Year"] as const).map((granularity) => {
-            const isSelected = filter.granularity === granularity;
-            const label =
-              granularity === "Day"
-                ? "Daily"
-                : granularity === "Month"
-                  ? "Monthly"
-                  : "Yearly";
-
-            return (
-              <button
-                key={granularity}
-                type="button"
-                onClick={() => handleChange("granularity", granularity)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
-                  isSelected
-                    ? "bg-slate-900 text-white shadow-xs dark:bg-slate-100 dark:text-slate-900"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
+          {[
+            { key: "Daily", label: "Daily", active: isDaily },
+            { key: "Monthly", label: "Monthly", active: isMonthly },
+            { key: "Yearly", label: "Yearly", active: isYearly },
+          ].map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => handlePresetSelect(item.key as "Daily" | "Monthly" | "Yearly")}
+              className={`cursor-pointer rounded-lg px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
+                item.active
+                  ? "bg-slate-900 text-white shadow-xs dark:bg-slate-100 dark:text-slate-900"
+                  : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
 
         {/* Currency Switcher Dropdown */}

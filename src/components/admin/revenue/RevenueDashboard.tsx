@@ -96,7 +96,7 @@ export function RevenueDashboard() {
           currency={currency}
         />
 
-      <RevenueCharts charts={chartsData} isLoading={isLoadingCharts} />
+        <RevenueCharts charts={chartsData} isLoading={isLoadingCharts} currency={currency} />
 
       <RevenueInvoiceTable 
         data={invoicesData} 

@@ -2,13 +2,18 @@ export interface MetricDetail {
   value: number;
   previousValue: number;
   percentageChange: number;
+  sparkline?: number[];
 }
 
 export interface RevenueMetricsDto {
-  totalNetRevenue: MetricDetail;
+  totalRevenue: MetricDetail;
+  netRevenue: MetricDetail;
   subscriptionMrr: MetricDetail;
+  arr: MetricDetail;
   activeSubscribers: MetricDetail;
-  arpu: MetricDetail;
+  refundAmount: MetricDetail;
+  totalNetRevenue?: MetricDetail;
+  arpu?: MetricDetail;
 }
 
 export interface RevenueTrendPointDto {

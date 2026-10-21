@@ -1,58 +1,103 @@
 "use client";
 
 import React from "react";
+import { Calendar, ChevronDown } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import type { RevenueFilterDto } from "@/types/revenue";
 
 interface RevenueFilterBarProps {
   filter: RevenueFilterDto;
   onFilterChange: (newFilter: RevenueFilterDto) => void;
+  currency: "VND" | "USD";
+  onCurrencyChange: (currency: "VND" | "USD") => void;
 }
 
-export function RevenueFilterBar({ filter, onFilterChange }: RevenueFilterBarProps) {
+export function RevenueFilterBar({
+  filter,
+  onFilterChange,
+  currency,
+  onCurrencyChange,
+}: RevenueFilterBarProps) {
   const handleChange = (key: keyof RevenueFilterDto, value: string | number) => {
-    onFilterChange({ ...filter, [key]: value, page: 1 }); // reset page on filter change
+    onFilterChange({ ...filter, [key]: value, page: 1 });
   };
 
   return (
-    <Card className="mb-6 border-none bg-white/50 shadow-sm backdrop-blur dark:bg-slate-900/50">
-      <CardContent className="flex flex-wrap items-center gap-4 p-4">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-slate-500">From:</label>
+    <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      {/* Title & Subtitle */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-100">
+          Revenue Intelligence
+        </h1>
+        <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+          Track revenue, subscriptions, and financial performance with real-time insights.
+        </p>
+      </div>
+
+      {/* Right Controls Bar */}
+      <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+        {/* Date Range Picker Pill */}
+        <div className="flex items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3 py-1.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
+          <Calendar className="h-4 w-4 text-slate-400 dark:text-slate-500" />
           <input
             type="date"
             value={filter.startDate}
             onChange={(e) => handleChange("startDate", e.target.value)}
-            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:placeholder:text-slate-400 dark:focus-visible:ring-slate-300"
+            className="cursor-pointer border-none bg-transparent p-0 text-xs font-semibold text-slate-700 outline-none focus:ring-0 dark:text-slate-200"
           />
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-slate-500">To:</label>
+          <span className="text-xs text-slate-300 dark:text-slate-600">–</span>
           <input
             type="date"
             value={filter.endDate}
             onChange={(e) => handleChange("endDate", e.target.value)}
-            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:placeholder:text-slate-400 dark:focus-visible:ring-slate-300"
+            className="cursor-pointer border-none bg-transparent p-0 text-xs font-semibold text-slate-700 outline-none focus:ring-0 dark:text-slate-200"
           />
         </div>
 
-        <div className="ml-auto flex items-center gap-1 rounded-md border bg-slate-50 p-1 pl-3 dark:border-slate-800 dark:bg-slate-900">
-          <span className="mr-2 text-xs font-bold tracking-wider text-slate-400 uppercase">Group by:</span>
-          {(["Day", "Month", "Year"] as const).map((granularity) => (
-            <Button
-              key={granularity}
-              variant={filter.granularity === granularity ? "default" : "ghost"}
-              size="sm"
-              onClick={() => handleChange("granularity", granularity)}
-              className={filter.granularity === granularity ? "shadow-sm" : ""}
-            >
-              {granularity === "Day" ? "Daily" : granularity === "Month" ? "Monthly" : "Yearly"}
-            </Button>
-          ))}
+        {/* Group by: Segmented Pill */}
+        <div className="flex items-center gap-1 rounded-xl border border-slate-200/90 bg-slate-50/80 p-1 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
+          <span className="px-2 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+            Group by:
+          </span>
+          {(["Day", "Month", "Year"] as const).map((granularity) => {
+            const isSelected = filter.granularity === granularity;
+            const label =
+              granularity === "Day"
+                ? "Daily"
+                : granularity === "Month"
+                  ? "Monthly"
+                  : "Yearly";
+
+            return (
+              <button
+                key={granularity}
+                type="button"
+                onClick={() => handleChange("granularity", granularity)}
+                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
+                  isSelected
+                    ? "bg-slate-900 text-white shadow-xs dark:bg-slate-100 dark:text-slate-900"
+                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Currency Switcher Dropdown */}
+        <div className="relative">
+          <select
+            value={currency}
+            onChange={(e) => onCurrencyChange(e.target.value as "VND" | "USD")}
+            className="h-9 cursor-pointer appearance-none rounded-xl border border-slate-200/90 bg-white pr-8 pl-3 text-xs font-bold text-slate-700 shadow-2xs transition-all hover:border-slate-300 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+          >
+            <option value="VND">VND</option>
+            <option value="USD">USD</option>
+          </select>
+          <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+        </div>
+      </div>
+    </div>
   );
 }

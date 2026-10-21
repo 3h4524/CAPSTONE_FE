@@ -1,74 +1,225 @@
 "use client";
 
 import React from "react";
-import { CreditCard,DollarSign, TrendingUp, Users } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Calendar,
+  Coins,
+  RefreshCw,
+  RotateCcw,
+  Users,
+  Wallet,
+} from "lucide-react";
+import { Line, LineChart, ResponsiveContainer } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { MetricDetail,RevenueMetricsDto } from "@/types/revenue";
+import { Card, CardContent } from "@/components/ui/card";
+import type { MetricDetail, RevenueMetricsDto } from "@/types/revenue";
+import { formatCurrency } from "@/utils/format-currency";
 
 interface RevenueMetricCardsProps {
   metrics?: RevenueMetricsDto;
   isLoading: boolean;
+  currency?: "VND" | "USD";
 }
 
-export function RevenueMetricCards({ metrics, isLoading }: RevenueMetricCardsProps) {
-  const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(val);
+interface CardConfig {
+  title: string;
+  icon: React.ReactNode;
+  iconBg: string;
+  iconColor: string;
+  strokeColor: string;
+  metric?: MetricDetail;
+  isCurrency: boolean;
+  invertTrend?: boolean; // For refunds, an increase can be considered warning
+}
 
-  const formatNumber = (val: number) => new Intl.NumberFormat("en-US").format(val);
-
-  const renderMetric = (
-    title: string,
-    icon: React.ReactNode,
-    metric: MetricDetail | undefined,
-    isCurrency: boolean = true
-  ) => {
-    if (isLoading || !metric) {
-      return (
-        <Card className="overflow-hidden border-none bg-white shadow-sm dark:bg-slate-900">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">{title}</CardTitle>
-            {icon}
-          </CardHeader>
-          <CardContent>
-            <div className="h-8 w-1/2 animate-pulse rounded bg-slate-200 dark:bg-slate-800"></div>
-            <div className="mt-2 h-4 w-1/3 animate-pulse rounded bg-slate-200 dark:bg-slate-800"></div>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    const isPositive = metric.percentageChange >= 0;
-
-    return (
-      <Card className="group overflow-hidden border-none bg-white shadow-sm transition-all hover:shadow-md dark:bg-slate-900">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="group-hover:text-primary text-sm font-medium text-slate-500 transition-colors">{title}</CardTitle>
-          <div className="bg-primary/10 text-primary rounded-full p-2">{icon}</div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold tracking-tight">
-            {isCurrency ? formatCurrency(metric.value) : formatNumber(metric.value)}
-          </div>
-          <p
-            className={`mt-1 text-xs font-medium ${
-              isPositive ? "text-emerald-500" : "text-rose-500"
-            }`}
-          >
-            {isPositive ? "+" : ""}
-            {metric.percentageChange}% from previous period
-          </p>
-        </CardContent>
-      </Card>
-    );
-  };
+export function RevenueMetricCards({
+  metrics,
+  isLoading,
+  currency = "VND",
+}: RevenueMetricCardsProps) {
+  const cards: CardConfig[] = [
+    {
+      title: "Total Revenue",
+      icon: <Coins className="h-4 w-4" />,
+      iconBg: "bg-blue-50 dark:bg-blue-950/40",
+      iconColor: "text-blue-600 dark:text-blue-400",
+      strokeColor: "#3b82f6",
+      metric: metrics?.totalRevenue,
+      isCurrency: true,
+    },
+    {
+      title: "Net Revenue",
+      icon: <Wallet className="h-4 w-4" />,
+      iconBg: "bg-emerald-50 dark:bg-emerald-950/40",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      strokeColor: "#10b981",
+      metric: metrics?.netRevenue ?? metrics?.totalNetRevenue,
+      isCurrency: true,
+    },
+    {
+      title: "MRR",
+      icon: <RefreshCw className="h-4 w-4" />,
+      iconBg: "bg-indigo-50 dark:bg-indigo-950/40",
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      strokeColor: "#6366f1",
+      metric: metrics?.subscriptionMrr,
+      isCurrency: true,
+    },
+    {
+      title: "ARR",
+      icon: <Calendar className="h-4 w-4" />,
+      iconBg: "bg-amber-50 dark:bg-amber-950/40",
+      iconColor: "text-amber-600 dark:text-amber-400",
+      strokeColor: "#f59e0b",
+      metric: metrics?.arr,
+      isCurrency: true,
+    },
+    {
+      title: "Active Subscribers",
+      icon: <Users className="h-4 w-4" />,
+      iconBg: "bg-teal-50 dark:bg-teal-950/40",
+      iconColor: "text-teal-600 dark:text-teal-400",
+      strokeColor: "#14b8a6",
+      metric: metrics?.activeSubscribers,
+      isCurrency: false,
+    },
+    {
+      title: "Refund Amount",
+      icon: <RotateCcw className="h-4 w-4" />,
+      iconBg: "bg-rose-50 dark:bg-rose-950/40",
+      iconColor: "text-rose-600 dark:text-rose-400",
+      strokeColor: "#f43f5e",
+      metric: metrics?.refundAmount,
+      isCurrency: true,
+      invertTrend: true,
+    },
+  ];
 
   return (
-    <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {renderMetric("Total Net Revenue", <DollarSign className="h-4 w-4" />, metrics?.totalNetRevenue)}
-      {renderMetric("Subscription MRR", <TrendingUp className="h-4 w-4" />, metrics?.subscriptionMrr)}
-      {renderMetric("Active Subscribers", <Users className="h-4 w-4" />, metrics?.activeSubscribers, false)}
-      {renderMetric("ARPU", <CreditCard className="h-4 w-4" />, metrics?.arpu)}
+    <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+      {cards.map((config) => {
+        const metric = config.metric;
+
+        if (isLoading || !metric) {
+          return (
+            <Card
+              key={config.title}
+              className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900"
+            >
+              <CardContent className="flex flex-col justify-between p-0">
+                <div className="flex items-center justify-between">
+                  <div className="h-8 w-8 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
+                  <div className="h-6 w-16 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+                </div>
+                <div className="mt-4 h-7 w-24 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+                <div className="mt-2 h-4 w-32 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+              </CardContent>
+            </Card>
+          );
+        }
+
+        const isPositive = metric.percentageChange >= 0;
+        const trendIsGood = config.invertTrend ? !isPositive : isPositive;
+
+        // Sparkline points
+        const rawPoints =
+          metric.sparkline && metric.sparkline.length > 0
+            ? metric.sparkline
+            : [
+                metric.previousValue,
+                metric.previousValue * 1.02,
+                metric.previousValue * 0.98,
+                metric.value * 0.97,
+                metric.value * 1.01,
+                metric.value,
+              ];
+
+        const sparklineData = rawPoints.map((val, idx) => ({
+          i: idx,
+          v: Number(val),
+        }));
+
+        const formattedValue = config.isCurrency
+          ? formatCurrency(metric.value, currency)
+          : new Intl.NumberFormat("en-US").format(metric.value);
+
+        const formattedPrevValue = config.isCurrency
+          ? formatCurrency(metric.previousValue, currency)
+          : new Intl.NumberFormat("en-US").format(metric.previousValue);
+
+        return (
+          <Card
+            key={config.title}
+            className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs transition-all duration-200 hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+          >
+            <CardContent className="flex flex-col justify-between p-0">
+              {/* Header: Icon + Title on left, Sparkline on right */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${config.iconBg} ${config.iconColor}`}
+                  >
+                    {config.icon}
+                  </div>
+                  <span className="text-xs font-semibold tracking-tight text-slate-600 dark:text-slate-300">
+                    {config.title}
+                  </span>
+                </div>
+
+                {/* Mini Sparkline */}
+                <div className="h-7 w-16 shrink-0 opacity-90 transition-opacity group-hover:opacity-100">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={sparklineData}>
+                      <Line
+                        type="monotone"
+                        dataKey="v"
+                        stroke={config.strokeColor}
+                        strokeWidth={2}
+                        dot={false}
+                        isAnimationActive={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Main Metric Value */}
+              <div className="mt-3">
+                <div className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-slate-100">
+                  {formattedValue}
+                </div>
+              </div>
+
+              {/* Trend % + Comparison */}
+              <div className="mt-2 flex flex-col gap-0.5">
+                <div className="flex items-center gap-1 text-xs">
+                  <span
+                    className={`inline-flex items-center font-bold ${
+                      trendIsGood ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                    }`}
+                  >
+                    {isPositive ? (
+                      <ArrowUpRight className="mr-0.5 h-3.5 w-3.5 stroke-[2.5]" />
+                    ) : (
+                      <ArrowDownRight className="mr-0.5 h-3.5 w-3.5 stroke-[2.5]" />
+                    )}
+                    {Math.abs(metric.percentageChange).toFixed(1)}%
+                  </span>
+                  <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                    vs. previous period
+                  </span>
+                </div>
+
+                <p className="truncate text-[11px] text-slate-400 dark:text-slate-500">
+                  Previous period: <span className="font-medium text-slate-500 dark:text-slate-400">{formattedPrevValue}</span>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

@@ -23,6 +23,7 @@ export function RevenueDashboard() {
   });
 
   const [isExporting, setIsExporting] = useState(false);
+  const [currency, setCurrency] = useState<"VND" | "USD">("VND");
 
   // Queries
   const { data: metricsData, isLoading: isLoadingMetrics } = useRevenueMetrics(filter);
@@ -82,18 +83,18 @@ export function RevenueDashboard() {
   return (
     <AdminShell pageTitle="revenue">
       <div className="flex h-full flex-col gap-6 p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Revenue Analytics</h1>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Track your financial performance, MRR growth, and billing history.
-            </p>
-          </div>
-        </div>
+        <RevenueFilterBar
+          filter={filter}
+          onFilterChange={setFilter}
+          currency={currency}
+          onCurrencyChange={setCurrency}
+        />
 
-      <RevenueFilterBar filter={filter} onFilterChange={setFilter} />
-
-      <RevenueMetricCards metrics={metricsData} isLoading={isLoadingMetrics} />
+        <RevenueMetricCards
+          metrics={metricsData}
+          isLoading={isLoadingMetrics}
+          currency={currency}
+        />
 
       <RevenueCharts charts={chartsData} isLoading={isLoadingCharts} />
 

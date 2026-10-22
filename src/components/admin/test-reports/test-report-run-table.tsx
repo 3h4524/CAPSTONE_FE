@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 
 import { TestReportStatusBadge } from "@/components/admin/test-reports/test-report-status-badge";
@@ -35,6 +38,8 @@ const formatStartedAt = (startedAtUtc: string) =>
   });
 
 export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps) => {
+  const router = useRouter();
+
   if (isLoading) {
     return (
       <div className="space-y-2 p-5">
@@ -73,9 +78,19 @@ export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps)
       </TableHeader>
       <TableBody>
         {runs.map((run) => (
-          <TableRow key={run.runId} className="hover:bg-slate-50/70">
+          <TableRow
+            key={run.runId}
+            className="cursor-pointer hover:bg-slate-50/70"
+            onClick={() => router.push(`/admin/test-reports/${run.runId}`)}
+          >
             <TableCell className="font-mono text-xs whitespace-nowrap text-slate-600">
-              {formatStartedAt(run.startedAtUtc)}
+              <Link
+                href={`/admin/test-reports/${run.runId}`}
+                className="hover:text-slate-900 hover:underline"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {formatStartedAt(run.startedAtUtc)}
+              </Link>
             </TableCell>
             <TableCell>
               <TestReportStatusBadge status={run.status} />
@@ -104,6 +119,7 @@ export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps)
                 href={`/admin/test-reports/${run.runId}`}
                 className="inline-flex size-7 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
                 aria-label={`Open the report of ${run.runId}`}
+                onClick={(event) => event.stopPropagation()}
               >
                 <ArrowRight className="size-4" />
               </Link>

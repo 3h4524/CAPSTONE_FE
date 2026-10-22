@@ -21,6 +21,8 @@ export type TestReportRun = {
   failedTests: number;
   flakyTests: number;
   skippedTests: number;
+  knownIssueTests: number;
+  unexpectedFailedTests: number;
   fileCount: number;
   suiteCount: number;
   failureSummary: string | null;
@@ -31,6 +33,7 @@ export type TestReportSpec = {
   status: TestReportSpecStatus;
   durationMs: number;
   retries: number;
+  isKnownIssue: boolean;
   errorMessage: string | null;
   errorStack: string | null;
   errorSnippet: string | null;

@@ -13,8 +13,16 @@ type TestReportFileAccordionProps = {
 };
 
 export const TestReportFileAccordion = ({ files }: TestReportFileAccordionProps) => {
+  // Only the files that lost a test to a new problem open by default; the ones that only
+  // hold the known gaps stay closed.
   const [openFiles, setOpenFiles] = useState<string[]>(() =>
-    files.filter((file) => file.failed > 0).map((file) => `${file.project}:${file.file}`)
+    files
+      .filter((file) =>
+        file.specs.some(
+          (spec) => spec.status === "failed" && !spec.isKnownIssue
+        )
+      )
+      .map((file) => `${file.project}:${file.file}`)
   );
 
   const toggle = (key: string) =>
@@ -54,7 +62,13 @@ export const TestReportFileAccordion = ({ files }: TestReportFileAccordionProps)
                   <span className="text-emerald-600">{file.passed} ok</span>
                 )}
                 {file.failed > 0 && (
-                  <span className="text-rose-600">{file.failed} failed</span>
+                  <span className="text-rose-600">
+                    {file.failed -
+                      file.specs.filter(
+                        (spec) => spec.status === "failed" && spec.isKnownIssue
+                      ).length}{" "}
+                    failed
+                  </span>
                 )}
                 {file.flaky > 0 && (
                   <span className="text-amber-600">{file.flaky} flaky</span>

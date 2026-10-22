@@ -30,6 +30,11 @@ export const TestReportSpecRow = ({ spec }: TestReportSpecRowProps) => {
         >
           {spec.title}
         </span>
+        {spec.isKnownIssue && (
+          <span className="shrink-0 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-amber-700 uppercase">
+            known gap
+          </span>
+        )}
         {spec.retries > 0 && (
           <span
             className="flex shrink-0 items-center gap-1 text-[10px] font-medium text-amber-600"

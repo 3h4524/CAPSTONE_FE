@@ -62,7 +62,7 @@ test.describe("api keys", () => {
     await test.step("choosing a provider still needs a key and the confirmation box", async () => {
       const dialog = page.getByRole("dialog");
       await dialog.getByLabel("Provider").click();
-      await page.getByRole("option", { name: "OpenAI", exact: true }).click();
+      await page.getByRole("option", { name: "Google Gemini", exact: true }).first().click();
 
       await expect(dialog.getByLabel("API key", { exact: true })).toBeVisible();
       await expect(dialog.getByRole("button", { name: "Validate & save" })).toBeDisabled();
@@ -77,7 +77,7 @@ test.describe("api keys", () => {
     const dialog = page.getByRole("dialog");
     await page.getByRole("button", { name: "Add API key" }).first().click();
     await dialog.getByLabel("Provider").click();
-    await page.getByRole("option", { name: "OpenAI", exact: true }).click();
+    await page.getByRole("option", { name: "Google Gemini", exact: true }).first().click();
     await dialog.getByLabel("API key", { exact: true }).fill("sk-e2e-invalid-key-value");
     await dialog.getByRole("checkbox").check();
 

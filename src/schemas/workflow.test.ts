@@ -4,6 +4,7 @@ import type { ZodSafeParseResult } from "zod";
 import {
   applyMockupConfigSchema,
   approvalGateConfigSchema,
+  designApprovalConfigSchema,
   designImageConfigSchema,
   exportZipConfigSchema,
   generateListingConfigSchema,
@@ -17,17 +18,42 @@ import {
 import type { WorkflowNodeType } from "@/types/workflow";
 
 const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
-  "product-input": { batchId: "bat_1" },
+  "product-input": { batchId: "bat_1", productId: "" },
   "prompt-synthesis": { designTemplateId: "dpl_1", stylePresetId: "sty_1", instructions: "Keep it warm" },
-  "design-image": { model: "sdxl", variants: 2 },
+  "design-image": { variants: 2, aspectRatio: "1:1" },
+  "design-approval": { mode: "manual" },
   "approval-gate": { mode: "manual" },
-  "apply-mockup": { mockupTemplateIds: ["mkp_1", "mkp_2"] },
-  "generate-video": { template: "slideshow", durationSeconds: 20, withMusic: true },
+  "apply-mockup": {
+    mockupTemplateIds: ["mkp_1", "mkp_2"],
+    templateColors: {},
+    templateBackgrounds: {},
+    mockupIds: [],
+    artworkGroupKey: "",
+  },
+  "generate-video": {
+    mode: "standard",
+    target: "etsy",
+    template: "auto",
+    outputFormat: "portrait",
+    durationSeconds: 20,
+    assetSelection: "automatic",
+    selectedMockupIds: [],
+    sceneOrder: [],
+    textOverlay: "",
+    standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
+    fallbackToStandard: true,
+    aiStudioMode: "direct",
+    aiStudioLayout: "hanging_window",
+  },
+  "review-video": {},
   "generate-listing": { model: "gpt-4o", tone: "friendly", includeSeoScore: true },
-  "export-zip": { includeVideo: true, includeListingCsv: false },
+  "export-zip": {},
   "publish-etsy": { publishImmediately: false },
   "publish-printify": { publishImmediately: true },
 };
+
+// These node types declare no field of their own, so an empty config is already valid for them.
+const OPTIONLESS_NODE_TYPES: WorkflowNodeType[] = ["export-zip", "review-video"];
 
 const omitKey = <T extends object, K extends keyof T>(source: T, key: K): Omit<T, K> => {
   const { [key]: _omitted, ...rest } = source;
@@ -47,11 +73,11 @@ const expectIssue = (result: ZodSafeParseResult<unknown>, path: string, message?
 const nodeEntries = Object.entries(validNodeConfigs) as Array<[WorkflowNodeType, Record<string, unknown>]>;
 
 describe("workflowNodeConfigSchemas", () => {
-  it("maps every one of the ten workflow node types to a schema", () => {
+  it("maps every one of the twelve workflow node types to a schema", () => {
     expect(Object.keys(workflowNodeConfigSchemas).sort()).toEqual(
       nodeEntries.map(([nodeType]) => nodeType).sort()
     );
-    expect(Object.keys(workflowNodeConfigSchemas)).toHaveLength(10);
+    expect(Object.keys(workflowNodeConfigSchemas)).toHaveLength(12);
   });
 
   it("shares a single schema between the two publish node types", () => {
@@ -66,12 +92,15 @@ describe("workflowNodeConfigSchemas", () => {
     expect(result.success && result.data).toEqual(config);
   });
 
-  it.each(nodeEntries)("rejects an empty $0 config", (nodeType) => {
-    const result = workflowNodeConfigSchemas[nodeType].safeParse({});
+  it.each(nodeEntries.filter(([nodeType]) => !OPTIONLESS_NODE_TYPES.includes(nodeType)))(
+    "rejects an empty $0 config",
+    (nodeType) => {
+      const result = workflowNodeConfigSchemas[nodeType].safeParse({});
 
-    expect(result.success).toBe(false);
-    expect(issuesAt(result).length).toBeGreaterThan(0);
-  });
+      expect(result.success).toBe(false);
+      expect(issuesAt(result).length).toBeGreaterThan(0);
+    }
+  );
 
   it.each(nodeEntries)("drops keys the $0 schema does not declare", (nodeType, config) => {
     const result = workflowNodeConfigSchemas[nodeType].safeParse({ ...config, label: "Node label" });
@@ -83,20 +112,34 @@ describe("workflowNodeConfigSchemas", () => {
 
 describe("productInputConfigSchema", () => {
   it("accepts a one-character batchId", () => {
-    const result = productInputConfigSchema.safeParse({ batchId: "b" });
+    const result = productInputConfigSchema.safeParse({ batchId: "b", productId: "" });
 
     expect(result.success).toBe(true);
-    expect(result.success && result.data).toEqual({ batchId: "b" });
+    expect(result.success && result.data).toEqual({ batchId: "b", productId: "" });
+  });
+
+  it("accepts a product id for the video", () => {
+    const productId = "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
+    const result = productInputConfigSchema.safeParse({ batchId: "b", productId });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.productId).toBe(productId);
+  });
+
+  it("rejects a product id that is not a uuid", () => {
+    const result = productInputConfigSchema.safeParse({ batchId: "b", productId: "product-1" });
+
+    expectIssue(result, "productId", "Choose one product from the selected batch.");
   });
 
   it("rejects an empty batchId", () => {
-    const result = productInputConfigSchema.safeParse({ batchId: "" });
+    const result = productInputConfigSchema.safeParse({ batchId: "", productId: "" });
 
     expectIssue(result, "batchId", "Choose the batch that feeds this workflow.");
   });
 
   it("rejects a whitespace batchId because the field skips trim()", () => {
-    const result = productInputConfigSchema.safeParse({ batchId: "   " });
+    const result = productInputConfigSchema.safeParse({ batchId: "   ", productId: "" });
 
     expect(result.success).toBe(true);
   });
@@ -147,10 +190,10 @@ describe("promptSynthesisConfigSchema", () => {
     expectIssue(result, "designTemplateId", "Choose a design template.");
   });
 
-  it("reports the dedicated message for an empty stylePresetId", () => {
+  it("accepts an empty stylePresetId because the art style is optional", () => {
     const result = promptSynthesisConfigSchema.safeParse({ ...valid, stylePresetId: "" });
 
-    expectIssue(result, "stylePresetId", "Choose an art style.");
+    expect(result.success).toBe(true);
   });
 
   it("accepts 500 characters of instructions and rejects 501", () => {
@@ -169,21 +212,21 @@ describe("promptSynthesisConfigSchema", () => {
 });
 
 describe("designImageConfigSchema", () => {
-  it.each(["leonardo", "sdxl"] as const)("accepts the image model %s", (model) => {
-    const result = designImageConfigSchema.safeParse({ model, variants: 1 });
+  it.each(["1:1", "16:9", "9:16", "4:3", "3:4"] as const)("accepts the aspect ratio %s", (aspectRatio) => {
+    const result = designImageConfigSchema.safeParse({ variants: 1, aspectRatio });
 
     expect(result.success).toBe(true);
-    expect(result.success && result.data.model).toBe(model);
+    expect(result.success && result.data.aspectRatio).toBe(aspectRatio);
   });
 
-  it.each(["midjourney", "dalle", "", "SDXL"])("rejects %j as an image model", (model) => {
-    const result = designImageConfigSchema.safeParse({ model, variants: 1 });
+  it.each(["21:9", "", "1:1 ", 1])("rejects %j as an aspect ratio", (aspectRatio) => {
+    const result = designImageConfigSchema.safeParse({ variants: 1, aspectRatio });
 
-    expectIssue(result, "model", "Choose an image model.");
+    expectIssue(result, "aspectRatio", "Choose an aspect ratio.");
   });
 
   it.each([1, 2, 3, 4])("accepts a variant count of %i", (variants) => {
-    const result = designImageConfigSchema.safeParse({ model: "sdxl", variants });
+    const result = designImageConfigSchema.safeParse({ variants, aspectRatio: "1:1" });
 
     expect(result.success).toBe(true);
     expect(result.success && result.data.variants).toBe(variants);
@@ -193,70 +236,106 @@ describe("designImageConfigSchema", () => {
     { variants: 0, message: "The number of variants must be at least 1." },
     { variants: 5, message: "The number of variants cannot exceed 4." },
   ])("rejects a variant count of $variants", ({ variants, message }) => {
-    const result = designImageConfigSchema.safeParse({ model: "sdxl", variants });
+    const result = designImageConfigSchema.safeParse({ variants, aspectRatio: "1:1" });
 
     expectIssue(result, "variants", message);
   });
 
   it("rejects a fractional variant count", () => {
-    const result = designImageConfigSchema.safeParse({ model: "sdxl", variants: 1.5 });
+    const result = designImageConfigSchema.safeParse({ variants: 1.5, aspectRatio: "1:1" });
 
     expectIssue(result, "variants", "The number of variants must be a whole number.");
   });
 
   it.each([undefined, "2", null, true])("rejects %j as a variant count", (variants) => {
-    const result = designImageConfigSchema.safeParse({ model: "sdxl", variants });
+    const result = designImageConfigSchema.safeParse({ variants, aspectRatio: "1:1" });
 
     expectIssue(result, "variants", "Enter the number of variants.");
   });
 
   it("rejects a config without variants", () => {
-    const result = designImageConfigSchema.safeParse({ model: "sdxl" });
+    const result = designImageConfigSchema.safeParse({ aspectRatio: "1:1" });
 
     expectIssue(result, "variants", "Enter the number of variants.");
   });
+
+  it("rejects a config without an aspect ratio", () => {
+    const result = designImageConfigSchema.safeParse({ variants: 2 });
+
+    expectIssue(result, "aspectRatio", "Choose an aspect ratio.");
+  });
 });
 
-describe("approvalGateConfigSchema", () => {
+describe("designApprovalConfigSchema", () => {
   it.each(["manual", "auto"] as const)("accepts the %s mode", (mode) => {
-    const result = approvalGateConfigSchema.safeParse({ mode });
+    const result = designApprovalConfigSchema.safeParse({ mode });
 
     expect(result.success).toBe(true);
     expect(result.success && result.data.mode).toBe(mode);
   });
 
   it.each(["review", "", "Manual", 1])("rejects %j as a mode", (mode) => {
-    const result = approvalGateConfigSchema.safeParse({ mode });
+    const result = designApprovalConfigSchema.safeParse({ mode });
 
     expectIssue(result, "mode", "Choose how designs are approved.");
   });
 
   it("rejects a config without mode", () => {
-    const result = approvalGateConfigSchema.safeParse({});
+    const result = designApprovalConfigSchema.safeParse({});
 
     expectIssue(result, "mode", "Choose how designs are approved.");
   });
 });
 
+describe("approvalGateConfigSchema", () => {
+  it("accepts the manual mode", () => {
+    const result = approvalGateConfigSchema.safeParse({ mode: "manual" });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.mode).toBe("manual");
+  });
+
+  it.each(["review", "", "Manual", "auto", 1])("rejects %j as a mode", (mode) => {
+    const result = approvalGateConfigSchema.safeParse({ mode });
+
+    expectIssue(result, "mode");
+  });
+
+  it("rejects a config without mode", () => {
+    const result = approvalGateConfigSchema.safeParse({});
+
+    expectIssue(result, "mode");
+  });
+});
+
 describe("applyMockupConfigSchema", () => {
+  const base = {
+    mockupTemplateIds: ["mkp_1"],
+    templateColors: {},
+    templateBackgrounds: {},
+    mockupIds: [],
+    artworkGroupKey: "",
+  };
+
   it("accepts one through five template ids", () => {
     for (const length of [1, 2, 3, 4, 5]) {
       const mockupTemplateIds = Array.from({ length }, (_, index) => `mkp_${index}`);
-      const result = applyMockupConfigSchema.safeParse({ mockupTemplateIds });
+      const result = applyMockupConfigSchema.safeParse({ ...base, mockupTemplateIds });
 
       expect(result.success).toBe(true);
       expect(result.success && result.data.mockupTemplateIds).toEqual(mockupTemplateIds);
     }
   });
 
-  it("rejects an empty template list", () => {
-    const result = applyMockupConfigSchema.safeParse({ mockupTemplateIds: [] });
+  it("accepts an empty template list because the mock-ups may be uploaded instead", () => {
+    const result = applyMockupConfigSchema.safeParse({ ...base, mockupTemplateIds: [] });
 
-    expectIssue(result, "mockupTemplateIds", "Choose at least one mock-up template.");
+    expect(result.success).toBe(true);
   });
 
   it("rejects a sixth template id", () => {
     const result = applyMockupConfigSchema.safeParse({
+      ...base,
       mockupTemplateIds: ["a", "b", "c", "d", "e", "f"],
     });
 
@@ -270,26 +349,58 @@ describe("applyMockupConfigSchema", () => {
     { label: "null", value: null },
     { label: "undefined", value: undefined },
   ])("rejects $label as a template list", ({ value }) => {
-    const result = applyMockupConfigSchema.safeParse({ mockupTemplateIds: value });
+    const result = applyMockupConfigSchema.safeParse({ ...base, mockupTemplateIds: value });
 
     expectIssue(result, "mockupTemplateIds");
   });
 
   it("rejects a non-string entry inside the template list", () => {
-    const result = applyMockupConfigSchema.safeParse({ mockupTemplateIds: [1] });
+    const result = applyMockupConfigSchema.safeParse({ ...base, mockupTemplateIds: [1] });
 
     expectIssue(result, "mockupTemplateIds.0");
   });
 
   it("rejects a config without the template list", () => {
-    const result = applyMockupConfigSchema.safeParse({});
+    const result = applyMockupConfigSchema.safeParse(omitKey(base, "mockupTemplateIds"));
 
     expectIssue(result, "mockupTemplateIds");
+  });
+
+  it("rejects a garment color that is not a hex color", () => {
+    const result = applyMockupConfigSchema.safeParse({
+      ...base,
+      templateColors: { mkp_1: ["red"] },
+    });
+
+    expectIssue(result, "templateColors.mkp_1.0", "Garment colors must look like #RRGGBB.");
+  });
+
+  it("rejects a background color that is not a hex color", () => {
+    const result = applyMockupConfigSchema.safeParse({
+      ...base,
+      templateBackgrounds: { mkp_1: "white" },
+    });
+
+    expectIssue(result, "templateBackgrounds.mkp_1", "Background colors must look like #RRGGBB.");
   });
 });
 
 describe("generateVideoConfigSchema", () => {
-  const valid = { template: "slideshow", durationSeconds: 20, withMusic: true };
+  const valid = {
+    mode: "standard",
+    target: "etsy",
+    template: "auto",
+    outputFormat: "portrait",
+    durationSeconds: 20,
+    assetSelection: "automatic",
+    selectedMockupIds: [],
+    sceneOrder: [],
+    textOverlay: "",
+    standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
+    fallbackToStandard: true,
+    aiStudioMode: "direct",
+    aiStudioLayout: "hanging_window",
+  };
 
   it("accepts a fully populated config", () => {
     const result = generateVideoConfigSchema.safeParse(valid);
@@ -298,7 +409,7 @@ describe("generateVideoConfigSchema", () => {
     expect(result.success && result.data).toEqual(valid);
   });
 
-  it.each(["slideshow", "showcase", "lifestyle-reel", "vertical-story"] as const)(
+  it.each(["auto", "product_showcase", "design_detail", "variant_showcase"] as const)(
     "accepts the video template %s",
     (template) => {
       const result = generateVideoConfigSchema.safeParse({ ...valid, template });
@@ -314,7 +425,7 @@ describe("generateVideoConfigSchema", () => {
     expectIssue(result, "template", "Choose a video template.");
   });
 
-  it.each([15, 20, 29, 30])("accepts a duration of %i seconds", (durationSeconds) => {
+  it.each([3, 15, 20, 29, 30])("accepts a duration of %i seconds", (durationSeconds) => {
     const result = generateVideoConfigSchema.safeParse({ ...valid, durationSeconds });
 
     expect(result.success).toBe(true);
@@ -322,7 +433,7 @@ describe("generateVideoConfigSchema", () => {
   });
 
   it.each([
-    { durationSeconds: 14, message: "The video duration must be at least 15." },
+    { durationSeconds: 2, message: "The video duration must be at least 3." },
     { durationSeconds: 31, message: "The video duration cannot exceed 30." },
   ])("rejects a duration of $durationSeconds seconds", ({ durationSeconds, message }) => {
     const result = generateVideoConfigSchema.safeParse({ ...valid, durationSeconds });
@@ -342,16 +453,61 @@ describe("generateVideoConfigSchema", () => {
     expectIssue(result, "durationSeconds", "Enter the video duration.");
   });
 
-  it.each(["true", 1, null])("rejects %j for withMusic", (withMusic) => {
-    const result = generateVideoConfigSchema.safeParse({ ...valid, withMusic });
+  it("accepts the standard mode", () => {
+    const result = generateVideoConfigSchema.safeParse({ ...valid, mode: "standard" });
 
-    expectIssue(result, "withMusic");
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.mode).toBe("standard");
   });
 
-  it("rejects a config without withMusic", () => {
-    const result = generateVideoConfigSchema.safeParse({ template: "slideshow", durationSeconds: 20 });
+  it("accepts the ai_shot mode with its scene settings", () => {
+    const result = generateVideoConfigSchema.safeParse({
+      ...valid,
+      mode: "ai_shot",
+      durationSeconds: 15,
+      aiShotOptions: {
+        coverage: "full_video",
+        concept: "product_cinematic",
+        sceneIndex: 0,
+        mockupId: null,
+        prompt: null,
+        rightsConfirmed: true,
+        fullSceneMockupIds: null,
+      },
+    });
 
-    expectIssue(result, "withMusic");
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.mode).toBe("ai_shot");
+  });
+
+  it("requires the ai shot scene settings when the mode is ai_shot", () => {
+    const result = generateVideoConfigSchema.safeParse({ ...valid, mode: "ai_shot" });
+
+    expectIssue(result, "aiShotOptions", "Configure at least one AI video scene.");
+  });
+
+  it.each(["auto", "", "Standard", 1])("rejects %j as a mode", (mode) => {
+    const result = generateVideoConfigSchema.safeParse({ ...valid, mode });
+
+    expectIssue(result, "mode");
+  });
+
+  it("requires an approved mockup when the assets are picked by hand", () => {
+    const result = generateVideoConfigSchema.safeParse({ ...valid, assetSelection: "manual" });
+
+    expectIssue(result, "selectedMockupIds", "Choose at least one approved mockup.");
+  });
+
+  it("rejects a target other than Etsy", () => {
+    const result = generateVideoConfigSchema.safeParse({ ...valid, target: "amazon" });
+
+    expectIssue(result, "target");
+  });
+
+  it("rejects a config without the standard options", () => {
+    const result = generateVideoConfigSchema.safeParse(omitKey(valid, "standardOptions"));
+
+    expectIssue(result, "standardOptions");
   });
 });
 
@@ -399,28 +555,19 @@ describe("generateListingConfigSchema", () => {
 });
 
 describe("exportZipConfigSchema", () => {
-  it("accepts both flags", () => {
+  it("accepts an empty config", () => {
+    const result = exportZipConfigSchema.safeParse({});
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data).toEqual({});
+  });
+
+  it("drops the keys it does not declare", () => {
     const result = exportZipConfigSchema.safeParse({ includeVideo: true, includeListingCsv: true });
 
     expect(result.success).toBe(true);
-    expect(result.success && result.data).toEqual({ includeVideo: true, includeListingCsv: true });
+    expect(result.success && result.data).toEqual({});
   });
-
-  it("rejects a config without either flag", () => {
-    const result = exportZipConfigSchema.safeParse({});
-
-    expectIssue(result, "includeVideo");
-    expectIssue(result, "includeListingCsv");
-  });
-
-  it.each(["includeVideo", "includeListingCsv"] as const)(
-    "rejects a string for the boolean %s",
-    (field) => {
-      const result = exportZipConfigSchema.safeParse({ includeVideo: true, includeListingCsv: true, [field]: "yes" });
-
-      expectIssue(result, field);
-    }
-  );
 });
 
 describe("publishConfigSchema", () => {

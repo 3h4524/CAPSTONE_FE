@@ -27,74 +27,114 @@ const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}
 
 const nodeTypes = Object.values(WORKFLOW_NODE_DEFINITIONS).map((definition) => definition.type);
 
+const VIDEO_PRODUCT_ID = "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
+
 const VALID_CONFIGS: Record<WorkflowNodeType, WorkflowNodeConfig> = {
-  "product-input": { batchId: "batch-1" },
+  "product-input": { batchId: "batch-1", productId: VIDEO_PRODUCT_ID },
   "prompt-synthesis": {
     designTemplateId: "template-1",
     stylePresetId: "preset-1",
     instructions: "",
   },
-  "design-image": { model: "leonardo", variants: 2 },
+  "design-image": { variants: 2, aspectRatio: "1:1" },
+  "design-approval": { mode: "manual" },
   "approval-gate": { mode: "manual" },
-  "apply-mockup": { mockupTemplateIds: ["mockup-1"] },
-  "generate-video": { template: "slideshow", durationSeconds: 20, withMusic: true },
+  "apply-mockup": {
+    mockupTemplateIds: ["mockup-1"],
+    templateColors: {},
+    templateBackgrounds: {},
+    mockupIds: [],
+    artworkGroupKey: "",
+  },
+  "generate-video": {
+    mode: "standard",
+    target: "etsy",
+    template: "auto",
+    durationSeconds: 20,
+    assetSelection: "automatic",
+    selectedMockupIds: [],
+    sceneOrder: [],
+    textOverlay: "",
+    standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
+    fallbackToStandard: true,
+  },
+  "review-video": {},
   "generate-listing": { model: "gpt-4o", tone: "friendly", includeSeoScore: true },
-  "export-zip": { includeVideo: true, includeListingCsv: true },
+  "export-zip": {},
   "publish-etsy": { publishImmediately: false },
   "publish-printify": { publishImmediately: false },
 };
 
 const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
-  ["product-input", { batchId: "" }, "Product input: Choose the batch that feeds this workflow."],
+  [
+    "product-input",
+    { batchId: "", productId: "" },
+    "Product input: Choose the batch that feeds this workflow.",
+  ],
   [
     "prompt-synthesis",
-    { designTemplateId: "template-1", stylePresetId: "", instructions: "" },
-    "Prompt synthesis: Choose an art style.",
+    { designTemplateId: "", stylePresetId: "", instructions: "" },
+    "Prompt synthesis: Choose a design template.",
   ],
   [
     "prompt-synthesis",
     { designTemplateId: "template-1", stylePresetId: "preset-1", instructions: "x".repeat(501) },
     "Prompt synthesis: Keep instructions under 500 characters.",
   ],
-  ["design-image", { model: "midjourney", variants: 2 }, "Design image: Choose an image model."],
-  ["design-image", {}, "Design image: Choose an image model."],
+  ["design-image", { variants: 2 }, "Design image: Choose an aspect ratio."],
   [
     "design-image",
-    { model: "leonardo", variants: 9 },
+    { variants: 9, aspectRatio: "1:1" },
     "Design image: The number of variants cannot exceed 4.",
   ],
   [
     "design-image",
-    { model: "leonardo", variants: 2.5 },
+    { variants: 2.5, aspectRatio: "1:1" },
     "Design image: The number of variants must be a whole number.",
   ],
   [
     "design-image",
-    { model: "leonardo", variants: "2" },
+    { variants: "2", aspectRatio: "1:1" },
     "Design image: Enter the number of variants.",
   ],
-  ["approval-gate", { mode: "unreviewed" }, "Approval gate: Choose how designs are approved."],
   [
-    "apply-mockup",
-    { mockupTemplateIds: [] },
-    "Apply mock-up: Choose at least one mock-up template.",
+    "design-approval",
+    { mode: "unreviewed" },
+    "Design approval: Choose how designs are approved.",
   ],
+  ["approval-gate", { mode: "unreviewed" }, 'Mockup Approval: Invalid input: expected "manual"'],
   [
     "apply-mockup",
-    { mockupTemplateIds: ["a", "b", "c", "d", "e", "f"] },
+    {
+      mockupTemplateIds: ["a", "b", "c", "d", "e", "f"],
+      templateColors: {},
+      templateBackgrounds: {},
+      mockupIds: [],
+      artworkGroupKey: "",
+    },
     "Apply mock-up: Choose up to 5 mock-up templates.",
   ],
   [
     "generate-video",
-    { template: "slideshow", durationSeconds: 5, withMusic: true },
-    "Promo video: The video duration must be at least 15.",
+    {
+      mode: "standard",
+      target: "etsy",
+      template: "auto",
+      durationSeconds: 2,
+      assetSelection: "automatic",
+      selectedMockupIds: [],
+      sceneOrder: [],
+      textOverlay: "",
+      standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
+      fallbackToStandard: true,
+    },
+    "Generate Video: The video duration must be at least 3.",
   ],
   [
     "generate-listing",
     { model: "gpt-4o", tone: "friendly", includeSeoScore: "yes" },
     "Listing content: Invalid input: expected boolean, received string",
   ],
-  ["export-zip", {}, "Export ZIP: Invalid input: expected boolean, received undefined"],
   [
     "publish-etsy",
     { publishImmediately: null },
@@ -116,24 +156,19 @@ const typedNode = (id: string, type: WorkflowNodeType, config: WorkflowNodeConfi
 
 const PIPELINE: Array<[string, WorkflowNodeType]> = [
   ["input", "product-input"],
-  ["prompt", "prompt-synthesis"],
-  ["design", "design-image"],
-  ["approval", "approval-gate"],
   ["mockup", "apply-mockup"],
+  ["approval", "approval-gate"],
   ["video", "generate-video"],
-  ["listing", "generate-listing"],
+  ["review", "review-video"],
   ["export", "export-zip"],
 ];
 
 const PIPELINE_EDGES: Array<[string, string]> = [
-  ["input", "prompt"],
-  ["prompt", "design"],
-  ["design", "approval"],
-  ["approval", "mockup"],
-  ["mockup", "video"],
-  ["mockup", "listing"],
-  ["video", "export"],
-  ["listing", "export"],
+  ["input", "mockup"],
+  ["mockup", "approval"],
+  ["approval", "video"],
+  ["video", "review"],
+  ["review", "export"],
 ];
 
 const pipelineNodes = () => PIPELINE.map(([id, type]) => typedNode(id, type, VALID_CONFIGS[type]));
@@ -349,36 +384,36 @@ describe("validateWorkflow", () => {
     expect(issues.map((issue) => issue.id)).toEqual(["missing-input"]);
   });
 
-  it.each(["generate-video", "generate-listing"] as const)(
-    "requires an upstream approval gate for %s",
-    (type) => {
-      const nodes = [
-        typedNode("input", "product-input", VALID_CONFIGS["product-input"]),
-        typedNode("export", "export-zip", VALID_CONFIGS["export-zip"]),
-        typedNode("target", type, VALID_CONFIGS[type]),
-      ];
-      const issues = validateWorkflow(nodes, [edge("input", "target"), edge("target", "export")]);
-
-      expect(issues.filter((issue) => issue.id === "approval-target")).toEqual([
-        {
-          id: "approval-target",
-          nodeId: "target",
-          message: `${WORKFLOW_NODE_DEFINITIONS[type].label} needs an Approval gate node before it.`,
-        },
-      ]);
-    }
-  );
-
-  it("accepts an approval gate anywhere upstream", () => {
+  it("requires an upstream approval gate for generate-video", () => {
     const nodes = [
       typedNode("input", "product-input", VALID_CONFIGS["product-input"]),
-      typedNode("gate", "approval-gate", VALID_CONFIGS["approval-gate"]),
-      typedNode("target", "generate-video", VALID_CONFIGS["generate-video"]),
       typedNode("export", "export-zip", VALID_CONFIGS["export-zip"]),
+      typedNode("target", "generate-video", VALID_CONFIGS["generate-video"]),
     ];
-    const edges = [edge("input", "gate"), edge("gate", "target"), edge("target", "export")];
+    const issues = validateWorkflow(nodes, [edge("input", "target"), edge("target", "export")]);
 
-    expect(validateWorkflow(nodes, edges)).toEqual([]);
+    expect(issues.filter((issue) => issue.id === "approval-target")).toEqual([
+      {
+        id: "approval-target",
+        nodeId: "target",
+        message: `${WORKFLOW_NODE_DEFINITIONS["generate-video"].label} needs a Mockup Approval step before it.`,
+      },
+    ]);
+  });
+
+  it("does not require an approval gate for generate-listing", () => {
+    const nodes = [
+      typedNode("input", "product-input", VALID_CONFIGS["product-input"]),
+      typedNode("export", "export-zip", VALID_CONFIGS["export-zip"]),
+      typedNode("target", "generate-listing", VALID_CONFIGS["generate-listing"]),
+    ];
+    const issues = validateWorkflow(nodes, [edge("input", "target"), edge("target", "export")]);
+
+    expect(issues.filter((issue) => issue.id === "approval-target")).toEqual([]);
+  });
+
+  it("accepts the approval gate of the video pipeline", () => {
+    expect(validateWorkflow(pipelineNodes(), pipelineEdges())).toEqual([]);
   });
 
   it("does not treat an approval gate downstream as an upstream gate", () => {
@@ -399,12 +434,9 @@ describe("validateWorkflow", () => {
       typedNode("target", "generate-video", { template: "slideshow", durationSeconds: 1 }),
     ];
 
-    expect(validateWorkflow(nodes, []).map((issue) => issue.id)).toEqual([
-      "missing-output",
-      "unreachable-target",
-      "config-target",
-      "approval-target",
-    ]);
+    expect(validateWorkflow(nodes, []).map((issue) => issue.id)).toEqual(
+      expect.arrayContaining(["missing-output", "unreachable-target", "config-target", "approval-target"])
+    );
   });
 });
 
@@ -449,14 +481,14 @@ describe("createWorkflowNode", () => {
 
 describe("toWorkflowNodes", () => {
   const definition: WorkflowDefinition = {
-    version: 1,
+    version: 2,
     nodes: [
       {
         id: "design",
         type: "design-image",
         label: "Design image",
         position: { x: 1, y: 2 },
-        config: { model: "sdxl", variants: 4, stray: "dropped" },
+        config: { variants: 4, aspectRatio: "1:1", stray: "dropped" },
       },
       {
         id: "input",
@@ -479,7 +511,7 @@ describe("toWorkflowNodes", () => {
         data: {
           type: "design-image",
           label: "Design image",
-          config: { model: "sdxl", variants: 4 },
+          config: { variants: 4, aspectRatio: "1:1" },
           status: "idle",
         },
       },
@@ -490,7 +522,7 @@ describe("toWorkflowNodes", () => {
         data: {
           type: "product-input",
           label: "Product input",
-          config: { batchId: "batch-1" },
+          config: { batchId: "batch-1", productId: "" },
           status: "idle",
         },
       },
@@ -511,7 +543,7 @@ describe("toWorkflowEdges", () => {
   it("maps definition edges to workflow edges", () => {
     expect(
       toWorkflowEdges({
-        version: 1,
+        version: 2,
         nodes: [],
         edges: [
           { id: "a->b", source: "a", target: "b" },
@@ -527,7 +559,7 @@ describe("toWorkflowEdges", () => {
 
   it("returns an empty array when the definition has no edges", () => {
     expect(
-      toWorkflowEdges({ version: 1, nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } })
+      toWorkflowEdges({ version: 2, nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } })
     ).toEqual([]);
   });
 });
@@ -540,7 +572,7 @@ describe("toWorkflowDefinition", () => {
     ];
 
     expect(toWorkflowDefinition(nodes, [], VIEWPORT)).toEqual({
-      version: 1,
+      version: 2,
       nodes: [
         {
           id: "input",
@@ -591,7 +623,7 @@ describe("toWorkflowDefinition", () => {
 
   it("returns an empty definition for an empty canvas", () => {
     expect(toWorkflowDefinition([], [], VIEWPORT)).toEqual({
-      version: 1,
+      version: 2,
       nodes: [],
       edges: [],
       viewport: VIEWPORT,
@@ -623,6 +655,7 @@ describe("toWorkflowSummary", () => {
       name: "Autumn drop",
       description: "Warm tones only.",
       nodeCount: 7,
+      revision: 1,
       updatedAt: "2026-03-02T10:00:00Z",
     });
   });

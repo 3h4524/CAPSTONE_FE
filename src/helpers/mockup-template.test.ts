@@ -1,27 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_MOCKUP_SELECTION, selectionLabel, sortMockupList } from "@/helpers/mockup-template";
+import { MAX_MOCKUP_SELECTION, sortMockupList } from "@/helpers/mockup-template";
 import { buildMockupTemplate } from "@/test/factories";
 
 describe("MAX_MOCKUP_SELECTION", () => {
   it("matches the apply-mockup schema limit", () => {
     expect(MAX_MOCKUP_SELECTION).toBe(5);
-  });
-});
-
-describe("selectionLabel", () => {
-  const cases: Array<[string, number, string]> = [
-    ["zero", 0, "Select mock-ups"],
-    ["one", 1, "1 mock-up selected"],
-    ["two", 2, "2 mock-ups selected"],
-    ["the maximum", MAX_MOCKUP_SELECTION, "5 mock-ups selected"],
-    ["a count above the maximum", 6, "6 mock-ups selected"],
-    ["a negative count", -1, "-1 mock-ups selected"],
-    ["a non-integer count", 2.5, "2.5 mock-ups selected"],
-  ];
-
-  it.each(cases)("describes a selection of %s", (_label, count, expected) => {
-    expect(selectionLabel(count)).toBe(expected);
   });
 });
 

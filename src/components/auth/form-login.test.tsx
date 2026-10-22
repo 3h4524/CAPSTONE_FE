@@ -1,16 +1,16 @@
 import { http, HttpResponse } from "msw";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { FormLogin } from "@/components/auth/form-login";
 import { useAuthStore } from "@/stores/auth";
-import { buildAuthenticatedUser } from "@/test/factories";
 import { routerPush } from "@/test/__mocks__/next/navigation";
+import { buildAuthenticatedUser } from "@/test/factories";
 import { server } from "@/test/mocks/server";
 import { createTestQueryClient } from "@/test/render-query-hook";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
 
 vi.mock("@/helpers/toast");
 

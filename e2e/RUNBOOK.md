@@ -1,8 +1,11 @@
 # E2E Runbook
 
 How to run the Playwright suite in `e2e/`. The suite has three projects
-(see `playwright.config.ts`): `setup` (log in once via API), `public`
+(see `e2e/playwright.config.ts`): `setup` (log in once via API), `public`
 (works without a backend), `authenticated` (needs a live backend + seeded seller).
+
+The root `playwright.config.ts` belongs to the workflow UI suite in
+`tests/browser` (`pnpm test:workflow-ui`); the two suites stay apart.
 
 ## Prerequisites
 
@@ -30,11 +33,11 @@ cd ~/fpt/CAPSTONE_FE
 export E2E_SELLER_EMAIL='<from seller.json>'
 export E2E_SELLER_PASSWORD='Passw0rdTest1!'
 
-pnpm playwright test --project=public                      # 26 tests, no backend needed
-pnpm playwright test --project=authenticated               # setup + 44 tests, needs backend
-pnpm playwright test                                        # everything (70 tests)
-pnpm playwright test e2e/private/profile.spec.ts --project=authenticated   # one file
-pnpm playwright test e2e/private/profile.spec.ts:21 --project=authenticated # one test
+pnpm test:e2e:public                                      # 26 tests, no backend needed
+pnpm playwright test --config e2e/playwright.config.ts --project=authenticated   # setup + 44 tests
+pnpm test:e2e                                             # everything (70 tests)
+pnpm playwright test --config e2e/playwright.config.ts e2e/private/profile.spec.ts --project=authenticated   # one file
+pnpm playwright test --config e2e/playwright.config.ts e2e/private/profile.spec.ts:21 --project=authenticated # one test
 ```
 
 Playwright reuses a FE server already on `:4010` (`reuseExistingServer`), so
@@ -45,13 +48,13 @@ keep it running to skip the ~4min build. Its env must be
 ## Watching / debugging
 
 ```bash
-pnpm playwright test --project=authenticated --headed --workers=1   # visible browser
-pnpm playwright test <file>:<line> --project=authenticated --debug  # step-through Inspector
+pnpm playwright test --config e2e/playwright.config.ts --project=authenticated --headed --workers=1   # visible browser
+pnpm playwright test --config e2e/playwright.config.ts <file>:<line> --project=authenticated --debug  # step-through Inspector
 pnpm test:e2e:ui                                                    # UI mode: timeline, time-travel
 ```
 
 Slow motion has no CLI flag — add temporarily to `use:` in
-`playwright.config.ts`, remove before committing:
+`e2e/playwright.config.ts`, remove before committing:
 
 ```ts
 launchOptions: { slowMo: 500 },

@@ -170,9 +170,12 @@ describe("getWorkflowNodeDefinition", () => {
 
 describe("normalizeNodeConfig", () => {
   it("keeps every declared field of the node type", () => {
-    const config = { template: "showcase", durationSeconds: 25, withMusic: false };
+    const config = { template: "showcase", durationSeconds: 25 };
 
-    expect(normalizeNodeConfig("generate-video", config)).toEqual(config);
+    expect(normalizeNodeConfig("generate-video", config)).toEqual({
+      ...WORKFLOW_NODE_DEFINITIONS["generate-video"].defaultConfig,
+      ...config,
+    });
   });
 
   it("drops fields that belong to another node type", () => {
@@ -181,12 +184,16 @@ describe("normalizeNodeConfig", () => {
     ).toEqual({ mode: "auto" });
   });
 
-  it("returns an empty config when only fields of another node type are present", () => {
-    expect(normalizeNodeConfig("design-image", { batchId: "batch-1" })).toEqual({});
+  it("returns the defaults when only fields of another node type are present", () => {
+    expect(normalizeNodeConfig("design-image", { batchId: "batch-1" })).toEqual(
+      WORKFLOW_NODE_DEFINITIONS["design-image"].defaultConfig
+    );
   });
 
-  it("returns an empty config for an empty input", () => {
-    expect(normalizeNodeConfig("product-input", {})).toEqual({});
+  it("returns the defaults for an empty input", () => {
+    expect(normalizeNodeConfig("product-input", {})).toEqual(
+      WORKFLOW_NODE_DEFINITIONS["product-input"].defaultConfig
+    );
   });
 
   it("keeps a field whose value is explicitly undefined", () => {
@@ -196,8 +203,10 @@ describe("normalizeNodeConfig", () => {
     expect(normalized.batchId).toBeUndefined();
   });
 
-  it("does not apply the definition defaults", () => {
-    expect(normalizeNodeConfig("design-image", {})).toEqual({});
+  it("applies the definition defaults", () => {
+    expect(normalizeNodeConfig("design-image", {})).toEqual(
+      WORKFLOW_NODE_DEFINITIONS["design-image"].defaultConfig
+    );
   });
 
   it("does not mutate the input config", () => {
@@ -208,38 +217,24 @@ describe("normalizeNodeConfig", () => {
     expect(config).toEqual({ mode: "auto", batchId: "batch-1" });
   });
 
-  it.each(nodeTypes)("keeps exactly the declared field names for %s", (type) => {
-    const fieldNames = WORKFLOW_NODE_DEFINITIONS[type].fields.map((field) => field.name);
+  it.each(nodeTypes)("keeps exactly the declared keys for %s", (type) => {
+    const definition = WORKFLOW_NODE_DEFINITIONS[type];
+    const fieldNames = definition.fields.map((field) => field.name.split(".")[0]);
     const everyField = Object.fromEntries(fieldNames.map((name) => [name, "value"]));
+    const declaredKeys = [...new Set([...Object.keys(definition.defaultConfig), ...fieldNames])];
 
     expect(
       Object.keys(normalizeNodeConfig(type, { ...everyField, stray: "value" })).sort()
-    ).toEqual([...fieldNames].sort());
+    ).toEqual([...declaredKeys].sort());
   });
 });
 
 describe("summarizeNodeConfig", () => {
   const videoCases: Array<[string, Record<string, unknown>, string[]]> = [
-    [
-      "a complete video config",
-      { template: "slideshow", durationSeconds: 30, withMusic: true },
-      ["Video template: Slideshow", "Duration: 30s", "Background music"],
-    ],
-    [
-      "a missing duration",
-      { template: "slideshow", withMusic: false },
-      ["Video template: Slideshow"],
-    ],
-    [
-      "a string duration",
-      { template: "slideshow", durationSeconds: "30", withMusic: false },
-      ["Video template: Slideshow"],
-    ],
-    [
-      "a NaN duration",
-      { template: "slideshow", durationSeconds: Number.NaN, withMusic: false },
-      ["Video template: Slideshow"],
-    ],
+    ["a complete video config", { durationSeconds: 30 }, ["Duration: 30s"]],
+    ["a missing duration", {}, []],
+    ["a string duration", { durationSeconds: "30" }, []],
+    ["a NaN duration", { durationSeconds: Number.NaN }, []],
   ];
 
   const mockupCases: Array<[string, Record<string, unknown>, string[]]> = [
@@ -251,9 +246,9 @@ describe("summarizeNodeConfig", () => {
   ];
 
   it("resolves select options to their labels", () => {
-    expect(summarizeNodeConfig("design-image", { model: "sdxl", variants: 3 })).toEqual([
-      "Image model: Stable Diffusion XL",
+    expect(summarizeNodeConfig("design-image", { variants: 3, aspectRatio: "16:9" })).toEqual([
       "Variants per product: 3",
+      "Aspect ratio: 16:9",
     ]);
   });
 
@@ -274,15 +269,10 @@ describe("summarizeNodeConfig", () => {
   });
 
   it("reports an enabled switch and hides a disabled one", () => {
-    expect(
-      summarizeNodeConfig("export-zip", { includeVideo: true, includeListingCsv: false })
-    ).toEqual(["Include videos"]);
-    expect(
-      summarizeNodeConfig("export-zip", { includeVideo: false, includeListingCsv: true })
-    ).toEqual(["Include listing CSV"]);
-    expect(
-      summarizeNodeConfig("export-zip", { includeVideo: false, includeListingCsv: false })
-    ).toEqual([]);
+    expect(summarizeNodeConfig("publish-etsy", { publishImmediately: true })).toEqual([
+      "Publish immediately",
+    ]);
+    expect(summarizeNodeConfig("publish-etsy", { publishImmediately: false })).toEqual([]);
   });
 
   it("reports a truthy-looking switch value as disabled", () => {

@@ -1,4 +1,5 @@
 import { http, HttpResponse } from "msw";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { FormRegister } from "@/components/auth/form-register";
@@ -7,7 +8,6 @@ import { createTestQueryClient } from "@/test/render-query-hook";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
 
 vi.mock("@/helpers/toast");
 

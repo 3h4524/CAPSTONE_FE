@@ -45,7 +45,7 @@ describe("useWorkflowStore initial state", () => {
     expect(state.workflowId).toBeNull();
     expect(state.nodes).toEqual([]);
     expect(state.edges).toEqual([]);
-    expect(state.selectedNodeId).toBeNull();
+    expect(state.selectedNodeIds).toEqual([]);
     expect(state.isDirty).toBe(false);
     expect(state.isRunning).toBe(false);
   });
@@ -94,7 +94,10 @@ describe("loadWorkflow", () => {
 
     useWorkflowStore.getState().loadWorkflow(buildWorkflowDetail({ definition }));
 
-    expect(useWorkflowStore.getState().nodes[0]?.data.config).toEqual({ batchId: "batch-9" });
+    expect(useWorkflowStore.getState().nodes[0]?.data.config).toEqual({
+      batchId: "batch-9",
+      productId: "",
+    });
   });
 
   it("clears the dirty flag and the selection of the previously loaded workflow", () => {
@@ -107,7 +110,7 @@ describe("loadWorkflow", () => {
     const state = useWorkflowStore.getState();
 
     expect(state.isDirty).toBe(false);
-    expect(state.selectedNodeId).toBeNull();
+    expect(state.selectedNodeIds).toEqual([]);
     expect(state.nodes.map((item) => item.id)).toEqual(["node-1", "node-2"]);
   });
 });
@@ -161,7 +164,7 @@ describe("onNodesChange", () => {
     const state = useWorkflowStore.getState();
 
     expect(state.nodes.map((item) => item.id)).toEqual(["node-1"]);
-    expect(state.selectedNodeId).toBeNull();
+    expect(state.selectedNodeIds).toEqual([]);
     expect(state.isDirty).toBe(true);
   });
 
@@ -171,7 +174,7 @@ describe("onNodesChange", () => {
 
     useWorkflowStore.getState().onNodesChange([{ id: "node-2", type: "remove" }]);
 
-    expect(useWorkflowStore.getState().selectedNodeId).toBe("node-1");
+    expect(useWorkflowStore.getState().selectedNodeIds).toEqual(["node-1"]);
   });
 
   it("clears the selection for a removed node inside one batch of changes", () => {
@@ -182,7 +185,7 @@ describe("onNodesChange", () => {
       .getState()
       .onNodesChange([moveNode("node-1", 5, 5), { id: "node-2", type: "remove" }]);
 
-    expect(useWorkflowStore.getState().selectedNodeId).toBeNull();
+    expect(useWorkflowStore.getState().selectedNodeIds).toEqual([]);
   });
 });
 
@@ -285,7 +288,7 @@ describe("addNode", () => {
     expect(state.nodes.map((item) => item.id)).toEqual(["node-1", "node-9"]);
     expect(state.nodes[0]?.selected).toBe(false);
     expect(state.nodes[1]?.selected).toBe(true);
-    expect(state.selectedNodeId).toBe("node-9");
+    expect(state.selectedNodeIds).toEqual(["node-9"]);
     expect(state.isDirty).toBe(true);
   });
 
@@ -298,7 +301,7 @@ describe("addNode", () => {
     const state = useWorkflowStore.getState();
 
     expect(state.nodes[0]?.selected).toBe(false);
-    expect(state.selectedNodeId).toBe("node-9");
+    expect(state.selectedNodeIds).toEqual(["node-9"]);
   });
 });
 
@@ -392,7 +395,7 @@ describe("removeNode", () => {
 
     useWorkflowStore.getState().removeNode("b");
 
-    expect(useWorkflowStore.getState().selectedNodeId).toBeNull();
+    expect(useWorkflowStore.getState().selectedNodeIds).toEqual([]);
   });
 
   it("keeps the selection when a different node is removed", () => {
@@ -401,7 +404,7 @@ describe("removeNode", () => {
 
     useWorkflowStore.getState().removeNode("a");
 
-    expect(useWorkflowStore.getState().selectedNodeId).toBe("b");
+    expect(useWorkflowStore.getState().selectedNodeIds).toEqual(["b"]);
   });
 
   it("marks the editor dirty", () => {
@@ -437,7 +440,7 @@ describe("selectNode", () => {
 
     const state = useWorkflowStore.getState();
 
-    expect(state.selectedNodeId).toBe("b");
+    expect(state.selectedNodeIds).toEqual(["b"]);
     expect(state.nodes[0]?.selected).toBe(false);
     expect(state.nodes[1]?.selected).toBe(true);
   });
@@ -450,7 +453,7 @@ describe("selectNode", () => {
 
     const state = useWorkflowStore.getState();
 
-    expect(state.selectedNodeId).toBeNull();
+    expect(state.selectedNodeIds).toEqual([]);
     expect(state.nodes.every((item) => item.selected === false)).toBe(true);
   });
 });
@@ -570,7 +573,7 @@ describe("reset", () => {
     expect(state.description).toBe("");
     expect(state.nodes).toEqual([]);
     expect(state.edges).toEqual([]);
-    expect(state.selectedNodeId).toBeNull();
+    expect(state.selectedNodeIds).toEqual([]);
     expect(state.isDirty).toBe(false);
     expect(state.isRunning).toBe(false);
   });

@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { useAuthStore } from "@/stores/auth";
-import { buildAuthenticatedUser } from "@/test/factories";
 import { routerReplace, usePathname } from "@/test/__mocks__/next/navigation";
+import { buildAuthenticatedUser } from "@/test/factories";
 import { render, screen, waitFor } from "@testing-library/react";
 
 const initialAuthState = useAuthStore.getState();

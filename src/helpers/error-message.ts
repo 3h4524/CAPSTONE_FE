@@ -2,6 +2,7 @@ export const DEFAULT_ERROR_MESSAGE = "Something went wrong";
 
 type ErrorWithResponse = {
   response?: {
+    status?: number;
     data?: {
       code?: unknown;
       message?: unknown;
@@ -28,6 +29,15 @@ const extractRawMessage = (error: unknown): string | undefined => {
     const errorCode = withResponse.response?.data?.code;
     if (typeof errorCode === "string" && ERROR_MESSAGES[errorCode]) {
       return ERROR_MESSAGES[errorCode];
+    }
+
+    const status = withResponse.response?.status;
+    if (status === 403) {
+      return "Tài khoản này không có quyền Admin. Hãy đăng nhập lại bằng tài khoản Admin.";
+    }
+
+    if (status === 401) {
+      return "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.";
     }
 
     const payloadMessage =

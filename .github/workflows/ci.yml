@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   quality:
-    name: lint / typecheck / build
+    name: lint / typecheck / test / build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -41,6 +41,9 @@ jobs:
 
       - name: Typecheck
         run: pnpm exec tsc --noEmit
+
+      - name: Test
+        run: pnpm test
 
       - name: Build
         run: pnpm build

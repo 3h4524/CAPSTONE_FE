@@ -58,7 +58,10 @@ export default defineConfig({
   webServer: {
     command: "pnpm build && pnpm start",
     url: E2E_BASE_URL,
-    reuseExistingServer: !IS_CI,
+    // The suite tests the production build, so it always starts a server of its own. Reusing a
+    // running dev server would test the dev build instead: React mounts twice there and the
+    // developer's own .env brings a Google client id the suite must not see.
+    reuseExistingServer: false,
     timeout: 300_000,
     env: {
       PORT: new URL(E2E_BASE_URL).port || "4010",

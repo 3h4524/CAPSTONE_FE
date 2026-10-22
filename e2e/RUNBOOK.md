@@ -11,6 +11,8 @@ The root `playwright.config.ts` belongs to the workflow UI suite in
 
 - Docker running (Postgres + Redis come from `CAPSTONE_BE/scripts/e2e/docker-compose.yml`).
 - Ports free: `5191` (API), `4010` (FE), `55432` (PG), `56379` (Redis), `2525` (SMTP sink).
+  The suite always builds and starts a production frontend of its own on `4010`, so a dev server
+  must not sit on that port — run the dev server on `3000` instead.
 
 ## One-time setup (per database)
 
@@ -40,9 +42,9 @@ pnpm playwright test --config e2e/playwright.config.ts e2e/private/profile.spec.
 pnpm playwright test --config e2e/playwright.config.ts e2e/private/profile.spec.ts:21 --project=authenticated # one test
 ```
 
-Playwright reuses a FE server already on `:4010` (`reuseExistingServer`), so
-keep it running to skip the ~4min build. Its env must be
-`NEXT_PUBLIC_API_BASE_URL=http://localhost:5191` with a blank
+Playwright always starts a production frontend of its own on `:4010` (`reuseExistingServer: false`),
+so the first run of the day spends ~4min on the build and every later one reuses the build
+output. The env it builds with is `NEXT_PUBLIC_API_BASE_URL=http://localhost:5191` with a blank
 `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
 
 ## Watching / debugging

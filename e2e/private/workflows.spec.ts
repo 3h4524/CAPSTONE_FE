@@ -34,7 +34,7 @@ test.describe("workflow editor", () => {
 
     await test.step("the toolbar and canvas chrome are rendered", async () => {
       await expect(page.getByRole("button", { name: "Validate" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Run demo" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Run", exact: true })).toBeVisible();
       await expect(page.getByRole("button", { name: "Save" })).toBeVisible();
       await expect(page.locator("button:has(.lucide-chevrons-up-down)")).toBeVisible();
     });

@@ -21,29 +21,31 @@ test.describe("support center", () => {
       await expect(page.getByRole("heading", { name: "Support tickets" })).toBeVisible();
     });
 
-    await test.step("the ticket endpoint is called with paging parameters", () => {
-      const ticketCalls = findCalls(calls, "GET", "/api/support-tickets");
-      expect(ticketCalls.length).toBeGreaterThan(0);
+    await test.step("the ticket endpoint is called with paging parameters", async () => {
+      await expect
+        .poll(() => findCalls(calls, "GET", "/api/support-tickets").length, { timeout: 15_000 })
+        .toBeGreaterThan(0);
     });
   });
 
-  test("BUG B4: ticket list fails with 500 in the E2E backend environment", async ({ page }) => {
+  test("the ticket list answers 200 in the E2E backend environment", async ({ page }) => {
     const calls = recordApiCalls(page);
 
     await openPrivateRoute(page, "/support");
 
-    await test.step("GET /api/support-tickets answers 5xx", async () => {
+    await test.step("GET /api/support-tickets answers 200", async () => {
       await expect
         .poll(
           () => findCalls(calls, "GET", "/api/support-tickets")[0]?.status ?? 0,
           { timeout: 15_000 }
         )
-        .toBeGreaterThanOrEqual(500);
+        .toBe(200);
     });
 
-    await test.step("the page shows the recoverable failure state", async () => {
-      await expect(page.getByRole("heading", { name: "Tickets could not be loaded" })).toBeVisible();
-      await expect(page.getByRole("button", { name: /Refresh/ })).toBeVisible();
+    await test.step("the tickets load instead of the failure state", async () => {
+      await expect(
+        page.getByRole("heading", { name: "Tickets could not be loaded" })
+      ).toHaveCount(0);
     });
   });
 
@@ -92,9 +94,26 @@ test.describe("support center", () => {
     });
   });
 
-  test("BUG B5: a failed ticket creation is silent in the composer", async ({ page }) => {
+  test("a failed ticket creation is reported in the composer", async ({ page }) => {
     const calls = recordApiCalls(page);
     const subject = `E2E ticket ${Date.now().toString(36)}`;
+
+    // The backend answers, so the failure is forced here to keep the test about the composer.
+    await page.route("**/api/support-tickets", async (route) => {
+      if (route.request().method() !== "POST") {
+        await route.continue();
+        return;
+      }
+
+      await route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: JSON.stringify({
+          title: "The ticket could not be submitted.",
+          detail: "The ticket could not be submitted.",
+        }),
+      });
+    });
 
     await openPrivateRoute(page, "/support");
     await page.getByRole("button", { name: /New ticket/ }).first().click();
@@ -118,15 +137,13 @@ test.describe("support center", () => {
       expect(findCalls(calls, "POST", "/api/support-tickets")).toHaveLength(1);
     });
 
-    await test.step("BUG: nothing tells the user the submit failed", async () => {
-      await expect(dialog.getByRole("dialog")).toHaveCount(0);
-      await expect(page.getByRole("alert").filter({ hasText: /.+/ })).toHaveCount(0);
-      await expect(page.locator("[data-sonner-toast]")).toHaveCount(0);
-      await expect(page).toHaveURL(/\/support\?compose=1/);
-      await expect(dialog.getByLabel("Subject")).toHaveValue(subject);
+    await test.step("the user is told the submit failed", async () => {
+      await expect(page.locator("[data-sonner-toast]").filter({ hasText: /.+/ })).toHaveCount(1);
     });
 
-    await test.step("the composer is usable again for a retry", async () => {
+    await test.step("the composer keeps what was typed and stays usable", async () => {
+      await expect(page).toHaveURL(/\/support\?compose=1/);
+      await expect(dialog.getByLabel("Subject")).toHaveValue(subject);
       await expect(dialog.getByRole("button", { name: "Submit ticket" })).toBeEnabled();
     });
   });

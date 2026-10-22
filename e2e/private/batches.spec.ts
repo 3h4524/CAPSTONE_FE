@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import { apiPath, findCalls, recordApiCalls } from "../support/api";
@@ -7,6 +8,24 @@ import { hasSellerSession } from "../support/auth";
 import { openPrivateRoute, pageHeading, uniqueLabel } from "../support/private";
 
 const FIXTURE_XLSX = path.resolve(__dirname, "../fixtures/product-import.xlsx");
+
+/**
+ * Opens the card menu of a batch and picks "Delete batch". The list polls, so the open menu keeps
+ * re-rendering and the item is never "stable" long enough for a normal click, and it can open
+ * outside the viewport; the keyboard activates the item either way.
+ */
+const deleteBatchFromCard = async (page: Page, batchName: string) => {
+  const cardHeading = page.getByRole("heading", { name: batchName, level: 3 });
+  await cardHeading.evaluate((element) => element.scrollIntoView({ block: "center" }));
+
+  const cardMenu = cardHeading.locator("xpath=ancestor::button").locator("xpath=..");
+  await cardMenu.getByRole("button").last().click();
+
+  const deleteBatchItem = page.getByRole("menuitem", { name: "Delete batch" });
+  await expect(deleteBatchItem).toBeVisible();
+  await deleteBatchItem.focus();
+  await page.keyboard.press("Enter");
+};
 
 test.describe("product batches", () => {
   test.beforeEach(() => {
@@ -50,7 +69,14 @@ test.describe("product batches", () => {
 
     await test.step("the batch appears in the list and its products are fetched", async () => {
       await expect(page.getByRole("heading", { name: batchName, level: 3 })).toBeVisible();
-      await expect(page.getByText("Default niche")).toBeVisible();
+      // Scoped to the new batch: the list holds the batches of every earlier run as well.
+      await expect(
+        page
+          .getByRole("heading", { name: batchName, level: 3 })
+          .locator("xpath=ancestor::button")
+          .locator("xpath=..")
+          .getByText("Default niche")
+      ).toBeVisible();
       await expect
         .poll(
           () => calls.some((call) => /^\/api\/batches\/[0-9a-f-]+\/products$/.test(call.path)),
@@ -60,13 +86,7 @@ test.describe("product batches", () => {
     });
 
     await test.step("deleting the batch removes it again", async () => {
-      const cardMenu = page
-        .getByRole("heading", { name: batchName, level: 3 })
-        .locator("xpath=ancestor::button")
-        .locator("xpath=..");
-
-      await cardMenu.getByRole("button").last().click();
-      await page.getByRole("menuitem", { name: "Delete batch" }).click();
+      await deleteBatchFromCard(page, batchName);
 
       const [response] = await Promise.all([
         page.waitForResponse(
@@ -170,7 +190,11 @@ test.describe("product batches", () => {
         .locator("xpath=..");
 
       await cardMenu.getByRole("button").last().click();
-      await page.getByRole("menuitem", { name: "Delete batch" }).click();
+      // The list polls, so the open menu keeps re-rendering and the item is never "stable"
+      // long enough for a normal click.
+      const deleteBatchItem = page.getByRole("menuitem", { name: "Delete batch" });
+      await expect(deleteBatchItem).toBeVisible();
+      await deleteBatchItem.click({ force: true });
 
       const [response] = await Promise.all([
         page.waitForResponse(
@@ -217,11 +241,7 @@ test.describe("product batches", () => {
 
     await dialog.getByRole("button", { name: "Close" }).last().click();
 
-    const cardButton = page
-      .getByRole("heading", { name: batchName, level: 3 })
-      .locator("xpath=ancestor::button");
-    await cardButton.locator("xpath=..").getByRole("button").last().click();
-    await page.getByRole("menuitem", { name: "Delete batch" }).click();
+    await deleteBatchFromCard(page, batchName);
     await page.getByRole("dialog").getByRole("button", { name: "Delete batch" }).click();
     await expect(page.getByRole("heading", { name: batchName, level: 3 })).toHaveCount(0);
   });

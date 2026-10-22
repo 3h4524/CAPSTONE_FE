@@ -19,41 +19,30 @@ test.describe("art styles", () => {
       await expect(page.getByRole("button", { name: "New style" }).first()).toBeVisible();
     });
 
-    await test.step("GET /api/style-art-presets was called", () => {
-      expect(findCalls(calls, "GET", "/api/style-art-presets").length).toBeGreaterThan(0);
+    await test.step("GET /api/style-art-presets was called", async () => {
+      await expect
+        .poll(() => findCalls(calls, "GET", "/api/style-art-presets").length, { timeout: 15_000 })
+        .toBeGreaterThan(0);
     });
   });
 
-  test("BUG B6: preset loading fails with 500 and the page shows the error state", async ({ page }) => {
+  test("the presets answer 200 and the page lists them", async ({ page }) => {
     const calls = recordApiCalls(page);
 
     await openPrivateRoute(page, "/styles");
 
-    await test.step("GET /api/style-art-presets answers 5xx", async () => {
+    await test.step("GET /api/style-art-presets answers 200", async () => {
       await expect
         .poll(
           () => findCalls(calls, "GET", "/api/style-art-presets")[0]?.status ?? 0,
           { timeout: 15_000 }
         )
-        .toBeGreaterThanOrEqual(500);
+        .toBe(200);
     });
 
-    await test.step("the recoverable error state is shown", async () => {
-      const alert = page.getByRole("alert");
-      await expect(alert.getByText("Art styles unavailable")).toBeVisible();
-      await expect(alert.getByRole("button", { name: "Try again" })).toBeVisible();
-    });
-
-    await test.step("retrying re-issues the same request", async () => {
-      const before = findCalls(calls, "GET", "/api/style-art-presets").length;
-
-      await page.getByRole("alert").getByRole("button", { name: "Try again" }).click();
-
-      await expect
-        .poll(() => findCalls(calls, "GET", "/api/style-art-presets").length, {
-          timeout: 10_000,
-        })
-        .toBeGreaterThan(before);
+    await test.step("the presets are listed instead of the error state", async () => {
+      await expect(page.getByText("Art styles unavailable")).toHaveCount(0);
+      await expect(page.getByText("No art styles yet")).toBeHidden();
     });
   });
 

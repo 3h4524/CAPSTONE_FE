@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { defineConfig, devices } from "@playwright/test";
 
 import { AUTH_STATE_PATH } from "./support/auth";
@@ -11,16 +13,24 @@ export default defineConfig({
   // Authenticated specs share a single seeded account, so parallel workers would fight over the
   // same session; parallelism would also let one spec's logout invalidate another's cookie.
   fullyParallel: false,
-  workers: IS_CI ? 2 : undefined,
+  // A headed run drives one window at a time, so the windows do not fight each other.
+  workers: process.env.E2E_HEADED === "1" ? 1 : IS_CI ? 2 : undefined,
   forbidOnly: IS_CI,
   retries: IS_CI ? 1 : 0,
   timeout: 30_000,
   expect: { timeout: 7_000 },
-  reporter: [["list"], ["html", { open: "never" }]],
+  // The JSON report is what the admin test-report pages read; the HTML one stays for debugging.
+  reporter: [
+    ["list"],
+    ["html", { open: "never" }],
+    ["json", { outputFile: path.join(process.cwd(), "test-results", "report", "report.json") }],
+  ],
   use: {
     baseURL: E2E_BASE_URL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+    // E2E_HEADED=1 opens a real browser window, so a person can watch the suite drive the app.
+    headless: process.env.E2E_HEADED !== "1",
   },
   projects: [
     {
@@ -48,7 +58,10 @@ export default defineConfig({
   webServer: {
     command: "pnpm build && pnpm start",
     url: E2E_BASE_URL,
-    reuseExistingServer: !IS_CI,
+    // The suite tests the production build, so it always starts a server of its own. Reusing a
+    // running dev server would test the dev build instead: React mounts twice there and the
+    // developer's own .env brings a Google client id the suite must not see.
+    reuseExistingServer: false,
     timeout: 300_000,
     env: {
       PORT: new URL(E2E_BASE_URL).port || "4010",

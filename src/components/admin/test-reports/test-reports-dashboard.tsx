@@ -5,6 +5,7 @@ import { PlayCircle, RefreshCw } from "lucide-react";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import { TestReportMetricCards } from "@/components/admin/test-reports/test-report-metric-cards";
+import { TestReportRunDialog } from "@/components/admin/test-reports/test-report-run-dialog";
 import { TestReportRunTable } from "@/components/admin/test-reports/test-report-run-table";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +29,7 @@ const STATUS_FILTERS: Array<{ value: string; label: string }> = [
 
 export const TestReportsDashboard = () => {
   const [status, setStatus] = useState<string>("all");
+  const [isRunDialogOpen, setIsRunDialogOpen] = useState(false);
   const filter = useMemo(
     () => (status === "all" ? {} : { status: status as TestReportStatus }),
     [status]
@@ -69,7 +71,7 @@ export const TestReportsDashboard = () => {
             </div>
             <Button
               type="button"
-              onClick={() => startRun(undefined)}
+              onClick={() => setIsRunDialogOpen(true)}
               disabled={isPending}
               className="gap-2 self-start"
             >
@@ -141,6 +143,15 @@ export const TestReportsDashboard = () => {
           )}
         </section>
       </div>
+
+      <TestReportRunDialog
+        open={isRunDialogOpen}
+        onOpenChange={setIsRunDialogOpen}
+        isPending={isPending}
+        onConfirm={() =>
+          startRun(undefined, { onSettled: () => setIsRunDialogOpen(false) })
+        }
+      />
     </AdminShell>
   );
 };

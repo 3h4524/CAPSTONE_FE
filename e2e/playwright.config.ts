@@ -13,7 +13,8 @@ export default defineConfig({
   // Authenticated specs share a single seeded account, so parallel workers would fight over the
   // same session; parallelism would also let one spec's logout invalidate another's cookie.
   fullyParallel: false,
-  workers: IS_CI ? 2 : undefined,
+  // A headed run drives one window at a time, so the windows do not fight each other.
+  workers: process.env.E2E_HEADED === "1" ? 1 : IS_CI ? 2 : undefined,
   forbidOnly: IS_CI,
   retries: IS_CI ? 1 : 0,
   timeout: 30_000,
@@ -28,6 +29,8 @@ export default defineConfig({
     baseURL: E2E_BASE_URL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+    // E2E_HEADED=1 opens a real browser window, so a person can watch the suite drive the app.
+    headless: process.env.E2E_HEADED !== "1",
   },
   projects: [
     {

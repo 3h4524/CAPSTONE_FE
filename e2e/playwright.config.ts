@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { defineConfig, devices } from "@playwright/test";
 
 import { AUTH_STATE_PATH } from "./support/auth";
@@ -16,7 +18,12 @@ export default defineConfig({
   retries: IS_CI ? 1 : 0,
   timeout: 30_000,
   expect: { timeout: 7_000 },
-  reporter: [["list"], ["html", { open: "never" }]],
+  // The JSON report is what the admin test-report pages read; the HTML one stays for debugging.
+  reporter: [
+    ["list"],
+    ["html", { open: "never" }],
+    ["json", { outputFile: path.join(process.cwd(), "test-results", "report", "report.json") }],
+  ],
   use: {
     baseURL: E2E_BASE_URL,
     trace: "on-first-retry",

@@ -23,6 +23,6 @@ export type UpdateBatchProductPromptInput = {
   moodTone: string;
   negativeTerms: string;
   instructions: string;
-  /** The product's own image prompt: empty removes it. */
-  customPrompt: string;
+  /** The product's own image prompt: left out keeps it as it is, empty removes it. */
+  customPrompt?: string;
 };

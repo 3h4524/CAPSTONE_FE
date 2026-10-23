@@ -17,11 +17,12 @@ export const productPromptSchema = z
     moodTone: z.string().trim().max(200),
     negativeTerms: z.string().max(500),
     instructions: z.string().max(1000),
-    customPrompt: z.string().max(MAX_CUSTOM_PROMPT_LENGTH, "Keep the image prompt under 1,000 characters."),
+    // Left out, the product keeps the image prompt it has; empty removes it.
+    customPrompt: z.string().max(MAX_CUSTOM_PROMPT_LENGTH, "Keep the image prompt under 1,000 characters.").optional(),
   })
   .superRefine((values, context) => {
     // A template needs its subject, style and mood; a custom image prompt says all of it itself.
-    if (values.customPrompt.trim()) return;
+    if (values.customPrompt?.trim()) return;
     for (const [field, message] of Object.entries(requiredForTemplate)) {
       if (!values[field as keyof typeof requiredForTemplate]) context.addIssue({ code: "custom", path: [field], message });
     }

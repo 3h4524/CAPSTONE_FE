@@ -119,6 +119,7 @@ export type WorkflowField =
       /** The value may stay empty; `noneLabel` is the choice that clears it. */
       optional?: boolean;
       noneLabel?: string;
+      description?: string;
     }
   | { kind: "product-select"; name: string; label: string; description?: string }
   | { kind: "video-formats"; name: string; label: string }

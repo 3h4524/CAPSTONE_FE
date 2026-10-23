@@ -92,6 +92,7 @@ export const promptSynthesisConfigSchema = z.object({
 });
 
 export const designImageConfigSchema = z.object({
+  imageProvider: z.enum(["gemini", "ideogram"], { error: "Choose an image model." }),
   variants: wholeNumber("number of variants", 1, 4),
   aspectRatio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"], { error: "Choose an aspect ratio." }),
 });

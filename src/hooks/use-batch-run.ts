@@ -234,6 +234,7 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
     try {
       const prepared = await prepareRun(plan, queryClient);
       if (isStopped()) return "blocked";
+      for (const warning of prepared.warnings) showToast("warning", warning);
       useWorkflowRunStore.setState({ batchJobId: prepared.batchJobId });
       if (prepared.attached) {
         showToast("info", "This batch already has a running job. Showing its progress.");
@@ -258,6 +259,7 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
           styleArtPresetId: plan.styleArtPresetId,
           variationCount: plan.variationCount,
           aspectRatio: plan.aspectRatio,
+          imageProvider: plan.imageProvider,
           ...(plan.instructions ? { instructions: plan.instructions } : {}),
           requireApproval: plan.requireApproval,
           workflowId: activeWorkflowId,

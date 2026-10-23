@@ -10,29 +10,28 @@ The root `playwright.config.ts` belongs to the workflow UI suite in
 ## Prerequisites
 
 - Docker running (Postgres + Redis come from `CAPSTONE_BE/scripts/e2e/docker-compose.yml`).
-- Ports free: `5191` (API), `4010` (FE), `55432` (PG), `56379` (Redis), `2525` (SMTP sink).
+- Ports free: `5191`-`5195` (API picks a free one), `4010` (FE), `55432` (PG), `56379` (Redis), `2525` (SMTP sink).
   The suite always builds and starts a production frontend of its own on `4010`, so a dev server
   must not sit on that port — run the dev server on `3000` instead.
 
-## One-time setup (per database)
+## Backend + seller (one command)
 
 ```bash
-cd ../CAPSTONE_BE/scripts/e2e
-./bootstrap-postgres.sh   # Postgres 18 + Redis containers
-./start-backend.sh        # schema + API + SMTP sink
-./seed-seller.sh          # register -> verify (via sink mail) -> login
-cat .run/seller.json      # copy email/password from here
+cd ../CAPSTONE_BE
+E2E_ORCHESTRATION_COMMAND=up dotnet test tests/APCS.E2E.Automation/APCS.E2E.Automation.csproj
 ```
 
-The seller persists in the `apcs_e2e` database. Re-seed only when the DB is
-wiped or you want a fresh account — always with a **new** email, reusing an
-old one stalls waiting for a verification mail that never comes.
+The orchestrator owns the whole backend: compose, schema from the EF model (`EnsureCreated`),
+SMTP sink, API, and the seller seeding (register -> verify via the sink mail -> login).
+The seller is the fixed account `e2e.seller@apcs.test` / `Passw0rdTest1!` and is seeded
+idempotently, so it is always fresh. `E2E_ORCHESTRATION_COMMAND=down` takes everything
+down again. See `CAPSTONE_BE/scripts/e2e/README.md`.
 
 ## Running
 
 ```bash
 cd ~/fpt/CAPSTONE_FE
-export E2E_SELLER_EMAIL='<from seller.json>'
+export E2E_SELLER_EMAIL='e2e.seller@apcs.test'
 export E2E_SELLER_PASSWORD='Passw0rdTest1!'
 
 pnpm test:e2e:public                                      # 26 tests, no backend needed
@@ -70,8 +69,8 @@ Insert `await page.pause()` in a spec to freeze the browser at that point.
 | Symptom | Cause | Fix |
 |---|---|---|
 | 32 skipped, only redirects pass | `E2E_SELLER_EMAIL/PASSWORD` missing in your shell | export creds, rerun |
-| `auth.setup` fails: login 500 | API lost Postgres (Docker stalled) | restart Docker, rerun `start-backend.sh` |
-| `seed-seller.sh` hangs on verification mail | reused an already-registered email | seed with a fresh email |
+| Public project runs but backend-dependent steps fail | backend not up | run `E2E_ORCHESTRATION_COMMAND=up dotnet test ...` again |
+| Seller seeding hangs on the verification mail | SMTP sink died or port 2525 taken | kill `.run/smtp.pid`, rerun; check `.run/smtp.log` |
 | Headed window is black | no X display | run under Xvfb or a real desktop |
 | `POST /api/support-tickets` 500 in E2E | known gap (BUG B5), GET list 500 too (BUG B4) | do not write success-path tests for it |
 | Stale FE build picked up | `.next` from another branch | rebuild (`pnpm build`) or delete `.next` |

@@ -2,8 +2,10 @@ import { api } from "@/api/client";
 import type {
   RevenueChartDto,
   RevenueFilterDto,
+  RevenueInsightsDto,
   RevenueInvoiceDto,
-  RevenueMetricsDto} from "@/types/revenue";
+  RevenueMetricsDto
+} from "@/types/revenue";
 
 export const getRevenueMetrics = async (params: RevenueFilterDto): Promise<RevenueMetricsDto> =>
   (await api.get<RevenueMetricsDto>("/api/admin/revenues/metrics", { params })).data;
@@ -22,3 +24,7 @@ export const getRevenueInvoices = async (
       pageSize: number;
     }>("/api/admin/revenues/invoices", { params })
   ).data;
+
+export const getRevenueInsights = async (params: RevenueFilterDto): Promise<RevenueInsightsDto> =>
+  (await api.get<RevenueInsightsDto>("/api/admin/revenues/insights", { params })).data;
+

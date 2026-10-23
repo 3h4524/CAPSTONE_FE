@@ -61,7 +61,7 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
               onMenuClick={() => setIsMobileSidebarOpen(true)}
               pageTitle="Subscriptions"
             />
-            <main className="mx-auto max-w-[1440px] px-4 py-6 sm:px-7 sm:py-8">
+            <main className="mx-auto max-w-[1600px] px-4 py-4 sm:px-[calc(1.5rem+1cm)] sm:py-5 2xl:max-w-[1720px]">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
                   <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">

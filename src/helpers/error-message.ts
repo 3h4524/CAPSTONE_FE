@@ -2,6 +2,7 @@ export const DEFAULT_ERROR_MESSAGE = "Something went wrong";
 
 type ErrorWithResponse = {
   response?: {
+    status?: number;
     data?: {
       code?: unknown;
       message?: unknown;
@@ -37,6 +38,16 @@ const extractRawMessage = (error: unknown): string | undefined => {
       withResponse.response?.data?.title;
     if (typeof payloadMessage === "string" && payloadMessage.trim()) {
       return payloadMessage;
+    }
+
+    // Only when the backend said nothing: its own message is the one that says what went wrong.
+    const status = withResponse.response?.status;
+    if (status === 403) {
+      return "Tài khoản này không có quyền Admin. Hãy đăng nhập lại bằng tài khoản Admin.";
+    }
+
+    if (status === 401) {
+      return "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.";
     }
 
     if (!withResponse.response && "message" in error) {

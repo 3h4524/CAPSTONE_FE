@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { FlaskConical, ShieldCheck, Trash2 } from "lucide-react";
+import { FlaskConical, RefreshCw, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,8 +34,8 @@ export const TestReportRunDialog = ({
           Run the end-to-end suite
         </DialogTitle>
         <DialogDescription>
-          The suite needs a signed-in seller, so the backend prepares one for the length of the
-          run. Nothing has to be typed in here.
+          The backend seeds a verified seller, resets its own test data, then runs the Playwright
+          suite. Nothing has to be typed in here.
         </DialogDescription>
       </DialogHeader>
 
@@ -45,15 +45,14 @@ export const TestReportRunDialog = ({
           <span>
             The seller{" "}
             <span className="font-mono text-xs text-slate-800">e2e.seller@apcs.test</span> is
-            created and confirmed before the run and gets a fresh random password. The password
-            lives only while the run lasts — it is never stored and never written to the report.
+            registered and confirmed before every run, so the suite never needs a manual sign-in.
           </span>
         </li>
         <li className="flex gap-3">
-          <Trash2 className="mt-0.5 size-4 shrink-0 text-slate-500" />
+          <RefreshCw className="mt-0.5 size-4 shrink-0 text-slate-500" />
           <span>
-            When the run is over the account is removed together with everything the suite left on
-            it, so the next run starts from the same clean state.
+            Every run starts from a clean reset of the test data, while the report history stays in
+            the store — this dialog only asks the backend to append one more run there.
           </span>
         </li>
       </ul>

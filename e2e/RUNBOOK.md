@@ -24,8 +24,10 @@ E2E_ORCHESTRATION_COMMAND=up dotnet test tests/APCS.E2E.Automation/APCS.E2E.Auto
 The orchestrator owns the whole backend: compose, schema from the EF model (`EnsureCreated`),
 SMTP sink, API, and the seller seeding (register -> verify via the sink mail -> login).
 The seller is the fixed account `e2e.seller@apcs.test` / `Passw0rdTest1!` and is seeded
-idempotently, so it is always fresh. `E2E_ORCHESTRATION_COMMAND=down` takes everything
-down again. See `CAPSTONE_BE/scripts/e2e/README.md`.
+idempotently, so it is always fresh. When a stack from an earlier run is still alive it is
+reused: application tables are truncated while the run history in `test_report_runs` is kept,
+Redis is flushed and catalog/admin are reseeded. `E2E_ORCHESTRATION_COMMAND=down` takes
+everything down again. See `CAPSTONE_BE/scripts/e2e/README.md`.
 
 ## Running
 

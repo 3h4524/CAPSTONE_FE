@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { AuthGuard } from "@/components/auth/auth-guard";
 import { AuthProvider } from "@/providers/global/auth-provider";
 
 type AdminLayoutProps = {
@@ -7,7 +8,9 @@ type AdminLayoutProps = {
 };
 
 const AdminLayout = ({ children }: AdminLayoutProps) => (
-  <AuthProvider>{children}</AuthProvider>
+  <AuthProvider>
+    <AuthGuard requireAdmin>{children}</AuthGuard>
+  </AuthProvider>
 );
 
 export default AdminLayout;

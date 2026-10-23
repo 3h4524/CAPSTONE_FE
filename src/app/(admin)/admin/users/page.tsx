@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { AdminUserDto, GetUsersRequest } from "@/types/admin";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function AdminUsersPage() {
@@ -70,7 +71,7 @@ export default function AdminUsersPage() {
 
   const { data: metrics } = useQuery({
     queryKey: ["adminMetrics"],
-    queryFn: () => getAdminDashboardMetrics("month"),
+    queryFn: () => getAdminDashboardMetrics("year"),
   });
 
   const { data: plansData } = useQuery({
@@ -122,13 +123,13 @@ export default function AdminUsersPage() {
         return;
       }
 
-      const headers = ["ID", "Name", "Email", "Role", "Plan", "Status", "Joined At", "Active Jobs", "API Cost ($)"];
+      const headers = ["ID", "Name", "Email", "Role", "Plan", "Status", "Joined At", "Active Jobs", "Plan Price (VND)"];
       const csvContent = data.items.map(u => {
         const name = `"${u.fullName.replace(/"/g, '""')}"`;
         const email = `"${u.email}"`;
         const roles = `"${u.roles.join(", ")}"`;
         const date = new Date(u.createdAt).toLocaleDateString();
-        const cost = u.monthlyApiCost.toFixed(2);
+        const cost = Math.round(u.monthlyApiCost * 1000).toString();
         
         return [u.id, name, email, roles, u.plan, u.accountStatus, date, u.totalJobs, cost].join(",");
       });
@@ -170,14 +171,10 @@ export default function AdminUsersPage() {
   return (
     <AdminShell pageTitle="users">
       <>
-        <div className="flex h-full flex-col gap-6 p-6">
+        <div className="flex h-full flex-col gap-6 p-0">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="mb-1 flex items-center space-x-2 text-sm text-slate-500">
-                <span>Admin</span>
-                <span>/</span>
-                <span className="font-medium text-slate-900">Users</span>
-              </div>
+
               <h1 className="text-2xl font-bold tracking-tight text-slate-900">Users Management</h1>
               <p className="mt-1 text-sm text-slate-500">
                 Search, filter, and manage registered user accounts.
@@ -224,7 +221,7 @@ export default function AdminUsersPage() {
               </div>
               <div className="mt-2">
                 <p className="text-2xl font-bold text-slate-900">
-                  ${(metrics?.totalRevenue || 0).toLocaleString()}
+                  {formatCurrencyVnd(metrics?.totalRevenue || 0)}
                 </p>
                 <p className="mt-1 text-xs text-slate-400">+5.2% from last month</p>
               </div>
@@ -447,9 +444,9 @@ export default function AdminUsersPage() {
                       <div className="h-10 w-px bg-slate-100"></div>
                       <div className="text-right">
                         <div className="mb-1 flex items-center justify-end gap-2">
-                          <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">API Cost</span>
+                          <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Plan Price</span>
                         </div>
-                        <span className="text-xl font-bold text-slate-900">${selectedUser.monthlyApiCost.toFixed(2)}</span>
+                        <span className="text-xl font-bold text-slate-900">{formatCurrencyVnd(selectedUser.monthlyApiCost)}</span>
                       </div>
                     </div>
                   </div>

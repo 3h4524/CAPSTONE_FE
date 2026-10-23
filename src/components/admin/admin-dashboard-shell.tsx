@@ -17,6 +17,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { Button } from "@/components/ui/button";
 import type { AdminDashboardMetricsDto } from "@/types/admin";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 
 type AdminDashboardShellProps = {
   fullName: string;
@@ -50,7 +51,7 @@ const AdminDashboardContent = ({ fullName, onLogout, metrics, timeRange, onTimeR
         <div className="min-w-0 flex-1 overflow-hidden">
           <div className="h-screen overflow-y-auto">
             <AdminTopbar fullName={fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} />
-            <main className="mx-auto max-w-[1440px] px-4 py-6 sm:px-7 sm:py-8">
+            <main className="mx-auto max-w-[1600px] px-4 py-4 sm:px-[calc(1.5rem+1cm)] sm:py-5 2xl:max-w-[1720px]">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
                   <p className="text-[10px] font-bold tracking-[0.16em] text-slate-400 uppercase">
@@ -88,18 +89,18 @@ const AdminDashboardContent = ({ fullName, onLogout, metrics, timeRange, onTimeR
                 />
                 <AdminMetricCard
                   label={`Total Revenue (${timeRange})`}
-                  value={`$${metrics?.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}`}
+                  value={metrics ? formatCurrencyVnd(metrics.totalRevenue) : "0 ₫"}
                   change=""
                   trend="up"
-                  note={`MRR: $${metrics?.recurringRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}`}
+                  note={`MRR: ${metrics ? formatCurrencyVnd(metrics.recurringRevenue) : "0 ₫"}`}
                   icon={DollarSign}
                 />
                 <AdminMetricCard
-                  label="Active Batch Jobs"
-                  value={metrics?.activeBatchJobs.toLocaleString() ?? "-"}
+                  label="Total Batch Jobs"
+                  value={metrics ? (metrics.totalBatchJobs ?? 0).toLocaleString() : "-"}
                   change=""
                   trend="up"
-                  note="Rendering queue"
+                  note={`${metrics?.activeBatchJobs ?? 0} active in queue`}
                   icon={BriefcaseBusiness}
                 />
                 <AdminMetricCard

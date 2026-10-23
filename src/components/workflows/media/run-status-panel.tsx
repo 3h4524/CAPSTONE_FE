@@ -1,4 +1,6 @@
 "use client";
+import { CircleAlert } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { confirmAiShot } from "@/helpers/confirm-ai-shot";
@@ -36,7 +38,10 @@ export const RunStatusPanel = () => {
   if (!run) return null;
   return <div className="space-y-3 rounded-lg border p-3" aria-live="polite"><p className="text-sm font-medium">Run: {run.status.replaceAll("_", " ")}</p><p className="text-muted-foreground text-xs">Snapshot revision {run.workflowRevision} · run r{run.revision}</p>
     {active && <><p className="text-xs">{active.stage ?? active.nodeType} · {active.progress}%</p><Progress value={active.progress} aria-label="Render progress" /></>}
-    {run.errorMessage && <p className="text-destructive text-xs" role="alert">{run.errorMessage}</p>}
+    {run.errorMessage && <p className="flex items-start gap-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs leading-relaxed text-rose-900" role="alert">
+      <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-rose-700" aria-hidden="true" />
+      <span>{run.errorMessage}</span>
+    </p>}
     {run.status === "failed" && <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => retry()}>Retry checkpoint</Button>{aiMode && <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => retry(true)}>Regenerate AI clips</Button>}</div>}
     {exportStep?.status === "succeeded" && typeof exportStep.output.exportId === "string" && <Button type="button" disabled={isDownloading} onClick={() => download({ id: String(exportStep.output.exportId), zip: true }, { onSuccess: url => window.location.assign(url) })}>Download approved ZIP</Button>}
   </div>;

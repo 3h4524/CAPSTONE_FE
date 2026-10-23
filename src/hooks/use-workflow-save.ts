@@ -34,8 +34,8 @@ export const useWorkflowSave = () => {
 
   const saveWorkflow = useCallback(
     (meta?: WorkflowMetaFormValues, options?: SaveWorkflowOptions) => {
-      const { workflowId, isRunning, isDirty } = useWorkflowStore.getState();
-      if (!workflowId || isRunning) return;
+      const { workflowId, isDirty } = useWorkflowStore.getState();
+      if (!workflowId) return;
       if (!meta && !isDirty) return;
       updateWorkflow(
         { id: workflowId, input: buildSaveInput(meta) },

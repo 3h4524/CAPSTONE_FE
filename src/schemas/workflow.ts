@@ -69,7 +69,7 @@ export const generateVideoConfigSchema = z.object({
   selectedMockupIds: z.array(z.string().uuid()).max(8).refine(ids => new Set(ids).size === ids.length, "Select each mockup once."),
   sceneOrder: z.array(z.string().uuid()).max(4).refine(ids => new Set(ids).size === ids.length, "Use each mockup once in the scene order."),
   textOverlay: z.string().max(120),
-  standardOptions: z.object({ motionPreset: z.enum(["varied", "gentle", "contain_gentle", "static", "pan", "zoom", "zoom_out", "pan_left", "pan_up", "pan_down", "diagonal_up_right", "diagonal_up_left", "diagonal_down_right", "diagonal_down_left"]), crop: z.literal("safe"), transition: z.enum(["fade", "cut"]) }),
+  standardOptions: z.object({ motionPreset: z.enum(["varied", "gentle", "contain_gentle", "static", "pan", "zoom", "zoom_out", "pan_left", "pan_up", "pan_down", "diagonal_up_right", "diagonal_up_left", "diagonal_down_right", "diagonal_down_left"]), crop: z.literal("safe"), transition: z.enum(["none", "fade", "swipe", "zoom", "flash", "whip_pan", "blur", "cut"]) }),
   sceneMotionPresets: z.array(z.enum(["gentle", "contain_gentle", "static", "pan", "zoom", "zoom_out", "pan_left", "pan_up", "pan_down", "diagonal_up_right", "diagonal_up_left", "diagonal_down_right", "diagonal_down_left"]).nullable()).max(4).optional(),
   fallbackToStandard: z.boolean(),
   aiShotOptions: z.object({
@@ -98,6 +98,7 @@ export const generateVideoConfigSchema = z.object({
     studioLayout: z.enum(["hanging_window", "flat_lay", "none"]).nullable().optional(),
     studioFrameId: z.string().uuid().nullable().optional(),
     studioPrompt: z.string().trim().max(500, "Keep keyframe directions under 500 characters.").nullable().optional(),
+    studioReferenceHashes: z.array(z.string().length(64)).max(3).nullable().optional(),
   })).max(4).optional(),
   aiGlobalInstructions: z.string().trim().max(500, "Keep shared AI scene direction under 500 characters.").nullable().optional(),
   aiStudioMode: z.enum(["direct", "studio"]).catch("direct").default("direct"),
@@ -106,9 +107,13 @@ export const generateVideoConfigSchema = z.object({
   aiStudioFrameId: z.string().uuid().nullable().optional(),
 }).superRefine((value, ctx) => {
   if (value.assetSelection === "manual" && value.selectedMockupIds.length === 0) ctx.addIssue({ code: "custom", path: ["selectedMockupIds"], message: "Choose at least one approved mockup." });
+  if (value.mode === "ai_shot" && value.outputFormat === "square") ctx.addIssue({ code: "custom", path: ["outputFormat"], message: "AI video supports portrait or landscape output." });
   if (value.mode !== "ai_shot") return;
   if (value.aiScenes?.length) {
     if (value.aiScenes.length > 4) ctx.addIssue({ code: "custom", path: ["aiScenes"], message: "Use up to four AI scenes." });
+    value.aiScenes.forEach((scene, index) => {
+      if (!scene.mockupId) ctx.addIssue({ code: "custom", path: ["aiScenes", index, "mockupId"], message: `Choose an approved image for scene ${index + 1}.` });
+    });
     const total = value.aiScenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
     if (total > 30) ctx.addIssue({ code: "custom", path: ["aiScenes"], message: "AI video scenes can total up to 30 seconds." });
     if (value.durationSeconds !== total) ctx.addIssue({ code: "custom", path: ["durationSeconds"], message: "Total duration is calculated from the scene durations." });

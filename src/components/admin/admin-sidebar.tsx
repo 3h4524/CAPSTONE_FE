@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Activity,
   BarChart3,
-  BriefcaseBusiness,
   CreditCard,
   Database,
+  FlaskConical,
   Headphones,
   LayoutDashboard,
   LogOut,
@@ -45,10 +46,14 @@ const primaryNavigation = [
   { label: "Subscriptions", href: "/admin/subscription-plans", icon: CreditCard },
 ];
 
-const secondaryNavigation = [
-  { label: "Revenue & Reports", href: "/admin/reports", icon: BarChart3 },
-  { label: "Batch Jobs", href: "/admin/batch-jobs", icon: BriefcaseBusiness, tone: "amber" },
+const analyticsNavigation = [
+  { label: "Revenue & Reports", href: "/admin/revenue", icon: BarChart3 },
+  { label: "System Statistics", href: "/admin/analytics", icon: Activity },
+];
+
+const systemNavigation = [
   { label: "Support Tickets", href: "/admin/support-tickets", icon: Headphones, tone: "rose" },
+  { label: "Test Reports", href: "/admin/test-reports", icon: FlaskConical, tone: "sky" },
 ];
 
 const AdminSidebar = ({
@@ -100,10 +105,10 @@ const AdminSidebar = ({
           <SidebarItems items={primaryNavigation} isCollapsed={isCollapsed} />
         </SidebarGroup>
         <SidebarGroup label="Finance & Analytics" isCollapsed={isCollapsed}>
-          <SidebarItems items={secondaryNavigation.slice(0, 1)} isCollapsed={isCollapsed} />
+          <SidebarItems items={analyticsNavigation} isCollapsed={isCollapsed} />
         </SidebarGroup>
         <SidebarGroup label="System" isCollapsed={isCollapsed}>
-          <SidebarItems items={secondaryNavigation.slice(1)} isCollapsed={isCollapsed} />
+          <SidebarItems items={systemNavigation} isCollapsed={isCollapsed} />
         </SidebarGroup>
       </nav>
 

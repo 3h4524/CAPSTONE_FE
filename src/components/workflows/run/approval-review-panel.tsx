@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { Check, X } from "lucide-react";
 
+import { ImageLightbox } from "@/components/commons/data-display/image-lightbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
+import { designLightboxImages } from "@/helpers/lightbox-images";
 import { productTypeLabel } from "@/helpers/mockup-template";
 import {
   countApprovals,
@@ -37,6 +41,7 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
   const mockupState = useWorkflowRunStore((state) => state.mockupState);
   const nodes = useWorkflowStore((state) => state.nodes);
   const { data: templates } = useMockupTemplates();
+  const [viewing, setViewing] = useState<number | null>(null);
 
   const counts = countApprovals(job);
   const manual = job.requireApproval === true;
@@ -51,42 +56,46 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
 
   if (!manual) {
     return (
-      <section className="space-y-2" aria-label="Approval">
-        <h3 className="text-sm font-semibold">Approval</h3>
-        <p className="text-muted-foreground text-xs">
+      <section className="space-y-3 border-t pt-5" aria-label="Approval">
+        <h3 className="text-sm font-semibold text-slate-900">Approval</h3>
+        <PanelNotice tone="info">
           {job.requireApproval === false
             ? "This run approves every design automatically, so they continue to the mock-ups without a review."
             : "This run started before designs could be reviewed, so they continue without approval."}
-        </p>
+        </PanelNotice>
       </section>
     );
   }
 
   if (!designsReady) {
     return (
-      <section className="space-y-2" aria-label="Approval">
-        <h3 className="text-sm font-semibold">Review designs</h3>
-        <p className="text-muted-foreground text-xs">The designs are still being generated. You can review them as soon as the job finishes.</p>
+      <section className="space-y-3 border-t pt-5" aria-label="Approval">
+        <h3 className="text-sm font-semibold text-slate-900">Review designs</h3>
+        <PanelNotice>The designs are still being generated. You can review them as soon as the job finishes.</PanelNotice>
       </section>
     );
   }
 
   const productsWithImages = job.products.filter((product) => product.images.length > 0);
+  const gallery = designLightboxImages(productsWithImages);
 
   return (
     <section className="space-y-4" aria-label="Review designs">
-      <div className="bg-background sticky top-0 z-10 -mx-4 -mt-4 space-y-2 border-b px-4 py-3">
+      <div className="sticky top-0 z-10 -mx-5 space-y-3 border-y bg-white/95 px-5 py-3 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">Review designs</h3>
-          <p className="text-muted-foreground text-xs" aria-live="polite">
-            {counts.approved} approved · {counts.rejected} rejected · {counts.pending} to review
+          <h3 className="text-sm font-semibold text-slate-900">Review designs</h3>
+          <p className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums" aria-live="polite">
+            <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />{counts.approved} approved</span>
+            <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-rose-500" aria-hidden="true" />{counts.rejected} rejected</span>
+            <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-slate-400" aria-hidden="true" />{counts.pending} to review</span>
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid grid-cols-1 gap-2 @xs:grid-cols-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
+            className="h-8 px-3 hover:translate-y-0"
             disabled={counts.pending === 0 || approval.isPending}
             onClick={() => decide(null, "approved")}
           >
@@ -96,6 +105,7 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
             <Button
               type="button"
               size="sm"
+              className="h-8 px-3 hover:translate-y-0"
               disabled={counts.approved === 0 || makingMockups || (selection?.templateIds.length ?? 0) === 0}
               onClick={() => void applySelectionAndGenerateMockups(job.id, queryClient)}
             >
@@ -124,7 +134,7 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-2">
                 <h4 className="truncate text-sm font-medium">{product.productName}</h4>
-                {product.productType && <Badge variant="secondary">{productTypeLabel(product.productType)}</Badge>}
+                {product.productType && <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700">{productTypeLabel(product.productType)}</Badge>}
               </div>
               <Button
                 type="button"
@@ -151,7 +161,14 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
                       status === "rejected" && "border-rose-300 opacity-70"
                     )}
                   >
-                    <a href={image.imageUrl} target="_blank" rel="noreferrer" className="block">
+                    {/* Opens the design large on the page rather than in a new tab. */}
+                    <Button
+                      type="button"
+                      variant="none"
+                      aria-label={`View ${label} larger`}
+                      onClick={() => setViewing(gallery.findIndex((item) => item.id === image.id))}
+                      className="block h-auto w-full cursor-zoom-in overflow-hidden rounded-none p-0 hover:translate-y-0"
+                    >
                       <Image
                         src={image.imageUrl}
                         alt={label}
@@ -160,7 +177,7 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
                         unoptimized
                         className="bg-muted aspect-square w-full object-cover"
                       />
-                    </a>
+                    </Button>
                     <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 p-2">
                       <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap", badge.className)}>
                         {badge.label}
@@ -197,6 +214,7 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
           </div>
         );
       })}
+      <ImageLightbox images={gallery} index={viewing} onIndexChange={setViewing} />
     </section>
   );
 };

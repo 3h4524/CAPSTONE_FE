@@ -6,5 +6,9 @@
 
 export type VideoOutputFormat = typeof VIDEO_OUTPUT_FORMATS[number]["value"];
 
-export const getVideoOutputFormat = (value: unknown) =>
-  VIDEO_OUTPUT_FORMATS.find(format => format.value === value) ?? VIDEO_OUTPUT_FORMATS[0];
+export const getVideoOutputFormats = (mode: unknown) => mode === "ai_shot"
+  ? VIDEO_OUTPUT_FORMATS.filter(format => format.value !== "square")
+  : VIDEO_OUTPUT_FORMATS;
+
+export const getVideoOutputFormat = (value: unknown, mode?: unknown) =>
+  getVideoOutputFormats(mode).find(format => format.value === value) ?? VIDEO_OUTPUT_FORMATS[0];

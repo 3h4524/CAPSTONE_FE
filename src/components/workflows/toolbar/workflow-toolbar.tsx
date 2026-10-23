@@ -146,7 +146,7 @@ export const WorkflowToolbar = ({
             <span className="hidden sm:inline">Run</span>
           </Button>
         )}
-        <Button type="button" size="sm" className="px-4" onClick={() => saveWorkflow()} disabled={isBusy || !isDirty}>
+        <Button type="button" size="sm" className="px-4" onClick={() => saveWorkflow()} disabled={!isEditorReady || isCreating || isSaving || isDeleting || isRunPending || !isDirty}>
           <Save aria-hidden="true" />
           <span className="hidden sm:inline">Save</span>
         </Button>

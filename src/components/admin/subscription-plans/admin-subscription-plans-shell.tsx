@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { AdminSubscriptionPlan } from "@/types/admin-subscription-plan";
 import { cn } from "@/utils/cn";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 
 type AdminSubscriptionPlansShellProps = {
   fullName: string;
@@ -21,8 +22,7 @@ type AdminSubscriptionPlansShellProps = {
   isLoading: boolean;
 };
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }).format(amount);
+const formatCurrency = (amount: number) => formatCurrencyVnd(amount);
 
 const formatLimit = (value: number) => (value === -1 ? "Unlimited" : value.toLocaleString());
 
@@ -61,7 +61,7 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
               onMenuClick={() => setIsMobileSidebarOpen(true)}
               pageTitle="Subscriptions"
             />
-            <main className="mx-auto max-w-[1440px] px-4 py-6 sm:px-7 sm:py-8">
+            <main className="mx-auto max-w-[1600px] px-4 py-4 sm:px-[calc(1.5rem+1cm)] sm:py-5 2xl:max-w-[1720px]">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
                   <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">
@@ -106,7 +106,7 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
                               <div className="font-medium text-slate-800">{plan.name}</div>
                               <div className="text-muted-foreground text-xs">{plan.tier}</div>
                             </TableCell>
-                            <TableCell>{formatCurrency(plan.monthlyPriceUsd)}/mo</TableCell>
+                            <TableCell>{formatCurrency(plan.monthlyPriceUsd)}/tháng</TableCell>
                             <TableCell>
                               <Badge variant={plan.isActive ? "default" : "secondary"}>
                                 {plan.isActive ? "Active" : "Inactive"}

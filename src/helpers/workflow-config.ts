@@ -36,7 +36,13 @@ export const readBoolean = (value: unknown): boolean => value === true;
 export const readStringArray = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 
-export const readInstructionsPreview = (config: WorkflowNodeConfig): string =>
+/** "16:9" as [16, 9], for drawing the ratio's shape; anything else draws a square. */
+export const parseAspectRatio = (ratio: string): [number, number] => {
+  const [width, height] = ratio.split(":").map(Number);
+  return width && height ? [width, height] : [1, 1];
+};
+
+export const readInstructionsPreview =(config: WorkflowNodeConfig): string =>
   readString(config.instructions).trim();
 
 const MAX_NODE_LABEL_LENGTH = 60;
@@ -59,12 +65,18 @@ const getFieldKeys = (field: WorkflowField): string[] =>
 
 // Keeps only the keys the node still declares (in its fields or its defaults), over its defaults, so a
 // workflow saved before a key existed (or after one was removed) still loads into a config the schema accepts.
+// A text value saved as null (an older product change cleared `artworkGroupKey` that way) takes its default.
 export const normalizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNodeConfig): WorkflowNodeConfig => {
   const definition = WORKFLOW_NODE_DEFINITIONS[type];
   const normalized: WorkflowNodeConfig = { ...definition.defaultConfig };
   new Set([...Object.keys(definition.defaultConfig), ...definition.fields.flatMap(getFieldKeys)]).forEach((key) => {
+    if (config[key] === null && typeof normalized[key] === "string") return;
     if (key in config) normalized[key] = config[key];
   });
+  if (type === "generate-video" && normalized.standardOptions && typeof normalized.standardOptions === "object") {
+    const options = normalized.standardOptions as Record<string, unknown>;
+    if (options.transition === "cut") normalized.standardOptions = { ...options, transition: "none" };
+  }
   return normalized;
 };
 

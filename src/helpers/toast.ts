@@ -21,10 +21,10 @@ const TOAST_STYLES: Record<AlertType, React.CSSProperties> = {
     "--normal-border": "var(--color-red-600)",
   } as React.CSSProperties,
   warning: {
-    "--normal-bg":
-      "color-mix(in oklab, var(--color-yellow-600) 10%, var(--background))",
-    "--normal-text": "var(--color-yellow-600)",
-    "--normal-border": "var(--color-yellow-600)",
+    "--normal-bg": "var(--warning)",
+    "--normal-text": "var(--warning-foreground)",
+    "--normal-border":
+      "color-mix(in oklab, var(--warning-foreground) 32%, var(--warning))",
   } as React.CSSProperties,
   info: {
     "--normal-bg":

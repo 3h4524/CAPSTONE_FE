@@ -1,6 +1,7 @@
 "use client";
 
 import { OptionSelect } from "@/components/workflows/config-panel/fields/option-select";
+import { SourcePreview } from "@/components/workflows/config-panel/fields/source-preview";
 import { useStylePresets } from "@/hooks/queries/use-style-presets";
 
 type StylePresetSelectProps = {
@@ -12,19 +13,35 @@ type StylePresetSelectProps = {
 
 export const StylePresetSelect = ({ value, placeholder, noneLabel, onChange }: StylePresetSelectProps) => {
   const { data: presets, isPending, isError, refetch } = useStylePresets();
-  const options = (presets ?? []).map((preset) => ({ value: preset.id, label: preset.name }));
+  const options = (presets ?? []).map((preset) => ({
+    value: preset.id,
+    label: preset.name,
+    hint: preset.description || undefined,
+    imageUrl: preset.previewImageUrl,
+  }));
+  const chosen = presets?.find((preset) => preset.id === value);
 
   return (
-    <OptionSelect
-      value={value}
-      options={options}
-      placeholder={placeholder}
-      noneLabel={noneLabel}
-      onChange={onChange}
-      isLoading={isPending}
-      isError={isError}
-      onRetry={() => refetch()}
-      emptyMessage="No art styles are available yet."
-    />
+    <div className="min-w-0 space-y-2">
+      <OptionSelect
+        value={value}
+        options={options}
+        placeholder={placeholder}
+        noneLabel={noneLabel}
+        onChange={onChange}
+        isLoading={isPending}
+        isError={isError}
+        onRetry={() => refetch()}
+        emptyMessage="No art styles are available yet."
+      />
+      {chosen && (
+        <SourcePreview
+          imageUrl={chosen.previewImageUrl}
+          title={chosen.name}
+          tags={chosen.recommendations.slice(0, 3)}
+          description={chosen.description || null}
+        />
+      )}
+    </div>
   );
 };

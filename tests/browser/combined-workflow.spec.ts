@@ -301,6 +301,54 @@ test("one mock-up of the job can be made its own way, removed and put back", asy
   expect(requests.some(r => r.method === "DELETE" && r.path === `/api/batch-jobs/${jobId}/mockups/overrides/${slotKey}`)).toBe(true);
 });
 
+test("one mock-up's background is copied onto its template's other mock-ups, and no two mock-ups end up alike", async ({ page }) => {
+  const template = {
+    id: templateId, name: "Classic Tee", productType: "tshirt", baseImageUrl: "/fixture-mockup.svg", previewImageUrl: null,
+    printAreaConfig: JSON.stringify({ x: 150, y: 250, width: 300, height: 300, unit: "px" }), outputWidthPx: 600, outputHeightPx: 900,
+    usageCount: 3, isSystemTemplate: false, isMine: true, realisticPrintReady: true, allowRecolor: true,
+    garmentMaskUrl: "/fixture-mockup.svg?mask=1", garmentColor: null, allowBackground: true,
+  };
+  const boxyId = "7d2c7b1a-4e5f-4a6b-8c7d-1e2f3a4b5c6d";
+  const [first] = madeMockups.images;
+  // Another garment color on the same template, and the same design on another template.
+  const navy = { ...first, id: "mockup-2", garmentColor: "#1F2A44", slotKey: "design1.template1.1F2A44" };
+  const boxy = { ...first, id: "mockup-3", mockupTemplateId: boxyId, slotKey: "design1.template2.own" };
+  const requests = await mockApi(page, { jobMockups: { ...madeMockups, images: [first!, navy, boxy] }, templates: [template, { ...template, id: boxyId, name: "Boxy Tee" }] });
+  await page.goto(`/workflows?id=${workflowId}&job=${jobId}`);
+  await node(page, "mockup").click({ position: { x: 80, y: 40 } });
+
+  await page.getByRole("button", { name: "Edit this mock-up of Vintage Fishing Club" }).first().click();
+  const dialog = page.getByRole("dialog", { name: "Edit this mock-up" });
+  const save = dialog.getByRole("button", { name: "Save", exact: true });
+
+  // The garment color the navy mock-up already has would make a second, identical one.
+  await dialog.getByRole("button", { name: "Navy", exact: true }).click();
+  await expect(dialog.getByRole("alert")).toContainText("This would look exactly like another mock-up of this design (Classic Tee in Navy)");
+  await expect(save).toBeDisabled();
+  await dialog.getByRole("button", { name: "Navy", exact: true }).click();
+  await expect(dialog.getByRole("alert")).toHaveCount(0);
+
+  // Copying reaches only the mock-ups of this template; there is no choice for the whole job.
+  await dialog.getByRole("button", { name: "Charcoal background" }).click();
+  await expect(dialog.getByRole("radio", { name: /This mock-up only/ })).toBeChecked();
+  await expect(dialog.getByRole("radio", { name: /All mock-ups/ })).toHaveCount(0);
+  await dialog.getByRole("radio", { name: /Mock-ups on this template/ }).click();
+  await expect(dialog).toContainText("1 other mock-up will change.");
+  await save.click();
+
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText("2 mock-ups updated.", { exact: false })).toBeVisible();
+  expect(requests.some(r => r.method === "PUT" && r.path.endsWith("/mockups/overrides"))).toBe(false);
+  const saved = requests.find(r => r.method === "PUT" && r.path.endsWith("/mockups/overrides/bulk"))!;
+  // The navy one keeps its garment color; the Boxy Tee mock-up is left as it is.
+  expect(saved.body).toEqual({
+    overrides: [
+      { slotKey, replacedMockupImageId: "mockup-1", override: { mockupTemplateId: templateId, garmentColor: null, backgroundColor: "#22262E", printArea: null, removed: false } },
+      { slotKey: navy.slotKey, replacedMockupImageId: "mockup-2", override: { mockupTemplateId: templateId, garmentColor: "#1F2A44", backgroundColor: "#22262E", printArea: null } },
+    ],
+  });
+});
+
 test("Apply mock-up puts each garment color of a template on a background of its own", async ({ page }) => {
   const template = {
     id: templateId, name: "Classic Tee", productType: "tshirt", baseImageUrl: "/fixture-mockup.svg", previewImageUrl: null,

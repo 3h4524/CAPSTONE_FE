@@ -14,10 +14,10 @@ const FINISHED_STATUSES = ["completed", "partially_completed", "failed"];
 const formatTime = (value: string | null) => (value ? new Date(value).toLocaleString() : "—");
 export const jobStatusText = (status: string) => (status === "image_review_required" ? "Ready for review" : status.replaceAll("_", " "));
 
-const Counter = ({ label, value }: { label: string; value: number }) => (
-  <div className="rounded-lg border p-3">
-    <p className="text-muted-foreground text-xs uppercase">{label}</p>
-    <p className="mt-1 text-2xl font-semibold">{value}</p>
+const Counter = ({ label, value, compact }: { label: string; value: number; compact: boolean }) => (
+  <div className={compact ? "rounded-md bg-slate-50 px-2.5 py-2" : "rounded-lg border p-3"}>
+    <p className={cn("text-muted-foreground text-xs", !compact && "uppercase")}>{label}</p>
+    <p className={cn("tabular-nums", compact ? "text-base font-medium text-slate-900" : "mt-1 text-2xl font-semibold")}>{value}</p>
   </div>
 );
 
@@ -34,7 +34,7 @@ export const JobProgressCard = ({ job, bare = false }: JobProgressCardProps) => 
   const canRetry = FINISHED_STATUSES.includes(job.status) && job.counters.failed > 0;
 
   const body = (
-    <div className="space-y-5">
+    <div className={bare ? "space-y-4" : "space-y-5"}>
       {bare && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="truncate text-sm font-semibold">{job.batchName}</p>
@@ -53,11 +53,11 @@ export const JobProgressCard = ({ job, bare = false }: JobProgressCardProps) => 
         <Progress value={job.progressPercentage} />
         {active && <p className="text-muted-foreground text-xs">Generating images… this updates automatically.</p>}
       </div>
-      <div className={cn("grid gap-3", bare ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4")}>
-        <Counter label="Pending" value={job.counters.pending} />
-        <Counter label="Processing" value={job.counters.processing} />
-        <Counter label="Completed" value={job.counters.completed} />
-        <Counter label="Failed" value={job.counters.failed} />
+      <div className={cn("grid", bare ? "grid-cols-2 gap-2 @sm:grid-cols-4" : "grid-cols-2 gap-3 sm:grid-cols-4")}>
+        <Counter label="Pending" value={job.counters.pending} compact={bare} />
+        <Counter label="Processing" value={job.counters.processing} compact={bare} />
+        <Counter label="Completed" value={job.counters.completed} compact={bare} />
+        <Counter label="Failed" value={job.counters.failed} compact={bare} />
       </div>
       {canRetry && (
         <div className="flex flex-wrap items-center gap-3 rounded-lg border border-dashed p-3">

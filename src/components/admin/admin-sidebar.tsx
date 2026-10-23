@@ -7,6 +7,7 @@ import {
   BarChart3,
   CreditCard,
   Database,
+  FlaskConical,
   Headphones,
   LayoutDashboard,
   LogOut,
@@ -52,6 +53,7 @@ const analyticsNavigation = [
 
 const systemNavigation = [
   { label: "Support Tickets", href: "/admin/support-tickets", icon: Headphones, tone: "rose" },
+  { label: "Test Reports", href: "/admin/test-reports", icon: FlaskConical, tone: "sky" },
 ];
 
 const AdminSidebar = ({

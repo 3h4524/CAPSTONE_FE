@@ -3,7 +3,7 @@
 import { AbsoluteFill, Img, Sequence, useCurrentFrame } from "remotion";
 
 import type { VideoStoryboard } from "@/types/video-workflow";
-import { getSceneFrame, getShotImageGeometry, type StandardVideoScene, type StandardVideoSource } from "@apcs/video-composition";
+import { getSceneFrame, getShotImageGeometry, getTransitionFrameStyle, type StandardVideoScene, type StandardVideoSource, type VideoTransition } from "@apcs/video-composition";
 
 export type StandardVideoPreviewProps = {
   storyboard: VideoStoryboard;
@@ -28,13 +28,38 @@ const PreviewShot = ({ scene, source, width, height }: { scene: StandardVideoSce
 
 export const StandardVideoPreview = ({ storyboard, sources }: StandardVideoPreviewProps) => {
   let offset = 0;
-  return <AbsoluteFill style={{ backgroundColor: "#111827" }}>{storyboard.scenes.map(scene => {
-    const from = offset;
-    offset += scene.durationFrames;
+  const overlapFrames = storyboard.outputDurationFrames == null ? storyboard.transitionOverlapFrames ?? 0 : storyboard.transitionOverlapFrames ?? 0;
+  return <AbsoluteFill style={{ backgroundColor: "#111827" }}>{storyboard.scenes.map((scene, index) => {
+    const from = Math.max(0, offset - (index > 0 ? overlapFrames : 0));
+    offset = from + scene.durationFrames;
     const source = sources[scene.mockupId];
     if (!source) throw new Error("Missing storyboard preview source");
     return <Sequence key={`${scene.sceneOrder}-${scene.mockupId}`} from={from} durationInFrames={scene.durationFrames}>
-      <PreviewShot scene={scene} source={source} width={storyboard.width} height={storyboard.height} />
+      <TransitionLayer sceneIndex={index} durationFrames={scene.durationFrames} transitionIn={scene.transition}
+        transitionOut={storyboard.scenes[index + 1]?.transition ?? "none"} overlapFrames={overlapFrames}
+        legacy={storyboard.outputDurationFrames == null}>
+        <PreviewShot scene={scene} source={source} width={storyboard.width} height={storyboard.height} />
+      </TransitionLayer>
     </Sequence>;
   })}</AbsoluteFill>;
+};
+
+const TransitionLayer = ({ children, sceneIndex, durationFrames, transitionIn, transitionOut, overlapFrames, legacy }: {
+  children: React.ReactNode; sceneIndex: number; durationFrames: number; transitionIn: VideoTransition;
+  transitionOut: VideoTransition; overlapFrames: number; legacy: boolean;
+}) => {
+  const frame = useCurrentFrame();
+  let style = { opacity: 1, transform: "none", clipPath: "none", filter: "none", flashOpacity: 0 };
+  if (legacy && transitionIn === "fade") {
+    style = { ...style, opacity: Math.min(frame / 8, Math.max(0, (durationFrames - 1 - frame) / 8)) };
+  } else if (!legacy && sceneIndex > 0 && frame < overlapFrames) {
+    style = getTransitionFrameStyle(transitionIn, frame, overlapFrames, "incoming");
+  } else if (!legacy && transitionOut !== "none" && transitionOut !== "cut" && frame >= durationFrames - overlapFrames) {
+    const outgoing = getTransitionFrameStyle(transitionOut, frame - (durationFrames - overlapFrames), overlapFrames, "outgoing");
+    style = { ...outgoing, flashOpacity: 0 };
+  }
+  return <AbsoluteFill style={{ opacity: style.opacity, transform: style.transform, clipPath: style.clipPath as React.CSSProperties["clipPath"], filter: style.filter }}>
+    {children}
+    {style.flashOpacity > 0 && <AbsoluteFill style={{ backgroundColor: "white", opacity: style.flashOpacity }} />}
+  </AbsoluteFill>;
 };

@@ -21,11 +21,17 @@ const FINISHED_RUN_STATUSES = ["completed", "cancelled", "failed"];
 export const useWorkflowRuntime = () => {
   const router = useRouter();
   const params = useSearchParams();
-  const runId = params.get(VIDEO_RUN_PARAM);
+  const urlRunId = params.get(VIDEO_RUN_PARAM);
+  const storedRunId = useWorkflowStore(state => state.videoRunId);
+  const runId = urlRunId ?? storedRunId;
   const { data: run, isError, refetch } = useWorkflowRun(runId);
   const { mutate: start, isPending: isStarting } = useStartWorkflowRun();
   const { mutate: action, isPending: isActing } = useWorkflowRunAction();
   const workflowId = useWorkflowStore(state => state.workflowId);
+  const setVideoRunId = useWorkflowStore(state => state.setVideoRunId);
+  useEffect(() => {
+    if (urlRunId && urlRunId !== storedRunId) setVideoRunId(urlRunId);
+  }, [urlRunId, storedRunId, setVideoRunId]);
   const startRun = () => {
     const state = useWorkflowStore.getState();
     if (!state.workflowId) return;
@@ -38,21 +44,30 @@ export const useWorkflowRuntime = () => {
       const query = new URLSearchParams(window.location.search);
       query.set("id", result.workflowId);
       query.set(VIDEO_RUN_PARAM, result.id);
+      setVideoRunId(result.id);
       // The video part has started, so the note that it was still to come goes.
       query.delete(NEXT_PART_PARAM);
       router.replace(`/workflows?${query.toString()}`, { scroll: false });
     } });
   };
   const cancelRun = () => { if (run) action({ runId: run.id, expectedRevision: run.revision, action: "cancel" }); };
+  const selectRun = (selectedRunId: string) => {
+    setVideoRunId(selectedRunId);
+    const query = new URLSearchParams(window.location.search);
+    if (workflowId) query.set("id", workflowId);
+    query.set(VIDEO_RUN_PARAM, selectedRunId);
+    router.replace(`/workflows?${query.toString()}`, { scroll: false });
+  };
   // Leaves the run where it is on the server and stops following it, so the next one starts from clean steps.
   const closeRun = () => {
+    setVideoRunId(null);
     const query = new URLSearchParams(window.location.search);
     if (!query.has(VIDEO_RUN_PARAM)) return;
     query.delete(VIDEO_RUN_PARAM);
     const rest = query.toString();
     router.replace(rest ? `/workflows?${rest}` : "/workflows", { scroll: false });
   };
-  return { run: run?.workflowId === workflowId ? run : undefined, runId, isRunning: Boolean(run && run.workflowId === workflowId && !FINISHED_RUN_STATUSES.includes(run.status)), isPending: isStarting || isActing, isError, refetch, startRun, cancelRun, closeRun };
+  return { run: run?.workflowId === workflowId ? run : undefined, runId, isRunning: Boolean(run && run.workflowId === workflowId && !FINISHED_RUN_STATUSES.includes(run.status)), isPending: isStarting || isActing, isError, refetch, startRun, cancelRun, selectRun, closeRun };
 };
 
 // Shows the open video run on the canvas. Mounted once, beside the hook that shows the batch job, so the two

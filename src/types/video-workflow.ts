@@ -7,7 +7,7 @@ export interface AiVideoSceneOptions {
   mode: "ai" | "standard";
   mockupId: string | null;
   templateCode: string;
-  durationSeconds: 4 | 6 | 8;
+  durationSeconds: number;
   framing: string;
   cameraAngle: string;
   cameraMovement: string;
@@ -25,7 +25,20 @@ export interface AiVideoSceneOptions {
   standardBaseCrop?: Region | null;
   standardStartCrop?: Region | null;
   standardEndCrop?: Region | null;
+  standardStartScale?: number | null;
+  standardEndScale?: number | null;
+  standardStartRotation?: number | null;
+  standardEndRotation?: number | null;
+  displayDurationFrames?: number | null;
+  trimStartFrames?: number | null;
+  trimEndFrames?: number | null;
+  transitionIn?: VideoTransition | null;
+  transitionDurationFrames?: number | null;
 }
+export interface VideoOverlay { id: string; type: "headline" | "cta"; text: string; startFrame: number; endFrame: number; x: number; y: number; align: "left" | "center" | "right"; preset: "clean" | "bold" | "minimal" | "solid" | "pill" | "outline"; fontScale: number; textColor: string; backgroundColor: string }
+export interface VideoMusicConfig { trackId: string; startFrame: number; sourceOffsetFrames: number; volume: number; fadeInFrames: number; fadeOutFrames: number; loop: boolean; muted: boolean }
+export interface VideoEditConfig { version: 1; music: VideoMusicConfig | null; overlays: VideoOverlay[] }
+export interface MusicTrack { id: string; name: string; artistName: string; durationSeconds: number; genre: string; mood: string; license: string; previewUrl: string }
 export interface AiVideoTemplateDefinition {
   code: string;
   name: string;
@@ -41,7 +54,7 @@ export interface AiVideoTemplateDefinition {
 export interface VideoTemplateRequirements { minimumAssets: number; requiresDetail: boolean; minimumVariants: number }
 export interface VideoTemplateCatalogItem { code: string; version: number; name: string; description: string; previewVideoUrl: string | null; defaultDurationSeconds: number; defaultTransition: "none" | "fade" | "cut"; defaultMotionPreset: string; requirements: VideoTemplateRequirements | null }
 export interface AiShotPlan { sceneOrder: number; mockupId: string; sourceHash: string; model: string; preset: string; prompt: string; durationSeconds: number; fingerprint: string; providerKey: string; modelKey: string; promptVersion: number; sourceCrop: Region | null }
-export interface VideoStoryboard { template: string; templateVersion: number; durationSeconds: number; outputDurationFrames?: number | null; productType: string; scenes: ScenePlan[]; fingerprint: string; outputFormat: string; width: number; height: number; aspectRatio: string; mode?: "standard" | "ai_shot"; transitionOverlapFrames?: number; aiShots?: AiShotPlan[] | null }
+export interface VideoStoryboard { template: string; templateVersion: number; durationSeconds: number; outputDurationFrames?: number | null; productType: string; scenes: ScenePlan[]; fingerprint: string; outputFormat: string; width: number; height: number; aspectRatio: string; mode?: "standard" | "ai_shot"; transitionOverlapFrames?: number; aiShots?: AiShotPlan[] | null; videoEdit?: VideoEditConfig | null }
 export interface VideoModeCapability { mode: string; enabled: boolean; availability: string; description: string; supportsFallback: boolean; estimatedCostRange: { currency: string; minimum: number; maximum: number; note: string } | null }
 export interface WorkflowCapabilities { definitionVersion: number; nodes: { type: string; enabled: boolean; description: string }[]; videoModes: VideoModeCapability[] }
 export interface Region { x: number; y: number; width: number; height: number }
@@ -62,9 +75,9 @@ export interface MockupAsset { id: string; productId: string; sourceType: string
 export interface AiStudioFrameRequest { sourceMockupId: string; layout: "hanging_window" | "flat_lay" | "none"; outputFormat: string; customPrompt?: string | null; templateCode?: string | null; references?: File[]; referenceRightsConfirmed?: boolean; regenerate?: boolean; expectedFingerprint?: string; confirmedEstimatedCostUsd?: number }
 export interface AiStudioFrameQuote { fingerprint: string; promptVersion: number; estimatedCostUsd: number; existingFrame: MockupAsset | null; note: string }
 export interface AiStudioFrameGeneration { frame: MockupAsset; reused: boolean; estimatedCostUsd: number }
-export type SceneMotion = "gentle" | "contain_gentle" | "static" | "pan" | "zoom" | "zoom_out" | "pan_left" | "pan_up" | "pan_down" | "diagonal_up_right" | "diagonal_up_left" | "diagonal_down_right" | "diagonal_down_left" | "custom";
+export type SceneMotion = "gentle" | "contain_gentle" | "static" | "pan" | "zoom" | "zoom_out" | "pan_left" | "pan_up" | "pan_down" | "diagonal_up_right" | "diagonal_up_left" | "diagonal_down_right" | "diagonal_down_left" | "rotate_cw" | "rotate_ccw" | "rotate_zoom_cw" | "rotate_zoom_ccw" | "custom";
 export type VideoTransition = "none" | "fade" | "swipe" | "zoom" | "flash" | "whip_pan" | "blur" | "cut";
-export interface ScenePlan { mockupId: string; sourceRevision: number; sourceHash: string; role: string; sceneOrder: number; durationFrames: number; crop: Region; endCrop: Region; motion: SceneMotion; transition: VideoTransition; text: string; generationStrategy: string; warnings: string[]; aiTemplateCode?: string | null; promptVersion?: number | null; compiledPrompt?: string | null; aiSettings?: AiVideoSceneOptions | null; sourceCrop?: Region | null; aiProviderKey?: string | null; aiModelKey?: string | null; aiModelName?: string | null }
+export interface ScenePlan { mockupId: string; sourceRevision: number; sourceHash: string; role: string; sceneOrder: number; durationFrames: number; crop: Region; endCrop: Region; motion: SceneMotion; transition: VideoTransition; text: string; generationStrategy: string; warnings: string[]; startScale?: number; endScale?: number; startRotation?: number; endRotation?: number; aiTemplateCode?: string | null; promptVersion?: number | null; compiledPrompt?: string | null; aiSettings?: AiVideoSceneOptions | null; sourceCrop?: Region | null; aiProviderKey?: string | null; aiModelKey?: string | null; aiModelName?: string | null; trimStartFrames?: number; trimEndFrames?: number; transitionFrames?: number }
 export interface PromoVideo { id: string; runId: string; mode: string; template: string; version: number; reviewRevision: number; status: string; approvalStatus: string; previewUrl: string | null; thumbnailUrl: string | null; qa: Record<string, unknown>; scenes: ScenePlan[]; outputFormat: string; width: number; height: number; aspectRatio: string }
 export interface AiSceneVideo { sceneOrder: number; status: string; previewUrl: string | null; failure: string | null }
 export interface WorkflowNodeRun { id: string; nodeId: string; nodeType: string; status: string; attempt: number; stage: string | null; progress: number; errorMessage: string | null; output: Record<string, unknown> }

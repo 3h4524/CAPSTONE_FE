@@ -250,7 +250,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { mode: "ai_shot", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "portrait", durationSeconds: 4, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], standardScenes: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "none" }, fallbackToStandard: true, aiStudioMode: "direct", aiStudioLayout: "hanging_window", aiStudioSourceMockupId: null, aiStudioFrameId: null },
+    defaultConfig: { mode: "standard", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "portrait", durationSeconds: 1, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], standardScenes: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "none" }, fallbackToStandard: true, aiStudioMode: "direct", aiStudioLayout: "hanging_window", aiStudioSourceMockupId: null, aiStudioFrameId: null },
     fields: [
       { kind: "video-formats", name: "outputFormat", label: "Output format" },
       { kind: "textarea", name: "textOverlay", label: "Text overlay", placeholder: "Optional short caption (120 characters)" },

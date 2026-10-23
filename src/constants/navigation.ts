@@ -1,5 +1,6 @@
 import {
   Activity,
+  Compass,
   CreditCard,
   KeyRound,
   Layers3,
@@ -27,6 +28,7 @@ export const NAV_SECTIONS: AppNavSection[] = [
       { label: "Design templates", href: "/design-templates", icon: WandSparkles },
       { label: "API keys", href: "/api-keys", icon: KeyRound },
       { label: "Usage", href: "/usage", icon: Activity },
+      { label: "Market Radar", href: "/market-opportunities", icon: Compass },
     ],
   },
   {

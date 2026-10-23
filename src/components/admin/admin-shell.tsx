@@ -52,7 +52,7 @@ export const AdminShell = ({ children, pageTitle }: AdminShellProps) => {
         <div className="min-w-0 flex-1 overflow-hidden">
           <div className="h-screen overflow-y-auto">
             <AdminTopbar fullName={user.fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} pageTitle={pageTitle} />
-            <main className="mx-auto max-w-[1440px] px-4 py-6 sm:px-7 sm:py-8">
+            <main className="mx-auto max-w-[1600px] px-4 py-4 sm:px-[calc(1.5rem+1cm)] sm:py-5 2xl:max-w-[1720px]">
               {children}
             </main>
           </div>

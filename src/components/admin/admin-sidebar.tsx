@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   BarChart3,
-  BriefcaseBusiness,
   CreditCard,
   Database,
   FlaskConical,
@@ -53,7 +52,6 @@ const analyticsNavigation = [
 ];
 
 const systemNavigation = [
-  { label: "Batch Jobs", href: "/admin/batch-jobs", icon: BriefcaseBusiness, tone: "amber" },
   { label: "Support Tickets", href: "/admin/support-tickets", icon: Headphones, tone: "rose" },
   { label: "Test Reports", href: "/admin/test-reports", icon: FlaskConical, tone: "sky" },
 ];

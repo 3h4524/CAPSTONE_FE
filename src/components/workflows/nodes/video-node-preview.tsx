@@ -8,7 +8,9 @@ import { useRunVideos } from "@/hooks/queries/use-run-videos";
 import { useWorkflowStore } from "@/stores/workflow";
 
 export const VideoNodePreview = () => {
-  const runId = useSearchParams().get("run") ?? useWorkflowStore(state => state.videoRunId);
+  const searchParams = useSearchParams();
+  const workflowVideoRunId = useWorkflowStore((state) => state.videoRunId);
+  const runId = searchParams.get("run") ?? workflowVideoRunId;
   const { data: videos } = useRunVideos(runId);
   const video = videos?.[0];
   return <div className="relative flex aspect-video flex-col items-center justify-center gap-1.5 overflow-hidden rounded-lg bg-slate-100 text-slate-400">

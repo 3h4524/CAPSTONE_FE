@@ -71,7 +71,7 @@ const AdminSidebar = ({
     )}
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:overflow-y-auto",
+        "fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white transition-all duration-200 lg:sticky lg:top-0 lg:z-auto lg:h-screen",
         isCollapsed ? "w-20" : "w-56",
         isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}
@@ -95,7 +95,7 @@ const AdminSidebar = ({
         </Button>
       </div>
 
-      <nav className="flex-1 space-y-7 px-3 py-6">
+      <nav className="scrollbar-hide min-h-0 flex-1 space-y-7 overflow-y-auto px-3 py-6">
         <SidebarGroup label="Overview" isCollapsed={isCollapsed}>
           <SidebarItems items={primaryNavigation} isCollapsed={isCollapsed} />
         </SidebarGroup>

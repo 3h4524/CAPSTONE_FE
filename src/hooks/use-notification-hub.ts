@@ -5,11 +5,12 @@ import { supportTicketKeys } from "@/api/support-tickets";
 import { adminSupportTicketsKeys } from "@/hooks/queries/use-admin-support-tickets";
 import { notificationKeys } from "@/hooks/queries/use-notifications";
 import type { NotificationDto } from "@/types/notification";
-import type { HubConnection} from "@microsoft/signalr";
+import type { HubConnection } from "@microsoft/signalr";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { useQueryClient } from "@tanstack/react-query";
 
 let sharedConnection: HubConnection | null = null;
+let sharedStartPromise: Promise<void> | null = null;
 let connectionCount = 0;
 
 export const useNotificationHub = () => {
@@ -33,8 +34,9 @@ export const useNotificationHub = () => {
 
         // Lắng nghe sự kiện ReceiveNotification
         sharedConnection.on("ReceiveNotification", (notification: NotificationDto) => {
-          const currentUrl = typeof window !== "undefined" ? window.location.pathname + window.location.search : "";
-          
+          const currentUrl =
+            typeof window !== "undefined" ? window.location.pathname + window.location.search : "";
+
           if (notification.actionUrl && currentUrl.includes(notification.actionUrl)) {
             // Bỏ qua việc kêu chuông và tự động đánh dấu đã đọc (Trải nghiệm UX tốt hơn)
             // eslint-disable-next-line no-console
@@ -43,18 +45,28 @@ export const useNotificationHub = () => {
             // Invalidate danh sách để chuông tự động lấy số lượng mới (hiện chấm đỏ)
             queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
           }
-          
+
           // Invalidate luôn danh sách Ticket để cập nhật chữ "New" nếu người dùng đang ở trang Support
           queryClient.invalidateQueries({ queryKey: [...supportTicketKeys.all, "list"] });
           queryClient.invalidateQueries({ queryKey: adminSupportTicketsKeys.lists() });
         });
 
         try {
-          await sharedConnection.start();
-          if (mounted) setIsConnected(true);
+          sharedStartPromise ??= sharedConnection.start().finally(() => {
+            sharedStartPromise = null;
+          });
+          await sharedStartPromise;
+          if (mounted && sharedConnection?.state === "Connected") setIsConnected(true);
         } catch (err) {
-          // eslint-disable-next-line no-console
-          console.error("SignalR NotificationHub Connection Error: ", err);
+          // The connection can be stopped by the last cleanup while a dev-mode
+          // effect is being replayed. Do not report that expected transition as
+          // a user-facing connection error.
+          const wasStoppedDuringNegotiation =
+            err instanceof Error && err.message.includes("stopped during negotiation");
+          if (mounted && !wasStoppedDuringNegotiation) {
+            // eslint-disable-next-line no-console
+            console.error("SignalR NotificationHub Connection Error: ", err);
+          }
         }
       } else {
         if (sharedConnection.state === "Connected") {
@@ -74,10 +86,23 @@ export const useNotificationHub = () => {
       connectionCount--;
 
       if (connectionCount === 0 && sharedConnection) {
-        // Chỉ ngắt kết nối khi không còn component nào sử dụng hook này
-        // Tuy nhiên với NotificationHub, nó thường sống 24/7 ở cấp App
-        sharedConnection.stop();
-        sharedConnection = null;
+        const connectionToStop = sharedConnection;
+        const stopWhenReady = async () => {
+          if (sharedStartPromise) {
+            try {
+              await sharedStartPromise;
+            } catch {
+              // The failed start has already been handled by the connector.
+            }
+          }
+
+          if (connectionCount === 0 && sharedConnection === connectionToStop) {
+            await connectionToStop.stop();
+            if (sharedConnection === connectionToStop) sharedConnection = null;
+          }
+        };
+
+        void stopWhenReady();
       }
     };
   }, [queryClient]);

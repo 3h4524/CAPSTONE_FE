@@ -1,17 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { getRevenueInvoices } from "@/api/revenue";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { useRevenueCharts, useRevenueInvoices,useRevenueMetrics } from "@/hooks/queries/use-revenue";
-import type { RevenueFilterDto } from "@/types/revenue";
+import { buildRevenueReport, reportFileName, toCsv } from "@/helpers/revenue-report";
+import { toXlsx } from "@/helpers/revenue-report-xlsx";
+import { useAdminSubscriptionPlans } from "@/hooks/queries/use-admin-subscription-plans";
+import { useRevenueCharts, useRevenueInsights, useRevenueInvoices, useRevenueMetrics } from "@/hooks/queries/use-revenue";
+import type { RevenueFilterDto, TransactionStatus } from "@/types/revenue";
 
 import { RevenueCharts } from "./RevenueCharts";
 import { RevenueFilterBar } from "./RevenueFilterBar";
-import { RevenueInvoiceTable } from "./RevenueInvoiceTable";
+import { type ReportFormat, RevenueGrowthCard } from "./RevenueGrowthCard";
+import { RevenueInsightsRow } from "./RevenueInsightsRow";
+import { RevenueInvoiceTable, type TransactionTableFilter } from "./RevenueInvoiceTable";
 import { RevenueMetricCards } from "./RevenueMetricCards";
+
+const TRANSACTIONS_PAGE_SIZE = 5;
+
 
 export function RevenueDashboard() {
   const [filter, setFilter] = useState<RevenueFilterDto>({
@@ -23,57 +31,83 @@ export function RevenueDashboard() {
   });
 
   const [isExporting, setIsExporting] = useState(false);
+  const [currency, setCurrency] = useState<"VND" | "USD">("VND");
+
+  // The transaction table's own search/filters/page live apart from the page-wide period filter, so
+  // paging or searching the table does not refetch the KPIs and charts.
+  const [tableFilter, setTableFilter] = useState<TransactionTableFilter>({ search: "", plan: "", status: "" });
+  const [tablePage, setTablePage] = useState(1);
+
+  const invoiceFilter = useMemo<RevenueFilterDto>(
+    () => ({
+      ...filter,
+      page: tablePage,
+      pageSize: TRANSACTIONS_PAGE_SIZE,
+      search: tableFilter.search || undefined,
+      plan: tableFilter.plan || undefined,
+      status: tableFilter.status || undefined,
+    }),
+    [filter, tablePage, tableFilter]
+  );
 
   // Queries
   const { data: metricsData, isLoading: isLoadingMetrics } = useRevenueMetrics(filter);
   const { data: chartsData, isLoading: isLoadingCharts } = useRevenueCharts(filter);
-  const { data: invoicesData, isLoading: isLoadingInvoices } = useRevenueInvoices(filter);
+  const { data: insightsData, isLoading: isLoadingInsights } = useRevenueInsights(filter);
+  const { data: invoicesData, isLoading: isLoadingInvoices } = useRevenueInvoices(invoiceFilter);
+  const { data: plans } = useAdminSubscriptionPlans();
 
-  const handlePageChange = (newPage: number) => {
-    setFilter(prev => ({ ...prev, page: newPage }));
-  };
+  const planOptions = useMemo(() => (plans ?? []).map((p) => p.name), [plans]);
 
-  const handleExportCSV = async () => {
+  const handleFilterChange = useCallback((next: RevenueFilterDto) => {
+    setFilter(next);
+    setTablePage(1);
+  }, []);
+
+  const handleTableFilterChange = useCallback((next: TransactionTableFilter) => {
+    setTableFilter(next);
+    setTablePage(1);
+  }, []);
+
+  // An alert's "Review" filters the transaction table by its status and scrolls to it. The search box
+  // keeps its own draft, so only the status (and plan) change here.
+  const handleReviewAlert = useCallback((status: TransactionStatus) => {
+    setTableFilter((prev) => ({ ...prev, plan: "", status }));
+    setTablePage(1);
+    document.getElementById("recent-transactions")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const handleExport = async (format: ReportFormat) => {
+    if (!metricsData || !chartsData || !insightsData) {
+      toast.error("The dashboard is still loading. Try again in a moment.");
+      return;
+    }
+
     try {
       setIsExporting(true);
-      
-      const exportFilter = { ...filter, page: 1, pageSize: 999999 };
-      const data = await getRevenueInvoices(exportFilter);
-      
-      if (!data || data.items.length === 0) {
-        toast.error("No data found to export.");
-        return;
-      }
 
-      const headers = ["Invoice No", "Customer Name", "Customer Email", "Plan", "Payment Date", "Amount (VND)"];
-      const csvContent = data.items.map(i => {
-        const date = i.paymentDate ? new Date(i.paymentDate).toLocaleDateString() : 'N/A';
-        const cost = Math.round(i.amount * 1000).toString();
-        
-        return [
-          i.invoiceNumber, 
-          `"${i.customerName.replace(/"/g, '""')}"`, 
-          `"${i.customerEmail}"`, 
-          i.planName, 
-          date, 
-          cost
-        ].join(",");
+      // The Transactions sheet holds every row the table matches (period + search + plan + status).
+      const transactions = await getRevenueInvoices({ ...invoiceFilter, page: 1, pageSize: 999999 });
+      const sections = buildRevenueReport({
+        filter,
+        currency,
+        generatedAt: new Date(),
+        metrics: metricsData,
+        charts: chartsData,
+        insights: insightsData,
+        transactions: transactions?.items ?? [],
+        transactionFilter: tableFilter,
       });
 
-      const csvData = [headers.join(","), ...csvContent].join("\n");
-      const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.setAttribute("hidden", "");
-      a.setAttribute("href", url);
-      a.setAttribute("download", `revenue_export_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      toast.success(`Exported ${data.items.length} invoices successfully!`);
+      const blob =
+        format === "xlsx"
+          ? await toXlsx(sections, currency)
+          : new Blob([toCsv(sections)], { type: "text/csv;charset=utf-8" });
+      downloadBlob(blob, `${reportFileName(filter)}.${format}`);
+
+      toast.success(`Revenue report exported as ${format === "xlsx" ? "Excel" : "CSV"}.`);
     } catch {
-      toast.error("An error occurred while exporting data.");
+      toast.error("An error occurred while exporting the report.");
     } finally {
       setIsExporting(false);
     }
@@ -81,31 +115,70 @@ export function RevenueDashboard() {
 
   return (
     <AdminShell pageTitle="revenue">
-      <div className="flex h-full flex-col gap-6 p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Revenue Analytics</h1>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Track your financial performance, MRR growth, and billing history.
-            </p>
+      <div className="flex h-full flex-col gap-4 p-0">
+        <RevenueFilterBar
+          filter={filter}
+          onFilterChange={handleFilterChange}
+          currency={currency}
+          onCurrencyChange={setCurrency}
+        />
+
+        <RevenueMetricCards
+          metrics={metricsData}
+          isLoading={isLoadingMetrics}
+          currency={currency}
+        />
+
+        <RevenueCharts
+          charts={chartsData}
+          isLoading={isLoadingCharts}
+          currency={currency}
+          filter={filter}
+        />
+
+        <RevenueInsightsRow
+          data={insightsData}
+          isLoading={isLoadingInsights}
+          currency={currency}
+          onReviewAlert={handleReviewAlert}
+        />
+
+        <div id="recent-transactions" className="grid scroll-mt-4 grid-cols-1 gap-4 xl:grid-cols-4">
+          <div className="min-w-0 xl:col-span-3">
+            <RevenueInvoiceTable
+              data={invoicesData}
+              isLoading={isLoadingInvoices}
+              currency={currency}
+              startDate={filter.startDate}
+              endDate={filter.endDate}
+              planOptions={planOptions}
+              tableFilter={tableFilter}
+              onTableFilterChange={handleTableFilterChange}
+              page={tablePage}
+              onPageChange={setTablePage}
+            />
           </div>
+          <RevenueGrowthCard
+            onExport={handleExport}
+            isExporting={isExporting}
+            transactionCount={invoicesData?.totalCount ?? 0}
+            startDate={filter.startDate}
+            endDate={filter.endDate}
+          />
         </div>
-
-      <RevenueFilterBar filter={filter} onFilterChange={setFilter} />
-
-      <RevenueMetricCards metrics={metricsData} isLoading={isLoadingMetrics} />
-
-      <RevenueCharts charts={chartsData} isLoading={isLoadingCharts} />
-
-      <RevenueInvoiceTable 
-        data={invoicesData} 
-        isLoading={isLoadingInvoices} 
-        page={filter.page || 1}
-        onPageChange={handlePageChange}
-        onExportClick={handleExportCSV}
-        isExporting={isExporting}
-      />
       </div>
     </AdminShell>
   );
+}
+
+function downloadBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.hidden = true;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }

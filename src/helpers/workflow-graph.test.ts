@@ -36,7 +36,7 @@ const VALID_CONFIGS: Record<WorkflowNodeType, WorkflowNodeConfig> = {
     stylePresetId: "preset-1",
     instructions: "",
   },
-  "design-image": { variants: 2, aspectRatio: "1:1" },
+  "design-image": { imageProvider: "gemini", variants: 2, aspectRatio: "1:1" },
   "design-approval": { mode: "manual" },
   "approval-gate": { mode: "manual" },
   "apply-mockup": {
@@ -81,20 +81,20 @@ const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
     { designTemplateId: "template-1", stylePresetId: "preset-1", instructions: "x".repeat(501) },
     "Prompt synthesis: Keep instructions under 500 characters.",
   ],
-  ["design-image", { variants: 2 }, "Design image: Choose an aspect ratio."],
+  ["design-image", { imageProvider: "gemini", variants: 2 }, "Design image: Choose an aspect ratio."],
   [
     "design-image",
-    { variants: 9, aspectRatio: "1:1" },
+    { imageProvider: "gemini", variants: 9, aspectRatio: "1:1" },
     "Design image: The number of variants cannot exceed 4.",
   ],
   [
     "design-image",
-    { variants: 2.5, aspectRatio: "1:1" },
+    { imageProvider: "gemini", variants: 2.5, aspectRatio: "1:1" },
     "Design image: The number of variants must be a whole number.",
   ],
   [
     "design-image",
-    { variants: "2", aspectRatio: "1:1" },
+    { imageProvider: "gemini", variants: "2", aspectRatio: "1:1" },
     "Design image: Enter the number of variants.",
   ],
   [
@@ -120,7 +120,7 @@ const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
       mode: "standard",
       target: "etsy",
       template: "auto",
-      durationSeconds: 2,
+      durationSeconds: 0,
       assetSelection: "automatic",
       selectedMockupIds: [],
       sceneOrder: [],
@@ -128,7 +128,7 @@ const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
       standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
       fallbackToStandard: true,
     },
-    "Generate Video: The video duration must be at least 3.",
+    "Generate Video: The video duration must be at least 1.",
   ],
   [
     "generate-listing",
@@ -511,7 +511,7 @@ describe("toWorkflowNodes", () => {
         data: {
           type: "design-image",
           label: "Design image",
-          config: { variants: 4, aspectRatio: "1:1" },
+          config: { imageProvider: "gemini", variants: 4, aspectRatio: "1:1" },
           status: "idle",
         },
       },

@@ -2,7 +2,7 @@ import axios from "axios";
 
 import { api } from "@/api/client";
 import type { MockupMetadataFormValues } from "@/schemas/video-workflow";
-import type { AiSceneVideo, AiShotQuote, AiStudioFrameGeneration, AiStudioFrameQuote, AiStudioFrameRequest, AiVideoTemplateDefinition, GenerateVideoConfig, MockupAsset, PromoVideo, RunAction, VideoRunSummary, VideoStoryboard, VideoTemplateCatalogItem, WorkflowCapabilities, WorkflowRun } from "@/types/video-workflow";
+import type { AiSceneVideo, AiShotQuote, AiStudioFrameGeneration, AiStudioFrameQuote, AiStudioFrameRequest, AiVideoTemplateDefinition, GenerateVideoConfig, MockupAsset, MusicTrack, PromoVideo, RunAction, VideoRunSummary, VideoStoryboard, VideoTemplateCatalogItem, WorkflowCapabilities, WorkflowRun } from "@/types/video-workflow";
 
 export const videoWorkflowKeys = {
   capabilities: () => ["workflow-capabilities"] as const,
@@ -14,10 +14,12 @@ export const videoWorkflowKeys = {
   assets: (id: string) => ["mockup-assets", id] as const,
   videos: (id: string | null) => ["workflow-videos", id] as const,
   sceneVideos: (id: string | null) => ["workflow-scene-videos", id] as const,
+  music: () => ["music-tracks"] as const,
 };
 export const getWorkflowCapabilities = async () => (await api.get<WorkflowCapabilities>("/api/workflows/capabilities")).data;
 export const listVideoTemplates = async () => (await api.get<VideoTemplateCatalogItem[]>("/api/workflows/video-templates")).data;
 export const listAiVideoTemplates = async () => (await api.get<AiVideoTemplateDefinition[]>("/api/workflows/ai-video-templates")).data;
+export const listMusicTracks = async () => (await api.get<MusicTrack[]>("/api/music-tracks")).data;
 export const startWorkflowRun = async ({ workflowId, revision, key }: { workflowId: string; revision: number; key: string }) => (await api.post<WorkflowRun>(`/api/workflows/${workflowId}/runs`, { expectedWorkflowRevision: revision, idempotencyKey: key })).data;
 export const getWorkflowRun = async (id: string) => (await api.get<WorkflowRun>(`/api/workflow-runs/${id}`)).data;
 export const getLatestWorkflowRun = async (workflowId: string): Promise<WorkflowRun | null> => {

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { PreloadedVideo } from "@/components/workflows/media/preloaded-video";
 import { VideoPreviewFrame } from "@/components/workflows/media/video-preview-frame";
+import { VideoTimelineEditor } from "@/components/workflows/media/video-timeline-editor";
 import { confirmAiShot } from "@/helpers/confirm-ai-shot";
 import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
@@ -20,12 +21,13 @@ import { readString, readStringArray } from "@/helpers/workflow-config";
 import { useMediaDownload } from "@/hooks/mutations/use-media-download";
 import { usePreviewVideoStoryboard } from "@/hooks/mutations/use-preview-video-storyboard";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
+import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { useRunVideos } from "@/hooks/queries/use-run-videos";
 import { useWorkflowVideoRuns } from "@/hooks/queries/use-workflow-video-runs";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { generateVideoConfigSchema } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
-import type { VideoRunSummary } from "@/types/video-workflow";
+import type { GenerateVideoConfig, VideoRunSummary } from "@/types/video-workflow";
 
 const formatRunDate = (value: string) =>
   `${new Intl.DateTimeFormat("en-GB", {
@@ -166,6 +168,8 @@ export const VideoReviewPanel = () => {
   const mockup = useWorkflowStore((state) =>
     state.nodes.find((n) => n.data.type === "apply-mockup")
   );
+  const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
+  const { data: editAssets = [] } = useMockupAssets(run?.productId ?? "");
   const candidateId = run?.nodes.find((n) => n.nodeType === "review-video")?.output.videoId;
   const canReview =
     run?.status === "waiting_for_review" &&
@@ -312,7 +316,7 @@ export const VideoReviewPanel = () => {
             </dd>
           </div>
         </dl>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
             size="icon-sm"
@@ -379,6 +383,8 @@ export const VideoReviewPanel = () => {
           >
             <RotateCcw aria-hidden="true" />
           </Button>
+          {generate && <VideoTimelineEditor config={generate.data.config as GenerateVideoConfig} assets={editAssets} disabled={isActing}
+            onSave={next => updateNodeConfig(generate.id, next)} />}
         </div>
         {!canReview && (
           <p className="text-muted-foreground text-xs leading-relaxed">

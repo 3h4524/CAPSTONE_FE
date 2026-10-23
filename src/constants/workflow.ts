@@ -143,6 +143,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         name: "designTemplateId",
         label: "Design template",
         source: "design-templates",
+        description: "Not used for products with their own image prompt.",
       },
       {
         kind: "source-select",
@@ -151,6 +152,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         source: "style-presets",
         optional: true,
         noneLabel: "No style",
+        description: "Not used for products with their own image prompt: the prompt sets the style.",
       },
       {
         kind: "textarea",
@@ -170,8 +172,26 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { variants: 2, aspectRatio: "1:1" },
+    defaultConfig: { imageProvider: "gemini", variants: 2, aspectRatio: "1:1" },
     fields: [
+      {
+        kind: "select",
+        name: "imageProvider",
+        label: "Image model",
+        display: "cards",
+        options: [
+          {
+            value: "gemini",
+            label: "Gemini (Nano Banana 2)",
+            description: "About $0.067 per image. Fills in detail from short prompts; the white backdrop is cut out afterwards.",
+          },
+          {
+            value: "ideogram",
+            label: "Ideogram 4.0",
+            description: "About $0.03 per 2K image. Draws apparel designs on a transparent background. Needs an Ideogram key with credits.",
+          },
+        ],
+      },
       { kind: "number", name: "variants", label: "Variants per product", min: 1, max: 4 },
       { kind: "select", name: "aspectRatio", label: "Aspect ratio", options: ASPECT_RATIO_OPTIONS, display: "ratios" },
     ],
@@ -245,16 +265,14 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
   "generate-video": {
     type: "generate-video",
     label: "Generate Video",
-    description: "Build a video from individually configured AI scenes.",
+    description: "Build a video from scenes configured individually for AI or Standard motion.",
     icon: Film,
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { mode: "ai_shot", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "portrait", durationSeconds: 4, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "none" }, fallbackToStandard: true, aiStudioMode: "direct", aiStudioLayout: "hanging_window", aiStudioSourceMockupId: null, aiStudioFrameId: null },
+    defaultConfig: { mode: "standard", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "portrait", durationSeconds: 1, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], standardScenes: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "none" }, fallbackToStandard: true, aiStudioMode: "direct", aiStudioLayout: "hanging_window", aiStudioSourceMockupId: null, aiStudioFrameId: null },
     fields: [
-      { kind: "video-modes", name: "mode", label: "Video mode" },
       { kind: "video-formats", name: "outputFormat", label: "Output format" },
-      { kind: "number", name: "durationSeconds", label: "Duration", min: 3, max: 15, unit: "s" },
       { kind: "textarea", name: "textOverlay", label: "Text overlay", placeholder: "Optional short caption (120 characters)" },
       { kind: "select", name: "standardOptions.transition", label: "Transition", options: [
         { value: "none", label: "None" }, { value: "fade", label: "Fade" }, { value: "swipe", label: "Swipe" },

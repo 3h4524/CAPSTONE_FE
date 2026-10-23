@@ -21,6 +21,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  CHANGE_TONE_CLASS,
+  type ChangePolarity,
+  changeTone,
+  formatChange,
+} from "@/helpers/revenue-change";
 import type { MetricDetail, RevenueMetricsDto } from "@/types/revenue";
 import { formatCurrency } from "@/utils/format-currency";
 
@@ -38,7 +44,7 @@ interface CardConfig {
   strokeColor: string;
   metric?: MetricDetail;
   isCurrency: boolean;
-  invertTrend?: boolean; // For refunds, an increase can be considered warning
+  polarity?: ChangePolarity; // Refunds: a decrease is good news
   tooltip: string;
 }
 
@@ -56,7 +62,7 @@ export function RevenueMetricCards({
       strokeColor: "#3b82f6",
       metric: metrics?.totalRevenue,
       isCurrency: true,
-      tooltip: "Gross revenue collected from all successful invoice payments in the selected period.",
+      tooltip: "Gross revenue from all successful invoice payments in the selected period, including payments later refunded.",
     },
     {
       title: "Net Revenue",
@@ -106,14 +112,14 @@ export function RevenueMetricCards({
       strokeColor: "#f43f5e",
       metric: metrics?.refundAmount,
       isCurrency: true,
-      invertTrend: true,
+      polarity: "lower-is-better",
       tooltip: "Total monetary value refunded to customers during the selected period.",
     },
   ];
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
         {cards.map((config) => {
           const metric = config.metric;
 
@@ -135,8 +141,8 @@ export function RevenueMetricCards({
             );
           }
 
-          const isPositive = metric.percentageChange >= 0;
-          const trendIsGood = config.invertTrend ? !isPositive : isPositive;
+          const pct = metric.percentageChange;
+          const tone = changeTone(pct, config.polarity);
 
           // Sparkline points
           const rawPoints =
@@ -226,17 +232,14 @@ export function RevenueMetricCards({
                 {/* Trend % + Comparison */}
                 <div className="mt-2 flex flex-col gap-0.5">
                   <div className="flex items-center gap-1 text-xs">
-                    <span
-                      className={`inline-flex items-center font-bold ${
-                        trendIsGood ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
-                      }`}
-                    >
-                      {isPositive ? (
+                    <span className={`inline-flex items-center font-bold ${CHANGE_TONE_CLASS[tone]}`}>
+                      {pct != null && pct > 0 && (
                         <ArrowUpRight className="mr-0.5 h-3.5 w-3.5 stroke-[2.5]" />
-                      ) : (
+                      )}
+                      {pct != null && pct < 0 && (
                         <ArrowDownRight className="mr-0.5 h-3.5 w-3.5 stroke-[2.5]" />
                       )}
-                      {Math.abs(metric.percentageChange).toFixed(1)}%
+                      {formatChange(pct, metric.value)}
                     </span>
                     <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
                       vs. previous period

@@ -84,7 +84,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
         <div className="min-w-0 flex-1 overflow-hidden">
           <div className="h-screen overflow-y-auto">
             <AdminTopbar fullName={fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} pageTitle="RAG Knowledge Base" />
-            <main className="mx-auto max-w-[1180px] px-4 py-6 sm:px-7 sm:py-8">
+            <main className="mx-auto max-w-[1600px] px-4 py-4 sm:px-[calc(1.5rem+1cm)] sm:py-5 2xl:max-w-[1720px]">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
                 <p className="text-[10px] font-bold tracking-[0.16em] text-slate-400 uppercase">Knowledge base</p>

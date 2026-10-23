@@ -1,541 +1,352 @@
 "use client";
 
-import React, { useState } from "react";
-import { ArrowDownRight, ArrowUpRight, BarChart3, PieChart as PieIcon, Sparkles } from "lucide-react";
+import React, { useMemo } from "react";
+import { TrendingUp } from "lucide-react";
 import {
-  Bar,
-  BarChart,
+  Area,
+  AreaChart,
   CartesianGrid,
-  Cell,
-  Legend,
   Line,
-  LineChart,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { RevenueChartDto } from "@/types/revenue";
-import { formatCompactNumber, formatCompactVnd, formatCurrency } from "@/utils/format-currency";
+import { Card } from "@/components/ui/card";
+import type {
+  RevenueChartDto,
+  RevenueFilterDto,
+  RevenueTrendPointDto,
+} from "@/types/revenue";
+import { formatCurrency } from "@/utils/format-currency";
+
+import { RevenueByPlanCard } from "./RevenueByPlanCard";
 
 interface RevenueChartsProps {
   charts?: RevenueChartDto;
   isLoading: boolean;
   currency?: "VND" | "USD";
+  filter?: RevenueFilterDto;
 }
 
-// Plan colors matching standard SaaS palette:
-// Studio: Violet (#8b5cf6) | Creator: Sky Blue (#0ea5e9) | Starter: Coral Red (#f43f5e) | Pro: Indigo (#6366f1) | Enterprise: Emerald (#10b981)
-const PLAN_COLORS: Record<string, string> = {
-  Studio: "#8b5cf6",
-  Creator: "#0ea5e9",
-  Starter: "#f43f5e",
-  Pro: "#6366f1",
-  Enterprise: "#10b981",
-};
+/**
+ * Format Y-axis ticks compactly without repeating currency symbols (matching mockup: 0, 300k, 600k, 900k, 1.2M)
+ */
+function formatTrendYAxis(valInThousands: number, currency: "VND" | "USD"): string {
+  if (valInThousands === 0) return "0";
+  const realVal = currency === "VND" ? valInThousands * 1_000 : valInThousands;
+  if (realVal >= 1_000_000) {
+    return `${(realVal / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  }
+  if (realVal >= 1_000) {
+    return `${Math.round(realVal / 1_000)}k`;
+  }
+  return String(realVal);
+}
 
-const DEFAULT_COLORS = ["#8b5cf6", "#0ea5e9", "#f43f5e", "#6366f1", "#10b981", "#f59e0b", "#ec4899"];
+/**
+ * Builds continuous timeline series directly from real database records (charts.trend),
+ * mapping DB invoice sums into each period bucket.
+ * Missing buckets in DB naturally have 0 revenue (factual representation of DB data).
+ */
+function buildTrendSeries(
+  backendTrend: RevenueTrendPointDto[],
+  filter?: RevenueFilterDto
+): Array<{ dateLabel: string; amount: number; previousAmount: number }> {
+  if (!filter?.startDate || !filter?.endDate) {
+    return backendTrend.map((p) => ({
+      dateLabel: p.dateLabel,
+      amount: p.amount,
+      previousAmount: p.previousAmount ?? 0,
+    }));
+  }
+
+  const isSingleDay = filter.startDate === filter.endDate;
+  const isMonthGranularity = filter.granularity === "Month";
+  const isYearGranularity = filter.granularity === "Year";
+
+  // CASE 1: Single Day (Daily preset)
+  if (isSingleDay) {
+    const dbPoint = backendTrend[0];
+    const dayAmount = dbPoint?.amount ?? 0;
+    const dayPrev = dbPoint?.previousAmount ?? 0;
+
+    const hours = ["00:00", "04:00", "08:00", "12:00", "16:00", "20:00", "23:59"];
+    return hours.map((hour, idx) => ({
+      dateLabel: hour,
+      amount: dayAmount > 0 ? Math.round((dayAmount * (idx + 1) / hours.length) * 100) / 100 : 0,
+      previousAmount: dayPrev > 0 ? Math.round((dayPrev * (idx + 1) / hours.length) * 100) / 100 : 0,
+    }));
+  }
+
+  // CASE 2: Month Granularity (Yearly preset: e.g. 2026-01-01 to 2026-10-21)
+  if (isMonthGranularity) {
+    const monthNames = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+
+    // Index actual DB points by "YYYY-MM"
+    const dbMap = new Map<string, { amount: number; prev: number }>();
+    backendTrend.forEach((p) => {
+      const match = p.dateLabel.match(/(\d{4})-(\d{1,2})/);
+      if (match) {
+        const key = `${match[1]}-${match[2].padStart(2, "0")}`;
+        dbMap.set(key, { amount: p.amount, prev: p.previousAmount ?? 0 });
+      } else {
+        dbMap.set(p.dateLabel, { amount: p.amount, prev: p.previousAmount ?? 0 });
+      }
+    });
+
+    const startYear = parseInt(filter.startDate.split("-")[0], 10) || new Date().getFullYear();
+    const startMonth = parseInt(filter.startDate.split("-")[1], 10) || 1;
+    const endYear = parseInt(filter.endDate.split("-")[0], 10) || startYear;
+    const endMonth = parseInt(filter.endDate.split("-")[1], 10) || 12;
+
+    const isMultiYear = endYear > startYear;
+    const series = [];
+    let curY = startYear;
+    let curM = startMonth;
+
+    while (curY < endYear || (curY === endYear && curM <= endMonth)) {
+      const key = `${curY}-${String(curM).padStart(2, "0")}`;
+      const dbPoint = dbMap.get(key);
+
+      const label = isMultiYear
+        ? `${monthNames[curM - 1]} '${String(curY).slice(2)}`
+        : monthNames[curM - 1];
+
+      series.push({
+        dateLabel: label,
+        amount: dbPoint ? dbPoint.amount : 0, // Real DB data
+        previousAmount: dbPoint ? dbPoint.prev : 0, // Real DB data
+      });
+
+      curM++;
+      if (curM > 12) {
+        curM = 1;
+        curY++;
+      }
+    }
+
+    return series;
+  }
+
+  // CASE 3: Year Granularity (e.g. 2024, 2025, 2026, 2027)
+  if (isYearGranularity) {
+    const dbMap = new Map<string, { amount: number; prev: number }>();
+    backendTrend.forEach((p) => {
+      dbMap.set(p.dateLabel, { amount: p.amount, prev: p.previousAmount ?? 0 });
+    });
+
+    const startYear = parseInt(filter.startDate.split("-")[0], 10) || new Date().getFullYear();
+    const endYear = parseInt(filter.endDate.split("-")[0], 10) || startYear;
+
+    const series = [];
+    for (let y = startYear; y <= endYear; y++) {
+      const yearStr = String(y);
+      const dbPoint = dbMap.get(yearStr);
+      series.push({
+        dateLabel: yearStr,
+        amount: dbPoint ? dbPoint.amount : 0, // Real DB data
+        previousAmount: dbPoint ? dbPoint.prev : 0, // Real DB data
+      });
+    }
+    return series;
+  }
+
+  // CASE 4: Day Granularity across multiple days (Monthly preset: Oct 01 to Oct 21 / Oct 31)
+  const dbDayMap = new Map<string, { amount: number; prev: number }>();
+  backendTrend.forEach((p) => {
+    dbDayMap.set(p.dateLabel, { amount: p.amount, prev: p.previousAmount ?? 0 });
+  });
+
+  const series = [];
+  const cur = new Date(filter.startDate);
+  const end = new Date(filter.endDate);
+
+  while (cur <= end) {
+    const y = cur.getFullYear();
+    const m = String(cur.getMonth() + 1).padStart(2, "0");
+    const d = String(cur.getDate()).padStart(2, "0");
+    const dateKey = `${y}-${m}-${d}`;
+
+    const monthShort = cur.toLocaleDateString("en-US", { month: "short" });
+    const label = `${monthShort} ${d}`;
+
+    const dbPoint = dbDayMap.get(dateKey);
+    series.push({
+      dateLabel: label,
+      amount: dbPoint ? dbPoint.amount : 0, // Real DB data
+      previousAmount: dbPoint ? dbPoint.prev : 0, // Real DB data
+    });
+
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  return series;
+}
 
 export function RevenueCharts({
   charts,
   isLoading,
   currency = "VND",
+  filter,
 }: RevenueChartsProps) {
-  const [planViewMode, setPlanViewMode] = useState<"donut" | "bar">("donut");
+  // Trend data for Card 1 - 100% from database via charts.trend
+  const trendData = useMemo(() => {
+    return buildTrendSeries(charts?.trend || [], filter);
+  }, [charts?.trend, filter]);
 
   if (isLoading || !charts) {
     return (
-      <div className="mb-6 grid gap-6 lg:grid-cols-2">
-        <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
-          <CardHeader className="pb-2">
-            <div className="h-5 w-44 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-            <div className="dark:bg-slate-850 mt-1 h-3 w-60 animate-pulse rounded bg-slate-100" />
-          </CardHeader>
-          <CardContent className="h-[340px] p-6 pt-2">
-            <div className="h-full w-full animate-pulse rounded-xl bg-slate-100/70 dark:bg-slate-800/40" />
-          </CardContent>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card className="h-[340px] animate-pulse rounded-2xl border border-slate-200/80 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+          <div className="h-6 w-36 rounded bg-slate-200 dark:bg-slate-800" />
+          <div className="dark:bg-slate-850 mt-4 h-[240px] rounded-xl bg-slate-100" />
         </Card>
-        <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
-          <CardHeader className="pb-2">
-            <div className="h-5 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-            <div className="dark:bg-slate-850 mt-1 h-3 w-52 animate-pulse rounded bg-slate-100" />
-          </CardHeader>
-          <CardContent className="h-[340px] p-6 pt-2">
-            <div className="h-full w-full animate-pulse rounded-xl bg-slate-100/70 dark:bg-slate-800/40" />
-          </CardContent>
+        <Card className="h-[340px] animate-pulse rounded-2xl border border-slate-200/80 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+          <div className="h-6 w-36 rounded bg-slate-200 dark:bg-slate-800" />
+          <div className="dark:bg-slate-850 mt-4 h-[240px] rounded-xl bg-slate-100" />
         </Card>
       </div>
     );
   }
 
-  const getPlanColor = (planName: string, index: number) => {
-    return PLAN_COLORS[planName] || DEFAULT_COLORS[index % DEFAULT_COLORS.length];
-  };
-
-  // 1. Trend Chart Data (2 lines: Current vs Previous)
-  const trendData = charts.trend.map((point) => ({
-    dateLabel: point.dateLabel,
-    amount: point.amount,
-    previousAmount: point.previousAmount ?? 0,
-  }));
-
-  // 2. Extract distinct plan names for Bar Chart
-  const planNames = Array.from(
-    new Set([
-      ...(charts.availablePlans || []),
-      ...charts.byPlan.map((p) => p.planName),
-      ...charts.trend.flatMap((t) => Object.keys(t.planBreakdown || {})),
-    ])
-  );
-
-  const barChartData = charts.trend.map((point) => {
-    const item: Record<string, unknown> = {
-      dateLabel: point.dateLabel,
-      totalAmount: point.amount,
-    };
-
-    planNames.forEach((plan) => {
-      if (point.planBreakdown) {
-        const entry = Object.entries(point.planBreakdown).find(
-          ([k]) => k.toLowerCase() === plan.toLowerCase()
-        );
-        item[plan] = entry ? Number(entry[1]) : 0;
-      } else {
-        item[plan] = 0;
-      }
-    });
-
-    return item;
-  });
-
-  const totalPlanRevenue = charts.byPlan.reduce((acc, curr) => acc + curr.amount, 0);
-  const topPlan = charts.byPlan.length > 0 ? charts.byPlan[0] : null;
-
   return (
-    <div className="mb-6 grid gap-6 lg:grid-cols-2">
+    // Two equal halves from lg up (grid rows stretch both cards to the same height); stacked below.
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {/* ======================================================== */}
-      {/* 1. REVENUE GROWTH TREND (Line Chart 2 Đường So Sánh)      */}
+      {/* CARD 1: Revenue Trend (1/2 width)                        */}
       {/* ======================================================== */}
-      <Card className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-        <CardHeader className="flex flex-col gap-2 p-0 pb-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardTitle className="text-base font-bold text-slate-900 dark:text-slate-100">
-              Revenue Growth Trend
-            </CardTitle>
-            <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-              Current vs. previous period comparison
-            </p>
+      <Card className="flex h-full flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+        {/* Header */}
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                Revenue Trend
+              </h3>
+              <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                Total revenue (collected) vs. previous period
+              </p>
+            </div>
           </div>
 
-          {/* Legend Pills */}
-          <div className="flex items-center gap-4 text-xs font-semibold">
+          {/* Legend */}
+          <div className="flex items-center gap-3 text-[11px] font-medium">
             <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-              <span className="h-2.5 w-2.5 rounded-full bg-sky-500" />
-              <span>Current</span>
+              <span className="h-0.5 w-3.5 rounded-full bg-blue-600" />
+              <span>Current period</span>
             </div>
             <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
-              <span className="h-0.5 w-3.5 border-b-2 border-dashed border-slate-400" />
-              <span>Previous</span>
+              <span className="h-0.5 w-3.5 border-b border-dashed border-blue-300 dark:border-slate-500" />
+              <span>Previous period</span>
             </div>
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="p-0">
-          <div className="h-[320px] w-full">
-            {trendData.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-xs font-medium text-slate-400">
-                No revenue records in this timeframe.
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={trendData}
-                  margin={{ top: 12, right: 18, left: -14, bottom: 0 }}
+        {/* Chart Area: Area Spline with gradient & dashed comparison */}
+        <div className="h-[250px] w-full flex-1">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={trendData}
+              margin={{ top: 18, right: 12, left: -20, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient
+                  id="revenueTrendGrad"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
                 >
-                  <defs>
-                    <linearGradient id="colorAmountArea" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.18} />
-                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#f1f5f9"
-                    className="dark:stroke-slate-800/80"
-                  />
-                  <XAxis
-                    dataKey="dateLabel"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: "#94a3b8" }}
-                    dy={8}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: "#94a3b8" }}
-                    tickFormatter={(val) =>
-                      currency === "VND" ? formatCompactVnd(val) : formatCompactNumber(val)
-                    }
-                  />
-                  <Tooltip
-                    content={({ active, payload, label }) => {
-                      if (!active || !payload || payload.length === 0) return null;
-                      const currentVal = Number(
-                        payload.find((p) => p.dataKey === "amount")?.value || 0
-                      );
-                      const prevVal = Number(
-                        payload.find((p) => p.dataKey === "previousAmount")?.value || 0
-                      );
-                      const diff = currentVal - prevVal;
-                      const pctChange =
-                        prevVal > 0 ? (diff / prevVal) * 100 : currentVal > 0 ? 100 : 0;
-                      const isUp = pctChange >= 0;
-
-                      return (
-                        <div className="min-w-[200px] rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-xl dark:border-slate-800 dark:bg-slate-900">
-                          <p className="mb-2.5 text-xs font-bold text-slate-700 dark:text-slate-200">
-                            {label}
-                          </p>
-                          <div className="space-y-2 text-xs">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-1.5">
-                                <span className="h-2 w-2 rounded-full bg-sky-500" />
-                                <span className="font-medium text-slate-500 dark:text-slate-400">
-                                  Current:
-                                </span>
-                              </div>
-                              <span className="font-bold text-slate-900 dark:text-slate-100">
-                                {formatCurrency(currentVal, currency)}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-1.5">
-                                <span className="h-2 w-2 rounded-full bg-slate-400" />
-                                <span className="font-medium text-slate-400 dark:text-slate-500">
-                                  Previous:
-                                </span>
-                              </div>
-                              <span className="font-semibold text-slate-600 dark:text-slate-400">
-                                {formatCurrency(prevVal, currency)}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-2 dark:border-slate-800">
-                              <span className="text-[11px] font-medium text-slate-400">
-                                Comparison:
-                              </span>
-                              <span
-                                className={`inline-flex items-center text-xs font-bold ${
-                                  isUp
-                                    ? "text-emerald-600 dark:text-emerald-400"
-                                    : "text-rose-600 dark:text-rose-400"
-                                }`}
-                              >
-                                {isUp ? (
-                                  <ArrowUpRight className="mr-0.5 h-3.5 w-3.5 stroke-[2.5]" />
-                                ) : (
-                                  <ArrowDownRight className="mr-0.5 h-3.5 w-3.5 stroke-[2.5]" />
-                                )}
-                                {Math.abs(pctChange).toFixed(1)}%
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }}
-                  />
-                  {/* Current Period Line */}
-                  <Line
-                    type="monotone"
-                    dataKey="amount"
-                    name="Current Period"
-                    stroke="#0ea5e9"
-                    strokeWidth={2.8}
-                    dot={{ r: 4, fill: "#0ea5e9", strokeWidth: 2, stroke: "#fff" }}
-                    activeDot={{ r: 6, fill: "#0ea5e9", strokeWidth: 2, stroke: "#fff" }}
-                  />
-                  {/* Previous Period Line */}
-                  <Line
-                    type="monotone"
-                    dataKey="previousAmount"
-                    name="Previous Period"
-                    stroke="#94a3b8"
-                    strokeWidth={2}
-                    strokeDasharray="4 4"
-                    dot={{ r: 3, fill: "#94a3b8", strokeWidth: 1.5, stroke: "#fff" }}
-                    activeDot={{ r: 5, fill: "#94a3b8" }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </CardContent>
+                  <stop offset="0%" stopColor="#2563eb" stopOpacity={0.16} />
+                  <stop offset="100%" stopColor="#2563eb" stopOpacity={0.0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="#f1f5f9"
+                className="dark:stroke-slate-800/80"
+              />
+              <XAxis
+                dataKey="dateLabel"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 10, fill: "#94a3b8" }}
+                dy={6}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 10, fill: "#94a3b8" }}
+                tickFormatter={(val) => formatTrendYAxis(val, currency)}
+              />
+              <Tooltip
+                cursor={{
+                  stroke: "#94a3b8",
+                  strokeWidth: 1,
+                  strokeDasharray: "3 3",
+                }}
+                content={({ active, payload, label }) => {
+                  if (!active || !payload || payload.length === 0) return null;
+                  const currentVal = Number(
+                    payload.find((p) => p.dataKey === "amount")?.value || 0
+                  );
+                  return (
+                    <div className="relative -translate-y-2 rounded-xl border border-slate-200/90 bg-white px-3.5 py-2 text-center shadow-xl dark:border-slate-800 dark:bg-slate-900">
+                      <p className="text-[11px] font-medium text-slate-400">
+                        {label}
+                      </p>
+                      <p className="mt-0.5 text-sm font-bold text-slate-900 dark:text-slate-100">
+                        {formatCurrency(currentVal, currency)}
+                      </p>
+                      {/* Pointer caret arrow pointing down to active dot */}
+                      <div className="absolute -bottom-1.5 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 border-r border-b border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-900" />
+                    </div>
+                  );
+                }}
+              />
+              {/* Current period smooth area line */}
+              <Area
+                type="monotone"
+                dataKey="amount"
+                name="Current period"
+                stroke="#2563eb"
+                strokeWidth={2.4}
+                fill="url(#revenueTrendGrad)"
+                dot={false}
+                activeDot={{
+                  r: 4.5,
+                  fill: "#2563eb",
+                  stroke: "#ffffff",
+                  strokeWidth: 2,
+                }}
+              />
+              {/* Previous period smooth dashed line */}
+              <Line
+                type="monotone"
+                dataKey="previousAmount"
+                name="Previous period"
+                stroke="#93c5fd"
+                strokeWidth={1.8}
+                strokeDasharray="4 4"
+                dot={false}
+                activeDot={{ r: 3.5, fill: "#93c5fd" }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       </Card>
 
-      {/* ======================================================== */}
-      {/* 2. REVENUE BY PLAN (Donut Chart + Plan Performance List) */}
-      {/* ======================================================== */}
-      <Card className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-        <CardHeader className="flex flex-row items-center justify-between p-0 pb-5">
-          <div>
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-base font-bold text-slate-900 dark:text-slate-100">
-                Revenue by Plan
-              </CardTitle>
-              {topPlan && topPlan.amount > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200/70 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
-                  <Sparkles className="h-3 w-3" />
-                  Top: {topPlan.planName}
-                </span>
-              )}
-            </div>
-            <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-              Plan distribution & performance breakdown
-            </p>
-          </div>
-
-          {/* Toggle Donut vs Stacked Bar */}
-          <div className="dark:bg-slate-850 flex items-center gap-1 rounded-xl border border-slate-200/80 bg-slate-50/90 p-1 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={() => setPlanViewMode("donut")}
-              aria-label="View as Donut chart"
-              className={`cursor-pointer rounded-lg p-1.5 transition-all ${
-                planViewMode === "donut"
-                  ? "bg-white text-slate-900 shadow-2xs dark:bg-slate-700 dark:text-white"
-                  : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              }`}
-            >
-              <PieIcon className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setPlanViewMode("bar")}
-              aria-label="View as Bar chart"
-              className={`cursor-pointer rounded-lg p-1.5 transition-all ${
-                planViewMode === "bar"
-                  ? "bg-white text-slate-900 shadow-2xs dark:bg-slate-700 dark:text-white"
-                  : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              }`}
-            >
-              <BarChart3 className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </CardHeader>
-
-        <CardContent className="p-0">
-          <div className="h-[320px] w-full">
-            {charts.byPlan.length === 0 || totalPlanRevenue === 0 ? (
-              <div className="flex h-full items-center justify-center text-xs font-medium text-slate-400">
-                No plan subscription revenue in this period.
-              </div>
-            ) : planViewMode === "donut" ? (
-              /* --- DONUT CHART + PLAN RANKING VIEW --- */
-              <div className="grid h-full grid-cols-1 items-center gap-4 sm:grid-cols-12">
-                {/* Donut Chart with Center Total */}
-                <div className="relative flex h-[280px] w-full items-center justify-center sm:col-span-5">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Tooltip
-                        content={({ active, payload }) => {
-                          if (!active || !payload || payload.length === 0) return null;
-                          const data = payload[0].payload as {
-                            planName: string;
-                            amount: number;
-                            percentage: number;
-                          };
-                          return (
-                            <div className="rounded-xl border border-slate-200/90 bg-white p-3 shadow-xl dark:border-slate-800 dark:bg-slate-900">
-                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                {data.planName}
-                              </p>
-                              <p className="mt-1 text-xs font-extrabold text-sky-600 dark:text-sky-400">
-                                {formatCurrency(data.amount, currency)}
-                              </p>
-                              <p className="mt-0.5 text-[11px] font-medium text-slate-400">
-                                Share: {data.percentage}%
-                              </p>
-                            </div>
-                          );
-                        }}
-                      />
-                      <Pie
-                        data={charts.byPlan}
-                        dataKey="amount"
-                        nameKey="planName"
-                        innerRadius={56}
-                        outerRadius={84}
-                        paddingAngle={3}
-                        stroke="none"
-                      >
-                        {charts.byPlan.map((entry, index) => (
-                          <Cell
-                            key={entry.planName}
-                            fill={getPlanColor(entry.planName, index)}
-                          />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-
-                  {/* Center Metric */}
-                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                      Total
-                    </span>
-                    <span className="mt-0.5 text-xs font-extrabold text-slate-900 sm:text-sm dark:text-slate-100">
-                      {formatCurrency(totalPlanRevenue, currency)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Plan Performance Breakdown List */}
-                <div className="flex flex-col justify-center space-y-3.5 pr-2 sm:col-span-7">
-                  {charts.byPlan.map((plan, idx) => {
-                    const color = getPlanColor(plan.planName, idx);
-                    const isTop = idx === 0 && plan.amount > 0;
-
-                    return (
-                      <div key={plan.planName} className="space-y-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="h-2.5 w-2.5 shrink-0 rounded-full"
-                              style={{ backgroundColor: color }}
-                            />
-                            <span className="font-bold text-slate-800 dark:text-slate-200">
-                              {plan.planName}
-                            </span>
-                            {isTop && (
-                              <span className="py-0.2 rounded-sm bg-amber-100/80 px-1 text-[9px] font-bold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-                                Top
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900 dark:text-slate-100">
-                              {formatCurrency(plan.amount, currency)}
-                            </span>
-                            <span className="w-9 text-right font-semibold text-slate-400">
-                              {plan.percentage}%
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                          <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{
-                              width: `${Math.min(100, Math.max(3, plan.percentage))}%`,
-                              backgroundColor: color,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              /* --- STACKED BAR CHART VIEW --- */
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={barChartData}
-                  margin={{ top: 12, right: 18, left: -14, bottom: 0 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#f1f5f9"
-                    className="dark:stroke-slate-800/80"
-                  />
-                  <XAxis
-                    dataKey="dateLabel"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: "#94a3b8" }}
-                    dy={8}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: "#94a3b8" }}
-                    tickFormatter={(val) =>
-                      currency === "VND" ? formatCompactVnd(val) : formatCompactNumber(val)
-                    }
-                  />
-                  <Tooltip
-                    content={({ active, payload, label }) => {
-                      if (!active || !payload || payload.length === 0) return null;
-                      const validItems = payload.filter(
-                        (p) => p.value != null && Number(p.value) > 0
-                      );
-                      if (validItems.length === 0) return null;
-
-                      return (
-                        <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-xl dark:border-slate-800 dark:bg-slate-900">
-                          <p className="mb-2 text-xs font-bold text-slate-700 dark:text-slate-200">
-                            {label}
-                          </p>
-                          <div className="space-y-1.5">
-                            {validItems.map((entry) => (
-                              <div
-                                key={String(entry.name)}
-                                className="flex items-center justify-between gap-4 text-xs"
-                              >
-                                <div className="flex items-center gap-1.5">
-                                  <span
-                                    className="h-2 w-2 rounded-full"
-                                    style={{ backgroundColor: entry.color }}
-                                  />
-                                  <span className="font-medium text-slate-600 dark:text-slate-300">
-                                    {String(entry.name)}:
-                                  </span>
-                                </div>
-                                <span className="font-bold text-slate-900 dark:text-white">
-                                  {formatCurrency(Number(entry.value), currency)}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    iconType="circle"
-                    formatter={(value) => (
-                      <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                        {value}
-                      </span>
-                    )}
-                  />
-                  {planNames.map((plan, index) => (
-                    <Bar
-                      key={plan}
-                      dataKey={plan}
-                      name={plan}
-                      fill={getPlanColor(plan, index)}
-                      radius={[4, 4, 0, 0]}
-                      maxBarSize={32}
-                    />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {/* CARD 2: Revenue by Plan - donut + per-plan table (1/2 width) */}
+      <RevenueByPlanCard plans={charts.byPlan ?? []} currency={currency} />
     </div>
   );
 }

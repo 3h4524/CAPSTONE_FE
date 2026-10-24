@@ -2,7 +2,7 @@
 
 import { AlertTriangle, CheckCircle2, FlaskConical, Loader2, OctagonAlert } from "lucide-react";
 
-import { TestReportRunTook } from "@/components/admin/test-reports/test-report-run-took";
+import { RunTook } from "@/components/admin/test-reports/run-took";
 import type { TestReportRun } from "@/types/admin-test-reports";
 import { cn } from "@/utils/cn";
 
@@ -73,7 +73,7 @@ export const TestReportVerdict = ({ run }: TestReportVerdictProps) => {
               {run.status === "running" ? (
                 <>
                   The Playwright suite is going on this machine — took{" "}
-                  <TestReportRunTook run={run} /> so far. This page follows the live state and
+                  <RunTook run={run} /> so far. This page follows the live state and
                   flips as soon as the run lands.
                 </>
               ) : run.status === "error" ? (

@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { FlaskConical, RefreshCw, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -67,7 +66,7 @@ export const TestReportRunDialog = ({
           Cancel
         </Button>
         <Button type="button" onClick={onConfirm} disabled={isPending}>
-          {isPending ? "Starting…" : "Run the suite"}
+          Run the suite
         </Button>
       </DialogFooter>
     </DialogContent>

@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 
-import { TestReportRunTook } from "@/components/admin/test-reports/test-report-run-took";
-import { TestReportStatusBadge } from "@/components/admin/test-reports/test-report-status-badge";
+import { RunTook } from "@/components/admin/test-reports/run-took";
+import { TestReportStatusBadge } from "@/components/admin/test-reports/status-badge";
 import {
   Table,
   TableBody,
@@ -104,7 +104,7 @@ export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps)
               {run.skippedTests}
             </TableCell>
             <TableCell className="text-right font-mono text-xs whitespace-nowrap text-slate-500">
-              <TestReportRunTook run={run} />
+              <RunTook run={run} />
             </TableCell>
             <TableCell>
               <Link

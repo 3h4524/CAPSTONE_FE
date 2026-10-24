@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { TestReportDetail } from "@/components/admin/test-reports/test-report-detail";
+import { TestReportDetail } from "@/components/admin/test-reports/detail";
 import { getPageMetadata } from "@/data/metadata";
 
 export const metadata: Metadata = getPageMetadata({

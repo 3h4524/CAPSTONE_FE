@@ -1,17 +1,17 @@
 "use client";
 
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 
 import { AdminShell } from "@/components/admin/admin-shell";
-import { TestReportComparison } from "@/components/admin/test-reports/test-report-comparison";
-import { TestReportFailureGroups } from "@/components/admin/test-reports/test-report-failure-groups";
-import { TestReportFileAccordion } from "@/components/admin/test-reports/test-report-file-accordion";
-import { TestReportFileFailures } from "@/components/admin/test-reports/test-report-file-failures";
-import { TestReportRunTrend } from "@/components/admin/test-reports/test-report-run-trend";
-import { TestReportSlowestSpecs } from "@/components/admin/test-reports/test-report-slowest-specs";
-import { TestReportVerdict } from "@/components/admin/test-reports/test-report-verdict";
+import { TestReportComparison } from "@/components/admin/test-reports/comparison";
+import { TestReportFailureGroups } from "@/components/admin/test-reports/failure-groups";
+import { TestReportFileAccordion } from "@/components/admin/test-reports/file-accordion";
+import { TestReportFileFailures } from "@/components/admin/test-reports/file-failures";
+import { TestReportRunTrend } from "@/components/admin/test-reports/run-trend";
+import { TestReportSlowestSpecs } from "@/components/admin/test-reports/slowest-specs";
+import { TestReportVerdict } from "@/components/admin/test-reports/verdict";
 import { Button } from "@/components/ui/button";
 import { useAdminTestReport } from "@/hooks/queries/use-admin-test-report";
 import { useAdminTestReports } from "@/hooks/queries/use-admin-test-reports";
@@ -32,7 +32,7 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
     return index >= 0 ? runs[index + 1]?.runId : undefined;
   }, [list?.items, runId]);
 
-  const { data: previous } = useAdminTestReport(previousRunId ?? "__none__", {
+  const { data: previous } = useAdminTestReport(previousRunId ?? "", {
     enabled: Boolean(previousRunId),
   });
 

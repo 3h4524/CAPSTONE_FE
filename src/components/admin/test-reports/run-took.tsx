@@ -19,12 +19,12 @@ const formatElapsed = (seconds: number) => {
   return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
 };
 
-type TestReportRunTookProps = {
+type RunTookProps = {
   run: TestReportRun;
   className?: string;
 };
 
-export const TestReportRunTook = ({ run, className }: TestReportRunTookProps) => {
+export const RunTook = ({ run, className }: RunTookProps) => {
   const isRunning = run.status === "running";
   const [elapsedSeconds, setElapsedSeconds] = useState(1);
 

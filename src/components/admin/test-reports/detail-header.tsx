@@ -2,8 +2,8 @@
 
 import { GitBranch, Hash, User } from "lucide-react";
 
-import { TestReportRunTook } from "@/components/admin/test-reports/test-report-run-took";
-import { TestReportStatusBadge } from "@/components/admin/test-reports/test-report-status-badge";
+import { RunTook } from "@/components/admin/test-reports/run-took";
+import { TestReportStatusBadge } from "@/components/admin/test-reports/status-badge";
 import type { TestReportRun } from "@/types/admin-test-reports";
 
 type TestReportDetailHeaderProps = {
@@ -55,7 +55,7 @@ export const TestReportDetailHeader = ({ run }: TestReportDetailHeaderProps) => 
           </span>
         )}
         <span className="font-mono">
-          took <TestReportRunTook run={run} />
+          took <RunTook run={run} />
         </span>
       </div>
     </div>

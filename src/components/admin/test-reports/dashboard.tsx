@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { PlayCircle, RefreshCw } from "lucide-react";
 
 import { AdminShell } from "@/components/admin/admin-shell";
-import { TestReportMetricCards } from "@/components/admin/test-reports/test-report-metric-cards";
-import { TestReportRunDialog } from "@/components/admin/test-reports/test-report-run-dialog";
-import { TestReportRunTable } from "@/components/admin/test-reports/test-report-run-table";
+import { TestReportMetricCards } from "@/components/admin/test-reports/metric-cards";
+import { TestReportRunDialog } from "@/components/admin/test-reports/run-dialog";
+import { TestReportRunTable } from "@/components/admin/test-reports/run-table";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -17,9 +17,13 @@ import {
 } from "@/components/ui/select";
 import { useAdminTestReportRun } from "@/hooks/mutations/use-admin-test-report-run";
 import { useAdminTestReports } from "@/hooks/queries/use-admin-test-reports";
+import { useTestReportEvents } from "@/hooks/use-test-report-events";
 import type { TestReportStatus } from "@/types/admin-test-reports";
 
-const STATUS_FILTERS: Array<{ value: string; label: string }> = [
+const STATUS_FILTERS: ReadonlyArray<{
+  value: "all" | TestReportStatus;
+  label: string;
+}> = [
   { value: "all", label: "Every state" },
   { value: "failed", label: "Failed" },
   { value: "error", label: "Broken" },
@@ -28,10 +32,10 @@ const STATUS_FILTERS: Array<{ value: string; label: string }> = [
 ];
 
 export const TestReportsDashboard = () => {
-  const [status, setStatus] = useState<string>("all");
+  const [status, setStatus] = useState<"all" | TestReportStatus>("all");
   const [isRunDialogOpen, setIsRunDialogOpen] = useState(false);
   const filter = useMemo(
-    () => (status === "all" ? {} : { status: status as TestReportStatus }),
+    () => (status === "all" ? {} : { status }),
     [status]
   );
 
@@ -39,6 +43,7 @@ export const TestReportsDashboard = () => {
     ...filter,
     pageSize: 50,
   });
+  useTestReportEvents();
   const { mutate: startRun, isPending } = useAdminTestReportRun();
 
   const runs = useMemo(() => data?.items ?? [], [data?.items]);
@@ -66,7 +71,8 @@ export const TestReportsDashboard = () => {
               <h2 className="text-sm font-bold text-slate-900">End-to-end test reports</h2>
               <p className="mt-1 max-w-2xl text-[11px] leading-relaxed text-slate-500">
                 Every run of the Playwright suite is kept on the machine that made it. Press
-                “Run tests” to run the suite here; the report appears as soon as it is over.
+                “Run tests” to run the suite here; the running row counts up here and flips by
+                itself the moment the suite lands.
               </p>
             </div>
             <Button
@@ -80,7 +86,7 @@ export const TestReportsDashboard = () => {
               ) : (
                 <PlayCircle className="size-4" />
               )}
-              {isPending ? "Starting…" : "Run tests"}
+              Run tests
             </Button>
           </div>
         </section>
@@ -104,7 +110,14 @@ export const TestReportsDashboard = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Select value={status} onValueChange={setStatus}>
+              <Select
+                value={status}
+                onValueChange={(value) =>
+                  setStatus(
+                    STATUS_FILTERS.find((option) => option.value === value)?.value ?? "all"
+                  )
+                }
+              >
                 <SelectTrigger className="h-8 w-40 text-xs">
                   <SelectValue />
                 </SelectTrigger>

@@ -12,7 +12,5 @@ export function useAdminTestReports(filter: TestReportFilter) {
   return useQuery({
     queryKey: adminTestReportKeys.list(filter),
     queryFn: () => getAdminTestReports(filter),
-    refetchInterval: (query) =>
-      query.state.data?.items.some((run) => run.status === "running") ? 5000 : false,
   });
 }

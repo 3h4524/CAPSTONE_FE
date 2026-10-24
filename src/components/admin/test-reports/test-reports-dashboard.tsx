@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { useAdminTestReportRun } from "@/hooks/mutations/use-admin-test-report-run";
 import { useAdminTestReports } from "@/hooks/queries/use-admin-test-reports";
+import { useTestReportEvents } from "@/hooks/use-test-report-events";
 import type { TestReportStatus } from "@/types/admin-test-reports";
 
 const STATUS_FILTERS: Array<{ value: string; label: string }> = [
@@ -39,6 +40,7 @@ export const TestReportsDashboard = () => {
     ...filter,
     pageSize: 50,
   });
+  useTestReportEvents();
   const { mutate: startRun, isPending } = useAdminTestReportRun();
 
   const runs = useMemo(() => data?.items ?? [], [data?.items]);
@@ -66,7 +68,8 @@ export const TestReportsDashboard = () => {
               <h2 className="text-sm font-bold text-slate-900">End-to-end test reports</h2>
               <p className="mt-1 max-w-2xl text-[11px] leading-relaxed text-slate-500">
                 Every run of the Playwright suite is kept on the machine that made it. Press
-                “Run tests” to run the suite here; the report appears as soon as it is over.
+                “Run tests” to run the suite here; the running row counts up here and flips by
+                itself the moment the suite lands.
               </p>
             </div>
             <Button

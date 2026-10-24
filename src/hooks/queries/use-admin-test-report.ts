@@ -8,7 +8,5 @@ export function useAdminTestReport(runId: string, options?: { enabled?: boolean 
     queryKey: [...adminTestReportKeys.all, "detail", runId],
     queryFn: () => getAdminTestReport(runId),
     enabled: options?.enabled ?? true,
-    refetchInterval: (query) =>
-      query.state.data?.run.status === "running" ? 5000 : false,
   });
 }

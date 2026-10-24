@@ -1,17 +1,13 @@
+"use client";
+
 import { GitBranch, Hash, User } from "lucide-react";
 
+import { TestReportRunTook } from "@/components/admin/test-reports/test-report-run-took";
 import { TestReportStatusBadge } from "@/components/admin/test-reports/test-report-status-badge";
 import type { TestReportRun } from "@/types/admin-test-reports";
 
 type TestReportDetailHeaderProps = {
   run: TestReportRun;
-};
-
-const formatDuration = (durationMs: number) => {
-  if (durationMs <= 0) return "—";
-  const seconds = durationMs / 1000;
-  if (seconds < 60) return `${seconds.toFixed(1)} s`;
-  return `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
 };
 
 export const TestReportDetailHeader = ({ run }: TestReportDetailHeaderProps) => (
@@ -58,7 +54,9 @@ export const TestReportDetailHeader = ({ run }: TestReportDetailHeaderProps) => 
             {run.triggeredBy}
           </span>
         )}
-        <span className="font-mono">took {formatDuration(run.durationMs)}</span>
+        <span className="font-mono">
+          took <TestReportRunTook run={run} />
+        </span>
       </div>
     </div>
 

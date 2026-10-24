@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 
+import { TestReportRunTook } from "@/components/admin/test-reports/test-report-run-took";
 import { TestReportStatusBadge } from "@/components/admin/test-reports/test-report-status-badge";
 import {
   Table,
@@ -18,15 +19,6 @@ import type { TestReportRun } from "@/types/admin-test-reports";
 type TestReportRunTableProps = {
   runs: TestReportRun[];
   isLoading: boolean;
-};
-
-const formatDuration = (durationMs: number) => {
-  if (durationMs <= 0) return "—";
-  if (durationMs < 1000) return `${durationMs} ms`;
-  const seconds = durationMs / 1000;
-  if (seconds < 60) return `${seconds.toFixed(1)} s`;
-  const minutes = Math.floor(seconds / 60);
-  return `${minutes}m ${Math.round(seconds % 60)}s`;
 };
 
 const formatStartedAt = (startedAtUtc: string) =>
@@ -112,7 +104,7 @@ export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps)
               {run.skippedTests}
             </TableCell>
             <TableCell className="text-right font-mono text-xs whitespace-nowrap text-slate-500">
-              {formatDuration(run.durationMs)}
+              <TestReportRunTook run={run} />
             </TableCell>
             <TableCell>
               <Link

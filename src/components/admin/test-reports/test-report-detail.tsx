@@ -15,6 +15,7 @@ import { TestReportVerdict } from "@/components/admin/test-reports/test-report-v
 import { Button } from "@/components/ui/button";
 import { useAdminTestReport } from "@/hooks/queries/use-admin-test-report";
 import { useAdminTestReports } from "@/hooks/queries/use-admin-test-reports";
+import { useTestReportEvents } from "@/hooks/use-test-report-events";
 
 type TestReportDetailProps = {
   runId: string;
@@ -23,6 +24,7 @@ type TestReportDetailProps = {
 export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
   const { data, isLoading, isError, refetch } = useAdminTestReport(runId);
   const { data: list } = useAdminTestReports({ pageSize: 20 });
+  useTestReportEvents();
 
   const previousRunId = useMemo(() => {
     const runs = list?.items ?? [];
@@ -33,6 +35,8 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
   const { data: previous } = useAdminTestReport(previousRunId ?? "__none__", {
     enabled: Boolean(previousRunId),
   });
+
+  const isRunning = data?.run.status === "running";
 
   if (isError) {
     return (
@@ -86,32 +90,41 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
         </div>
 
         <TestReportVerdict run={data.run} />
+        {isRunning ? (
+          <p className="rounded-xl border border-sky-100 bg-sky-50/40 px-5 py-4 text-xs leading-relaxed text-slate-600">
+            This page follows the live state, so the verdict above flips the moment the suite
+            lands — the took on this page counts up while it is still going. The arrow above
+            still forces a pull if you want one.
+          </p>
+        ) : (
+          <>
+            <TestReportComparison
+              current={data}
+              previous={previousRunId ? previous : undefined}
+            />
 
-        <TestReportComparison
-          current={data}
-          previous={previousRunId ? previous : undefined}
-        />
+            <TestReportRunTrend runs={list?.items ?? []} currentRunId={runId} />
 
-        <TestReportRunTrend runs={list?.items ?? []} currentRunId={runId} />
+            <div className="grid gap-4 xl:grid-cols-2">
+              <TestReportFailureGroups files={data.files} />
+              <TestReportFileFailures files={data.files} />
+            </div>
 
-        <div className="grid gap-4 xl:grid-cols-2">
-          <TestReportFailureGroups files={data.files} />
-          <TestReportFileFailures files={data.files} />
-        </div>
+            <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div className="border-b border-slate-100 px-5 py-4">
+                <h3 className="text-xs font-bold tracking-wide text-slate-800 uppercase">
+                  The slowest tests
+                </h3>
+                <p className="mt-0.5 text-[10px] text-slate-400">
+                  The tests that took the most time in this run.
+                </p>
+              </div>
+              <TestReportSlowestSpecs files={data.files} limit={6} />
+            </section>
 
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <div className="border-b border-slate-100 px-5 py-4">
-            <h3 className="text-xs font-bold tracking-wide text-slate-800 uppercase">
-              The slowest tests
-            </h3>
-            <p className="mt-0.5 text-[10px] text-slate-400">
-              The tests that took the most time in this run.
-            </p>
-          </div>
-          <TestReportSlowestSpecs files={data.files} limit={6} />
-        </section>
-
-        <TestReportFileAccordion files={data.files} />
+            <TestReportFileAccordion files={data.files} />
+          </>
+        )}
       </div>
     </AdminShell>
   );

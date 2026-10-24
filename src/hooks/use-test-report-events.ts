@@ -2,9 +2,10 @@
 
 import { useEffect } from "react";
 
+import { Log } from "@/helpers/log";
 import { adminTestReportKeys } from "@/hooks/queries/use-admin-test-reports";
-import type { HubConnection} from "@microsoft/signalr";
-import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import type { HubConnection } from "@microsoft/signalr";
+import { HubConnectionBuilder, HubConnectionState, LogLevel } from "@microsoft/signalr";
 import { useQueryClient } from "@tanstack/react-query";
 
 let sharedConnection: HubConnection | null = null;
@@ -18,8 +19,8 @@ export function useTestReportEvents() {
       queryClient.invalidateQueries({ queryKey: adminTestReportKeys.all });
     };
 
-    connectionCount++;
-    let mounted = true;
+    connectionCount += 1;
+    let isMounted = true;
 
     const connect = async () => {
       if (!sharedConnection) {
@@ -35,26 +36,30 @@ export function useTestReportEvents() {
       }
 
       try {
-        if (sharedConnection.state === "Disconnected") {
+        if (sharedConnection.state === HubConnectionState.Disconnected) {
           await sharedConnection.start();
         }
-        if (mounted) {
+        if (isMounted) {
           applyChange();
         }
-      } catch {
-        const reconnect = () => {
-          if (mounted) {
+      } catch (error) {
+        Log.warn({
+          prefix: "test-report-events",
+          message: "The live run stream did not start yet",
+          data: error,
+        });
+        sharedConnection.onreconnected(() => {
+          if (isMounted) {
             applyChange();
           }
-        };
-        sharedConnection.onreconnected(reconnect);
+        });
       }
     };
 
     void connect();
 
     return () => {
-      mounted = false;
+      isMounted = false;
       connectionCount -= 1;
 
       if (connectionCount === 0 && sharedConnection) {

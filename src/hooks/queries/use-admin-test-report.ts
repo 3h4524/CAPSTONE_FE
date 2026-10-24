@@ -1,5 +1,5 @@
 import { getAdminTestReport } from "@/api/admin-test-reports";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@/hooks/queries/use-query";
 
 import { adminTestReportKeys } from "./use-admin-test-reports";
 

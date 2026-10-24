@@ -31,7 +31,7 @@ const VERDICT_STYLES = {
 
 export const TestReportVerdict = ({ run }: TestReportVerdictProps) => {
   const style = VERDICT_STYLES[run.status];
-  const needsAttention = run.unexpectedFailedTests;
+  const unexpectedFailedCount = run.unexpectedFailedTests;
 
   const title =
     run.status === "running" ? (
@@ -40,7 +40,7 @@ export const TestReportVerdict = ({ run }: TestReportVerdictProps) => {
       "The run broke before it could report"
     ) : run.failedTests > 0 ? (
       <>
-        {needsAttention} of {run.failedTests} failed test
+        {unexpectedFailedCount} of {run.failedTests} failed test
         {run.failedTests === 1 ? "" : "s"} need a look
       </>
     ) : (

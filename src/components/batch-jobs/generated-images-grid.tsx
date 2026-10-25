@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { RefreshCw } from "lucide-react";
 
 import { ImageLightbox } from "@/components/commons/data-display/image-lightbox";
 import { Badge } from "@/components/ui/badge";
@@ -18,13 +19,23 @@ type GeneratedImagesGridProps = {
   onPreview: (target: MockupPreviewTarget) => void;
   /** Column classes of each product's grid; a side panel passes fewer columns. */
   columnsClassName?: string;
+  /** Offers to change a product's prompt and generate it again; without it the grid is view-only. */
+  onRegenerate?: (product: BatchJobProductResult) => void;
+  /** True while the job is still generating, when no product can be generated again yet. */
+  regenerateDisabled?: boolean;
 };
 
-// SRS 3.5.12 Generated Image Review, view-only: every product's designs with a mock-up preview.
+// A product whose designs are being made right now, the first time or again.
+const IN_PROGRESS_STATUSES = ["queued", "generating_image"];
+
+// SRS 3.5.12 Generated Image Review: every product's designs with a mock-up preview, and, where offered, a way to
+// generate a product again.
 export const GeneratedImagesGrid = ({
   products,
   onPreview,
   columnsClassName = "grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4",
+  onRegenerate,
+  regenerateDisabled = false,
 }: GeneratedImagesGridProps) => {
   const [viewing, setViewing] = useState<number | null>(null);
   const productsWithImages = products.filter((product) => product.images.length > 0);
@@ -37,6 +48,22 @@ export const GeneratedImagesGrid = ({
           <div className="mb-3 flex items-center gap-2">
             <h4 className="min-w-0 truncate text-sm font-medium text-slate-900">{product.productName}</h4>
             {product.productType && <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700">{productTypeLabel(product.productType)}</Badge>}
+            {onRegenerate &&
+              (IN_PROGRESS_STATUSES.includes(product.status) ? (
+                <span className="text-muted-foreground ml-auto shrink-0 text-xs">Generating new designs…</span>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto h-7 shrink-0 gap-1 px-2 text-xs whitespace-nowrap"
+                  disabled={regenerateDisabled}
+                  onClick={() => onRegenerate(product)}
+                >
+                  <RefreshCw className="size-3.5" aria-hidden="true" />
+                  Edit &amp; regenerate
+                </Button>
+              ))}
           </div>
           <div className={cn("grid", columnsClassName)}>
             {/* Numbered by position: older rows were stored with duplicate variation indexes. */}

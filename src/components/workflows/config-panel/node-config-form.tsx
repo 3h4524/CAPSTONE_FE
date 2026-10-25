@@ -4,7 +4,12 @@ import { useEffect } from "react";
 import { Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Form } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ApprovalFlow } from "@/components/workflows/config-panel/approval-flow";
@@ -43,12 +48,19 @@ type NodeConfigFormProps = {
   showHeader?: boolean;
 };
 
+const isAiSceneConfig = (scene: unknown) =>
+  typeof scene === "object" && scene !== null && "mode" in scene && scene.mode !== "standard";
+
 export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps) => {
   const definition = WORKFLOW_NODE_DEFINITIONS[node.data.type];
   const isRunning = useWorkflowStore((state) => state.isRunning);
   // Only the video's review unlocks the video settings; a design review leaves them as they are.
-  const waitingReview = useWorkflowStore(state => state.nodes.some(n => n.data.type === "review-video" && n.data.status === "waiting_for_review"));
-  const hasVideo = useWorkflowStore(state => hasVideoSteps(state.nodes));
+  const waitingReview = useWorkflowStore((state) =>
+    state.nodes.some(
+      (n) => n.data.type === "review-video" && n.data.status === "waiting_for_review"
+    )
+  );
+  const hasVideo = useWorkflowStore((state) => hasVideoSteps(state.nodes));
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const selectNode = useWorkflowStore((state) => state.selectNode);
   const overview = useNodeOverview(node);
@@ -59,22 +71,45 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
     defaultValues: node.data.config,
     mode: "onChange",
   });
-  const { control, trigger, watch, setValue } = form;
+  const { control, trigger, watch, setValue, reset, getValues } = form;
   const videoMode = watch("mode");
-  const videoFields = definition.fields.filter(field => field.name === "outputFormat");
-  const advancedVideoFields = definition.fields.filter(field => field.name === "textOverlay" || field.name === "standardOptions.transition");
-  const { grouped, rest } = groupPanelFields(definition.fields, NODE_PANEL_SECTIONS[node.data.type]);
-  const renderField = (field: WorkflowField) => <NodeConfigField key={field.name} field={field} control={control} />;
+  const watchedScenes = watch("aiScenes");
+  const configuredScenes = Array.isArray(watchedScenes) ? watchedScenes : [];
+  const outputMode = configuredScenes.length
+    ? configuredScenes.some(isAiSceneConfig)
+      ? "ai_shot"
+      : "standard"
+    : videoMode;
+  const videoFields = definition.fields.filter((field) => field.name === "outputFormat");
+  const advancedVideoFields = definition.fields.filter(
+    (field) => field.name === "textOverlay" || field.name === "standardOptions.transition"
+  );
+  const { grouped, rest } = groupPanelFields(
+    definition.fields,
+    NODE_PANEL_SECTIONS[node.data.type]
+  );
+  const renderField = (field: WorkflowField) => (
+    <NodeConfigField key={field.name} field={field} control={control} />
+  );
+
+  // The scene editor writes directly to the workflow store. Reset only when a
+  // real external change arrives, so controls and both editors always open from
+  // the latest saved configuration without discarding a field being edited here.
+  useEffect(() => {
+    if (JSON.stringify(getValues()) === JSON.stringify(node.data.config)) return;
+    reset(node.data.config);
+  }, [node.data.config, getValues, reset]);
 
   useEffect(() => {
     void trigger();
     const subscription = watch((values, { name }) => {
       if (!name) return;
       const root = name.split(".")[0];
-      const current = useWorkflowStore.getState().nodes.find(n => n.id === node.id);
+      const current = useWorkflowStore.getState().nodes.find((n) => n.id === node.id);
       if (root && current) {
         updateNodeConfig(node.id, { ...current.data.config, [root]: values[root] });
-        if (root === "batchId" && current.data.config.batchId !== values.batchId) setValue("productId", "", { shouldDirty: true, shouldValidate: true });
+        if (root === "batchId" && current.data.config.batchId !== values.batchId)
+          setValue("productId", "", { shouldDirty: true, shouldValidate: true });
       }
     });
     return () => subscription.unsubscribe();
@@ -83,7 +118,14 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
   useEffect(() => {
     if (node.data.type !== "generate-video") return;
     const currentFormat = node.data.config.outputFormat;
-    const normalizedFormat = getVideoOutputFormat(currentFormat, node.data.config.mode).value;
+    const sceneModes = node.data.config.aiScenes;
+    const effectiveMode =
+      Array.isArray(sceneModes) && sceneModes.length > 0
+        ? sceneModes.some(isAiSceneConfig)
+          ? "ai_shot"
+          : "standard"
+        : node.data.config.mode;
+    const normalizedFormat = getVideoOutputFormat(currentFormat, effectiveMode).value;
     if (currentFormat !== normalizedFormat) {
       setValue("outputFormat", normalizedFormat, { shouldDirty: true, shouldValidate: true });
       updateNodeConfig(node.id, { ...node.data.config, outputFormat: normalizedFormat });
@@ -99,17 +141,30 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
         {settingsLocked && definition.fields.length > 0 && (
           <div className="px-5 pt-4">
             <PanelNotice tone="info">
-              <span className="inline-flex items-center gap-1.5 font-medium"><Lock className="size-3" aria-hidden="true" />Settings are locked while the run is in progress.</span>
+              <span className="inline-flex items-center gap-1.5 font-medium">
+                <Lock className="size-3" aria-hidden="true" />
+                Settings are locked while the run is in progress.
+              </span>
             </PanelNotice>
           </div>
         )}
         <Form {...form}>
           <form onSubmit={(event) => event.preventDefault()}>
             {/* A fieldset is as wide as its widest line by default; min-w-0 keeps a long batch name inside the panel. */}
-            <fieldset disabled={settingsLocked} className="min-w-0 [&>section:first-child]:border-t-0">
+            <fieldset
+              disabled={settingsLocked}
+              className="min-w-0 [&>section:first-child]:border-t-0"
+            >
               {node.data.type === "generate-video" ? (
                 <div className="space-y-6 px-5 py-5">
-                  {videoFields.map(field => <NodeConfigField key={field.name} field={field} control={control} videoMode={String(videoMode ?? "ai_shot")} />)}
+                  {videoFields.map((field) => (
+                    <NodeConfigField
+                      key={field.name}
+                      field={field}
+                      control={control}
+                      videoMode={String(outputMode ?? "ai_shot")}
+                    />
+                  ))}
                   <Accordion type="single" collapsible>
                     <AccordionItem value="advanced-video">
                       <AccordionTrigger>Caption and transition</AccordionTrigger>
@@ -118,33 +173,63 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
-                  {videoMode === "ai_shot" && <AiShotOptions nodeId={node.id} disabled={isRunning && !waitingReview} onChange={(scenes, seconds, sharedInstructions) => {
-                    setValue("mode", "ai_shot", { shouldDirty: true, shouldValidate: true });
-                    setValue("aiScenes", scenes, { shouldDirty: true, shouldValidate: true });
-                    setValue("aiGlobalInstructions", sharedInstructions ?? null, { shouldDirty: true, shouldValidate: true });
-                    setValue("durationSeconds", seconds, { shouldDirty: true, shouldValidate: true });
-                    void trigger();
-                  }} />}
+                  <AiShotOptions
+                    nodeId={node.id}
+                    disabled={isRunning && !waitingReview}
+                    onChange={(scenes, seconds, sharedInstructions) => {
+                      const nextMode =
+                        scenes.length > 0 && scenes.every((scene) => scene.mode === "standard")
+                          ? "standard"
+                          : "ai_shot";
+                      setValue("mode", nextMode, { shouldDirty: true, shouldValidate: true });
+                      setValue("aiScenes", scenes, { shouldDirty: true, shouldValidate: true });
+                      setValue("aiGlobalInstructions", sharedInstructions ?? null, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
+                      setValue("durationSeconds", seconds, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
+                      void trigger();
+                    }}
+                  />
                 </div>
               ) : (
                 <>
                   {grouped.map(({ section, fields }) => (
-                    <PanelSection key={section.title} title={section.title} description={section.description}>
+                    <PanelSection
+                      key={section.title}
+                      title={section.title}
+                      description={section.description}
+                    >
                       <div className="space-y-6">{fields.map(renderField)}</div>
                     </PanelSection>
                   ))}
-                  {rest.length > 0 && <div className="space-y-6 px-5 py-5">{rest.map(renderField)}</div>}
-                  {definition.fields.length === 0 && <p className="text-muted-foreground px-5 py-5 text-xs">This step has no settings.</p>}
+                  {rest.length > 0 && (
+                    <div className="space-y-6 px-5 py-5">{rest.map(renderField)}</div>
+                  )}
+                  {definition.fields.length === 0 && (
+                    <p className="text-muted-foreground px-5 py-5 text-xs">
+                      This step has no settings.
+                    </p>
+                  )}
                 </>
               )}
             </fieldset>
           </form>
         </Form>
-        {node.data.type === "product-input" && <PreviousRunsSelect batchId={readString(node.data.config.batchId)} />}
+        {node.data.type === "product-input" && (
+          <PreviousRunsSelect batchId={readString(node.data.config.batchId)} />
+        )}
         {node.data.type === "prompt-synthesis" && <PromptRecipe config={node.data.config} />}
         {node.data.type === "design-image" && <DesignOutputPreview config={node.data.config} />}
         {node.data.type === "design-approval" && (
-          <ApprovalFlow from="design-image" to="apply-mockup" automatic={node.data.config.mode === "auto"} />
+          <ApprovalFlow
+            from="design-image"
+            to="apply-mockup"
+            automatic={node.data.config.mode === "auto"}
+          />
         )}
         {node.data.type === "apply-mockup" && hasVideo && (
           <PanelSection
@@ -160,7 +245,7 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
             <ApprovalFlow from="apply-mockup" to="generate-video" automatic={false} />
             <PanelSection
               title="Mock-ups for the video"
-                description="Approve the mock-ups to use in the video. The ones made by Apply mock-up are added here when the video part starts."
+              description="Approve the mock-ups to use in the video. The ones made by Apply mock-up are added here when the video part starts."
             >
               <RunStatusPanel />
               <VideoProductSelect />
@@ -169,12 +254,15 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
             </PanelSection>
           </>
         )}
-        {((isVideoRunNode(node.data.type) && node.data.type !== "approval-gate") || node.data.type === "generate-listing") && (
+        {((isVideoRunNode(node.data.type) && node.data.type !== "approval-gate") ||
+          node.data.type === "generate-listing") && (
           <div className="space-y-4 px-5 pb-5">
             {isVideoRunNode(node.data.type) && <RunStatusPanel />}
             {node.data.type === "generate-listing" && <ListingContentResultPanel />}
             {node.data.type === "generate-video" && <StoryboardPanel node={node} />}
-            {(node.data.type === "review-video" || node.data.type === "generate-video") && <VideoReviewPanel />}
+            {(node.data.type === "review-video" || node.data.type === "generate-video") && (
+              <VideoReviewPanel />
+            )}
           </div>
         )}
       </ScrollArea>

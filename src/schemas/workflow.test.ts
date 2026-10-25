@@ -20,7 +20,7 @@ import type { WorkflowNodeType } from "@/types/workflow";
 const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
   "product-input": { batchId: "bat_1", productId: "" },
   "prompt-synthesis": { designTemplateId: "dpl_1", stylePresetId: "sty_1", instructions: "Keep it warm" },
-  "design-image": { variants: 2, aspectRatio: "1:1" },
+  "design-image": { imageProvider: "gemini", variants: 2, aspectRatio: "1:1" },
   "design-approval": { mode: "manual" },
   "approval-gate": { mode: "manual" },
   "apply-mockup": {
@@ -212,21 +212,34 @@ describe("promptSynthesisConfigSchema", () => {
 });
 
 describe("designImageConfigSchema", () => {
+  it.each(["gemini", "ideogram"] as const)("accepts the image model %s", (imageProvider) => {
+    const result = designImageConfigSchema.safeParse({ imageProvider, variants: 1, aspectRatio: "1:1" });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.imageProvider).toBe(imageProvider);
+  });
+
+  it.each(["openai", "", "Gemini", undefined])("rejects %j as an image model", (imageProvider) => {
+    const result = designImageConfigSchema.safeParse({ imageProvider, variants: 1, aspectRatio: "1:1" });
+
+    expectIssue(result, "imageProvider", "Choose an image model.");
+  });
+
   it.each(["1:1", "16:9", "9:16", "4:3", "3:4"] as const)("accepts the aspect ratio %s", (aspectRatio) => {
-    const result = designImageConfigSchema.safeParse({ variants: 1, aspectRatio });
+    const result = designImageConfigSchema.safeParse({ imageProvider: "gemini", variants: 1, aspectRatio });
 
     expect(result.success).toBe(true);
     expect(result.success && result.data.aspectRatio).toBe(aspectRatio);
   });
 
   it.each(["21:9", "", "1:1 ", 1])("rejects %j as an aspect ratio", (aspectRatio) => {
-    const result = designImageConfigSchema.safeParse({ variants: 1, aspectRatio });
+    const result = designImageConfigSchema.safeParse({ imageProvider: "gemini", variants: 1, aspectRatio });
 
     expectIssue(result, "aspectRatio", "Choose an aspect ratio.");
   });
 
   it.each([1, 2, 3, 4])("accepts a variant count of %i", (variants) => {
-    const result = designImageConfigSchema.safeParse({ variants, aspectRatio: "1:1" });
+    const result = designImageConfigSchema.safeParse({ imageProvider: "gemini", variants, aspectRatio: "1:1" });
 
     expect(result.success).toBe(true);
     expect(result.success && result.data.variants).toBe(variants);
@@ -236,31 +249,31 @@ describe("designImageConfigSchema", () => {
     { variants: 0, message: "The number of variants must be at least 1." },
     { variants: 5, message: "The number of variants cannot exceed 4." },
   ])("rejects a variant count of $variants", ({ variants, message }) => {
-    const result = designImageConfigSchema.safeParse({ variants, aspectRatio: "1:1" });
+    const result = designImageConfigSchema.safeParse({ imageProvider: "gemini", variants, aspectRatio: "1:1" });
 
     expectIssue(result, "variants", message);
   });
 
   it("rejects a fractional variant count", () => {
-    const result = designImageConfigSchema.safeParse({ variants: 1.5, aspectRatio: "1:1" });
+    const result = designImageConfigSchema.safeParse({ imageProvider: "gemini", variants: 1.5, aspectRatio: "1:1" });
 
     expectIssue(result, "variants", "The number of variants must be a whole number.");
   });
 
   it.each([undefined, "2", null, true])("rejects %j as a variant count", (variants) => {
-    const result = designImageConfigSchema.safeParse({ variants, aspectRatio: "1:1" });
+    const result = designImageConfigSchema.safeParse({ imageProvider: "gemini", variants, aspectRatio: "1:1" });
 
     expectIssue(result, "variants", "Enter the number of variants.");
   });
 
   it("rejects a config without variants", () => {
-    const result = designImageConfigSchema.safeParse({ aspectRatio: "1:1" });
+    const result = designImageConfigSchema.safeParse({ imageProvider: "gemini", aspectRatio: "1:1" });
 
     expectIssue(result, "variants", "Enter the number of variants.");
   });
 
   it("rejects a config without an aspect ratio", () => {
-    const result = designImageConfigSchema.safeParse({ variants: 2 });
+    const result = designImageConfigSchema.safeParse({ imageProvider: "gemini", variants: 2 });
 
     expectIssue(result, "aspectRatio", "Choose an aspect ratio.");
   });
@@ -419,7 +432,15 @@ describe("generateVideoConfigSchema", () => {
     }
   );
 
-  it.each(["reel", "", "Slideshow", "vertical_reel"])("rejects %j as a video template", (template) => {
+  // Standard scenes no longer pick a template: the field only keeps what older workflows stored.
+  it.each(["reel", "vertical_reel"])("keeps %j, a template name stored by an older workflow", (template) => {
+    const result = generateVideoConfigSchema.safeParse({ ...valid, template });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.template).toBe(template);
+  });
+
+  it.each(["", "   "])("rejects %j as a video template", (template) => {
     const result = generateVideoConfigSchema.safeParse({ ...valid, template });
 
     expectIssue(result, "template", "Choose a video template.");
@@ -433,7 +454,7 @@ describe("generateVideoConfigSchema", () => {
   });
 
   it.each([
-    { durationSeconds: 2, message: "The video duration must be at least 3." },
+    { durationSeconds: 0, message: "The video duration must be at least 1." },
     { durationSeconds: 31, message: "The video duration cannot exceed 30." },
   ])("rejects a duration of $durationSeconds seconds", ({ durationSeconds, message }) => {
     const result = generateVideoConfigSchema.safeParse({ ...valid, durationSeconds });

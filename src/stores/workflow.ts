@@ -7,6 +7,7 @@ import type {
   WorkflowEdge,
   WorkflowNode,
   WorkflowNodeConfig,
+  WorkflowNodeData,
   WorkflowNodeStatus,
 } from "@/types/workflow";
 import {
@@ -73,6 +74,10 @@ type WorkflowEditorState = {
   beginNodeDrag: () => void;
   commitNodeDrag: () => void;
   setNodeStatus: (nodeId: string, status: WorkflowNodeStatus) => void;
+  setNodeRuntime: (
+    nodeId: string,
+    runtime: Partial<Pick<WorkflowNodeData, "status" | "stage" | "progress">>
+  ) => void;
   resetStatuses: () => void;
   resetProductDependentState: () => void;
   setVideoRunId: (runId: string | null) => void;
@@ -353,6 +358,13 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
     set((state) => ({
       nodes: state.nodes.map((node) =>
         node.id === nodeId ? { ...node, data: { ...node.data, status } } : node
+      ),
+    })),
+
+  setNodeRuntime: (nodeId, runtime) =>
+    set((state) => ({
+      nodes: state.nodes.map((node) =>
+        node.id === nodeId ? { ...node, data: { ...node.data, ...runtime } } : node
       ),
     })),
 

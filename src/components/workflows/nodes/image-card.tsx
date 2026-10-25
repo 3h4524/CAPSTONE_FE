@@ -34,28 +34,33 @@ export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
 
   return (
     <NodeShell nodeId={id} data={data} selected={selected} widthClassName="w-72">
-      <div className="p-2.5 pb-2">
+      <div className="px-3 pt-3 pb-2.5">
         {data.type === "generate-video" ? (
           <VideoNodePreview />
         ) : shown.length > 0 ? (
-          <div className="space-y-1.5">
-            <div className="grid grid-cols-4 gap-1.5">
+          <div className="space-y-2">
+            <div className="grid grid-cols-4 gap-1">
               {shown.map((url, index) => (
-                <div key={`${index}:${url}`} className="relative aspect-square overflow-hidden rounded-md bg-slate-100">
+                <div
+                  key={`${index}:${url}`}
+                  className="relative aspect-square overflow-hidden rounded bg-slate-50"
+                >
                   <Image src={url} alt="" fill sizes="64px" unoptimized className="object-cover" />
                 </div>
               ))}
             </div>
-            {images.length > shown.length && <p className="text-[11px] text-slate-500">+{images.length - shown.length} more</p>}
+            {images.length > shown.length && (
+              <p className="text-[11px] text-slate-500">+{images.length - shown.length} more</p>
+            )}
           </div>
         ) : (
-          <div className="flex aspect-video flex-col items-center justify-center gap-1.5 rounded-lg bg-slate-100 text-slate-400">
-            <ImageIcon className="size-7" aria-hidden="true" />
-            <p className="text-[11px] font-medium">Preview appears after run</p>
+          <div className="flex aspect-[2/1] flex-col items-center justify-center gap-2 rounded-md border border-dashed border-slate-200 bg-slate-50/70 text-slate-400">
+            <ImageIcon className="size-5" aria-hidden="true" />
+            <p className="text-xs">Preview appears after run</p>
           </div>
         )}
       </div>
-      <div className="space-y-1 px-3 pb-2.5">
+      <div className="space-y-1.5 px-3 pb-3">
         {progress && <p className="text-xs font-medium text-slate-700">{progress}</p>}
         <NodeSummary lines={summary} />
       </div>

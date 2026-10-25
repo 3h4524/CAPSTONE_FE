@@ -170,6 +170,7 @@ export const NodeConfigField = ({ field, control, videoMode }: NodeConfigFieldPr
                 noneLabel={field.noneLabel}
                 onChange={controller.onChange}
               />
+              {field.description && <FormDescription className={DESCRIPTION_CLASS}>{field.description}</FormDescription>}
               <FormMessage />
             </FormItem>
           );

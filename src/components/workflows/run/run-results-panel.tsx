@@ -8,6 +8,7 @@ import { GeneratedImagesGrid, type MockupPreviewTarget } from "@/components/batc
 import { JobProgressCard } from "@/components/batch-jobs/job-progress-card";
 import { MockupImageEditDialog } from "@/components/batch-jobs/mockup-image-edit-dialog";
 import { MockupResultsGrid } from "@/components/batch-jobs/mockup-results-grid";
+import { RegenerateProductDialog } from "@/components/batch-jobs/regenerate-product-dialog";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { MockupGenerateDialog } from "@/components/mockups/mockup-generate-dialog";
 import { Button } from "@/components/ui/button";
@@ -17,10 +18,11 @@ import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-no
 import { ApprovalReviewPanel } from "@/components/workflows/run/approval-review-panel";
 import { showToast } from "@/helpers/toast";
 import { readStringArray } from "@/helpers/workflow-config";
-import { countApprovals, DESIGNS_READY_STATUSES } from "@/helpers/workflow-run";
+import { countApprovals, DESIGNS_READY_STATUSES, FINISHED_JOB_STATUSES } from "@/helpers/workflow-run";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 import { applySelectionAndGenerateMockups } from "@/hooks/use-batch-run";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
+import type { BatchJobProductResult } from "@/types/batch-jobs";
 import type { GenerateAllMockupsResult, MockupImage } from "@/types/mockup-templates";
 import type { WorkflowNode } from "@/types/workflow";
 import { useQueryClient } from "@tanstack/react-query";
@@ -38,6 +40,8 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
   const [previewTarget, setPreviewTarget] = useState<MockupPreviewTarget | null>(null);
   // The mock-up being changed on its own, apart from the job's settings.
   const [editing, setEditing] = useState<MockupImage | null>(null);
+  // The product whose prompt is being changed before it is generated again.
+  const [regenerating, setRegenerating] = useState<BatchJobProductResult | null>(null);
   const restore = useMutation<GenerateAllMockupsResult, { jobId: string; slotKey: string }>({
     mutationFn: ({ jobId, slotKey }) => resetMockupOverride(jobId, slotKey),
     onSuccess: (result) => {
@@ -128,7 +132,14 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
           <section className="space-y-3 border-t pt-5" aria-label="Generated images">
             <h3 className="text-sm font-semibold text-slate-900">Generated images</h3>
             {job.products.some((product) => product.images.length > 0) ? (
-              <GeneratedImagesGrid products={job.products} onPreview={setPreviewTarget} columnsClassName={PANEL_GRID} />
+              <GeneratedImagesGrid
+                products={job.products}
+                onPreview={setPreviewTarget}
+                columnsClassName={PANEL_GRID}
+                onRegenerate={setRegenerating}
+                // One product at a time: the job has to finish before another can be generated again.
+                regenerateDisabled={!FINISHED_JOB_STATUSES.includes(job.status)}
+              />
             ) : (
               <PanelEmptyState icon={ImageIcon} title="No images yet." description="Designs show up here as each product finishes." />
             )}
@@ -152,6 +163,12 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
         designImageUrl={editingDesignUrl}
         onOpenChange={(nextOpen) => !nextOpen && setEditing(null)}
         onSaved={showEdited}
+      />
+      <RegenerateProductDialog
+        batchJobId={job.id}
+        product={regenerating}
+        variationCount={job.variationCount}
+        onOpenChange={(nextOpen) => !nextOpen && setRegenerating(null)}
       />
     </ScrollArea>
   );

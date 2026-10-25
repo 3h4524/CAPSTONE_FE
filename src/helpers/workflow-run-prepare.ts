@@ -1,11 +1,14 @@
 import { apiKeyKeys, listApiKeys } from "@/api/api-keys";
 import { batchJobKeys, getBatchJob, listBatchJobs } from "@/api/batch-jobs";
 import { approveBatch, batchKeys, listBatchProducts } from "@/api/batches";
+import { designTemplateKeys, getDesignTemplate } from "@/api/design-templates";
 import { listMockupTemplates, mockupTemplateKeys } from "@/api/mockup-templates";
 import { getSubscriptionOverviewRequest } from "@/api/subscription";
+import { missingDesignTextWarning, thinInputWarning } from "@/helpers/design-text";
 import { countProductTypes, productTypeLabel } from "@/helpers/mockup-template";
 import { ACTIVE_JOB_STATUSES, narrowMockupSelection, type RunPlan } from "@/helpers/workflow-run";
 import { SUBSCRIPTION_OVERVIEW_QUERY_KEY } from "@/hooks/queries/use-subscription-overview";
+import type { Product } from "@/types/batches";
 import type { QueryClient } from "@tanstack/react-query";
 
 const IMAGE_QUOTA_CODE = "image_generation";
@@ -20,6 +23,8 @@ export type PreparedRun = {
   batchJobId: string;
   /** The batch already had a running job: it is shown instead of starting another (one active job per batch). */
   attached: boolean;
+  /** Things worth knowing that do not stop the run, shown as is. */
+  warnings: string[];
 };
 
 // Runs every check the backend would make when the job starts, before anything is created, so a
@@ -34,7 +39,7 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
     ...fresh,
   });
   const active = jobs.find((job) => ACTIVE_JOB_STATUSES.includes(job.status.toLowerCase()));
-  if (active) return { batchJobId: active.id, attached: true };
+  if (active) return { batchJobId: active.id, attached: true, warnings: [] };
 
   // A run generates for the batch's pending products, so a draft job is reused only when it holds
   // exactly those: a draft made earlier misses the products added since, and one whose products were
@@ -89,8 +94,10 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
   }
 
   const keys = await queryClient.fetchQuery({ queryKey: apiKeyKeys.all, queryFn: () => listApiKeys(), ...fresh });
-  if (!keys.items.some((key) => key.provider.toLowerCase().includes("gemini") && key.status === "Connected")) {
-    throw new RunBlockedError("Connect a valid Google Gemini API key on the API Keys page before running.");
+  // The list names each provider for display ("Google Gemini", "Ideogram"), which contains the name the run uses.
+  if (!keys.items.some((key) => key.provider.toLowerCase().includes(plan.imageProvider) && key.status === "Connected")) {
+    const name = plan.imageProvider === "ideogram" ? "Ideogram" : "Google Gemini";
+    throw new RunBlockedError(`Connect a valid ${name} API key on the API Keys page before running.`);
   }
 
   const overview = await queryClient.fetchQuery({
@@ -106,8 +113,27 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
     );
   }
 
-  if (reusableDraftId) return { batchJobId: reusableDraftId, attached: false };
+  const warnings = [await designTextWarning(plan, pending, queryClient), thinInputWarning(pending, plan.imageProvider)].filter(
+    (warning): warning is string => warning !== null
+  );
+
+  if (reusableDraftId) return { batchJobId: reusableDraftId, attached: false, warnings };
   const approved = await approveBatch(plan.batchId);
   await queryClient.invalidateQueries({ queryKey: batchKeys.all });
-  return { batchJobId: approved.batchJobId, attached: false };
+  return { batchJobId: approved.batchJobId, attached: false, warnings };
+};
+
+// A lettering template prints each product's design text. A template that cannot be read here is left for the
+// server to report when the job starts, so this check never stops a run on its own.
+const designTextWarning = async (plan: RunPlan, pending: Product[], queryClient: QueryClient): Promise<string | null> => {
+  if (!plan.designTemplateId) return null;
+  try {
+    const template = await queryClient.fetchQuery({
+      queryKey: designTemplateKeys.detail(plan.designTemplateId),
+      queryFn: () => getDesignTemplate(plan.designTemplateId),
+    });
+    return missingDesignTextWarning(template.basePrompt, pending);
+  } catch {
+    return null;
+  }
 };

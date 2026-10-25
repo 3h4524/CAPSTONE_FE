@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { ChevronDown, FileCode2 } from "lucide-react";
 
-import { TestReportSpecRow } from "@/components/admin/test-reports/test-report-spec-row";
-import { TestReportStatusBadge } from "@/components/admin/test-reports/test-report-status-badge";
+import { TestReportSpecRow } from "@/components/admin/test-reports/spec-row";
+import { TestReportStatusBadge } from "@/components/admin/test-reports/status-badge";
 import type { TestReportFile } from "@/types/admin-test-reports";
 import { cn } from "@/utils/cn";
 

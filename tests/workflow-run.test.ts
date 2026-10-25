@@ -91,6 +91,18 @@ test("Design approval decides whether the job waits for a review", () => {
   assert.equal(extractRunPlan(nodes.filter((node) => node.data.type !== "design-approval")).mockup?.templateIds[0], id);
 });
 
+test("Design image decides which provider makes the designs, Gemini unless Ideogram is chosen", () => {
+  const { nodes, edges } = configured();
+  assert.equal(extractRunPlan(nodes).imageProvider, "gemini");
+  byType(nodes, "design-image").data.config = { ...byType(nodes, "design-image").data.config, imageProvider: "ideogram" };
+  assert.equal(extractRunPlan(nodes).imageProvider, "ideogram");
+  assert.deepEqual(validateRunnable(nodes, edges), []);
+  // A step saved before the choice existed has no provider and keeps making Gemini designs.
+  const { imageProvider: _, ...saved } = byType(nodes, "design-image").data.config;
+  byType(nodes, "design-image").data.config = saved;
+  assert.equal(extractRunPlan(nodes).imageProvider, "gemini");
+});
+
 test("the batch job gives statuses to its own steps and leaves the video steps alone", () => {
   const { nodes } = configured();
   const statuses = deriveNodeStatuses(nodes, watching(job({ requireApproval: true })));

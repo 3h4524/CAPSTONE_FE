@@ -7,12 +7,13 @@ import { useEffect, useRef } from "react";
 import { supportTicketKeys } from "@/api/support-tickets";
 import { adminSupportTicketsKeys } from "@/hooks/queries/use-admin-support-tickets";
 import type { SupportTicketReply } from "@/types/support";
-import type { HubConnection} from "@microsoft/signalr";
+import type { HubConnection } from "@microsoft/signalr";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Singleton connection to ensure we only have one socket open
 let sharedConnection: HubConnection | null = null;
+let sharedStartPromise: Promise<void> | null = null;
 
 export const useSupportHub = (ticketId?: string) => {
   const queryClient = useQueryClient();
@@ -48,25 +49,30 @@ export const useSupportHub = (ticketId?: string) => {
             return { ...old, replies: [...old.replies, reply] };
           });
         }
-        
+
         // Vẫn chạy ngầm tải lại để đề phòng miss data
         queryClient.invalidateQueries({ queryKey: supportTicketKeys.detail(ticketId) });
         queryClient.invalidateQueries({ queryKey: adminSupportTicketsKeys.detail(ticketId) });
-        
+
         // Cập nhật cả list luôn để màn hình chia đôi không bị out-sync
         queryClient.invalidateQueries({ queryKey: [...supportTicketKeys.all, "list"] });
         queryClient.invalidateQueries({ queryKey: adminSupportTicketsKeys.lists() });
       }
     });
 
-        // (Sự kiện Notification toàn cầu đã được chuyển sang NotificationHub)
+    // (Sự kiện Notification toàn cầu đã được chuyển sang NotificationHub)
 
     // 3. Khởi động sợi cáp
     const startConnection = async () => {
       try {
         if (connection.state === "Disconnected") {
-          await connection.start();
+          sharedStartPromise ??= connection.start().finally(() => {
+            sharedStartPromise = null;
+          });
+          await sharedStartPromise;
           console.log("🟢 Đã cắm cáp WebSocket thành công!");
+        } else if (sharedStartPromise) {
+          await sharedStartPromise;
         }
 
         // Nếu người dùng đang mở 1 cái Ticket cụ thể, xin vào phòng chat đó

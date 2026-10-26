@@ -1,9 +1,19 @@
 "use client";
 
-import { type ComponentRef, type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ComponentRef,
+  type CSSProperties,
+  type PointerEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Check,
   Clapperboard,
+  GripVertical,
   Loader2,
   Minus,
   Music2,
@@ -49,6 +59,7 @@ import {
   ScalePercentageInput,
   STANDARD_MOTION_OPTIONS,
 } from "@/components/workflows/config-panel/fields/standard-motion-editor";
+import { loadMusicPreview } from "@/helpers/music-preview";
 import type {
   AiVideoSceneOptions,
   GenerateVideoConfig,
@@ -59,6 +70,7 @@ import type {
   VideoOverlay,
   VideoTransition,
 } from "@/types/video-workflow";
+import { getTransitionFrameStyle } from "@apcs/video-composition";
 import { Player } from "@remotion/player";
 import { useQuery } from "@tanstack/react-query";
 
@@ -66,19 +78,17 @@ const FPS = 30;
 const CANVAS_ZOOM_MIN = 0.6;
 const CANVAS_ZOOM_MAX = 1.6;
 const CANVAS_ZOOM_STEP = 0.1;
-const MUSIC_PREVIEW_CACHE = "apcs-music-preview-v1";
 const FULL_REGION: Region = { x: 0, y: 0, width: 1, height: 1 };
 const FAST_MOTION_CROP = 1 / 1.2;
 const PUSH_PULL_SCALE = 1.1;
+const TRANSITION_DRAG_TYPE = "application/x-apcs-video-transition";
 const TRANSITIONS: { value: VideoTransition; label: string }[] = [
-  { value: "none", label: "Cut / none" },
   { value: "fade", label: "Fade" },
   { value: "swipe", label: "Swipe" },
   { value: "zoom", label: "Zoom" },
   { value: "flash", label: "Flash" },
   { value: "whip_pan", label: "Whip pan" },
   { value: "blur", label: "Blur" },
-  { value: "cut", label: "Cut" },
 ];
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const blankEdit = (): VideoEditConfig => ({ version: 1, music: null, overlays: [] });
@@ -88,18 +98,6 @@ type MusicPreparation =
   | { status: "ready"; trackName: string; sourceUrl: string }
   | { status: "error"; trackName: string };
 
-async function loadMusicPreview(url: string, signal: AbortSignal) {
-  const cache = "caches" in window ? await caches.open(MUSIC_PREVIEW_CACHE).catch(() => null) : null;
-  let response = cache ? await cache.match(url) : undefined;
-  if (!response) {
-    response = await fetch(url, { signal });
-    if (!response.ok) throw new Error(`Music preview request failed (${response.status})`);
-    void cache?.put(url, response.clone()).catch(() => undefined);
-  }
-  const audio = await response.blob();
-  if (!audio.size) throw new Error("Music preview is empty");
-  return audio;
-}
 const clamp = (value: number, minimum: number, maximum: number) =>
   Math.min(maximum, Math.max(minimum, value));
 const sceneSourceFrames = (scene: AiVideoSceneOptions) =>
@@ -139,10 +137,7 @@ const transitionFrames = (scene: AiVideoSceneOptions, index: number) =>
     ? (scene.transitionDurationFrames ?? 12)
     : 0;
 const total = (scenes: AiVideoSceneOptions[]) =>
-  scenes.reduce(
-    (sum, scene, index) => sum + sceneFrames(scene) - transitionFrames(scene, index),
-    0
-  );
+  scenes.reduce((sum, scene) => sum + sceneFrames(scene), 0);
 const seconds = (frames: number) => `${(frames / FPS).toFixed(frames % FPS ? 1 : 0)}s`;
 const timecode = (frames: number) => {
   const totalSeconds = Math.max(0, Math.floor(frames / FPS));
@@ -304,9 +299,100 @@ function sceneAtFrame(scenes: TimelineScene[], frame: number) {
     const end = offset + sceneFrames(scene);
     if (frame < end || index === scenes.length - 1)
       return { scene, index, localFrame: Math.max(0, frame - offset) };
-    offset = end - transitionFrames(scenes[index + 1]!, index + 1);
+    offset = end;
   }
   return null;
+}
+
+type PreviewTransitionStyle = ReturnType<typeof getTransitionFrameStyle>;
+
+function PreviewSceneImage({
+  scene,
+  sceneIndex,
+  localFrame,
+  assets,
+  config,
+  aspectRatio,
+  transitionStyle,
+}: {
+  scene: TimelineScene;
+  sceneIndex: number;
+  localFrame: number;
+  assets: MockupAsset[];
+  config: GenerateVideoConfig;
+  aspectRatio: number;
+  transitionStyle?: PreviewTransitionStyle;
+}) {
+  const image = assets.find((asset) => asset.id === scene.mockupId) ?? assets[0];
+  const progress = sceneProgress(scene, localFrame);
+  const standardFrame =
+    scene.mode === "standard" && image
+      ? getStandardFrame(scene, image, sceneIndex, progress, config, aspectRatio)
+      : null;
+  const style =
+    transitionStyle ??
+    ({
+      opacity: 1,
+      transform: "none",
+      clipPath: "none",
+      filter: "none",
+      flashOpacity: 0,
+    } satisfies PreviewTransitionStyle);
+
+  return (
+    <AbsoluteFill
+      style={{
+        opacity: style.opacity,
+        transform: style.transform,
+        clipPath: style.clipPath as CSSProperties["clipPath"],
+        filter: style.filter,
+        overflow: "hidden",
+      }}
+    >
+      <AbsoluteFill style={{ background: "#090f1b", overflow: "hidden" }}>
+        {image ? (
+          standardFrame && !standardFrame.contain ? (
+            <Img
+              src={image.previewUrl}
+              style={{
+                position: "absolute",
+                maxWidth: "none",
+                width: `${100 / standardFrame.crop.width}%`,
+                height: `${100 / standardFrame.crop.height}%`,
+                left: `${(-standardFrame.crop.x / standardFrame.crop.width) * 100}%`,
+                top: `${(-standardFrame.crop.y / standardFrame.crop.height) * 100}%`,
+                objectFit: "fill",
+                transform: `translate3d(0, 0, 0) scale(${standardFrame.scale}) rotate(${standardFrame.rotation}deg)`,
+                transformOrigin: "center",
+                willChange: "transform",
+              }}
+            />
+          ) : (
+            <Img
+              src={image.previewUrl}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+                transform: standardFrame
+                  ? `translate3d(0, 0, 0) scale(${standardFrame.scale}) rotate(${standardFrame.rotation}deg)`
+                  : undefined,
+                transformOrigin: "center",
+                willChange: "transform",
+              }}
+            />
+          )
+        ) : (
+          <AbsoluteFill style={{ display: "grid", placeItems: "center", color: "#94a3b8" }}>
+            Choose a source image
+          </AbsoluteFill>
+        )}
+      </AbsoluteFill>
+      {style.flashOpacity > 0 && (
+        <AbsoluteFill style={{ backgroundColor: "white", opacity: style.flashOpacity }} />
+      )}
+    </AbsoluteFill>
+  );
 }
 
 function Preview({
@@ -314,6 +400,7 @@ function Preview({
   assets,
   edit,
   musicUrl,
+  musicDurationInFrames,
   durationInFrames,
   selectedId,
   onSelect,
@@ -323,6 +410,7 @@ function Preview({
   assets: MockupAsset[];
   edit: VideoEditConfig;
   musicUrl?: string;
+  musicDurationInFrames?: number;
   durationInFrames: number;
   selectedId: string | null;
   onSelect: (value: Selection) => void;
@@ -333,14 +421,29 @@ function Preview({
   const current = activeScene?.scene;
   const currentIndex = activeScene?.index ?? 0;
   const localFrame = activeScene?.localFrame ?? 0;
-  const image = assets.find((asset) => asset.id === current?.mockupId) ?? assets[0];
   const [ratioWidth, ratioHeight] = aspectForFormat(config.outputFormat);
   const aspectRatio = ratioWidth / ratioHeight;
-  const progress = current ? sceneProgress(current, localFrame) : 0;
-  const standardFrame =
-    current?.mode === "standard" && image
-      ? getStandardFrame(current, image, currentIndex, progress, config, aspectRatio)
-      : null;
+  const boundaryFrames = current ? transitionFrames(current, currentIndex) : 0;
+  const isTransitioning = Boolean(currentIndex > 0 && boundaryFrames > 0 && localFrame < boundaryFrames);
+  const previousScene = isTransitioning ? scenes[currentIndex - 1] : undefined;
+  const transitionEffect = current?.transitionIn ?? "none";
+  const musicPlaybackFrames = edit.music
+    ? Math.max(0, durationInFrames - edit.music.startFrame)
+    : 0;
+  const shouldLoopMusic = Boolean(
+    edit.music?.loop &&
+      musicDurationInFrames &&
+      edit.music.sourceOffsetFrames + musicPlaybackFrames > musicDurationInFrames
+  );
+  const incomingTransition = isTransitioning
+    ? getTransitionFrameStyle(transitionEffect, localFrame, boundaryFrames, "incoming")
+    : undefined;
+  const outgoingTransition = isTransitioning
+    ? {
+        ...getTransitionFrameStyle(transitionEffect, localFrame, boundaryFrames, "outgoing"),
+        flashOpacity: 0,
+      }
+    : undefined;
   return (
     <AbsoluteFill
       style={{
@@ -357,7 +460,8 @@ function Preview({
           <Audio
             src={musicUrl}
             startFrom={edit.music.sourceOffsetFrames}
-            loop={edit.music.loop}
+            loop={shouldLoopMusic}
+            pauseWhenBuffering
             volume={(localFrame) => {
               const fadeIn = edit.music!.fadeInFrames
                 ? Math.min(1, localFrame / edit.music!.fadeInFrames)
@@ -371,38 +475,27 @@ function Preview({
           />
         </Sequence>
       )}
-      {image ? (
-        standardFrame && !standardFrame.contain ? (
-          <Img
-            src={image.previewUrl}
-            style={{
-              position: "absolute",
-              maxWidth: "none",
-              width: `${100 / standardFrame.crop.width}%`,
-              height: `${100 / standardFrame.crop.height}%`,
-              left: `${(-standardFrame.crop.x / standardFrame.crop.width) * 100}%`,
-              top: `${(-standardFrame.crop.y / standardFrame.crop.height) * 100}%`,
-              objectFit: "fill",
-              transform: `translate3d(0, 0, 0) scale(${standardFrame.scale}) rotate(${standardFrame.rotation}deg)`,
-              transformOrigin: "center",
-              willChange: "transform",
-            }}
-          />
-        ) : (
-          <Img
-            src={image.previewUrl}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              transform: standardFrame
-                ? `translate3d(0, 0, 0) scale(${standardFrame.scale}) rotate(${standardFrame.rotation}deg)`
-                : undefined,
-              transformOrigin: "center",
-              willChange: "transform",
-            }}
-          />
-        )
+      {previousScene && outgoingTransition && (
+        <PreviewSceneImage
+          scene={previousScene}
+          sceneIndex={currentIndex - 1}
+          localFrame={Math.max(0, sceneFrames(previousScene) - 1)}
+          assets={assets}
+          config={config}
+          aspectRatio={aspectRatio}
+          transitionStyle={outgoingTransition}
+        />
+      )}
+      {current ? (
+        <PreviewSceneImage
+          scene={current}
+          sceneIndex={currentIndex}
+          localFrame={localFrame}
+          assets={assets}
+          config={config}
+          aspectRatio={aspectRatio}
+          transitionStyle={incomingTransition}
+        />
       ) : (
         <AbsoluteFill style={{ display: "grid", placeItems: "center", color: "#94a3b8" }}>
           Choose a source image
@@ -759,9 +852,9 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
     enabled: open,
   });
   const active = draft ?? config;
-  const scenes = active.aiScenes ?? [];
+  const scenes = useMemo(() => active.aiScenes ?? [], [active.aiScenes]);
   const [previewWidth, previewHeight] = aspectForFormat(active.outputFormat);
-  const edit = active.videoEdit ?? blankEdit();
+  const edit = useMemo(() => active.videoEdit ?? blankEdit(), [active.videoEdit]);
   const frameTotal = Math.max(FPS, total(scenes));
   const overlay =
     selection?.kind === "overlay"
@@ -787,13 +880,35 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
     : previewScene
       ? assets.find((asset) => asset.id === previewScene.scene.mockupId)
       : undefined;
+  const musicTrackId = edit.music?.trackId;
+  const musicMuted = edit.music?.muted ?? false;
   const track = useMemo(
-    () => tracks.find((item) => item.id === edit.music?.trackId),
-    [tracks, edit.music?.trackId]
+    () => tracks.find((item) => item.id === musicTrackId),
+    [musicTrackId, tracks]
   );
+  const trackId = track?.id;
+  const trackName = track?.name;
+  const trackPreviewUrl = track?.previewUrl;
   const musicIsPreparing = Boolean(edit.music && !edit.music.muted && musicPreparation.status !== "ready");
   const musicLoadFailed = Boolean(edit.music && musicPreparation.status === "error");
   const musicPreviewUrl = musicPreparation.status === "ready" ? musicPreparation.sourceUrl : undefined;
+  const musicDurationInFrames = track
+    ? Math.max(1, Math.round(track.durationSeconds * FPS))
+    : undefined;
+  const previewInputProps = useMemo(
+    () => ({
+      scenes,
+      assets,
+      edit,
+      musicUrl: musicPreviewUrl,
+      musicDurationInFrames,
+      durationInFrames: frameTotal,
+      selectedId: overlay?.id ?? null,
+      onSelect: setSelection,
+      config: active,
+    }),
+    [active, assets, edit, frameTotal, musicDurationInFrames, musicPreviewUrl, overlay?.id, scenes]
+  );
   const commit = useCallback((recipe: (current: GenerateVideoConfig) => GenerateVideoConfig) =>
     setDraft((current) => {
       if (!current) return current;
@@ -808,7 +923,11 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
   );
   const retryMusicPreparation = () => setMusicLoadAttempt((attempt) => attempt + 1);
   const start = () => {
-    setDraft(clone(config));
+    const next = clone(config);
+    next.aiScenes = next.aiScenes?.map((scene) =>
+      scene.transitionIn === "cut" ? { ...scene, transitionIn: "none" } : scene
+    );
+    setDraft(next);
     setPast([]);
     setFuture([]);
     setSelection(null);
@@ -835,11 +954,11 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
     setPlaying(true);
   }, [musicIsPreparing, musicLoadFailed, playing]);
   useEffect(() => {
-    if (!open || !edit.music || edit.music.muted) {
+    if (!open || !musicTrackId || musicMuted) {
       setMusicPreparation({ status: "idle" });
       return;
     }
-    if (!track) {
+    if (!trackId || !trackName || !trackPreviewUrl) {
       setMusicPreparation({ status: "loading", trackName: "selected soundtrack" });
       return;
     }
@@ -849,14 +968,14 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
     let objectUrl: string | undefined;
     let preload: HTMLAudioElement | undefined;
     let timeout: ReturnType<typeof setTimeout> | undefined;
-    setMusicPreparation({ status: "loading", trackName: track.name });
+    setMusicPreparation({ status: "loading", trackName });
     player.current?.pause();
     setPlaying(false);
 
     const prepare = async () => {
-      let sourceUrl = track.previewUrl;
+      let sourceUrl = trackPreviewUrl;
       try {
-        const audioBlob = await loadMusicPreview(track.previewUrl, controller.signal);
+        const audioBlob = await loadMusicPreview(trackPreviewUrl, controller.signal);
         if (cancelled) return;
         objectUrl = URL.createObjectURL(audioBlob);
         sourceUrl = objectUrl;
@@ -873,12 +992,12 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
       const ready = () => {
         if (cancelled) return;
         if (timeout) clearTimeout(timeout);
-        setMusicPreparation({ status: "ready", trackName: track.name, sourceUrl });
+        setMusicPreparation({ status: "ready", trackName, sourceUrl });
       };
       const failed = () => {
         if (cancelled) return;
         if (timeout) clearTimeout(timeout);
-        setMusicPreparation({ status: "error", trackName: track.name });
+        setMusicPreparation({ status: "error", trackName });
       };
       audioElement.addEventListener("canplay", ready, { once: true });
       audioElement.addEventListener("error", failed, { once: true });
@@ -898,7 +1017,7 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
       preload?.load();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [edit.music, musicLoadAttempt, open, track]);
+  }, [musicLoadAttempt, musicMuted, musicTrackId, open, trackId, trackName, trackPreviewUrl]);
   const adjustCanvasZoom = (amount: number) =>
     setCanvasZoom((current) =>
       Math.min(CANVAS_ZOOM_MAX, Math.max(CANVAS_ZOOM_MIN, Number((current + amount).toFixed(2))))
@@ -975,6 +1094,51 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
       ),
     }));
   };
+  const assignTransition = (sceneIndex: number, transitionIn: VideoTransition) => {
+    if (sceneIndex <= 0 || sceneIndex >= scenes.length) return;
+    commit((current) => ({
+      ...current,
+      aiScenes: (current.aiScenes ?? []).map((scene, index) =>
+        index === sceneIndex ? { ...scene, transitionIn } : scene
+      ),
+    }));
+    setSelection({ kind: "transition", sceneIndex });
+  };
+  const removeTransition = useCallback(
+    (sceneIndex: number) => {
+      if (sceneIndex <= 0) return;
+      commit((current) => ({
+        ...current,
+        aiScenes: (current.aiScenes ?? []).map((scene, index) =>
+          index === sceneIndex ? { ...scene, transitionIn: "none" } : scene
+        ),
+      }));
+      setSelection(null);
+    },
+    [commit]
+  );
+  useEffect(() => {
+    const removeWithKeyboard = (event: KeyboardEvent) => {
+      if (
+        !open ||
+        selection?.kind !== "transition" ||
+        (event.key !== "Delete" && event.key !== "Backspace")
+      )
+        return;
+      const selectedTransition = transition?.transitionIn;
+      if (!selectedTransition || selectedTransition === "none" || selectedTransition === "cut") return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable || target.closest("input, textarea, select, [contenteditable='true']"))
+      )
+        return;
+      event.preventDefault();
+      removeTransition(selection.sceneIndex);
+    };
+    window.addEventListener("keydown", removeWithKeyboard);
+    return () => window.removeEventListener("keydown", removeWithKeyboard);
+  }, [open, removeTransition, selection, transition]);
   const beginSceneTransform = () => {
     if (!draft) return;
     setPast((history) => [...history.slice(-49), clone(draft)]);
@@ -1077,26 +1241,36 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
   useEffect(() => {
     if (!open || !player.current) return;
     const currentPlayer = player.current;
-    const syncPlayhead = ({ detail }: { detail: { frame: number } }) => setPlayhead(detail.frame);
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
     const onEnded = () => {
       setPlayhead(frameTotal - 1);
       setPlaying(false);
     };
-    currentPlayer.addEventListener("frameupdate", syncPlayhead);
-    currentPlayer.addEventListener("timeupdate", syncPlayhead);
     currentPlayer.addEventListener("play", onPlay);
     currentPlayer.addEventListener("pause", onPause);
     currentPlayer.addEventListener("ended", onEnded);
     return () => {
-      currentPlayer.removeEventListener("frameupdate", syncPlayhead);
-      currentPlayer.removeEventListener("timeupdate", syncPlayhead);
       currentPlayer.removeEventListener("play", onPlay);
       currentPlayer.removeEventListener("pause", onPause);
       currentPlayer.removeEventListener("ended", onEnded);
     };
   }, [open, frameTotal]);
+  useEffect(() => {
+    if (!open || !playing) return;
+    let animationFrame = 0;
+    const syncPlayhead = () => {
+      const currentFrame = player.current?.getCurrentFrame();
+      if (typeof currentFrame === "number")
+        setPlayhead((previousFrame) =>
+          previousFrame === currentFrame ? previousFrame : currentFrame
+        );
+      if (player.current?.isPlaying()) animationFrame = requestAnimationFrame(syncPlayhead);
+      else setPlaying(false);
+    };
+    animationFrame = requestAnimationFrame(syncPlayhead);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [open, playing]);
   useEffect(() => {
     if (!open || playhead < frameTotal) return;
     const lastFrame = frameTotal - 1;
@@ -1105,22 +1279,6 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
     setPlaying(false);
     setPlayhead(lastFrame);
   }, [frameTotal, open, playhead]);
-  useEffect(() => {
-    if (!open || !playing) return;
-    let animationFrame = 0;
-    const syncWhilePlaying = () => {
-      const frame = player.current?.getCurrentFrame();
-      if (typeof frame === "number")
-        setPlayhead((current) => (current === frame ? current : frame));
-      if (!player.current?.isPlaying()) {
-        setPlaying(false);
-        return;
-      }
-      animationFrame = requestAnimationFrame(syncWhilePlaying);
-    };
-    animationFrame = requestAnimationFrame(syncWhilePlaying);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [open, playing]);
   useEffect(() => {
     const surface = previewCanvasRef.current;
     if (!open || !surface) return;
@@ -1146,15 +1304,15 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
       type="button"
       onClick={click}
       aria-pressed={activeTool}
-      className={`focus-visible:ring-primary flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none xl:min-h-12 xl:flex-row xl:justify-center xl:gap-2 xl:px-2 xl:py-1.5 xl:text-center ${activeTool ? "bg-primary text-primary-foreground shadow-sm" : "text-foreground hover:bg-muted"}`}
+      className={`focus-visible:ring-primary flex min-h-10 w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none xl:flex-row xl:justify-center xl:gap-1.5 xl:px-2 xl:py-1 xl:text-center ${activeTool ? "bg-primary text-primary-foreground shadow-sm" : "text-foreground hover:bg-muted"}`}
     >
       <span
-        className={`grid size-8 shrink-0 place-items-center rounded-md xl:size-7 ${activeTool ? "bg-white/15" : "bg-primary/10 text-primary"}`}
+        className={`grid size-7 shrink-0 place-items-center rounded-md xl:size-6 ${activeTool ? "bg-white/15" : "bg-primary/10 text-primary"}`}
       >
         {icon}
       </span>
       <span className="min-w-0 xl:w-auto">
-        <span className="block text-sm font-semibold xl:text-[13px]">{title}</span>
+        <span className="block text-[13px] font-semibold xl:text-xs">{title}</span>
         <span
           className={`mt-0.5 block truncate text-[11px] xl:hidden ${activeTool ? "text-primary-foreground/75" : "text-muted-foreground"}`}
         >
@@ -1237,14 +1395,10 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
               <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
                 <div className="grid min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-y-auto lg:overflow-hidden xl:grid-cols-[minmax(32rem,1.15fr)_minmax(22rem,0.85fr)_minmax(26rem,28rem)] xl:grid-rows-1">
                   <aside
-                    className="border-border bg-card border-b p-3 lg:flex lg:items-start lg:gap-3 xl:grid xl:min-h-0 xl:grid-rows-[auto_minmax(0,1fr)] xl:overflow-hidden xl:border-r xl:border-b-0"
+                    className="border-border bg-card border-b p-2 lg:flex lg:items-start lg:gap-2 xl:grid xl:min-h-0 xl:grid-rows-[auto_minmax(0,1fr)] xl:overflow-hidden xl:border-r xl:border-b-0"
                     aria-label="Video editing tools"
                   >
-                    <div>
-                      <p className="text-muted-foreground mb-2 px-2 text-[11px] font-semibold tracking-[.12em] uppercase lg:hidden xl:block">
-                        Add to video
-                      </p>
-                      <div className="grid flex-1 grid-cols-2 gap-1 sm:grid-cols-4 xl:grid-cols-4 xl:gap-1.5">
+                    <div className="grid flex-1 grid-cols-2 gap-1 sm:grid-cols-4 xl:grid-cols-4 xl:gap-1.5">
                         {tool(
                           <Type className="size-4" />,
                           "Headline",
@@ -1254,7 +1408,7 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
                         )}
                         {tool(
                           <Zap className="size-4" />,
-                          "Call to action",
+                          "CTA",
                           "Button-style label",
                           () => addOverlay("cta"),
                           overlay?.type === "cta"
@@ -1277,9 +1431,8 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
                             }),
                           selection?.kind === "transition"
                         )}
-                      </div>
                     </div>
-                    <div className="border-border mt-3 min-h-0 border-t pt-4 xl:mt-3 xl:overflow-y-auto">
+                    <div className="border-border mt-2 h-full max-h-[calc(100dvh-13rem)] min-h-0 scroll-pb-4 overflow-y-auto overscroll-contain border-t pt-3 pr-1 xl:mt-2 xl:max-h-none">
                       {selection?.kind === "music" ? (
                         <MusicPicker
                           tracks={tracks}
@@ -1326,16 +1479,7 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
                           <Player
                             ref={player}
                             component={Preview}
-                            inputProps={{
-                              scenes,
-                              assets,
-                              edit,
-                              musicUrl: musicPreviewUrl,
-                              durationInFrames: frameTotal,
-                              selectedId: overlay?.id ?? null,
-                              onSelect: setSelection,
-                              config: active,
-                            }}
+                            inputProps={previewInputProps}
                             durationInFrames={frameTotal}
                             fps={FPS}
                             compositionWidth={previewWidth === 1 ? 1080 : previewWidth * 120}
@@ -1352,7 +1496,9 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
                             }}
                           />
                         </div>
-                        {selectedScene?.scene.mode === "standard" && previewImage && (
+                        {selectedScene?.scene.mode === "standard" &&
+                          previewScene?.index === selectedScene.index &&
+                          previewImage && (
                           <SceneTransformOverlay
                             scene={selectedScene.scene}
                             sceneIndex={selectedScene.index}
@@ -1477,7 +1623,7 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
                       )}
                     </div>
                     <span className="text-muted-foreground hidden text-[11px] sm:inline">
-                      Click a boundary to edit its transition
+                  Click a boundary or drag a transition onto it
                     </span>
                   </div>
                   <Timeline
@@ -1492,6 +1638,7 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
                     onSelect={setSelection}
                     onBeginSceneTrim={beginTimelineSceneTrim}
                     onChangeSceneTrim={changeTimelineSceneTrim}
+                    onChangeTransition={assignTransition}
                   />
                 </section>
               </div>
@@ -1917,14 +2064,13 @@ function MusicPicker({
             volume: 0.25,
             fadeInFrames: 15,
             fadeOutFrames: 15,
-            loop: true,
+            loop: false,
             muted: false,
           }
         : null,
     }));
   return (
-    <div className="space-y-4">
-      <Title icon={<Music2 />} name="Choose music" description="One soundtrack for the complete video." />
+    <div className="space-y-3">
       <label className="hidden">
         Track
         <select
@@ -1940,7 +2086,7 @@ function MusicPicker({
                     volume: 0.25,
                     fadeInFrames: 15,
                     fadeOutFrames: 15,
-                    loop: true,
+                    loop: false,
                     muted: false,
                   }
                 : null,
@@ -2121,6 +2267,146 @@ function MusicInspector({
     </div>
   );
 }
+function TransitionPreviewArtwork({ variant }: { variant: "from" | "to" }) {
+  if (variant === "from") {
+    return (
+      <svg viewBox="0 0 160 200" className="size-full" preserveAspectRatio="xMidYMid slice">
+        <rect width="160" height="200" fill="#EEE8DE" />
+        <rect x="14" y="14" width="132" height="172" rx="12" fill="#F9F6F0" />
+        <path d="M42 62 59 46h42l17 16-11 25-11-8v76H64V79l-11 8Z" fill="#C98655" />
+        <path d="M67 89h26v29H67z" fill="#F2D3B9" opacity=".9" />
+        <circle cx="36" cy="36" r="9" fill="#D9B696" />
+        <text x="123" y="40" fill="#8D6546" fontSize="13" fontFamily="system-ui" fontWeight="700">
+          01
+        </text>
+        <path d="M35 169h90" stroke="#D7CFC2" strokeWidth="4" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 160 200" className="size-full" preserveAspectRatio="xMidYMid slice">
+      <rect width="160" height="200" fill="#1F3146" />
+      <rect x="14" y="14" width="132" height="172" rx="12" fill="#29435D" />
+      <circle cx="108" cy="81" r="38" fill="#F2B05E" />
+      <path d="M47 141c18-28 40-43 67-43 17 0 29 5 40 13v45H31Z" fill="#5BA9A6" />
+      <path d="m49 125 14-20 14 17 14-28 17 31 12-12 15 20" fill="none" stroke="#D9F0E9" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="36" cy="36" r="9" fill="#79C5BF" />
+      <text x="123" y="40" fill="#D9F0E9" fontSize="13" fontFamily="system-ui" fontWeight="700">
+        02
+      </text>
+      <path d="M35 169h90" stroke="#46647A" strokeWidth="4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TransitionPreview({ effect }: { effect: VideoTransition }) {
+  const [progress, setProgress] = useState(0);
+  const animationRef = useRef<number | null>(null);
+  const startedAtRef = useRef(0);
+  const transitionFrames = 30;
+  const frame = Math.min(transitionFrames - 1, Math.round(progress * (transitionFrames - 1)));
+  const incoming = getTransitionFrameStyle(effect, frame, transitionFrames, "incoming");
+  const outgoing = getTransitionFrameStyle(effect, frame, transitionFrames, "outgoing");
+  const isCut = effect === "none" || effect === "cut";
+  const isFlash = effect === "flash";
+  const isBlur = effect === "blur";
+  const flashOpacity = incoming.flashOpacity;
+
+  const cancelPreview = () => {
+    if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
+    animationRef.current = null;
+  };
+  const stopPreview = () => {
+    cancelPreview();
+    setProgress(0);
+  };
+  const startPreview = () => {
+    cancelPreview();
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setProgress(0.55);
+      return;
+    }
+    startedAtRef.current = performance.now();
+    const tick = (now: number) => {
+      const cycle = (now - startedAtRef.current) % 1400;
+      setProgress(Math.min(1, cycle / 900));
+      animationRef.current = requestAnimationFrame(tick);
+    };
+    animationRef.current = requestAnimationFrame(tick);
+  };
+
+  useEffect(() => () => cancelPreview(), []);
+
+  const imageStyle = (style: ReturnType<typeof getTransitionFrameStyle>): CSSProperties => ({
+    opacity: style.opacity,
+    transform: style.transform,
+    clipPath: style.clipPath as CSSProperties["clipPath"],
+    filter: style.filter,
+    transformOrigin: "center",
+    willChange: "transform, opacity, filter, clip-path",
+  });
+  const blurOutgoingStyle: CSSProperties = {
+    opacity: 1 - progress * 0.7,
+    transform: `scale(${1 + progress * 0.06})`,
+    filter: `blur(${progress * 14}px)`,
+    transformOrigin: "center",
+    willChange: "transform, opacity, filter",
+  };
+  const blurIncomingStyle: CSSProperties = {
+    opacity: progress,
+    transform: `scale(${1.1 - progress * 0.1})`,
+    filter: `blur(${(1 - progress) * 18}px)`,
+    transformOrigin: "center",
+    willChange: "transform, opacity, filter",
+  };
+
+  return (
+    <span
+      aria-hidden="true"
+      onMouseEnter={startPreview}
+      onMouseLeave={stopPreview}
+      className="bg-muted relative block size-full overflow-hidden"
+    >
+      <span
+        className="absolute inset-0"
+        style={
+          isCut
+            ? { opacity: progress < 0.5 ? 1 : 0 }
+            : isFlash
+              ? { opacity: 1 - progress }
+              : isBlur
+                ? blurOutgoingStyle
+            : imageStyle({ ...outgoing, flashOpacity: 0 })
+        }
+      >
+        <TransitionPreviewArtwork variant="from" />
+      </span>
+      <span
+        className="absolute inset-0"
+        style={
+          isCut
+            ? { opacity: progress < 0.5 ? 0 : 1 }
+            : isFlash
+              ? { opacity: progress }
+              : isBlur
+                ? blurIncomingStyle
+            : imageStyle({ ...incoming, flashOpacity: 0 })
+        }
+      >
+        <TransitionPreviewArtwork variant="to" />
+      </span>
+      {!isCut && flashOpacity > 0 && (
+        <span
+          className="absolute inset-0 bg-white"
+          style={{ opacity: flashOpacity }}
+        />
+      )}
+      <span className="pointer-events-none absolute inset-0 ring-1 ring-black/10 ring-inset" />
+    </span>
+  );
+}
+
 function TransitionPicker({
   scene,
   sceneNumber,
@@ -2132,26 +2418,45 @@ function TransitionPicker({
 }) {
   const effect = scene.transitionIn ?? "none";
   return (
-    <div className="space-y-5">
-      <Title
-        icon={<Zap />}
-        name="Choose transition"
-        description={`Scene ${sceneNumber} boundary.`}
-      />
-      <label className="block space-y-2 text-sm font-medium">
-        Effect
-        <select
-          value={effect}
-          onChange={(event) => onChange({ transitionIn: event.target.value as VideoTransition })}
-          className="border-input bg-background h-10 w-full rounded-lg border px-3 text-sm font-normal"
-        >
-          {TRANSITIONS.map((item) => (
-            <option key={item.value} value={item.value}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-      </label>
+    <div>
+      <div className="grid grid-cols-3 gap-2" role="group" aria-label={`Transition effects for Scene ${sceneNumber}`}>
+          {TRANSITIONS.map((item) => {
+            const selected = effect === item.value;
+            return (
+              <button
+                key={item.value}
+                type="button"
+                draggable
+                aria-pressed={selected}
+                onClick={() => onChange({ transitionIn: item.value })}
+                onDragStart={(event) => {
+                  event.dataTransfer.effectAllowed = "copy";
+                  event.dataTransfer.setData(TRANSITION_DRAG_TYPE, item.value);
+                  event.dataTransfer.setData("text/plain", item.value);
+                }}
+                title={`${item.label} — click to apply or drag to the Scenes timeline`}
+                className={`group focus-visible:ring-primary relative aspect-[4/5] min-w-0 cursor-grab overflow-hidden rounded-xl border text-left shadow-sm transition-[border-color,box-shadow] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:cursor-grabbing ${
+                  selected
+                    ? "border-primary ring-primary/30 ring-2"
+                    : "border-border bg-background hover:border-primary/50 hover:shadow-md"
+                }`}
+              >
+                <TransitionPreview effect={item.value} />
+                <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent px-2 pt-8 pb-2 text-white">
+                  <span className="block truncate text-xs font-semibold">{item.label}</span>
+                </span>
+                {selected && (
+                  <span className="bg-primary text-primary-foreground pointer-events-none absolute top-2 right-2 grid size-6 place-items-center rounded-full shadow-sm">
+                    <Check aria-hidden="true" className="size-3.5" />
+                  </span>
+                )}
+                <span className="pointer-events-none absolute top-2 left-2 grid size-6 place-items-center rounded-full bg-black/55 text-white backdrop-blur-sm">
+                  <GripVertical aria-hidden="true" className="size-3.5" />
+                </span>
+              </button>
+            );
+          })}
+      </div>
     </div>
   );
 }
@@ -2186,7 +2491,7 @@ function TransitionInspector({
         />
       ) : (
         <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm leading-6">
-          A cut has no overlap. Choose an effect to control its duration.
+          No transition is applied. Choose an effect to control its duration.
         </p>
       )}
     </div>
@@ -2204,6 +2509,7 @@ function Timeline({
   onSelect,
   onBeginSceneTrim,
   onChangeSceneTrim,
+  onChangeTransition,
 }: {
   scenes: TimelineScene[];
   assets: MockupAsset[];
@@ -2216,6 +2522,7 @@ function Timeline({
   onSelect: (value: Selection) => void;
   onBeginSceneTrim: () => void;
   onChangeSceneTrim: (sceneIndex: number, changes: Partial<TimelineScene>) => void;
+  onChangeTransition: (sceneIndex: number, transition: VideoTransition) => void;
 }) {
   const trimGesture = useRef<{
     pointerId: number;
@@ -2235,18 +2542,24 @@ function Timeline({
     changed: boolean;
   } | null>(null);
   const suppressEndpointClick = useRef(false);
-  const timelineSeekGesture = useRef<{
-    pointerId: number;
-    startX: number;
-    dragged: boolean;
-  } | null>(null);
-  const suppressSceneClick = useRef(false);
+  const playheadDragPointer = useRef<number | null>(null);
+  const timelineSurfaceRef = useRef<HTMLDivElement>(null);
   const [pendingTrim, setPendingTrim] = useState<{
     sceneIndex: number;
     edge: "start" | "end";
     trimStartFrames: number;
     trimEndFrames: number;
   } | null>(null);
+  const [dragOverBoundary, setDragOverBoundary] = useState<number | null>(null);
+  useEffect(() => {
+    const clearDragTarget = () => setDragOverBoundary(null);
+    window.addEventListener("dragend", clearDragTarget);
+    window.addEventListener("drop", clearDragTarget);
+    return () => {
+      window.removeEventListener("dragend", clearDragTarget);
+      window.removeEventListener("drop", clearDragTarget);
+    };
+  }, []);
   const maxFrame = Math.max(0, totalFrames - 1);
   const currentFrame = Math.min(playhead, maxFrame);
   const playheadPercent = (currentFrame / Math.max(1, maxFrame)) * 100;
@@ -2261,10 +2574,9 @@ function Timeline({
   });
   const scenePlaybackStarts: number[] = [];
   let playbackOffset = 0;
-  scenes.forEach((scene, index) => {
+  scenes.forEach((scene) => {
     scenePlaybackStarts.push(playbackOffset);
-    const nextScene = scenes[index + 1];
-    playbackOffset += sceneFrames(scene) - (nextScene ? transitionFrames(nextScene, index + 1) : 0);
+    playbackOffset += sceneFrames(scene);
   });
   const selectSceneFrame = (sceneIndex: number, endpoint: "start" | "end" = "start") => {
     const scene = scenes[sceneIndex];
@@ -2273,10 +2585,11 @@ function Timeline({
       scenePlaybackStarts[sceneIndex]! +
       (endpoint === "end"
         ? sceneFrames(scene) - 1
-        : Math.min(sceneFrames(scene) - 1, transitionFrames(scene, sceneIndex)));
+        : 0);
     onSeek(Math.min(maxFrame, Math.max(0, frame)));
     onSelect({ kind: "scene", sceneIndex });
   };
+  const selectScene = (sceneIndex: number) => onSelect({ kind: "scene", sceneIndex });
   const resolveTrim = (
     edge: "start" | "end",
     sourceFrames: number,
@@ -2427,34 +2740,27 @@ function Timeline({
     );
     onSelect({ kind: "scene", sceneIndex });
   };
-  const seekFromPointer = (event: PointerEvent<HTMLDivElement>) => {
-    const bounds = event.currentTarget.getBoundingClientRect();
+  const seekFromPlayheadPointer = (event: PointerEvent<HTMLButtonElement>) => {
+    const bounds = timelineSurfaceRef.current?.getBoundingClientRect();
+    if (!bounds) return;
     const ratio = Math.min(1, Math.max(0, (event.clientX - bounds.left) / bounds.width));
     onSeek(Math.round(ratio * maxFrame));
   };
-  const beginTimelineSeek = (event: PointerEvent<HTMLDivElement>) => {
+  const beginPlayheadDrag = (event: PointerEvent<HTMLButtonElement>) => {
     if (event.button !== 0) return;
-    timelineSeekGesture.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      dragged: false,
-    };
+    event.preventDefault();
+    playheadDragPointer.current = event.pointerId;
     event.currentTarget.setPointerCapture(event.pointerId);
-    seekFromPointer(event);
+    seekFromPlayheadPointer(event);
   };
-  const moveTimelineSeek = (event: PointerEvent<HTMLDivElement>) => {
+  const movePlayheadDrag = (event: PointerEvent<HTMLButtonElement>) => {
     if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-    const gesture = timelineSeekGesture.current;
-    if (gesture?.pointerId === event.pointerId && Math.abs(event.clientX - gesture.startX) > 3)
-      gesture.dragged = true;
-    seekFromPointer(event);
+    if (playheadDragPointer.current !== event.pointerId) return;
+    seekFromPlayheadPointer(event);
   };
-  const endTimelineSeek = (event: PointerEvent<HTMLDivElement>) => {
+  const endPlayheadDrag = (event: PointerEvent<HTMLButtonElement>) => {
     if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-    if (timelineSeekGesture.current?.pointerId === event.pointerId) {
-      suppressSceneClick.current = timelineSeekGesture.current.dragged;
-      timelineSeekGesture.current = null;
-    }
+    if (playheadDragPointer.current === event.pointerId) playheadDragPointer.current = null;
     event.currentTarget.releasePointerCapture(event.pointerId);
   };
   return (
@@ -2491,15 +2797,12 @@ function Timeline({
             ))}
           </div>
           <div
-            className="border-border bg-background relative h-14 cursor-ew-resize overflow-hidden rounded-lg border shadow-sm"
-            onPointerDown={beginTimelineSeek}
-            onPointerMove={moveTimelineSeek}
-            onPointerUp={endTimelineSeek}
-            title="Drag horizontally to move the playhead"
+            ref={timelineSurfaceRef}
+            className="border-border bg-background relative h-14 overflow-hidden rounded-lg border shadow-sm"
           >
-            <div className="absolute inset-y-1.5 right-1.5 left-1.5 flex gap-1">
+            <div className="absolute inset-y-1.5 right-1.5 left-1.5 flex">
               {scenes.map((scene, index) => {
-                const duration = Math.max(1, sceneFrames(scene) - transitionFrames(scene, index));
+                const duration = Math.max(1, sceneFrames(scene));
                 const asset = assets.find((item) => item.id === scene.mockupId);
                 const isSelected = selection?.kind === "scene" && selection.sceneIndex === index;
                 const trim = sceneTrim(scene);
@@ -2527,18 +2830,14 @@ function Timeline({
                     key={`${scene.mockupId}-${index}`}
                     data-timeline-scene
                     style={{ flex: `${duration} 1 0%` }}
-                    className={`border-border bg-muted/60 group relative min-w-0 overflow-hidden rounded-sm border ${isSelected ? "ring-primary z-20 ring-2" : ""}`}
+                    className={`border-border bg-muted/60 group relative min-w-0 overflow-hidden rounded-sm border ${isSelected ? "ring-primary ring-2" : ""}`}
                   >
                     <button
                       type="button"
                       onClick={() => {
-                        if (suppressSceneClick.current) {
-                          suppressSceneClick.current = false;
-                          return;
-                        }
-                        selectSceneFrame(index);
+                        selectScene(index);
                       }}
-                      className="focus-visible:ring-ring absolute inset-0 z-10 size-full cursor-ew-resize focus-visible:ring-2 focus-visible:ring-inset"
+                      className="focus-visible:ring-ring absolute inset-0 z-10 size-full cursor-pointer focus-visible:ring-2 focus-visible:ring-inset"
                       aria-label={`Edit Scene ${index + 1} transform`}
                     >
                       <span className="sr-only">Select Scene {index + 1}</span>
@@ -2589,7 +2888,7 @@ function Timeline({
                       style={
                         pending?.edge === "start" ? { left: `${startPreviewPercent}%` } : undefined
                       }
-                      className="bg-background/95 text-primary focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute top-1/2 left-0 z-30 grid size-6 -translate-y-1/2 cursor-ew-resize touch-none place-items-center rounded-full shadow-sm transition-colors focus-visible:ring-2"
+                      className={`bg-background/95 text-primary focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute top-1/2 left-0 ${isSelected ? "z-40" : "z-30"} grid size-6 -translate-y-1/2 cursor-ew-resize touch-none place-items-center rounded-full shadow-sm transition-colors focus-visible:ring-2`}
                       aria-label={`Trim start of Scene ${index + 1}. Click to edit its first frame; use arrow keys to trim one frame.`}
                       title={`Drag to trim start of Scene ${index + 1}. Arrow keys trim by one frame; Shift + arrow trims by one second.`}
                     >
@@ -2612,13 +2911,97 @@ function Timeline({
                       style={
                         pending?.edge === "end" ? { right: `${endPreviewPercent}%` } : undefined
                       }
-                      className="bg-background/95 text-primary focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute top-1/2 right-0 z-30 grid size-6 -translate-y-1/2 cursor-ew-resize touch-none place-items-center rounded-full shadow-sm transition-colors focus-visible:ring-2"
+                      className={`bg-background/95 text-primary focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute top-1/2 right-0 ${isSelected ? "z-40" : "z-30"} grid size-6 -translate-y-1/2 cursor-ew-resize touch-none place-items-center rounded-full shadow-sm transition-colors focus-visible:ring-2`}
                       aria-label={`Trim end of Scene ${index + 1}. Click to edit its last frame; use arrow keys to trim one frame.`}
                       title={`Drag to trim end of Scene ${index + 1}. Arrow keys trim by one frame; Shift + arrow trims by one second.`}
                     >
                       <span className="size-2 rotate-45 bg-current" />
                     </button>
                   </div>
+                );
+              })}
+              {scenes.slice(1).map((scene, boundaryOffset) => {
+                const sceneIndex = boundaryOffset + 1;
+                const boundaryFrame = scenePlaybackStarts[sceneIndex] ?? 0;
+                const effect = scene.transitionIn ?? "none";
+                const frames = transitionFrames(scene, sceneIndex);
+                const hasTransition = frames > 0;
+                const selectedBoundary =
+                  selection?.kind === "transition" && selection.sceneIndex === sceneIndex;
+                const isDragTarget = dragOverBoundary === sceneIndex;
+                const label =
+                  TRANSITIONS.find((item) => item.value === effect)?.label ?? "Transition";
+                return (
+                  <button
+                    key={`boundary-${sceneIndex}`}
+                    type="button"
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onClick={() => {
+                      if (hasTransition) onSelect({ kind: "transition", sceneIndex });
+                    }}
+                    onDragEnter={(event) => {
+                      if (
+                        !event.dataTransfer.types.includes(TRANSITION_DRAG_TYPE) &&
+                        !event.dataTransfer.types.includes("text/plain")
+                      )
+                        return;
+                      event.preventDefault();
+                      setDragOverBoundary(sceneIndex);
+                    }}
+                    onDragOver={(event) => {
+                      if (
+                        !event.dataTransfer.types.includes(TRANSITION_DRAG_TYPE) &&
+                        !event.dataTransfer.types.includes("text/plain")
+                      )
+                        return;
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = "copy";
+                    }}
+                    onDragLeave={(event) => {
+                      if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+                      setDragOverBoundary((current) => (current === sceneIndex ? null : current));
+                    }}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      const value = (event.dataTransfer.getData(TRANSITION_DRAG_TYPE) ||
+                        event.dataTransfer.getData("text/plain")) as VideoTransition;
+                      setDragOverBoundary(null);
+                      if (!TRANSITIONS.some((item) => item.value === value)) return;
+                      onChangeTransition(sceneIndex, value);
+                    }}
+                    aria-label={`${selectedBoundary ? "Selected. " : ""}${hasTransition ? `Edit ${label}` : "Add transition"} between Scene ${sceneIndex} and Scene ${sceneIndex + 1}${hasTransition ? ". Press Delete or Backspace to remove it." : ""}`}
+                    aria-keyshortcuts={hasTransition ? "Delete Backspace" : undefined}
+                    aria-pressed={selectedBoundary}
+                    aria-hidden={!hasTransition}
+                    tabIndex={hasTransition ? 0 : -1}
+                    title={
+                      hasTransition
+                        ? `${label} between Scene ${sceneIndex} and Scene ${sceneIndex + 1}${selectedBoundary ? " — press Delete to remove" : ""}`
+                        : undefined
+                    }
+                    style={{
+                      left: `${(boundaryFrame / Math.max(1, totalFrames)) * 100}%`,
+                      width: hasTransition
+                        ? `max(2rem, ${(frames / Math.max(1, totalFrames)) * 100}%)`
+                        : "4rem",
+                    }}
+                    className={`focus-visible:ring-ring absolute top-1/2 z-[25] grid h-8 -translate-x-1/2 -translate-y-1/2 place-items-center overflow-hidden rounded-md border transition-[background-color,border-color,box-shadow] focus-visible:ring-2 focus-visible:outline-none ${
+                      isDragTarget
+                        ? "border-primary bg-primary/25 text-primary ring-primary/20 shadow-sm ring-4"
+                        : hasTransition && selectedBoundary
+                          ? "border-primary-foreground bg-primary text-primary-foreground ring-primary ring-offset-background shadow-md ring-2 ring-offset-2"
+                          : hasTransition
+                            ? "border-primary/70 bg-primary/80 text-primary-foreground hover:bg-primary shadow-sm"
+                            : "border-transparent bg-transparent text-transparent"
+                    }`}
+                  >
+                    {hasTransition ? (
+                      <span className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(135deg,transparent_0,transparent_5px,rgba(255,255,255,0.16)_5px,rgba(255,255,255,0.16)_7px)]" />
+                    ) : null}
+                    {hasTransition || isDragTarget ? (
+                      <Zap aria-hidden="true" className="relative size-3.5" />
+                    ) : null}
+                  </button>
                 );
               })}
             </div>
@@ -2667,13 +3050,30 @@ function Timeline({
             )}
           </button>
         </div>
-        <span
-          className="bg-primary/90 pointer-events-none absolute top-0 bottom-0 z-30 w-0.5 shadow-[0_0_0_1px_hsl(var(--background))]"
+        <button
+          type="button"
+          className="focus-visible:ring-ring absolute top-0 bottom-0 z-50 flex w-6 -translate-x-1/2 cursor-ew-resize touch-none justify-center bg-transparent focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
           style={{ left: `${playheadPercent}%` }}
-          aria-hidden="true"
+          onPointerDown={beginPlayheadDrag}
+          onPointerMove={movePlayheadDrag}
+          onPointerUp={endPlayheadDrag}
+          onPointerCancel={endPlayheadDrag}
+          onKeyDown={(event) => {
+            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+            event.preventDefault();
+            onSeek(
+              Math.max(
+                0,
+                Math.min(maxFrame, currentFrame + (event.key === "ArrowRight" ? 1 : -1) * (event.shiftKey ? FPS : 1))
+              )
+            );
+          }}
+          aria-label={`Playhead at ${timecode(currentFrame)}. Drag to seek; arrow keys move one frame.`}
+          title="Drag the playhead to seek. Arrow keys move one frame; Shift + arrow moves one second."
         >
-          <span className="bg-primary absolute -top-1 left-1/2 size-2 -translate-x-1/2 rotate-45 rounded-[1px]" />
-        </span>
+          <span aria-hidden="true" className="bg-primary/90 pointer-events-none absolute top-0 bottom-0 w-0.5 shadow-[0_0_0_1px_hsl(var(--background))]" />
+          <span aria-hidden="true" className="bg-primary pointer-events-none absolute -top-1 left-1/2 size-2 -translate-x-1/2 rotate-45 rounded-[1px]" />
+        </button>
       </div>
     </div>
   );

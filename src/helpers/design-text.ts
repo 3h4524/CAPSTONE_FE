@@ -10,8 +10,9 @@ export const printsExactPhrase = (basePrompt: string | null | undefined) =>
 const wordCount = (text: string | null | undefined) =>
   (text ?? "").split(/\s+/).filter(Boolean).length;
 
-// Text in quotes, straight or curly: what a Seller usually means as words to print.
-const QUOTED_TEXT = /["“”]([^"“”]+)["“”]/g;
+// Text in quotes, straight or curly: what a Seller usually means as words to print. As on the server, a quote mark glued
+// to a word or number, or followed by a space, opens nothing: 12" x 18" is a size.
+const QUOTED_TEXT = /(?<![\p{L}\p{N}])["“](?![\s"“”])([^"“”]+)["”]/gu;
 
 // Prints on these have no background of their own (the server leaves it transparent or cuts it out).
 const BACKGROUNDLESS_TYPES = new Set(["tshirt", "hoodie", "tote_bag"]);

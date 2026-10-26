@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import { SceneVideoResult } from "@/components/workflows/config-panel/fields/scene-video-result";
 import {
+  getStandardBaseCrop,
   STANDARD_MOTION_OPTIONS,
   StandardMotionEditor,
   StandardMotionPreview,
@@ -134,24 +135,6 @@ const VALUE_LABELS: Record<string, string> = {
   warm_natural: "Warm natural",
   golden_hour: "Golden hour",
 };
-const FULL_FRAME: Region = { x: 0, y: 0, width: 1, height: 1 };
-
-function getStandardBaseCrop(asset: MockupAsset | undefined, aspectRatio: string): Region {
-  if (!asset) return FULL_FRAME;
-  const [aspectWidth, aspectHeight] = aspectRatio.split(":").map(Number);
-  const outputRatio = (aspectWidth || 9) / (aspectHeight || 16);
-  const sourceRatio = asset.width / Math.max(1, asset.height);
-  const height = sourceRatio < outputRatio ? sourceRatio / outputRatio : 1;
-  const width = sourceRatio > outputRatio ? outputRatio / sourceRatio : 1;
-  const focal = asset.regions.focalPoint ?? { x: 0.5, y: 0.5 };
-  return {
-    x: Math.min(Math.max(focal.x - width / 2, 0), 1 - width),
-    y: Math.min(Math.max(focal.y - height / 2, 0), 1 - height),
-    width,
-    height,
-  };
-}
-
 function convertLegacy(
   legacy: LegacyOptions | undefined,
   definition?: AiVideoTemplateDefinition,
@@ -316,6 +299,10 @@ export function AiShotOptions({
   const [preparingSceneIndex, setPreparingSceneIndex] = useState<number | null>(null);
   const [regeneratingSceneIndex, setRegeneratingSceneIndex] = useState<number | null>(null);
   const [previewFrame, setPreviewFrame] = useState<{ url: string; scene: number } | null>(null);
+  const [framePicker, setFramePicker] = useState<{
+    sceneIndex: number;
+    view: "library" | "create";
+  } | null>(null);
   const [referenceFilesByScene, setReferenceFilesByScene] = useState<Record<number, File[]>>({});
   const node = useWorkflowStore((state) => state.nodes.find((item) => item.id === nodeId));
   const productId = useWorkflowStore((state) =>
@@ -535,14 +522,12 @@ export function AiShotOptions({
     }
     const seconds = migrated.reduce((sum, scene) => sum + scene.durationSeconds, 0);
     const { aiShotOptions: _old, ...cleanConfig } = node.data.config;
-    useWorkflowStore
-      .getState()
-      .updateNodeConfig(nodeId, {
-        ...cleanConfig,
-        mode: workflowModeForScenes(migrated),
-        aiScenes: migrated,
-        durationSeconds: seconds,
-      });
+    useWorkflowStore.getState().updateNodeConfig(nodeId, {
+      ...cleanConfig,
+      mode: workflowModeForScenes(migrated),
+      aiScenes: migrated,
+      durationSeconds: seconds,
+    });
     onChange(migrated, seconds, sharedInstructions);
   }, [node, nodeId, scenes.length, catalog, onChange, sharedInstructions]);
 
@@ -610,14 +595,12 @@ export function AiShotOptions({
       );
     if (!needsNormalization) return;
     const seconds = normalizedScenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
-    useWorkflowStore
-      .getState()
-      .updateNodeConfig(nodeId, {
-        ...node.data.config,
-        mode: normalizedMode,
-        aiScenes: normalizedScenes,
-        durationSeconds: seconds,
-      });
+    useWorkflowStore.getState().updateNodeConfig(nodeId, {
+      ...node.data.config,
+      mode: normalizedMode,
+      aiScenes: normalizedScenes,
+      durationSeconds: seconds,
+    });
     onChange(normalizedScenes, seconds, sharedInstructions);
   }, [
     node,
@@ -641,15 +624,13 @@ export function AiShotOptions({
   ) => {
     const seconds = next.reduce((sum, scene) => sum + scene.durationSeconds, 0);
     const { aiShotOptions: _old, ...cleanConfig } = node.data.config;
-    useWorkflowStore
-      .getState()
-      .updateNodeConfig(nodeId, {
-        ...cleanConfig,
-        mode: workflowModeForScenes(next),
-        aiScenes: next,
-        aiGlobalInstructions: nextSharedInstructions,
-        durationSeconds: seconds,
-      });
+    useWorkflowStore.getState().updateNodeConfig(nodeId, {
+      ...cleanConfig,
+      mode: workflowModeForScenes(next),
+      aiScenes: next,
+      aiGlobalInstructions: nextSharedInstructions,
+      durationSeconds: seconds,
+    });
     onChange(next, seconds, nextSharedInstructions);
   };
   const regenerateScene = async (sceneOrder: number) => {
@@ -969,10 +950,10 @@ export function AiShotOptions({
         const selectedSource = scene.mockupId
           ? sources.find((asset) => asset.id === scene.mockupId)
           : undefined;
-        const selectedSourceValue =
-          scene.mockupId && sources.some((asset) => asset.id === scene.mockupId)
-            ? scene.mockupId
-            : "";
+        const selectedStudioSource = scene.mockupId
+          ? originalApproved.find((asset) => asset.id === scene.mockupId)
+          : undefined;
+        const selectedStudioSourceValue = selectedStudioSource?.id ?? "";
         const sceneFrame = allAssets.find((asset) => asset.id === scene.studioFrameId);
         const studioLayout = normalizeStudioLayout(scene.studioLayout);
         const sceneReferenceFiles = referenceFilesByScene[index] ?? [];
@@ -1005,7 +986,7 @@ export function AiShotOptions({
             promptMatches &&
             ["hanging_window", "flat_lay", "none"].includes(metadata?.layout ?? "") &&
             metadata?.aspectRatio === outputAspect &&
-            sources.some((asset) => asset.id === metadata.sourceMockupId) &&
+            originalApproved.some((asset) => asset.id === metadata.sourceMockupId) &&
             !!original &&
             original.revision === metadata.sourceRevision
           );
@@ -1021,12 +1002,12 @@ export function AiShotOptions({
               reference.contentHash === sceneReferenceHashes[referenceIndex]
           );
         const pendingFrameMatches = Boolean(
-          selectedSource &&
+          selectedStudioSource &&
             sceneFrame &&
             sceneFrame.approvalStatus === "pending" &&
             sceneFrameMetadata &&
-            sceneFrameMetadata.sourceMockupId === selectedSource.id &&
-            sceneFrameMetadata.sourceRevision === selectedSource.revision &&
+            sceneFrameMetadata.sourceMockupId === selectedStudioSource.id &&
+            sceneFrameMetadata.sourceRevision === selectedStudioSource.revision &&
             sceneFrameMetadata.aspectRatio === outputAspect &&
             sceneFrameMetadata.promptVersion === expectedPromptVersion &&
             (sceneFrameMetadata.customPrompt ?? "") === currentScenePrompt &&
@@ -1038,15 +1019,15 @@ export function AiShotOptions({
             pendingFrameMatches ||
             (selectedSourceFrame &&
               reusableStudioFrames.some((frame) => frame.id === selectedSourceFrame.id)) ||
-            (selectedSource &&
+            (selectedStudioSource &&
               reusableStudioFrames.some(
-                (frame) => studioMetadata(frame)?.sourceMockupId === selectedSource.id
+                (frame) => studioMetadata(frame)?.sourceMockupId === selectedStudioSource.id
               ))
         );
         const matchingReusableFrame =
           selectedSourceFrame ??
           reusableStudioFrames.find(
-            (frame) => studioMetadata(frame)?.sourceMockupId === selectedSource?.id
+            (frame) => studioMetadata(frame)?.sourceMockupId === selectedStudioSource?.id
           );
         const frameIsCurrentAndApproved = Boolean(
           sceneFrame?.approvalStatus === "approved" &&
@@ -1062,9 +1043,7 @@ export function AiShotOptions({
             keyframeToUse.approvedRevision === keyframeToUse.revision &&
             (keyframeToUse.id !== sceneFrame?.id || frameIsCurrentAndApproved)
         );
-        const existingAssetValue = selectedSourceFrame
-          ? `frame:${selectedSourceFrame.id}`
-          : selectedSourceValue;
+        const selectedStartFrame = selectedSourceFrame ?? selectedSource;
         const otherDuration = totalSeconds - scene.durationSeconds;
         const maxDuration =
           scene.mode === "standard"
@@ -1109,7 +1088,7 @@ export function AiShotOptions({
           const metadata = studioMetadata(keyframeToUse);
           persistScene(index, {
             startFrameMode: "studio",
-            mockupId: metadata?.sourceMockupId ?? selectedSource?.id ?? scene.mockupId,
+            mockupId: metadata?.sourceMockupId ?? selectedStudioSource?.id ?? scene.mockupId,
             studioLayout:
               (metadata?.layout as "hanging_window" | "flat_lay" | "none" | undefined) ??
               studioLayout,
@@ -1363,6 +1342,546 @@ export function AiShotOptions({
                 {template.description}
               </p>
             )}
+            <section
+              className="space-y-3 rounded-md border p-3"
+              aria-label={`Scene ${index + 1} start frame`}
+            >
+              <div>
+                <p className="text-sm font-semibold">Start frame</p>
+                <p className="text-muted-foreground mt-1 max-w-md text-xs leading-relaxed">
+                  Choose the image this scene starts from, or create a custom keyframe.
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setFramePicker({ sceneIndex: index, view: "library" })}
+                aria-label={`${selectedStartFrame ? "Change" : "Choose"} start frame for scene ${index + 1}`}
+                className="bg-background hover:bg-muted/40 focus-visible:ring-ring group flex min-h-24 w-full items-center gap-3 rounded-lg border p-2.5 text-left transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {selectedStartFrame ? (
+                  <span className="bg-muted relative h-20 w-16 shrink-0 overflow-hidden rounded-md border">
+                    <Image
+                      src={selectedStartFrame.previewUrl}
+                      alt=""
+                      fill
+                      sizes="64px"
+                      unoptimized
+                      className="object-contain"
+                    />
+                  </span>
+                ) : (
+                  <span className="bg-muted text-muted-foreground flex h-20 w-16 shrink-0 items-center justify-center rounded-md border border-dashed">
+                    <Plus aria-hidden="true" className="size-5" />
+                  </span>
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">
+                    {selectedStartFrame ? "Selected start frame" : "Choose a start frame"}
+                  </span>
+                  <span className="text-muted-foreground mt-1 block truncate text-xs">
+                    {selectedSourceFrame
+                      ? `Approved keyframe · revision ${selectedSourceFrame.revision}`
+                      : selectedSource
+                        ? `${selectedSource.role} · ${selectedSource.width} × ${selectedSource.height}${selectedSource.variantKey ? ` · ${selectedSource.variantKey}` : ""}`
+                        : "Browse approved images or create a new keyframe"}
+                  </span>
+                </span>
+                <span className="text-primary shrink-0 px-1 text-xs font-semibold">
+                  {selectedStartFrame ? "Change" : "Choose"}
+                </span>
+              </button>
+
+              <Dialog
+                open={framePicker?.sceneIndex === index}
+                onOpenChange={(open) => {
+                  if (!open) setFramePicker(null);
+                }}
+              >
+                <DialogContent className="flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-4xl flex-col gap-0 overflow-hidden p-0">
+                  <DialogHeader className="border-b px-5 pt-5 pb-4 text-left">
+                    <DialogTitle>Choose start frame</DialogTitle>
+                    <DialogDescription>
+                      Select an approved image for scene {index + 1}, or create a custom keyframe.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div
+                    className="border-b px-5 pt-3"
+                    role="tablist"
+                    aria-label="Start frame options"
+                  >
+                    <div className="flex gap-5">
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={framePicker?.view === "library"}
+                        onClick={() => setFramePicker({ sceneIndex: index, view: "library" })}
+                        className={`focus-visible:ring-ring min-h-11 border-b-2 px-0.5 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none ${
+                          framePicker?.view === "library"
+                            ? "border-primary text-foreground"
+                            : "text-muted-foreground hover:text-foreground border-transparent"
+                        }`}
+                      >
+                        Approved frames
+                      </button>
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={framePicker?.view === "create"}
+                        onClick={() => setFramePicker({ sceneIndex: index, view: "create" })}
+                        className={`focus-visible:ring-ring min-h-11 border-b-2 px-0.5 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none ${
+                          framePicker?.view === "create"
+                            ? "border-primary text-foreground"
+                            : "text-muted-foreground hover:text-foreground border-transparent"
+                        }`}
+                      >
+                        Create new keyframe
+                      </button>
+                    </div>
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-y-auto p-5">
+                    {framePicker?.view === "library" ? (
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-semibold">Approved frames</p>
+                          <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                            Select a frame to use immediately. The selected item is saved when you
+                            click it.
+                          </p>
+                        </div>
+                        {approved.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                            {approved.map((asset) => {
+                              const reusableFrame = reusableStudioFrames.find(
+                                (frame) => frame.id === asset.id
+                              );
+                              const metadata = reusableFrame && studioMetadata(reusableFrame);
+                              const isSelected = reusableFrame
+                                ? selectedSourceFrame?.id === asset.id
+                                : !selectedSourceFrame && selectedSource?.id === asset.id;
+                              const isGeneratedFrame = isStudioFrame(asset);
+
+                              return (
+                                <button
+                                  key={asset.id}
+                                  type="button"
+                                  disabled={disabled}
+                                  aria-pressed={isSelected}
+                                  aria-label={`Use ${isGeneratedFrame ? "approved keyframe" : asset.role} ${asset.variantKey || asset.id.slice(0, 6)} for scene ${index + 1}`}
+                                  onClick={() => {
+                                    if (reusableFrame) {
+                                      persistScene(index, {
+                                        startFrameMode: "studio",
+                                        mockupId: metadata?.sourceMockupId ?? null,
+                                        studioFrameId: reusableFrame.id,
+                                        standardBaseCrop: null,
+                                        standardStartCrop: null,
+                                        standardEndCrop: null,
+                                        standardStartScale: null,
+                                        standardEndScale: null,
+                                        standardStartRotation: null,
+                                        standardEndRotation: null,
+                                        ...(metadata && {
+                                          studioLayout: metadata.layout as
+                                            | "hanging_window"
+                                            | "flat_lay"
+                                            | "none",
+                                        }),
+                                      });
+                                    } else {
+                                      persistScene(index, {
+                                        startFrameMode: "direct",
+                                        mockupId: asset.id,
+                                        studioFrameId: null,
+                                        standardBaseCrop: null,
+                                        standardStartCrop: null,
+                                        standardEndCrop: null,
+                                        standardStartScale: null,
+                                        standardEndScale: null,
+                                        standardStartRotation: null,
+                                        standardEndRotation: null,
+                                      });
+                                    }
+                                    setFramePicker(null);
+                                  }}
+                                  className={`focus-visible:ring-ring group relative aspect-[3/4] min-h-52 cursor-pointer overflow-hidden rounded-xl border text-left shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none ${
+                                    isSelected
+                                      ? "border-primary ring-primary/30 shadow-primary/10 ring-2"
+                                      : "hover:border-foreground/30"
+                                  }`}
+                                >
+                                  <span className="bg-muted absolute inset-0 overflow-hidden">
+                                    <Image
+                                      src={asset.previewUrl}
+                                      alt=""
+                                      fill
+                                      sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 280px"
+                                      unoptimized
+                                      className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.035] motion-reduce:transform-none motion-reduce:transition-none"
+                                    />
+                                  </span>
+                                  <span
+                                    aria-hidden="true"
+                                    className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/80 via-black/35 to-transparent"
+                                  />
+                                  {isSelected && (
+                                    <span className="bg-primary text-primary-foreground absolute top-2.5 right-2.5 flex size-8 items-center justify-center rounded-full border border-white/30 shadow-md">
+                                      <Check aria-hidden="true" className="size-4" />
+                                    </span>
+                                  )}
+                                  <span className="absolute right-3 bottom-3 left-3 text-white">
+                                    <span
+                                      className="block truncate text-sm font-semibold drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+                                      title={isGeneratedFrame ? "Approved keyframe" : asset.role}
+                                    >
+                                      {isGeneratedFrame ? "Approved keyframe" : asset.role}
+                                    </span>
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="bg-muted/30 flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
+                            <p className="text-sm font-semibold">No approved frames yet</p>
+                            <p className="text-muted-foreground mt-1 max-w-sm text-xs leading-relaxed">
+                              Approve a product image first, or create a custom keyframe from an
+                              approved source.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {selectedStudioSource?.role === "Lifestyle" && (
+                          <p className="text-muted-foreground text-xs">
+                            The approved people and setting stay in the image.
+                          </p>
+                        )}
+                        <label className="flex flex-col gap-2 text-xs font-medium">
+                          <span>
+                            Approved product image{" "}
+                            <span className="text-muted-foreground font-normal">(required)</span>
+                          </span>
+                          <Select
+                            disabled={disabled || originalApproved.length === 0}
+                            value={selectedStudioSourceValue}
+                            onValueChange={(value) => {
+                              persistScene(index, {
+                                startFrameMode: "studio",
+                                mockupId: value,
+                                studioFrameId: null,
+                                standardBaseCrop: null,
+                                standardStartCrop: null,
+                                standardEndCrop: null,
+                                standardStartScale: null,
+                                standardEndScale: null,
+                                standardStartRotation: null,
+                                standardEndRotation: null,
+                                studioReferenceHashes: [],
+                              });
+                            }}
+                          >
+                            <SelectTrigger
+                              aria-label={`Scene ${index + 1} mockup source for new keyframe`}
+                              aria-required="true"
+                            >
+                              <SelectValue placeholder="Select an image" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {originalApproved.map((asset) => (
+                                <MockupOption key={asset.id} asset={asset} />
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </label>
+                        <label className="block space-y-1.5 text-xs font-medium">
+                          <span className="flex items-baseline justify-between gap-3">
+                            <span>
+                              Custom keyframe prompt{" "}
+                              <span className="text-muted-foreground font-normal">(optional)</span>
+                            </span>
+                            <span className="text-muted-foreground shrink-0 text-[11px] font-normal tabular-nums">
+                              {scene.studioPrompt?.length ?? 0}/500
+                            </span>
+                          </span>
+                          <textarea
+                            disabled={disabled}
+                            maxLength={500}
+                            value={scene.studioPrompt ?? ""}
+                            onChange={(event) =>
+                              changeScene(index, {
+                                studioPrompt: event.currentTarget.value || null,
+                                studioFrameId: null,
+                              })
+                            }
+                            placeholder="Describe how the product should appear and how the reference images should guide the scene."
+                            className="bg-background min-h-24 w-full resize-y rounded-md border p-2.5 text-sm leading-relaxed font-normal"
+                          />
+                        </label>
+                        <div className="space-y-1.5">
+                          <p className="text-xs font-medium">
+                            Reference images{" "}
+                            <span className="text-muted-foreground font-normal tabular-nums">
+                              ({sceneReferenceFiles.length}/3, optional)
+                            </span>
+                          </p>
+                          <div className="flex flex-wrap items-start gap-2">
+                            {sceneReferenceFiles.map((file, referenceIndex) => (
+                              <ReferenceImageTile
+                                key={`${file.name}-${referenceIndex}`}
+                                file={file}
+                                index={referenceIndex + 1}
+                                disabled={disabled}
+                                onRemove={() => removeReferenceFile(index, referenceIndex)}
+                              />
+                            ))}
+                            {sceneReferenceFiles.length < 3 && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                disabled={disabled}
+                                onClick={() => chooseReferenceFile(index)}
+                                aria-label={`Add reference image ${sceneReferenceFiles.length + 1} of 3`}
+                                className="text-muted-foreground hover:text-foreground flex size-20 shrink-0 flex-col gap-1 rounded-md border-dashed p-2"
+                              >
+                                <Plus aria-hidden="true" className="size-5" />
+                                <span className="text-[11px] font-medium">Add image</span>
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        {needsRightsConfirmation && (
+                          <label className="bg-muted/30 flex min-h-11 items-start gap-3 rounded-md border p-3 text-xs leading-5">
+                            <input
+                              type="checkbox"
+                              disabled={disabled}
+                              checked={scene.rightsConfirmed}
+                              onChange={(event) =>
+                                changeScene(index, {
+                                  rightsConfirmed: event.target.checked,
+                                  studioFrameId: null,
+                                })
+                              }
+                              className="mt-1"
+                            />
+                            <span>
+                              I have the rights to use people visible in the selected product and
+                              reference images.
+                            </span>
+                          </label>
+                        )}
+                        {(sceneFrame || preparingSceneIndex === index) && (
+                          <section
+                            className="bg-muted/40 space-y-3 rounded-md p-3"
+                            aria-label={`Scene ${index + 1} keyframe result`}
+                            aria-live="polite"
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-xs font-semibold">Keyframe preview</p>
+                              <span
+                                className={`rounded-full px-2 py-1 text-[11px] font-semibold ${frameStatusClass}`}
+                              >
+                                {frameStatusLabel}
+                                {sceneFrame && preparingSceneIndex !== index
+                                  ? ` · r${sceneFrame.revision}`
+                                  : ""}
+                              </span>
+                            </div>
+                            <div className="grid min-w-0 gap-3 min-[420px]:grid-cols-[7rem_minmax(0,1fr)]">
+                              {preparingSceneIndex === index ? (
+                                <div
+                                  role="status"
+                                  aria-label="Generating keyframe preview"
+                                  className="bg-muted aspect-[9/16] w-28 animate-pulse rounded-md"
+                                >
+                                  <span className="sr-only">Generating keyframe...</span>
+                                </div>
+                              ) : (
+                                sceneFrame && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setPreviewFrame({
+                                        url: sceneFrame.previewUrl,
+                                        scene: index + 1,
+                                      })
+                                    }
+                                    aria-label={`View keyframe for scene ${index + 1}`}
+                                    title="View keyframe"
+                                    className="bg-background focus-visible:ring-ring relative aspect-[9/16] w-28 cursor-zoom-in overflow-hidden rounded-md focus-visible:ring-2 focus-visible:ring-offset-2"
+                                  >
+                                    <Image
+                                      src={sceneFrame.previewUrl}
+                                      alt={`Scene ${index + 1} studio keyframe preview`}
+                                      fill
+                                      sizes="112px"
+                                      unoptimized
+                                      className="object-contain"
+                                    />
+                                  </button>
+                                )
+                              )}
+                              <div className="min-w-0 self-center text-xs">
+                                {preparingSceneIndex === index ? (
+                                  <>
+                                    <p className="font-medium">Creating your keyframe</p>
+                                    <p className="text-muted-foreground mt-1 leading-relaxed">
+                                      This may take a moment. The preview will appear here when it
+                                      is ready.
+                                    </p>
+                                  </>
+                                ) : (
+                                  sceneFrame && (
+                                    <>
+                                      <p className="font-medium">Generated keyframe</p>
+                                      <p className="text-muted-foreground mt-1 leading-relaxed">
+                                        {sceneFrame.approvalStatus === "pending"
+                                          ? "Review and approve this image before generating video."
+                                          : frameIsCurrentAndApproved
+                                            ? "Approved and ready to use for this scene."
+                                            : sceneFrame.approvalStatus === "approved"
+                                              ? "The source or direction has changed. Generate another matching keyframe."
+                                              : "This keyframe was rejected. Generate another to continue."}
+                                      </p>
+                                      {sceneFrame.approvalStatus === "pending" && (
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                          <Button
+                                            type="button"
+                                            size="sm"
+                                            disabled={disabled || isReviewingStudioFrame}
+                                            onClick={() =>
+                                              reviewStudioFrame({
+                                                id: sceneFrame.id,
+                                                revision: sceneFrame.revision,
+                                                approved: true,
+                                              })
+                                            }
+                                          >
+                                            Approve
+                                          </Button>
+                                          <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="outline"
+                                            disabled={disabled || isReviewingStudioFrame}
+                                            onClick={() =>
+                                              reviewStudioFrame({
+                                                id: sceneFrame.id,
+                                                revision: sceneFrame.revision,
+                                                approved: false,
+                                              })
+                                            }
+                                          >
+                                            Reject
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          </section>
+                        )}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="default"
+                            disabled={
+                              disabled ||
+                              !selectedStudioSource ||
+                              preparingSceneIndex !== null ||
+                              (hasSceneKeyframe && !keyframeCanBeUsed) ||
+                              (needsRightsConfirmation && !scene.rightsConfirmed)
+                            }
+                            onClick={() => {
+                              if (hasSceneKeyframe) {
+                                selectSceneKeyframe();
+                                setFramePicker(null);
+                                return;
+                              }
+                              void prepareStudioFrame(index);
+                            }}
+                            className="min-h-9 gap-2 px-4 font-semibold"
+                          >
+                            {preparingSceneIndex === index ? (
+                              <>
+                                <span
+                                  className="size-4 animate-spin rounded-full border-2 border-current border-r-transparent"
+                                  aria-hidden="true"
+                                />
+                                Generating keyframe...
+                              </>
+                            ) : hasSceneKeyframe ? (
+                              <>
+                                <Check aria-hidden="true" />
+                                Use keyframe for this scene
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles aria-hidden="true" />
+                                Create keyframe
+                              </>
+                            )}
+                          </Button>
+                          {sceneFrame && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={
+                                disabled ||
+                                !selectedStudioSource ||
+                                preparingSceneIndex !== null ||
+                                (needsRightsConfirmation && !scene.rightsConfirmed)
+                              }
+                              onClick={() => void prepareStudioFrame(index, true)}
+                            >
+                              Generate another
+                            </Button>
+                          )}
+                        </div>
+                        <p className="text-muted-foreground text-xs leading-relaxed">
+                          {sceneFrame?.approvalStatus === "pending"
+                            ? "Approve the generated image before creating the video."
+                            : frameIsCurrentAndApproved
+                              ? "This approved keyframe is ready for the current scene."
+                              : "Matching approved keyframes are reused without a new image generation call."}
+                        </p>
+                        {template?.requiresDetail &&
+                          selectedStudioSource &&
+                          !hasUsableDetail(selectedStudioSource) && (
+                            <p className="rounded-md border border-blue-200 bg-blue-50 p-2 text-xs leading-relaxed text-blue-900">
+                              This image can be used directly. Mark an artwork/detail region for a
+                              tighter automatic crop, or create an approved close-up keyframe for
+                              the clearest detail. Review generated keyframes because fine print may
+                              be reinterpreted.
+                            </p>
+                          )}
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </section>
+            {scene.mode !== "standard" && (
+              <>
+                <div className="flex justify-center py-1" aria-hidden="true">
+                  <ArrowDown className="text-primary size-4" strokeWidth={2.25} />
+                </div>
+                <SceneVideoResult
+                  sceneNumber={index + 1}
+                  clip={sceneVideo}
+                  runStarted={Boolean(sceneRunId)}
+                  waitingForGeneration={waitingForVideoGeneration}
+                  canRegenerate={canRegenerateScene}
+                  isRegenerating={regeneratingSceneIndex === index}
+                  onRegenerate={() => void regenerateScene(index)}
+                />
+              </>
+            )}
             {scene.mode === "standard" &&
               (() => {
                 const editorSource = selectedSourceFrame ?? selectedSource;
@@ -1382,524 +1901,84 @@ export function AiShotOptions({
                     standardEndRotation: null,
                   });
                 return (
-                  <div
-                    className="space-y-3 rounded-md border p-3"
-                    aria-label={`Scene ${index + 1} Standard camera motion`}
-                  >
-                    <label className="flex flex-col gap-2 text-xs font-medium">
-                      <span>Camera movement</span>
-                      <Select
-                        disabled={disabled}
-                        value={
-                          scene.standardMotionPreset === "gentle"
-                            ? "zoom"
-                            : (scene.standardMotionPreset ?? "zoom")
-                        }
-                        onValueChange={(value) => {
-                          const motion = value as NonNullable<
-                            AiVideoSceneOptions["standardMotionPreset"]
-                          >;
-                          setStandardMotion(motion);
-                        }}
-                      >
-                        <SelectTrigger aria-label={`Scene ${index + 1} Standard camera movement`}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STANDARD_MOTION_OPTIONS.map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </label>
-                    <StandardMotionPreview
-                      scene={scene}
-                      sceneNumber={index + 1}
-                      baseCrop={baseCrop}
-                      source={editorSource}
-                      aspectRatio={outputAspect}
-                    />
-                    <StandardMotionEditor
-                      scene={scene}
-                      sceneNumber={index + 1}
-                      baseCrop={baseCrop}
-                      source={editorSource}
-                      aspectRatio={outputAspect}
-                      disabled={disabled}
-                      hasRenderedVideo={Boolean(sceneRunId)}
-                      onMotionPresetChange={setStandardMotion}
-                      onApply={(changes) => changeScene(index, changes)}
-                    />
-                  </div>
-                );
-              })()}
-            <section
-              className="space-y-4 rounded-md border p-3"
-              aria-label={`Scene ${index + 1} start frame`}
-            >
-              <div className="grid items-end gap-3 min-[480px]:grid-cols-[minmax(0,1fr)_13rem]">
-                <div>
-                  <p className="text-sm font-semibold">Start frame</p>
-                  <p className="text-muted-foreground mt-1 max-w-md text-xs leading-relaxed">
-                    Choose an approved asset or create a custom keyframe for this scene.
-                  </p>
-                </div>
-                <label className="flex flex-col gap-2 text-xs font-medium">
-                  <span>Frame source</span>
-                  <Select
-                    disabled={disabled}
-                    value={selectedSourceFrame ? "direct" : (scene.startFrameMode ?? "direct")}
-                    onValueChange={(value) =>
-                      persistScene(index, {
-                        startFrameMode: value as "direct" | "studio",
-                        studioFrameId: null,
-                        standardBaseCrop: null,
-                        standardStartCrop: null,
-                        standardEndCrop: null,
-                        standardStartScale: null,
-                        standardEndScale: null,
-                        standardStartRotation: null,
-                        standardEndRotation: null,
-                        studioLayout,
-                      })
-                    }
-                  >
-                    <SelectTrigger aria-label={`Scene ${index + 1} start frame source`}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="direct">Use approved asset</SelectItem>
-                      <SelectItem value="studio">Create new keyframe</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </label>
-              </div>
-              {scene.startFrameMode !== "studio" || selectedSourceFrame ? (
-                <div className="min-w-0 space-y-3">
-                  <label className="flex flex-col gap-2 text-xs font-medium">
-                    <span>
-                      Choose an approved product image or keyframe{" "}
-                      <span className="text-muted-foreground font-normal">(required)</span>
-                    </span>
-                    <Select
-                      disabled={
-                        disabled || (!hasRequiredSource && reusableStudioFrames.length === 0)
-                      }
-                      value={existingAssetValue}
-                      onValueChange={(value) => {
-                        if (value.startsWith("frame:")) {
-                          const frame = reusableStudioFrames.find(
-                            (item) => item.id === value.slice(6)
-                          );
-                          const metadata = frame && studioMetadata(frame);
-                          persistScene(index, {
-                            startFrameMode: "studio",
-                            mockupId: metadata?.sourceMockupId ?? null,
-                            studioFrameId: value.slice(6),
-                            standardBaseCrop: null,
-                            standardStartCrop: null,
-                            standardEndCrop: null,
-                            standardStartScale: null,
-                            standardEndScale: null,
-                            standardStartRotation: null,
-                            standardEndRotation: null,
-                            ...(metadata && {
-                              studioLayout: metadata.layout as
-                                | "hanging_window"
-                                | "flat_lay"
-                                | "none",
-                            }),
-                          });
-                        } else
-                          persistScene(index, {
-                            startFrameMode: "direct",
-                            mockupId: value,
-                            studioFrameId: null,
-                            standardBaseCrop: null,
-                            standardStartCrop: null,
-                            standardEndCrop: null,
-                            standardStartScale: null,
-                            standardEndScale: null,
-                            standardStartRotation: null,
-                            standardEndRotation: null,
-                          });
-                      }}
-                    >
-                      <SelectTrigger
-                        className="w-full"
-                        aria-label={`Scene ${index + 1} approved mockup`}
-                        aria-required="true"
-                      >
-                        <SelectValue placeholder="Select an approved image" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sources.map((asset) => (
-                          <MockupOption key={asset.id} asset={asset} />
-                        ))}
-                        {reusableStudioFrames.map((frame) => (
-                          <SelectItem key={frame.id} value={`frame:${frame.id}`}>
-                            <span className="flex min-w-0 items-center gap-2">
-                              <Image
-                                src={frame.previewUrl}
-                                alt=""
-                                width={40}
-                                height={40}
-                                unoptimized
-                                className="bg-background size-10 shrink-0 rounded border object-contain"
-                              />
-                              <span className="min-w-0 truncate">
-                                Approved keyframe | r{frame.revision}
-                              </span>
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </label>
-                  {!hasRequiredSource && reusableStudioFrames.length === 0 ? (
-                    <p className="text-muted-foreground text-xs">
-                      No approved images are available. Approve a product image before setting this
-                      scene.
-                    </p>
-                  ) : (
-                    !selectedSource &&
-                    !selectedSourceFrame && (
-                      <p className="text-muted-foreground text-xs">
-                        Select which approved image this scene should start from.
-                      </p>
-                    )
-                  )}
-                  {(selectedSourceFrame || selectedSource) && (
-                    <figure className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setPreviewFrame({
-                            url: (selectedSourceFrame ?? selectedSource!).previewUrl,
-                            scene: index + 1,
-                          })
-                        }
-                        aria-label={`View selected start frame image for scene ${index + 1}`}
-                        title="View image"
-                        className="bg-background focus-visible:ring-ring relative size-24 shrink-0 cursor-zoom-in overflow-hidden rounded-md border focus-visible:ring-2 focus-visible:ring-offset-2"
-                      >
-                        <Image
-                          src={(selectedSourceFrame ?? selectedSource!).previewUrl}
-                          alt={`${selectedSourceFrame ? "Keyframe" : selectedSource!.role} preview for scene ${index + 1}`}
-                          fill
-                          sizes="96px"
-                          unoptimized
-                          className="object-contain"
-                        />
-                      </button>
-                      <figcaption className="text-muted-foreground text-xs">
-                        {selectedSourceFrame
-                          ? `Approved keyframe | r${selectedSourceFrame.revision}`
-                          : `${selectedSource!.role}  |  ${selectedSource!.width}x${selectedSource!.height}${selectedSource!.variantKey ? `  |  ${selectedSource!.variantKey}` : ""}`}
-                      </figcaption>
-                    </figure>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {selectedSource?.role === "Lifestyle" && (
-                    <p className="text-muted-foreground text-xs">
-                      The approved people and setting stay in the image.
-                    </p>
-                  )}
-                  <label className="flex flex-col gap-2 text-xs font-medium">
-                    <span>
-                      Approved product image{" "}
-                      <span className="text-muted-foreground font-normal">(required)</span>
-                    </span>
-                    <Select
-                      disabled={disabled || !hasRequiredSource}
-                      value={selectedSourceValue}
-                      onValueChange={(value) => {
-                        persistScene(index, {
-                          mockupId: value,
-                          studioFrameId: null,
-                          standardBaseCrop: null,
-                          standardStartCrop: null,
-                          standardEndCrop: null,
-                          standardStartScale: null,
-                          standardEndScale: null,
-                          standardStartRotation: null,
-                          standardEndRotation: null,
-                          studioReferenceHashes: [],
-                        });
-                      }}
-                    >
-                      <SelectTrigger
-                        aria-label={`Scene ${index + 1} mockup source for new keyframe`}
-                        aria-required="true"
-                      >
-                        <SelectValue placeholder="Select an image" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sources.map((asset) => (
-                          <MockupOption key={asset.id} asset={asset} />
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </label>
-                  <label className="block space-y-1.5 text-xs font-medium">
-                    <span className="flex items-baseline justify-between gap-3">
-                      <span>
-                        Custom keyframe prompt{" "}
-                        <span className="text-muted-foreground font-normal">(optional)</span>
-                      </span>
-                      <span className="text-muted-foreground shrink-0 text-[11px] font-normal tabular-nums">
-                        {scene.studioPrompt?.length ?? 0}/500
-                      </span>
-                    </span>
-                    <textarea
-                      disabled={disabled}
-                      maxLength={500}
-                      value={scene.studioPrompt ?? ""}
-                      onChange={(event) =>
-                        changeScene(index, {
-                          studioPrompt: event.currentTarget.value || null,
-                          studioFrameId: null,
-                        })
-                      }
-                      placeholder="Describe how the product should appear and how the reference images should guide the scene."
-                      className="bg-background min-h-24 w-full resize-y rounded-md border p-2.5 text-sm leading-relaxed font-normal"
-                    />
-                  </label>
-                  <div className="space-y-1.5">
-                    <p className="text-xs font-medium">
-                      Reference images{" "}
-                      <span className="text-muted-foreground font-normal tabular-nums">
-                        ({sceneReferenceFiles.length}/3, optional)
-                      </span>
-                    </p>
-                    <div className="flex flex-wrap items-start gap-2">
-                      {sceneReferenceFiles.map((file, referenceIndex) => (
-                        <ReferenceImageTile
-                          key={`${file.name}-${referenceIndex}`}
-                          file={file}
-                          index={referenceIndex + 1}
-                          disabled={disabled}
-                          onRemove={() => removeReferenceFile(index, referenceIndex)}
-                        />
-                      ))}
-                      {sceneReferenceFiles.length < 3 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          disabled={disabled}
-                          onClick={() => chooseReferenceFile(index)}
-                          aria-label={`Add reference image ${sceneReferenceFiles.length + 1} of 3`}
-                          className="text-muted-foreground hover:text-foreground flex size-20 shrink-0 flex-col gap-1 rounded-md border-dashed p-2"
-                        >
-                          <Plus aria-hidden="true" className="size-5" />
-                          <span className="text-[11px] font-medium">Add image</span>
-                        </Button>
-                      )}
+                  <>
+                    <div className="flex justify-center py-1" aria-hidden="true">
+                      <ArrowDown className="text-primary size-4" strokeWidth={2.25} />
                     </div>
-                  </div>
-                  {(sceneFrame || preparingSceneIndex === index) && (
                     <section
-                      className="bg-muted/40 space-y-3 rounded-md p-3"
-                      aria-label={`Scene ${index + 1} keyframe result`}
-                      aria-live="polite"
+                      className="bg-muted/35 space-y-3 rounded-md border p-3"
+                      aria-label={`Scene ${index + 1} Standard camera motion`}
                     >
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-xs font-semibold">Keyframe preview</p>
-                        <span
-                          className={`rounded-full px-2 py-1 text-[11px] font-semibold ${frameStatusClass}`}
-                        >
-                          {frameStatusLabel}
-                          {sceneFrame && preparingSceneIndex !== index
-                            ? ` · r${sceneFrame.revision}`
-                            : ""}
-                        </span>
+                      <div>
+                        <p className="text-sm font-semibold">Scene video</p>
+                        <p className="text-muted-foreground mt-0.5 text-xs">
+                          Preview this scene with the selected camera movement.
+                        </p>
                       </div>
-                      <div className="grid min-w-0 gap-3 min-[420px]:grid-cols-[7rem_minmax(0,1fr)]">
-                        {preparingSceneIndex === index ? (
-                          <div
-                            role="status"
-                            aria-label="Generating keyframe preview"
-                            className="bg-muted aspect-[9/16] w-28 animate-pulse rounded-md"
-                          >
-                            <span className="sr-only">Generating keyframe...</span>
-                          </div>
-                        ) : (
-                          sceneFrame && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setPreviewFrame({ url: sceneFrame.previewUrl, scene: index + 1 })
+                      <div className="grid items-start gap-4 min-[440px]:grid-cols-[10rem_minmax(0,1fr)]">
+                        <StandardMotionPreview
+                          scene={scene}
+                          sceneNumber={index + 1}
+                          baseCrop={baseCrop}
+                          source={editorSource}
+                          aspectRatio={outputAspect}
+                        />
+                        <div className="min-w-0 space-y-4">
+                          <label className="flex flex-col gap-2 text-xs font-medium">
+                            <span>Camera movement</span>
+                            <Select
+                              disabled={disabled}
+                              value={
+                                scene.standardMotionPreset === "gentle"
+                                  ? "zoom"
+                                  : (scene.standardMotionPreset ?? "zoom")
                               }
-                              aria-label={`View keyframe for scene ${index + 1}`}
-                              title="View keyframe"
-                              className="bg-background focus-visible:ring-ring relative aspect-[9/16] w-28 cursor-zoom-in overflow-hidden rounded-md focus-visible:ring-2 focus-visible:ring-offset-2"
+                              onValueChange={(value) => {
+                                const motion = value as NonNullable<
+                                  AiVideoSceneOptions["standardMotionPreset"]
+                                >;
+                                setStandardMotion(motion);
+                              }}
                             >
-                              <Image
-                                src={sceneFrame.previewUrl}
-                                alt={`Scene ${index + 1} studio keyframe preview`}
-                                fill
-                                sizes="112px"
-                                unoptimized
-                                className="object-contain"
-                              />
-                            </button>
-                          )
-                        )}
-                        <div className="min-w-0 self-center text-xs">
-                          {preparingSceneIndex === index ? (
-                            <>
-                              <p className="font-medium">Creating your keyframe</p>
-                              <p className="text-muted-foreground mt-1 leading-relaxed">
-                                This may take a moment. The preview will appear here when it is
-                                ready.
+                              <SelectTrigger
+                                aria-label={`Scene ${index + 1} Standard camera movement`}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {STANDARD_MOTION_OPTIONS.map(([value, label]) => (
+                                  <SelectItem key={value} value={value}>
+                                    {label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </label>
+                          <div className="bg-background/70 space-y-2 rounded-lg border p-3">
+                            <div>
+                              <p className="text-xs font-semibold">Fine-tune the motion</p>
+                              <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                                Adjust the first and last frame when the preset needs a more precise crop.
                               </p>
-                            </>
-                          ) : (
-                            sceneFrame && (
-                              <>
-                                <p className="font-medium">Generated keyframe</p>
-                                <p className="text-muted-foreground mt-1 leading-relaxed">
-                                  {sceneFrame.approvalStatus === "pending"
-                                    ? "Review and approve this image before generating video."
-                                    : frameIsCurrentAndApproved
-                                      ? "Approved and ready to use for this scene."
-                                      : sceneFrame.approvalStatus === "approved"
-                                        ? "The source or direction has changed. Generate another matching keyframe."
-                                        : "This keyframe was rejected. Generate another to continue."}
-                                </p>
-                                {sceneFrame.approvalStatus === "pending" && (
-                                  <div className="mt-3 flex flex-wrap gap-2">
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      disabled={disabled || isReviewingStudioFrame}
-                                      onClick={() =>
-                                        reviewStudioFrame({
-                                          id: sceneFrame.id,
-                                          revision: sceneFrame.revision,
-                                          approved: true,
-                                        })
-                                      }
-                                    >
-                                      Approve
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="outline"
-                                      disabled={disabled || isReviewingStudioFrame}
-                                      onClick={() =>
-                                        reviewStudioFrame({
-                                          id: sceneFrame.id,
-                                          revision: sceneFrame.revision,
-                                          approved: false,
-                                        })
-                                      }
-                                    >
-                                      Reject
-                                    </Button>
-                                  </div>
-                                )}
-                              </>
-                            )
-                          )}
+                            </div>
+                            <StandardMotionEditor
+                              scene={scene}
+                              sceneNumber={index + 1}
+                              baseCrop={baseCrop}
+                              source={editorSource}
+                              aspectRatio={outputAspect}
+                              disabled={disabled}
+                              hasRenderedVideo={Boolean(sceneRunId)}
+                              onMotionPresetChange={setStandardMotion}
+                              onApply={(changes) => changeScene(index, changes)}
+                            />
+                          </div>
                         </div>
                       </div>
                     </section>
-                  )}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="default"
-                      disabled={
-                        disabled ||
-                        !selectedSource ||
-                        preparingSceneIndex !== null ||
-                        (hasSceneKeyframe && !keyframeCanBeUsed) ||
-                        (needsRightsConfirmation && !scene.rightsConfirmed)
-                      }
-                      onClick={() =>
-                        hasSceneKeyframe ? selectSceneKeyframe() : void prepareStudioFrame(index)
-                      }
-                      className="min-h-9 gap-2 px-4 font-semibold"
-                    >
-                      {preparingSceneIndex === index ? (
-                        <>
-                          <span
-                            className="size-4 animate-spin rounded-full border-2 border-current border-r-transparent"
-                            aria-hidden="true"
-                          />
-                          Generating keyframe...
-                        </>
-                      ) : hasSceneKeyframe ? (
-                        <>
-                          <Check aria-hidden="true" />
-                          Use keyframe for this scene
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles aria-hidden="true" />
-                          Create keyframe
-                        </>
-                      )}
-                    </Button>
-                    {sceneFrame && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={
-                          disabled ||
-                          !selectedSource ||
-                          preparingSceneIndex !== null ||
-                          (needsRightsConfirmation && !scene.rightsConfirmed)
-                        }
-                        onClick={() => void prepareStudioFrame(index, true)}
-                      >
-                        Generate another
-                      </Button>
-                    )}
-                  </div>
-                  <p className="text-muted-foreground text-xs leading-relaxed">
-                    {sceneFrame?.approvalStatus === "pending"
-                      ? "Approve the generated image before creating the video."
-                      : frameIsCurrentAndApproved
-                        ? "This approved keyframe is ready for the current scene."
-                        : "Matching approved keyframes are reused without a new image generation call."}
-                  </p>
-                  {template?.requiresDetail &&
-                    selectedSource &&
-                    !hasUsableDetail(selectedSource) && (
-                      <p className="rounded-md border border-blue-200 bg-blue-50 p-2 text-xs leading-relaxed text-blue-900">
-                        This image can be used directly. Mark an artwork/detail region for a tighter
-                        automatic crop, or create an approved close-up keyframe for the clearest
-                        detail. Review generated keyframes because fine print may be reinterpreted.
-                      </p>
-                    )}
-                </div>
-              )}
-            </section>
-            {scene.mode !== "standard" && (
-              <>
-                <div className="flex justify-center py-1" aria-hidden="true">
-                  <ArrowDown className="text-primary size-4" strokeWidth={2.25} />
-                </div>
-                <SceneVideoResult
-                  sceneNumber={index + 1}
-                  clip={sceneVideo}
-                  runStarted={Boolean(sceneRunId)}
-                  waitingForGeneration={waitingForVideoGeneration}
-                  canRegenerate={canRegenerateScene}
-                  isRegenerating={regeneratingSceneIndex === index}
-                  onRegenerate={() => void regenerateScene(index)}
-                />
-              </>
-            )}
+                  </>
+                );
+              })()}
             {!hasRequiredSource && (
               <p className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs leading-relaxed text-amber-900">
                 {template?.requiresLifestyle
@@ -2014,23 +2093,29 @@ export function AiShotOptions({
           </article>
         );
       })}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {hasAiScenes ? (
-          <p className="text-muted-foreground text-xs">
+      <div className="space-y-2 py-1">
+        <div className="flex items-center gap-3">
+          <span aria-hidden="true" className="border-border/80 flex-1 border-t border-dashed" />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            disabled={disabled || scenes.length >= 4 || totalSeconds + 1 > 30}
+            onClick={addScene}
+            aria-label="Add scene"
+            title="Add scene"
+            className="border-primary/25 bg-background text-primary hover:border-primary/40 hover:bg-primary/5 size-9 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-offset-2"
+          >
+            <Plus aria-hidden="true" className="size-4" strokeWidth={2} />
+            <span className="sr-only">Add scene</span>
+          </Button>
+          <span aria-hidden="true" className="border-border/80 flex-1 border-t border-dashed" />
+        </div>
+        {hasAiScenes && (
+          <p className="text-muted-foreground text-center text-xs">
             Estimated AI footage ${(aiSceneSeconds * 0.1).toFixed(2)} USD
           </p>
-        ) : (
-          <span />
         )}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={disabled || scenes.length >= 4 || totalSeconds + 1 > 30}
-          onClick={addScene}
-        >
-          <Plus aria-hidden="true" /> Add scene
-        </Button>
       </div>
       <VideoTimelineEditor
         disabled={disabled}

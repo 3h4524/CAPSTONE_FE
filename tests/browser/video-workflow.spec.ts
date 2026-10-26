@@ -94,9 +94,11 @@ test("Standard mode and camera framing are configured per scene", async ({ page 
   await motion.click();
   await page.getByRole("option", { name: "Pan left", exact: true }).click();
   await expect(motion).toContainText("Pan left");
-  await page.getByText("Advanced · first and last frame").click();
-  await expect(page.getByRole("slider", { name: "Scene 1 first frame zoom" })).toBeVisible();
-  await expect(page.getByRole("combobox", { name: "Scene 1 last frame anchor" })).toBeVisible();
+  await page.getByRole("button", { name: /Advanced · first and last frame/ }).click();
+  const motionEditor = page.getByRole("dialog");
+  await expect(motionEditor).toBeVisible();
+  await expect(motionEditor.getByRole("slider", { name: "Scene 1 first frame scale" })).toBeVisible();
+  await expect(motionEditor.getByRole("combobox", { name: "Scene 1 last frame anchor" })).toBeVisible();
   await page.screenshot({ path: ".next/workflow-ui-results/per-scene-standard.png", fullPage: true });
 });
 
@@ -106,8 +108,8 @@ test("a Standard scene cannot use its new keyframe until it is reviewed and appr
   await page.locator('.react-flow__node[data-id="video"]').click({ position: { x: 80, y: 70 } });
   await page.getByRole("combobox", { name: "Scene 1 generation mode" }).click();
   await page.getByRole("option", { name: "Standard", exact: true }).click();
-  await page.getByRole("combobox", { name: "Scene 1 start frame source" }).click();
-  await page.getByRole("option", { name: "Create new keyframe", exact: true }).click();
+  await page.getByRole("button", { name: /start frame for scene 1/ }).click();
+  await page.getByRole("tab", { name: "Create new keyframe", exact: true }).click();
   await page.getByRole("combobox", { name: "Scene 1 mockup source for new keyframe" }).click();
   await page.getByRole("option", { name: /Hero/ }).click();
   await page.getByRole("button", { name: "Create keyframe" }).click();
@@ -161,7 +163,7 @@ test("refresh restores review and only current candidate can be approved", async
   await page.getByRole("combobox", { name: "Video version" }).click();
   await page.getByRole("option", { name: "Version 1 · rejected" }).click();
   await expect(page.getByRole("button", { name: "Approve video" })).toBeDisabled();
-  await expect(page.getByText("Only the current review candidate can be approved. Previous versions remain available.")).toBeVisible();
+  await expect(page.getByText("Only the current completed version can be approved. Older versions remain available from the version menu.")).toBeVisible();
   await page.screenshot({ path: ".next/workflow-ui-results/video-review.png", fullPage: true });
   await page.reload();
   await page.locator('.react-flow__node[data-id="review"]').click({ position: { x: 80, y: 40 } });

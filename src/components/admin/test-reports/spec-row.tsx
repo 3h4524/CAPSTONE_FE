@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { ChevronDown, RotateCcw } from "lucide-react";
 
-import { TestReportStatusBadge } from "@/components/admin/test-reports/test-report-status-badge";
+import { TestReportStatusBadge } from "@/components/admin/test-reports/status-badge";
 import type { TestReportSpec } from "@/types/admin-test-reports";
 import { cn } from "@/utils/cn";
 

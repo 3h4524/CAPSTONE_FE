@@ -156,7 +156,7 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
             Storyboard preview
           </h3>
           <p className="text-muted-foreground text-xs leading-relaxed">
-            Review the source frame and order of every scene before running the workflow.
+            Watch the assembled output using each scene's selected keyframe, format, and motion.
           </p>
         </div>
         <Button
@@ -194,7 +194,11 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
         )}
         {board && (
           <>
-            <StoryboardPlayer board={board} assets={assets} />
+            <StoryboardPlayer
+              board={board}
+              assets={assets}
+              config={node.data.config as GenerateVideoConfig}
+            />
             <p className="text-muted-foreground text-xs font-medium capitalize" aria-live="polite">
               {board.template.replaceAll("_", " ")} · {board.aspectRatio} · {board.width}×
               {board.height} · {board.durationSeconds}s · {board.scenes.length} scenes
@@ -227,8 +231,8 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
             </dl>
             {storyboardHasAiScenes && (
               <p className="text-muted-foreground text-xs leading-relaxed">
-                Standard scenes show their camera framing here. AI scenes use their source frames
-                until generated clips are ready.
+                Standard scenes play their selected camera movement here. AI scenes use their
+                selected start frame until their generated clips are ready.
               </p>
             )}
           </>

@@ -1,6 +1,6 @@
 "use client";
 
-import { type KeyboardEvent, type PointerEvent,useEffect, useMemo, useRef, useState } from "react";
+import { type KeyboardEvent, type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   ChevronDown,
@@ -64,6 +64,26 @@ const PUSH_PULL_SCALE = 1.1;
 const CANVAS_ZOOM_MIN = 1;
 const CANVAS_ZOOM_MAX = 3;
 const CANVAS_ZOOM_STEP = 0.1;
+
+export const getStandardBaseCrop = (
+  asset: Pick<MockupAsset, "width" | "height" | "regions"> | undefined,
+  aspectRatio: string
+): Region => {
+  if (!asset) return FULL_FRAME;
+  const [aspectWidth, aspectHeight] = aspectRatio.split(":").map(Number);
+  const outputRatio = (aspectWidth || 9) / (aspectHeight || 16);
+  const sourceRatio = asset.width / Math.max(1, asset.height);
+  const height = sourceRatio < outputRatio ? sourceRatio / outputRatio : 1;
+  const width = sourceRatio > outputRatio ? outputRatio / sourceRatio : 1;
+  const focal = asset.regions.focalPoint ?? { x: 0.5, y: 0.5 };
+  return {
+    x: Math.min(Math.max(focal.x - width / 2, 0), 1 - width),
+    y: Math.min(Math.max(focal.y - height / 2, 0), 1 - height),
+    width,
+    height,
+  };
+};
+
 type Endpoint = "start" | "end";
 type Anchor = "center" | "left" | "right" | "top" | "bottom";
 type PreviewTransform =
@@ -442,8 +462,7 @@ const pan = (bounds: Region, horizontal: -1 | 0 | 1, vertical: -1 | 0 | 1): [Reg
 const presetFrames = (motion: SceneMotion, base: Region): [Region, Region] => {
   if (motion === "contain_gentle") return [FULL_FRAME, FULL_FRAME];
   if (motion === "gentle" || motion === "zoom" || motion === "zoom_out") return [base, base];
-  if (motion === "rotate_zoom_cw" || motion === "rotate_zoom_ccw")
-    return [base, base];
+  if (motion === "rotate_zoom_cw" || motion === "rotate_zoom_ccw") return [base, base];
   if (motion === "pan") return pan(base, 1, 0);
   if (motion === "pan_left") return pan(base, -1, 0);
   if (motion === "pan_up") return pan(base, 0, -1);
@@ -483,8 +502,8 @@ const presetScales = (motion: SceneMotion, aspectRatio: string): [number, number
   ) {
     const cover = rotationCoverScale(aspectRatio);
     startScale = cover;
-    endScale = cover *
-      (motion === "rotate_zoom_cw" || motion === "rotate_zoom_ccw" ? PUSH_PULL_SCALE : 1);
+    endScale =
+      cover * (motion === "rotate_zoom_cw" || motion === "rotate_zoom_ccw" ? PUSH_PULL_SCALE : 1);
   }
   return [startScale, endScale];
 };
@@ -502,6 +521,38 @@ const clampScale = (value: number) =>
   Math.max(SCALE_MIN, Math.min(SCALE_MAX, Number.isFinite(value) ? value : 1));
 const visibleMotion = (motion: SceneMotion | null | undefined): SceneMotion =>
   motion === "gentle" || !motion ? "zoom" : motion;
+
+export type StandardMotionPlan = {
+  motion: SceneMotion;
+  startCrop: Region;
+  endCrop: Region;
+  startScale: number;
+  endScale: number;
+  startRotation: number;
+  endRotation: number;
+};
+
+export const resolveStandardMotionPlan = (
+  scene: AiVideoSceneOptions,
+  baseCrop: Region,
+  aspectRatio: string
+): StandardMotionPlan => {
+  const motion = visibleMotion(scene.standardMotionPreset);
+  const [presetStartCrop, presetEndCrop] = presetFrames(motion, baseCrop);
+  const [presetStartRotation, presetEndRotation] = presetRotations(motion);
+  const [presetStartScale, presetEndScale] = presetScales(motion, aspectRatio);
+  return {
+    motion,
+    startCrop: motion === "custom" ? (scene.standardStartCrop ?? baseCrop) : presetStartCrop,
+    endCrop: motion === "custom" ? (scene.standardEndCrop ?? baseCrop) : presetEndCrop,
+    startScale: motion === "custom" ? clampScale(scene.standardStartScale ?? 1) : presetStartScale,
+    endScale: motion === "custom" ? clampScale(scene.standardEndScale ?? 1) : presetEndScale,
+    startRotation:
+      motion === "custom" ? clampRotation(scene.standardStartRotation ?? 0) : presetStartRotation,
+    endRotation:
+      motion === "custom" ? clampRotation(scene.standardEndRotation ?? 0) : presetEndRotation,
+  };
+};
 
 const cropZoom = (base: Region, crop: Region) =>
   Math.max(1, Math.min(1.2, base.width / Math.max(0.001, crop.width)));
@@ -617,19 +668,8 @@ export function StandardMotionPreview({
   const startedAtRef = useRef(0);
   const playheadRef = useRef(playhead);
   const previewSource = source ?? SAMPLE_PREVIEW_SOURCE;
-  const motion = visibleMotion(scene.standardMotionPreset);
-  const [presetStartCrop, presetEndCrop] = presetFrames(motion, baseCrop);
-  const [presetStartRotation, presetEndRotation] = presetRotations(motion);
-  const [presetStartScale, presetEndScale] = presetScales(motion, aspectRatio);
-  const startCrop = motion === "custom" ? (scene.standardStartCrop ?? baseCrop) : presetStartCrop;
-  const endCrop = motion === "custom" ? (scene.standardEndCrop ?? baseCrop) : presetEndCrop;
-  const startScale =
-    motion === "custom" ? clampScale(scene.standardStartScale ?? 1) : presetStartScale;
-  const endScale = motion === "custom" ? clampScale(scene.standardEndScale ?? 1) : presetEndScale;
-  const startRotation =
-    motion === "custom" ? clampRotation(scene.standardStartRotation ?? 0) : presetStartRotation;
-  const endRotation =
-    motion === "custom" ? clampRotation(scene.standardEndRotation ?? 0) : presetEndRotation;
+  const { motion, startCrop, endCrop, startScale, endScale, startRotation, endRotation } =
+    resolveStandardMotionPlan(scene, baseCrop, aspectRatio);
   const previewCrop = mixRegion(startCrop, endCrop, playhead);
   const previewScale = startScale + (endScale - startScale) * playhead;
   const previewRotation = startRotation + (endRotation - startRotation) * playhead;
@@ -720,7 +760,7 @@ export function StandardMotionPreview({
           startPreview();
         }
       }}
-      className="focus-visible:ring-ring relative mr-auto ml-0 h-44 max-w-full cursor-pointer overflow-hidden rounded-md bg-black shadow-md outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+      className="focus-visible:ring-ring relative mr-auto ml-0 w-40 max-w-full cursor-pointer overflow-hidden rounded-md bg-black shadow-md outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
       style={{ aspectRatio: previewAspect }}
     >
       {motion === "contain_gentle" ? (
@@ -1334,7 +1374,7 @@ export function StandardMotionEditor({
         variant="outline"
         disabled={disabled}
         onClick={openEditor}
-        className="h-auto min-h-11 w-full justify-between gap-3 px-3 py-2 text-left"
+        className="h-auto min-h-11 w-fit max-w-full justify-between gap-3 px-3 py-2 text-left"
       >
         <span className="flex min-w-0 items-center gap-2">
           <SlidersHorizontal className="text-primary size-4 shrink-0" aria-hidden="true" />

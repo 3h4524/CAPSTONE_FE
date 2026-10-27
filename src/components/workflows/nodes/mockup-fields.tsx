@@ -15,7 +15,7 @@ export const MockupFields = ({ data }: { data: WorkflowNode["data"] }) => {
         placeholder="Choose mock-up templates"
         chevron
       />
-      <div className="border-wf-line flex h-8 items-center justify-between gap-2 rounded-md border px-2.5">
+      <div className="border-wf-line bg-wf-muted/50 flex h-8 items-center justify-between gap-2 rounded-md border px-2.5">
         {colors.length > 0 ? (
           <>
             <span className="flex items-center gap-1">

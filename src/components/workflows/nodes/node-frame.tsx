@@ -95,32 +95,26 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
           isConnectable={!workflowIsRunning}
           title={`Connect another node to ${data.label}`}
           aria-label={`Connect another node to ${data.label}`}
-          className={cn(HANDLE_CLASS_NAME, "top-[30px]!", "before:size-6!")}
+          className={cn(HANDLE_CLASS_NAME, "top-0!", "before:size-6!")}
         >
           <span className={HANDLE_DOT_CLASS_NAME} />
         </Handle>
       )}
 
-      <div className="mb-1.5 flex h-6 items-center pl-0.5">
-        <NodeName
-          nodeId={nodeId}
-          label={data.label}
-          fallbackLabel={definition.label}
-          Icon={definition.icon}
-          iconClassName={CATEGORY_TEXT[definition.category]}
-        />
-      </div>
-
       <article className={frame}>
-        <div className="flex items-center justify-between gap-2 px-2.5 pt-2.5 pb-1.5">
-          <span
-            className={cn(
-              "font-mono text-[9px] leading-none font-semibold tracking-[0.14em] uppercase [text-shadow:0_0_8px_currentColor]",
-              CATEGORY_TEXT[definition.category]
-            )}
-          >
-            {CATEGORY_LABELS[definition.category]}
+        <div className="border-wf-line flex items-center gap-2 border-b px-2.5 py-1.5">
+          <span className="flex shrink-0 items-center gap-1" aria-hidden="true">
+            <span className="bg-wf-fail size-1.5 rounded-full" />
+            <span className="bg-wf-warn size-1.5 rounded-full" />
+            <span className="bg-wf-ok size-1.5 rounded-full" />
           </span>
+          <NodeName
+            nodeId={nodeId}
+            label={data.label}
+            fallbackLabel={definition.label}
+            Icon={definition.icon}
+            iconClassName={CATEGORY_TEXT[definition.category]}
+          />
           {!runnable && data.status === "idle" ? (
             <span className="text-wf-faint shrink-0 text-[9.5px] leading-none font-medium tracking-wide uppercase">
               Planned
@@ -146,6 +140,18 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
               {statusLabel ?? "Idle"}
             </span>
           )}
+        </div>
+
+        <div className="flex items-center justify-between gap-2 px-2.5 pt-1.5 pb-1">
+          <span
+            className={cn(
+              "font-mono text-[9px] leading-none font-semibold tracking-[0.14em] uppercase [text-shadow:0_0_8px_currentColor]",
+              CATEGORY_TEXT[definition.category]
+            )}
+          >
+            {CATEGORY_LABELS[definition.category]}
+          </span>
+          <span className="bg-wf-accent h-2.5 w-1 motion-safe:animate-pulse" aria-hidden="true" />
         </div>
 
         {children}

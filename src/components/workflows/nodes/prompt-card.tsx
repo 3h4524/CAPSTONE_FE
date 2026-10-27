@@ -31,7 +31,7 @@ export const PromptCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
 
   return (
     <NodeFrame nodeId={id} data={data} selected={selected} widthClassName="w-60">
-      <div className="space-y-1.5 px-2.5 pb-2.5">
+      <div className="[&>div]:before:text-wf-accent space-y-1.5 px-2.5 pb-2.5 [&>div]:relative [&>div]:pl-4 [&>div]:before:absolute [&>div]:before:top-0 [&>div]:before:left-0 [&>div]:before:font-mono [&>div]:before:text-[10px] [&>div]:before:leading-8 [&>div]:before:content-['>']">
         <NodeField value={template?.name} placeholder="Choose design template" chevron />
         <NodeField value={style?.name} placeholder="No art style" chevron />
         <NodeReadonlyText value={instructions} placeholder="Add extra instructions…" />

@@ -15,7 +15,7 @@ export const NodeCheck = ({ label, checked }: NodeCheckProps) => (
       aria-hidden="true"
       className={cn(
         "grid size-3.5 shrink-0 place-items-center rounded-[3px] border",
-        checked ? "border-wf-accent bg-wf-accent text-white" : "border-wf-line"
+        checked ? "border-wf-accent bg-wf-accent text-wf-surface shadow-[0_0_10px_var(--wf-halo)]" : "border-wf-line"
       )}
     >
       {checked && <Check className="size-2.5" strokeWidth={3} />}

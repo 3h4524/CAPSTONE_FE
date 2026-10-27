@@ -8,7 +8,7 @@ type NodeReadonlyTextProps = {
 };
 
 export const NodeReadonlyText = ({ value, placeholder }: NodeReadonlyTextProps) => (
-  <div className="border-wf-line min-h-8 rounded-md border px-2.5 py-1.5">
+  <div className="border-wf-line bg-wf-muted/40 min-h-8 rounded-md border px-2.5 py-1.5">
     <p
       className={cn(
         "line-clamp-2 text-[11px] leading-4",

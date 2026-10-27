@@ -24,7 +24,7 @@ export const NodeSegmented = ({ options, value, ariaLabel }: NodeSegmentedProps)
           className={cn(
             "flex-1 py-1.5 text-center text-[10px] leading-none",
             option.value === value
-              ? "bg-wf-ink text-wf-surface font-semibold"
+              ? "bg-wf-accent text-wf-surface font-semibold shadow-[0_0_12px_var(--wf-halo)]"
               : "text-wf-dim"
           )}
         >

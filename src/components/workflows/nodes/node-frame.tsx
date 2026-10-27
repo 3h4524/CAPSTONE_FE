@@ -41,10 +41,10 @@ const HANDLE_CLASS_NAME =
   "group/connect flex! size-2.5! cursor-crosshair! items-center! justify-center! border-0! bg-transparent! before:absolute before:size-10 before:rounded-full before:content-['']";
 
 const HANDLE_DOT_CLASS_NAME =
-  "border-wf-line bg-wf-surface pointer-events-none absolute size-2.5 rounded-full border transition-[transform,background-color,border-color] duration-150 group-hover/connect:scale-125 motion-reduce:transition-none";
+  "border-wf-accent/60 bg-wf-surface pointer-events-none absolute size-2.5 rounded-full border shadow-[0_0_8px_var(--wf-halo)] transition-[transform,background-color,border-color] duration-150 group-hover/connect:scale-125 motion-reduce:transition-none";
 
 const HANDLE_ACTION_CLASS_NAME =
-  "border-wf-line bg-wf-surface text-wf-dim pointer-events-none absolute grid size-6 place-items-center rounded-full border transition-[opacity,scale,background-color,border-color,color] duration-200 ease-out";
+  "border-wf-accent/40 bg-wf-surface text-wf-accent pointer-events-none absolute grid size-6 place-items-center rounded-full border shadow-[0_0_12px_var(--wf-halo)] transition-[opacity,scale,background-color,border-color,color] duration-200 ease-out";
 
 const HANDLE_ACTION_REVEAL_CLASS_NAME =
   "group-hover/node:pointer-events-auto group-hover/node:scale-100 group-hover/node:opacity-100 group-focus-within/node:pointer-events-auto group-focus-within/node:scale-100 group-focus-within/node:opacity-100";
@@ -76,14 +76,14 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
   const statusLabel = isRunning && progress > 0 ? `${pill?.label ?? "Running"} ${Math.round(progress)}%` : pill?.label;
 
   const frame = cn(
-    "border-wf-line bg-wf-surface relative w-full rounded-lg border",
-    "hover:border-wf-dim/40",
+    "border-wf-line bg-wf-surface relative w-full rounded-xl border shadow-[0_10px_30px_-18px_rgba(2,6,23,0.7)]",
+    "hover:border-wf-accent/50",
     isConnectionTarget
       ? connectionState === "invalid-target"
-        ? "border-wf-fail z-20 shadow-[0_0_0_1px_var(--wf-fail)]"
-        : "border-wf-ok z-20 shadow-[0_0_0_1px_var(--wf-ok)]"
-      : isRunning && "border-wf-accent z-10 shadow-[0_0_0_1px_var(--wf-accent)]",
-    selected && "border-wf-accent z-10 shadow-[0_0_0_1px_var(--wf-accent)]"
+        ? "border-wf-fail z-20 shadow-[0_0_0_1px_var(--wf-fail),0_0_20px_var(--wf-fail)]"
+        : "border-wf-ok z-20 shadow-[0_0_0_1px_var(--wf-ok),0_0_20px_var(--wf-ok)]"
+      : isRunning && "border-wf-accent z-10 shadow-[0_0_0_1px_var(--wf-accent),0_0_24px_var(--wf-halo)]",
+    selected && "border-wf-accent z-10 shadow-[0_0_0_1px_var(--wf-accent),0_0_24px_var(--wf-halo)]"
   );
 
   return (
@@ -115,7 +115,7 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
         <div className="flex items-center justify-between gap-2 px-2.5 pt-2.5 pb-1.5">
           <span
             className={cn(
-              "font-mono text-[9px] leading-none font-semibold tracking-[0.14em] uppercase",
+              "font-mono text-[9px] leading-none font-semibold tracking-[0.14em] uppercase [text-shadow:0_0_8px_currentColor]",
               CATEGORY_TEXT[definition.category]
             )}
           >
@@ -127,7 +127,7 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
             </span>
           ) : (
             <span
-              className="text-wf-dim flex shrink-0 items-center gap-1.5 text-[9.5px] leading-none font-medium"
+              className="text-wf-dim flex shrink-0 items-center gap-1.5 text-[9.5px] leading-none font-medium tracking-wider uppercase"
               role={data.status === "idle" ? undefined : "status"}
               aria-live={data.status === "idle" ? undefined : "polite"}
             >

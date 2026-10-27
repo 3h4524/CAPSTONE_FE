@@ -70,7 +70,7 @@ export const NodeName = ({ nodeId, label, fallbackLabel, Icon, iconClassName }: 
       >
         <Icon className="size-3" aria-hidden="true" />
       </span>
-      <span className="text-wf-ink min-w-0 truncate text-xs leading-5 font-semibold tracking-[-0.01em]">
+      <span className="min-w-0 truncate text-xs leading-5 font-semibold tracking-[-0.01em] text-slate-900">
         {label}
       </span>
       {!isRunning && (

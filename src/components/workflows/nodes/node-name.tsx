@@ -49,7 +49,7 @@ export const NodeName = ({ nodeId, label, fallbackLabel, Icon, iconClassName }: 
           if (event.key === "Escape") setIsEditing(false);
         }}
         onMouseDown={(event) => event.stopPropagation()}
-        className="nodrag h-7 min-w-0 flex-1 px-1.5 text-[13px] font-semibold"
+        className="nodrag h-6 min-w-0 flex-1 px-1.5 text-xs font-semibold"
       />
     );
   }
@@ -60,22 +60,22 @@ export const NodeName = ({ nodeId, label, fallbackLabel, Icon, iconClassName }: 
       aria-label={`Rename node ${label}`}
       disabled={isRunning}
       onClick={startEditing}
-      className="nodrag group/name focus-visible:ring-ring/40 flex min-w-0 flex-1 cursor-text items-center gap-2 rounded text-left outline-none focus-visible:ring-2 disabled:cursor-default"
+      className="nodrag group/name focus-visible:ring-ring/40 flex min-w-0 flex-1 cursor-text items-center gap-1.5 rounded text-left outline-none focus-visible:ring-2 disabled:cursor-default"
     >
       <span
         className={cn(
-          "bg-muted/55 grid size-7 shrink-0 place-items-center rounded-md",
+          "border-wf-line bg-wf-surface grid size-5 shrink-0 place-items-center rounded-md border",
           iconClassName
         )}
       >
-        <Icon className="size-4" aria-hidden="true" />
+        <Icon className="size-3" aria-hidden="true" />
       </span>
-      <span className="text-card-foreground min-w-0 truncate text-[13px] leading-5 font-semibold">
+      <span className="text-wf-ink min-w-0 truncate text-xs leading-5 font-semibold tracking-[-0.01em]">
         {label}
       </span>
       {!isRunning && (
         <Pencil
-          className="size-3 shrink-0 text-slate-400 opacity-0 transition-opacity group-hover/name:opacity-100 group-focus-visible/name:opacity-100"
+          className="text-wf-faint size-3 shrink-0 opacity-0 transition-opacity group-hover/name:opacity-100 group-focus-visible/name:opacity-100"
           aria-hidden="true"
         />
       )}

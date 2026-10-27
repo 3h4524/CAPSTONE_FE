@@ -1,47 +1,41 @@
 "use client";
 
-import { NodeShell } from "@/components/workflows/nodes/node-shell";
-import { NodeSummary } from "@/components/workflows/nodes/node-summary";
-import { WORKFLOW_CATEGORIES } from "@/constants/workflow";
-import {
-  getWorkflowNodeDefinition,
-  readInstructionsPreview,
-  summarizeNodeConfig,
-} from "@/helpers/workflow-config";
+import { NodeField } from "@/components/workflows/nodes/node-field";
+import { NodeFrame } from "@/components/workflows/nodes/node-frame";
+import { NodeReadonlyText } from "@/components/workflows/nodes/node-readonly-text";
+import { readInstructionsPreview, readString } from "@/helpers/workflow-config";
+import { useDesignTemplates } from "@/hooks/queries/use-design-templates";
+import { useStylePresets } from "@/hooks/queries/use-style-presets";
 import type { WorkflowNode } from "@/types/workflow";
-import { cn } from "@/utils/cn";
 import type { NodeProps } from "@xyflow/react";
 
+const TEMPLATE_PAGE_SIZE = 48;
+
 export const PromptCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
-  const instructions = readInstructionsPreview(data.config);
-  const summary = summarizeNodeConfig(data.type, data.config).slice(0, 2);
-  const category = WORKFLOW_CATEGORIES.find(
-    (item) => item.id === getWorkflowNodeDefinition(data.type)?.category
+  const templateId = readString(data.config.designTemplateId);
+  const styleId = readString(data.config.stylePresetId);
+  const { data: systemTemplates } = useDesignTemplates(
+    { pageNumber: 1, pageSize: TEMPLATE_PAGE_SIZE, scope: "system" },
+    Boolean(templateId)
   );
+  const { data: personalTemplates } = useDesignTemplates(
+    { pageNumber: 1, pageSize: TEMPLATE_PAGE_SIZE, scope: "personal" },
+    Boolean(templateId)
+  );
+  const { data: presets } = useStylePresets(Boolean(styleId));
+  const template = [...(personalTemplates?.items ?? []), ...(systemTemplates?.items ?? [])].find(
+    (item) => item.id === templateId
+  );
+  const style = presets?.find((item) => item.id === styleId);
+  const instructions = readInstructionsPreview(data.config);
 
   return (
-    <NodeShell nodeId={id} data={data} selected={selected} widthClassName="w-60">
-      <div className="space-y-3 px-3 py-3">
-        <p
-          className={cn(
-            "line-clamp-4 text-[13px] leading-[1.55]",
-            instructions ? "text-slate-700" : "text-slate-400"
-          )}
-        >
-          {instructions || "No prompt configured yet."}
-        </p>
-        {summary.length > 0 && (
-          <div className="space-y-1 border-l-2 border-slate-200 pl-2.5">
-            <NodeSummary lines={summary} />
-          </div>
-        )}
+    <NodeFrame nodeId={id} data={data} selected={selected} widthClassName="w-60">
+      <div className="space-y-1.5 px-2.5 pb-2.5">
+        <NodeField value={template?.name} placeholder="Choose design template" chevron />
+        <NodeField value={style?.name} placeholder="No art style" chevron />
+        <NodeReadonlyText value={instructions} placeholder="Add extra instructions…" />
       </div>
-      <div className="flex items-center justify-between border-t border-slate-100 px-3 py-2">
-        <p className="text-[11px] font-medium text-slate-500">{category?.label}</p>
-        <p className="text-[11px] text-slate-400 tabular-nums">
-          {instructions ? `${instructions.length} chars` : "Empty"}
-        </p>
-      </div>
-    </NodeShell>
+    </NodeFrame>
   );
 };

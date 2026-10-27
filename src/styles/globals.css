@@ -48,6 +48,52 @@
   --primary-blue: #2563eb;
   --success-background: #dcfce7;
   --success-text: #166534;
+
+  --wf-surface: #ffffff;
+  --wf-muted: #f5f5f7;
+  --wf-line: #e5e5ea;
+  --wf-frame: #18181b;
+  --wf-ink: #18181b;
+  --wf-dim: #71717a;
+  --wf-faint: #a0a0ab;
+  --wf-accent: #4f46e5;
+  --wf-accent-soft: #eef2ff;
+  --wf-ok: #16a34a;
+  --wf-warn: #d97706;
+  --wf-fail: #dc2626;
+  --wf-halo: rgba(79, 70, 229, 0.16);
+  --wf-c1: #d97706;
+  --wf-c1-soft: #fdf3e3;
+  --wf-c2: #7c3aed;
+  --wf-c2-soft: #f2ecfe;
+  --wf-c3: #0284c7;
+  --wf-c3-soft: #e7f3fc;
+  --wf-c4: #059669;
+  --wf-c4-soft: #e2f5ec;
+}
+
+.dark {
+  --wf-surface: #1a1a20;
+  --wf-muted: #23232b;
+  --wf-line: #2d2d37;
+  --wf-frame: #000000;
+  --wf-ink: #ededf2;
+  --wf-dim: #a2a2ae;
+  --wf-faint: #66666f;
+  --wf-accent: #818cf8;
+  --wf-accent-soft: rgba(129, 140, 248, 0.16);
+  --wf-ok: #34d399;
+  --wf-warn: #fbbf24;
+  --wf-fail: #f87171;
+  --wf-halo: rgba(129, 140, 248, 0.24);
+  --wf-c1: #fbbf24;
+  --wf-c1-soft: rgba(251, 191, 36, 0.14);
+  --wf-c2: #a78bfa;
+  --wf-c2-soft: rgba(167, 139, 250, 0.15);
+  --wf-c3: #38bdf8;
+  --wf-c3-soft: rgba(56, 189, 248, 0.13);
+  --wf-c4: #34d399;
+  --wf-c4-soft: rgba(52, 211, 153, 0.13);
 }
 
 @theme inline {
@@ -91,6 +137,26 @@
   --color-primary-blue: var(--primary-blue);
   --color-success-background: var(--success-background);
   --color-success-text: var(--success-text);
+  --color-wf-surface: var(--wf-surface);
+  --color-wf-muted: var(--wf-muted);
+  --color-wf-line: var(--wf-line);
+  --color-wf-frame: var(--wf-frame);
+  --color-wf-ink: var(--wf-ink);
+  --color-wf-dim: var(--wf-dim);
+  --color-wf-faint: var(--wf-faint);
+  --color-wf-accent: var(--wf-accent);
+  --color-wf-accent-soft: var(--wf-accent-soft);
+  --color-wf-ok: var(--wf-ok);
+  --color-wf-warn: var(--wf-warn);
+  --color-wf-fail: var(--wf-fail);
+  --color-wf-c1: var(--wf-c1);
+  --color-wf-c1-soft: var(--wf-c1-soft);
+  --color-wf-c2: var(--wf-c2);
+  --color-wf-c2-soft: var(--wf-c2-soft);
+  --color-wf-c3: var(--wf-c3);
+  --color-wf-c3-soft: var(--wf-c3-soft);
+  --color-wf-c4: var(--wf-c4);
+  --color-wf-c4-soft: var(--wf-c4-soft);
   --font-display: var(--font-display);
 }
 

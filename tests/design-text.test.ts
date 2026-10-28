@@ -134,4 +134,5 @@ test("an image prompt that asks for words other than the design text, or a backg
     []
   );
   assert.deepEqual(customPromptWarnings("", "Salt Life", "tshirt"), []);
+  assert.deepEqual(customPromptWarnings('A poster sized 12" x 18".', "", "poster"), []);
 });

@@ -123,7 +123,7 @@ describe("onNodesChange", () => {
     useWorkflowStore.setState(initialState, true);
   });
 
-  it("applies a position change without marking the editor dirty", () => {
+  it("applies a position change and marks the editor dirty", () => {
     seedGraph([node("node-1")], []);
 
     useWorkflowStore.getState().onNodesChange([moveNode("node-1", 120, 64)]);
@@ -131,7 +131,26 @@ describe("onNodesChange", () => {
     const state = useWorkflowStore.getState();
 
     expect(state.nodes[0]?.position).toEqual({ x: 120, y: 64 });
-    expect(state.isDirty).toBe(false);
+    expect(state.isDirty).toBe(true);
+  });
+
+  it("keeps the editor clean for a nudge under the move threshold", () => {
+    seedGraph([node("node-1")], []);
+    const { x, y } = useWorkflowStore.getState().nodes[0]!.position;
+
+    useWorkflowStore.getState().onNodesChange([moveNode("node-1", x + 5, y + 5)]);
+
+    expect(useWorkflowStore.getState().isDirty).toBe(false);
+  });
+
+  it("returns to clean when a moved node goes back to its saved position", () => {
+    seedGraph([node("node-1")], []);
+    const { x, y } = useWorkflowStore.getState().nodes[0]!.position;
+
+    useWorkflowStore.getState().onNodesChange([moveNode("node-1", 120, 64)]);
+    useWorkflowStore.getState().onNodesChange([moveNode("node-1", x, y)]);
+
+    expect(useWorkflowStore.getState().isDirty).toBe(false);
   });
 
   it("keeps a clean editor clean for a selection-only change", () => {

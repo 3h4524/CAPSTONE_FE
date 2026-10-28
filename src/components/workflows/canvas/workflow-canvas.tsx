@@ -6,7 +6,7 @@ import { SelectionToolbar } from "@/components/workflows/canvas/selection-toolba
 import { ShortcutCheatsheet } from "@/components/workflows/canvas/shortcut-cheatsheet";
 import { NodeView } from "@/components/workflows/nodes/node-view";
 import { NODE_CARD_WIDTHS, WORKFLOW_DND_MIME } from "@/constants/workflow";
-import { showToast } from "@/helpers/toast";
+import { showWorkflowActionToast } from "@/helpers/toast";
 import { getWorkflowNodeDefinition, isWorkflowNodeType } from "@/helpers/workflow-config";
 import { createWorkflowNode, getConnectionIssue, isConnectionAllowed } from "@/helpers/workflow-graph";
 import { useCanvasShortcuts } from "@/hooks/use-canvas-shortcuts";
@@ -156,7 +156,7 @@ export const WorkflowCanvas = () => {
             targetId
           );
           if (issue || !connection) {
-            showToast("warning", issue ?? "That node cannot accept this connection.");
+            showWorkflowActionToast("warning", issue ?? "That node cannot accept this connection.");
             return;
           }
           connect(connection);

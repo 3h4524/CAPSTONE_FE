@@ -159,7 +159,18 @@ test("undoing a bulk removal restores the saved graph and clears the dirty flag"
   assert.equal(useWorkflowStore.getState().isDirty, false);
 });
 
-test("moving a node and undoing the move keep the editor clean", () => {
+test("a small nudge keeps the editor clean", () => {
+  fresh();
+  const target = useWorkflowStore.getState().nodes[0];
+  assert.ok(target);
+  const { x, y } = target.position;
+  useWorkflowStore.getState().beginNodeDrag();
+  useWorkflowStore.getState().onNodesChange([{ type: "position", id: target.id, position: { x: x + 4, y: y + 3 } }]);
+  useWorkflowStore.getState().commitNodeDrag();
+  assert.equal(useWorkflowStore.getState().isDirty, false);
+});
+
+test("moving a node far makes the editor dirty and undoing the move makes it clean", () => {
   fresh();
   const target = useWorkflowStore.getState().nodes[0];
   assert.ok(target);
@@ -167,11 +178,11 @@ test("moving a node and undoing the move keep the editor clean", () => {
   useWorkflowStore.getState().beginNodeDrag();
   useWorkflowStore.getState().onNodesChange([{ type: "position", id: target.id, position: { x: x + 40, y: y + 40 } }]);
   useWorkflowStore.getState().commitNodeDrag();
-  assert.equal(useWorkflowStore.getState().isDirty, false);
+  assert.equal(useWorkflowStore.getState().isDirty, true);
   useWorkflowStore.getState().undo();
   assert.equal(useWorkflowStore.getState().isDirty, false);
   useWorkflowStore.getState().redo();
-  assert.equal(useWorkflowStore.getState().isDirty, false);
+  assert.equal(useWorkflowStore.getState().isDirty, true);
 });
 
 test("a new action clears the redo stack", () => {

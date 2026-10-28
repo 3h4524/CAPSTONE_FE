@@ -3,6 +3,7 @@
 import { Loader2 } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OptionThumbnail } from "@/components/workflows/config-panel/fields/option-thumbnail";
 import { NodeControl } from "@/components/workflows/nodes/node-control";
 import type { WorkflowOption } from "@/types/workflow";
 import { cn } from "@/utils/cn";
@@ -36,6 +37,8 @@ export const NodeField = ({
   ariaLabel,
 }: NodeFieldProps) => {
   const interactive = Boolean(options && onChange && (options.length > 0 || noneLabel));
+  const withImages = Boolean(options?.some((option) => option.imageUrl !== undefined));
+  const rich = withImages || Boolean(options?.some((option) => option.hint));
 
   if (loading) {
     return (
@@ -86,8 +89,22 @@ export const NodeField = ({
         >
           {noneLabel && <SelectItem value={NONE_VALUE}>{noneLabel}</SelectItem>}
           {options?.map((option) => (
-            <SelectItem key={option.value} value={option.value} className="focus:bg-wf-accent-soft focus:text-wf-ink text-[11px]">
-              {option.label}
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              className={cn("focus:bg-wf-accent-soft focus:text-wf-ink text-[11px]", rich && "py-1.5 *:min-w-0")}
+            >
+              {rich ? (
+                <span className="flex min-w-0 items-center gap-2">
+                  {withImages && <OptionThumbnail imageUrl={option.imageUrl} className="size-8" />}
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate">{option.label}</span>
+                    {option.hint && <span className="text-wf-faint truncate text-[10px]">{option.hint}</span>}
+                  </span>
+                </span>
+              ) : (
+                option.label
+              )}
             </SelectItem>
           ))}
         </SelectContent>

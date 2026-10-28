@@ -22,6 +22,7 @@ import type {
 export const WORKFLOW_DND_MIME = "application/x-apcs-workflow-node";
 
 export const DUPLICATE_NODE_OFFSET = 48;
+export const NODE_MOVE_DIRTY_THRESHOLD = 16;
 
 export const HISTORY_LIMIT = 50;
 

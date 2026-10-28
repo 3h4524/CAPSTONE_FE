@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { DUPLICATE_NODE_OFFSET, HISTORY_GROUP_WINDOW_MS, HISTORY_LIMIT } from "@/constants/workflow";
+import { DUPLICATE_NODE_OFFSET, HISTORY_GROUP_WINDOW_MS, HISTORY_LIMIT, NODE_MOVE_DIRTY_THRESHOLD } from "@/constants/workflow";
 import { duplicateWorkflowSelection, toWorkflowEdges, toWorkflowNodes } from "@/helpers/workflow-graph";
 import type {
   WorkflowDetail,
@@ -162,6 +162,7 @@ const hasMeaningfulGraphChanges = (
       node.type !== other.type ||
       node.data.type !== other.data.type ||
       node.data.label !== other.data.label ||
+      Math.hypot(node.position.x - other.position.x, node.position.y - other.position.y) > NODE_MOVE_DIRTY_THRESHOLD ||
       JSON.stringify(node.data.config) !== JSON.stringify(other.data.config)
     );
   });

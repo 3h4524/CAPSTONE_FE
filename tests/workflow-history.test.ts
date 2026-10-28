@@ -124,6 +124,56 @@ test("a committed drag is a single undo step", () => {
   assert.deepEqual(restored?.position, { x, y });
 });
 
+test("undoing a config edit back to the saved graph clears the dirty flag", () => {
+  fresh();
+  const target = useWorkflowStore.getState().nodes.find((node) => node.data.type === "design-image");
+  assert.ok(target);
+  const original = target.data.config;
+  useWorkflowStore.getState().updateNodeConfig(target.id, { ...original, variants: 3 });
+  assert.equal(useWorkflowStore.getState().isDirty, true);
+
+  useWorkflowStore.getState().undo();
+  assert.equal(useWorkflowStore.getState().isDirty, false);
+
+  useWorkflowStore.getState().redo();
+  assert.equal(useWorkflowStore.getState().isDirty, true);
+});
+
+test("deleting an added node clears the dirty flag", () => {
+  fresh();
+  const added = createWorkflowNode("design-image", { x: 0, y: 0 });
+  useWorkflowStore.getState().addNode(added);
+  assert.equal(useWorkflowStore.getState().isDirty, true);
+
+  useWorkflowStore.getState().removeNode(added.id);
+  assert.equal(useWorkflowStore.getState().isDirty, false);
+});
+
+test("undoing a bulk removal restores the saved graph and clears the dirty flag", () => {
+  fresh();
+  useWorkflowStore.getState().selectAllNodes();
+  useWorkflowStore.getState().removeSelectedNodes();
+  assert.equal(useWorkflowStore.getState().isDirty, true);
+
+  useWorkflowStore.getState().undo();
+  assert.equal(useWorkflowStore.getState().isDirty, false);
+});
+
+test("moving a node and undoing the move keep the editor clean", () => {
+  fresh();
+  const target = useWorkflowStore.getState().nodes[0];
+  assert.ok(target);
+  const { x, y } = target.position;
+  useWorkflowStore.getState().beginNodeDrag();
+  useWorkflowStore.getState().onNodesChange([{ type: "position", id: target.id, position: { x: x + 40, y: y + 40 } }]);
+  useWorkflowStore.getState().commitNodeDrag();
+  assert.equal(useWorkflowStore.getState().isDirty, false);
+  useWorkflowStore.getState().undo();
+  assert.equal(useWorkflowStore.getState().isDirty, false);
+  useWorkflowStore.getState().redo();
+  assert.equal(useWorkflowStore.getState().isDirty, false);
+});
+
 test("a new action clears the redo stack", () => {
   const before = fresh().nodes.length;
   const first = createWorkflowNode("design-image", { x: 0, y: 0 });

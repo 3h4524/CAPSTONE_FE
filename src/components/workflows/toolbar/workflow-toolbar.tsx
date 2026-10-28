@@ -10,7 +10,7 @@ import { WorkflowBackButton } from "@/components/workflows/toolbar/workflow-back
 import { WorkflowMetaDialog } from "@/components/workflows/toolbar/workflow-meta-dialog";
 import { WorkflowSwitcher } from "@/components/workflows/toolbar/workflow-switcher";
 import { NEW_WORKFLOW_NAME, STARTER_WORKFLOW_DEFINITION } from "@/constants/workflow";
-import { showToast } from "@/helpers/toast";
+import { showToast, showWorkflowActionToast } from "@/helpers/toast";
 import { getCopyName, validateWorkflow } from "@/helpers/workflow-graph";
 import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
 import { useDeleteWorkflow } from "@/hooks/mutations/use-delete-workflow";
@@ -59,8 +59,8 @@ export const WorkflowToolbar = ({
     const { nodes, edges } = useWorkflowStore.getState();
     const issueCount = validateWorkflow(nodes, edges).length;
     selectNode(null);
-    if (issueCount === 0) showToast("success", "The workflow is valid and ready to run.");
-    else showToast("warning", `Found ${issueCount} issue${issueCount > 1 ? "s" : ""}. Review them in the side panel.`);
+    if (issueCount === 0) showWorkflowActionToast("success", "The workflow is valid and ready to run.");
+    else showWorkflowActionToast("warning", `Found ${issueCount} issue${issueCount > 1 ? "s" : ""}. Review them in the side panel.`);
   };
 
   const submitMeta = (values: WorkflowMetaFormValues) => {
@@ -146,7 +146,7 @@ export const WorkflowToolbar = ({
             <span className="hidden sm:inline">Run</span>
           </Button>
         )}
-        <Button type="button" size="sm" className="px-4" onClick={() => saveWorkflow()} disabled={!isEditorReady || isCreating || isSaving || isDeleting || isRunPending || !isDirty}>
+        <Button type="button" size="sm" className="px-4" onClick={() => saveWorkflow()} disabled={isBusy || !isDirty}>
           <Save aria-hidden="true" />
           <span className="hidden sm:inline">Save</span>
         </Button>

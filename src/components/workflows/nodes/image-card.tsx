@@ -3,10 +3,11 @@
 import Image from "next/image";
 
 import { DesignImageFields } from "@/components/workflows/nodes/design-image-fields";
-import { MockupFields } from "@/components/workflows/nodes/mockup-fields";
 import { NodeFrame } from "@/components/workflows/nodes/node-frame";
+import { NodeMockupField } from "@/components/workflows/nodes/node-mockup-field";
 import { VideoFields } from "@/components/workflows/nodes/video-fields";
 import { VideoNodePreview } from "@/components/workflows/nodes/video-node-preview";
+import { useNodeSettingsLocked } from "@/hooks/use-node-settings-locked";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { WorkflowNode } from "@/types/workflow";
 import type { NodeProps } from "@xyflow/react";
@@ -16,6 +17,7 @@ const MAX_THUMBNAILS = 4;
 export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
   const job = useWorkflowRunStore((state) => state.job);
   const mockupResult = useWorkflowRunStore((state) => state.mockupResult);
+  const disabled = useNodeSettingsLocked(data.type);
   const images =
     data.type === "design-image"
       ? (job?.products.flatMap((product) => product.images.map((image) => image.imageUrl)) ?? [])
@@ -27,10 +29,14 @@ export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
 
   return (
     <NodeFrame nodeId={id} data={data} selected={selected} widthClassName="w-72">
-      <div className="[&>div]:before:text-wf-accent space-y-1.5 px-2.5 pb-2.5 [&>div]:relative [&>div]:pl-4 [&>div]:before:absolute [&>div]:before:top-0 [&>div]:before:left-0 [&>div]:before:font-mono [&>div]:before:text-[10px] [&>div]:before:leading-8 [&>div]:before:content-['>']">
-        {data.type === "design-image" && <DesignImageFields data={data} />}
-        {data.type === "apply-mockup" && <MockupFields data={data} />}
-        {data.type === "generate-video" && <VideoFields data={data} />}
+      <div className="space-y-1.5 px-2.5 pb-2.5">
+        {data.type === "design-image" && (
+          <DesignImageFields nodeId={id} data={data} disabled={disabled} />
+        )}
+        {data.type === "apply-mockup" && (
+          <NodeMockupField nodeId={id} data={data} disabled={disabled} />
+        )}
+        {data.type === "generate-video" && <VideoFields nodeId={id} data={data} disabled={disabled} />}
 
         {progress > 0 && (data.type === "design-image" || data.type === "generate-video") && (
           <div className="bg-wf-line h-1 overflow-hidden rounded-full" aria-hidden="true">

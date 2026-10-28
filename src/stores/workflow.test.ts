@@ -31,8 +31,11 @@ const moveNode = (id: string, x: number, y: number): NodeChange<WorkflowNode> =>
   position: { x, y },
 });
 
-const seedGraph = (nodes: WorkflowNode[], edges: WorkflowEdge[]) =>
-  useWorkflowStore.setState({ nodes, edges });
+const seedGraph = (
+  nodes: WorkflowNode[],
+  edges: WorkflowEdge[],
+  savedGraph = { nodes, edges }
+) => useWorkflowStore.setState({ nodes, edges, savedGraph });
 
 describe("useWorkflowStore initial state", () => {
   beforeEach(() => {
@@ -120,7 +123,7 @@ describe("onNodesChange", () => {
     useWorkflowStore.setState(initialState, true);
   });
 
-  it("applies a position change and marks the editor dirty", () => {
+  it("applies a position change without marking the editor dirty", () => {
     seedGraph([node("node-1")], []);
 
     useWorkflowStore.getState().onNodesChange([moveNode("node-1", 120, 64)]);
@@ -128,7 +131,7 @@ describe("onNodesChange", () => {
     const state = useWorkflowStore.getState();
 
     expect(state.nodes[0]?.position).toEqual({ x: 120, y: 64 });
-    expect(state.isDirty).toBe(true);
+    expect(state.isDirty).toBe(false);
   });
 
   it("keeps a clean editor clean for a selection-only change", () => {
@@ -146,7 +149,7 @@ describe("onNodesChange", () => {
 
   it("stays dirty when a clean change follows an earlier edit", () => {
     seedGraph([node("node-1")], []);
-    useWorkflowStore.getState().onNodesChange([moveNode("node-1", 10, 10)]);
+    useWorkflowStore.getState().renameNode("node-1", "Spring products");
 
     useWorkflowStore
       .getState()
@@ -264,12 +267,20 @@ describe("connect", () => {
     expect(useWorkflowStore.getState().edges).toEqual([]);
   });
 
-  it("marks the editor dirty even when the duplicate edge was rejected", () => {
+  it("keeps the editor clean when the duplicate edge was rejected", () => {
     seedGraph([node("node-1"), node("node-2")], [edge("node-1", "node-2")]);
 
     useWorkflowStore.getState().connect(connection("node-1", "node-2"));
 
-    expect(useWorkflowStore.getState().isDirty).toBe(true);
+    expect(useWorkflowStore.getState().isDirty).toBe(false);
+  });
+
+  it("keeps the editor clean when a connection has a missing endpoint", () => {
+    seedGraph([node("node-1"), node("node-2")], []);
+
+    useWorkflowStore.getState().connect(connection("", "node-2"));
+
+    expect(useWorkflowStore.getState().isDirty).toBe(false);
   });
 });
 
@@ -322,6 +333,14 @@ describe("renameNode", () => {
     expect(second?.data.label).toBe("Product input");
     expect(useWorkflowStore.getState().isDirty).toBe(true);
   });
+
+  it("keeps the editor clean when the label does not change", () => {
+    seedGraph([node("node-1")], []);
+
+    useWorkflowStore.getState().renameNode("node-1", "Product input");
+
+    expect(useWorkflowStore.getState().isDirty).toBe(false);
+  });
 });
 
 describe("updateNodeConfig", () => {
@@ -348,6 +367,14 @@ describe("updateNodeConfig", () => {
     useWorkflowStore.getState().updateNodeConfig("node-1", { batchId: "batch-7" });
 
     expect(useWorkflowStore.getState().nodes[1]?.data.config).toEqual({ name: "Mug design" });
+  });
+
+  it("keeps the editor clean when the config does not change", () => {
+    seedGraph([node("node-1")], []);
+
+    useWorkflowStore.getState().updateNodeConfig("node-1", { name: "Mug design" });
+
+    expect(useWorkflowStore.getState().isDirty).toBe(false);
   });
 });
 
@@ -424,7 +451,7 @@ describe("removeNode", () => {
 
     expect(state.nodes.map((item) => item.id)).toEqual(["a", "b"]);
     expect(state.edges).toEqual([edge("a", "b")]);
-    expect(state.isDirty).toBe(true);
+    expect(state.isDirty).toBe(false);
   });
 });
 
@@ -501,6 +528,44 @@ describe("node status tracking", () => {
       "idle",
       "idle",
     ]);
+  });
+});
+
+describe("resetProductDependentState", () => {
+  beforeEach(() => {
+    useWorkflowStore.setState(initialState, true);
+  });
+
+  it("keeps the editor clean when there is no product-dependent config", () => {
+    seedGraph([node("a")], []);
+
+    useWorkflowStore.getState().resetProductDependentState();
+
+    expect(useWorkflowStore.getState().isDirty).toBe(false);
+  });
+
+  it("marks the editor dirty when it clears product-dependent config", () => {
+    seedGraph(
+      [
+        node("a", {
+          data: {
+            type: "apply-mockup",
+            label: "Apply mock-up",
+            config: { mockupIds: ["mockup-1"], artworkGroupKey: "artwork-1" },
+            status: "success",
+          },
+        }),
+      ],
+      []
+    );
+
+    useWorkflowStore.getState().resetProductDependentState();
+
+    expect(useWorkflowStore.getState().nodes[0]?.data.config).toEqual({
+      mockupIds: [],
+      artworkGroupKey: "",
+    });
+    expect(useWorkflowStore.getState().isDirty).toBe(true);
   });
 });
 

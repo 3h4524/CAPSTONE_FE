@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
 import {
+  DEFAULT_WORKFLOW_DEFINITION,
+  DEFAULT_WORKFLOW_NAME,
+  DEFAULT_WORKFLOW_POSITIONS,
+  WORKFLOW_NODE_DEFINITIONS,
+} from "@/constants/workflow";
+import {
+  applyCompactDefaultLayoutIfStillVertical,
   createWorkflowNode,
+  getConnectionIssue,
   getCopyName,
   getExecutionOrder,
   isConnectionAllowed,
@@ -240,6 +247,44 @@ describe("isConnectionAllowed", () => {
     const existing = edge("a", "b");
 
     expect(isConnectionAllowed(existing, [existing])).toBe(false);
+  });
+});
+
+describe("getConnectionIssue", () => {
+  it("explains an empty endpoint", () => {
+    expect(getConnectionIssue(connection("", "b"), [])).toBe("Drop the connection on another node.");
+  });
+
+  it("explains a self connection", () => {
+    expect(getConnectionIssue(connection("a", "a"), [])).toBe("A node cannot connect to itself.");
+  });
+
+  it("explains a duplicate edge", () => {
+    expect(getConnectionIssue(connection("a", "b"), [edge("a", "b")])).toBe("These nodes are already connected.");
+  });
+
+  it("explains a cycle", () => {
+    const edges = [edge("a", "b"), edge("b", "c")];
+
+    expect(getConnectionIssue(connection("c", "a"), edges)).toBe(
+      "That connection would create a loop. Workflows run in one direction."
+    );
+  });
+
+  it("points to the next pipeline step when a connection skips ahead", () => {
+    expect(getConnectionIssue(connection("input", "approval"), [], pipelineNodes())).toBe(
+      "Steps run in order. Connect Product input to Apply mock-up next."
+    );
+  });
+
+  it("accepts the next pipeline step", () => {
+    expect(getConnectionIssue(connection("input", "mockup"), [], pipelineNodes())).toBeNull();
+  });
+
+  it("explains that the last pipeline step has no next node", () => {
+    expect(getConnectionIssue(connection("export", "input"), [], pipelineNodes())).toBe(
+      "Export ZIP is the last step in the workflow, so it has no next node."
+    );
   });
 });
 
@@ -662,5 +707,45 @@ describe("toWorkflowSummary", () => {
 
   it("keeps an empty description as an empty string", () => {
     expect(toWorkflowSummary(buildWorkflowDetail({ description: "" })).description).toBe("");
+  });
+});
+
+describe("applyCompactDefaultLayoutIfStillVertical", () => {
+  it("moves the untouched default workflow onto the compact layout", () => {
+    const definition = {
+      ...DEFAULT_WORKFLOW_DEFINITION,
+      nodes: DEFAULT_WORKFLOW_DEFINITION.nodes.map((node, index) => ({
+        ...node,
+        position: node.id === "design" ? { x: 333, y: 481 } : { x: 0, y: index * 220 },
+      })),
+    };
+    const workflow = buildWorkflowDetail({ name: DEFAULT_WORKFLOW_NAME, definition });
+    const result = applyCompactDefaultLayoutIfStillVertical(workflow);
+
+    expect(result.definition.nodes.find((node) => node.id === "design")?.position).toEqual(
+      DEFAULT_WORKFLOW_POSITIONS.design
+    );
+    expect(result.definition.nodes.find((node) => node.id === "export")?.position).toEqual(
+      DEFAULT_WORKFLOW_POSITIONS.export
+    );
+  });
+
+  it("leaves a workflow that is already spread out alone", () => {
+    const definition = {
+      ...DEFAULT_WORKFLOW_DEFINITION,
+      nodes: DEFAULT_WORKFLOW_DEFINITION.nodes.map((node) => ({
+        ...node,
+        position: { x: 640, y: node.position.y },
+      })),
+    };
+    const workflow = buildWorkflowDetail({ name: DEFAULT_WORKFLOW_NAME, definition });
+
+    expect(applyCompactDefaultLayoutIfStillVertical(workflow)).toBe(workflow);
+  });
+
+  it("leaves a differently named workflow alone", () => {
+    const workflow = buildWorkflowDetail({ definition: DEFAULT_WORKFLOW_DEFINITION });
+
+    expect(applyCompactDefaultLayoutIfStillVertical(workflow)).toBe(workflow);
   });
 });

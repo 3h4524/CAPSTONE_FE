@@ -4,50 +4,21 @@ import { LoaderCircle } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { NodeName } from "@/components/workflows/nodes/node-name";
+import { WORKFLOW_CATEGORY_THEME } from "@/constants/workflow-category-theme";
 import { NODE_STATUS_PILLS } from "@/constants/workflow-status";
 import { getWorkflowNodeDefinition } from "@/helpers/workflow-config";
 import { isRunnableNode } from "@/helpers/workflow-run";
 import { useWorkflowStore } from "@/stores/workflow";
-import type { WorkflowNodeCategory, WorkflowNodeData, WorkflowNodeStatus } from "@/types/workflow";
+import { useWorkflowConnectionStore } from "@/stores/workflow-connection";
+import type { WorkflowNodeData } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 import { Handle, Position, useConnection } from "@xyflow/react";
-
-const CATEGORY_LABELS: Record<WorkflowNodeCategory, string> = {
-  trigger: "Trigger",
-  ai: "AI",
-  review: "Review",
-  output: "Output",
-};
-
-const CATEGORY_TEXT: Record<WorkflowNodeCategory, string> = {
-  trigger: "text-wf-c1",
-  ai: "text-wf-c2",
-  review: "text-wf-c3",
-  output: "text-wf-c4",
-};
-
-const STATUS_DOT: Record<WorkflowNodeStatus, string> = {
-  idle: "bg-wf-faint",
-  running: "bg-wf-accent",
-  success: "bg-wf-ok",
-  failed: "bg-wf-fail",
-  skipped: "bg-wf-faint",
-  waiting_for_input: "bg-wf-warn",
-  waiting_for_review: "bg-wf-warn",
-  cancelled: "bg-wf-faint",
-};
 
 const HANDLE_CLASS_NAME =
   "group/connect flex! size-2.5! cursor-crosshair! items-center! justify-center! border-0! bg-transparent! before:absolute before:size-10 before:rounded-full before:content-['']";
 
 const HANDLE_DOT_CLASS_NAME =
-  "border-wf-accent/60 bg-wf-surface pointer-events-none absolute size-2.5 rounded-full border shadow-[0_0_8px_var(--wf-halo)] transition-[transform,background-color,border-color] duration-150 group-hover/connect:scale-125 motion-reduce:transition-none";
-
-const HANDLE_ACTION_CLASS_NAME =
-  "border-wf-accent/40 bg-wf-surface text-wf-accent pointer-events-none absolute grid size-6 place-items-center rounded-full border shadow-[0_0_12px_var(--wf-halo)] transition-[opacity,scale,background-color,border-color,color] duration-200 ease-out";
-
-const HANDLE_ACTION_REVEAL_CLASS_NAME =
-  "group-hover/node:pointer-events-auto group-hover/node:scale-100 group-hover/node:opacity-100 group-focus-within/node:pointer-events-auto group-focus-within/node:scale-100 group-focus-within/node:opacity-100";
+  "border-wf-accent/70 bg-white pointer-events-none absolute size-2.5 rounded-full border shadow-sm transition-[transform,background-color,border-color] duration-150 group-hover/connect:scale-125 motion-reduce:transition-none";
 
 type NodeFrameProps = {
   nodeId: string;
@@ -65,25 +36,31 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
     if (connection.toNode?.id !== nodeId) return "candidate";
     return connection.isValid === false ? "invalid-target" : "valid-target";
   });
+  const hoveredConnectionValid = useWorkflowConnectionStore((state) =>
+    state.hoveredNodeId === nodeId ? state.hoveredNodeValid : null
+  );
   const definition = getWorkflowNodeDefinition(data.type);
   if (!definition) return null;
+  const theme = WORKFLOW_CATEGORY_THEME[definition.category];
   const pill = data.status === "idle" ? null : NODE_STATUS_PILLS[data.status];
   const isRunning = data.status === "running";
   const runnable = isRunnableNode(data.type);
-  const isConnectionTarget =
-    connectionState === "valid-target" || connectionState === "invalid-target";
+  const connectionTargetValid = connectionState === "valid-target" || hoveredConnectionValid === true;
+  const connectionTargetInvalid = connectionState === "invalid-target" || hoveredConnectionValid === false;
+  const isConnectionTarget = connectionTargetValid || connectionTargetInvalid;
   const progress = Math.max(0, Math.min(100, data.progress ?? 0));
   const statusLabel = isRunning && progress > 0 ? `${pill?.label ?? "Running"} ${Math.round(progress)}%` : pill?.label;
 
   const frame = cn(
-    "border-wf-line bg-wf-surface relative w-full rounded-xl border shadow-[0_10px_30px_-18px_rgba(2,6,23,0.7)]",
+    "bg-wf-surface relative w-full rounded-xl border shadow-[0_1px_2px_rgba(15,23,42,0.05),0_18px_36px_-28px_rgba(15,23,42,0.35)]",
+    theme.frame,
     "hover:border-wf-accent/50",
+    selected && "border-wf-accent ring-wf-accent/20 z-10 ring-2",
     isConnectionTarget
-      ? connectionState === "invalid-target"
-        ? "border-wf-fail z-20 shadow-[0_0_0_1px_var(--wf-fail),0_0_20px_var(--wf-fail)]"
-        : "border-wf-ok z-20 shadow-[0_0_0_1px_var(--wf-ok),0_0_20px_var(--wf-ok)]"
-      : isRunning && "border-wf-accent z-10 shadow-[0_0_0_1px_var(--wf-accent),0_0_24px_var(--wf-halo)]",
-    selected && "border-wf-accent z-10 shadow-[0_0_0_1px_var(--wf-accent),0_0_24px_var(--wf-halo)]"
+      ? connectionTargetInvalid
+        ? "border-wf-fail ring-wf-fail/15 z-20 ring-2"
+        : "border-wf-ok ring-wf-ok/15 z-20 ring-2"
+      : isRunning && "border-wf-accent ring-wf-accent/20 z-10 ring-2"
   );
 
   return (
@@ -102,59 +79,33 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
       )}
 
       <article className={frame}>
-        <div className="border-wf-line flex items-center gap-2 border-b px-2.5 py-1.5">
-          <span className="flex shrink-0 items-center gap-1" aria-hidden="true">
-            <span className="bg-wf-fail size-1.5 rounded-full" />
-            <span className="bg-wf-warn size-1.5 rounded-full" />
-            <span className="bg-wf-ok size-1.5 rounded-full" />
-          </span>
+        <div className={cn("flex items-center gap-2 border-b px-2.5 py-2", theme.header)}>
           <NodeName
             nodeId={nodeId}
             label={data.label}
             fallbackLabel={definition.label}
             Icon={definition.icon}
-            iconClassName={CATEGORY_TEXT[definition.category]}
+            iconClassName={theme.icon}
           />
           {!runnable && data.status === "idle" ? (
-            <span className="text-wf-faint shrink-0 text-[9.5px] leading-none font-medium tracking-wide uppercase">
+            <span className="shrink-0 rounded-full border border-slate-200 bg-white/80 px-1.5 py-0.5 text-[9px] leading-none font-semibold tracking-wide text-slate-500 uppercase">
               Planned
             </span>
-          ) : (
+          ) : pill ? (
             <span
-              className="text-wf-dim flex shrink-0 items-center gap-1.5 text-[9.5px] leading-none font-medium tracking-wider uppercase"
-              role={data.status === "idle" ? undefined : "status"}
-              aria-live={data.status === "idle" ? undefined : "polite"}
+              className={cn("flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] leading-none font-semibold tracking-wide uppercase", pill.className)}
+              role="status"
+              aria-live="polite"
             >
-              {isRunning ? (
-                <LoaderCircle
-                  className="text-wf-accent size-3 motion-safe:animate-spin"
-                  strokeWidth={2.5}
-                  aria-hidden="true"
-                />
-              ) : (
-                <span
-                  className={cn("size-1.5 rounded-full", STATUS_DOT[data.status])}
-                  aria-hidden="true"
-                />
+              {isRunning && (
+                <LoaderCircle className="size-2.5 motion-safe:animate-spin" strokeWidth={2.5} aria-hidden="true" />
               )}
-              {statusLabel ?? "Idle"}
+              {statusLabel}
             </span>
-          )}
+          ) : null}
         </div>
 
-        <div className="flex items-center justify-between gap-2 px-2.5 pt-1.5 pb-1">
-          <span
-            className={cn(
-              "font-mono text-[9px] leading-none font-semibold tracking-[0.14em] uppercase [text-shadow:0_0_8px_currentColor]",
-              CATEGORY_TEXT[definition.category]
-            )}
-          >
-            {CATEGORY_LABELS[definition.category]}
-          </span>
-          <span className="bg-wf-accent h-2.5 w-1 motion-safe:animate-pulse" aria-hidden="true" />
-        </div>
-
-        {children}
+        <div className="pt-2.5">{children}</div>
       </article>
 
       {definition.hasOutput && (
@@ -167,21 +118,6 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
           className={HANDLE_CLASS_NAME}
         >
           <span className={HANDLE_DOT_CLASS_NAME} />
-          <span
-            className={cn(
-              HANDLE_ACTION_CLASS_NAME,
-              "translate-y-7",
-              !workflowIsRunning && HANDLE_ACTION_REVEAL_CLASS_NAME,
-              selected && !workflowIsRunning && "pointer-events-auto scale-100 opacity-100",
-              connectionState === "valid-target" &&
-                "border-wf-ok text-wf-ok pointer-events-auto scale-100 opacity-100",
-              connectionState === "invalid-target" &&
-                "border-wf-fail text-wf-fail pointer-events-auto scale-100 opacity-100"
-            )}
-            aria-hidden="true"
-          >
-            <span className="text-[11px] font-semibold">+</span>
-          </span>
         </Handle>
       )}
     </div>

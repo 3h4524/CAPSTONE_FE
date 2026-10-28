@@ -3,8 +3,11 @@
 import { NodeField } from "@/components/workflows/nodes/node-field";
 import { NodeFrame } from "@/components/workflows/nodes/node-frame";
 import { NodeReadonlyText } from "@/components/workflows/nodes/node-readonly-text";
-import { getSelectFieldLabel, readString } from "@/helpers/workflow-config";
+import { NodeSegmented } from "@/components/workflows/nodes/node-segmented";
+import { getSelectFieldLabel, getSelectFieldOptions, readString } from "@/helpers/workflow-config";
 import { countApprovals } from "@/helpers/workflow-run";
+import { useNodeSettingsLocked } from "@/hooks/use-node-settings-locked";
+import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { WorkflowNode, WorkflowNodeType } from "@/types/workflow";
 import { cn } from "@/utils/cn";
@@ -21,16 +24,33 @@ export const ApprovalCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =>
   const counts =
     data.type === "design-approval" && job?.requireApproval === true ? countApprovals(job) : null;
   const mode = readString(data.config.mode);
-  const hint = MANUAL_HINTS[data.type];
+  const hint =
+    data.type === "design-approval" && mode === "auto"
+      ? "Every generated design goes straight to mock-ups."
+      : MANUAL_HINTS[data.type];
   const total = counts ? counts.approved + counts.rejected + counts.pending : 0;
+  const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
+  const disabled = useNodeSettingsLocked(data.type);
+  const modeOptions = getSelectFieldOptions(data.type, "mode").map((option) => ({
+    ...option,
+    label: option.value === "manual" ? "Manual" : "Auto",
+  }));
 
   return (
     <NodeFrame nodeId={id} data={data} selected={selected} widthClassName="w-60">
-      <div className="[&>div]:before:text-wf-accent space-y-1.5 px-2.5 pb-2.5 [&>div]:relative [&>div]:pl-4 [&>div]:before:absolute [&>div]:before:top-0 [&>div]:before:left-0 [&>div]:before:font-mono [&>div]:before:text-[10px] [&>div]:before:leading-8 [&>div]:before:content-['>']">
+      <div className="space-y-1.5 px-2.5 pb-2.5">
         {data.type === "review-video" ? (
           <NodeReadonlyText placeholder="Waiting for the latest cut" />
+        ) : data.type === "design-approval" ? (
+          <NodeSegmented
+            options={modeOptions}
+            value={mode}
+            onChange={(next) => updateNodeConfig(id, { ...data.config, mode: next })}
+            disabled={disabled}
+            ariaLabel="Approval mode"
+          />
         ) : (
-          <NodeField value={getSelectFieldLabel(data.type, "mode", mode)} placeholder="Choose approval mode" chevron />
+          <NodeField value={getSelectFieldLabel(data.type, "mode", mode)} placeholder="Manual review" />
         )}
 
         {counts && total > 0 && (

@@ -58,9 +58,10 @@ export const NodeName = ({ nodeId, label, fallbackLabel, Icon, iconClassName }: 
     <button
       type="button"
       aria-label={`Rename node ${label}`}
+      title={label}
       disabled={isRunning}
       onClick={startEditing}
-      className="nodrag group/name focus-visible:ring-ring/40 flex min-w-0 flex-1 cursor-text items-center gap-1.5 rounded text-left outline-none focus-visible:ring-2 disabled:cursor-default"
+      className="nodrag group/name focus-visible:ring-ring/40 flex min-w-0 flex-1 cursor-text items-center gap-1.5 rounded text-left outline-none focus-visible:ring-2 disabled:cursor-default in-[.wf-select-mode]:pointer-events-none"
     >
       <Icon className={cn("size-3.5 shrink-0", iconClassName)} aria-hidden="true" />
       <span className="min-w-0 truncate text-xs leading-5 font-semibold tracking-[-0.01em] text-slate-900">

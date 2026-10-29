@@ -16,7 +16,7 @@ const stopNodeEvent = (event: SyntheticEvent) => {
 
 export const NodeControl = ({ children, className }: NodeControlProps) => (
   <div
-    className={cn("nodrag nopan nowheel", className)}
+    className={cn("nodrag nopan nowheel in-[.wf-select-mode]:pointer-events-none", className)}
     onDoubleClick={stopNodeEvent}
     onKeyDown={stopNodeEvent}
     onWheel={stopNodeEvent}

@@ -9,6 +9,7 @@ import {
 import {
   applyCompactDefaultLayoutIfStillVertical,
   createWorkflowNode,
+  getConnectableNodeIds,
   getConnectionIssue,
   getCopyName,
   getExecutionOrder,
@@ -247,6 +248,32 @@ describe("isConnectionAllowed", () => {
     const existing = edge("a", "b");
 
     expect(isConnectionAllowed(existing, [existing])).toBe(false);
+  });
+});
+
+describe("getConnectableNodeIds", () => {
+  const pipeline = toWorkflowNodes(DEFAULT_WORKFLOW_DEFINITION);
+
+  it("lists the next step when dragging from an output", () => {
+    expect(getConnectableNodeIds("input", "source", pipeline, [])).toEqual(["prompt"]);
+  });
+
+  it("lists the previous step when dragging from an input", () => {
+    expect(getConnectableNodeIds("design", "target", pipeline, [])).toEqual(["prompt"]);
+  });
+
+  it("is empty when dragging from an output of a node that has none", () => {
+    expect(getConnectableNodeIds("export", "source", pipeline, [])).toEqual([]);
+  });
+
+  it("is empty when the next step is already connected", () => {
+    const connected = [buildWorkflowEdge({ id: "input-prompt", source: "input", target: "prompt" })];
+
+    expect(getConnectableNodeIds("input", "source", pipeline, connected)).toEqual([]);
+  });
+
+  it("is empty for an unknown node", () => {
+    expect(getConnectableNodeIds("missing", "source", pipeline, [])).toEqual([]);
   });
 });
 

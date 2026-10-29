@@ -6,7 +6,7 @@ import {
   RUN_ORDER,
   WORKFLOW_NODE_DEFINITIONS,
 } from "@/constants/workflow";
-import { normalizeNodeConfig, readString } from "@/helpers/workflow-config";
+import { getWorkflowNodeDefinition, normalizeNodeConfig, readString } from "@/helpers/workflow-config";
 import { findMissingMockupTemplates, isRunnableNode } from "@/helpers/workflow-run";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type {
@@ -87,6 +87,27 @@ export const isConnectionAllowed = (
   edges: WorkflowEdge[],
   nodes?: WorkflowNode[]
 ): boolean => getConnectionIssue(connection, edges, nodes) === null;
+
+export const getConnectableNodeIds = (
+  fromNodeId: string,
+  fromHandleType: "source" | "target" | null,
+  nodes: WorkflowNode[],
+  edges: WorkflowEdge[]
+): string[] => {
+  if (!nodes.some((node) => node.id === fromNodeId)) return [];
+  const fromSource = fromHandleType !== "target";
+  return nodes
+    .filter((node) => {
+      if (node.id === fromNodeId) return false;
+      const definition = getWorkflowNodeDefinition(node.data.type);
+      if (!(fromSource ? definition?.hasInput : definition?.hasOutput)) return false;
+      const connection = fromSource
+        ? { source: fromNodeId, target: node.id, sourceHandle: null, targetHandle: null }
+        : { source: node.id, target: fromNodeId, sourceHandle: null, targetHandle: null };
+      return isConnectionAllowed(connection, edges, nodes);
+    })
+    .map((node) => node.id);
+};
 
 export const getExecutionOrder = (nodes: WorkflowNode[], edges: WorkflowEdge[]): string[] => {
   const inDegree = new Map(nodes.map((node) => [node.id, 0]));

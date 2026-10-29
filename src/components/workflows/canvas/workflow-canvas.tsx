@@ -4,21 +4,31 @@ import type { DragEvent, PointerEvent as ReactPointerEvent } from "react";
 
 import { SelectionToolbar } from "@/components/workflows/canvas/selection-toolbar";
 import { ShortcutCheatsheet } from "@/components/workflows/canvas/shortcut-cheatsheet";
+import { WorkflowFloatingEdge } from "@/components/workflows/canvas/workflow-floating-edge";
 import { NodeView } from "@/components/workflows/nodes/node-view";
 import { NODE_CARD_WIDTHS, WORKFLOW_DND_MIME } from "@/constants/workflow";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { getWorkflowNodeDefinition, isWorkflowNodeType } from "@/helpers/workflow-config";
-import { createWorkflowNode, getConnectionIssue, isConnectionAllowed } from "@/helpers/workflow-graph";
+import {
+  createWorkflowNode,
+  getConnectableNodeIds,
+  getConnectionIssue,
+  isConnectionAllowed,
+} from "@/helpers/workflow-graph";
 import { useCanvasShortcuts } from "@/hooks/use-canvas-shortcuts";
+import { useSelectModifierHeld } from "@/hooks/use-select-modifier-held";
 import { useWorkflowSave } from "@/hooks/use-workflow-save";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowConnectionStore } from "@/stores/workflow-connection";
+import { cn } from "@/utils/cn";
 import {
   Background,
   BackgroundVariant,
   type Connection,
   Controls,
   type Edge,
+  type EdgeTypes,
+  MarkerType,
   MiniMap,
   type NodeTypes,
   ReactFlow,
@@ -27,7 +37,12 @@ import {
 
 const NODE_TYPES: NodeTypes = { workflow: NodeView };
 
-const DEFAULT_EDGE_OPTIONS = { type: "default" };
+const EDGE_TYPES: EdgeTypes = { floating: WorkflowFloatingEdge };
+
+const DEFAULT_EDGE_OPTIONS = {
+  type: "floating",
+  markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: "var(--wf-faint)" },
+};
 
 const DELETE_KEYS = ["Backspace", "Delete"];
 
@@ -59,6 +74,8 @@ export const WorkflowCanvas = () => {
   const hoverConnection = useWorkflowConnectionStore((state) => state.hover);
   const resetConnection = useWorkflowConnectionStore((state) => state.reset);
   const { saveWorkflow } = useWorkflowSave();
+
+  const selectModifierHeld = useSelectModifierHeld();
 
   useCanvasShortcuts({ saveWorkflow });
 
@@ -128,7 +145,7 @@ export const WorkflowCanvas = () => {
 
   return (
     <div
-      className="relative h-full w-full"
+      className={cn("relative h-full w-full", selectModifierHeld && "wf-select-mode")}
       onPointerMoveCapture={handleConnectionPointerMove}
       onPointerLeave={() => hoverConnection(null, null)}
     >
@@ -136,13 +153,19 @@ export const WorkflowCanvas = () => {
         nodes={nodes}
         edges={displayedEdges}
         nodeTypes={NODE_TYPES}
+        edgeTypes={EDGE_TYPES}
         defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={connect}
         isValidConnection={validateConnection}
         onConnectStart={(_, params) => {
-          if (params.nodeId) startConnection(params.nodeId, params.handleType);
+          if (params.nodeId)
+            startConnection(
+              params.nodeId,
+              params.handleType,
+              getConnectableNodeIds(params.nodeId, params.handleType, nodes, edges)
+            );
         }}
         onConnectEnd={(event, state) => {
           const hoveredNodeId = useWorkflowConnectionStore.getState().hoveredNodeId;

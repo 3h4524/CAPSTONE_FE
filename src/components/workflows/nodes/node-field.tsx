@@ -22,6 +22,8 @@ type NodeFieldProps = {
   ariaLabel?: string;
 };
 
+const getSecondLine = (option: WorkflowOption) => option.hint ?? option.description?.split(/(?<=\.)\s/)[0];
+
 const fieldClassName =
   "border-wf-line bg-wf-muted/50 flex h-8 min-w-0 items-center gap-2 rounded-md border px-2.5";
 
@@ -38,7 +40,7 @@ export const NodeField = ({
 }: NodeFieldProps) => {
   const interactive = Boolean(options && onChange && (options.length > 0 || noneLabel));
   const withImages = Boolean(options?.some((option) => option.imageUrl !== undefined));
-  const rich = withImages || Boolean(options?.some((option) => option.hint));
+  const rich = withImages || Boolean(options?.some((option) => getSecondLine(option)));
 
   if (loading) {
     return (
@@ -56,6 +58,7 @@ export const NodeField = ({
     return (
       <div className={fieldClassName}>
         <span
+          title={label}
           className={cn(
             "min-w-0 flex-1 truncate text-[11px] leading-none",
             label ? "text-wf-ink font-medium" : "text-wf-faint"
@@ -77,6 +80,7 @@ export const NodeField = ({
         <SelectTrigger
           size="sm"
           aria-label={ariaLabel ?? placeholder}
+          title={displayValue}
           className="border-wf-line bg-wf-muted/50 text-wf-ink data-[placeholder]:text-wf-faint focus-visible:border-wf-accent focus-visible:ring-wf-accent/30 [&_svg]:text-wf-faint h-8 w-full min-w-0 rounded-md px-2.5 py-0 text-[11px] leading-none shadow-none [&_svg]:size-3"
         >
           <SelectValue placeholder={placeholder}>
@@ -85,7 +89,7 @@ export const NodeField = ({
         </SelectTrigger>
         <SelectContent
           position="popper"
-          className="border-wf-line bg-wf-surface text-wf-ink w-(--radix-select-trigger-width) min-w-0"
+          className="border-wf-line bg-wf-surface text-wf-ink w-72 max-w-[min(20rem,90vw)] min-w-(--radix-select-trigger-width)"
         >
           {noneLabel && <SelectItem value={NONE_VALUE}>{noneLabel}</SelectItem>}
           {options?.map((option) => (
@@ -98,8 +102,10 @@ export const NodeField = ({
                 <span className="flex min-w-0 items-center gap-2">
                   {withImages && <OptionThumbnail imageUrl={option.imageUrl} className="size-8" />}
                   <span className="flex min-w-0 flex-col">
-                    <span className="truncate">{option.label}</span>
-                    {option.hint && <span className="text-wf-faint truncate text-[10px]">{option.hint}</span>}
+                    <span className="truncate" title={option.label}>{option.label}</span>
+                    {getSecondLine(option) && (
+                      <span className="text-wf-faint truncate text-[10px]">{getSecondLine(option)}</span>
+                    )}
                   </span>
                 </span>
               ) : (

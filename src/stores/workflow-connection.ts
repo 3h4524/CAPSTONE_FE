@@ -7,7 +7,8 @@ type WorkflowConnectionState = {
   sourceHandleType: HandleType | null;
   hoveredNodeId: string | null;
   hoveredNodeValid: boolean | null;
-  start: (nodeId: string, handleType: HandleType | null) => void;
+  connectableNodeIds: string[];
+  start: (nodeId: string, handleType: HandleType | null, connectableNodeIds: string[]) => void;
   hover: (nodeId: string | null, valid: boolean | null) => void;
   reset: () => void;
 };
@@ -17,12 +18,13 @@ const INITIAL_STATE = {
   sourceHandleType: null,
   hoveredNodeId: null,
   hoveredNodeValid: null,
+  connectableNodeIds: [],
 };
 
 export const useWorkflowConnectionStore = create<WorkflowConnectionState>((set) => ({
   ...INITIAL_STATE,
-  start: (sourceNodeId, sourceHandleType) =>
-    set({ sourceNodeId, sourceHandleType, hoveredNodeId: null, hoveredNodeValid: null }),
+  start: (sourceNodeId, sourceHandleType, connectableNodeIds) =>
+    set({ sourceNodeId, sourceHandleType, connectableNodeIds, hoveredNodeId: null, hoveredNodeValid: null }),
   hover: (hoveredNodeId, hoveredNodeValid) =>
     set((state) =>
       state.hoveredNodeId === hoveredNodeId && state.hoveredNodeValid === hoveredNodeValid

@@ -155,3 +155,96 @@ test("the palette lists every category and its nodes", async ({ page }) => {
     await expect(palette.getByRole("heading", { name: label })).toBeVisible();
   }
 });
+
+test("no connection line runs behind a node", async ({ page }) => {
+  const hidden = await page.evaluate(() => {
+    const rects = [...document.querySelectorAll<HTMLElement>(".react-flow__node")].map((element) => element.getBoundingClientRect());
+    const result: { edge: string; hiddenPercent: number }[] = [];
+    document.querySelectorAll<SVGGElement>(".react-flow__edge").forEach((edge) => {
+      const path = edge.querySelector("path");
+      const matrix = path?.getScreenCTM();
+      if (!path || !matrix) return;
+      const length = path.getTotalLength();
+      let inside = 0;
+      let total = 0;
+      for (let at = 6; at < length - 6; at += 1) {
+        const point = path.getPointAtLength(at);
+        const x = point.x * matrix.a + point.y * matrix.c + matrix.e;
+        const y = point.x * matrix.b + point.y * matrix.d + matrix.f;
+        total += 1;
+        if (rects.some((rect) => x > rect.left + 2 && x < rect.right - 2 && y > rect.top + 2 && y < rect.bottom - 2)) inside += 1;
+      }
+      result.push({ edge: edge.getAttribute("data-testid") ?? "?", hiddenPercent: total === 0 ? 0 : Math.round((inside / total) * 100) });
+    });
+    return result;
+  });
+  expect(hidden.length).toBe(8);
+  expect(hidden.filter((item) => item.hiddenPercent > 0)).toEqual([]);
+});
+
+test("holding ctrl only selects a node and does not touch its fields", async ({ page }) => {
+  const prompt = node(page, "prompt");
+  const field = prompt.getByRole("textbox", { name: "Extra instructions" });
+  const model = node(page, "design").getByRole("combobox", { name: "Image model" });
+
+  await page.keyboard.down("Control");
+  await field.click({ force: true, position: { x: 20, y: 10 } });
+  await expect(field).not.toBeFocused();
+  await model.click({ force: true });
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+  await page.keyboard.up("Control");
+
+  await expect(page.getByRole("heading", { name: "2 nodes selected" })).toBeVisible();
+  await field.click();
+  await expect(field).toBeFocused();
+  await model.click();
+  await expect(page.getByRole("listbox")).toBeVisible();
+});
+
+test("holding ctrl lets a click on a node field add the node to the selection", async ({ page }) => {
+  await node(page, "input").click({ position: { x: 4, y: 14 } });
+  await page.keyboard.down("Control");
+  await node(page, "prompt").getByRole("textbox", { name: "Extra instructions" }).click({ force: true });
+  await page.keyboard.up("Control");
+  await expect(page.getByRole("heading", { name: "2 nodes selected" })).toBeVisible();
+});
+
+const plusOf = (page: Page, id: string) => node(page, id).locator(".react-flow__handle.source > span").nth(1);
+const acceptingPlusOf = (page: Page, id: string) => node(page, id).locator(".react-flow__handle.target > span").nth(1);
+
+test("a plus appears at the output of a node when it is hovered", async ({ page }) => {
+  await expect(plusOf(page, "prompt")).toHaveCSS("opacity", "0");
+  await node(page, "prompt").hover({ position: { x: 4, y: 14 } });
+  await expect(plusOf(page, "prompt")).toHaveCSS("opacity", "1");
+});
+
+test("a node without an output has no plus", async ({ page }) => {
+  await expect(node(page, "export").locator(".react-flow__handle.source")).toHaveCount(0);
+});
+
+test("dragging a connection lights a plus on the node that may accept it", async ({ page }) => {
+  const edgeless = { ...workflow, definition: { ...definition, edges: [] } };
+  await page.route(`**/api/workflows/${workflowId}`, async (route) => {
+    const origin = new URL(test.info().project.use.baseURL ?? "http://127.0.0.1:3101").origin;
+    await route.fulfill({
+      json: edgeless,
+      headers: { "access-control-allow-origin": origin, "access-control-allow-credentials": "true" },
+    });
+  });
+  await page.reload();
+  await expect(node(page, "export")).toBeVisible();
+
+  const handle = await node(page, "input").locator(".react-flow__handle.source").boundingBox();
+  const target = await node(page, "mockup").boundingBox();
+  if (!handle || !target) throw new Error("handle or node is not visible");
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 10 });
+
+  await expect(acceptingPlusOf(page, "prompt")).toHaveClass(/ring-4/);
+  await expect(acceptingPlusOf(page, "design")).not.toHaveClass(/ring-4/);
+  await expect(acceptingPlusOf(page, "mockup")).not.toHaveClass(/ring-4/);
+
+  await page.mouse.up();
+  await expect(acceptingPlusOf(page, "prompt")).not.toHaveClass(/ring-4/);
+});

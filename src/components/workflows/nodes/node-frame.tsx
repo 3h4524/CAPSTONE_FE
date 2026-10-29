@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Plus } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { NodeName } from "@/components/workflows/nodes/node-name";
@@ -20,6 +20,15 @@ const HANDLE_CLASS_NAME =
 const HANDLE_DOT_CLASS_NAME =
   "border-wf-accent/70 bg-white pointer-events-none absolute size-2.5 rounded-full border shadow-sm transition-[transform,background-color,border-color] duration-150 group-hover/connect:scale-125 motion-reduce:transition-none";
 
+const HANDLE_ACTION_CLASS_NAME =
+  "bg-wf-surface text-wf-accent border-wf-line pointer-events-none absolute grid size-7 scale-90 place-items-center rounded-full border opacity-0 shadow-md transition-[opacity,transform,background-color,color,box-shadow] duration-200 ease-out group-hover/connect:scale-105 group-hover/connect:bg-wf-accent group-hover/connect:text-wf-surface motion-reduce:transition-none";
+
+const HANDLE_ACTION_ACCEPTING_CLASS_NAME =
+  "border-wf-accent bg-wf-accent text-wf-surface ring-wf-accent/25 scale-100 opacity-100 ring-4 motion-safe:animate-pulse";
+
+const HANDLE_ACTION_REVEAL_CLASS_NAME =
+  "group-hover/node:pointer-events-auto group-hover/node:scale-100 group-hover/node:opacity-100 group-focus-within/node:pointer-events-auto group-focus-within/node:scale-100 group-focus-within/node:opacity-100";
+
 type NodeFrameProps = {
   nodeId: string;
   data: WorkflowNodeData;
@@ -38,6 +47,9 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
   });
   const hoveredConnectionValid = useWorkflowConnectionStore((state) =>
     state.hoveredNodeId === nodeId ? state.hoveredNodeValid : null
+  );
+  const acceptsConnectionFrom = useWorkflowConnectionStore((state) =>
+    state.connectableNodeIds.includes(nodeId) ? state.sourceHandleType : null
   );
   const definition = getWorkflowNodeDefinition(data.type);
   if (!definition) return null;
@@ -75,6 +87,16 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
           className={cn(HANDLE_CLASS_NAME, "top-0!", "before:size-6!")}
         >
           <span className={HANDLE_DOT_CLASS_NAME} />
+          <span
+            className={cn(
+              HANDLE_ACTION_CLASS_NAME,
+              "-translate-y-6",
+              acceptsConnectionFrom === "source" && HANDLE_ACTION_ACCEPTING_CLASS_NAME
+            )}
+            aria-hidden="true"
+          >
+            <Plus className="size-4" strokeWidth={2} />
+          </span>
         </Handle>
       )}
 
@@ -118,6 +140,19 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
           className={HANDLE_CLASS_NAME}
         >
           <span className={HANDLE_DOT_CLASS_NAME} />
+          <span
+            className={cn(
+              HANDLE_ACTION_CLASS_NAME,
+              "translate-y-6",
+              !workflowIsRunning && HANDLE_ACTION_REVEAL_CLASS_NAME,
+              selected && !workflowIsRunning && "pointer-events-auto scale-100 opacity-100",
+              connectionState === "source" && "bg-wf-accent text-wf-surface pointer-events-auto scale-100 opacity-100",
+              acceptsConnectionFrom === "target" && HANDLE_ACTION_ACCEPTING_CLASS_NAME
+            )}
+            aria-hidden="true"
+          >
+            <Plus className="size-4" strokeWidth={2} />
+          </span>
         </Handle>
       )}
     </div>

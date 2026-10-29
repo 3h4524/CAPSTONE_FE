@@ -248,3 +248,68 @@ test("dragging a connection lights a plus on the node that may accept it", async
   await page.mouse.up();
   await expect(acceptingPlusOf(page, "prompt")).not.toHaveClass(/ring-4/);
 });
+
+const edgelessWorkflow = async (page: Page) => {
+  const edgeless = { ...workflow, definition: { ...definition, edges: [] } };
+  await page.route(`**/api/workflows/${workflowId}`, async (route) => {
+    const origin = new URL(test.info().project.use.baseURL ?? "http://127.0.0.1:3101").origin;
+    await route.fulfill({
+      json: edgeless,
+      headers: { "access-control-allow-origin": origin, "access-control-allow-credentials": "true" },
+    });
+  });
+  await page.reload();
+  await expect(node(page, "export")).toBeVisible();
+};
+
+const frameColors = (page: Page, id: string) =>
+  node(page, id)
+    .locator("article")
+    .evaluate((element) => {
+      const probe = document.createElement("div");
+      probe.style.borderStyle = "solid";
+      document.body.append(probe);
+      const read = (name: string) => {
+        probe.style.borderColor = `var(${name})`;
+        return getComputedStyle(probe).borderTopColor;
+      };
+      const colors = {
+        border: getComputedStyle(element).borderTopColor,
+        ok: read("--wf-ok"),
+        fail: read("--wf-fail"),
+        accent: read("--wf-accent"),
+      };
+      probe.remove();
+      return colors;
+    });
+
+const dragConnectionOnto = async (page: Page, targetId: string) => {
+  const handle = await node(page, "input").locator(".react-flow__handle.source").boundingBox();
+  const target = await node(page, targetId).boundingBox();
+  if (!handle || !target) throw new Error("handle or node is not visible");
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 12 });
+};
+
+test("a node under the dragged connection stays green when the connection is allowed", async ({ page }) => {
+  await edgelessWorkflow(page);
+  await dragConnectionOnto(page, "prompt");
+  await expect.poll(async () => (await frameColors(page, "prompt")).border === (await frameColors(page, "prompt")).ok).toBe(true);
+  await page.mouse.up();
+});
+
+test("a node under the dragged connection stays red when the connection is not allowed", async ({ page }) => {
+  await edgelessWorkflow(page);
+  await dragConnectionOnto(page, "design");
+  await expect.poll(async () => (await frameColors(page, "design")).border === (await frameColors(page, "design")).fail).toBe(true);
+  await page.mouse.up();
+});
+
+test("a selected node keeps the green or red feedback while the connection is over it", async ({ page }) => {
+  await edgelessWorkflow(page);
+  await node(page, "prompt").click({ position: { x: 4, y: 14 } });
+  await dragConnectionOnto(page, "prompt");
+  await expect.poll(async () => (await frameColors(page, "prompt")).border === (await frameColors(page, "prompt")).ok).toBe(true);
+  await page.mouse.up();
+});

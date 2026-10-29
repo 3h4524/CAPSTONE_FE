@@ -70,8 +70,8 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
     selected && "border-wf-accent ring-wf-accent/20 z-10 ring-2",
     isConnectionTarget
       ? connectionTargetInvalid
-        ? "border-wf-fail ring-wf-fail/15 z-20 ring-2"
-        : "border-wf-ok ring-wf-ok/15 z-20 ring-2"
+        ? "border-wf-fail hover:border-wf-fail ring-wf-fail/25 z-20 ring-4"
+        : "border-wf-ok hover:border-wf-ok ring-wf-ok/25 z-20 ring-4"
       : isRunning && "border-wf-accent ring-wf-accent/20 z-10 ring-2"
   );
 

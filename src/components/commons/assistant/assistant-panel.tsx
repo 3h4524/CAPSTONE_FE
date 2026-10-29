@@ -11,8 +11,12 @@ export const AssistantPanel = () => {
   const setOpen = useAssistantStore((state) => state.setOpen);
 
   return (
-    <Sheet open={isOpen} onOpenChange={setOpen}>
-      <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+    <Sheet open={isOpen} onOpenChange={setOpen} modal={false}>
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col gap-0 p-0 sm:max-w-md"
+        onInteractOutside={(event) => event.preventDefault()}
+      >
         <AssistantHeader />
         <SheetDescription className="sr-only">Ask questions or get help with your workflows.</SheetDescription>
         <AssistantMessageList />

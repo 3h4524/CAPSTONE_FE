@@ -1374,7 +1374,7 @@ export function StandardMotionEditor({
         variant="outline"
         disabled={disabled}
         onClick={openEditor}
-        className="h-auto min-h-11 w-fit max-w-full justify-between gap-3 px-3 py-2 text-left"
+        className="h-auto min-h-11 w-full max-w-full flex-wrap justify-between gap-x-3 gap-y-1 px-3 py-2 text-left whitespace-normal"
       >
         <span className="flex min-w-0 items-center gap-2">
           <SlidersHorizontal className="text-primary size-4 shrink-0" aria-hidden="true" />

@@ -880,7 +880,7 @@ export function AiShotOptions({
           </p>
         </div>
         <div
-          className="bg-background grid grid-cols-[auto_minmax(3rem,1fr)_auto] items-center gap-3 rounded-md border px-3 py-2"
+          className="bg-background flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-md border px-3 py-2"
           aria-label={`Total video duration: ${totalSeconds} of 30 seconds`}
         >
           <p className="text-foreground text-sm font-semibold whitespace-nowrap tabular-nums">
@@ -893,7 +893,7 @@ export function AiShotOptions({
             aria-valuemax={30}
             aria-valuenow={Math.min(totalSeconds, 30)}
             aria-valuetext={`${totalSeconds} of 30 seconds`}
-            className="bg-muted h-2 min-w-0 overflow-hidden rounded-full"
+            className="bg-muted h-2 min-w-12 flex-1 basis-16 overflow-hidden rounded-full"
           >
             <div
               className="h-full rounded-full bg-teal-600 transition-[width] duration-200"
@@ -1125,7 +1125,7 @@ export function AiShotOptions({
             }}
             className={`bg-background space-y-3 rounded-lg border p-3 transition-colors ${dragOverIndex === index || selectedForMove === index ? "border-primary ring-primary/20 ring-2" : ""}`}
           >
-            <header className="flex items-center gap-2">
+            <header className="flex flex-wrap items-center gap-2">
               <h3 className="bg-background flex size-7 items-center justify-center rounded-md border text-sm font-semibold tabular-nums">
                 <span className="sr-only">Scene </span>
                 {index + 1}
@@ -1167,7 +1167,7 @@ export function AiShotOptions({
                   </SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex max-w-56 min-w-0 flex-1 items-center gap-1">
+              <div className="flex max-w-56 min-w-32 flex-1 basis-36 items-center gap-1">
                 <Button
                   type="button"
                   variant="ghost"
@@ -1688,7 +1688,7 @@ export function AiShotOptions({
                                   : ""}
                               </span>
                             </div>
-                            <div className="grid min-w-0 gap-3 min-[420px]:grid-cols-[7rem_minmax(0,1fr)]">
+                            <div className="grid min-w-0 gap-3 @min-[36rem]:grid-cols-[7rem_minmax(0,1fr)]">
                               {preparingSceneIndex === index ? (
                                 <div
                                   role="status"
@@ -1915,7 +1915,7 @@ export function AiShotOptions({
                           Preview this scene with the selected camera movement.
                         </p>
                       </div>
-                      <div className="grid items-start gap-4 min-[440px]:grid-cols-[10rem_minmax(0,1fr)]">
+                      <div className="grid items-start gap-4 @min-[36rem]:grid-cols-[10rem_minmax(0,1fr)]">
                         <StandardMotionPreview
                           scene={scene}
                           sceneNumber={index + 1}
@@ -1941,6 +1941,7 @@ export function AiShotOptions({
                               }}
                             >
                               <SelectTrigger
+                                className="w-full min-w-0"
                                 aria-label={`Scene ${index + 1} Standard camera movement`}
                               >
                                 <SelectValue />

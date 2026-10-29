@@ -29,10 +29,23 @@ export type AssistantCanvasOperation = {
 
 export type AssistantCanvasPatchPayload = { workflowId: string; operations: AssistantCanvasOperation[]; warnings: string[] };
 
+export type AssistantArrangeLayout = "horizontal" | "vertical" | "grid";
+
+export type AssistantArrangeSpacing = "compact" | "comfortable" | "wide";
+
+export type AssistantArrangePayload = {
+  workflowId: string;
+  layout: AssistantArrangeLayout;
+  spacing: AssistantArrangeSpacing;
+  perRow: number;
+  nodeCount: number;
+};
+
 export type AssistantNavigatePayload = { path: string; label: string };
 
 export type AssistantClientAction =
   | { id: string; kind: "edit_workflow_canvas"; payload: AssistantCanvasPatchPayload }
+  | { id: string; kind: "arrange_workflow_canvas"; payload: AssistantArrangePayload }
   | { id: string; kind: "navigate"; payload: AssistantNavigatePayload };
 
 export type AssistantClientActionState = "idle" | "applied" | "dismissed";

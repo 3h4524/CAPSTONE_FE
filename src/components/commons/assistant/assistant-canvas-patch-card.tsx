@@ -12,12 +12,22 @@ import { useSetAssistantClientActionState } from "@/hooks/mutations/use-set-assi
 import { useAssistantStore } from "@/stores/assistant";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { AssistantCanvasPatchPayload, AssistantClientActionState } from "@/types/assistant";
+import type { WorkflowNode } from "@/types/workflow";
 
 type AssistantCanvasPatchCardProps = {
   messageId: string;
   actionId: string;
   payload: AssistantCanvasPatchPayload;
   state: AssistantClientActionState;
+};
+
+const changedNodeIds = (before: WorkflowNode[], after: WorkflowNode[], payload: AssistantCanvasPatchPayload) => {
+  const known = new Set(before.map((node) => node.id));
+  const added = after.filter((node) => !known.has(node.id)).map((node) => node.id);
+  const edited = payload.operations.flatMap((operation) =>
+    operation.op === "update_config" && operation.nodeId && known.has(operation.nodeId) ? [operation.nodeId] : []
+  );
+  return [...new Set([...added, ...edited])];
 };
 
 const STATE_TEXT: Record<Exclude<AssistantClientActionState, "idle">, string> = {
@@ -44,7 +54,7 @@ export const AssistantCanvasPatchCard = ({ messageId, actionId, payload, state }
   const apply = () => {
     const { nodes: currentNodes, edges: currentEdges } = useWorkflowStore.getState();
     const result = applyCanvasPatch(currentNodes, currentEdges, payload.operations);
-    if (result.applied > 0) applyGraphPatch(result.nodes, result.edges);
+    if (result.applied > 0) applyGraphPatch(result.nodes, result.edges, changedNodeIds(currentNodes, result.nodes, payload));
     settle("applied");
     if (result.skipped.length === 0) {
       showToast("success", "Changes applied. Remember to save.");

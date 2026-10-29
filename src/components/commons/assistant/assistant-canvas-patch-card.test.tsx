@@ -160,4 +160,15 @@ describe("AssistantCanvasPatchCard", () => {
     expect(screen.getByRole("button", { name: "Apply to canvas" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Dismiss" })).toBeDisabled();
   });
+
+  it("asks the canvas to bring the new nodes into view", async () => {
+    openWorkflow();
+    renderWithQuery(<AssistantCanvasPatchCard messageId="m1" actionId="x1" payload={payload()} state="idle" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Apply to canvas" }));
+
+    const request = useWorkflowStore.getState().focusRequest;
+    const addedId = useWorkflowStore.getState().nodes.find((node) => node.id !== "a")?.id;
+    expect(request?.nodeIds).toEqual([addedId]);
+  });
 });

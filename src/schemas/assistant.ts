@@ -51,8 +51,17 @@ const navigatePayloadSchema = z.object({ path: z.string(), label: z.string() });
 
 const pendingActionStatusSchema = z.enum(["pending", "executing", "executed", "rejected", "expired", "failed"]);
 
+const arrangePayloadSchema = z.object({
+  workflowId: z.string(),
+  layout: z.enum(["horizontal", "vertical", "grid"]),
+  spacing: z.enum(["compact", "comfortable", "wide"]),
+  perRow: z.number(),
+  nodeCount: z.number(),
+});
+
 const clientActionSchema = z.discriminatedUnion("kind", [
   z.object({ id: z.string(), kind: z.literal("edit_workflow_canvas"), payload: canvasPatchPayloadSchema }),
+  z.object({ id: z.string(), kind: z.literal("arrange_workflow_canvas"), payload: arrangePayloadSchema }),
   z.object({ id: z.string(), kind: z.literal("navigate"), payload: navigatePayloadSchema }),
 ]);
 

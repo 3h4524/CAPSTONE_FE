@@ -672,6 +672,25 @@ describe("reset", () => {
 });
 
 describe("applyGraphPatch", () => {
+  it("records which nodes the canvas should bring into view", () => {
+    seedGraph([node("a")], []);
+
+    useWorkflowStore.getState().applyGraphPatch([node("a"), node("b")], [], ["b"]);
+    const first = useWorkflowStore.getState().focusRequest;
+    useWorkflowStore.getState().applyGraphPatch([node("a"), node("b"), node("c")], [], ["c"]);
+
+    expect(first?.nodeIds).toEqual(["b"]);
+    expect(useWorkflowStore.getState().focusRequest).toMatchObject({ nodeIds: ["c"], token: (first?.token ?? 0) + 1 });
+  });
+
+  it("asks for no focus when nothing was added or edited", () => {
+    seedGraph([node("a")], []);
+
+    useWorkflowStore.getState().applyGraphPatch([node("a")], []);
+
+    expect(useWorkflowStore.getState().focusRequest).toBeNull();
+  });
+
   beforeEach(() => {
     useWorkflowStore.setState(initialState, true);
   });

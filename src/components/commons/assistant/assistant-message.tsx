@@ -31,8 +31,13 @@ export const AssistantMessage = ({ message }: AssistantMessageProps) => {
 
   return (
     <div className="flex max-w-[92%] flex-col gap-2 self-start">
-      {message.tools.length > 0 ? <AssistantToolStatus tools={message.tools} /> : null}
-      {isWaiting ? <Spinner className="size-4" /> : null}
+      {message.tools.length > 0 ? <AssistantToolStatus tools={message.tools} isStreaming={message.isStreaming} /> : null}
+      {isWaiting ? (
+        <p className="text-muted-foreground flex items-center gap-2 text-xs">
+          <Spinner className="size-3" />
+          Thinking…
+        </p>
+      ) : null}
       {message.content ? (
         <div className="bg-muted rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap">{message.content}</div>
       ) : null}

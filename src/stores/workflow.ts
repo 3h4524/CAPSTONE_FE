@@ -54,13 +54,14 @@ export type WorkflowEditorState = {
   lastHistoryAt: number;
   isDirty: boolean;
   isRunning: boolean;
+  focusRequest: { nodeIds: string[]; token: number } | null;
   clipboard: NodeClipboard | null;
   loadWorkflow: (workflow: WorkflowDetail) => void;
   onNodesChange: (changes: NodeChange<WorkflowNode>[]) => void;
   onEdgesChange: (changes: EdgeChange<WorkflowEdge>[]) => void;
   connect: OnConnect;
   addNode: (node: WorkflowNode) => void;
-  applyGraphPatch: (nodes: WorkflowNode[], edges: WorkflowEdge[]) => void;
+  applyGraphPatch: (nodes: WorkflowNode[], edges: WorkflowEdge[], focusNodeIds?: string[]) => void;
   renameNode: (nodeId: string, label: string) => void;
   updateNodeConfig: (nodeId: string, config: WorkflowNodeConfig) => void;
   removeNode: (nodeId: string) => void;
@@ -105,6 +106,7 @@ const INITIAL_STATE = {
   lastHistoryAt: 0,
   isDirty: false,
   isRunning: false,
+  focusRequest: null,
 };
 
 let dragSnapshot: HistorySnapshot | null = null;
@@ -239,11 +241,12 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
       };
     }),
 
-  applyGraphPatch: (nodes, edges) =>
+  applyGraphPatch: (nodes, edges, focusNodeIds = []) =>
     set((state) => ({
       nodes,
       edges,
       isDirty: true,
+      focusRequest: focusNodeIds.length > 0 ? { nodeIds: focusNodeIds, token: (state.focusRequest?.token ?? 0) + 1 } : null,
       ...pushHistory(state, "assistant", false),
     })),
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { applyCanvasPatch, describeCanvasOperation } from "@/helpers/assistant-canvas-patch";
+import { applyCanvasPatch, describeCanvasOperation, mergeConfig } from "@/helpers/assistant-canvas-patch";
 import { buildWorkflowEdge, buildWorkflowNode } from "@/test/factories";
 import type { AssistantCanvasOperation } from "@/types/assistant";
 import type { WorkflowNode } from "@/types/workflow";
@@ -113,6 +113,37 @@ describe("describeCanvasOperation", () => {
 
     expect(describeCanvasOperation({ op: "add_node", type: "generate-listing", after: "a" }, nodes)).toContain('after "Product Input"');
     expect(describeCanvasOperation({ op: "connect", source: "a", target: "b" }, nodes)).toBe('Connect "Product Input" → "Apply Mockup"');
-    expect(describeCanvasOperation({ op: "update_config", nodeId: "b" }, nodes)).toBe('Update settings of "Apply Mockup"');
+    expect(describeCanvasOperation({ op: "update_config", nodeId: "b" }, nodes)).toBe('Change settings of "Apply Mockup"');
+  });
+});
+
+describe("mergeConfig", () => {
+  it("merges nested objects instead of replacing them", () => {
+    const merged = mergeConfig({ standardOptions: { motionPreset: "zoom", transition: "none" }, keep: 1 }, { standardOptions: { transition: "fade" } });
+
+    expect(merged).toEqual({ standardOptions: { motionPreset: "zoom", transition: "fade" }, keep: 1 });
+  });
+
+  it("replaces arrays and primitives wholesale", () => {
+    expect(mergeConfig({ ids: ["a", "b"], count: 1 }, { ids: ["c"], count: 2 })).toEqual({ ids: ["c"], count: 2 });
+  });
+
+  it("does not mutate its inputs", () => {
+    const current = { nested: { a: 1 } };
+
+    mergeConfig(current, { nested: { b: 2 } });
+
+    expect(current).toEqual({ nested: { a: 1 } });
+  });
+
+  it("applies a nested update_config through the patch without losing sibling keys", () => {
+    const video = buildWorkflowNode({
+      id: "v",
+      data: { type: "generate-video", label: "Video", config: { standardOptions: { motionPreset: "zoom", transition: "none" } }, status: "idle" },
+    });
+
+    const result = applyCanvasPatch([video], [], [{ op: "update_config", nodeId: "v", config: { standardOptions: { transition: "fade" } } }]);
+
+    expect(result.nodes[0]?.data.config).toEqual({ standardOptions: { motionPreset: "zoom", transition: "fade" } });
   });
 });

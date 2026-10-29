@@ -22,6 +22,20 @@ export const listAssistantConversations = async (signal?: AbortSignal) =>
 export const getAssistantConversation = async (id: string, signal?: AbortSignal) =>
   (await api.get<AssistantConversationDetail>(`/api/assistant/conversations/${id}`, { signal })).data;
 
+export type AssistantClientActionStateInput = { messageId: string; actionId: string; state: "applied" | "dismissed" };
+
+export const setAssistantClientActionState = async ({ messageId, actionId, state }: AssistantClientActionStateInput) => {
+  await api.put(`/api/assistant/messages/${messageId}/client-actions/${actionId}`, { state });
+};
+
+export const deleteAssistantConversation = async (id: string) => {
+  await api.delete(`/api/assistant/conversations/${id}`);
+};
+
+export const deleteAssistantConversations = async (exceptConversationId: string | null) => {
+  await api.delete("/api/assistant/conversations", { params: exceptConversationId ? { except: exceptConversationId } : undefined });
+};
+
 export const confirmAssistantAction = async (id: string) =>
   (await api.post<AssistantActionResult>(`/api/assistant/actions/${id}/confirm`)).data;
 

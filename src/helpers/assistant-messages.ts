@@ -14,7 +14,9 @@ export const toAssistantUiMessage = (dto: AssistantMessageDto): AssistantUiMessa
     choices: metadata.choices ?? null,
     choicesUsed: true,
     clientActions,
-    clientActionStates: Object.fromEntries(clientActions.map((action) => [action.id, "idle" as const])),
+    clientActionStates: Object.fromEntries(
+      clientActions.map((action) => [action.id, metadata.clientActionStates?.[action.id] ?? ("idle" as const)])
+    ),
     pendingActionIds: metadata.pendingActionIds ?? [],
     tools: (metadata.toolCalls ?? []).map((tool, index) => ({
       callId: `${dto.id}-${index}`,

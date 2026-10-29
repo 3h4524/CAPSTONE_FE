@@ -1,3 +1,4 @@
+import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AssistantCanvasPatchCard } from "@/components/commons/assistant/assistant-canvas-patch-card";
@@ -6,12 +7,15 @@ import { useAssistantStore } from "@/stores/assistant";
 import { useWorkflowStore } from "@/stores/workflow";
 import { usePathname } from "@/test/__mocks__/next/navigation";
 import { buildWorkflowNode } from "@/test/factories";
+import { server } from "@/test/mocks/server";
 import { renderWithQuery } from "@/test/render-with-query";
 import type { AssistantCanvasPatchPayload } from "@/types/assistant";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 vi.mock("@/helpers/toast");
+
+const stateRequests: { url: string; body: unknown }[] = [];
 
 const payload = (overrides: Partial<AssistantCanvasPatchPayload> = {}): AssistantCanvasPatchPayload => ({
   workflowId: "wf-1",
@@ -35,6 +39,13 @@ describe("AssistantCanvasPatchCard", () => {
       ],
     });
     vi.mocked(showToast).mockClear();
+    stateRequests.length = 0;
+    server.use(
+      http.put(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/assistant/messages/:messageId/client-actions/:actionId`, async ({ request }) => {
+        stateRequests.push({ url: request.url, body: await request.json() });
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
   });
 
   it("lists the proposed operations and any warnings", () => {
@@ -97,5 +108,56 @@ describe("AssistantCanvasPatchCard", () => {
 
     expect(screen.getByText(text)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Apply to canvas" })).not.toBeInTheDocument();
+  });
+
+  it("saves the applied state to the backend", async () => {
+    openWorkflow();
+    renderWithQuery(<AssistantCanvasPatchCard messageId="m1" actionId="x1" payload={payload()} state="idle" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Apply to canvas" }));
+
+    await vi.waitFor(() => expect(stateRequests).toHaveLength(1));
+    expect(stateRequests[0]?.url).toContain("/messages/m1/client-actions/x1");
+    expect(stateRequests[0]?.body).toEqual({ state: "applied" });
+  });
+
+  it("saves the dismissed state to the backend", async () => {
+    openWorkflow();
+    renderWithQuery(<AssistantCanvasPatchCard messageId="m1" actionId="x1" payload={payload()} state="idle" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+
+    await vi.waitFor(() => expect(stateRequests[0]?.body).toEqual({ state: "dismissed" }));
+  });
+
+  it("explains each setting change with its old and new value", () => {
+    useWorkflowStore.setState({
+      workflowId: "wf-1",
+      nodes: [buildWorkflowNode({ id: "l", data: { type: "generate-listing", label: "Listing", config: { tone: "friendly" }, status: "idle" } })],
+      edges: [],
+    });
+    usePathname.mockReturnValue("/workflows");
+
+    renderWithQuery(
+      <AssistantCanvasPatchCard
+        messageId="m1"
+        actionId="x1"
+        payload={payload({ operations: [{ op: "update_config", nodeId: "l", config: { tone: "playful" } }] })}
+        state="idle"
+      />
+    );
+
+    expect(screen.getByText('Change settings of "Listing"')).toBeInTheDocument();
+    expect(screen.getByText("Tone: Friendly → Playful")).toBeInTheDocument();
+  });
+
+  it("disables the chips while a reply is still streaming", () => {
+    openWorkflow();
+    useAssistantStore.setState({ streamingMessageId: "streaming" });
+
+    renderWithQuery(<AssistantCanvasPatchCard messageId="m1" actionId="x1" payload={payload()} state="idle" />);
+
+    expect(screen.getByRole("button", { name: "Apply to canvas" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Dismiss" })).toBeDisabled();
   });
 });

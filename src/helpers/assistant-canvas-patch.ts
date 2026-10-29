@@ -18,6 +18,20 @@ export type CanvasPatchResult = {
 
 type PatchState = { nodes: WorkflowNode[]; edges: WorkflowEdge[] };
 
+type ConfigObject = Record<string, unknown>;
+
+const isConfigObject = (value: unknown): value is ConfigObject =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+export const mergeConfig = (current: ConfigObject, patch: ConfigObject): ConfigObject => {
+  const merged: ConfigObject = { ...current };
+  Object.entries(patch).forEach(([key, value]) => {
+    const existing = merged[key];
+    merged[key] = isConfigObject(existing) && isConfigObject(value) ? mergeConfig(existing, value) : value;
+  });
+  return merged;
+};
+
 type OperationOutcome = { state: PatchState } | { reason: string };
 
 const labelOf = (nodeId: string | null | undefined, nodes: WorkflowNode[]) => {
@@ -94,7 +108,7 @@ export const applyCanvasPatch = (
         return {
           state: {
             nodes: state.nodes.map((node) =>
-              node.id === nodeId ? { ...node, data: { ...node.data, config: { ...node.data.config, ...config } } } : node
+              node.id === nodeId ? { ...node, data: { ...node.data, config: mergeConfig(node.data.config, config) } } : node
             ),
             edges: state.edges,
           },
@@ -141,7 +155,7 @@ export const describeCanvasOperation = (operation: AssistantCanvasOperation, nod
     case "disconnect":
       return `Disconnect "${known(operation.source)}" from "${known(operation.target)}"`;
     case "update_config":
-      return `Update settings of "${known(operation.nodeId)}"`;
+      return `Change settings of "${known(operation.nodeId)}"`;
     case "rename_node":
       return `Rename "${known(operation.nodeId)}" to "${operation.label ?? ""}"`;
   }

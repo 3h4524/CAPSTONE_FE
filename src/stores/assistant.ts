@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+import { ASSISTANT_PANEL_DEFAULT_WIDTH_PX } from "@/constants/assistant";
 import type { LauncherPosition } from "@/helpers/assistant-launcher-position";
 import { type AssistantChatState, reduceAssistantStreamEvent } from "@/helpers/assistant-reducer";
 import type {
@@ -14,6 +15,8 @@ type AssistantState = AssistantChatState & {
   isOpen: boolean;
   selectedConversationId: string | null;
   launcherPosition: LauncherPosition | null;
+  panelWidth: number;
+  setPanelWidth: (width: number) => void;
   setLauncherPosition: (position: LauncherPosition | null) => void;
   setOpen: (open: boolean) => void;
   toggleOpen: () => void;
@@ -60,6 +63,9 @@ export const useAssistantStore = create<AssistantState>((set) => ({
   isOpen: false,
   selectedConversationId: null,
   launcherPosition: null,
+  panelWidth: ASSISTANT_PANEL_DEFAULT_WIDTH_PX,
+
+  setPanelWidth: (width) => set({ panelWidth: width }),
 
   setLauncherPosition: (position) => set({ launcherPosition: position }),
 

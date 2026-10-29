@@ -97,6 +97,7 @@ export const assistantMessageMetadataSchema = z.object({
   citations: z.array(citationSchema).optional(),
   toolCalls: z.array(z.object({ name: z.string(), ok: z.boolean() })).optional(),
   clientActions: z.array(clientActionSchema).optional(),
+  clientActionStates: z.record(z.string(), z.enum(["applied", "dismissed"])).optional(),
   pendingActionIds: z.array(z.string()).optional(),
   choices: choicesSchema.optional(),
   error: z.object({ code: z.string(), message: z.string() }).optional(),

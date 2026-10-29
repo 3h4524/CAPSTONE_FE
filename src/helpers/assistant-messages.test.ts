@@ -76,4 +76,17 @@ describe("toAssistantChatState", () => {
 
     expect(state.messages.every((message) => message.choicesUsed)).toBe(true);
   });
+
+  it("restores the saved state of client actions and leaves the others idle", () => {
+    const action = (id: string) => ({ id, kind: "navigate", payload: { path: "/usage", label: "Usage" } });
+    const message = toAssistantUiMessage({
+      id: "m",
+      role: "assistant",
+      content: "x",
+      createdAt: "2026-10-29T00:00:00Z",
+      metadata: { clientActions: [action("a1"), action("a2")], clientActionStates: { a1: "applied" } },
+    });
+
+    expect(message.clientActionStates).toEqual({ a1: "applied", a2: "idle" });
+  });
 });

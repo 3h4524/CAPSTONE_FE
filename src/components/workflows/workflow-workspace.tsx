@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { type CSSProperties, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Workflow } from "lucide-react";
 
@@ -20,6 +20,7 @@ import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
 import { useLatestWorkflowRun } from "@/hooks/queries/use-latest-workflow-run";
 import { useWorkflow } from "@/hooks/queries/use-workflow";
 import { useWorkflows } from "@/hooks/queries/use-workflows";
+import { useAssistantStore } from "@/stores/assistant";
 import { usePopupStore } from "@/stores/popup";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
@@ -37,6 +38,10 @@ export const WorkflowWorkspace = () => {
   const loadedWorkflowId = useWorkflowStore((state) => state.workflowId);
   const workflowName = useWorkflowStore((state) => state.name);
   const isDirty = useWorkflowStore((state) => state.isDirty);
+  const hasSelectedNode = useWorkflowStore((state) => state.selectedNodeIds.length > 0);
+  const isAssistantOpen = useAssistantStore((state) => state.isOpen);
+  const assistantWidth = useAssistantStore((state) => state.panelWidth);
+  const showNodePanel = hasSelectedNode || !isAssistantOpen;
   const loadWorkflow = useWorkflowStore((state) => state.loadWorkflow);
   const resetEditor = useWorkflowStore((state) => state.reset);
   const productId = useWorkflowStore((state) => {
@@ -203,7 +208,10 @@ export const WorkflowWorkspace = () => {
   const isEditorReady = workflow !== undefined && workflow.id === loadedWorkflowId;
 
   return (
-    <div className="flex min-h-[560px] flex-1 flex-col">
+    <div
+      className="flex min-h-[560px] flex-1 flex-col xl:pr-(--assistant-inset)"
+      style={{ "--assistant-inset": isAssistantOpen ? `${assistantWidth}px` : "0px" } as CSSProperties}
+    >
       <WorkflowToolbar
         workflows={workflows}
         activeWorkflowId={activeWorkflowId}
@@ -227,16 +235,18 @@ export const WorkflowWorkspace = () => {
             <SectionLoading label="Loading workflow" className="h-full" />
           )}
         </div>
-        <ResizableAside
-          label="the node panel"
-          storageKey="apcs.workflows.panel-width"
-          defaultWidth={320}
-          minWidth={288}
-          maxWidth={760}
-          reservedWidth={640}
-        >
-          <NodeConfigPanel />
-        </ResizableAside>
+        {showNodePanel ? (
+          <ResizableAside
+            label="the node panel"
+            storageKey="apcs.workflows.panel-width"
+            defaultWidth={320}
+            minWidth={288}
+            maxWidth={760}
+            reservedWidth={640}
+          >
+            <NodeConfigPanel />
+          </ResizableAside>
+        ) : null}
       </div>
     </div>
   );

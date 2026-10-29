@@ -60,6 +60,7 @@ export type WorkflowEditorState = {
   onEdgesChange: (changes: EdgeChange<WorkflowEdge>[]) => void;
   connect: OnConnect;
   addNode: (node: WorkflowNode) => void;
+  applyGraphPatch: (nodes: WorkflowNode[], edges: WorkflowEdge[]) => void;
   renameNode: (nodeId: string, label: string) => void;
   updateNodeConfig: (nodeId: string, config: WorkflowNodeConfig) => void;
   removeNode: (nodeId: string) => void;
@@ -237,6 +238,14 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
         ...pushHistory(state, "structure", false),
       };
     }),
+
+  applyGraphPatch: (nodes, edges) =>
+    set((state) => ({
+      nodes,
+      edges,
+      isDirty: true,
+      ...pushHistory(state, "assistant", false),
+    })),
 
   updateNodeConfig: (nodeId, config) =>
     set((state) => {

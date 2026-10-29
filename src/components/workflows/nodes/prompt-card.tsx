@@ -1,47 +1,87 @@
 "use client";
 
-import { NodeShell } from "@/components/workflows/nodes/node-shell";
-import { NodeSummary } from "@/components/workflows/nodes/node-summary";
-import { WORKFLOW_CATEGORIES } from "@/constants/workflow";
-import {
-  getWorkflowNodeDefinition,
-  readInstructionsPreview,
-  summarizeNodeConfig,
-} from "@/helpers/workflow-config";
+import { NodeField } from "@/components/workflows/nodes/node-field";
+import { NodeFrame } from "@/components/workflows/nodes/node-frame";
+import { NodeTextInput } from "@/components/workflows/nodes/node-text-input";
+import { readString } from "@/helpers/workflow-config";
+import { useDesignTemplates } from "@/hooks/queries/use-design-templates";
+import { useStylePresets } from "@/hooks/queries/use-style-presets";
+import { useNodeSettingsLocked } from "@/hooks/use-node-settings-locked";
+import { useWorkflowStore } from "@/stores/workflow";
 import type { WorkflowNode } from "@/types/workflow";
-import { cn } from "@/utils/cn";
 import type { NodeProps } from "@xyflow/react";
 
+const TEMPLATE_PAGE_SIZE = 48;
+
 export const PromptCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
-  const instructions = readInstructionsPreview(data.config);
-  const summary = summarizeNodeConfig(data.type, data.config).slice(0, 2);
-  const category = WORKFLOW_CATEGORIES.find(
-    (item) => item.id === getWorkflowNodeDefinition(data.type)?.category
+  const templateId = readString(data.config.designTemplateId);
+  const styleId = readString(data.config.stylePresetId);
+  const instructions = readString(data.config.instructions);
+  const { data: systemTemplates, isPending: systemLoading } = useDesignTemplates({
+    pageNumber: 1,
+    pageSize: TEMPLATE_PAGE_SIZE,
+    scope: "system",
+  });
+  const { data: personalTemplates, isPending: personalLoading } = useDesignTemplates({
+    pageNumber: 1,
+    pageSize: TEMPLATE_PAGE_SIZE,
+    scope: "personal",
+  });
+  const { data: presets, isPending: presetsLoading } = useStylePresets();
+  const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
+  const disabled = useNodeSettingsLocked(data.type);
+  const templates = [...(personalTemplates?.items ?? []), ...(systemTemplates?.items ?? [])].filter(
+    (template, index, list) => list.findIndex((item) => item.id === template.id) === index
   );
+  const template = templates.find((item) => item.id === templateId);
+  const style = presets?.find((item) => item.id === styleId);
+  const templateOptions = templates.map((item) => ({
+    value: item.id,
+    label: item.isSystemTemplate ? item.name : `${item.name} (mine)`,
+    hint: [item.nicheCategory, item.artStyle].filter(Boolean).join(" · ") || (item.isSystemTemplate ? "System template" : "My template"),
+    imageUrl: item.previewImageUrl,
+  }));
+  const styleOptions = (presets ?? []).map((item) => ({
+    value: item.id,
+    label: item.name,
+    hint: item.description || undefined,
+    imageUrl: item.previewImageUrl,
+  }));
 
   return (
-    <NodeShell nodeId={id} data={data} selected={selected} widthClassName="w-60">
-      <div className="space-y-3 px-3 py-3">
-        <p
-          className={cn(
-            "line-clamp-4 text-[13px] leading-[1.55]",
-            instructions ? "text-slate-700" : "text-slate-400"
-          )}
-        >
-          {instructions || "No prompt configured yet."}
-        </p>
-        {summary.length > 0 && (
-          <div className="space-y-1 border-l-2 border-slate-200 pl-2.5">
-            <NodeSummary lines={summary} />
-          </div>
-        )}
+    <NodeFrame nodeId={id} data={data} selected={selected} widthClassName="w-60">
+      <div className="space-y-1.5 px-2.5 pb-2.5">
+        <NodeField
+          value={templateId}
+          displayValue={template?.name}
+          options={templateOptions}
+          onChange={(next) => updateNodeConfig(id, { ...data.config, designTemplateId: next })}
+          loading={systemLoading || personalLoading}
+          disabled={disabled}
+          placeholder="Choose design template"
+          ariaLabel="Design template"
+        />
+        <NodeField
+          value={styleId}
+          displayValue={style?.name}
+          options={styleOptions}
+          onChange={(next) => updateNodeConfig(id, { ...data.config, stylePresetId: next })}
+          noneLabel="No style"
+          loading={presetsLoading}
+          disabled={disabled}
+          placeholder="No art style"
+          ariaLabel="Art style"
+        />
+        <NodeTextInput
+          value={instructions}
+          onChange={(next) => updateNodeConfig(id, { ...data.config, instructions: next })}
+          maxLength={500}
+          disabled={disabled}
+          placeholder="Add extra instructions…"
+          ariaLabel="Extra instructions"
+          rows={2}
+        />
       </div>
-      <div className="flex items-center justify-between border-t border-slate-100 px-3 py-2">
-        <p className="text-[11px] font-medium text-slate-500">{category?.label}</p>
-        <p className="text-[11px] text-slate-400 tabular-nums">
-          {instructions ? `${instructions.length} chars` : "Empty"}
-        </p>
-      </div>
-    </NodeShell>
+    </NodeFrame>
   );
 };

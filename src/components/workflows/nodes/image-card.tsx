@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { ImageIcon } from "lucide-react";
 
-import { NodeShell } from "@/components/workflows/nodes/node-shell";
-import { NodeSummary } from "@/components/workflows/nodes/node-summary";
+import { DesignImageFields } from "@/components/workflows/nodes/design-image-fields";
+import { NodeFrame } from "@/components/workflows/nodes/node-frame";
+import { NodeMockupField } from "@/components/workflows/nodes/node-mockup-field";
+import { VideoFields } from "@/components/workflows/nodes/video-fields";
 import { VideoNodePreview } from "@/components/workflows/nodes/video-node-preview";
-import { summarizeNodeConfig } from "@/helpers/workflow-config";
+import { useNodeSettingsLocked } from "@/hooks/use-node-settings-locked";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { WorkflowNode } from "@/types/workflow";
 import type { NodeProps } from "@xyflow/react";
@@ -14,12 +15,9 @@ import type { NodeProps } from "@xyflow/react";
 const MAX_THUMBNAILS = 4;
 
 export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
-  const summary = summarizeNodeConfig(data.type, data.config).slice(0, 2);
-  // Select the stored objects and derive the list here: a selector that builds a new array on every
-  // call never settles under zustand 5 and loops until React gives up.
   const job = useWorkflowRunStore((state) => state.job);
   const mockupResult = useWorkflowRunStore((state) => state.mockupResult);
-  // The images this node produced in the open run: designs for Design image, mock-ups for Apply mock-up.
+  const disabled = useNodeSettingsLocked(data.type);
   const images =
     data.type === "design-image"
       ? (job?.products.flatMap((product) => product.images.map((image) => image.imageUrl)) ?? [])
@@ -27,43 +25,37 @@ export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
         ? (mockupResult?.images.map((image) => image.mockupImageUrl) ?? [])
         : [];
   const shown = images.slice(0, MAX_THUMBNAILS);
-  const progress =
-    data.type === "design-image" && job
-      ? `${job.processedProducts} of ${job.totalProducts} products${job.failedProducts > 0 ? ` · ${job.failedProducts} failed` : ""}`
-      : null;
+  const progress = Math.max(0, Math.min(100, data.progress ?? 0));
 
   return (
-    <NodeShell nodeId={id} data={data} selected={selected} widthClassName="w-72">
-      <div className="px-3 pt-3 pb-2.5">
-        {data.type === "generate-video" ? (
-          <VideoNodePreview />
-        ) : shown.length > 0 ? (
-          <div className="space-y-2">
-            <div className="grid grid-cols-4 gap-1">
-              {shown.map((url, index) => (
-                <div
-                  key={`${index}:${url}`}
-                  className="relative aspect-square overflow-hidden rounded bg-slate-50"
-                >
-                  <Image src={url} alt="" fill sizes="64px" unoptimized className="object-cover" />
-                </div>
-              ))}
-            </div>
-            {images.length > shown.length && (
-              <p className="text-[11px] text-slate-500">+{images.length - shown.length} more</p>
-            )}
-          </div>
-        ) : (
-          <div className="flex aspect-[2/1] flex-col items-center justify-center gap-2 rounded-md border border-dashed border-slate-200 bg-slate-50/70 text-slate-400">
-            <ImageIcon className="size-5" aria-hidden="true" />
-            <p className="text-xs">Preview appears after run</p>
+    <NodeFrame nodeId={id} data={data} selected={selected} widthClassName="w-72">
+      <div className="space-y-1.5 px-2.5 pb-2.5">
+        {data.type === "design-image" && (
+          <DesignImageFields nodeId={id} data={data} disabled={disabled} />
+        )}
+        {data.type === "apply-mockup" && (
+          <NodeMockupField nodeId={id} data={data} disabled={disabled} />
+        )}
+        {data.type === "generate-video" && <VideoFields nodeId={id} data={data} disabled={disabled} />}
+
+        {progress > 0 && (data.type === "design-image" || data.type === "generate-video") && (
+          <div className="bg-wf-line h-1 overflow-hidden rounded-full" aria-hidden="true">
+            <span className="bg-wf-accent block h-full" style={{ width: `${progress}%` }} />
           </div>
         )}
+
+        {shown.length > 0 && (
+          <div className="grid grid-cols-4 gap-1.5">
+            {shown.map((url, index) => (
+              <div key={`${index}:${url}`} className="relative aspect-square overflow-hidden rounded-sm">
+                <Image src={url} alt="" fill sizes="64px" unoptimized className="object-cover" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {data.type === "generate-video" && <VideoNodePreview />}
       </div>
-      <div className="space-y-1.5 px-3 pb-3">
-        {progress && <p className="text-xs font-medium text-slate-700">{progress}</p>}
-        <NodeSummary lines={summary} />
-      </div>
-    </NodeShell>
+    </NodeFrame>
   );
 };

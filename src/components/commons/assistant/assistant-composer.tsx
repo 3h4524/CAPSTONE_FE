@@ -5,11 +5,12 @@ import type { KeyboardEvent } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { ASSISTANT_COUNTER_THRESHOLD, ASSISTANT_MAX_MESSAGE_LENGTH } from "@/constants/assistant";
 import { useAssistantChat } from "@/hooks/use-assistant-chat";
 import { assistantComposerSchema,type AssistantComposerValues } from "@/schemas/assistant";
+import { cn } from "@/utils/cn";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const MIN_ROWS = 1;
@@ -43,7 +44,7 @@ export const AssistantComposer = () => {
           control={form.control}
           name="message"
           render={({ field }) => (
-            <FormItem className="min-w-0 flex-1">
+            <FormItem className="relative min-w-0 flex-1">
               <FormControl>
                 <Textarea
                   {...field}
@@ -54,11 +55,15 @@ export const AssistantComposer = () => {
                 />
               </FormControl>
               {message.length > ASSISTANT_COUNTER_THRESHOLD ? (
-                <p className="text-muted-foreground text-xs">
+                <p
+                  className={cn(
+                    "pointer-events-none absolute -top-5 right-1 text-xs",
+                    message.length > ASSISTANT_MAX_MESSAGE_LENGTH ? "text-destructive" : "text-muted-foreground"
+                  )}
+                >
                   {message.length}/{ASSISTANT_MAX_MESSAGE_LENGTH}
                 </p>
               ) : null}
-              <FormMessage />
             </FormItem>
           )}
         />

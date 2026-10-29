@@ -69,4 +69,34 @@ describe("AssistantComposer", () => {
     expect(screen.getByRole("button", { name: "Stop" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send" })).not.toBeInTheDocument();
   });
+
+  it("shows no message when the text is deleted again, only a disabled Send", async () => {
+    renderWithQuery(<AssistantComposer />);
+
+    await userEvent.type(input(), "hello");
+    await userEvent.clear(input());
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Send" })).toBeDisabled());
+    expect(screen.queryByText("Type a message")).not.toBeInTheDocument();
+    expect(input().parentElement?.querySelector("p")).toBeNull();
+  });
+
+  it("ignores Enter on an empty or blank message without any message", async () => {
+    renderWithQuery(<AssistantComposer />);
+
+    await userEvent.type(input(), "   {Enter}");
+
+    expect(streamAssistantChat).not.toHaveBeenCalled();
+    expect(screen.queryByText("Type a message")).not.toBeInTheDocument();
+  });
+
+  it("keeps the counter out of the layout flow and turns it red past the limit", async () => {
+    renderWithQuery(<AssistantComposer />);
+    await userEvent.click(input());
+    await userEvent.paste("a".repeat(ASSISTANT_MAX_MESSAGE_LENGTH + 5));
+
+    const counter = await screen.findByText(`${ASSISTANT_MAX_MESSAGE_LENGTH + 5}/${ASSISTANT_MAX_MESSAGE_LENGTH}`);
+
+    expect(counter).toHaveClass("absolute", "text-destructive");
+  });
 });

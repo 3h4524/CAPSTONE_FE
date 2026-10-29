@@ -34,3 +34,11 @@ export const ASSISTANT_NAVIGATION_PATTERNS: RegExp[] = [
   /^\/workflows\?id=[0-9a-fA-F-]{36}(&run=[0-9a-fA-F-]{36})?$/,
   /^\/admin\/(dashboard|revenue|analytics|support-tickets|subscription-plans|rag-ingest|users|test-reports)$/,
 ];
+
+export const ASSISTANT_LAUNCHER_SIZE_PX = 48;
+export const ASSISTANT_LAUNCHER_MARGIN_PX = 8;
+export const ASSISTANT_LAUNCHER_DRAG_THRESHOLD_PX = 4;
+export const ASSISTANT_LAUNCHER_KEY_STEP_PX = 16;
+export const ASSISTANT_LAUNCHER_STORAGE_KEY = "apcs.assistant.launcher";
+export const ASSISTANT_LAUNCHER_DEFAULT_OFFSET_PX = 16;
+export const ASSISTANT_LAUNCHER_WORKFLOW_BOTTOM_PX = 176;

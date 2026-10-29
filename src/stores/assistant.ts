@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+import type { LauncherPosition } from "@/helpers/assistant-launcher-position";
 import { type AssistantChatState, reduceAssistantStreamEvent } from "@/helpers/assistant-reducer";
 import type {
   AssistantClientActionState,
@@ -12,6 +13,8 @@ import type {
 type AssistantState = AssistantChatState & {
   isOpen: boolean;
   selectedConversationId: string | null;
+  launcherPosition: LauncherPosition | null;
+  setLauncherPosition: (position: LauncherPosition | null) => void;
   setOpen: (open: boolean) => void;
   toggleOpen: () => void;
   startNewConversation: () => void;
@@ -56,6 +59,9 @@ export const useAssistantStore = create<AssistantState>((set) => ({
   ...EMPTY_CHAT,
   isOpen: false,
   selectedConversationId: null,
+  launcherPosition: null,
+
+  setLauncherPosition: (position) => set({ launcherPosition: position }),
 
   setOpen: (open) => set({ isOpen: open }),
 

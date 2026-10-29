@@ -27,7 +27,7 @@ export const AssistantLauncher = () => {
             type="button"
             size="icon"
             aria-label="Open assistant"
-            className="fixed z-40 cursor-grab touch-none rounded-full shadow-lg active:cursor-grabbing"
+            className="fixed z-40 cursor-grab touch-none rounded-full shadow-lg transition-none active:cursor-grabbing"
             style={{ right: position.right, bottom: position.bottom, width: ASSISTANT_LAUNCHER_SIZE_PX, height: ASSISTANT_LAUNCHER_SIZE_PX }}
             onClick={handleClick}
             {...handlers}

@@ -26,6 +26,7 @@ const CONTENT_TYPES = [
   ["listing", "Listings"],
   ["policy", "Policies"],
   ["keyword", "Keywords"],
+  ["faq", "FAQ"],
   ["image", "Image knowledge"],
   ["video", "Video knowledge"],
 ] as const;

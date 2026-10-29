@@ -63,7 +63,8 @@ export const useAssistantStore = create<AssistantState>((set) => ({
 
   startNewConversation: () => set({ ...EMPTY_CHAT, selectedConversationId: null }),
 
-  selectConversation: (id) => set({ selectedConversationId: id }),
+  selectConversation: (id) =>
+    set((state) => (state.streamingMessageId === null ? { ...EMPTY_CHAT, selectedConversationId: id } : state)),
 
   loadConversation: (chat) =>
     set((state) => (state.streamingMessageId === null ? { ...chat, selectedConversationId: chat.conversationId } : state)),

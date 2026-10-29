@@ -670,3 +670,36 @@ describe("reset", () => {
     expect(useWorkflowStore.getState().nodes).toHaveLength(1);
   });
 });
+
+describe("applyGraphPatch", () => {
+  beforeEach(() => {
+    useWorkflowStore.setState(initialState, true);
+  });
+
+  it("replaces the graph, marks it dirty and records a single history entry", () => {
+    const original = [node("a")];
+    seedGraph(original, []);
+    const patched = [node("a"), node("b")];
+    const patchedEdges = [edge("a", "b")];
+
+    useWorkflowStore.getState().applyGraphPatch(patched, patchedEdges);
+
+    const state = useWorkflowStore.getState();
+    expect(state.nodes).toEqual(patched);
+    expect(state.edges).toEqual(patchedEdges);
+    expect(state.isDirty).toBe(true);
+    expect(state.past).toHaveLength(1);
+  });
+
+  it("is undone in one step", () => {
+    const original = [node("a")];
+    seedGraph(original, []);
+
+    useWorkflowStore.getState().applyGraphPatch([node("a"), node("b"), node("c")], [edge("a", "b"), edge("b", "c")]);
+    useWorkflowStore.getState().undo();
+
+    const state = useWorkflowStore.getState();
+    expect(state.nodes.map((item) => item.id)).toEqual(["a"]);
+    expect(state.edges).toEqual([]);
+  });
+});

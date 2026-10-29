@@ -26,7 +26,10 @@ export const AssistantComposer = () => {
   const message = form.watch("message");
   const rows = Math.min(MAX_ROWS, Math.max(MIN_ROWS, message.split("\n").length));
 
+  const canSend = message.trim().length > 0 && message.length <= ASSISTANT_MAX_MESSAGE_LENGTH;
+
   const submit = form.handleSubmit((values) => {
+    if (isStreaming || values.message.trim().length === 0) return;
     send(values.message);
     form.reset();
   });
@@ -68,11 +71,11 @@ export const AssistantComposer = () => {
           )}
         />
         {isStreaming ? (
-          <Button type="button" size="icon" variant="outline" aria-label="Stop" onClick={stop}>
+          <Button key="stop" type="button" size="icon" variant="outline" aria-label="Stop" onClick={stop}>
             <Square aria-hidden="true" />
           </Button>
         ) : (
-          <Button type="submit" size="icon" aria-label="Send" disabled={!form.formState.isValid}>
+          <Button key="send" type="submit" size="icon" aria-label="Send" disabled={!canSend}>
             <ArrowUp aria-hidden="true" />
           </Button>
         )}

@@ -86,4 +86,23 @@ describe("describeCanvasChange", () => {
 
     expect(change).toEqual({ title: 'Connect "Input" → "Mockup"', details: [] });
   });
+
+  it("names a node that is added in the same proposal instead of showing its temporary id", () => {
+    const input = node("a", "product-input", "Input", {});
+    const operations = [
+      { op: "add_node" as const, ref: "n_ps", type: "prompt-synthesis" as const },
+      { op: "add_node" as const, ref: "n_x", type: "design-image" as const, label: "My designs" },
+      { op: "connect" as const, source: "a", target: "n_ps" },
+      { op: "connect" as const, source: "n_ps", target: "n_x" },
+    ];
+
+    const titles = operations.map((operation) => describeCanvasChange(operation, [input], operations).title);
+
+    expect(titles[2]).toBe('Connect "Input" → "Prompt synthesis"');
+    expect(titles[3]).toBe('Connect "Prompt synthesis" → "My designs"');
+  });
+
+  it("falls back to the id only when it is unknown everywhere", () => {
+    expect(describeCanvasChange({ op: "connect", source: "ghost", target: "other" }, [], []).title).toBe('Connect "ghost" → "other"');
+  });
 });

@@ -7,6 +7,7 @@ import type { WorkflowNode } from "@/types/workflow";
 
 const workflow = (overrides: Partial<Parameters<typeof buildAssistantContext>[0]["workflow"]> = {}) => ({
   workflowId: "wf-1",
+  name: "Spring flow",
   revision: 4,
   isDirty: true,
   nodes: [buildWorkflowNode({ id: "a" }), buildWorkflowNode({ id: "b" })],
@@ -28,7 +29,7 @@ describe("buildAssistantContext", () => {
 
     expect(context.workflowId).toBe("wf-1");
     expect(context.selectedNodeIds).toEqual(["b"]);
-    expect(context.canvas).toMatchObject({ workflowId: "wf-1", revision: 4, isDirty: true });
+    expect(context.canvas).toMatchObject({ workflowId: "wf-1", workflowName: "Spring flow", revision: 4, isDirty: true });
     expect(context.canvas?.nodes.map((node) => node.id)).toEqual(["a", "b"]);
     expect(context.canvas?.edges).toEqual([{ id: "e", source: "a", target: "b" }]);
   });
@@ -70,5 +71,19 @@ describe("buildAssistantContext", () => {
     const context = buildAssistantContext({ pathname: "/dashboard", search: `?q=${"a".repeat(500)}`, workflow: workflow() });
 
     expect(context.route).toHaveLength(ASSISTANT_ROUTE_MAX_LENGTH);
+  });
+
+  it("uses the open workflow even when the url has no id (the editor loads one by default)", () => {
+    const context = buildAssistantContext({ pathname: "/workflows", search: "", workflow: workflow() });
+
+    expect(context.workflowId).toBe("wf-1");
+    expect(context.canvas?.workflowName).toBe("Spring flow");
+    expect(context.selectedNodeIds).toEqual(["b"]);
+  });
+
+  it("still sends no canvas when nothing is loaded in the editor", () => {
+    const context = buildAssistantContext({ pathname: "/workflows", search: "", workflow: workflow({ workflowId: null }) });
+
+    expect(context.canvas).toBeNull();
   });
 });

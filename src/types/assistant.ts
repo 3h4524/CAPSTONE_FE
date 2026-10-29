@@ -85,6 +85,7 @@ export type AssistantUiMessage = {
 
 export type AssistantCanvasContext = {
   workflowId: string;
+  workflowName: string;
   revision: number;
   isDirty: boolean;
   nodes: { id: string; type: WorkflowNodeType; label: string; config: Record<string, unknown> }[];

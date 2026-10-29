@@ -9,7 +9,7 @@ import type { WorkflowNodeConfig } from "@/types/workflow";
 
 type ContextWorkflow = Pick<
   WorkflowEditorState,
-  "workflowId" | "revision" | "isDirty" | "nodes" | "edges" | "selectedNodeIds" | "videoRunId"
+  "workflowId" | "name" | "revision" | "isDirty" | "nodes" | "edges" | "selectedNodeIds" | "videoRunId"
 >;
 
 const limitConfig = (config: WorkflowNodeConfig): WorkflowNodeConfig =>
@@ -20,6 +20,7 @@ const buildCanvas = (workflowId: string, workflow: ContextWorkflow): AssistantCa
   const nodeIds = new Set(nodes.map((node) => node.id));
   return {
     workflowId,
+    workflowName: workflow.name,
     revision: workflow.revision,
     isDirty: workflow.isDirty,
     nodes: nodes.map((node) => ({
@@ -44,7 +45,7 @@ export const buildAssistantContext = (input: {
   const params = new URLSearchParams(search);
   const requestedId = params.get("id");
   const isOpenWorkflow =
-    pathname === "/workflows" && workflow.workflowId !== null && requestedId === workflow.workflowId;
+    pathname === "/workflows" && workflow.workflowId !== null && (requestedId === null || requestedId === workflow.workflowId);
 
   if (!isOpenWorkflow || workflow.workflowId === null) {
     return { route, workflowId: null, runId: null, selectedNodeIds: [], canvas: null };

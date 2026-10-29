@@ -44,7 +44,7 @@ export const AssistantCanvasPatchCard = ({ messageId, actionId, payload, state }
   const isStreaming = useAssistantStore((store) => store.streamingMessageId !== null);
   const { mutate: saveActionState } = useSetAssistantClientActionState();
   const canApply = pathname === "/workflows" && workflowId === payload.workflowId && !isStreaming;
-  const changes = payload.operations.map((operation) => describeCanvasChange(operation, nodes));
+  const changes = payload.operations.map((operation) => describeCanvasChange(operation, nodes, payload.operations));
 
   const settle = (next: "applied" | "dismissed") => {
     setClientActionState(messageId, actionId, next);

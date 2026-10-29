@@ -5,7 +5,7 @@ import { AssistantComposer } from "@/components/commons/assistant/assistant-comp
 import { ASSISTANT_MAX_MESSAGE_LENGTH } from "@/constants/assistant";
 import { useAssistantStore } from "@/stores/assistant";
 import { renderWithQuery } from "@/test/render-with-query";
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const streamAssistantChat = vi.fn();
@@ -68,6 +68,59 @@ describe("AssistantComposer", () => {
 
     expect(screen.getByRole("button", { name: "Stop" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send" })).not.toBeInTheDocument();
+  });
+
+  it("does not mark the field invalid when the text is deleted again", async () => {
+    renderWithQuery(<AssistantComposer />);
+
+    await userEvent.type(input(), "hello");
+    await userEvent.clear(input());
+
+    expect(input()).not.toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+  });
+
+  it("marks the field invalid only past the length limit", async () => {
+    renderWithQuery(<AssistantComposer />);
+    await userEvent.click(input());
+
+    await userEvent.paste("a".repeat(ASSISTANT_MAX_MESSAGE_LENGTH + 1));
+
+    await waitFor(() => expect(input()).toHaveAttribute("aria-invalid", "true"));
+  });
+
+  it("clicking Stop with a draft in the box only stops: nothing is sent and the draft stays", async () => {
+    useAssistantStore.setState({ streamingMessageId: "streaming" });
+    renderWithQuery(<AssistantComposer />);
+    await userEvent.type(input(), "a follow-up typed while waiting");
+
+    await userEvent.click(screen.getByRole("button", { name: "Stop" }));
+    useAssistantStore.setState({ streamingMessageId: null });
+
+    expect(streamAssistantChat).not.toHaveBeenCalled();
+    expect(input()).toHaveValue("a follow-up typed while waiting");
+  });
+
+  it("uses a different element for Stop and Send so a Stop click can never turn into a submit", () => {
+    useAssistantStore.setState({ streamingMessageId: "streaming" });
+    renderWithQuery(<AssistantComposer />);
+    const stop = screen.getByRole("button", { name: "Stop" });
+
+    act(() => useAssistantStore.setState({ streamingMessageId: null }));
+
+    const send = screen.getByRole("button", { name: "Send" });
+    expect(send).not.toBe(stop);
+    expect(stop.isConnected).toBe(false);
+  });
+
+  it("keeps the draft when Enter is pressed while a reply is still streaming", async () => {
+    useAssistantStore.setState({ streamingMessageId: "streaming" });
+    renderWithQuery(<AssistantComposer />);
+
+    await userEvent.type(input(), "typed too early{Enter}");
+
+    expect(streamAssistantChat).not.toHaveBeenCalled();
+    expect(input()).toHaveValue("typed too early");
   });
 
   it("shows no message when the text is deleted again, only a disabled Send", async () => {

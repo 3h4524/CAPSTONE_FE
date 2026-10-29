@@ -48,7 +48,11 @@ const describeConfigChanges = (operation: AssistantCanvasOperation, nodes: Workf
   });
 };
 
-export const describeCanvasChange = (operation: AssistantCanvasOperation, nodes: WorkflowNode[]): CanvasChange => ({
-  title: describeCanvasOperation(operation, nodes),
+export const describeCanvasChange = (
+  operation: AssistantCanvasOperation,
+  nodes: WorkflowNode[],
+  operations: AssistantCanvasOperation[] = []
+): CanvasChange => ({
+  title: describeCanvasOperation(operation, nodes, operations),
   details: operation.op === "update_config" ? describeConfigChanges(operation, nodes) : [],
 });

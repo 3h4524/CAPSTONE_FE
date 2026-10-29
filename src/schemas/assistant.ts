@@ -97,7 +97,7 @@ export const assistantStreamEventSchema = z.discriminatedUnion("type", [
 ]);
 
 export const assistantComposerSchema = z.object({
-  message: z.string().trim().min(1).max(ASSISTANT_MAX_MESSAGE_LENGTH),
+  message: z.string().max(ASSISTANT_MAX_MESSAGE_LENGTH),
 });
 
 export type AssistantComposerValues = z.infer<typeof assistantComposerSchema>;

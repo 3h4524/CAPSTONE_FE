@@ -142,8 +142,22 @@ export const applyCanvasPatch = (
   return { nodes: state.nodes, edges: state.edges, applied, skipped };
 };
 
-export const describeCanvasOperation = (operation: AssistantCanvasOperation, nodes: WorkflowNode[]): string => {
-  const known = (id: string | null | undefined) => (id && nodes.some((node) => node.id === id) ? labelOf(id, nodes) : id ?? "a step");
+const proposedLabel = (id: string, operations: AssistantCanvasOperation[]) => {
+  const added = operations.find((candidate) => candidate.op === "add_node" && candidate.ref === id);
+  if (!added) return undefined;
+  return added.label ?? (added.type ? WORKFLOW_NODE_DEFINITIONS[added.type]?.label : undefined);
+};
+
+export const describeCanvasOperation = (
+  operation: AssistantCanvasOperation,
+  nodes: WorkflowNode[],
+  operations: AssistantCanvasOperation[] = []
+): string => {
+  const known = (id: string | null | undefined) => {
+    if (!id) return "a step";
+    if (nodes.some((node) => node.id === id)) return labelOf(id, nodes);
+    return proposedLabel(id, operations) ?? id;
+  };
   const name = operation.label ?? (operation.type ? WORKFLOW_NODE_DEFINITIONS[operation.type]?.label : undefined) ?? "step";
   switch (operation.op) {
     case "add_node":

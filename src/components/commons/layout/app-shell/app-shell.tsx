@@ -8,7 +8,6 @@ import { ContentArea } from "@/components/commons/layout/app-shell/content-area"
 import { AppHeader } from "@/components/commons/layout/app-shell/header/app-header";
 import { AppSidebar } from "@/components/commons/layout/app-shell/sidebar/app-sidebar";
 import { AppSidebarMobile } from "@/components/commons/layout/app-shell/sidebar/app-sidebar-mobile";
-import { UserHydrator } from "@/components/commons/layout/app-shell/user-hydrator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 type AppShellProps = {
@@ -23,13 +22,22 @@ export const AppShell = ({ children }: AppShellProps) => {
     setMobileOpen(false);
   }, [pathname]);
 
+  const isWorkflowRoute = pathname === "/workflows" || pathname?.startsWith("/workflows/") === true;
+
+  if (isWorkflowRoute) {
+    return (
+      <TooltipProvider>
+        <div className="bg-muted/40 flex h-dvh flex-col overflow-hidden">{children}</div>
+      </TooltipProvider>
+    );
+  }
+
   return (
     <TooltipProvider>
       <div className="bg-muted/40 flex h-screen overflow-hidden">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <AppHeader onMobileMenu={() => setMobileOpen(true)} />
-          <UserHydrator />
           <ContentArea>{children}</ContentArea>
         </div>
       </div>

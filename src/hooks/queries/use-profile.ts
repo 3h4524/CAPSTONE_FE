@@ -12,10 +12,11 @@ export const getProfileRequest = async (): Promise<Profile> => {
   const { data } = await api.get<Profile>("/api/profile");
   return data;
 };
-export const useProfile = () =>
+export const useProfile = (enabled = true) =>
   useQuery({
     queryKey: PROFILE_QUERY_KEY,
     queryFn: getProfileRequest,
+    enabled,
     suppressErrorToast: true,
     onError: (error) => {
       if (getResponseStatus(error) !== 401) {

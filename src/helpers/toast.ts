@@ -4,6 +4,9 @@ import { toast } from "sonner";
 
 export const DEFAULT_DURATION_NOTIFICATION = 2000;
 export const DEFAULT_POSITION_NOTIFICATION: ToasterProps["position"] = "top-right";
+export const WORKFLOW_ACTION_TOAST_OPTIONS: Omit<ExternalToast, "style"> = {
+  position: "bottom-center",
+};
 
 export type AlertType = "success" | "info" | "warning" | "error";
 
@@ -21,10 +24,10 @@ const TOAST_STYLES: Record<AlertType, React.CSSProperties> = {
     "--normal-border": "var(--color-red-600)",
   } as React.CSSProperties,
   warning: {
-    "--normal-bg":
-      "color-mix(in oklab, var(--color-yellow-600) 10%, var(--background))",
-    "--normal-text": "var(--color-yellow-600)",
-    "--normal-border": "var(--color-yellow-600)",
+    "--normal-bg": "var(--warning)",
+    "--normal-text": "var(--warning-foreground)",
+    "--normal-border":
+      "color-mix(in oklab, var(--warning-foreground) 32%, var(--warning))",
   } as React.CSSProperties,
   info: {
     "--normal-bg":
@@ -45,4 +48,8 @@ export function showToast(
     style: TOAST_STYLES[type],
     ...options,
   });
+}
+
+export function showWorkflowActionToast(type: AlertType, message: string) {
+  showToast(type, message, WORKFLOW_ACTION_TOAST_OPTIONS);
 }

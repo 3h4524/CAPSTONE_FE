@@ -1,0 +1,14 @@
+﻿export const VIDEO_OUTPUT_FORMATS = [
+  { value: "portrait", label: "Portrait", dimensions: "1080 × 1920", aspectRatio: "9:16", width: 1080, height: 1920 },
+  { value: "square", label: "Square", dimensions: "1080 × 1080", aspectRatio: "1:1", width: 1080, height: 1080 },
+  { value: "landscape", label: "Landscape", dimensions: "1920 × 1080", aspectRatio: "16:9", width: 1920, height: 1080 },
+] as const;
+
+export type VideoOutputFormat = typeof VIDEO_OUTPUT_FORMATS[number]["value"];
+
+export const getVideoOutputFormats = (mode: unknown) => mode === "ai_shot"
+  ? VIDEO_OUTPUT_FORMATS.filter(format => format.value !== "square")
+  : VIDEO_OUTPUT_FORMATS;
+
+export const getVideoOutputFormat = (value: unknown, mode?: unknown) =>
+  getVideoOutputFormats(mode).find(format => format.value === value) ?? VIDEO_OUTPUT_FORMATS[0];

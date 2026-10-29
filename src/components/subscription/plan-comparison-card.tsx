@@ -3,9 +3,9 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AvailablePlan } from "@/types/subscription";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+const formatCurrency = (amount: number) => formatCurrencyVnd(amount);
 
 type PlanComparisonCardProps = {
   plan: AvailablePlan;
@@ -67,7 +67,7 @@ export const PlanComparisonCard = ({
         <CardTitle>{plan.name}</CardTitle>
         <p className="text-lg font-bold whitespace-nowrap">
           {formatCurrency(plan.monthlyPriceUsd)}
-          <span className="text-muted-foreground text-xs font-normal">/mo</span>
+          <span className="text-muted-foreground text-xs font-normal">/tháng</span>
         </p>
       </CardHeader>
       <CardContent className="space-y-3">

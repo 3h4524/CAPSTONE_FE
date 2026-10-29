@@ -76,7 +76,7 @@ export const SubscriptionPageContent = () => {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 p-6">
+    <div className="w-full min-w-0 space-y-8 p-4 sm:p-6">
       <div>
         <h1 className="text-2xl font-bold">Subscription</h1>
         <p className="text-muted-foreground text-sm">

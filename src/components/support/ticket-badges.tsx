@@ -1,15 +1,8 @@
+import { StatusBadge } from "@/components/commons/data-display/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { PRIORITY_LABELS, STATUS_LABELS } from "@/constants/support";
 import type { TicketPriority, TicketStatus } from "@/types/support";
 import { cn } from "@/utils/cn";
-
-const statusStyles: Record<TicketStatus, string> = {
-  open: "border-transparent bg-[#eef2f7] text-slate-700",
-  in_progress: "border-transparent bg-[#fff0d9] text-[#99610d]",
-  waiting_customer: "border-transparent bg-[#fff0d9] text-[#8a580c]",
-  resolved: "border-transparent bg-[#e3f2e8] text-[#196638]",
-  closed: "border-transparent bg-slate-100 text-slate-600",
-};
 
 const priorityStyles: Record<TicketPriority, string> = {
   low: "border-transparent bg-[#f3f6fb] text-[#344862]",
@@ -20,9 +13,7 @@ const priorityStyles: Record<TicketPriority, string> = {
 
 export function TicketStatusBadge({ status }: { status: TicketStatus }) {
   return (
-    <Badge variant="outline" className={cn("min-h-6 rounded-md px-2 text-[11px] font-semibold shadow-none", statusStyles[status])}>
-      {STATUS_LABELS[status]}
-    </Badge>
+    <StatusBadge status={status} className={cn("min-h-6 rounded-md px-2 text-[11px] font-semibold shadow-none")}>{STATUS_LABELS[status]}</StatusBadge>
   );
 }
 

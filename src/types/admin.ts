@@ -5,6 +5,7 @@ export type MonthlyRevenueDto = {
 };
 
 export type SupportTicketDto = {
+  id: string;
   userName: string;
   userEmail: string;
   issue: string;
@@ -27,8 +28,51 @@ export type AdminDashboardMetricsDto = {
   totalRevenue: number;
   recurringRevenue: number;
   activeBatchJobs: number;
+  totalBatchJobs?: number;
   pendingTickets: number;
   revenueChart: MonthlyRevenueDto[];
   latestTickets: SupportTicketDto[];
   recentBatchJobs: BatchJobDto[];
 };
+
+export type AdminUserDto = {
+  id: string;
+  fullName: string;
+  email: string;
+  avatarUrl: string | null;
+  accountStatus: string;
+  roles: string[];
+  plan: string;
+  totalJobs: number;
+  monthlyApiCost: number;
+  birthday: string | null;
+  createdAt: string;
+};
+
+export type UpdateAdminUserRequest = {
+  fullName: string;
+  email: string;
+  birthday: string | null;
+  avatarUrl: string | null;
+  accountStatus: string;
+  roles: string[];
+};
+
+export type GetUsersRequest = {
+  pageIndex?: number;
+  pageSize?: number;
+  searchTerm?: string;
+  role?: string;
+  plan?: string;
+  status?: string;
+  sortBy?: string;
+  sortDesc?: boolean;
+};
+
+export interface PagedResult<T> {
+  items: T[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+}

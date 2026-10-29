@@ -15,5 +15,6 @@ export const useCheckoutStatus = (invoiceId: string | null) =>
     queryFn: () => getCheckoutStatusRequest(invoiceId!),
     enabled: invoiceId !== null,
     suppressErrorToast: true,
+    staleTime: 0,
     refetchInterval: (query) => (query.state.data?.status === "pending" ? POLL_INTERVAL_MS : false),
   });

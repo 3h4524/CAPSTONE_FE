@@ -2,9 +2,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { CurrentSubscription } from "@/types/subscription";
+import { formatCurrencyVnd } from "@/utils/format-currency";
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+const formatCurrency = (amount: number) => formatCurrencyVnd(amount);
 
 const formatDate = (isoDate: string) =>
   new Date(isoDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
@@ -60,7 +60,7 @@ export const CurrentPlanCard = ({
         </div>
         <div className="text-right">
           <p className="text-2xl font-bold">
-            {subscription ? formatCurrency(subscription.price) : "$0"}
+            {subscription ? formatCurrency(subscription.price) : "0 ₫"}
             <span className="text-muted-foreground text-sm font-normal">
               {" "}
               / {subscription?.billingCycle === "annual" ? "year" : "month"}

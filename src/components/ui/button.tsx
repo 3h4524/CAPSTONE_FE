@@ -11,11 +11,11 @@ const buttonVariants = cva(
       variant: {
         none: "",
         default:
-          "bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(22,28,34,0.2)] hover:bg-primary/90 hover:shadow-[0_8px_20px_rgba(22,28,34,0.3)]",
+          "bg-[#273750] text-white shadow-[0_4px_12px_rgba(22,28,34,0.2)] hover:bg-[#1f2d43] hover:shadow-[0_8px_20px_rgba(22,28,34,0.3)]",
         defaultWithTextWhite:
-          "bg-primary text-white shadow-[0_4px_12px_rgba(39,55,80,0.25)] hover:bg-primary/90 hover:shadow-[0_8px_20px_rgba(39,55,80,0.35)]",
+          "bg-[#273750] text-white shadow-[0_4px_12px_rgba(39,55,80,0.25)] hover:bg-[#1f2d43] hover:shadow-[0_8px_20px_rgba(39,55,80,0.35)]",
         primaryBlue:
-          "bg-primary-blue text-white shadow-[0_4px_12px_rgba(37,99,235,0.25)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.35)]",
+          "bg-[#2563eb] text-white shadow-[0_4px_12px_rgba(37,99,235,0.25)] hover:bg-[#1d4ed8] hover:shadow-[0_6px_20px_rgba(37,99,235,0.35)]",
         secondary:
           "bg-secondary text-secondary-foreground shadow-[0_4px_12px_rgba(125,86,45,0.25)] hover:bg-secondary/90 hover:shadow-[0_6px_16px_rgba(125,86,45,0.35)]",
         accent:

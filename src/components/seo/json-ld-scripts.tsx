@@ -8,6 +8,7 @@ export const JsonLdScripts = ({ values }: Props) => (
       <script
         key={index}
         type="application/ld+json"
+        suppressHydrationWarning
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(value).replace(/</g, "\\u003c"),
         }}

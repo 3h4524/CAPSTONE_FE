@@ -48,6 +48,58 @@
   --primary-blue: #2563eb;
   --success-background: #dcfce7;
   --success-text: #166534;
+
+  --wf-surface: #ffffff;
+  --wf-muted: #f8fafc;
+  --wf-line: #dbe3ee;
+  --wf-ink: #0f172a;
+  --wf-dim: #475569;
+  --wf-faint: #64748b;
+  --wf-accent: #2563eb;
+  --wf-accent-soft: rgba(37, 99, 235, 0.08);
+  --wf-ok: #059669;
+  --wf-warn: #b45309;
+  --wf-fail: #dc2626;
+  --wf-halo: rgba(37, 99, 235, 0.16);
+  --wf-cat-trigger: var(--primary);
+  --wf-cat-trigger-soft: #eef2f7;
+  --wf-cat-trigger-line: #cbd5e1;
+  --wf-cat-ai: #6d28d9;
+  --wf-cat-ai-soft: #ede9fe;
+  --wf-cat-ai-line: #c4b5fd;
+  --wf-cat-review: var(--secondary);
+  --wf-cat-review-soft: #f7f0e7;
+  --wf-cat-review-line: #e7d7c3;
+  --wf-cat-output: var(--primary-blue);
+  --wf-cat-output-soft: #dbeafe;
+  --wf-cat-output-line: #93c5fd;
+}
+
+.dark {
+  --wf-surface: #1a1a20;
+  --wf-muted: #23232b;
+  --wf-line: #2d2d37;
+  --wf-ink: #ededf2;
+  --wf-dim: #a2a2ae;
+  --wf-faint: #66666f;
+  --wf-accent: #818cf8;
+  --wf-accent-soft: rgba(129, 140, 248, 0.16);
+  --wf-ok: #34d399;
+  --wf-warn: #fbbf24;
+  --wf-fail: #f87171;
+  --wf-halo: rgba(129, 140, 248, 0.24);
+  --wf-cat-trigger: #cbd5e1;
+  --wf-cat-trigger-soft: rgba(203, 213, 225, 0.1);
+  --wf-cat-trigger-line: rgba(203, 213, 225, 0.28);
+  --wf-cat-ai: #c4b5fd;
+  --wf-cat-ai-soft: rgba(196, 181, 253, 0.12);
+  --wf-cat-ai-line: rgba(196, 181, 253, 0.28);
+  --wf-cat-review: #d6b48c;
+  --wf-cat-review-soft: rgba(214, 180, 140, 0.12);
+  --wf-cat-review-line: rgba(214, 180, 140, 0.28);
+  --wf-cat-output: #60a5fa;
+  --wf-cat-output-soft: rgba(96, 165, 250, 0.12);
+  --wf-cat-output-line: rgba(96, 165, 250, 0.28);
 }
 
 @theme inline {
@@ -91,6 +143,29 @@
   --color-primary-blue: var(--primary-blue);
   --color-success-background: var(--success-background);
   --color-success-text: var(--success-text);
+  --color-wf-surface: var(--wf-surface);
+  --color-wf-muted: var(--wf-muted);
+  --color-wf-line: var(--wf-line);
+  --color-wf-ink: var(--wf-ink);
+  --color-wf-dim: var(--wf-dim);
+  --color-wf-faint: var(--wf-faint);
+  --color-wf-accent: var(--wf-accent);
+  --color-wf-accent-soft: var(--wf-accent-soft);
+  --color-wf-ok: var(--wf-ok);
+  --color-wf-warn: var(--wf-warn);
+  --color-wf-fail: var(--wf-fail);
+  --color-wf-cat-trigger: var(--wf-cat-trigger);
+  --color-wf-cat-trigger-soft: var(--wf-cat-trigger-soft);
+  --color-wf-cat-trigger-line: var(--wf-cat-trigger-line);
+  --color-wf-cat-ai: var(--wf-cat-ai);
+  --color-wf-cat-ai-soft: var(--wf-cat-ai-soft);
+  --color-wf-cat-ai-line: var(--wf-cat-ai-line);
+  --color-wf-cat-review: var(--wf-cat-review);
+  --color-wf-cat-review-soft: var(--wf-cat-review-soft);
+  --color-wf-cat-review-line: var(--wf-cat-review-line);
+  --color-wf-cat-output: var(--wf-cat-output);
+  --color-wf-cat-output-soft: var(--wf-cat-output-soft);
+  --color-wf-cat-output-line: var(--wf-cat-output-line);
   --font-display: var(--font-display);
 }
 

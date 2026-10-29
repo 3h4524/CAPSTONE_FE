@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import type { BatchJobDto, SupportTicketDto } from "@/types/admin";
@@ -49,12 +50,12 @@ const AdminActivityPanels = ({ latestTickets = [], recentBatchJobs = [] }: Admin
                   <StatusPill value={ticket.status} />
                 </td>
                 <td className="px-5 py-3 text-right">
-                  <button
-                    type="button"
+                  <Link
+                    href={`/admin/support-tickets?ticketId=${ticket.id}`}
                     className="text-[9px] font-semibold text-slate-500 hover:text-slate-900"
                   >
                     {ticket.status.toLowerCase() === "resolved" ? "View" : "Reply"}
-                  </button>
+                  </Link>
                 </td>
               </tr>
             ))}

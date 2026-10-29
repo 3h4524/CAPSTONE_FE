@@ -20,13 +20,12 @@ import { useUpgrade } from "@/hooks/mutations/use-upgrade";
 import { useCheckoutStatus } from "@/hooks/queries/use-checkout-status";
 import { SUBSCRIPTION_OVERVIEW_QUERY_KEY } from "@/hooks/queries/use-subscription-overview";
 import type { AvailablePlan, UpgradeResult } from "@/types/subscription";
+import { formatCurrencyVnd, formatRawVnd } from "@/utils/format-currency";
 import { useQueryClient } from "@tanstack/react-query";
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+const formatCurrency = (amount: number) => formatCurrencyVnd(amount);
 
-const formatVnd = (amount: number) =>
-  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
+const formatVnd = (amount: number) => formatRawVnd(amount);
 
 const formatDate = (isoDate: string) =>
   new Date(isoDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
@@ -44,7 +43,7 @@ type SubscriptionUpgradeModalProps = {
 export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeModalProps) => {
   const [step, setStep] = useState<UpgradeStep>("confirm");
   const [result, setResult] = useState<UpgradeResult | null>(null);
-  const { mutate: upgrade, isPending, isError, error } = useUpgrade();
+  const { mutate: upgrade, isPending, isError, error, reset: resetUpgrade } = useUpgrade();
   const { data: status } = useCheckoutStatus(step === "paying" ? (result?.invoiceId ?? null) : null);
   const queryClient = useQueryClient();
   const hasResolvedRef = useRef(false);
@@ -53,6 +52,7 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
     setStep("confirm");
     setResult(null);
     hasResolvedRef.current = false;
+    resetUpgrade();
   };
 
   useEffect(() => {
@@ -140,7 +140,7 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
             <div className="bg-muted flex items-center justify-between rounded-lg p-4 text-sm">
               <span className="text-muted-foreground">New plan</span>
               <span className="font-semibold">
-                {plan.name} — {formatCurrency(plan.monthlyPriceUsd)}/mo
+                {plan.name} — {formatCurrency(plan.monthlyPriceUsd)}/tháng
               </span>
             </div>
             {isError && (
@@ -149,7 +149,7 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
               </p>
             )}
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={onClose} disabled={isPending}>
+              <Button variant="ghost" onClick={() => handleClose(false)} disabled={isPending}>
                 Not now
               </Button>
               <Button onClick={handleConfirm} disabled={isPending}>

@@ -12,7 +12,7 @@ export const useDeleteAssistantConversations = () => {
   return useMutation<void, string | null, DeleteContext>({
     mutationFn: deleteAssistantConversations,
     onMutate: async (exceptConversationId) => {
-      await client.cancelQueries({ queryKey: assistantKeys.conversations() });
+      await client.cancelQueries({ queryKey: assistantKeys.conversations(), exact: true });
       const previous = client.getQueryData<AssistantConversationSummary[]>(assistantKeys.conversations());
       client.setQueryData<AssistantConversationSummary[]>(
         assistantKeys.conversations(),

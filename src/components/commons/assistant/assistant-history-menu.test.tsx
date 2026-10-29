@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { assistantKeys } from "@/api/assistant";
+import { assistantKeys, getAssistantConversation } from "@/api/assistant";
 import { AssistantHistoryMenu } from "@/components/commons/assistant/assistant-history-menu";
 import { showToast } from "@/helpers/toast";
 import { useAssistantStore } from "@/stores/assistant";
@@ -136,5 +136,25 @@ describe("AssistantHistoryMenu", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
 
     expect(called).toBe(false);
+  });
+
+  it("does not cancel the load of the chat that becomes active after the open chat is deleted", async () => {
+    server.use(
+      http.delete(`${LIST_URL}/:id`, () => new HttpResponse(null, { status: 202 })),
+      http.get(`${LIST_URL}/c-mid`, async () => {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        return HttpResponse.json({ id: "c-mid", title: "Middle chat", messages: [], pendingActions: [] });
+      })
+    );
+    useAssistantStore.setState({ conversationId: "c-new", selectedConversationId: "c-new" });
+    const { queryClient } = await openMenu();
+    const loading = queryClient.fetchQuery({
+      queryKey: assistantKeys.conversation("c-mid"),
+      queryFn: () => getAssistantConversation("c-mid"),
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Delete chat Newest chat" }));
+
+    await expect(loading).resolves.toMatchObject({ id: "c-mid" });
   });
 });

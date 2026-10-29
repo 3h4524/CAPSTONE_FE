@@ -38,7 +38,7 @@ type NodeClipboard = {
   pastes: number;
 };
 
-type WorkflowEditorState = {
+export type WorkflowEditorState = {
   workflowId: string | null;
   videoRunId: string | null;
   revision: number;

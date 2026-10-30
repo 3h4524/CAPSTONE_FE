@@ -24,6 +24,7 @@ import { PanelSection } from "@/components/workflows/config-panel/layout/panel-s
 import { PanelStats } from "@/components/workflows/config-panel/layout/panel-stats";
 import { ListingContentResultPanel } from "@/components/workflows/config-panel/listing-content-result";
 import { NodeConfigField } from "@/components/workflows/config-panel/node-config-field";
+import { OwnPromptNotice } from "@/components/workflows/config-panel/own-prompt-notice";
 import { PromptRecipe } from "@/components/workflows/config-panel/prompt-recipe";
 import { MockupPanel } from "@/components/workflows/media/mockup-panel";
 import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
@@ -148,6 +149,8 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
             </PanelNotice>
           </div>
         )}
+        {/* Above the template and art style it is about. */}
+        {node.data.type === "prompt-synthesis" && <OwnPromptNotice className="mx-5 mt-4" />}
         <Form {...form}>
           <form onSubmit={(event) => event.preventDefault()}>
             {/* A fieldset is as wide as its widest line by default; min-w-0 keeps a long batch name inside the panel. */}

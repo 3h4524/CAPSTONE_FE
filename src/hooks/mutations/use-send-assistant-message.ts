@@ -9,10 +9,16 @@ import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useAssistantStore } from "@/stores/assistant";
 import type { SendAssistantMessageInput } from "@/types/assistant";
 
+const STREAM_INTERRUPTED_ERROR = {
+  code: "stream_interrupted",
+  message: "The connection was interrupted. Please try again.",
+};
+
 const streamIntoStore = async ({ input, signal }: { input: SendAssistantMessageInput; signal: AbortSignal }) => {
   const { applyStreamEvent, stopStreaming, failStreaming } = useAssistantStore.getState();
   try {
     await streamAssistantChat(input, applyStreamEvent, signal);
+    if (useAssistantStore.getState().streamingMessageId !== null) failStreaming(STREAM_INTERRUPTED_ERROR);
   } catch (error) {
     if (axios.isCancel(error) || signal.aborted) {
       stopStreaming();

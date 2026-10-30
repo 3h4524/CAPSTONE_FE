@@ -82,6 +82,30 @@ describe("useAssistantChat", () => {
     expect(useAssistantStore.getState().messages.at(-1)?.error?.code).toBe("request_failed");
   });
 
+  it("ends the stream with an error when it closes without a done event", async () => {
+    const { result } = renderQueryHook(() => useAssistantChat());
+
+    await run(() => result.current.send("hello"));
+
+    expect(useAssistantStore.getState().messages.at(-1)?.error?.code).toBe("stream_interrupted");
+    expect(useAssistantStore.getState().streamingMessageId).toBeNull();
+    expect(result.current.isStreaming).toBe(false);
+  });
+
+  it("keeps a completed stream free of errors", async () => {
+    streamAssistantChat.mockImplementation((_input: unknown, onEvent: (event: unknown) => void) => {
+      onEvent({ type: "delta", data: { text: "Hi" } });
+      onEvent({ type: "done", data: { assistantMessageId: "server-id", model: "m" } });
+      return Promise.resolve();
+    });
+    const { result } = renderQueryHook(() => useAssistantChat());
+
+    await run(() => result.current.send("hello"));
+
+    const message = useAssistantStore.getState().messages.at(-1);
+    expect(message).toMatchObject({ content: "Hi", error: null, isStreaming: false });
+  });
+
   it("retryLast resends the last user message", async () => {
     streamAssistantChat.mockRejectedValueOnce(new Error("fail")).mockResolvedValue(undefined);
     const { result } = renderQueryHook(() => useAssistantChat());

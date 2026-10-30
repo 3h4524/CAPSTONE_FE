@@ -102,13 +102,7 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
 
       <article className={frame}>
         <div className={cn("flex items-center gap-2 border-b px-2.5 py-2", theme.header)}>
-          <NodeName
-            nodeId={nodeId}
-            label={data.label}
-            fallbackLabel={definition.label}
-            Icon={definition.icon}
-            iconClassName={theme.icon}
-          />
+          <NodeName label={data.label} Icon={definition.icon} iconClassName={theme.icon} />
           {!runnable && data.status === "idle" ? (
             <span className="shrink-0 rounded-full border border-slate-200 bg-white/80 px-1.5 py-0.5 text-[9px] leading-none font-semibold tracking-wide text-slate-500 uppercase">
               Planned

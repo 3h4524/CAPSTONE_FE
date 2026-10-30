@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import { Maximize2, MessageCircle, Minimize2, Plus, X } from "lucide-react";
 
 import { AssistantHistoryMenu } from "@/components/commons/assistant/assistant-history-menu";
 import { Button } from "@/components/ui/button";
 import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ASSISTANT_MASCOT_SRC } from "@/constants/assistant";
 import { type AssistantDisplayMode, saveDisplayMode } from "@/helpers/assistant-display-mode";
 import { useAssistantStore } from "@/stores/assistant";
 
@@ -24,6 +26,17 @@ export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
     setDisplayMode("bubble");
     saveDisplayMode("bubble");
   };
+
+  const avatar = (
+    <Image
+      src={ASSISTANT_MASCOT_SRC}
+      alt=""
+      width={28}
+      height={28}
+      unoptimized
+      className="size-7 shrink-0 rounded-full border [image-rendering:pixelated]"
+    />
+  );
 
   const actions = (
     <div className="flex items-center gap-1">
@@ -73,7 +86,10 @@ export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
   if (isBubble) {
     return (
       <div className="flex items-center justify-between gap-2 border-b py-2 pr-2 pl-4">
-        <h2 className="text-foreground font-semibold">Assistant</h2>
+        <div className="flex items-center gap-2">
+          {avatar}
+          <h2 className="text-foreground font-semibold">Assistant</h2>
+        </div>
         {actions}
       </div>
     );
@@ -81,7 +97,10 @@ export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
 
   return (
     <SheetHeader className="flex-row items-center justify-between gap-2 border-b py-3 pr-12 pl-4">
-      <SheetTitle>Assistant</SheetTitle>
+      <div className="flex items-center gap-2">
+        {avatar}
+        <SheetTitle>Assistant</SheetTitle>
+      </div>
       {actions}
     </SheetHeader>
   );

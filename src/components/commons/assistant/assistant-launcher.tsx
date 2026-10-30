@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ASSISTANT_LAUNCHER_SIZE_PX } from "@/constants/assistant";
+import { ASSISTANT_LAUNCHER_SIZE_PX, ASSISTANT_MASCOT_SRC } from "@/constants/assistant";
 import { useAssistantLauncherDrag } from "@/hooks/use-assistant-launcher-drag";
 import { useAssistantStore } from "@/stores/assistant";
 
@@ -27,12 +27,21 @@ export const AssistantLauncher = () => {
             type="button"
             size="icon"
             aria-label="Open assistant"
-            className="fixed z-40 cursor-grab touch-none rounded-full shadow-lg transition-none active:cursor-grabbing"
+            variant="outline"
+            className="fixed z-40 cursor-grab touch-none overflow-hidden rounded-full p-0 shadow-lg transition-none active:cursor-grabbing"
             style={{ right: position.right, bottom: position.bottom, width: ASSISTANT_LAUNCHER_SIZE_PX, height: ASSISTANT_LAUNCHER_SIZE_PX }}
             onClick={handleClick}
             {...handlers}
           >
-            <Sparkles aria-hidden="true" />
+            <Image
+              src={ASSISTANT_MASCOT_SRC}
+              alt=""
+              width={ASSISTANT_LAUNCHER_SIZE_PX}
+              height={ASSISTANT_LAUNCHER_SIZE_PX}
+              unoptimized
+              draggable={false}
+              className="size-full object-cover [image-rendering:pixelated]"
+            />
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">Drag to move, click to chat</TooltipContent>

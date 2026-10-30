@@ -1,13 +1,14 @@
 "use client";
 
-import { AssistantChip } from "@/components/commons/assistant/assistant-chip";
+import { useShallow } from "zustand/react/shallow";
+
 import { AssistantChoiceChips } from "@/components/commons/assistant/assistant-choice-chips";
 import { AssistantCitations } from "@/components/commons/assistant/assistant-citations";
 import { AssistantClientActionView } from "@/components/commons/assistant/assistant-client-action";
+import { AssistantMessageError } from "@/components/commons/assistant/assistant-message-error";
 import { AssistantPendingActionCard } from "@/components/commons/assistant/assistant-pending-action-card";
 import { AssistantToolStatus } from "@/components/commons/assistant/assistant-tool-status";
 import { Spinner } from "@/components/ui/spinner";
-import { useAssistantChat } from "@/hooks/use-assistant-chat";
 import { useAssistantStore } from "@/stores/assistant";
 import type { AssistantUiMessage } from "@/types/assistant";
 
@@ -16,8 +17,9 @@ type AssistantMessageProps = {
 };
 
 export const AssistantMessage = ({ message }: AssistantMessageProps) => {
-  const pendingActions = useAssistantStore((state) => state.pendingActions);
-  const { retryLast, isStreaming } = useAssistantChat();
+  const pendingActions = useAssistantStore(
+    useShallow((state) => message.pendingActionIds.map((id) => state.pendingActions[id]))
+  );
   const isUser = message.role === "user";
   const isWaiting = message.isStreaming && !message.content && message.tools.length === 0;
 
@@ -50,19 +52,13 @@ export const AssistantMessage = ({ message }: AssistantMessageProps) => {
           state={message.clientActionStates[action.id] ?? "idle"}
         />
       ))}
-      {message.pendingActionIds.map((id) => {
-        const action = pendingActions[id];
-        return action ? <AssistantPendingActionCard key={id} action={action} /> : null;
-      })}
+      {pendingActions.map((action) =>
+        action ? <AssistantPendingActionCard key={action.id} action={action} /> : null
+      )}
       {message.choices ? (
         <AssistantChoiceChips messageId={message.id} choices={message.choices} choicesUsed={message.choicesUsed} />
       ) : null}
-      {message.error ? (
-        <div className="flex flex-col items-start gap-2">
-          <p className="text-destructive text-xs">{message.error.message}</p>
-          <AssistantChip label="Retry" disabled={isStreaming} onClick={retryLast} />
-        </div>
-      ) : null}
+      {message.error ? <AssistantMessageError error={message.error} /> : null}
     </div>
   );
 };

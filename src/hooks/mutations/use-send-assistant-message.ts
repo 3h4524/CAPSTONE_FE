@@ -34,7 +34,7 @@ export const useSendAssistantMessage = () => {
     mutationFn: streamIntoStore,
     suppressErrorToast: true,
     onSuccess: () => {
-      void client.invalidateQueries({ queryKey: assistantKeys.conversations() });
+      void client.invalidateQueries({ queryKey: assistantKeys.conversations(), exact: true });
     },
   });
 };

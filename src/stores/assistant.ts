@@ -69,7 +69,7 @@ export const useAssistantStore = create<AssistantState>((set) => ({
   selectedConversationId: null,
   launcherPosition: null,
   panelWidth: ASSISTANT_PANEL_DEFAULT_WIDTH_PX,
-  displayMode: "panel",
+  displayMode: "bubble",
   isBubbleExpanded: false,
 
   setPanelWidth: (width) => set({ panelWidth: width }),

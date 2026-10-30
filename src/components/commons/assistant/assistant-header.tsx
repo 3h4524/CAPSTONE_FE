@@ -1,6 +1,6 @@
 "use client";
 
-import { Maximize2, MessageCircle, Minimize2, PanelRight, Plus, X } from "lucide-react";
+import { Maximize2, MessageCircle, Minimize2, Plus, X } from "lucide-react";
 
 import { AssistantHistoryMenu } from "@/components/commons/assistant/assistant-history-menu";
 import { Button } from "@/components/ui/button";
@@ -19,11 +19,10 @@ export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
   const isBubbleExpanded = useAssistantStore((state) => state.isBubbleExpanded);
   const toggleBubbleExpanded = useAssistantStore((state) => state.toggleBubbleExpanded);
   const isBubble = variant === "bubble";
-  const nextMode: AssistantDisplayMode = isBubble ? "panel" : "bubble";
 
-  const switchDisplayMode = () => {
-    setDisplayMode(nextMode);
-    saveDisplayMode(nextMode);
+  const switchToBubble = () => {
+    setDisplayMode("bubble");
+    saveDisplayMode("bubble");
   };
 
   const actions = (
@@ -39,16 +38,18 @@ export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
         </Button>
       )}
       <AssistantHistoryMenu />
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label={isBubble ? "Dock to the side" : "Switch to bubble"}
-        title={isBubble ? "Dock to the side" : "Switch to bubble"}
-        onClick={switchDisplayMode}
-      >
-        {isBubble ? <PanelRight aria-hidden="true" /> : <MessageCircle aria-hidden="true" />}
-      </Button>
+      {isBubble ? null : (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Switch to bubble"
+          title="Switch to bubble"
+          onClick={switchToBubble}
+        >
+          <MessageCircle aria-hidden="true" />
+        </Button>
+      )}
       {isBubble ? (
         <>
           <Button

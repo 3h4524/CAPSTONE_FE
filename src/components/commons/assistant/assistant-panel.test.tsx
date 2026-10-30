@@ -9,7 +9,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 describe("AssistantPanel", () => {
   beforeEach(() => {
     window.localStorage.clear();
-    useAssistantStore.setState({ ...useAssistantStore.getInitialState(), isOpen: true }, true);
+    useAssistantStore.setState({ ...useAssistantStore.getInitialState(), isOpen: true, displayMode: "panel" }, true);
     window.innerWidth = 1600;
   });
 

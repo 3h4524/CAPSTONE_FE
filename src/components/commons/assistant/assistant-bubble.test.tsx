@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { AssistantBubble } from "@/components/commons/assistant/assistant-bubble";
-import { ASSISTANT_DISPLAY_MODE_STORAGE_KEY } from "@/constants/assistant";
 import { useAssistantStore } from "@/stores/assistant";
 import { renderWithQuery } from "@/test/render-with-query";
 import { fireEvent, screen } from "@testing-library/react";
@@ -40,14 +39,12 @@ describe("AssistantBubble", () => {
     expect(screen.getByRole("dialog", { name: "Assistant" })).toHaveClass("w-[380px]");
   });
 
-  it("docks back to the side panel and remembers the choice", () => {
+  it("is the default display and offers no docking", () => {
+    expect(useAssistantStore.getInitialState().displayMode).toBe("bubble");
+
     renderWithQuery(<AssistantBubble />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Dock to the side" }));
-
-    expect(useAssistantStore.getState().displayMode).toBe("panel");
-    expect(useAssistantStore.getState().isOpen).toBe(true);
-    expect(window.localStorage.getItem(ASSISTANT_DISPLAY_MODE_STORAGE_KEY)).toBe("panel");
+    expect(screen.queryByRole("button", { name: "Dock to the side" })).not.toBeInTheDocument();
   });
 
   it("closes from its own close button and with Escape", () => {

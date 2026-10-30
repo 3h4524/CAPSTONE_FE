@@ -90,7 +90,13 @@ export type AssistantCanvasContext = {
   workflowName: string;
   revision: number;
   isDirty: boolean;
-  nodes: { id: string; type: WorkflowNodeType; label: string; config: Record<string, unknown> }[];
+  nodes: {
+    id: string;
+    type: WorkflowNodeType;
+    label: string;
+    config: Record<string, unknown>;
+    position: { x: number; y: number };
+  }[];
   edges: { id: string; source: string; target: string }[];
 };
 

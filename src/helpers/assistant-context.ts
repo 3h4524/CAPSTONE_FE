@@ -28,6 +28,7 @@ const buildCanvas = (workflowId: string, workflow: ContextWorkflow): AssistantCa
       type: node.data.type,
       label: node.data.label,
       config: limitConfig(node.data.config),
+      position: { x: Math.round(node.position.x), y: Math.round(node.position.y) },
     })),
     edges: workflow.edges
       .filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target))

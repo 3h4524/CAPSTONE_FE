@@ -59,6 +59,14 @@ describe("buildAssistantContext", () => {
     expect(context.canvas?.edges.map((edge) => edge.id)).toEqual(["keep"]);
   });
 
+  it("sends rounded node positions so the assistant can see the layout", () => {
+    const placed = buildWorkflowNode({ id: "n1", position: { x: 120.6, y: 40.2 }, data: { type: "product-input", label: "Input", config: {}, status: "idle" } });
+
+    const context = buildAssistantContext({ pathname: "/workflows", search: "?id=wf-1", workflow: workflow({ nodes: [placed], edges: [] }) });
+
+    expect(context.canvas?.nodes[0]?.position).toEqual({ x: 121, y: 40 });
+  });
+
   it("replaces an oversized node config with an empty object", () => {
     const big = buildWorkflowNode({ id: "big", data: { type: "product-input", label: "Big", config: { blob: "x".repeat(9000) }, status: "idle" } });
 

@@ -9,9 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useDownloadInvoice } from "@/hooks/mutations/use-download-invoice";
 import type { RecentInvoice } from "@/types/subscription";
 import { cn } from "@/utils/cn";
-import { formatCurrencyVnd } from "@/utils/format-currency";
-
-const formatCurrency = (amount: number) => formatCurrencyVnd(amount);
+import { formatVnd } from "@/utils/format-currency";
 
 const formatDate = (isoDate: string) =>
   new Date(isoDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
@@ -72,7 +70,7 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
                       <TableCell className="text-primary font-medium">{invoice.invoiceNumber}</TableCell>
                       <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
                       <TableCell>{invoice.planName}</TableCell>
-                      <TableCell>{formatCurrency(invoice.totalAmount)}</TableCell>
+                      <TableCell>{formatVnd(invoice.totalAmountVnd)}</TableCell>
                       <TableCell>
                         <Badge
                           variant={STATUS_BADGE_VARIANT[invoice.status] ?? "secondary"}

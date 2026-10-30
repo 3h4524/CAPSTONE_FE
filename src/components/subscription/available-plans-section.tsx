@@ -26,13 +26,13 @@ export const AvailablePlansSection = ({
           <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
             Available plans
           </p>
-          <h2 className="text-lg font-semibold">Choose the right capacity</h2>
+          <h2 className="text-lg font-semibold">Choose your plan</h2>
         </div>
         <p className="text-muted-foreground max-w-xs text-xs sm:text-right">
-          All plans include the complete APCS workflow.
+          Every plan runs the whole APCS pipeline with no monthly quota. Pro adds the AI tools.
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className={`grid gap-4 ${plans.length >= 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         {plans.map((plan) => (
           <PlanComparisonCard
             key={plan.planId}

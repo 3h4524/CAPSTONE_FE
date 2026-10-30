@@ -1,0 +1,181 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { AlertTriangle, Info, Layers, Loader2, RefreshCw, Sparkles } from "lucide-react";
+
+import { MrrBridgeStrip } from "@/components/admin/subscription-plans/mrr-bridge-strip";
+import { PlanDetail } from "@/components/admin/subscription-plans/plan-health-detail";
+import { PlanTile } from "@/components/admin/subscription-plans/plan-health-tile";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { formatDay, formatPeriod, planName, regenerateBlocker } from "@/helpers/plan-ai-review";
+import { useRegeneratePlanAiReview } from "@/hooks/mutations/use-regenerate-plan-ai-review";
+import { usePlanAiReview } from "@/hooks/queries/use-plan-ai-review";
+import type { PlanAiAssessment, PlanAiReviewResponse } from "@/types/plan-ai-review";
+import type { PlanInsights } from "@/types/plan-insights";
+
+interface PlanAiReviewSectionProps {
+  /** A plan key to open first, when the page is opened from the Revenue page. */
+  focusPlan?: string | null;
+  /** Plan Insights for the same days: who stayed and who left, and the rule-based checks. */
+  insights?: PlanInsights;
+  /** A feature picked in the adoption table: open a plan that comments on it and scroll to the comment. */
+  focusFeature?: { metric: string; nonce: number } | null;
+}
+
+/**
+ * Plan health, from the verdict to the evidence: a tile per paid plan to pick from, then the
+ * picked plan's summary, why its customers leave next to what to do about it, how those who stayed
+ * and left used APCS, its features, and its strengths and risks.
+ */
+export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanAiReviewSectionProps) {
+  const { data, isLoading } = usePlanAiReview();
+  const regenerate = useRegeneratePlanAiReview();
+  const [picked, setPicked] = useState<string | null>(focusPlan ?? null);
+
+  // Opened from the Revenue page for one plan: bring the section into view once it is there.
+  const hasReview = Boolean(data?.latest);
+  useEffect(() => {
+    if (focusPlan && hasReview) document.getElementById("plan-health")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [focusPlan, hasReview]);
+
+  // The picked plan if it comments on the feature, otherwise the first plan that does.
+  const reviewPlans = data?.latest?.review.plans;
+  useEffect(() => {
+    if (!focusFeature || !reviewPlans) return;
+    const comments = (plan: PlanAiAssessment) => plan.featureInsights.some((insight) => insight.feature === focusFeature.metric);
+    const target = reviewPlans.find((plan) => plan.plan === picked && comments(plan)) ?? reviewPlans.find(comments);
+    if (!target) return;
+    setPicked(target.plan);
+    // After the plan's detail renders.
+    window.setTimeout(
+      () => document.getElementById(`ai-feature-${target.plan}-${focusFeature.metric}`)?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      60
+    );
+    // Only a new pick moves the page, not a change of plan by hand.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusFeature, reviewPlans]);
+
+  if (isLoading || !data) return <Card className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-white" />;
+
+  const blocker = regenerateBlocker(data, new Date());
+  const snapshot = data.latest;
+  const plans = snapshot?.review.plans ?? [];
+  const selected = plans.find((plan) => plan.plan === picked) ?? plans[0];
+  const allPlansBridge = snapshot?.mrrBridges?.find((bridge) => bridge.planName === null);
+
+  return (
+    <section id="plan-health" className="scroll-mt-24 space-y-4" aria-labelledby="ai-review-title">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#5b7aa6]/10 text-[#3f5f8a]">
+            <Sparkles className="size-[18px]" />
+          </div>
+          <div>
+            <h2 id="ai-review-title" className="flex items-center gap-1.5 text-base font-semibold text-slate-900">
+              Plan health
+              {/* A plain title tooltip: the caveat stays one hover away instead of a third line. */}
+              <span
+                className="cursor-help text-slate-400"
+                title="Written by AI. Every figure it quotes is checked against the data. It shows what goes together, not proven causes."
+              >
+                <Info className="size-3.5" aria-label="About this review" />
+              </span>
+            </h2>
+            {snapshot && (
+              <p className="text-xs text-slate-500" title={snapshot.model ?? undefined}>
+                AI review of {formatPeriod(snapshot.periodStart, snapshot.periodEnd)} · Generated {formatDay(snapshot.generatedAt)}
+                {data.nextRefreshAt && <> · Next refresh {formatDay(data.nextRefreshAt)}</>}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-col items-start gap-1 sm:items-end">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 rounded-md px-3 text-xs"
+            disabled={blocker !== null || regenerate.isPending}
+            onClick={() => regenerate.mutate()}
+          >
+            {data.isGenerating ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
+            {data.isGenerating ? "Generating…" : "Regenerate"}
+          </Button>
+          {blocker && !data.isGenerating && <span className="text-[11px] text-slate-400">{blocker}</span>}
+        </div>
+      </div>
+
+      <StatusNotes data={data} />
+
+      {snapshot && selected ? (
+        <>
+          {snapshot.review.overall && (
+            <div className="flex gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4">
+              <Layers className="mt-0.5 size-4 shrink-0 text-slate-400" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-slate-500">Across all plans</p>
+                <p className="mt-0.5 text-sm leading-relaxed text-slate-700">{snapshot.review.overall}</p>
+                {allPlansBridge && (
+                  <MrrBridgeStrip bridge={allPlansBridge} periodStart={snapshot.periodStart} periodEnd={snapshot.periodEnd} className="mt-3" />
+                )}
+              </div>
+            </div>
+          )}
+
+          <div role="tablist" aria-label="Plan" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {plans.map((plan) => (
+              <PlanTile
+                key={plan.plan}
+                plan={plan}
+                name={planName(snapshot, plan.plan)}
+                previous={data.previousScores.find((item) => item.plan === plan.plan)}
+                selected={plan.plan === selected.plan}
+                onSelect={() => setPicked(plan.plan)}
+              />
+            ))}
+          </div>
+
+          <PlanDetail
+            plan={selected}
+            snapshot={snapshot}
+            signal={insights?.churnSignals?.find((item) => item.key === selected.plan)}
+            verdict={insights?.verdicts.find((item) => item.key === selected.plan)}
+            days={insights?.days}
+          />
+        </>
+      ) : (
+        !data.isGenerating && (
+          <p className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-500">
+            No AI review yet. {data.isConfigured ? "Press Regenerate to write the first one, or wait for the scheduled one." : ""}
+            {" "}The rule-based checks below still apply.
+          </p>
+        )
+      )}
+    </section>
+  );
+}
+
+function StatusNotes({ data }: { data: PlanAiReviewResponse }) {
+  return (
+    <>
+      {/* Slim one-line notes, so they inform without pushing the review down. */}
+      {data.isGenerating && (
+        <p className="flex items-center gap-2 rounded-lg border border-[#5b7aa6]/20 bg-[#5b7aa6]/5 px-3 py-1.5 text-xs text-[#3f5f8a]">
+          <Loader2 className="size-3.5 shrink-0 animate-spin" /> Writing a new review. It takes a few minutes; this page updates when it is done.
+        </p>
+      )}
+      {!data.isConfigured && (
+        <p className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-600">
+          <Info className="size-3.5 shrink-0" /> AI reviews are off: no Gemini key is set on the server.
+        </p>
+      )}
+      {data.lastFailedAt && !data.isGenerating && (
+        <p className="flex items-center gap-2 rounded-lg border border-amber-200/70 bg-amber-50/70 px-3 py-1.5 text-xs text-amber-900">
+          <AlertTriangle className="size-3.5 shrink-0 text-amber-600" />
+          The last attempt on {formatDay(data.lastFailedAt)} did not pass the checks
+          {data.latest ? ", so this is the previous review." : "."} It will be tried again automatically.
+        </p>
+      )}
+    </>
+  );
+}

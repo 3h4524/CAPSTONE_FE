@@ -20,12 +20,8 @@ import { useUpgrade } from "@/hooks/mutations/use-upgrade";
 import { useCheckoutStatus } from "@/hooks/queries/use-checkout-status";
 import { SUBSCRIPTION_OVERVIEW_QUERY_KEY } from "@/hooks/queries/use-subscription-overview";
 import type { AvailablePlan, UpgradeResult } from "@/types/subscription";
-import { formatCurrencyVnd, formatRawVnd } from "@/utils/format-currency";
+import { formatVnd } from "@/utils/format-currency";
 import { useQueryClient } from "@tanstack/react-query";
-
-const formatCurrency = (amount: number) => formatCurrencyVnd(amount);
-
-const formatVnd = (amount: number) => formatRawVnd(amount);
 
 const formatDate = (isoDate: string) =>
   new Date(isoDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
@@ -140,7 +136,7 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
             <div className="bg-muted flex items-center justify-between rounded-lg p-4 text-sm">
               <span className="text-muted-foreground">New plan</span>
               <span className="font-semibold">
-                {plan.name} — {formatCurrency(plan.monthlyPriceUsd)}/tháng
+                {plan.name} — {formatVnd(plan.monthlyPriceVnd)} / month
               </span>
             </div>
             {isError && (
@@ -165,11 +161,11 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
             <div className="bg-muted grid w-full grid-cols-2 divide-x rounded-lg text-sm">
               <div className="space-y-0.5 px-4 py-3">
                 <p className="text-muted-foreground text-xs">Prorated credit</p>
-                <p className="font-semibold">{formatCurrency(result.proratedCreditUsd)}</p>
+                <p className="font-semibold">{formatVnd(result.proratedCreditVnd)}</p>
               </div>
               <div className="space-y-0.5 px-4 py-3">
                 <p className="text-muted-foreground text-xs">Due today</p>
-                <p className="font-semibold">{formatCurrency(result.dueTodayUsd)}</p>
+                <p className="font-semibold">{formatVnd(result.dueTodayVnd)}</p>
               </div>
             </div>
             {result.qrCode && (

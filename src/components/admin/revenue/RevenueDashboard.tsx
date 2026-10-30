@@ -8,10 +8,12 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import { buildRevenueReport, reportFileName, toCsv } from "@/helpers/revenue-report";
 import { toXlsx } from "@/helpers/revenue-report-xlsx";
 import { useAdminSubscriptionPlans } from "@/hooks/queries/use-admin-subscription-plans";
+import { usePlanAiReview } from "@/hooks/queries/use-plan-ai-review";
 import { useRevenueCharts, useRevenueInsights, useRevenueInvoices, useRevenueMetrics } from "@/hooks/queries/use-revenue";
 import type { RevenueFilterDto, TransactionStatus } from "@/types/revenue";
 
-import { RevenueCharts } from "./RevenueCharts";
+import { MrrMovementCard } from "./MrrMovementCard";
+import { RevenueByPlanCard } from "./RevenueByPlanCard";
 import { RevenueFilterBar } from "./RevenueFilterBar";
 import { type ReportFormat, RevenueGrowthCard } from "./RevenueGrowthCard";
 import { RevenueInsightsRow } from "./RevenueInsightsRow";
@@ -31,7 +33,6 @@ export function RevenueDashboard() {
   });
 
   const [isExporting, setIsExporting] = useState(false);
-  const [currency, setCurrency] = useState<"VND" | "USD">("VND");
 
   // The transaction table's own search/filters/page live apart from the page-wide period filter, so
   // paging or searching the table does not refetch the KPIs and charts.
@@ -54,6 +55,7 @@ export function RevenueDashboard() {
   const { data: metricsData, isLoading: isLoadingMetrics } = useRevenueMetrics(filter);
   const { data: chartsData, isLoading: isLoadingCharts } = useRevenueCharts(filter);
   const { data: insightsData, isLoading: isLoadingInsights } = useRevenueInsights(filter);
+  const { data: aiReview } = usePlanAiReview();
   const { data: invoicesData, isLoading: isLoadingInvoices } = useRevenueInvoices(invoiceFilter);
   const { data: plans } = useAdminSubscriptionPlans();
 
@@ -90,7 +92,6 @@ export function RevenueDashboard() {
       const transactions = await getRevenueInvoices({ ...invoiceFilter, page: 1, pageSize: 999999 });
       const sections = buildRevenueReport({
         filter,
-        currency,
         generatedAt: new Date(),
         metrics: metricsData,
         charts: chartsData,
@@ -101,7 +102,7 @@ export function RevenueDashboard() {
 
       const blob =
         format === "xlsx"
-          ? await toXlsx(sections, currency)
+          ? await toXlsx(sections)
           : new Blob([toCsv(sections)], { type: "text/csv;charset=utf-8" });
       downloadBlob(blob, `${reportFileName(filter)}.${format}`);
 
@@ -119,27 +120,31 @@ export function RevenueDashboard() {
         <RevenueFilterBar
           filter={filter}
           onFilterChange={handleFilterChange}
-          currency={currency}
-          onCurrencyChange={setCurrency}
         />
 
         <RevenueMetricCards
           metrics={metricsData}
           isLoading={isLoadingMetrics}
-          currency={currency}
         />
 
-        <RevenueCharts
-          charts={chartsData}
+        {/* From the total down: how MRR moved, then which plans moved it. The revenue trend over
+            time lives on the Admin Dashboard. */}
+        <MrrMovementCard
+          data={insightsData?.mrrMovement}
+          isLoading={isLoadingInsights}
+          startDate={filter.startDate}
+          endDate={filter.endDate}
+          aiReview={aiReview}
+        />
+
+        <RevenueByPlanCard
+          plans={chartsData?.byPlan}
           isLoading={isLoadingCharts}
-          currency={currency}
-          filter={filter}
         />
 
         <RevenueInsightsRow
           data={insightsData}
           isLoading={isLoadingInsights}
-          currency={currency}
           onReviewAlert={handleReviewAlert}
         />
 
@@ -148,7 +153,6 @@ export function RevenueDashboard() {
             <RevenueInvoiceTable
               data={invoicesData}
               isLoading={isLoadingInvoices}
-              currency={currency}
               startDate={filter.startDate}
               endDate={filter.endDate}
               planOptions={planOptions}

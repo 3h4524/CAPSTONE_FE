@@ -1,11 +1,10 @@
 import { ArrowRight, Check, Sparkles } from "lucide-react";
 
+import { planLines } from "@/components/subscription/plan-comparison-card";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { AvailablePlan, BillingCycle } from "@/types/subscription";
-import { formatCurrencyVnd } from "@/utils/format-currency";
-
-const formatCurrency = (amount: number) => formatCurrencyVnd(amount);
+import { formatVnd } from "@/utils/format-currency";
 
 const formatDate = (date: Date) =>
   date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
@@ -40,14 +39,14 @@ export const CheckoutStepReview = ({
   const today = new Date();
   // BR191: a plan with no annual price must never offer the Annual option.
   const canChooseAnnual = plan.annualPriceUsd !== null;
-  const dueToday = billingCycle === "annual" && plan.annualPriceUsd !== null
-    ? plan.annualPriceUsd
-    : plan.monthlyPriceUsd;
+  const dueToday = billingCycle === "annual" && plan.annualPriceVnd !== null
+    ? plan.annualPriceVnd
+    : plan.monthlyPriceVnd;
   const firstRenewal = billingCycle === "annual" ? addYears(today, 1) : addMonths(today, 1);
   const monthlyRate =
-    billingCycle === "annual" && plan.annualPriceUsd !== null
-      ? plan.annualPriceUsd / 12
-      : plan.monthlyPriceUsd;
+    billingCycle === "annual" && plan.annualPriceVnd !== null
+      ? Math.round(plan.annualPriceVnd / 12)
+      : plan.monthlyPriceVnd;
 
   return (
     <div className="space-y-6">
@@ -63,24 +62,20 @@ export const CheckoutStepReview = ({
             </div>
           </div>
           <p className="text-xl font-bold whitespace-nowrap">
-            {formatCurrency(plan.monthlyPriceUsd)}
-            <span className="text-muted-foreground text-sm font-normal">/tháng</span>
+            {formatVnd(plan.monthlyPriceVnd)}
+            <span className="text-muted-foreground text-sm font-normal"> / month</span>
           </p>
         </div>
         {plan.description && <p className="text-muted-foreground mt-2 text-sm">{plan.description}</p>}
-        <div className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
-          <span className="flex items-center gap-2">
-            <Check className="text-primary size-4 shrink-0" />
-            {plan.quotas.imageGenerationQuota.toLocaleString()} images
-          </span>
-          <span className="flex items-center gap-2">
-            <Check className="text-primary size-4 shrink-0" />
-            {plan.quotas.apiCallQuota.toLocaleString()} API calls
-          </span>
-          <span className="flex items-center gap-2">
-            <Check className="text-primary size-4 shrink-0" />
-            {plan.quotas.storageQuotaGb.toLocaleString()} GB storage
-          </span>
+        <div className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+          {planLines(plan)
+            .filter((line) => line.included)
+            .map((line) => (
+              <span key={line.label} className="flex items-center gap-2">
+                <Check className="text-primary size-4 shrink-0" />
+                {line.label}
+              </span>
+            ))}
         </div>
       </div>
 
@@ -102,7 +97,7 @@ export const CheckoutStepReview = ({
       <div className="bg-muted grid grid-cols-3 divide-x rounded-lg text-sm">
         <div className="space-y-0.5 px-4 py-3">
           <p className="text-muted-foreground text-xs">Due today</p>
-          <p className="font-semibold">{formatCurrency(dueToday)}</p>
+          <p className="font-semibold">{formatVnd(dueToday)}</p>
         </div>
         <div className="space-y-0.5 px-4 py-3">
           <p className="text-muted-foreground text-xs">First renewal</p>
@@ -110,7 +105,7 @@ export const CheckoutStepReview = ({
         </div>
         <div className="space-y-0.5 px-4 py-3">
           <p className="text-muted-foreground text-xs">Monthly rate</p>
-          <p className="font-semibold">{formatCurrency(monthlyRate)}</p>
+          <p className="font-semibold">{formatVnd(monthlyRate)}</p>
         </div>
       </div>
 

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Layers, X } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,20 +16,54 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { PLAN_FEATURES } from "@/helpers/plan-features";
 import { useCreateSubscriptionPlan } from "@/hooks/mutations/use-create-subscription-plan";
 import { useUpdateSubscriptionPlan } from "@/hooks/mutations/use-update-subscription-plan";
 import {
   subscriptionPlanFormSchema,
   type SubscriptionPlanFormValues,
 } from "@/schemas/subscription-plan";
-import type { AdminSubscriptionPlan } from "@/types/admin-subscription-plan";
+import type { AdminSubscriptionPlan, PlanFeatureInput } from "@/types/admin-subscription-plan";
+import { formatVnd } from "@/utils/format-currency";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 type PlanFormDialogProps = {
   open: boolean;
   plan: AdminSubscriptionPlan | null;
+  // The PayOS rate, to preview what a typed USD price charges; null hides the preview.
+  usdToVndRate: number | null;
   onClose: () => void;
 };
+
+// Prices are entered in USD and charged in VND at the PayOS rate, as the server rounds them.
+const chargedVnd = (priceUsd: number | undefined, rate: number | null) =>
+  rate !== null && typeof priceUsd === "number" && Number.isFinite(priceUsd)
+    ? `≈ ${formatVnd(Math.round(priceUsd * rate))} charged via PayOS`
+    : null;
+
+type FeatureValues = NonNullable<SubscriptionPlanFormValues["features"]>;
+
+// A new plan starts with every flag off and every limit unset (no limit).
+const DEFAULT_FEATURES: FeatureValues = Object.fromEntries(
+  PLAN_FEATURES.map((feature) => [feature.code, { isEnabled: feature.kind === "limit", limitValue: null }])
+);
+
+const toFeatureValues = (features: PlanFeatureInput[] | undefined): FeatureValues => ({
+  ...DEFAULT_FEATURES,
+  ...Object.fromEntries(
+    (features ?? []).map((feature) => [feature.code, { isEnabled: feature.isEnabled, limitValue: feature.limitValue }])
+  ),
+});
+
+const toFeatureInputs = (features: FeatureValues): PlanFeatureInput[] =>
+  PLAN_FEATURES.map((feature) => {
+    const value = features[feature.code] ?? DEFAULT_FEATURES[feature.code];
+    return feature.kind === "limit"
+      ? { code: feature.code, isEnabled: true, limitValue: value.limitValue }
+      : { code: feature.code, isEnabled: value.isEnabled, limitValue: null };
+  });
+
+const FEATURE_GROUPS = [...new Set(PLAN_FEATURES.map((feature) => feature.group))];
 
 const EMPTY_VALUES: SubscriptionPlanFormValues = {
   name: "",
@@ -48,6 +82,7 @@ const EMPTY_VALUES: SubscriptionPlanFormValues = {
   whiteLabelExportEnabled: false,
   prioritySupport: false,
   isActive: true,
+  features: DEFAULT_FEATURES,
 };
 
 const toFormValues = (plan: AdminSubscriptionPlan | null): SubscriptionPlanFormValues =>
@@ -69,10 +104,11 @@ const toFormValues = (plan: AdminSubscriptionPlan | null): SubscriptionPlanFormV
         whiteLabelExportEnabled: plan.whiteLabelExportEnabled,
         prioritySupport: plan.prioritySupport,
         isActive: plan.isActive,
+        features: toFeatureValues(plan.features),
       }
     : EMPTY_VALUES;
 
-export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
+export function PlanFormDialog({ open, plan, usdToVndRate, onClose }: PlanFormDialogProps) {
   const isEditing = plan !== null;
   const createMutation = useCreateSubscriptionPlan(onClose);
   const updateMutation = useUpdateSubscriptionPlan(onClose);
@@ -88,6 +124,12 @@ export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
     resolver: zodResolver(subscriptionPlanFormSchema),
     defaultValues: EMPTY_VALUES,
   });
+  const [monthlyPriceUsd, annualPriceUsd] = useWatch({
+    control,
+    name: ["monthlyPriceUsd", "annualPriceUsd"],
+  });
+  const monthlyCharged = chargedVnd(monthlyPriceUsd, usdToVndRate);
+  const annualCharged = chargedVnd(annualPriceUsd, usdToVndRate);
 
   useEffect(() => {
     if (open) {
@@ -96,19 +138,20 @@ export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, plan]);
 
-  const submit = handleSubmit(({ tier, ...values }) => {
+  const submit = handleSubmit(({ tier, features, ...values }) => {
     const annualPriceUsd = values.annualPriceUsd ?? null;
     const description = values.description?.trim() ? values.description.trim() : null;
+    const featureInputs = toFeatureInputs(features ?? DEFAULT_FEATURES);
 
     if (isEditing) {
       updateMutation.mutate({
         id: plan.id,
-        input: { ...values, description, annualPriceUsd },
+        input: { ...values, description, annualPriceUsd, features: featureInputs },
       });
       return;
     }
 
-    createMutation.mutate({ ...values, tier, description, annualPriceUsd });
+    createMutation.mutate({ ...values, tier, description, annualPriceUsd, features: featureInputs });
   });
 
   return (
@@ -161,27 +204,31 @@ export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
                   />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Monthly price (nghìn VNĐ)" htmlFor="plan-monthly-price" error={errors.monthlyPriceUsd?.message}>
+                  <Field label="Monthly price (USD)" htmlFor="plan-monthly-price" error={errors.monthlyPriceUsd?.message}>
                     <Input
                       id="plan-monthly-price"
                       type="number"
-                      step="1"
-                      placeholder="e.g. 250 (= 250.000 ₫)"
+                      step="0.01"
+                      min={0}
+                      placeholder="e.g. 9.99"
                       aria-invalid={Boolean(errors.monthlyPriceUsd)}
                       {...register("monthlyPriceUsd", { valueAsNumber: true })}
                     />
-                    <p className="mt-1 text-[11px] text-slate-400">Đơn vị: nghìn đồng (ví dụ: nhập 50 là 50.000 ₫)</p>
+                    {monthlyCharged && <p className="mt-1 text-[11px] text-slate-400">{monthlyCharged}</p>}
                   </Field>
-                  <Field label="Annual price (nghìn VNĐ)" htmlFor="plan-annual-price" error={errors.annualPriceUsd?.message}>
+                  <Field label="Annual price (USD)" htmlFor="plan-annual-price" error={errors.annualPriceUsd?.message}>
                     <Input
                       id="plan-annual-price"
                       type="number"
-                      step="1"
-                      placeholder="Optional, e.g. 2500 (= 2.500.000 ₫)"
+                      step="0.01"
+                      min={0}
+                      placeholder="Optional, e.g. 99.99"
                       aria-invalid={Boolean(errors.annualPriceUsd)}
                       {...register("annualPriceUsd", { setValueAs: (v) => (v === "" ? undefined : Number(v)) })}
                     />
-                    <p className="mt-1 text-[11px] text-slate-400">Tùy chọn, tính theo nghìn đồng</p>
+                    <p className="mt-1 text-[11px] text-slate-400">
+                      {annualCharged ?? "Leave empty to offer monthly billing only"}
+                    </p>
                   </Field>
                 </div>
                 <Field label="Description" htmlFor="plan-description" error={errors.description?.message}>
@@ -189,20 +236,66 @@ export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
                 </Field>
               </FormSection>
 
-              <FormSection title="Usage limits">
-                <p className="text-muted-foreground -mt-1 text-xs">Use -1 for unlimited.</p>
+              {/* Plans differ by feature, not by monthly quota, so only the speed limits are set here. */}
+              <FormSection title="Run limits">
+                <p className="text-muted-foreground -mt-1 text-xs">
+                  These set how fast a Seller can work, not how much. Use -1 for no limit.
+                </p>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <NumberField label="Max batch size" htmlFor="plan-max-batch-size" name="maxBatchSize" register={register} error={errors.maxBatchSize?.message} />
-                  <NumberField label="Concurrent jobs" htmlFor="plan-max-concurrent-jobs" name="maxConcurrentJobs" register={register} error={errors.maxConcurrentJobs?.message} />
-                  <NumberField label="Products / month" htmlFor="plan-max-products" name="maxProductsPerMonth" register={register} error={errors.maxProductsPerMonth?.message} />
-                  <NumberField label="API calls / month" htmlFor="plan-api-calls" name="apiCallQuota" register={register} error={errors.apiCallQuota?.message} />
-                  <NumberField label="Images / month" htmlFor="plan-images" name="imageGenerationQuota" register={register} error={errors.imageGenerationQuota?.message} />
-                  <NumberField label="Videos / month" htmlFor="plan-videos" name="videoGenerationQuota" register={register} error={errors.videoGenerationQuota?.message} />
-                  <NumberField label="Storage (GB)" htmlFor="plan-storage" name="storageQuotaGb" register={register} error={errors.storageQuotaGb?.message} />
+                  <NumberField label="Products per run" htmlFor="plan-max-batch-size" name="maxBatchSize" register={register} error={errors.maxBatchSize?.message} />
+                  <NumberField label="Design jobs at once" htmlFor="plan-max-concurrent-jobs" name="maxConcurrentJobs" register={register} error={errors.maxConcurrentJobs?.message} />
                 </div>
               </FormSection>
 
-              <FormSection title="Features & permissions">
+              {FEATURE_GROUPS.map((group) => (
+                <FormSection key={group} title={group === "Safety caps" ? "Safety caps (hidden from Sellers)" : group}>
+                  {PLAN_FEATURES.filter((feature) => feature.group === group).map((feature) =>
+                    feature.kind === "flag" ? (
+                      <Controller
+                        key={feature.code}
+                        name={`features.${feature.code}.isEnabled`}
+                        control={control}
+                        render={({ field }) => (
+                          <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 px-3.5 py-2.5">
+                            <div>
+                              <p className="text-sm font-medium text-slate-700">{feature.label}</p>
+                              <p className="text-muted-foreground text-xs">{feature.description}</p>
+                            </div>
+                            <Switch checked={Boolean(field.value)} onCheckedChange={field.onChange} aria-label={feature.label} />
+                          </div>
+                        )}
+                      />
+                    ) : (
+                      <Controller
+                        key={feature.code}
+                        name={`features.${feature.code}.limitValue`}
+                        control={control}
+                        render={({ field }) => (
+                          <Field
+                            label={feature.label}
+                            htmlFor={`plan-feature-${feature.code}`}
+                            error={errors.features?.[feature.code]?.limitValue?.message}
+                          >
+                            <Input
+                              id={`plan-feature-${feature.code}`}
+                              type="number"
+                              min={0}
+                              placeholder="No limit"
+                              value={typeof field.value === "number" ? field.value : ""}
+                              onChange={(event) =>
+                                field.onChange(event.target.value === "" ? null : Number(event.target.value))
+                              }
+                            />
+                            <p className="mt-1 text-[11px] text-slate-400">{feature.description}</p>
+                          </Field>
+                        )}
+                      />
+                    )
+                  )}
+                </FormSection>
+              ))}
+
+              <FormSection title="Plan settings">
                 <ToggleField control={control} name="isActive" label="Plan is active" description="Visible on the public pricing page" />
                 <ToggleField control={control} name="customApiKeysAllowed" label="Custom API keys" description="Allow programmatic access" />
                 <ToggleField control={control} name="whiteLabelExportEnabled" label="White-label export" description="Remove APCS branding" />

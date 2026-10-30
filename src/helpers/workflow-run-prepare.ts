@@ -1,14 +1,17 @@
+import { getAllowancesRequest } from "@/api/allowances";
 import { apiKeyKeys, listApiKeys } from "@/api/api-keys";
 import { batchJobKeys, getBatchJob, listBatchJobs } from "@/api/batch-jobs";
 import { approveBatch, batchKeys, listBatchProducts } from "@/api/batches";
 import { listMockupTemplates, mockupTemplateKeys } from "@/api/mockup-templates";
-import { getSubscriptionOverviewRequest } from "@/api/subscription";
+import { getEntitlementsRequest } from "@/api/subscription";
+import { allowanceBlocksRun } from "@/helpers/allowance";
 import { countProductTypes, productTypeLabel } from "@/helpers/mockup-template";
+import { featureLimit, hasFeature } from "@/helpers/plan-features";
 import { ACTIVE_JOB_STATUSES, narrowMockupSelection, type RunPlan } from "@/helpers/workflow-run";
-import { SUBSCRIPTION_OVERVIEW_QUERY_KEY } from "@/hooks/queries/use-subscription-overview";
+import { ALLOWANCES_QUERY_KEY } from "@/hooks/queries/use-allowances";
+import { ENTITLEMENTS_QUERY_KEY } from "@/hooks/queries/use-entitlements";
+import type { Entitlements } from "@/types/subscription";
 import type { QueryClient } from "@tanstack/react-query";
-
-const IMAGE_QUOTA_CODE = "image_generation";
 
 // A problem the user can fix; its message is shown as is.
 export class RunBlockedError extends Error {}
@@ -20,6 +23,26 @@ export type PreparedRun = {
   batchJobId: string;
   /** The batch already had a running job: it is shown instead of starting another (one active job per batch). */
   attached: boolean;
+};
+
+// Why the Seller's plan cannot run this, or null when it can. Mirrors the backend's checks.
+export const planBlocksRun = (
+  entitlements: Entitlements,
+  productCount: number,
+  variationCount: number,
+  requireApproval: boolean
+): string | null => {
+  if (entitlements.maxBatchSize >= 0 && productCount > entitlements.maxBatchSize) {
+    return `This run has ${productCount} products, but your plan runs up to ${entitlements.maxBatchSize} at a time. Split the batch or upgrade to Pro.`;
+  }
+  const maxVariations = featureLimit(entitlements, "design_variations");
+  if (typeof maxVariations === "number" && variationCount > maxVariations) {
+    return `Your plan generates up to ${maxVariations} variation${maxVariations === 1 ? "" : "s"} per product. Lower the variants or upgrade to Pro.`;
+  }
+  if (!requireApproval && !hasFeature(entitlements, "auto_approval")) {
+    return "Automatic design approval is part of Pro. Set Design approval to manual review, or upgrade to Pro.";
+  }
+  return null;
 };
 
 // Runs every check the backend would make when the job starts, before anything is created, so a
@@ -93,18 +116,23 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
     throw new RunBlockedError("Connect a valid Google Gemini API key on the API Keys page before running.");
   }
 
-  const overview = await queryClient.fetchQuery({
-    queryKey: SUBSCRIPTION_OVERVIEW_QUERY_KEY,
-    queryFn: getSubscriptionOverviewRequest,
+  // Plans differ by feature, not by monthly quota: the run must fit what the plan includes.
+  const entitlements = await queryClient.fetchQuery({
+    queryKey: ENTITLEMENTS_QUERY_KEY,
+    queryFn: getEntitlementsRequest,
     ...fresh,
   });
-  const quota = overview.usageQuotas.find((item) => item.quotaCode === IMAGE_QUOTA_CODE);
-  const imagesNeeded = productCount * plan.variationCount;
-  if (quota && imagesNeeded > Math.max(0, quota.limit - quota.used)) {
-    throw new RunBlockedError(
-      `This run needs ${imagesNeeded} images but your plan has ${Math.max(0, quota.limit - quota.used)} left. Lower the variants or upgrade your plan.`
-    );
-  }
+  const blocked = planBlocksRun(entitlements, productCount, plan.variationCount, plan.requireApproval);
+  if (blocked) throw new RunBlockedError(blocked);
+
+  // Free and the Pro trial run within their allowances.
+  const allowances = await queryClient.fetchQuery({ queryKey: ALLOWANCES_QUERY_KEY, queryFn: getAllowancesRequest, ...fresh });
+  const overAllowance = allowanceBlocksRun(allowances, {
+    productCount,
+    variationCount: plan.variationCount,
+    templateCount: plan.mockup?.templateIds.length ?? 0,
+  });
+  if (overAllowance) throw new RunBlockedError(overAllowance);
 
   if (reusableDraftId) return { batchJobId: reusableDraftId, attached: false };
   const approved = await approveBatch(plan.batchId);

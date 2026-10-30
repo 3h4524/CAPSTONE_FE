@@ -6,10 +6,12 @@ import { evaluateListingSeo, generateListingContent, getListingContent } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { hasFeature } from "@/helpers/plan-features";
 import { showToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
+import { useEntitlements } from "@/hooks/queries/use-entitlements";
 import { useQuery } from "@/hooks/queries/use-query";
 import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
@@ -63,6 +65,12 @@ export const ListingContentResultPanel = () => {
   // regenerating here is safe again and does not affect the video.
   const waitingForRunToStart = isRunning && !runIsOpen;
   const seo = seoMutation.data;
+  // The first listing of a product is in every plan; writing it again and scoring its SEO are Pro.
+  const { data: entitlements } = useEntitlements();
+  const canRegenerate = entitlements === undefined || hasFeature(entitlements, "listing_regenerate");
+  // Listing content itself is not on Starter.
+  const listingLocked = entitlements !== undefined && !hasFeature(entitlements, "workflow_listing");
+  const regenerateLocked = listingLocked || (Boolean(result) && !canRegenerate);
 
   const evaluateSeo = () => {
     if (!productId) {
@@ -90,9 +98,16 @@ export const ListingContentResultPanel = () => {
             Generate content for the product selected in Product input.
           </p>
         </div>
-        <Button type="button" size="sm" onClick={generate} disabled={waitingForRunToStart || mutation.isPending || isRetrying}>
+        <Button
+          type="button"
+          size="sm"
+          onClick={generate}
+          disabled={waitingForRunToStart || mutation.isPending || isRetrying || regenerateLocked}
+          title={listingLocked ? "Listing content is part of Pro." : regenerateLocked ? "Regenerating a listing is part of Pro." : undefined}
+        >
           {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           {mutation.isPending ? "Generating…" : result ? "Regenerate" : "Generate"}
+          {regenerateLocked && <Badge variant="outline" className="ml-1 text-[10px]">Pro</Badge>}
         </Button>
       </div>
 
@@ -124,9 +139,17 @@ export const ListingContentResultPanel = () => {
                 <ShieldCheck className="size-4 text-emerald-600" />
                 <p className="text-sm font-semibold">SEO evaluation</p>
               </div>
-              <Button type="button" size="sm" variant="outline" onClick={evaluateSeo} disabled={seoMutation.isPending}>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={evaluateSeo}
+                disabled={seoMutation.isPending || !canRegenerate}
+                title={canRegenerate ? undefined : "SEO scoring is part of Pro."}
+              >
                 {seoMutation.isPending && <Loader2 className="size-4 animate-spin" />}
                 {seoMutation.isPending ? "Checking…" : "Check SEO score"}
+                {!canRegenerate && <Badge variant="outline" className="ml-1 text-[10px]">Pro</Badge>}
               </Button>
             </div>
             {seo && (

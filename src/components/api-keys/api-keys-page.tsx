@@ -433,6 +433,7 @@ export function ApiKeysPage() {
           </DialogHeader>
           <ol className="text-muted-foreground list-decimal space-y-3 pl-5 text-sm">
             <li>Google Gemini supplies listing content; Gemini or Ideogram supplies design images.</li>
+            <li>MiniMax H3 video generation uses the platform-managed system credential; Sellers do not add a MiniMax key here.</li>
             <li>Printify publishes products; Etsy publishes marketplace listings.</li>
             <li>
               Create a credential in your provider account with only the permissions your workflow

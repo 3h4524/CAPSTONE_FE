@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import type { WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
 
+const AI_ADVANCED_CONTROLS_ENABLED = false;
+
 const wholeNumber = (label: string, min: number, max: number) =>
   z
     .number({ error: `Enter the ${label}.` })
@@ -26,6 +28,39 @@ const videoTransitionSchema = z.enum([
   "blur",
   "cut",
 ]);
+const standardSceneMotions = [
+  "gentle",
+  "contain_gentle",
+  "static",
+  "pan",
+  "zoom",
+  "zoom_out",
+  "pan_left",
+  "pan_up",
+  "pan_down",
+  "diagonal_up_right",
+  "diagonal_up_left",
+  "diagonal_down_right",
+  "diagonal_down_left",
+  "rotate_cw",
+  "rotate_ccw",
+  "rotate_zoom_cw",
+  "rotate_zoom_ccw",
+  "custom",
+] as const;
+type StandardSceneMotion = (typeof standardSceneMotions)[number];
+const legacyAiCameraMotionAliases: Record<string, StandardSceneMotion> = {
+  locked: "static",
+  push_in: "zoom",
+  pull_back: "zoom_out",
+  pan_right: "pan",
+  orbit_left: "contain_gentle",
+  orbit_right: "contain_gentle",
+  gentle_tracking: "contain_gentle",
+  subtle_handheld: "contain_gentle",
+};
+const normalizeLegacyStandardMotion = (value: unknown) =>
+  typeof value === "string" ? (legacyAiCameraMotionAliases[value] ?? value) : value;
 const timelineFrame = wholeNumber("timeline frame", 0, 900);
 const videoOverlaySchema = z
   .object({
@@ -169,53 +204,19 @@ export const generateVideoConfigSchema = z
       .optional(),
     textOverlay: z.string().max(120),
     standardOptions: z.object({
-      motionPreset: z.enum([
-        "varied",
-        "gentle",
-        "contain_gentle",
-        "static",
-        "pan",
-        "zoom",
-        "zoom_out",
-        "pan_left",
-        "pan_up",
-        "pan_down",
-        "diagonal_up_right",
-        "diagonal_up_left",
-        "diagonal_down_right",
-        "diagonal_down_left",
-        "rotate_cw",
-        "rotate_ccw",
-        "rotate_zoom_cw",
-        "rotate_zoom_ccw",
-      ]),
+      motionPreset: z.preprocess(
+        normalizeLegacyStandardMotion,
+        z.enum(["varied", ...standardSceneMotions.filter((motion) => motion !== "custom")])
+      ),
       crop: z.literal("safe"),
       transition: videoTransitionSchema,
     }),
     sceneMotionPresets: z
       .array(
-        z
-          .enum([
-            "gentle",
-            "contain_gentle",
-            "static",
-            "pan",
-            "zoom",
-            "zoom_out",
-            "pan_left",
-            "pan_up",
-            "pan_down",
-            "diagonal_up_right",
-            "diagonal_up_left",
-            "diagonal_down_right",
-            "diagonal_down_left",
-            "rotate_cw",
-            "rotate_ccw",
-            "rotate_zoom_cw",
-            "rotate_zoom_ccw",
-            "custom",
-          ])
-          .nullable()
+        z.preprocess(
+          normalizeLegacyStandardMotion,
+          z.enum(standardSceneMotions).nullable()
+        )
       )
       .max(4)
       .optional(),
@@ -249,11 +250,13 @@ export const generateVideoConfigSchema = z
           subjectMotion: z.string().min(1),
           motionIntensity: z.string().min(1),
           lighting: z.string().min(1),
-          extraInstructions: z
-            .string()
-            .trim()
-            .max(500, "Keep scene instructions under 500 characters.")
-            .nullable(),
+          extraInstructions: AI_ADVANCED_CONTROLS_ENABLED
+            ? z
+                .string()
+                .trim()
+                .max(500, "Keep scene instructions under 500 characters.")
+                .nullable()
+            : z.unknown().transform(() => null),
           rightsConfirmed: z.boolean(),
           startFrameMode: z.enum(["direct", "studio"]).nullable().optional(),
           studioLayout: z.enum(["hanging_window", "flat_lay", "none"]).nullable().optional(),
@@ -265,28 +268,10 @@ export const generateVideoConfigSchema = z
             .nullable()
             .optional(),
           studioReferenceHashes: z.array(z.string().length(64)).max(3).nullable().optional(),
-          standardMotionPreset: z
-            .enum([
-              "gentle",
-              "contain_gentle",
-              "static",
-              "pan",
-              "zoom",
-              "zoom_out",
-              "pan_left",
-              "pan_up",
-              "pan_down",
-              "diagonal_up_right",
-              "diagonal_up_left",
-              "diagonal_down_right",
-              "diagonal_down_left",
-              "rotate_cw",
-              "rotate_ccw",
-              "rotate_zoom_cw",
-              "rotate_zoom_ccw",
-              "custom",
-            ])
-            .optional(),
+          standardMotionPreset: z.preprocess(
+            normalizeLegacyStandardMotion,
+            z.enum(standardSceneMotions).nullable().optional()
+          ),
           standardBaseCrop: videoRegionSchema.nullable().optional(),
           standardStartCrop: videoRegionSchema.nullable().optional(),
           standardEndCrop: videoRegionSchema.nullable().optional(),
@@ -303,12 +288,14 @@ export const generateVideoConfigSchema = z
       )
       .max(4)
       .optional(),
-    aiGlobalInstructions: z
-      .string()
-      .trim()
-      .max(500, "Keep shared AI scene direction under 500 characters.")
-      .nullable()
-      .optional(),
+    aiGlobalInstructions: AI_ADVANCED_CONTROLS_ENABLED
+      ? z
+          .string()
+          .trim()
+          .max(500, "Keep shared AI scene direction under 500 characters.")
+          .nullable()
+          .optional()
+      : z.unknown().transform(() => null),
     aiStudioMode: z.enum(["direct", "studio"]).catch("direct").default("direct"),
     aiStudioLayout: z
       .enum(["hanging_window", "flat_lay"])

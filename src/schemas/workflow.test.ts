@@ -42,6 +42,7 @@ const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
     textOverlay: "",
     standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
     fallbackToStandard: true,
+    aiGlobalInstructions: null,
     aiStudioMode: "direct",
     aiStudioLayout: "hanging_window",
   },
@@ -411,6 +412,7 @@ describe("generateVideoConfigSchema", () => {
     textOverlay: "",
     standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
     fallbackToStandard: true,
+    aiGlobalInstructions: null,
     aiStudioMode: "direct",
     aiStudioLayout: "hanging_window",
   };

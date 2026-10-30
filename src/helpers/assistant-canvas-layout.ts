@@ -1,5 +1,5 @@
 import { ASSISTANT_LAYOUT_DEFAULT_NODE_HEIGHT_PX, ASSISTANT_LAYOUT_GAPS } from "@/constants/assistant";
-import { NODE_CARD_WIDTHS } from "@/constants/workflow";
+import { NODE_CARD_WIDTHS, RUN_ORDER } from "@/constants/workflow";
 import type { AssistantArrangeLayout, AssistantArrangePayload, AssistantArrangeSpacing } from "@/types/assistant";
 import type { WorkflowEdge, WorkflowNode } from "@/types/workflow";
 
@@ -13,6 +13,13 @@ const sizeOf = (node: WorkflowNode): Size => ({
 });
 
 const byCurrentPosition = (a: WorkflowNode, b: WorkflowNode) => a.position.y - b.position.y || a.position.x - b.position.x;
+
+const runRank = (node: WorkflowNode) => {
+  const index = RUN_ORDER.indexOf(node.data.type);
+  return index < 0 ? RUN_ORDER.length : index;
+};
+
+const byRunOrder = (a: WorkflowNode, b: WorkflowNode) => runRank(a) - runRank(b) || byCurrentPosition(a, b);
 
 const assignLayers = (nodes: WorkflowNode[], edges: WorkflowEdge[]): Map<string, number> => {
   const ids = new Set(nodes.map((node) => node.id));
@@ -37,13 +44,21 @@ const assignLayers = (nodes: WorkflowNode[], edges: WorkflowEdge[]): Map<string,
 };
 
 const groupIntoLayers = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowNode[][] => {
-  const layerOf = assignLayers(nodes, edges);
+  const ids = new Set(nodes.map((node) => node.id));
+  const linked = new Set(
+    edges
+      .filter((edge) => edge.source !== edge.target && ids.has(edge.source) && ids.has(edge.target))
+      .flatMap((edge) => [edge.source, edge.target])
+  );
+  const connected = nodes.filter((node) => linked.has(node.id));
+  const loose = nodes.filter((node) => !linked.has(node.id)).sort(byRunOrder);
+  const layerOf = assignLayers(connected, edges);
   const grouped: WorkflowNode[][] = [];
-  [...nodes].sort(byCurrentPosition).forEach((node) => {
+  [...connected].sort(byCurrentPosition).forEach((node) => {
     const layer = layerOf.get(node.id) ?? 0;
     grouped[layer] = [...(grouped[layer] ?? []), node];
   });
-  return grouped.filter((group) => group !== undefined);
+  return [...grouped.filter((group) => group !== undefined), ...loose.map((node) => [node])];
 };
 
 const layoutByLayers = (layers: WorkflowNode[][], gap: { x: number; y: number }, horizontal: boolean): Placed[] => {

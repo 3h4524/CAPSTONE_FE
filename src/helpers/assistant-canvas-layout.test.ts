@@ -99,6 +99,38 @@ describe("arrangeNodes", () => {
     expect(overlaps(arranged)).toBe(false);
   });
 
+  it.each([
+    ["horizontal", "x"],
+    ["vertical", "y"],
+  ] as const)("lays unconnected steps along the %s axis in run order", (layout, axis) => {
+    const nodes = [
+      node("video", 0, 0, "generate-video"),
+      node("input", 0, 300, "product-input"),
+      node("mockup", 0, 600, "apply-mockup"),
+      node("design", 0, 900, "design-image"),
+    ];
+
+    const arranged = arrangeNodes(nodes, [], { layout, spacing: "comfortable", perRow: 3 });
+
+    const along = ["input", "design", "mockup", "video"].map((id) => position(arranged, id)[axis]);
+    expect(along).toEqual([...along].sort((a, b) => a - b));
+    expect(new Set(along).size).toBe(4);
+    const centers = ["input", "design", "mockup", "video"].map((id) => {
+      const placed = arranged.find((item) => item.id === id)!;
+      return axis === "x" ? placed.position.y + 100 : placed.position.x + (placed.measured?.width ?? 0) / 2;
+    });
+    expect(new Set(centers).size).toBe(1);
+  });
+
+  it("puts unconnected steps after the connected chain", () => {
+    const nodes = [node("loose", 0, 0, "export-zip"), node("a", 0, 0, "product-input"), node("b", 0, 0, "design-image")];
+
+    const arranged = arrangeNodes(nodes, [edge("a", "b")], { layout: "horizontal", spacing: "comfortable", perRow: 3 });
+
+    expect(position(arranged, "a").x).toBeLessThan(position(arranged, "b").x);
+    expect(position(arranged, "b").x).toBeLessThan(position(arranged, "loose").x);
+  });
+
   it("survives a loop and edges that point at missing nodes", () => {
     const nodes = [node("a"), node("b")];
 

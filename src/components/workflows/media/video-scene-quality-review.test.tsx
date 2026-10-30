@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VideoSceneQualityReview } from "@/components/workflows/media/video-scene-quality-review";
 import type { PromoVideo, VideoSceneQuality } from "@/types/video-workflow";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const { getVideoSceneQuality, evaluateVideoScene, reviseVideoExperience, saveVideoSceneReview, setVideoExperienceStatus } = vi.hoisted(() => ({
@@ -52,11 +52,9 @@ describe("VideoSceneQualityReview", () => {
     renderPanel();
     await screen.findByRole("button", { name: "Save observation" });
 
-    await user.clear(screen.getByLabelText("Start (seconds)"));
-    await user.type(screen.getByLabelText("Start (seconds)"), "2.3");
-    await user.clear(screen.getByLabelText("End (seconds)"));
-    await user.type(screen.getByLabelText("End (seconds)"), "2.8");
-    await user.type(screen.getByLabelText("Observation"), "The hand jerks while touching the collar.");
+    fireEvent.change(screen.getByLabelText("Start (seconds)"), { target: { value: "2.3" } });
+    fireEvent.change(screen.getByLabelText("End (seconds)"), { target: { value: "2.8" } });
+    fireEvent.change(screen.getByLabelText("Observation"), { target: { value: "The hand jerks while touching the collar." } });
     await user.click(screen.getByLabelText("Confirm the system suggestion after saving"));
     await user.click(screen.getByRole("button", { name: "Save observation" }));
 
@@ -99,8 +97,7 @@ describe("VideoSceneQualityReview", () => {
     expect(screen.getAllByText(/Keep one slow hand path/)).toHaveLength(2);
 
     const revisionInput = screen.getByLabelText("Revision for lesson lesson-1");
-    await user.clear(revisionInput);
-    await user.type(revisionInput, "Keep the hand path slow and preserve anatomy.");
+    fireEvent.change(revisionInput, { target: { value: "Keep the hand path slow and preserve anatomy." } });
     await user.click(screen.getByRole("button", { name: "Create revised candidate" }));
 
     await waitFor(() => expect(reviseVideoExperience).toHaveBeenCalledWith({

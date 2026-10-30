@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { PreloadedVideo } from "@/components/workflows/media/preloaded-video";
 import { VideoPreviewFrame } from "@/components/workflows/media/video-preview-frame";
+import { VideoSceneQualityReview } from "@/components/workflows/media/video-scene-quality-review";
 import { VideoTimelineEditor } from "@/components/workflows/media/video-timeline-editor";
 import { confirmAiShot } from "@/helpers/confirm-ai-shot";
 import { getErrorMessage } from "@/helpers/error-message";
@@ -316,6 +317,7 @@ export const VideoReviewPanel = () => {
             </dd>
           </div>
         </dl>
+        <VideoSceneQualityReview runId={runId} video={video} />
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"

@@ -124,6 +124,30 @@ describe("reduceAssistantStreamEvent", () => {
     expect(state.messages.map((message) => message.key)).toEqual([user?.key, placeholder?.key]);
   });
 
+  it("shows the retry countdown until the model answers", () => {
+    const retrying = reduceAssistantStreamEvent(buildStreamingState(), {
+      type: "status",
+      data: { state: "retrying", retryInSeconds: 8 },
+    });
+    const answered = reduceAssistantStreamEvent(retrying, { type: "delta", data: { text: "Hi" } });
+
+    expect(lastMessage(retrying).retryInSeconds).toBe(8);
+    expect(lastMessage(answered).retryInSeconds).toBeNull();
+  });
+
+  it("clears the retry countdown when a tool starts or the stream ends", () => {
+    const retrying = reduceAssistantStreamEvent(buildStreamingState(), {
+      type: "status",
+      data: { state: "retrying", retryInSeconds: 2 },
+    });
+
+    const toolStarted = reduceAssistantStreamEvent(retrying, { type: "tool_started", data: { callId: "t-1", name: "search_faq" } });
+    const failed = reduceAssistantStreamEvent(retrying, { type: "error", data: { code: "x", message: "y" } });
+
+    expect(lastMessage(toolStarted).retryInSeconds).toBeNull();
+    expect(lastMessage(failed).retryInSeconds).toBeNull();
+  });
+
   it("records the error and stops streaming on error", () => {
     const state = reduceAssistantStreamEvent(buildStreamingState(), {
       type: "error",

@@ -22,6 +22,7 @@ export const AssistantMessage = ({ message }: AssistantMessageProps) => {
   );
   const isUser = message.role === "user";
   const isWaiting = message.isStreaming && !message.content && message.tools.length === 0;
+  const isRetrying = message.isStreaming && message.retryInSeconds !== null;
 
   if (isUser) {
     return (
@@ -34,10 +35,10 @@ export const AssistantMessage = ({ message }: AssistantMessageProps) => {
   return (
     <div className="flex max-w-[92%] flex-col gap-2 self-start">
       {message.tools.length > 0 ? <AssistantToolStatus tools={message.tools} isStreaming={message.isStreaming} /> : null}
-      {isWaiting ? (
+      {isWaiting || isRetrying ? (
         <p className="text-muted-foreground flex items-center gap-2 text-xs">
           <Spinner className="size-3" />
-          Thinking…
+          {isRetrying ? `The assistant is busy, retrying in ${message.retryInSeconds}s…` : "Thinking…"}
         </p>
       ) : null}
       {message.content ? (

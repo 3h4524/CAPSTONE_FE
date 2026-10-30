@@ -35,7 +35,7 @@ describe("AssistantCanvasPatchCard", () => {
     useAssistantStore.setState({
       ...useAssistantStore.getInitialState(),
       messages: [
-        { id: "m1", key: "m1", role: "assistant", content: "", citations: [], choices: null, choicesUsed: false, clientActions: [], clientActionStates: {}, pendingActionIds: [], tools: [], error: null, isStreaming: false, createdAt: "" },
+        { id: "m1", key: "m1", role: "assistant", content: "", citations: [], choices: null, choicesUsed: false, clientActions: [], clientActionStates: {}, pendingActionIds: [], tools: [], error: null, retryInSeconds: null, isStreaming: false, createdAt: "" },
       ],
     });
     vi.mocked(showToast).mockClear();

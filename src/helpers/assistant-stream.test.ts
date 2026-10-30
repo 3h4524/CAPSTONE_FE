@@ -11,6 +11,14 @@ describe("createAssistantStreamParser", () => {
     expect(parser.push(deltaBlock("Hi"))).toEqual([{ type: "delta", data: { text: "Hi" } }]);
   });
 
+  it("parses a retrying status event", () => {
+    const parser = createAssistantStreamParser();
+
+    expect(parser.push('event: status\ndata: {"state":"retrying","retryInSeconds":8}\n\n')).toEqual([
+      { type: "status", data: { state: "retrying", retryInSeconds: 8 } },
+    ]);
+  });
+
   it("joins an event split across two chunks", () => {
     const parser = createAssistantStreamParser();
 

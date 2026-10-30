@@ -80,6 +80,7 @@ export type AssistantUiMessage = {
   pendingActionIds: string[];
   tools: AssistantToolActivity[];
   error: AssistantError | null;
+  retryInSeconds: number | null;
   isStreaming: boolean;
   createdAt: string;
 };

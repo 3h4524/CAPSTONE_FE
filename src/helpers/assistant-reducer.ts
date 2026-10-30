@@ -27,6 +27,7 @@ const createMessage = (role: AssistantUiMessage["role"], content: string, isStre
     pendingActionIds: [],
     tools: [],
     error: null,
+    retryInSeconds: null,
     isStreaming,
     createdAt: new Date().toISOString(),
   };
@@ -65,10 +66,17 @@ export const reduceAssistantStreamEvent = (state: AssistantChatState, event: Ass
 
   switch (event.type) {
     case "delta":
-      return updateMessage(state, streamingId, (message) => ({ ...message, content: message.content + event.data.text }));
+      return updateMessage(state, streamingId, (message) => ({
+        ...message,
+        content: message.content + event.data.text,
+        retryInSeconds: null,
+      }));
+    case "status":
+      return updateMessage(state, streamingId, (message) => ({ ...message, retryInSeconds: event.data.retryInSeconds }));
     case "tool_started":
       return updateMessage(state, streamingId, (message) => ({
         ...message,
+        retryInSeconds: null,
         tools: [...message.tools, { callId: event.data.callId, name: event.data.name, status: "running" }],
       }));
     case "tool_finished":
@@ -105,8 +113,12 @@ export const reduceAssistantStreamEvent = (state: AssistantChatState, event: Ass
     case "choices":
       return updateMessage(state, streamingId, (message) => ({ ...message, choices: event.data, choicesUsed: false }));
     case "done":
-      return finishStreaming(state, streamingId, (message) => ({ ...message, id: event.data.assistantMessageId }));
+      return finishStreaming(state, streamingId, (message) => ({
+        ...message,
+        id: event.data.assistantMessageId,
+        retryInSeconds: null,
+      }));
     case "error":
-      return finishStreaming(state, streamingId, (message) => ({ ...message, error: event.data }));
+      return finishStreaming(state, streamingId, (message) => ({ ...message, error: event.data, retryInSeconds: null }));
   }
 };

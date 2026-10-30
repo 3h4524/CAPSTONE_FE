@@ -25,6 +25,7 @@ export const toAssistantUiMessage = (dto: AssistantMessageDto): AssistantUiMessa
       status: tool.ok ? "ok" : "failed",
     })),
     error: metadata.error ?? null,
+    retryInSeconds: null,
     isStreaming: false,
     createdAt: dto.createdAt,
   };

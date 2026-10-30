@@ -38,7 +38,7 @@ describe("AssistantArrangeCard", () => {
     useWorkflowStore.setState(useWorkflowStore.getInitialState(), true);
     useAssistantStore.setState({
       ...useAssistantStore.getInitialState(),
-      messages: [{ id: "m1", key: "m1", role: "assistant", content: "", citations: [], choices: null, choicesUsed: false, clientActions: [], clientActionStates: {}, pendingActionIds: [], tools: [], error: null, isStreaming: false, createdAt: "" }],
+      messages: [{ id: "m1", key: "m1", role: "assistant", content: "", citations: [], choices: null, choicesUsed: false, clientActions: [], clientActionStates: {}, pendingActionIds: [], tools: [], error: null, retryInSeconds: null, isStreaming: false, createdAt: "" }],
     });
     vi.mocked(showToast).mockClear();
     server.use(http.put(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/assistant/messages/:messageId/client-actions/:actionId`, () => new HttpResponse(null, { status: 204 })));

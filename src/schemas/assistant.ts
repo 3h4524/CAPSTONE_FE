@@ -94,6 +94,7 @@ export const assistantStreamEventSchema = z.discriminatedUnion("type", [
     }),
   }),
   z.object({ type: z.literal("error"), data: z.object({ code: z.string(), message: z.string() }) }),
+  z.object({ type: z.literal("status"), data: z.object({ state: z.literal("retrying"), retryInSeconds: z.number() }) }),
 ]);
 
 export const assistantComposerSchema = z.object({

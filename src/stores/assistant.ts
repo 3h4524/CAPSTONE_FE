@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 import { ASSISTANT_PANEL_DEFAULT_WIDTH_PX } from "@/constants/assistant";
+import type { AssistantDisplayMode } from "@/helpers/assistant-display-mode";
 import type { LauncherPosition } from "@/helpers/assistant-launcher-position";
 import { type AssistantChatState, reduceAssistantStreamEvent } from "@/helpers/assistant-reducer";
 import type {
@@ -16,7 +17,11 @@ type AssistantState = AssistantChatState & {
   selectedConversationId: string | null;
   launcherPosition: LauncherPosition | null;
   panelWidth: number;
+  displayMode: AssistantDisplayMode;
+  isBubbleExpanded: boolean;
   setPanelWidth: (width: number) => void;
+  setDisplayMode: (mode: AssistantDisplayMode) => void;
+  toggleBubbleExpanded: () => void;
   setLauncherPosition: (position: LauncherPosition | null) => void;
   setOpen: (open: boolean) => void;
   toggleOpen: () => void;
@@ -64,8 +69,14 @@ export const useAssistantStore = create<AssistantState>((set) => ({
   selectedConversationId: null,
   launcherPosition: null,
   panelWidth: ASSISTANT_PANEL_DEFAULT_WIDTH_PX,
+  displayMode: "panel",
+  isBubbleExpanded: false,
 
   setPanelWidth: (width) => set({ panelWidth: width }),
+
+  setDisplayMode: (mode) => set({ displayMode: mode }),
+
+  toggleBubbleExpanded: () => set((state) => ({ isBubbleExpanded: !state.isBubbleExpanded })),
 
   setLauncherPosition: (position) => set({ launcherPosition: position }),
 

@@ -39,7 +39,7 @@ export const WorkflowWorkspace = () => {
   const workflowName = useWorkflowStore((state) => state.name);
   const isDirty = useWorkflowStore((state) => state.isDirty);
   const hasSelectedNode = useWorkflowStore((state) => state.selectedNodeIds.length > 0);
-  const isAssistantOpen = useAssistantStore((state) => state.isOpen);
+  const isAssistantOpen = useAssistantStore((state) => state.isOpen && state.displayMode === "panel");
   const assistantWidth = useAssistantStore((state) => state.panelWidth);
   const showNodePanel = hasSelectedNode || !isAssistantOpen;
   const loadWorkflow = useWorkflowStore((state) => state.loadWorkflow);

@@ -36,6 +36,15 @@ describe("AssistantPanel", () => {
     await waitFor(() => expect(useAssistantStore.getState().panelWidth).toBe(560));
   });
 
+  it("offers a switch to the bubble and hides itself in bubble mode", async () => {
+    renderWithQuery(<AssistantPanel />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Switch to bubble" }));
+
+    expect(useAssistantStore.getState().displayMode).toBe("bubble");
+    await waitFor(() => expect(screen.queryByRole("separator", { name: "Resize the assistant" })).not.toBeInTheDocument());
+  });
+
   it("does not render when closed", () => {
     useAssistantStore.setState({ isOpen: false });
 

@@ -18,7 +18,7 @@ import { useAssistantStore } from "@/stores/assistant";
 import { cn } from "@/utils/cn";
 
 export const AssistantPanel = () => {
-  const isOpen = useAssistantStore((state) => state.isOpen);
+  const isOpen = useAssistantStore((state) => state.isOpen && state.displayMode === "panel");
   const setOpen = useAssistantStore((state) => state.setOpen);
   const setPanelWidth = useAssistantStore((state) => state.setPanelWidth);
   const { width, isDragging, separatorProps } = useResizableWidth({
@@ -52,7 +52,7 @@ export const AssistantPanel = () => {
             isDragging && "after:bg-primary"
           )}
         />
-        <AssistantHeader />
+        <AssistantHeader variant="panel" />
         <SheetDescription className="sr-only">Ask questions or get help with your workflows.</SheetDescription>
         <AssistantMessageList />
         <AssistantComposer />

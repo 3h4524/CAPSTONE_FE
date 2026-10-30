@@ -7,11 +7,28 @@
 
 ## 2. API client duy nhất
 
-- Mọi HTTP call qua axios instance `api` từ `src/api/client.ts` (`api.get/post/patch/delete`).
+- Mọi HTTP call tới backend qua axios instance `api` từ `src/api/client.ts` (`api.get/post/put/patch/delete`).
+- Auth dùng **HttpOnly cookie** do backend set khi login/refresh. Client JS **không đọc, không lưu token** (không localStorage, không header `Authorization` tự gắn).
 - Client tự lo cross-cutting:
-  - Gắn `Authorization: Bearer <accessToken>` lấy từ **localStorage** vào mọi request.
-  - Nhận **401** → gọi refresh endpoint (refresh token cũng ở localStorage) → **retry request gốc đúng 1 lần**; refresh fail → clear tokens.
-- **Component/hook KHÔNG gọi `fetch` hay tự tạo axios instance.**
+  - `withCredentials: true` → browser tự gắn access/refresh cookie (cross-origin).
+  - Nhận **401** → `refreshAccessTokenOnce()` (dedup mọi request đang chờ, gọi `/api/auth/refresh`) → **retry request gốc đúng 1 lần**; refresh fail → `useAuthStore.getState().clearSession()`.
+  - `baseURL` từ `NEXT_PUBLIC_API_BASE_URL`; lỗi trả về là `AxiosError` để `getErrorMessage` đọc được.
+- **Component/hook KHÔNG gọi `fetch` trực tiếp tới backend và KHÔNG tự tạo axios instance.** Lý do: `fetch` thô không có `baseURL`, `credentials`, refresh + retry 401 hay shape lỗi chung; mỗi chỗ tự viết lại sẽ lệch nhau và dễ hỏng phiên đăng nhập. Không có "fetch wrapper" riêng — wrapper duy nhất là `api`.
+- **Streaming (SSE / chunked)**: vẫn dùng `api`, bật fetch adapter của axios:
+
+  ```ts
+  const response = await api.post<ReadableStream<Uint8Array>>(url, body, {
+    adapter: "fetch",
+    responseType: "stream",
+    signal,
+  });
+  const reader = response.data.getReader();
+  ```
+
+  401 bị reject trước khi đọc body nên interceptor refresh + retry vẫn chạy. Parse stream đặt ở `helpers/`, gọi API đặt ở `src/api/<domain>.ts`.
+- Ngoại lệ được phép dùng `fetch` thô:
+  - URL **không phải backend** (CDN/media công khai để lấy blob), đặt trong `helpers/` hoặc `src/api/`.
+  - Server-side (Server Component/route) cần chuyển tiếp cookie của request, ví dụ `src/api/session.ts` (`cookies()` → header `Cookie`).
 
 ## 3. TanStack Query (client data)
 

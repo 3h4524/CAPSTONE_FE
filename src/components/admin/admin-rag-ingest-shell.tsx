@@ -27,6 +27,7 @@ const CONTENT_TYPES = [
   ["listing", "Listings"],
   ["policy", "Policies"],
   ["keyword", "Keywords"],
+  ["faq", "FAQ"],
   ["image", "Image knowledge"],
   ["video", "Video knowledge"],
 ] as const;
@@ -43,6 +44,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [fileName, setFileName] = useState("");
   const [title, setTitle] = useState("");
+  const [sourceId, setSourceId] = useState("");
   const [sourceType, setSourceType] = useState("manual");
   const [sourceUrl, setSourceUrl] = useState("");
   const [version, setVersion] = useState("");
@@ -93,6 +95,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
     setIsDraggingFile(false);
     setFileName("");
     setTitle("");
+    setSourceId("");
     setSourceType("manual");
     setSourceUrl("");
     setVersion("");
@@ -109,6 +112,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
 
     mutation.mutate({
       title: title.trim(),
+      sourceId: sourceId.trim() || undefined,
       sourceType: sourceType.trim() || "manual",
       sourceUrl: sourceUrl.trim() || undefined,
       version: version.trim() || undefined,
@@ -357,6 +361,13 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                             ))}
                           </SelectContent>
                         </Select>
+                      </Field>
+                      <Field label="Source id">
+                        <Input
+                          value={sourceId}
+                          onChange={(event) => setSourceId(event.target.value)}
+                          placeholder="faq-about-apcs (same id replaces the older version)"
+                        />
                       </Field>
                       <Field label="Source type">
                         <Input

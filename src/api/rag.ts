@@ -8,7 +8,7 @@ export type RagIngestRequest = {
   language: string;
   content: string;
   metadata?: Record<string, unknown>;
-  contentType: "listing" | "image" | "video" | "policy" | "keyword";
+  contentType: "listing" | "image" | "video" | "policy" | "keyword" | "faq";
   sourceId?: string;
 };
 

@@ -111,6 +111,19 @@ describe("reduceAssistantStreamEvent", () => {
     expect(state.streamingMessageId).toBeNull();
   });
 
+  it("keeps message keys stable when the server assigns ids", () => {
+    const initial = buildStreamingState();
+    const [user, placeholder] = initial.messages;
+
+    const state = reduceAll(initial, [
+      { type: "conversation", data: { conversationId: "c-1", userMessageId: "u-1" } },
+      { type: "done", data: { assistantMessageId: "m-1", model: "gemini", inputTokens: 1, outputTokens: 2 } },
+    ]);
+
+    expect(state.messages.map((message) => message.id)).toEqual(["u-1", "m-1"]);
+    expect(state.messages.map((message) => message.key)).toEqual([user?.key, placeholder?.key]);
+  });
+
   it("records the error and stops streaming on error", () => {
     const state = reduceAssistantStreamEvent(buildStreamingState(), {
       type: "error",

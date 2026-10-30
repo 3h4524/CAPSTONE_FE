@@ -69,6 +69,7 @@ export type AssistantError = { code: string; message: string };
 
 export type AssistantUiMessage = {
   id: string;
+  key: string;
   role: AssistantRole;
   content: string;
   citations: AssistantCitation[];

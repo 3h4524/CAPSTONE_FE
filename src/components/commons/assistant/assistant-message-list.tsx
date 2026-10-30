@@ -27,7 +27,7 @@ export const AssistantMessageList = () => {
         {isLoadingConversation && isEmpty ? <AssistantMessageSkeleton /> : null}
         {!isLoadingConversation && isEmpty ? <AssistantStarterChips /> : null}
         {messages.map((message) => (
-          <AssistantMessage key={message.id} message={message} />
+          <AssistantMessage key={message.key} message={message} />
         ))}
         <div ref={endRef} />
       </div>

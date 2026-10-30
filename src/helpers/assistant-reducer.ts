@@ -12,21 +12,25 @@ export type AssistantChatState = {
   streamingMessageId: string | null;
 };
 
-const createMessage = (role: AssistantUiMessage["role"], content: string, isStreaming: boolean): AssistantUiMessage => ({
-  id: uuid(),
-  role,
-  content,
-  citations: [],
-  choices: null,
-  choicesUsed: false,
-  clientActions: [],
-  clientActionStates: {},
-  pendingActionIds: [],
-  tools: [],
-  error: null,
-  isStreaming,
-  createdAt: new Date().toISOString(),
-});
+const createMessage = (role: AssistantUiMessage["role"], content: string, isStreaming: boolean): AssistantUiMessage => {
+  const id = uuid();
+  return {
+    id,
+    key: id,
+    role,
+    content,
+    citations: [],
+    choices: null,
+    choicesUsed: false,
+    clientActions: [],
+    clientActionStates: {},
+    pendingActionIds: [],
+    tools: [],
+    error: null,
+    isStreaming,
+    createdAt: new Date().toISOString(),
+  };
+};
 
 export const createUserMessage = (content: string): AssistantUiMessage => createMessage("user", content, false);
 

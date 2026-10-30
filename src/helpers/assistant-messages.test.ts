@@ -29,6 +29,7 @@ describe("toAssistantUiMessage", () => {
 
     expect(message.citations).toHaveLength(1);
     expect(message.tools[0]).toMatchObject({ name: "search_faq", status: "ok" });
+    expect(message.key).toBe(message.id);
     expect(message.clientActionStates).toEqual({ "a-1": "idle" });
     expect(message.pendingActionIds).toEqual(["p-1"]);
     expect(message.choices?.options).toHaveLength(1);

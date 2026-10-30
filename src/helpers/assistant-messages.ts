@@ -8,6 +8,7 @@ export const toAssistantUiMessage = (dto: AssistantMessageDto): AssistantUiMessa
   const clientActions = metadata.clientActions ?? [];
   return {
     id: dto.id,
+    key: dto.id,
     role: dto.role,
     content: dto.content,
     citations: metadata.citations ?? [],

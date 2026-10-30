@@ -53,4 +53,5 @@ export const ROUTE_TITLES = {
   styles: "My Styles",
   settings: "Settings",
   billing: "Billing",
+  "market-opportunities": "Market Radar",
 } as const;

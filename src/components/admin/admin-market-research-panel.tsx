@@ -334,7 +334,11 @@ const AdminMarketResearchPanel = () => {
             ))}
           </div>
         </div>
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          {/* Say why the button is off, so it never looks broken. */}
+          {!normalizedQueries.length && (
+            <p className="text-xs text-slate-500">Add at least one keyword above, or pick a suggested niche, to run.</p>
+          )}
           <Button
             type="button"
             onClick={runNow}

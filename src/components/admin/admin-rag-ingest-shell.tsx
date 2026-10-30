@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, CheckCircle2, FileText, Info, Loader2, RotateCcw, Upload } from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronDown, FileText, Info, Loader2, RotateCcw, Upload } from "lucide-react";
 
 import { ingestRagDocument, type RagIngestRequest } from "@/api/rag";
 import { AdminMarketResearchPanel } from "@/components/admin/admin-market-research-panel";
@@ -39,7 +39,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
   const inputRef = useRef<HTMLInputElement>(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState<"ingest" | "documents" | "search">("ingest");
+  const [activeTab, setActiveTab] = useState<"ingest" | "research" | "documents" | "search">("ingest");
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [fileName, setFileName] = useState("");
   const [title, setTitle] = useState("");
@@ -151,7 +151,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                     retrieval.
                   </p>
                 </div>
-                <div className="flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+                <div className="flex flex-wrap rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
                   <Button
                     type="button"
                     size="sm"
@@ -159,6 +159,14 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                     onClick={() => setActiveTab("ingest")}
                   >
                     Ingest document
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={activeTab === "research" ? "default" : "ghost"}
+                    onClick={() => setActiveTab("research")}
+                  >
+                    Etsy research
                   </Button>
                   <Button
                     type="button"
@@ -179,10 +187,10 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                 </div>
               </div>
 
-              <RagUsageGuide />
-
               <>
-                <div className={activeTab === "ingest" ? "mt-6" : "hidden"}>
+                {/* The guide only concerns adding knowledge, and folds away once read. */}
+                {activeTab === "ingest" && <RagUsageGuide />}
+                <div className={activeTab === "research" ? "mt-6" : "hidden"}>
                   <AdminMarketResearchPanel />
                 </div>
                 <div
@@ -400,7 +408,9 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                         )}
                       </Button>
                       <p className="mt-3 text-center text-[11px] leading-4 text-slate-400">
-                        The document will be chunked and embedded for semantic search.
+                        {!title.trim() || !content.trim()
+                          ? `Add ${!title.trim() && !content.trim() ? "a title and content" : !title.trim() ? "a title" : "content"} to ingest the document.`
+                          : "The document will be chunked and embedded for semantic search."}
                       </p>
                     </div>
                   </aside>
@@ -436,54 +446,72 @@ const Field = ({
   </label>
 );
 
-const RagUsageGuide = () => (
-  <section className="mt-6 rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 sm:p-5">
-    <div className="flex items-start gap-3">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm">
-        <Info className="size-4" />
+const RagUsageGuide = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <section className="mt-6 rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 sm:p-5">
+      <div className="flex items-start gap-3">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm">
+          <Info className="size-4" />
+        </div>
+        <div>
+          <h2 className="text-sm font-bold text-slate-900">
+            Quick guide: how to use the RAG knowledge base
+          </h2>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            Add trusted information here so the assistant can find and use it later.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="ml-auto shrink-0 text-indigo-700"
+          onClick={() => setIsOpen((value) => !value)}
+          aria-expanded={isOpen}
+        >
+          <ChevronDown className={`size-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+          {isOpen ? "Hide steps" : "Show steps"}
+        </Button>
       </div>
-      <div>
-        <h2 className="text-sm font-bold text-slate-900">
-          Quick guide: how to use the RAG knowledge base
-        </h2>
-        <p className="mt-1 text-xs leading-5 text-slate-500">
-          Add trusted information here so the assistant can find and use it later.
-        </p>
-      </div>
-    </div>
-    <div className="mt-4 grid gap-3 md:grid-cols-4">
-      <GuideStep
-        number="1"
-        title="Choose a source"
-        text="Paste content, upload a file, or run Etsy research for public listing signals."
-      />
-      <GuideStep
-        number="2"
-        title="Add metadata"
-        text="Enter a clear title, content type, language, and version so documents are easy to find."
-      />
-      <GuideStep
-        number="3"
-        title="Ingest document"
-        text="Click Ingest document. The system splits, embeds, and indexes the content for search."
-      />
-      <GuideStep
-        number="4"
-        title="Review versions"
-        text="Open Documents & versions to check status and manage which version is active."
-      />
-    </div>
-    <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-indigo-100 pt-3 text-[11px] leading-5 text-slate-500">
-      <span className="font-semibold text-indigo-700">Etsy tip:</span>
-      <span>
-        Run now automatically selects the top 3 listings and queues them for RAG. Enable a schedule
-        for recurring research.
-      </span>
-      <ArrowRight className="size-3.5 text-indigo-400" />
-      <span>Use only information you are allowed to store and retrieve.</span>
-    </div>
-  </section>
-);
+      {isOpen && (
+        <>
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            <GuideStep
+              number="1"
+              title="Choose a source"
+              text="Paste content, upload a file, or run Etsy research for public listing signals."
+            />
+            <GuideStep
+              number="2"
+              title="Add metadata"
+              text="Enter a clear title, content type, language, and version so documents are easy to find."
+            />
+            <GuideStep
+              number="3"
+              title="Ingest document"
+              text="Click Ingest document. The system splits, embeds, and indexes the content for search."
+            />
+            <GuideStep
+              number="4"
+              title="Review versions"
+              text="Open Documents & versions to check status and manage which version is active."
+            />
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-indigo-100 pt-3 text-[11px] leading-5 text-slate-500">
+            <span className="font-semibold text-indigo-700">Etsy tip:</span>
+            <span>
+              Run now automatically selects the top 3 listings and queues them for RAG. Enable a schedule
+              for recurring research.
+            </span>
+            <ArrowRight className="size-3.5 text-indigo-400" />
+            <span>Use only information you are allowed to store and retrieve.</span>
+          </div>
+        </>
+      )}
+    </section>
+  );
+};
 
 const GuideStep = ({ number, title, text }: { number: string; title: string; text: string }) => (
   <div className="rounded-lg border border-white/80 bg-white/80 p-3">

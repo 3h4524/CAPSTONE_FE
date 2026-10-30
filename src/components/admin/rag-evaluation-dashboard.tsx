@@ -336,7 +336,7 @@ const RagEvaluationDashboard = ({
                     RAG quality lab
                   </p>
                   <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">
-                    Evaluation dashboard
+                    RAG Evaluation
                   </h1>
                   <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
                     Inspect retrieval traces and corpus health before RAG reaches seller-facing workflows.
@@ -368,11 +368,13 @@ const RagEvaluationDashboard = ({
               </header>
 
               <Card className="border-emerald-100 bg-white shadow-sm">
-                <CardHeader className="border-b border-emerald-100 pb-4">
+                <CardHeader>
                   <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
                     <div>
-                      <CardTitle className="flex items-center gap-2 text-sm">
-                        <Search className="size-4 text-emerald-600" />
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                          <Search className="size-4" />
+                        </span>
                         Production listing retrieval
                       </CardTitle>
                       <CardDescription className="mt-1 max-w-3xl text-xs leading-5">
@@ -380,17 +382,21 @@ const RagEvaluationDashboard = ({
                         same production query, then retrieves policy Top 5 and listing references Top 3.
                       </CardDescription>
                     </div>
-                    <Badge variant="outline" className="w-fit border-emerald-200 text-[10px] text-emerald-700">
-                      No source ID required
+                    <Badge
+                      variant="outline"
+                      className="w-fit border-emerald-200 text-[10px] text-emerald-700"
+                      title="Runs retrieval only; no listing is written."
+                    >
+                      Read only
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4 pt-5">
+                <CardContent className="space-y-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Input
                       value={listingProductId}
                       onChange={(event) => setListingProductId(event.target.value)}
-                      placeholder="Product ID"
+                      placeholder="Product ID, e.g. 3f2a…"
                       aria-label="Product ID"
                       className="sm:max-w-md"
                     />
@@ -403,15 +409,32 @@ const RagEvaluationDashboard = ({
                       <Search className="size-3.5" />
                       {isListingTraceRunning ? "Running..." : "Run production flow"}
                     </Button>
+                    <p className="text-[11px] text-slate-400">
+                      Paste the ID of a product to replay the retrieval its listing would use.
+                    </p>
                   </div>
+                  {!listingTrace && !isListingTraceRunning && (
+                    <ol className="grid gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-4 sm:grid-cols-3">
+                      {[
+                        ["Product input", "Name, type, niche, audience, keywords and notes."],
+                        ["Production query", "The same query the listing generator builds."],
+                        ["Retrieved context", "Policy Top 5 and listing references Top 3, with scores."],
+                      ].map(([title, text], index) => (
+                        <li key={title} className="flex gap-2.5">
+                          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-200">
+                            {index + 1}
+                          </span>
+                          <span>
+                            <span className="block text-xs font-semibold text-slate-700">{title}</span>
+                            <span className="block text-[11px] leading-5 text-slate-500">{text}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
                   {listingTrace && (
                     <div className="space-y-4 rounded-xl border border-emerald-100 bg-emerald-50/30 p-4">
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <DetailBlock label="Product" value={listingTrace.productName} />
-                        <DetailBlock label="Product type" value={listingTrace.productType} />
-                        <DetailBlock label="Niche" value={listingTrace.niche ?? "Not specified"} />
-                        <DetailBlock label="Target audience" value={listingTrace.targetAudience ?? "Not specified"} />
-                      </div>
+                      {/* The coverage block already lists every input field, the product's name and type included. */}
                       <ProductInputCoverage trace={listingTrace} />
                       <div>
                         <p className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
@@ -421,16 +444,12 @@ const RagEvaluationDashboard = ({
                           {listingTrace.productionQuery}
                         </p>
                       </div>
-                      <div className="grid gap-4 xl:grid-cols-2">
-                        <ListingTraceResults
-                          label="Policy context - Top 5"
-                          diagnostics={listingTrace.policyContext}
-                        />
-                        <ListingTraceResults
-                          label="Listing references · Top 3"
-                          diagnostics={listingTrace.listingContext}
-                        />
-                      </div>
+                      <TraceSections
+                        sections={[
+                          { label: "Policy context · Top 5", diagnostics: listingTrace.policyContext },
+                          { label: "Listing references · Top 3", diagnostics: listingTrace.listingContext },
+                        ]}
+                      />
                       <p className="text-[11px] text-slate-500">
                         Retrieval completed in {Math.round(listingTrace.durationMs)} ms. This trace
                         mirrors the retrieval stage used before listing generation; it does not write a new listing.
@@ -443,21 +462,26 @@ const RagEvaluationDashboard = ({
               <RagCorpusHealthPanel />
 
               <Card className="border-indigo-100 bg-white shadow-sm">
-                <CardHeader className="border-b border-indigo-100 pb-4">
+                {/* Collapsed, the card is only its header: no divider or empty body below it. */}
+                <CardHeader className={isBenchmarkOpen ? "border-b border-indigo-100 pb-4" : undefined}>
                   <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
                     <div>
-                      <CardTitle className="flex items-center gap-2 text-sm">
-                        <Database className="size-4 text-indigo-500" />
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                          <FlaskConical className="size-4" />
+                        </span>
                         Advanced offline benchmark
                       </CardTitle>
                       <CardDescription className="mt-1 max-w-3xl text-xs leading-5">
-                        Use labeled evidence cases when you need a measurable Recall @K regression check.
+                        Use labeled evidence cases when you need a measurable Recall@K regression check.
                         Production listing retrieval above remains the primary RAG inspection flow.
                       </CardDescription>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-2">
                       <Badge variant="outline" className="w-fit text-[10px]">
-                        {datasetCases.length} cases ready
+                        {datasetCases.length === 0
+                          ? "No labeled cases yet"
+                          : `${datasetCases.length} labeled case${datasetCases.length === 1 ? "" : "s"}`}
                       </Badge>
                       <Button
                         type="button"
@@ -938,7 +962,7 @@ const RagEvaluationDashboard = ({
                       <p className="text-sm font-semibold text-slate-900">No benchmark result yet</p>
                       <p className="mt-1 text-xs leading-5 text-slate-500">
                         The live listing trace and corpus health above are the RAG inspection tools. Add a
-                        labeled evidence case only when you want a measurable Recall @K result; no sample score is shown here.
+                        labeled evidence case only when you want a measurable Recall@K result; no sample score is shown here.
                       </p>
                     </div>
                   </CardContent>
@@ -1089,37 +1113,56 @@ const RetrievedResultCard = ({
 }: {
   diagnostic: RagSearchDiagnosticResult;
   rank: number;
-}) => (
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isLong = diagnostic.result.content.length > 320;
+  return (
   <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
-    <div className="flex flex-col justify-between gap-2 md:flex-row md:items-start">
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge className="border-indigo-200 bg-indigo-50 text-indigo-700">#{rank}</Badge>
-          <Badge variant="outline" className="text-[10px]">
-            {diagnostic.result.contentType}
-          </Badge>
-          <p className="truncate text-xs font-semibold text-slate-800">{diagnostic.result.title}</p>
-        </div>
-        <p className="mt-1 break-all text-[10px] text-slate-400">
-          source: {diagnostic.result.sourceId ?? "n/a"} / chunk: {diagnostic.result.chunkId}
-        </p>
+    {/* Rank and scores on one line, then the title and its source on their own full-width lines. */}
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
+        <Badge className="border-indigo-200 bg-indigo-50 text-indigo-700">#{rank}</Badge>
+        <Badge variant="outline" className="text-[10px]">
+          {diagnostic.result.contentType}
+        </Badge>
       </div>
-      <div className="flex shrink-0 flex-wrap gap-1.5 text-[10px] text-slate-500">
+      <div className="flex flex-wrap gap-1.5 text-[10px] text-slate-500">
         <ScorePill label="semantic" value={diagnostic.semanticScore} />
         <ScorePill label="lexical" value={diagnostic.lexicalScore} />
         <ScorePill label="viral" value={diagnostic.viralScore} />
         <ScorePill label="fresh" value={diagnostic.freshnessScore} />
-        <ScorePill label="final" value={diagnostic.finalScore} />
+        <ScorePill label="final" value={diagnostic.finalScore} emphasis />
       </div>
     </div>
-    <p className="mt-3 whitespace-pre-wrap text-xs leading-5 text-slate-600">
+    <p className="mt-2 line-clamp-2 text-xs font-semibold text-slate-800" title={diagnostic.result.title}>
+      {diagnostic.result.title}
+    </p>
+    <p className="mt-0.5 truncate text-[10px] text-slate-400" title={`${diagnostic.result.sourceId ?? "n/a"} / ${diagnostic.result.chunkId}`}>
+      source {diagnostic.result.sourceId ?? "n/a"} · chunk {diagnostic.result.chunkId}
+    </p>
+    <p className={`mt-3 whitespace-pre-wrap text-xs leading-5 text-slate-600 ${isLong && !isExpanded ? "line-clamp-4" : ""}`}>
       {diagnostic.result.content}
     </p>
+    {isLong && (
+      <button
+        type="button"
+        onClick={() => setIsExpanded((value) => !value)}
+        className="mt-1 text-[11px] font-semibold text-indigo-600 hover:underline"
+      >
+        {isExpanded ? "Show less" : "Show more"}
+      </button>
+    )}
   </div>
-);
+  );
+};
 
-const ScorePill = ({ label, value }: { label: string; value: number }) => (
-  <span className="rounded-full border border-slate-200 bg-white px-2 py-1">
+// The final score decides the rank, so it stands out from the parts it is made of.
+const ScorePill = ({ label, value, emphasis = false }: { label: string; value: number; emphasis?: boolean }) => (
+  <span
+    className={`rounded-full border px-2 py-1 tabular-nums ${
+      emphasis ? "border-indigo-200 bg-indigo-50 font-semibold text-indigo-700" : "border-slate-200 bg-white"
+    }`}
+  >
     {label} {value.toFixed(3)}
   </span>
 );
@@ -1214,7 +1257,7 @@ const RetrievalInsight = ({ diagnostics }: { diagnostics: RagSearchDiagnostics }
           </div>
         </div>
         <Badge variant="outline" className="border-current text-[10px] capitalize">
-          {confidence} confidence
+          {confidence === "none" ? "No confidence" : `${confidence} confidence`}
         </Badge>
       </div>
 
@@ -1284,6 +1327,65 @@ const ScoreMetric = ({ label, value }: { label: string; value: number }) => (
     <p className="mt-1 text-sm font-bold text-slate-800">{value.toFixed(3)}</p>
   </div>
 );
+
+type TraceSection = { label: string; diagnostics: ListingRetrievalEvaluationResponse["policyContext"] };
+
+// Side by side only when both sides retrieved something. A side that came back empty folds into one
+// summary line, so the other side's results get the full width instead of sitting next to a blank column.
+const TraceSections = ({ sections }: { sections: TraceSection[] }) => {
+  const empty = sections.filter((section) => section.diagnostics.results.length === 0);
+  const filled = sections.filter((section) => section.diagnostics.results.length > 0);
+  if (empty.length === 0) {
+    return (
+      <div className="grid items-start gap-4 xl:grid-cols-2">
+        {filled.map((section) => (
+          <ListingTraceResults key={section.label} label={section.label} diagnostics={section.diagnostics} />
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      {empty.map((section) => (
+        <EmptyTraceSummary key={section.label} label={section.label} diagnostics={section.diagnostics} />
+      ))}
+      {filled.map((section) => (
+        <ListingTraceResults key={section.label} label={section.label} diagnostics={section.diagnostics} />
+      ))}
+    </div>
+  );
+};
+
+const EmptyTraceSummary = ({ label, diagnostics }: TraceSection) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const reason = diagnostics.warnings?.[0];
+  return (
+    <div className="rounded-xl border border-amber-100 bg-white">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5">
+        <AlertTriangle className="size-4 shrink-0 text-amber-500" />
+        <p className="text-xs font-bold text-slate-800">{label}</p>
+        <span className="text-xs text-amber-700">No context returned · 0 retrieved</span>
+        {reason && <span className="min-w-0 flex-1 truncate text-[11px] text-slate-500" title={reason}>{reason}</span>}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="ml-auto h-7 text-xs"
+          onClick={() => setIsOpen((value) => !value)}
+          aria-expanded={isOpen}
+        >
+          <ChevronDown className={`size-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+          {isOpen ? "Hide details" : "Show details"}
+        </Button>
+      </div>
+      {isOpen && (
+        <div className="border-t border-amber-100 px-3 pb-3">
+          <RetrievalInsight diagnostics={diagnostics} />
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ListingTraceResults = ({
   label,

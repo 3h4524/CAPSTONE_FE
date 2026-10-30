@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { createWorkflowNode } from "@/helpers/workflow-graph";
 import { useWorkflowStore } from "@/stores/workflow";
 import {
   buildWorkflowDefinition,
@@ -332,6 +333,35 @@ describe("addNode", () => {
 
     expect(state.nodes[0]?.selected).toBe(false);
     expect(state.selectedNodeIds).toEqual(["node-9"]);
+  });
+});
+
+describe("unique node names", () => {
+  beforeEach(() => {
+    useWorkflowStore.setState(initialState, true);
+  });
+
+  const designNode = () => createWorkflowNode("design-image", { x: 0, y: 0 });
+
+  it("numbers a new node whose name is already on the canvas", () => {
+    seedGraph([], []);
+
+    useWorkflowStore.getState().addNode(designNode());
+    useWorkflowStore.getState().addNode(designNode());
+    useWorkflowStore.getState().addNode(designNode());
+
+    expect(useWorkflowStore.getState().nodes.map((item) => item.data.label)).toEqual(["Design image", "Design image 1", "Design image 2"]);
+  });
+
+  it("numbers duplicated and pasted nodes", () => {
+    seedGraph([], []);
+    useWorkflowStore.getState().addNode(designNode());
+
+    useWorkflowStore.getState().duplicateSelectedNodes();
+    useWorkflowStore.getState().copySelectedNodes();
+    useWorkflowStore.getState().pasteNodes();
+
+    expect(useWorkflowStore.getState().nodes.map((item) => item.data.label)).toEqual(["Design image", "Design image 1", "Design image 2"]);
   });
 });
 

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import { DUPLICATE_NODE_OFFSET, HISTORY_GROUP_WINDOW_MS, HISTORY_LIMIT, NODE_MOVE_DIRTY_THRESHOLD } from "@/constants/workflow";
-import { duplicateWorkflowSelection, toWorkflowEdges, toWorkflowNodes } from "@/helpers/workflow-graph";
+import { duplicateWorkflowSelection, toWorkflowEdges, toWorkflowNodes, withUniqueLabels } from "@/helpers/workflow-graph";
 import type {
   WorkflowDetail,
   WorkflowEdge,
@@ -232,7 +232,8 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
 
   addNode: (node) =>
     set((state) => {
-      const nodes = [...state.nodes.map((item) => ({ ...item, selected: false })), { ...node, selected: true }];
+      const [labeled = node] = withUniqueLabels([node], state.nodes);
+      const nodes = [...state.nodes.map((item) => ({ ...item, selected: false })), { ...labeled, selected: true }];
       return {
         nodes,
         selectedNodeIds: [node.id],
@@ -346,7 +347,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
       if (state.selectedNodeIds.length === 0) return state;
       const duplicated = duplicateWorkflowSelection(state.nodes, state.edges, state.selectedNodeIds);
       if (duplicated.addedNodeIds.length === 0) return state;
-      const nodes = [...state.nodes.map((node) => ({ ...node, selected: false })), ...duplicated.nodes];
+      const nodes = [...state.nodes.map((node) => ({ ...node, selected: false })), ...withUniqueLabels(duplicated.nodes, state.nodes)];
       const edges = [...state.edges, ...duplicated.edges];
       return {
         nodes,
@@ -374,7 +375,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
       // Each paste lands one step further than the last, so pasting twice does not stack the copies.
       const pastes = clipboard.pastes + 1;
       const pasted = duplicateWorkflowSelection(clipboard.nodes, clipboard.edges, clipboard.nodes.map((node) => node.id), DUPLICATE_NODE_OFFSET * pastes);
-      const nodes = [...state.nodes.map((node) => ({ ...node, selected: false })), ...pasted.nodes];
+      const nodes = [...state.nodes.map((node) => ({ ...node, selected: false })), ...withUniqueLabels(pasted.nodes, state.nodes)];
       const edges = [...state.edges, ...pasted.edges];
       return {
         nodes,

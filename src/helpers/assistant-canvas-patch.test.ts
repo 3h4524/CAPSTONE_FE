@@ -21,8 +21,8 @@ describe("applyCanvasPatch", () => {
 
     expect(result.skipped).toEqual([]);
     expect(result.applied).toBe(2);
-    const added = result.nodes.find((node) => node.data.label === "Listing");
-    expect(added?.data.type).toBe("generate-listing");
+    const added = result.nodes.find((node) => node.data.type === "generate-listing");
+    expect(added?.data.label).toBe("Listing content");
     expect(result.edges.some((edge) => edge.source === "a" && edge.target === added?.id)).toBe(true);
   });
 
@@ -66,15 +66,37 @@ describe("applyCanvasPatch", () => {
     expect(second.skipped).toHaveLength(1);
   });
 
-  it("merges config shallowly and renames", () => {
-    const result = patch([
-      { op: "update_config", nodeId: "a", config: { added: 2 } },
-      { op: "rename_node", nodeId: "a", label: "Start" },
-    ]);
+  it("merges config shallowly", () => {
+    const result = patch([{ op: "update_config", nodeId: "a", config: { added: 2 } }]);
 
-    const updated = result.nodes.find((node) => node.id === "a");
-    expect(updated?.data.config).toEqual({ keep: 1, added: 2 });
-    expect(updated?.data.label).toBe("Start");
+    expect(result.nodes.find((node) => node.id === "a")?.data.config).toEqual({ keep: 1, added: 2 });
+  });
+
+  it("skips renaming because it is turned off", () => {
+    const result = patch([{ op: "rename_node", nodeId: "a", label: "Start" }]);
+
+    expect(result.applied).toBe(0);
+    expect(result.skipped[0]?.reason).toBe("Renaming steps is turned off");
+    expect(result.nodes.find((node) => node.id === "a")?.data.label).toBe("Product Input");
+  });
+
+  it("numbers a new step whose name is already used", () => {
+    const design = buildWorkflowNode({ id: "d", data: { type: "design-image", label: "Design image", config: {}, status: "idle" } });
+
+    const result = patch(
+      [
+        { op: "add_node", ref: "n1", type: "design-image" },
+        { op: "add_node", ref: "n2", type: "design-image" },
+      ],
+      [input, design],
+      []
+    );
+
+    expect(result.nodes.filter((node) => node.data.type === "design-image").map((node) => node.data.label)).toEqual([
+      "Design image",
+      "Design image 1",
+      "Design image 2",
+    ]);
   });
 
   it("skips operations on unknown steps without throwing", () => {

@@ -1,5 +1,5 @@
 import { NODE_CARD_WIDTHS, WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
-import { createWorkflowNode, getConnectionIssue } from "@/helpers/workflow-graph";
+import { createWorkflowNode, getConnectionIssue, withUniqueLabels } from "@/helpers/workflow-graph";
 import type { AssistantCanvasOperation } from "@/types/assistant";
 import type { WorkflowEdge, WorkflowNode } from "@/types/workflow";
 import { addEdge, type Connection } from "@xyflow/react";
@@ -69,7 +69,7 @@ export const applyCanvasPatch = (
         if (operation.after && !afterId) return { reason: "The step to add after was not found" };
         const after = state.nodes.find((node) => node.id === afterId);
         const created = createWorkflowNode(operation.type, nextPosition(state.nodes, after));
-        const node = operation.label ? { ...created, data: { ...created.data, label: operation.label } } : created;
+        const [node = created] = withUniqueLabels([created], state.nodes);
         if (operation.ref) refMap.set(operation.ref, node.id);
         return { state: { nodes: [...state.nodes, node], edges: state.edges } };
       }
@@ -114,18 +114,8 @@ export const applyCanvasPatch = (
           },
         };
       }
-      case "rename_node": {
-        const nodeId = resolve(operation.nodeId);
-        if (!nodeId) return { reason: "Step not found" };
-        const label = operation.label;
-        if (!label) return { reason: "No label provided" };
-        return {
-          state: {
-            nodes: state.nodes.map((node) => (node.id === nodeId ? { ...node, data: { ...node.data, label } } : node)),
-            edges: state.edges,
-          },
-        };
-      }
+      case "rename_node":
+        return { reason: "Renaming steps is turned off" };
     }
   };
 

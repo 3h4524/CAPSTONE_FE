@@ -14,6 +14,7 @@ import { ResizableAside } from "@/components/workflows/resizable-aside";
 import { WorkflowToolbar } from "@/components/workflows/toolbar/workflow-toolbar";
 import { SITE_CONFIG } from "@/constants/site";
 import { DEFAULT_WORKFLOW_DEFINITION, DEFAULT_WORKFLOW_NAME } from "@/constants/workflow";
+import { isDockedPanelOpen } from "@/helpers/assistant-display-mode";
 import { showToast } from "@/helpers/toast";
 import { applyCompactDefaultLayoutIfStillVertical, resolveActiveWorkflowId } from "@/helpers/workflow-graph";
 import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
@@ -39,7 +40,7 @@ export const WorkflowWorkspace = () => {
   const workflowName = useWorkflowStore((state) => state.name);
   const isDirty = useWorkflowStore((state) => state.isDirty);
   const hasSelectedNode = useWorkflowStore((state) => state.selectedNodeIds.length > 0);
-  const isAssistantOpen = useAssistantStore((state) => state.isOpen && state.displayMode === "panel");
+  const isAssistantOpen = useAssistantStore(isDockedPanelOpen);
   const assistantWidth = useAssistantStore((state) => state.panelWidth);
   const showNodePanel = hasSelectedNode || !isAssistantOpen;
   const loadWorkflow = useWorkflowStore((state) => state.loadWorkflow);

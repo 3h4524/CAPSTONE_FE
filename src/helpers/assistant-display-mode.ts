@@ -1,6 +1,15 @@
-import { ASSISTANT_DISPLAY_MODE_STORAGE_KEY } from "@/constants/assistant";
+import { ASSISTANT_DISPLAY_MODE_STORAGE_KEY, ASSISTANT_DOCK_ENABLED } from "@/constants/assistant";
 
 export type AssistantDisplayMode = "panel" | "bubble";
+
+export const effectiveDisplayMode = (mode: AssistantDisplayMode): AssistantDisplayMode =>
+  ASSISTANT_DOCK_ENABLED ? mode : "bubble";
+
+export const isDockedPanelOpen = (state: { isOpen: boolean; displayMode: AssistantDisplayMode }) =>
+  state.isOpen && effectiveDisplayMode(state.displayMode) === "panel";
+
+export const isBubbleOpen = (state: { isOpen: boolean; displayMode: AssistantDisplayMode }) =>
+  state.isOpen && effectiveDisplayMode(state.displayMode) === "bubble";
 
 const isDisplayMode = (value: unknown): value is AssistantDisplayMode => value === "panel" || value === "bubble";
 

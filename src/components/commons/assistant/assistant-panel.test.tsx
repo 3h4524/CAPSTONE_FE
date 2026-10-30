@@ -1,10 +1,16 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AssistantPanel } from "@/components/commons/assistant/assistant-panel";
+import type * as AssistantConstants from "@/constants/assistant";
 import { ASSISTANT_PANEL_DEFAULT_WIDTH_PX } from "@/constants/assistant";
 import { useAssistantStore } from "@/stores/assistant";
 import { renderWithQuery } from "@/test/render-with-query";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+
+vi.mock("@/constants/assistant", async (importOriginal) => ({
+  ...(await importOriginal<typeof AssistantConstants>()),
+  ASSISTANT_DOCK_ENABLED: true,
+}));
 
 describe("AssistantPanel", () => {
   beforeEach(() => {

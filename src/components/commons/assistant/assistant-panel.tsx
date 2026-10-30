@@ -13,12 +13,13 @@ import {
   ASSISTANT_PANEL_RESERVED_WIDTH_PX,
   ASSISTANT_PANEL_STORAGE_KEY,
 } from "@/constants/assistant";
+import { isDockedPanelOpen } from "@/helpers/assistant-display-mode";
 import { useResizableWidth } from "@/hooks/use-resizable-width";
 import { useAssistantStore } from "@/stores/assistant";
 import { cn } from "@/utils/cn";
 
 export const AssistantPanel = () => {
-  const isOpen = useAssistantStore((state) => state.isOpen && state.displayMode === "panel");
+  const isOpen = useAssistantStore(isDockedPanelOpen);
   const setOpen = useAssistantStore((state) => state.setOpen);
   const setPanelWidth = useAssistantStore((state) => state.setPanelWidth);
   const { width, isDragging, separatorProps } = useResizableWidth({

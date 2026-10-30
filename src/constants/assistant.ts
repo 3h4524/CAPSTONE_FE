@@ -60,6 +60,7 @@ export const ASSISTANT_PANEL_MAX_WIDTH_PX = 760;
 export const ASSISTANT_PANEL_RESERVED_WIDTH_PX = 480;
 export const ASSISTANT_PANEL_STORAGE_KEY = "apcs.assistant.panel-width";
 export const ASSISTANT_DISPLAY_MODE_STORAGE_KEY = "apcs.assistant.display-mode";
+export const ASSISTANT_DOCK_ENABLED = false;
 export const ASSISTANT_BUBBLE_GAP_PX = 12;
 
 export const ASSISTANT_LAYOUT_GAPS: Record<"compact" | "comfortable" | "wide", { x: number; y: number }> = {

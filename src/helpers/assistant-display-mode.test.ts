@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { ASSISTANT_DISPLAY_MODE_STORAGE_KEY } from "@/constants/assistant";
-import { loadDisplayMode, saveDisplayMode } from "@/helpers/assistant-display-mode";
+import { isBubbleOpen, isDockedPanelOpen, loadDisplayMode, saveDisplayMode } from "@/helpers/assistant-display-mode";
 
 describe("assistant display mode storage", () => {
   beforeEach(() => {
@@ -20,5 +20,13 @@ describe("assistant display mode storage", () => {
     window.localStorage.setItem(ASSISTANT_DISPLAY_MODE_STORAGE_KEY, "floating");
 
     expect(loadDisplayMode()).toBeNull();
+  });
+
+  it("keeps the chat in the bubble while docking is turned off, even if the panel was saved", () => {
+    const savedPanel = { isOpen: true, displayMode: "panel" as const };
+
+    expect(isDockedPanelOpen(savedPanel)).toBe(false);
+    expect(isBubbleOpen(savedPanel)).toBe(true);
+    expect(isBubbleOpen({ isOpen: false, displayMode: "bubble" })).toBe(false);
   });
 });

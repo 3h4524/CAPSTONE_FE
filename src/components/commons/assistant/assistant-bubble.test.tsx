@@ -18,14 +18,19 @@ describe("AssistantBubble", () => {
     expect(screen.getByRole("textbox")).toBeInTheDocument();
   });
 
-  it("renders nothing in panel mode or when closed", () => {
+  it("stays a bubble when a panel was saved while docking is turned off", () => {
     useAssistantStore.setState({ displayMode: "panel" });
-    const { unmount } = renderWithQuery(<AssistantBubble />);
-    expect(screen.queryByRole("dialog", { name: "Assistant" })).not.toBeInTheDocument();
-    unmount();
 
-    useAssistantStore.setState({ displayMode: "bubble", isOpen: false });
     renderWithQuery(<AssistantBubble />);
+
+    expect(screen.getByRole("dialog", { name: "Assistant" })).toBeInTheDocument();
+  });
+
+  it("renders nothing when closed", () => {
+    useAssistantStore.setState({ isOpen: false });
+
+    renderWithQuery(<AssistantBubble />);
+
     expect(screen.queryByRole("dialog", { name: "Assistant" })).not.toBeInTheDocument();
   });
 

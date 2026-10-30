@@ -7,13 +7,14 @@ import { AssistantHeader } from "@/components/commons/assistant/assistant-header
 import { AssistantMessageList } from "@/components/commons/assistant/assistant-message-list";
 import { Card } from "@/components/ui/card";
 import { ASSISTANT_BUBBLE_GAP_PX, ASSISTANT_LAUNCHER_MARGIN_PX, ASSISTANT_LAUNCHER_SIZE_PX } from "@/constants/assistant";
+import { isBubbleOpen } from "@/helpers/assistant-display-mode";
 import { defaultLauncherPosition } from "@/helpers/assistant-launcher-position";
 import { useAssistantStore } from "@/stores/assistant";
 import { cn } from "@/utils/cn";
 
 export const AssistantBubble = () => {
   const pathname = usePathname();
-  const isOpen = useAssistantStore((state) => state.isOpen && state.displayMode === "bubble");
+  const isOpen = useAssistantStore(isBubbleOpen);
   const isExpanded = useAssistantStore((state) => state.isBubbleExpanded);
   const launcherPosition = useAssistantStore((state) => state.launcherPosition);
   const setOpen = useAssistantStore((state) => state.setOpen);

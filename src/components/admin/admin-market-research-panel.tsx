@@ -40,6 +40,7 @@ import { useQuery } from "@/hooks/queries/use-query";
 
 const DEFAULT_QUERIES = "hiking shirt\nmountain gift\ncamping t shirt";
 const RESEARCH_HISTORY_KEY = "apcs.admin.market-research.history";
+const RESEARCH_RUN_COUNTER_KEY = "apcs.admin.market-research.run-counter";
 
 const SUGGESTED_NICHES = [
   {
@@ -74,6 +75,7 @@ const AdminMarketResearchPanel = () => {
   const [intervalMinutes, setIntervalMinutes] = useState("1440");
   const [result, setResult] = useState<MarketResearchResponse | null>(null);
   const [history, setHistory] = useState<ResearchHistoryEntry[]>([]);
+  const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
   const retrieveMutation = useRetrieveMarketResearch();
   const saveMutation = useMutation({
     mutationFn: updateMarketResearchSchedule,
@@ -146,35 +148,64 @@ const AdminMarketResearchPanel = () => {
     });
   };
 
-  const runNow = () =>
+  const saveResearchHistory = (researchQueries: string[], data: MarketResearchResponse) => {
+    const previousRunNumber = Number(window.localStorage.getItem(RESEARCH_RUN_COUNTER_KEY) ?? 0);
+    const runNumber =
+      Number.isInteger(previousRunNumber) && previousRunNumber > 0 ? previousRunNumber + 1 : 1;
+    window.localStorage.setItem(RESEARCH_RUN_COUNTER_KEY, String(runNumber));
+    const entry: ResearchHistoryEntry = {
+      id: `${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      runNumber,
+      queries: researchQueries,
+      retrievedCount: data.retrievedCount,
+      selectedCount: data.selectedCount,
+      averageScore: data.items.length
+        ? data.items.reduce((sum, item) => sum + (Number(item.viralScore) || 0), 0) /
+          data.items.length
+        : 0,
+      result: data,
+    };
+    setHistory((previous) => {
+      const nextHistory = [entry, ...previous].slice(0, 5);
+      window.localStorage.setItem(RESEARCH_HISTORY_KEY, JSON.stringify(nextHistory));
+      return nextHistory;
+    });
+    setSelectedHistoryId(entry.id);
+  };
+
+  const runResearch = (researchQueries: string[]) => {
     retrieveMutation.mutate(
       {
         platform: 1,
-        queries: normalizedQueries,
+        queries: researchQueries,
         limitPerQuery: Number(limitPerQuery),
         topN: Number(topN),
         minimumViralScore: Number(minimumViralScore),
       },
       {
         onSuccess: (data) => {
+          setQueries(researchQueries.join("\n"));
           setResult(data);
-          const entry: ResearchHistoryEntry = {
-            id: `${Date.now()}`,
-            createdAt: new Date().toISOString(),
-            queries: normalizedQueries,
-            retrievedCount: data.retrievedCount,
-            selectedCount: data.selectedCount,
-            averageScore: data.items.length
-              ? data.items.reduce((sum, item) => sum + (Number(item.viralScore) || 0), 0) /
-                data.items.length
-              : 0,
-          };
-          const nextHistory = [entry, ...history].slice(0, 5);
-          setHistory(nextHistory);
-          window.localStorage.setItem(RESEARCH_HISTORY_KEY, JSON.stringify(nextHistory));
+          saveResearchHistory(researchQueries, data);
         },
       }
     );
+  };
+
+  const runNow = () => runResearch(normalizedQueries);
+
+  const selectHistory = (entry: ResearchHistoryEntry) => {
+    setQueries(entry.queries.join("\n"));
+    setSelectedHistoryId(entry.id);
+    if (entry.result) {
+      setResult(entry.result);
+      return;
+    }
+    // History written by older frontend versions contains only summary data.
+    // Re-run those entries so clicking them still produces a visible snapshot.
+    runResearch(entry.queries);
+  };
 
   return (
     <section className="space-y-5 rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-white to-white p-5 shadow-sm sm:p-6">
@@ -324,11 +355,13 @@ const AdminMarketResearchPanel = () => {
       </div>
       <TooltipProvider>
         {result ? <ResearchResult result={result} /> : <ResearchEmptyState />}
+        <ResearchHistory
+          history={history}
+          selectedId={selectedHistoryId}
+          isLoading={retrieveMutation.isPending}
+          onSelect={selectHistory}
+        />
       </TooltipProvider>
-      <ResearchHistory
-        history={history}
-        onSelect={(entry) => setQueries(entry.queries.join("\n"))}
-      />
     </section>
   );
 };
@@ -336,17 +369,23 @@ const AdminMarketResearchPanel = () => {
 type ResearchHistoryEntry = {
   id: string;
   createdAt: string;
+  runNumber?: number;
   queries: string[];
   retrievedCount: number;
   selectedCount: number;
   averageScore: number;
+  result?: MarketResearchResponse;
 };
 
 const ResearchHistory = ({
   history,
+  selectedId,
+  isLoading,
   onSelect,
 }: {
   history: ResearchHistoryEntry[];
+  selectedId: string | null;
+  isLoading: boolean;
   onSelect: (entry: ResearchHistoryEntry) => void;
 }) => (
   <div className="border-t border-indigo-100 pt-4">
@@ -359,23 +398,58 @@ const ResearchHistory = ({
     </div>
     {history.length ? (
       <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-5">
-        {history.map((entry) => (
-          <button
-            key={entry.id}
-            type="button"
-            onClick={() => onSelect(entry)}
-            className="rounded-lg border border-slate-200 bg-white p-3 text-left transition hover:border-indigo-300 hover:bg-indigo-50/40"
-          >
-            <p className="truncate text-[11px] font-semibold text-slate-700">
-              {entry.queries.slice(0, 2).join(" · ")}
-            </p>
-            <p className="mt-2 text-[10px] text-slate-400">{formatDate(entry.createdAt)}</p>
-            <p className="mt-1 text-[10px] text-slate-500">
-              {entry.retrievedCount} scanned · {entry.selectedCount} selected · avg{" "}
-              {entry.averageScore.toFixed(1)}
-            </p>
-          </button>
-        ))}
+        {history.map((entry, index) => {
+          const runNumber = entry.runNumber ?? index + 1;
+          const runLabel = `Research Run #${String(runNumber).padStart(2, "0")}`;
+          const nicheLabel = entry.queries.join(" · ");
+          return (
+            <Tooltip key={entry.id}>
+              <TooltipTrigger asChild>
+                <button
+                  key={entry.id}
+                  type="button"
+                  onClick={() => onSelect(entry)}
+                  disabled={isLoading}
+                  aria-pressed={selectedId === entry.id}
+                  aria-label={`${runLabel}: ${nicheLabel}`}
+                  className={`rounded-lg border p-3 text-left transition hover:border-indigo-300 hover:bg-indigo-50/40 disabled:cursor-wait disabled:opacity-60 ${selectedId === entry.id ? "border-indigo-400 bg-indigo-50/70 ring-1 ring-indigo-200" : "border-slate-200 bg-white"}`}
+                >
+                  <p className="truncate text-[11px] font-semibold text-slate-700">{runLabel}</p>
+                  <p className="mt-2 text-[10px] text-slate-400">{formatDate(entry.createdAt)}</p>
+                  <p className="mt-1 text-[10px] text-slate-500">
+                    {entry.retrievedCount} scanned · {entry.selectedCount} selected · avg{" "}
+                    {entry.averageScore.toFixed(1)}
+                  </p>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                align="start"
+                sideOffset={8}
+                className="w-fit min-w-64 max-w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-slate-700 bg-slate-950 p-3 text-white shadow-xl"
+              >
+                <p className="text-[10px] font-semibold tracking-[0.14em] text-indigo-300 uppercase">
+                  Niches researched ({entry.queries.length})
+                </p>
+                <div className="mt-2 flex max-h-48 flex-wrap content-start gap-1.5 overflow-y-auto pr-1 [scrollbar-color:#475569_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-600 [&::-webkit-scrollbar-track]:bg-transparent">
+                  {entry.queries.map((query) => (
+                    <span
+                      key={query}
+                      className="max-w-full rounded-full border border-slate-700 bg-slate-800 px-2.5 py-1 text-[11px] leading-4 text-slate-100 break-words"
+                    >
+                      {query}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-3 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                  {entry.result
+                    ? "Click to restore this snapshot"
+                    : "Click to run this research again"}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
       </div>
     ) : (
       <p className="mt-3 rounded-lg border border-dashed border-slate-200 p-3 text-[11px] text-slate-400">
@@ -433,7 +507,7 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
             What Etsy is signalling right now
           </h3>
         </div>
-      <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-500">
           {result.selectedCount} high-signal references queued to RAG across the selected niches
         </p>
       </div>

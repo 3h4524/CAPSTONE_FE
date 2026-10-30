@@ -6,6 +6,7 @@ import { ArrowRight, CheckCircle2, FileText, Info, Loader2, RotateCcw, Upload } 
 import { ingestRagDocument, type RagIngestRequest } from "@/api/rag";
 import { AdminMarketResearchPanel } from "@/components/admin/admin-market-research-panel";
 import { AdminRagDocumentsPanel } from "@/components/admin/admin-rag-documents-panel";
+import { RagSearchPlayground } from "@/components/admin/rag-search-playground";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
   const inputRef = useRef<HTMLInputElement>(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState<"ingest" | "documents">("ingest");
+  const [activeTab, setActiveTab] = useState<"ingest" | "documents" | "search">("ingest");
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [fileName, setFileName] = useState("");
   const [title, setTitle] = useState("");
@@ -166,6 +167,14 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                     onClick={() => setActiveTab("documents")}
                   >
                     Documents & versions
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={activeTab === "search" ? "default" : "ghost"}
+                    onClick={() => setActiveTab("search")}
+                  >
+                    Search playground
                   </Button>
                 </div>
               </div>
@@ -398,6 +407,9 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                 </div>
                 <div className={activeTab === "documents" ? "mt-6" : "hidden"}>
                   <AdminRagDocumentsPanel onIngest={() => setActiveTab("ingest")} />
+                </div>
+                <div className={activeTab === "search" ? "mt-6" : "hidden"}>
+                  <RagSearchPlayground />
                 </div>
               </>
             </main>

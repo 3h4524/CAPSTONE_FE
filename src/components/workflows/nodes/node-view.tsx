@@ -2,6 +2,7 @@
 
 import { ApprovalCard } from "@/components/workflows/nodes/approval-card";
 import { ImageCard } from "@/components/workflows/nodes/image-card";
+import { ListingCard } from "@/components/workflows/nodes/listing-card";
 import { OutputCard } from "@/components/workflows/nodes/output-card";
 import { ProductInputCard } from "@/components/workflows/nodes/product-input-card";
 import { PromptCard } from "@/components/workflows/nodes/prompt-card";
@@ -16,8 +17,9 @@ export const NodeView = (props: NodeProps<WorkflowNode>) => {
     case "product-input":
       return <ProductInputCard {...props} />;
     case "prompt-synthesis":
-    case "generate-listing":
       return <PromptCard {...props} />;
+    case "generate-listing":
+      return <ListingCard {...props} />;
     case "design-image":
     case "apply-mockup":
     case "generate-video":

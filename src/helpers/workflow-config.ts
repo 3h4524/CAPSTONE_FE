@@ -59,6 +59,14 @@ export const isWorkflowNodeType = (value: string): value is WorkflowNodeType =>
 export const getWorkflowNodeDefinition = (type: string): WorkflowNodeDefinition | undefined =>
   isWorkflowNodeType(type) ? WORKFLOW_NODE_DEFINITIONS[type] : undefined;
 
+export const getSelectFieldOptions = (type: WorkflowNodeType, name: string) => {
+  const field = getWorkflowNodeDefinition(type)?.fields.find((item) => item.name === name);
+  return field?.kind === "select" ? field.options : [];
+};
+
+export const getSelectFieldLabel = (type: WorkflowNodeType, name: string, value: unknown) =>
+  getSelectFieldOptions(type, name).find((option) => option.value === value)?.label;
+
 // A field named "standardOptions.transition" edits a value inside the `standardOptions` key.
 const getFieldKeys = (field: WorkflowField): string[] =>
   (field.kind === "mockup-selection" ? [field.name, field.templateColorsName, field.templateBackgroundsName] : [field.name]).map((name) => name.split(".")[0]);

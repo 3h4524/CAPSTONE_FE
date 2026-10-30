@@ -7,8 +7,8 @@ import {
   Layers3,
   Shirt,
   ShoppingBag,
-  Sparkles,
   Store,
+  TextCursorInput,
 } from "lucide-react";
 
 import type {
@@ -16,11 +16,13 @@ import type {
   WorkflowDefinition,
   WorkflowNodeDefinition,
   WorkflowNodeType,
+  WorkflowPosition,
 } from "@/types/workflow";
 
 export const WORKFLOW_DND_MIME = "application/x-apcs-workflow-node";
 
 export const DUPLICATE_NODE_OFFSET = 48;
+export const NODE_MOVE_DIRTY_THRESHOLD = 16;
 
 export const HISTORY_LIMIT = 50;
 
@@ -102,10 +104,10 @@ const PUBLISH_FIELDS = [
 ] as const;
 
 export const WORKFLOW_CATEGORIES: WorkflowCategoryDefinition[] = [
-  { id: "trigger", label: "Trigger", accentClassName: "bg-sky-100 text-sky-700", iconClassName: "text-sky-600" },
-  { id: "ai", label: "AI generation", accentClassName: "bg-violet-100 text-violet-700", iconClassName: "text-violet-600" },
-  { id: "review", label: "Review", accentClassName: "bg-amber-100 text-amber-700", iconClassName: "text-amber-600" },
-  { id: "output", label: "Output", accentClassName: "bg-emerald-100 text-emerald-700", iconClassName: "text-emerald-600" },
+  { id: "trigger", label: "Trigger", accentClassName: "bg-wf-cat-trigger-soft text-wf-cat-trigger", iconClassName: "text-wf-cat-trigger" },
+  { id: "ai", label: "AI generation", accentClassName: "bg-wf-cat-ai-soft text-wf-cat-ai", iconClassName: "text-wf-cat-ai" },
+  { id: "review", label: "Review", accentClassName: "bg-wf-cat-review-soft text-wf-cat-review", iconClassName: "text-wf-cat-review" },
+  { id: "output", label: "Output", accentClassName: "bg-wf-cat-output-soft text-wf-cat-output", iconClassName: "text-wf-cat-output" },
 ];
 
 export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDefinition> = {
@@ -132,7 +134,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     type: "prompt-synthesis",
     label: "Prompt synthesis",
     description: "Combine a design template and art style into a design prompt.",
-    icon: Sparkles,
+    icon: TextCursorInput,
     category: "ai",
     hasInput: true,
     hasOutput: true,
@@ -353,26 +355,38 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
   },
 };
 
-const pipelineNode = (id: string, type: WorkflowNodeType, x: number, y: number) => ({
+export const DEFAULT_WORKFLOW_POSITIONS: Record<string, WorkflowPosition> = {
+  input: { x: 0, y: 0 },
+  prompt: { x: 320, y: 0 },
+  design: { x: 640, y: 0 },
+  "design-approval": { x: 640, y: 320 },
+  mockup: { x: 320, y: 320 },
+  approval: { x: 0, y: 320 },
+  video: { x: 0, y: 640 },
+  review: { x: 320, y: 640 },
+  export: { x: 640, y: 640 },
+};
+
+const pipelineNode = (id: string, type: WorkflowNodeType, position: WorkflowPosition) => ({
   id,
   type,
   label: WORKFLOW_NODE_DEFINITIONS[type].label,
-  position: { x, y },
+  position,
   config: { ...WORKFLOW_NODE_DEFINITIONS[type].defaultConfig },
 });
 
 export const DEFAULT_WORKFLOW_DEFINITION: WorkflowDefinition = {
   version: 2,
   nodes: [
-    pipelineNode("input", "product-input", 0, 0),
-    pipelineNode("prompt", "prompt-synthesis", 0, 220),
-    pipelineNode("design", "design-image", 0, 420),
-    pipelineNode("design-approval", "design-approval", 0, 720),
-    pipelineNode("mockup", "apply-mockup", 0, 930),
-    pipelineNode("approval", "approval-gate", 0, 1210),
-    pipelineNode("video", "generate-video", 0, 1410),
-    pipelineNode("review", "review-video", 0, 1690),
-    pipelineNode("export", "export-zip", 0, 1930),
+    pipelineNode("input", "product-input", DEFAULT_WORKFLOW_POSITIONS.input),
+    pipelineNode("prompt", "prompt-synthesis", DEFAULT_WORKFLOW_POSITIONS.prompt),
+    pipelineNode("design", "design-image", DEFAULT_WORKFLOW_POSITIONS.design),
+    pipelineNode("design-approval", "design-approval", DEFAULT_WORKFLOW_POSITIONS["design-approval"]),
+    pipelineNode("mockup", "apply-mockup", DEFAULT_WORKFLOW_POSITIONS.mockup),
+    pipelineNode("approval", "approval-gate", DEFAULT_WORKFLOW_POSITIONS.approval),
+    pipelineNode("video", "generate-video", DEFAULT_WORKFLOW_POSITIONS.video),
+    pipelineNode("review", "review-video", DEFAULT_WORKFLOW_POSITIONS.review),
+    pipelineNode("export", "export-zip", DEFAULT_WORKFLOW_POSITIONS.export),
   ],
   edges: [
     { id: "input-prompt", source: "input", target: "prompt" },
@@ -389,7 +403,7 @@ export const DEFAULT_WORKFLOW_DEFINITION: WorkflowDefinition = {
 
 export const STARTER_WORKFLOW_DEFINITION: WorkflowDefinition = {
   version: 2,
-  nodes: [pipelineNode("input", "product-input", 0, 0)],
+  nodes: [pipelineNode("input", "product-input", DEFAULT_WORKFLOW_POSITIONS.input)],
   edges: [],
   viewport: { x: 0, y: 0, zoom: 1 },
 };

@@ -156,7 +156,7 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
             {/* A fieldset is as wide as its widest line by default; min-w-0 keeps a long batch name inside the panel. */}
             <fieldset
               disabled={settingsLocked}
-              className="min-w-0 [&>section:first-child]:border-t-0"
+              className="@container min-w-0 [&>section:first-child]:border-t-0"
             >
               {node.data.type === "generate-video" ? (
                 <div className="space-y-6 px-5 py-5">

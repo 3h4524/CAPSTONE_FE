@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { DUPLICATE_NODE_OFFSET, HISTORY_GROUP_WINDOW_MS, HISTORY_LIMIT } from "@/constants/workflow";
+import { DUPLICATE_NODE_OFFSET, HISTORY_GROUP_WINDOW_MS, HISTORY_LIMIT, NODE_MOVE_DIRTY_THRESHOLD } from "@/constants/workflow";
 import { duplicateWorkflowSelection, toWorkflowEdges, toWorkflowNodes } from "@/helpers/workflow-graph";
 import type {
   WorkflowDetail,
@@ -19,14 +19,15 @@ import {
   type OnConnect,
 } from "@xyflow/react";
 
-const DIRTY_NODE_CHANGES = new Set<NodeChange["type"]>(["position", "remove", "add", "replace"]);
-const DIRTY_EDGE_CHANGES = new Set<EdgeChange["type"]>(["remove", "add", "replace"]);
 const HISTORY_NODE_CHANGES = new Set<NodeChange["type"]>(["remove", "add", "replace"]);
 const HISTORY_EDGE_CHANGES = new Set<EdgeChange["type"]>(["remove", "add", "replace"]);
 
-type HistorySnapshot = {
+type GraphSnapshot = {
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
+};
+
+type HistorySnapshot = GraphSnapshot & {
   selectedNodeIds: string[];
 };
 
@@ -45,6 +46,7 @@ type WorkflowEditorState = {
   description: string;
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
+  savedGraph: GraphSnapshot;
   selectedNodeIds: string[];
   past: HistorySnapshot[];
   future: HistorySnapshot[];
@@ -94,6 +96,7 @@ const INITIAL_STATE = {
   description: "",
   nodes: [],
   edges: [],
+  savedGraph: { nodes: [], edges: [] },
   selectedNodeIds: [],
   past: [],
   future: [],
@@ -146,6 +149,28 @@ const hasNodePositionsChanged = (before: WorkflowNode[], after: WorkflowNode[]) 
   });
 };
 
+const hasMeaningfulGraphChanges = (
+  before: Pick<WorkflowEditorState, "nodes" | "edges">,
+  after: Pick<WorkflowEditorState, "nodes" | "edges">
+) => {
+  if (before.nodes.length !== after.nodes.length || before.edges.length !== after.edges.length) return true;
+  const afterNodes = new Map(after.nodes.map((node) => [node.id, node]));
+  const nodesChanged = before.nodes.some((node) => {
+    const other = afterNodes.get(node.id);
+    return (
+      !other ||
+      node.type !== other.type ||
+      node.data.type !== other.data.type ||
+      node.data.label !== other.data.label ||
+      Math.hypot(node.position.x - other.position.x, node.position.y - other.position.y) > NODE_MOVE_DIRTY_THRESHOLD ||
+      JSON.stringify(node.data.config) !== JSON.stringify(other.data.config)
+    );
+  });
+  if (nodesChanged) return true;
+  const afterEdges = new Set(after.edges.map((edge) => `${edge.id}:${edge.source}:${edge.target}`));
+  return before.edges.some((edge) => !afterEdges.has(`${edge.id}:${edge.source}:${edge.target}`));
+};
+
 export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
   ...INITIAL_STATE,
   // Not part of INITIAL_STATE: opening another workflow keeps it, so copied nodes can be pasted there.
@@ -153,23 +178,27 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
 
   loadWorkflow: (workflow) => {
     dragSnapshot = null;
+    const nodes = toWorkflowNodes(workflow.definition);
+    const edges = toWorkflowEdges(workflow.definition);
     set({
       ...INITIAL_STATE,
       workflowId: workflow.id,
       revision: workflow.revision,
       name: workflow.name,
       description: workflow.description,
-      nodes: toWorkflowNodes(workflow.definition),
-      edges: toWorkflowEdges(workflow.definition),
+      nodes,
+      edges,
+      savedGraph: { nodes, edges },
     });
   },
 
   onNodesChange: (changes) =>
     set((state) => {
       const removedIds = new Set(changes.flatMap((change) => (change.type === "remove" ? [change.id] : [])));
+      const nodes = applyNodeChanges(changes, state.nodes);
       const next = {
-        nodes: applyNodeChanges(changes, state.nodes),
-        isDirty: state.isDirty || changes.some((change) => DIRTY_NODE_CHANGES.has(change.type)),
+        nodes,
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes, edges: state.edges }),
         selectedNodeIds: state.selectedNodeIds.filter((id) => !removedIds.has(id)),
       };
       if (!changes.some((change) => HISTORY_NODE_CHANGES.has(change.type))) return next;
@@ -178,51 +207,78 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
 
   onEdgesChange: (changes) =>
     set((state) => {
+      const edges = applyEdgeChanges(changes, state.edges);
       const next = {
-        edges: applyEdgeChanges(changes, state.edges),
-        isDirty: state.isDirty || changes.some((change) => DIRTY_EDGE_CHANGES.has(change.type)),
+        edges,
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes: state.nodes, edges }),
       };
       if (!changes.some((change) => HISTORY_EDGE_CHANGES.has(change.type))) return next;
       return { ...next, ...pushHistory(state, "structure", false) };
     }),
 
   connect: (connection) =>
-    set((state) => ({ edges: addEdge(connection, state.edges), isDirty: true, ...pushHistory(state, "structure", false) })),
+    set((state) => {
+      const edges = addEdge(connection, state.edges);
+      if (edges.length === state.edges.length) return state;
+      return {
+        edges,
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes: state.nodes, edges }),
+        ...pushHistory(state, "structure", false),
+      };
+    }),
 
   addNode: (node) =>
-    set((state) => ({
-      nodes: [...state.nodes.map((item) => ({ ...item, selected: false })), { ...node, selected: true }],
-      selectedNodeIds: [node.id],
-      isDirty: true,
-      ...pushHistory(state, "structure", false),
-    })),
+    set((state) => {
+      const nodes = [...state.nodes.map((item) => ({ ...item, selected: false })), { ...node, selected: true }];
+      return {
+        nodes,
+        selectedNodeIds: [node.id],
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes, edges: state.edges }),
+        ...pushHistory(state, "structure", false),
+      };
+    }),
 
   updateNodeConfig: (nodeId, config) =>
-    set((state) => ({
-      nodes: state.nodes.map((node) =>
+    set((state) => {
+      const target = state.nodes.find((node) => node.id === nodeId);
+      if (!target || JSON.stringify(target.data.config) === JSON.stringify(config)) return state;
+      const nodes = state.nodes.map((node) =>
         node.id === nodeId ? { ...node, data: { ...node.data, config } } : node
-      ),
-      isDirty: true,
-      ...pushHistory(state, "config", true),
-    })),
+      );
+      return {
+        nodes,
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes, edges: state.edges }),
+        ...pushHistory(state, "config", true),
+      };
+    }),
 
   renameNode: (nodeId, label) =>
-    set((state) => ({
-      nodes: state.nodes.map((node) =>
+    set((state) => {
+      const target = state.nodes.find((node) => node.id === nodeId);
+      if (!target || target.data.label === label) return state;
+      const nodes = state.nodes.map((node) =>
         node.id === nodeId ? { ...node, data: { ...node.data, label } } : node
-      ),
-      isDirty: true,
-      ...pushHistory(state, "rename", false),
-    })),
+      );
+      return {
+        nodes,
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes, edges: state.edges }),
+        ...pushHistory(state, "rename", false),
+      };
+    }),
 
   removeNode: (nodeId) =>
-    set((state) => ({
-      nodes: state.nodes.filter((node) => node.id !== nodeId),
-      edges: state.edges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId),
-      selectedNodeIds: state.selectedNodeIds.filter((id) => id !== nodeId),
-      isDirty: true,
-      ...pushHistory(state, "structure", false),
-    })),
+    set((state) => {
+      if (!state.nodes.some((node) => node.id === nodeId)) return state;
+      const nodes = state.nodes.filter((node) => node.id !== nodeId);
+      const edges = state.edges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId);
+      return {
+        nodes,
+        edges,
+        selectedNodeIds: state.selectedNodeIds.filter((id) => id !== nodeId),
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes, edges }),
+        ...pushHistory(state, "structure", false),
+      };
+    }),
 
   selectNode: (nodeId) =>
     set((state) => ({
@@ -262,11 +318,13 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
     set((state) => {
       if (state.selectedNodeIds.length === 0) return state;
       const removedIds = new Set(state.selectedNodeIds);
+      const nodes = state.nodes.filter((node) => !removedIds.has(node.id));
+      const edges = state.edges.filter((edge) => !removedIds.has(edge.source) && !removedIds.has(edge.target));
       return {
-        nodes: state.nodes.filter((node) => !removedIds.has(node.id)),
-        edges: state.edges.filter((edge) => !removedIds.has(edge.source) && !removedIds.has(edge.target)),
+        nodes,
+        edges,
         selectedNodeIds: [],
-        isDirty: true,
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes, edges }),
         ...pushHistory(state, "structure", false),
       };
     }),
@@ -276,11 +334,13 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
       if (state.selectedNodeIds.length === 0) return state;
       const duplicated = duplicateWorkflowSelection(state.nodes, state.edges, state.selectedNodeIds);
       if (duplicated.addedNodeIds.length === 0) return state;
+      const nodes = [...state.nodes.map((node) => ({ ...node, selected: false })), ...duplicated.nodes];
+      const edges = [...state.edges, ...duplicated.edges];
       return {
-        nodes: [...state.nodes.map((node) => ({ ...node, selected: false })), ...duplicated.nodes],
-        edges: [...state.edges, ...duplicated.edges],
+        nodes,
+        edges,
         selectedNodeIds: duplicated.addedNodeIds,
-        isDirty: true,
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes, edges }),
         ...pushHistory(state, "structure", false),
       };
     }),
@@ -302,12 +362,14 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
       // Each paste lands one step further than the last, so pasting twice does not stack the copies.
       const pastes = clipboard.pastes + 1;
       const pasted = duplicateWorkflowSelection(clipboard.nodes, clipboard.edges, clipboard.nodes.map((node) => node.id), DUPLICATE_NODE_OFFSET * pastes);
+      const nodes = [...state.nodes.map((node) => ({ ...node, selected: false })), ...pasted.nodes];
+      const edges = [...state.edges, ...pasted.edges];
       return {
-        nodes: [...state.nodes.map((node) => ({ ...node, selected: false })), ...pasted.nodes],
-        edges: [...state.edges, ...pasted.edges],
+        nodes,
+        edges,
         selectedNodeIds: pasted.addedNodeIds,
         clipboard: { ...clipboard, pastes },
-        isDirty: true,
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes, edges }),
         ...pushHistory(state, "structure", false),
       };
     }),
@@ -323,7 +385,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
         selectedNodeIds: previous.selectedNodeIds,
         past: state.past.slice(0, -1),
         future: [...state.future, takeSnapshot(state)],
-        isDirty: true,
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, previous),
       };
     }),
 
@@ -338,7 +400,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
         selectedNodeIds: next.selectedNodeIds,
         past: [...state.past.slice(-(HISTORY_LIMIT - 1)), takeSnapshot(state)],
         future: state.future.slice(0, -1),
-        isDirty: true,
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, next),
       };
     }),
 
@@ -374,21 +436,30 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
     })),
 
   resetProductDependentState: () =>
-    set((state) => ({
-      nodes: state.nodes.map((node) => {
+    set((state) => {
+      const nodes: WorkflowNode[] = state.nodes.map((node) => {
         if (node.data.type !== "apply-mockup") return { ...node, data: { ...node.data, status: "idle" } };
         return { ...node, data: { ...node.data, status: "idle", config: { ...node.data.config, mockupIds: [], artworkGroupKey: "" } } };
-      }),
-      isDirty: true,
-      videoRunId: null,
-    })),
+      });
+      return {
+        nodes,
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes, edges: state.edges }),
+        videoRunId: null,
+      };
+    }),
 
   setVideoRunId: (videoRunId) => set({ videoRunId }),
 
   setRunning: (isRunning) => set({ isRunning }),
 
   markSaved: (workflow) =>
-    set({ name: workflow.name, description: workflow.description, revision: workflow.revision, isDirty: false }),
+    set((state) => ({
+      name: workflow.name,
+      description: workflow.description,
+      revision: workflow.revision,
+      savedGraph: { nodes: state.nodes, edges: state.edges },
+      isDirty: false,
+    })),
 
   reset: () => {
     dragSnapshot = null;

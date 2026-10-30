@@ -15,27 +15,30 @@ export const VideoNodePreview = () => {
   const { data: videos } = useRunVideos(runId);
   const video = videos?.[0];
 
+  if (video?.thumbnailUrl) {
+    return (
+      <div className="relative aspect-[2/1] w-full overflow-hidden rounded-sm">
+        <Image
+          src={video.thumbnailUrl}
+          alt={`Latest video, version ${video.version}`}
+          fill
+          unoptimized
+          className="object-contain"
+        />
+        <span className="bg-wf-surface/90 text-wf-dim absolute right-1 bottom-1 rounded-sm px-1 py-0.5 text-[9px] font-medium tracking-wide tabular-nums">
+          v{video.version} · {video.status}
+        </span>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-muted/45 text-muted-foreground relative flex aspect-[2/1] flex-col items-center justify-center gap-2 overflow-hidden rounded-md border border-slate-200/80">
-      {video?.thumbnailUrl ? (
-        <>
-          <Image
-            src={video.thumbnailUrl}
-            alt={`Latest video, version ${video.version}`}
-            fill
-            unoptimized
-            className="object-contain"
-          />
-          <span className="absolute right-2 bottom-2 rounded bg-slate-950/80 px-2 py-1 text-[10px] font-medium text-white backdrop-blur-sm">
-            v{video.version} · {video.status}
-          </span>
-        </>
-      ) : (
-        <>
-          <Film className="size-5" aria-hidden="true" />
-          <p className="text-xs">Preview appears after render</p>
-        </>
-      )}
+    <div className="border-wf-line flex aspect-[2/1] w-full items-center gap-1.5 border border-dashed px-2.5">
+      <Film className="text-wf-faint size-3.5 shrink-0" aria-hidden="true" />
+      <span className="text-wf-faint text-[10px] font-medium tracking-[0.08em] uppercase">
+        Preview after render
+      </span>
+      <span className="bg-wf-line h-px flex-1" aria-hidden="true" />
     </div>
   );
 };

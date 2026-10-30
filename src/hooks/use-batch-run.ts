@@ -8,7 +8,7 @@ import { batchKeys } from "@/api/batches";
 import { applyBatchMockupTemplates, generateAllBatchMockups, getBatchJobMockups, getBatchMockupSelection, listMockupTemplates, mockupTemplateKeys } from "@/api/mockup-templates";
 import { getErrorMessage } from "@/helpers/error-message";
 import { countProductTypes } from "@/helpers/mockup-template";
-import { showToast } from "@/helpers/toast";
+import { showWorkflowActionToast } from "@/helpers/toast";
 import {
   ACTIVE_JOB_STATUSES,
   deriveNodeStatuses,
@@ -62,13 +62,13 @@ export const generateRunMockups = async (batchJobId: string, options: { onlyIfSe
     if (useWorkflowRunStore.getState().batchJobId !== batchJobId) return;
     useWorkflowRunStore.getState().setMockupResult(result);
     useWorkflowRunStore.getState().setMockupState("done");
-    if (result.noApprovedImageCount && result.generatedCount === 0 && result.images.length === 0) showToast("warning", "None of the designs is approved yet. Approve at least one to make mock-ups.");
-    else if (result.errors.length > 0) showToast("warning", `Mock-ups finished with ${result.errors.length} problem${result.errors.length === 1 ? "" : "s"}. Open the Apply mock-up node to review them.`);
-    else showToast("success", `Mock-ups ready: ${result.images.length} image${result.images.length === 1 ? "" : "s"}.`);
+    if (result.noApprovedImageCount && result.generatedCount === 0 && result.images.length === 0) showWorkflowActionToast("warning", "None of the designs is approved yet. Approve at least one to make mock-ups.");
+    else if (result.errors.length > 0) showWorkflowActionToast("warning", `Mock-ups finished with ${result.errors.length} problem${result.errors.length === 1 ? "" : "s"}. Open the Apply mock-up node to review them.`);
+    else showWorkflowActionToast("success", `Mock-ups ready: ${result.images.length} image${result.images.length === 1 ? "" : "s"}.`);
   } catch (error) {
     if (useWorkflowRunStore.getState().batchJobId !== batchJobId) return;
     useWorkflowRunStore.getState().setMockupState("failed");
-    showToast("error", getErrorMessage(error));
+    showWorkflowActionToast("error", getErrorMessage(error));
   }
 };
 
@@ -94,7 +94,7 @@ export const saveRunMockupSelection = async (batchJobId: string): Promise<boolea
   const config = useWorkflowStore.getState().nodes.find((node) => node.data.type === "apply-mockup")?.data.config;
   let selection = extractMockupSelection(config ?? {});
   if (selection.templateIds.length === 0) {
-    showToast("error", "Choose at least one mock-up template in the node's Settings first.");
+    showWorkflowActionToast("error", "Choose at least one mock-up template in the node's Settings first.");
     return false;
   }
   try {
@@ -103,14 +103,14 @@ export const saveRunMockupSelection = async (batchJobId: string): Promise<boolea
     if (job?.id === batchJobId) {
       selection = narrowMockupSelection(selection, await listMockupTemplates(), countProductTypes(job.products));
       if (selection.templateIds.length === 0) {
-        showToast("error", "None of the chosen mock-up templates is for this run's products. Choose a template for them in the node's Settings first.");
+        showWorkflowActionToast("error", "None of the chosen mock-up templates is for this run's products. Choose a template for them in the node's Settings first.");
         return false;
       }
     }
     await applyBatchMockupTemplates(batchJobId, selection.templateIds, selection.garmentColors, selection.templateColors, selection.templateBackgrounds);
     return true;
   } catch (error) {
-    showToast("error", getErrorMessage(error));
+    showWorkflowActionToast("error", getErrorMessage(error));
     return false;
   }
 };
@@ -190,10 +190,10 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
         // Open Design approval so the designs to review are in front of the person.
         const gate = useWorkflowStore.getState().nodes.find((node) => node.data.type === "design-approval");
         if (gate) selectNode(gate.id);
-        showToast("info", "Designs are ready. Approve the ones you want, then continue to the mock-ups.");
-      } else if (status === "completed") showToast("success", "Image generation finished.");
-      else if (status === "partially_completed") showToast("warning", "Image generation finished, but some products failed. Open the Design image node to retry them.");
-      else showToast("error", "Image generation failed.");
+        showWorkflowActionToast("info", "Designs are ready. Approve the ones you want, then continue to the mock-ups.");
+      } else if (status === "completed") showWorkflowActionToast("success", "Image generation finished.");
+      else if (status === "partially_completed") showWorkflowActionToast("warning", "Image generation finished, but some products failed. Open the Design image node to retry them.");
+      else showWorkflowActionToast("error", "Image generation failed.");
       // The "Previous runs" list shows each run's status, so it must not keep the old one.
       const finishedBatchId = useWorkflowRunStore.getState().job?.batchId;
       if (finishedBatchId) void queryClient.invalidateQueries({ queryKey: batchJobKeys.byBatch(finishedBatchId) });
@@ -218,7 +218,7 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
     const { nodes, edges } = useWorkflowStore.getState();
     const issues = validateRunnable(nodes, edges);
     if (issues.length > 0) {
-      showToast("error", issues[0].message);
+      showWorkflowActionToast("error", issues[0].message);
       selectNode(issues[0].nodeId);
       return "blocked";
     }
@@ -234,10 +234,10 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
     try {
       const prepared = await prepareRun(plan, queryClient);
       if (isStopped()) return "blocked";
-      for (const warning of prepared.warnings) showToast("warning", warning);
+      for (const warning of prepared.warnings) showWorkflowActionToast("warning", warning);
       useWorkflowRunStore.setState({ batchJobId: prepared.batchJobId });
       if (prepared.attached) {
-        showToast("info", "This batch already has a running job. Showing its progress.");
+        showWorkflowActionToast("info", "This batch already has a running job. Showing its progress.");
       } else {
         // Saved while the job is still a draft: the backend refuses it once the job is running.
         if (plan.mockup) {
@@ -264,7 +264,7 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
           requireApproval: plan.requireApproval,
           workflowId: activeWorkflowId,
         });
-        showToast("success", "Image generation started.");
+        showWorkflowActionToast("success", "Image generation started.");
       }
       run.setStep("watching");
       setRunParam(router, prepared.batchJobId, options.videoFollows);
@@ -281,7 +281,7 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
         return "nothing-pending";
       }
       useWorkflowRunStore.getState().reset();
-      showToast("error", error instanceof RunBlockedError ? error.message : getErrorMessage(error));
+      showWorkflowActionToast("error", error instanceof RunBlockedError ? error.message : getErrorMessage(error));
       return "blocked";
     }
   };
@@ -294,9 +294,9 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
       try {
         await cancelBatchJob(current.id);
         await queryClient.invalidateQueries({ queryKey: batchJobKeys.detail(current.id) });
-        showToast("info", "Stopping after the product being generated. The remaining products are marked as cancelled.");
+        showWorkflowActionToast("info", "Stopping after the product being generated. The remaining products are marked as cancelled.");
       } catch (error) {
-        showToast("error", getErrorMessage(error));
+        showWorkflowActionToast("error", getErrorMessage(error));
       }
       return;
     }
@@ -304,7 +304,7 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
     activeRunToken += 1;
     useWorkflowRunStore.getState().reset();
     setRunParam(router, null);
-    showToast("info", "Run stopped.");
+    showWorkflowActionToast("info", "Run stopped.");
   };
 
   return { isBusy: isRunBusy({ step, job, mockupState }), start, cancel };

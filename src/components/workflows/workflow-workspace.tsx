@@ -15,7 +15,7 @@ import { WorkflowToolbar } from "@/components/workflows/toolbar/workflow-toolbar
 import { SITE_CONFIG } from "@/constants/site";
 import { DEFAULT_WORKFLOW_DEFINITION, DEFAULT_WORKFLOW_NAME } from "@/constants/workflow";
 import { showToast } from "@/helpers/toast";
-import { resolveActiveWorkflowId } from "@/helpers/workflow-graph";
+import { applyCompactDefaultLayoutIfStillVertical, resolveActiveWorkflowId } from "@/helpers/workflow-graph";
 import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
 import { useLatestWorkflowRun } from "@/hooks/queries/use-latest-workflow-run";
 import { useWorkflow } from "@/hooks/queries/use-workflow";
@@ -74,7 +74,7 @@ export const WorkflowWorkspace = () => {
   });
 
   useEffect(() => {
-    if (workflow && workflow.id !== loadedWorkflowId) loadWorkflow(workflow);
+    if (workflow && workflow.id !== loadedWorkflowId) loadWorkflow(applyCompactDefaultLayoutIfStillVertical(workflow));
   }, [workflow, loadedWorkflowId, loadWorkflow]);
 
   useEffect(() => {
@@ -215,7 +215,7 @@ export const WorkflowWorkspace = () => {
         <aside className="hidden w-64 shrink-0 border-r lg:block">
           <NodePalette />
         </aside>
-        <div className="relative min-w-0 flex-1 bg-slate-50">
+        <div className="relative min-w-0 flex-1 bg-slate-100/70">
           {isEditorReady ? (
             <WorkflowCanvas />
           ) : isWorkflowError ? (

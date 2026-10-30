@@ -2,10 +2,12 @@
 
 import { Toaster } from "sonner";
 
+import { DEFAULT_POSITION_NOTIFICATION } from "@/helpers/toast";
+
 export function GlobalToast() {
   return (
     <Toaster
-      position="top-right"
+      position={DEFAULT_POSITION_NOTIFICATION}
       className="toaster group whitespace-pre-line"
       toastOptions={{
         classNames: {

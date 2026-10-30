@@ -20,10 +20,25 @@ export type BatchJobProductResult = {
   designText?: string | null;
   /** The product's own image prompt, as it has it now; null when its designs come from the template. */
   customPrompt?: string | null;
+  /** The template the product's designs are made from now. */
+  designTemplateId?: string | null;
+  /** The instructions set for this product in the job; null uses the job's. */
+  instructions?: string | null;
 };
 
 /** What a product is made from when it is generated again: empty clears the field. */
-export type RegenerateProductInput = { customPrompt: string; designText: string };
+export type RegenerateProductInput = {
+  customPrompt: string;
+  designText: string;
+  /** How many new designs to make (1-4); the job keeps its own count. */
+  variationCount: number;
+  /** Empty means none, rather than the job's. */
+  instructions: string;
+  /** Left out keeps the product's template. */
+  designTemplateId?: string;
+  /** Left out keeps the product's art style; empty removes it. */
+  styleArtPresetId?: string;
+};
 
 export type BatchJobCounters = { pending: number; processing: number; completed: number; failed: number };
 

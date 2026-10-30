@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { showToast } from "@/helpers/toast";
+import { showWorkflowActionToast } from "@/helpers/toast";
 import { useWorkflowStore } from "@/stores/workflow";
 
 const CANVAS_SELECTOR = ".react-flow";
@@ -44,7 +44,7 @@ export const useCanvasShortcuts = ({ saveWorkflow }: CanvasShortcutsProps) => {
       if (modifier && event.key.toLowerCase() === "c" && !isOutsideCanvas(event.target) && selectedNodeIds.length > 0 && !window.getSelection()?.toString()) {
         event.preventDefault();
         copySelectedNodes();
-        showToast("success", `Copied ${selectedNodeIds.length} node${selectedNodeIds.length === 1 ? "" : "s"}. Paste them with Ctrl+V.`);
+        showWorkflowActionToast("success", `Copied ${selectedNodeIds.length} node${selectedNodeIds.length === 1 ? "" : "s"}. Paste them with Ctrl+V.`);
         return;
       }
       if (modifier && event.key.toLowerCase() === "v" && !isOutsideCanvas(event.target) && clipboard) {

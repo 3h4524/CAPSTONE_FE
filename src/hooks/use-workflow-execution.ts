@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { importGeneratedMockups } from "@/api/generated-mockups";
 import { videoWorkflowKeys } from "@/api/video-workflow";
 import { getErrorMessage } from "@/helpers/error-message";
-import { showToast } from "@/helpers/toast";
+import { showWorkflowActionToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
 import { hasBatchSteps, hasListingSteps, hasVideoSteps } from "@/helpers/workflow-run";
 import { BATCH_JOB_PARAM, NEXT_PART_PARAM, useBatchRun } from "@/hooks/use-batch-run";
@@ -22,18 +22,18 @@ const findNode = (type: string) => useWorkflowStore.getState().nodes.find((node)
 const startVideoRun = async (queryClient: QueryClient, startRun: () => void) => {
   const productId = readString(findNode("product-input")?.data.config.productId);
   if (!productId) {
-    showToast("error", "Choose the product for the video in Product input.");
+    showWorkflowActionToast("error", "Choose the product for the video in Product input.");
     return;
   }
   try {
     const result = await importGeneratedMockups(productId);
     queryClient.setQueryData(videoWorkflowKeys.assets(productId), result.mockups);
     if (result.failedCount > 0) {
-      showToast("warning", `${result.failedCount} mock-up${result.failedCount === 1 ? "" : "s"} could not be added for the video. Add them again at Mockup Approval.`);
+      showWorkflowActionToast("warning", `${result.failedCount} mock-up${result.failedCount === 1 ? "" : "s"} could not be added for the video. Add them again at Mockup Approval.`);
     }
   } catch (error) {
     // The run still starts: it waits at Mockup Approval, where the mock-ups can be added again or uploaded.
-    showToast("warning", `The product's mock-ups could not be added for the video. ${getErrorMessage(error)}`);
+    showWorkflowActionToast("warning", `The product's mock-ups could not be added for the video. ${getErrorMessage(error)}`);
   }
   startRun();
 };
@@ -99,7 +99,7 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       router.replace(`/workflows?${query.toString()}`, { scroll: false });
       const input = findNode("product-input");
       if (input) selectNode(input.id);
-      showToast("warning", `The video was not started: its product is not in this run. Choose ${jobProducts.length === 1 ? jobProducts[0].productName : "one of this run's products"} for the video in Product input, save, then Run again.`);
+      showWorkflowActionToast("warning", `The video was not started: its product is not in this run. Choose ${jobProducts.length === 1 ? jobProducts[0].productName : "one of this run's products"} for the video in Product input, save, then Run again.`);
       return;
     }
     announceWaiting.current = true;
@@ -113,7 +113,7 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     announceWaiting.current = false;
     const gate = findNode("approval-gate");
     if (gate) selectNode(gate.id);
-    showToast("info", "Approve the mock-ups to use in the video, then continue.");
+    showWorkflowActionToast("info", "Approve the mock-ups to use in the video, then continue.");
   }, [videoStatus, selectNode]);
 
   const start = async () => {
@@ -122,12 +122,12 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     const listingOnly = hasListingSteps(nodes) && !hasBatchSteps(nodes) && !wantsVideo;
     if (listingOnly) {
       if (isDirty) {
-        showToast("warning", "Save your configuration before running.");
+        showWorkflowActionToast("warning", "Save your configuration before running.");
         return;
       }
       const input = findNode("product-input");
       if (input && !readString(input.data.config.productId)) {
-        showToast("error", "Choose the product for listing content in Product input.");
+        showWorkflowActionToast("error", "Choose the product for listing content in Product input.");
         selectNode(input.id);
         return;
       }
@@ -138,12 +138,12 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     if (wantsVideo) {
       // The video run is made from the saved workflow, for one product.
       if (isDirty) {
-        showToast("warning", "Save your configuration before running.");
+        showWorkflowActionToast("warning", "Save your configuration before running.");
         return;
       }
       const input = findNode("product-input");
       if (input && !readString(input.data.config.productId)) {
-        showToast("error", "Choose the product for the video in Product input.");
+        showWorkflowActionToast("error", "Choose the product for the video in Product input.");
         selectNode(input.id);
         return;
       }

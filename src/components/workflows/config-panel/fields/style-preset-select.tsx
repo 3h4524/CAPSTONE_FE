@@ -9,9 +9,11 @@ type StylePresetSelectProps = {
   placeholder: string;
   noneLabel?: string;
   onChange: (value: string) => void;
+  /** For a dropdown outside a form, such as in a dialog: the id its label points to. */
+  id?: string;
 };
 
-export const StylePresetSelect = ({ value, placeholder, noneLabel, onChange }: StylePresetSelectProps) => {
+export const StylePresetSelect = ({ value, placeholder, noneLabel, onChange, id }: StylePresetSelectProps) => {
   const { data: presets, isPending, isError, refetch } = useStylePresets();
   const options = (presets ?? []).map((preset) => ({
     value: preset.id,
@@ -29,6 +31,7 @@ export const StylePresetSelect = ({ value, placeholder, noneLabel, onChange }: S
         placeholder={placeholder}
         noneLabel={noneLabel}
         onChange={onChange}
+        standaloneId={id}
         isLoading={isPending}
         isError={isError}
         onRetry={() => refetch()}

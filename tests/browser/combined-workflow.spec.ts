@@ -117,12 +117,14 @@ test("a batch job and a video run each show their own steps", async ({ page }) =
   await expect(node(page, "prompt")).toContainText("Done");
   await expect(node(page, "design")).toContainText("Done");
   await expect(node(page, "design-approval")).toContainText("Needs review");
-  await expect(node(page, "design-approval")).toContainText("1 approved · 0 rejected · 1 to review");
+  await expect(node(page, "design-approval")).toContainText("1 approved");
+  await expect(node(page, "design-approval")).toContainText("0 rejected");
+  await expect(node(page, "design-approval")).toContainText("1 pending");
   // From the video run.
   await expect(node(page, "approval")).toContainText("Needs input");
   await expect(node(page, "video")).not.toContainText("Done");
 
-  await node(page, "design-approval").click({ position: { x: 80, y: 40 } });
+  await node(page, "design-approval").click({ position: { x: 4, y: 14 } });
   await expect(page.getByRole("heading", { name: "Review designs" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Approve all remaining (1)" })).toBeEnabled();
   await page.screenshot({ path: ".next/workflow-ui-results/combined-run.png", fullPage: true });
@@ -131,7 +133,7 @@ test("a batch job and a video run each show their own steps", async ({ page }) =
 test("Mockup Approval adds the product's composited mock-ups to the video sources", async ({ page }) => {
   const requests = await mockApi(page);
   await page.goto(`/workflows?id=${workflowId}`);
-  await node(page, "approval").click({ position: { x: 80, y: 40 } });
+  await node(page, "approval").click({ position: { x: 4, y: 14 } });
   await expect(page.getByText("No mockups yet. Upload images in Apply Mockup.")).toBeVisible();
   await page.getByRole("button", { name: "Add this product's mock-ups" }).click();
   await expect(page.getByText("Added 2 mock-ups for the video.")).toBeVisible();
@@ -266,7 +268,7 @@ test("one mock-up of the job can be made its own way, removed and put back", asy
   };
   const requests = await mockApi(page, { jobMockups: madeMockups, templates: [template] });
   await page.goto(`/workflows?id=${workflowId}&job=${jobId}`);
-  await node(page, "mockup").click({ position: { x: 80, y: 40 } });
+  await node(page, "mockup").click({ position: { x: 4, y: 14 } });
 
   // Each of the job's mock-ups can be changed on its own.
   await page.getByRole("button", { name: "Edit this mock-up of Vintage Fishing Club" }).click();
@@ -315,7 +317,7 @@ test("one mock-up's background is copied onto its template's other mock-ups, and
   const boxy = { ...first, id: "mockup-3", mockupTemplateId: boxyId, slotKey: "design1.template2.own" };
   const requests = await mockApi(page, { jobMockups: { ...madeMockups, images: [first!, navy, boxy] }, templates: [template, { ...template, id: boxyId, name: "Boxy Tee" }] });
   await page.goto(`/workflows?id=${workflowId}&job=${jobId}`);
-  await node(page, "mockup").click({ position: { x: 80, y: 40 } });
+  await node(page, "mockup").click({ position: { x: 4, y: 14 } });
 
   await page.getByRole("button", { name: "Edit this mock-up of Vintage Fishing Club" }).first().click();
   const dialog = page.getByRole("dialog", { name: "Edit this mock-up" });
@@ -358,7 +360,7 @@ test("Apply mock-up puts each garment color of a template on a background of its
   };
   const requests = await mockApi(page, { templates: [template] });
   await page.goto(`/workflows?id=${workflowId}`);
-  await node(page, "mockup").click({ position: { x: 80, y: 40 } });
+  await node(page, "mockup").click({ position: { x: 4, y: 14 } });
   await page.getByRole("button", { name: "Change templates" }).click();
 
   // The seller's own template can be edited without leaving the picker.

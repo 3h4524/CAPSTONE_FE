@@ -82,7 +82,7 @@ test.beforeEach(async ({ page }) => {
 
 test("Standard mode and camera framing are configured per scene", async ({ page }) => {
   await page.goto(`/workflows?id=${workflowId}`);
-  await page.locator('.react-flow__node[data-id="video"]').click({ position: { x: 80, y: 70 } });
+  await page.locator('.react-flow__node[data-id="video"]').click({ position: { x: 4, y: 14 } });
   await expect(page.getByRole("group", { name: "Video mode" })).toHaveCount(0);
   await expect(page.getByText("Standard template")).toHaveCount(0);
   const generationMode = page.getByRole("combobox", { name: "Scene 1 generation mode" });
@@ -105,7 +105,7 @@ test("Standard mode and camera framing are configured per scene", async ({ page 
 test("a Standard scene cannot use its new keyframe until it is reviewed and approved", async ({ page }) => {
   page.on("dialog", dialog => dialog.accept());
   await page.goto(`/workflows?id=${workflowId}`);
-  await page.locator('.react-flow__node[data-id="video"]').click({ position: { x: 80, y: 70 } });
+  await page.locator('.react-flow__node[data-id="video"]').click({ position: { x: 4, y: 14 } });
   await page.getByRole("combobox", { name: "Scene 1 generation mode" }).click();
   await page.getByRole("option", { name: "Standard", exact: true }).click();
   await page.getByRole("button", { name: /start frame for scene 1/ }).click();

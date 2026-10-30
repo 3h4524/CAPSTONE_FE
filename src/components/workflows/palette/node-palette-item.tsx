@@ -5,19 +5,20 @@ import type { DragEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { WORKFLOW_DND_MIME } from "@/constants/workflow";
+import { WORKFLOW_CATEGORY_THEME } from "@/constants/workflow-category-theme";
 import { useWorkflowCapabilities } from "@/hooks/queries/use-workflow-capabilities";
 import type { WorkflowNodeDefinition } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 
 type NodePaletteItemProps = {
   definition: WorkflowNodeDefinition;
-  iconClassName: string;
   disabled: boolean;
   onAdd: (definition: WorkflowNodeDefinition) => void;
 };
 
-export const NodePaletteItem = ({ definition, iconClassName, disabled, onAdd }: NodePaletteItemProps) => {
+export const NodePaletteItem = ({ definition, disabled, onAdd }: NodePaletteItemProps) => {
   const Icon = definition.icon;
+  const theme = WORKFLOW_CATEGORY_THEME[definition.category];
   const { data: capabilities } = useWorkflowCapabilities();
   const capability = capabilities?.nodes.find(n => n.type === definition.type);
 
@@ -34,13 +35,16 @@ export const NodePaletteItem = ({ definition, iconClassName, disabled, onAdd }: 
       disabled={disabled}
       onDragStart={startDrag}
       onClick={() => onAdd(definition)}
-      className="h-auto w-full cursor-grab items-start justify-start gap-3 rounded-lg border border-slate-200 bg-white p-3 text-left font-normal whitespace-normal hover:border-slate-300 hover:shadow-sm active:cursor-grabbing"
+      className={cn(
+        "focus-visible:ring-ring/40 h-auto w-full cursor-grab items-start justify-start gap-2.5 rounded-md px-2 py-2 text-left font-normal whitespace-normal transition-colors focus-visible:ring-2 active:cursor-grabbing disabled:cursor-not-allowed",
+        theme.item
+      )}
     >
-      <Icon className={cn("mt-0.5 size-5 shrink-0", iconClassName)} aria-hidden="true" />
+      <Icon className={cn("mt-0.5 size-4 shrink-0", theme.icon)} aria-hidden="true" />
       <span className="min-w-0">
-        <span className="block text-sm font-semibold text-slate-900">{definition.label}</span>
-        {capability && !capability.enabled && <Badge variant="outline">Not executable yet</Badge>}
-        <span className="text-muted-foreground mt-0.5 block text-xs leading-snug">{definition.description}</span>
+        <span className="block text-[13px] leading-5 font-semibold text-slate-800">{definition.label}</span>
+        {capability && !capability.enabled && <Badge variant="outline" className="mt-1 text-[10px]">Not executable yet</Badge>}
+        <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">{definition.description}</span>
       </span>
     </Button>
   );

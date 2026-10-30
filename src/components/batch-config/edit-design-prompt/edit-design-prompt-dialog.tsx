@@ -5,6 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 
 import { ArtStyleField } from "@/components/batch-config/edit-design-prompt/art-style-field";
 import { EffectivePromptPreview } from "@/components/batch-config/edit-design-prompt/effective-prompt-preview";
+import { KeywordUse } from "@/components/batch-config/edit-design-prompt/keyword-use";
 import { FormInputField } from "@/components/commons/forms/form-input-field";
 import { FormTextareaField } from "@/components/commons/forms/form-textarea-field";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
@@ -182,6 +183,7 @@ const EditDesignPromptContent = ({ prompt, pending, onSave, onRestore, onClose }
             <FormInputField id="prompt-mood" label="Mood & Tone" type="text" placeholder="Calm" registration={register("moodTone")} error={errors.moodTone} required={!customPrompt} />
             <FormTextareaField id="prompt-negative" label="Negative Terms" placeholder="Blurry, dark" registration={register("negativeTerms")} error={errors.negativeTerms} rows={2} />
             <FormTextareaField id="prompt-instructions" label="Instructions" placeholder="Front print" registration={register("instructions")} error={errors.instructions} rows={2} />
+            {!customPrompt && <KeywordUse motifs={prompt.motifs} ignoredKeywords={prompt.ignoredKeywords} />}
             {removingCustomPrompt
               ? <p className="text-muted-foreground text-sm">The design template's prompt is used again once you save.</p>
               : <EffectivePromptPreview prompt={preview} />}

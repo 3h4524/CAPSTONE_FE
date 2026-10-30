@@ -58,17 +58,18 @@ export const NodeName = ({ nodeId, label, fallbackLabel, Icon, iconClassName }: 
     <button
       type="button"
       aria-label={`Rename node ${label}`}
+      title={label}
       disabled={isRunning}
       onClick={startEditing}
-      className="nodrag group/name flex max-w-full min-w-0 cursor-text items-center gap-1 rounded px-0.5 py-0.5 text-left hover:bg-slate-100 disabled:cursor-default disabled:hover:bg-transparent"
+      className="nodrag group/name focus-visible:ring-ring/40 flex min-w-0 flex-1 cursor-text items-center gap-1.5 rounded text-left outline-none focus-visible:ring-2 disabled:cursor-default in-[.wf-select-mode]:pointer-events-none"
     >
-      <Icon className={cn("size-3.5 shrink-0", iconClassName ?? "text-slate-500")} aria-hidden="true" />
-      <span className="min-w-0 truncate text-xs font-semibold text-slate-700 group-hover/name:underline">
+      <Icon className={cn("size-3.5 shrink-0", iconClassName)} aria-hidden="true" />
+      <span className="min-w-0 truncate text-xs leading-5 font-semibold tracking-[-0.01em] text-slate-900">
         {label}
       </span>
       {!isRunning && (
         <Pencil
-          className="size-3 shrink-0 text-slate-400 opacity-0 transition-opacity group-hover/name:opacity-100"
+          className="text-wf-faint size-3 shrink-0 opacity-0 transition-opacity group-hover/name:opacity-100 group-focus-visible/name:opacity-100"
           aria-hidden="true"
         />
       )}

@@ -18,7 +18,12 @@ export const RunStatusPanel = () => {
   const { mutate: download, isPending: isDownloading } = useMediaDownload();
   const active = run?.nodes.find(n => n.status === "running");
   const exportStep = run?.nodes.find(n => n.nodeType === "export-zip");
-  const aiMode = useWorkflowStore(state => state.nodes.find(n => n.data.type === "generate-video")?.data.config.mode === "ai_shot");
+  const aiMode = useWorkflowStore(state => {
+    const config = state.nodes.find(n => n.data.type === "generate-video")?.data.config;
+    if (config?.mode !== "ai_shot") return false;
+    const scenes = Array.isArray(config.aiScenes) ? config.aiScenes : [];
+    return scenes.length === 0 || scenes.some(scene => typeof scene !== "object" || scene === null || !("mode" in scene) || scene.mode !== "standard");
+  });
   const retry = async (regenerate = false) => {
     if (!run) return;
     // Only the ZIP failed: the approved video is packaged again as it is, with nothing to change or confirm.

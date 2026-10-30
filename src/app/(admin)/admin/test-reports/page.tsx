@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { TestReportsDashboard } from "@/components/admin/test-reports/test-reports-dashboard";
+import { TestReportsDashboard } from "@/components/admin/test-reports/dashboard";
 import { getPageMetadata } from "@/data/metadata";
 
 export const metadata: Metadata = getPageMetadata({

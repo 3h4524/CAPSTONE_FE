@@ -47,7 +47,7 @@ export const SceneVideoResult = ({ sceneNumber, clip, runStarted, waitingForGene
       <span role="status" aria-atomic="true" className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusClass}`}>{status}</span>
     </div>
 
-    <div className="grid items-center gap-3 min-[440px]:grid-cols-[10rem_minmax(0,1fr)]">
+    <div className="grid items-center gap-3 @min-[36rem]:grid-cols-[10rem_minmax(0,1fr)]">
       {clip?.previewUrl && !isRegenerating
         ? <button type="button" onClick={() => setIsVideoOpen(true)} aria-label={`Open video preview for scene ${sceneNumber}`}
           className="group focus-visible:outline-primary relative mx-auto block aspect-[9/16] w-40 overflow-hidden rounded-md bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">

@@ -48,22 +48,22 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("a single click focuses one node in the side panel", async ({ page }) => {
-  await node(page, "input").click();
+  await node(page, "input").click({ position: { x: 4, y: 14 } });
   await expect(page.getByRole("heading", { name: "Product input" })).toBeVisible();
   await expect(page.getByText("nodes selected")).toBeHidden();
 });
 
 test("ctrl-click adds nodes to the selection", async ({ page }) => {
-  await node(page, "input").click();
+  await node(page, "input").click({ position: { x: 4, y: 14 } });
   await page.keyboard.down("Control");
-  await node(page, "prompt").click();
+  await node(page, "prompt").click({ position: { x: 4, y: 14 } });
   await page.keyboard.up("Control");
   await expect(page.getByRole("heading", { name: "2 nodes selected" })).toBeVisible();
   await expect(page.getByRole("toolbar", { name: "2 nodes selected" })).toBeVisible();
 });
 
 test("ctrl-a selects every node and escape clears the selection", async ({ page }) => {
-  await node(page, "input").click();
+  await node(page, "input").click({ position: { x: 4, y: 14 } });
   await page.keyboard.press("Control+a");
   await expect(page.getByRole("heading", { name: "9 nodes selected" })).toBeVisible();
   await page.keyboard.press("Escape");
@@ -72,9 +72,9 @@ test("ctrl-a selects every node and escape clears the selection", async ({ page 
 
 test("ctrl-d duplicates the selected nodes", async ({ page }) => {
   await expect(page.locator(".react-flow__node")).toHaveCount(9);
-  await node(page, "design").click();
+  await node(page, "design").click({ position: { x: 4, y: 14 } });
   await page.keyboard.down("Control");
-  await node(page, "mockup").click();
+  await node(page, "mockup").click({ position: { x: 4, y: 14 } });
   await page.keyboard.up("Control");
   await page.keyboard.press("Control+d");
   await expect(page.locator(".react-flow__node")).toHaveCount(11);
@@ -83,9 +83,9 @@ test("ctrl-d duplicates the selected nodes", async ({ page }) => {
 
 test("ctrl-c and ctrl-v copy and paste the selected nodes", async ({ page }) => {
   await expect(page.locator(".react-flow__node")).toHaveCount(9);
-  await node(page, "design").click();
+  await node(page, "design").click({ position: { x: 4, y: 14 } });
   await page.keyboard.down("Control");
-  await node(page, "mockup").click();
+  await node(page, "mockup").click({ position: { x: 4, y: 14 } });
   await page.keyboard.up("Control");
   await page.keyboard.press("Control+c");
   await expect(page.getByText("Copied 2 nodes.")).toBeVisible();
@@ -100,7 +100,7 @@ test("ctrl-c and ctrl-v copy and paste the selected nodes", async ({ page }) => 
 });
 
 test("clicking the canvas background clears the selection", async ({ page }) => {
-  await node(page, "input").click();
+  await node(page, "input").click({ position: { x: 4, y: 14 } });
   await expect(page.getByRole("heading", { name: "Product input" })).toBeVisible();
   await page.mouse.click(1200, 800);
   await expect(page.getByText("nodes selected")).toBeHidden();
@@ -117,7 +117,7 @@ test("the shortcut cheatsheet lists the canvas keys", async ({ page }) => {
 
 test("ctrl-z undoes a node delete and ctrl-y redoes it", async ({ page }) => {
   await expect(page.locator(".react-flow__node")).toHaveCount(9);
-  await node(page, "export").click();
+  await node(page, "export").click({ position: { x: 4, y: 14 } });
   await page.keyboard.press("Delete");
   await expect(page.locator(".react-flow__node")).toHaveCount(8);
   await page.keyboard.press("Control+z");
@@ -127,7 +127,7 @@ test("ctrl-z undoes a node delete and ctrl-y redoes it", async ({ page }) => {
 });
 
 test("ctrl-s saves the workflow", async ({ page }) => {
-  await node(page, "design").click();
+  await node(page, "design").click({ position: { x: 4, y: 14 } });
   await page.keyboard.press("Control+d");
   await page.keyboard.press("Control+s");
   await expect(page.getByText("Selection workflow was saved.")).toBeVisible();

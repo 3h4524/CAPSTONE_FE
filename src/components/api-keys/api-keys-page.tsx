@@ -432,7 +432,7 @@ export function ApiKeysPage() {
             </DialogDescription>
           </DialogHeader>
           <ol className="text-muted-foreground list-decimal space-y-3 pl-5 text-sm">
-            <li>OpenAI supplies listing content; Replicate supplies image generation.</li>
+            <li>Google Gemini supplies listing content; Gemini or Ideogram supplies design images.</li>
             <li>Printify publishes products; Etsy publishes marketplace listings.</li>
             <li>
               Create a credential in your provider account with only the permissions your workflow

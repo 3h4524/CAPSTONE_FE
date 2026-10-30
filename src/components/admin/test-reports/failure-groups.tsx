@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronDown, Layers } from "lucide-react";
 
-import { TestReportStatusBadge } from "@/components/admin/test-reports/test-report-status-badge";
+import { TestReportStatusBadge } from "@/components/admin/test-reports/status-badge";
 import type { TestReportFile, TestReportSpec } from "@/types/admin-test-reports";
 import { cn } from "@/utils/cn";
 

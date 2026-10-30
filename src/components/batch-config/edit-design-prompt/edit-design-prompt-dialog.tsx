@@ -11,7 +11,8 @@ import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { buildEffectivePrompt } from "@/helpers/build-effective-prompt";
+import { buildEffectivePrompt, customBasePrompt } from "@/helpers/build-effective-prompt";
+import { customPromptWarnings } from "@/helpers/design-text";
 import { useQuickCreateStylePreset } from "@/hooks/mutations/use-quick-create-style-preset";
 import { useRestoreProductPrompt } from "@/hooks/mutations/use-restore-product-prompt";
 import { useSaveProductPrompt } from "@/hooks/mutations/use-save-product-prompt";
@@ -34,6 +35,7 @@ const toFormValues = (prompt: BatchProductPrompt): ProductPromptFormValues => ({
   moodTone: prompt.moodTone,
   negativeTerms: prompt.negativeTerms,
   instructions: prompt.instructions,
+  customPrompt: prompt.customPrompt ?? "",
 });
 
 export const EditDesignPromptDialog = ({ rowId, open, onOpenChange }: EditDesignPromptDialogProps) => {
@@ -104,15 +106,19 @@ const EditDesignPromptContent = ({ prompt, pending, onSave, onRestore, onClose }
   }, [prompt, reset]);
 
   const values = watch();
+  const customPrompt = values.customPrompt?.trim() ?? "";
+  // Removing the product's own prompt brings the template back, which the server resolves once it is saved.
+  const removingCustomPrompt = !customPrompt && !!prompt.customPrompt;
+  // The product's own prompt sets the look itself: the server adds no art style or style preset to it.
   const preview = buildEffectivePrompt({
-    basePrompt: prompt.defaultBasePrompt,
+    basePrompt: customPrompt ? customBasePrompt(customPrompt, values.subject ?? "") : prompt.defaultBasePrompt,
     subject: values.subject ?? "",
-    artStyle: values.artStyle ?? "",
+    artStyle: customPrompt ? "" : (values.artStyle ?? ""),
     moodTone: values.moodTone ?? "",
     negativeTerms: values.negativeTerms ?? "",
     instructions: values.instructions ?? "",
     niche: prompt.defaultNiche,
-    styleModifiers: prompt.defaultStyleModifiers,
+    styleModifiers: customPrompt ? "" : prompt.defaultStyleModifiers,
   });
   const overLimit = preview.length > MAX_EFFECTIVE_PROMPT_LENGTH;
 
@@ -146,28 +152,39 @@ const EditDesignPromptContent = ({ prompt, pending, onSave, onRestore, onClose }
       >
         <ScrollArea className="min-h-0 flex-1">
           <div className="space-y-4 px-1 py-1">
-            <FormInputField id="prompt-subject" label="Subject" type="text" placeholder="Space cat" registration={register("subject")} error={errors.subject} required />
-            <Controller
-              name="artStyle"
-              control={control}
-              render={({ field }) => (
-                <ArtStyleField
-                  value={field.value}
-                  presets={stylePresets ?? []}
-                  creating={isCreatingStyle}
-                  disabled={pending}
-                  error={errors.artStyle?.message}
-                  onChange={field.onChange}
-                  onCreateNew={(name) =>
-                    quickCreateStyle(name, { onSuccess: (preset) => field.onChange(preset.name) })
-                  }
-                />
-              )}
-            />
-            <FormInputField id="prompt-mood" label="Mood & Tone" type="text" placeholder="Calm" registration={register("moodTone")} error={errors.moodTone} required />
+            <FormTextareaField id="prompt-custom" label="Custom image prompt" placeholder="Leave empty to use the design template" registration={register("customPrompt")} error={errors.customPrompt} rows={3} />
+            <p className="text-muted-foreground -mt-2 text-xs">Replaces the design template and art style for this product, so describe the style in the prompt. With it, Subject holds the words to print; leave Subject empty for a design without words.</p>
+            {customPromptWarnings(values.customPrompt, values.subject).map((warning) => (
+              <p key={warning} className="-mt-2 text-xs text-amber-700">{warning.replace("Design text", "Subject")}</p>
+            ))}
+            <FormInputField id="prompt-subject" label={customPrompt ? "Subject (words to print)" : "Subject"} type="text" placeholder={customPrompt ? "Leave empty for no words" : "Space cat"} registration={register("subject")} error={errors.subject} required={!customPrompt} />
+            {customPrompt ? (
+              <p className="text-muted-foreground text-xs">Art style does not apply to a product with its own image prompt, nor does the art style set in the workflow.</p>
+            ) : (
+              <Controller
+                name="artStyle"
+                control={control}
+                render={({ field }) => (
+                  <ArtStyleField
+                    value={field.value}
+                    presets={stylePresets ?? []}
+                    creating={isCreatingStyle}
+                    disabled={pending}
+                    error={errors.artStyle?.message}
+                    onChange={field.onChange}
+                    onCreateNew={(name) =>
+                      quickCreateStyle(name, { onSuccess: (preset) => field.onChange(preset.name) })
+                    }
+                  />
+                )}
+              />
+            )}
+            <FormInputField id="prompt-mood" label="Mood & Tone" type="text" placeholder="Calm" registration={register("moodTone")} error={errors.moodTone} required={!customPrompt} />
             <FormTextareaField id="prompt-negative" label="Negative Terms" placeholder="Blurry, dark" registration={register("negativeTerms")} error={errors.negativeTerms} rows={2} />
             <FormTextareaField id="prompt-instructions" label="Instructions" placeholder="Front print" registration={register("instructions")} error={errors.instructions} rows={2} />
-            <EffectivePromptPreview prompt={preview} />
+            {removingCustomPrompt
+              ? <p className="text-muted-foreground text-sm">The design template's prompt is used again once you save.</p>
+              : <EffectivePromptPreview prompt={preview} />}
           </div>
         </ScrollArea>
         <DialogFooter className="gap-2 pt-4">

@@ -4,6 +4,7 @@ import type {
   BatchJobSummary,
   ImageApprovalResult,
   ImageApprovalStatus,
+  RegenerateProductInput,
   StartBatchJobInput,
   StartBatchJobResult,
 } from "@/types/batch-jobs";
@@ -25,6 +26,15 @@ export const startBatchJob = async ({ batchJobId, ...input }: StartBatchJobInput
 
 export const retryFailedBatchJob = async (batchJobId: string): Promise<StartBatchJobResult> =>
   (await api.post<StartBatchJobResult>(`/api/batch-jobs/${batchJobId}/retry-failed`)).data;
+
+// Saves a product's image prompt and design text, then generates it again within its finished job. The designs it
+// already has are kept; the new ones are added after them.
+export const regenerateBatchJobProduct = async ({
+  batchJobId,
+  rowId,
+  ...input
+}: RegenerateProductInput & { batchJobId: string; rowId: string }): Promise<StartBatchJobResult> =>
+  (await api.post<StartBatchJobResult>(`/api/batch-jobs/${batchJobId}/products/${rowId}/regenerate`, input)).data;
 
 // Stops a queued or running job after the product being generated; the rest are failed as cancelled.
 export const cancelBatchJob = async (batchJobId: string): Promise<void> => {

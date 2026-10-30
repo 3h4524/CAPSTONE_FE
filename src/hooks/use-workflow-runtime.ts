@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { showToast } from "@/helpers/toast";
+import { showWorkflowActionToast } from "@/helpers/toast";
 import { isBatchRunNode, isServerRunNode, toCanvasStatus } from "@/helpers/workflow-run";
 import { useStartWorkflowRun } from "@/hooks/mutations/use-start-workflow-run";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
@@ -35,11 +35,11 @@ export const useWorkflowRuntime = () => {
   const startRun = () => {
     const state = useWorkflowStore.getState();
     if (!state.workflowId) return;
-    if (state.isDirty) { showToast("warning", "Save your configuration before running."); return; }
+    if (state.isDirty) { showWorkflowActionToast("warning", "Save your configuration before running."); return; }
     start({ workflowId: state.workflowId, revision: state.revision, key: uuid() }, { onSuccess: result => {
       // The listing is written while the run starts. Failing it does not stop a video, so it is easy to miss.
       if (result.nodes.some(node => node.nodeType === "generate-listing" && node.status === "failed"))
-        showToast("warning", `Listing content could not be generated. Open the Listing content node to try again${result.status === "failed" ? "." : "; the video steps go on."}`);
+        showWorkflowActionToast("warning", `Listing content could not be generated. Open the Listing content node to try again${result.status === "failed" ? "." : "; the video steps go on."}`);
       // The other parameters stay: the batch job that made the designs is still open beside the new run.
       const query = new URLSearchParams(window.location.search);
       query.set("id", result.workflowId);

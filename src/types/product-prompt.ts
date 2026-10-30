@@ -13,6 +13,8 @@ export interface BatchProductPrompt {
   characterCount: number;
   isCustomized: boolean;
   canEdit: boolean;
+  /** The product's own image prompt, which replaces the design template; null when it has none. */
+  customPrompt?: string | null;
 }
 
 export type UpdateBatchProductPromptInput = {
@@ -21,4 +23,6 @@ export type UpdateBatchProductPromptInput = {
   moodTone: string;
   negativeTerms: string;
   instructions: string;
+  /** The product's own image prompt: left out keeps it as it is, empty removes it. */
+  customPrompt?: string;
 };

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Timer } from "lucide-react";
 
-import { TestReportStatusBadge } from "@/components/admin/test-reports/test-report-status-badge";
+import { TestReportStatusBadge } from "@/components/admin/test-reports/status-badge";
 import type { TestReportFile } from "@/types/admin-test-reports";
 
 type TestReportSlowestSpecsProps = {

@@ -1,5 +1,12 @@
-import { DUPLICATE_NODE_OFFSET, RUN_ORDER, WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
-import { normalizeNodeConfig, readString } from "@/helpers/workflow-config";
+import {
+  DEFAULT_WORKFLOW_DEFINITION,
+  DEFAULT_WORKFLOW_NAME,
+  DEFAULT_WORKFLOW_POSITIONS,
+  DUPLICATE_NODE_OFFSET,
+  RUN_ORDER,
+  WORKFLOW_NODE_DEFINITIONS,
+} from "@/constants/workflow";
+import { getWorkflowNodeDefinition, normalizeNodeConfig, readString } from "@/helpers/workflow-config";
 import { findMissingMockupTemplates, isRunnableNode } from "@/helpers/workflow-run";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type {
@@ -45,24 +52,61 @@ const collectReachable = (startIds: string[], adjacency: Map<string, string[]>) 
   return visited;
 };
 
+export const getConnectionIssue = (
+  connection: Connection | WorkflowEdge,
+  edges: WorkflowEdge[],
+  nodes?: WorkflowNode[]
+): string | null => {
+  const { source, target } = connection;
+  if (!source || !target) return "Drop the connection on another node.";
+  if (source === target) return "A node cannot connect to itself.";
+  if (edges.some((edge) => edge.source === source && edge.target === target)) return "These nodes are already connected.";
+  if (nodes) {
+    // Two steps of a run connect only to the next step that is on the canvas, so no approval can be skipped.
+    const fromNode = nodes.find(n => n.id === source);
+    const toNode = nodes.find(n => n.id === target);
+    const from = fromNode?.data.type;
+    const to = toNode?.data.type;
+    if (from && to && runOrderOf(from) >= 0 && runOrderOf(to) >= 0) {
+      const next = nodes.map(n => runOrderOf(n.data.type)).filter(order => order > runOrderOf(from)).sort((a, b) => a - b)[0];
+      if (runOrderOf(to) !== next) {
+        const fromLabel = fromNode?.data.label ?? WORKFLOW_NODE_DEFINITIONS[from].label;
+        if (next === undefined) return `${fromLabel} is the last step in the workflow, so it has no next node.`;
+        const nextType = nodes.find(n => runOrderOf(n.data.type) === next)?.data.type;
+        const nextLabel = nextType ? WORKFLOW_NODE_DEFINITIONS[nextType].label : "the next step";
+        return `Steps run in order. Connect ${fromLabel} to ${nextLabel} next.`;
+      }
+    }
+  }
+  if (collectReachable([target], buildAdjacency(edges, "forward")).has(source)) return "That connection would create a loop. Workflows run in one direction.";
+  return null;
+};
+
 export const isConnectionAllowed = (
   connection: Connection | WorkflowEdge,
   edges: WorkflowEdge[],
   nodes?: WorkflowNode[]
-): boolean => {
-  const { source, target } = connection;
-  if (!source || !target || source === target) return false;
-  if (edges.some((edge) => edge.source === source && edge.target === target)) return false;
-  if (nodes) {
-    // Two steps of a run connect only to the next step that is on the canvas, so no approval can be skipped.
-    const from = nodes.find(n => n.id === source)?.data.type;
-    const to = nodes.find(n => n.id === target)?.data.type;
-    if (from && to && runOrderOf(from) >= 0 && runOrderOf(to) >= 0) {
-      const next = nodes.map(n => runOrderOf(n.data.type)).filter(order => order > runOrderOf(from)).sort((a, b) => a - b)[0];
-      if (runOrderOf(to) !== next) return false;
-    }
-  }
-  return !collectReachable([target], buildAdjacency(edges, "forward")).has(source);
+): boolean => getConnectionIssue(connection, edges, nodes) === null;
+
+export const getConnectableNodeIds = (
+  fromNodeId: string,
+  fromHandleType: "source" | "target" | null,
+  nodes: WorkflowNode[],
+  edges: WorkflowEdge[]
+): string[] => {
+  if (!nodes.some((node) => node.id === fromNodeId)) return [];
+  const fromSource = fromHandleType !== "target";
+  return nodes
+    .filter((node) => {
+      if (node.id === fromNodeId) return false;
+      const definition = getWorkflowNodeDefinition(node.data.type);
+      if (!(fromSource ? definition?.hasInput : definition?.hasOutput)) return false;
+      const connection = fromSource
+        ? { source: fromNodeId, target: node.id, sourceHandle: null, targetHandle: null }
+        : { source: node.id, target: fromNodeId, sourceHandle: null, targetHandle: null };
+      return isConnectionAllowed(connection, edges, nodes);
+    })
+    .map((node) => node.id);
 };
 
 export const getExecutionOrder = (nodes: WorkflowNode[], edges: WorkflowEdge[]): string[] => {
@@ -258,6 +302,25 @@ export const toWorkflowSummary = (workflow: WorkflowDetail): WorkflowSummary => 
   updatedAt: workflow.updatedAt,
   revision: workflow.revision,
 });
+
+export const applyCompactDefaultLayoutIfStillVertical = (workflow: WorkflowDetail): WorkflowDetail => {
+  if (workflow.name !== DEFAULT_WORKFLOW_NAME) return workflow;
+  const defaultTypes = new Map(DEFAULT_WORKFLOW_DEFINITION.nodes.map((node) => [node.id, node.type]));
+  const nodes = workflow.definition.nodes;
+  if (nodes.length !== defaultTypes.size) return workflow;
+  if (!nodes.every((node) => defaultTypes.get(node.id) === node.type)) return workflow;
+  if (Math.max(...nodes.map((node) => node.position.x)) >= 400) return workflow;
+  return {
+    ...workflow,
+    definition: {
+      ...workflow.definition,
+      nodes: nodes.map((node) => ({
+        ...node,
+        position: DEFAULT_WORKFLOW_POSITIONS[node.id] ?? node.position,
+      })),
+    },
+  };
+};
 
 export const sortWorkflowSummaries = (workflows: WorkflowSummary[]) =>
   [...workflows].sort((first, second) => second.updatedAt.localeCompare(first.updatedAt));

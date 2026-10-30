@@ -10,9 +10,11 @@ type DesignTemplateSelectProps = {
   value: string;
   placeholder: string;
   onChange: (value: string) => void;
+  /** For a dropdown outside a form, such as in a dialog: the id its label points to. */
+  id?: string;
 };
 
-export const DesignTemplateSelect = ({ value, placeholder, onChange }: DesignTemplateSelectProps) => {
+export const DesignTemplateSelect = ({ value, placeholder, onChange, id }: DesignTemplateSelectProps) => {
   const {
     data: systemTemplates,
     isPending: isLoadingSystem,
@@ -44,6 +46,7 @@ export const DesignTemplateSelect = ({ value, placeholder, onChange }: DesignTem
         options={options}
         placeholder={placeholder}
         onChange={onChange}
+        standaloneId={id}
         isLoading={isLoadingSystem || isLoadingPersonal}
         isError={isSystemError && isPersonalError}
         onRetry={() => {

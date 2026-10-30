@@ -29,6 +29,10 @@ export const VideoSceneCard = ({ scene, asset }: { scene: ScenePlan; asset?: Moc
         {scene.aiSettings?.lighting && <Badge variant="outline" className="font-normal">{scene.aiSettings.lighting.replaceAll("_", " ")}</Badge>}
         {scene.transition && <Badge variant="outline" className="font-normal">Transition · {scene.transition}</Badge>}
       </div>}
+      {!scene.aiTemplateCode && <div className="flex flex-wrap gap-2" aria-label="Scene camera settings">
+        <Badge variant="outline" className="font-normal">Camera · {scene.motion.replaceAll("_", " ")}</Badge>
+        {scene.transition && <Badge variant="outline" className="font-normal">Transition · {scene.transition}</Badge>}
+      </div>}
 
       {scene.compiledPrompt && <details className="bg-muted/45 rounded-lg px-3 py-2.5">
         <summary className="marker:text-muted-foreground focus-visible:ring-ring cursor-pointer text-sm font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none">

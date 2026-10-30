@@ -3,7 +3,7 @@ import { backgroundKeys, backgroundsFor, type TemplateBackgrounds } from "@/help
 import { readNumber, readString, readStringArray, readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type { MockupState, RunStep } from "@/stores/workflow-run";
-import type { BatchJobDetail } from "@/types/batch-jobs";
+import type { BatchJobDetail, ImageProvider } from "@/types/batch-jobs";
 import type { WorkflowEdge, WorkflowIssue, WorkflowNode, WorkflowNodeConfig, WorkflowNodeStatus, WorkflowNodeType } from "@/types/workflow";
 
 export const ACTIVE_JOB_STATUSES = ["queued", "running", "paused"];
@@ -26,6 +26,7 @@ export type RunPlan = {
   instructions: string;
   variationCount: number;
   aspectRatio: string;
+  imageProvider: ImageProvider;
   mockup: MockupSelection | null;
   /** true when Design approval is set to manual review: mock-ups wait until the designs are approved. */
   requireApproval: boolean;
@@ -154,6 +155,7 @@ export const extractRunPlan = (nodes: WorkflowNode[]): RunPlan => {
     instructions: readString(prompt.instructions).trim(),
     variationCount: readNumber(design.variants) ?? 1,
     aspectRatio: readString(design.aspectRatio) || "1:1",
+    imageProvider: readString(design.imageProvider) === "ideogram" ? "ideogram" : "gemini",
     mockup: mockup
       ? extractMockupSelection(mockup)
       : null,

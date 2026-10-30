@@ -17,6 +17,8 @@ const validProduct = {
   keywords: "latte, espresso, barista",
   productDescription: "Glazed ceramic",
   sourceNotes: "From supplier A",
+  designText: "",
+  customPrompt: "",
 };
 
 const omitKey = <T extends object, K extends keyof T>(source: T, key: K): Omit<T, K> => {

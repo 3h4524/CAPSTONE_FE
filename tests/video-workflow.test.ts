@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { DEFAULT_WORKFLOW_DEFINITION } from "@/constants/workflow";
 import { clampRegion, createRegion, moveRegion, resizeRegion } from "@/helpers/regions";
-import { moveScene, resetVideoTemplateConfig } from "@/helpers/video-scenes";
+import { createFramingCrop, moveScene, resetVideoTemplateConfig, setStandardSceneFraming } from "@/helpers/video-scenes";
 import { getTemplateAvailability, recommendVideoTemplate } from "@/helpers/video-templates";
 import { isConnectionAllowed, toWorkflowDefinition, toWorkflowEdges, toWorkflowNodes, validateWorkflow } from "@/helpers/workflow-graph";
 import { toCanvasStatus } from "@/helpers/workflow-run";
@@ -12,6 +12,13 @@ import type { MockupAsset, VideoTemplateCatalogItem } from "@/types/video-workfl
 
 const mockup = "bd48d15b-57b9-47b9-84cc-d30a0fb6ad59";
 const config = { mode: "standard", target: "etsy", template: "auto", templateVersion: 2, durationSeconds: 12, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], textOverlay: "", standardOptions: { motionPreset: "gentle", crop: "safe", transition: "fade" }, fallbackToStandard: true };
+const configuredScene = (mode: "ai" | "standard", overrides: Record<string, unknown> = {}) => ({
+  mode, mockupId: mockup, templateCode: "cinematic_product_showcase", durationSeconds: 4,
+  framing: "medium", cameraAngle: "three_quarter", cameraMovement: "push_in", subjectMotion: "none",
+  motionIntensity: "subtle", lighting: "soft_studio", extraInstructions: null, rightsConfirmed: false,
+  startFrameMode: "direct", studioLayout: "none", studioFrameId: null, studioPrompt: null, studioReferenceHashes: [],
+  ...overrides,
+});
 const asset = (overrides: Partial<MockupAsset> = {}): MockupAsset => ({
   id: crypto.randomUUID(), productId: mockup, sourceType: "upload", role: "Hero", artworkGroupKey: mockup,
   variantKey: null, revision: 1, approvalStatus: "approved", approvedRevision: 1, width: 1200, height: 1600,
@@ -30,10 +37,73 @@ for (const transition of ["none", "fade", "swipe", "zoom", "flash", "whip_pan", 
   test(`accepts transition ${transition}`, () => assert.equal(generateVideoConfigSchema.parse({ ...config, standardOptions: { ...config.standardOptions, transition } }).standardOptions.transition, transition));
 for (const duration of [2, 31, 3.5]) test(`rejects duration ${duration}`, () => assert.equal(generateVideoConfigSchema.safeParse({ ...config, durationSeconds: duration }).success, false));
 test("accepts the 30-second video duration limit", () => assert.equal(generateVideoConfigSchema.parse({ ...config, durationSeconds: 30 }).durationSeconds, 30));
-for (const template of ["auto", "product_showcase", "design_detail", "variant_showcase"]) test(`preserves template ${template}`, () => assert.equal(generateVideoConfigSchema.parse({ ...config, template }).template, template));
+for (const template of ["auto", "product_showcase", "design_detail"]) test(`preserves Standard template ${template}`, () => assert.equal(generateVideoConfigSchema.parse({ ...config, template }).template, template));
+test("Standard mode offers Product Showcase and Design Detail while rejecting Variant Showcase", () => {
+  for (const template of ["auto", "product_showcase", "design_detail"])
+    assert.equal(generateVideoConfigSchema.safeParse({ ...config, mode: "standard", template }).success, true);
+  assert.equal(generateVideoConfigSchema.safeParse({ ...config, mode: "standard", template: "variant_showcase" }).success, false);
+});
+test("Standard-only scenes accept per-scene motion and first/last framing without a global template choice", () => {
+  const baseCrop = { x: 0, y: 0, width: 1, height: 1 };
+  const startCrop = { x: 0.1, y: 0.1, width: 0.8, height: 0.8 };
+  const endCrop = { x: 0.2, y: 0.2, width: 0.6, height: 0.6 };
+  const parsed = generateVideoConfigSchema.parse({
+    ...config, mode: "ai_shot", template: "auto", outputFormat: "square", durationSeconds: 4,
+    aiScenes: [configuredScene("standard", { standardMotionPreset: "custom", standardBaseCrop: baseCrop, standardStartCrop: startCrop, standardEndCrop: endCrop })],
+  });
+  assert.equal(parsed.aiScenes?.[0]?.mode, "standard");
+  assert.equal(parsed.aiScenes?.[0]?.standardMotionPreset, "custom");
+  assert.deepEqual(parsed.aiScenes?.[0]?.standardStartCrop, startCrop);
+  assert.deepEqual(parsed.aiScenes?.[0]?.standardEndCrop, endCrop);
+});
+test("mixed scenes preserve an independent AI or Standard mode on each scene", () => {
+  const parsed = generateVideoConfigSchema.parse({
+    ...config, mode: "ai_shot", template: "auto", durationSeconds: 8,
+    aiScenes: [configuredScene("standard", { standardMotionPreset: "pan_left" }), configuredScene("ai")],
+  });
+  assert.deepEqual(parsed.aiScenes?.map(scene => scene.mode), ["standard", "ai"]);
+});
 for (const motionPreset of ["gentle", "contain_gentle", "static", "zoom", "zoom_out", "pan", "pan_left", "pan_up", "pan_down", "diagonal_up_right", "diagonal_up_left", "diagonal_down_right", "diagonal_down_left"])
   test(`accepts motion ${motionPreset}`, () => assert.equal(generateVideoConfigSchema.parse({ ...config, standardOptions: { ...config.standardOptions, motionPreset } }).standardOptions.motionPreset, motionPreset));
 test("accepts distinct motion for each scene", () => assert.deepEqual(generateVideoConfigSchema.parse({ ...config, standardOptions: { ...config.standardOptions, motionPreset: "varied" }, sceneMotionPresets: ["zoom", "pan_left", "diagonal_up_right", "zoom_out"] }).sceneMotionPresets, ["zoom", "pan_left", "diagonal_up_right", "zoom_out"]));
+test("accepts the custom scene motion marker for endpoint framing", () => {
+  assert.deepEqual(generateVideoConfigSchema.parse({ ...config, sceneMotionPresets: ["custom"] }).sceneMotionPresets, ["custom"]);
+});
+test("preserves custom start and end framing on the same selected source image", () => {
+  const baseCrop = { x: 0, y: 0, width: 1, height: 1 };
+  const startCrop = { x: 0.1, y: 0.12, width: 0.72, height: 0.7 };
+  const endCrop = { x: 0.2, y: 0.18, width: 0.6, height: 0.62 };
+  const parsed = generateVideoConfigSchema.parse({
+    ...config,
+    assetSelection: "manual",
+    selectedMockupIds: [mockup],
+    sceneOrder: [mockup],
+    standardScenes: [{ mockupId: mockup, baseCrop, startCrop, endCrop }],
+  });
+  assert.deepEqual(parsed.standardScenes, [{ mockupId: mockup, baseCrop, startCrop, endCrop }]);
+});
+test("rejects invalid custom framing bounds and more than four custom scene entries", () => {
+  const valid = { x: 0.1, y: 0.1, width: 0.8, height: 0.8 };
+  const invalidCrops = [
+    { x: -0.01, y: 0, width: 0.5, height: 0.5 },
+    { x: 0.8, y: 0, width: 0.3, height: 0.5 },
+    { x: 0, y: 0, width: 0, height: 0.5 },
+    { x: 0, y: 0.8, width: 0.5, height: 0.3 },
+  ];
+  for (const field of ["baseCrop", "startCrop", "endCrop"] as const) {
+    for (const invalidCrop of invalidCrops) {
+      const standardScene = { mockupId: mockup, baseCrop: valid, startCrop: valid, endCrop: valid, [field]: invalidCrop };
+      assert.equal(generateVideoConfigSchema.safeParse({ ...config, standardScenes: [standardScene] }).success, false);
+    }
+  }
+  const fiveScenes = Array.from({ length: 5 }, () => ({ mockupId: crypto.randomUUID(), startCrop: valid, endCrop: valid }));
+  assert.equal(generateVideoConfigSchema.safeParse({ ...config, standardScenes: fiveScenes }).success, false);
+  assert.equal(generateVideoConfigSchema.safeParse({ ...config, standardScenes: [{ mockupId: "not-a-uuid", startCrop: valid, endCrop: valid }] }).success, false);
+  assert.equal(generateVideoConfigSchema.safeParse({ ...config, standardScenes: [
+    { mockupId: mockup, startCrop: valid, endCrop: valid },
+    { mockupId: mockup, startCrop: valid, endCrop: valid },
+  ] }).success, false);
+});
 test("new workflows default to varied motion", () => {
   const videoNode = DEFAULT_WORKFLOW_DEFINITION.nodes.find(node => node.type === "generate-video");
   const options = videoNode?.config.standardOptions as { motionPreset: string } | undefined;
@@ -73,10 +143,44 @@ test("scene reorder keeps motion override attached to the same image", () => {
   assert.deepEqual(moveScene(ids, 2, -1), ["hero", "variant", "detail"]);
   assert.deepEqual(moveScene(motions, 2, -1), ["zoom", "pan_left", null]);
 });
+test("framing crops clamp zoom and anchor within the same base image", () => {
+  const baseCrop = { x: 0.1, y: 0.1, width: 0.8, height: 0.8 };
+  assert.deepEqual(createFramingCrop(baseCrop, 1, "center"), baseCrop);
+  assert.deepEqual(createFramingCrop(baseCrop, 0.5, "center"), baseCrop);
+  const maximumZoom = createFramingCrop(baseCrop, 1.2, "right");
+  assert.deepEqual(createFramingCrop(baseCrop, 2, "right"), maximumZoom);
+  assert.equal(maximumZoom.x, 0.233333);
+  assert.equal(maximumZoom.y, 0.166667);
+  assert.equal(maximumZoom.x + maximumZoom.width, 0.9);
+  const top = createFramingCrop(baseCrop, 1.1, "top");
+  const bottom = createFramingCrop(baseCrop, 1.1, "bottom");
+  assert.equal(top.y, baseCrop.y);
+  assert.ok(bottom.y > top.y);
+  assert.ok(bottom.y + bottom.height <= baseCrop.y + baseCrop.height);
+});
+test("framing edits replace only the matching source and clearing removes its override", () => {
+  const baseCrop = { x: 0, y: 0, width: 1, height: 1 };
+  const first = { x: 0.1, y: 0.1, width: 0.8, height: 0.8 };
+  const end = { x: 0.2, y: 0.2, width: 0.6, height: 0.6 };
+  const otherId = crypto.randomUUID();
+  const original = { ...config, standardScenes: [
+    { mockupId: mockup, baseCrop, startCrop: first, endCrop: first },
+    { mockupId: otherId, baseCrop, startCrop: first, endCrop: first },
+  ] };
+  const updated = setStandardSceneFraming(original, mockup, baseCrop, first, end);
+  assert.deepEqual(updated.standardScenes, [
+    { mockupId: otherId, baseCrop, startCrop: first, endCrop: first },
+    { mockupId: mockup, baseCrop, startCrop: first, endCrop: end },
+  ]);
+  assert.equal(original.standardScenes[0]?.endCrop, first);
+  const cleared = setStandardSceneFraming(updated, mockup, baseCrop, null, null);
+  assert.deepEqual(cleared.standardScenes, [{ mockupId: otherId, baseCrop, startCrop: first, endCrop: first }]);
+});
 test("reset to template clears every scene override", () => {
-  const reset = resetVideoTemplateConfig({ ...config, template: "design_detail", assetSelection: "manual", selectedMockupIds: [mockup], sceneOrder: [mockup], sceneMotionPresets: ["zoom"] });
-  assert.deepEqual({ template: reset.template, templateVersion: reset.templateVersion, assetSelection: reset.assetSelection, selectedMockupIds: reset.selectedMockupIds, sceneOrder: reset.sceneOrder, sceneMotionPresets: reset.sceneMotionPresets }, {
-    template: "auto", templateVersion: 2, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [],
+  const framing = { x: 0.1, y: 0.1, width: 0.8, height: 0.8 };
+  const reset = resetVideoTemplateConfig({ ...config, template: "design_detail", assetSelection: "manual", selectedMockupIds: [mockup], sceneOrder: [mockup], sceneMotionPresets: ["zoom"], standardScenes: [{ mockupId: mockup, startCrop: framing, endCrop: framing }] });
+  assert.deepEqual({ template: reset.template, templateVersion: reset.templateVersion, assetSelection: reset.assetSelection, selectedMockupIds: reset.selectedMockupIds, sceneOrder: reset.sceneOrder, sceneMotionPresets: reset.sceneMotionPresets, standardScenes: reset.standardScenes }, {
+    template: "auto", templateVersion: 2, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], standardScenes: [],
   });
 });
 test("template recommendation prioritizes variants, then detail, then product", () => {

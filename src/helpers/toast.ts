@@ -4,6 +4,9 @@ import { toast } from "sonner";
 
 export const DEFAULT_DURATION_NOTIFICATION = 2000;
 export const DEFAULT_POSITION_NOTIFICATION: ToasterProps["position"] = "top-right";
+export const WORKFLOW_ACTION_TOAST_OPTIONS: Omit<ExternalToast, "style"> = {
+  position: "bottom-center",
+};
 
 export type AlertType = "success" | "info" | "warning" | "error";
 
@@ -45,4 +48,8 @@ export function showToast(
     style: TOAST_STYLES[type],
     ...options,
   });
+}
+
+export function showWorkflowActionToast(type: AlertType, message: string) {
+  showToast(type, message, WORKFLOW_ACTION_TOAST_OPTIONS);
 }

@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 
-import { showToast } from "@/helpers/toast";
+import { showWorkflowActionToast } from "@/helpers/toast";
 import { toWorkflowDefinition } from "@/helpers/workflow-graph";
 import { useUpdateWorkflow } from "@/hooks/mutations/use-update-workflow";
 import type { WorkflowMetaFormValues } from "@/schemas/workflow";
@@ -43,7 +43,7 @@ export const useWorkflowSave = () => {
           onSuccess: (saved) => {
             markSaved(saved);
             options?.onSaved?.();
-            showToast("success", `${saved.name} was saved.`);
+            showWorkflowActionToast("success", `${saved.name} was saved.`);
           },
         }
       );

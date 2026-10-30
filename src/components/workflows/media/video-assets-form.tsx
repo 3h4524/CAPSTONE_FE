@@ -54,7 +54,7 @@ export const VideoAssetsForm = ({ node, assets, disabled }: { node: WorkflowNode
       <FormField control={form.control} name="assetSelection" render={({ field }) => <FormItem><FormLabel>Assets</FormLabel><Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="automatic">Choose approved assets automatically</SelectItem><SelectItem value="manual">Choose approved assets myself</SelectItem></SelectContent></Select><FormMessage /></FormItem>} />
       {form.watch("assetSelection") === "manual" && approved.map((asset, index) => <label key={asset.id} className="flex min-h-11 items-center gap-2 text-sm"><Checkbox checked={chosen.includes(asset.id)} onCheckedChange={checked => form.setValue("selectedMockupIds", checked ? [...chosen, asset.id] : chosen.filter(id => id !== asset.id), { shouldDirty: true, shouldValidate: true })} />{index + 1}. {asset.role} · {asset.variantKey ?? asset.id.slice(0, 8)}</label>)}
       <FormField control={form.control} name="selectedMockupIds" render={() => <FormItem><FormMessage /></FormItem>} />
-      <p className="text-muted-foreground text-xs">Choose up to four scenes. Leave the order automatic to use the selected template.</p>
+      <p className="text-muted-foreground text-xs">Build 2–4 scenes from approved mockups. You can reuse one image for two camera moves; leave order automatic to follow the template.</p>
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" size="sm" onClick={() => {
           const next = (chosen.length ? chosen : approved.map(asset => asset.id)).slice(0, 4);

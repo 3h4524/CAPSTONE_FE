@@ -9,6 +9,8 @@ export const productSchema = z.object({
   keywords: z.string().refine((value) => value.split(",").map((item) => item.trim()).filter(Boolean).length > 0, "Enter at least one keyword.").refine((value) => value.split(",").map((item) => item.trim()).filter(Boolean).length <= 13, "Use no more than 13 keywords."),
   productDescription: z.string().max(2000, "Use no more than 2,000 characters."),
   sourceNotes: z.string().max(2000),
+  designText: z.string().max(100, "Keep the design text under 100 characters."),
+  customPrompt: z.string().max(1000, "Keep the image prompt under 1,000 characters."),
 });
 export type BatchFormValues = z.infer<typeof batchSchema>;
 export type ProductFormValues = z.infer<typeof productSchema>;

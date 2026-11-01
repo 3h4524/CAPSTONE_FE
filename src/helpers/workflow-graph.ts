@@ -228,6 +228,25 @@ export const createWorkflowNode = (type: WorkflowNodeType, position: WorkflowPos
   },
 });
 
+const normalizeLabel = (label: string) => label.trim().toLowerCase();
+
+export const uniqueNodeLabel = (baseLabel: string, takenLabels: string[]): string => {
+  const taken = new Set(takenLabels.map(normalizeLabel));
+  if (!taken.has(normalizeLabel(baseLabel))) return baseLabel;
+  let suffix = 1;
+  while (taken.has(normalizeLabel(`${baseLabel} ${suffix}`))) suffix += 1;
+  return `${baseLabel} ${suffix}`;
+};
+
+export const withUniqueLabels = (added: WorkflowNode[], existing: WorkflowNode[]): WorkflowNode[] => {
+  const taken = existing.map((node) => node.data.label);
+  return added.map((node) => {
+    const label = uniqueNodeLabel(WORKFLOW_NODE_DEFINITIONS[node.data.type].label, taken);
+    taken.push(label);
+    return { ...node, data: { ...node.data, label } };
+  });
+};
+
 export const duplicateWorkflowSelection = (
   nodes: WorkflowNode[],
   edges: WorkflowEdge[],

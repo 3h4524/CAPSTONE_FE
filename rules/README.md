@@ -67,7 +67,7 @@ Folder `schemas/`, `stores/` sẽ được thêm khi có form/state thực tế.
 - **State management**: **thuần Zustand** — mọi client/UI state (cart, preferences, UI flags...) qua zustand stores (`stores/<domain>.ts`). Store là state-only: KHÔNG gọi API trực tiếp trong store; server state/cache do TanStack Query quản lý.
 - **Styling**: Tailwind CSS v4 + shadcn/ui primitives (bắt buộc dùng shadcn, cấm thư viện khác).
 - **Forms**: React Hook Form + Zod resolver + zod schema tách riêng `schemas/<domain>.ts`.
-- **Data fetching**: TanStack Query + axios (`api/client.ts`) — HTTP đi qua HttpClient duy nhất, tự động gắn access token từ localStorage và retry sau refresh 401.
+- **Data fetching**: TanStack Query + axios (`api/client.ts`) — HTTP đi qua HttpClient duy nhất (`withCredentials`, token nằm trong HttpOnly cookie, client không lưu token) và retry 1 lần sau refresh khi 401.
 - **Notify**: `showToast(type, message)` từ `helpers/toast.ts`.
 - **Icons**: Lucide React + custom SVG trong `commons/icons/`.
 - **Logging**: consola qua `helpers/log.ts` — cấm `console.log`.

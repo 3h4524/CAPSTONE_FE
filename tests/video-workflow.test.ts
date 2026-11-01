@@ -63,6 +63,34 @@ test("mixed scenes preserve an independent AI or Standard mode on each scene", (
   });
   assert.deepEqual(parsed.aiScenes?.map(scene => scene.mode), ["standard", "ai"]);
 });
+test("normalizes legacy AI camera values stored in Standard motion fields", () => {
+  const parsed = generateVideoConfigSchema.parse({
+    ...config,
+    mode: "ai_shot",
+    durationSeconds: 4,
+    standardOptions: { ...config.standardOptions, motionPreset: "push_in" },
+    sceneMotionPresets: ["gentle_tracking"],
+    aiGlobalInstructions: "Use a custom shared direction.",
+    aiScenes: [configuredScene("ai", {
+      standardMotionPreset: "gentle_tracking",
+      extraInstructions: "Use a custom scene direction.",
+    })],
+  });
+  assert.equal(parsed.standardOptions.motionPreset, "zoom");
+  assert.deepEqual(parsed.sceneMotionPresets, ["contain_gentle"]);
+  assert.equal(parsed.aiScenes?.[0]?.standardMotionPreset, "contain_gentle");
+  assert.equal(parsed.aiScenes?.[0]?.extraInstructions, null);
+  assert.equal(parsed.aiGlobalInstructions, null);
+});
+test("accepts a null Standard motion preset for an AI scene", () => {
+  const parsed = generateVideoConfigSchema.parse({
+    ...config,
+    mode: "ai_shot",
+    durationSeconds: 4,
+    aiScenes: [configuredScene("ai", { standardMotionPreset: null })],
+  });
+  assert.equal(parsed.aiScenes?.[0]?.standardMotionPreset, null);
+});
 for (const motionPreset of ["gentle", "contain_gentle", "static", "zoom", "zoom_out", "pan", "pan_left", "pan_up", "pan_down", "diagonal_up_right", "diagonal_up_left", "diagonal_down_right", "diagonal_down_left"])
   test(`accepts motion ${motionPreset}`, () => assert.equal(generateVideoConfigSchema.parse({ ...config, standardOptions: { ...config.standardOptions, motionPreset } }).standardOptions.motionPreset, motionPreset));
 test("accepts distinct motion for each scene", () => assert.deepEqual(generateVideoConfigSchema.parse({ ...config, standardOptions: { ...config.standardOptions, motionPreset: "varied" }, sceneMotionPresets: ["zoom", "pan_left", "diagonal_up_right", "zoom_out"] }).sceneMotionPresets, ["zoom", "pan_left", "diagonal_up_right", "zoom_out"]));

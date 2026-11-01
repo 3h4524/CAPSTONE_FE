@@ -64,6 +64,7 @@ import type {
 } from "@/types/video-workflow";
 
 type LegacyOptions = NonNullable<GenerateVideoConfig["aiShotOptions"]>;
+const AI_ADVANCED_CONTROLS_ENABLED = false;
 const BASE_SCENE: AiVideoSceneOptions = {
   mode: "standard",
   mockupId: null,
@@ -171,6 +172,19 @@ function normalizeTemplateSettings(
   scene: AiVideoSceneOptions,
   template: AiVideoTemplateDefinition
 ): AiVideoSceneOptions {
+  if (!AI_ADVANCED_CONTROLS_ENABLED) {
+    return {
+      ...scene,
+      framing: template.defaults.framing,
+      cameraAngle: template.defaults.cameraAngle,
+      cameraMovement: template.defaults.cameraMovement,
+      subjectMotion: template.defaults.subjectMotion,
+      motionIntensity: template.defaults.motionIntensity,
+      lighting: template.defaults.lighting,
+      extraInstructions: null,
+      mode: "ai",
+    };
+  }
   let normalized: AiVideoSceneOptions = { ...scene, mode: "ai" };
   for (const field of TEMPLATE_SETTING_FIELDS) {
     const choices = template.allowedSettings[field] ?? [];
@@ -337,7 +351,7 @@ export function AiShotOptions({
     ? artworkGroupKey
     : "";
   const sharedInstructions =
-    typeof node?.data.config.aiGlobalInstructions === "string"
+    AI_ADVANCED_CONTROLS_ENABLED && typeof node?.data.config.aiGlobalInstructions === "string"
       ? node.data.config.aiGlobalInstructions
       : null;
   const legacyStudioMode = node?.data.config.aiStudioMode === "studio";
@@ -590,15 +604,17 @@ export function AiShotOptions({
           (scene.templateCode === "cinematic_product_showcase" &&
             scene.studioLayout !== normalizedScenes[index]?.studioLayout) ||
           scene.mockupId !== normalizedScenes[index]?.mockupId ||
+          scene.extraInstructions !== normalizedScenes[index]?.extraInstructions ||
           (scene.studioReferenceHashes ?? []).join("|") !==
             (normalizedScenes[index]?.studioReferenceHashes ?? []).join("|")
-      );
+      ) || node.data.config.aiGlobalInstructions !== sharedInstructions;
     if (!needsNormalization) return;
     const seconds = normalizedScenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
     useWorkflowStore.getState().updateNodeConfig(nodeId, {
       ...node.data.config,
       mode: normalizedMode,
       aiScenes: normalizedScenes,
+      aiGlobalInstructions: sharedInstructions,
       durationSeconds: seconds,
     });
     onChange(normalizedScenes, seconds, sharedInstructions);
@@ -622,16 +638,19 @@ export function AiShotOptions({
     next: AiVideoSceneOptions[],
     nextSharedInstructions: string | null = sharedInstructions
   ) => {
+    const effectiveSharedInstructions = AI_ADVANCED_CONTROLS_ENABLED
+      ? nextSharedInstructions
+      : null;
     const seconds = next.reduce((sum, scene) => sum + scene.durationSeconds, 0);
     const { aiShotOptions: _old, ...cleanConfig } = node.data.config;
     useWorkflowStore.getState().updateNodeConfig(nodeId, {
       ...cleanConfig,
       mode: workflowModeForScenes(next),
       aiScenes: next,
-      aiGlobalInstructions: nextSharedInstructions,
+      aiGlobalInstructions: effectiveSharedInstructions,
       durationSeconds: seconds,
     });
-    onChange(next, seconds, nextSharedInstructions);
+    onChange(next, seconds, effectiveSharedInstructions);
   };
   const regenerateScene = async (sceneOrder: number) => {
     if (!run || !node) return;
@@ -722,7 +741,7 @@ export function AiShotOptions({
       }
       const estimate = quote.estimatedCostUsd.toFixed(2);
       const confirmed = window.confirm(
-        `Generate one custom prompt keyframe with Gemini Image? Estimated image cost: $${estimate} USD. This is charged separately from Veo video generation.`
+        `Generate one custom prompt keyframe with Gemini Image? Estimated image cost: $${estimate} USD. This is charged separately from MiniMax H3 video generation.`
       );
       if (!confirmed) return;
       const result = await generateAiStudioFrame({
@@ -905,7 +924,7 @@ export function AiShotOptions({
           </span>
         </div>
       </div>
-      {hasAiScenes && (
+      {hasAiScenes && AI_ADVANCED_CONTROLS_ENABLED && (
         <label className="block space-y-1 text-xs font-medium">
           Shared direction for AI scenes{" "}
           <span className="text-muted-foreground font-normal">
@@ -925,6 +944,13 @@ export function AiShotOptions({
             {sharedInstructions?.length ?? 0}/500 | appended before product-preservation guardrails
           </span>
         </label>
+      )}
+      {hasAiScenes && !AI_ADVANCED_CONTROLS_ENABLED && (
+        <p className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs leading-relaxed text-blue-900">
+          Advanced AI controls are temporarily disabled. Each AI scene uses the selected
+          template&apos;s default camera, motion, lighting, and prompt direction while prompt
+          templates are being tested.
+        </p>
       )}
       {hasAiScenes && isPending && (
         <p className="text-muted-foreground text-xs">Loading AI scene templates... </p>
@@ -2012,7 +2038,7 @@ export function AiShotOptions({
                 </span>
               </label>
             )}
-            {scene.mode !== "standard" && (
+            {scene.mode !== "standard" && AI_ADVANCED_CONTROLS_ENABLED && (
               <details className="group bg-muted/20 rounded-md border p-2">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-semibold">
                   Advanced camera, motion and lighting
@@ -2114,7 +2140,7 @@ export function AiShotOptions({
         </div>
         {hasAiScenes && (
           <p className="text-muted-foreground text-center text-xs">
-            Estimated AI footage ${(aiSceneSeconds * 0.1).toFixed(2)} USD
+            Estimated MiniMax H3 footage ${(aiSceneSeconds * 0.08).toFixed(2)} USD at 768P
           </p>
         )}
       </div>

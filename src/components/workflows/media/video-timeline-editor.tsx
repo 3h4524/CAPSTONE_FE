@@ -2589,7 +2589,9 @@ function Timeline({
     onSeek(Math.min(maxFrame, Math.max(0, frame)));
     onSelect({ kind: "scene", sceneIndex });
   };
-  const selectScene = (sceneIndex: number) => onSelect({ kind: "scene", sceneIndex });
+  // Selecting a scene must also move the preview to it. Without seeking, the inspector
+  // would show the selected scene while the player still rendered the previous playhead.
+  const selectScene = (sceneIndex: number) => selectSceneFrame(sceneIndex);
   const resolveTrim = (
     edge: "start" | "end",
     sourceFrames: number,

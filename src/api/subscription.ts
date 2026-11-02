@@ -1,4 +1,5 @@
 import { api } from "@/api/client";
+import type { FeatureCatalogItem } from "@/types/feature-catalog";
 import type {
   BillingCycle,
   CheckoutStatus,
@@ -66,6 +67,11 @@ export const getEntitlementsRequest = async (): Promise<Entitlements> => {
   return data;
 };
 
+export const getFeatureCatalogRequest = async (): Promise<FeatureCatalogItem[]> => {
+  const { data } = await api.get<FeatureCatalogItem[]>("/api/subscriptions/features");
+  return data;
+};
+
 export type DownloadInvoicePayload = {
   invoiceId: string;
   invoiceNumber: string;
@@ -73,6 +79,25 @@ export type DownloadInvoicePayload = {
 
 // Named by invoiceNumber client-side rather than parsing Content-Disposition, which the backend
 // would otherwise need to expose via Access-Control-Expose-Headers for cross-origin reads.
+// Opens an invoice's PDF in a new tab. The tab is opened before the download, while the click
+// still counts as the Seller's own action, so the browser does not block it as a pop-up.
+export const viewInvoiceRequest = async ({ invoiceId }: Pick<DownloadInvoicePayload, "invoiceId">): Promise<void> => {
+  const tab = window.open("", "_blank");
+  try {
+    const { data } = await api.get<Blob>(`/api/subscriptions/invoices/${invoiceId}/download`, {
+      responseType: "blob",
+    });
+    const url = URL.createObjectURL(data);
+    if (tab) tab.location.href = url;
+    else window.location.href = url;
+    // Long enough for the tab to load the PDF before the address is released.
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } catch (error) {
+    tab?.close();
+    throw error;
+  }
+};
+
 export const downloadInvoiceRequest = async ({
   invoiceId,
   invoiceNumber,

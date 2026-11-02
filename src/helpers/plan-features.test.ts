@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { featureLimit, hasFeature, isNodeLocked, planIssues, readPlanFeature } from "@/helpers/plan-features";
+import {
+  catalogFeatures,
+  featureLimit,
+  hasFeature,
+  isNodeLocked,
+  PLAN_FEATURES,
+  planIssues,
+  readPlanFeature,
+} from "@/helpers/plan-features";
 import { planBlocksRun } from "@/helpers/workflow-run-prepare";
 import type { Entitlements } from "@/types/subscription";
 
@@ -144,5 +152,31 @@ describe("planIssues", () => {
     expect(
       planIssues(entitlements(), "generate-video", { mode: "standard", outputFormat: "square" })
     ).toEqual([]);
+  });
+});
+
+describe("catalogFeatures", () => {
+  it("uses the definitions in code until the catalog loads", () => {
+    expect(catalogFeatures(undefined)).toBe(PLAN_FEATURES);
+    expect(catalogFeatures([])).toBe(PLAN_FEATURES);
+  });
+
+  it("takes labels, groups and order from the catalog and keeps the kind from code", () => {
+    const features = catalogFeatures([
+      { code: "ai_video", label: "Veo videos", description: "AI scenes", group: "Video tools", kind: "flag", unit: null, sortOrder: 1 },
+      { code: "design_variations", label: "Variations", description: "", group: "Design", kind: "flag", unit: null, sortOrder: 2 },
+    ]);
+
+    expect(features[0]).toMatchObject({ code: "ai_video", label: "Veo videos", group: "Video tools" });
+    expect(features[1]).toMatchObject({ code: "design_variations", label: "Variations", kind: "limit" });
+    expect(features).toHaveLength(PLAN_FEATURES.length);
+  });
+
+  it("ignores codes the frontend does not know", () => {
+    const features = catalogFeatures([
+      { code: "video_generation", label: "Old", description: "", group: "Old", kind: "flag", unit: null, sortOrder: 0 },
+    ]);
+
+    expect(features.map((feature) => feature.code)).toEqual(PLAN_FEATURES.map((feature) => feature.code));
   });
 });

@@ -18,6 +18,8 @@ export type TrialInsight = {
   conversionRate: number | null;
   previousConversionRate: number | null;
   featureComparison: TrialFeatureComparison[];
+  // How many trials bought each plan; older responses send only the three fields above.
+  convertedByPlan?: { tier: string; name: string; count: number }[] | null;
 };
 
 export type FeatureAdoption = {
@@ -55,6 +57,8 @@ export type PipelineStage = {
   key: string;
   label: string;
   products: number;
+  // False for a step on the canvas whose executor does not exist yet, such as publishing.
+  isAvailable?: boolean;
 };
 
 export type UnitCost = {

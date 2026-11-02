@@ -74,12 +74,12 @@ describe("FeatureAdoptionCard", () => {
     expect(screen.getAllByLabelText(/^Design images, Starter/)[0]).not.toHaveTextContent("×");
   });
 
-  it("says what stands out above the table", () => {
+  it("says what stands out in each feature's own row", () => {
     renderCard();
 
-    expect(
-      screen.getByText("2 AI features are used less on Studio than on Pro: AI videos (▼19.7), Lifestyle mockups (▼8.5).")
-    ).toBeInTheDocument();
+    const aiVideos = screen.getByRole("row", { name: /^AI videos/ });
+    expect(aiVideos).toHaveTextContent("Underused on Studio");
+    expect(screen.getByRole("row", { name: /^Design images/ })).not.toHaveTextContent("Underused");
   });
 
   it("turns (AI) into a badge", () => {

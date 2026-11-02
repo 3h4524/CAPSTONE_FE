@@ -35,8 +35,8 @@ export type RunNeeds = {
  */
 export const allowanceBlocksRun = (allowances: Allowances, needs: RunNeeds): string | null => {
   if (allowances.scope === null) return null;
-  const where = allowances.scope === "trial" ? "Your Pro trial" : "Free";
-  const reset = allowances.scope === "free" && allowances.resetsOn ? ` They reset on ${formatAllowanceDate(allowances.resetsOn)}.` : "";
+  const where = allowances.scope === "trial" ? "Your free trial" : allowances.scope === "plan" ? "Your plan" : "Free";
+  const reset = allowances.scope !== "trial" && allowances.resetsOn ? ` They reset on ${formatAllowanceDate(allowances.resetsOn)}.` : "";
 
   const check = (code: AllowanceCode, requested: number): string | null => {
     const item = find(allowances, code);

@@ -1,12 +1,11 @@
 "use client";
 
-import { Info } from "lucide-react";
+import { Gauge, Info, type LucideIcon,TrendingDown } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   adoptionDrop,
-  adoptionSummary,
   formatShare,
   isUnderused,
   MIN_DROP_POINTS,
@@ -18,9 +17,13 @@ import { getPlanColor } from "@/helpers/revenue-by-plan";
 import type { FeatureAdoption, PlanGroupInsight } from "@/types/plan-insights";
 import { cn } from "@/utils/cn";
 
-// Steel blue bars; an underused feature only turns its bar orange, the figure stays as it is.
+// One steel blue for the share; an underused share turns orange, in the bar and the figure.
 const BAR = "bg-[#47689a]";
 const BAR_UNDERUSED = "bg-orange-400";
+
+// Shares of the table's width, in percent; the plans split what is left equally.
+const FEATURE_COLUMN = 22;
+const FLAGS_COLUMN = 26;
 
 interface FeatureAdoptionCardProps {
   /** Paid plans, cheapest first: each is compared with the one before it. */
@@ -35,19 +38,19 @@ interface FeatureAdoptionCardProps {
 
 interface CellView {
   plan: PlanGroupInsight;
-  planIndex: number;
   cell: FeatureAdoption | undefined;
   previous: { name: string; rate: number | null } | null;
 }
 
+type Flag = { label: string; style: string; icon: LucideIcon };
+
 /**
- * Feature adoption: a sentence with what stands out, then one row per feature in workflow order and
- * one equal column per plan. Each cell is the share, then a bar; a clear drop from the plan before
- * is written out, and the rest of the detail is in a tooltip.
+ * Feature adoption as one table: a row per feature in workflow order, a column per plan with the
+ * share, the people behind it and a thin bar, and a last column saying what stands out in that row
+ * (underused, a daily cap reached), so nothing needs reading above the table.
  */
 export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatures, onFeatureSelect }: FeatureAdoptionCardProps) {
   const features = orderFeatures(plans[0]?.adoption ?? []);
-  const summary = adoptionSummary(plans, underusedBelow);
 
   // Each plan's cell for a feature, with the plan before it (by price) to compare with.
   const cellsFor = (metric: string): CellView[] =>
@@ -55,119 +58,126 @@ export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatu
       const cell = plan.adoption.find((item) => item.metric === metric);
       const before = planIndex > 0 ? plans[planIndex - 1] : null;
       const beforeCell = before?.adoption.find((item) => item.metric === metric);
-      return {
-        plan,
-        planIndex,
-        cell,
-        previous: before ? { name: before.name, rate: beforeCell?.includedInPlan ? beforeCell.rate : null } : null,
-      };
+      return { plan, cell, previous: before ? { name: before.name, rate: beforeCell?.includedInPlan ? beforeCell.rate : null } : null };
     });
+
+  // What stands out for one feature across the plans, in a few words each.
+  const flagsFor = (cells: CellView[]): Flag[] => {
+    const included = cells.filter((view) => view.cell?.includedInPlan);
+    const underused = included.filter((view) => isUnderused(view.cell!.rate, underusedBelow)).map((view) => view.plan.name);
+    const capped = included.filter((view) => (view.cell!.usersAtDailyCap ?? 0) > 0);
+    const flags: Flag[] = [];
+    if (underused.length > 0)
+      flags.push({ label: `Underused on ${underused.join(", ")}`, style: "bg-orange-100 text-orange-800", icon: TrendingDown });
+    if (capped.length > 0)
+      flags.push({
+        label: `Daily cap hit: ${capped.map((view) => `${view.cell!.usersAtDailyCap} on ${view.plan.name}`).join(", ")}`,
+        style: "bg-slate-100 text-slate-700",
+        icon: Gauge,
+      });
+    return flags;
+  };
+
+  // Columns of fixed shares, so the plan columns are equal and the bars line up across rows.
+  const planWidth = `${(100 - FEATURE_COLUMN - FLAGS_COLUMN) / Math.max(1, plans.length)}%`;
 
   return (
     <TooltipProvider delayDuration={120}>
-      <Card className="gap-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-none">
-        <h3 className="flex items-center gap-1.5 text-[15px] font-semibold text-slate-900">
-          Feature adoption
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button type="button" aria-label="How to read this table" className="text-slate-400 hover:text-slate-600">
-                <Info className="size-3.5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs text-xs text-slate-100">
-              Each bar is the share of a plan’s Sellers who used the feature at least once in the last {days} days. ▼ marks a drop
-              of {MIN_DROP_POINTS} points or more from the plan before it. An orange bar is under {underusedBelow}%, the same
-              underused rule the AI review uses. Hover a cell for the people behind it and how often the typical user used it.
-            </TooltipContent>
-          </Tooltip>
-        </h3>
-        <p className="mt-1 text-sm text-slate-500">Share of each plan’s Sellers who used each feature at least once.</p>
-
-        {/* What stands out, said in words so the cells need no alarm colours. */}
-        {summary.length > 0 && (
-          <ul className="mt-3 space-y-1 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-            {summary.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        )}
+      <Card className="gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-none">
+        {/* How to read it, in view: the bar, the orange of underused, and the drop mark. */}
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-slate-100 bg-slate-50/60 px-5 py-3 text-xs text-slate-500">
+          <p>Share of each plan’s Sellers who used a feature at least once in the last {days} days.</p>
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="flex items-center gap-1.5">
+              <span className={cn("h-1.5 w-5 rounded-full", BAR)} /> Used
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className={cn("h-1.5 w-5 rounded-full", BAR_UNDERUSED)} /> Underused, under {underusedBelow}%
+            </span>
+            <span className="flex items-center gap-1 font-semibold text-[#c4553a]">
+              ▼<span className="font-normal text-slate-500">{MIN_DROP_POINTS}+ points below the cheaper plan</span>
+            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" aria-label="How to read this table" className="text-slate-400 hover:text-slate-600">
+                  <Info className="size-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs text-xs text-slate-100">
+                The figure is the share; the small one the Sellers behind it. Hover a figure for how often the typical user used it.
+                Underused uses the same {underusedBelow}% rule as the AI review.
+              </TooltipContent>
+            </Tooltip>
+          </p>
+        </div>
 
         {plans.length === 0 ? (
           <p className="py-10 text-center text-sm text-slate-500">No Sellers have a plan yet.</p>
         ) : (
-          <>
-            {/* Wide screens: the full width, the plans in equal columns. */}
-            <div
-              role="table"
-              aria-label="Feature adoption by plan"
-              className="mt-4 hidden md:grid"
-              style={{ gridTemplateColumns: `minmax(9rem, 12rem) repeat(${plans.length}, minmax(0, 1fr))` }}
-            >
-              <div role="row" className="contents">
-                <div role="columnheader" className="border-b border-slate-200 pb-2 text-xs font-medium text-slate-500">
-                  Feature
-                </div>
-                {plans.map((plan, index) => (
-                  <div key={plan.key} role="columnheader" className="border-b border-slate-200 px-3 pb-2">
-                    <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-                      <span className="size-2 rounded-full" style={{ backgroundColor: getPlanColor(plan.name, index) }} />
-                      {plan.name}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {plan.subscribers.toLocaleString()} Sellers
-                      {!plan.hasEnoughData && <span className="text-amber-800"> · not enough data</span>}
-                    </p>
-                  </div>
+          <div className="overflow-x-auto">
+            <table aria-label="Feature adoption by plan" className="w-full min-w-[760px] table-fixed border-collapse text-sm">
+              <colgroup>
+                <col style={{ width: `${FEATURE_COLUMN}%` }} />
+                {plans.map((plan) => (
+                  <col key={plan.key} style={{ width: planWidth }} />
                 ))}
-              </div>
-
-              {features.map((feature) => (
-                <div key={feature.metric} role="row" className="group/row contents">
-                  <div
-                    role="rowheader"
-                    className="flex items-center border-b border-slate-100 py-2 pr-3 group-focus-within/row:bg-slate-50 group-hover/row:bg-slate-50"
-                  >
-                    <FeatureName
-                      label={feature.label}
-                      onSelect={reviewedFeatures?.has(feature.metric) ? () => onFeatureSelect?.(feature.metric) : undefined}
-                    />
-                  </div>
-                  {cellsFor(feature.metric).map((view) => (
-                    <div
-                      key={view.plan.key}
-                      role="cell"
-                      className="border-b border-slate-100 px-3 py-2 group-focus-within/row:bg-slate-50 group-hover/row:bg-slate-50"
-                    >
-                      <AdoptionCell view={view} feature={feature} underusedBelow={underusedBelow} days={days} />
-                    </div>
+                <col style={{ width: `${FLAGS_COLUMN}%` }} />
+              </colgroup>
+              <thead>
+                <tr className="border-b border-slate-200 text-left">
+                  <th scope="col" className="px-5 py-3 text-xs font-medium text-slate-500">
+                    Feature
+                  </th>
+                  {plans.map((plan, index) => (
+                    <th key={plan.key} scope="col" className="px-5 py-3 font-normal">
+                      <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                        <span className="size-2 rounded-full" style={{ backgroundColor: getPlanColor(plan.name, index) }} />
+                        {plan.name}
+                        <span className="text-xs font-normal text-slate-400">· {plan.subscribers.toLocaleString()} Sellers</span>
+                      </span>
+                      {!plan.hasEnoughData && <span className="text-xs text-amber-800">Not enough data</span>}
+                    </th>
                   ))}
-                </div>
-              ))}
-            </div>
-
-            {/* Narrow screens: one card per feature, one line per plan, no sideways scrolling. */}
-            <ul className="mt-4 space-y-2 md:hidden">
-              {features.map((feature) => (
-                <li key={feature.metric} className="rounded-xl border border-slate-200 p-3">
-                  <FeatureName
-                    label={feature.label}
-                    onSelect={reviewedFeatures?.has(feature.metric) ? () => onFeatureSelect?.(feature.metric) : undefined}
-                  />
-                  <div className="mt-2 space-y-1.5">
-                    {cellsFor(feature.metric).map((view) => (
-                      <div key={view.plan.key} className="flex items-center gap-2">
-                        <span className="flex w-20 shrink-0 items-center gap-1.5 text-xs font-medium text-slate-700">
-                          <span className="size-2 rounded-full" style={{ backgroundColor: getPlanColor(view.plan.name, view.planIndex) }} />
-                          {view.plan.name}
-                        </span>
-                        <AdoptionCell view={view} feature={feature} underusedBelow={underusedBelow} days={days} />
-                      </div>
-                    ))}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </>
+                  <th scope="col" className="px-5 py-3 text-xs font-medium text-slate-500">
+                    What stands out
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {features.map((feature) => {
+                  const cells = cellsFor(feature.metric);
+                  const flags = flagsFor(cells);
+                  return (
+                    <tr key={feature.metric} className="hover:bg-slate-50/70">
+                      <th scope="row" className="truncate px-5 py-3.5 text-left font-normal">
+                        <FeatureName
+                          label={feature.label}
+                          onSelect={reviewedFeatures?.has(feature.metric) ? () => onFeatureSelect?.(feature.metric) : undefined}
+                        />
+                      </th>
+                      {cells.map((view) => (
+                        <td key={view.plan.key} className="px-5 py-3.5 align-middle">
+                          <AdoptionCell view={view} feature={feature} underusedBelow={underusedBelow} days={days} />
+                        </td>
+                      ))}
+                      <td className="px-5 py-3.5">
+                        {flags.length > 0 && (
+                          <span className="flex flex-col items-start gap-1">
+                            {flags.map((flag) => (
+                              <span key={flag.label} className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium", flag.style)}>
+                                <flag.icon className="size-3 shrink-0" />
+                                {flag.label}
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
     </TooltipProvider>
@@ -210,7 +220,7 @@ function AdoptionCell({
   const { plan, cell, previous } = view;
   const { name } = splitAiLabel(feature.label);
   if (!cell || !cell.includedInPlan) {
-    return <span className="text-xs text-slate-500">Not in plan</span>;
+    return <span className="text-xs text-slate-400">Not in plan</span>;
   }
 
   const underused = isUnderused(cell.rate, underusedBelow);
@@ -231,20 +241,25 @@ function AdoptionCell({
         <div
           tabIndex={0}
           aria-label={label}
-          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-[#5b7aa6]/50"
+          className="rounded-md tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-[#5b7aa6]/50"
         >
-          <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-200">
+          <div className="flex items-baseline gap-2">
+            <span className={cn("text-sm font-semibold", underused ? "text-orange-700" : "text-slate-900")}>{share}</span>
+            {drop !== null && previous && (
+              <span className="text-[11px] font-semibold whitespace-nowrap text-[#c4553a]">
+                ▼{drop.toFixed(1)} vs {previous.name}
+              </span>
+            )}
+            <span className="ml-auto text-[11px] text-slate-400">
+              {cell.users}/{plan.subscribers}
+            </span>
+          </div>
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
             <div
               className={cn("h-full rounded-full", underused ? BAR_UNDERUSED : BAR)}
-              style={{ width: `${Math.min(100, Math.max(cell.rate, cell.rate > 0 ? 3 : 0))}%` }}
+              style={{ width: `${Math.min(100, Math.max(cell.rate, cell.rate > 0 ? 2 : 0))}%` }}
             />
           </div>
-          {/* The figure after the bar, in a fixed width so the figures of a column still line up. */}
-          <span className="w-12 shrink-0 text-right text-sm font-semibold text-slate-900">{share}</span>
-          {/* Same width in every cell, so every bar in a column has the same scale. */}
-          <span className="w-[4.75rem] shrink-0 text-[11px] font-semibold whitespace-nowrap text-slate-700">
-            {drop !== null && previous ? `▼${drop.toFixed(1)} vs ${previous.name}` : ""}
-          </span>
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" className="w-60 space-y-0.5 p-3 text-xs text-slate-100 [&_p]:text-slate-100">

@@ -1,14 +1,28 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 
 import { formatDay } from "@/helpers/plan-ai-review";
 import { bridgeRows, signedVnd } from "@/helpers/revenue-mrr-movement";
 import type { MrrBridgeDto } from "@/types/revenue";
 import { cn } from "@/utils/cn";
-import { formatVnd } from "@/utils/format-currency";
+import { formatCompactVndAmount, formatVnd } from "@/utils/format-currency";
+
+// What came in is blue (new customers) or aqua (moves between plans); what went out is red (churn)
+// or yellow (moves and downgrades). Checked to tell apart, also with colour blindness; every card
+// also names its movement, so colour is never the only cue.
+const MOVEMENT_COLOR: Record<string, string> = {
+  New: "#2a78d6",
+  "Moved in": "#1baf7a",
+  Expansion: "#1baf7a",
+  "Plan changes": "#1baf7a",
+  Churn: "#e34948",
+  "Moved out": "#eda100",
+  Contraction: "#eda100",
+};
 
 /**
- * MRR from the start to the end of the AI review's period, from the same figures the review was
- * written from, so the start, each movement and the end always add up.
+ * MRR over the AI review's period, from the same figures the review was written from: MRR at the
+ * start and at the end with the change between them, then a ledger of what came in and what went
+ * out, each with a bar against the largest movement.
  */
 export function MrrBridgeStrip({
   bridge,
@@ -27,34 +41,84 @@ export function MrrBridgeStrip({
       ? { ...row, label: "Plan changes" }
       : row
   );
+  // What came in first, then what went out.
+  const movements = [...rows.filter((row) => row.value >= 0), ...rows.filter((row) => row.value < 0)];
+  const largest = Math.max(1, ...movements.map((row) => Math.abs(row.value)));
+  const net = bridge.end - bridge.start;
+  const pct = bridge.start > 0 ? (net / bridge.start) * 100 : null;
+  const Trend = net > 0 ? ArrowUpRight : net < 0 ? ArrowDownRight : ArrowRight;
 
   return (
-    <div
-      aria-label="MRR bridge"
-      className={cn("flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-slate-600 tabular-nums", className)}
-    >
-      <Amount label={`MRR ${formatDay(dayBefore(periodStart))}`} value={formatVnd(bridge.start)} />
-      {rows.map((row) => (
-        <span key={row.label} className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5">
-          <span className="size-1.5 rounded-full" style={{ backgroundColor: row.color }} />
-          <span>{row.label}</span>
-          <span className={cn("font-semibold", row.value >= 0 ? "text-emerald-700" : "text-rose-700")}>
-            {signedVnd(row.value)}
+    <div aria-label="MRR bridge" className={cn("text-xs tabular-nums", className)}>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4">
+        <Total label={`MRR ${formatDay(dayBefore(periodStart))}`} value={bridge.start} muted />
+        <ArrowRight className="size-4 text-slate-300" aria-hidden="true" />
+        <Total label={`MRR ${formatDay(periodEnd)}`} value={bridge.end} />
+      </div>
+
+      <p
+        className={cn(
+          "mt-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold",
+          net >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+        )}
+      >
+        <Trend className="size-3.5" />
+        {net >= 0 ? "+" : "−"}
+        {formatCompactVndAmount(Math.abs(net))}
+        {pct !== null && (
+          <span className="font-medium opacity-80">
+            {" "}
+            · {pct >= 0 ? "+" : "−"}
+            {Math.abs(pct).toFixed(1)}%
           </span>
-        </span>
-      ))}
-      <ArrowRight className="size-3.5 text-slate-400" aria-hidden />
-      <Amount label={`MRR ${formatDay(periodEnd)}`} value={formatVnd(bridge.end)} />
+        )}
+      </p>
+
+      {movements.length > 0 && (
+        <ul className="mt-5 divide-y divide-slate-100 border-t border-slate-100">
+          {movements.map((row) => {
+            const color = MOVEMENT_COLOR[row.label] ?? "#94a3b8";
+            const share = bridge.start > 0 ? Math.round((Math.abs(row.value) / bridge.start) * 100) : null;
+            return (
+              <li key={row.label} className="grid grid-cols-[7rem_minmax(0,1fr)_auto] items-center gap-4 py-3">
+                <div>
+                  <p className="flex items-center gap-1.5 font-medium text-slate-700">
+                    <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+                    {row.label}
+                  </p>
+                  {share !== null && <p className="mt-0.5 pl-3.5 text-[11px] text-slate-400">{share}% of start</p>}
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${Math.max((Math.abs(row.value) / largest) * 100, 2)}%`, backgroundColor: color }}
+                  />
+                </div>
+                <div className="text-right">
+                  <p className={cn("text-sm font-semibold", row.value >= 0 ? "text-slate-900" : "text-rose-700")}>
+                    {row.value >= 0 ? "+" : "−"}
+                    {formatCompactVndAmount(Math.abs(row.value))}
+                  </p>
+                  <p className="text-[11px] text-slate-400">{signedVnd(row.value)}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
 
-function Amount({ label, value }: { label: string; value: string }) {
+function Total({ label, value, muted = false }: { label: string; value: number; muted?: boolean }) {
   return (
-    <span>
-      <span className="text-slate-500">{label} </span>
-      <span className="font-semibold text-slate-900">{value}</span>
-    </span>
+    <div className="min-w-0">
+      <p className="text-slate-500">{label}</p>
+      <p className={cn("mt-1 text-2xl font-semibold tracking-tight", muted ? "text-slate-500" : "text-slate-900")}>
+        {formatCompactVndAmount(value)}
+      </p>
+      <p className="text-[11px] text-slate-400">{formatVnd(value)}</p>
+    </div>
   );
 }
 

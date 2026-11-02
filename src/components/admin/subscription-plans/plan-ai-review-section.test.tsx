@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PlanAiReviewSection } from "@/components/admin/subscription-plans/plan-ai-review-section";
 import type { PlanAiAssessment, PlanAiReviewResponse } from "@/types/plan-ai-review";
 import type { PlanInsights } from "@/types/plan-insights";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 
 const mutate = vi.fn();
 let review: PlanAiReviewResponse;
@@ -76,20 +76,36 @@ const buildReview = (overrides: Partial<PlanAiReviewResponse> = {}): PlanAiRevie
   ...overrides,
 });
 
+// Every plan together opens first; a plan's own review is one click on its tile.
+const openStarter = () => fireEvent.click(screen.getByRole("tab", { name: /Starter/ }));
+
 describe("PlanAiReviewSection", () => {
   beforeEach(() => {
     mutate.mockReset();
     review = buildReview();
   });
 
+  it("opens on every plan together, with the overall reading and the plans side by side", () => {
+    render(<PlanAiReviewSection />);
+
+    expect(screen.getByRole("tab", { name: /All plans/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByText("Across all plans").nextElementSibling).toHaveTextContent("Trial conversion is 28.6%.");
+    expect(screen.getByRole("row", { name: /Starter.*64 · Watch.*Stable.*Healthy · 78/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Starter" }));
+    expect(screen.getByText((_, element) => element?.tagName === "P" && element.textContent === "Starter grew to 113 subscribers.")).toBeInTheDocument();
+  });
+
   it("shows each plan's verdict, its change since the last review and where the review came from", () => {
     render(<PlanAiReviewSection />);
+    openStarter();
 
     expect(screen.getByText("Starter")).toBeInTheDocument();
     // The score change is its own chip, apart from the status and the outlook.
     expect(screen.getByText("▼ 14")).toBeInTheDocument();
     expect(screen.getByText("Last review: Healthy · 78")).toBeInTheDocument();
     expect(screen.getByText(/AI review of 1 Aug – 29 Oct 2026 · Generated 29 Oct 2026/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^Features/ }));
     expect(screen.getByText("Standard videos")).toBeInTheDocument();
     expect(screen.getByText("Keeps customers")).toBeInTheDocument();
   });
@@ -105,16 +121,21 @@ describe("PlanAiReviewSection", () => {
   it("shows the MRR bridge from the review's own figures, for all plans and the picked plan", () => {
     render(<PlanAiReviewSection />);
 
-    const [all, plan] = screen.getAllByLabelText("MRR bridge");
+    const all = screen.getByLabelText("MRR bridge");
     expect(all).toHaveTextContent("MRR 31 Jul 2026");
     expect(all).toHaveTextContent("Plan changes");
     expect(all).not.toHaveTextContent("Expansion");
+
+    openStarter();
+    const plan = screen.getByLabelText("MRR bridge");
     expect(plan).toHaveTextContent("Moved out");
     expect(plan).toHaveTextContent("MRR 29 Oct 2026");
   });
 
   it("keeps a churn pattern apart from its unconfirmed explanation", () => {
     render(<PlanAiReviewSection />);
+    openStarter();
+    fireEvent.click(screen.getByRole("button", { name: /^Why customers leave/ }));
 
     expect(screen.getByText("Leaving is linked to making no designs or mockups.")).toBeInTheDocument();
     expect(screen.getByText("Possible explanation, unconfirmed:")).toBeInTheDocument();
@@ -123,9 +144,10 @@ describe("PlanAiReviewSection", () => {
 
   it("lists high priority actions first, with their kind", () => {
     render(<PlanAiReviewSection />);
+    openStarter();
 
-    const actions = screen.getAllByText(/^(Change|Investigate):/).map((label) => label.textContent);
-    expect(actions).toEqual(["Change: ", "Investigate: "]);
+    const actions = screen.getAllByText(/^(Change|Investigate)$/).map((label) => label.textContent);
+    expect(actions).toEqual(["Change", "Investigate"]);
   });
 
   it("shows the backend's note when churn was not analysed", () => {
@@ -134,6 +156,8 @@ describe("PlanAiReviewSection", () => {
     review.latest!.review.plans = [starter({ churnReasons: [], churnNote: note })];
 
     render(<PlanAiReviewSection />);
+    openStarter();
+    fireEvent.click(screen.getByRole("button", { name: /^Why customers leave/ }));
 
     expect(screen.getByText(note)).toBeInTheDocument();
   });
@@ -164,6 +188,11 @@ describe("PlanAiReviewSection", () => {
     );
     const insights = {
       days: 90,
+      plans: [
+        { key: "starter", isTrial: false, subscribers: 113 },
+        { key: "pro", isTrial: false, subscribers: 77 },
+        { key: "trial", isTrial: true, subscribers: 12 },
+      ],
       verdicts: [{ key: "pro", verdictLabel: "Healthy", evidence: ["Keeps 72.7% of its customers."], action: null }],
       churnSignals: [
         {
@@ -187,19 +216,27 @@ describe("PlanAiReviewSection", () => {
     } as unknown as PlanInsights;
 
     render(<PlanAiReviewSection insights={insights} />);
-    expect(screen.getByText("Starter grew to 113 subscribers.")).toBeInTheDocument();
+    // Paying subscribers and running trials sit on the All plans tile.
+    expect(screen.getByRole("tab", { name: /All plans/ })).toHaveTextContent("190 paying · 12 on trial");
+    openStarter();
+    expect(screen.getByText((_, element) => element?.tagName === "P" && element.textContent === "Starter grew to 113 subscribers.")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: /Pro/ }));
 
     expect(screen.getByText("Pro kept most customers.")).toBeInTheDocument();
+    expect(screen.getByText(/Rule-based check \(Healthy\)/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^Features/ }));
     expect(screen.getByText(/56 customers stayed and 21 stopped paying in the last 90 days/)).toBeInTheDocument();
     // The widest gap first.
     expect(screen.getAllByText(/^(AI videos|ZIP exports)$/).map((item) => item.textContent)).toEqual(["AI videos", "ZIP exports"]);
-    expect(screen.getByText(/Rule-based check \(Healthy\)/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^Why customers leave/ }));
     // Each customer who left in one group, the notable one marked.
     const groups = screen.getByLabelText("Leave groups");
-    expect(groups).toHaveTextContent("Never got started");
-    expect(groups).toHaveTextContent("8 of 21 (38.1%) against 5.4% of those who stayed.");
+    const started = within(groups).getByRole("row", { name: /Never got started/ });
+    expect(within(started).getAllByRole("cell").map((cell) => cell.textContent)).toEqual(
+      expect.arrayContaining(["38.1%8 of 21", "5.4%"])
+    );
+    expect(within(started).getByRole("img", { name: "Left 38.1%, Stayed 5.4%" })).toBeInTheDocument();
     expect(groups).toHaveTextContent("Never used rendered mockups or design images, the plan's most used features.");
     expect(screen.getByText("Notable")).toBeInTheDocument();
   });

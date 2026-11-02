@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Layers, X } from "lucide-react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
+import {
+  type FeaturePicks,
+  initialPicks,
+  picksAreValid,
+  PlanFeaturePicker,
+  toFeatureInputs,
+} from "@/components/admin/subscription-plans/plan-feature-picker";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,14 +23,14 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { PLAN_FEATURES } from "@/helpers/plan-features";
 import { useCreateSubscriptionPlan } from "@/hooks/mutations/use-create-subscription-plan";
 import { useUpdateSubscriptionPlan } from "@/hooks/mutations/use-update-subscription-plan";
+import { useAdminFeatures } from "@/hooks/queries/use-admin-features";
 import {
   subscriptionPlanFormSchema,
   type SubscriptionPlanFormValues,
 } from "@/schemas/subscription-plan";
-import type { AdminSubscriptionPlan, PlanFeatureInput } from "@/types/admin-subscription-plan";
+import type { AdminSubscriptionPlan } from "@/types/admin-subscription-plan";
 import { formatVnd } from "@/utils/format-currency";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -32,6 +39,8 @@ type PlanFormDialogProps = {
   plan: AdminSubscriptionPlan | null;
   // The PayOS rate, to preview what a typed USD price charges; null hides the preview.
   usdToVndRate: number | null;
+  // The plans a new plan can copy its features from.
+  plans: AdminSubscriptionPlan[];
   onClose: () => void;
 };
 
@@ -41,30 +50,8 @@ const chargedVnd = (priceUsd: number | undefined, rate: number | null) =>
     ? `≈ ${formatVnd(Math.round(priceUsd * rate))} charged via PayOS`
     : null;
 
-type FeatureValues = NonNullable<SubscriptionPlanFormValues["features"]>;
-
-// A new plan starts with every flag off and every limit unset (no limit).
-const DEFAULT_FEATURES: FeatureValues = Object.fromEntries(
-  PLAN_FEATURES.map((feature) => [feature.code, { isEnabled: feature.kind === "limit", limitValue: null }])
-);
-
-const toFeatureValues = (features: PlanFeatureInput[] | undefined): FeatureValues => ({
-  ...DEFAULT_FEATURES,
-  ...Object.fromEntries(
-    (features ?? []).map((feature) => [feature.code, { isEnabled: feature.isEnabled, limitValue: feature.limitValue }])
-  ),
-});
-
-const toFeatureInputs = (features: FeatureValues): PlanFeatureInput[] =>
-  PLAN_FEATURES.map((feature) => {
-    const value = features[feature.code] ?? DEFAULT_FEATURES[feature.code];
-    return feature.kind === "limit"
-      ? { code: feature.code, isEnabled: true, limitValue: value.limitValue }
-      : { code: feature.code, isEnabled: value.isEnabled, limitValue: null };
-  });
-
-const FEATURE_GROUPS = [...new Set(PLAN_FEATURES.map((feature) => feature.group))];
-
+// The old quota columns and the API key, white-label and priority support switches are kept as they
+// are: nothing checks them any more, and what a plan includes is set with features.
 const EMPTY_VALUES: SubscriptionPlanFormValues = {
   name: "",
   tier: "",
@@ -81,8 +68,8 @@ const EMPTY_VALUES: SubscriptionPlanFormValues = {
   customApiKeysAllowed: false,
   whiteLabelExportEnabled: false,
   prioritySupport: false,
-  isActive: true,
-  features: DEFAULT_FEATURES,
+  // A new plan waits off sale until the Admin has checked it.
+  isActive: false,
 };
 
 const toFormValues = (plan: AdminSubscriptionPlan | null): SubscriptionPlanFormValues =>
@@ -104,12 +91,14 @@ const toFormValues = (plan: AdminSubscriptionPlan | null): SubscriptionPlanFormV
         whiteLabelExportEnabled: plan.whiteLabelExportEnabled,
         prioritySupport: plan.prioritySupport,
         isActive: plan.isActive,
-        features: toFeatureValues(plan.features),
       }
     : EMPTY_VALUES;
 
-export function PlanFormDialog({ open, plan, usdToVndRate, onClose }: PlanFormDialogProps) {
+export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: PlanFormDialogProps) {
   const isEditing = plan !== null;
+  // A new plan's features come from the catalog, as the Admin set it up.
+  const { data: catalog = [] } = useAdminFeatures();
+  const [picks, setPicks] = useState<FeaturePicks>({});
   const createMutation = useCreateSubscriptionPlan(onClose);
   const updateMutation = useUpdateSubscriptionPlan(onClose);
   const isPending = createMutation.isPending || updateMutation.isPending;
@@ -138,20 +127,31 @@ export function PlanFormDialog({ open, plan, usdToVndRate, onClose }: PlanFormDi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, plan]);
 
+  // A new plan starts from the basics; the catalog may load after the dialog opens.
+  const catalogSize = catalog.length;
+  useEffect(() => {
+    if (open && !plan) setPicks(initialPicks(catalog));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, plan, catalogSize]);
+
+  const picksValid = picksAreValid(picks);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const submit = handleSubmit(({ tier, features, ...values }) => {
     const annualPriceUsd = values.annualPriceUsd ?? null;
     const description = values.description?.trim() ? values.description.trim() : null;
-    const featureInputs = toFeatureInputs(features ?? DEFAULT_FEATURES);
 
     if (isEditing) {
       updateMutation.mutate({
         id: plan.id,
-        input: { ...values, description, annualPriceUsd, features: featureInputs },
+        // Features are changed on the plan card, where current subscribers keep what they had.
+        input: { ...values, description, annualPriceUsd },
       });
       return;
     }
 
-    createMutation.mutate({ ...values, tier, description, annualPriceUsd, features: featureInputs });
+    if (!picksValid) return;
+    createMutation.mutate({ ...values, tier, description, annualPriceUsd, features: toFeatureInputs(catalog, picks) });
   });
 
   return (
@@ -216,6 +216,11 @@ export function PlanFormDialog({ open, plan, usdToVndRate, onClose }: PlanFormDi
                     />
                     {monthlyCharged && <p className="mt-1 text-[11px] text-slate-400">{monthlyCharged}</p>}
                   </Field>
+                  {isEditing && (
+                    <p className="text-[11px] leading-relaxed text-slate-400 sm:col-span-2">
+                      A new price applies to new purchases and renewals; a period already paid keeps its price.
+                    </p>
+                  )}
                   <Field label="Annual price (USD)" htmlFor="plan-annual-price" error={errors.annualPriceUsd?.message}>
                     <Input
                       id="plan-annual-price"
@@ -247,59 +252,33 @@ export function PlanFormDialog({ open, plan, usdToVndRate, onClose }: PlanFormDi
                 </div>
               </FormSection>
 
-              {FEATURE_GROUPS.map((group) => (
-                <FormSection key={group} title={group === "Safety caps" ? "Safety caps (hidden from Sellers)" : group}>
-                  {PLAN_FEATURES.filter((feature) => feature.group === group).map((feature) =>
-                    feature.kind === "flag" ? (
-                      <Controller
-                        key={feature.code}
-                        name={`features.${feature.code}.isEnabled`}
-                        control={control}
-                        render={({ field }) => (
-                          <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 px-3.5 py-2.5">
-                            <div>
-                              <p className="text-sm font-medium text-slate-700">{feature.label}</p>
-                              <p className="text-muted-foreground text-xs">{feature.description}</p>
-                            </div>
-                            <Switch checked={Boolean(field.value)} onCheckedChange={field.onChange} aria-label={feature.label} />
-                          </div>
-                        )}
-                      />
-                    ) : (
-                      <Controller
-                        key={feature.code}
-                        name={`features.${feature.code}.limitValue`}
-                        control={control}
-                        render={({ field }) => (
-                          <Field
-                            label={feature.label}
-                            htmlFor={`plan-feature-${feature.code}`}
-                            error={errors.features?.[feature.code]?.limitValue?.message}
-                          >
-                            <Input
-                              id={`plan-feature-${feature.code}`}
-                              type="number"
-                              min={0}
-                              placeholder="No limit"
-                              value={typeof field.value === "number" ? field.value : ""}
-                              onChange={(event) =>
-                                field.onChange(event.target.value === "" ? null : Number(event.target.value))
-                              }
-                            />
-                            <p className="mt-1 text-[11px] text-slate-400">{feature.description}</p>
-                          </Field>
-                        )}
-                      />
-                    )
+              {isEditing ? (
+                <p className="rounded-xl bg-slate-50 px-4 py-3 text-xs leading-relaxed text-slate-500">
+                  Features and limits are changed on the plan card, so current subscribers keep what they paid for until
+                  their period ends.
+                </p>
+              ) : (
+                <FormSection title="Features">
+                  <PlanFeaturePicker catalog={catalog} plans={plans} picks={picks} onChange={setPicks} />
+                  {!picksValid && (
+                    <p role="alert" className="text-destructive text-xs">
+                      Each limit must be a whole number from 0 to 10,000, or empty for no limit.
+                    </p>
                   )}
                 </FormSection>
-              ))}
+              )}
 
-              <FormSection title="Plan settings">
-                <ToggleField control={control} name="isActive" label="Plan is active" description="Visible on the public pricing page" />
-                <ToggleField control={control} name="customApiKeysAllowed" label="Custom API keys" description="Allow programmatic access" />
-                <ToggleField control={control} name="whiteLabelExportEnabled" label="White-label export" description="Remove APCS branding" />
-                <ToggleField control={control} name="prioritySupport" label="Priority support" description="SLA guarantees" />
+              <FormSection title="Sale">
+                <ToggleField
+                  control={control}
+                  name="isActive"
+                  label="On sale"
+                  description={
+                    isEditing
+                      ? "Sellers can buy it. Taking it off sale keeps current subscribers on it."
+                      : "Leave off until you have checked the new plan; Sellers cannot buy it until then."
+                  }
+                />
               </FormSection>
             </div>
           </div>

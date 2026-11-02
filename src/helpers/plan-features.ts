@@ -1,11 +1,16 @@
+import type { FeatureCatalogItem } from "@/types/feature-catalog";
 import type { Entitlements, PlanFeatureFlag } from "@/types/subscription";
 
 export type PlanFeatureCode =
+  | "design_images"
   | "design_variations"
   | "auto_approval"
+  | "template_mockups"
   | "custom_mockup_templates"
   | "lifestyle_mockup"
   | "listing_regenerate"
+  | "monthly_listings"
+  | "standard_video"
   | "all_video_formats"
   | "ai_video"
   | "studio_keyframe"
@@ -13,9 +18,10 @@ export type PlanFeatureCode =
   | "daily_listing_cap"
   | "daily_video_cap"
   | "workflow_listing"
-  | "workflow_publish";
+  | "workflow_publish"
+  | "zip_export";
 
-type PlanFeatureDefinition = {
+export type PlanFeatureDefinition = {
   code: PlanFeatureCode;
   label: string;
   kind: "flag" | "limit";
@@ -25,6 +31,13 @@ type PlanFeatureDefinition = {
 
 // Mirrors PlanFeatures.All on the backend, in the same order.
 export const PLAN_FEATURES: PlanFeatureDefinition[] = [
+  {
+    code: "design_images",
+    label: "Design images from prompt",
+    kind: "flag",
+    group: "Design images",
+    description: "Generate design images from a prompt, on their own or in a workflow.",
+  },
   {
     code: "design_variations",
     label: "Design variations per product",
@@ -38,6 +51,13 @@ export const PLAN_FEATURES: PlanFeatureDefinition[] = [
     kind: "flag",
     group: "Design images",
     description: "Approve generated designs automatically instead of reviewing each one.",
+  },
+  {
+    code: "template_mockups",
+    label: "Mockups from templates",
+    kind: "flag",
+    group: "Mockups",
+    description: "Render mockups with the built-in templates.",
   },
   {
     code: "custom_mockup_templates",
@@ -59,6 +79,20 @@ export const PLAN_FEATURES: PlanFeatureDefinition[] = [
     kind: "flag",
     group: "Listing",
     description: "Regenerate a listing and score its SEO.",
+  },
+  {
+    code: "monthly_listings",
+    label: "Listings per month",
+    kind: "limit",
+    group: "Listing",
+    description: "Most listings a Seller can write each calendar month. Leave empty for no limit.",
+  },
+  {
+    code: "standard_video",
+    label: "Standard video",
+    kind: "flag",
+    group: "Video",
+    description: "Render standard videos in square and portrait.",
   },
   {
     code: "all_video_formats",
@@ -116,7 +150,34 @@ export const PLAN_FEATURES: PlanFeatureDefinition[] = [
     group: "Workflow",
     description: "Publish finished products to Etsy and Printify, once those steps are available.",
   },
+  {
+    code: "zip_export",
+    label: "ZIP export",
+    kind: "flag",
+    group: "Workflow",
+    description: "Download a finished product's files as a ZIP.",
+  },
 ];
+
+// The features with the labels, groups and order the Admin set in the catalog. Only codes the
+// frontend knows are kept, with their kind from PLAN_FEATURES; without a catalog (still loading,
+// or unreachable) PLAN_FEATURES is used as is.
+export const catalogFeatures = (catalog: FeatureCatalogItem[] | undefined): PlanFeatureDefinition[] => {
+  if (!catalog?.length) return PLAN_FEATURES;
+
+  const byCode = new Map(catalog.map((item) => [item.code, item]));
+  return PLAN_FEATURES.map((feature, index) => {
+    const item = byCode.get(feature.code);
+    return {
+      definition: item
+        ? { ...feature, label: item.label, group: item.group, description: item.description }
+        : feature,
+      order: item?.sortOrder ?? (index + 1) * 10,
+    };
+  })
+    .sort((a, b) => a.order - b.order)
+    .map(({ definition }) => definition);
+};
 
 export const isSafetyCap = (code: string) => code.startsWith("daily_");
 

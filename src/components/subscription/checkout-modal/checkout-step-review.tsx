@@ -3,6 +3,8 @@ import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { planLines } from "@/components/subscription/plan-comparison-card";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { catalogFeatures } from "@/helpers/plan-features";
+import { useFeatureCatalog } from "@/hooks/queries/use-feature-catalog";
 import type { AvailablePlan, BillingCycle } from "@/types/subscription";
 import { formatVnd } from "@/utils/format-currency";
 
@@ -37,6 +39,7 @@ export const CheckoutStepReview = ({
   onCancel,
 }: CheckoutStepReviewProps) => {
   const today = new Date();
+  const { data: catalog } = useFeatureCatalog();
   // BR191: a plan with no annual price must never offer the Annual option.
   const canChooseAnnual = plan.annualPriceUsd !== null;
   const dueToday = billingCycle === "annual" && plan.annualPriceVnd !== null
@@ -68,7 +71,7 @@ export const CheckoutStepReview = ({
         </div>
         {plan.description && <p className="text-muted-foreground mt-2 text-sm">{plan.description}</p>}
         <div className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-          {planLines(plan)
+          {planLines(plan, catalogFeatures(catalog))
             .filter((line) => line.included)
             .map((line) => (
               <span key={line.label} className="flex items-center gap-2">

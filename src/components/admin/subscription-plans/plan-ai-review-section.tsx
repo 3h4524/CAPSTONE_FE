@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Info, Layers, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { Activity, AlertTriangle, Info, Loader2, RefreshCw } from "lucide-react";
 
-import { MrrBridgeStrip } from "@/components/admin/subscription-plans/mrr-bridge-strip";
+import { AllPlansDetail, AllPlansTile } from "@/components/admin/subscription-plans/all-plans-health";
 import { PlanDetail } from "@/components/admin/subscription-plans/plan-health-detail";
 import { PlanTile } from "@/components/admin/subscription-plans/plan-health-tile";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,9 @@ import { useRegeneratePlanAiReview } from "@/hooks/mutations/use-regenerate-plan
 import { usePlanAiReview } from "@/hooks/queries/use-plan-ai-review";
 import type { PlanAiAssessment, PlanAiReviewResponse } from "@/types/plan-ai-review";
 import type { PlanInsights } from "@/types/plan-insights";
+
+// The pick that shows every plan together.
+const ALL = "__all__";
 
 interface PlanAiReviewSectionProps {
   /** A plan key to open first, when the page is opened from the Revenue page. */
@@ -61,18 +64,21 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
   const blocker = regenerateBlocker(data, new Date());
   const snapshot = data.latest;
   const plans = snapshot?.review.plans ?? [];
-  const selected = plans.find((plan) => plan.plan === picked) ?? plans[0];
   const allPlansBridge = snapshot?.mrrBridges?.find((bridge) => bridge.planName === null);
+  const hasAllPlans = Boolean(snapshot?.review.overall || allPlansBridge);
+  // Nothing picked opens every plan together, when there is anything to show for it.
+  const showAll = hasAllPlans && (picked === ALL || picked === null);
+  const selected = plans.find((plan) => plan.plan === picked) ?? plans[0];
 
   return (
-    <section id="plan-health" className="scroll-mt-24 space-y-4" aria-labelledby="ai-review-title">
+    <section id="plan-health" className="scroll-mt-32 space-y-4" aria-labelledby="ai-review-title">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#5b7aa6]/10 text-[#3f5f8a]">
-            <Sparkles className="size-[18px]" />
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#2a9d8f]/12 text-[#21796e]">
+            <Activity className="size-[18px]" />
           </div>
           <div>
-            <h2 id="ai-review-title" className="flex items-center gap-1.5 text-base font-semibold text-slate-900">
+            <h2 id="ai-review-title" className="flex items-center gap-1.5 text-lg font-semibold tracking-tight text-slate-900">
               Plan health
               {/* A plain title tooltip: the caveat stays one hover away instead of a third line. */}
               <span
@@ -109,39 +115,49 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
 
       {snapshot && selected ? (
         <>
-          {snapshot.review.overall && (
-            <div className="flex gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4">
-              <Layers className="mt-0.5 size-4 shrink-0 text-slate-400" />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-slate-500">Across all plans</p>
-                <p className="mt-0.5 text-sm leading-relaxed text-slate-700">{snapshot.review.overall}</p>
-                {allPlansBridge && (
-                  <MrrBridgeStrip bridge={allPlansBridge} periodStart={snapshot.periodStart} periodEnd={snapshot.periodEnd} className="mt-3" />
-                )}
-              </div>
-            </div>
-          )}
-
+          {/* Every plan together is picked like a plan, first in the row, instead of a card of its own. */}
           <div role="tablist" aria-label="Plan" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {hasAllPlans && (
+              <AllPlansTile
+                planCount={plans.length}
+                paying={insights?.plans.filter((plan) => !plan.isTrial).reduce((sum, plan) => sum + plan.subscribers, 0)}
+                onTrial={insights?.plans.find((plan) => plan.isTrial)?.subscribers}
+                bridge={allPlansBridge}
+                selected={showAll}
+                onSelect={() => setPicked(ALL)}
+              />
+            )}
             {plans.map((plan) => (
               <PlanTile
                 key={plan.plan}
                 plan={plan}
                 name={planName(snapshot, plan.plan)}
                 previous={data.previousScores.find((item) => item.plan === plan.plan)}
-                selected={plan.plan === selected.plan}
+                selected={!showAll && plan.plan === selected.plan}
                 onSelect={() => setPicked(plan.plan)}
               />
             ))}
           </div>
 
+          {showAll ? (
+            <AllPlansDetail
+              overall={snapshot.review.overall || null}
+              bridge={allPlansBridge}
+              snapshot={snapshot}
+              plans={plans}
+              previousScores={data.previousScores}
+              onPick={setPicked}
+            />
+          ) : (
           <PlanDetail
             plan={selected}
             snapshot={snapshot}
             signal={insights?.churnSignals?.find((item) => item.key === selected.plan)}
             verdict={insights?.verdicts.find((item) => item.key === selected.plan)}
             days={insights?.days}
+            focusFeature={focusFeature?.metric}
           />
+          )}
         </>
       ) : (
         !data.isGenerating && (

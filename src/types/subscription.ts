@@ -66,6 +66,8 @@ export type AvailablePlan = {
   monthlyPriceVnd: number;
   annualPriceVnd: number | null;
   isCurrentPlan: boolean;
+  // The plan an Admin marked Recommended; at most one is.
+  isRecommended?: boolean;
   features: PlanFeatureFlag[];
   quotas: PlanQuotas;
 };
@@ -90,6 +92,9 @@ export type SubscriptionOverview = {
   // True when the Seller has no paid plan and never started a trial.
   trialEligible: boolean;
   trialDays: number;
+  // The plan the free trial gives and what it includes, as an Admin set them.
+  trialPlanName?: string | null;
+  trialAllowances?: { code: string; label: string; limit: number }[] | null;
 };
 
 export type TrialResult = {

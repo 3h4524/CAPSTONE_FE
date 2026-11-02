@@ -18,7 +18,8 @@ export type AllowanceItem = {
 
 export type Allowances = {
   /** "free", "trial", or null on a paid plan, which has no allowances. */
-  scope: "free" | "trial" | null;
+  // "plan": a paid plan with a monthly limit, such as Starter's listings per month.
+  scope: "free" | "trial" | "plan" | null;
   /** Free: the 1st of next month. Trial: the day it ends (YYYY-MM-DD). */
   resetsOn: string | null;
   /** Mockups one run may make; null when there is no such limit. */

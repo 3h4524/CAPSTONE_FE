@@ -10,13 +10,12 @@ import { useStartTrial } from "@/hooks/mutations/use-start-trial";
 import { ENTITLEMENTS_QUERY_KEY } from "@/hooks/queries/use-entitlements";
 import { SUBSCRIPTION_OVERVIEW_QUERY_KEY, useSubscriptionOverview } from "@/hooks/queries/use-subscription-overview";
 import { usePopupStore } from "@/stores/popup";
-import type { AvailablePlan } from "@/types/subscription";
+import type { AvailablePlan, BillingCycle } from "@/types/subscription";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { SubscriptionCheckoutModal } from "./checkout-modal/subscription-checkout-modal";
 import { SubscriptionRenewModal } from "./renew-modal/subscription-renew-modal";
 import { SubscriptionUpgradeModal } from "./upgrade-modal/subscription-upgrade-modal";
-import { AllowanceCard } from "./allowance-card";
 import { AvailablePlansSection } from "./available-plans-section";
 import { CurrentPlanCard } from "./current-plan-card";
 import { RecentInvoicesTable } from "./recent-invoices-table";
@@ -31,6 +30,8 @@ export const SubscriptionPageContent = () => {
   const [checkoutPlan, setCheckoutPlan] = useState<AvailablePlan | null>(null);
   const [upgradePlan, setUpgradePlan] = useState<AvailablePlan | null>(null);
   const [isRenewOpen, setIsRenewOpen] = useState(false);
+  // Plan cards show the monthly price with the yearly one under it; checkout lets the Seller pick.
+  const cycle: BillingCycle = "monthly";
   const { mutate: downgrade } = useDowngrade();
   const { mutate: cancelScheduledDowngrade, isPending: isCancellingScheduledDowngrade } =
     useCancelScheduledDowngrade();
@@ -95,38 +96,47 @@ export const SubscriptionPageContent = () => {
   return (
     <div className="w-full min-w-0 space-y-8 p-4 sm:p-6">
       <div>
-        <h1 className="text-2xl font-bold">Subscription</h1>
+        <h1 className="text-2xl font-bold">Billing &amp; Subscription</h1>
         <p className="text-muted-foreground text-sm">
-          Review your current plan and choose the features that fit your shop.
+          Keep track of your plan and what it allows, compare plans, and download your invoices.
         </p>
       </div>
 
-      <CurrentPlanCard
-        subscription={data.currentSubscription}
-        onCancelScheduledDowngrade={handleCancelScheduledDowngrade}
-        isCancellingScheduledDowngrade={isCancellingScheduledDowngrade}
-        onRenewClick={() => setIsRenewOpen(true)}
-      />
-
-      {data.trialEligible && (
-        <TrialOfferCard trialDays={data.trialDays} isStarting={isStartingTrial} onStart={handleStartTrial} />
+      {/* On Free there's nothing to show here; a plan or trial keeps it for renewal and scheduled changes. */}
+      {data.currentSubscription && (
+        <CurrentPlanCard
+          subscription={data.currentSubscription}
+          onCancelScheduledDowngrade={handleCancelScheduledDowngrade}
+          isCancellingScheduledDowngrade={isCancellingScheduledDowngrade}
+          onRenewClick={() => setIsRenewOpen(true)}
+        />
       )}
-
-      <AllowanceCard />
 
       <UsageQuotaCards quotas={data.usageQuotas} />
 
       <AvailablePlansSection
         plans={data.availablePlans}
         hasActivePaidPlan={data.hasActivePaidPlan}
+        cycle={cycle}
         onBuyClick={setCheckoutPlan}
         onUpgradeClick={setUpgradePlan}
         onDowngradeClick={handleDowngradeClick}
+        trialOffer={
+          data.trialEligible && (
+            <TrialOfferCard
+              trialDays={data.trialDays}
+              planName={data.trialPlanName ?? "Pro"}
+              allowances={data.trialAllowances ?? []}
+              isStarting={isStartingTrial}
+              onStart={handleStartTrial}
+            />
+          )
+        }
       />
 
       <RecentInvoicesTable invoices={data.recentInvoices} />
 
-      <SubscriptionCheckoutModal plan={checkoutPlan} onClose={() => setCheckoutPlan(null)} />
+      <SubscriptionCheckoutModal plan={checkoutPlan} initialCycle={cycle} onClose={() => setCheckoutPlan(null)} />
       <SubscriptionUpgradeModal plan={upgradePlan} onClose={() => setUpgradePlan(null)} />
       <SubscriptionRenewModal
         subscription={data.currentSubscription}

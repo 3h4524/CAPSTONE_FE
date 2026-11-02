@@ -27,7 +27,7 @@ export const AllowanceBanner = () => {
     >
       <span className="flex items-center gap-1.5 font-semibold text-slate-800">
         <Gauge className="size-3.5" aria-hidden="true" />
-        {allowances.scope === "trial" ? "Pro trial" : "Free"}
+        {allowances.scope === "trial" ? "Free trial" : allowances.scope === "plan" ? "Your plan this month" : "Free"}
       </span>
       {items.map((item) => (
         <span key={item.code} className={cn("tabular-nums", remaining(item) === 0 && "font-semibold text-rose-700")}>

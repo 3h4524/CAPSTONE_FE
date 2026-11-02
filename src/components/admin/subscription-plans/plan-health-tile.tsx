@@ -1,4 +1,4 @@
-import { OUTLOOK_ICON, STATUS_STYLE } from "@/components/admin/subscription-plans/plan-health-parts";
+import { OUTLOOK_CHIP, OUTLOOK_ICON, STATUS_STYLE } from "@/components/admin/subscription-plans/plan-health-parts";
 import { OUTLOOK_LABEL, STATUS_LABEL } from "@/helpers/plan-ai-review";
 import type { PlanAiAssessment, PlanAiScore } from "@/types/plan-ai-review";
 import { cn } from "@/utils/cn";
@@ -33,15 +33,22 @@ export function PlanTile({
       aria-selected={selected}
       onClick={onSelect}
       className={cn(
-        "flex items-center gap-4 rounded-2xl border bg-white p-4 text-left transition-all hover:border-slate-300 hover:shadow-sm",
-        selected ? cn("shadow-sm", style.selected) : "border-slate-200"
+        "relative flex items-center gap-4 overflow-hidden rounded-2xl border bg-white p-4 pt-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        selected ? cn("shadow-md ring-2", style.selected, style.ring) : "border-slate-200 shadow-xs"
       )}
     >
+      {/* A stripe in the plan's status colour, so health reads before the tile is read. */}
+      <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: style.stroke }} />
       <ScoreRing score={plan.score} stroke={style.stroke} className={style.score} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-[15px] font-semibold text-slate-900">{name}</p>
-          <span className="flex shrink-0 items-center gap-0.5 text-xs font-medium text-slate-500">
+          <p className="truncate text-base font-bold tracking-tight text-slate-900">{name}</p>
+          <span
+            className={cn(
+              "flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+              OUTLOOK_CHIP[plan.outlook.direction]
+            )}
+          >
             <Outlook className="size-3.5" /> {OUTLOOK_LABEL[plan.outlook.direction]}
           </span>
         </div>
@@ -72,7 +79,7 @@ function ScoreRing({ score, stroke, className }: { score: number | null; stroke:
   const circumference = 2 * Math.PI * radius;
   const filled = score === null ? 0 : (Math.max(0, Math.min(100, score)) / 100) * circumference;
   return (
-    <div className="relative size-16 shrink-0">
+    <div className="relative size-[72px] shrink-0">
       <svg viewBox="0 0 60 60" className="size-full -rotate-90">
         <circle cx="30" cy="30" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="6" />
         <circle
@@ -86,7 +93,7 @@ function ScoreRing({ score, stroke, className }: { score: number | null; stroke:
           strokeDasharray={`${filled} ${circumference}`}
         />
       </svg>
-      <span className={cn("absolute inset-0 flex items-center justify-center text-lg font-semibold tabular-nums", className)}>
+      <span className={cn("absolute inset-0 flex flex-col items-center justify-center text-2xl leading-none font-bold tabular-nums", className)}>
         {score ?? "—"}
       </span>
     </div>

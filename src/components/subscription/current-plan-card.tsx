@@ -58,7 +58,7 @@ export const CurrentPlanCard = ({
               ? `You're trying every ${subscription!.planName} feature for free. Choose a plan before ${formatDate(subscription!.trialEndsAt!)} to keep running your workflows.`
               : subscription
                 ? subscription.shortDescription
-                : "You can build and save workflows on Free. Start the Pro trial or choose a plan to run them."}
+                : "You can build and save workflows on Free. Start the free trial or choose a plan to run them."}
           </p>
           {isPastDue && subscription!.lastGraceDay && (
             <div

@@ -7,8 +7,10 @@ import { Plus } from "lucide-react";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { DeletePlanDialog } from "@/components/admin/subscription-plans/delete-plan-dialog";
+import { FeatureCatalogPanel } from "@/components/admin/subscription-plans/feature-catalog-panel";
 import { PlanCardGrid } from "@/components/admin/subscription-plans/plan-card-grid";
 import { PlanFormDialog } from "@/components/admin/subscription-plans/plan-form-dialog";
+import { PlanHistoryPanel } from "@/components/admin/subscription-plans/plan-history-panel";
 import { PlanInsightsPanel } from "@/components/admin/subscription-plans/plan-insights-panel";
 import { Button } from "@/components/ui/button";
 import type { AdminSubscriptionPlan } from "@/types/admin-subscription-plan";
@@ -21,7 +23,9 @@ type AdminSubscriptionPlansShellProps = {
   isLoading: boolean;
 };
 
-type View = "plans" | "insights";
+type View = "plans" | "features" | "history" | "insights";
+
+const VIEW_LABEL: Record<View, string> = { plans: "Plans", features: "Features", history: "History", insights: "Plan Insights" };
 
 const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: AdminSubscriptionPlansShellProps) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -35,6 +39,7 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
   const [view, setView] = useState<View>(searchParams.get("view") === "insights" ? "insights" : "plans");
 
   const openCreateForm = () => {
+    setView("plans");
     setFormPlan(null);
     setIsFormOpen(true);
   };
@@ -72,36 +77,44 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
                     Configure tiers, pricing and the features each plan includes, and see how Sellers use them.
                   </p>
                 </div>
-                <div className="flex items-center justify-end gap-2">
-                  <div className="flex rounded-lg border border-slate-200 bg-white p-0.5" role="tablist" aria-label="Subscription plans view">
-                    {(["plans", "insights"] as const).map((item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        role="tab"
-                        aria-selected={view === item}
-                        onClick={() => setView(item)}
-                        className={cn(
-                          "rounded-md px-3 py-1 text-[11px] font-semibold transition-colors",
-                          view === item ? "bg-slate-900 text-white" : "text-slate-500 hover:text-slate-800"
-                        )}
-                      >
-                        {item === "plans" ? "Plans" : "Plan Insights"}
-                      </button>
-                    ))}
-                  </div>
-                  {view === "plans" && (
-                    <Button size="sm" className="h-8 rounded-md px-3 text-[10px]" onClick={openCreateForm}>
-                      <Plus className="size-3" /> Create new plan
-                    </Button>
-                  )}
-                </div>
+                {/* On every tab, so the header keeps its shape; a new plan is shown with the others. */}
+                <Button size="sm" className="h-9 shrink-0 self-start rounded-lg px-4 text-xs sm:self-auto" onClick={openCreateForm}>
+                  <Plus className="size-3.5" /> Create new plan
+                </Button>
+              </div>
+
+              <div
+                className="mt-5 flex gap-6 overflow-x-auto border-b border-slate-200"
+                role="tablist"
+                aria-label="Subscription plans view"
+              >
+                {(["plans", "features", "history", "insights"] as const).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    role="tab"
+                    aria-selected={view === item}
+                    onClick={() => setView(item)}
+                    className={cn(
+                      "-mb-px shrink-0 border-b-2 px-0.5 pb-2.5 text-sm font-semibold transition-colors",
+                      view === item
+                        ? "border-slate-900 text-slate-900"
+                        : "border-transparent text-slate-400 hover:border-slate-300 hover:text-slate-700"
+                    )}
+                  >
+                    {VIEW_LABEL[item]}
+                  </button>
+                ))}
               </div>
 
               {view === "insights" ? (
                 <PlanInsightsPanel focusPlan={searchParams.get("plan")} />
+              ) : view === "history" ? (
+                <PlanHistoryPanel />
+              ) : view === "features" ? (
+                <FeatureCatalogPanel />
               ) : (
-              <PlanCardGrid plans={plans} isLoading={isLoading} onEdit={openEditForm} onDelete={setDeletePlan} />
+                <PlanCardGrid plans={plans} isLoading={isLoading} onEdit={openEditForm} onDelete={setDeletePlan} />
               )}
             </main>
           </div>
@@ -112,6 +125,7 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
         open={isFormOpen}
         plan={formPlan}
         usdToVndRate={plans[0]?.usdToVndRate ?? null}
+        plans={plans}
         onClose={() => setIsFormOpen(false)}
       />
       <DeletePlanDialog open={deletePlan !== null} plan={deletePlan} onClose={() => setDeletePlan(null)} />

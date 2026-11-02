@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Copy,
   GripVertical,
+  Lock,
   Minus,
   Plus,
   Sparkles,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { generateAiStudioFrame, quoteAiStudioFrame, videoWorkflowKeys } from "@/api/video-workflow";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,12 +43,14 @@ import {
 import { VideoTimelineEditor } from "@/components/workflows/media/video-timeline-editor";
 import { confirmAiShot } from "@/helpers/confirm-ai-shot";
 import { getErrorMessage } from "@/helpers/error-message";
+import { hasFeature } from "@/helpers/plan-features";
 import { showToast } from "@/helpers/toast";
 import { getVideoOutputFormat } from "@/helpers/video-output-formats";
 import { readString, readStringArray } from "@/helpers/workflow-config";
 import { useReviewMockupAsset } from "@/hooks/mutations/use-review-mockup-asset";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { useAiVideoTemplates } from "@/hooks/queries/use-ai-video-templates";
+import { useEntitlements } from "@/hooks/queries/use-entitlements";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { useRunSceneVideos } from "@/hooks/queries/use-run-scene-videos";
 import { useAppQueryClient } from "@/hooks/use-query-client";
@@ -314,6 +318,9 @@ export function AiShotOptions({
     state.nodes.find((item) => item.data.type === "apply-mockup")
   );
   const { data: catalog = [], isPending, isError, refetch } = useAiVideoTemplates();
+  // AI video is a Pro feature; a plan without it can still pick Standard for every scene.
+  const { data: entitlements } = useEntitlements();
+  const aiVideoLocked = entitlements !== undefined && !hasFeature(entitlements, "ai_video");
   const { data: allAssets = [], isPending: areAssetsLoading } = useMockupAssets(productId);
   const queryClient = useAppQueryClient();
   const { mutate: reviewStudioFrame, isPending: isReviewingStudioFrame } = useReviewMockupAsset();
@@ -1158,15 +1165,31 @@ export function AiShotOptions({
                   className="h-8 w-28 shrink-0"
                   aria-label={`Scene ${index + 1} generation mode`}
                 >
-                  <SelectValue />
+                  {/* Just the label: the trigger is too narrow to repeat the item's Pro badge. */}
+                  <SelectValue>{scene.mode === "standard" ? "Standard" : "AI video"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="standard">Standard</SelectItem>
-                  <SelectItem value="ai" disabled={otherDuration + 4 > 30}>
+                  <SelectItem value="ai" disabled={otherDuration + 4 > 30 || aiVideoLocked}>
                     AI video
+                    {aiVideoLocked && (
+                      <Badge variant="outline" className="gap-1 text-[10px]" title="Not included in your plan">
+                        <Lock className="size-3" aria-hidden="true" /> Pro
+                      </Badge>
+                    )}
                   </SelectItem>
                 </SelectContent>
               </Select>
+              {/* A scene saved as AI video before the plan changed: say why it will not run. */}
+              {aiVideoLocked && scene.mode !== "standard" && (
+                <Badge
+                  variant="outline"
+                  className="gap-1 text-[10px]"
+                  title="AI video is not included in your plan. Switch this scene to Standard."
+                >
+                  <Lock className="size-3" aria-hidden="true" /> Pro
+                </Badge>
+              )}
               <div className="flex max-w-56 min-w-32 flex-1 basis-36 items-center gap-1">
                 <Button
                   type="button"

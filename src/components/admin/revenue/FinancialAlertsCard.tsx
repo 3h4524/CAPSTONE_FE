@@ -30,12 +30,11 @@ import {
 } from "@/helpers/financial-alerts-seen";
 import { useAuthStore } from "@/stores/auth";
 import type { FinancialAlertDto, TransactionStatus } from "@/types/revenue";
-import { formatCurrency } from "@/utils/format-currency";
+import { formatVnd } from "@/utils/format-currency";
 
 interface FinancialAlertsCardProps {
   alerts?: FinancialAlertDto[];
   isLoading?: boolean;
-  currency?: "VND" | "USD";
   /** Filters the transaction table by a status and brings it into view. */
   onReview?: (status: TransactionStatus) => void;
 }
@@ -76,7 +75,6 @@ const ALERT_STYLE: Record<
 export function FinancialAlertsCard({
   alerts,
   isLoading,
-  currency = "VND",
   onReview,
 }: FinancialAlertsCardProps) {
   const [showAll, setShowAll] = useState(false);
@@ -153,7 +151,7 @@ export function FinancialAlertsCard({
           list
             .slice(0, VISIBLE_ALERTS)
             .map((alert) => (
-              <AlertItem key={alert.id} alert={alert} isNew={isNew(alert)} currency={currency} onReview={review} />
+              <AlertItem key={alert.id} alert={alert} isNew={isNew(alert)} onReview={review} />
             ))
         )}
       </div>
@@ -172,7 +170,6 @@ export function FinancialAlertsCard({
                 key={alert.id}
                 alert={alert}
                 isNew={newInDialog.has(alert.id)}
-                currency={currency}
                 onReview={review}
               />
             ))}
@@ -186,12 +183,10 @@ export function FinancialAlertsCard({
 function AlertItem({
   alert,
   isNew = false,
-  currency,
   onReview,
 }: {
   alert: FinancialAlertDto;
   isNew?: boolean;
-  currency: "VND" | "USD";
   onReview: (status: TransactionStatus) => void;
 }) {
   const style = ALERT_STYLE[alert.type] ?? ALERT_STYLE.info;
@@ -216,7 +211,7 @@ function AlertItem({
             {alert.amount != null ? (
               <span className="text-[11px] text-slate-500 dark:text-slate-400">
                 <span className="font-semibold text-slate-800 tabular-nums dark:text-slate-200">
-                  {formatCurrency(alert.amount, currency)}
+                  {formatVnd(alert.amount)}
                 </span>{" "}
                 {alert.amountLabel}
               </span>

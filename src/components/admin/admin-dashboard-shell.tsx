@@ -12,12 +12,12 @@ import {
 
 import { AdminActivityPanels } from "@/components/admin/admin-activity-panels";
 import { AdminMetricCard } from "@/components/admin/admin-metric-card";
-import { AdminRevenueChart } from "@/components/admin/admin-revenue-chart";
+import { AdminRevenueTrend } from "@/components/admin/admin-revenue-trend";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { Button } from "@/components/ui/button";
 import type { AdminDashboardMetricsDto } from "@/types/admin";
-import { formatCurrencyVnd } from "@/utils/format-currency";
+import { formatVnd } from "@/utils/format-currency";
 
 type AdminDashboardShellProps = {
   fullName: string;
@@ -89,10 +89,10 @@ const AdminDashboardContent = ({ fullName, onLogout, metrics, timeRange, onTimeR
                 />
                 <AdminMetricCard
                   label={`Total Revenue (${timeRange})`}
-                  value={metrics ? formatCurrencyVnd(metrics.totalRevenue) : "0 ₫"}
+                  value={metrics ? formatVnd(metrics.totalRevenue) : "0 ₫"}
                   change=""
                   trend="up"
-                  note={`MRR: ${metrics ? formatCurrencyVnd(metrics.recurringRevenue) : "0 ₫"}`}
+                  note={`MRR: ${metrics ? formatVnd(metrics.recurringRevenue) : "0 ₫"}`}
                   icon={DollarSign}
                 />
                 <AdminMetricCard
@@ -114,11 +114,7 @@ const AdminDashboardContent = ({ fullName, onLogout, metrics, timeRange, onTimeR
               </section>
 
               <div className="mt-5">
-                <AdminRevenueChart 
-                  revenueChart={metrics?.revenueChart} 
-                  timeRange={timeRange} 
-                  onTimeRangeChange={onTimeRangeChange} 
-                />
+                <AdminRevenueTrend timeRange={timeRange} onTimeRangeChange={onTimeRangeChange} />
               </div>
               <div className="mt-5">
                 <AdminActivityPanels latestTickets={metrics?.latestTickets} recentBatchJobs={metrics?.recentBatchJobs} />

@@ -131,7 +131,7 @@ export function UsagePage() {
               {data.allowance.planName}
             </p>
             <CardTitle className="flex justify-between">
-              Credit allowance{" "}
+              AI requests this period{" "}
               <Link href="/subscription" className="text-primary text-xs">
                 Manage <ExternalLink className="inline size-3" />
               </Link>
@@ -140,19 +140,28 @@ export function UsagePage() {
           <CardContent>
             <p className="text-2xl font-semibold">
               {data.allowance.used.toLocaleString()}{" "}
-              <span className="text-muted-foreground text-sm font-normal">
-                / {data.allowance.limit.toLocaleString()}
-              </span>
+              {data.allowance.limit > 0 && (
+                <span className="text-muted-foreground text-sm font-normal">
+                  / {data.allowance.limit.toLocaleString()}
+                </span>
+              )}
             </p>
-            <Progress value={data.allowance.percent} className="mt-3" />
+            {/* A limit of 0 means none: plans differ by feature, not by monthly quota. */}
+            {data.allowance.limit > 0 && <Progress value={data.allowance.percent} className="mt-3" />}
             <p className="text-muted-foreground mt-2 text-xs">
-              Resets {data.allowance.resetDate} · {data.allowance.daysRemaining} days remaining
+              Period ends {data.allowance.resetDate} · {data.allowance.daysRemaining} days remaining
             </p>
-            <p
-              className={`mt-4 rounded p-2 text-xs ${data.allowance.atRisk ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}
-            >
-              {data.allowance.atRisk ? "At risk" : "On track"} based on current usage pace.
-            </p>
+            {data.allowance.limit > 0 ? (
+              <p
+                className={`mt-4 rounded p-2 text-xs ${data.allowance.atRisk ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}
+              >
+                {data.allowance.atRisk ? "At risk" : "On track"} based on current usage pace.
+              </p>
+            ) : (
+              <p className="bg-muted text-muted-foreground mt-4 rounded p-2 text-xs">
+                No monthly limit. Fair use applies.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>

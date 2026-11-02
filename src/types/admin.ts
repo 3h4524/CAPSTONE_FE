@@ -1,9 +1,3 @@
-export type MonthlyRevenueDto = {
-  month: string;
-  subscriptions: number;
-  usage: number;
-};
-
 export type SupportTicketDto = {
   id: string;
   userName: string;
@@ -25,12 +19,13 @@ export type BatchJobDto = {
 export type AdminDashboardMetricsDto = {
   totalUsers: number;
   activePaidUsers: number;
+  /** Collected in the selected range, in VND, as on the Revenue page. */
   totalRevenue: number;
+  /** MRR today, in VND, as on the Revenue page. */
   recurringRevenue: number;
   activeBatchJobs: number;
   totalBatchJobs?: number;
   pendingTickets: number;
-  revenueChart: MonthlyRevenueDto[];
   latestTickets: SupportTicketDto[];
   recentBatchJobs: BatchJobDto[];
 };
@@ -44,6 +39,7 @@ export type AdminUserDto = {
   roles: string[];
   plan: string;
   totalJobs: number;
+  /** What the Seller pays a month for their plan, in VND (annual / 12; 0 on a free trial). */
   monthlyApiCost: number;
   birthday: string | null;
   createdAt: string;

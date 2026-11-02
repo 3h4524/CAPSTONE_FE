@@ -1,94 +1,31 @@
 /**
- * Formats a monetary amount into VND or USD.
- * Quy ước: Số lưu trong hệ thống là "nghìn đồng" (x 1.000) đối với VND.
- * Không làm tròn để đảm bảo hiển thị chính xác toàn bộ giá trị.
+ * Formats an amount already in full VND to whole đồng, e.g. 249750 -> "249.750 ₫". Prices are
+ * stored in USD; the API sends every amount the UI shows in full VND, at the PayOS rate.
  */
-export function formatCurrency(amount: number, currency: "VND" | "USD" = "VND"): string {
-  if (isNaN(amount) || amount === null || amount === undefined) {
-    return currency === "VND" ? "0 ₫" : "$0.00";
+export function formatVnd(amountVnd: number | null | undefined): string {
+  if (amountVnd === null || amountVnd === undefined || isNaN(amountVnd)) {
+    return "0 ₫";
   }
-
-  if (currency === "VND") {
-    const realVnd = amount * 1_000;
-    return formatRawVnd(realVnd);
-  }
-
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-}
-
-export function formatCompactNumber(amount: number): string {
-  if (isNaN(amount) || amount === null || amount === undefined) {
-    return "0";
-  }
-  return new Intl.NumberFormat("en-US", {
-    notation: "compact",
-    compactDisplay: "short",
-  }).format(amount);
+  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(
+    Math.round(amountVnd)
+  );
 }
 
 /**
- * Formats a raw monetary amount (already in full VND) into Vietnamese Dong (VND / ₫).
- * Example: 250000 -> "250.000 ₫"
- * Không làm tròn cứng, giữ số thập phân nếu có (tối đa 2 chữ số).
+ * Formats an amount already in full VND compactly for axes and tight labels, with English unit
+ * suffixes: 2118811000 -> "2.1B ₫", 176567583 -> "176.6M ₫", 249750 -> "250K ₫".
  */
-export function formatRawVnd(amountVnd: number): string {
-  if (isNaN(amountVnd) || amountVnd === null || amountVnd === undefined) {
+export function formatCompactVndAmount(amountVnd: number | null | undefined): string {
+  if (amountVnd === null || amountVnd === undefined || isNaN(amountVnd) || amountVnd === 0) {
     return "0 ₫";
   }
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 2,
-  }).format(amountVnd);
-}
+  const abs = Math.abs(amountVnd);
+  const sign = amountVnd < 0 ? "-" : "";
+  const scaled = (divisor: number, unit: string) => `${sign}${(abs / divisor).toFixed(1).replace(/\.0$/, "")}${unit} ₫`;
 
-/**
- * Formats an amount stored in thousands of VND (1 đơn vị = 1.000 ₫) into Vietnamese Dong (VND / ₫).
- * Quy ước: Số lưu trong hệ thống là "nghìn đồng" (x 1.000)
- * Example:
- * 50 -> "50.000 ₫"
- * 250 -> "250.000 ₫"
- * 9.99 -> "9.990 ₫"
- * Không làm tròn (không dùng Math.round).
- */
-export function formatCurrencyVnd(amountInThousands: number): string {
-  if (isNaN(amountInThousands) || amountInThousands === null || amountInThousands === undefined) {
-    return "0 ₫";
-  }
-  const realVnd = amountInThousands * 1_000;
-  return formatRawVnd(realVnd);
-}
-
-/**
- * Formats a compact VND string for charts or space-constrained labels.
- * Số đầu vào là "nghìn đồng" (x 1.000).
- * Example:
- * 1500000 -> "1.5 tỷ ₫" (1.500.000k = 1.5 tỷ)
- * 25000 -> "25M ₫" (25.000k = 25 triệu)
- * 250 -> "250k ₫" (250k = 250.000 ₫)
- * 50 -> "50k ₫"
- */
-export function formatCompactVnd(valueInThousands: number): string {
-  if (isNaN(valueInThousands) || valueInThousands === null || valueInThousands === undefined || valueInThousands === 0) {
-    return "0 ₫";
-  }
-  const realVnd = valueInThousands * 1_000;
-  const abs = Math.abs(realVnd);
-  const sign = realVnd < 0 ? "-" : "";
-
-  if (abs >= 1_000_000_000) {
-    return `${sign}${(abs / 1_000_000_000).toFixed(1).replace(/\.0$/, "")} tỷ ₫`;
-  }
-  if (abs >= 1_000_000) {
-    return `${sign}${(abs / 1_000_000).toFixed(1).replace(/\.0$/, "")}M ₫`;
-  }
-  if (abs >= 1_000) {
-    return `${sign}${(abs / 1_000).toFixed(0)}k ₫`;
-  }
-  return `${sign}${abs} ₫`;
+  // Each unit takes over where the smaller one would round up to 1000 (999,500 is "1M", not "1000K").
+  if (abs >= 999_950_000) return scaled(1_000_000_000, "B");
+  if (abs >= 999_500) return scaled(1_000_000, "M");
+  if (abs >= 999.5) return `${sign}${Math.round(abs / 1_000)}K ₫`;
+  return `${sign}${Math.round(abs)} ₫`;
 }

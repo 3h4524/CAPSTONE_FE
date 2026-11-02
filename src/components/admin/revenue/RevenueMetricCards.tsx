@@ -28,12 +28,11 @@ import {
   formatChange,
 } from "@/helpers/revenue-change";
 import type { MetricDetail, RevenueMetricsDto } from "@/types/revenue";
-import { formatCurrency } from "@/utils/format-currency";
+import { formatCompactVndAmount, formatVnd } from "@/utils/format-currency";
 
 interface RevenueMetricCardsProps {
   metrics?: RevenueMetricsDto;
   isLoading: boolean;
-  currency?: "VND" | "USD";
 }
 
 interface CardConfig {
@@ -51,7 +50,6 @@ interface CardConfig {
 export function RevenueMetricCards({
   metrics,
   isLoading,
-  currency = "VND",
 }: RevenueMetricCardsProps) {
   const cards: CardConfig[] = [
     {
@@ -82,7 +80,8 @@ export function RevenueMetricCards({
       strokeColor: "#6366f1",
       metric: metrics?.subscriptionMrr,
       isCurrency: true,
-      tooltip: "Monthly Recurring Revenue: Current monthly recurring revenue snapshot from all active subscriptions.",
+      tooltip:
+        "Monthly Recurring Revenue at the end of the period: each paying subscription's monthly price (annual plans count 1/12). The previous value is MRR at the end of the previous period, including customers who have left since.",
     },
     {
       title: "ARR",
@@ -92,7 +91,7 @@ export function RevenueMetricCards({
       strokeColor: "#f59e0b",
       metric: metrics?.arr,
       isCurrency: true,
-      tooltip: "Annual Recurring Revenue: Projected annualized recurring revenue snapshot based on SaaS standard (MRR × 12 months).",
+      tooltip: "Annual Recurring Revenue: MRR × 12, at the end of the period and of the previous period.",
     },
     {
       title: "Active Subscribers",
@@ -102,7 +101,8 @@ export function RevenueMetricCards({
       strokeColor: "#14b8a6",
       metric: metrics?.activeSubscribers,
       isCurrency: false,
-      tooltip: "Total unique customers with an active paid subscription in the selected period.",
+      tooltip:
+        "Sellers paying for a plan at the end of the period (free trials and unpaid renewals not counted), compared with those paying at the end of the previous period.",
     },
     {
       title: "Refund Amount",
@@ -163,11 +163,11 @@ export function RevenueMetricCards({
           }));
 
           const formattedValue = config.isCurrency
-            ? formatCurrency(metric.value, currency)
+            ? formatVnd(metric.value)
             : new Intl.NumberFormat("en-US").format(metric.value);
 
           const formattedPrevValue = config.isCurrency
-            ? formatCurrency(metric.previousValue, currency)
+            ? formatCompactVndAmount(metric.previousValue)
             : new Intl.NumberFormat("en-US").format(metric.previousValue);
 
           return (
@@ -224,7 +224,7 @@ export function RevenueMetricCards({
 
                 {/* Main Metric Value */}
                 <div className="mt-3">
-                  <div className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-slate-100">
+                  <div className="text-lg font-bold tracking-tight text-slate-900 tabular-nums xl:text-xl dark:text-slate-100">
                     {formattedValue}
                   </div>
                 </div>
@@ -246,7 +246,10 @@ export function RevenueMetricCards({
                     </span>
                   </div>
 
-                  <p className="truncate text-[11px] text-slate-400 dark:text-slate-500">
+                  <p
+                    className="truncate text-[11px] text-slate-400 dark:text-slate-500"
+                    title={config.isCurrency ? formatVnd(metric.previousValue) : undefined}
+                  >
                     Previous period: <span className="font-medium text-slate-500 dark:text-slate-400">{formattedPrevValue}</span>
                   </p>
                 </div>

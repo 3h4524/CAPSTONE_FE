@@ -34,14 +34,55 @@ export interface RevenueByPlanDto {
   uniqueCustomers: number;
   /** amount / uniqueCustomers; null when nobody paid. */
   arpu: number | null;
-  /** Customers live on the plan at the period start (retention denominator). */
-  retentionBase: number;
-  /** % of retentionBase still paying after the period; null when retentionBase < 5. */
+  /** The plan's paying customers at the period's start and end, and what happened between. */
+  customers: PlanCustomerFlowDto;
+  /** % of customers.start still paying at the end, on any plan; null when customers.start < 5. */
   retentionRate: number | null;
   /** Collected revenue in the equally long previous period. */
   previousAmount: number;
   /** Change vs. previousAmount; null when the plan earned nothing in the previous period. */
   percentageChange: number | null;
+  /** The plan's MRR at the end of the day before the period. */
+  mrrStart: number;
+  /** The plan's MRR at the end of the period. */
+  mrrEnd: number;
+  /** MRR change vs. mrrStart in percent; null when the plan had no MRR then. */
+  mrrChangePercent: number | null;
+  usageSignal: PlanUsageSignalDto;
+}
+
+/**
+ * A plan's paying customers at the end of the day before the period and at its end, counted like
+ * MRR. start = stayed + switchedOut + stoppedPaying; end = stayed + new + switchedIn.
+ */
+export interface PlanCustomerFlowDto {
+  start: number;
+  /** On the plan at both ends. */
+  stayed: number;
+  /** Moved to another plan and still paying. */
+  switchedOut: number;
+  /** Paying for nothing at the end. */
+  stoppedPaying: number;
+  /** Paying for nothing at the start. */
+  new: number;
+  /** Moved here from another plan. */
+  switchedIn: number;
+  end: number;
+}
+
+/** The feature with the largest usage gap between a plan's customers who stayed and who left. */
+export interface PlanUsageSignalDto {
+  stayed: number;
+  left: number;
+  /** Each group's minimum size for a comparison. */
+  minimumGroup: number;
+  hasSignal: boolean;
+  feature: string | null;
+  featureLabel: string | null;
+  /** 0–100. */
+  stayedRate: number | null;
+  /** 0–100. */
+  leftRate: number | null;
 }
 
 export interface RevenueChartDto {
@@ -137,7 +178,7 @@ export interface FinancialAlertDto {
   description: string;
   /** How many things the alert counts; null for a rate alert. A higher count makes it new again. */
   count?: number | null;
-  /** A money figure in invoice units (thousand VND), formatted by the client. */
+  /** A money figure in full VND, formatted by the client. */
   amount?: number | null;
   /** What `amount` means, e.g. "per month at risk". */
   amountLabel?: string | null;
@@ -147,9 +188,47 @@ export interface FinancialAlertDto {
   actionStatus?: TransactionStatus | null;
 }
 
+export interface MrrMovementMonthDto {
+  /** The month's first day (YYYY-MM-DD). */
+  monthStart: string;
+  new: number;
+  expansion: number;
+  contraction: number;
+  churn: number;
+  /** new + expansion - contraction - churn. */
+  net: number;
+}
+
+/**
+ * MRR at the period start, each cause of change and MRR at its end:
+ * end = start + new + movedIn + expansion - contraction - movedOut - churn.
+ */
+export interface MrrBridgeDto {
+  /** The plan, or null for all plans together. */
+  planName: string | null;
+  start: number;
+  new: number;
+  /** Customers who changed to this plan from another; always 0 for all plans together. */
+  movedIn: number;
+  expansion: number;
+  contraction: number;
+  /** Customers who changed from this plan to another; always 0 for all plans together. */
+  movedOut: number;
+  churn: number;
+  end: number;
+}
+
+export interface MrrMovementDto {
+  /** Six calendar months ending with the period's month, oldest first. */
+  months: MrrMovementMonthDto[];
+  /** The selected period for all plans together (planName null), then each plan. */
+  period: MrrBridgeDto[];
+}
+
 export interface RevenueInsightsDto {
   subscriptionAnalytics: SubscriptionAnalyticsDto;
   forecast: RevenueForecastDto;
   financialAlerts: FinancialAlertDto[];
+  mrrMovement: MrrMovementDto;
 }
 

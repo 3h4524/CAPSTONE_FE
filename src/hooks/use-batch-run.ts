@@ -187,10 +187,8 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
     if (previousStatus.current && ACTIVE_JOB_STATUSES.includes(previousStatus.current) && status && FINISHED_JOB_STATUSES.includes(status)) {
       const needsReview = useWorkflowRunStore.getState().job?.requireApproval === true;
       if (needsReview && status !== "failed") {
-        // Open Design approval so the designs to review are in front of the person.
-        const gate = useWorkflowStore.getState().nodes.find((node) => node.data.type === "design-approval");
-        if (gate) selectNode(gate.id);
-        showWorkflowActionToast("info", "Designs are ready. Approve the ones you want, then continue to the mock-ups.");
+        // The panel stays where the person left it (often on the designs being made): the note says where to go next.
+        showWorkflowActionToast("info", "Designs are ready. Approve the ones you want in Design approval, then continue to the mock-ups.");
       } else if (status === "completed") showWorkflowActionToast("success", "Image generation finished.");
       else if (status === "partially_completed") showWorkflowActionToast("warning", "Image generation finished, but some products failed. Open the Design image node to retry them.");
       else showWorkflowActionToast("error", "Image generation failed.");
@@ -199,7 +197,7 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
       if (finishedBatchId) void queryClient.invalidateQueries({ queryKey: batchJobKeys.byBatch(finishedBatchId) });
     }
     previousStatus.current = status;
-  }, [job?.status, queryClient, selectNode]);
+  }, [job?.status, queryClient]);
 
   useEffect(() => {
     if (!isEditorReady || !hasMockupNode || !job || step !== "watching") return;

@@ -50,8 +50,13 @@ export const WorkflowWorkspace = () => {
     const input = state.nodes.find((node) => node.data.type === "product-input");
     return typeof input?.data.config.productId === "string" ? input.data.config.productId : "";
   });
+  const batchId = useWorkflowStore((state) => {
+    const input = state.nodes.find((node) => node.data.type === "product-input");
+    return typeof input?.data.config.batchId === "string" ? input.data.config.batchId : "";
+  });
   const resetProductDependentState = useWorkflowStore((state) => state.resetProductDependentState);
   const previousProductId = useRef(productId);
+  const previousBatch = useRef({ workflowId: loadedWorkflowId, batchId });
 
   const {
     data: workflows,
@@ -119,6 +124,26 @@ export const WorkflowWorkspace = () => {
     const query = params.toString();
     router.replace(query ? `/workflows?${query}` : "/workflows", { scroll: false });
   }, [productId, resetProductDependentState, router]);
+
+  // The open job belongs to one batch: choosing another batch on the same workflow closes it, so the steps
+  // stop showing that batch's designs and statuses. (Opening a workflow is not a change of batch.)
+  useEffect(() => {
+    const previous = previousBatch.current;
+    previousBatch.current = { workflowId: loadedWorkflowId, batchId };
+    if (!previous.batchId || previous.workflowId !== loadedWorkflowId || previous.batchId === batchId) return;
+    if (useWorkflowStore.getState().isRunning) return;
+
+    const run = useWorkflowRunStore.getState();
+    if (!run.batchJobId || run.job?.batchId === batchId) return;
+    run.reset();
+    resetProductDependentState();
+    const params = new URLSearchParams(window.location.search);
+    params.delete("job");
+    params.delete("then");
+    params.delete("run");
+    const query = params.toString();
+    router.replace(query ? `/workflows?${query}` : "/workflows", { scroll: false });
+  }, [loadedWorkflowId, batchId, resetProductDependentState, router]);
 
   useEffect(() => {
     if (workflows && workflows.length === 0 && loadedWorkflowId) resetEditor();

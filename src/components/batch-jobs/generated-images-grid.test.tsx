@@ -23,6 +23,23 @@ const product = (overrides: Partial<BatchJobProductResult>): BatchJobProductResu
 const image = { id: "image-1", imageUrl: "https://img.example/1.png", variationIndex: 1, widthPx: 512, heightPx: 512, approvalStatus: "pending" };
 
 describe("GeneratedImagesGrid", () => {
+  it("warns under a design whose text OCR read wrong, and notes the one it read right", () => {
+    const misspelt = {
+      ...image,
+      id: "image-2",
+      textCheck: { ok: false, expected: "Salt Life", read: "SALT LIFF", missing: ["LIFE"], extra: ["LIFF"], repeated: [] },
+    };
+    const right = {
+      ...image,
+      textCheck: { ok: true, expected: "Salt Life", read: "SALT / LIFE", missing: [], extra: [], repeated: [] },
+    };
+    render(<GeneratedImagesGrid products={[product({ images: [right, misspelt] })]} onPreview={vi.fn()} />);
+
+    expect(screen.getByText("Text may be wrong")).toBeInTheDocument();
+    expect(screen.getByText(/missing LIFE; extra LIFF/)).toBeInTheDocument();
+    expect(screen.getByText("Text matches")).toBeInTheDocument();
+  });
+
   it("shows a product left without designs, with the reason and a way to generate it again", async () => {
     const user = userEvent.setup();
     const onRegenerate = vi.fn();

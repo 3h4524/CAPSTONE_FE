@@ -1,3 +1,16 @@
+/** What OCR read in a design compared with the phrase it should print. A warning only: OCR can misread stylised letters. */
+export type DesignTextCheck = {
+  /** Every word of the phrase was read, with no other word and no repeat. */
+  ok: boolean;
+  /** The phrase the design should print; null when it should print no words. */
+  expected: string | null;
+  /** The text OCR read, line by line, joined with " / ". */
+  read: string;
+  missing: string[];
+  extra: string[];
+  repeated: string[];
+};
+
 export type GeneratedImage = {
   id: string;
   imageUrl: string;
@@ -5,6 +18,8 @@ export type GeneratedImage = {
   widthPx: number;
   heightPx: number;
   approvalStatus: string;
+  /** Absent or null when the design's text was not checked. */
+  textCheck?: DesignTextCheck | null;
 };
 
 export type BatchJobProductResult = {
@@ -57,6 +72,8 @@ export type BatchJobDetail = {
   aspectRatio: string;
   counters: BatchJobCounters;
   products: BatchJobProductResult[];
+  /** True while a design made in the last few minutes is still waiting for its OCR text check. */
+  textCheckPending?: boolean;
   /** null for jobs started before approval existed. */
   requireApproval?: boolean | null;
   /** The workflow the job was started from; null when it was started outside one. */

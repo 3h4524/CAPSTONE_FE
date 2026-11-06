@@ -35,7 +35,7 @@ export const NAV_SECTIONS: AppNavSection[] = [
     label: "SYSTEM",
     items: [
       { label: "Support", href: "/support", icon: LifeBuoy },
-      { label: "Settings", href: "/settings", icon: Settings, disabled: true },
+      { label: "Settings", href: "/settings", icon: Settings },
       { label: "Billing", href: "/subscription", icon: CreditCard },
     ],
   },
@@ -53,4 +53,5 @@ export const ROUTE_TITLES = {
   styles: "My Styles",
   settings: "Settings",
   billing: "Billing",
+  "market-opportunities": "Market Radar",
 } as const;

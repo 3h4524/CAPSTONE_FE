@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
+import { getSessionUser, resolveSignedInLanding } from "@/api/session";
 import { BenefitsSection } from "@/components/landing/sections/benefits-section";
 import { ComparisonSection } from "@/components/landing/sections/comparison-section";
 import { CtaSection } from "@/components/landing/sections/cta-section";
@@ -18,7 +20,13 @@ export const generateMetadata = (): Metadata =>
     pathname: "/",
   });
 
-const RootPage = () => {
+const RootPage = async () => {
+  const user = await getSessionUser();
+
+  if (user) {
+    redirect(resolveSignedInLanding(user));
+  }
+
   return (
     <>
       <main className="flex flex-col">

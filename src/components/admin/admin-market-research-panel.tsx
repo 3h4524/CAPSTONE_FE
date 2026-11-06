@@ -23,13 +23,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -38,8 +31,34 @@ import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useRetrieveMarketResearch } from "@/hooks/mutations/use-retrieve-market-research";
 import { useQuery } from "@/hooks/queries/use-query";
 
-const DEFAULT_QUERIES = "hiking shirt\nmountain gift\ncamping t shirt";
+const DEFAULT_QUERIES = [
+  "personalized friend gift",
+  "custom pet gift",
+  "pet ornament",
+  "whimsical ornament",
+  "bedazzled kit",
+  "custom napkins",
+  "friendsmas party supplies",
+  "whimsical holiday decor",
+  "rhinestone christmas decor",
+  "ruffle tablecloth",
+  "lace table decor",
+  "diy ornament kit",
+  "holiday craft kit",
+  "beginner sewing pattern",
+  "hand woven home decor",
+  "hand painted home decor",
+  "personalized teacher gift",
+  "custom wedding sign",
+  "bridesmaid gift",
+  "birth flower necklace",
+  "memorial pet gift",
+  "gallery wall art",
+  "book lover gift",
+  "crochet animal gift",
+].join("\n");
 const RESEARCH_HISTORY_KEY = "apcs.admin.market-research.history";
+const RESEARCH_RUN_COUNTER_KEY = "apcs.admin.market-research.run-counter";
 
 const SUGGESTED_NICHES = [
   {
@@ -72,8 +91,11 @@ const AdminMarketResearchPanel = () => {
   const [topN, setTopN] = useState("3");
   const [minimumViralScore, setMinimumViralScore] = useState("50");
   const [intervalMinutes, setIntervalMinutes] = useState("1440");
+  const [batchSize, setBatchSize] = useState("5");
+  const [runWindowMinutes, setRunWindowMinutes] = useState("120");
   const [result, setResult] = useState<MarketResearchResponse | null>(null);
   const [history, setHistory] = useState<ResearchHistoryEntry[]>([]);
+  const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
   const retrieveMutation = useRetrieveMarketResearch();
   const saveMutation = useMutation({
     mutationFn: updateMarketResearchSchedule,
@@ -93,6 +115,8 @@ const AdminMarketResearchPanel = () => {
     setTopN(String(data.topN || 3));
     setMinimumViralScore(String(data.minimumViralScore));
     setIntervalMinutes(String(data.intervalMinutes));
+    setBatchSize(String(data.batchSize || 5));
+    setRunWindowMinutes(String(data.runWindowMinutes || 120));
   }, [scheduleQuery.data]);
 
   useEffect(() => {
@@ -119,7 +143,7 @@ const AdminMarketResearchPanel = () => {
     suggestedQueries.forEach((query) => {
       if (!nextQueries.includes(query)) nextQueries.push(query);
     });
-    setQueries(nextQueries.slice(0, 20).join("\n"));
+    setQueries(nextQueries.slice(0, 100).join("\n"));
   };
 
   const saveSchedule = () => {
@@ -127,6 +151,8 @@ const AdminMarketResearchPanel = () => {
     const top = Number(topN);
     const score = Number(minimumViralScore);
     const interval = Number(intervalMinutes);
+    const batch = Number(batchSize);
+    const window = Number(runWindowMinutes);
     if (enabled && !normalizedQueries.length)
       return showToast("error", "Add at least one keyword before enabling the schedule.");
     if (!Number.isInteger(limit) || limit < 1 || limit > 100)
@@ -135,6 +161,12 @@ const AdminMarketResearchPanel = () => {
       return showToast("error", "Top listings must be between 1 and 25.");
     if (!Number.isFinite(score) || score < 0 || score > 100)
       return showToast("error", "Minimum score must be between 0 and 100.");
+    if (!Number.isInteger(interval) || interval < 1 || interval > 10080)
+      return showToast("error", "Run frequency must be between 1 and 10080 minutes.");
+    if (!Number.isInteger(batch) || batch < 1 || batch > 100)
+      return showToast("error", "Niches per batch must be between 1 and 100.");
+    if (!Number.isInteger(window) || window < 1 || window > 43200)
+      return showToast("error", "Run window must be between 1 and 43200 minutes (30 days).");
     saveMutation.mutate({
       enabled,
       platform: 1,
@@ -143,38 +175,69 @@ const AdminMarketResearchPanel = () => {
       topN: top,
       minimumViralScore: score,
       intervalMinutes: interval,
+      batchSize: batch,
+      runWindowMinutes: window,
     });
   };
 
-  const runNow = () =>
+  const saveResearchHistory = (researchQueries: string[], data: MarketResearchResponse) => {
+    const previousRunNumber = Number(window.localStorage.getItem(RESEARCH_RUN_COUNTER_KEY) ?? 0);
+    const runNumber =
+      Number.isInteger(previousRunNumber) && previousRunNumber > 0 ? previousRunNumber + 1 : 1;
+    window.localStorage.setItem(RESEARCH_RUN_COUNTER_KEY, String(runNumber));
+    const entry: ResearchHistoryEntry = {
+      id: `${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      runNumber,
+      queries: researchQueries,
+      retrievedCount: data.retrievedCount,
+      selectedCount: data.selectedCount,
+      averageScore: data.items.length
+        ? data.items.reduce((sum, item) => sum + (Number(item.viralScore) || 0), 0) /
+          data.items.length
+        : 0,
+      result: data,
+    };
+    setHistory((previous) => {
+      const nextHistory = [entry, ...previous].slice(0, 5);
+      window.localStorage.setItem(RESEARCH_HISTORY_KEY, JSON.stringify(nextHistory));
+      return nextHistory;
+    });
+    setSelectedHistoryId(entry.id);
+  };
+
+  const runResearch = (researchQueries: string[]) => {
     retrieveMutation.mutate(
       {
         platform: 1,
-        queries: normalizedQueries,
+        queries: researchQueries,
         limitPerQuery: Number(limitPerQuery),
         topN: Number(topN),
         minimumViralScore: Number(minimumViralScore),
       },
       {
         onSuccess: (data) => {
+          setQueries(researchQueries.join("\n"));
           setResult(data);
-          const entry: ResearchHistoryEntry = {
-            id: `${Date.now()}`,
-            createdAt: new Date().toISOString(),
-            queries: normalizedQueries,
-            retrievedCount: data.retrievedCount,
-            selectedCount: data.selectedCount,
-            averageScore: data.items.length
-              ? data.items.reduce((sum, item) => sum + (Number(item.viralScore) || 0), 0) /
-                data.items.length
-              : 0,
-          };
-          const nextHistory = [entry, ...history].slice(0, 5);
-          setHistory(nextHistory);
-          window.localStorage.setItem(RESEARCH_HISTORY_KEY, JSON.stringify(nextHistory));
+          saveResearchHistory(researchQueries, data);
         },
       }
     );
+  };
+
+  const runNow = () => runResearch(normalizedQueries);
+
+  const selectHistory = (entry: ResearchHistoryEntry) => {
+    setQueries(entry.queries.join("\n"));
+    setSelectedHistoryId(entry.id);
+    if (entry.result) {
+      setResult(entry.result);
+      return;
+    }
+    // History written by older frontend versions contains only summary data.
+    // Re-run those entries so clicking them still produces a visible snapshot.
+    runResearch(entry.queries);
+  };
 
   return (
     <section className="space-y-5 rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-white to-white p-5 shadow-sm sm:p-6">
@@ -203,20 +266,17 @@ const AdminMarketResearchPanel = () => {
             Enable schedule
           </label>
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <Field label="Run frequency">
-            <Select value={intervalMinutes} onValueChange={setIntervalMinutes}>
-              <SelectTrigger className="mt-2 w-full bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="60">Every hour</SelectItem>
-                <SelectItem value="360">Every 6 hours</SelectItem>
-                <SelectItem value="720">Every 12 hours</SelectItem>
-                <SelectItem value="1440">Every day</SelectItem>
-                <SelectItem value="10080">Every week</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+          <Field label="Run frequency (minutes)">
+            <Input
+              type="number"
+              min={1}
+              max={10080}
+              step={1}
+              value={intervalMinutes}
+              onChange={(event) => setIntervalMinutes(event.target.value)}
+              className="mt-2 bg-white"
+            />
           </Field>
           <Field label="Candidates / keyword">
             <Input
@@ -248,6 +308,26 @@ const AdminMarketResearchPanel = () => {
               className="mt-2"
             />
           </Field>
+          <Field label="Niches / batch">
+            <Input
+              type="number"
+              min={1}
+              max={100}
+              value={batchSize}
+              onChange={(event) => setBatchSize(event.target.value)}
+              className="mt-2"
+            />
+          </Field>
+          <Field label="Run window (minutes)">
+            <Input
+              type="number"
+              min={1}
+              max={43200}
+              value={runWindowMinutes}
+              onChange={(event) => setRunWindowMinutes(event.target.value)}
+              className="mt-2"
+            />
+          </Field>
         </div>
         <div className="mt-4 flex justify-end">
           <Button
@@ -275,7 +355,7 @@ const AdminMarketResearchPanel = () => {
             placeholder="One keyword per line, e.g. hiking shirt"
           />
           <span className="mt-1 block text-[11px] font-normal text-slate-400">
-            {normalizedQueries.length}/20 keywords · public Etsy data only
+            {normalizedQueries.length}/100 keywords · public Etsy data only
           </span>
         </label>
         <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3">
@@ -303,7 +383,11 @@ const AdminMarketResearchPanel = () => {
             ))}
           </div>
         </div>
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          {/* Say why the button is off, so it never looks broken. */}
+          {!normalizedQueries.length && (
+            <p className="text-xs text-slate-500">Add at least one keyword above, or pick a suggested niche, to run.</p>
+          )}
           <Button
             type="button"
             onClick={runNow}
@@ -324,11 +408,13 @@ const AdminMarketResearchPanel = () => {
       </div>
       <TooltipProvider>
         {result ? <ResearchResult result={result} /> : <ResearchEmptyState />}
+        <ResearchHistory
+          history={history}
+          selectedId={selectedHistoryId}
+          isLoading={retrieveMutation.isPending}
+          onSelect={selectHistory}
+        />
       </TooltipProvider>
-      <ResearchHistory
-        history={history}
-        onSelect={(entry) => setQueries(entry.queries.join("\n"))}
-      />
     </section>
   );
 };
@@ -336,17 +422,23 @@ const AdminMarketResearchPanel = () => {
 type ResearchHistoryEntry = {
   id: string;
   createdAt: string;
+  runNumber?: number;
   queries: string[];
   retrievedCount: number;
   selectedCount: number;
   averageScore: number;
+  result?: MarketResearchResponse;
 };
 
 const ResearchHistory = ({
   history,
+  selectedId,
+  isLoading,
   onSelect,
 }: {
   history: ResearchHistoryEntry[];
+  selectedId: string | null;
+  isLoading: boolean;
   onSelect: (entry: ResearchHistoryEntry) => void;
 }) => (
   <div className="border-t border-indigo-100 pt-4">
@@ -359,23 +451,58 @@ const ResearchHistory = ({
     </div>
     {history.length ? (
       <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-5">
-        {history.map((entry) => (
-          <button
-            key={entry.id}
-            type="button"
-            onClick={() => onSelect(entry)}
-            className="rounded-lg border border-slate-200 bg-white p-3 text-left transition hover:border-indigo-300 hover:bg-indigo-50/40"
-          >
-            <p className="truncate text-[11px] font-semibold text-slate-700">
-              {entry.queries.slice(0, 2).join(" · ")}
-            </p>
-            <p className="mt-2 text-[10px] text-slate-400">{formatDate(entry.createdAt)}</p>
-            <p className="mt-1 text-[10px] text-slate-500">
-              {entry.retrievedCount} scanned · {entry.selectedCount} selected · avg{" "}
-              {entry.averageScore.toFixed(1)}
-            </p>
-          </button>
-        ))}
+        {history.map((entry, index) => {
+          const runNumber = entry.runNumber ?? index + 1;
+          const runLabel = `Research Run #${String(runNumber).padStart(2, "0")}`;
+          const nicheLabel = entry.queries.join(" · ");
+          return (
+            <Tooltip key={entry.id}>
+              <TooltipTrigger asChild>
+                <button
+                  key={entry.id}
+                  type="button"
+                  onClick={() => onSelect(entry)}
+                  disabled={isLoading}
+                  aria-pressed={selectedId === entry.id}
+                  aria-label={`${runLabel}: ${nicheLabel}`}
+                  className={`rounded-lg border p-3 text-left transition hover:border-indigo-300 hover:bg-indigo-50/40 disabled:cursor-wait disabled:opacity-60 ${selectedId === entry.id ? "border-indigo-400 bg-indigo-50/70 ring-1 ring-indigo-200" : "border-slate-200 bg-white"}`}
+                >
+                  <p className="truncate text-[11px] font-semibold text-slate-700">{runLabel}</p>
+                  <p className="mt-2 text-[10px] text-slate-400">{formatDate(entry.createdAt)}</p>
+                  <p className="mt-1 text-[10px] text-slate-500">
+                    {entry.retrievedCount} scanned · {entry.selectedCount} selected · avg{" "}
+                    {entry.averageScore.toFixed(1)}
+                  </p>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                align="start"
+                sideOffset={8}
+                className="w-fit max-w-[min(28rem,calc(100vw-2rem))] min-w-64 rounded-xl border border-slate-700 bg-slate-950 p-3 text-white shadow-xl"
+              >
+                <p className="text-[10px] font-semibold tracking-[0.14em] text-indigo-300 uppercase">
+                  Niches researched ({entry.queries.length})
+                </p>
+                <div className="mt-2 flex max-h-48 flex-wrap content-start gap-1.5 overflow-y-auto pr-1 [scrollbar-color:#475569_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-600 [&::-webkit-scrollbar-track]:bg-transparent">
+                  {entry.queries.map((query) => (
+                    <span
+                      key={query}
+                      className="max-w-full rounded-full border border-slate-700 bg-slate-800 px-2.5 py-1 text-[11px] leading-4 break-words text-slate-100"
+                    >
+                      {query}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-3 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                  {entry.result
+                    ? "Click to restore this snapshot"
+                    : "Click to run this research again"}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
       </div>
     ) : (
       <p className="mt-3 rounded-lg border border-dashed border-slate-200 p-3 text-[11px] text-slate-400">
@@ -433,7 +560,7 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
             What Etsy is signalling right now
           </h3>
         </div>
-      <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-500">
           {result.selectedCount} high-signal references queued to RAG across the selected niches
         </p>
       </div>

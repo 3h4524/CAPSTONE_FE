@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 
+import { getCurrentLocale } from "@/i18n/client";
 import { useAuthStore } from "@/stores/auth";
 
 const UNAUTHORIZED_STATUS = 401;
@@ -36,6 +37,11 @@ export const refreshAccessTokenOnce = (): Promise<void> => {
   });
   return refreshPromise;
 };
+
+api.interceptors.request.use((config) => {
+  config.headers.set("Accept-Language", getCurrentLocale());
+  return config;
+});
 
 api.interceptors.response.use(
   (response) => response,

@@ -29,7 +29,6 @@ type AdminHealthCheckDrawerProps = {
   onOpenChange: (open: boolean) => void;
   healthChecks: HealthCheck[];
 };
-
 const AREA_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   revenue: CreditCard,
   support: Headphones,
@@ -227,4 +226,3 @@ export const AdminHealthCheckDrawer = ({
     </Sheet>
   );
 };
-

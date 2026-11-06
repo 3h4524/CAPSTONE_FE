@@ -16,6 +16,12 @@ vi.mock("@/hooks/queries/use-entitlements", () => ({
 vi.mock("@/hooks/queries/use-ai-video-templates", () => ({
   useAiVideoTemplates: () => ({ data: [], isPending: false, isError: false, refetch: vi.fn() }),
 }));
+vi.mock("@/hooks/queries/use-ai-character-models", () => ({
+  useAiCharacterModels: () => ({ data: [], isPending: false, isError: false, refetch: vi.fn() }),
+}));
+vi.mock("@/hooks/queries/use-video-packs", () => ({
+  useVideoPacks: () => ({ data: [], isPending: false }),
+}));
 vi.mock("@/hooks/queries/use-mockup-assets", () => ({
   useMockupAssets: () => ({ data: [], isPending: false }),
 }));

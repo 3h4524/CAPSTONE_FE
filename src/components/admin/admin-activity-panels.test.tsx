@@ -38,7 +38,9 @@ describe("AdminActivityPanels", () => {
     expect(within(row).getByText("31")).toBeInTheDocument();
     expect(within(row).getByText("$0.12")).toBeInTheDocument();
     expect(within(row).getByText("completed")).toBeInTheDocument();
-    expect(screen.getByText("1 most recent of 7,146")).toBeInTheDocument();
+    expect(
+      screen.getByText(`1 most recent of ${new Intl.NumberFormat().format(7146)}`)
+    ).toBeInTheDocument();
   });
 
   it("shows how far an unfinished job got, and a dash for a job without AI cost", () => {

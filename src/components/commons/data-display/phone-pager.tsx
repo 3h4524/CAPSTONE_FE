@@ -9,16 +9,25 @@ type PhonePagerProps = {
   pageCount: number;
   onPageChange: (page: number) => void;
   label: string;
+  /** Where the list starts, when that is not the top of the page. */
+  anchorId?: string;
 };
 
 /** Previous and Next for a list shown a few items at a time, which then starts again from its top.
  * The bottom padding keeps Next clear of the floating assistant button. */
-export const PhonePager = ({ page, pageCount, onPageChange, label }: PhonePagerProps) => {
+export const PhonePager = ({ page, pageCount, onPageChange, label, anchorId }: PhonePagerProps) => {
   if (pageCount <= 1) return null;
 
   const goTo = (next: number) => {
     onPageChange(next);
-    document.querySelector("main")?.scrollTo({ top: 0, behavior: "smooth" });
+    const anchor = anchorId ? document.getElementById(anchorId) : null;
+    if (anchor) {
+      anchor.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    const main = document.querySelector("main");
+    const scroller = main && main.scrollHeight > main.clientHeight ? main : main?.parentElement;
+    scroller?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (

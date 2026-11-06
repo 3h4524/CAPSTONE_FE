@@ -18,11 +18,11 @@ export const AdminUsersTable = ({ users, ...actions }: AdminUsersTableProps) => 
 
   if (isPhone) {
     return (
-      <div className="rounded-md border border-slate-200 bg-white shadow-sm">
+      <div>
         {users.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-500">No users found.</p>
         ) : (
-          <ul className="divide-y">
+          <ul className="space-y-2.5">
             {users.map((user) => (
               <AdminUserCard key={user.id} user={user} actions={actions} />
             ))}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, FileText, Info, Loader2, RotateCcw, Upload } from "lucide-react";
 
 import { ingestRagDocument, type RagIngestRequest } from "@/api/rag";
+import { AdminBottomNav } from "@/components/admin/admin-bottom-nav";
 import { AdminMarketResearchPanel } from "@/components/admin/admin-market-research-panel";
 import { AdminRagDocumentsPanel } from "@/components/admin/admin-rag-documents-panel";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
@@ -122,7 +123,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
   };
 
   return (
-    <div className="h-dvh min-h-0 overflow-hidden bg-[#f8fafc] text-slate-900">
+    <div className="relative h-dvh min-h-0 overflow-hidden bg-[#f8fafc] text-slate-900">
       <div className="flex h-full min-h-0">
         <AdminSidebar
           fullName={fullName}
@@ -133,14 +134,14 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
-        <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
-          <div className="h-full min-h-0 overflow-y-auto">
+        <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <AdminTopbar
               fullName={fullName}
               onMenuClick={() => setIsMobileSidebarOpen(true)}
               pageTitle="RAG Knowledge Base"
             />
-            <main className="mx-auto max-w-[1600px] px-4 py-4 sm:px-[calc(1.5rem+1cm)] sm:py-5 2xl:max-w-[1720px]">
+            <main className="mx-auto max-w-[1600px] px-4 py-4 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
                   <p className="text-[10px] font-bold tracking-[0.16em] text-slate-400 uppercase">
@@ -413,6 +414,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
               </>
             </main>
           </div>
+          <AdminBottomNav onOpenMore={() => setIsMobileSidebarOpen(true)} />
         </div>
       </div>
     </div>

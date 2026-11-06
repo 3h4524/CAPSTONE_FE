@@ -126,7 +126,7 @@ export function PlanDetail({
       <div className="px-6 py-6">
         {tab === "overview" && (
           <div className="space-y-8">
-            <div className={cn("grid gap-8", bridge && "lg:grid-cols-2")}>
+            <div className={cn("grid gap-8 max-md:grid-cols-[minmax(0,1fr)]", bridge && "lg:grid-cols-2")}>
               {bridge && (
                 <Section icon={LineChart} title="MRR this period">
                   <MrrBridgeStrip

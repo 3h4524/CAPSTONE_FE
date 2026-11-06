@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { ArrowDownUp, ChevronLeft, ChevronRight, Copy, Gauge, History, Layers, Puzzle, Settings2, ToggleRight } from "lucide-react";
 
+import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { usePlanHistory } from "@/hooks/queries/use-plan-history";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { PlanHistoryEntry } from "@/types/admin-subscription-plan";
 import { cn } from "@/utils/cn";
 
-const PAGE_SIZE = 10;
+const DESKTOP_PAGE_SIZE = 10;
+const PHONE_PAGE_SIZE = 5;
 
 const KIND: Record<PlanHistoryEntry["kind"], { icon: typeof History; label: string }> = {
   plan: { icon: Layers, label: "Plan" },
@@ -29,8 +32,9 @@ const formatTime = (value: string) => new Date(value).toLocaleTimeString("en-GB"
 // Who changed what on the plans, Free and the trial, newest first and grouped by day: the record to
 // point to when a Seller asks why something they had is gone.
 export function PlanHistoryPanel() {
+  const isPhone = useIsPhone();
   const [page, setPage] = useState(1);
-  const { data, isLoading, isPlaceholderData } = usePlanHistory(page, PAGE_SIZE);
+  const { data, isLoading, isPlaceholderData } = usePlanHistory(page, isPhone ? PHONE_PAGE_SIZE : DESKTOP_PAGE_SIZE);
 
   if (isLoading || !data) {
     return <Card className="mt-6 h-64 animate-pulse rounded-2xl border border-slate-200/80 bg-white" />;
@@ -68,7 +72,7 @@ export function PlanHistoryPanel() {
               .map((entry) => {
                 const { icon: Icon, label } = KIND[entry.kind] ?? KIND.other;
                 return (
-                  <li key={entry.id} className="flex items-start gap-3 px-5 py-3">
+                  <li key={entry.id} className="flex items-start gap-3 px-5 py-3 max-md:px-3.5">
                     <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
                       <Icon className="size-3.5" aria-hidden="true" />
                     </span>
@@ -89,7 +93,9 @@ export function PlanHistoryPanel() {
         </Card>
       ))}
 
-      {data.totalPages > 1 && (
+      {isPhone ? (
+        <PhonePager page={data.pageNumber} pageCount={data.totalPages} onPageChange={setPage} label="History pages" />
+      ) : data.totalPages > 1 && (
         <nav aria-label="History pages" className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
           <span className="tabular-nums">
             {first.toLocaleString()}–{last.toLocaleString()} of {data.totalCount.toLocaleString()}

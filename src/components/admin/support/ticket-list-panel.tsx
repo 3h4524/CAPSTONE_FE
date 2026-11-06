@@ -77,7 +77,7 @@ export const TicketListPanel = ({
     <div className="flex min-h-0 flex-1 flex-col border-r border-slate-200 bg-white">
       {/* Header & Tabs */}
       <div className="border-b border-slate-200 px-4 pt-4 pb-0">
-        <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-900">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-900 max-md:mb-3">
           <Headphones className="size-5" />
           Support Tickets
         </h2>
@@ -95,10 +95,10 @@ export const TicketListPanel = ({
                 }
               }}
               placeholder="Search tickets..."
-              className="h-9 border-slate-200 bg-slate-50 pl-9 text-[13px] shadow-none focus-visible:ring-1 focus-visible:ring-slate-300"
+              className="h-9 border-slate-200 bg-slate-50 pl-9 text-[13px] shadow-none focus-visible:ring-1 focus-visible:ring-slate-300 max-md:text-base"
             />
           </div>
-          <Button variant="outline" size="icon" className="size-9 shrink-0 text-slate-500 shadow-none">
+          <Button variant="outline" size="icon" className="size-9 shrink-0 text-slate-500 shadow-none max-md:hidden">
             <Filter className="size-4" />
           </Button>
         </div>
@@ -119,7 +119,7 @@ export const TicketListPanel = ({
                   })
                 }
                 className={cn(
-                  "flex items-center gap-1.5 border-b-2 pb-3 text-[13px] font-semibold whitespace-nowrap transition-colors",
+                  "flex items-center gap-1.5 border-b-2 pb-3 text-[13px] font-semibold whitespace-nowrap transition-colors max-md:min-h-10 max-md:pt-2",
                   isActive
                     ? "border-blue-600 text-slate-900"
                     : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"

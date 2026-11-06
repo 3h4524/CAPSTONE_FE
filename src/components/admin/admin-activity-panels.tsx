@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import { formatUsd, timeAgo } from "@/helpers/admin-dashboard";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { BatchJobDto, SupportTicketDto } from "@/types/admin";
 
 type AdminActivityPanelsProps = {
@@ -49,6 +50,44 @@ const formatTicketStatus = (status: string) => {
   }
 };
 
+// A phone lists only the latest few: the links beside each heading lead to the rest.
+const PHONE_LATEST_ITEMS = 3;
+
+const JobStatus = ({ job }: { job: BatchJobDto }) => {
+  const tone = toneOf(job.status, job.tone);
+  const finished = job.progressPercentage === "100%";
+  return (
+    <span className="inline-flex items-center gap-1.5 text-slate-700 capitalize">
+      <span className={`size-1.5 rounded-full ${DOT[tone]}`} aria-hidden="true" />
+      {job.status.toLowerCase()}
+      {!finished && tone !== "rose" && (
+        <span className="text-xs text-slate-400 tabular-nums">{job.progressPercentage}</span>
+      )}
+    </span>
+  );
+};
+
+const BatchJobCard = ({ job, now }: { job: BatchJobDto; now?: Date }) => (
+  <li className="space-y-0.5 py-2.5 text-sm">
+    <div className="flex items-start justify-between gap-3">
+      <p className="min-w-0 truncate font-medium text-slate-900">{job.batchName ?? job.name}</p>
+      <span className="shrink-0 text-xs">
+        <JobStatus job={job} />
+      </span>
+    </div>
+    <p className="truncate text-xs text-slate-400">
+      {job.batchName ? job.name : "Batch job"}
+      {job.createdAt && ` · ${timeAgo(job.createdAt, now)}`}
+    </p>
+    <p className="flex justify-between gap-3 text-xs text-slate-600">
+      <span className="min-w-0 truncate">{job.userName}</span>
+      <span className="shrink-0 tabular-nums">
+        {job.itemCount.toLocaleString()} products{job.aiCostUsd ? ` · ${formatUsd(job.aiCostUsd)}` : ""}
+      </span>
+    </p>
+  </li>
+);
+
 const AdminActivityPanels = ({
   latestTickets = [],
   recentBatchJobs = [],
@@ -69,19 +108,31 @@ const BatchJobsPanel = ({
   jobs: BatchJobDto[];
   totalJobs?: number;
   now?: Date;
-}) => (
+}) => {
+  const isPhone = useIsPhone();
+  const shown = isPhone ? jobs.slice(0, PHONE_LATEST_ITEMS) : jobs;
+
+  return (
   <section className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-    <div className="p-5 pb-3">
+    <div className="p-5 pb-3 max-md:p-4 max-md:pb-2">
       <PanelHeading
         title="Latest batch jobs"
         subtitle={
           totalJobs !== undefined
-            ? `${jobs.length} most recent of ${totalJobs.toLocaleString()}`
+            ? `${shown.length} most recent of ${totalJobs.toLocaleString()}`
             : "The most recent generation runs"
         }
         action={<PanelLink href="/admin/analytics" label="System statistics" />}
       />
     </div>
+    {isPhone ? (
+      <ul className="divide-y divide-slate-100 px-4 pb-1.5">
+        {shown.length === 0 && <li className="py-6 text-center text-xs text-slate-400">No batch jobs yet.</li>}
+        {shown.map((job, index) => (
+          <BatchJobCard key={`${job.name}-${index}`} job={job} now={now} />
+        ))}
+      </ul>
+    ) : (
     <div className="flex-1 overflow-x-auto">
       <table className="w-full min-w-[620px] table-fixed text-left text-sm">
         <thead className="border-y border-slate-100 bg-slate-50/60 text-xs text-slate-500">
@@ -102,8 +153,6 @@ const BatchJobsPanel = ({
             </tr>
           )}
           {jobs.map((job, index) => {
-            const tone = toneOf(job.status, job.tone);
-            const finished = job.progressPercentage === "100%";
             return (
               <tr key={`${job.name}-${index}`} className="hover:bg-slate-50/60">
                 <td className="px-5 py-2.5">
@@ -123,15 +172,7 @@ const BatchJobsPanel = ({
                   {job.aiCostUsd ? formatUsd(job.aiCostUsd) : "—"}
                 </td>
                 <td className="px-5 py-2.5 whitespace-nowrap">
-                  <span className="inline-flex items-center gap-1.5 text-slate-700 capitalize">
-                    <span className={`size-1.5 rounded-full ${DOT[tone]}`} aria-hidden="true" />
-                    {job.status.toLowerCase()}
-                    {!finished && tone !== "rose" && (
-                      <span className="text-xs text-slate-400 tabular-nums">
-                        {job.progressPercentage}
-                      </span>
-                    )}
-                  </span>
+                  <JobStatus job={job} />
                 </td>
               </tr>
             );
@@ -139,16 +180,20 @@ const BatchJobsPanel = ({
         </tbody>
       </table>
     </div>
+    )}
   </section>
-);
+  );
+};
 
 const TicketsPanel = ({ tickets }: { tickets: SupportTicketDto[] }) => {
+  const isPhone = useIsPhone();
+  const shown = isPhone ? tickets.slice(0, PHONE_LATEST_ITEMS) : tickets;
   const openCount = tickets.filter(
     (ticket) => !["resolved", "closed"].includes(ticket.status.toLowerCase())
   ).length;
 
   return (
-    <section className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+    <section className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] max-md:p-4">
       <PanelHeading
         title="Latest support tickets"
         subtitle={
@@ -160,12 +205,12 @@ const TicketsPanel = ({ tickets }: { tickets: SupportTicketDto[] }) => {
         {tickets.length === 0 && (
           <li className="py-6 text-center text-xs text-slate-400">No tickets found.</li>
         )}
-        {tickets.map((ticket) => {
+        {shown.map((ticket) => {
           const tone = toneOf(ticket.status);
           const isDone = ["resolved", "closed"].includes(ticket.status.toLowerCase());
           return (
-            <li key={ticket.id} className="flex items-center justify-between gap-3 py-2.5">
-              <div className="min-w-0 flex-1">
+            <li key={ticket.id} className="flex items-center justify-between gap-3 py-2.5 max-md:flex-wrap max-md:gap-2">
+              <div className="min-w-0 flex-1 max-md:basis-full">
                 <p className="truncate text-sm font-medium text-slate-900" title={ticket.issue}>
                   {ticket.issue}
                 </p>
@@ -174,14 +219,14 @@ const TicketsPanel = ({ tickets }: { tickets: SupportTicketDto[] }) => {
                   {ticket.priority && ` · ${ticket.priority} priority`}
                 </p>
               </div>
-              <div className="flex shrink-0 items-center gap-3">
+              <div className="flex shrink-0 items-center gap-3 max-md:w-full max-md:justify-between">
                 <span className="inline-flex w-24 items-center gap-1.5 text-xs text-slate-600">
                   <span className={`size-1.5 rounded-full ${DOT[tone]}`} aria-hidden="true" />
                   {formatTicketStatus(ticket.status)}
                 </span>
                 <Link
                   href={`/admin/support-tickets?ticketId=${ticket.id}`}
-                  className={`inline-flex h-7 min-w-[54px] items-center justify-center rounded-lg border px-2.5 text-xs font-medium transition-all ${
+                  className={`inline-flex h-7 min-w-[54px] items-center justify-center rounded-lg border px-2.5 text-xs font-medium transition-all max-md:h-9 max-md:min-w-16 ${
                     isDone
                       ? "border-slate-200 bg-slate-50/70 text-slate-600 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
                       : "border-sky-200 bg-sky-50/70 text-sky-700 hover:border-sky-300 hover:bg-sky-100 hover:text-sky-900"

@@ -14,6 +14,7 @@ import {
 
 import { AdminActivityPanels } from "@/components/admin/admin-activity-panels";
 import { healthChecks } from "@/components/admin/admin-attention-panel";
+import { AdminBottomNav } from "@/components/admin/admin-bottom-nav";
 import { AdminHealthCheckDrawer } from "@/components/admin/admin-health-check-drawer";
 import { AdminHeroCard } from "@/components/admin/admin-hero-card";
 import { AdminMetricCard, Delta } from "@/components/admin/admin-metric-card";
@@ -99,7 +100,7 @@ const AdminDashboardContent = ({
   );
 
   return (
-    <div className="h-dvh overflow-hidden bg-[#f8fafc] text-slate-900">
+    <div className="relative h-dvh overflow-hidden bg-[#f8fafc] text-slate-900">
       <div className="flex h-dvh">
         <AdminSidebar
           fullName={fullName}
@@ -109,13 +110,14 @@ const AdminDashboardContent = ({
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
-        <div className="min-w-0 flex-1 overflow-hidden">
-          <div className="h-dvh overflow-y-auto">
+        <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <AdminTopbar fullName={fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} />
-            <main className="mx-auto max-w-[1600px] px-4 py-4 sm:px-[calc(1.5rem+1cm)] sm:py-5 2xl:max-w-[1720px]">
+            <main className="mx-auto max-w-[1600px] px-4 py-4 max-md:flex max-md:flex-col max-md:gap-3.5 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]">
               {/* Header */}
-              <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-                <div>
+              <div className="flex flex-col justify-between gap-4 max-md:gap-0 lg:flex-row lg:items-end">
+                {/* A phone opens on the greeting, so the title is left to screen readers. */}
+                <div className="max-md:sr-only">
                   <p className="text-[10px] font-bold tracking-[0.16em] text-slate-400 uppercase">
                     Platform overview
                   </p>
@@ -126,13 +128,13 @@ const AdminDashboardContent = ({
                     Growth, production and what needs your attention, for the period you pick.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 max-md:flex-nowrap">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8.5 cursor-pointer gap-1.5 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50"
+                        className="h-8.5 cursor-pointer gap-1.5 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 max-md:flex-1"
                       >
                         {rangeLabel}
                         <ChevronDown className="size-3.5 text-slate-500" />
@@ -154,7 +156,7 @@ const AdminDashboardContent = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8.5 cursor-pointer gap-1.5 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50"
+                    className="h-8.5 cursor-pointer gap-1.5 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 max-md:flex-1"
                     onClick={onExport}
                     disabled={isExporting}
                   >
@@ -164,7 +166,7 @@ const AdminDashboardContent = ({
               </div>
 
               {/* 5 KPI Metric Cards */}
-              <section className="mt-4.5 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-5">
+              <section className="mt-4.5 grid gap-3.5 max-md:mt-0 max-md:grid-cols-2 max-md:gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
                 <AdminMetricCard
                   label="Users"
                   value={metrics?.totalUsers.toLocaleString() ?? "-"}
@@ -195,7 +197,7 @@ const AdminDashboardContent = ({
                   icon={Database}
                 />
                 <AdminMetricCard
-                  label="Monthly recurring revenue"
+                  label={<>Monthly recurring<span className="max-md:hidden"> revenue</span></>}
                   value={formatVnd(mrrValue)}
                   exactValue={formatVnd(mrrValue)}
                   context={
@@ -229,12 +231,12 @@ const AdminDashboardContent = ({
                     )
                   }
                   icon={Headphones}
-                  className="sm:col-span-2 lg:col-span-1"
+                  className="max-md:col-span-2 sm:col-span-2 lg:col-span-1"
                 />
               </section>
 
               {/* Row 2: Admin Hero Welcome (Health Check) + Revenue Trend */}
-              <div className="mt-4.5 grid gap-4.5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1.85fr)]">
+              <div className="mt-4.5 grid gap-4.5 max-md:contents xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1.85fr)]">
                 <AdminHeroCard
                   fullName={fullName}
                   healthChecks={checks}
@@ -244,12 +246,12 @@ const AdminDashboardContent = ({
               </div>
 
               {/* Row 3: Production Overview */}
-              <div className="mt-4.5">
+              <div className="mt-4.5 max-md:mt-0">
                 <AdminOperationsRow operations={operations} isLoading={isOperationsLoading} />
               </div>
 
               {/* Row 4: Recent Activity */}
-              <div className="mt-4.5">
+              <div className="mt-4.5 max-md:mt-0">
                 <AdminActivityPanels
                   latestTickets={metrics?.latestTickets}
                   recentBatchJobs={metrics?.recentBatchJobs}
@@ -257,7 +259,7 @@ const AdminDashboardContent = ({
                 />
               </div>
 
-              <footer className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 text-[10px] text-slate-400">
+              <footer className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 text-[10px] text-slate-400 max-md:hidden">
                 <span>APCS Admin Console · Platform overview</span>
                 <span className="flex items-center gap-1">
                   <Activity className="size-3" /> Last synced just now
@@ -272,6 +274,7 @@ const AdminDashboardContent = ({
               healthChecks={checks}
             />
           </div>
+          <AdminBottomNav onOpenMore={() => setIsMobileSidebarOpen(true)} />
         </div>
       </div>
     </div>

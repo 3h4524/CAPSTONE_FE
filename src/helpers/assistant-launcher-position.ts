@@ -14,12 +14,9 @@ export type Viewport = { width: number; height: number };
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), Math.max(min, max));
 
-// Phones show bottom tabs on Seller pages; the workflow canvas and the admin pages have none.
+// Phones show bottom tabs everywhere but the workflow canvas.
 const hasBottomTabs = (pathname: string) =>
-  typeof window !== "undefined" &&
-  window.innerWidth <= ASSISTANT_LAUNCHER_PHONE_MAX_WIDTH_PX &&
-  pathname !== "/workflows" &&
-  !pathname.startsWith("/admin");
+  typeof window !== "undefined" && window.innerWidth <= ASSISTANT_LAUNCHER_PHONE_MAX_WIDTH_PX && pathname !== "/workflows";
 
 const defaultBottom = (pathname: string) => {
   if (pathname === "/workflows") return ASSISTANT_LAUNCHER_WORKFLOW_BOTTOM_PX;

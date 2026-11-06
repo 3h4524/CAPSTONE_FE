@@ -122,6 +122,18 @@ const billingPlan = (planId: string, name: string, monthlyPriceVnd: number, isRe
   quotas: { imageGenerationQuota: 0, videoGenerationQuota: 0, apiCallQuota: 0, storageQuotaGb: 0, maxBatchSize: 20, maxProductsPerMonth: 10, maxConcurrentJobs: 1 },
 });
 
+const adminPlan = (id: string, name: string, monthlyPriceVnd: number) => ({
+  ...billingPlan(id, name, monthlyPriceVnd),
+  id,
+  usdToVndRate: 25000,
+  maxBatchSize: 20,
+  maxConcurrentJobs: 1,
+  isActive: true,
+  activeSubscriberCount: 0,
+  trialSubscriberCount: 0,
+  canDelete: true,
+});
+
 const responses: Record<string, unknown> = {
   "/api/auth/me": { id: "user-1", email: "seller@apcs.test", fullName: "Nguyen Test", roles: ["Seller"] },
   "/api/batches": [batch("batch-1", "Summer outdoor", 23), batch("batch-2", "Autumn gifts", 0)],
@@ -134,6 +146,29 @@ const responses: Record<string, unknown> = {
     allowance: { planName: "No active plan", used: 0, limit: 0, percent: 0, resetDate: "2026-12-06", daysRemaining: 30, atRisk: false },
     costs: [],
     hasData: false,
+  },
+  "/api/admin/dashboard/metrics": { totalUsers: 17, activePaidUsers: 2, totalRevenue: 0, pendingTickets: 2, activeBatchJobs: 0, totalBatchJobs: 56, recentBatchJobs: [], latestTickets: [] },
+  "/api/admin/subscription-plans": [adminPlan("starter", "Starter", 249750), adminPlan("creator", "Creator", 749750), adminPlan("studio", "Studio", 2499750)],
+  "/api/admin/plan-settings": {
+    recommendedPlanTier: "creator",
+    trialPlanTier: "creator",
+    trialDays: 14,
+    activeTrials: 0,
+    trialPlans: [{ tier: "creator", name: "Creator" }],
+    allowances: [],
+    updatedAt: null,
+    updatedByName: null,
+  },
+  "/api/admin/users": { items: [], totalCount: 0, pageNumber: 1, pageSize: 5, totalPages: 0 },
+  "/api/admin/dashboard/operations": {
+    periodStart: "2025-12-01",
+    periodEnd: "2026-11-30",
+    bucket: "month",
+    throughput: [],
+    activeSellers: 0,
+    previousActiveSellers: 0,
+    funnel: { products: 0, designed: 0, mockedUp: 0, listed: 0, published: 0 },
+    aiUsage: [],
   },
   "/api/subscriptions/overview": {
     currentSubscription: null,
@@ -315,6 +350,36 @@ test.describe("on a phone", () => {
     await plans.getByRole("button", { name: "Studio" }).tap();
     await expect(plans.getByRole("button", { name: "Studio" })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByRole("button", { name: "Buy Studio" })).toBeInViewport();
+  });
+
+  test("an Admin moves between pages with the tabs and reaches the rest from More", async ({ page }) => {
+    await page.route("**/api/auth/me", (route) =>
+      fulfillJson(route, { id: "admin-1", email: "admin@apcs.test", fullName: "Nguyen Admin", roles: ["Admin"] })
+    );
+    await page.goto("/admin/users");
+    const tabs = page.getByRole("navigation", { name: "Main tabs" });
+    await expect(tabs.getByRole("link", { name: "Users" })).toHaveAttribute("aria-current", "page");
+    await expect(tabs.getByText("Needs attention")).toHaveCount(1);
+    await expect(page.getByText("12% of all users")).toBeVisible();
+    expect(await staysInsideTheScreen(page)).toBe(true);
+
+    await tabs.getByRole("button", { name: "More" }).tap();
+    await expect(page.getByRole("link", { name: "Test Reports" })).toBeVisible();
+  });
+
+  test("an Admin swipes through the plans and keeps every plan action", async ({ page }) => {
+    await page.route("**/api/auth/me", (route) =>
+      fulfillJson(route, { id: "admin-1", email: "admin@apcs.test", fullName: "Nguyen Admin", roles: ["Admin"] })
+    );
+    await page.goto("/admin/subscription-plans");
+    const plans = page.getByRole("group", { name: "Choose a plan" });
+    await expect(plans.getByRole("button", { name: "Creator" })).toHaveAttribute("aria-pressed", "true");
+
+    await page.getByRole("button", { name: "Actions for Creator" }).tap();
+    for (const action of ["Move earlier", "Recommend", "Duplicate", "Edit", "Delete"]) {
+      await expect(page.getByRole("menuitem", { name: new RegExp(action, "i") })).toBeVisible();
+    }
+    expect(await staysInsideTheScreen(page)).toBe(true);
   });
 
   test("a workflow is edited as a list, and removing a step keeps it connected", async ({ page }) => {

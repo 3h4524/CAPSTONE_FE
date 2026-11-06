@@ -77,14 +77,14 @@ export const PhonePlanCarousel = ({ items, initialKey }: PhonePlanCarouselProps)
           </button>
         ))}
       </div>
-      {/* Reaches the screen's edges, so the next card is cut off there rather than in mid-page. */}
+      {/* Reaches the screen's edges, so the next card is cut off there rather than in mid-page. Each card is as tall as the tallest. */}
       <div
         ref={scrollerRef}
         onScroll={followScroll}
         className="relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((item) => (
-          <div key={item.key} className="w-[88%] shrink-0 snap-start">
+          <div key={item.key} className="flex w-[88%] shrink-0 snap-start *:w-full">
             {item.node}
           </div>
         ))}

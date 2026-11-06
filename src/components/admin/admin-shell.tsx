@@ -3,18 +3,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { AdminBottomNav } from "@/components/admin/admin-bottom-nav";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { PageLoading } from "@/components/commons/layout/page-loading";
 import { useLogout } from "@/hooks/mutations/use-logout";
 import { useAuthStore } from "@/stores/auth";
+import { cn } from "@/utils/cn";
 
 type AdminShellProps = {
   children: React.ReactNode;
   pageTitle?: string;
+  /** On a phone the page fills the space under the header itself, like a chat, instead of scrolling. */
+  fillsPhoneScreen?: boolean;
+  /** On a phone, leaves the tabs out, so a reply box gets their room. */
+  hidesPhoneTabs?: boolean;
 };
 
-export const AdminShell = ({ children, pageTitle }: AdminShellProps) => {
+export const AdminShell = ({ children, pageTitle, fillsPhoneScreen = false, hidesPhoneTabs = false }: AdminShellProps) => {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const isHydrated = useAuthStore((state) => state.isHydrated);
@@ -38,7 +44,7 @@ export const AdminShell = ({ children, pageTitle }: AdminShellProps) => {
   const handleLogout = () => logout(undefined, { onSettled: () => router.replace("/login") });
 
   return (
-    <div className="h-dvh overflow-hidden bg-[#f8fafc] text-slate-900">
+    <div className="relative h-dvh overflow-hidden bg-[#f8fafc] text-slate-900">
       <div className="flex h-dvh">
         <AdminSidebar
           fullName={user.fullName}
@@ -49,13 +55,14 @@ export const AdminShell = ({ children, pageTitle }: AdminShellProps) => {
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
-        <div className="min-w-0 flex-1 overflow-hidden">
-          <div className="h-dvh overflow-y-auto">
+        <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
+          <div className={cn("min-h-0 flex-1 overflow-y-auto", fillsPhoneScreen && "max-md:flex max-md:flex-col max-md:overflow-hidden")}>
             <AdminTopbar fullName={user.fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} pageTitle={pageTitle} />
-            <main className="mx-auto max-w-[1600px] px-4 py-4 sm:px-[calc(1.5rem+1cm)] sm:py-5 2xl:max-w-[1720px]">
+            <main className={cn("mx-auto max-w-[1600px] px-4 py-4 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]", fillsPhoneScreen && "max-md:flex max-md:min-h-0 max-md:w-full max-md:flex-1 max-md:flex-col max-md:p-0")}>
               {children}
             </main>
           </div>
+          {!hidesPhoneTabs && <AdminBottomNav onOpenMore={() => setIsMobileSidebarOpen(true)} />}
         </div>
       </div>
     </div>

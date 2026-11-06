@@ -10,6 +10,9 @@ import { cn } from "@/utils/cn";
 type MobileBottomNavProps = {
   /** Opens the full menu, which holds every page without a tab of its own. */
   onOpenMore: () => void;
+  tabs?: typeof MOBILE_TABS;
+  /** The tab to mark as needing attention. */
+  alertHref?: string;
 };
 
 const TAB_CLASS_NAME =
@@ -22,14 +25,14 @@ const ACTIVE_ICON_CLASS_NAME = "bg-muted";
  * The phone's main navigation. It sits in the shell's column rather than floating over the page,
  * so every page keeps its full height above it without reserving any space of its own.
  */
-export const MobileBottomNav = ({ onOpenMore }: MobileBottomNavProps) => {
+export const MobileBottomNav = ({ onOpenMore, tabs = MOBILE_TABS, alertHref }: MobileBottomNavProps) => {
   const pathname = usePathname();
   const isTabActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
-  const isMoreActive = !MOBILE_TABS.some((tab) => isTabActive(tab.href));
+  const isMoreActive = !tabs.some((tab) => isTabActive(tab.href));
 
   return (
     <nav aria-label="Main tabs" className="bg-card grid shrink-0 grid-cols-5 border-t md:hidden">
-      {MOBILE_TABS.map(({ label, href, icon: Icon }) => {
+      {tabs.map(({ label, href, icon: Icon }) => {
         const isActive = isTabActive(href);
         return (
           <Link
@@ -38,8 +41,13 @@ export const MobileBottomNav = ({ onOpenMore }: MobileBottomNavProps) => {
             aria-current={isActive ? "page" : undefined}
             className={cn(TAB_CLASS_NAME, isActive && ACTIVE_TAB_CLASS_NAME)}
           >
-            <span className={cn(ICON_CLASS_NAME, isActive && ACTIVE_ICON_CLASS_NAME)}>
+            <span className={cn("relative", ICON_CLASS_NAME, isActive && ACTIVE_ICON_CLASS_NAME)}>
               <Icon className="size-5" aria-hidden="true" />
+              {href === alertHref && (
+                <span className="absolute top-0.5 right-2.5 size-2 rounded-full bg-rose-500">
+                  <span className="sr-only">Needs attention</span>
+                </span>
+              )}
             </span>
             {label}
           </Link>

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Eye, Receipt, Search } from "lucide-react";
 
+import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { Card } from "@/components/ui/card";
 import {
   Dialog,
@@ -48,7 +49,7 @@ interface RevenueInvoiceTableProps {
 }
 
 const SELECT_CLASS =
-  "h-9 cursor-pointer appearance-none rounded-lg border border-slate-200 bg-white pr-8 pl-3 text-xs font-medium text-slate-700 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200";
+  "h-9 cursor-pointer appearance-none rounded-lg border border-slate-200 bg-white pr-8 pl-3 text-xs font-medium text-slate-700 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 max-md:w-full max-md:text-base max-md:font-normal";
 
 export function RevenueInvoiceTable({
   data,
@@ -79,7 +80,7 @@ export function RevenueInvoiceTable({
   const lastRow = Math.min(page * pageSize, totalCount);
 
   return (
-    <Card className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+    <Card className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
       {/* Header + toolbar */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
@@ -89,20 +90,20 @@ export function RevenueInvoiceTable({
           <h3 className="text-sm font-bold whitespace-nowrap text-slate-900 dark:text-slate-100">Recent Transactions</h3>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-full sm:w-72">
+        <div className="flex flex-wrap items-center gap-2 max-md:grid max-md:grid-cols-2">
+          <div className="relative w-full max-md:col-span-2 sm:w-72">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-slate-400" />
             <input
               type="search"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search invoice, customer, email or user ID..."
+              placeholder={isPhone ? "Search transactions" : "Search invoice, customer, email or user ID..."}
               aria-label="Search transactions"
-              className="h-9 w-full rounded-lg border border-slate-200 bg-white pr-3 pl-8 text-xs text-slate-700 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+              className="h-9 w-full rounded-lg border border-slate-200 bg-white pr-3 pl-8 text-xs text-slate-700 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none max-md:text-base dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             />
           </div>
 
-          <div className="relative">
+          <div className="relative max-md:min-w-0">
             <select
               aria-label="Filter by plan"
               value={tableFilter.plan}
@@ -119,7 +120,7 @@ export function RevenueInvoiceTable({
             <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 text-slate-400" />
           </div>
 
-          <div className="relative">
+          <div className="relative max-md:min-w-0">
             <select
               aria-label="Filter by status"
               value={tableFilter.status}
@@ -138,7 +139,7 @@ export function RevenueInvoiceTable({
 
           <div
             title="Change the period with the date filter at the top of the page"
-            className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs whitespace-nowrap text-slate-600 dark:border-slate-800 dark:text-slate-300"
+            className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs whitespace-nowrap text-slate-600 max-md:hidden dark:border-slate-800 dark:text-slate-300"
           >
             <Calendar className="size-3.5 text-slate-400" />
             {formatRangeDate(startDate)} – {formatRangeDate(endDate)}
@@ -288,7 +289,9 @@ export function RevenueInvoiceTable({
           <span className="font-semibold text-slate-700 dark:text-slate-200">{lastRow}</span> of{" "}
           <span className="font-semibold text-slate-700 dark:text-slate-200">{totalCount}</span> transactions
         </p>
-        {totalPages > 1 && (
+        {isPhone ? (
+          <PhonePager page={page} pageCount={totalPages} onPageChange={onPageChange} label="Transactions pages" anchorId="recent-transactions" />
+        ) : totalPages > 1 && (
           <nav aria-label="Transactions pages" className="flex flex-wrap items-center gap-1">
             <PagerButton label="Previous page" disabled={page <= 1 || isLoading} onClick={() => onPageChange(page - 1)}>
               <ChevronLeft className="size-3.5" />

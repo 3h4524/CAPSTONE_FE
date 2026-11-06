@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 
+import { AdminBottomNav } from "@/components/admin/admin-bottom-nav";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { DeletePlanDialog } from "@/components/admin/subscription-plans/delete-plan-dialog";
@@ -50,7 +51,7 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
   };
 
   return (
-    <div className="h-dvh overflow-hidden bg-[#f8fafc] text-slate-900">
+    <div className="relative h-dvh overflow-hidden bg-[#f8fafc] text-slate-900">
       <div className="flex h-dvh">
         <AdminSidebar
           fullName={fullName}
@@ -60,31 +61,31 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
-        <div className="min-w-0 flex-1 overflow-hidden">
-          <div className="h-dvh overflow-y-auto">
+        <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <AdminTopbar
               fullName={fullName}
               onMenuClick={() => setIsMobileSidebarOpen(true)}
               pageTitle="Subscriptions"
             />
-            <main className="mx-auto max-w-[1600px] px-4 py-4 sm:px-[calc(1.5rem+1cm)] sm:py-5 2xl:max-w-[1720px]">
-              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-                <div>
-                  <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">
+            <main className="mx-auto max-w-[1600px] px-4 py-4 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]">
+              <div className="flex flex-col justify-between gap-4 max-md:flex-row max-md:items-center max-md:gap-3 sm:flex-row sm:items-end">
+                <div className="min-w-0">
+                  <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 max-md:text-xl sm:text-[28px]">
                     Subscription Plans
                   </h1>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-slate-400 max-md:hidden">
                     Configure tiers, pricing and the features each plan includes, and see how Sellers use them.
                   </p>
                 </div>
                 {/* On every tab, so the header keeps its shape; a new plan is shown with the others. */}
-                <Button size="sm" className="h-9 shrink-0 self-start rounded-lg px-4 text-xs sm:self-auto" onClick={openCreateForm}>
-                  <Plus className="size-3.5" /> Create new plan
+                <Button size="sm" aria-label="Create new plan" className="h-9 shrink-0 self-start rounded-lg px-4 text-xs max-md:self-auto max-md:rounded-full sm:self-auto" onClick={openCreateForm}>
+                  <Plus className="size-3.5" /> <span>Create<span className="max-md:hidden"> new plan</span></span>
                 </Button>
               </div>
 
               <div
-                className="mt-5 flex gap-6 overflow-x-auto border-b border-slate-200"
+                className="mt-5 flex gap-6 overflow-x-auto border-b border-slate-200 max-md:mt-3 max-md:justify-between max-md:gap-3"
                 role="tablist"
                 aria-label="Subscription plans view"
               >
@@ -118,6 +119,7 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
               )}
             </main>
           </div>
+          <AdminBottomNav onOpenMore={() => setIsMobileSidebarOpen(true)} />
         </div>
       </div>
 

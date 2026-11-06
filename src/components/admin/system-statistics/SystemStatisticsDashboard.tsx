@@ -103,16 +103,17 @@ export function SystemStatisticsDashboard() {
               dailyJobs={data?.dailyJobs}
             />
 
+            {/* The rows open up on a phone, so System health can follow the headline figures. */}
             {/* 2. Middle Row: Daily batch jobs (left 7 cols) & Pipeline conversion (right 5 cols) */}
-            <div className="mb-4.5 grid grid-cols-1 items-stretch gap-4.5 lg:grid-cols-12">
-              <div id={sectionId("volume")} className="scroll-mt-24 lg:col-span-7">
+            <div className="mb-4.5 grid grid-cols-1 items-stretch gap-4.5 max-md:contents lg:grid-cols-12">
+              <div id={sectionId("volume")} className="scroll-mt-24 max-md:order-2 max-md:mb-3.5 lg:col-span-7">
                 <DailyJobsBarChart
                   dailyJobs={data?.dailyJobs}
                   isLoading={isLoading}
                   periodEnd={data?.periodEnd}
                 />
               </div>
-              <div id={sectionId("pipeline")} className="scroll-mt-24 lg:col-span-5">
+              <div id={sectionId("pipeline")} className="scroll-mt-24 max-md:order-2 max-md:mb-3.5 lg:col-span-5">
                 <PipelineStageBreakdown
                   pipelineStages={data?.pipelineStages}
                   integrationStatus={data?.integrationStatus}
@@ -122,11 +123,11 @@ export function SystemStatisticsDashboard() {
             </div>
 
             {/* 3. Bottom Row: System health (left 7 cols) & Integrations (right 5 cols) */}
-            <div className="mb-4.5 grid grid-cols-1 items-stretch gap-4.5 lg:grid-cols-12">
-              <div className="lg:col-span-7">
+            <div className="mb-4.5 grid grid-cols-1 items-stretch gap-4.5 max-md:contents lg:grid-cols-12">
+              <div className="max-md:order-1 max-md:mb-3.5 lg:col-span-7">
                 <StatisticsInsightsPanel data={data} isLoading={isLoading} />
               </div>
-              <div id={sectionId("integrations")} className="scroll-mt-24 lg:col-span-5">
+              <div id={sectionId("integrations")} className="scroll-mt-24 max-md:order-2 max-md:mb-3.5 lg:col-span-5">
                 <IntegrationHealthCards
                   integrationStatus={data?.integrationStatus}
                   isLoading={isLoading}
@@ -135,7 +136,7 @@ export function SystemStatisticsDashboard() {
             </div>
 
             {/* 4. Full-width Section: Recent Operational Errors */}
-            <div id={sectionId("errors")} className="scroll-mt-24">
+            <div id={sectionId("errors")} className="scroll-mt-24 max-md:order-2">
               <RecentErrorsTable
                 recentErrors={data?.recentErrors}
                 isLoading={isLoading}

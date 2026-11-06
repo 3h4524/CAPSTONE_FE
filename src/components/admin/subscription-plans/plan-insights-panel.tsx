@@ -19,12 +19,15 @@ import {
   Tag,
 } from "lucide-react";
 
+import { ArrowScroller } from "@/components/admin/subscription-plans/arrow-scroller";
 import { FeatureAdoptionCard } from "@/components/admin/subscription-plans/feature-adoption-card";
 import { PlanAiReviewSection } from "@/components/admin/subscription-plans/plan-ai-review-section";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatShare, splitAiLabel } from "@/helpers/plan-adoption";
 import { usePlanAiReview } from "@/hooks/queries/use-plan-ai-review";
 import { usePlanInsights } from "@/hooks/queries/use-plan-insights";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { PipelineStage, PlanInsights, PlanVerdict } from "@/types/plan-insights";
 import { cn } from "@/utils/cn";
 import { formatVnd } from "@/utils/format-currency";
@@ -210,7 +213,12 @@ const SECTIONS = [
 
 // Jumps between the sections of a long page, and marks the one in view; sticks under the top bar.
 function SectionNav({ days }: { days: number }) {
+  const isPhone = useIsPhone();
   const [active, setActive] = useState<string>(SECTIONS[0].id);
+  const jumpTo = (id: string) => {
+    setActive(id);
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -231,8 +239,22 @@ function SectionNav({ days }: { days: number }) {
   return (
     <nav
       aria-label="Plan Insights sections"
-      className="sticky top-[53px] z-10 -mx-1 flex items-center justify-between gap-3 bg-[#f8fafc]/90 px-1 py-2 backdrop-blur"
+      className="sticky top-[53px] z-10 -mx-1 flex items-center justify-between gap-3 bg-[#f8fafc]/90 px-1 py-2 backdrop-blur max-md:top-[65px]"
     >
+      {isPhone ? (
+        <Select value={active} onValueChange={jumpTo}>
+          <SelectTrigger aria-label="Jump to a section" className="w-full bg-white">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent position="popper" className="w-(--radix-select-trigger-width) bg-white">
+            {SECTIONS.map((section) => (
+              <SelectItem key={section.id} value={section.id}>
+                {section.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
       <div className="flex gap-1 overflow-x-auto rounded-full border border-slate-200 bg-white p-1 shadow-xs">
         {SECTIONS.map((section) => (
           <a
@@ -240,8 +262,7 @@ function SectionNav({ days }: { days: number }) {
             href={`#${section.id}`}
             onClick={(event) => {
               event.preventDefault();
-              setActive(section.id);
-              document.getElementById(section.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+              jumpTo(section.id);
             }}
             aria-current={active === section.id ? "location" : undefined}
             className={cn(
@@ -253,6 +274,7 @@ function SectionNav({ days }: { days: number }) {
           </a>
         ))}
       </div>
+      )}
       <span className="hidden shrink-0 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600 sm:inline">
         Last {days} days
       </span>
@@ -394,6 +416,7 @@ function TrialCard({ data }: { data: PlanInsights }) {
         {used.length === 0 ? (
           <Empty text="No trial used a feature yet." />
         ) : (
+          <div className="max-md:overflow-x-auto">
           <table className="mt-3 w-full border-collapse text-sm tabular-nums">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
@@ -435,6 +458,7 @@ function TrialCard({ data }: { data: PlanInsights }) {
               })}
             </tbody>
           </table>
+</div>
         )}
         {unused.length > 0 && (
           <p className="mt-3 text-xs text-slate-500">Not used in any trial: {unused.map((item) => splitAiLabel(item.label).name).join(", ")}.</p>
@@ -541,7 +565,8 @@ function PipelineCard({ data }: { data: PlanInsights }) {
         </Link>
       </div>
 
-      <div className="-mx-1 overflow-x-auto px-1 pb-1">
+      <ArrowScroller label="Pipeline steps" className="-mx-1">
+        <div className="px-1 pb-1">
         <ol
           className="relative grid gap-2"
           style={{
@@ -660,7 +685,8 @@ function PipelineCard({ data }: { data: PlanInsights }) {
             );
           })}
         </ol>
-      </div>
+        </div>
+      </ArrowScroller>
 
       <ul className="text-muted-foreground flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-100 pt-3 text-[11px]">
         <li className="flex items-center gap-1.5">

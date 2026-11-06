@@ -35,8 +35,8 @@ describe("defaultLauncherPosition", () => {
       expect(keepClearOfBottomTabs({ right: 8, bottom: 300 }, "/batches").bottom).toBe(300);
     });
 
-    it("stays low on admin pages, which have no bottom tabs", () => {
-      expect(defaultLauncherPosition("/admin/users").bottom).toBeLessThan(ASSISTANT_LAUNCHER_PHONE_BOTTOM_PX);
+    it("stays above the bottom tabs on admin pages too", () => {
+      expect(defaultLauncherPosition("/admin/users").bottom).toBe(ASSISTANT_LAUNCHER_PHONE_BOTTOM_PX);
     });
   });
 

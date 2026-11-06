@@ -40,11 +40,11 @@ export const AdminHeroCard = ({
   };
 
   return (
-    <section className="group relative flex h-full min-h-64 flex-col justify-between overflow-hidden rounded-2xl border border-[#cbd3dc] bg-linear-to-r from-[#e1e5ea] via-[#dfe3e8] to-[#dce2e7] p-6 text-slate-900 shadow-sm transition-shadow duration-300 hover:shadow-md">
+    <section className="group relative order-first flex h-full min-h-64 flex-col justify-between overflow-hidden rounded-2xl border border-[#cbd3dc] bg-linear-to-r from-[#e1e5ea] via-[#dfe3e8] to-[#dce2e7] p-6 text-slate-900 shadow-sm transition-shadow duration-300 hover:shadow-md max-md:min-h-0 max-md:p-4 md:order-none">
       {/* Merch Product Photo on the right side - fully visible, not cut off */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 right-0 hidden max-w-[66%] items-center justify-end pr-3 sm:flex xl:max-w-[70%]"
+        className="pointer-events-none absolute inset-y-0 right-0 hidden max-w-[66%] items-center justify-end pr-3 md:flex xl:max-w-[70%]"
       >
         <div className="relative aspect-[1024/682] h-[92%] max-w-full translate-y-2">
           <Image
@@ -59,9 +59,9 @@ export const AdminHeroCard = ({
       </div>
 
       {/* Text Info */}
-      <div className="relative z-10 max-w-[56%] min-w-0 max-sm:max-w-full">
+      <div className="relative z-10 max-w-[56%] min-w-0 max-md:max-w-full">
         <p className="text-xs font-semibold text-slate-900">{today()}</p>
-        <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900">
+        <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 max-md:text-xl">
           Welcome back, {firstName}
         </h2>
         <p className="mt-2 text-sm leading-snug text-slate-700">
@@ -70,7 +70,7 @@ export const AdminHeroCard = ({
       </div>
 
       {/* Health Check Button */}
-      <div className="relative z-10 mt-6">
+      <div className="relative z-10 mt-6 max-md:mt-3">
         <button
           type="button"
           onClick={onOpenHealthCheck}

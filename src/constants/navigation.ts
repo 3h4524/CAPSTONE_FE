@@ -1,13 +1,16 @@
 import {
   Activity,
+  BarChart3,
   Compass,
   CreditCard,
+  Headphones,
   KeyRound,
   Layers3,
   LayoutDashboard,
   LifeBuoy,
   Palette,
   Settings,
+  Users,
   WandSparkles,
   Workflow,
 } from "lucide-react";
@@ -47,6 +50,14 @@ export const MOBILE_TABS = [
   { label: "Workflows", href: "/workflows", icon: Workflow },
   { label: "Batches", href: "/batches", icon: Layers3 },
   { label: "Radar", href: "/market-opportunities", icon: Compass },
+];
+
+/** The Admin's bottom tabs; More opens the sidebar for the other pages. */
+export const ADMIN_MOBILE_TABS = [
+  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Revenue", href: "/admin/revenue", icon: BarChart3 },
+  { label: "Support", href: "/admin/support-tickets", icon: Headphones },
 ];
 
 export const ROUTE_TITLES = {

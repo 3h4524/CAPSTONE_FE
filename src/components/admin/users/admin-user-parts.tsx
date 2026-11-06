@@ -24,6 +24,15 @@ export type AdminUserActions = {
   onCopyId: (id: string) => void;
 };
 
+// The dialogs set their own width, so a phone needs its margins back; the column must also be
+// free to shrink, or a row of buttons that cannot wrap pushes the dialog past the screen.
+export const USER_DIALOG_ON_PHONE =
+  "max-md:max-h-[calc(100dvh-1.5rem)] max-md:max-w-[calc(100%-1.5rem)] max-md:grid-cols-[minmax(0,1fr)] max-md:overflow-y-auto max-md:rounded-2xl";
+
+// Keeps a long form's actions on screen while it scrolls under them.
+export const USER_DIALOG_FOOTER_ON_PHONE =
+  "max-md:sticky max-md:bottom-0 max-md:z-10 max-md:-mx-5 max-md:mt-4 max-md:border-t max-md:bg-slate-50 max-md:px-5 max-md:py-3";
+
 // The pieces of a user, shared by the desktop table's row and the phone's card.
 
 export const UserRoles = ({ user }: { user: AdminUserDto }) => (
@@ -87,7 +96,7 @@ export const UserStatus = ({ user }: { user: AdminUserDto }) => (
 export const UserActions = ({ user, onView, onEdit, onSuspend, onUnlock, onCopyId }: AdminUserActions & { user: AdminUserDto }) => (
   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-slate-900">
+                      <Button variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-slate-900 max-md:size-10">
                         <span className="sr-only">Open menu</span>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
@@ -145,21 +154,27 @@ export const UserIdentity = ({ user }: { user: AdminUserDto }) => (
 
 /** A user on the phone, where eight columns have no room. */
 export const AdminUserCard = ({ user, actions }: { user: AdminUserDto; actions: AdminUserActions }) => (
-  <li className="space-y-2 p-4">
+  <li className="space-y-2.5 rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-2xs">
     <div className="flex items-start gap-2">
-      <div className="min-w-0 flex-1 wrap-anywhere">
+      <button
+        type="button"
+        aria-label={`View ${user.fullName}`}
+        className="min-w-0 flex-1 text-left wrap-anywhere"
+        onClick={() => actions.onView(user)}
+      >
         <UserIdentity user={user} />
-      </div>
+      </button>
       <UserActions user={user} {...actions} />
     </div>
-    <UserRoles user={user} />
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap items-center gap-1.5">
+      <UserRoles user={user} />
       <UserPlan user={user} />
       <UserStatus user={user} />
     </div>
     <p className="text-xs text-slate-500">
-      Jobs: <span className="font-medium text-slate-700">{user.totalJobs}</span> · API cost:{" "}
-      <span className="font-medium text-slate-700">{formatVnd(user.monthlyApiCost)}</span>
+      <span className="font-medium text-slate-700 tabular-nums">{user.totalJobs.toLocaleString()}</span>{" "}
+      {user.totalJobs === 1 ? "job" : "jobs"} ·{" "}
+      <span className="font-medium text-slate-700 tabular-nums">{formatVnd(user.monthlyApiCost)}</span>/month
     </p>
   </li>
 );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Gift, Pencil, RotateCcw, Sparkles, X } from "lucide-react";
+import { ChevronDown, Gift, Pencil, RotateCcw, Sparkles, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Spinner } from "@/components/ui/spinner";
 import { useUpdatePlanSettings } from "@/hooks/mutations/use-update-plan-settings";
 import { usePlanSettings } from "@/hooks/queries/use-plan-settings";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { AllowanceScope, AllowanceSetting, PlanSettings } from "@/types/plan-settings";
 import { cn } from "@/utils/cn";
 
@@ -29,6 +30,9 @@ const formatEdited = (settings: PlanSettings) =>
 export function FreeTrialCard() {
   const { data: settings, isLoading } = usePlanSettings();
   const [isEditing, setIsEditing] = useState(false);
+  // A phone keeps the allowances folded, so the plans above stay within reach.
+  const isPhone = useIsPhone();
+  const [isAllowancesOpen, setIsAllowancesOpen] = useState(false);
 
   if (isLoading || !settings) {
     return <Card className="h-48 animate-pulse rounded-2xl border border-slate-200/80 bg-white" />;
@@ -44,8 +48,8 @@ export function FreeTrialCard() {
 
   return (
     <Card className="gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3 px-6 pt-5">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3 px-6 pt-5 max-md:flex-nowrap max-md:px-4 max-md:pt-4">
+        <div className="min-w-0">
           <h3 className="text-base font-semibold text-slate-900">Free and free trial</h3>
           <p className="text-xs text-slate-500">Not plans Sellers buy, so they are set here. Changes apply at once.</p>
         </div>
@@ -58,7 +62,7 @@ export function FreeTrialCard() {
       </div>
 
       {/* The figures to check at a glance before opening the editor. */}
-      <div className="mx-6 mt-4 grid grid-cols-2 divide-slate-100 rounded-xl bg-slate-50 py-2.5 text-center sm:grid-cols-4 sm:divide-x">
+      <div className="mx-6 mt-4 grid grid-cols-2 divide-slate-100 rounded-xl bg-slate-50 py-2.5 text-center max-md:mx-4 sm:grid-cols-4 sm:divide-x">
         <Figure label="Trials running" value={settings.activeTrials.toLocaleString()} />
         <Figure label="Trial gives" value={trialPlan?.name ?? settings.trialPlanTier} tone={trialPlan ? undefined : "warning"} />
         <Figure label="Trial length" value={`${settings.trialDays} days`} />
@@ -69,7 +73,24 @@ export function FreeTrialCard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
+      {isPhone && !isAllowancesOpen && !trialPlan && (
+        <p role="alert" className="mx-4 mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          This plan is not on sale: new trials cannot start. Choose another plan.
+        </p>
+      )}
+      {isPhone && (
+        <button
+          type="button"
+          aria-expanded={isAllowancesOpen}
+          className="mx-4 mt-1 mb-2 flex min-h-11 items-center gap-1 text-xs font-semibold text-slate-600"
+          onClick={() => setIsAllowancesOpen((open) => !open)}
+        >
+          <ChevronDown className={cn("size-3.5 transition-transform", isAllowancesOpen && "rotate-180")} aria-hidden="true" />
+          {isAllowancesOpen ? "Hide allowances" : "Show allowances"}
+        </button>
+      )}
+      {(!isPhone || isAllowancesOpen) && (
+      <div className="grid grid-cols-1 gap-4 p-6 max-md:p-4 max-md:pt-0 md:grid-cols-2">
         <Panel
           icon={<Gift className="size-4" />}
           title="Free"
@@ -91,6 +112,7 @@ export function FreeTrialCard() {
           }}
         />
       </div>
+      )}
       <PlanSettingsDialog open={isEditing} settings={settings} onClose={() => setIsEditing(false)} />
     </Card>
   );

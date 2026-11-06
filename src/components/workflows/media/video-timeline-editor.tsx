@@ -3144,7 +3144,7 @@ function Timeline({
                       style={
                         pending?.edge === "start" ? { left: `${startPreviewPercent}%` } : undefined
                       }
-                      className={`focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute inset-y-0 left-0 ${isSelected ? "z-40" : "z-20"} flex w-6 cursor-ew-resize touch-none items-center justify-start rounded-l-sm bg-transparent pl-1.5 focus-visible:ring-2 focus-visible:ring-inset focus-visible:outline-none`}
+                      className={`focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute inset-y-0 left-0 ${isSelected ? "z-40" : "z-20"} flex w-6 cursor-ew-resize touch-none items-center justify-start rounded-l-sm bg-transparent pl-1.5 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset`}
                       aria-label={`Trim start of Scene ${index + 1}. Current duration ${seconds(duration)}. Use arrow keys to adjust by one frame.`}
                       aria-keyshortcuts="ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight"
                       title={`Drag to trim the start of Scene ${index + 1}. Arrow keys adjust one frame; Shift + arrow adjusts one second.`}
@@ -3171,7 +3171,7 @@ function Timeline({
                       style={
                         pending?.edge === "end" ? { right: `${endPreviewPercent}%` } : undefined
                       }
-                      className={`focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute inset-y-0 right-0 ${isSelected ? "z-40" : "z-20"} flex w-6 cursor-ew-resize touch-none items-center justify-end rounded-r-sm bg-transparent pr-1.5 focus-visible:ring-2 focus-visible:ring-inset focus-visible:outline-none`}
+                      className={`focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute inset-y-0 right-0 ${isSelected ? "z-40" : "z-20"} flex w-6 cursor-ew-resize touch-none items-center justify-end rounded-r-sm bg-transparent pr-1.5 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset`}
                       aria-label={`Trim end of Scene ${index + 1}. Current duration ${seconds(duration)}. Use arrow keys to adjust by one frame.`}
                       aria-keyshortcuts="ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight"
                       title={`Drag to trim the end of Scene ${index + 1}. Arrow keys adjust one frame; Shift + arrow adjusts one second.`}

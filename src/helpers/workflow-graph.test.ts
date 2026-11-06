@@ -136,7 +136,7 @@ const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
       standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
       fallbackToStandard: true,
     },
-    "Generate Video: The video duration must be at least 1.",
+    "Generate Video: The video duration must be at least 5.",
   ],
   [
     "generate-listing",

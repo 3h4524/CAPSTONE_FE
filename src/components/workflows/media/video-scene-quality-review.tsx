@@ -277,7 +277,7 @@ export const VideoSceneQualityReview = ({ runId, video, showObservationForm = fa
   const qualitySummary = summary.data ? (
     <div className="overflow-hidden rounded-xl border">
       <div className="bg-muted/30 space-y-2 p-4" role="status" aria-atomic="true">
-        <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><Film className="size-4 text-muted-foreground" aria-hidden="true" /><h5 className="text-sm font-semibold">Final video quality</h5></div><StatusPill label={overall.label} tone={overall.tone} /></div>
+        <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><Film className="text-muted-foreground size-4" aria-hidden="true" /><h5 className="text-sm font-semibold">Final video quality</h5></div><StatusPill label={overall.label} tone={overall.tone} /></div>
         <p className="text-muted-foreground text-xs leading-relaxed">{overall.detail}</p>
       </div>
       <div className="space-y-4 p-4 text-xs">

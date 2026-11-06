@@ -1584,7 +1584,7 @@ export function AiShotOptions({
                           aria-pressed={selected}
                           disabled={disabled}
                           onClick={() => chooseSharedMockup(asset.id)}
-                          className={`focus-visible:ring-ring group relative aspect-[3/4] overflow-hidden rounded-xl border-2 bg-muted text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:hover:-translate-y-0.5 ${selected ? "border-primary ring-primary/25 ring-2" : "border-transparent hover:border-foreground/25"}`}
+                          className={`focus-visible:ring-ring group bg-muted relative aspect-[3/4] overflow-hidden rounded-xl border-2 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:hover:-translate-y-0.5 ${selected ? "border-primary ring-primary/25 ring-2" : "hover:border-foreground/25 border-transparent"}`}
                         >
                           <Image
                             src={asset.previewUrl}
@@ -1647,7 +1647,7 @@ export function AiShotOptions({
                           className="object-contain"
                         />
                       ) : progress?.status === "generating" || progress?.status === "quoting" ? (
-                        <span className="absolute inset-0 animate-pulse bg-muted-foreground/10" />
+                        <span className="bg-muted-foreground/10 absolute inset-0 animate-pulse" />
                       ) : null}
                     </div>
                     <div className="flex items-center justify-between gap-2 px-2.5 py-2">
@@ -1692,7 +1692,7 @@ export function AiShotOptions({
                 Approve all
               </Button>
               {allPackFramesApproved && (
-                <span className="text-emerald-700 flex items-center gap-1 text-xs font-medium">
+                <span className="flex items-center gap-1 text-xs font-medium text-emerald-700">
                   <Check aria-hidden="true" className="size-3.5" /> Ready for video
                 </span>
               )}

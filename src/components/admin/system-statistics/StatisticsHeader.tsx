@@ -1,77 +1,90 @@
 "use client";
 
 import React from "react";
-import { Calendar, Download, Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import { formatDateLabel } from "./statistics-insights";
 
 interface StatisticsHeaderProps {
   timeRange: string;
   onTimeRangeChange: (newRange: string) => void;
   onExport: () => void;
   isExporting: boolean;
-  onRefresh?: () => void;
-  isRefreshing?: boolean;
+  periodStart?: string;
+  periodEnd?: string;
 }
+
+const TIME_OPTIONS = [
+  { value: "7d", label: "Last 7 days" },
+  { value: "30d", label: "Last 30 days" },
+  { value: "90d", label: "Last 90 days" },
+  { value: "180d", label: "Last 180 days" },
+  { value: "year", label: "This year" },
+];
 
 export function StatisticsHeader({
   timeRange,
   onTimeRangeChange,
   onExport,
   isExporting,
+  periodStart,
+  periodEnd,
 }: StatisticsHeaderProps) {
-  const timeOptions = [
-    { label: "Last 7 days", value: "7d" },
-    { label: "Last 30 days", value: "30d" },
-    { label: "Last 90 days", value: "90d" },
-    { label: "This year", value: "year" },
-  ];
-
   return (
-    <div className="mb-6 flex flex-col justify-between gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-center dark:border-slate-800">
+    <div className="mb-4.5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
       <div>
-        <h1 className="text-xl font-bold tracking-wider text-slate-900 uppercase sm:text-2xl dark:text-slate-100">
-          System Statistics & Telemetry
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-[26px]">
+          System Statistics
         </h1>
-        <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-          System-wide performance telemetry, asset throughput volume, and service reliability
+        <p className="mt-1 text-xs text-slate-500 sm:text-[13px]">
+          Generation throughput, pipeline conversion and job reliability across all sellers
+          {periodStart && periodEnd && (
+            <>
+              {" · "}
+              <span className="font-medium text-slate-600">
+                {formatDateLabel(periodStart)} – {formatDateLabel(periodEnd, { month: "short", day: "numeric", year: "numeric" })}
+              </span>
+            </>
+          )}
         </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2.5">
-        <div className="flex h-8 items-center rounded-md border border-slate-200 bg-white px-2.5 dark:border-slate-800 dark:bg-slate-900">
-          <Calendar className="mr-1.5 h-3.5 w-3.5 text-slate-400" />
-          <select
-            value={timeRange}
-            onChange={(e) => onTimeRangeChange(e.target.value)}
-            className="cursor-pointer bg-transparent text-xs font-semibold tracking-wider text-slate-700 uppercase outline-none dark:text-slate-200"
-            aria-label="Select time range"
-          >
-            {timeOptions.map((opt) => (
-              <option
-                key={opt.value}
-                value={opt.value}
-                className="text-xs normal-case dark:bg-slate-900"
-              >
+        <Select value={timeRange} onValueChange={onTimeRangeChange}>
+          <SelectTrigger className="h-8.5 min-w-[135px] cursor-pointer rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 focus:ring-1 focus:ring-slate-400">
+            <SelectValue placeholder="Select period" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl border-slate-200 bg-white shadow-md">
+            {TIME_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value} className="cursor-pointer text-xs font-medium">
                 {opt.label}
-              </option>
+              </SelectItem>
             ))}
-          </select>
-        </div>
+          </SelectContent>
+        </Select>
 
         <Button
           onClick={onExport}
           disabled={isExporting}
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-none hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="h-8.5 cursor-pointer gap-1.5 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50"
         >
           {isExporting ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
           ) : (
-            <Download className="h-3.5 w-3.5 text-slate-500" />
+            <Download className="h-3.5 w-3.5 text-slate-600" />
           )}
-          <span>{isExporting ? "Exporting..." : "Export CSV"}</span>
+          <span>Export CSV</span>
         </Button>
       </div>
     </div>

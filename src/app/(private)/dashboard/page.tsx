@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { DashboardEmptyState } from "@/components/dashboard/dashboard-empty-state";
+import { SellerDashboard } from "@/components/dashboard/seller-dashboard";
 import { getPageMetadata } from "@/data/metadata";
 
 export const metadata: Metadata = getPageMetadata({
@@ -11,11 +11,7 @@ export const metadata: Metadata = getPageMetadata({
 });
 
 const DashboardPage = () => {
-  return (
-    <div className="w-full min-w-0 p-4 sm:p-6">
-      <DashboardEmptyState />
-    </div>
-  );
+  return <SellerDashboard />;
 };
 
 export default DashboardPage;

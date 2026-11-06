@@ -24,6 +24,7 @@ import { PanelSection } from "@/components/workflows/config-panel/layout/panel-s
 import { PanelStats } from "@/components/workflows/config-panel/layout/panel-stats";
 import { ListingContentResultPanel } from "@/components/workflows/config-panel/listing-content-result";
 import { NodeConfigField } from "@/components/workflows/config-panel/node-config-field";
+import { PlanLockNotice } from "@/components/workflows/config-panel/plan-lock-notice";
 import { PromptRecipe } from "@/components/workflows/config-panel/prompt-recipe";
 import { MockupPanel } from "@/components/workflows/media/mockup-panel";
 import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
@@ -138,6 +139,16 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
       {/* Radix lays the content out as a table that grows to its widest line; block keeps it inside the panel. */}
       <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:block!">
         <PanelStats stats={overview} />
+        <PlanLockNotice
+          nodeType={node.data.type}
+          config={node.data.config as Record<string, unknown>}
+          disabled={settingsLocked}
+          onFix={(patch) => {
+            for (const [key, value] of Object.entries(patch)) {
+              setValue(key, value as never, { shouldDirty: true, shouldValidate: true });
+            }
+          }}
+        />
         {settingsLocked && definition.fields.length > 0 && (
           <div className="px-5 pt-4">
             <PanelNotice tone="info">

@@ -1,5 +1,5 @@
 export interface StatisticsFilterDto {
-  timeRange?: string; // "7d" | "30d" | "90d" | "year"
+  timeRange?: string; // "7d" | "30d" | "90d" | "180d" | "year"
   startDate?: string;
   endDate?: string;
 }
@@ -49,10 +49,23 @@ export interface SystemErrorLogDto {
   source?: string;
 }
 
+export interface JobReliabilityDto {
+  finishedJobs: number;
+  completedJobs: number;
+  partiallyCompletedJobs: number;
+  failedJobs: number;
+  successRate: number;
+  avgProcessingMinutes: number | null;
+  totalCostUsd: number;
+}
+
 export interface SystemStatisticsOverviewDto {
   metrics: StatisticsMetricCardsDto;
   dailyJobs: DailyJobsPointDto[];
   pipelineStages: PipelineStageBreakdownDto[];
   integrationStatus: IntegrationStatusDto;
   recentErrors: SystemErrorLogDto[];
+  reliability: JobReliabilityDto;
+  periodStart: string; // yyyy-MM-dd
+  periodEnd: string; // yyyy-MM-dd
 }

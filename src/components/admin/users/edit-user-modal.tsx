@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import type { AdminUserDto, UpdateAdminUserRequest } from "@/types/admin";
 import { cn } from "@/utils/cn";
-import { formatCurrencyVnd } from "@/utils/format-currency";
+import { formatVnd } from "@/utils/format-currency";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface EditUserModalProps {
@@ -292,7 +292,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
                   <div className="mb-1 flex items-center justify-end gap-2">
                     <span className="text-[10px] font-bold tracking-wider text-indigo-400 uppercase">Plan Price / Mo</span>
                   </div>
-                  <span className="text-lg font-bold text-indigo-900">{formatCurrencyVnd(user.monthlyApiCost)}</span>
+                  <span className="text-lg font-bold text-indigo-900">{formatVnd(user.monthlyApiCost)}</span>
                 </div>
               </div>
             )}

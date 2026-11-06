@@ -1,6 +1,6 @@
 "use client";
 
-import type { DragEvent, PointerEvent as ReactPointerEvent } from "react";
+import { type DragEvent, type PointerEvent as ReactPointerEvent, useEffect } from "react";
 
 import { SelectionToolbar } from "@/components/workflows/canvas/selection-toolbar";
 import { ShortcutCheatsheet } from "@/components/workflows/canvas/shortcut-cheatsheet";
@@ -46,6 +46,8 @@ const DEFAULT_EDGE_OPTIONS = {
 
 const DELETE_KEYS = ["Backspace", "Delete"];
 
+const FOCUS_DELAY_MS = 60;
+
 const getNodeIdAtPoint = (x: number, y: number) =>
   document.elementFromPoint(x, y)?.closest<HTMLElement>(".react-flow__node")?.dataset.id ?? null;
 
@@ -57,7 +59,16 @@ const getNodeIdAtPointer = (event: MouseEvent | TouchEvent) => {
 };
 
 export const WorkflowCanvas = () => {
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView } = useReactFlow();
+  const focusRequest = useWorkflowStore((state) => state.focusRequest);
+
+  useEffect(() => {
+    if (!focusRequest) return;
+    const timer = window.setTimeout(() => {
+      void fitView({ nodes: focusRequest.nodeIds.map((id) => ({ id })), duration: 400, maxZoom: 1, padding: 0.4 });
+    }, FOCUS_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [focusRequest, fitView]);
   const nodes = useWorkflowStore((state) => state.nodes);
   const edges = useWorkflowStore((state) => state.edges);
   const isRunning = useWorkflowStore((state) => state.isRunning);

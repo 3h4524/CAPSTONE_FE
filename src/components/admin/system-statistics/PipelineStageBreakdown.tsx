@@ -1,209 +1,206 @@
-/* eslint-disable @next/next/no-img-element */
+ 
 "use client";
 
 import React, { useMemo } from "react";
-import { ArrowDown, Layers } from "lucide-react";
+import {
+  Clapperboard,
+  GitFork,
+  Image as ImageIcon,
+  Layers,
+  Tag,
+  Wrench,
+} from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { PipelineStageBreakdownDto } from "@/types/system-statistics";
+import type {
+  IntegrationStatusDto,
+  PipelineStageBreakdownDto,
+} from "@/types/system-statistics";
 
 interface PipelineStageBreakdownProps {
   pipelineStages?: PipelineStageBreakdownDto[];
+  integrationStatus?: IntegrationStatusDto;
   isLoading: boolean;
 }
 
 interface StepConfig {
-  step: string;
   badge: string;
   icon: React.ReactNode;
-  barColor: string;
-  percentageBadge: string;
+  relativeTo?: string;
+  relativeNoun?: string;
 }
+
+const PUBLISHED_STAGE = "Published to Etsy";
 
 const STEP_DETAILS: Record<string, StepConfig> = {
   "Image Generation": {
-    step: "01",
     badge: "Source Designs",
-    icon: (
-      <img
-        src="/icons/stat-images.png"
-        alt="Image Generation"
-        className="h-5 w-5 object-contain"
-      />
-    ),
-    barColor: "bg-[#0f172a] dark:bg-slate-100",
-    percentageBadge: "border-slate-300 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
+    icon: <ImageIcon className="h-4 w-4 text-slate-600" />,
   },
   "Mock-up Rendering": {
-    step: "02",
     badge: "Product Mockups",
-    icon: (
-      <img
-        src="/icons/stat-mockup.png"
-        alt="Mock-up Rendering"
-        className="h-5 w-5 object-contain dark:brightness-200"
-      />
-    ),
-    barColor: "bg-[#334155] dark:bg-slate-300",
-    percentageBadge: "border-slate-300 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
+    icon: <Wrench className="h-4 w-4 text-slate-600" />,
+    relativeTo: "Image Generation",
+    relativeNoun: "image",
   },
   "Video Rendering": {
-    step: "03",
     badge: "Promo Videos",
-    icon: (
-      <img
-        src="/icons/stat-videos.png"
-        alt="Video Rendering"
-        className="h-5 w-5 object-contain"
-      />
-    ),
-    barColor: "bg-[#c2410c] dark:bg-orange-500",
-    percentageBadge: "border-orange-300/80 bg-orange-50 text-[#c2410c] dark:border-orange-900/60 dark:bg-orange-950/40 dark:text-orange-300",
+    icon: <Clapperboard className="h-4 w-4 text-slate-600" />,
+    relativeTo: "Image Generation",
+    relativeNoun: "image",
   },
   "Listing Generation": {
-    step: "04",
     badge: "Listing Copies",
-    icon: (
-      <img
-        src="/icons/stat-listings.png"
-        alt="Listing Generation"
-        className="h-5 w-5 object-contain"
-      />
-    ),
-    barColor: "bg-[#15803d] dark:bg-emerald-500",
-    percentageBadge: "border-emerald-300/80 bg-emerald-50 text-[#15803d] dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300",
+    icon: <Tag className="h-4 w-4 text-slate-600" />,
+    relativeTo: "Image Generation",
+    relativeNoun: "image",
   },
+  [PUBLISHED_STAGE]: {
+    badge: "Marketplace Uploads",
+    icon: (
+      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#f97316] text-[9px] font-bold text-white shadow-2xs">
+        Etsy
+      </div>
+    ),
+    relativeTo: "Listing Generation",
+    relativeNoun: "listing",
+  },
+};
+
+const FALLBACK_STEP: StepConfig = {
+  badge: "Pipeline Stage",
+  icon: <Layers className="h-4 w-4 text-slate-600" />,
 };
 
 export function PipelineStageBreakdown({
   pipelineStages = [],
+  integrationStatus,
   isLoading,
 }: PipelineStageBreakdownProps) {
   const totalAssets = useMemo(() => {
     return pipelineStages.reduce((sum, s) => sum + s.count, 0);
   }, [pipelineStages]);
 
-  if (isLoading) {
-    return (
-      <Card className="flex flex-col gap-0 border border-slate-200/80 bg-white py-0 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
-        <CardHeader className="border-b border-slate-100/80 px-5 py-3.5 dark:border-slate-800/80">
-          <div className="h-5 w-44 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-          <div className="mt-1 h-3.5 w-60 animate-pulse rounded bg-slate-100 dark:bg-slate-800/60" />
-        </CardHeader>
-        <CardContent className="space-y-3 px-5 py-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="h-14 w-full animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800"
-            />
-          ))}
-        </CardContent>
-      </Card>
-    );
-  }
+  const rows = useMemo(() => {
+    const stages = pipelineStages.map((s) => ({ stageName: s.stageName, count: s.count }));
+    if (integrationStatus) {
+      stages.push({ stageName: PUBLISHED_STAGE, count: integrationStatus.etsyTotal });
+    }
+    const countByStage = new Map(stages.map((s) => [s.stageName, s.count]));
+    const maxCount = Math.max(1, ...stages.map((s) => s.count));
+
+    return stages.map((stage) => {
+      const details = STEP_DETAILS[stage.stageName];
+      const reference = details?.relativeTo ? countByStage.get(details.relativeTo) ?? 0 : 0;
+      let ratioText = "Funnel entry";
+      let isZeroBottleneck = false;
+
+      if (details?.relativeTo && reference > 0) {
+        const ratio = stage.count / reference;
+        if (ratio >= 1) {
+          ratioText = `${ratio.toFixed(2)}x per ${details.relativeNoun}`;
+        } else {
+          ratioText = `${(ratio * 100).toFixed(1)}% of ${details.relativeNoun}s`;
+          if (stage.count === 0) isZeroBottleneck = true;
+        }
+      } else if (details?.relativeTo) {
+        ratioText = stage.count === 0 ? `0.0% of ${details.relativeNoun}s` : "—";
+        if (stage.count === 0) isZeroBottleneck = true;
+      }
+
+      return {
+        ...stage,
+        details,
+        ratioText,
+        isZeroBottleneck,
+        width: stage.count === 0 ? 0 : Math.max((stage.count / maxCount) * 100, 2),
+      };
+    });
+  }, [pipelineStages, integrationStatus]);
 
   const isEmpty = pipelineStages.length === 0 || totalAssets === 0;
 
   return (
-    <Card className="flex flex-col gap-0 rounded-lg border border-slate-200/90 bg-white py-0 shadow-none dark:border-slate-800 dark:bg-slate-900">
-      <CardHeader className="border-b border-slate-200/90 px-4.5 py-3.5 dark:border-slate-800">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-xs font-bold tracking-wider text-slate-800 uppercase dark:text-slate-200">
-              Pipeline Stage Breakdown
-            </CardTitle>
-            <p className="mt-0.5 text-[11px] font-medium text-slate-400 dark:text-slate-500">
-              End-to-end generative asset throughput
-            </p>
-          </div>
-          <div className="flex items-center gap-1.5 rounded-sm border border-slate-300 bg-slate-100 px-2 py-0.5 dark:border-slate-700 dark:bg-slate-800">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-            <span className="font-mono text-[11px] font-bold text-slate-800 dark:text-slate-200">
-              {totalAssets.toLocaleString()} TOTAL
-            </span>
-          </div>
+    <div className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+          <GitFork className="h-5 w-5" />
         </div>
-      </CardHeader>
+        <div>
+          <h3 className="text-sm font-bold text-slate-900">Pipeline conversion</h3>
+          {isLoading ? (
+            <div className="mt-1 h-3.5 w-48 animate-pulse rounded bg-slate-100" />
+          ) : (
+            <p className="text-xs text-slate-500">
+              <span className="font-semibold text-slate-700">{totalAssets.toLocaleString()}</span>{" "}
+              assets generated · each stage vs the one it builds on
+            </p>
+          )}
+        </div>
+      </div>
 
-      <CardContent className="px-4.5 py-4">
-        {isEmpty ? (
-          <div className="flex h-[300px] items-center justify-center text-xs text-slate-400">
+      <div className="mt-3 flex flex-1 flex-col justify-between">
+        {isLoading ? (
+          <div className="flex-1 space-y-4 pt-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex animate-pulse items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-slate-100" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3.5 w-1/2 rounded bg-slate-100" />
+                  <div className="h-1.5 w-full rounded-full bg-slate-100" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : isEmpty ? (
+          <div className="flex flex-1 items-center justify-center py-16 text-xs text-slate-400">
             No generative assets recorded in this period.
           </div>
         ) : (
-          <div className="relative space-y-1.5">
-            {pipelineStages.map((stage, index) => {
-              const details = STEP_DETAILS[stage.stageName] ?? {
-                step: `0${index + 1}`,
-                badge: "Pipeline Stage",
-                icon: <Layers className="h-5 w-5 text-slate-500" />,
-                barColor: "bg-slate-800",
-                percentageBadge: "border-slate-300 bg-slate-100 text-slate-700",
-              };
-
-              const isLast = index === pipelineStages.length - 1;
-
+          <div className="flex flex-1 flex-col justify-around py-1">
+            {rows.map((row) => {
+              const details = row.details ?? FALLBACK_STEP;
               return (
-                <div key={stage.stageName} className="group relative">
-                  {/* Step Card */}
-                  <div className="relative rounded-md border border-slate-200/90 bg-white p-3 shadow-none transition-all hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/90 dark:hover:border-slate-700">
-                    <div className="flex items-center justify-between">
-                      {/* Left: Step number, icon in white frame, and name */}
-                      <div className="flex items-center gap-2.5">
-                        <span className="font-mono text-xs font-bold text-slate-400 dark:text-slate-500">
-                          {index + 1}.
-                        </span>
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-800">
-                          {details.icon}
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold tracking-tight text-slate-900 dark:text-slate-100">
-                            {stage.stageName}
-                          </div>
-                          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
-                            {details.badge}
-                          </span>
-                        </div>
+                <div key={row.stageName} className="py-2.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                        {details.icon}
                       </div>
-
-                      {/* Right: Count and Percentage Badge */}
-                      <div className="flex items-center justify-end gap-2.5">
-                        <div className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100">
-                          {stage.count.toLocaleString()}
-                        </div>
-                        <span
-                          className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 font-mono text-[10px] font-bold ${details.percentageBadge}`}
-                        >
-                          {stage.percentage.toFixed(1)}%
-                        </span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-900">
+                          {row.stageName}
+                        </p>
+                        <p className="text-[11px] text-slate-400">{details.badge}</p>
                       </div>
                     </div>
-
-                    {/* Proportional Solid Bar Track */}
-                    <div className="mt-2.5 h-2 w-full overflow-hidden rounded-xs bg-slate-100 dark:bg-slate-800">
-                      <div
-                        className={`h-full transition-all duration-500 ease-out ${details.barColor}`}
-                        style={{
-                          width: `${Math.max(stage.percentage, 2)}%`,
-                        }}
-                      />
+                    <div className="shrink-0 text-right">
+                      <p className="text-xs font-bold text-slate-900">
+                        {row.count.toLocaleString()}
+                      </p>
+                      <p
+                        className={`text-[11px] ${
+                          row.isZeroBottleneck
+                            ? "font-semibold text-rose-600"
+                            : "text-slate-500"
+                        }`}
+                      >
+                        {row.ratioText}
+                      </p>
                     </div>
                   </div>
-
-                  {/* Flow Arrow Connector between steps */}
-                  {!isLast && (
-                    <div className="my-1 flex justify-center">
-                      <div className="flex h-4 w-4 items-center justify-center text-slate-300 dark:text-slate-600">
-                        <ArrowDown className="h-3 w-3 stroke-[2]" />
-                      </div>
-                    </div>
-                  )}
+                  {/* Subtle Slate Blue Progress Track */}
+                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-[#475569] transition-all duration-500 ease-out"
+                      style={{ width: `${row.width}%` }}
+                    />
+                  </div>
                 </div>
               );
             })}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

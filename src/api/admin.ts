@@ -1,6 +1,9 @@
-import type { AdminDashboardMetricsDto, AdminUserDto, GetUsersRequest, PagedResult, UpdateAdminUserRequest } from "@/types/admin";
+import type { AdminDashboardMetricsDto, AdminOperationsDto, AdminUserDto, GetUsersRequest, PagedResult, UpdateAdminUserRequest } from "@/types/admin";
 
 import { api } from "./client";
+
+export const getAdminOperations = async (timeRange: string): Promise<AdminOperationsDto> =>
+  (await api.get<AdminOperationsDto>("/api/admin/dashboard/operations", { params: { timeRange } })).data;
 
 export const getAdminDashboardMetrics = async (
   timeRange: string = "month",

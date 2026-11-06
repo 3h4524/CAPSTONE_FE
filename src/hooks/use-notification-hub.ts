@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { notificationApi } from "@/api/notifications";
 import { supportTicketKeys } from "@/api/support-tickets";
 import { adminSupportTicketsKeys } from "@/hooks/queries/use-admin-support-tickets";
+import { sellerDashboardKeys } from "@/hooks/queries/use-dashboard-summary";
 import { notificationKeys } from "@/hooks/queries/use-notifications";
 import type { NotificationDto } from "@/types/notification";
 import type { HubConnection } from "@microsoft/signalr";
@@ -49,6 +50,8 @@ export const useNotificationHub = () => {
           // Invalidate luôn danh sách Ticket để cập nhật chữ "New" nếu người dùng đang ở trang Support
           queryClient.invalidateQueries({ queryKey: [...supportTicketKeys.all, "list"] });
           queryClient.invalidateQueries({ queryKey: adminSupportTicketsKeys.lists() });
+          // Một batch xong hay lỗi đều đổi số liệu và việc cần làm trên Dashboard
+          queryClient.invalidateQueries({ queryKey: sellerDashboardKeys.all });
         });
 
         try {

@@ -21,7 +21,7 @@ import {
   TRANSACTION_STATUSES,
 } from "@/helpers/revenue-transactions";
 import type { RevenueInvoiceDto, TransactionStatus } from "@/types/revenue";
-import { formatCurrency } from "@/utils/format-currency";
+import { formatVnd } from "@/utils/format-currency";
 
 export interface TransactionTableFilter {
   search: string;
@@ -37,7 +37,6 @@ interface RevenueInvoiceTableProps {
     pageSize: number;
   };
   isLoading: boolean;
-  currency?: "VND" | "USD";
   startDate: string;
   endDate: string;
   planOptions: string[];
@@ -53,7 +52,6 @@ const SELECT_CLASS =
 export function RevenueInvoiceTable({
   data,
   isLoading,
-  currency = "VND",
   startDate,
   endDate,
   planOptions,
@@ -205,7 +203,7 @@ export function RevenueInvoiceTable({
                       </span>
                     </td>
                     <td className="px-3 py-3 text-right font-semibold whitespace-nowrap text-slate-900 dark:text-slate-100">
-                      {formatCurrency(invoice.amount, currency)}
+                      {formatVnd(invoice.amount)}
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap text-slate-600 dark:text-slate-300">
                       {invoice.paymentMethod ?? <span className="text-slate-400">—</span>}
@@ -276,7 +274,7 @@ export function RevenueInvoiceTable({
         )}
       </div>
 
-      <TransactionDetailDialog invoice={selected} currency={currency} onClose={() => setSelected(null)} />
+      <TransactionDetailDialog invoice={selected} onClose={() => setSelected(null)} />
     </Card>
   );
 }
@@ -314,11 +312,9 @@ function PagerButton({
 
 function TransactionDetailDialog({
   invoice,
-  currency,
   onClose,
 }: {
   invoice: RevenueInvoiceDto | null;
-  currency: "VND" | "USD";
   onClose: () => void;
 }) {
   const status = invoice ? getTransactionStatusStyle(invoice.status) : null;
@@ -344,7 +340,7 @@ function TransactionDetailDialog({
               <dt className="text-slate-500">Plan</dt>
               <dd className="text-right font-medium">{invoice.planName}</dd>
               <dt className="text-slate-500">Amount</dt>
-              <dd className="text-right font-semibold">{formatCurrency(invoice.amount, currency)}</dd>
+              <dd className="text-right font-semibold">{formatVnd(invoice.amount)}</dd>
               <dt className="text-slate-500">Payment method</dt>
               <dd className="text-right">{invoice.paymentMethod ?? "—"}</dd>
               <dt className="text-slate-500">Status</dt>

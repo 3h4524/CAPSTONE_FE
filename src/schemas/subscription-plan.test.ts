@@ -104,6 +104,26 @@ describe("subscriptionPlanFormSchema", () => {
     );
   });
 
+  it("keeps plan features keyed by code, with no limit as null", () => {
+    const features = {
+      ai_video: { isEnabled: true, limitValue: null },
+      design_variations: { isEnabled: true, limitValue: 2 },
+    };
+
+    const result = subscriptionPlanFormSchema.safeParse({ ...validPlan, features });
+
+    expect(result.success && result.data.features).toEqual(features);
+  });
+
+  it.each([-1, 1.5])("rejects a feature limit of %s", (limitValue) => {
+    const result = subscriptionPlanFormSchema.safeParse({
+      ...validPlan,
+      features: { daily_mockup_cap: { isEnabled: true, limitValue } },
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it.each(requiredFields)("rejects a plan without %s", (field) => {
     const result = subscriptionPlanFormSchema.safeParse(omitKey(validPlan, field));
 

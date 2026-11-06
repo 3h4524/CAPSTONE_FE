@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { AdminSubscriptionPlansShell } from "@/components/admin/subscription-plans/admin-subscription-plans-shell";
@@ -43,13 +43,16 @@ const AdminSubscriptionPlansPage = () => {
     return null;
   }
 
+  // The shell reads ?view= from the URL, which needs a Suspense boundary.
   return (
-    <AdminSubscriptionPlansShell
-      fullName={user.fullName}
-      onLogout={handleLogout}
-      plans={plans ?? []}
-      isLoading={isPlansLoading}
-    />
+    <Suspense fallback={null}>
+      <AdminSubscriptionPlansShell
+        fullName={user.fullName}
+        onLogout={handleLogout}
+        plans={plans ?? []}
+        isLoading={isPlansLoading}
+      />
+    </Suspense>
   );
 };
 

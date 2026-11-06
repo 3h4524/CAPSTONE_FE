@@ -14,8 +14,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { parsePrintArea } from "@/helpers/mockup-template";
+import { hasFeature } from "@/helpers/plan-features";
 import { useCreateMockupTemplate } from "@/hooks/mutations/use-create-mockup-template";
 import { useUpdateMockupTemplate } from "@/hooks/mutations/use-update-mockup-template";
+import { useEntitlements } from "@/hooks/queries/use-entitlements";
 import { productTypes } from "@/schemas/batches";
 import { type MockupTemplateFormValues, mockupTemplateSchema } from "@/schemas/mockup-template";
 import type { GarmentMaskPreview, MockupPrintArea, MockupTemplate } from "@/types/mockup-templates";
@@ -105,12 +107,15 @@ export const MockupTemplateFormDialog = ({ open, template, onClose }: MockupTemp
 
   const creating = template === null;
   const pending = isCreating || isUpdating;
+  const { data: entitlements } = useEntitlements();
+  // Making and editing the Seller's own templates is a Pro feature; the backend refuses it on other plans.
+  const locked = entitlements !== undefined && !hasFeature(entitlements, "custom_mockup_templates");
   // A photo without a saved garment mask (newly picked, or not analyzed yet) is analyzed on the
   // server right away: the mask gives the garment box to center the print area in, and lets the
   // recolor be previewed before saving. This is a quick pass; saving runs the full one.
   const savedMaskUrl = !photoFile ? (template?.garmentMaskUrl ?? null) : null;
   const savedPhotoUrl = template?.baseImageUrl ?? null;
-  const needsPreview = open && (photoFile !== null || savedPhotoUrl !== null) && !savedMaskUrl;
+  const needsPreview = open && !locked && (photoFile !== null || savedPhotoUrl !== null) && !savedMaskUrl;
 
   useEffect(() => {
     setMaskPreview(null);
@@ -296,7 +301,8 @@ export const MockupTemplateFormDialog = ({ open, template, onClose }: MockupTemp
           </div>
           <DialogFooter className="gap-2 pt-4">
             <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>Cancel</Button>
-            <Button type="submit" disabled={pending}>{pending ? "Analyzing photo…" : creating ? "Create template" : "Save changes"}</Button>
+            {locked && <p className="text-muted-foreground mr-auto self-center text-xs">Custom mock-up templates are part of Pro.</p>}
+            <Button type="submit" disabled={pending || locked}>{pending ? "Analyzing photo…" : creating ? "Create template" : "Save changes"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

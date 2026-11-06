@@ -34,13 +34,19 @@ const CONTENT_TYPES = [
 
 const ACCEPTED_FILES = ".txt,.md,.csv,.json,.html,.htm";
 
-type AdminRagIngestShellProps = { fullName: string; onLogout: () => void };
+type AdminRagTab = "ingest" | "research" | "documents" | "search";
 
-const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) => {
+type AdminRagIngestShellProps = {
+  fullName: string;
+  onLogout: () => void;
+  initialTab?: AdminRagTab;
+};
+
+const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: AdminRagIngestShellProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState<"ingest" | "research" | "documents" | "search">("ingest");
+  const [activeTab, setActiveTab] = useState<AdminRagTab>(initialTab);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [fileName, setFileName] = useState("");
   const [title, setTitle] = useState("");
@@ -128,7 +134,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
         <AdminSidebar
           fullName={fullName}
           onLogout={onLogout}
-          activeItem="RAG Ingest"
+          activeItem={activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
           isMobileOpen={isMobileSidebarOpen}
           onClose={() => setIsMobileSidebarOpen(false)}
           isCollapsed={isSidebarCollapsed}
@@ -139,7 +145,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
             <AdminTopbar
               fullName={fullName}
               onMenuClick={() => setIsMobileSidebarOpen(true)}
-              pageTitle="RAG Knowledge Base"
+              pageTitle={activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
             />
             <main className="mx-auto max-w-[1600px] px-4 py-4 sm:px-[calc(1.5rem+1cm)] sm:py-5 2xl:max-w-[1720px]">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -148,11 +154,12 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                     Knowledge base
                   </p>
                   <h1 className="font-display mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">
-                    RAG Knowledge Base
+                    {activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
                   </h1>
                   <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
-                    Ingest documents, review versions, and control which knowledge is active for
-                    retrieval.
+                    {activeTab === "research"
+                      ? "Manage the shared public Etsy dataset used by seller-facing Market Radar."
+                      : "Ingest documents, review versions, and control which knowledge is active for retrieval."}
                   </p>
                 </div>
                 <div className="flex flex-wrap rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
@@ -170,7 +177,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                     variant={activeTab === "research" ? "default" : "ghost"}
                     onClick={() => setActiveTab("research")}
                   >
-                    Etsy research
+                    Market Insights
                   </Button>
                   <Button
                     type="button"

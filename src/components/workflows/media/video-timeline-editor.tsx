@@ -510,6 +510,7 @@ function PreviewSceneMedia({
                 width: "100%",
                 height: "100%",
                 objectFit: "cover",
+                objectPosition: `${(scene.aiCropPosition?.x ?? 0.5) * 100}% ${(scene.aiCropPosition?.y ?? 0.5) * 100}%`,
               }}
             />
           </Sequence>
@@ -1363,6 +1364,15 @@ export function VideoTimelineEditor({
         : current
     );
   };
+  const commitSelectedSceneTransform = (changes: Partial<TimelineScene>) => {
+    if (!selectedScene) return;
+    commit((current) => ({
+      ...current,
+      aiScenes: (current.aiScenes ?? []).map((scene, index) =>
+        index === selectedScene.index ? { ...scene, ...changes } : scene
+      ),
+    }));
+  };
   const resetSelectedSceneTransform = () => {
     if (!selectedScene) return;
     commit((current) => ({
@@ -1763,6 +1773,8 @@ export function VideoTimelineEditor({
                           onReset={resetSelectedSceneTransform}
                           onChange={changeSelectedSceneTransform}
                         />
+                      ) : selectedScene ? (
+                        <AiCropInspector scene={selectedScene.scene} sceneNumber={selectedScene.index + 1} onChange={commitSelectedSceneTransform} />
                       ) : selection?.kind === "music" ? (
                         <MusicInspector
                           edit={edit}
@@ -1864,6 +1876,19 @@ function OptionPickerEmpty() {
       <p className="text-muted-foreground mt-1.5 text-sm leading-6">
         Select Music or Transition above to choose what you want to add.
       </p>
+    </div>
+  );
+}
+
+function AiCropInspector({ scene, sceneNumber, onChange }: { scene: TimelineScene; sceneNumber: number; onChange: (changes: Partial<TimelineScene>) => void }) {
+  const position = scene.aiCropPosition ?? { x: 0.5, y: 0.5 };
+  return (
+    <div className="space-y-5">
+      <Title icon={<SlidersHorizontal />} name="Frame position" description={`Scene ${sceneNumber}`} />
+      <p className="text-muted-foreground text-sm">Adjust the visible part of the AI video. The preview matches the final render.</p>
+      <Range label="Horizontal position" value={Math.round(position.x * 100)} min={0} max={100} step={1} display={`${Math.round(position.x * 100)}%`} onChange={(value) => onChange({ aiCropPosition: { ...position, x: value / 100 } })} />
+      <Range label="Vertical position" value={Math.round(position.y * 100)} min={0} max={100} step={1} display={`${Math.round(position.y * 100)}%`} onChange={(value) => onChange({ aiCropPosition: { ...position, y: value / 100 } })} />
+      <Button type="button" variant="outline" onClick={() => onChange({ aiCropPosition: { x: 0.5, y: 0.5 } })}>Center frame</Button>
     </div>
   );
 }

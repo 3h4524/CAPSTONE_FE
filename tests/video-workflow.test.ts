@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import { DEFAULT_WORKFLOW_DEFINITION } from "@/constants/workflow";
 import { clampRegion, createRegion, moveRegion, resizeRegion } from "@/helpers/regions";
+import { getVideoOutputFormat, getVideoOutputFormats } from "@/helpers/video-output-formats";
 import {
   createFramingCrop,
   moveScene,
@@ -128,6 +129,19 @@ test("Standard mode offers Product Showcase and Design Detail while rejecting Va
     }).success,
     false
   );
+});
+test("square output accepts AI scenes and retains their crop position", () => {
+  assert.deepEqual(getVideoOutputFormats("ai_shot").map((format) => format.value), ["portrait", "square", "landscape"]);
+  assert.equal(getVideoOutputFormat("square", "ai_shot").value, "square");
+  const parsed = generateVideoConfigSchema.parse({
+    ...config,
+    mode: "ai_shot",
+    outputFormat: "square",
+    durationSeconds: 5,
+    aiScenes: [configuredScene("ai", { durationSeconds: 5, aiCropPosition: { x: 0.5, y: 0.2 } })],
+  });
+  assert.equal(parsed.outputFormat, "square");
+  assert.deepEqual(parsed.aiScenes?.[0]?.aiCropPosition, { x: 0.5, y: 0.2 });
 });
 test("Standard-only scenes accept per-scene motion and first/last framing without a global template choice", () => {
   const baseCrop = { x: 0, y: 0, width: 1, height: 1 };

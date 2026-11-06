@@ -34,7 +34,7 @@ const configured = () => {
   set("product-input", { batchId: id, productId: id });
   set("prompt-synthesis", { designTemplateId: id });
   set("apply-mockup", { mockupTemplateIds: [id] });
-  set("generate-video", { aiScenes: [{ mockupId: id, templateCode: "cinematic_product_showcase", durationSeconds: 4, framing: "medium", cameraAngle: "three_quarter", cameraMovement: "push_in", subjectMotion: "none", motionIntensity: "subtle", lighting: "soft_studio", extraInstructions: null, rightsConfirmed: false }] });
+  set("generate-video", { aiScenes: [{ mockupId: id, templateCode: "cinematic_product_showcase", durationSeconds: 5, framing: "medium", cameraAngle: "three_quarter", cameraMovement: "push_in", subjectMotion: "none", motionIntensity: "subtle", lighting: "soft_studio", extraInstructions: null, rightsConfirmed: false }] });
   return { nodes, edges: toWorkflowEdges(DEFAULT_WORKFLOW_DEFINITION) };
 };
 

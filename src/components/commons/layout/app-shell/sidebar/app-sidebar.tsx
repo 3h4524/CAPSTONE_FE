@@ -31,7 +31,7 @@ export const AppSidebar = () => {
         </span>
         <CollapseToggle />
       </div>
-      <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-3" aria-label="Primary">
+      <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-3" aria-label="Primary navigation">
         {NAV_SECTIONS.map((section, index) => (
           <Fragment key={section.label}>
             {index > 0 && <Separator />}

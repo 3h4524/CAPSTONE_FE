@@ -52,9 +52,7 @@ describe("AuthGuard", () => {
 
     const { queryByText: queryContent } = renderGuard(true);
 
-    await waitFor(() =>
-      expect(routerReplace).toHaveBeenCalledWith("/login?returnUrl=%2Fdashboard")
-    );
+    await waitFor(() => expect(routerReplace).toHaveBeenCalledWith("/unauthorized"));
     expect(queryContent("protected content")).not.toBeInTheDocument();
   });
 

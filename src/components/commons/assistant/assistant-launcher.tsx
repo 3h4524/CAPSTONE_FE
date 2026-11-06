@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { Bot } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ASSISTANT_LAUNCHER_SIZE_PX, ASSISTANT_MASCOT_SRC } from "@/constants/assistant";
+import { ASSISTANT_LAUNCHER_SIZE_PX } from "@/constants/assistant";
 import { useAssistantLauncherDrag } from "@/hooks/use-assistant-launcher-drag";
 import { useAssistantStore } from "@/stores/assistant";
 
@@ -33,15 +33,7 @@ export const AssistantLauncher = () => {
             onClick={handleClick}
             {...handlers}
           >
-            <Image
-              src={ASSISTANT_MASCOT_SRC}
-              alt=""
-              width={ASSISTANT_LAUNCHER_SIZE_PX}
-              height={ASSISTANT_LAUNCHER_SIZE_PX}
-              unoptimized
-              draggable={false}
-              className="size-full object-cover [image-rendering:pixelated]"
-            />
+            <Bot className="text-primary size-6" aria-hidden="true" />
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">Drag to move, click to chat</TooltipContent>

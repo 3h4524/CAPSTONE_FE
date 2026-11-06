@@ -10,7 +10,6 @@ type AdminHeroCardProps = {
   healthChecks: HealthCheck[];
   onOpenHealthCheck: () => void;
 };
-
 const today = () =>
   new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
 
@@ -83,4 +82,3 @@ export const AdminHeroCard = ({
     </section>
   );
 };
-

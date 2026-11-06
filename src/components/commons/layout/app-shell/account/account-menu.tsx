@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, User } from "lucide-react";
+import { LogOut, Settings, User } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { UserAvatar } from "@/components/commons/layout/app-shell/account/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ type AccountMenuProps = {
 
 export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
   const router = useRouter();
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
   const setAvatarUrl = useAuthStore((state) => state.setAvatarUrl);
@@ -54,8 +56,8 @@ export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
         <Button
           type="button"
           variant="ghost"
-          aria-label="Account"
-          title={user?.fullName ?? "Account"}
+          aria-label={t("account.account")}
+          title={user?.fullName ?? t("account.account")}
           className={cn(
             "h-auto w-full items-center gap-2.5 rounded-lg p-2 text-left",
             collapsed ? "justify-center" : "justify-start"
@@ -70,7 +72,7 @@ export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
                   <span className="text-muted-foreground block truncate text-xs">{user.email}</span>
                 </>
               ) : (
-                <Spinner className="size-4" aria-label="Loading account" />
+                <Spinner className="size-4" aria-label={t("account.loading")} />
               )}
             </span>
           )}
@@ -84,13 +86,19 @@ export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
         <DropdownMenuItem asChild className="focus:bg-muted focus:text-primary">
           <Link href="/profile">
             <User />
-            <span>Profile</span>
+            <span>{t("account.profile")}</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="focus:bg-muted focus:text-primary">
+          <Link href="/settings">
+            <Settings />
+            <span>{t("account.settings")}</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="focus:bg-muted focus:text-primary" onClick={handleLogout} disabled={isPending}>
           <LogOut />
-          <span>Log out</span>
+          <span>{t("account.logout")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

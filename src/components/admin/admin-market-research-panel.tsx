@@ -23,13 +23,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -38,7 +31,32 @@ import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useRetrieveMarketResearch } from "@/hooks/mutations/use-retrieve-market-research";
 import { useQuery } from "@/hooks/queries/use-query";
 
-const DEFAULT_QUERIES = "hiking shirt\nmountain gift\ncamping t shirt";
+const DEFAULT_QUERIES = [
+  "personalized friend gift",
+  "custom pet gift",
+  "pet ornament",
+  "whimsical ornament",
+  "bedazzled kit",
+  "custom napkins",
+  "friendsmas party supplies",
+  "whimsical holiday decor",
+  "rhinestone christmas decor",
+  "ruffle tablecloth",
+  "lace table decor",
+  "diy ornament kit",
+  "holiday craft kit",
+  "beginner sewing pattern",
+  "hand woven home decor",
+  "hand painted home decor",
+  "personalized teacher gift",
+  "custom wedding sign",
+  "bridesmaid gift",
+  "birth flower necklace",
+  "memorial pet gift",
+  "gallery wall art",
+  "book lover gift",
+  "crochet animal gift",
+].join("\n");
 const RESEARCH_HISTORY_KEY = "apcs.admin.market-research.history";
 const RESEARCH_RUN_COUNTER_KEY = "apcs.admin.market-research.run-counter";
 
@@ -73,6 +91,8 @@ const AdminMarketResearchPanel = () => {
   const [topN, setTopN] = useState("3");
   const [minimumViralScore, setMinimumViralScore] = useState("50");
   const [intervalMinutes, setIntervalMinutes] = useState("1440");
+  const [batchSize, setBatchSize] = useState("5");
+  const [runWindowMinutes, setRunWindowMinutes] = useState("120");
   const [result, setResult] = useState<MarketResearchResponse | null>(null);
   const [history, setHistory] = useState<ResearchHistoryEntry[]>([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
@@ -95,6 +115,8 @@ const AdminMarketResearchPanel = () => {
     setTopN(String(data.topN || 3));
     setMinimumViralScore(String(data.minimumViralScore));
     setIntervalMinutes(String(data.intervalMinutes));
+    setBatchSize(String(data.batchSize || 5));
+    setRunWindowMinutes(String(data.runWindowMinutes || 120));
   }, [scheduleQuery.data]);
 
   useEffect(() => {
@@ -121,7 +143,7 @@ const AdminMarketResearchPanel = () => {
     suggestedQueries.forEach((query) => {
       if (!nextQueries.includes(query)) nextQueries.push(query);
     });
-    setQueries(nextQueries.slice(0, 20).join("\n"));
+    setQueries(nextQueries.slice(0, 100).join("\n"));
   };
 
   const saveSchedule = () => {
@@ -129,6 +151,8 @@ const AdminMarketResearchPanel = () => {
     const top = Number(topN);
     const score = Number(minimumViralScore);
     const interval = Number(intervalMinutes);
+    const batch = Number(batchSize);
+    const window = Number(runWindowMinutes);
     if (enabled && !normalizedQueries.length)
       return showToast("error", "Add at least one keyword before enabling the schedule.");
     if (!Number.isInteger(limit) || limit < 1 || limit > 100)
@@ -137,6 +161,12 @@ const AdminMarketResearchPanel = () => {
       return showToast("error", "Top listings must be between 1 and 25.");
     if (!Number.isFinite(score) || score < 0 || score > 100)
       return showToast("error", "Minimum score must be between 0 and 100.");
+    if (!Number.isInteger(interval) || interval < 1 || interval > 10080)
+      return showToast("error", "Run frequency must be between 1 and 10080 minutes.");
+    if (!Number.isInteger(batch) || batch < 1 || batch > 100)
+      return showToast("error", "Niches per batch must be between 1 and 100.");
+    if (!Number.isInteger(window) || window < 1 || window > 43200)
+      return showToast("error", "Run window must be between 1 and 43200 minutes (30 days).");
     saveMutation.mutate({
       enabled,
       platform: 1,
@@ -145,6 +175,8 @@ const AdminMarketResearchPanel = () => {
       topN: top,
       minimumViralScore: score,
       intervalMinutes: interval,
+      batchSize: batch,
+      runWindowMinutes: window,
     });
   };
 
@@ -234,20 +266,17 @@ const AdminMarketResearchPanel = () => {
             Enable schedule
           </label>
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <Field label="Run frequency">
-            <Select value={intervalMinutes} onValueChange={setIntervalMinutes}>
-              <SelectTrigger className="mt-2 w-full bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="60">Every hour</SelectItem>
-                <SelectItem value="360">Every 6 hours</SelectItem>
-                <SelectItem value="720">Every 12 hours</SelectItem>
-                <SelectItem value="1440">Every day</SelectItem>
-                <SelectItem value="10080">Every week</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+          <Field label="Run frequency (minutes)">
+            <Input
+              type="number"
+              min={1}
+              max={10080}
+              step={1}
+              value={intervalMinutes}
+              onChange={(event) => setIntervalMinutes(event.target.value)}
+              className="mt-2 bg-white"
+            />
           </Field>
           <Field label="Candidates / keyword">
             <Input
@@ -279,6 +308,26 @@ const AdminMarketResearchPanel = () => {
               className="mt-2"
             />
           </Field>
+          <Field label="Niches / batch">
+            <Input
+              type="number"
+              min={1}
+              max={100}
+              value={batchSize}
+              onChange={(event) => setBatchSize(event.target.value)}
+              className="mt-2"
+            />
+          </Field>
+          <Field label="Run window (minutes)">
+            <Input
+              type="number"
+              min={1}
+              max={43200}
+              value={runWindowMinutes}
+              onChange={(event) => setRunWindowMinutes(event.target.value)}
+              className="mt-2"
+            />
+          </Field>
         </div>
         <div className="mt-4 flex justify-end">
           <Button
@@ -306,7 +355,7 @@ const AdminMarketResearchPanel = () => {
             placeholder="One keyword per line, e.g. hiking shirt"
           />
           <span className="mt-1 block text-[11px] font-normal text-slate-400">
-            {normalizedQueries.length}/20 keywords · public Etsy data only
+            {normalizedQueries.length}/100 keywords · public Etsy data only
           </span>
         </label>
         <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3">

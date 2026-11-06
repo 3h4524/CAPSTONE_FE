@@ -232,9 +232,9 @@ describe("normalizeNodeConfig", () => {
 describe("summarizeNodeConfig", () => {
   const videoCases: Array<[string, Record<string, unknown>, string[]]> = [
     // The total duration is added up from the scenes, so the node no longer lists it as a setting.
-    ["a complete video config", { durationSeconds: 30 }, []],
+    ["a complete video config", { durationSeconds: 15 }, []],
     ["a missing duration", {}, []],
-    ["a string duration", { durationSeconds: "30" }, []],
+    ["a string duration", { durationSeconds: "15" }, []],
     ["a NaN duration", { durationSeconds: Number.NaN }, []],
   ];
 

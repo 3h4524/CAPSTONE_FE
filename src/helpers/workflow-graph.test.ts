@@ -58,7 +58,7 @@ const VALID_CONFIGS: Record<WorkflowNodeType, WorkflowNodeConfig> = {
     mode: "standard",
     target: "etsy",
     template: "auto",
-    durationSeconds: 20,
+    durationSeconds: 12,
     assetSelection: "automatic",
     selectedMockupIds: [],
     sceneOrder: [],

@@ -64,7 +64,10 @@ export const NODE_CARD_WIDTHS: Record<WorkflowNodeType, number> = {
 };
 
 // The ratios the image-generation API accepts.
-const ASPECT_RATIO_OPTIONS = ["1:1", "16:9", "9:16", "4:3", "3:4"].map((ratio) => ({ value: ratio, label: ratio }));
+const ASPECT_RATIO_OPTIONS = ["1:1", "16:9", "9:16", "4:3", "3:4"].map((ratio) => ({
+  value: ratio,
+  label: ratio,
+}));
 
 // A run has two parts. The canvas drives the first as a batch job: designs, their approval and the
 // mock-ups. The server then runs the second for one product: mock-up approval, video, video review
@@ -77,9 +80,18 @@ export const BATCH_RUN_NODE_TYPES: WorkflowNodeType[] = [
   "apply-mockup",
 ];
 
-export const VIDEO_RUN_NODE_TYPES: WorkflowNodeType[] = ["approval-gate", "generate-video", "review-video", "export-zip"];
+export const VIDEO_RUN_NODE_TYPES: WorkflowNodeType[] = [
+  "approval-gate",
+  "generate-video",
+  "review-video",
+  "export-zip",
+];
 
-export const RUNNABLE_NODE_TYPES: WorkflowNodeType[] = [...BATCH_RUN_NODE_TYPES, ...VIDEO_RUN_NODE_TYPES, "generate-listing"];
+export const RUNNABLE_NODE_TYPES: WorkflowNodeType[] = [
+  ...BATCH_RUN_NODE_TYPES,
+  ...VIDEO_RUN_NODE_TYPES,
+  "generate-listing",
+];
 
 // The order the steps of a run must be connected in (the backend checks the same order).
 export const RUN_ORDER: WorkflowNodeType[] = [
@@ -104,10 +116,30 @@ const PUBLISH_FIELDS = [
 ] as const;
 
 export const WORKFLOW_CATEGORIES: WorkflowCategoryDefinition[] = [
-  { id: "trigger", label: "Trigger", accentClassName: "bg-wf-cat-trigger-soft text-wf-cat-trigger", iconClassName: "text-wf-cat-trigger" },
-  { id: "ai", label: "AI generation", accentClassName: "bg-wf-cat-ai-soft text-wf-cat-ai", iconClassName: "text-wf-cat-ai" },
-  { id: "review", label: "Review", accentClassName: "bg-wf-cat-review-soft text-wf-cat-review", iconClassName: "text-wf-cat-review" },
-  { id: "output", label: "Output", accentClassName: "bg-wf-cat-output-soft text-wf-cat-output", iconClassName: "text-wf-cat-output" },
+  {
+    id: "trigger",
+    label: "Trigger",
+    accentClassName: "bg-wf-cat-trigger-soft text-wf-cat-trigger",
+    iconClassName: "text-wf-cat-trigger",
+  },
+  {
+    id: "ai",
+    label: "AI generation",
+    accentClassName: "bg-wf-cat-ai-soft text-wf-cat-ai",
+    iconClassName: "text-wf-cat-ai",
+  },
+  {
+    id: "review",
+    label: "Review",
+    accentClassName: "bg-wf-cat-review-soft text-wf-cat-review",
+    iconClassName: "text-wf-cat-review",
+  },
+  {
+    id: "output",
+    label: "Output",
+    accentClassName: "bg-wf-cat-output-soft text-wf-cat-output",
+    iconClassName: "text-wf-cat-output",
+  },
 ];
 
 export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDefinition> = {
@@ -126,7 +158,8 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         kind: "product-select",
         name: "productId",
         label: "Product for the video",
-        description: "Designs and mock-ups are made for the whole batch. The video is made for this one product.",
+        description:
+          "Designs and mock-ups are made for the whole batch. The video is made for this one product.",
       },
     ],
   },
@@ -154,7 +187,8 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         source: "style-presets",
         optional: true,
         noneLabel: "No style",
-        description: "Not used for products with their own image prompt: the prompt sets the style.",
+        description:
+          "Not used for products with their own image prompt: the prompt sets the style.",
       },
       {
         kind: "textarea",
@@ -185,17 +219,25 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
           {
             value: "gemini",
             label: "Gemini (Nano Banana 2)",
-            description: "About $0.067 per image. Fills in detail from short prompts; the white backdrop is cut out afterwards.",
+            description:
+              "About $0.067 per image. Fills in detail from short prompts; the white backdrop is cut out afterwards.",
           },
           {
             value: "ideogram",
             label: "Ideogram 4.0",
-            description: "About $0.03 per 2K image. Draws apparel designs on a transparent background. Needs an Ideogram key with credits.",
+            description:
+              "About $0.03 per 2K image. Draws apparel designs on a transparent background. Needs an Ideogram key with credits.",
           },
         ],
       },
       { kind: "number", name: "variants", label: "Variants per product", min: 1, max: 4 },
-      { kind: "select", name: "aspectRatio", label: "Aspect ratio", options: ASPECT_RATIO_OPTIONS, display: "ratios" },
+      {
+        kind: "select",
+        name: "aspectRatio",
+        label: "Aspect ratio",
+        options: ASPECT_RATIO_OPTIONS,
+        display: "ratios",
+      },
     ],
   },
   "design-approval": {
@@ -214,8 +256,16 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         label: "Approval mode",
         display: "cards",
         options: [
-          { value: "manual", label: "Manual review", description: "The run pauses so you can approve or reject each design." },
-          { value: "auto", label: "Approve automatically", description: "Every generated design goes straight to the mock-ups." },
+          {
+            value: "manual",
+            label: "Manual review",
+            description: "The run pauses so you can approve or reject each design.",
+          },
+          {
+            value: "auto",
+            label: "Approve automatically",
+            description: "Every generated design goes straight to the mock-ups.",
+          },
         ],
       },
     ],
@@ -232,7 +282,13 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     // (Workflows saved with the old shared `garmentColors` list lose it when they load.)
     // `templateBackgrounds` holds the background color of the templates that do not keep their photo's own.
     // `mockupIds` and `artworkGroupKey` are the video's choice among the finished mock-ups, made at Mockup Approval.
-    defaultConfig: { mockupTemplateIds: [], templateColors: {}, templateBackgrounds: {}, mockupIds: [], artworkGroupKey: "" },
+    defaultConfig: {
+      mockupTemplateIds: [],
+      templateColors: {},
+      templateBackgrounds: {},
+      mockupIds: [],
+      artworkGroupKey: "",
+    },
     fields: [
       {
         kind: "mockup-selection",
@@ -259,7 +315,11 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         label: "Approval mode",
         display: "cards",
         options: [
-          { value: "manual", label: "Manual review", description: "The video waits until you approve the mock-ups it may use." },
+          {
+            value: "manual",
+            label: "Manual review",
+            description: "The video waits until you approve the mock-ups it may use.",
+          },
         ],
       },
     ],
@@ -272,17 +332,64 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { mode: "standard", target: "etsy", template: "auto", templateVersion: 2, outputFormat: "portrait", durationSeconds: 1, assetSelection: "automatic", selectedMockupIds: [], sceneOrder: [], sceneMotionPresets: [], standardScenes: [], textOverlay: "", standardOptions: { motionPreset: "varied", crop: "safe", transition: "none" }, fallbackToStandard: true, aiStudioMode: "direct", aiStudioLayout: "hanging_window", aiStudioSourceMockupId: null, aiStudioFrameId: null },
+    defaultConfig: {
+      mode: "standard",
+      aiVideoModelKey: "minimax_h3",
+      target: "etsy",
+      template: "auto",
+      templateVersion: 2,
+      outputFormat: "portrait",
+      durationSeconds: 5,
+      assetSelection: "automatic",
+      selectedMockupIds: [],
+      sceneOrder: [],
+      sceneMotionPresets: [],
+      standardScenes: [],
+      textOverlay: "",
+      standardOptions: { motionPreset: "varied", crop: "safe", transition: "none" },
+      fallbackToStandard: true,
+      aiCharacterModelId: null,
+      sharedMockupId: null,
+      aiStudioMode: "direct",
+      aiStudioLayout: "hanging_window",
+      aiStudioSourceMockupId: null,
+      aiStudioFrameId: null,
+    },
     fields: [
       { kind: "video-formats", name: "outputFormat", label: "Output format" },
-      { kind: "textarea", name: "textOverlay", label: "Text overlay", placeholder: "Optional short caption (120 characters)" },
-      { kind: "select", name: "standardOptions.transition", label: "Transition", options: [
-        { value: "none", label: "None" }, { value: "fade", label: "Fade" }, { value: "swipe", label: "Swipe" },
-        { value: "zoom", label: "Zoom" }, { value: "flash", label: "Flash" }, { value: "whip_pan", label: "Whip pan" }, { value: "blur", label: "Blur" },
-      ] },
+      {
+        kind: "textarea",
+        name: "textOverlay",
+        label: "Text overlay",
+        placeholder: "Optional short caption (120 characters)",
+      },
+      {
+        kind: "select",
+        name: "standardOptions.transition",
+        label: "Transition",
+        options: [
+          { value: "none", label: "None" },
+          { value: "fade", label: "Fade" },
+          { value: "swipe", label: "Swipe" },
+          { value: "zoom", label: "Zoom" },
+          { value: "flash", label: "Flash" },
+          { value: "whip_pan", label: "Whip pan" },
+          { value: "blur", label: "Blur" },
+        ],
+      },
     ],
   },
-  "review-video": { type: "review-video", label: "Review Video", description: "Approve the exact video version before export.", icon: CheckCircle2, category: "review", hasInput: true, hasOutput: true, defaultConfig: {}, fields: [] },
+  "review-video": {
+    type: "review-video",
+    label: "Review Video",
+    description: "Approve the exact video version before export.",
+    icon: CheckCircle2,
+    category: "review",
+    hasInput: true,
+    hasOutput: true,
+    defaultConfig: {},
+    fields: [],
+  },
   "generate-listing": {
     type: "generate-listing",
     label: "Listing content",
@@ -381,7 +488,11 @@ export const DEFAULT_WORKFLOW_DEFINITION: WorkflowDefinition = {
     pipelineNode("input", "product-input", DEFAULT_WORKFLOW_POSITIONS.input),
     pipelineNode("prompt", "prompt-synthesis", DEFAULT_WORKFLOW_POSITIONS.prompt),
     pipelineNode("design", "design-image", DEFAULT_WORKFLOW_POSITIONS.design),
-    pipelineNode("design-approval", "design-approval", DEFAULT_WORKFLOW_POSITIONS["design-approval"]),
+    pipelineNode(
+      "design-approval",
+      "design-approval",
+      DEFAULT_WORKFLOW_POSITIONS["design-approval"]
+    ),
     pipelineNode("mockup", "apply-mockup", DEFAULT_WORKFLOW_POSITIONS.mockup),
     pipelineNode("approval", "approval-gate", DEFAULT_WORKFLOW_POSITIONS.approval),
     pipelineNode("video", "generate-video", DEFAULT_WORKFLOW_POSITIONS.video),

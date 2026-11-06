@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Award, Check, ChevronDown, ChevronsUpDown, Copy, GripVertical, Hourglass, Layers, LayoutGrid, type LucideIcon, Pencil, Plus, Star, Table2, Tag, Trash2, Users, X } from "lucide-react";
 
+import { AdminMetricCard } from "@/components/admin/admin-metric-card";
 import { addableFeatures,AddFeatureDialog } from "@/components/admin/subscription-plans/add-feature-dialog";
 import { DuplicatePlanDialog } from "@/components/admin/subscription-plans/duplicate-plan-dialog";
 import { FreeTrialCard } from "@/components/admin/subscription-plans/free-trial-card";
@@ -137,25 +138,49 @@ export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGri
 
   return (
     <div className="mt-6 space-y-5">
-      {/* The figures across all plans as one plain strip, read left to right. */}
-      <Card className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 p-0 shadow-xs lg:grid-cols-4">
-        <SummaryTile
+      {/* 4 KPI Metric Cards styled identically to Admin Dashboard */}
+      <section className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+        <AdminMetricCard
           icon={Tag}
           label="Plans on sale"
-          value={`${sellingPlans.length}`}
-          suffix={`of ${plans.length}`}
-          hint={sellingPlans.length === plans.length ? "All plans are on sale" : `${plans.length - sellingPlans.length} taken off sale`}
+          value={
+            <span className="flex items-baseline gap-1.5">
+              <span>{sellingPlans.length}</span>
+              <span className="text-xs font-normal text-slate-400 tabular-nums">
+                of {plans.length}
+              </span>
+            </span>
+          }
+          context={
+            sellingPlans.length === plans.length
+              ? "All plans are on sale"
+              : `${plans.length - sellingPlans.length} taken off sale`
+          }
         />
-        <SummaryTile icon={Users} label="Paying subscribers" value={totalSubscribers.toLocaleString()} hint="Across every plan" />
-        <SummaryTile icon={Hourglass} label="On free trial" value={totalTrials.toLocaleString()} hint="Not counted until they pay" />
-        <SummaryTile
+        <AdminMetricCard
+          icon={Users}
+          label="Paying subscribers"
+          value={totalSubscribers.toLocaleString()}
+          context="Across every plan"
+        />
+        <AdminMetricCard
+          icon={Hourglass}
+          label="On free trial"
+          value={totalTrials.toLocaleString()}
+          context="Not counted until they pay"
+        />
+        <AdminMetricCard
           icon={Award}
           label="Most popular"
           value={totalSubscribers > 0 ? topPlan.name : "—"}
-          hint={totalSubscribers > 0 ? `${topShare}% of paying subscribers` : "No paying subscribers yet"}
-          share={totalSubscribers > 0 ? topShare : undefined}
+          context={
+            totalSubscribers > 0
+              ? `${topShare}% of paying subscribers`
+              : "No paying subscribers yet"
+          }
+          progress={totalSubscribers > 0 ? topShare : undefined}
         />
-      </Card>
+      </section>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
@@ -691,41 +716,6 @@ function SectionToggle({
   );
 }
 
-// One figure across all plans, a column of the strip above the cards.
-function SummaryTile({
-  icon: Icon,
-  label,
-  value,
-  suffix,
-  hint,
-  share,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  suffix?: string;
-  hint: string;
-  share?: number;
-}) {
-  return (
-    <div className="min-w-0 bg-white px-5 py-4">
-      <p className="flex items-center gap-1.5 truncate text-xs font-medium text-slate-500">
-        <Icon className="size-3.5 shrink-0 text-slate-400" aria-hidden="true" />
-        {label}
-      </p>
-      <p className="mt-1 flex items-baseline gap-1.5 truncate">
-        <span className="text-2xl leading-tight font-semibold tracking-tight text-slate-900 tabular-nums">{value}</span>
-        {suffix && <span className="text-sm text-slate-400 tabular-nums">{suffix}</span>}
-      </p>
-      {share !== undefined && (
-        <div className="mt-2 h-1 overflow-hidden rounded-full bg-slate-100">
-          <div className="h-full rounded-full bg-slate-700" style={{ width: `${share}%` }} />
-        </div>
-      )}
-      <p className={cn("truncate text-[11px] text-slate-400", share !== undefined ? "mt-1.5" : "mt-0.5")}>{hint}</p>
-    </div>
-  );
-}
 
 // Trials sit beside the subscriber count, never added to it: they have not paid yet.
 function TrialBadge({ count, planName, isDark = false }: { count: number; planName: string; isDark?: boolean }) {

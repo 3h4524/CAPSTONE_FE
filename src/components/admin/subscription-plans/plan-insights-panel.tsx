@@ -1,16 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowRight,
+  ArrowUpRight,
+  CheckCircle2,
+  Clapperboard,
+  Hourglass,
+  ImageIcon,
+  Inbox,
+  Layers,
+  PencilLine,
+  Search,
+  Store,
+  Tag,
+} from "lucide-react";
 
-import { ArrowScroller } from "@/components/admin/subscription-plans/arrow-scroller";
 import { FeatureAdoptionCard } from "@/components/admin/subscription-plans/feature-adoption-card";
 import { PlanAiReviewSection } from "@/components/admin/subscription-plans/plan-ai-review-section";
 import { Card } from "@/components/ui/card";
 import { formatShare, splitAiLabel } from "@/helpers/plan-adoption";
 import { usePlanAiReview } from "@/hooks/queries/use-plan-ai-review";
 import { usePlanInsights } from "@/hooks/queries/use-plan-insights";
-import type { PlanInsights, PlanVerdict } from "@/types/plan-insights";
+import type { PipelineStage, PlanInsights, PlanVerdict } from "@/types/plan-insights";
 import { cn } from "@/utils/cn";
 import { formatVnd } from "@/utils/format-currency";
 
@@ -451,104 +466,216 @@ function ShareBar({ value, color }: { value: number; color: string }) {
   );
 }
 
-// The workflow's phases, each with the steps it runs, in run order, and its colour on the ribbon:
-// violet, orange, aqua, yellow, checked to tell apart side by side (also with colour blindness).
-// Every arrow carries its name, so the two lighter ones need no more contrast; ink is set per fill.
-const PIPELINE_PHASES = [
-  { name: "Design", keys: ["prompt_added", "prompt_written", "designed", "design_approved"], fill: "#6250d6", ink: "text-white" },
-  { name: "Mockups", keys: ["mockups", "mockups_approved"], fill: "#eb6834", ink: "text-slate-900" },
-  { name: "Video", keys: ["video", "video_approved"], fill: "#1baf7a", ink: "text-slate-900" },
-  { name: "Deliver", keys: ["exported", "listing", "published"], fill: "#eda100", ink: "text-slate-900" },
-];
-const OTHER_PHASE = { name: "Workflow", keys: [] as string[], fill: "#6250d6", ink: "text-white" };
+const PIPELINE_STAGE_ICONS: Record<string, LucideIcon> = {
+  // Admin Plan Insights keys
+  prompt_added: Inbox,
+  prompt_written: PencilLine,
+  designed: ImageIcon,
+  design_approved: Search,
+  mockups: Layers,
+  mockups_approved: CheckCircle2,
+  video: Clapperboard,
+  video_approved: CheckCircle2,
+  exported: Tag,
+  listing: Tag,
+  published: Store,
 
-// An arrow: a point on the right, and a notch on the left that the arrow before fits into.
-const ARROW = "polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%)";
-const FIRST_ARROW = "polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%)";
+  // Seller Dashboard keys fallback
+  queued: Inbox,
+  designing: PencilLine,
+  design_review: Search,
+  mockup: Layers,
+  ready: CheckCircle2,
+};
 
-// The workflow's steps from the Seller's prompt to the push to a store as a ribbon of arrows,
-// coloured by phase, with a column under each: the products that reached the step and every step
-// before it, their share of the products added, and what the step lost from the one before.
+/**
+ * Production pipeline stepper: displays how products progress from initial prompt to store,
+ * showing where sellers get stuck with bottlenecks and review stages.
+ */
 function PipelineCard({ data }: { data: PlanInsights }) {
-  const first = Math.max(1, data.pipeline[0]?.products ?? 0);
-  const known = new Set(PIPELINE_PHASES.flatMap((phase) => phase.keys));
-  // A response with other steps (an older backend) is shown in one colour, in its own order.
-  const phaseOf = (key: string) =>
-    data.pipeline.every((stage) => known.has(stage.key)) ? (PIPELINE_PHASES.find((phase) => phase.keys.includes(key)) ?? OTHER_PHASE) : OTHER_PHASE;
-  const phases = [...new Set(data.pipeline.map((stage) => phaseOf(stage.key)))];
+  const total = data.pipeline[0]?.products ?? 0;
+  const first = Math.max(1, total);
+  const published =
+    data.pipeline.find((s) => s.key === "published")?.products ??
+    (data.pipeline[data.pipeline.length - 1]?.products ?? 0);
+  const inProgress = Math.max(0, total - published);
+
+  const busiest = data.pipeline.reduce<PipelineStage | null>(
+    (best, stage) => (stage.products > 0 && (!best || stage.products > best.products) ? stage : best),
+    null
+  );
+
+  const bottleneckStages = data.pipeline.filter((stage, index) => {
+    if (index === 0 || stage.isAvailable === false) return false;
+    const previous = data.pipeline[index - 1].products;
+    if (previous <= 0) return false;
+    const drop = Math.round(((previous - stage.products) / previous) * 100);
+    return drop >= 20;
+  });
 
   return (
-    <Panel>
-      <ArrowScroller label="Workflow steps">
-        <ol className="flex min-w-max gap-0">
+    <Card className="gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-none">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-semibold text-slate-900">Production pipeline</h3>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            <span className="font-semibold text-[#5f8a4c]">
+              {inProgress.toLocaleString()} in progress
+            </span>
+            {bottleneckStages.length > 0 && (
+              <span className="font-semibold text-rose-600">
+                {" "}
+                · {bottleneckStages.length.toLocaleString()} stuck
+              </span>
+            )}
+            {" · "}
+            {total.toLocaleString()} products in all
+          </p>
+        </div>
+        <Link
+          href="/batches"
+          className="inline-flex items-center gap-1 text-xs font-medium text-slate-800 hover:text-black hover:underline"
+        >
+          Open batches
+          <ArrowRight className="size-3.5" aria-hidden="true" />
+        </Link>
+      </div>
+
+      <div className="-mx-1 overflow-x-auto px-1 pb-1">
+        <ol
+          className="relative grid gap-2"
+          style={{
+            minWidth: `${Math.max(900, data.pipeline.length * 110)}px`,
+            gridTemplateColumns: `repeat(${data.pipeline.length}, minmax(0, 1fr))`,
+          }}
+        >
+          {/* The line joining the steps, from the first circle's centre to the last's. */}
+          <span
+            aria-hidden="true"
+            className="absolute top-[17px] h-0.5 rounded-full bg-slate-200"
+            style={{
+              left: `calc(100% / (${data.pipeline.length * 2}))`,
+              right: `calc(100% / (${data.pipeline.length * 2}))`,
+            }}
+          />
           {data.pipeline.map((stage, index) => {
-            const phase = phaseOf(stage.key);
+            const Icon = PIPELINE_STAGE_ICONS[stage.key] ?? Layers;
+            const share = first > 0 ? (stage.products / first) * 100 : 0;
             const previous = index === 0 ? stage.products : data.pipeline[index - 1].products;
             const drop = index > 0 && previous > 0 ? Math.round(((previous - stage.products) / previous) * 100) : 0;
-            const share = Math.round((stage.products / first) * 1000) / 10;
+            const lost = index > 0 && previous > 0 ? previous - stage.products : 0;
             const isLive = stage.isAvailable !== false;
             const isBottleneck = isLive && drop >= 20;
+            const isBusiest = busiest?.key === stage.key && stage.products > 0;
+            const isReviewStage = stage.key.includes("review") || stage.key.includes("approved");
+
             return (
-              <li key={stage.key} className={cn("flex w-40 shrink-0 flex-col xl:w-auto xl:flex-1", index > 0 && "-ml-2")}>
-                <div
-                  className={cn("flex h-12 items-center pr-5 text-[13px] leading-tight font-semibold", phase.ink, index === 0 ? "pl-3" : "pl-6")}
-                  style={{ backgroundColor: phase.fill, clipPath: index === 0 ? FIRST_ARROW : ARROW, opacity: isLive ? 1 : 0.45 }}
-                  title={`${phase.name}: ${stage.label}`}
+              <li key={stage.key} className="relative flex min-w-0 flex-col items-center">
+                <span
+                  className={cn(
+                    "flex size-9 items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums transition-transform duration-300 hover:scale-110",
+                    isBusiest
+                      ? "border-[#2fae93] bg-[#2fae93] text-white shadow-md shadow-emerald-900/10"
+                      : isBottleneck
+                        ? "border-rose-400 bg-white text-rose-600 ring-2 ring-rose-100"
+                        : isReviewStage
+                          ? "border-amber-400 bg-white text-amber-700 ring-2 ring-amber-100"
+                          : "border-slate-200 bg-white text-slate-700"
+                  )}
+                  title={
+                    isBusiest
+                      ? "Most products are here"
+                      : isBottleneck
+                        ? `Stuck bottleneck: −${drop}% drop from previous step`
+                        : undefined
+                  }
                 >
-                  <span className="mr-1.5 opacity-80">{index + 1}</span>
-                  <span className="line-clamp-2">{stage.label}</span>
-                </div>
+                  {index + 1}
+                </span>
+                <span
+                  className={cn(
+                    "mt-2 flex max-w-full items-center gap-1 text-xs",
+                    isBusiest ? "font-semibold text-slate-900" : "text-slate-600"
+                  )}
+                >
+                  <Icon className="size-3.5 shrink-0" aria-hidden="true" />
+                  <span className="truncate" title={stage.label}>
+                    {stage.label}
+                  </span>
+                </span>
+
                 <div
                   className={cn(
-                    "mt-1.5 flex-1 rounded-lg border p-3 tabular-nums",
-                    index > 0 && "ml-2",
-                    isBottleneck ? "border-[#e34948] ring-1 ring-[#e34948]" : "border-slate-200",
-                    !isLive && "border-dashed"
+                    "mt-3 flex w-full flex-1 flex-col gap-1 rounded-xl border bg-white p-2.5 shadow-sm shadow-slate-900/5 transition duration-300 hover:-translate-y-0.5 hover:shadow-md",
+                    isBottleneck
+                      ? "border-rose-300"
+                      : isReviewStage && stage.products > 0
+                        ? "border-amber-300"
+                        : "border-slate-200/80",
+                    !isLive && "border-dashed opacity-60"
                   )}
-                  style={{ backgroundColor: isLive ? `${phase.fill}0d` : undefined }}
                 >
-                  {isLive ? (
-                    <>
-                      <p className="text-xl font-semibold tracking-tight text-slate-900">{stage.products.toLocaleString()}</p>
-                      <p className="text-xs text-slate-500">{share.toFixed(1)}% of added</p>
-                      <div className="mt-2 h-1 overflow-hidden rounded-full bg-slate-200/70">
-                        <div className="h-full rounded-full" style={{ width: `${Math.min(100, share)}%`, backgroundColor: phase.fill }} />
-                      </div>
-                      <p className="mt-2 min-h-5 text-[11px]">
-                        {drop > 0 && (
-                          <span
-                            className={cn(
-                              "rounded px-1.5 py-px font-semibold",
-                              isBottleneck ? "bg-[#e34948]/12 text-[#b42f2e]" : "bg-slate-100 text-slate-600"
-                            )}
-                          >
-                            −{drop}%{isBottleneck ? " · Bottleneck" : ""}
-                          </span>
-                        )}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-xl font-semibold text-slate-300">—</p>
-                      <p className="text-xs text-slate-500" title="No executor yet.">Not live yet</p>
-                    </>
-                  )}
+                  <span
+                    className={cn(
+                      "text-lg leading-none font-semibold tabular-nums text-slate-900",
+                      (stage.products === 0 || !isLive) && "text-slate-400"
+                    )}
+                  >
+                    {isLive ? stage.products.toLocaleString() : "—"}
+                  </span>
+                  <span className="text-slate-500 text-[11px] tabular-nums">
+                    {isLive ? `${share.toFixed(1)}% of products` : "Not live yet"}
+                  </span>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all duration-300",
+                        isBottleneck ? "bg-rose-500" : isBusiest ? "bg-[#2fae93]" : "bg-slate-200"
+                      )}
+                      style={{ width: `${Math.min(100, isLive ? share : 0)}%` }}
+                    />
+                  </div>
+                  <div className="mt-0.5 h-5">
+                    {isBottleneck ? (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold text-rose-600">
+                        <Hourglass className="size-3" aria-hidden="true" />
+                        {lost > 0 ? `${lost.toLocaleString()} stuck` : `−${drop}% drop`}
+                      </span>
+                    ) : isReviewStage && stage.products > 0 ? (
+                      <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                        Waits on review
+                      </span>
+                    ) : drop > 0 ? (
+                      <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                        −{drop}% drop
+                      </span>
+                    ) : !isLive ? (
+                      <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-400">
+                        Not live yet
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
               </li>
             );
           })}
         </ol>
-      </ArrowScroller>
-      <p className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-slate-100 pt-3 text-xs text-slate-500">
-        {phases.map((phase) => (
-          <span key={phase.name} className="flex items-center gap-1.5">
-            <span className="size-2.5 rounded-sm" style={{ backgroundColor: phase.fill }} /> {phase.name}
-          </span>
-        ))}
-        <span className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm border border-[#e34948] ring-1 ring-[#e34948]" /> Bottleneck: lost 20% or more of the step before
-        </span>
-      </p>
-    </Panel>
+      </div>
+
+      <ul className="text-muted-foreground flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-100 pt-3 text-[11px]">
+        <li className="flex items-center gap-1.5">
+          <span className="size-2.5 rounded-full bg-[#2fae93]" />
+          Where most products are
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span className="size-2.5 rounded-full border-2 border-rose-400" />
+          Stuck: taking far longer than usual
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span className="size-2.5 rounded-full border-2 border-amber-400" />
+          Waits on your review
+        </li>
+      </ul>
+    </Card>
   );
 }

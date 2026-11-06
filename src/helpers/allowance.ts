@@ -10,6 +10,13 @@ export const formatAllowanceDate = (value: string) => {
 
 export const remaining = (item: AllowanceItem) => Math.max(0, item.limit - item.used);
 
+/** The allowances that decide whether a workflow can run, in the order a run uses them. */
+export const ALLOWANCE_RUN_ORDER: AllowanceCode[] = ["full_runs", "design_runs", "products", "design_images", "mockups", "videos", "listings"];
+
+/** The allowances in the order a run uses them, so every page lists them alike. */
+export const orderAllowances = (allowances: Allowances) =>
+  ALLOWANCE_RUN_ORDER.flatMap((code) => allowances.items.filter((item) => item.code === code));
+
 const find = (allowances: Allowances, code: AllowanceCode) => allowances.items.find((item) => item.code === code);
 
 /** When the allowances start again, in the words the page shows. */

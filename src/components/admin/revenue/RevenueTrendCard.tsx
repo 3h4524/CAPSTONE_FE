@@ -197,7 +197,7 @@ export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueT
       {/* Header */}
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fef3f0] text-[#e07a5f] dark:bg-orange-950/40">
             <TrendingUp className="h-5 w-5" />
           </div>
           <div>
@@ -212,11 +212,11 @@ export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueT
           {/* Legend */}
           <div className="flex items-center gap-3 text-[11px] font-medium">
             <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-              <span className="h-0.5 w-3.5 rounded-full bg-blue-600" />
+              <span className="h-0.5 w-3.5 rounded-full bg-[#e07a5f]" />
               <span>Current period</span>
             </div>
             <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
-              <span className="h-0.5 w-3.5 border-b border-dashed border-blue-300 dark:border-slate-500" />
+              <span className="h-0.5 w-3.5 border-b-2 border-dashed border-[#48a999]" />
               <span>Previous period</span>
             </div>
           </div>
@@ -233,8 +233,8 @@ export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueT
             <AreaChart data={trendData} margin={{ top: 18, right: 12, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="revenueTrendGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2563eb" stopOpacity={0.16} />
-                  <stop offset="100%" stopColor="#2563eb" stopOpacity={0.0} />
+                  <stop offset="0%" stopColor="#e07a5f" stopOpacity={0.16} />
+                  <stop offset="100%" stopColor="#e07a5f" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-800/80" />
@@ -260,22 +260,22 @@ export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueT
                 type="monotone"
                 dataKey="amount"
                 name="Current period"
-                stroke="#2563eb"
+                stroke="#e07a5f"
                 strokeWidth={2.4}
                 fill="url(#revenueTrendGrad)"
                 dot={false}
-                activeDot={{ r: 4.5, fill: "#2563eb", stroke: "#ffffff", strokeWidth: 2 }}
+                activeDot={{ r: 4.5, fill: "#e07a5f", stroke: "#ffffff", strokeWidth: 2 }}
               />
               {/* Previous period smooth dashed line */}
               <Line
                 type="monotone"
                 dataKey="previousAmount"
                 name="Previous period"
-                stroke="#93c5fd"
+                stroke="#48a999"
                 strokeWidth={1.8}
                 strokeDasharray="4 4"
                 dot={false}
-                activeDot={{ r: 3.5, fill: "#93c5fd" }}
+                activeDot={{ r: 3.5, fill: "#48a999" }}
               />
             </AreaChart>
           </ResponsiveContainer>

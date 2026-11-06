@@ -2,8 +2,6 @@
 
 import React from "react";
 import {
-  ArrowDownRight,
-  ArrowUpRight,
   Calendar,
   Coins,
   HelpCircle,
@@ -12,21 +10,14 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import { Line, LineChart, ResponsiveContainer } from "recharts";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { AdminMetricCard, Delta } from "@/components/admin/admin-metric-card";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  CHANGE_TONE_CLASS,
-  type ChangePolarity,
-  changeTone,
-  formatChange,
-} from "@/helpers/revenue-change";
 import type { MetricDetail, RevenueMetricsDto } from "@/types/revenue";
 import { formatCompactVndAmount, formatVnd } from "@/utils/format-currency";
 
@@ -35,229 +26,149 @@ interface RevenueMetricCardsProps {
   isLoading: boolean;
 }
 
-interface CardConfig {
-  title: string;
-  icon: React.ReactNode;
-  iconBg: string;
-  iconColor: string;
-  strokeColor: string;
-  metric?: MetricDetail;
-  isCurrency: boolean;
-  polarity?: ChangePolarity; // Refunds: a decrease is good news
-  tooltip: string;
-}
-
 export function RevenueMetricCards({
   metrics,
   isLoading,
 }: RevenueMetricCardsProps) {
-  const cards: CardConfig[] = [
+  const cards = [
     {
       title: "Total Revenue",
-      icon: <Coins className="h-4 w-4" />,
-      iconBg: "bg-blue-50 dark:bg-blue-950/40",
-      iconColor: "text-blue-600 dark:text-blue-400",
-      strokeColor: "#3b82f6",
+      icon: Coins,
       metric: metrics?.totalRevenue,
       isCurrency: true,
-      tooltip: "Gross revenue from all successful invoice payments in the selected period, including payments later refunded.",
+      tooltip:
+        "Gross revenue from all successful invoice payments in the selected period, including payments later refunded.",
     },
     {
       title: "Net Revenue",
-      icon: <Wallet className="h-4 w-4" />,
-      iconBg: "bg-emerald-50 dark:bg-emerald-950/40",
-      iconColor: "text-emerald-600 dark:text-emerald-400",
-      strokeColor: "#10b981",
+      icon: Wallet,
       metric: metrics?.netRevenue ?? metrics?.totalNetRevenue,
       isCurrency: true,
-      tooltip: "Net revenue retained after deducting refunds (Gross Revenue − Refunds) in the selected period.",
+      tooltip:
+        "Net revenue retained after deducting refunds (Gross Revenue − Refunds) in the selected period.",
     },
     {
       title: "MRR",
-      icon: <RefreshCw className="h-4 w-4" />,
-      iconBg: "bg-indigo-50 dark:bg-indigo-950/40",
-      iconColor: "text-indigo-600 dark:text-indigo-400",
-      strokeColor: "#6366f1",
+      icon: RefreshCw,
       metric: metrics?.subscriptionMrr,
       isCurrency: true,
       tooltip:
-        "Monthly Recurring Revenue at the end of the period: each paying subscription's monthly price (annual plans count 1/12). The previous value is MRR at the end of the previous period, including customers who have left since.",
+        "Monthly Recurring Revenue at the end of the period: each paying subscription's monthly price (annual plans count 1/12).",
     },
     {
       title: "ARR",
-      icon: <Calendar className="h-4 w-4" />,
-      iconBg: "bg-amber-50 dark:bg-amber-950/40",
-      iconColor: "text-amber-600 dark:text-amber-400",
-      strokeColor: "#f59e0b",
+      icon: Calendar,
       metric: metrics?.arr,
       isCurrency: true,
-      tooltip: "Annual Recurring Revenue: MRR × 12, at the end of the period and of the previous period.",
+      tooltip:
+        "Annual Recurring Revenue: MRR × 12, at the end of the period and of the previous period.",
     },
     {
       title: "Active Subscribers",
-      icon: <Users className="h-4 w-4" />,
-      iconBg: "bg-teal-50 dark:bg-teal-950/40",
-      iconColor: "text-teal-600 dark:text-teal-400",
-      strokeColor: "#14b8a6",
+      icon: Users,
       metric: metrics?.activeSubscribers,
       isCurrency: false,
       tooltip:
-        "Sellers paying for a plan at the end of the period (free trials and unpaid renewals not counted), compared with those paying at the end of the previous period.",
+        "Sellers paying for a plan at the end of the period (free trials and unpaid renewals not counted).",
     },
     {
       title: "Refund Amount",
-      icon: <RotateCcw className="h-4 w-4" />,
-      iconBg: "bg-rose-50 dark:bg-rose-950/40",
-      iconColor: "text-rose-600 dark:text-rose-400",
-      strokeColor: "#f43f5e",
+      icon: RotateCcw,
       metric: metrics?.refundAmount,
       isCurrency: true,
-      polarity: "lower-is-better",
+      polarity: "lower-is-better" as const,
       tooltip: "Total monetary value refunded to customers during the selected period.",
     },
   ];
 
+  if (isLoading || !metrics) {
+    return (
+      <div className="grid grid-cols-2 gap-3 sm:gap-3.5 md:grid-cols-3 lg:grid-cols-6">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div
+            key={i}
+            className="flex flex-col justify-between rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-2xs"
+          >
+            <div className="flex items-center justify-between">
+              <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
+              <div className="h-3.5 w-3.5 animate-pulse rounded bg-slate-100" />
+            </div>
+            <div className="my-2 h-6 w-20 animate-pulse rounded bg-slate-100" />
+            <div className="h-2.5 w-24 animate-pulse rounded bg-slate-100" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <section className="grid grid-cols-2 gap-3 sm:gap-3.5 md:grid-cols-3 lg:grid-cols-6">
         {cards.map((config) => {
-          const metric = config.metric;
+          const metric: MetricDetail | undefined = config.metric;
+          const valueDisplay = metric
+            ? config.isCurrency
+              ? formatVnd(metric.value)
+              : metric.value.toLocaleString()
+            : "-";
 
-          if (isLoading || !metric) {
-            return (
-              <Card
-                key={config.title}
-                className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900"
-              >
-                <CardContent className="flex flex-col justify-between p-0">
-                  <div className="flex items-center justify-between">
-                    <div className="h-8 w-8 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
-                    <div className="h-6 w-16 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
-                  </div>
-                  <div className="mt-4 h-7 w-24 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
-                  <div className="mt-2 h-4 w-32 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
-                </CardContent>
-              </Card>
-            );
-          }
+          const exactDisplay = metric
+            ? config.isCurrency
+              ? formatVnd(metric.value)
+              : metric.value.toLocaleString()
+            : undefined;
 
-          const pct = metric.percentageChange;
-          const tone = changeTone(pct, config.polarity);
-
-          // Sparkline points
           const rawPoints =
-            metric.sparkline && metric.sparkline.length > 0
+            metric?.sparkline && metric.sparkline.length > 0
               ? metric.sparkline
-              : [
-                  metric.previousValue,
-                  metric.previousValue * 1.02,
-                  metric.previousValue * 0.98,
-                  metric.value * 0.97,
-                  metric.value * 1.01,
-                  metric.value,
-                ];
-
-          const sparklineData = rawPoints.map((val, idx) => ({
-            i: idx,
-            v: Number(val),
-          }));
-
-          const formattedValue = config.isCurrency
-            ? formatVnd(metric.value)
-            : new Intl.NumberFormat("en-US").format(metric.value);
-
-          const formattedPrevValue = config.isCurrency
-            ? formatCompactVndAmount(metric.previousValue)
-            : new Intl.NumberFormat("en-US").format(metric.previousValue);
+              : metric
+                ? [
+                    metric.previousValue,
+                    metric.previousValue * 1.02,
+                    metric.previousValue * 0.98,
+                    metric.value * 0.97,
+                    metric.value * 1.01,
+                    metric.value,
+                  ]
+                : undefined;
 
           return (
-            <Card
+            <AdminMetricCard
               key={config.title}
-              className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs transition-all duration-200 hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
-            >
-              <CardContent className="flex flex-col justify-between p-0">
-                {/* Header: Icon + Title with Tooltip on left, Sparkline on right */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${config.iconBg} ${config.iconColor}`}
-                    >
-                      {config.icon}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs font-semibold tracking-tight text-slate-600 dark:text-slate-300">
-                        {config.title}
-                      </span>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            aria-label={`About ${config.title}`}
-                            className="inline-flex cursor-pointer text-slate-400 transition-colors hover:text-slate-600 focus:outline-none dark:text-slate-500 dark:hover:text-slate-300"
-                          >
-                            <HelpCircle className="h-3 w-3" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs text-xs font-normal">
-                          {config.tooltip}
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-
-                  {/* Mini Sparkline */}
-                  <div className="h-7 w-16 shrink-0 opacity-90 transition-opacity group-hover:opacity-100">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={sparklineData}>
-                        <Line
-                          type="monotone"
-                          dataKey="v"
-                          stroke={config.strokeColor}
-                          strokeWidth={2}
-                          dot={false}
-                          isAnimationActive={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+              label={
+                <div className="flex items-center gap-1">
+                  <span className="truncate">{config.title}</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label={`About ${config.title}`}
+                        className="inline-flex cursor-pointer text-slate-400 transition-colors hover:text-slate-600 focus:outline-none"
+                      >
+                        <HelpCircle className="size-2.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs text-xs font-normal">
+                      {config.tooltip}
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
-
-                {/* Main Metric Value */}
-                <div className="mt-3">
-                  <div className="text-lg font-bold tracking-tight text-slate-900 tabular-nums xl:text-xl dark:text-slate-100">
-                    {formattedValue}
-                  </div>
-                </div>
-
-                {/* Trend % + Comparison */}
-                <div className="mt-2 flex flex-col gap-0.5">
-                  <div className="flex items-center gap-1 text-xs">
-                    <span className={`inline-flex items-center font-bold ${CHANGE_TONE_CLASS[tone]}`}>
-                      {pct != null && pct > 0 && (
-                        <ArrowUpRight className="mr-0.5 h-3.5 w-3.5 stroke-[2.5]" />
-                      )}
-                      {pct != null && pct < 0 && (
-                        <ArrowDownRight className="mr-0.5 h-3.5 w-3.5 stroke-[2.5]" />
-                      )}
-                      {formatChange(pct, metric.value)}
-                    </span>
-                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
-                      vs. previous period
-                    </span>
-                  </div>
-
-                  <p
-                    className="truncate text-[11px] text-slate-400 dark:text-slate-500"
-                    title={config.isCurrency ? formatVnd(metric.previousValue) : undefined}
-                  >
-                    Previous period: <span className="font-medium text-slate-500 dark:text-slate-400">{formattedPrevValue}</span>
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+              }
+              value={valueDisplay}
+              exactValue={exactDisplay}
+              context={
+                <Delta
+                  percent={metric?.percentageChange}
+                  suffix="vs previous period"
+                  polarity={config.polarity}
+                />
+              }
+              sparkline={rawPoints}
+              icon={config.icon}
+            />
           );
         })}
-      </div>
+      </section>
     </TooltipProvider>
   );
 }

@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { AlertCircle, ShieldCheck } from "lucide-react";
+import { AlertCircle, AlertTriangle, ListFilter, ShieldCheck } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -25,30 +24,26 @@ export function RecentErrorsTable({
 }: RecentErrorsTableProps) {
   const getBadgeForErrorType = (type: string) => {
     const lower = type.toLowerCase();
-    if (lower.includes("rate") || lower.includes("limit")) {
+    if (lower.includes("warn")) {
       return (
-        <span className="inline-flex items-center rounded-xs border border-amber-300 bg-amber-50 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider text-amber-800 uppercase dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
-          Rate Limit
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50/80 px-2.5 py-0.5 text-[11px] font-medium text-amber-700/90 border border-amber-200/50">
+          <AlertTriangle className="h-3 w-3 text-amber-500/80" />
+          Warning
         </span>
       );
     }
-    if (lower.includes("oauth") || lower.includes("auth")) {
+    if (lower.includes("failed") || lower.includes("job")) {
       return (
-        <span className="inline-flex items-center rounded-xs border border-purple-300 bg-purple-50 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider text-purple-800 uppercase dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-300">
-          Auth / Token
-        </span>
-      );
-    }
-    if (lower.includes("timeout") || lower.includes("network")) {
-      return (
-        <span className="inline-flex items-center rounded-xs border border-orange-300 bg-orange-50 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider text-orange-800 uppercase dark:border-orange-800 dark:bg-orange-950/40 dark:text-orange-300">
-          Timeout
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50/70 px-2.5 py-0.5 text-[11px] font-medium text-rose-500 border border-rose-100">
+          <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+          Job failed
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center rounded-xs border border-rose-300 bg-rose-50 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider text-rose-800 uppercase dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
-        {type || "Exception"}
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50/70 px-2.5 py-0.5 text-[11px] font-medium text-rose-500 border border-rose-100">
+        <AlertCircle className="h-3 w-3 text-rose-400" />
+        Error
       </span>
     );
   };
@@ -59,10 +54,10 @@ export function RecentErrorsTable({
       return new Intl.DateTimeFormat("en-US", {
         month: "short",
         day: "numeric",
-        hour: "2-digit",
+        year: "numeric",
+        hour: "numeric",
         minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
+        hour12: true,
       }).format(date);
     } catch {
       return isoString;
@@ -70,62 +65,63 @@ export function RecentErrorsTable({
   };
 
   return (
-    <Card className="rounded-lg border border-slate-200/90 bg-white shadow-none dark:border-slate-800 dark:bg-slate-900">
-      <CardHeader className="border-b border-slate-200/90 pb-3.5 dark:border-slate-800">
-        <div className="flex items-center justify-between">
+    <div className="w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xs">
+      {/* Table Header */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+            <ListFilter className="h-5 w-5" />
+          </div>
           <div>
-            <CardTitle className="text-xs font-bold tracking-wider text-slate-800 uppercase dark:text-slate-200">
-              Recent Operational Errors & Incidents
-            </CardTitle>
-            <p className="mt-0.5 text-[11px] font-medium text-slate-400 dark:text-slate-500">
-              Audit log of exceptions, rate limits, and external service gateway failures
+            <h3 className="text-sm font-bold text-slate-900">Recent errors</h3>
+            <p className="text-xs text-slate-500">
+              Latest failures, rate limits and gateway errors from batch jobs
             </p>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-sm border border-slate-300 bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
-            TOP 10 INCIDENTS
-          </span>
         </div>
-      </CardHeader>
+        <span className="text-xs font-medium text-slate-400">
+          Showing latest {recentErrors.length > 0 ? recentErrors.length : 10}
+        </span>
+      </div>
 
-      <CardContent className="p-0">
+      <div className="w-full">
         {isLoading ? (
           <div className="space-y-3 p-5">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-4 py-2">
-                <div className="h-4 w-32 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
-                <div className="h-4 w-28 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
-                <div className="h-4 w-20 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
-                <div className="h-4 flex-1 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+                <div className="h-4 w-32 animate-pulse rounded bg-slate-100" />
+                <div className="h-4 w-36 animate-pulse rounded bg-slate-100" />
+                <div className="h-4 w-20 animate-pulse rounded bg-slate-100" />
+                <div className="h-4 flex-1 animate-pulse rounded bg-slate-100" />
               </div>
             ))}
           </div>
         ) : recentErrors.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-10 text-center">
-            <div className="rounded-md bg-emerald-50 p-2.5 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-              <ShieldCheck className="h-5 w-5" />
+          <div className="flex flex-col items-center justify-center p-12 text-center">
+            <div className="rounded-xl bg-emerald-50 p-3 text-emerald-600">
+              <ShieldCheck className="h-6 w-6" />
             </div>
-            <p className="mt-2 text-xs font-bold tracking-wider text-slate-800 uppercase dark:text-slate-200">
-              All Systems Functioning Normally
+            <p className="mt-2 text-sm font-semibold text-slate-900">
+              No errors recorded
             </p>
-            <p className="mt-0.5 text-[11px] text-slate-400">
-              No runtime errors, rate limits, or integration exceptions recorded in this timeframe.
+            <p className="mt-0.5 text-xs text-slate-400">
+              Batch jobs logged no failures, rate limits or gateway errors in this period.
             </p>
           </div>
         ) : (
-          <Table>
-            <TableHeader className="bg-slate-50/80 dark:bg-slate-800/40">
-              <TableRow className="border-b border-slate-200/90 hover:bg-transparent dark:border-slate-800">
-                <TableHead className="w-[170px] text-[10px] font-bold tracking-wider text-slate-600 uppercase dark:text-slate-400">
+          <Table className="w-full table-fixed">
+            <TableHeader className="bg-slate-50/80">
+              <TableRow className="border-b border-slate-200/90 hover:bg-transparent">
+                <TableHead className="w-[150px] sm:w-[170px] text-xs font-bold text-slate-600">
                   Timestamp
                 </TableHead>
-                <TableHead className="w-[160px] text-[10px] font-bold tracking-wider text-slate-600 uppercase dark:text-slate-400">
+                <TableHead className="w-[180px] sm:w-[240px] text-xs font-bold text-slate-600">
                   Component / Job
                 </TableHead>
-                <TableHead className="w-[140px] text-[10px] font-bold tracking-wider text-slate-600 uppercase dark:text-slate-400">
+                <TableHead className="w-[110px] sm:w-[130px] text-xs font-bold text-slate-600">
                   Classification
                 </TableHead>
-                <TableHead className="text-[10px] font-bold tracking-wider text-slate-600 uppercase dark:text-slate-400">
+                <TableHead className="text-xs font-bold text-slate-600">
                   Message
                 </TableHead>
               </TableRow>
@@ -134,24 +130,22 @@ export function RecentErrorsTable({
               {recentErrors.map((err) => (
                 <TableRow
                   key={err.id}
-                  className="border-b border-slate-100 text-xs transition-colors hover:bg-slate-50/70 dark:border-slate-800/70 dark:hover:bg-slate-800/40"
+                  className="border-b border-slate-100 text-xs transition-colors hover:bg-slate-50/70"
                 >
-                  <TableCell className="font-mono text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  <TableCell className="text-slate-600 font-medium whitespace-nowrap">
                     {formatDate(err.timestamp)}
                   </TableCell>
-                  <TableCell className="font-mono text-[11px] font-medium text-slate-700 dark:text-slate-300">
-                    <span className="rounded-xs border border-slate-200 bg-slate-50 px-1.5 py-0.5 dark:border-slate-700 dark:bg-slate-800">
-                      {err.source || "Batch Engine"}
-                    </span>
+                  <TableCell className="font-semibold text-slate-800">
+                    <div className="truncate" title={err.source || "Batch job / Generation"}>
+                      {err.source || "Batch job / Generation"}
+                    </div>
                   </TableCell>
-                  <TableCell>{getBadgeForErrorType(err.errorType)}</TableCell>
-                  <TableCell
-                    className="max-w-[420px] truncate text-slate-600 dark:text-slate-300"
-                    title={err.message}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <AlertCircle className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                      <span className="truncate font-medium">{err.message}</span>
+                  <TableCell className="whitespace-nowrap">
+                    {getBadgeForErrorType(err.errorType)}
+                  </TableCell>
+                  <TableCell className="text-slate-600 font-normal">
+                    <div className="truncate" title={err.message}>
+                      {err.message}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -159,7 +153,7 @@ export function RecentErrorsTable({
             </TableBody>
           </Table>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

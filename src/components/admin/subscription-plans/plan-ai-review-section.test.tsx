@@ -249,4 +249,13 @@ describe("PlanAiReviewSection", () => {
     expect(screen.getByText(/No AI review yet/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Regenerate/ })).toBeEnabled();
   });
+
+  it("renders an error state with retry when data is missing or query fails", () => {
+    review = undefined as unknown as PlanAiReviewResponse;
+
+    render(<PlanAiReviewSection />);
+
+    expect(screen.getByText("AI Plan Review is currently unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Retry/ })).toBeInTheDocument();
+  });
 });

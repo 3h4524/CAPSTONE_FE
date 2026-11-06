@@ -14,6 +14,11 @@ export type BatchJobDto = {
   progressPercentage: string;
   userName: string;
   tone: string;
+  /** The batch the job runs for. */
+  batchName?: string | null;
+  createdAt?: string | null;
+  /** What the job's AI calls cost, in USD. */
+  aiCostUsd?: number;
 };
 
 export type AdminDashboardMetricsDto = {
@@ -28,6 +33,24 @@ export type AdminDashboardMetricsDto = {
   pendingTickets: number;
   latestTickets: SupportTicketDto[];
   recentBatchJobs: BatchJobDto[];
+};
+
+export type OperationsBucket = "day" | "month";
+
+export type AdminOperationsDto = {
+  /** First and last day counted (YYYY-MM-DD). */
+  periodStart: string;
+  periodEnd: string;
+  bucket: OperationsBucket;
+  /** Work started in each bucket, empty ones included. */
+  throughput: { start: string; jobs: number; products: number }[];
+  /** Sellers who started a batch job in the period, and in the period just before. */
+  activeSellers: number;
+  previousActiveSellers: number;
+  /** Products created in the period, and how many of them reached each step. */
+  funnel: { products: number; designed: number; mockedUp: number; listed: number; published: number };
+  /** AI calls in the period by feature, most used first. */
+  aiUsage: { feature: string; calls: number; failed: number; costUsd: number }[];
 };
 
 export type AdminUserDto = {

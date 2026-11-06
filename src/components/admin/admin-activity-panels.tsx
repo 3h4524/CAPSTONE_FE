@@ -1,111 +1,202 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
+import { formatUsd, timeAgo } from "@/helpers/admin-dashboard";
 import type { BatchJobDto, SupportTicketDto } from "@/types/admin";
 
 type AdminActivityPanelsProps = {
   latestTickets?: SupportTicketDto[];
   recentBatchJobs?: BatchJobDto[];
+  /** Every batch job on the platform, so the list can say how much of it is shown. */
+  totalBatchJobs?: number;
+  /** When "now" is, for the jobs' ages. */
+  now?: Date;
 };
 
-const AdminActivityPanels = ({ latestTickets = [], recentBatchJobs = [] }: AdminActivityPanelsProps) => (
-  <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
-    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.02)]">
-      <PanelHeading
-        title="Latest Support Tickets"
-        subtitle="Top recent inquiries requiring attention"
-        action={`View all (${latestTickets.length})`}
-      />
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[520px] text-left">
-          <thead className="border-y border-slate-100 bg-slate-50/70 text-[9px] font-bold tracking-wider text-slate-400 uppercase">
-            <tr>
-              <th className="px-5 py-3">User</th>
-              <th className="px-3 py-3">Issue</th>
-              <th className="px-3 py-3">Status</th>
-              <th className="px-5 py-3 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {latestTickets.length === 0 && (
-              <tr>
-                <td colSpan={4} className="p-5 text-center text-xs text-slate-400">
-                  No tickets found.
-                </td>
-              </tr>
-            )}
-            {latestTickets.map((ticket) => (
-              <tr className="border-b border-slate-100 last:border-0" key={ticket.issue}>
-                <td className="px-5 py-3">
-                  <p className="text-[10px] font-semibold text-slate-800">{ticket.userName}</p>
-                  <p className="text-[9px] text-slate-400">{ticket.userEmail}</p>
-                </td>
-                <td className="px-3 py-3">
-                  <p className="max-w-[150px] truncate text-[10px] text-slate-600">{ticket.issue}</p>
-                  {ticket.priority && (
-                    <span className="text-[8px] font-bold text-rose-500">{ticket.priority}</span>
-                  )}
-                </td>
-                <td className="px-3 py-3">
-                  <StatusPill value={ticket.status} />
-                </td>
-                <td className="px-5 py-3 text-right">
-                  <Link
-                    href={`/admin/support-tickets?ticketId=${ticket.id}`}
-                    className="text-[9px] font-semibold text-slate-500 hover:text-slate-900"
-                  >
-                    {ticket.status.toLowerCase() === "resolved" ? "View" : "Reply"}
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+type Tone = "emerald" | "amber" | "orange" | "rose" | "slate";
 
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.02)]">
-      <PanelHeading
-        title="Recent Batch Production"
-        subtitle="Top 5 background generation workloads"
-        action={`Monitor (${recentBatchJobs.length})`}
-      />
-      <div className="mt-2 space-y-2">
-        {recentBatchJobs.length === 0 && (
-          <div className="p-5 text-center text-xs text-slate-400">No recent batch jobs.</div>
-        )}
-        {recentBatchJobs.map((job) => (
-          <div className="rounded-md border border-slate-100 p-3" key={job.name}>
-            <div className="flex items-center justify-between gap-2">
-              <p className="truncate text-[10px] font-semibold text-slate-800">
-                {job.name} <span className="font-normal text-slate-400">({job.itemCount} items)</span>
-              </p>
-              <StatusPill value={job.status} tone={job.tone} />
-            </div>
-            <div className="mt-2 h-1 overflow-hidden rounded-full bg-slate-100">
-              <div
-                className={`h-full rounded-full ${job.tone === "emerald" ? "bg-emerald-500" : job.tone === "rose" ? "bg-rose-400" : job.tone === "orange" ? "bg-orange-400" : "bg-amber-400"}`}
-                style={{ width: job.progressPercentage }}
-              />
-            </div>
-            <div className="mt-2 flex justify-between text-[8px] text-slate-400">
-              <span>By: {job.userName}</span>
-              <span>
-                {job.status.toLowerCase() === "completed"
-                  ? "Published to Etsy Drafts"
-                  : job.status.toLowerCase() === "running"
-                    ? `ID: ${job.name.substring(0, 5)} · running`
-                    : job.status.toLowerCase() === "queued"
-                      ? "waiting GPU"
-                      : "Retry Worker"}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
+const DOT: Record<Tone, string> = {
+  emerald: "bg-emerald-500",
+  amber: "bg-amber-400",
+  orange: "bg-orange-400",
+  rose: "bg-rose-500",
+  slate: "bg-slate-400",
+};
+
+// The backend sends a tone with each batch job; tickets only have a status.
+const toneOf = (value: string, tone?: string): Tone => {
+  const status = value.toLowerCase();
+  if (tone === "emerald" || status === "resolved" || status === "completed") return "emerald";
+  if (tone === "rose" || status === "open" || status === "failed") return "rose";
+  if (tone === "orange" || status === "queued") return "orange";
+  if (status === "closed") return "slate";
+  return "amber";
+};
+
+const formatTicketStatus = (status: string) => {
+  const s = status.toLowerCase().replace(/_/g, " ");
+  switch (s) {
+    case "open":
+      return "Open";
+    case "in progress":
+      return "In progress";
+    case "resolved":
+      return "Resolved";
+    case "closed":
+      return "Closed";
+    default:
+      return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+};
+
+const AdminActivityPanels = ({
+  latestTickets = [],
+  recentBatchJobs = [],
+  totalBatchJobs,
+  now,
+}: AdminActivityPanelsProps) => (
+  <div className="grid gap-4.5 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+    <BatchJobsPanel jobs={recentBatchJobs} totalJobs={totalBatchJobs} now={now} />
+    <TicketsPanel tickets={latestTickets} />
   </div>
 );
+
+const BatchJobsPanel = ({
+  jobs,
+  totalJobs,
+  now,
+}: {
+  jobs: BatchJobDto[];
+  totalJobs?: number;
+  now?: Date;
+}) => (
+  <section className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+    <div className="p-5 pb-3">
+      <PanelHeading
+        title="Latest batch jobs"
+        subtitle={
+          totalJobs !== undefined
+            ? `${jobs.length} most recent of ${totalJobs.toLocaleString()}`
+            : "The most recent generation runs"
+        }
+        action={<PanelLink href="/admin/analytics" label="System statistics" />}
+      />
+    </div>
+    <div className="flex-1 overflow-x-auto">
+      <table className="w-full min-w-[620px] table-fixed text-left text-sm">
+        <thead className="border-y border-slate-100 bg-slate-50/60 text-xs text-slate-500">
+          <tr>
+            <th className="w-[43%] px-5 py-2 font-medium">Batch</th>
+            <th className="w-[19%] px-4 py-2 font-medium whitespace-nowrap">Seller</th>
+            <th className="w-[11%] px-4 py-2 text-left font-medium whitespace-nowrap">Products</th>
+            <th className="w-[12%] px-4 py-2 text-left font-medium whitespace-nowrap">AI cost</th>
+            <th className="w-[15%] px-5 py-2 font-medium whitespace-nowrap">Status</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100">
+          {jobs.length === 0 && (
+            <tr>
+              <td colSpan={5} className="p-6 text-center text-xs text-slate-400">
+                No batch jobs yet.
+              </td>
+            </tr>
+          )}
+          {jobs.map((job, index) => {
+            const tone = toneOf(job.status, job.tone);
+            const finished = job.progressPercentage === "100%";
+            return (
+              <tr key={`${job.name}-${index}`} className="hover:bg-slate-50/60">
+                <td className="px-5 py-2.5">
+                  <p className="truncate font-medium text-slate-900" title={job.batchName ?? job.name}>
+                    {job.batchName ?? job.name}
+                  </p>
+                  <p className="truncate text-xs text-slate-400">
+                    {job.batchName ? job.name : "Batch job"}
+                    {job.createdAt && ` · ${timeAgo(job.createdAt, now)}`}
+                  </p>
+                </td>
+                <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{job.userName}</td>
+                <td className="px-4 py-2.5 text-left text-slate-700 tabular-nums whitespace-nowrap">
+                  {job.itemCount.toLocaleString()}
+                </td>
+                <td className="px-4 py-2.5 text-left text-slate-700 tabular-nums whitespace-nowrap">
+                  {job.aiCostUsd ? formatUsd(job.aiCostUsd) : "—"}
+                </td>
+                <td className="px-5 py-2.5 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1.5 text-slate-700 capitalize">
+                    <span className={`size-1.5 rounded-full ${DOT[tone]}`} aria-hidden="true" />
+                    {job.status.toLowerCase()}
+                    {!finished && tone !== "rose" && (
+                      <span className="text-xs text-slate-400 tabular-nums">
+                        {job.progressPercentage}
+                      </span>
+                    )}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  </section>
+);
+
+const TicketsPanel = ({ tickets }: { tickets: SupportTicketDto[] }) => {
+  const openCount = tickets.filter(
+    (ticket) => !["resolved", "closed"].includes(ticket.status.toLowerCase())
+  ).length;
+
+  return (
+    <section className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <PanelHeading
+        title="Latest support tickets"
+        subtitle={
+          tickets.length > 0 ? `${openCount} of ${tickets.length} awaiting a reply` : "Nothing yet"
+        }
+        action={<PanelLink href="/admin/support-tickets" label="All tickets" />}
+      />
+      <ul className="mt-3 flex-1 divide-y divide-slate-100">
+        {tickets.length === 0 && (
+          <li className="py-6 text-center text-xs text-slate-400">No tickets found.</li>
+        )}
+        {tickets.map((ticket) => {
+          const tone = toneOf(ticket.status);
+          const isDone = ["resolved", "closed"].includes(ticket.status.toLowerCase());
+          return (
+            <li key={ticket.id} className="flex items-center justify-between gap-3 py-2.5">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-slate-900" title={ticket.issue}>
+                  {ticket.issue}
+                </p>
+                <p className="mt-0.5 truncate text-xs text-slate-400">
+                  {ticket.userName}
+                  {ticket.priority && ` · ${ticket.priority} priority`}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="inline-flex w-24 items-center gap-1.5 text-xs text-slate-600">
+                  <span className={`size-1.5 rounded-full ${DOT[tone]}`} aria-hidden="true" />
+                  {formatTicketStatus(ticket.status)}
+                </span>
+                <Link
+                  href={`/admin/support-tickets?ticketId=${ticket.id}`}
+                  className={`inline-flex h-7 min-w-[54px] items-center justify-center rounded-lg border px-2.5 text-xs font-medium transition-all ${
+                    isDone
+                      ? "border-slate-200 bg-slate-50/70 text-slate-600 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
+                      : "border-sky-200 bg-sky-50/70 text-sky-700 hover:border-sky-300 hover:bg-sky-100 hover:text-sky-900"
+                  }`}
+                >
+                  {isDone ? "View" : "Reply"}
+                </Link>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+};
 
 const PanelHeading = ({
   title,
@@ -114,35 +205,25 @@ const PanelHeading = ({
 }: {
   title: string;
   subtitle: string;
-  action: string;
+  action: React.ReactNode;
 }) => (
-  <div className="flex items-start justify-between gap-4 p-5">
+  <div className="flex items-start justify-between gap-4">
     <div>
-      <h2 className="text-sm font-bold text-slate-900">{title}</h2>
-      <p className="mt-1 text-[10px] text-slate-400">{subtitle}</p>
+      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+      <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p>
     </div>
-    <button
-      type="button"
-      className="flex shrink-0 items-center gap-1 text-[9px] font-semibold text-slate-700 hover:text-slate-950"
-    >
-      {action}
-      <ArrowUpRight className="size-3" />
-    </button>
+    {action}
   </div>
 );
-const StatusPill = ({ value, tone }: { value: string; tone?: string }) => {
-  const normalizedValue = value.toLowerCase();
-  const isEmerald = tone === "emerald" || normalizedValue === "resolved" || normalizedValue === "completed";
-  const isRose = tone === "rose" || normalizedValue === "open" || normalizedValue === "failed";
-  const isOrange = tone === "orange" || normalizedValue === "queued";
 
-  return (
-    <span
-      className={`inline-flex rounded px-1.5 py-0.5 text-[8px] font-bold capitalize ${isEmerald ? "bg-emerald-50 text-emerald-600" : isRose ? "bg-rose-50 text-rose-500" : isOrange ? "bg-orange-50 text-orange-600" : "bg-amber-50 text-amber-600"}`}
-    >
-      {value}
-    </span>
-  );
-};
+const PanelLink = ({ href, label }: { href: string; label: string }) => (
+  <Link
+    href={href}
+    className="flex shrink-0 items-center gap-0.5 text-xs font-medium text-slate-500 hover:text-slate-900"
+  >
+    {label}
+    <ArrowUpRight className="size-3" />
+  </Link>
+);
 
 export { AdminActivityPanels };

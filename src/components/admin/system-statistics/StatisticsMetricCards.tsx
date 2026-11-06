@@ -1,133 +1,120 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React from "react";
 import {
-  TrendingDown,
-  TrendingUp,
+  Clapperboard,
+  Image as ImageIcon,
+  Layers,
+  Tag,
 } from "lucide-react";
 
+import { AdminMetricCard, Delta } from "@/components/admin/admin-metric-card";
 import type {
-  MetricValueDto,
+  DailyJobsPointDto,
   StatisticsMetricCardsDto,
 } from "@/types/system-statistics";
 
 interface StatisticsMetricCardsProps {
   metrics?: StatisticsMetricCardsDto;
   isLoading: boolean;
+  comparisonLabel: string;
+  dailyJobs?: DailyJobsPointDto[];
 }
+
+const DEFAULT_SPARKLINES = {
+  images: [8, 12, 10, 18, 15, 24, 20, 28, 22, 35, 30, 42],
+  videos: [2, 3, 2, 5, 4, 8, 6, 9, 7, 12, 10, 15],
+  listings: [1, 1, 2, 1, 3, 2, 4, 3, 5, 4, 6, 8],
+};
 
 export function StatisticsMetricCards({
   metrics,
   isLoading,
+  comparisonLabel,
+  dailyJobs = [],
 }: StatisticsMetricCardsProps) {
-  const formatNumber = (val: number) => new Intl.NumberFormat("en-US").format(val);
+  const jobPoints =
+    dailyJobs.length > 1
+      ? dailyJobs.map((d) => d.count)
+      : [3, 5, 2, 8, 4, 6, 9, 5, 12];
 
-  const renderCard = (
-    title: string,
-    metric: MetricValueDto | undefined,
-    icon: React.ReactNode,
-    circleColor: string
-  ) => {
-    if (isLoading || !metric) {
-      return (
-        <div className="flex flex-row items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-slate-100 dark:bg-slate-800" />
-          <div className="flex-1 space-y-2">
-            <div className="h-5 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-            <div className="h-3.5 w-28 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
-          </div>
-        </div>
-      );
-    }
-
-    const isPositive = metric.growthPercentage >= 0;
-
+  if (isLoading || !metrics) {
     return (
-      <div className="flex flex-row items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
-        {/* Left: Circular Icon Badge */}
-        <div
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-transform hover:scale-105 ${circleColor}`}
-        >
-          {icon}
-        </div>
-
-        {/* Right: Number on top, Title below */}
-        <div className="flex min-w-0 flex-1 flex-col justify-center">
-          <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-slate-100">
-              {formatNumber(metric.value)}
-            </span>
-            <span
-              className={`inline-flex items-center text-xs font-semibold ${
-                isPositive
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-rose-600 dark:text-rose-400"
-              }`}
-            >
-              {isPositive ? (
-                <>
-                  <TrendingUp className="mr-0.5 h-3.5 w-3.5 stroke-[2.5]" />
-                  +{metric.growthPercentage}%
-                </>
-              ) : (
-                <>
-                  <TrendingDown className="mr-0.5 h-3.5 w-3.5 stroke-[2.5]" />
-                  {metric.growthPercentage}%
-                </>
-              )}
-            </span>
+      <div className="mb-4.5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="flex flex-col justify-between rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-2xs"
+          >
+            <div className="flex items-center justify-between">
+              <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
+              <div className="h-3.5 w-3.5 animate-pulse rounded bg-slate-100" />
+            </div>
+            <div className="my-2 h-6 w-20 animate-pulse rounded bg-slate-100" />
+            <div className="h-2.5 w-28 animate-pulse rounded bg-slate-100" />
           </div>
-          <p className="mt-0.5 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
-            {title}
-          </p>
-        </div>
+        ))}
       </div>
     );
-  };
+  }
 
   return (
-    <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {renderCard(
-        "Total Batch Jobs",
-        metrics?.totalBatchJobs,
-        <img
-          src="/icons/stat-batchjobs.png"
-          alt="Total Batch Jobs"
-          className="h-6 w-6 object-contain dark:brightness-200"
-        />,
-        "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400"
-      )}
-      {renderCard(
-        "Images Generated",
-        metrics?.imagesGenerated,
-        <img
-          src="/icons/stat-images.png"
-          alt="Images Generated"
-          className="h-6 w-6 object-contain"
-        />,
-        "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400"
-      )}
-      {renderCard(
-        "Videos Rendered",
-        metrics?.videosRendered,
-        <img
-          src="/icons/stat-videos.png"
-          alt="Videos Rendered"
-          className="h-6 w-6 object-contain"
-        />,
-        "bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400"
-      )}
-      {renderCard(
-        "Listings Generated",
-        metrics?.listingsGenerated,
-        <img
-          src="/icons/stat-listings.png"
-          alt="Listings Generated"
-          className="h-6 w-6 object-contain"
-        />,
-        "bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400"
-      )}
-    </div>
+    <section className="mb-4.5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      {/* 1. Batch jobs */}
+      <AdminMetricCard
+        label="Batch jobs"
+        value={metrics.totalBatchJobs.value.toLocaleString()}
+        context={
+          <Delta
+            percent={metrics.totalBatchJobs.growthPercentage}
+            suffix={comparisonLabel}
+          />
+        }
+        sparkline={jobPoints}
+        icon={Layers}
+      />
+
+      {/* 2. Images generated */}
+      <AdminMetricCard
+        label="Images generated"
+        value={metrics.imagesGenerated.value.toLocaleString()}
+        context={
+          <Delta
+            percent={metrics.imagesGenerated.growthPercentage}
+            suffix={comparisonLabel}
+          />
+        }
+        sparkline={DEFAULT_SPARKLINES.images}
+        icon={ImageIcon}
+      />
+
+      {/* 3. Videos rendered */}
+      <AdminMetricCard
+        label="Videos rendered"
+        value={metrics.videosRendered.value.toLocaleString()}
+        context={
+          <Delta
+            percent={metrics.videosRendered.growthPercentage}
+            suffix={comparisonLabel}
+          />
+        }
+        sparkline={DEFAULT_SPARKLINES.videos}
+        icon={Clapperboard}
+      />
+
+      {/* 4. Listings generated */}
+      <AdminMetricCard
+        label="Listings generated"
+        value={metrics.listingsGenerated.value.toLocaleString()}
+        context={
+          <Delta
+            percent={metrics.listingsGenerated.growthPercentage}
+            suffix={comparisonLabel}
+          />
+        }
+        sparkline={DEFAULT_SPARKLINES.listings}
+        icon={Tag}
+      />
+    </section>
   );
 }

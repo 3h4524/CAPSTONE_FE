@@ -1,44 +1,133 @@
-import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import type { ComponentType } from "react";
+import { ArrowDownRight, ArrowUpRight, type LucideIcon } from "lucide-react";
 
 type AdminMetricCardProps = {
-  label: string;
-  value: string;
-  change: string;
-  trend: "up" | "down";
-  note: string;
-  icon: React.ComponentType<{ className?: string }>;
+  label: React.ReactNode;
+  value: React.ReactNode;
+  /** The exact value, shown on hover when `value` is rounded. */
+  exactValue?: string;
+  /** One line of context under the value, e.g. a change or a share. */
+  context: React.ReactNode;
+  /** The value over the period (optional). */
+  sparkline?: number[];
+  /** Progress percentage 0-100 (optional). */
+  progress?: number;
+  icon?: LucideIcon | ComponentType<{ className?: string }>;
+  href?: string;
+  className?: string;
 };
 
-const AdminMetricCard = ({
+/** One figure of the Dashboard's KPI strip, styled as a slim compact static card. */
+export const AdminMetricCard = ({
   label,
   value,
-  change,
-  trend,
-  note,
+  exactValue,
+  context,
+  sparkline,
+  progress,
   icon: Icon,
-}: AdminMetricCardProps) => (
-  <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-[0_2px_8px_rgba(15,23,42,0.02)] sm:p-5">
-    <div className="flex items-start justify-between gap-3">
-      <p className="text-[9px] font-bold tracking-[0.13em] text-slate-400 uppercase">{label}</p>
-      <span className="flex size-5 items-center justify-center rounded bg-slate-50 text-slate-400">
-        <Icon className="size-3" />
-      </span>
-    </div>
-    <div className="mt-3 flex items-end gap-2">
-      <p className="font-display text-2xl font-bold tracking-tight text-slate-900">{value}</p>
-      <span
-        className={`mb-1 flex items-center text-[10px] font-bold ${trend === "up" ? "text-emerald-600" : "text-rose-500"}`}
-      >
-        {trend === "up" ? (
-          <ArrowUpRight className="size-3" />
-        ) : (
-          <ArrowDownRight className="size-3" />
-        )}
-        {change}
-      </span>
-    </div>
-    <p className="mt-2 text-[10px] text-slate-400">{note}</p>
-  </article>
-);
+  className = "",
+}: AdminMetricCardProps) => {
+  return (
+    <article
+      className={`relative flex min-w-0 flex-col rounded-xl border border-slate-200/80 bg-white px-3.5 py-2.5 shadow-2xs ${className}`}
+    >
+      <div className="flex h-full flex-col justify-between">
+        <div>
+          <div className="flex items-center justify-between gap-1">
+            <div className="truncate text-[11px] font-medium text-slate-500 leading-none">{label}</div>
+            {Icon && (
+              <Icon
+                className="size-3.5 shrink-0 text-slate-400"
+                aria-hidden="true"
+              />
+            )}
+          </div>
+          <div
+            className="mt-1 truncate text-lg font-bold tracking-tight text-slate-900 tabular-nums sm:text-[19px] leading-tight"
+            title={exactValue}
+          >
+            {value}
+          </div>
+          <div className="mt-0.5 truncate text-[10.5px] text-slate-400 leading-tight">{context}</div>
+        </div>
 
-export { AdminMetricCard };
+        <div className="mt-1 flex h-3 items-end pt-0.5">
+          {sparkline && sparkline.length > 1 ? (
+            <div className="h-2.5 w-16">
+              <Sparkline points={sparkline} />
+            </div>
+          ) : progress !== undefined ? (
+            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-[#475569] transition-all duration-500"
+                style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+              />
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </article>
+  );
+};
+
+/** A change against the previous period: an arrow and the percent, or a note when there is nothing to compare. */
+export const Delta = ({
+  percent,
+  suffix,
+  polarity = "higher-is-better",
+}: {
+  percent: number | null | undefined;
+  suffix: string;
+  polarity?: "higher-is-better" | "lower-is-better";
+}) => {
+  if (percent === null || percent === undefined)
+    return <span className="text-slate-400">No earlier period to compare</span>;
+  const isPositive = percent > 0;
+  const isFavorable = polarity === "higher-is-better" ? isPositive : !isPositive;
+  const Arrow = isPositive ? ArrowUpRight : ArrowDownRight;
+  return (
+    <span className="inline-flex items-center gap-1">
+      {percent !== 0 && (
+        <span
+          className={`inline-flex items-center font-semibold ${
+            isFavorable ? "text-emerald-600" : "text-rose-600"
+          }`}
+        >
+          <Arrow className="size-2.5" aria-hidden="true" />
+          {Math.abs(percent).toFixed(1)}%
+        </span>
+      )}
+      <span>{percent === 0 ? `No change ${suffix}` : suffix}</span>
+    </span>
+  );
+};
+
+const Sparkline = ({ points }: { points: number[] }) => {
+  if (!points || points.length < 2) return null;
+  const max = Math.max(...points);
+  const min = Math.min(...points);
+  const span = max - min || 1;
+  const coordinates = points.map(
+    (point, index) =>
+      `${((index / (points.length - 1)) * 100).toFixed(1)},${(9 - ((point - min) / span) * 7).toFixed(1)}`
+  );
+
+  return (
+    <svg
+      viewBox="0 0 100 11"
+      preserveAspectRatio="none"
+      className="h-full w-full overflow-visible"
+      aria-hidden="true"
+    >
+      <polyline
+        fill="none"
+        stroke="#38bdf8"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={coordinates.join(" ")}
+      />
+    </svg>
+  );
+};

@@ -3,21 +3,17 @@
 import Link from "next/link";
 import { Gauge } from "lucide-react";
 
-import { allowanceLine, allowanceResetLine, remaining } from "@/helpers/allowance";
+import { allowanceLine, allowanceResetLine, orderAllowances, remaining } from "@/helpers/allowance";
 import { SUBSCRIPTION_PATH } from "@/helpers/plan-errors";
 import { useAllowances } from "@/hooks/queries/use-allowances";
-import type { AllowanceCode } from "@/types/allowance";
 import { cn } from "@/utils/cn";
-
-// The allowances that decide whether a workflow can run, in the order a run uses them.
-const SHOWN: AllowanceCode[] = ["full_runs", "design_runs", "products", "design_images", "mockups", "videos", "listings"];
 
 // A slim line above the canvas for Sellers on Free or the Pro trial: what is left before they run.
 export const AllowanceBanner = () => {
   const { data: allowances } = useAllowances();
   if (!allowances || allowances.scope === null) return null;
 
-  const items = SHOWN.flatMap((code) => allowances.items.filter((item) => item.code === code));
+  const items = orderAllowances(allowances);
   const reset = allowanceResetLine(allowances);
 
   return (

@@ -32,7 +32,7 @@ interface PlanAiReviewSectionProps {
  * and left used APCS, its features, and its strengths and risks.
  */
 export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanAiReviewSectionProps) {
-  const { data, isLoading } = usePlanAiReview();
+  const { data, isLoading, isError, refetch } = usePlanAiReview();
   const regenerate = useRegeneratePlanAiReview();
   const [picked, setPicked] = useState<string | null>(focusPlan ?? null);
 
@@ -59,7 +59,72 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusFeature, reviewPlans]);
 
-  if (isLoading || !data) return <Card className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-white" />;
+  if (isLoading) {
+    return (
+      <section id="plan-health" className="scroll-mt-32 space-y-4" aria-labelledby="ai-review-title">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#2a9d8f]/12 text-[#21796e]">
+              <Activity className="size-[18px]" />
+            </div>
+            <div>
+              <h2 id="ai-review-title" className="flex items-center gap-1.5 text-lg font-semibold tracking-tight text-slate-900">
+                Plan health
+              </h2>
+              <p className="text-xs text-slate-400">Loading AI review...</p>
+            </div>
+          </div>
+        </div>
+        <Card className="flex h-56 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-6">
+          <Loader2 className="size-6 animate-spin text-slate-400" />
+          <p className="mt-2 text-xs text-slate-400">Analyzing plan performance and subscriber health metrics...</p>
+        </Card>
+      </section>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <section id="plan-health" className="scroll-mt-32 space-y-4" aria-labelledby="ai-review-title">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#2a9d8f]/12 text-[#21796e]">
+              <Activity className="size-[18px]" />
+            </div>
+            <div>
+              <h2 id="ai-review-title" className="flex items-center gap-1.5 text-lg font-semibold tracking-tight text-slate-900">
+                Plan health
+              </h2>
+              <p className="text-xs text-slate-500">AI analysis unavailable</p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 rounded-md px-3 text-xs"
+            onClick={() => refetch?.()}
+          >
+            <RefreshCw className="mr-1.5 size-3.5" />
+            Retry
+          </Button>
+        </div>
+
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-8 text-center">
+          <AlertTriangle className="mx-auto size-7 text-amber-500" />
+          <p className="mt-2 text-sm font-semibold text-slate-800">AI Plan Review is currently unavailable</p>
+          <p className="mx-auto mt-1 max-w-md text-xs text-slate-500">
+            Unable to connect to the AI review service or the server returned an error. The rule-based checks below still apply.
+          </p>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => refetch?.()}>
+              <RefreshCw className="mr-1.5 size-3.5" />
+              Try again
+            </Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const blocker = regenerateBlocker(data, new Date());
   const snapshot = data.latest;

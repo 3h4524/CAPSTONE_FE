@@ -9,7 +9,7 @@ type AppHeaderProps = {
 
 export const AppHeader = ({ onMobileMenu }: AppHeaderProps) => {
   return (
-    <header className="bg-background sticky top-0 z-30 border-b">
+    <header className="bg-card sticky top-0 z-30 border-b">
       <div className="flex h-16 items-center gap-2 px-4 lg:px-6">
         <MobileMenuButton onClick={onMobileMenu} />
         <HeaderTitle />

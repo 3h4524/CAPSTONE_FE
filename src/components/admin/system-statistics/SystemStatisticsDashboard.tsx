@@ -14,7 +14,16 @@ import { IntegrationHealthCards } from "./IntegrationHealthCards";
 import { PipelineStageBreakdown } from "./PipelineStageBreakdown";
 import { RecentErrorsTable } from "./RecentErrorsTable";
 import { StatisticsHeader } from "./StatisticsHeader";
+import { sectionId, StatisticsInsightsPanel } from "./StatisticsInsightsPanel";
 import { StatisticsMetricCards } from "./StatisticsMetricCards";
+
+const COMPARISON_PERIODS: Record<string, string> = {
+  "7d": "week",
+  "30d": "month",
+  "90d": "quarter",
+  "180d": "6 months",
+  year: "year",
+};
 
 export function SystemStatisticsDashboard() {
   const [timeRange, setTimeRange] = useState<string>("30d");
@@ -24,6 +33,8 @@ export function SystemStatisticsDashboard() {
     useSystemStatisticsOverview({
       timeRange,
     });
+
+  const comparisonLabel = `vs previous ${COMPARISON_PERIODS[timeRange] ?? "period"}`;
 
   const handleExportCSV = async () => {
     try {
@@ -53,27 +64,30 @@ export function SystemStatisticsDashboard() {
 
   return (
     <AdminShell pageTitle="System Statistics">
-      <div className="flex flex-col">
+      <div className="flex flex-col pb-8">
+        {/* Top Header: Title, Subtitle, Time Filter, Export CSV */}
         <StatisticsHeader
           timeRange={timeRange}
           onTimeRangeChange={setTimeRange}
           onExport={handleExportCSV}
           isExporting={isExporting}
+          periodStart={data?.periodStart}
+          periodEnd={data?.periodEnd}
         />
 
         {isError ? (
-          <div className="my-8 flex flex-col items-center justify-center rounded-xl border border-rose-100 bg-rose-50/50 p-8 text-center dark:border-rose-900/40 dark:bg-rose-950/20">
+          <div className="my-8 flex flex-col items-center justify-center rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-2xs">
             <AlertCircle className="mb-3 h-10 w-10 text-rose-500" />
-            <h3 className="text-base font-semibold text-rose-900 dark:text-rose-200">
+            <h3 className="text-base font-semibold text-rose-900">
               Failed to load system statistics
             </h3>
-            <p className="mt-1 text-sm text-rose-600 dark:text-rose-400">
+            <p className="mt-1 text-sm text-rose-600">
               An error occurred while communicating with the analytics server. Please try again.
             </p>
             <Button
               onClick={() => refetch()}
               variant="outline"
-              className="mt-4 gap-2 border-rose-200 bg-white hover:bg-rose-50 dark:border-rose-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+              className="mt-4 gap-2 border-rose-200 bg-white hover:bg-rose-50 cursor-pointer"
             >
               <RefreshCw className="h-4 w-4 text-rose-500" />
               <span>Retry</span>
@@ -81,54 +95,52 @@ export function SystemStatisticsDashboard() {
           </div>
         ) : (
           <>
-            {/* Top 4 Summary Metric Cards */}
+            {/* 1. Four Headline Metric Cards (Using Admin Dashboard KPI Card style) */}
             <StatisticsMetricCards
               metrics={data?.metrics}
               isLoading={isLoading}
+              comparisonLabel={comparisonLabel}
+              dailyJobs={data?.dailyJobs}
             />
 
-            {/* Middle Section: Daily Jobs Chart & Pipeline Breakdown */}
-            <div className="mb-6 grid gap-6 lg:grid-cols-12">
-              <div className="lg:col-span-8">
+            {/* 2. Middle Row: Daily batch jobs (left 7 cols) & Pipeline conversion (right 5 cols) */}
+            <div className="mb-4.5 grid grid-cols-1 gap-4.5 lg:grid-cols-12 items-stretch">
+              <div id={sectionId("volume")} className="scroll-mt-24 lg:col-span-7">
                 <DailyJobsBarChart
                   dailyJobs={data?.dailyJobs}
                   isLoading={isLoading}
+                  periodEnd={data?.periodEnd}
                 />
               </div>
-              <div className="lg:col-span-4">
+              <div id={sectionId("pipeline")} className="scroll-mt-24 lg:col-span-5">
                 <PipelineStageBreakdown
                   pipelineStages={data?.pipelineStages}
+                  integrationStatus={data?.integrationStatus}
                   isLoading={isLoading}
                 />
               </div>
             </div>
 
-            {/* Integration Status Section */}
-            <div className="mb-6">
-              <div className="mb-3 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xs font-bold tracking-wider text-slate-800 uppercase dark:text-slate-200">
-                    Integration Health & Service Gateways
-                  </h2>
-                  <p className="mt-0.5 text-[11px] font-medium text-slate-400 dark:text-slate-500">
-                    Third-party marketplace and channel sync reliability
-                  </p>
-                </div>
-                <span className="font-mono text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                  Real-time telemetry
-                </span>
+            {/* 3. Bottom Row: System health (left 7 cols) & Integrations (right 5 cols) */}
+            <div className="mb-4.5 grid grid-cols-1 gap-4.5 lg:grid-cols-12 items-stretch">
+              <div className="lg:col-span-7">
+                <StatisticsInsightsPanel data={data} isLoading={isLoading} />
               </div>
-              <IntegrationHealthCards
-                integrationStatus={data?.integrationStatus}
+              <div id={sectionId("integrations")} className="scroll-mt-24 lg:col-span-5">
+                <IntegrationHealthCards
+                  integrationStatus={data?.integrationStatus}
+                  isLoading={isLoading}
+                />
+              </div>
+            </div>
+
+            {/* 4. Full-width Section: Recent Operational Errors */}
+            <div id={sectionId("errors")} className="scroll-mt-24">
+              <RecentErrorsTable
+                recentErrors={data?.recentErrors}
                 isLoading={isLoading}
               />
             </div>
-
-            {/* Bottom Section: Recent Operational Errors */}
-            <RecentErrorsTable
-              recentErrors={data?.recentErrors}
-              isLoading={isLoading}
-            />
           </>
         )}
       </div>

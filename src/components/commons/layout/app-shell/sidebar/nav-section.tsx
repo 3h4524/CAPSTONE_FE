@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import type { AppNavSection } from "@/types/navigation";
 
 import { NavItem } from "./nav-item";
@@ -10,15 +12,26 @@ type NavSectionProps = {
 };
 
 export const NavSection = ({ section, collapsed }: NavSectionProps) => {
+  const { t } = useTranslation("common");
+  const sectionKey = section.label.toLowerCase() as "overview" | "workspace" | "system";
+  const translatedSection = {
+    ...section,
+    label: t(`navigation.sections.${sectionKey}`),
+    items: section.items.map((item) => ({
+      ...item,
+      label: t(`navigation.items.${navigationItemKey(item.href)}`),
+    })),
+  };
+
   return (
     <div className="flex flex-col gap-1">
       {!collapsed && (
         <p className="text-muted-foreground px-3 text-xs font-medium tracking-wider uppercase">
-          {section.label}
+          {translatedSection.label}
         </p>
       )}
       <ul className="flex flex-col gap-1">
-        {section.items.map((item) => (
+        {translatedSection.items.map((item) => (
           <li key={item.href}>
             <NavItem item={item} collapsed={collapsed} />
           </li>
@@ -26,4 +39,21 @@ export const NavSection = ({ section, collapsed }: NavSectionProps) => {
       </ul>
     </div>
   );
+};
+
+const navigationItemKey = (href: string) => {
+  const keys: Record<string, string> = {
+    "/dashboard": "dashboard",
+    "/workflows": "workflows",
+    "/batches": "batches",
+    "/styles": "styles",
+    "/design-templates": "templates",
+    "/api-keys": "apiKeys",
+    "/usage": "usage",
+    "/market-opportunities": "marketRadar",
+    "/support": "support",
+    "/settings": "settings",
+    "/subscription": "billing",
+  };
+  return keys[href] ?? href.replace(/^\//, "");
 };

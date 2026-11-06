@@ -1,6 +1,7 @@
 "use client";
 
 import { Bell } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { NotificationDropdown } from "@/components/commons/layout/app-shell/notifications/notification-dropdown";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { useNotificationHub } from "@/hooks/use-notification-hub";
 
 export const NotificationBell = () => {
   useNotificationHub();
+  const { t } = useTranslation("common");
   const { data: notifications } = useNotifications();
   
   const unreadCount = notifications?.filter(n => !n.isRead).length ?? 0;
@@ -21,7 +23,7 @@ export const NotificationBell = () => {
           type="button"
           variant="ghost"
           size="icon"
-          aria-label="Notifications"
+          aria-label={t("header.notifications")}
           className="relative"
         >
           <Bell />

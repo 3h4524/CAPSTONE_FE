@@ -13,6 +13,10 @@ vi.mock("@/helpers/toast", () => ({ showToast: mocks.showToast }));
 vi.mock("@/hooks/mutations/use-generate-lifestyle-mockup", () => ({
   useGenerateLifestyleMockup: () => ({ mutateAsync: mocks.generate }),
 }));
+// Plan features not loaded yet: the form is not locked.
+vi.mock("@/hooks/queries/use-entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
 vi.mock("@/hooks/queries/use-mockup-assets", () => ({
   useMockupAssets: () => ({ data: [] }),
 }));

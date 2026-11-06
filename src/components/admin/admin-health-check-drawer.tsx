@@ -15,6 +15,7 @@ import {
   Workflow,
 } from "lucide-react";
 
+import type { HealthCheck } from "@/components/admin/admin-attention-panel";
 import {
   Sheet,
   SheetContent,
@@ -22,7 +23,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { CheckStatus, HealthCheck } from "@/components/admin/admin-attention-panel";
 
 type AdminHealthCheckDrawerProps = {
   open: boolean;
@@ -63,7 +63,7 @@ export const AdminHealthCheckDrawer = ({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto bg-slate-50/30 p-5 space-y-4">
+        <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50/30 p-5">
           {/* Summary Banner */}
           {issues.length === 0 ? (
             <div className="flex items-center gap-3.5 rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 text-emerald-900 shadow-2xs">
@@ -134,7 +134,7 @@ export const AdminHealthCheckDrawer = ({
                         </div>
                       </div>
                       <span
-                        className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide ${badgeColor}`}
+                        className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-semibold tracking-wide uppercase ${badgeColor}`}
                       >
                         <StatusIcon className="size-3" />
                         {isCritical ? "Critical" : "Warning"}
@@ -175,7 +175,7 @@ export const AdminHealthCheckDrawer = ({
                       <Link
                         href={check.href}
                         onClick={() => onOpenChange(false)}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs transition-all hover:bg-slate-800 hover:scale-[1.02] active:scale-95"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs transition-all hover:scale-[1.02] hover:bg-slate-800 active:scale-95"
                       >
                         <span>{check.action}</span>
                         <ArrowRight className="size-3 text-slate-300" />
@@ -193,7 +193,7 @@ export const AdminHealthCheckDrawer = ({
               <p className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
                 Operating normally ({healthy.length})
               </p>
-              <div className="divide-y divide-slate-100 rounded-xl border border-slate-200/80 bg-white shadow-2xs overflow-hidden">
+              <div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-2xs">
                 {healthy.map((check) => {
                   const AreaIcon = AREA_ICONS[check.key] || Activity;
                   return (
@@ -201,7 +201,7 @@ export const AdminHealthCheckDrawer = ({
                       key={check.key}
                       className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-slate-50/60"
                     >
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="flex min-w-0 flex-1 items-center gap-2.5">
                         <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
                           <AreaIcon className="size-3.5" />
                         </div>

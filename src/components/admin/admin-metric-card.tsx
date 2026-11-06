@@ -1,5 +1,5 @@
-import type { ComponentType } from "react";
 import { ArrowDownRight, ArrowUpRight, type LucideIcon } from "lucide-react";
+import type { ComponentType } from "react";
 
 type AdminMetricCardProps = {
   label: React.ReactNode;
@@ -35,7 +35,7 @@ export const AdminMetricCard = ({
       <div className="flex h-full flex-col justify-between">
         <div>
           <div className="flex items-center justify-between gap-1">
-            <div className="truncate text-[11px] font-medium text-slate-500 leading-none">{label}</div>
+            <div className="truncate text-[11px] leading-none font-medium text-slate-500">{label}</div>
             {Icon && (
               <Icon
                 className="size-3.5 shrink-0 text-slate-400"
@@ -44,12 +44,12 @@ export const AdminMetricCard = ({
             )}
           </div>
           <div
-            className="mt-1 truncate text-lg font-bold tracking-tight text-slate-900 tabular-nums sm:text-[19px] leading-tight"
+            className="mt-1 truncate text-lg leading-tight font-bold tracking-tight text-slate-900 tabular-nums sm:text-[19px]"
             title={exactValue}
           >
             {value}
           </div>
-          <div className="mt-0.5 truncate text-[10.5px] text-slate-400 leading-tight">{context}</div>
+          <div className="mt-0.5 truncate text-[10.5px] leading-tight text-slate-400">{context}</div>
         </div>
 
         <div className="mt-1 flex h-3 items-end pt-0.5">

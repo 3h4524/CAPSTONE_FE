@@ -19,7 +19,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { MetricDetail, RevenueMetricsDto } from "@/types/revenue";
-import { formatCompactVndAmount, formatVnd } from "@/utils/format-currency";
+import { formatVnd } from "@/utils/format-currency";
 
 interface RevenueMetricCardsProps {
   metrics?: RevenueMetricsDto;

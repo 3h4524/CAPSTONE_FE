@@ -87,7 +87,7 @@ export function SystemStatisticsDashboard() {
             <Button
               onClick={() => refetch()}
               variant="outline"
-              className="mt-4 gap-2 border-rose-200 bg-white hover:bg-rose-50 cursor-pointer"
+              className="mt-4 cursor-pointer gap-2 border-rose-200 bg-white hover:bg-rose-50"
             >
               <RefreshCw className="h-4 w-4 text-rose-500" />
               <span>Retry</span>
@@ -104,7 +104,7 @@ export function SystemStatisticsDashboard() {
             />
 
             {/* 2. Middle Row: Daily batch jobs (left 7 cols) & Pipeline conversion (right 5 cols) */}
-            <div className="mb-4.5 grid grid-cols-1 gap-4.5 lg:grid-cols-12 items-stretch">
+            <div className="mb-4.5 grid grid-cols-1 items-stretch gap-4.5 lg:grid-cols-12">
               <div id={sectionId("volume")} className="scroll-mt-24 lg:col-span-7">
                 <DailyJobsBarChart
                   dailyJobs={data?.dailyJobs}
@@ -122,7 +122,7 @@ export function SystemStatisticsDashboard() {
             </div>
 
             {/* 3. Bottom Row: System health (left 7 cols) & Integrations (right 5 cols) */}
-            <div className="mb-4.5 grid grid-cols-1 gap-4.5 lg:grid-cols-12 items-stretch">
+            <div className="mb-4.5 grid grid-cols-1 items-stretch gap-4.5 lg:grid-cols-12">
               <div className="lg:col-span-7">
                 <StatisticsInsightsPanel data={data} isLoading={isLoading} />
               </div>

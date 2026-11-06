@@ -26,7 +26,7 @@ export function RecentErrorsTable({
     const lower = type.toLowerCase();
     if (lower.includes("warn")) {
       return (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50/80 px-2.5 py-0.5 text-[11px] font-medium text-amber-700/90 border border-amber-200/50">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/50 bg-amber-50/80 px-2.5 py-0.5 text-[11px] font-medium text-amber-700/90">
           <AlertTriangle className="h-3 w-3 text-amber-500/80" />
           Warning
         </span>
@@ -34,14 +34,14 @@ export function RecentErrorsTable({
     }
     if (lower.includes("failed") || lower.includes("job")) {
       return (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50/70 px-2.5 py-0.5 text-[11px] font-medium text-rose-500 border border-rose-100">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-100 bg-rose-50/70 px-2.5 py-0.5 text-[11px] font-medium text-rose-500">
           <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
           Job failed
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50/70 px-2.5 py-0.5 text-[11px] font-medium text-rose-500 border border-rose-100">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-100 bg-rose-50/70 px-2.5 py-0.5 text-[11px] font-medium text-rose-500">
         <AlertCircle className="h-3 w-3 text-rose-400" />
         Error
       </span>
@@ -112,13 +112,13 @@ export function RecentErrorsTable({
           <Table className="w-full table-fixed">
             <TableHeader className="bg-slate-50/80">
               <TableRow className="border-b border-slate-200/90 hover:bg-transparent">
-                <TableHead className="w-[150px] sm:w-[170px] text-xs font-bold text-slate-600">
+                <TableHead className="w-[150px] text-xs font-bold text-slate-600 sm:w-[170px]">
                   Timestamp
                 </TableHead>
-                <TableHead className="w-[180px] sm:w-[240px] text-xs font-bold text-slate-600">
+                <TableHead className="w-[180px] text-xs font-bold text-slate-600 sm:w-[240px]">
                   Component / Job
                 </TableHead>
-                <TableHead className="w-[110px] sm:w-[130px] text-xs font-bold text-slate-600">
+                <TableHead className="w-[110px] text-xs font-bold text-slate-600 sm:w-[130px]">
                   Classification
                 </TableHead>
                 <TableHead className="text-xs font-bold text-slate-600">
@@ -132,7 +132,7 @@ export function RecentErrorsTable({
                   key={err.id}
                   className="border-b border-slate-100 text-xs transition-colors hover:bg-slate-50/70"
                 >
-                  <TableCell className="text-slate-600 font-medium whitespace-nowrap">
+                  <TableCell className="font-medium whitespace-nowrap text-slate-600">
                     {formatDate(err.timestamp)}
                   </TableCell>
                   <TableCell className="font-semibold text-slate-800">
@@ -143,7 +143,7 @@ export function RecentErrorsTable({
                   <TableCell className="whitespace-nowrap">
                     {getBadgeForErrorType(err.errorType)}
                   </TableCell>
-                  <TableCell className="text-slate-600 font-normal">
+                  <TableCell className="font-normal text-slate-600">
                     <div className="truncate" title={err.message}>
                       {err.message}
                     </div>

@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+ 
 "use client";
 
 import React from "react";
@@ -75,7 +75,7 @@ export function IntegrationHealthCards({
       </div>
 
       {/* 2x2 Grid of Channels */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
+      <div className="grid grid-cols-1 gap-3 pt-3 sm:grid-cols-2">
         {/* Etsy */}
         <div className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50/70 p-3.5 transition-all hover:bg-slate-50">
           <div className="flex items-center gap-2.5">

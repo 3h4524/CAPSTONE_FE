@@ -52,7 +52,7 @@ export const BatchGaugeCard = ({ batches }: { batches: ActiveBatch[] }) => {
               <span className="text-muted-foreground text-[11px]">complete</span>
             </RingGauge>
           </Link>
-          <dl className="grid grid-cols-2 gap-2 divide-x divide-slate-200 rounded-xl bg-slate-50/80 border border-slate-100 p-3 text-center text-xs">
+          <dl className="grid grid-cols-2 gap-2 divide-x divide-slate-200 rounded-xl border border-slate-100 bg-slate-50/80 p-3 text-center text-xs">
             <div>
               <dt className="text-muted-foreground">Done</dt>
               <dd className="font-semibold tabular-nums">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { type ReactNode,useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import type { AvailablePlan, BillingCycle } from "@/types/subscription";
@@ -110,18 +110,18 @@ export const AvailablePlansSection = ({
             onClick={() => scroll("left")}
             aria-label="Previous plan"
             disabled={!canScrollLeft}
-            className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-30 flex size-10 sm:size-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-lg transition-all duration-200 hover:scale-105 hover:bg-slate-50 active:scale-95 disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
+            className="absolute top-1/2 -left-3 z-30 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-lg transition-all duration-200 hover:scale-105 hover:bg-slate-50 active:scale-95 disabled:pointer-events-none disabled:opacity-25 sm:-left-5 sm:size-11"
           >
-            <ChevronLeft className="size-5 sm:size-6 stroke-[2.5]" />
+            <ChevronLeft className="size-5 stroke-[2.5] sm:size-6" />
           </button>
           <button
             type="button"
             onClick={() => scroll("right")}
             aria-label="Next plan"
             disabled={!canScrollRight}
-            className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-30 flex size-10 sm:size-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-lg transition-all duration-200 hover:scale-105 hover:bg-slate-50 active:scale-95 disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
+            className="absolute top-1/2 -right-3 z-30 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-lg transition-all duration-200 hover:scale-105 hover:bg-slate-50 active:scale-95 disabled:pointer-events-none disabled:opacity-25 sm:-right-5 sm:size-11"
           >
-            <ChevronRight className="size-5 sm:size-6 stroke-[2.5]" />
+            <ChevronRight className="size-5 stroke-[2.5] sm:size-6" />
           </button>
         </>
       )}
@@ -138,7 +138,7 @@ export const AvailablePlansSection = ({
       ) : (
         <div
           ref={scrollRef}
-          className="flex gap-5 overflow-x-auto pb-4 pt-1 scroll-smooth snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+          className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pt-1 pb-4 [&::-webkit-scrollbar]:hidden"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {cardItems.map(({ key, node }) => (

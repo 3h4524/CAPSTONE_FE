@@ -132,7 +132,7 @@ const AdminDashboardContent = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8.5 gap-1.5 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 cursor-pointer"
+                        className="h-8.5 cursor-pointer gap-1.5 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50"
                       >
                         {rangeLabel}
                         <ChevronDown className="size-3.5 text-slate-500" />
@@ -143,7 +143,7 @@ const AdminDashboardContent = ({
                         <DropdownMenuItem
                           key={option.key}
                           onClick={() => onTimeRangeChange(option.key)}
-                          className={`text-xs ${timeRange === option.key ? "font-semibold text-primary" : ""}`}
+                          className={`text-xs ${timeRange === option.key ? "text-primary font-semibold" : ""}`}
                         >
                           {option.label}
                         </DropdownMenuItem>
@@ -154,7 +154,7 @@ const AdminDashboardContent = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8.5 gap-1.5 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 cursor-pointer"
+                    className="h-8.5 cursor-pointer gap-1.5 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50"
                     onClick={onExport}
                     disabled={isExporting}
                   >

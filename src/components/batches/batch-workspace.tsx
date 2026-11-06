@@ -349,7 +349,7 @@ export const BatchWorkspace = () => {
                     const count = status === "all" ? totalProducts : statusCounts[status];
                     // Empty statuses add nothing to filter by, so only the ones holding products are offered.
                     if (status !== "all" && count === 0 && !active) return null;
-                    return <button key={status} type="button" role="tab" aria-selected={active} onClick={() => { setFilter(status); setPage(1); }} className={`focus-visible:ring-ring inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none ${active ? "border-[#cbd5e1] bg-[#e6edf5] text-slate-800 font-semibold" : "hover:bg-muted text-muted-foreground"}`}>
+                    return <button key={status} type="button" role="tab" aria-selected={active} onClick={() => { setFilter(status); setPage(1); }} className={`focus-visible:ring-ring inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none ${active ? "border-[#cbd5e1] bg-[#e6edf5] font-semibold text-slate-800" : "hover:bg-muted text-muted-foreground"}`}>
                       {status !== "all" && <span className={`size-2 rounded-full ${statusDot[status]}`} aria-hidden />}
                       {status === "all" ? "All" : statusLabel(status)}
                       <span className={`rounded-full px-1.5 text-xs tabular-nums ${active ? "bg-white text-slate-700 shadow-xs" : "bg-muted text-foreground"}`}>{count}</span>

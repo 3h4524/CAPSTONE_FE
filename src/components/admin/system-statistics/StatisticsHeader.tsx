@@ -60,12 +60,12 @@ export function StatisticsHeader({
 
       <div className="flex flex-wrap items-center gap-2.5">
         <Select value={timeRange} onValueChange={onTimeRangeChange}>
-          <SelectTrigger className="h-8.5 min-w-[135px] rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 focus:ring-1 focus:ring-slate-400 cursor-pointer">
+          <SelectTrigger className="h-8.5 min-w-[135px] cursor-pointer rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 focus:ring-1 focus:ring-slate-400">
             <SelectValue placeholder="Select period" />
           </SelectTrigger>
           <SelectContent className="rounded-xl border-slate-200 bg-white shadow-md">
             {TIME_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value} className="text-xs font-medium cursor-pointer">
+              <SelectItem key={opt.value} value={opt.value} className="cursor-pointer text-xs font-medium">
                 {opt.label}
               </SelectItem>
             ))}
@@ -77,7 +77,7 @@ export function StatisticsHeader({
           disabled={isExporting}
           variant="outline"
           size="sm"
-          className="h-8.5 gap-1.5 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 cursor-pointer"
+          className="h-8.5 cursor-pointer gap-1.5 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50"
         >
           {isExporting ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />

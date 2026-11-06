@@ -20,8 +20,6 @@ const getFirstName = (fullName?: string | null): string => {
   return parts[0] ?? "Admin";
 };
 
-const MERCH_FADE = "linear-gradient(to right, transparent 0%, black 15%)";
-
 export const AdminHeroCard = ({
   fullName,
   healthChecks,
@@ -46,7 +44,7 @@ export const AdminHeroCard = ({
       {/* Merch Product Photo on the right side - fully visible, not cut off */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 right-0 hidden sm:flex items-center justify-end max-w-[66%] xl:max-w-[70%] pr-3"
+        className="pointer-events-none absolute inset-y-0 right-0 hidden max-w-[66%] items-center justify-end pr-3 sm:flex xl:max-w-[70%]"
       >
         <div className="relative aspect-[1024/682] h-[92%] max-w-full translate-y-2">
           <Image
@@ -66,7 +64,7 @@ export const AdminHeroCard = ({
         <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900">
           Welcome back, {firstName}
         </h2>
-        <p className="mt-2 text-sm text-slate-700 leading-snug">
+        <p className="mt-2 text-sm leading-snug text-slate-700">
           {describeAttention()}
         </p>
       </div>
@@ -76,7 +74,7 @@ export const AdminHeroCard = ({
         <button
           type="button"
           onClick={onOpenHealthCheck}
-          className="inline-flex items-center gap-2 rounded-full bg-[#1e293b] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#0f172a] hover:scale-105 active:scale-95 cursor-pointer"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#1e293b] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-105 hover:bg-[#0f172a] active:scale-95"
         >
           Health check
           <ArrowRight className="size-4" aria-hidden="true" />

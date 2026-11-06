@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useState } from "react";
-import { Award, Check, ChevronDown, ChevronsUpDown, Copy, GripVertical, Hourglass, Layers, LayoutGrid, type LucideIcon, Pencil, Plus, Star, Table2, Tag, Trash2, Users, X } from "lucide-react";
+import { Award, Check, ChevronDown, ChevronsUpDown, Copy, GripVertical, Hourglass, Layers, LayoutGrid, Pencil, Plus, Star, Table2, Tag, Trash2, Users, X } from "lucide-react";
 
 import { AdminMetricCard } from "@/components/admin/admin-metric-card";
 import { addableFeatures,AddFeatureDialog } from "@/components/admin/subscription-plans/add-feature-dialog";

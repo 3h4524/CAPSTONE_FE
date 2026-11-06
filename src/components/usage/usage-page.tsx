@@ -105,7 +105,7 @@ export function UsagePage() {
               <DropdownMenuItem
                 key={range.days}
                 onClick={() => setDays(range.days)}
-                className={`text-xs ${days === range.days ? "font-semibold text-primary" : ""}`}
+                className={`text-xs ${days === range.days ? "text-primary font-semibold" : ""}`}
               >
                 {range.label}
               </DropdownMenuItem>
@@ -148,12 +148,12 @@ export function UsagePage() {
           >
             <div className="min-w-0">
               <p className="text-muted-foreground truncate text-xs font-medium">{label}</p>
-              <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 leading-tight tabular-nums">
+              <p className="mt-1 text-2xl leading-tight font-semibold tracking-tight text-slate-900 tabular-nums">
                 {value}
               </p>
-              <p className="text-muted-foreground truncate text-[11px] mt-0.5">{note}</p>
+              <p className="text-muted-foreground mt-0.5 truncate text-[11px]">{note}</p>
             </div>
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#eef4fb] text-[#4f709c] ring-1 ring-[#dbe7f4] ring-inset transition-transform duration-300 group-hover:scale-110">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#eef4fb] text-[#4f709c] ring-1 ring-[#dbe7f4] transition-transform duration-300 ring-inset group-hover:scale-110">
               <Icon className="size-5" aria-hidden="true" />
             </span>
           </Card>
@@ -174,11 +174,11 @@ export function UsagePage() {
             {totalActivity === 0 ? (
               <div className="py-2">
                 <div className="relative flex h-48 w-full items-center justify-center border-b border-l border-slate-200 pl-4">
-                  <span className="absolute -left-6 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] font-medium text-slate-400">
+                  <span className="absolute top-1/2 -left-6 -translate-y-1/2 -rotate-90 text-[10px] font-medium text-slate-400">
                     Images
                   </span>
                   <div className="flex flex-col items-center justify-center text-center">
-                    <BarChart3 className="size-8 text-slate-400 stroke-[1.5]" />
+                    <BarChart3 className="size-8 stroke-[1.5] text-slate-400" />
                     <p className="mt-3 text-sm font-semibold text-slate-900">
                       No generation activity yet
                     </p>
@@ -220,7 +220,7 @@ export function UsagePage() {
         </Card>
 
         {/* AI requests this period */}
-        <Card className="rounded-2xl border-slate-200/80 p-5 sm:p-6 shadow-2xs gap-0 flex flex-col justify-between">
+        <Card className="flex flex-col justify-between gap-0 rounded-2xl border-slate-200/80 p-5 shadow-2xs sm:p-6">
           <div>
             {/* Top row: Plan badge + Manage link */}
             <div className="flex items-center justify-between">
@@ -246,7 +246,7 @@ export function UsagePage() {
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#eff4fa] text-[#4f709c] ring-1 ring-[#dbe7f4] ring-inset">
                 <Sparkles className="size-5" />
               </span>
-              <h2 className="text-base font-bold text-slate-900 leading-tight">
+              <h2 className="text-base leading-tight font-bold text-slate-900">
                 AI requests this period
               </h2>
             </div>
@@ -262,7 +262,7 @@ export function UsagePage() {
             </div>
 
             <div className="mt-3 flex items-center gap-2 text-xs text-slate-600">
-              <CalendarDays className="size-4 text-slate-500 shrink-0" />
+              <CalendarDays className="size-4 shrink-0 text-slate-500" />
               <span>
                 Period ends {data.allowance.resetDate} · {data.allowance.daysRemaining} days remaining
               </span>
@@ -296,7 +296,7 @@ export function UsagePage() {
       </div>
 
       {/* Bottom Table: Cost detail / By provider */}
-      <Card className="rounded-2xl border-slate-200/80 shadow-2xs gap-0 py-0 overflow-hidden">
+      <Card className="gap-0 overflow-hidden rounded-2xl border-slate-200/80 py-0 shadow-2xs">
         <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-6">
           <div className="flex items-center gap-3.5">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#eff4fa] text-[#4f709c] ring-1 ring-[#dbe7f4] ring-inset">
@@ -326,7 +326,7 @@ export function UsagePage() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-t border-b border-slate-200/80 bg-[#f1f5f9] text-[10px] font-bold tracking-wider text-slate-700 uppercase">
+            <thead className="border-y border-slate-200/80 bg-[#f1f5f9] text-[10px] font-bold tracking-wider text-slate-700 uppercase">
               <tr>
                 {["PROVIDER", "SERVICE", "REQUESTS", "ESTIMATED COST", "SHARE"].map(
                   (heading) => (
@@ -362,7 +362,7 @@ export function UsagePage() {
           </table>
           {data.costs.length === 0 && (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Layers className="size-8 text-slate-300 stroke-[1.5]" />
+              <Layers className="size-8 stroke-[1.5] text-slate-300" />
               <p className="mt-3 text-xs text-slate-600">
                 There&apos;s no usage activity in this time range yet.
               </p>

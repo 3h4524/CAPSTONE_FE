@@ -94,15 +94,15 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
           </div>
 
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-0.5 font-semibold text-rose-600 border border-rose-200/70">
+            <span className="inline-flex items-center rounded-full border border-rose-200/70 bg-rose-50 px-2.5 py-0.5 font-semibold text-rose-600">
               {issues.length} issues
             </span>
             <span className="text-slate-300">·</span>
-            <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 font-semibold text-amber-700 border border-amber-200/70">
+            <span className="inline-flex items-center rounded-full border border-amber-200/70 bg-amber-50 px-2.5 py-0.5 font-semibold text-amber-700">
               {warnings.length} warnings
             </span>
             <span className="text-slate-300">·</span>
-            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 font-semibold text-slate-700 border border-slate-200">
+            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-0.5 font-semibold text-slate-700">
               {infos.length} info
             </span>
           </div>
@@ -130,7 +130,7 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
             topIssues.map((issue) => (
               <div
                 key={issue.id}
-                className="flex flex-col justify-between gap-2 rounded-xl bg-slate-50/70 border border-slate-200/80 p-3 sm:flex-row sm:items-center"
+                className="flex flex-col justify-between gap-2 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 sm:flex-row sm:items-center"
               >
                 <div className="flex items-start gap-2.5">
                   <div className="mt-0.5 shrink-0">
@@ -147,7 +147,7 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
                 <button
                   type="button"
                   onClick={() => scrollToSection(issue.target)}
-                  className="inline-flex shrink-0 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 cursor-pointer"
+                  className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50"
                 >
                   <span>{getActionLabel(issue)}</span>
                   <ArrowRight className="h-3 w-3 text-slate-500" />
@@ -162,7 +162,7 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
           <button
             type="button"
             onClick={() => setIsDrawerOpen(true)}
-            className="flex items-center gap-1.5 font-semibold text-slate-600 transition-colors hover:text-slate-900 cursor-pointer"
+            className="flex cursor-pointer items-center gap-1.5 font-semibold text-slate-600 transition-colors hover:text-slate-900"
           >
             <ChevronDown className="h-4 w-4 text-slate-500" />
             <span>
@@ -175,8 +175,8 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
 
       {/* Slide-over Drawer */}
       <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md p-6 bg-[#f8fafc] overflow-y-auto border-l border-slate-200">
-          <SheetHeader className="pb-4 border-b border-slate-200">
+        <SheetContent side="right" className="w-full overflow-y-auto border-l border-slate-200 bg-[#f8fafc] p-6 sm:max-w-md">
+          <SheetHeader className="border-b border-slate-200 pb-4">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
                 <Shield className="h-5 w-5" />
@@ -188,15 +188,15 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
 
             {/* Badges in Drawer Header */}
             <div className="mt-2.5 flex items-center gap-1.5 text-xs">
-              <span className="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-0.5 font-semibold text-rose-600 border border-rose-200/70">
+              <span className="inline-flex items-center rounded-full border border-rose-200/70 bg-rose-50 px-2.5 py-0.5 font-semibold text-rose-600">
                 {issues.length} issues
               </span>
               <span className="text-slate-300">·</span>
-              <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 font-semibold text-amber-700 border border-amber-200/70">
+              <span className="inline-flex items-center rounded-full border border-amber-200/70 bg-amber-50 px-2.5 py-0.5 font-semibold text-amber-700">
                 {warnings.length} warnings
               </span>
               <span className="text-slate-300">·</span>
-              <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 font-semibold text-slate-700 border border-slate-200">
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-0.5 font-semibold text-slate-700">
                 {infos.length} info
               </span>
             </div>
@@ -222,7 +222,7 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
                       <h4 className="mt-1.5 text-xs font-bold text-slate-900">
                         {insight.title}
                       </h4>
-                      <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">
                         {insight.detail}
                       </p>
                     </div>
@@ -235,7 +235,7 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
                       scrollToSection(insight.target);
                     }}
                     title="Jump to section"
-                    className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-2xs hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
+                    className="mt-1 flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-2xs hover:bg-slate-50 hover:text-slate-900"
                   >
                     <ArrowRight className="h-3.5 w-3.5" />
                   </button>

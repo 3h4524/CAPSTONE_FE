@@ -115,11 +115,11 @@ const BatchJobsPanel = ({
                     {job.createdAt && ` · ${timeAgo(job.createdAt, now)}`}
                   </p>
                 </td>
-                <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{job.userName}</td>
-                <td className="px-4 py-2.5 text-left text-slate-700 tabular-nums whitespace-nowrap">
+                <td className="px-4 py-2.5 whitespace-nowrap text-slate-600">{job.userName}</td>
+                <td className="px-4 py-2.5 text-left whitespace-nowrap text-slate-700 tabular-nums">
                   {job.itemCount.toLocaleString()}
                 </td>
-                <td className="px-4 py-2.5 text-left text-slate-700 tabular-nums whitespace-nowrap">
+                <td className="px-4 py-2.5 text-left whitespace-nowrap text-slate-700 tabular-nums">
                   {job.aiCostUsd ? formatUsd(job.aiCostUsd) : "—"}
                 </td>
                 <td className="px-5 py-2.5 whitespace-nowrap">

@@ -617,13 +617,13 @@ function PipelineCard({ data }: { data: PlanInsights }) {
                 >
                   <span
                     className={cn(
-                      "text-lg leading-none font-semibold tabular-nums text-slate-900",
+                      "text-lg leading-none font-semibold text-slate-900 tabular-nums",
                       (stage.products === 0 || !isLive) && "text-slate-400"
                     )}
                   >
                     {isLive ? stage.products.toLocaleString() : "—"}
                   </span>
-                  <span className="text-slate-500 text-[11px] tabular-nums">
+                  <span className="text-[11px] text-slate-500 tabular-nums">
                     {isLive ? `${share.toFixed(1)}% of products` : "Not live yet"}
                   </span>
                   <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">

@@ -55,7 +55,7 @@ const AdminActivityPanels = ({
   totalBatchJobs,
   now,
 }: AdminActivityPanelsProps) => (
-  <div className="grid gap-4.5 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+  <div className="grid grid-cols-1 gap-4.5 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
     <BatchJobsPanel jobs={recentBatchJobs} totalJobs={totalBatchJobs} now={now} />
     <TicketsPanel tickets={latestTickets} />
   </div>

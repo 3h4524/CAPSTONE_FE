@@ -40,7 +40,7 @@ const DOT: Record<DashboardTone, string> = {
 };
 
 const AdminOperationsRow = ({ operations, isLoading }: AdminOperationsRowProps) => (
-  <div className="grid gap-4.5 lg:grid-cols-3">
+  <div className="grid grid-cols-1 gap-4.5 lg:grid-cols-3">
     <OperationsCard
       title="Throughput"
       subtitle="Products created and sellers at work"

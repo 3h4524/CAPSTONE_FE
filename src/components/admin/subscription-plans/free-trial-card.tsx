@@ -69,7 +69,7 @@ export function FreeTrialCard() {
         />
       </div>
 
-      <div className="grid gap-4 p-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
         <Panel
           icon={<Gift className="size-4" />}
           title="Free"

@@ -128,8 +128,8 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
         {invoices.length === 0 ? (
           <p className="text-muted-foreground rounded-xl bg-slate-50 px-4 py-8 text-center text-sm">No invoices yet.</p>
         ) : (
-          <Table>
-            <TableHeader>
+          <Table className="max-md:block">
+            <TableHeader className="max-md:hidden">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="bg-slate-50 font-medium first:rounded-l-lg">Plan Name</TableHead>
                 <TableHead className="bg-slate-50 font-medium">Amount</TableHead>
@@ -138,7 +138,7 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
                 <TableHead className="bg-slate-50 text-right font-medium last:rounded-r-lg">Action</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="max-md:block">
               {shown.length === 0 ? (
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={5} className="text-muted-foreground py-8 text-center text-sm">
@@ -150,20 +150,20 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
                   const isDownloadingThisRow = isPending && variables?.invoiceId === invoice.invoiceId;
                   const { label, dot, text } = statusOf(invoice.status);
                   return (
-                    <TableRow key={invoice.invoiceId}>
-                      <TableCell className="py-3.5">
+                    <TableRow key={invoice.invoiceId} className="max-md:grid max-md:grid-cols-2 max-md:gap-x-3 max-md:gap-y-1 max-md:py-3">
+                      <TableCell className="py-3.5 max-md:col-span-2 max-md:p-0 max-md:whitespace-normal">
                         <p className="font-medium text-slate-800">{invoice.planName}</p>
                         <p className="text-muted-foreground text-xs">{invoice.invoiceNumber}</p>
                       </TableCell>
-                      <TableCell className="tabular-nums">{formatVnd(invoice.totalAmountVnd)}</TableCell>
-                      <TableCell className="tabular-nums">{formatDate(invoice.invoiceDate)}</TableCell>
-                      <TableCell>
+                      <TableCell className="tabular-nums max-md:p-0">{formatVnd(invoice.totalAmountVnd)}</TableCell>
+                      <TableCell className="tabular-nums max-md:p-0 max-md:text-right">{formatDate(invoice.invoiceDate)}</TableCell>
+                      <TableCell className="max-md:p-0 max-md:whitespace-normal">
                         <span className={cn("inline-flex items-center gap-1.5 text-sm font-medium", text)}>
                           <span className={cn("size-2 rounded-full", dot)} />
                           {label}
                         </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="max-md:p-0">
                         <div className="flex justify-end gap-1.5">
                           <Button
                             variant="outline"

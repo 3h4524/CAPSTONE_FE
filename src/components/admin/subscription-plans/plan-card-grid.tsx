@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useState } from "react";
-import { Award, Check, ChevronDown, ChevronsUpDown, Copy, GripVertical, Hourglass, Layers, LayoutGrid, Pencil, Plus, Star, Table2, Tag, Trash2, Users, X } from "lucide-react";
+import { Award, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, Copy, GripVertical, Hourglass, Layers, LayoutGrid, Pencil, Plus, Star, Table2, Tag, Trash2, Users, X } from "lucide-react";
 
 import { AdminMetricCard } from "@/components/admin/admin-metric-card";
 import { addableFeatures,AddFeatureDialog } from "@/components/admin/subscription-plans/add-feature-dialog";
@@ -394,7 +394,7 @@ function PlanCard({
         />
       ))}
 
-      <div className="flex items-start justify-between gap-3 p-6 pb-4">
+      <div className="flex items-start justify-between gap-3 p-6 pb-4 max-sm:flex-wrap">
         <div className="flex min-w-0 items-start gap-1.5">
           {position.count > 1 && (
             <button
@@ -414,15 +414,37 @@ function PlanCard({
                 }
               }}
               className={cn(
-                "mt-0.5 -ml-1.5 cursor-grab rounded p-0.5 active:cursor-grabbing",
+                "mt-0.5 -ml-1.5 cursor-grab rounded p-0.5 active:cursor-grabbing [@media(pointer:coarse)]:hidden",
                 isDark ? "text-slate-400 hover:bg-white/10 hover:text-white" : "text-slate-300 hover:bg-slate-100 hover:text-slate-600"
               )}
             >
               <GripVertical className="size-4" />
             </button>
           )}
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className={cn("truncate text-lg font-bold tracking-tight", isDark ? "text-white" : "text-slate-900")}>{plan.name}</h3>
+          {position.count > 1 && (
+            <span className="-ml-2 hidden shrink-0 items-center [@media(pointer:coarse)]:inline-flex">
+              <button
+                type="button"
+                aria-label={`${plan.name}: move earlier`}
+                disabled={position.index === 0}
+                onClick={() => onMove(-1)}
+                className={cn("inline-flex size-10 items-center justify-center rounded disabled:opacity-30", isDark ? "text-slate-300" : "text-slate-500")}
+              >
+                <ChevronLeft className="size-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                aria-label={`${plan.name}: move later`}
+                disabled={position.index >= position.count - 1}
+                onClick={() => onMove(1)}
+                className={cn("inline-flex size-10 items-center justify-center rounded disabled:opacity-30", isDark ? "text-slate-300" : "text-slate-500")}
+              >
+                <ChevronRight className="size-4" aria-hidden="true" />
+              </button>
+            </span>
+          )}
+        <div className="flex flex-wrap items-center gap-2 max-sm:min-w-0">
+          <h3 className={cn("truncate text-lg font-bold tracking-tight max-sm:max-w-full", isDark ? "text-white" : "text-slate-900")}>{plan.name}</h3>
           <span
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase",

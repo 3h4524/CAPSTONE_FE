@@ -84,7 +84,7 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
           isConnectable={!workflowIsRunning}
           title={`Connect another node to ${data.label}`}
           aria-label={`Connect another node to ${data.label}`}
-          className={cn(HANDLE_CLASS_NAME, "top-0!", "before:size-6!")}
+          className={cn(HANDLE_CLASS_NAME, "top-0!", "before:size-6! [@media(pointer:coarse)]:before:size-11!")}
         >
           <span className={HANDLE_DOT_CLASS_NAME} />
           <span

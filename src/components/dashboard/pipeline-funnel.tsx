@@ -76,11 +76,11 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
       </div>
 
       <div className="-mx-1 overflow-x-auto px-1 pb-1">
-        <ol className="relative grid min-w-[900px] grid-cols-8 gap-2">
+        <ol className="relative grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[900px] lg:grid-cols-8">
           {/* The line joining the steps, from the first circle's centre to the last's. */}
           <span
             aria-hidden="true"
-            className="absolute top-[17px] right-[calc(100%/16)] left-[calc(100%/16)] h-0.5 rounded-full bg-slate-200"
+            className="absolute top-[17px] right-[calc(100%/16)] left-[calc(100%/16)] hidden h-0.5 rounded-full bg-slate-200 lg:block"
           />
           {stages.map((stage, index) => {
             const Icon = STAGE_ICONS[stage.stage];

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Calendar, CheckCircle2, Copy, Download, FileText, Folder, Headphones, Maximize2, Minimize2, Paperclip, Send, Star, User, X } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle2, Copy, Download, FileText, Folder, Headphones, Maximize2, Minimize2, Paperclip, Send, Star, User, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -17,9 +17,18 @@ type TicketDetailPanelProps = {
   ticketId: string | null;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  /** Returns to the ticket list on narrow screens, where the list and detail panels swap. */
+  onBack?: () => void;
 };
 
-export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: TicketDetailPanelProps) => {
+const BackToListButton = ({ onClick }: { onClick: () => void }) => (
+  <Button variant="ghost" size="sm" className="-ml-2 self-start px-2 md:hidden" onClick={onClick}>
+    <ArrowLeft className="size-4" aria-hidden="true" />
+    All tickets
+  </Button>
+);
+
+export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack }: TicketDetailPanelProps) => {
   const { data: ticket, isLoading, isError } = useAdminSupportTicketDetail(ticketId || undefined);
   useSupportHub(ticketId || undefined);
   const { mutate: sendReply, isPending: isSending } = useReplyAdminTicket();
@@ -90,16 +99,22 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Spinner className="size-8 text-indigo-600" />
+      <div className="flex h-full flex-col">
+        {onBack && <div className="p-4 md:hidden"><BackToListButton onClick={onBack} /></div>}
+        <div className="flex flex-1 items-center justify-center">
+          <Spinner className="size-8 text-indigo-600" />
+        </div>
       </div>
     );
   }
 
   if (isError || !ticket) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-red-500">
-        Failed to load ticket details.
+      <div className="flex h-full flex-col">
+        {onBack && <div className="p-4 md:hidden"><BackToListButton onClick={onBack} /></div>}
+        <div className="flex flex-1 items-center justify-center text-sm text-red-500">
+          Failed to load ticket details.
+        </div>
       </div>
     );
   }
@@ -108,7 +123,8 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
     <div className="relative flex min-h-0 flex-1 flex-col bg-white">
       {/* Header */}
       <div className="z-10 flex flex-col items-start justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] sm:flex-row sm:items-center">
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2">
+          {onBack && <BackToListButton onClick={onBack} />}
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-xl font-bold text-slate-900">{ticket.subject}</h2>
             <span className="text-sm font-medium text-slate-500">#{ticket.ticketNumber}</span>
@@ -172,7 +188,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
       </div>
 
       {/* Chat History */}
-      <div ref={scrollRef} className="flex-1 space-y-8 overflow-y-auto bg-white p-6 md:px-10">
+      <div ref={scrollRef} className="flex-1 space-y-8 overflow-y-auto bg-white p-4 md:p-6 md:px-10">
         
         {/* Original Request */}
         <div className="flex gap-4">
@@ -181,7 +197,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
               {ticket.requesterName.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className="max-w-[70%] flex-1">
+          <div className="max-w-[85%] flex-1 md:max-w-[70%]">
             <div className="mb-1.5 flex items-baseline gap-2">
               <span className="text-[15px] font-bold text-slate-900">{ticket.requesterName}</span>
               <span className="text-[13px] font-medium text-slate-500">
@@ -241,7 +257,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
                   {isAdmin ? reply.authorName.substring(0, 1).toUpperCase() : reply.authorName.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className={cn("flex max-w-[70%] flex-col", isAdmin ? "items-end" : "items-start")}>
+              <div className={cn("flex max-w-[85%] flex-col md:max-w-[70%]", isAdmin ? "items-end" : "items-start")}>
                 <div className={cn("mb-1.5 flex items-baseline gap-2", isAdmin && "flex-row-reverse")}>
                   <span className="text-[15px] font-bold text-slate-900">{reply.authorName}</span>
                   <span className="text-[13px] font-medium text-slate-500">
@@ -321,7 +337,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               placeholder="Type a reply..."
-              className="min-h-[60px] resize-none border-none bg-transparent p-3 text-[14px] focus-visible:ring-0"
+              className="min-h-[60px] resize-none border-none bg-transparent p-3 text-base focus-visible:ring-0 md:text-[14px]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();

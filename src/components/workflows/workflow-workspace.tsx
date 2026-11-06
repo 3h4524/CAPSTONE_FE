@@ -211,7 +211,7 @@ export const WorkflowWorkspace = () => {
 
   return (
     <div
-      className="flex min-h-[560px] flex-1 flex-col xl:pr-(--assistant-inset)"
+      className="flex min-h-0 flex-1 flex-col xl:pr-(--assistant-inset) [@media(min-height:560px)]:min-h-[560px]"
       style={{ "--assistant-inset": isAssistantOpen ? `${assistantWidth}px` : "0px" } as CSSProperties}
     >
       <WorkflowToolbar

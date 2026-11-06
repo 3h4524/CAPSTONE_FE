@@ -34,7 +34,7 @@ export const AppShell = ({ children }: AppShellProps) => {
 
   return (
     <TooltipProvider>
-      <div className="bg-muted/40 flex h-screen overflow-hidden">
+      <div className="bg-muted/40 flex h-dvh overflow-hidden">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <AppHeader onMobileMenu={() => setMobileOpen(true)} />

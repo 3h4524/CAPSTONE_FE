@@ -33,7 +33,7 @@ export const EditorPanelSheets = () => {
             <SlidersHorizontal aria-hidden="true" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="right" className="w-80 gap-0 p-0 sm:max-w-sm">
+        <SheetContent side="right" className="w-full gap-0 p-0 sm:w-80 sm:max-w-sm">
           <SheetHeader className="sr-only">
             <SheetTitle>Node settings</SheetTitle>
             <SheetDescription>Configure the selected node or review workflow checks.</SheetDescription>

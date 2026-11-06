@@ -37,8 +37,8 @@ export const AdminUsersTable = ({
 }: AdminUsersTableProps) => {
   return (
     <div className="rounded-md border border-slate-200 bg-white shadow-sm">
-      <Table>
-        <TableHeader>
+      <Table className="max-md:block">
+        <TableHeader className="max-md:hidden">
           <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
             <TableHead className="w-12 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase">
               NO.
@@ -66,7 +66,7 @@ export const AdminUsersTable = ({
             </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="max-md:block">
           {users.length === 0 ? (
             <TableRow>
               <TableCell colSpan={8} className="h-24 text-center text-slate-500">
@@ -75,11 +75,11 @@ export const AdminUsersTable = ({
             </TableRow>
           ) : (
             users.map((user, index) => (
-              <TableRow key={user.id} className="hover:bg-slate-50/80">
-                <TableCell className="text-center font-medium text-slate-500">
+              <TableRow key={user.id} className="hover:bg-slate-50/80 max-md:relative max-md:grid max-md:grid-cols-2 max-md:gap-x-3 max-md:gap-y-2 max-md:p-4">
+                <TableCell className="text-center font-medium text-slate-500 max-md:hidden">
                   {index + 1}
                 </TableCell>
-                <TableCell>
+                <TableCell className="max-md:col-span-2 max-md:p-0 max-md:pr-10 max-md:whitespace-normal">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9 border-0">
                       <AvatarImage src={user.avatarUrl || ""} alt={user.fullName} />
@@ -92,13 +92,13 @@ export const AdminUsersTable = ({
                           .toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col">
+                    <div className="flex min-w-0 flex-col">
                       <span className="text-sm font-medium text-slate-900">{user.fullName}</span>
-                      <span className="text-xs text-slate-500">{user.email}</span>
+                      <span className="text-xs text-slate-500 max-md:break-all">{user.email}</span>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="max-md:col-span-2 max-md:p-0 max-md:whitespace-normal">
                   <div className="flex flex-wrap gap-1">
                     {user.roles.length > 0 ? (
                       user.roles.map((role) => (
@@ -122,7 +122,7 @@ export const AdminUsersTable = ({
                     )}
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="max-md:p-0 max-md:whitespace-normal">
                   <span
                     className={cn(
                       "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium",
@@ -135,7 +135,7 @@ export const AdminUsersTable = ({
                     {user.plan}
                   </span>
                 </TableCell>
-                <TableCell>
+                <TableCell className="max-md:p-0 max-md:whitespace-normal">
                   <span
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium",
@@ -153,13 +153,15 @@ export const AdminUsersTable = ({
                     {user.accountStatus.toLowerCase() === "pending_verification" ? "Pending" : user.accountStatus}
                   </span>
                 </TableCell>
-                <TableCell className="text-center font-medium text-slate-700">
+                <TableCell className="text-center font-medium text-slate-700 max-md:p-0 max-md:text-left">
+                  <span className="font-normal text-slate-500 md:hidden">Jobs: </span>
                   {user.totalJobs}
                 </TableCell>
-                <TableCell className="text-center font-medium text-slate-600">
+                <TableCell className="text-center font-medium text-slate-600 max-md:p-0 max-md:text-left">
+                  <span className="font-normal text-slate-500 md:hidden">API cost: </span>
                   {formatVnd(user.monthlyApiCost)}
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="text-center max-md:absolute max-md:top-3 max-md:right-2 max-md:p-0">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-slate-900">

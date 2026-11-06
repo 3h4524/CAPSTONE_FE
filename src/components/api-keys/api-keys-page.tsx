@@ -208,11 +208,11 @@ function ConnectionRow({
   return (
     <tr
       className={cn(
-        "border-border border-t transition-colors",
+        "border-border border-t transition-colors max-md:grid max-md:grid-cols-1 max-md:gap-3 max-md:p-4",
         connected ? "hover:bg-muted/30" : "bg-amber-50/40 hover:bg-amber-50/70"
       )}
     >
-      <th scope="row" className="py-3.5 pr-3 pl-5 text-left font-normal">
+      <th scope="row" className="py-3.5 pr-3 pl-5 text-left font-normal max-md:block max-md:p-0">
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"
@@ -223,7 +223,7 @@ function ConnectionRow({
           <div className="min-w-0">
             <div className="text-foreground text-sm font-medium">{connection.provider}</div>
             <div
-              className="text-muted-foreground max-w-52 truncate"
+              className="text-muted-foreground truncate md:max-w-52"
               title={`${connection.label} · ${connection.providerCategory}`}
             >
               {connection.label}
@@ -233,7 +233,7 @@ function ConnectionRow({
           </div>
         </div>
       </th>
-      <td className="px-3 py-3.5">
+      <td className="px-3 py-3.5 max-md:block max-md:p-0">
         <div className="flex flex-wrap items-center gap-1.5">
           {oauth ? (
             <span
@@ -264,7 +264,7 @@ function ConnectionRow({
           )}
         </div>
       </td>
-      <td className="px-3 py-3.5">
+      <td className="px-3 py-3.5 max-md:block max-md:p-0">
         <span
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap",
@@ -281,7 +281,8 @@ function ConnectionRow({
           {statusReason(connection, now)}
         </div>
       </td>
-      <td className="text-muted-foreground px-3 py-3.5 whitespace-nowrap">
+      <td className="text-muted-foreground px-3 py-3.5 whitespace-nowrap max-md:block max-md:p-0 max-md:whitespace-normal">
+        <span className="md:hidden">Last used: </span>
         <time
           dateTime={connection.lastUsedAtUtc ?? undefined}
           title={connection.lastUsedAtUtc ?? "Never used"}
@@ -294,8 +295,8 @@ function ConnectionRow({
           </div>
         )}
       </td>
-      <td className="py-3.5 pr-5 pl-3">
-        <div className="flex items-center justify-end gap-1">
+      <td className="py-3.5 pr-5 pl-3 max-md:block max-md:p-0">
+        <div className="flex items-center justify-end gap-1 max-md:justify-start">
           {!oauth && (
             <>
               <Button
@@ -398,13 +399,13 @@ export function ApiKeysPage() {
           <p className="text-muted-foreground mt-1 text-sm">
             Connect the services APCS uses to create and publish your products.
           </p>
-          <p className="text-muted-foreground mt-2 flex items-center gap-1.5 text-xs">
+          <p className="text-muted-foreground mt-2 flex items-center gap-1.5 text-xs max-sm:flex-wrap">
             <LockKeyhole className="text-primary size-3.5 shrink-0" />
             <span className="text-foreground font-medium">Keys stay private.</span>
             Only masked credentials are shown here.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => setGuideOpen(true)}>
             <BookOpen className="size-4" />
             Read setup guide
@@ -494,11 +495,11 @@ export function ApiKeysPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] text-xs">
+                <table className="w-full text-xs max-md:block md:min-w-[760px]">
                   <caption className="sr-only">
                     Your service credentials, connection status, and last-used time
                   </caption>
-                  <thead className="bg-muted/50 text-muted-foreground border-t text-left text-[10px] tracking-wider uppercase">
+                  <thead className="bg-muted/50 text-muted-foreground border-t text-left text-[10px] tracking-wider uppercase max-md:hidden">
                     <tr>
                       {["Provider", "Credential", "Status", "Last used", "Actions"].map((label) => (
                         <th
@@ -511,7 +512,7 @@ export function ApiKeysPage() {
                       ))}
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="max-md:block">
                     {rows.map((connection) => (
                       <ConnectionRow
                         key={connection.id}

@@ -146,8 +146,8 @@ export function RevenueInvoiceTable({
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[820px] text-xs tabular-nums">
-          <thead>
+        <table className="w-full text-xs tabular-nums max-md:block md:min-w-[820px]">
+          <thead className="max-md:hidden">
             <tr className="border-b border-slate-100 text-left text-[11px] font-semibold text-slate-500 dark:border-slate-800 dark:text-slate-400">
               <th className="py-2.5 pr-3 font-semibold">Invoice No.</th>
               <th className="px-3 py-2.5 font-semibold">Customer</th>
@@ -159,7 +159,7 @@ export function RevenueInvoiceTable({
               <th className="py-2.5 pl-3 text-right font-semibold">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="max-md:block">
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i} className="border-b border-slate-100 last:border-0 dark:border-slate-800">
@@ -183,18 +183,18 @@ export function RevenueInvoiceTable({
                 return (
                   <tr
                     key={invoice.id}
-                    className="border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50/70 dark:border-slate-800 dark:hover:bg-slate-800/40"
+                    className="border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50/70 max-md:grid max-md:grid-cols-2 max-md:gap-x-3 max-md:gap-y-1.5 max-md:py-3 dark:border-slate-800 dark:hover:bg-slate-800/40"
                   >
-                    <td className="py-3 pr-3 font-medium whitespace-nowrap text-slate-700 dark:text-slate-200">
+                    <td className="py-3 pr-3 font-medium whitespace-nowrap text-slate-700 max-md:col-span-2 max-md:p-0 max-md:whitespace-normal dark:text-slate-200">
                       {invoice.invoiceNumber}
                     </td>
-                    <td className="px-3 py-3">
-                      <div className="font-semibold whitespace-nowrap text-slate-900 dark:text-slate-100">
+                    <td className="px-3 py-3 max-md:col-span-2 max-md:p-0">
+                      <div className="font-semibold whitespace-nowrap text-slate-900 max-md:whitespace-normal dark:text-slate-100">
                         {invoice.customerName}
                       </div>
                       <div className="max-w-[180px] truncate text-[11px] text-slate-400">{invoice.customerEmail}</div>
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 max-md:p-0">
                       <span
                         className="inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold"
                         style={{ backgroundColor: `${planColor}1a`, color: planColor }}
@@ -202,25 +202,25 @@ export function RevenueInvoiceTable({
                         {invoice.planName}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-right font-semibold whitespace-nowrap text-slate-900 dark:text-slate-100">
+                    <td className="px-3 py-3 text-right font-semibold whitespace-nowrap text-slate-900 max-md:p-0 dark:text-slate-100">
                       {formatVnd(invoice.amount)}
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-slate-600 dark:text-slate-300">
+                    <td className="px-3 py-3 whitespace-nowrap text-slate-600 max-md:p-0 max-md:whitespace-normal dark:text-slate-300">
                       {invoice.paymentMethod ?? <span className="text-slate-400">—</span>}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 max-md:p-0 max-md:text-right">
                       <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${status.className}`}>
                         {status.label}
                       </span>
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">
+                    <td className="px-3 py-3 whitespace-nowrap text-slate-500 max-md:p-0 dark:text-slate-400">
                       {formatTransactionDate(invoice.paymentDate, invoice.createdAt)}
                     </td>
-                    <td className="py-3 pl-3 text-right">
+                    <td className="py-3 pl-3 text-right max-md:p-0">
                       <button
                         type="button"
                         onClick={() => setSelected(invoice)}
-                        className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:text-slate-300"
+                        className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 max-md:min-h-10 max-md:px-3 dark:border-slate-700 dark:text-slate-300"
                       >
                         <Eye className="size-3" />
                         View
@@ -242,7 +242,7 @@ export function RevenueInvoiceTable({
           <span className="font-semibold text-slate-700 dark:text-slate-200">{totalCount}</span> transactions
         </p>
         {totalPages > 1 && (
-          <nav aria-label="Transactions pages" className="flex items-center gap-1">
+          <nav aria-label="Transactions pages" className="flex flex-wrap items-center gap-1">
             <PagerButton label="Previous page" disabled={page <= 1 || isLoading} onClick={() => onPageChange(page - 1)}>
               <ChevronLeft className="size-3.5" />
             </PagerButton>
@@ -299,7 +299,7 @@ function PagerButton({
       aria-current={active ? "page" : undefined}
       disabled={disabled}
       onClick={onClick}
-      className={`inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={`inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 max-md:h-10 max-md:min-w-10 ${
         active
           ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
           : "border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-800 dark:text-slate-300"

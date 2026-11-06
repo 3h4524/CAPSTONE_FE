@@ -99,8 +99,8 @@ const AdminDashboardContent = ({
   );
 
   return (
-    <div className="h-screen overflow-hidden bg-[#f8fafc] text-slate-900">
-      <div className="flex h-screen">
+    <div className="h-dvh overflow-hidden bg-[#f8fafc] text-slate-900">
+      <div className="flex h-dvh">
         <AdminSidebar
           fullName={fullName}
           onLogout={onLogout}
@@ -110,7 +110,7 @@ const AdminDashboardContent = ({
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
         <div className="min-w-0 flex-1 overflow-hidden">
-          <div className="h-screen overflow-y-auto">
+          <div className="h-dvh overflow-y-auto">
             <AdminTopbar fullName={fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} />
             <main className="mx-auto max-w-[1600px] px-4 py-4 sm:px-[calc(1.5rem+1cm)] sm:py-5 2xl:max-w-[1720px]">
               {/* Header */}

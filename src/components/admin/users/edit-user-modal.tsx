@@ -146,7 +146,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
 
               {/* Overlay Edit Button */}
               <div
-                className="absolute inset-0 m-1.5 flex items-center justify-center rounded-full bg-black/50 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100"
+                className="absolute inset-0 m-1.5 flex items-center justify-center rounded-full bg-black/50 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100 [@media(hover:none)]:opacity-100"
                 onClick={() => setIsEditingAvatar(!isEditingAvatar)}
               >
                 <Camera className="size-6 text-white drop-shadow-md" />

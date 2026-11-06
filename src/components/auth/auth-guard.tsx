@@ -39,7 +39,7 @@ export const AuthGuard = ({ children, requireSeller = false, requireAdmin = fals
 
   if (!isHydrated) {
     return (
-      <div className="flex min-h-screen items-center justify-center" role="status" aria-label="Checking sign-in">
+      <div className="flex min-h-dvh items-center justify-center" role="status" aria-label="Checking sign-in">
         <Spinner className="size-8" />
       </div>
     );

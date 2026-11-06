@@ -16,7 +16,9 @@ export const AppHeader = ({ onMobileMenu }: AppHeaderProps) => {
         <div className="mx-auto hidden w-full max-w-lg min-w-0 flex-1 px-2 md:block">
           <GlobalSearchTrigger />
         </div>
-        <NotificationBell />
+        <div className="ml-auto md:ml-0">
+          <NotificationBell />
+        </div>
       </div>
     </header>
   );

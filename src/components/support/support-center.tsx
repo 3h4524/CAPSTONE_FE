@@ -190,14 +190,14 @@ export function SupportCenter() {
               </h2>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="border-border bg-background inline-flex self-start rounded-full border p-0.5" role="group" aria-label="Filter tickets">
+              <div className="border-border bg-background flex max-w-full flex-wrap self-start rounded-2xl border p-0.5 sm:inline-flex sm:flex-nowrap sm:rounded-full" role="group" aria-label="Filter tickets">
                 {(["all", "open", "in_progress", "resolved", "closed"] as const).map((item) => (
                   <button
                     key={item}
                     type="button"
                     aria-pressed={view === item}
                     className={cn(
-                      "min-h-8 rounded-full px-3.5 text-sm font-medium capitalize transition-colors focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none",
+                      "min-h-8 rounded-full px-3.5 text-sm font-medium whitespace-nowrap capitalize transition-colors focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none",
                       view === item
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"

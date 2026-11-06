@@ -38,7 +38,7 @@ export const AssistantBubble = () => {
       style={{
         right: anchor.right,
         bottom,
-        maxHeight: `calc(100vh - ${bottom + ASSISTANT_LAUNCHER_MARGIN_PX}px)`,
+        maxHeight: `calc(100dvh - ${bottom + ASSISTANT_LAUNCHER_MARGIN_PX}px)`,
         maxWidth: `calc(100vw - ${anchor.right + ASSISTANT_LAUNCHER_MARGIN_PX}px)`,
       }}
     >

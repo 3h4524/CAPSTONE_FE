@@ -44,7 +44,7 @@ export function PlanCompareTable({ plans, features, catalog, isAdding, onAdd, on
   return (
     <Card className="gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-0 shadow-xs">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-sm">
+        <table className="w-full min-w-[640px] border-collapse text-sm max-md:[&_th:first-child]:sticky max-md:[&_th:first-child]:left-0 max-md:[&_th:first-child]:z-1 max-md:[&_th:first-child]:w-36 max-md:[&_th:first-child]:bg-white">
           <thead className="sticky top-0 z-10 bg-white">
             <tr className="border-b border-slate-200">
               <th scope="col" className="w-[38%] px-5 py-4 text-left text-[11px] font-semibold tracking-wide text-slate-500 uppercase">

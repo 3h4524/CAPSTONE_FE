@@ -50,8 +50,8 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-[#f8fafc] text-slate-900">
-      <div className="flex h-screen">
+    <div className="h-dvh overflow-hidden bg-[#f8fafc] text-slate-900">
+      <div className="flex h-dvh">
         <AdminSidebar
           fullName={fullName}
           onLogout={onLogout}
@@ -61,7 +61,7 @@ const AdminSubscriptionPlansShell = ({ fullName, onLogout, plans, isLoading }: A
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
         <div className="min-w-0 flex-1 overflow-hidden">
-          <div className="h-screen overflow-y-auto">
+          <div className="h-dvh overflow-y-auto">
             <AdminTopbar
               fullName={fullName}
               onMenuClick={() => setIsMobileSidebarOpen(true)}

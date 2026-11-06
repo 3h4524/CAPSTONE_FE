@@ -325,8 +325,8 @@ export function UsagePage() {
           </Button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-y border-slate-200/80 bg-[#f1f5f9] text-[10px] font-bold tracking-wider text-slate-700 uppercase">
+          <table className="w-full text-left text-sm max-md:block">
+            <thead className="border-y border-slate-200/80 bg-[#f1f5f9] text-[10px] font-bold tracking-wider text-slate-700 uppercase max-md:hidden">
               <tr>
                 {["PROVIDER", "SERVICE", "REQUESTS", "ESTIMATED COST", "SHARE"].map(
                   (heading) => (
@@ -338,18 +338,19 @@ export function UsagePage() {
               </tr>
             </thead>
             {data.costs.length > 0 && (
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 max-md:block max-md:border-t max-md:border-slate-200/80">
                 {data.costs.map((row) => (
-                  <tr key={`${row.provider}-${row.service}`} className="hover:bg-slate-50/50">
-                    <td className="px-5 py-3.5 font-medium text-slate-900">{row.provider}</td>
-                    <td className="px-5 py-3.5 text-slate-600">{row.service}</td>
-                    <td className="px-5 py-3.5 text-slate-600">
+                  <tr key={`${row.provider}-${row.service}`} className="hover:bg-slate-50/50 max-md:grid max-md:grid-cols-2 max-md:gap-x-3 max-md:gap-y-1.5 max-md:px-5 max-md:py-3.5">
+                    <td className="px-5 py-3.5 font-medium text-slate-900 max-md:p-0">{row.provider}</td>
+                    <td className="px-5 py-3.5 text-slate-600 max-md:p-0 max-md:text-right">{row.service}</td>
+                    <td className="px-5 py-3.5 text-slate-600 max-md:p-0">
+                      <span className="md:hidden">Requests: </span>
                       {row.requests.toLocaleString()}
                     </td>
-                    <td className="px-5 py-3.5 text-slate-900">
+                    <td className="px-5 py-3.5 text-slate-900 max-md:p-0 max-md:text-right">
                       {money.format(row.estimatedCostUsd)}
                     </td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-5 py-3.5 max-md:col-span-2 max-md:p-0">
                       <div className="flex items-center gap-2">
                         <Progress value={row.sharePercent} className="h-1.5 w-20" />
                         <span className="text-xs text-slate-600">{row.sharePercent}%</span>

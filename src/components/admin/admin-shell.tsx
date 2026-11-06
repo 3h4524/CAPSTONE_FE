@@ -38,8 +38,8 @@ export const AdminShell = ({ children, pageTitle }: AdminShellProps) => {
   const handleLogout = () => logout(undefined, { onSettled: () => router.replace("/login") });
 
   return (
-    <div className="h-screen overflow-hidden bg-[#f8fafc] text-slate-900">
-      <div className="flex h-screen">
+    <div className="h-dvh overflow-hidden bg-[#f8fafc] text-slate-900">
+      <div className="flex h-dvh">
         <AdminSidebar
           fullName={user.fullName}
           email={user.email}
@@ -50,7 +50,7 @@ export const AdminShell = ({ children, pageTitle }: AdminShellProps) => {
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
         <div className="min-w-0 flex-1 overflow-hidden">
-          <div className="h-screen overflow-y-auto">
+          <div className="h-dvh overflow-y-auto">
             <AdminTopbar fullName={user.fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} pageTitle={pageTitle} />
             <main className="mx-auto max-w-[1600px] px-4 py-4 sm:px-[calc(1.5rem+1cm)] sm:py-5 2xl:max-w-[1720px]">
               {children}

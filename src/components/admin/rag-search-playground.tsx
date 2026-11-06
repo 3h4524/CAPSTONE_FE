@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 
-import { searchRagWithDiagnostics, type RagSearchDiagnostics, type RagSearchRequest } from "@/api/rag";
+import { type RagSearchDiagnostics, type RagSearchRequest, searchRagWithDiagnostics } from "@/api/rag";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

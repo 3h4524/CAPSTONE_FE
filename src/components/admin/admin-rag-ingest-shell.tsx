@@ -6,9 +6,9 @@ import { ArrowRight, CheckCircle2, ChevronDown, FileText, Info, Loader2, RotateC
 import { ingestRagDocument, type RagIngestRequest } from "@/api/rag";
 import { AdminMarketResearchPanel } from "@/components/admin/admin-market-research-panel";
 import { AdminRagDocumentsPanel } from "@/components/admin/admin-rag-documents-panel";
-import { RagSearchPlayground } from "@/components/admin/rag-search-playground";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
+import { RagSearchPlayground } from "@/components/admin/rag-search-playground";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

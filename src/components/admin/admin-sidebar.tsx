@@ -9,11 +9,13 @@ import {
   Database,
   FlaskConical,
   Headphones,
+  ImageIcon,
   LayoutDashboard,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
   User,
+  UserRound,
   Users,
 } from "lucide-react";
 
@@ -45,11 +47,13 @@ const primaryNavigation = [
   { label: "RAG Evaluation", href: "/admin/rag-evaluation", icon: FlaskConical },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Subscriptions", href: "/admin/subscription-plans", icon: CreditCard },
+  { label: "Model Photos", href: "/admin/model-photos", icon: UserRound },
 ];
 
 const analyticsNavigation = [
   { label: "Revenue & Reports", href: "/admin/revenue", icon: BarChart3 },
   { label: "System Statistics", href: "/admin/analytics", icon: Activity },
+  { label: "Image Quality", href: "/admin/image-quality", icon: ImageIcon },
 ];
 
 const systemNavigation = [

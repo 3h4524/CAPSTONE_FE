@@ -430,7 +430,7 @@ const ResearchHistory = ({
                 side="top"
                 align="start"
                 sideOffset={8}
-                className="w-fit min-w-64 max-w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-slate-700 bg-slate-950 p-3 text-white shadow-xl"
+                className="w-fit max-w-[min(28rem,calc(100vw-2rem))] min-w-64 rounded-xl border border-slate-700 bg-slate-950 p-3 text-white shadow-xl"
               >
                 <p className="text-[10px] font-semibold tracking-[0.14em] text-indigo-300 uppercase">
                   Niches researched ({entry.queries.length})
@@ -439,7 +439,7 @@ const ResearchHistory = ({
                   {entry.queries.map((query) => (
                     <span
                       key={query}
-                      className="max-w-full rounded-full border border-slate-700 bg-slate-800 px-2.5 py-1 text-[11px] leading-4 text-slate-100 break-words"
+                      className="max-w-full rounded-full border border-slate-700 bg-slate-800 px-2.5 py-1 text-[11px] leading-4 break-words text-slate-100"
                     >
                       {query}
                     </span>

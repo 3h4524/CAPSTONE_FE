@@ -4,14 +4,14 @@ import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
+  ChevronDown,
   CircleHelp,
   Clock3,
   Database,
-  ChevronDown,
   FlaskConical,
   Gauge,
-  Plus,
   Play,
+  Plus,
   Search,
   ShieldCheck,
   Target,
@@ -32,17 +32,17 @@ import {
   YAxis,
 } from "recharts";
 
-import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { AdminTopbar } from "@/components/admin/admin-topbar";
-import { RagCorpusHealthPanel } from "@/components/admin/rag-corpus-health-panel";
 import {
   evaluateListingRetrieval,
   evaluateRag,
   type ListingRetrievalEvaluationResponse,
   type RagEvaluationTypeMetrics,
-  type RagSearchDiagnostics,
   type RagSearchDiagnosticResult,
+  type RagSearchDiagnostics,
 } from "@/api/rag";
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { AdminTopbar } from "@/components/admin/admin-topbar";
+import { RagCorpusHealthPanel } from "@/components/admin/rag-corpus-health-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -440,7 +440,7 @@ const RagEvaluationDashboard = ({
                         <p className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
                           Production query
                         </p>
-                        <p className="mt-2 whitespace-pre-wrap rounded-lg border border-emerald-100 bg-white p-3 text-xs leading-5 text-slate-600">
+                        <p className="mt-2 rounded-lg border border-emerald-100 bg-white p-3 text-xs leading-5 whitespace-pre-wrap text-slate-600">
                           {listingTrace.productionQuery}
                         </p>
                       </div>
@@ -667,7 +667,7 @@ const RagEvaluationDashboard = ({
                     <tbody>
                       {selectedRun.typeMetrics.map((metric) => (
                         <tr key={metric.contentType} className="border-t border-slate-100">
-                          <td className="px-5 py-3 font-semibold capitalize text-slate-800">
+                          <td className="px-5 py-3 font-semibold text-slate-800 capitalize">
                             {metric.contentType}
                           </td>
                           <td className="px-3 py-3 text-slate-500">{metric.caseCount}</td>
@@ -1140,7 +1140,7 @@ const RetrievedResultCard = ({
     <p className="mt-0.5 truncate text-[10px] text-slate-400" title={`${diagnostic.result.sourceId ?? "n/a"} / ${diagnostic.result.chunkId}`}>
       source {diagnostic.result.sourceId ?? "n/a"} · chunk {diagnostic.result.chunkId}
     </p>
-    <p className={`mt-3 whitespace-pre-wrap text-xs leading-5 text-slate-600 ${isLong && !isExpanded ? "line-clamp-4" : ""}`}>
+    <p className={`mt-3 text-xs leading-5 whitespace-pre-wrap text-slate-600 ${isLong && !isExpanded ? "line-clamp-4" : ""}`}>
       {diagnostic.result.content}
     </p>
     {isLong && (

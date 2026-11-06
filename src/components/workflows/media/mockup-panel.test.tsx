@@ -20,9 +20,10 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/components/workflows/media/lifestyle-mockup-form", () => ({ LifestyleMockupForm: () => null }));
+vi.mock("@/components/workflows/media/lifestyle-mockup-form", () => ({ LifestyleMockupForm: () => null, lifestyleGarmentsOf: () => [] }));
 vi.mock("@/components/workflows/media/mockup-card", () => ({ MockupCard: () => null }));
 vi.mock("@/components/workflows/media/mockup-upload-form", () => ({ MockupUploadForm: () => null }));
+vi.mock("@/components/workflows/media/model-photo-mockup-form", () => ({ ModelPhotoMockupForm: () => null }));
 vi.mock("@/helpers/confirm-ai-shot", () => ({ confirmAiShot: mocks.confirmAiShot }));
 vi.mock("@/helpers/error-message", () => ({ getErrorMessage: () => "Request failed" }));
 vi.mock("@/helpers/toast", () => ({ showToast: mocks.showToast }));

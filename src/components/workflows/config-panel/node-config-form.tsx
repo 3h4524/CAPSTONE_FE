@@ -27,6 +27,7 @@ import { NodeConfigField } from "@/components/workflows/config-panel/node-config
 import { OwnPromptNotice } from "@/components/workflows/config-panel/own-prompt-notice";
 import { PromptRecipe } from "@/components/workflows/config-panel/prompt-recipe";
 import { MockupPanel } from "@/components/workflows/media/mockup-panel";
+import { ModelPhotoSection } from "@/components/workflows/media/model-photo-section";
 import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
 import { StoryboardPanel } from "@/components/workflows/media/storyboard-panel";
 import { VideoReviewPanel } from "@/components/workflows/media/video-review-panel";
@@ -233,6 +234,14 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
             to="apply-mockup"
             automatic={node.data.config.mode === "auto"}
           />
+        )}
+        {node.data.type === "apply-mockup" && !hasVideo && (
+          <PanelSection
+            title="Model photos"
+            description="Put this product's mock-ups on a photo of a person in a plain, light tee, without AI."
+          >
+            <ModelPhotoSection />
+          </PanelSection>
         )}
         {node.data.type === "apply-mockup" && hasVideo && (
           <PanelSection

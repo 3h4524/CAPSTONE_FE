@@ -801,7 +801,8 @@ function NicheConclusionCard({ insight: source }: { insight: SellerNicheMarketIn
           label={t("marketRadar.tileListPrice", { defaultValue: "Typical list price" })}
           value={signals.priceP25 == null || signals.priceP75 == null ? "—" : `${formatMoney(signals.priceP25)}–${formatMoney(signals.priceP75)}`}
           badge={signals.medianPrice == null ? undefined : t("marketRadar.medianBadge", { defaultValue: "Median {{value}}", value: formatMoney(signals.medianPrice) })}
-          caption={signals.priceCurrency ? t("marketRadar.tileListPriceCaptionCurrency", { defaultValue: "Middle half of top listing list prices, {{currency}}, before discounts", currency: signals.priceCurrency }) : t("marketRadar.tileListPriceCaption", { defaultValue: "Middle half of top listing list prices, before discounts" })}
+          caption={signals.priceCurrency ? t("marketRadar.tileListPricePositionCaptionCurrency", { defaultValue: "Where top listings set their list price ({{currency}}, middle half). Compare your own list price with it.", currency: signals.priceCurrency }) : t("marketRadar.tileListPricePositionCaption", { defaultValue: "Where top listings set their list price (middle half). Compare your own list price with it." })}
+          note={t("marketRadar.priceSaleWarning", { defaultValue: "Many shops run sales all the time; buyers may pay much less than the list price." })}
           progress={signals.personalizedSharePercent}
           chart={signals.points.length > 0 ? <PriceHistogram points={signals.points} p25={signals.priceP25} p75={signals.priceP75} /> : undefined}
           footerLeft={t("marketRadar.personalized", { defaultValue: "Personalized" })}
@@ -952,6 +953,7 @@ function MetricTile({
   footerRight,
   footerTone,
   chart,
+  note,
 }: {
   label: string;
   value: string;
@@ -963,6 +965,8 @@ function MetricTile({
   footerLeft: string;
   footerRight: string;
   footerTone?: "up";
+  /** A caution shown under the tile, for a figure that is easy to misread. */
+  note?: string;
 }) {
   const badgeClass = badgeTone === "up" ? "text-emerald-700" : badgeTone === "down" ? "text-rose-700" : "text-slate-500";
   return (
@@ -984,6 +988,12 @@ function MetricTile({
         <span className="truncate text-slate-500">{footerLeft}</span>
         <span className={`shrink-0 font-bold ${footerTone === "up" ? "text-emerald-700" : "text-blue-700"}`}>{footerRight}</span>
       </div>
+      {note && (
+        <p className="flex items-start gap-1.5 border-t border-slate-200 pt-2 text-[11px] leading-4 text-amber-700">
+          <TriangleAlert className="mt-px size-3 shrink-0" aria-hidden="true" />
+          <span>{note}</span>
+        </p>
+      )}
     </div>
   );
 }
@@ -1361,21 +1371,154 @@ function SnapshotMetric({ label, value, detail }: { label: string; value: string
   );
 }
 
+type CompareRow = {
+  key: string;
+  label: string;
+  hint: string;
+  value: (item: SellerOpportunity) => string;
+  detail?: (item: SellerOpportunity) => string | null;
+  /** A comparable number; the highest (or lowest, see lowerIsBetter) wins the row. Null when the item has no figure. */
+  score?: (item: SellerOpportunity) => number | null;
+  lowerIsBetter?: boolean;
+};
+
+const competitionRank: Record<string, number | null> = { low: 3, medium: 2, high: 1, unknown: null };
+
+/** Share of the shops at the top that already gain traction; lower leaves more room for a new shop. */
+function strongShopShare(item: SellerOpportunity) {
+  const niche = item.nicheMarket;
+  return niche && niche.sellerCount > 0 ? niche.strongSellerCount / niche.sellerCount : null;
+}
+
+function itemCurrency(item: SellerOpportunity) {
+  return item.insights.evidence.find((evidence) => evidence.currency)?.currency ?? null;
+}
+
+/** The ids that win a row, or none when fewer than two items have a figure or they all tie. */
+function rowWinners(row: CompareRow, items: SellerOpportunity[]) {
+  if (!row.score) return new Set<string>();
+  const scored = items
+    .map((item) => ({ id: item.id, value: row.score!(item) }))
+    .filter((entry): entry is { id: string; value: number } => entry.value != null && Number.isFinite(entry.value));
+  if (scored.length < 2) return new Set<string>();
+  const best = row.lowerIsBetter ? Math.min(...scored.map((entry) => entry.value)) : Math.max(...scored.map((entry) => entry.value));
+  const winners = scored.filter((entry) => entry.value === best);
+  return winners.length === scored.length ? new Set<string>() : new Set(winners.map((entry) => entry.id));
+}
+
 function ComparePanel({ items, onRemove }: { items: SellerOpportunity[]; onRemove: (id: string) => void }) {
   const { t } = useTranslation("common");
-  const bestOverall = [...items].sort((a, b) => b.finalScore - a.finalScore)[0];
-  const bestFit = [...items].sort((a, b) => b.sellerFitScore - a.sellerFitScore)[0];
-  const lowestRisk = [...items].sort((a, b) => compareRisk(b) - compareRisk(a))[0];
-  const marketLeader = [...items].sort((a, b) => b.marketOpportunityScore - a.marketOpportunityScore)[0];
-  const rows = [
-    [t("marketRadar.fitScore"), (item: SellerOpportunity) => `${Math.round(item.finalScore)}/100`],
-    [t("marketRadar.market"), (item: SellerOpportunity) => `${Math.round(item.marketOpportunityScore)}/100`],
-    [t("marketRadar.sellerFit"), (item: SellerOpportunity) => `${Math.round(item.sellerFitScore)}/100`],
-    [t("marketRadar.engagement"), (item: SellerOpportunity) => item.insights.engagementRate == null ? "—" : `${item.insights.engagementRate.toFixed(2)}%`],
-    [t("marketRadar.competition"), (item: SellerOpportunity) => item.insights.competitionLevel],
-    [t("marketRadar.typicalPrice"), (item: SellerOpportunity) => item.insights.medianPrice == null ? "—" : `${item.insights.medianPrice.toFixed(0)} ${item.insights.evidence.find((evidence) => evidence.currency)?.currency ?? ""}`.trim()],
-    [t("marketRadar.confidence"), (item: SellerOpportunity) => item.insights.confidenceLabel],
-  ] as const;
+  const level = (value: string | undefined) =>
+    value ? t(`marketRadar.level.${value}`, { defaultValue: value.charAt(0).toUpperCase() + value.slice(1) }) : "—";
+  const currencies = new Set(items.map(itemCurrency).filter(Boolean));
+  const mixedCurrencies = currencies.size > 1;
+
+  const rows: CompareRow[] = [
+    {
+      key: "overall",
+      label: t("marketRadar.compareOverall", { defaultValue: "Overall score" }),
+      hint: t("marketRadar.compareOverallHint", { defaultValue: "60% listing heat, 40% fit with your shop" }),
+      value: (item) => `${Math.round(item.finalScore)}/100`,
+      score: (item) => Math.round(item.finalScore),
+    },
+    {
+      key: "heat",
+      label: t("marketRadar.compareHeat", { defaultValue: "Listing heat" }),
+      hint: t("marketRadar.compareHeatHint", { defaultValue: "How fast this listing gains favorites and views" }),
+      value: (item) => `${Math.round(item.marketOpportunityScore)}/100`,
+      score: (item) => Math.round(item.marketOpportunityScore),
+    },
+    {
+      key: "fit",
+      label: t("marketRadar.compareFit", { defaultValue: "Fit with your shop" }),
+      hint: t("marketRadar.compareFitHint", { defaultValue: "Category, keywords and price against your profile" }),
+      value: (item) => `${Math.round(item.sellerFitScore)}/100`,
+      detail: (item) => {
+        const b = item.fitBreakdown;
+        return b.categoryFit == null ? null : t("marketRadar.compareFitDetail", {
+          defaultValue: "Category {{category}} · Keywords {{keywords}} · Price {{price}}",
+          category: Math.round(b.categoryFit), keywords: Math.round(b.keywordFit ?? 0), price: Math.round(b.priceFit ?? 0),
+        });
+      },
+      score: (item) => Math.round(item.sellerFitScore),
+    },
+    {
+      key: "competition",
+      label: t("marketRadar.competition", { defaultValue: "Competition" }),
+      hint: t("marketRadar.compareCompetitionHint", { defaultValue: "Size of the niche on Etsy against the other tracked niches" }),
+      value: (item) => level(item.nicheMarket?.competitionLevel),
+      detail: (item) => item.nicheMarket?.activeListingCount == null ? null : t("marketRadar.compareActiveListings", {
+        defaultValue: "{{count}} active listings", count: compactNumber(item.nicheMarket.activeListingCount),
+      }),
+      score: (item) => competitionRank[item.nicheMarket?.competitionLevel ?? "unknown"] ?? null,
+    },
+    {
+      key: "strong",
+      label: t("marketRadar.compareStrongShops", { defaultValue: "Strong shops at the top" }),
+      hint: t("marketRadar.compareStrongShopsHint", { defaultValue: "Shops at the top already gaining 3+ favorites a month; fewer is easier to enter" }),
+      value: (item) => item.nicheMarket && item.nicheMarket.sellerCount > 0
+        ? `${item.nicheMarket.strongSellerCount} / ${item.nicheMarket.sellerCount}`
+        : "—",
+      detail: (item) => {
+        const share = strongShopShare(item);
+        return share == null ? null : `${Math.round(share * 100)}%`;
+      },
+      score: strongShopShare,
+      lowerIsBetter: true,
+    },
+    {
+      key: "demand",
+      label: t("marketRadar.compareDemand", { defaultValue: "Buyer demand" }),
+      hint: t("marketRadar.compareDemandHint", { defaultValue: "Median favorites per 30 days of the niche's top listings" }),
+      value: (item) => item.nicheMarket?.medianFavoritesPer30Days == null
+        ? "—"
+        : t("marketRadar.compareFavoritesValue", { defaultValue: "{{value}} fav / 30 days", value: item.nicheMarket.medianFavoritesPer30Days.toFixed(1) }),
+      detail: (item) => item.nicheMarket ? level(item.nicheMarket.demandProxy) : null,
+      score: (item) => item.nicheMarket?.medianFavoritesPer30Days ?? null,
+    },
+    {
+      key: "rising",
+      label: t("marketRadar.compareRising", { defaultValue: "New listings gaining traction" }),
+      hint: t("marketRadar.compareRisingHint", { defaultValue: "Listings under 90 days old already gaining favorites: proof newcomers can sell" }),
+      value: (item) => item.nicheMarket ? String(item.nicheMarket.risingNewListingCount) : "—",
+      score: (item) => item.nicheMarket?.risingNewListingCount ?? null,
+    },
+    {
+      key: "price",
+      label: t("marketRadar.typicalPrice", { defaultValue: "Typical price" }),
+      hint: mixedCurrencies
+        ? t("marketRadar.compareMixedCurrency", { defaultValue: "List prices in different currencies are not compared" })
+        : t("marketRadar.compareListPrice", { defaultValue: "List price before discounts" }),
+      value: (item) => item.insights.medianPrice == null ? "—" : `${formatMoney(item.insights.medianPrice)} ${itemCurrency(item) ?? ""}`.trim(),
+    },
+    {
+      key: "evidence",
+      label: t("marketRadar.compareEvidence", { defaultValue: "Evidence" }),
+      hint: t("marketRadar.compareEvidenceHint", { defaultValue: "Listings and days of data behind the niche figures" }),
+      value: (item) => {
+        const listings = item.fitBreakdown.distinctListingCount;
+        const days = item.fitBreakdown.observationPeriodCount;
+        return listings == null ? "—" : t("marketRadar.compareEvidenceValue", {
+          defaultValue: "{{listings}} listings · {{days}} day(s)", listings: Math.round(listings), days: Math.round(days ?? 0),
+        });
+      },
+    },
+  ];
+  const winners = Object.fromEntries(rows.map((row) => [row.key, rowWinners(row, items)]));
+  const winCount = (item: SellerOpportunity) => rows.filter((row) => winners[row.key].has(item.id)).length;
+  const contested = rows.filter((row) => row.score).length;
+
+  const leader = (key: string) => {
+    const set = winners[key];
+    return items.find((item) => set.has(item.id)) ?? null;
+  };
+  const verdicts = [
+    { key: "overall", label: t("marketRadar.compareBestOverall", { defaultValue: "Test first" }), tone: "blue" as const },
+    { key: "strong", label: t("marketRadar.compareEasiest", { defaultValue: "Easiest niche to enter" }), tone: "green" as const },
+    { key: "demand", label: t("marketRadar.compareStrongestDemand", { defaultValue: "Strongest buyer demand" }), tone: "amber" as const },
+  ].map((verdict) => ({ ...verdict, item: leader(verdict.key), row: rows.find((row) => row.key === verdict.key)! }));
+  const decided = verdicts.filter((verdict) => verdict.item);
+  const sweep = decided.length === verdicts.length && decided.every((verdict) => verdict.item!.id === decided[0].item!.id);
 
   return (
     <Card className="gap-0 overflow-hidden border-slate-200 bg-white py-0 shadow-sm">
@@ -1383,47 +1526,95 @@ function ComparePanel({ items, onRemove }: { items: SellerOpportunity[]; onRemov
         <div className="flex items-center gap-2"><GitCompareArrows className="size-4 text-blue-600" /><div><h2 className="font-semibold text-slate-900">{t("marketRadar.compareTitle")}</h2><p className="text-xs text-slate-500">{t("marketRadar.compareDescription")}</p></div></div>
         <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700">{items.length}/3</span>
       </div>
-      <div className="grid gap-3 border-b border-slate-100 bg-slate-50/70 p-4 lg:grid-cols-3">
-        <CompareInsight
-          label={t("marketRadar.recommendedPick", { defaultValue: "Recommended first test" })}
-          title={bestOverall.title}
-          detail={`${Math.round(bestOverall.finalScore)}/100 fit score · ${bestOverall.insights.evidenceQuality} evidence`}
-          tone="blue"
-        />
-        <CompareInsight
-          label={t("marketRadar.bestSellerFit", { defaultValue: "Best seller fit" })}
-          title={bestFit.title}
-          detail={`${Math.round(bestFit.sellerFitScore)}/100 seller fit · ${bestFit.category ?? t("marketRadar.categoryUnknown", { defaultValue: "category not set" })}`}
-          tone="green"
-        />
-        <CompareInsight
-          label={t("marketRadar.lowestRisk", { defaultValue: "Lowest validation risk" })}
-          title={lowestRisk.title}
-          detail={`${lowestRisk.insights.confidenceLabel} confidence · ${lowestRisk.insights.competitionLevel} competition`}
-          tone="amber"
-        />
-        {marketLeader.id !== bestOverall.id && (
-          <p className="text-xs leading-5 text-slate-500 lg:col-span-3">
-            {t("marketRadar.compareTradeoff", { defaultValue: "Trade-off" })}: <span className="font-medium text-slate-700">{marketLeader.title}</span> has the strongest market score ({Math.round(marketLeader.marketOpportunityScore)}), but <span className="font-medium text-slate-700">{bestOverall.title}</span> is the better first test for this seller profile.
-          </p>
-        )}
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[38rem] text-left text-sm">
-          <thead className="bg-slate-50 text-xs text-slate-500">
-            <tr>
-              <th className="w-32 px-5 py-3 font-medium">{t("marketRadar.signal")}</th>
-              {items.map((item) => <th key={item.id} className="min-w-44 px-4 py-3 font-medium"><div className="flex items-start justify-between gap-2"><span className="truncate text-slate-800" title={item.title}>{item.title}</span><button type="button" aria-label={`Remove ${item.title} from comparison`} className="shrink-0 text-slate-400 hover:text-slate-700" onClick={() => onRemove(item.id)}><X className="size-3.5" /></button></div></th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(([label, value]) => <tr key={label} className="border-t border-slate-100"><th className="px-5 py-2.5 text-xs font-medium text-slate-500">{label}</th>{items.map((item) => <td key={item.id} className="px-4 py-2.5 font-semibold text-slate-800 capitalize">{value(item)}</td>)}</tr>)}
-          </tbody>
-        </table>
-      </div>
+
+      {items.length > 1 && (
+        <div className="border-b border-slate-100 bg-slate-50/70 p-4">
+          {sweep ? (
+            <CompareInsight
+              label={t("marketRadar.compareSweep", { defaultValue: "Clear winner" })}
+              title={decided[0].item!.title}
+              detail={t("marketRadar.compareSweepDetail", { defaultValue: "Leads on overall score, room for new shops and buyer demand. Test it first." })}
+              tone="blue"
+            />
+          ) : decided.length === 0 ? (
+            <p className="text-xs text-slate-500">{t("marketRadar.compareNoVerdict", { defaultValue: "These opportunities are too close to call on score, competition and demand." })}</p>
+          ) : (
+            <div className="grid gap-3 lg:grid-cols-3">
+              {verdicts.map((verdict) => (
+                <CompareInsight
+                  key={verdict.key}
+                  label={verdict.label}
+                  title={verdict.item?.title ?? t("marketRadar.compareTie", { defaultValue: "No clear leader" })}
+                  detail={verdict.item ? `${verdict.row.label}: ${verdict.row.value(verdict.item)}` : t("marketRadar.compareTieDetail", { defaultValue: "Tied, or not enough niche data" })}
+                  tone={verdict.tone}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <TooltipProvider delayDuration={200}>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[40rem] table-fixed text-left text-sm">
+            <colgroup>
+              <col className="w-48" />
+              {items.map((item) => <col key={item.id} />)}
+            </colgroup>
+            <thead className="bg-slate-50 text-xs text-slate-500">
+              <tr>
+                <th className="px-5 py-3 align-top font-medium">{t("marketRadar.signal")}</th>
+                {items.map((item) => (
+                  <th key={item.id} className="px-4 py-3 align-top font-medium">
+                    <div className="flex min-w-0 items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="truncate text-sm font-semibold text-slate-800">{item.title}</p>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-sm">{item.title}</TooltipContent>
+                        </Tooltip>
+                        <p className="mt-0.5 truncate text-[11px] font-normal text-slate-500">
+                          {item.niche}
+                          {items.length > 1 && contested > 0 && ` · ${t("marketRadar.compareWins", { defaultValue: "best on {{count}} of {{total}}", count: winCount(item), total: contested })}`}
+                        </p>
+                      </div>
+                      <button type="button" aria-label={t("marketRadar.compareRemove", { defaultValue: "Remove {{title}} from comparison", title: item.title })} className="shrink-0 text-slate-400 hover:text-slate-700" onClick={() => onRemove(item.id)}><X className="size-3.5" /></button>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.key} className="border-t border-slate-100">
+                  <th className="px-5 py-2.5 align-top text-xs font-medium text-slate-600">
+                    {row.label}
+                    <p className="mt-0.5 text-[10px] leading-4 font-normal text-slate-400">{row.hint}</p>
+                  </th>
+                  {items.map((item) => {
+                    const isBest = winners[row.key].has(item.id);
+                    const detail = row.detail?.(item);
+                    return (
+                      <td key={item.id} className={`px-4 py-2.5 align-top ${isBest ? "bg-emerald-50/60" : ""}`}>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <span className={`truncate font-semibold tabular-nums ${isBest ? "text-emerald-700" : "text-slate-800"}`}>{row.value(item)}</span>
+                          {isBest && <Check className="size-3.5 shrink-0 text-emerald-600" aria-label={t("marketRadar.compareBest", { defaultValue: "Best" })} />}
+                        </div>
+                        {detail && <p className="mt-0.5 truncate text-[11px] text-slate-500" title={detail}>{detail}</p>}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </TooltipProvider>
     </Card>
   );
 }
+
 
 function CompareInsight({
   label,
@@ -1448,13 +1639,6 @@ function CompareInsight({
       <p className="mt-1 text-xs text-slate-600">{detail}</p>
     </div>
   );
-}
-
-function compareRisk(item: SellerOpportunity) {
-  const evidence = { supported: 3, early: 2, insufficient: 1 }[item.insights.evidenceQuality] ?? 0;
-  const confidence = { high: 3, medium: 2, low: 1 }[item.insights.confidenceLabel] ?? 0;
-  const competition = { low: 3, medium: 2, high: 1, unknown: 0 }[item.insights.competitionLevel] ?? 0;
-  return evidence * 3 + confidence * 2 + competition;
 }
 
 function CompactProfileSummary({ profile }: { profile: SellerResearchProfileInput }) {
@@ -1552,6 +1736,22 @@ function OpportunityActions({ item, busy, analysis, analyzing, onAnalyze, onStat
   );
 }
 
+/** A title cut to a fixed number of lines with an ellipsis; the full text shows in a tooltip on hover or focus. */
+function ClampedTitle({ as: Tag, title, lines, className }: { as: "h3" | "p"; title: string; lines: 1 | 2; className: string }) {
+  return (
+    <TooltipProvider delayDuration={300}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Tag tabIndex={0} className={`${className} ${lines === 1 ? "truncate" : "line-clamp-2"} cursor-default break-words outline-none focus-visible:ring-2 focus-visible:ring-blue-200`}>
+            {title}
+          </Tag>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-md text-sm leading-5">{title}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 function OpportunityCard({ item, featured, ...actions }: CardActions & { item: SellerOpportunity; featured: boolean }) {
   const { t } = useTranslation("common");
   return (
@@ -1560,7 +1760,7 @@ function OpportunityCard({ item, featured, ...actions }: CardActions & { item: S
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <OpportunityMeta item={item} featured={featured} />
-            <h3 className={"mt-2 leading-snug font-semibold text-slate-900 " + (featured ? "text-xl" : "text-lg")}>{item.title}</h3>
+            <ClampedTitle as="h3" title={item.title} lines={2} className={"mt-2 leading-snug font-semibold text-slate-900 " + (featured ? "text-xl" : "text-lg")} />
             <p className="mt-0.5 text-sm text-slate-500 capitalize">{item.category ?? item.niche}</p>
           </div>
           <ScoreRing item={item} />
@@ -1794,7 +1994,7 @@ function OpportunityRow({ item, ...actions }: CardActions & { item: SellerOpport
       <div className="grid gap-3 border-b border-slate-100 px-4 py-3 last:border-b-0 hover:bg-slate-50/60 md:grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,16rem)_auto] md:items-center md:gap-5">
         <div className="min-w-0">
           <OpportunityMeta item={item} />
-          <p className="mt-1 truncate font-semibold text-slate-900" title={item.title}>{item.title}</p>
+          <ClampedTitle as="p" title={item.title} lines={1} className="mt-1 font-semibold text-slate-900" />
           <p className="truncate text-xs text-slate-500"><span className="capitalize">{item.category ?? item.niche}</span>{item.fitExplanation ? ` · ${item.fitExplanation}` : ` · ${t("marketRadar.rankedContext")}`}</p>
         </div>
         <FitScoreTooltip item={item}>

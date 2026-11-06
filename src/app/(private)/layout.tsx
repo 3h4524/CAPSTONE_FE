@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { AuthGuard } from "@/components/auth/auth-guard";
+import { AssistantRoot } from "@/components/commons/assistant/assistant-root";
 import { AppShell } from "@/components/commons/layout/app-shell/app-shell";
 import { AuthProvider } from "@/providers/global/auth-provider";
 
@@ -13,6 +14,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     <AuthProvider>
       <AuthGuard>
         <AppShell>{children}</AppShell>
+        <AssistantRoot />
       </AuthGuard>
     </AuthProvider>
   );

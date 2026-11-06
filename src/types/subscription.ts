@@ -11,12 +11,27 @@ export type CurrentSubscription = {
   // Set when a downgrade is scheduled; null when nothing is scheduled.
   scheduledPlanName: string | null;
   scheduledPlanEffectiveDate: string | null;
+  // The free Pro trial has no invoice and ends on trialEndsAt, returning the Seller to Free.
+  isTrial: boolean;
+  trialEndsAt: string | null;
+  // Nothing charges a renewal by itself: the Seller pays each cycle with Renew now, open from a
+  // week before renewalDate. From renewalDate the status is "past_due" and the plan keeps working
+  // until lastGraceDay, then the Seller is back on Free.
+  canRenew: boolean;
+  lastGraceDay: string | null;
+  // The next cycle's plan (a scheduled downgrade, or the current plan) and its price.
+  renewalPlanName: string | null;
+  renewalPrice: number | null;
+  // price and renewalPrice (stored in USD) in whole đồng, as PayOS charges them.
+  priceVnd: number;
+  renewalPriceVnd: number | null;
 };
 
 export type UsageQuota = {
   quotaCode: string;
   label: string;
   used: number;
+  // 0 means no limit: plans differ by feature, not by monthly quota.
   limit: number;
   unit: string;
   percentUsed: number;
@@ -47,7 +62,12 @@ export type AvailablePlan = {
   monthlyPriceUsd: number;
   // Null means this plan has no annual option — the Annual billing choice must not be offered.
   annualPriceUsd: number | null;
+  // The same prices in whole đồng, as PayOS charges them.
+  monthlyPriceVnd: number;
+  annualPriceVnd: number | null;
   isCurrentPlan: boolean;
+  // The plan an Admin marked Recommended; at most one is.
+  isRecommended?: boolean;
   features: PlanFeatureFlag[];
   quotas: PlanQuotas;
 };
@@ -59,6 +79,8 @@ export type RecentInvoice = {
   planName: string;
   totalAmount: number;
   status: string;
+  // totalAmount (USD) in whole đồng.
+  totalAmountVnd: number;
 };
 
 export type SubscriptionOverview = {
@@ -67,6 +89,42 @@ export type SubscriptionOverview = {
   availablePlans: AvailablePlan[];
   recentInvoices: RecentInvoice[];
   hasActivePaidPlan: boolean;
+  // True when the Seller has no paid plan and never started a trial.
+  trialEligible: boolean;
+  trialDays: number;
+  // The plan the free trial gives and what it includes, as an Admin set them.
+  trialPlanName?: string | null;
+  trialAllowances?: { code: string; label: string; limit: number }[] | null;
+};
+
+export type TrialResult = {
+  subscriptionId: string;
+  planName: string;
+  trialEndsAt: string;
+};
+
+export type EntitlementFeature = {
+  code: string;
+  label: string;
+  kind: "flag" | "limit";
+  group: string;
+  isEnabled: boolean;
+  // For a limit: its value, or null for no limit.
+  limitValue: number | null;
+};
+
+// What the Seller's current plan allows. hasPlan is false on Free: browse, but run nothing.
+export type Entitlements = {
+  hasPlan: boolean;
+  planName: string | null;
+  tier: string | null;
+  isTrial: boolean;
+  trialEndsAt: string | null;
+  // -1 means no limit.
+  maxBatchSize: number;
+  maxConcurrentJobs: number;
+  prioritySupport: boolean;
+  features: EntitlementFeature[];
 };
 
 export type BillingCycle = "monthly" | "annual";
@@ -103,6 +161,10 @@ export type UpgradeResult = {
   qrCode: string | null;
   checkoutUrl: string | null;
   amountVnd: number | null;
+  // dueTodayUsd, proratedCreditUsd and monthlyRate in whole đồng.
+  dueTodayVnd: number;
+  proratedCreditVnd: number;
+  monthlyRateVnd: number;
 };
 
 // The result of downgrading a subscription — scheduled only, current plan is untouched.

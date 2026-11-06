@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { createWorkflowNode } from "@/helpers/workflow-graph";
 import { useWorkflowStore } from "@/stores/workflow";
 import {
   buildWorkflowDefinition,
@@ -332,6 +333,35 @@ describe("addNode", () => {
 
     expect(state.nodes[0]?.selected).toBe(false);
     expect(state.selectedNodeIds).toEqual(["node-9"]);
+  });
+});
+
+describe("unique node names", () => {
+  beforeEach(() => {
+    useWorkflowStore.setState(initialState, true);
+  });
+
+  const designNode = () => createWorkflowNode("design-image", { x: 0, y: 0 });
+
+  it("numbers a new node whose name is already on the canvas", () => {
+    seedGraph([], []);
+
+    useWorkflowStore.getState().addNode(designNode());
+    useWorkflowStore.getState().addNode(designNode());
+    useWorkflowStore.getState().addNode(designNode());
+
+    expect(useWorkflowStore.getState().nodes.map((item) => item.data.label)).toEqual(["Design image", "Design image 1", "Design image 2"]);
+  });
+
+  it("numbers duplicated and pasted nodes", () => {
+    seedGraph([], []);
+    useWorkflowStore.getState().addNode(designNode());
+
+    useWorkflowStore.getState().duplicateSelectedNodes();
+    useWorkflowStore.getState().copySelectedNodes();
+    useWorkflowStore.getState().pasteNodes();
+
+    expect(useWorkflowStore.getState().nodes.map((item) => item.data.label)).toEqual(["Design image", "Design image 1", "Design image 2"]);
   });
 });
 
@@ -668,5 +698,57 @@ describe("reset", () => {
     useWorkflowStore.getState().addNode(node("node-1"));
 
     expect(useWorkflowStore.getState().nodes).toHaveLength(1);
+  });
+});
+
+describe("applyGraphPatch", () => {
+  it("records which nodes the canvas should bring into view", () => {
+    seedGraph([node("a")], []);
+
+    useWorkflowStore.getState().applyGraphPatch([node("a"), node("b")], [], ["b"]);
+    const first = useWorkflowStore.getState().focusRequest;
+    useWorkflowStore.getState().applyGraphPatch([node("a"), node("b"), node("c")], [], ["c"]);
+
+    expect(first?.nodeIds).toEqual(["b"]);
+    expect(useWorkflowStore.getState().focusRequest).toMatchObject({ nodeIds: ["c"], token: (first?.token ?? 0) + 1 });
+  });
+
+  it("asks for no focus when nothing was added or edited", () => {
+    seedGraph([node("a")], []);
+
+    useWorkflowStore.getState().applyGraphPatch([node("a")], []);
+
+    expect(useWorkflowStore.getState().focusRequest).toBeNull();
+  });
+
+  beforeEach(() => {
+    useWorkflowStore.setState(initialState, true);
+  });
+
+  it("replaces the graph, marks it dirty and records a single history entry", () => {
+    const original = [node("a")];
+    seedGraph(original, []);
+    const patched = [node("a"), node("b")];
+    const patchedEdges = [edge("a", "b")];
+
+    useWorkflowStore.getState().applyGraphPatch(patched, patchedEdges);
+
+    const state = useWorkflowStore.getState();
+    expect(state.nodes).toEqual(patched);
+    expect(state.edges).toEqual(patchedEdges);
+    expect(state.isDirty).toBe(true);
+    expect(state.past).toHaveLength(1);
+  });
+
+  it("is undone in one step", () => {
+    const original = [node("a")];
+    seedGraph(original, []);
+
+    useWorkflowStore.getState().applyGraphPatch([node("a"), node("b"), node("c")], [edge("a", "b"), edge("b", "c")]);
+    useWorkflowStore.getState().undo();
+
+    const state = useWorkflowStore.getState();
+    expect(state.nodes.map((item) => item.id)).toEqual(["a"]);
+    expect(state.edges).toEqual([]);
   });
 });

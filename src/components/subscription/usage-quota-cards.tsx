@@ -33,15 +33,21 @@ export const UsageQuotaCards = ({ quotas }: UsageQuotaCardsProps) => {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">
-                    {quota.used.toLocaleString()} / {quota.limit.toLocaleString()}
+                    {quota.used.toLocaleString()}
+                    {quota.limit > 0 && ` / ${quota.limit.toLocaleString()}`} {quota.unit}
                   </p>
-                  <p className="text-muted-foreground text-xs">{quota.label}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {quota.label} this period{quota.limit > 0 ? "" : " · no monthly limit"}
+                  </p>
                 </div>
               </div>
-              <Progress
-                value={quota.percentUsed}
-                indicatorClassName={quota.isWarning ? "bg-destructive" : undefined}
-              />
+              {/* A limit of 0 means none: plans differ by feature, not by monthly quota. */}
+              {quota.limit > 0 && (
+                <Progress
+                  value={quota.percentUsed}
+                  indicatorClassName={quota.isWarning ? "bg-destructive" : undefined}
+                />
+              )}
             </CardContent>
           </Card>
         );

@@ -1,3 +1,4 @@
+import { usageSignalText } from "@/helpers/revenue-by-plan";
 import { formatChange } from "@/helpers/revenue-change";
 import { formatTransactionDate, getTransactionStatusStyle } from "@/helpers/revenue-transactions";
 import type {
@@ -27,7 +28,6 @@ export interface ReportSection {
 
 export interface RevenueReportInput {
   filter: RevenueFilterDto;
-  currency: "VND" | "USD";
   generatedAt: Date;
   metrics?: RevenueMetricsDto;
   charts?: RevenueChartDto;
@@ -51,14 +51,13 @@ export function previousPeriod(startDate: string, endDate: string): { start: str
 
 /**
  * Builds the revenue report as sections of typed rows; {@link toCsv} and the Excel writer only
- * lay them out. Amounts arrive in invoice units (thousand VND) and leave as whole VND, or unchanged
- * in USD, matching what the dashboard shows for the selected currency.
+ * lay them out. Amounts arrive and leave in full VND, rounded to the whole đồng.
  */
 export function buildRevenueReport(input: RevenueReportInput): ReportSection[] {
-  const { filter, currency, metrics, charts, insights, transactions } = input;
+  const { filter, metrics, charts, insights, transactions } = input;
   const money = (amount: number | null | undefined): number | null =>
-    amount == null ? null : currency === "VND" ? Math.round(amount * 1000) : Math.round(amount * 100) / 100;
-  const moneyHeader = (label: string) => `${label} (${currency})`;
+    amount == null ? null : Math.round(amount);
+  const moneyHeader = (label: string) => `${label} (VND)`;
   const previous = previousPeriod(filter.startDate, filter.endDate);
   const forecast = insights?.forecast;
   const subs = insights?.subscriptionAnalytics;
@@ -81,7 +80,7 @@ export function buildRevenueReport(input: RevenueReportInput): ReportSection[] {
         ["Period", `${filter.startDate} to ${filter.endDate}`],
         ["Compared with", `${previous.start} to ${previous.end}`],
         ["Granularity", filter.granularity],
-        ["Currency", currency],
+        ["Currency", "VND"],
         ["Transactions filter", tableFilters.length > 0 ? tableFilters.join(", ") : "None (all transactions)"],
         ["Generated at", input.generatedAt.toISOString().replace("T", " ").slice(0, 16) + " UTC"],
       ],
@@ -139,7 +138,13 @@ export function buildRevenueReport(input: RevenueReportInput): ReportSection[] {
         { header: "Purchases", kind: "number" },
         { header: "Customers", kind: "number" },
         { header: moneyHeader("ARPU"), kind: "money" },
+        { header: "Customers at start", kind: "number" },
+        { header: "Customers at end", kind: "number" },
         { header: "Retention (%)", kind: "percent" },
+        { header: moneyHeader("MRR at start"), kind: "money" },
+        { header: moneyHeader("MRR at end"), kind: "money" },
+        { header: "MRR change", kind: "text" },
+        { header: "Usage of customers who left", kind: "text" },
       ],
       rows: charts.byPlan.map((p) => [
         p.planName,
@@ -149,8 +154,57 @@ export function buildRevenueReport(input: RevenueReportInput): ReportSection[] {
         p.purchaseCount,
         p.uniqueCustomers,
         money(p.arpu),
+        p.customers.start,
+        p.customers.end,
         p.retentionRate,
+        money(p.mrrStart),
+        money(p.mrrEnd),
+        formatChange(p.mrrChangePercent, p.mrrEnd),
+        usageSignalText(p)?.text ?? null,
       ]),
+    });
+  }
+
+  const movement = insights?.mrrMovement;
+  if (movement?.period.length) {
+    sections.push({
+      sheet: "MRR Movement",
+      title: `MRR Movement (${filter.startDate} to ${filter.endDate})`,
+      columns: [
+        { header: "Plan", kind: "text" },
+        { header: moneyHeader("MRR at start"), kind: "money" },
+        { header: moneyHeader("New"), kind: "money" },
+        { header: moneyHeader("Moved in"), kind: "money" },
+        { header: moneyHeader("Expansion"), kind: "money" },
+        { header: moneyHeader("Contraction"), kind: "money" },
+        { header: moneyHeader("Moved out"), kind: "money" },
+        { header: moneyHeader("Churn"), kind: "money" },
+        { header: moneyHeader("MRR at end"), kind: "money" },
+      ],
+      rows: movement.period.map((b) => [
+        b.planName ?? "All plans",
+        money(b.start),
+        money(b.new),
+        money(b.movedIn),
+        money(b.expansion),
+        money(b.contraction),
+        money(b.movedOut),
+        money(b.churn),
+        money(b.end),
+      ]),
+    });
+    sections.push({
+      sheet: "MRR Movement",
+      title: "MRR Movement by month",
+      columns: [
+        { header: "Month starting", kind: "text" },
+        { header: moneyHeader("New"), kind: "money" },
+        { header: moneyHeader("Expansion"), kind: "money" },
+        { header: moneyHeader("Contraction"), kind: "money" },
+        { header: moneyHeader("Churn"), kind: "money" },
+        { header: moneyHeader("Net"), kind: "money" },
+      ],
+      rows: movement.months.map((m) => [m.monthStart, money(m.new), money(m.expansion), money(m.contraction), money(m.churn), money(m.net)]),
     });
   }
 

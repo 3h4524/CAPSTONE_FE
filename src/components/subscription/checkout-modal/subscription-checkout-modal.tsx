@@ -23,6 +23,8 @@ import { CheckoutStepReview } from "./checkout-step-review";
 
 type SubscriptionCheckoutModalProps = {
   plan: AvailablePlan | null;
+  // The cycle chosen on the page; the Seller can still change it in the review step.
+  initialCycle?: BillingCycle;
   onClose: () => void;
 };
 
@@ -34,9 +36,14 @@ type SubscriptionCheckoutModalProps = {
 // navigating Back to Review and forward again reuses the same QR instead of creating a new one on
 // every visit (BR105: Back must not discard what Review/Payment already produced) — only the
 // explicit "Cancel payment" button, or fully closing the modal, actually cancels it.
-export const SubscriptionCheckoutModal = ({ plan, onClose }: SubscriptionCheckoutModalProps) => {
+export const SubscriptionCheckoutModal = ({ plan, initialCycle = "monthly", onClose }: SubscriptionCheckoutModalProps) => {
   const [step, setStep] = useState<CheckoutStep>("review");
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
+
+  // Opening on a plan starts from the cycle chosen on the page, when the plan offers it.
+  useEffect(() => {
+    if (plan) setBillingCycle(initialCycle === "annual" && plan.annualPriceUsd !== null ? "annual" : "monthly");
+  }, [plan, initialCycle]);
   const [result, setResult] = useState<CheckoutStatus | null>(null);
   const [pendingCheckout, setPendingCheckout] = useState<PendingCheckout | null>(null);
   const { mutate: checkout, isPending: isCreatingCheckout, isError, error, reset: resetCheckout } = useCheckout();

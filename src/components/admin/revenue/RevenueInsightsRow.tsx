@@ -11,14 +11,12 @@ import { SubscriptionAnalyticsCard } from "./SubscriptionAnalyticsCard";
 interface RevenueInsightsRowProps {
   data?: RevenueInsightsDto;
   isLoading?: boolean;
-  currency?: "VND" | "USD";
   onReviewAlert?: (status: TransactionStatus) => void;
 }
 
 export function RevenueInsightsRow({
   data,
   isLoading,
-  currency = "VND",
   onReviewAlert,
 }: RevenueInsightsRowProps) {
   return (
@@ -36,7 +34,6 @@ export function RevenueInsightsRow({
         <RevenueForecastCard
           data={data?.forecast}
           isLoading={isLoading}
-          currency={currency}
         />
       </div>
 
@@ -45,7 +42,6 @@ export function RevenueInsightsRow({
         <FinancialAlertsCard
           alerts={data?.financialAlerts}
           isLoading={isLoading}
-          currency={currency}
           onReview={onReviewAlert}
         />
       </div>

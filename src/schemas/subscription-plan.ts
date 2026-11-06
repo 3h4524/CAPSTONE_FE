@@ -28,6 +28,18 @@ export const subscriptionPlanFormSchema = z.object({
   whiteLabelExportEnabled: z.boolean(),
   prioritySupport: z.boolean(),
   isActive: z.boolean(),
+  // Keyed by feature code. A limit of null means no limit. Left out, the plan keeps its features.
+  features: z.record(
+    z.string(),
+    z.object({
+      isEnabled: z.boolean(),
+      limitValue: z
+        .number({ message: "Enter a whole number, or leave it empty for no limit." })
+        .int("Enter a whole number.")
+        .min(0, "Enter 0 or more, or leave it empty for no limit.")
+        .nullable(),
+    })
+  ).optional(),
 });
 
 export type SubscriptionPlanFormValues = z.infer<typeof subscriptionPlanFormSchema>;

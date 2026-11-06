@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Layers, X } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
+import {
+  type FeaturePicks,
+  initialPicks,
+  picksAreValid,
+  PlanFeaturePicker,
+  toFeatureInputs,
+} from "@/components/admin/subscription-plans/plan-feature-picker";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,19 +25,33 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateSubscriptionPlan } from "@/hooks/mutations/use-create-subscription-plan";
 import { useUpdateSubscriptionPlan } from "@/hooks/mutations/use-update-subscription-plan";
+import { useAdminFeatures } from "@/hooks/queries/use-admin-features";
 import {
   subscriptionPlanFormSchema,
   type SubscriptionPlanFormValues,
 } from "@/schemas/subscription-plan";
 import type { AdminSubscriptionPlan } from "@/types/admin-subscription-plan";
+import { formatVnd } from "@/utils/format-currency";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 type PlanFormDialogProps = {
   open: boolean;
   plan: AdminSubscriptionPlan | null;
+  // The PayOS rate, to preview what a typed USD price charges; null hides the preview.
+  usdToVndRate: number | null;
+  // The plans a new plan can copy its features from.
+  plans: AdminSubscriptionPlan[];
   onClose: () => void;
 };
 
+// Prices are entered in USD and charged in VND at the PayOS rate, as the server rounds them.
+const chargedVnd = (priceUsd: number | undefined, rate: number | null) =>
+  rate !== null && typeof priceUsd === "number" && Number.isFinite(priceUsd)
+    ? `≈ ${formatVnd(Math.round(priceUsd * rate))} charged via PayOS`
+    : null;
+
+// The old quota columns and the API key, white-label and priority support switches are kept as they
+// are: nothing checks them any more, and what a plan includes is set with features.
 const EMPTY_VALUES: SubscriptionPlanFormValues = {
   name: "",
   tier: "",
@@ -47,7 +68,8 @@ const EMPTY_VALUES: SubscriptionPlanFormValues = {
   customApiKeysAllowed: false,
   whiteLabelExportEnabled: false,
   prioritySupport: false,
-  isActive: true,
+  // A new plan waits off sale until the Admin has checked it.
+  isActive: false,
 };
 
 const toFormValues = (plan: AdminSubscriptionPlan | null): SubscriptionPlanFormValues =>
@@ -72,8 +94,11 @@ const toFormValues = (plan: AdminSubscriptionPlan | null): SubscriptionPlanFormV
       }
     : EMPTY_VALUES;
 
-export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
+export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: PlanFormDialogProps) {
   const isEditing = plan !== null;
+  // A new plan's features come from the catalog, as the Admin set it up.
+  const { data: catalog = [] } = useAdminFeatures();
+  const [picks, setPicks] = useState<FeaturePicks>({});
   const createMutation = useCreateSubscriptionPlan(onClose);
   const updateMutation = useUpdateSubscriptionPlan(onClose);
   const isPending = createMutation.isPending || updateMutation.isPending;
@@ -88,6 +113,12 @@ export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
     resolver: zodResolver(subscriptionPlanFormSchema),
     defaultValues: EMPTY_VALUES,
   });
+  const [monthlyPriceUsd, annualPriceUsd] = useWatch({
+    control,
+    name: ["monthlyPriceUsd", "annualPriceUsd"],
+  });
+  const monthlyCharged = chargedVnd(monthlyPriceUsd, usdToVndRate);
+  const annualCharged = chargedVnd(annualPriceUsd, usdToVndRate);
 
   useEffect(() => {
     if (open) {
@@ -96,19 +127,31 @@ export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, plan]);
 
-  const submit = handleSubmit(({ tier, ...values }) => {
+  // A new plan starts from the basics; the catalog may load after the dialog opens.
+  const catalogSize = catalog.length;
+  useEffect(() => {
+    if (open && !plan) setPicks(initialPicks(catalog));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, plan, catalogSize]);
+
+  const picksValid = picksAreValid(picks);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const submit = handleSubmit(({ tier, features, ...values }) => {
     const annualPriceUsd = values.annualPriceUsd ?? null;
     const description = values.description?.trim() ? values.description.trim() : null;
 
     if (isEditing) {
       updateMutation.mutate({
         id: plan.id,
+        // Features are changed on the plan card, where current subscribers keep what they had.
         input: { ...values, description, annualPriceUsd },
       });
       return;
     }
 
-    createMutation.mutate({ ...values, tier, description, annualPriceUsd });
+    if (!picksValid) return;
+    createMutation.mutate({ ...values, tier, description, annualPriceUsd, features: toFeatureInputs(catalog, picks) });
   });
 
   return (
@@ -161,27 +204,36 @@ export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
                   />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Monthly price (nghìn VNĐ)" htmlFor="plan-monthly-price" error={errors.monthlyPriceUsd?.message}>
+                  <Field label="Monthly price (USD)" htmlFor="plan-monthly-price" error={errors.monthlyPriceUsd?.message}>
                     <Input
                       id="plan-monthly-price"
                       type="number"
-                      step="1"
-                      placeholder="e.g. 250 (= 250.000 ₫)"
+                      step="0.01"
+                      min={0}
+                      placeholder="e.g. 9.99"
                       aria-invalid={Boolean(errors.monthlyPriceUsd)}
                       {...register("monthlyPriceUsd", { valueAsNumber: true })}
                     />
-                    <p className="mt-1 text-[11px] text-slate-400">Đơn vị: nghìn đồng (ví dụ: nhập 50 là 50.000 ₫)</p>
+                    {monthlyCharged && <p className="mt-1 text-[11px] text-slate-400">{monthlyCharged}</p>}
                   </Field>
-                  <Field label="Annual price (nghìn VNĐ)" htmlFor="plan-annual-price" error={errors.annualPriceUsd?.message}>
+                  {isEditing && (
+                    <p className="text-[11px] leading-relaxed text-slate-400 sm:col-span-2">
+                      A new price applies to new purchases and renewals; a period already paid keeps its price.
+                    </p>
+                  )}
+                  <Field label="Annual price (USD)" htmlFor="plan-annual-price" error={errors.annualPriceUsd?.message}>
                     <Input
                       id="plan-annual-price"
                       type="number"
-                      step="1"
-                      placeholder="Optional, e.g. 2500 (= 2.500.000 ₫)"
+                      step="0.01"
+                      min={0}
+                      placeholder="Optional, e.g. 99.99"
                       aria-invalid={Boolean(errors.annualPriceUsd)}
                       {...register("annualPriceUsd", { setValueAs: (v) => (v === "" ? undefined : Number(v)) })}
                     />
-                    <p className="mt-1 text-[11px] text-slate-400">Tùy chọn, tính theo nghìn đồng</p>
+                    <p className="mt-1 text-[11px] text-slate-400">
+                      {annualCharged ?? "Leave empty to offer monthly billing only"}
+                    </p>
                   </Field>
                 </div>
                 <Field label="Description" htmlFor="plan-description" error={errors.description?.message}>
@@ -189,24 +241,44 @@ export function PlanFormDialog({ open, plan, onClose }: PlanFormDialogProps) {
                 </Field>
               </FormSection>
 
-              <FormSection title="Usage limits">
-                <p className="text-muted-foreground -mt-1 text-xs">Use -1 for unlimited.</p>
+              {/* Plans differ by feature, not by monthly quota, so only the speed limits are set here. */}
+              <FormSection title="Run limits">
+                <p className="text-muted-foreground -mt-1 text-xs">
+                  These set how fast a Seller can work, not how much. Use -1 for no limit.
+                </p>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <NumberField label="Max batch size" htmlFor="plan-max-batch-size" name="maxBatchSize" register={register} error={errors.maxBatchSize?.message} />
-                  <NumberField label="Concurrent jobs" htmlFor="plan-max-concurrent-jobs" name="maxConcurrentJobs" register={register} error={errors.maxConcurrentJobs?.message} />
-                  <NumberField label="Products / month" htmlFor="plan-max-products" name="maxProductsPerMonth" register={register} error={errors.maxProductsPerMonth?.message} />
-                  <NumberField label="API calls / month" htmlFor="plan-api-calls" name="apiCallQuota" register={register} error={errors.apiCallQuota?.message} />
-                  <NumberField label="Images / month" htmlFor="plan-images" name="imageGenerationQuota" register={register} error={errors.imageGenerationQuota?.message} />
-                  <NumberField label="Videos / month" htmlFor="plan-videos" name="videoGenerationQuota" register={register} error={errors.videoGenerationQuota?.message} />
-                  <NumberField label="Storage (GB)" htmlFor="plan-storage" name="storageQuotaGb" register={register} error={errors.storageQuotaGb?.message} />
+                  <NumberField label="Products per run" htmlFor="plan-max-batch-size" name="maxBatchSize" register={register} error={errors.maxBatchSize?.message} />
+                  <NumberField label="Design jobs at once" htmlFor="plan-max-concurrent-jobs" name="maxConcurrentJobs" register={register} error={errors.maxConcurrentJobs?.message} />
                 </div>
               </FormSection>
 
-              <FormSection title="Features & permissions">
-                <ToggleField control={control} name="isActive" label="Plan is active" description="Visible on the public pricing page" />
-                <ToggleField control={control} name="customApiKeysAllowed" label="Custom API keys" description="Allow programmatic access" />
-                <ToggleField control={control} name="whiteLabelExportEnabled" label="White-label export" description="Remove APCS branding" />
-                <ToggleField control={control} name="prioritySupport" label="Priority support" description="SLA guarantees" />
+              {isEditing ? (
+                <p className="rounded-xl bg-slate-50 px-4 py-3 text-xs leading-relaxed text-slate-500">
+                  Features and limits are changed on the plan card, so current subscribers keep what they paid for until
+                  their period ends.
+                </p>
+              ) : (
+                <FormSection title="Features">
+                  <PlanFeaturePicker catalog={catalog} plans={plans} picks={picks} onChange={setPicks} />
+                  {!picksValid && (
+                    <p role="alert" className="text-destructive text-xs">
+                      Each limit must be a whole number from 0 to 10,000, or empty for no limit.
+                    </p>
+                  )}
+                </FormSection>
+              )}
+
+              <FormSection title="Sale">
+                <ToggleField
+                  control={control}
+                  name="isActive"
+                  label="On sale"
+                  description={
+                    isEditing
+                      ? "Sellers can buy it. Taking it off sale keeps current subscribers on it."
+                      : "Leave off until you have checked the new plan; Sellers cannot buy it until then."
+                  }
+                />
               </FormSection>
             </div>
           </div>

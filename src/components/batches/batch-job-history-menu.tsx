@@ -24,7 +24,7 @@ const statusText = (status: string) => status.replaceAll("_", " ");
 // across all of its jobs: they are all listed, and each opens on the workflow canvas, in the workflow it
 // was started from when that is known. A draft has not started, so there is nothing to open in it; it is
 // numbered all the same, so the numbers agree with "Previous runs" on the canvas.
-export const BatchJobHistoryMenu = ({ batchId }: { batchId: string }) => {
+export const BatchJobHistoryMenu = ({ batchId, size }: { batchId: string; size?: "sm" | "default" }) => {
   const router = useRouter();
   const { data: jobs } = useBatchJobs(batchId);
 
@@ -44,7 +44,7 @@ export const BatchJobHistoryMenu = ({ batchId }: { batchId: string }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" size={size}>
           <History className="mr-2 size-4" />
           Jobs ({startedJobs.length})
           <ChevronDown className="ml-2 size-4" />

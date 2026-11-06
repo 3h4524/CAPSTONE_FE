@@ -40,7 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { AdminUserDto, GetUsersRequest } from "@/types/admin";
-import { formatCurrencyVnd } from "@/utils/format-currency";
+import { formatVnd } from "@/utils/format-currency";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function AdminUsersPage() {
@@ -129,7 +129,7 @@ export default function AdminUsersPage() {
         const email = `"${u.email}"`;
         const roles = `"${u.roles.join(", ")}"`;
         const date = new Date(u.createdAt).toLocaleDateString();
-        const cost = Math.round(u.monthlyApiCost * 1000).toString();
+        const cost = Math.round(u.monthlyApiCost).toString();
         
         return [u.id, name, email, roles, u.plan, u.accountStatus, date, u.totalJobs, cost].join(",");
       });
@@ -221,9 +221,9 @@ export default function AdminUsersPage() {
               </div>
               <div className="mt-2">
                 <p className="text-2xl font-bold text-slate-900">
-                  {formatCurrencyVnd(metrics?.totalRevenue || 0)}
+                  {formatVnd(metrics?.totalRevenue || 0)}
                 </p>
-                <p className="mt-1 text-xs text-slate-400">+5.2% from last month</p>
+                <p className="mt-1 text-xs text-slate-400">Collected this year</p>
               </div>
             </div>
             <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
@@ -446,7 +446,7 @@ export default function AdminUsersPage() {
                         <div className="mb-1 flex items-center justify-end gap-2">
                           <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Plan Price</span>
                         </div>
-                        <span className="text-xl font-bold text-slate-900">{formatCurrencyVnd(selectedUser.monthlyApiCost)}</span>
+                        <span className="text-xl font-bold text-slate-900">{formatVnd(selectedUser.monthlyApiCost)}</span>
                       </div>
                     </div>
                   </div>

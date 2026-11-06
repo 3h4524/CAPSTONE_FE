@@ -15,12 +15,11 @@ import {
 
 import { Card } from "@/components/ui/card";
 import type { RevenueForecastDto } from "@/types/revenue";
-import { formatCompactNumber, formatCompactVnd, formatCurrency } from "@/utils/format-currency";
+import { formatCompactVndAmount, formatVnd } from "@/utils/format-currency";
 
 interface RevenueForecastCardProps {
   data?: RevenueForecastDto;
   isLoading?: boolean;
-  currency?: "VND" | "USD";
 }
 
 type TimeHorizon = 3 | 6 | 12;
@@ -34,7 +33,6 @@ const RELIABLE_WEEKS = 14;
 export function RevenueForecastCard({
   data,
   isLoading,
-  currency = "VND",
 }: RevenueForecastCardProps) {
   const [timeHorizon, setTimeHorizon] = useState<TimeHorizon>(3);
 
@@ -60,15 +58,10 @@ export function RevenueForecastCard({
     };
   });
 
-  const formatYAxis = (val: number) => {
-    if (currency === "VND") {
-      return formatCompactVnd(val);
-    }
-    return formatCompactNumber(val);
-  };
+  const formatYAxis = (val: number) => formatCompactVndAmount(val);
 
   const weeklyTrend = data?.weeklyTrend ?? 0;
-  const trendLabel = `${weeklyTrend >= 0 ? "+" : ""}${formatCurrency(weeklyTrend, currency)}/week`;
+  const trendLabel = `${weeklyTrend >= 0 ? "+" : ""}${formatVnd(weeklyTrend)}/week`;
 
   const warning =
     status === "insufficient"
@@ -167,14 +160,14 @@ export function RevenueForecastCard({
                       </p>
                       <div className="mt-1 flex items-baseline gap-2">
                         <span className="text-base font-bold text-slate-900 dark:text-slate-100">
-                          {formatCurrency(val, currency)}
+                          {formatVnd(val)}
                         </span>
                       </div>
                       {isF && (
                         <>
                           <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                            95%: {formatCurrency(item?.conservative ?? 0, currency)} –{" "}
-                            {formatCurrency(item?.optimistic ?? 0, currency)}
+                            95%: {formatVnd(item?.conservative ?? 0)} –{" "}
+                            {formatVnd(item?.optimistic ?? 0)}
                           </p>
                           <p className="mt-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
                             {pct >= 0 ? `+${pct}%` : `${pct}%`} vs. last completed week
@@ -245,7 +238,7 @@ export function RevenueForecastCard({
       {!isLoading && showForecast && (
         <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-[11px] text-slate-500 dark:text-slate-400">
           <span>
-            Linear regression over {sampleWeeks} weeks, R² = {(data?.rSquared ?? 0).toFixed(2)}
+            Linear regression over the {sampleWeeks} weeks before today, R² = {(data?.rSquared ?? 0).toFixed(2)}
           </span>
           <span
             className={

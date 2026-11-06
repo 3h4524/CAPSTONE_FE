@@ -2,24 +2,34 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { CurrentSubscription } from "@/types/subscription";
-import { formatCurrencyVnd } from "@/utils/format-currency";
-
-const formatCurrency = (amount: number) => formatCurrencyVnd(amount);
+import { formatVnd } from "@/utils/format-currency";
 
 const formatDate = (isoDate: string) =>
   new Date(isoDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+// Whole days left, rounded up, so a trial ending later today still shows "1 day left".
+export const trialDaysLeft = (trialEndsAt: string, now: number = Date.now()) =>
+  Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - now) / MS_PER_DAY));
 
 type CurrentPlanCardProps = {
   subscription: CurrentSubscription | null;
   onCancelScheduledDowngrade: () => void;
   isCancellingScheduledDowngrade: boolean;
+  onRenewClick: () => void;
 };
 
 export const CurrentPlanCard = ({
   subscription,
   onCancelScheduledDowngrade,
   isCancellingScheduledDowngrade,
+  onRenewClick,
 }: CurrentPlanCardProps) => {
+  const isTrial = subscription?.isTrial === true && subscription.trialEndsAt !== null;
+  const daysLeft = isTrial ? trialDaysLeft(subscription.trialEndsAt!) : 0;
+  const isPastDue = subscription?.status === "past_due";
+
   return (
     <Card>
       <CardContent className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -29,21 +39,46 @@ export const CurrentPlanCard = ({
           </p>
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold">
-              {subscription ? subscription.planName : "No Active Subscription"}
+              {subscription ? subscription.planName : "Free"}
             </h3>
-            <Badge variant={subscription?.status === "active" ? "default" : "outline"}>
-              {subscription ? subscription.status : "No plan"}
-            </Badge>
+            {isTrial ? (
+              <Badge variant="secondary">
+                Trial · {daysLeft} day{daysLeft === 1 ? "" : "s"} left
+              </Badge>
+            ) : isPastDue ? (
+              <Badge variant="destructive">Payment due</Badge>
+            ) : (
+              <Badge variant={subscription?.status === "active" ? "default" : "outline"}>
+                {subscription ? subscription.status : "No plan"}
+              </Badge>
+            )}
           </div>
           <p className="text-muted-foreground text-sm">
-            {subscription
-              ? subscription.shortDescription
-              : "You currently do not have an active subscription. Choose a plan below to unlock credits and features."}
+            {isTrial
+              ? `You're trying every ${subscription!.planName} feature for free. Choose a plan before ${formatDate(subscription!.trialEndsAt!)} to keep running your workflows.`
+              : subscription
+                ? subscription.shortDescription
+                : "You can build and save workflows on Free. Start the free trial or choose a plan to run them."}
           </p>
+          {isPastDue && subscription!.lastGraceDay && (
+            <div
+              role="alert"
+              className="border-destructive/40 bg-destructive/10 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border px-3 py-2 text-sm"
+            >
+              <span>
+                Your renewal was due {formatDate(subscription!.renewalDate)}. Renew by{" "}
+                <strong>{formatDate(subscription!.lastGraceDay)}</strong> to keep {subscription!.planName}; after that
+                your account moves to Free.
+              </span>
+              <Button size="sm" onClick={onRenewClick}>
+                Renew now
+              </Button>
+            </div>
+          )}
           {subscription?.scheduledPlanName && subscription.scheduledPlanEffectiveDate && (
             <div className="border-warning bg-warning/10 flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-sm">
               <span>
-                Downgrading to <strong>{subscription.scheduledPlanName}</strong> on{" "}
+                Moving to <strong>{subscription.scheduledPlanName}</strong> when you renew on{" "}
                 {formatDate(subscription.scheduledPlanEffectiveDate)}.
               </span>
               <Button
@@ -60,15 +95,28 @@ export const CurrentPlanCard = ({
         </div>
         <div className="text-right">
           <p className="text-2xl font-bold">
-            {subscription ? formatCurrency(subscription.price) : "0 ₫"}
-            <span className="text-muted-foreground text-sm font-normal">
-              {" "}
-              / {subscription?.billingCycle === "annual" ? "year" : "month"}
-            </span>
+            {isTrial ? "Free trial" : subscription ? formatVnd(subscription.priceVnd) : "0 ₫"}
+            {!isTrial && (
+              <span className="text-muted-foreground text-sm font-normal">
+                {" "}
+                / {subscription?.billingCycle === "annual" ? "year" : "month"}
+              </span>
+            )}
           </p>
           <p className="text-muted-foreground text-sm">
-            {subscription ? `Renews ${formatDate(subscription.renewalDate)}` : "Choose a plan to start"}
+            {isTrial
+              ? `Ends ${formatDate(subscription!.trialEndsAt!)}`
+              : isPastDue
+                ? `Was due ${formatDate(subscription!.renewalDate)}`
+                : subscription
+                  ? `Paid until ${formatDate(subscription.renewalDate)}`
+                  : "No plan yet"}
           </p>
+          {subscription?.canRenew && !isPastDue && (
+            <Button variant="outline" size="sm" className="mt-2" onClick={onRenewClick}>
+              Renew now
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

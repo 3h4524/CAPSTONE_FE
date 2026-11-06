@@ -7,6 +7,7 @@ import { Workflow } from "lucide-react";
 import { PageLoading } from "@/components/commons/layout/page-loading";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { Button } from "@/components/ui/button";
+import { AllowanceBanner } from "@/components/workflows/allowance-banner";
 import { WorkflowCanvas } from "@/components/workflows/canvas/workflow-canvas";
 import { NodeConfigPanel } from "@/components/workflows/config-panel/node-config-panel";
 import { NodePalette } from "@/components/workflows/palette/node-palette";
@@ -220,6 +221,7 @@ export const WorkflowWorkspace = () => {
         onOpenWorkflow={openWorkflow}
         guardUnsavedChanges={guardUnsavedChanges}
       />
+      <AllowanceBanner />
       <div className="flex min-h-0 flex-1">
         <aside className="hidden w-64 shrink-0 border-r lg:block">
           <NodePalette />

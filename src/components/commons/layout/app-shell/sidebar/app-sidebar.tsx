@@ -17,7 +17,7 @@ export const AppSidebar = () => {
   return (
     <aside
       className={cn(
-        "bg-background hidden flex-col border-r transition-all duration-200 lg:flex",
+        "bg-card hidden flex-col border-r transition-all duration-200 lg:flex",
         isCollapsed ? "w-[72px]" : "w-60"
       )}
     >

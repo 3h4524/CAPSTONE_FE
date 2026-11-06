@@ -38,7 +38,20 @@ export const quoteAiShot = async (runId: string, config?: GenerateVideoConfig, r
   (await api.post<AiShotQuote>(`/api/workflow-runs/${runId}/ai-shot-quote`, { config, regenerate, sceneOrder, expectedStoryboardFingerprint })).data;
 export const listMockupAssets = async (id: string) => (await api.get<MockupAsset[]>(`/api/products/${id}/mockup-assets`)).data;
 export const uploadMockupAsset = async ({ productId, file }: { productId: string; file: File }) => (await api.postForm<MockupAsset>(`/api/products/${productId}/mockup-assets`, { file })).data;
-export const generateLifestyleMockup = async ({ productId, garmentMockupId, file }: { productId: string; garmentMockupId: string; file: File }) => (await api.postForm<MockupAsset>(`/api/products/${productId}/mockup-assets/lifestyle`, { garmentMockupId, file })).data;
+/** Dresses the people in an uploaded photo, or in a model photo from the library, in a mock-up of the product. */
+export const generateLifestyleMockup = async ({ productId, garmentMockupId, file, modelPhotoId }: { productId: string; garmentMockupId: string; file?: File; modelPhotoId?: string }) => {
+  const form = new FormData();
+  form.append("garmentMockupId", garmentMockupId);
+  if (file) form.append("file", file);
+  else if (modelPhotoId) form.append("modelPhotoId", modelPhotoId);
+  return (await api.post<MockupAsset>(`/api/products/${productId}/mockup-assets/lifestyle`, form)).data;
+};
+// The image putting a mock-up on a model photo would make, as a URL to look at; nothing is stored.
+export const previewModelPhotoMockup = async ({ productId, ...request }: { productId: string; garmentMockupId: string; modelPhotoId: string; garmentColor?: string | null }) =>
+  (await api.post<{ url: string }>(`/api/products/${productId}/mockup-assets/on-model/preview`, request)).data;
+// No AI: the model photo's garment takes the mock-up's color and design, composited like any mock-up.
+export const generateModelPhotoMockup = async ({ productId, ...request }: { productId: string; garmentMockupId: string; modelPhotoId: string; garmentColor?: string | null }) =>
+  (await api.post<MockupAsset>(`/api/products/${productId}/mockup-assets/on-model`, request)).data;
 const studioFrameForm = (request: AiStudioFrameRequest) => {
   const form = new FormData();
   form.append("sourceMockupId", request.sourceMockupId);

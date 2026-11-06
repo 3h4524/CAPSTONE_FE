@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PanelEmptyState } from "@/components/workflows/config-panel/layout/panel-empty-state";
 import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
+import { type LifestyleGarment, LifestyleMockupForm } from "@/components/workflows/media/lifestyle-mockup-form";
 import { ApprovalReviewPanel } from "@/components/workflows/run/approval-review-panel";
 import { showToast } from "@/helpers/toast";
 import { readNumber, readString, readStringArray } from "@/helpers/workflow-config";
@@ -31,6 +32,17 @@ import { useQueryClient } from "@tanstack/react-query";
 // Columns follow the panel's own width (it can be dragged wider), not the screen's: one column while
 // it is narrow so each card keeps room for its button, then two and three as it grows.
 const PANEL_GRID = "grid-cols-1 gap-2 @sm:grid-cols-2 @2xl:grid-cols-3";
+
+// The job's mock-ups to dress a person in, named by product and garment color; a name used twice is numbered.
+const lifestyleGarmentsOfBatch = (images: MockupImage[], productNameById: Map<string | null, string>): LifestyleGarment[] => {
+  const seen = new Map<string, number>();
+  return images.map((image) => {
+    const base = `${productNameById.get(image.productId) ?? "Product"}${image.garmentColor ? ` · ${image.garmentColor}` : ""}`;
+    const count = (seen.get(base) ?? 0) + 1;
+    seen.set(base, count);
+    return { id: image.id, productId: image.productId, label: count > 1 ? `${base} (${count})` : base, imageUrl: image.mockupImageUrl };
+  });
+};
 
 // What the open run produced, shown beside the canvas for the Design image and Apply mock-up nodes.
 export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
@@ -134,6 +146,9 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
                 onRestore={designsReady ? (slot) => restore.mutate({ jobId: job.id, slotKey: slot.slotKey }) : undefined}
                 disabled={mockupState === "running" || restore.isPending}
               />
+            )}
+            {mockupResult && mockupResult.images.length > 0 && (
+              <LifestyleMockupForm garments={lifestyleGarmentsOfBatch(mockupResult.images, productNameById)} showResults />
             )}
           </section>
         ) : (

@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { ASSISTANT_LAUNCHER_STORAGE_KEY } from "@/constants/assistant";
+import { ASSISTANT_LAUNCHER_PHONE_BOTTOM_PX, ASSISTANT_LAUNCHER_STORAGE_KEY } from "@/constants/assistant";
 import {
   clampLauncherPosition,
   defaultLauncherPosition,
@@ -11,6 +11,26 @@ import {
 const viewport = { width: 1000, height: 800 };
 
 describe("defaultLauncherPosition", () => {
+  describe("on a phone", () => {
+    const desktopWidth = window.innerWidth;
+
+    beforeEach(() => {
+      window.innerWidth = 375;
+    });
+
+    afterEach(() => {
+      window.innerWidth = desktopWidth;
+    });
+
+    it("sits above the bottom tabs on Seller pages", () => {
+      expect(defaultLauncherPosition("/dashboard").bottom).toBe(ASSISTANT_LAUNCHER_PHONE_BOTTOM_PX);
+    });
+
+    it("stays low on admin pages, which have no bottom tabs", () => {
+      expect(defaultLauncherPosition("/admin/users").bottom).toBeLessThan(ASSISTANT_LAUNCHER_PHONE_BOTTOM_PX);
+    });
+  });
+
   it("sits above the minimap on the workflow editor", () => {
     expect(defaultLauncherPosition("/workflows").bottom).toBeGreaterThan(defaultLauncherPosition("/dashboard").bottom);
   });

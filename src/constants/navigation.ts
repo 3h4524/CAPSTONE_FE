@@ -41,6 +41,14 @@ export const NAV_SECTIONS: AppNavSection[] = [
   },
 ];
 
+/** The phone's bottom tabs. Every other page stays reachable from the More tab. */
+export const MOBILE_TABS = [
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Workflows", href: "/workflows", icon: Workflow },
+  { label: "Batches", href: "/batches", icon: Layers3 },
+  { label: "Radar", href: "/market-opportunities", icon: Compass },
+];
+
 export const ROUTE_TITLES = {
   dashboard: "Dashboard",
   "design-templates": "Design templates",

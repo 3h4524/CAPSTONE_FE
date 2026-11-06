@@ -9,6 +9,8 @@ import { getInitials } from "@/utils/get-initials";
 type UserAvatarProps = {
   size?: "default" | "sm" | "lg";
   className?: string;
+  /** The phone header's look: one letter on the accent color. */
+  accent?: boolean;
 };
 
 const AVATAR_SIZES = {
@@ -17,7 +19,7 @@ const AVATAR_SIZES = {
   lg: "size-10",
 } as const;
 
-export const UserAvatar = ({ size = "default", className }: UserAvatarProps) => {
+export const UserAvatar = ({ size = "default", className, accent = false }: UserAvatarProps) => {
   const user = useAuthStore((state) => state.user);
 
   if (!user) {
@@ -37,7 +39,9 @@ export const UserAvatar = ({ size = "default", className }: UserAvatarProps) => 
   return (
     <Avatar size={size} className={className}>
       <AvatarImage src={user.avatarUrl ?? undefined} alt={user.fullName} />
-      <AvatarFallback>{getInitials(user.fullName)}</AvatarFallback>
+      <AvatarFallback className={cn(accent && "bg-primary text-primary-foreground text-xs font-semibold")}>
+        {accent ? getInitials(user.fullName).slice(0, 1) : getInitials(user.fullName)}
+      </AvatarFallback>
     </Avatar>
   );
 };

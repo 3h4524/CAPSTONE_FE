@@ -17,7 +17,7 @@ export const KpiRow = ({ kpis, days }: KpiRowProps) => {
   const periodLabel = `${days} days`;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
       <KpiCard
         label="Products created"
         icon={Package}
@@ -27,6 +27,7 @@ export const KpiRow = ({ kpis, days }: KpiRowProps) => {
       />
       <KpiCard
         label="Pipeline success rate"
+        shortLabel="Pipeline success"
         icon={Target}
         kpi={kpis.successRatePercent}
         formatValue={formatPercent}
@@ -44,6 +45,7 @@ export const KpiRow = ({ kpis, days }: KpiRowProps) => {
       />
       <KpiCard
         label="AI cost per product"
+        shortLabel="AI cost / product"
         icon={CircleDollarSign}
         kpi={kpis.costPerProductUsd}
         formatValue={formatUsd}

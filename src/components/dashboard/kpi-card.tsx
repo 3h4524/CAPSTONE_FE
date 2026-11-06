@@ -7,6 +7,8 @@ import { cn } from "@/utils/cn";
 
 type KpiCardProps = {
   label: string;
+  /** Replaces the label on a phone, where the card is half the width. */
+  shortLabel?: string;
   icon: LucideIcon;
   kpi: Kpi;
   formatValue: (value: number) => string;
@@ -27,6 +29,7 @@ const TONE_CLASSES = {
 /** One figure of the Dashboard's KPI row: the value, and how it moved against the period before. */
 export const KpiCard = ({
   label,
+  shortLabel,
   icon: Icon,
   kpi,
   formatValue,
@@ -37,10 +40,19 @@ export const KpiCard = ({
   const change = describeChange(kpi, isLowerBetter);
 
   return (
-    <Card className="group flex-row items-center justify-between gap-3 rounded-2xl px-5 py-4 transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md">
+    <Card className="group flex-row items-center justify-between gap-3 rounded-2xl px-5 py-4 transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md max-sm:relative max-sm:items-start max-sm:px-3.5 max-sm:py-3">
       <div className="min-w-0">
-        <p className="text-muted-foreground truncate text-xs font-medium">{label}</p>
-        <div className="mt-1 flex items-baseline gap-2">
+        <p className="text-muted-foreground truncate text-xs font-medium max-sm:pr-7 max-sm:whitespace-normal">
+          {shortLabel ? (
+            <>
+              <span className="sm:hidden">{shortLabel}</span>
+              <span className="max-sm:hidden">{label}</span>
+            </>
+          ) : (
+            label
+          )}
+        </p>
+        <div className="mt-1 flex items-baseline gap-2 max-sm:mt-3 max-sm:flex-wrap">
           <p className="text-2xl leading-tight font-semibold tracking-tight tabular-nums">
             {formatValue(kpi.value)}
           </p>
@@ -50,12 +62,12 @@ export const KpiCard = ({
             </span>
           )}
         </div>
-        <p className="text-muted-foreground truncate text-[11px]">
+        <p className="text-muted-foreground truncate text-[11px] max-sm:whitespace-normal">
           {change ? `vs previous ${periodLabel}` : (emptyHint ?? `No data before the ${periodLabel}`)}
         </p>
       </div>
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#eef4fb] text-[#4f709c] ring-1 ring-[#dbe7f4] transition-transform duration-300 ring-inset group-hover:scale-110 group-hover:-rotate-6">
-        <Icon className="size-5" aria-hidden="true" />
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#eef4fb] text-[#4f709c] ring-1 ring-[#dbe7f4] transition-transform duration-300 ring-inset group-hover:scale-110 group-hover:-rotate-6 max-sm:absolute max-sm:top-2.5 max-sm:right-2.5 max-sm:size-8">
+        <Icon className="size-5 max-sm:size-4" aria-hidden="true" />
       </span>
     </Card>
   );

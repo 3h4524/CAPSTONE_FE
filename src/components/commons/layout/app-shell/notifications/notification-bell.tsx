@@ -22,11 +22,11 @@ export const NotificationBell = () => {
           variant="ghost"
           size="icon"
           aria-label="Notifications"
-          className="relative"
+          className="relative max-md:size-10 max-md:rounded-full max-md:border [@media(pointer:coarse)]:max-md:min-h-10 [@media(pointer:coarse)]:max-md:min-w-10"
         >
           <Bell />
           {unreadCount > 0 && (
-            <span className="bg-destructive absolute top-1.5 right-1.5 size-2 rounded-full" />
+            <span className="bg-destructive absolute top-1.5 right-1.5 size-2 rounded-full max-md:bg-emerald-500" />
           )}
         </Button>
       </DropdownMenuTrigger>

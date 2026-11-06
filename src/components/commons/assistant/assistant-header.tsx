@@ -1,12 +1,10 @@
 "use client";
 
-import Image from "next/image";
-import { Maximize2, MessageCircle, Minimize2, Plus, X } from "lucide-react";
+import { Bot, Maximize2, MessageCircle, Minimize2, Plus, X } from "lucide-react";
 
 import { AssistantHistoryMenu } from "@/components/commons/assistant/assistant-history-menu";
 import { Button } from "@/components/ui/button";
 import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ASSISTANT_MASCOT_SRC } from "@/constants/assistant";
 import { type AssistantDisplayMode, saveDisplayMode } from "@/helpers/assistant-display-mode";
 import { useAssistantStore } from "@/stores/assistant";
 
@@ -28,14 +26,9 @@ export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
   };
 
   const avatar = (
-    <Image
-      src={ASSISTANT_MASCOT_SRC}
-      alt=""
-      width={28}
-      height={28}
-      unoptimized
-      className="size-7 shrink-0 rounded-full border [image-rendering:pixelated]"
-    />
+    <span className="bg-primary/10 text-primary flex size-7 shrink-0 items-center justify-center rounded-full border">
+      <Bot className="size-4" aria-hidden="true" />
+    </span>
   );
 
   const actions = (

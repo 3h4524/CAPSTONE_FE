@@ -4,6 +4,7 @@ import { ASSISTANT_LAUNCHER_PHONE_BOTTOM_PX, ASSISTANT_LAUNCHER_STORAGE_KEY } fr
 import {
   clampLauncherPosition,
   defaultLauncherPosition,
+  keepClearOfBottomTabs,
   loadLauncherPosition,
   saveLauncherPosition,
 } from "@/helpers/assistant-launcher-position";
@@ -24,6 +25,14 @@ describe("defaultLauncherPosition", () => {
 
     it("sits above the bottom tabs on Seller pages", () => {
       expect(defaultLauncherPosition("/dashboard").bottom).toBe(ASSISTANT_LAUNCHER_PHONE_BOTTOM_PX);
+    });
+
+    it("lifts a launcher dragged onto the bottom tabs", () => {
+      expect(keepClearOfBottomTabs({ right: 8, bottom: 8 }, "/batches").bottom).toBe(ASSISTANT_LAUNCHER_PHONE_BOTTOM_PX);
+    });
+
+    it("leaves a launcher dragged higher up where it is", () => {
+      expect(keepClearOfBottomTabs({ right: 8, bottom: 300 }, "/batches").bottom).toBe(300);
     });
 
     it("stays low on admin pages, which have no bottom tabs", () => {

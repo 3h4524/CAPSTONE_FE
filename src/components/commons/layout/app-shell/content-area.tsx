@@ -12,8 +12,8 @@ type ContentAreaProps = {
 
 // Pages whose own cards sit straight on the shell background, without the white page card.
 const BARE_ROUTES = ["/subscription"];
-// The same on phones only, where the Dashboard needs the page card's width for its own cards.
-const BARE_ON_PHONE_ROUTES = ["/dashboard"];
+// The same on phones only, where these pages need the page card's width for their own cards.
+const BARE_ON_PHONE_ROUTES = ["/dashboard", "/batches", "/styles"];
 
 export const ContentArea = ({ children }: ContentAreaProps) => {
   const pathname = usePathname();

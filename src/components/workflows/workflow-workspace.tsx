@@ -1,8 +1,8 @@
 "use client";
 
-import { type CSSProperties, useEffect, useRef } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Workflow } from "lucide-react";
+import { ListOrdered, Workflow } from "lucide-react";
 
 import { PageLoading } from "@/components/commons/layout/page-loading";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
@@ -12,6 +12,7 @@ import { WorkflowCanvas } from "@/components/workflows/canvas/workflow-canvas";
 import { NodeConfigPanel } from "@/components/workflows/config-panel/node-config-panel";
 import { NodePalette } from "@/components/workflows/palette/node-palette";
 import { ResizableAside } from "@/components/workflows/resizable-aside";
+import { WorkflowStepList } from "@/components/workflows/steps/workflow-step-list";
 import { WorkflowToolbar } from "@/components/workflows/toolbar/workflow-toolbar";
 import { SITE_CONFIG } from "@/constants/site";
 import { DEFAULT_WORKFLOW_DEFINITION, DEFAULT_WORKFLOW_NAME } from "@/constants/workflow";
@@ -22,6 +23,7 @@ import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
 import { useLatestWorkflowRun } from "@/hooks/queries/use-latest-workflow-run";
 import { useWorkflow } from "@/hooks/queries/use-workflow";
 import { useWorkflows } from "@/hooks/queries/use-workflows";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { useAssistantStore } from "@/stores/assistant";
 import { usePopupStore } from "@/stores/popup";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -34,6 +36,9 @@ export const WorkflowWorkspace = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedId = searchParams.get("id");
+  const isPhone = useIsPhone();
+  const [showsDiagram, setShowsDiagram] = useState(false);
+  const showsStepList = isPhone && !showsDiagram;
   const hasAutoCreatedRef = useRef(false);
   const restoredRunForWorkflow = useRef<string | null>(null);
   const openPopup = usePopupStore((state) => state.openPopup);
@@ -220,6 +225,7 @@ export const WorkflowWorkspace = () => {
         isEditorReady={isEditorReady}
         onOpenWorkflow={openWorkflow}
         guardUnsavedChanges={guardUnsavedChanges}
+        showsPanelButtons={!showsStepList}
       />
       <AllowanceBanner />
       <div className="flex min-h-0 flex-1">
@@ -228,7 +234,19 @@ export const WorkflowWorkspace = () => {
         </aside>
         <div className="relative min-w-0 flex-1 bg-slate-100/70">
           {isEditorReady ? (
-            <WorkflowCanvas />
+            showsStepList ? (
+              <WorkflowStepList onShowDiagram={() => setShowsDiagram(true)} />
+            ) : (
+              <>
+                <WorkflowCanvas />
+                {isPhone && (
+                  <Button type="button" variant="outline" size="sm" className="absolute top-3 left-3 z-10 bg-white" onClick={() => setShowsDiagram(false)}>
+                    <ListOrdered aria-hidden="true" />
+                    Step list
+                  </Button>
+                )}
+              </>
+            )
           ) : isWorkflowError ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center" role="alert">
               <p className="font-semibold text-slate-900">This workflow could not be opened</p>

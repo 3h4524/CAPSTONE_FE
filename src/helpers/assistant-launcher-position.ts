@@ -31,6 +31,9 @@ export const defaultLauncherPosition = (pathname: string): LauncherPosition => (
   bottom: defaultBottom(pathname),
 });
 
+export const keepClearOfBottomTabs = (position: LauncherPosition, pathname: string): LauncherPosition =>
+  hasBottomTabs(pathname) ? { ...position, bottom: Math.max(position.bottom, ASSISTANT_LAUNCHER_PHONE_BOTTOM_PX) } : position;
+
 export const clampLauncherPosition = (position: LauncherPosition, viewport: Viewport): LauncherPosition => ({
   right: clamp(position.right, ASSISTANT_LAUNCHER_MARGIN_PX, viewport.width - ASSISTANT_LAUNCHER_SIZE_PX - ASSISTANT_LAUNCHER_MARGIN_PX),
   bottom: clamp(position.bottom, ASSISTANT_LAUNCHER_MARGIN_PX, viewport.height - ASSISTANT_LAUNCHER_SIZE_PX - ASSISTANT_LAUNCHER_MARGIN_PX),

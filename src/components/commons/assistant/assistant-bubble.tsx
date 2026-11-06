@@ -8,7 +8,7 @@ import { AssistantMessageList } from "@/components/commons/assistant/assistant-m
 import { Card } from "@/components/ui/card";
 import { ASSISTANT_BUBBLE_GAP_PX, ASSISTANT_LAUNCHER_MARGIN_PX, ASSISTANT_LAUNCHER_SIZE_PX } from "@/constants/assistant";
 import { isBubbleOpen } from "@/helpers/assistant-display-mode";
-import { defaultLauncherPosition } from "@/helpers/assistant-launcher-position";
+import { defaultLauncherPosition, keepClearOfBottomTabs } from "@/helpers/assistant-launcher-position";
 import { useAssistantStore } from "@/stores/assistant";
 import { cn } from "@/utils/cn";
 
@@ -21,7 +21,7 @@ export const AssistantBubble = () => {
 
   if (!isOpen) return null;
 
-  const anchor = launcherPosition ?? defaultLauncherPosition(pathname);
+  const anchor = keepClearOfBottomTabs(launcherPosition ?? defaultLauncherPosition(pathname), pathname);
   const bottom = anchor.bottom + ASSISTANT_LAUNCHER_SIZE_PX + ASSISTANT_BUBBLE_GAP_PX;
 
   return (

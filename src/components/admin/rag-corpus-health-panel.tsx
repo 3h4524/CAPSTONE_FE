@@ -5,8 +5,8 @@ import { AlertTriangle, CheckCircle2, Database, RefreshCw, RotateCw } from "luci
 
 import {
   getRagCorpusHealth,
-  reingestRagDocuments,
   type RagCorpusHealthResponse,
+  reingestRagDocuments,
 } from "@/api/rag";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -173,7 +173,7 @@ const RagCorpusHealthPanel = () => {
                       <AlertTriangle className="mt-0.5 size-4 shrink-0" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-2">
-                          <span className="text-xs font-semibold capitalize text-slate-800">
+                          <span className="text-xs font-semibold text-slate-800 capitalize">
                             {issue.code.replaceAll("_", " ")}
                           </span>
                           <span className="text-sm font-bold tabular-nums">{issue.count}</span>
@@ -202,7 +202,7 @@ const RagCorpusHealthPanel = () => {
                 <tbody className="tabular-nums">
                   {health.byContentType.map((metric) => (
                     <tr key={metric.contentType} className="border-t border-slate-100 hover:bg-slate-50/60">
-                      <td className="px-4 py-3 font-semibold capitalize text-slate-800">{metric.contentType}</td>
+                      <td className="px-4 py-3 font-semibold text-slate-800 capitalize">{metric.contentType}</td>
                       <td className="px-3 py-3 text-right text-slate-600">{metric.documentCount}</td>
                       <td className="px-3 py-3 text-right text-slate-600">{metric.readyDocuments}</td>
                       <td className="px-3 py-3 text-right text-slate-600">{metric.chunkCount}</td>

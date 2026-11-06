@@ -32,7 +32,7 @@ export const BatchPicker = ({ batches, selected, onSelect }: BatchPickerProps) =
         </span>
         <ChevronDown className="text-muted-foreground size-5 shrink-0" aria-hidden="true" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="max-h-[60dvh] w-(--radix-dropdown-menu-trigger-width) overflow-y-auto">
+      <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width) overflow-hidden">
         {batches.length >= SEARCH_FROM && (
           <div className="relative p-1">
             <Search className="text-muted-foreground absolute top-3.5 left-3.5 size-4" aria-hidden="true" />
@@ -47,6 +47,8 @@ export const BatchPicker = ({ batches, selected, onSelect }: BatchPickerProps) =
             />
           </div>
         )}
+        {/* Five rows and half of a sixth: the cut-off row says there is more, where a phone hides the scrollbar. */}
+        <div className="max-h-66 overflow-y-auto overscroll-contain">
         {matches.map((batch) => (
           <DropdownMenuItem key={batch.id} onSelect={() => onSelect(batch)} className="min-h-12 items-center gap-2">
             <span className="min-w-0 flex-1">
@@ -61,6 +63,7 @@ export const BatchPicker = ({ batches, selected, onSelect }: BatchPickerProps) =
             <Check className={batch.id === selected.id ? "text-primary size-4 shrink-0" : "invisible size-4 shrink-0"} aria-hidden="true" />
           </DropdownMenuItem>
         ))}
+        </div>
         {matches.length === 0 && <p className="text-muted-foreground px-3 py-4 text-center text-sm">No batches match “{query}”.</p>}
       </DropdownMenuContent>
     </DropdownMenu>

@@ -9,15 +9,20 @@ import {
   Check,
   KeyRound,
   LockKeyhole,
-  Pencil,
   Plus,
   RefreshCw,
-  Trash2,
 } from "lucide-react";
 
 import { apiKeyKeys, validateApiKey } from "@/api/api-keys";
 import { apiKeyError, ConnectionDialog } from "@/components/api-keys/connection-dialog";
-import { relativeTime } from "@/components/api-keys/relative-time";
+import {
+  ConnectionActions,
+  ConnectionCredential,
+  type ConnectionHandlers,
+  ConnectionLastUsed,
+  ConnectionProvider,
+  ConnectionStatus,
+} from "@/components/api-keys/connection-parts";
 import { PageLoading } from "@/components/commons/layout/page-loading";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +35,7 @@ import {
 import { showToast } from "@/helpers/toast";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useApiKeys } from "@/hooks/queries/use-api-keys";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useAuthStore } from "@/stores/auth";
 import type { ApiKeyConnection } from "@/types/api-keys";
@@ -42,28 +48,11 @@ const WORKFLOW_STAGES = [
   { category: "Product publishing", provider: "printify", providerName: "Printify" },
 ] as const;
 
-const UNUSED_AFTER_DAYS = 30;
-const DAY_MS = 86_400_000;
-
 type DialogState = {
   connection?: ApiKeyConnection;
   deleting?: boolean;
   initialProvider?: string;
 };
-
-function statusReason(connection: ApiKeyConnection, now: number) {
-  if (connection.status === "Connected") {
-    return `Checked ${relativeTime(connection.lastCheckedAtUtc, now, "never")}`;
-  }
-  if (connection.status === "Reconnect") return "Key invalid, inactive, or expired";
-  return "Not validated yet";
-}
-
-function unusedDays(connection: ApiKeyConnection, now: number) {
-  if (connection.status !== "Connected" || !connection.lastUsedAtUtc) return null;
-  const days = Math.floor((now - Date.parse(connection.lastUsedAtUtc)) / DAY_MS);
-  return days >= UNUSED_AFTER_DAYS ? days : null;
-}
 
 function WorkflowReadiness({
   items,
@@ -187,169 +176,54 @@ function WorkflowReadiness({
   );
 }
 
-function ConnectionRow({
-  connection,
-  now,
-  onEdit,
-  onDelete,
-  onValidate,
-  busy,
-}: {
-  connection: ApiKeyConnection;
-  now: number;
-  onEdit: () => void;
-  onDelete: () => void;
-  onValidate: () => void;
-  busy: boolean;
-}) {
-  const oauth = connection.authType === "OAuth";
-  const connected = connection.status === "Connected";
-  const unused = unusedDays(connection, now);
+type ConnectionViewProps = ConnectionHandlers & { connection: ApiKeyConnection; now: number };
+
+function ConnectionRow({ connection, now, ...handlers }: ConnectionViewProps) {
   return (
     <tr
       className={cn(
-        "border-border border-t transition-colors max-md:grid max-md:grid-cols-1 max-md:gap-3 max-md:p-4",
-        connected ? "hover:bg-muted/30" : "bg-amber-50/40 hover:bg-amber-50/70"
+        "border-border border-t transition-colors",
+        connection.status === "Connected" ? "hover:bg-muted/30" : "bg-amber-50/40 hover:bg-amber-50/70"
       )}
     >
-      <th scope="row" className="py-3.5 pr-3 pl-5 text-left font-normal max-md:block max-md:p-0">
-        <div className="flex items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold"
-          >
-            {connection.provider.slice(0, 1)}
-          </span>
-          <div className="min-w-0">
-            <div className="text-foreground text-sm font-medium">{connection.provider}</div>
-            <div
-              className="text-muted-foreground truncate md:max-w-52"
-              title={`${connection.label} · ${connection.providerCategory}`}
-            >
-              {connection.label}
-              <span className="mx-1.5 opacity-50">·</span>
-              {connection.providerCategory}
-            </div>
-          </div>
-        </div>
+      <th scope="row" className="py-3.5 pr-3 pl-5 text-left font-normal">
+        <ConnectionProvider connection={connection} labelClassName="max-w-52" />
       </th>
-      <td className="px-3 py-3.5 max-md:block max-md:p-0">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {oauth ? (
-            <span
-              className="inline-flex max-w-52 items-center gap-1.5 truncate"
-              title={connection.credential}
-            >
-              <span className="rounded bg-violet-50 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700">
-                OAuth
-              </span>
-              {connection.credential}
-            </span>
-          ) : (
-            <code
-              className="bg-muted/60 text-foreground inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-[11px]"
-              title={connection.authType}
-            >
-              <KeyRound className="text-muted-foreground size-3" aria-hidden="true" />
-              {connection.credential}
-            </code>
-          )}
-          {connection.environment && (
-            <span
-              className="text-muted-foreground max-w-24 truncate rounded-md border px-1.5 py-0.5 text-[10px]"
-              title={connection.environment}
-            >
-              {connection.environment}
-            </span>
-          )}
-        </div>
+      <td className="px-3 py-3.5">
+        <ConnectionCredential connection={connection} />
       </td>
-      <td className="px-3 py-3.5 max-md:block max-md:p-0">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap",
-            connected ? "bg-success-background text-success-text" : "bg-amber-50 text-amber-800"
-          )}
-        >
-          <span
-            aria-hidden="true"
-            className={cn("size-1.5 rounded-full", connected ? "bg-success-text" : "bg-amber-500")}
-          />
-          {connection.status}
-        </span>
-        <div className="text-muted-foreground mt-1 text-[11px]">
-          {statusReason(connection, now)}
-        </div>
+      <td className="px-3 py-3.5">
+        <ConnectionStatus connection={connection} now={now} />
       </td>
-      <td className="text-muted-foreground px-3 py-3.5 whitespace-nowrap max-md:block max-md:p-0 max-md:whitespace-normal">
-        <span className="md:hidden">Last used: </span>
-        <time
-          dateTime={connection.lastUsedAtUtc ?? undefined}
-          title={connection.lastUsedAtUtc ?? "Never used"}
-        >
-          {relativeTime(connection.lastUsedAtUtc, now)}
-        </time>
-        {unused !== null && (
-          <div className="mt-1 text-[11px] text-amber-700">
-            Unused for {unused} days — delete if no longer needed
-          </div>
-        )}
+      <td className="text-muted-foreground px-3 py-3.5 whitespace-nowrap">
+        <ConnectionLastUsed connection={connection} now={now} />
       </td>
-      <td className="py-3.5 pr-5 pl-3 max-md:block max-md:p-0">
-        <div className="flex items-center justify-end gap-1 max-md:justify-start">
-          {!oauth && (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={busy}
-                onClick={onValidate}
-                className="text-muted-foreground hover:text-foreground h-8 px-2.5 text-xs"
-              >
-                Validate
-              </Button>
-              {connected ? (
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={onEdit}
-                  disabled={busy}
-                  aria-label={`Edit ${connection.provider} ${connection.label}`}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Pencil className="size-3.5" />
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={onEdit}
-                  disabled={busy}
-                  aria-label={`Edit ${connection.provider} ${connection.label}`}
-                  className="h-8 px-3 text-xs"
-                >
-                  Fix key
-                </Button>
-              )}
-            </>
-          )}
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onDelete}
-            disabled={busy}
-            aria-label={`Delete ${connection.provider} ${connection.label}`}
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="size-3.5" />
-          </Button>
-        </div>
+      <td className="py-3.5 pr-5 pl-3">
+        <ConnectionActions connection={connection} className="justify-end" {...handlers} />
       </td>
     </tr>
   );
 }
 
+function ConnectionCard({ connection, now, ...handlers }: ConnectionViewProps) {
+  return (
+    <li className={cn("border-border space-y-3 border-t p-4 text-xs", connection.status !== "Connected" && "bg-amber-50/40")}>
+      <ConnectionProvider connection={connection} />
+      <ConnectionCredential connection={connection} />
+      <div>
+        <ConnectionStatus connection={connection} now={now} />
+      </div>
+      <p className="text-muted-foreground">
+        Last used: <ConnectionLastUsed connection={connection} now={now} />
+      </p>
+      <ConnectionActions connection={connection} {...handlers} />
+    </li>
+  );
+}
+
 export function ApiKeysPage() {
   const queryClient = useAppQueryClient();
+  const isPhone = useIsPhone();
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const validation = useMutation({
     mutationFn: validateApiKey,
@@ -392,28 +266,30 @@ export function ApiKeysPage() {
     : [];
 
   return (
-    <div className="w-full min-w-0 p-4 sm:p-6">
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">API keys</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
+    <div className="w-full min-w-0 md:p-6">
+      <header className="mb-6 flex flex-wrap items-end justify-between gap-4 max-md:mb-4 max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:items-center max-md:gap-x-3 max-md:gap-y-1">
+        <div className="max-md:contents">
+          <h1 className="font-display text-3xl font-semibold tracking-tight max-md:text-xl">API keys</h1>
+          <p className="text-muted-foreground mt-1 text-sm max-md:hidden">
             Connect the services APCS uses to create and publish your products.
           </p>
-          <p className="text-muted-foreground mt-2 flex items-center gap-1.5 text-xs max-sm:flex-wrap">
+          <p className="text-muted-foreground mt-2 flex items-center gap-1.5 text-xs max-md:col-span-2 max-md:mt-1">
             <LockKeyhole className="text-primary size-3.5 shrink-0" />
             <span className="text-foreground font-medium">Keys stay private.</span>
             Only masked credentials are shown here.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setGuideOpen(true)}>
+        <div className="flex flex-wrap items-center gap-2 max-md:contents">
+          <Button variant="ghost" size="sm" className="max-md:col-span-2 max-md:row-start-3 max-md:-ml-1 max-md:justify-self-start max-md:px-1" onClick={() => setGuideOpen(true)}>
             <BookOpen className="size-4" />
             Read setup guide
           </Button>
-          <span>
-            <Button disabled={!query.data || forbidden || failed} onClick={() => setDialog({})}>
+          <span className="max-md:col-start-2 max-md:row-start-1">
+            <Button size="page-action" disabled={!query.data || forbidden || failed} onClick={() => setDialog({})}>
               <Plus className="size-4" />
-              Add API key
+              <span>
+                Add<span className="max-md:hidden"> API key</span>
+              </span>
             </Button>
           </span>
         </div>
@@ -486,20 +362,35 @@ export function ApiKeysPage() {
                   <KeyRound className="size-5" />
                 </div>
                 <h3 className="font-semibold">No API keys yet</h3>
-                <span>
+                <p className="text-muted-foreground mt-1 text-sm md:hidden">Connect a service for each stage above to start creating products.</p>
+                <span className="max-md:hidden">
                   <Button variant="outline" size="sm" className="mt-4" onClick={() => setDialog({})}>
                     <Plus className="size-4" />
                     Add API key
                   </Button>
                 </span>
               </div>
+            ) : isPhone ? (
+              <ul>
+                {rows.map((connection) => (
+                  <ConnectionCard
+                    key={connection.id}
+                    connection={connection}
+                    now={now}
+                    onEdit={() => setDialog({ connection })}
+                    onDelete={() => setDialog({ connection, deleting: true })}
+                    onValidate={() => validation.mutate(connection.id)}
+                    busy={validation.isPending}
+                  />
+                ))}
+              </ul>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-xs max-md:block md:min-w-[760px]">
+                <table className="w-full min-w-[760px] text-xs">
                   <caption className="sr-only">
                     Your service credentials, connection status, and last-used time
                   </caption>
-                  <thead className="bg-muted/50 text-muted-foreground border-t text-left text-[10px] tracking-wider uppercase max-md:hidden">
+                  <thead className="bg-muted/50 text-muted-foreground border-t text-left text-[10px] tracking-wider uppercase">
                     <tr>
                       {["Provider", "Credential", "Status", "Last used", "Actions"].map((label) => (
                         <th
@@ -512,7 +403,7 @@ export function ApiKeysPage() {
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="max-md:block">
+                  <tbody>
                     {rows.map((connection) => (
                       <ConnectionRow
                         key={connection.id}

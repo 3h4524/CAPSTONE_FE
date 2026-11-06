@@ -26,8 +26,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATEGORY_LABELS } from "@/constants/support";
 import { useSupportTickets } from "@/hooks/queries/use-support-tickets";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { useAuthStore } from "@/stores/auth";
 import type { SupportTicketSummary, TicketStatus } from "@/types/support";
 import { cn } from "@/utils/cn";
@@ -88,13 +90,16 @@ const HELP_TOPICS: readonly HelpTopic[] = [
   },
 ] as const;
 
-type TicketView = "all" | "open" | "in_progress" | "resolved" | "closed";
+const TICKET_VIEW_LABELS = { all: "All", open: "Open", in_progress: "In Progress", resolved: "Resolved", closed: "Closed" };
+type TicketView = keyof typeof TICKET_VIEW_LABELS;
+const TICKET_VIEWS = Object.keys(TICKET_VIEW_LABELS) as TicketView[];
 
 export function SupportCenter() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = useAuthStore((state) => state.user);
   const [pageNumber, setPageNumber] = useState(1);
+  const isPhone = useIsPhone();
   const [view, setView] = useState<TicketView>("all");
   const [selectedHelpTopic, setSelectedHelpTopic] = useState<HelpTopic | null>(null);
   const [draftSubject, setDraftSubject] = useState("");
@@ -182,34 +187,49 @@ export function SupportCenter() {
         </section>
 
         <section className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm" aria-labelledby="support-tickets-heading">
-          <div className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 px-5 py-4 max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:items-center max-md:gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[10px] font-bold tracking-[0.16em] text-slate-500">YOUR REQUESTS</p>
-              <h2 id="support-tickets-heading" className="font-display mt-1 text-xl font-semibold tracking-tight">
+              <h2 id="support-tickets-heading" className="font-display mt-1 text-xl font-semibold tracking-tight max-md:text-lg">
                 Support tickets
               </h2>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-3 max-md:contents sm:flex-row sm:items-center">
+              {isPhone ? (
+                <Select value={view} onValueChange={(next) => selectView(next as TicketView)}>
+                  <SelectTrigger aria-label="Filter tickets" className="w-full bg-white max-md:col-span-2 max-md:row-start-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="w-(--radix-select-trigger-width) bg-white">
+                    {TICKET_VIEWS.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {TICKET_VIEW_LABELS[item]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
               <div className="border-border bg-background flex max-w-full flex-wrap self-start rounded-2xl border p-0.5 sm:inline-flex sm:flex-nowrap sm:rounded-full" role="group" aria-label="Filter tickets">
-                {(["all", "open", "in_progress", "resolved", "closed"] as const).map((item) => (
+                {TICKET_VIEWS.map((item) => (
                   <button
                     key={item}
                     type="button"
                     aria-pressed={view === item}
                     className={cn(
-                      "min-h-8 rounded-full px-3.5 text-sm font-medium whitespace-nowrap capitalize transition-colors focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none",
+                      "min-h-8 rounded-full px-3.5 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none",
                       view === item
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                     onClick={() => selectView(item)}
                   >
-                    {item.replace("_", " ")}
+                    {TICKET_VIEW_LABELS[item]}
                   </button>
                 ))}
               </div>
-              <Button className="min-h-10 self-start px-4 sm:self-auto" onClick={() => openComposer()}>
-                <Plus aria-hidden="true" />New ticket
+              )}
+              <Button size="page-action" className="min-h-10 self-start px-4 max-md:col-start-2 max-md:row-start-1 sm:self-auto" aria-label="New ticket" onClick={() => openComposer()}>
+                <Plus aria-hidden="true" /><span>New<span className="max-md:hidden"> ticket</span></span>
               </Button>
             </div>
           </div>

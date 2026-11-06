@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ImageIcon, Plus, Search } from "lucide-react";
 
+import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { StylePresetFormDialog } from "@/components/styles/style-preset-form-dialog";
 import { StylePresetListItem } from "@/components/styles/style-preset-list-item";
@@ -13,6 +14,8 @@ import { useStylePresets } from "@/hooks/queries/use-style-presets";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import { usePopupStore } from "@/stores/popup";
 import type { StylePreset } from "@/types/style-presets";
+
+const PHONE_PAGE_SIZE = 5;
 
 const STYLE_FILTERS = [
   { value: "all", label: "All", matches: () => true },
@@ -26,6 +29,7 @@ export const StylesPage = () => {
   const isPhone = useIsPhone();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<StyleFilter>("all");
+  const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPreset, setEditingPreset] = useState<StylePreset | null>(null);
   const { data: presets, isPending: isLoadingPresets, isError: isPresetsError, refetch: refetchPresets } = useStylePresets();
@@ -57,6 +61,10 @@ export const StylesPage = () => {
   const shownPresets = isPhone
     ? (presets ?? []).filter((preset) => activeFilter.matches(preset) && `${preset.name} ${preset.description}`.toLowerCase().includes(needle))
     : (presets ?? []);
+  const pageCount = isPhone ? Math.max(1, Math.ceil(shownPresets.length / PHONE_PAGE_SIZE)) : 1;
+  // Deleting the last style of the last page would otherwise leave an empty page.
+  const currentPage = Math.min(page, pageCount);
+  const pagePresets = isPhone ? shownPresets.slice((currentPage - 1) * PHONE_PAGE_SIZE, currentPage * PHONE_PAGE_SIZE) : shownPresets;
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-4 md:gap-6 md:p-6">
@@ -70,7 +78,7 @@ export const StylesPage = () => {
             </p>
           )}
         </div>
-        <Button type="button" onClick={openCreate} disabled={isDeleting}>
+        <Button type="button" size="page-action" onClick={openCreate} disabled={isDeleting}>
           <Plus aria-hidden="true" />
           <span>
             New<span className="max-md:hidden"> style</span>
@@ -81,7 +89,7 @@ export const StylesPage = () => {
         <div className="space-y-3">
           <div className="relative">
             <Search className="text-muted-foreground absolute top-3 left-3 size-4" aria-hidden="true" />
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search styles" aria-label="Search styles" className="h-10 pl-9" />
+            <Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search styles" aria-label="Search styles" className="h-10 pl-9" />
           </div>
           <div className="flex gap-2" role="group" aria-label="Filter styles">
             {STYLE_FILTERS.map((item) => (
@@ -89,7 +97,7 @@ export const StylesPage = () => {
                 key={item.value}
                 type="button"
                 aria-pressed={filter === item.value}
-                onClick={() => setFilter(item.value)}
+                onClick={() => { setFilter(item.value); setPage(1); }}
                 className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 text-sm font-medium ${filter === item.value ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground"}`}
               >
                 {item.label}
@@ -120,17 +128,18 @@ export const StylesPage = () => {
         <div className="bg-card flex flex-col items-center gap-2 rounded-xl border border-dashed p-8 text-center">
           <p className="font-semibold text-slate-900">No styles match</p>
           <p className="text-muted-foreground text-sm">Try another search or filter.</p>
-          <Button type="button" variant="link" size="sm" onClick={() => { setSearch(""); setFilter("all"); }}>
+          <Button type="button" variant="link" size="sm" onClick={() => { setSearch(""); setFilter("all"); setPage(1); }}>
             Clear filters
           </Button>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {shownPresets.map((preset) => (
+          {pagePresets.map((preset) => (
             <StylePresetListItem key={preset.id} preset={preset} busy={isDeleting} onEdit={openEdit} onDelete={askDelete} />
           ))}
         </div>
       )}
+      {isPhone && <PhonePager page={currentPage} pageCount={pageCount} onPageChange={setPage} label="Style pages" />}
       <StylePresetFormDialog open={dialogOpen} preset={editingPreset} onClose={() => setDialogOpen(false)} />
     </div>
   );

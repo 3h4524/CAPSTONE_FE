@@ -20,6 +20,7 @@ import {
   TRANSACTION_STATUS_STYLE,
   TRANSACTION_STATUSES,
 } from "@/helpers/revenue-transactions";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { RevenueInvoiceDto, TransactionStatus } from "@/types/revenue";
 import { formatVnd } from "@/utils/format-currency";
 
@@ -60,6 +61,7 @@ export function RevenueInvoiceTable({
   page,
   onPageChange,
 }: RevenueInvoiceTableProps) {
+  const isPhone = useIsPhone();
   const [searchInput, setSearchInput] = useState(tableFilter.search);
   const [selected, setSelected] = useState<RevenueInvoiceDto | null>(null);
 
@@ -145,9 +147,53 @@ export function RevenueInvoiceTable({
       </div>
 
       {/* Table */}
+      {isPhone ? (
+        isLoading ? (
+          <p className="py-8 text-center text-sm text-slate-400">Loading transactions…</p>
+        ) : !data || data.items.length === 0 ? (
+          <p className="py-8 text-center text-sm text-slate-400">No transactions match these filters.</p>
+        ) : (
+          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            {data.items.map((invoice) => {
+              const status = getTransactionStatusStyle(invoice.status);
+              const planColor = getPlanColor(invoice.planName);
+              return (
+                <li key={invoice.id} className="space-y-1.5 py-3 text-xs tabular-nums">
+                  <p className="font-medium text-slate-700 dark:text-slate-200">{invoice.invoiceNumber}</p>
+                  <div>
+                    <p className="font-semibold text-slate-900 dark:text-slate-100">{invoice.customerName}</p>
+                    <p className="truncate text-[11px] text-slate-400">{invoice.customerEmail}</p>
+                  </div>
+                  <p className="flex items-center justify-between gap-2">
+                    <span className="inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold" style={{ backgroundColor: `${planColor}1a`, color: planColor }}>
+                      {invoice.planName}
+                    </span>
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">{formatVnd(invoice.amount)}</span>
+                  </p>
+                  <p className="flex items-center justify-between gap-2 text-slate-500 dark:text-slate-400">
+                    <span>{invoice.paymentMethod ?? "—"}</span>
+                    <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${status.className}`}>{status.label}</span>
+                  </p>
+                  <div className="flex items-center justify-between gap-2 text-slate-500 dark:text-slate-400">
+                    <span>{formatTransactionDate(invoice.paymentDate, invoice.createdAt)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelected(invoice)}
+                      className="inline-flex min-h-10 cursor-pointer items-center gap-1 rounded-md border border-slate-200 px-3 text-[11px] font-medium text-slate-600 dark:border-slate-800 dark:text-slate-300"
+                    >
+                      <Eye className="size-3" />
+                      View
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )
+      ) : (
       <div className="overflow-x-auto">
-        <table className="w-full text-xs tabular-nums max-md:block md:min-w-[820px]">
-          <thead className="max-md:hidden">
+        <table className="w-full min-w-[820px] text-xs tabular-nums">
+          <thead>
             <tr className="border-b border-slate-100 text-left text-[11px] font-semibold text-slate-500 dark:border-slate-800 dark:text-slate-400">
               <th className="py-2.5 pr-3 font-semibold">Invoice No.</th>
               <th className="px-3 py-2.5 font-semibold">Customer</th>
@@ -159,7 +205,7 @@ export function RevenueInvoiceTable({
               <th className="py-2.5 pl-3 text-right font-semibold">Actions</th>
             </tr>
           </thead>
-          <tbody className="max-md:block">
+          <tbody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i} className="border-b border-slate-100 last:border-0 dark:border-slate-800">
@@ -183,18 +229,18 @@ export function RevenueInvoiceTable({
                 return (
                   <tr
                     key={invoice.id}
-                    className="border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50/70 max-md:grid max-md:grid-cols-2 max-md:gap-x-3 max-md:gap-y-1.5 max-md:py-3 dark:border-slate-800 dark:hover:bg-slate-800/40"
+                    className="border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50/70 dark:border-slate-800 dark:hover:bg-slate-800/40"
                   >
-                    <td className="py-3 pr-3 font-medium whitespace-nowrap text-slate-700 max-md:col-span-2 max-md:p-0 max-md:whitespace-normal dark:text-slate-200">
+                    <td className="py-3 pr-3 font-medium whitespace-nowrap text-slate-700 dark:text-slate-200">
                       {invoice.invoiceNumber}
                     </td>
-                    <td className="px-3 py-3 max-md:col-span-2 max-md:p-0">
-                      <div className="font-semibold whitespace-nowrap text-slate-900 max-md:whitespace-normal dark:text-slate-100">
+                    <td className="px-3 py-3">
+                      <div className="font-semibold whitespace-nowrap text-slate-900 dark:text-slate-100">
                         {invoice.customerName}
                       </div>
                       <div className="max-w-[180px] truncate text-[11px] text-slate-400">{invoice.customerEmail}</div>
                     </td>
-                    <td className="px-3 py-3 max-md:p-0">
+                    <td className="px-3 py-3">
                       <span
                         className="inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold"
                         style={{ backgroundColor: `${planColor}1a`, color: planColor }}
@@ -202,25 +248,25 @@ export function RevenueInvoiceTable({
                         {invoice.planName}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-right font-semibold whitespace-nowrap text-slate-900 max-md:p-0 dark:text-slate-100">
+                    <td className="px-3 py-3 text-right font-semibold whitespace-nowrap text-slate-900 dark:text-slate-100">
                       {formatVnd(invoice.amount)}
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-slate-600 max-md:p-0 max-md:whitespace-normal dark:text-slate-300">
+                    <td className="px-3 py-3 whitespace-nowrap text-slate-600 dark:text-slate-300">
                       {invoice.paymentMethod ?? <span className="text-slate-400">—</span>}
                     </td>
-                    <td className="px-3 py-3 max-md:p-0 max-md:text-right">
+                    <td className="px-3 py-3">
                       <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${status.className}`}>
                         {status.label}
                       </span>
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-slate-500 max-md:p-0 dark:text-slate-400">
+                    <td className="px-3 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">
                       {formatTransactionDate(invoice.paymentDate, invoice.createdAt)}
                     </td>
-                    <td className="py-3 pl-3 text-right max-md:p-0">
+                    <td className="py-3 pl-3 text-right">
                       <button
                         type="button"
                         onClick={() => setSelected(invoice)}
-                        className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 max-md:min-h-10 max-md:px-3 dark:border-slate-700 dark:text-slate-300"
+                        className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:text-slate-300"
                       >
                         <Eye className="size-3" />
                         View
@@ -233,6 +279,7 @@ export function RevenueInvoiceTable({
           </tbody>
         </table>
       </div>
+      )}
 
       {/* Footer: count + numbered pager */}
       <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">

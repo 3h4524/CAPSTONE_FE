@@ -35,14 +35,15 @@ export const AppShell = ({ children }: AppShellProps) => {
   if (isWorkflowRoute) {
     return (
       <TooltipProvider>
-        <div className="bg-muted/40 flex h-dvh flex-col overflow-hidden">{children}</div>
+        <div className="bg-muted/40 relative flex h-dvh flex-col overflow-hidden">{children}</div>
       </TooltipProvider>
     );
   }
 
   return (
     <TooltipProvider>
-      <div className="bg-muted/40 flex h-dvh overflow-hidden">
+      {/* Relative so the hidden inputs behind selects and switches stay clipped, instead of making the page itself scroll. */}
+      <div className="bg-muted/40 relative flex h-dvh overflow-hidden">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <AppHeader onMobileMenu={() => openMobileMenu("left")} />

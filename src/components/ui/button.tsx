@@ -41,6 +41,8 @@ const buttonVariants = cva(
         lg: "h-11 rounded-lg px-7 py-3 text-base",
         icon: "size-9 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11",
         "icon-sm": "size-8 [@media(pointer:coarse)]:min-h-10 [@media(pointer:coarse)]:min-w-10",
+        // A page's main action: the usual button on a desktop, a small pill beside the title on a phone.
+        "page-action": "h-9 px-7 py-3 text-[0.95rem] max-md:h-10 max-md:rounded-full max-md:px-4 max-md:text-sm [@media(pointer:coarse)]:min-h-10",
         "icon-lg": "size-10 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11",
       },
     },

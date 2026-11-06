@@ -3,74 +3,44 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Download, FileSpreadsheet, MoreHorizontal, PackagePlus, Pencil, Plus, RotateCcw, Search, Shirt, Trash2, Upload, Workflow, X } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, FileSpreadsheet, PackagePlus, Pencil, Plus, RotateCcw, Search, Shirt, Trash2, Upload, Workflow, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
+import { BatchFormDialog } from "@/components/batches/batch-form-dialog";
+import { BatchImportDialog } from "@/components/batches/batch-import-dialog";
 import { BatchJobHistoryMenu } from "@/components/batches/batch-job-history-menu";
+import { BatchListPanel } from "@/components/batches/batch-list-panel";
 import { BatchPicker } from "@/components/batches/batch-picker";
 import { BatchProductCard } from "@/components/batches/batch-product-card";
+import { BatchProductDialog } from "@/components/batches/batch-product-dialog";
 import { BatchSummaryCard } from "@/components/batches/batch-summary-card";
 import { StatusBadge } from "@/components/commons/data-display/status-badge";
 import { TruncatedTooltip } from "@/components/commons/data-display/truncated-tooltip";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
-import { customPromptWarnings } from "@/helpers/design-text";
+import { productTypeLabels, statusDot, statuses, statusLabel } from "@/constants/batches";
 import { smoothScrollTo } from "@/helpers/smooth-scroll";
 import { useCreateBatch } from "@/hooks/mutations/use-create-batch";
 import { useDeleteBatch } from "@/hooks/mutations/use-delete-batch";
 import { useDeleteBatchProduct } from "@/hooks/mutations/use-delete-batch-product";
-import { useImportBatchProducts } from "@/hooks/mutations/use-import-batch-products";
 import { useResetBatchProducts } from "@/hooks/mutations/use-reset-batch-products";
 import { useSaveBatchProduct } from "@/hooks/mutations/use-save-batch-product";
 import { useUpdateBatch } from "@/hooks/mutations/use-update-batch";
 import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useBatches } from "@/hooks/queries/use-batches";
 import { useIsPhone } from "@/hooks/use-is-phone";
-import { type BatchFormValues, batchSchema, type ProductFormValues, productSchema, productTypes } from "@/schemas/batches";
+import { type BatchFormValues, batchSchema, type ProductFormValues, productSchema } from "@/schemas/batches";
 import { usePopupStore } from "@/stores/popup";
-import type { Batch, BatchProductImportRow, Product, ProductType, SaveProductInput } from "@/types/batches";
+import type { Batch, Product, ProductType, SaveProductInput } from "@/types/batches";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-const productTypeLabels: Record<ProductType, string> = { tshirt: "T-shirt", hoodie: "Hoodie", mug: "Mug", poster: "Poster", tote_bag: "Tote bag", phone_case: "Phone case" };
-// Every product falls under exactly one of these, so the counters add up to the batch's product count.
-const statuses = ["pending", "queued", "processing", "review", "completed", "failed"] as const;
-// The Dashboard's muted earth tones: neutral while waiting, soft hues while moving, sage when done.
-const statusDot: Record<(typeof statuses)[number], string> = { pending: "bg-[#c9bdb0]", queued: "bg-[#9f93c4]", processing: "bg-[#d8899b]", review: "bg-[#e2b05a]", completed: "bg-[#7d9f68]", failed: "bg-[#e66b7b]" };
-const statusLabel = (status: string) => status === "pending" ? "Pending" : status === "queued" ? "Queued" : status === "failed" ? "Failed" : ["approved", "exported", "published", "completed"].includes(status) ? "Completed" : status === "image_review_required" || status === "review" ? "Review" : "Processing";
-type ImportRow = BatchProductImportRow & { issues: string[] };
 // First, last and the pages around the current one; longer runs collapse into a gap, e.g. 1 … 4 5 6 … 12.
 const pageNumbers = (current: number, count: number): Array<number | "gap"> => {
   const shown = [...new Set([1, current - 1, current, current + 1, count])].filter((item) => item >= 1 && item <= count).sort((a, b) => a - b);
   return shown.flatMap((item, index) => index > 0 && item - shown[index - 1] > 1 ? ["gap" as const, item] : [item]);
-};
-
-const cellText = (value: unknown) => String(value ?? "").trim();
-const normalizeImportHeader = (value: unknown) => {
-  const header = cellText(value).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  if (["name", "productname"].includes(header)) return "name";
-  if (["type", "producttype"].includes(header)) return "producttype";
-  if (header === "niche") return "niche";
-  if (header === "keywords") return "keywords";
-  if (["description", "productdescription"].includes(header)) return "productdescription";
-  if (["notes", "sourcenotes"].includes(header)) return "sourcenotes";
-  if (["designtext", "text", "slogan", "phrase"].includes(header)) return "designtext";
-  if (["imageprompt", "prompt", "customprompt"].includes(header)) return "customprompt";
-  return header;
-};
-const productTypeAliases: Record<string, ProductType> = {
-  tshirt: "tshirt",
-  hoodie: "hoodie",
-  mug: "mug",
-  poster: "poster",
-  totebag: "tote_bag",
-  phonecase: "phone_case",
 };
 
 export const BatchWorkspace = () => {
@@ -89,6 +59,7 @@ export const BatchWorkspace = () => {
   const [deletingBatch, setDeletingBatch] = useState<Batch | null>(null);
   const [productDialog, setProductDialog] = useState(false);
   const [importDialog, setImportDialog] = useState(false);
+  const [importSession, setImportSession] = useState(0);
   const [editing, setEditing] = useState<Product | null>(null);
   const [search, setSearch] = useState("");
   // null until the Seller picks a status: the list then opens on Pending, the work still to run, or on All when
@@ -97,10 +68,6 @@ export const BatchWorkspace = () => {
   const [page, setPage] = useState(1);
   const [batchSearch, setBatchSearch] = useState("");
   const [showHelp, setShowHelp] = useState(false);
-  const [importRows, setImportRows] = useState<ImportRow[]>([]);
-  const [fileError, setFileError] = useState("");
-  const [importResult, setImportResult] = useState<{ importedCount: number; errors: Array<{ row: number; name: string; message: string }> } | null>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
   const detailRef = useRef<HTMLDivElement>(null);
   // Bumped on every explicit batch pick, so re-clicking the already-selected card scrolls too. Only needed when the
   // list and the detail panel are stacked; side by side the detail is already in view.
@@ -113,7 +80,6 @@ export const BatchWorkspace = () => {
   const deleteBatch = useDeleteBatch();
   const router = useRouter();
   const saveProduct = useSaveBatchProduct();
-  const importProducts = useImportBatchProducts();
   const deleteProduct = useDeleteBatchProduct();
   const resetProducts = useResetBatchProducts();
   const openPopup = usePopupStore((state) => state.openPopup);
@@ -171,7 +137,7 @@ export const BatchWorkspace = () => {
       positiveLabel: "Remove",
       onPositive: () => deleteProduct.mutate({ batchId, productId: product.id }),
     });
-  const openImport = () => { setImportDialog(true); setFileError(""); setImportResult(null); };
+  const openImport = () => { setImportSession((session) => session + 1); setImportDialog(true); };
 
   const openNewBatch = () => {
     setEditingBatch(null);
@@ -233,54 +199,6 @@ export const BatchWorkspace = () => {
     setProductDialog(false);
   });
 
-  const readImportFile = async (file?: File) => {
-    setFileError(""); setImportResult(null); setImportRows([]);
-    if (!file) return;
-    if (!/\.xlsx$/i.test(file.name)) { setFileError("Choose an Excel .xlsx file."); return; }
-    if (file.size > 5 * 1024 * 1024) { setFileError("The workbook must be smaller than 5 MB."); return; }
-    try {
-      const { default: readXlsxFile } = await import("read-excel-file/browser");
-      const sheets = await readXlsxFile(file);
-      const sheetRows = (sheets.find(({ sheet }) => sheet === "Products") ?? sheets[0])?.data;
-      if (!sheetRows) { setFileError("The workbook has no product worksheet."); return; }
-      const headers = (sheetRows[0] ?? []).map(normalizeImportHeader);
-      const requiredHeaders = ["name", "producttype", "niche", "keywords"];
-      if (requiredHeaders.some((header) => !headers.includes(header))) {
-        setFileError("The Products worksheet must include Product name, Product type, Niche and Keywords columns."); return;
-      }
-      const column = (name: string) => headers.indexOf(normalizeImportHeader(name));
-      const rows: ImportRow[] = sheetRows.slice(1).map((record, index) => {
-        const name = cellText(record[column("name")]);
-        const productTypeText = cellText(record[column("productType")]).toLowerCase().replace(/[^a-z0-9]/g, "");
-        const productType = productTypeAliases[productTypeText] ?? productTypeText as ProductType;
-        const niche = cellText(record[column("niche")]);
-        const keywordsText = cellText(record[column("keywords")]);
-        const keywords = keywordsText.split(",").map((keyword) => keyword.trim().toLowerCase()).filter(Boolean);
-        const productDescription = column("productDescription") < 0 ? "" : cellText(record[column("productDescription")]);
-        const sourceNotes = column("sourceNotes") < 0 ? "" : cellText(record[column("sourceNotes")]);
-        const designText = column("designText") < 0 ? "" : cellText(record[column("designText")]);
-        const customPrompt = column("customPrompt") < 0 ? "" : cellText(record[column("customPrompt")]);
-        const input: SaveProductInput = { name, productType, niche, keywords, productDescription: productDescription || undefined, sourceNotes: sourceNotes || undefined, designText: designText || undefined, customPrompt: customPrompt || undefined };
-        const parsed = productSchema.safeParse({ name, productType, niche, keywords: keywordsText, productDescription, sourceNotes, designText, customPrompt });
-        const issues = parsed.success ? [] : parsed.error.issues.map((issue) => issue.message);
-        return { row: index + 2, product: input, issues: [...new Set(issues)] };
-      }).filter((row) => row.product.name || row.product.productType || row.product.niche || row.product.keywords.length || row.product.productDescription || row.product.sourceNotes || row.product.designText || row.product.customPrompt);
-      if (sheetRows.length - 1 > 500) { setFileError("A file can contain up to 500 product rows per import."); return; }
-      if (!rows.length) { setFileError("No product rows found. Use the Products worksheet and keep the provided column headers."); return; }
-      setImportRows(rows);
-    } catch {
-      setFileError("Could not read this workbook. Please download a fresh template and try again.");
-    }
-  };
-
-  const submitImport = async () => {
-    if (!selectedBatch || importRows.length === 0) return;
-    const result = await importProducts.mutateAsync({ batchId: selectedBatch.id, products: importRows.map(({ row, product }) => ({ row, product })) });
-    setImportResult(result);
-    if (result.errors.length === 0) { setImportDialog(false); setImportRows([]); if (fileInput.current) fileInput.current.value = ""; }
-    else setImportRows((current) => current.filter((row) => result.errors.some((error) => error.row === row.row)));
-  };
-
   return (
     <div className="w-full min-w-0 space-y-4 md:space-y-5 md:p-6">
       <header className="flex flex-col justify-between gap-4 max-md:flex-row max-md:items-center sm:flex-row sm:items-start">
@@ -291,7 +209,7 @@ export const BatchWorkspace = () => {
         </div>
         <div className="flex flex-wrap gap-2 sm:shrink-0">
           <Button variant="ghost" className="text-muted-foreground max-md:hidden" aria-expanded={showHelp} onClick={() => setShowHelp((open) => !open)}><CircleHelp className="mr-2 size-4" />How it works<ChevronDown className={`ml-1 size-4 transition-transform ${showHelp ? "rotate-180" : ""}`} /></Button>
-          <Button className="max-md:px-4" onClick={openNewBatch}><Plus className="mr-2 size-4 max-md:mr-0" /><span>New<span className="max-md:hidden"> batch</span></span></Button>
+          <Button size="page-action" onClick={openNewBatch}><Plus className="mr-2 size-4 max-md:mr-0" /><span>New<span className="max-md:hidden"> batch</span></span></Button>
         </div>
       </header>
 
@@ -311,24 +229,7 @@ export const BatchWorkspace = () => {
       ) : (
         <div className="grid items-start gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[20rem_minmax(0,1fr)]">
           <aside className="bg-card flex flex-col overflow-hidden rounded-xl border max-md:hidden">
-            <div className="space-y-3 border-b p-3">
-              <div className="flex items-center justify-between px-1"><h2 className="text-sm font-semibold">Your batches</h2><span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium tabular-nums">{batchCount}</span></div>
-              {batchCount > 5 && <div className="relative"><Search className="text-muted-foreground absolute top-2 left-2.5 size-4" /><Input value={batchSearch} onChange={(event) => setBatchSearch(event.target.value)} placeholder="Find a batch" className="h-8 pl-8 text-sm" aria-label="Find a batch" /></div>}
-            </div>
-            <ul className="max-h-104 min-h-0 flex-1 space-y-1 overflow-y-auto p-2 lg:max-h-none">
-              {visibleBatches.length === 0 && <li className="text-muted-foreground px-3 py-6 text-center text-sm">No batches match “{batchSearch}”.</li>}
-              {visibleBatches.map((batch) => {
-                const active = selectedBatch?.id === batch.id;
-                return <li key={batch.id} className={`group/batch relative rounded-lg border transition-colors ${active ? "border-primary/40 bg-primary/5" : "hover:bg-muted/60 border-transparent"}`}>
-                  <button type="button" onClick={() => selectBatch(batch)} aria-current={active ? "true" : undefined} className="focus-visible:ring-ring w-full rounded-lg py-2.5 pr-10 pl-3 text-left focus-visible:ring-2 focus-visible:outline-none">
-                    <div className="flex items-center gap-2"><h3 className="min-w-0 flex-1 truncate text-sm font-semibold">{batch.name}</h3><StatusBadge status={batch.status} className="shrink-0 px-2 py-0 text-[11px] capitalize">{batch.status}</StatusBadge></div>
-                    <div className="text-muted-foreground mt-1 flex min-w-0 items-center gap-1.5 text-xs"><span className="shrink-0"><span className="text-foreground font-medium tabular-nums">{batch.productCount}</span> {batch.productCount === 1 ? "product" : "products"}</span>{batch.defaultNiche && <><span aria-hidden>·</span><span className="truncate"><span className="sr-only">Default niche </span>{batch.defaultNiche}</span></>}</div>
-                  </button>
-                  <div className="absolute top-1.5 right-1.5"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className={`text-muted-foreground size-7 transition-opacity ${active ? "" : "lg:opacity-0 lg:group-hover/batch:opacity-100 lg:focus-visible:opacity-100 lg:data-[state=open]:opacity-100"}`} aria-label={`Actions for ${batch.name}`}><MoreHorizontal className="size-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => openEditBatch(batch)}><Pencil />Edit batch</DropdownMenuItem><DropdownMenuItem variant="destructive" onSelect={() => setDeletingBatch(batch)}><Trash2 />Delete batch</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div>
-                </li>;
-              })}
-            </ul>
-            <div className="border-t p-2"><Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground w-full justify-start" onClick={openNewBatch}><Plus className="mr-2 size-4" />Add another batch</Button></div>
+            <BatchListPanel batches={visibleBatches} batchCount={batchCount} search={batchSearch} onSearchChange={setBatchSearch} selectedId={selectedBatch?.id} onSelect={selectBatch} onEdit={openEditBatch} onDelete={setDeletingBatch} onAdd={openNewBatch} />
           </aside>
 
           {selectedBatch && <section ref={detailRef} className="md:bg-card min-w-0 md:overflow-hidden md:rounded-xl md:border md:shadow-sm">
@@ -427,17 +328,13 @@ export const BatchWorkspace = () => {
       )}
 
 
-      <Dialog open={batchDialog} onOpenChange={(open) => { setBatchDialog(open); if (!open) setEditingBatch(null); }}><DialogContent><DialogHeader><DialogTitle>{editingBatch ? "Edit product batch" : "Create product batch"}</DialogTitle><DialogDescription>{editingBatch ? "Update the batch name and defaults used for new products." : "Set shared defaults to speed up adding products."}</DialogDescription></DialogHeader><form onSubmit={submitBatch} className="space-y-4"><div className="space-y-2"><Label htmlFor="batch-name" className="leading-5">Batch name *</Label><Input id="batch-name" {...batchForm.register("name")} placeholder="e.g. Summer outdoor collection" aria-invalid={!!batchForm.formState.errors.name}/>{batchForm.formState.errors.name && <p className="text-destructive text-sm">{batchForm.formState.errors.name.message}</p>}</div><div className="space-y-2"><Label htmlFor="batch-niche" className="leading-5">Default niche</Label><Input id="batch-niche" {...batchForm.register("defaultNiche")} placeholder="e.g. hiking and camping"/><p className="text-muted-foreground text-xs">Used to prefill new products; each product can override it.</p></div><div className="space-y-2"><Label htmlFor="batch-product-type" className="leading-5">Default product type</Label><Select value={batchForm.watch("defaultProductType") || "none"} onValueChange={(value) => batchForm.setValue("defaultProductType", value === "none" ? "" : value as ProductType)}><SelectTrigger id="batch-product-type" className="w-full"><SelectValue placeholder="No default"/></SelectTrigger><SelectContent><SelectItem value="none">No default</SelectItem>{productTypes.map((type) => <SelectItem key={type} value={type}>{productTypeLabels[type]}</SelectItem>)}</SelectContent></Select></div><div className="space-y-2"><Label htmlFor="batch-description" className="leading-5">Description</Label><Textarea id="batch-description" {...batchForm.register("description")} placeholder="What is this batch for?"/></div><DialogFooter><Button type="button" variant="outline" onClick={() => setBatchDialog(false)}>Cancel</Button><Button type="submit" disabled={createBatch.isPending || updateBatch.isPending}>{createBatch.isPending ? "Creating…" : updateBatch.isPending ? "Saving…" : editingBatch ? "Save changes" : "Create batch"}</Button></DialogFooter></form></DialogContent></Dialog>
+      <BatchFormDialog open={batchDialog} onOpenChange={(open) => { setBatchDialog(open); if (!open) setEditingBatch(null); }} form={batchForm} isEditing={!!editingBatch} isCreating={createBatch.isPending} isSaving={updateBatch.isPending} onSubmit={submitBatch} />
 
       <Dialog open={!!deletingBatch} onOpenChange={(open) => { if (!open) setDeletingBatch(null); }}><DialogContent><DialogHeader><DialogTitle>Delete “{deletingBatch?.name}”?</DialogTitle><DialogDescription>This batch will be removed from your batch list. Its saved products and completed job history remain stored. A batch with an active queue job cannot be deleted.</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setDeletingBatch(null)}>Cancel</Button><Button variant="destructive" disabled={deleteBatch.isPending} onClick={() => void submitDeleteBatch()}>{deleteBatch.isPending ? "Deleting…" : "Delete batch"}</Button></DialogFooter></DialogContent></Dialog>
 
-      <Dialog open={productDialog} onOpenChange={setProductDialog}><DialogContent className="max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{editing ? "Edit product" : "Add product"}</DialogTitle><DialogDescription>These are the product inputs currently stored for the creation queue.</DialogDescription></DialogHeader><form onSubmit={submitProduct} className="space-y-5"><div className="space-y-2"><Label htmlFor="product-name" className="leading-5">Product name *</Label><Input id="product-name" {...productForm.register("name")} aria-invalid={!!productForm.formState.errors.name}/>{productForm.formState.errors.name && <p className="text-destructive text-sm">{productForm.formState.errors.name.message}</p>}</div><div className="space-y-2"><Label htmlFor="product-type" className="leading-5">Product type *</Label><Select value={productForm.watch("productType")} onValueChange={(value) => { if (value) productForm.setValue("productType", value as ProductType, { shouldValidate: true }); }}><SelectTrigger id="product-type" className="w-full"><SelectValue/></SelectTrigger><SelectContent>{productTypes.map((type) => <SelectItem key={type} value={type}>{productTypeLabels[type]}</SelectItem>)}</SelectContent></Select></div><div className="space-y-2"><Label htmlFor="product-niche" className="leading-5">Niche *</Label><Input id="product-niche" {...productForm.register("niche")} placeholder="e.g. hiking enthusiasts" aria-invalid={!!productForm.formState.errors.niche}/><p className="text-muted-foreground text-xs">The specific audience or interest this product is for.</p>{productForm.formState.errors.niche && <p className="text-destructive text-sm">{productForm.formState.errors.niche.message}</p>}</div><div className="space-y-2"><Label htmlFor="product-keywords" className="leading-5">Keywords * <span className="text-muted-foreground font-normal">(comma separated, up to 13)</span></Label><Input id="product-keywords" {...productForm.register("keywords")} placeholder="minimalist, nature, gift" aria-invalid={!!productForm.formState.errors.keywords}/>{productForm.formState.errors.keywords && <p className="text-destructive text-sm">{productForm.formState.errors.keywords.message}</p>}</div><div className="space-y-2"><Label htmlFor="product-design-text" className="leading-5">Design text <span className="text-muted-foreground font-normal">(optional)</span></Label><Input id="product-design-text" maxLength={100} {...productForm.register("designText")} placeholder="e.g. GO HIGHER" aria-invalid={!!productForm.formState.errors.designText}/><p className="text-muted-foreground text-xs">The exact words printed on the design. With a lettering template, leaving it empty prints the product name; with an image prompt, it prints no words.</p>{productForm.formState.errors.designText && <p className="text-destructive text-sm">{productForm.formState.errors.designText.message}</p>}</div><div className="space-y-2"><Label htmlFor="product-custom-prompt" className="leading-5">Image prompt <span className="text-muted-foreground font-normal">(optional)</span></Label><Textarea id="product-custom-prompt" maxLength={1000} {...productForm.register("customPrompt")} placeholder="e.g. A detailed vintage badge with a leaping trout, crossed fishing rods and a calm lake at sunrise" aria-invalid={!!productForm.formState.errors.customPrompt}/><p className="text-muted-foreground text-xs">Replaces the design template and the art style set in the workflow for this product. Describe the image and its style; put any words to print in Design text.</p>{customPromptWarnings(productForm.watch("customPrompt"), productForm.watch("designText"), productForm.watch("productType")).map((warning) => <p key={warning} className="text-xs text-amber-700">{warning}</p>)}{productForm.formState.errors.customPrompt && <p className="text-destructive text-sm">{productForm.formState.errors.customPrompt.message}</p>}</div><div className="space-y-2"><Label htmlFor="product-description" className="leading-5">Product description <span className="text-muted-foreground font-normal">(optional)</span></Label><Textarea id="product-description" maxLength={2000} {...productForm.register("productDescription")} placeholder="Describe the product idea or design brief" aria-invalid={!!productForm.formState.errors.productDescription}/><p className="text-muted-foreground text-xs">Add the design idea or brief you want the generation workflow to use.</p>{productForm.formState.errors.productDescription && <p className="text-destructive text-sm">{productForm.formState.errors.productDescription.message}</p>}</div><div className="space-y-2"><Label htmlFor="product-notes" className="leading-5">Source notes <span className="text-muted-foreground font-normal">(optional)</span></Label><Textarea id="product-notes" {...productForm.register("sourceNotes")} placeholder="Reference or production notes"/>{productForm.formState.errors.sourceNotes && <p className="text-destructive text-sm">{productForm.formState.errors.sourceNotes.message}</p>}</div><DialogFooter><Button type="button" variant="outline" onClick={() => setProductDialog(false)}>Cancel</Button><Button type="submit" disabled={saveProduct.isPending}>{saveProduct.isPending ? "Saving…" : editing ? "Save changes" : "Add product"}</Button></DialogFooter></form></DialogContent></Dialog>
+      <BatchProductDialog open={productDialog} onOpenChange={setProductDialog} form={productForm} isEditing={!!editing} isSaving={saveProduct.isPending} onSubmit={submitProduct} />
 
-      <Dialog open={importDialog} onOpenChange={(open) => { setImportDialog(open); if (!open) { setImportRows([]); setImportResult(null); setFileError(""); if (fileInput.current) fileInput.current.value = ""; } }}><DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto"><DialogHeader><DialogTitle>Import products from Excel</DialogTitle><DialogDescription>Upload a completed template. Valid rows are saved as pending products; importing does not start AI generation. Review the products and approve the batch when you are ready to queue them.</DialogDescription></DialogHeader><div className="space-y-4"><div className="bg-muted/40 flex flex-col justify-between gap-3 rounded-lg border p-4 sm:flex-row sm:items-center"><div><p className="text-sm font-medium">Start with the sample template</p><p className="text-muted-foreground mt-1 text-xs">Includes a quick guide, an example and a product type dropdown.</p></div><Button variant="outline" size="sm" asChild><a href="/templates/product-import-template.xlsx" download><Download className="mr-2 size-4"/>Download template</a></Button></div><div><Label htmlFor="product-excel">Excel file (.xlsx)</Label><Input id="product-excel" ref={fileInput} type="file" accept=".xlsx" className="mt-2" onChange={(event) => void readImportFile(event.target.files?.[0])}/><p className="text-muted-foreground mt-1 text-xs">Up to 500 products and 5 MB. Required: product name, product type, niche and keywords. Niche is the target market or interest; separate 1–13 keywords with commas. Description and source notes are optional.</p></div>
-          {fileError && <p role="alert" className="text-destructive text-sm">{fileError}</p>}
-          {importRows.length > 0 && <div className="space-y-2 rounded-lg border p-4"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium">{importRows.length} rows ready</p><StatusBadge status={importRows.some((row) => row.issues.length) ? "pending" : "completed"}>{importRows.filter((row) => row.issues.length).length} need attention</StatusBadge></div><p className="text-muted-foreground text-sm">Rows with errors will be skipped; valid rows can still be imported.</p><div className="max-h-36 space-y-1 overflow-y-auto text-sm">{importRows.flatMap((row) => row.issues.map((issue) => <p key={`${row.row}-${issue}`} className="text-destructive">Row {row.row} · {row.product.name || "(unnamed)"}: {issue}</p>))}</div></div>}
-          {importResult && <div className="rounded-lg border p-4"><p className="font-medium">Imported {importResult.importedCount} products</p>{importResult.errors.length > 0 && <div className="mt-2 max-h-36 space-y-1 overflow-y-auto text-sm">{importResult.errors.map((error) => <p key={`${error.row}-${error.message}`} className="text-destructive">Row {error.row} · {error.name || "(unnamed)"}: {error.message}</p>)}</div>}</div>}
-        </div><DialogFooter><Button variant="outline" onClick={() => setImportDialog(false)}>Close</Button><Button onClick={() => void submitImport()} disabled={!importRows.length || importProducts.isPending}>{importProducts.isPending ? "Importing…" : "Import valid rows"}</Button></DialogFooter></DialogContent></Dialog>
+      <BatchImportDialog key={importSession} batchId={selectedBatch?.id} open={importDialog} onOpenChange={setImportDialog} />
     </div>
   );
 };

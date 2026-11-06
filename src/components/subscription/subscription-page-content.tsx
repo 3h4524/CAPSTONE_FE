@@ -94,10 +94,13 @@ export const SubscriptionPageContent = () => {
   }
 
   return (
-    <div className="w-full min-w-0 space-y-8 p-4 sm:p-6">
+    // The bottom padding keeps the last line clear of the floating assistant button.
+    <div className="w-full min-w-0 space-y-8 max-md:space-y-4 max-md:pb-14 md:p-6">
       <div>
-        <h1 className="text-2xl font-bold">Billing &amp; Subscription</h1>
-        <p className="text-muted-foreground text-sm">
+        <h1 className="text-2xl font-bold">
+          Billing<span className="max-md:hidden"> &amp; Subscription</span>
+        </h1>
+        <p className="text-muted-foreground text-sm max-md:hidden">
           Keep track of your plan and what it allows, compare plans, and download your invoices.
         </p>
       </div>
@@ -121,6 +124,7 @@ export const SubscriptionPageContent = () => {
         onBuyClick={setCheckoutPlan}
         onUpgradeClick={setUpgradePlan}
         onDowngradeClick={handleDowngradeClick}
+        trialLabel={`${data.trialPlanName ?? "Pro"} trial`}
         trialOffer={
           data.trialEligible && (
             <TrialOfferCard

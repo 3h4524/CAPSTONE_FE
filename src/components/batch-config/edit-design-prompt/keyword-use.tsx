@@ -24,8 +24,8 @@ export const KeywordUse = ({ motifs, ignoredKeywords }: KeywordUseProps) => {
         </p>
       )}
       <p className="text-muted-foreground">
-        Words for the product or who it is for, words asking for lettering, words the printed phrase already says and anything past
-        the first five are left out. Edit the product&apos;s keywords to change this.
+        Keywords are used as written, less words for the product or its listing (shirt, mug, gift…) and words the printed phrase
+        already says. Edit the product&apos;s keywords to change this.
       </p>
     </div>
   );

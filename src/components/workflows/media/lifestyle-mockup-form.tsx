@@ -1,12 +1,12 @@
 "use client";
-import { useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
-import { Check } from "lucide-react";
+import { Check, ImagePlus, SlidersHorizontal, Sparkles } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 
+import { HorizontalStrip } from "@/components/commons/data-display/horizontal-strip";
 import { ImageLightbox } from "@/components/commons/data-display/image-lightbox";
 import {
-  ChoiceChips,
   filterBySource,
   ModelPhotoFilterBar,
   type PhotoSource,
@@ -36,7 +36,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { getErrorMessage } from "@/helpers/error-message";
 import { modelAttributesLabel } from "@/helpers/model-attributes";
 import { hasFeature } from "@/helpers/plan-features";
@@ -251,10 +250,103 @@ const GarmentChooser = ({
   );
 };
 
-const SOURCE_OPTIONS: { value: "upload" | "library"; label: string }[] = [
-  { value: "upload", label: "Upload a photo" },
-  { value: "library", label: "From model photos" },
+const SOURCE_OPTIONS: { value: "upload" | "library"; label: string; hint: string }[] = [
+  { value: "upload", label: "Upload a photo", hint: "Your own photo of people" },
+  { value: "library", label: "From model photos", hint: "Ready-made people, no upload" },
 ];
+
+// One numbered step of the form: what to do, then the controls for it.
+const Step = ({
+  number,
+  title,
+  hint,
+  children,
+}: {
+  number: number;
+  title: string;
+  hint?: string;
+  children: ReactNode;
+}) => (
+  <section className="space-y-2.5">
+    <div className="flex items-start gap-2.5">
+      <span className="bg-primary mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white">
+        {number}
+      </span>
+      <div className="min-w-0">
+        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        {hint && <p className="text-muted-foreground text-xs leading-relaxed">{hint}</p>}
+      </div>
+    </div>
+    <div className="pl-7.5">{children}</div>
+  </section>
+);
+
+// The photo to upload as a drop area; once chosen, it is shown with a way to change it.
+const UploadPhoto = ({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: File | undefined;
+  onChange: (file: File | undefined) => void;
+  disabled: boolean;
+}) => {
+  const [preview, setPreview] = useState<string | null>(null);
+  useEffect(() => {
+    if (!value) {
+      setPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(value);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [value]);
+  return (
+    <label
+      className={cn(
+        // Relative, so the hidden input sits inside it: focusing it never scrolls the panel away.
+        "relative flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 transition-colors hover:border-slate-400",
+        disabled && "pointer-events-none opacity-60"
+      )}
+    >
+      <input
+        type="file"
+        aria-label="Photo of a model"
+        accept="image/jpeg,image/png,image/webp"
+        disabled={disabled}
+        className="sr-only"
+        onChange={(event) => {
+          onChange(event.target.files?.[0]);
+          event.target.value = "";
+        }}
+      />
+      {preview ? (
+        <Image
+          src={preview}
+          alt=""
+          width={64}
+          height={80}
+          unoptimized
+          className="h-20 w-16 shrink-0 rounded border bg-white object-cover"
+        />
+      ) : (
+        <span className="flex h-20 w-16 shrink-0 items-center justify-center rounded border bg-white text-slate-400">
+          <ImagePlus className="size-5" aria-hidden="true" />
+        </span>
+      )}
+      <span className="min-w-0 flex-1 text-xs leading-relaxed">
+        <span className="block truncate font-medium text-slate-800">
+          {value ? value.name : "Choose a photo"}
+        </span>
+        <span className="text-muted-foreground block">
+          {value
+            ? "Click to choose another."
+            : "JPEG, PNG or WebP, up to 8 MB. A sharper photo gives a sharper image."}
+        </span>
+      </span>
+    </label>
+  );
+};
 
 // The model photos to dress (the shared ones and the Seller's own), narrowed to the people wanted; one is chosen.
 const LibraryModelPicker = ({
@@ -270,12 +362,33 @@ const LibraryModelPicker = ({
   const [source, setSource] = useState<PhotoSource | null>(null);
   const { data: allPhotos, isPending, isError } = useModelPhotos("seller", undefined, true, filter);
   const photos = allPhotos && filterBySource(allPhotos, source);
+  // The filters are folded away: most people just pick a photo.
+  const [filtering, setFiltering] = useState(false);
+  const active = Object.values(filter).filter(Boolean).length + (source ? 1 : 0);
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-x-6 gap-y-3">
-        <PhotoSourceFilter value={source} onChange={setSource} disabled={disabled} />
-        <ModelPhotoFilterBar value={filter} onChange={setFilter} disabled={disabled} />
+    <div className="min-w-0 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-muted-foreground text-xs">
+          {photos ? `${photos.length} photo${photos.length === 1 ? "" : "s"}` : ""}
+        </span>
+        <Button
+          type="button"
+          variant={filtering || active > 0 ? "secondary" : "ghost"}
+          size="sm"
+          className="h-7 px-2 text-xs hover:translate-y-0"
+          aria-expanded={filtering}
+          onClick={() => setFiltering((open) => !open)}
+        >
+          <SlidersHorizontal aria-hidden="true" />
+          {active > 0 ? `Filters (${active})` : "Filters"}
+        </Button>
       </div>
+      {filtering && (
+        <div className="flex flex-wrap gap-x-6 gap-y-3 rounded-md border bg-slate-50 p-2.5">
+          <PhotoSourceFilter value={source} onChange={setSource} disabled={disabled} />
+          <ModelPhotoFilterBar value={filter} onChange={setFilter} disabled={disabled} />
+        </div>
+      )}
       {isPending ? (
         <p className="text-muted-foreground text-xs">Loading model photos…</p>
       ) : isError ? (
@@ -284,14 +397,15 @@ const LibraryModelPicker = ({
         </p>
       ) : (photos ?? []).length === 0 ? (
         <p className="text-muted-foreground text-xs">
-          No model photos of these people yet. Add or make one under Mock-up templates → Model
-          photos.
+          No model photos match. Change the filters, or add or make one under Mock-up templates →
+          Model photos.
         </p>
       ) : (
-        <div
+        <HorizontalStrip
           role="radiogroup"
           aria-label="Model photo to dress"
-          className="grid max-h-72 auto-rows-max grid-cols-3 gap-2 overflow-y-auto p-0.5"
+          itemsLabel="model photos"
+          itemCount={(photos ?? []).length}
         >
           {(photos ?? []).map((photo) => {
             const chosen = photo.id === value;
@@ -305,7 +419,7 @@ const LibraryModelPicker = ({
                 title={photo.name}
                 onClick={() => onChange(photo.id)}
                 className={cn(
-                  "relative overflow-hidden rounded-md border bg-slate-50 text-left transition-shadow disabled:opacity-60",
+                  "relative w-36 shrink-0 snap-start overflow-hidden rounded-md border bg-slate-50 text-left transition-shadow disabled:opacity-60",
                   chosen ? "border-primary ring-primary/25 ring-2" : "hover:border-slate-400"
                 )}
               >
@@ -329,7 +443,7 @@ const LibraryModelPicker = ({
               </button>
             );
           })}
-        </div>
+        </HorizontalStrip>
       )}
     </div>
   );
@@ -432,41 +546,27 @@ export const LifestyleMockupForm = ({
         <AccordionContent className="space-y-4">
           <Form {...form}>
             <form
-              className="space-y-3"
+              className="space-y-5 pb-1"
               aria-label="AI lifestyle image"
               onSubmit={form.handleSubmit(generateAll)}
             >
               <p className="text-muted-foreground text-xs leading-relaxed">
-                Upload a photo of the people to dress, or pick one of your model photos, and AI
-                dresses them in the product: the cut and color come from the mock-up, the print from
-                its design. Everyone in a group photo wears it.
+                AI puts your product on real people: the cut and color come from the mockup, the
+                print from its design.
               </p>
-              <FormField
-                control={form.control}
-                name="source"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <ChoiceChips
-                        label="People to dress"
-                        options={SOURCE_OPTIONS}
-                        value={field.value}
-                        disabled={isPending}
-                        onChange={(next) => next && field.onChange(next)}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              {source === "library" ? (
+              <Step
+                number={1}
+                title="Choose the mockups"
+                hint={`One image is made for each, up to ${MAX_LIFESTYLE_MOCKUPS}.`}
+              >
                 <FormField
                   control={form.control}
-                  name="modelPhotoId"
+                  name="garmentMockupIds"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Model photo</FormLabel>
                       <FormControl>
-                        <LibraryModelPicker
+                        <GarmentChooser
+                          garments={garments}
                           value={field.value}
                           onChange={field.onChange}
                           disabled={isPending}
@@ -476,95 +576,155 @@ export const LifestyleMockupForm = ({
                     </FormItem>
                   )}
                 />
-              ) : (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="file"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Photo of a model</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            disabled={isPending}
-                            className="text-muted-foreground file:bg-muted h-9 cursor-pointer bg-white py-1 text-xs file:mr-2 file:h-6.5 file:rounded file:px-2.5 file:text-xs file:text-slate-700"
-                            onChange={(e) => field.onChange(e.target.files?.[0])}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="rightsConfirmed"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-start gap-2">
+              </Step>
+              <Step
+                number={2}
+                title="Choose who wears them"
+                hint="Everyone in a group photo wears the product."
+              >
+                <FormField
+                  control={form.control}
+                  name="source"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div
+                          role="group"
+                          aria-label="People to dress"
+                          className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1"
+                        >
+                          {SOURCE_OPTIONS.map((option) => {
+                            const picked = field.value === option.value;
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                aria-pressed={picked}
+                                aria-label={option.label}
+                                disabled={isPending}
+                                onClick={() => field.onChange(option.value)}
+                                className={cn(
+                                  "rounded-md px-2 py-1.5 text-left transition-colors disabled:opacity-60",
+                                  picked
+                                    ? "bg-white shadow-sm ring-1 ring-slate-200"
+                                    : "hover:bg-white/60"
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    "block text-xs font-semibold",
+                                    picked ? "text-slate-900" : "text-slate-600"
+                                  )}
+                                >
+                                  {option.label}
+                                </span>
+                                <span className="text-muted-foreground block text-[11px] leading-snug">
+                                  {option.hint}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <div className="mt-3">
+                  {source === "library" ? (
+                    <FormField
+                      control={form.control}
+                      name="modelPhotoId"
+                      render={({ field }) => (
+                        <FormItem className="grid-cols-[minmax(0,1fr)]">
                           <FormControl>
-                            <Checkbox
-                              checked={field.value}
+                            <LibraryModelPicker
+                              value={field.value}
+                              onChange={field.onChange}
                               disabled={isPending}
-                              onCheckedChange={(checked) => field.onChange(checked === true)}
-                              className="mt-0.5"
                             />
                           </FormControl>
-                          <FormLabel className="text-xs leading-relaxed font-normal text-slate-700">
-                            I have the rights to this photo, and the consent of a parent or guardian
-                            for anyone under 18 in it.
-                          </FormLabel>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
-              <FormField
-                control={form.control}
-                name="garmentMockupIds"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Product mockups to wear</FormLabel>
-                    <FormControl>
-                      <GarmentChooser
-                        garments={garments}
-                        value={field.value}
-                        onChange={field.onChange}
-                        disabled={isPending}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      <FormField
+                        control={form.control}
+                        name="file"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <UploadPhoto
+                                value={field.value}
+                                onChange={field.onChange}
+                                disabled={isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <p className="text-muted-foreground text-xs leading-relaxed">
-                Uploads: JPEG, PNG or static WebP · 8 MB. Each image (about $0.03) is charged to
-                your Ideogram key
-                {chosen.length > 1
-                  ? `: ${chosen.length} images, about $${(chosen.length * 0.03).toFixed(2)}`
-                  : ""}
-                . The result keeps the photo&apos;s size, so a sharper photo gives a sharper image.
-                AI can alter the print, so check the result.
-              </p>
-              <Button
-                type="submit"
-                size="sm"
-                className="w-full hover:translate-y-0"
-                disabled={isPending || chosen.length === 0 || locked}
-              >
-                {progress
-                  ? progress.total > 1
-                    ? `Generating… ${progress.done} of ${progress.total} done`
-                    : "Generating…"
-                  : locked
-                    ? "Lifestyle images are part of Pro"
-                    : chosen.length > 1
-                      ? `Generate ${chosen.length} lifestyle images`
-                      : "Generate lifestyle image"}
-              </Button>
+                      <FormField
+                        control={form.control}
+                        name="rightsConfirmed"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex items-start gap-2">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  disabled={isPending}
+                                  onCheckedChange={(checked) => field.onChange(checked === true)}
+                                  className="mt-0.5"
+                                />
+                              </FormControl>
+                              <FormLabel className="text-xs leading-relaxed font-normal text-slate-700">
+                                I have the rights to this photo, and the consent of a parent or
+                                guardian for anyone under 18 in it.
+                              </FormLabel>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
+              </Step>
+              <Step number={3} title="Make the images">
+                <div className="space-y-2">
+                  {chosen.length > 0 && !locked && (
+                    <p className="flex items-baseline justify-between gap-2 rounded-md bg-slate-50 px-2.5 py-1.5 text-xs">
+                      <span className="text-slate-700">
+                        {chosen.length} image{chosen.length === 1 ? "" : "s"}
+                      </span>
+                      <span className="text-muted-foreground">
+                        about ${(chosen.length * 0.03).toFixed(2)} on your Ideogram key
+                      </span>
+                    </p>
+                  )}
+                  <Button
+                    type="submit"
+                    className="w-full hover:translate-y-0"
+                    disabled={isPending || chosen.length === 0 || locked}
+                  >
+                    {!locked && !progress && <Sparkles aria-hidden="true" />}
+                    {progress
+                      ? progress.total > 1
+                        ? `Generating… ${progress.done} of ${progress.total} done`
+                        : "Generating…"
+                      : locked
+                        ? "Lifestyle images are part of Pro"
+                        : chosen.length > 1
+                          ? `Generate ${chosen.length} lifestyle images`
+                          : "Generate lifestyle image"}
+                  </Button>
+                  <p className="text-muted-foreground text-[11px] leading-relaxed">
+                    AI can change the print slightly, so check each image before you use it.
+                  </p>
+                </div>
+              </Step>
             </form>
           </Form>
           {showResults &&
@@ -606,7 +766,7 @@ const LifestyleResults = ({
     height: asset.height,
   }));
   return (
-    <section className="space-y-2" aria-label="Lifestyle images">
+    <section className="space-y-2 border-t pt-4" aria-label="Lifestyle images">
       <p className="text-xs font-medium text-slate-700">{title}</p>
       <div className="grid grid-cols-2 gap-2 @sm:grid-cols-3">
         {made.map((asset, index) => (

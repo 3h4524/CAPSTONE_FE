@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { type ReactNode, useMemo } from "react";
 import { TrendingUp } from "lucide-react";
 import {
   Area,
@@ -15,27 +15,27 @@ import {
 
 import { Card } from "@/components/ui/card";
 import type {
-  RevenueChartDto,
   RevenueFilterDto,
   RevenueTrendPointDto,
 } from "@/types/revenue";
-import { formatCurrency } from "@/utils/format-currency";
+import { formatVnd } from "@/utils/format-currency";
 
-import { RevenueByPlanCard } from "./RevenueByPlanCard";
-
-interface RevenueChartsProps {
-  charts?: RevenueChartDto;
+interface RevenueTrendCardProps {
+  trend?: RevenueTrendPointDto[];
   isLoading: boolean;
-  currency?: "VND" | "USD";
   filter?: RevenueFilterDto;
+  /** Controls shown in the header, e.g. the Dashboard's range picker. */
+  actions?: ReactNode;
 }
 
 /**
  * Format Y-axis ticks compactly without repeating currency symbols (matching mockup: 0, 300k, 600k, 900k, 1.2M)
  */
-function formatTrendYAxis(valInThousands: number, currency: "VND" | "USD"): string {
-  if (valInThousands === 0) return "0";
-  const realVal = currency === "VND" ? valInThousands * 1_000 : valInThousands;
+function formatTrendYAxis(realVal: number): string {
+  if (realVal === 0) return "0";
+  if (realVal >= 1_000_000_000) {
+    return `${(realVal / 1_000_000_000).toFixed(1).replace(/\.0$/, "")}B`;
+  }
   if (realVal >= 1_000_000) {
     return `${(realVal / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
   }
@@ -188,125 +188,67 @@ function buildTrendSeries(
   return series;
 }
 
-export function RevenueCharts({
-  charts,
-  isLoading,
-  currency = "VND",
-  filter,
-}: RevenueChartsProps) {
-  // Trend data for Card 1 - 100% from database via charts.trend
-  const trendData = useMemo(() => {
-    return buildTrendSeries(charts?.trend || [], filter);
-  }, [charts?.trend, filter]);
-
-  if (isLoading || !charts) {
-    return (
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card className="h-[340px] animate-pulse rounded-2xl border border-slate-200/80 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-          <div className="h-6 w-36 rounded bg-slate-200 dark:bg-slate-800" />
-          <div className="dark:bg-slate-850 mt-4 h-[240px] rounded-xl bg-slate-100" />
-        </Card>
-        <Card className="h-[340px] animate-pulse rounded-2xl border border-slate-200/80 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-          <div className="h-6 w-36 rounded bg-slate-200 dark:bg-slate-800" />
-          <div className="dark:bg-slate-850 mt-4 h-[240px] rounded-xl bg-slate-100" />
-        </Card>
-      </div>
-    );
-  }
+/** Collected revenue over the period against the equally long period before it. */
+export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueTrendCardProps) {
+  const trendData = useMemo(() => buildTrendSeries(trend ?? [], filter), [trend, filter]);
 
   return (
-    // Two equal halves from lg up (grid rows stretch both cards to the same height); stacked below.
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      {/* ======================================================== */}
-      {/* CARD 1: Revenue Trend (1/2 width)                        */}
-      {/* ======================================================== */}
-      <Card className="flex h-full flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-        {/* Header */}
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                Revenue Trend
-              </h3>
-              <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
-                Total revenue (collected) vs. previous period
-              </p>
-            </div>
+    <Card className="flex h-full flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+      {/* Header */}
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fef3f0] text-[#e07a5f] dark:bg-orange-950/40">
+            <TrendingUp className="h-5 w-5" />
           </div>
-
-          {/* Legend */}
-          <div className="flex items-center gap-3 text-[11px] font-medium">
-            <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-              <span className="h-0.5 w-3.5 rounded-full bg-blue-600" />
-              <span>Current period</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
-              <span className="h-0.5 w-3.5 border-b border-dashed border-blue-300 dark:border-slate-500" />
-              <span>Previous period</span>
-            </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Revenue Trend</h3>
+            <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+              Total revenue (collected) vs. previous period
+            </p>
           </div>
         </div>
 
-        {/* Chart Area: Area Spline with gradient & dashed comparison */}
-        <div className="h-[250px] w-full flex-1">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Legend */}
+          <div className="flex items-center gap-3 text-[11px] font-medium">
+            <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+              <span className="h-0.5 w-3.5 rounded-full bg-[#e07a5f]" />
+              <span>Current period</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
+              <span className="h-0.5 w-3.5 border-b-2 border-dashed border-[#48a999]" />
+              <span>Previous period</span>
+            </div>
+          </div>
+          {actions}
+        </div>
+      </div>
+
+      {/* Chart Area: Area Spline with gradient & dashed comparison */}
+      <div className="h-[250px] w-full">
+        {isLoading || !trend ? (
+          <div className="h-full w-full animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/60" />
+        ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={trendData}
-              margin={{ top: 18, right: 12, left: -20, bottom: 0 }}
-            >
+            <AreaChart data={trendData} margin={{ top: 18, right: 12, left: -20, bottom: 0 }}>
               <defs>
-                <linearGradient
-                  id="revenueTrendGrad"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="0%" stopColor="#2563eb" stopOpacity={0.16} />
-                  <stop offset="100%" stopColor="#2563eb" stopOpacity={0.0} />
+                <linearGradient id="revenueTrendGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#e07a5f" stopOpacity={0.16} />
+                  <stop offset="100%" stopColor="#e07a5f" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-                stroke="#f1f5f9"
-                className="dark:stroke-slate-800/80"
-              />
-              <XAxis
-                dataKey="dateLabel"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 10, fill: "#94a3b8" }}
-                dy={6}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 10, fill: "#94a3b8" }}
-                tickFormatter={(val) => formatTrendYAxis(val, currency)}
-              />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-800/80" />
+              <XAxis dataKey="dateLabel" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} dy={6} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} tickFormatter={formatTrendYAxis} />
               <Tooltip
-                cursor={{
-                  stroke: "#94a3b8",
-                  strokeWidth: 1,
-                  strokeDasharray: "3 3",
-                }}
+                cursor={{ stroke: "#94a3b8", strokeWidth: 1, strokeDasharray: "3 3" }}
                 content={({ active, payload, label }) => {
                   if (!active || !payload || payload.length === 0) return null;
-                  const currentVal = Number(
-                    payload.find((p) => p.dataKey === "amount")?.value || 0
-                  );
+                  const currentVal = Number(payload.find((p) => p.dataKey === "amount")?.value || 0);
                   return (
                     <div className="relative -translate-y-2 rounded-xl border border-slate-200/90 bg-white px-3.5 py-2 text-center shadow-xl dark:border-slate-800 dark:bg-slate-900">
-                      <p className="text-[11px] font-medium text-slate-400">
-                        {label}
-                      </p>
-                      <p className="mt-0.5 text-sm font-bold text-slate-900 dark:text-slate-100">
-                        {formatCurrency(currentVal, currency)}
-                      </p>
+                      <p className="text-[11px] font-medium text-slate-400">{label}</p>
+                      <p className="mt-0.5 text-sm font-bold text-slate-900 dark:text-slate-100">{formatVnd(currentVal)}</p>
                       {/* Pointer caret arrow pointing down to active dot */}
                       <div className="absolute -bottom-1.5 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 border-r border-b border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-900" />
                     </div>
@@ -318,35 +260,27 @@ export function RevenueCharts({
                 type="monotone"
                 dataKey="amount"
                 name="Current period"
-                stroke="#2563eb"
+                stroke="#e07a5f"
                 strokeWidth={2.4}
                 fill="url(#revenueTrendGrad)"
                 dot={false}
-                activeDot={{
-                  r: 4.5,
-                  fill: "#2563eb",
-                  stroke: "#ffffff",
-                  strokeWidth: 2,
-                }}
+                activeDot={{ r: 4.5, fill: "#e07a5f", stroke: "#ffffff", strokeWidth: 2 }}
               />
               {/* Previous period smooth dashed line */}
               <Line
                 type="monotone"
                 dataKey="previousAmount"
                 name="Previous period"
-                stroke="#93c5fd"
+                stroke="#48a999"
                 strokeWidth={1.8}
                 strokeDasharray="4 4"
                 dot={false}
-                activeDot={{ r: 3.5, fill: "#93c5fd" }}
+                activeDot={{ r: 3.5, fill: "#48a999" }}
               />
             </AreaChart>
           </ResponsiveContainer>
-        </div>
-      </Card>
-
-      {/* CARD 2: Revenue by Plan - donut + per-plan table (1/2 width) */}
-      <RevenueByPlanCard plans={charts.byPlan ?? []} currency={currency} />
-    </div>
+        )}
+      </div>
+    </Card>
   );
 }

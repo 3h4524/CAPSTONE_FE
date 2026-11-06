@@ -39,8 +39,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { getErrorMessage } from "@/helpers/error-message";
 import { modelAttributesLabel } from "@/helpers/model-attributes";
+import { hasFeature } from "@/helpers/plan-features";
 import { showToast } from "@/helpers/toast";
 import { useGenerateLifestyleMockup } from "@/hooks/mutations/use-generate-lifestyle-mockup";
+import { useEntitlements } from "@/hooks/queries/use-entitlements";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { useModelPhotos } from "@/hooks/queries/use-model-photos";
 import type { LifestyleMockupFormValues } from "@/schemas/video-workflow";
@@ -364,6 +366,9 @@ export const LifestyleMockupForm = ({
   const source = useWatch({ control: form.control, name: "source" });
   const chosen = garments.filter((garment) => chosenIds.includes(garment.id));
   const productIds = [...new Set(chosen.map((garment) => garment.productId))];
+  const { data: entitlements } = useEntitlements();
+  // Lifestyle mockups are a Pro feature; the backend refuses them on other plans.
+  const locked = entitlements !== undefined && !hasFeature(entitlements, "lifestyle_mockup");
   if (garments.length === 0) return null;
 
   // One request per mock-up, up to LIFESTYLE_PARALLEL_REQUESTS at once (as many Ideogram images as design generation
@@ -548,15 +553,17 @@ export const LifestyleMockupForm = ({
                 type="submit"
                 size="sm"
                 className="w-full hover:translate-y-0"
-                disabled={isPending || chosen.length === 0}
+                disabled={isPending || chosen.length === 0 || locked}
               >
                 {progress
                   ? progress.total > 1
                     ? `Generating… ${progress.done} of ${progress.total} done`
                     : "Generating…"
-                  : chosen.length > 1
-                    ? `Generate ${chosen.length} lifestyle images`
-                    : "Generate lifestyle image"}
+                  : locked
+                    ? "Lifestyle images are part of Pro"
+                    : chosen.length > 1
+                      ? `Generate ${chosen.length} lifestyle images`
+                      : "Generate lifestyle image"}
               </Button>
             </form>
           </Form>

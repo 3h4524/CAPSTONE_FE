@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronLeft, ChevronRight, Download, FileSpreadsheet, Layers3, MoreHorizontal, Pencil, Plus, RotateCcw, Search, Trash2, Upload, Workflow } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { formatDistanceToNow } from "date-fns";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Download, FileSpreadsheet, MoreHorizontal, PackagePlus, Pencil, Plus, RotateCcw, Search, Shirt, Trash2, Upload, Workflow, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { BatchJobHistoryMenu } from "@/components/batches/batch-job-history-menu";
 import { StatusBadge } from "@/components/commons/data-display/status-badge";
 import { TruncatedTooltip } from "@/components/commons/data-display/truncated-tooltip";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -36,8 +37,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 const productTypeLabels: Record<ProductType, string> = { tshirt: "T-shirt", hoodie: "Hoodie", mug: "Mug", poster: "Poster", tote_bag: "Tote bag", phone_case: "Phone case" };
 // Every product falls under exactly one of these, so the counters add up to the batch's product count.
 const statuses = ["pending", "queued", "processing", "review", "completed", "failed"] as const;
+// The Dashboard's muted earth tones: neutral while waiting, soft hues while moving, sage when done.
+const statusDot: Record<(typeof statuses)[number], string> = { pending: "bg-[#c9bdb0]", queued: "bg-[#9f93c4]", processing: "bg-[#d8899b]", review: "bg-[#e2b05a]", completed: "bg-[#7d9f68]", failed: "bg-[#e66b7b]" };
 const statusLabel = (status: string) => status === "pending" ? "Pending" : status === "queued" ? "Queued" : status === "failed" ? "Failed" : ["approved", "exported", "published", "completed"].includes(status) ? "Completed" : status === "image_review_required" || status === "review" ? "Review" : "Processing";
 type ImportRow = BatchProductImportRow & { issues: string[] };
+// First, last and the pages around the current one; longer runs collapse into a gap, e.g. 1 … 4 5 6 … 12.
+const pageNumbers = (current: number, count: number): Array<number | "gap"> => {
+  const shown = [...new Set([1, current - 1, current, current + 1, count])].filter((item) => item >= 1 && item <= count).sort((a, b) => a - b);
+  return shown.flatMap((item, index) => index > 0 && item - shown[index - 1] > 1 ? ["gap" as const, item] : [item]);
+};
 
 const cellText = (value: unknown) => String(value ?? "").trim();
 const normalizeImportHeader = (value: unknown) => {
@@ -63,7 +71,13 @@ const productTypeAliases: Record<string, ProductType> = {
 
 export const BatchWorkspace = () => {
   const batchesQuery = useBatches();
-  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
+  // /batches?batch=<id>&status=<filter> (from the Dashboard) opens that batch with its products filtered.
+  const searchParams = useSearchParams();
+  const requestedStatus = searchParams.get("status");
+  const [selectedBatchId, setSelectedBatchId] = useState<string | null>(searchParams.get("batch"));
+  // Read from the polled list so the status badge stays current; falls back to the first batch so the detail panel is never empty.
+  const selectedBatch = batchesQuery.data?.find((batch) => batch.id === selectedBatchId) ?? batchesQuery.data?.[0] ?? null;
+  const setSelectedBatch = (batch: Batch | null) => setSelectedBatchId(batch?.id ?? null);
   const productsQuery = useBatchProducts(selectedBatch?.id ?? "");
   const [batchDialog, setBatchDialog] = useState(false);
   const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
@@ -72,18 +86,22 @@ export const BatchWorkspace = () => {
   const [importDialog, setImportDialog] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
+  // null until the Seller picks a status: the list then opens on Pending, the work still to run, or on All when
+  // nothing is pending. A status asked for in the link wins.
+  const [filter, setFilter] = useState<string | null>(statuses.find((status) => status === requestedStatus) ?? null);
   const [page, setPage] = useState(1);
-  const [batchPage, setBatchPage] = useState(1);
+  const [batchSearch, setBatchSearch] = useState("");
+  const [showHelp, setShowHelp] = useState(false);
   const [importRows, setImportRows] = useState<ImportRow[]>([]);
   const [fileError, setFileError] = useState("");
   const [importResult, setImportResult] = useState<{ importedCount: number; errors: Array<{ row: number; name: string; message: string }> } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const detailRef = useRef<HTMLDivElement>(null);
-  // Bumped on every explicit batch pick, so re-clicking the already-selected card scrolls too.
+  // Bumped on every explicit batch pick, so re-clicking the already-selected card scrolls too. Only needed when the
+  // list and the detail panel are stacked; side by side the detail is already in view.
   const [revealTick, setRevealTick] = useState(0);
   useEffect(() => {
-    if (revealTick > 0 && detailRef.current) smoothScrollTo(detailRef.current);
+    if (revealTick > 0 && detailRef.current && window.matchMedia("(max-width: 1023px)").matches) smoothScrollTo(detailRef.current);
   }, [revealTick]);
   const createBatch = useCreateBatch();
   const updateBatch = useUpdateBatch();
@@ -98,13 +116,23 @@ export const BatchWorkspace = () => {
   const batchForm = useForm<BatchFormValues>({ resolver: zodResolver(batchSchema), defaultValues: { name: "", description: "", defaultNiche: "", defaultProductType: "" } });
   const productForm = useForm<ProductFormValues>({ resolver: zodResolver(productSchema), defaultValues: { name: "", productType: "tshirt", niche: "", keywords: "", productDescription: "", sourceNotes: "", designText: "", customPrompt: "" } });
 
+  const statusCounts = Object.fromEntries(statuses.map((status) => [status, (productsQuery.data ?? []).filter((product) => statusLabel(product.status).toLowerCase() === status).length])) as Record<(typeof statuses)[number], number>;
+  const activeFilter = filter ?? (statusCounts.pending > 0 ? "pending" : "all");
   const products = useMemo(() => (productsQuery.data ?? []).filter((product) => {
     const matchesSearch = `${product.name} ${product.niche ?? ""} ${product.keywords.join(" ")}`.toLowerCase().includes(search.toLowerCase());
-    return matchesSearch && (filter === "all" || statusLabel(product.status).toLowerCase() === filter);
-  }), [filter, productsQuery.data, search]);
-  const pageSize = 20;
+    return matchesSearch && (activeFilter === "all" || statusLabel(product.status).toLowerCase() === activeFilter);
+  }), [activeFilter, productsQuery.data, search]);
+  const pageSize = 10;
   const pageCount = Math.max(1, Math.ceil(products.length / pageSize));
-  const visibleProducts = products.slice((page - 1) * pageSize, page * pageSize);
+  // Deleting the last product on the last page would otherwise leave an empty page.
+  const currentPage = Math.min(page, pageCount);
+  const visibleProducts = products.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const tableRef = useRef<HTMLDivElement>(null);
+  const goToPage = (next: number) => {
+    setPage(next);
+    // Bring the table's first row back into view when the pager was reached by scrolling down.
+    if (tableRef.current && tableRef.current.getBoundingClientRect().top < 80) smoothScrollTo(tableRef.current, { offset: 96 });
+  };
   const pendingProductCount = (productsQuery.data ?? []).filter((product) => product.status === "pending").length;
   const failedProductIds = (productsQuery.data ?? []).filter((product) => product.status === "failed").map((product) => product.id);
   // A failed product can be generated again once it is pending. One still in review can too, when every design of it
@@ -116,11 +144,21 @@ export const BatchWorkspace = () => {
       positiveLabel: "Reset to pending",
       onPositive: () => resetProducts.mutate({ batchId, productIds }),
     });
-  const batchPageSize = 6;
   const batchCount = batchesQuery.data?.length ?? 0;
-  const batchPageCount = Math.max(1, Math.ceil(batchCount / batchPageSize));
-  const currentBatchPage = Math.min(batchPage, batchPageCount);
-  const visibleBatches = (batchesQuery.data ?? []).slice((currentBatchPage - 1) * batchPageSize, currentBatchPage * batchPageSize);
+  const visibleBatches = (batchesQuery.data ?? []).filter((batch) => `${batch.name} ${batch.description ?? ""} ${batch.defaultNiche ?? ""}`.toLowerCase().includes(batchSearch.trim().toLowerCase()));
+  const totalProducts = productsQuery.data?.length ?? 0;
+  // A batch imported without keywords would show an empty column; it only appears when there is something in it.
+  const hasKeywords = (productsQuery.data ?? []).some((product) => product.keywords.length > 0);
+  // Filtering (and the status bar) only tells something once products are spread over more than one status.
+  const showStatusFilter = statuses.filter((status) => statusCounts[status] > 0).length > 1;
+  // Hiding the filter row must not leave a filter applied that can no longer be cleared. Wait for the
+  // products, or a filter opened from a link is dropped before they arrive.
+  const hasProducts = productsQuery.data !== undefined;
+  useEffect(() => {
+    if (hasProducts && !showStatusFilter && filter !== null && filter !== "all") { setFilter(null); setPage(1); }
+  }, [hasProducts, showStatusFilter, filter]);
+  const selectBatch = (batch: Batch) => { setSelectedBatch(batch); setSearch(""); setFilter(null); setPage(1); setRevealTick((tick) => tick + 1); };
+  const openImport = () => { setImportDialog(true); setFileError(""); setImportResult(null); };
 
   const openNewBatch = () => {
     setEditingBatch(null);
@@ -150,7 +188,7 @@ export const BatchWorkspace = () => {
     } else {
       const created = await createBatch.mutateAsync(input);
       setSelectedBatch(created);
-      setBatchPage(1);
+      setBatchSearch("");
       setRevealTick((tick) => tick + 1);
     }
     setBatchDialog(false);
@@ -231,53 +269,131 @@ export const BatchWorkspace = () => {
   };
 
   return (
-    <div className="w-full min-w-0 space-y-6 p-4 sm:p-6">
-      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div><p className="text-muted-foreground text-sm font-medium tracking-wide">PRODUCT MANAGEMENT</p><h1 className="font-display mt-1 text-3xl font-semibold tracking-tight">Product batches</h1><p className="text-muted-foreground mt-2 max-w-2xl text-sm sm:text-base">Prepare and track product inputs before sending them into the creation workflow.</p></div>
-        <Button onClick={openNewBatch}><Plus className="mr-2 size-4" />New batch</Button>
+    <div className="w-full min-w-0 space-y-5 p-4 sm:p-6">
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div className="min-w-0">
+          <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Product management</p>
+          <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight">Product batches</h1>
+          <p className="text-muted-foreground mt-1.5 max-w-2xl text-sm">Prepare and track product inputs before sending them into the creation workflow.</p>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <Button variant="ghost" className="text-muted-foreground" aria-expanded={showHelp} onClick={() => setShowHelp((open) => !open)}><CircleHelp className="mr-2 size-4" />How it works<ChevronDown className={`ml-1 size-4 transition-transform ${showHelp ? "rotate-180" : ""}`} /></Button>
+          <Button onClick={openNewBatch}><Plus className="mr-2 size-4" />New batch</Button>
+        </div>
       </header>
 
-      <details className="group bg-card rounded-xl border shadow-sm">
-        <summary className="hover:bg-muted/50 focus-visible:ring-ring flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium marker:hidden focus-visible:ring-2 focus-visible:outline-none">
-          <span>How product batches work</span>
-          <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-180" />
-        </summary>
-        <div className="grid gap-3 border-t px-4 py-4 text-sm md:grid-cols-3">
-          <div><p className="font-medium">1. Add product inputs</p><p className="text-muted-foreground mt-1">Enter a product name, type, niche and keywords. Imported or manually added products stay pending.</p></div>
-          <div><p className="font-medium">2. Review the batch</p><p className="text-muted-foreground mt-1">Check each product before approving. A niche describes its target market, such as hiking enthusiasts.</p></div>
-          <div><p className="font-medium">3. Run in a workflow</p><p className="text-muted-foreground mt-1">Open the batch in a workflow, choose the design template, style and mock-ups, then press Run. Products lock while their job is queued.</p></div>
-        </div>
-      </details>
+      {showHelp && <section className="bg-muted/40 relative rounded-xl border" aria-label="How product batches work">
+        <Button variant="ghost" size="icon" className="text-muted-foreground absolute top-2 right-2 size-7" aria-label="Hide how it works" onClick={() => setShowHelp(false)}><X className="size-4" /></Button>
+        <ol className="grid gap-4 px-4 py-4 pr-12 text-sm md:grid-cols-3">
+          {[
+            ["Add product inputs", "Enter a product name, type, niche and keywords. Imported or manually added products stay pending."],
+            ["Review the batch", "Check each product before approving. A niche describes its target market, such as hiking enthusiasts."],
+            ["Run in a workflow", "Open the batch in a workflow, choose the design template, style and mock-ups, then press Run. Products lock while their job is queued."],
+          ].map(([title, body], index) => <li key={title} className="flex gap-3"><span className="bg-primary text-primary-foreground flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold">{index + 1}</span><div><p className="font-medium">{title}</p><p className="text-muted-foreground mt-0.5">{body}</p></div></li>)}
+        </ol>
+      </section>}
 
-      {batchesQuery.isLoading ? <p className="text-muted-foreground py-12 text-center">Loading batches…</p> : batchesQuery.isError ? <Card><CardContent className="py-12 text-center" role="alert">Could not load batches. Please try again.</CardContent></Card> : (batchesQuery.data?.length ?? 0) === 0 ? (
-        <Card><CardContent className="flex flex-col items-center py-16 text-center"><div className="bg-primary/10 mb-4 flex size-12 items-center justify-center rounded-xl"><FileSpreadsheet className="text-primary size-6" /></div><h2 className="text-lg font-semibold">Start with a product batch</h2><p className="text-muted-foreground mt-2 max-w-md text-sm">A batch keeps related product inputs together. You can add products manually or import them from Excel.</p><Button className="mt-5" onClick={openNewBatch}>Create your first batch</Button></CardContent></Card>
+      {batchesQuery.isLoading ? <p className="text-muted-foreground py-12 text-center">Loading batches…</p> : batchesQuery.isError ? <Card><CardContent className="py-12 text-center" role="alert">Could not load batches. Please try again.</CardContent></Card> : batchCount === 0 ? (
+        <Card className="border-dashed"><CardContent className="flex flex-col items-center py-16 text-center"><div className="bg-primary/10 mb-4 flex size-12 items-center justify-center rounded-xl"><FileSpreadsheet className="text-primary size-6" /></div><h2 className="text-lg font-semibold">Start with a product batch</h2><p className="text-muted-foreground mt-2 max-w-md text-sm">A batch keeps related product inputs together. You can add products manually or import them from Excel.</p><Button className="mt-5" onClick={openNewBatch}><Plus className="mr-2 size-4" />Create your first batch</Button></CardContent></Card>
       ) : (
-        <section className="space-y-3">
-          <div className="flex items-center justify-between"><h2 className="text-base font-semibold tracking-tight">Your batches</h2><span className="bg-card inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium shadow-sm"><span className="text-foreground font-semibold tabular-nums">{batchCount}</span><span className="text-muted-foreground">batches</span></span></div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {visibleBatches.map((batch) => <Card key={batch.id} className={`hover:border-primary/50 h-full gap-0 overflow-hidden rounded-xl border py-0 shadow-sm transition-colors ${selectedBatch?.id === batch.id ? "border-primary bg-primary/[0.03]" : ""}`}>
-              <button type="button" onClick={() => { setSelectedBatch(batch); setSearch(""); setFilter("all"); setPage(1); setRevealTick((tick) => tick + 1); }} className="focus-visible:ring-ring w-full rounded-t-xl text-left focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset">
-                <CardContent className="space-y-3 p-4"><div className="flex items-start justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg"><Layers3 className="size-4" /></span><h3 className="truncate font-semibold">{batch.name}</h3></div><StatusBadge status={batch.status} className="shrink-0 capitalize">{batch.status}</StatusBadge></div><p className="text-muted-foreground line-clamp-1 min-h-5 text-sm">{batch.description || "No description"}</p>
-                  <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-2 border-t pt-3 text-sm"><span><span className="text-foreground font-medium">{batch.productCount}</span> {batch.productCount === 1 ? "product" : "products"}</span>{batch.defaultNiche && <span className="bg-muted inline-flex max-w-full items-center gap-1.5 truncate rounded-md px-2 py-1"><span className="text-muted-foreground shrink-0 text-xs">Default niche</span><span className="text-foreground truncate">{batch.defaultNiche}</span></span>}</div>
-                </CardContent>
-              </button>
-              <div className="flex justify-end border-t px-3 py-1.5"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="sm" className="text-muted-foreground h-8 gap-2 px-2"><MoreHorizontal className="size-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => openEditBatch(batch)}><Pencil />Edit batch</DropdownMenuItem><DropdownMenuItem variant="destructive" onSelect={() => setDeletingBatch(batch)}><Trash2 />Delete batch</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div>
-            </Card>)}
-          </div>
-          {batchCount > batchPageSize && <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between"><span className="text-muted-foreground">Showing {(currentBatchPage - 1) * batchPageSize + 1}–{Math.min(currentBatchPage * batchPageSize, batchCount)} of {batchCount} batches</span><div className="flex gap-2"><Button variant="outline" size="sm" disabled={currentBatchPage <= 1} onClick={() => setBatchPage(currentBatchPage - 1)}><ChevronLeft className="mr-1 size-4" />Previous</Button><Button variant="outline" size="sm" disabled={currentBatchPage >= batchPageCount} onClick={() => setBatchPage(currentBatchPage + 1)}>Next<ChevronRight className="ml-1 size-4" /></Button></div></div>}
-        </section>
-      )}
+        <div className="grid items-start gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[20rem_minmax(0,1fr)]">
+          <aside className="bg-card flex flex-col overflow-hidden rounded-xl border">
+            <div className="space-y-3 border-b p-3">
+              <div className="flex items-center justify-between px-1"><h2 className="text-sm font-semibold">Your batches</h2><span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium tabular-nums">{batchCount}</span></div>
+              {batchCount > 5 && <div className="relative"><Search className="text-muted-foreground absolute top-2 left-2.5 size-4" /><Input value={batchSearch} onChange={(event) => setBatchSearch(event.target.value)} placeholder="Find a batch" className="h-8 pl-8 text-sm" aria-label="Find a batch" /></div>}
+            </div>
+            <ul className="max-h-104 min-h-0 flex-1 space-y-1 overflow-y-auto p-2 lg:max-h-none">
+              {visibleBatches.length === 0 && <li className="text-muted-foreground px-3 py-6 text-center text-sm">No batches match “{batchSearch}”.</li>}
+              {visibleBatches.map((batch) => {
+                const active = selectedBatch?.id === batch.id;
+                return <li key={batch.id} className={`group/batch relative rounded-lg border transition-colors ${active ? "border-primary/40 bg-primary/5" : "hover:bg-muted/60 border-transparent"}`}>
+                  <button type="button" onClick={() => selectBatch(batch)} aria-current={active ? "true" : undefined} className="focus-visible:ring-ring w-full rounded-lg py-2.5 pr-10 pl-3 text-left focus-visible:ring-2 focus-visible:outline-none">
+                    <div className="flex items-center gap-2"><h3 className="min-w-0 flex-1 truncate text-sm font-semibold">{batch.name}</h3><StatusBadge status={batch.status} className="shrink-0 px-2 py-0 text-[11px] capitalize">{batch.status}</StatusBadge></div>
+                    <div className="text-muted-foreground mt-1 flex min-w-0 items-center gap-1.5 text-xs"><span className="shrink-0"><span className="text-foreground font-medium tabular-nums">{batch.productCount}</span> {batch.productCount === 1 ? "product" : "products"}</span>{batch.defaultNiche && <><span aria-hidden>·</span><span className="truncate"><span className="sr-only">Default niche </span>{batch.defaultNiche}</span></>}</div>
+                  </button>
+                  <div className="absolute top-1.5 right-1.5"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className={`text-muted-foreground size-7 transition-opacity ${active ? "" : "lg:opacity-0 lg:group-hover/batch:opacity-100 lg:focus-visible:opacity-100 lg:data-[state=open]:opacity-100"}`} aria-label={`Actions for ${batch.name}`}><MoreHorizontal className="size-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => openEditBatch(batch)}><Pencil />Edit batch</DropdownMenuItem><DropdownMenuItem variant="destructive" onSelect={() => setDeletingBatch(batch)}><Trash2 />Delete batch</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div>
+                </li>;
+              })}
+            </ul>
+            <div className="border-t p-2"><Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground w-full justify-start" onClick={openNewBatch}><Plus className="mr-2 size-4" />Add another batch</Button></div>
+          </aside>
 
-      {selectedBatch && <Card ref={detailRef} className="gap-0 overflow-hidden rounded-xl py-0 shadow-sm"><CardHeader className="bg-muted/20 border-b px-4 py-4 sm:px-5"><div className="flex flex-col justify-between gap-4 @5xl/card-header:flex-row @5xl/card-header:items-center"><div className="min-w-0 @5xl/card-header:flex-1"><div className="flex items-center gap-2"><CardTitle className="text-xl">{selectedBatch.name}</CardTitle><StatusBadge status={selectedBatch.status} className="capitalize">{selectedBatch.status}</StatusBadge></div><p className="text-muted-foreground mt-1 text-sm">Review products, then run the pending ones in a workflow.</p></div><div className="flex flex-wrap gap-2 @5xl/card-header:max-w-[75%] @5xl/card-header:flex-none @5xl/card-header:justify-end"><BatchJobHistoryMenu batchId={selectedBatch.id} /><Button variant="outline" onClick={() => { setImportDialog(true); setFileError(""); setImportResult(null); }}><Upload className="mr-2 size-4" />Import Excel</Button><Button variant="outline" onClick={() => openProduct()}><Plus className="mr-2 size-4" />Add product</Button>{pendingProductCount > 0 && <Button onClick={() => router.push(`/workflows?batch=${selectedBatch.id}`)}><Workflow className="mr-2 size-4" />Run in workflow ({pendingProductCount})</Button>}</div></div></CardHeader>
-        <CardContent className="space-y-5 p-4 md:p-6">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">{statuses.map((status) => { const count = (productsQuery.data ?? []).filter((product) => statusLabel(product.status).toLowerCase() === status).length; return <button key={status} type="button" onClick={() => { setFilter(filter === status ? "all" : status); setPage(1); }} className={`hover:bg-muted/50 rounded-lg border p-4 text-left transition-colors ${filter === status ? "border-primary bg-primary/[0.03]" : ""}`}><span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{statusLabel(status)}</span><span className="mt-1 block text-2xl font-semibold">{count}</span></button>; })}</div>
-          <div className="flex flex-col gap-3 sm:flex-row"><div className="relative min-w-0 flex-1"><Search className="text-muted-foreground absolute top-2.5 left-3 size-4"/><Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search products, niche or keywords" className="pl-9" aria-label="Search products"/></div><Select value={filter} onValueChange={(value) => { setFilter(value ?? "all"); setPage(1); }}><SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All statuses"/></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{statuses.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select>{failedProductIds.length > 0 && <Button variant="outline" disabled={resetProducts.isPending} onClick={() => confirmReset(selectedBatch.id, failedProductIds, `Set ${failedProductIds.length} failed product${failedProductIds.length === 1 ? "" : "s"} back to pending?`)}><RotateCcw className="mr-2 size-4" />Reset failed ({failedProductIds.length})</Button>}</div>
-          {productsQuery.isLoading ? <p className="text-muted-foreground py-10 text-center">Loading products…</p> : productsQuery.isError ? <p role="alert" className="text-destructive py-10 text-center">Could not load products for this batch.</p> : products.length === 0 ? <div className="rounded-lg border border-dashed py-12 text-center"><p className="font-medium">{(productsQuery.data?.length ?? 0) ? "No products match these filters" : "This batch is empty"}</p><p className="text-muted-foreground mt-1 text-sm">Add one product or import a spreadsheet to get started.</p></div> : <>
-            <div className="overflow-x-auto rounded-lg border"><Table className="min-w-[72rem] table-fixed"><TableHeader className="bg-muted/60"><TableRow><TableHead className="w-64">Product</TableHead><TableHead className="w-72">Description</TableHead><TableHead className="w-48">Niche</TableHead><TableHead className="w-72">Keywords</TableHead><TableHead className="w-32">Type</TableHead><TableHead className="w-32">Status</TableHead><TableHead className="w-36 text-right">Actions</TableHead></TableRow></TableHeader><TableBody>{visibleProducts.map((product) => <TableRow key={product.id}><TableCell className="font-medium"><TruncatedTooltip value={product.name} />{product.customPrompt && <span className="text-muted-foreground mt-1 block text-xs font-normal">Own image prompt</span>}</TableCell><TableCell><TruncatedTooltip value={product.productDescription || ""} className="line-clamp-2 whitespace-normal" /></TableCell><TableCell><TruncatedTooltip value={product.niche || ""} /></TableCell><TableCell><TruncatedTooltip value={product.keywords.join(", ")} className="line-clamp-2 whitespace-normal" /></TableCell><TableCell>{productTypeLabels[product.productType]}</TableCell><TableCell><StatusBadge status={product.status}>{statusLabel(product.status)}</StatusBadge></TableCell><TableCell className="text-right">{product.status === "pending" && <div className="flex justify-end gap-1"><Button variant="outline" size="sm" onClick={() => openProduct(product)}>Edit</Button><Button variant="ghost" size="icon" aria-label={`Delete ${product.name}`} disabled={deleteProduct.isPending} onClick={() => openPopup({ title: `Remove “${product.name}”?`, description: "This removes the product from the batch. Only pending products can be removed.", positiveLabel: "Remove", onPositive: () => deleteProduct.mutate({ batchId: selectedBatch.id, productId: product.id }) })}><Trash2 className="size-4"/></Button></div>}{(product.status === "failed" || product.status === "image_review_required") && <Button variant="outline" size="sm" disabled={resetProducts.isPending} onClick={() => confirmReset(selectedBatch.id, [product.id], `Set “${product.name}” back to pending?`)}>Reset to pending</Button>}</TableCell></TableRow>)}</TableBody></Table></div>
-            <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between"><span className="text-muted-foreground">Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, products.length)} of {products.length}</span><div className="flex gap-2"><Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>Previous</Button><Button variant="outline" size="sm" disabled={page >= pageCount} onClick={() => setPage((current) => Math.min(pageCount, current + 1))}>Next</Button></div></div>
-          </>}
-        </CardContent>
-      </Card>}
+          {selectedBatch && <section ref={detailRef} className="bg-card min-w-0 overflow-hidden rounded-xl border shadow-sm">
+            {/* The name with every action on one row, then the details on the next. The buttons are small so all
+                of them fit beside the name without squeezing it. */}
+            <div className="space-y-2.5 border-b p-4 sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-1 items-center gap-2"><h2 className="truncate text-xl font-semibold tracking-tight">{selectedBatch.name}</h2></div>
+                <div className="flex flex-wrap items-center gap-2 lg:flex-nowrap">
+                  <BatchJobHistoryMenu batchId={selectedBatch.id} size="sm" />
+                  {/* While the batch is empty, the empty state below offers these same two actions, so they are not repeated here. */}
+                  {totalProducts > 0 && <>
+                    <Button variant="outline" size="sm" onClick={openImport}><Upload className="mr-1.5 size-3.5" />Import Excel</Button>
+                    <Button variant={pendingProductCount > 0 ? "outline" : "default"} size="sm" onClick={() => openProduct()}><Plus className="mr-1.5 size-3.5" />Add product</Button>
+                  </>}
+                  {pendingProductCount > 0 && <Button size="sm" onClick={() => router.push(`/workflows?batch=${selectedBatch.id}`)}><Workflow className="mr-1.5 size-3.5" />Run in workflow ({pendingProductCount})</Button>}
+                </div>
+              </div>
+              {selectedBatch.description && <p className="text-muted-foreground line-clamp-2 text-sm">{selectedBatch.description}</p>}
+              <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
+                {selectedBatch.defaultProductType && <span className="bg-muted inline-flex items-center gap-1 rounded-md px-2 py-1"><Shirt className="size-3" />Type: <span className="text-foreground font-medium">{productTypeLabels[selectedBatch.defaultProductType as ProductType] ?? selectedBatch.defaultProductType}</span></span>}
+                <span className="inline-flex items-center gap-1 px-1 py-1"><CalendarDays className="size-3" />Created {formatDistanceToNow(new Date(selectedBatch.createdAt), { addSuffix: true })}</span>
+              </div>
+            </div>
+
+            <div className="space-y-4 p-4 sm:p-5">
+              {showStatusFilter && <div className="space-y-3">
+                <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1" role="tablist" aria-label="Filter products by status">
+                  {(["all", ...statuses] as const).map((status) => {
+                    const active = activeFilter === status;
+                    const count = status === "all" ? totalProducts : statusCounts[status];
+                    // Empty statuses add nothing to filter by, so only the ones holding products are offered.
+                    if (status !== "all" && count === 0 && !active) return null;
+                    return <button key={status} type="button" role="tab" aria-selected={active} onClick={() => { setFilter(status); setPage(1); }} className={`focus-visible:ring-ring inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none ${active ? "border-[#cbd5e1] bg-[#e6edf5] font-semibold text-slate-800" : "hover:bg-muted text-muted-foreground"}`}>
+                      {status !== "all" && <span className={`size-2 rounded-full ${statusDot[status]}`} aria-hidden />}
+                      {status === "all" ? "All" : statusLabel(status)}
+                      <span className={`rounded-full px-1.5 text-xs tabular-nums ${active ? "bg-white text-slate-700 shadow-xs" : "bg-muted text-foreground"}`}>{count}</span>
+                    </button>;
+                  })}
+                </div>
+              </div>}
+
+              {(totalProducts > 8 || search || failedProductIds.length > 0) && <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">{(totalProducts > 8 || search) && <div className="relative min-w-0 flex-1"><Search className="text-muted-foreground absolute top-2.5 left-3 size-4"/><Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search products, niche or keywords" className="pl-9" aria-label="Search products"/></div>}{failedProductIds.length > 0 && <Button variant="outline" disabled={resetProducts.isPending} onClick={() => confirmReset(selectedBatch.id, failedProductIds, `Set ${failedProductIds.length} failed product${failedProductIds.length === 1 ? "" : "s"} back to pending?`)}><RotateCcw className="mr-2 size-4" />Reset failed ({failedProductIds.length})</Button>}</div>}
+
+              {productsQuery.isLoading ? <p className="text-muted-foreground py-10 text-center">Loading products…</p> : productsQuery.isError ? <p role="alert" className="text-destructive py-10 text-center">Could not load products for this batch.</p> : totalProducts === 0 ? (
+                <div className="rounded-xl border border-dashed p-6 sm:p-10">
+                  <div className="text-center"><div className="bg-primary/10 mx-auto mb-3 flex size-11 items-center justify-center rounded-xl"><PackagePlus className="text-primary size-5" /></div><p className="font-semibold">This batch is empty</p><p className="text-muted-foreground mt-1 text-sm">Add your first product to get started. You can always add more later.</p></div>
+                  <div className="mx-auto mt-6 grid max-w-xl gap-3 sm:grid-cols-2">
+                    <button type="button" onClick={() => openProduct()} className="hover:border-primary/60 hover:bg-primary/5 focus-visible:ring-ring flex flex-col items-start justify-start rounded-xl border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"><Plus className="text-primary size-5" /><p className="mt-3 text-sm font-semibold">Add product</p><p className="text-muted-foreground mt-1 text-xs">Fill in a short form, one product at a time.</p></button>
+                    <button type="button" onClick={openImport} className="hover:border-primary/60 hover:bg-primary/5 focus-visible:ring-ring flex flex-col items-start justify-start rounded-xl border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"><FileSpreadsheet className="text-primary size-5" /><p className="mt-3 text-sm font-semibold">Import Excel</p><p className="text-muted-foreground mt-1 text-xs">Add up to 500 products at once from an .xlsx file.</p></button>
+                  </div>
+                  <p className="text-muted-foreground mt-4 text-center text-xs">No spreadsheet yet? <a href="/templates/product-import-template.xlsx" download className="text-primary font-medium underline-offset-4 hover:underline">Download the template</a></p>
+                </div>
+              ) : products.length === 0 ? (
+                <div className="rounded-xl border border-dashed py-12 text-center"><p className="font-medium">No products match these filters</p><p className="text-muted-foreground mt-1 text-sm">Try another status or search term.</p><Button variant="link" size="sm" className="mt-1" onClick={() => { setSearch(""); setFilter("all"); setPage(1); }}>Clear filters</Button></div>
+              ) : <>
+                <div ref={tableRef} className="overflow-hidden rounded-lg border"><Table className="table-fixed"><TableHeader className="bg-muted/50"><TableRow><TableHead className={hasKeywords ? "w-[36%]" : "w-[44%]"}>Product</TableHead><TableHead className={`hidden sm:table-cell ${hasKeywords ? "w-[18%]" : "w-[22%]"}`}>Niche</TableHead>{hasKeywords && <TableHead className="hidden w-[22%] lg:table-cell">Keywords</TableHead>}<TableHead>Status</TableHead><TableHead className="w-28"><span className="sr-only">Actions</span></TableHead></TableRow></TableHeader><TableBody>{visibleProducts.map((product) => <TableRow key={product.id} className="group/row">
+                  <TableCell className="font-medium"><TruncatedTooltip value={product.name} /><span className="text-muted-foreground mt-0.5 flex min-w-0 items-center gap-1.5 text-xs font-normal"><span className="shrink-0">{productTypeLabels[product.productType]}</span>{product.customPrompt && <><span aria-hidden>·</span><span className="shrink-0">Own image prompt</span></>}{product.productDescription && <><span aria-hidden>·</span><TruncatedTooltip value={product.productDescription} className="min-w-0 truncate" /></>}</span></TableCell>
+                  <TableCell className="hidden sm:table-cell"><TruncatedTooltip value={product.niche || "—"} /></TableCell>
+                  {hasKeywords && <TableCell className="hidden lg:table-cell"><div className="flex min-w-0 items-center gap-1" title={product.keywords.join(", ")}>{product.keywords.slice(0, 2).map((keyword) => <span key={keyword} className="bg-muted min-w-0 truncate rounded px-1.5 py-0.5 text-xs">{keyword}</span>)}{product.keywords.length > 2 && <span className="text-muted-foreground shrink-0 px-1 py-0.5 text-xs">+{product.keywords.length - 2}</span>}</div></TableCell>}
+                  <TableCell><StatusBadge status={product.status}>{statusLabel(product.status)}</StatusBadge></TableCell>
+                  <TableCell className="text-right">{product.status === "pending" && <div className="flex justify-end gap-0.5 transition-opacity [@media(hover:hover)]:opacity-35 [@media(hover:hover)]:group-focus-within/row:opacity-100 [@media(hover:hover)]:group-hover/row:opacity-100"><Button variant="ghost" size="icon" className="size-8" aria-label={`Edit ${product.name}`} onClick={() => openProduct(product)}><Pencil className="size-4"/></Button><Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive size-8" aria-label={`Delete ${product.name}`} disabled={deleteProduct.isPending} onClick={() => openPopup({ title: `Remove “${product.name}”?`, description: "This removes the product from the batch. Only pending products can be removed.", positiveLabel: "Remove", onPositive: () => deleteProduct.mutate({ batchId: selectedBatch.id, productId: product.id }) })}><Trash2 className="size-4"/></Button></div>}{(product.status === "failed" || product.status === "image_review_required") && <Button variant="outline" size="sm" className="bg-card text-foreground h-8 gap-2 rounded-full pr-1 pl-3 text-xs font-medium shadow-none" title="Set back to pending" aria-label={`Reset ${product.name} to pending`} disabled={resetProducts.isPending} onClick={() => confirmReset(selectedBatch.id, [product.id], `Set “${product.name}” back to pending?`)}>Reset<span className="bg-muted text-muted-foreground flex size-6 items-center justify-center rounded-full"><RotateCcw className="size-3.5" /></span></Button>}</TableCell>
+                </TableRow>)}</TableBody></Table></div>
+                {pageCount > 1 && <nav aria-label="Product pages" className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-muted-foreground">Showing <span className="text-foreground font-medium tabular-nums">{(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, products.length)}</span> of <span className="text-foreground font-medium tabular-nums">{products.length}</span> products</span>
+                  <div className="flex items-center gap-1">
+                    <Button variant="outline" size="icon" className="size-8" aria-label="Previous page" disabled={currentPage <= 1} onClick={() => goToPage(currentPage - 1)}><ChevronLeft className="size-4" /></Button>
+                    {pageNumbers(currentPage, pageCount).map((item, index) => item === "gap"
+                      ? <span key={`gap-${index}`} className="text-muted-foreground w-8 text-center" aria-hidden>…</span>
+                      : <Button key={item} variant={item === currentPage ? "default" : "ghost"} size="icon" className="size-8 tabular-nums" aria-label={`Page ${item}`} aria-current={item === currentPage ? "page" : undefined} onClick={() => goToPage(item)}>{item}</Button>)}
+                    <Button variant="outline" size="icon" className="size-8" aria-label="Next page" disabled={currentPage >= pageCount} onClick={() => goToPage(currentPage + 1)}><ChevronRight className="size-4" /></Button>
+                  </div>
+                </nav>}
+              </>}
+            </div>
+          </section>}
+        </div>
+      )}
 
 
       <Dialog open={batchDialog} onOpenChange={(open) => { setBatchDialog(open); if (!open) setEditingBatch(null); }}><DialogContent><DialogHeader><DialogTitle>{editingBatch ? "Edit product batch" : "Create product batch"}</DialogTitle><DialogDescription>{editingBatch ? "Update the batch name and defaults used for new products." : "Set shared defaults to speed up adding products."}</DialogDescription></DialogHeader><form onSubmit={submitBatch} className="space-y-4"><div className="space-y-2"><Label htmlFor="batch-name" className="leading-5">Batch name *</Label><Input id="batch-name" {...batchForm.register("name")} placeholder="e.g. Summer outdoor collection" aria-invalid={!!batchForm.formState.errors.name}/>{batchForm.formState.errors.name && <p className="text-destructive text-sm">{batchForm.formState.errors.name.message}</p>}</div><div className="space-y-2"><Label htmlFor="batch-niche" className="leading-5">Default niche</Label><Input id="batch-niche" {...batchForm.register("defaultNiche")} placeholder="e.g. hiking and camping"/><p className="text-muted-foreground text-xs">Used to prefill new products; each product can override it.</p></div><div className="space-y-2"><Label htmlFor="batch-product-type" className="leading-5">Default product type</Label><Select value={batchForm.watch("defaultProductType") || "none"} onValueChange={(value) => batchForm.setValue("defaultProductType", value === "none" ? "" : value as ProductType)}><SelectTrigger id="batch-product-type" className="w-full"><SelectValue placeholder="No default"/></SelectTrigger><SelectContent><SelectItem value="none">No default</SelectItem>{productTypes.map((type) => <SelectItem key={type} value={type}>{productTypeLabels[type]}</SelectItem>)}</SelectContent></Select></div><div className="space-y-2"><Label htmlFor="batch-description" className="leading-5">Description</Label><Textarea id="batch-description" {...batchForm.register("description")} placeholder="What is this batch for?"/></div><DialogFooter><Button type="button" variant="outline" onClick={() => setBatchDialog(false)}>Cancel</Button><Button type="submit" disabled={createBatch.isPending || updateBatch.isPending}>{createBatch.isPending ? "Creating…" : updateBatch.isPending ? "Saving…" : editingBatch ? "Save changes" : "Create batch"}</Button></DialogFooter></form></DialogContent></Dialog>

@@ -1,23 +1,16 @@
 "use client";
 
 import React from "react";
-import { Calendar, ChevronDown } from "lucide-react";
+import { Calendar } from "lucide-react";
 
 import type { RevenueFilterDto } from "@/types/revenue";
 
 interface RevenueFilterBarProps {
   filter: RevenueFilterDto;
   onFilterChange: (newFilter: RevenueFilterDto) => void;
-  currency: "VND" | "USD";
-  onCurrencyChange: (currency: "VND" | "USD") => void;
 }
 
-export function RevenueFilterBar({
-  filter,
-  onFilterChange,
-  currency,
-  onCurrencyChange,
-}: RevenueFilterBarProps) {
+export function RevenueFilterBar({ filter, onFilterChange }: RevenueFilterBarProps) {
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, "0");
@@ -175,19 +168,6 @@ export function RevenueFilterBar({
               {item.label}
             </button>
           ))}
-        </div>
-
-        {/* Currency Switcher Dropdown */}
-        <div className="relative">
-          <select
-            value={currency}
-            onChange={(e) => onCurrencyChange(e.target.value as "VND" | "USD")}
-            className="h-9 cursor-pointer appearance-none rounded-xl border border-slate-200/90 bg-white pr-8 pl-3 text-xs font-bold text-slate-700 shadow-2xs transition-all hover:border-slate-300 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-          >
-            <option value="VND">VND</option>
-            <option value="USD">USD</option>
-          </select>
-          <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
         </div>
       </div>
     </div>

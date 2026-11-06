@@ -43,16 +43,21 @@ export function apiKeyError(error: unknown): string {
 export function ConnectionDialog({
   connection,
   deleting = false,
+  initialProvider,
   connections,
   onClose,
 }: {
   connection?: ApiKeyConnection;
   deleting?: boolean;
+  /** Provider id to preselect when adding a new connection. */
+  initialProvider?: string;
   connections: ApiKeyConnection[];
   onClose: () => void;
 }) {
   const providers = useApiKeyProviders(!deleting);
-  const [provider, setProvider] = useState(connection?.provider.toLowerCase() ?? "");
+  const [provider, setProvider] = useState(
+    connection?.provider.toLowerCase() ?? initialProvider ?? ""
+  );
   const [name, setName] = useState(connection?.label ?? "");
   const [environment, setEnvironment] = useState(connection?.environment ?? "Production");
   const [key, setKey] = useState("");

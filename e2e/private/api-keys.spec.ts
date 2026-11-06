@@ -23,11 +23,13 @@ test.describe("api keys", () => {
       expect(findCalls(calls, "GET", "/api/auth/me")[0]?.status).toBe(200);
     });
 
-    await test.step("the summary section is rendered", async () => {
+    await test.step("the workflow readiness checklist is rendered", async () => {
       const summary = page.getByRole("region", { name: "Connection summary" });
       await expect(summary).toBeVisible();
-      await expect(summary.getByText("Connected", { exact: true })).toBeVisible();
-      await expect(summary.getByText("Needs attention", { exact: true })).toBeVisible();
+      await expect(summary.getByText("Workflow readiness", { exact: true })).toBeVisible();
+      for (const stage of ["Listing content", "Image generation", "Product publishing"]) {
+        await expect(summary.getByText(stage, { exact: true })).toBeVisible();
+      }
     });
 
     await test.step("the privacy notice explains masked credentials", async () => {

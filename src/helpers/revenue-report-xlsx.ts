@@ -5,10 +5,10 @@ import type { ReportColumnKind, ReportSection } from "@/helpers/revenue-report";
 const HEADER_FILL = "FFF1F5F9"; // slate-100
 const TITLE_COLOR = "FF0F172A"; // slate-900
 
-const numberFormat = (kind: ReportColumnKind, currency: "VND" | "USD"): string | undefined => {
+const numberFormat = (kind: ReportColumnKind): string | undefined => {
   switch (kind) {
     case "money":
-      return currency === "VND" ? '#,##0" ₫"' : '"$"#,##0.00';
+      return '#,##0" ₫"';
     case "percent":
       return '0.0"%"';
     case "number":
@@ -23,7 +23,7 @@ const numberFormat = (kind: ReportColumnKind, currency: "VND" | "USD"): string |
  * sheet stacked with a blank row between them. exceljs is loaded on demand so it never weighs on
  * the dashboard's initial bundle.
  */
-export async function toXlsx(sections: ReportSection[], currency: "VND" | "USD"): Promise<Blob> {
+export async function toXlsx(sections: ReportSection[]): Promise<Blob> {
   const { default: ExcelJS } = await import("exceljs");
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "APCS Admin";
@@ -60,7 +60,7 @@ export async function toXlsx(sections: ReportSection[], currency: "VND" | "USD")
     for (const values of section.rows) {
       const row = sheet.addRow(values.map((v) => (v === null ? null : v)));
       section.columns.forEach((column, i) => {
-        const format = numberFormat(column.kind, currency);
+        const format = numberFormat(column.kind);
         if (format) row.getCell(i + 1).numFmt = format;
       });
     }

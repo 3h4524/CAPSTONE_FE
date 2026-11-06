@@ -13,7 +13,7 @@ type PrivateLayoutProps = {
 const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   return (
     <AuthProvider>
-      <AuthGuard>
+      <AuthGuard requireSeller>
         <UserPreferencesSync />
         <AppShell>{children}</AppShell>
         <AssistantRoot />

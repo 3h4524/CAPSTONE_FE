@@ -12,30 +12,37 @@ type AuthGuardProps = {
   requireAdmin?: boolean;
 };
 
-const SELLER_ROLE = "Seller";
+const SELLER_ROLE = "seller";
 const ADMIN_ROLE = "admin";
 
-export const AuthGuard = ({ children, requireSeller = false, requireAdmin = false }: AuthGuardProps) => {
+const normalizeRole = (role: string) => role.trim().toLowerCase();
+
+export const AuthGuard = ({
+  children,
+  requireSeller = false,
+  requireAdmin = false,
+}: AuthGuardProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const user = useAuthStore((state) => state.user);
-  const isSeller = Boolean(user?.roles.includes(SELLER_ROLE));
-  const isAdmin = Boolean(user?.roles.some((role) => role.toLowerCase() === ADMIN_ROLE));
-  const isAllowed = Boolean(user) && (!requireSeller || isSeller) && (!requireAdmin || isAdmin);
+  const userRoles = user?.roles.map(normalizeRole) ?? [];
+  const isSeller = userRoles.includes(SELLER_ROLE);
+  const isAdmin = userRoles.includes(ADMIN_ROLE);
+  const isAllowed =
+    Boolean(user) && (!requireSeller || isSeller) && (!requireAdmin || isAdmin);
 
   useEffect(() => {
     if (!isHydrated || isAllowed) return;
 
-    // A signed-in non-admin has nothing to gain from the login page; send them home instead.
-    if (requireAdmin && user) {
-      router.replace("/");
+    if (user) {
+      router.replace("/unauthorized");
       return;
     }
 
     const returnUrl = `${pathname}${window.location.search}`;
     router.replace(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
-  }, [isAllowed, isHydrated, pathname, requireAdmin, router, user]);
+  }, [isAllowed, isHydrated, pathname, router, user]);
 
   if (!isHydrated) {
     return (

@@ -42,7 +42,7 @@ export function bridgeRows(bridge: MrrBridgeDto): BridgeRow[] {
 export function bridgeSummary(bridge: MrrBridgeDto): string {
   const subject = bridge.planName ? `${bridge.planName} MRR` : "Overall MRR";
   const net = bridge.end - bridge.start;
-  const pct = bridge.start > 0 ? ` (${net >= 0 ? "+" : "−"}${Math.abs((net / bridge.start) * 100).toFixed(1)}%)` : "";
+  const pct = bridge.start > 0 && net !== 0 ? ` (${net >= 0 ? "+" : "−"}${Math.abs((net / bridge.start) * 100).toFixed(1)}%)` : "";
   const direction = net > 0 ? "grew" : net < 0 ? "fell" : "held steady";
   const head = `${subject} ${direction}${net === 0 ? "" : ` ${formatVnd(Math.abs(net))}`}${pct}.`;
 

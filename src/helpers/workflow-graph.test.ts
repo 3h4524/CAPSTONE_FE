@@ -20,7 +20,9 @@ import {
   toWorkflowEdges,
   toWorkflowNodes,
   toWorkflowSummary,
+  uniqueNodeLabel,
   validateWorkflow,
+  withUniqueLabels,
 } from "@/helpers/workflow-graph";
 import {
   buildWorkflowDetail,
@@ -509,6 +511,37 @@ describe("validateWorkflow", () => {
     expect(validateWorkflow(nodes, []).map((issue) => issue.id)).toEqual(
       expect.arrayContaining(["missing-output", "unreachable-target", "config-target", "approval-target"])
     );
+  });
+});
+
+describe("uniqueNodeLabel", () => {
+  it("keeps a free name as it is", () => {
+    expect(uniqueNodeLabel("Design image", ["Product input"])).toBe("Design image");
+  });
+
+  it("adds the first free number to a used name, ignoring case and spaces", () => {
+    expect(uniqueNodeLabel("Design image", [" design IMAGE ", "Design image 1"])).toBe("Design image 2");
+  });
+
+  it("reuses a number that became free", () => {
+    expect(uniqueNodeLabel("Design image", ["Design image", "Design image 2"])).toBe("Design image 1");
+  });
+});
+
+describe("withUniqueLabels", () => {
+  it("names each added node after its step type, numbering repeats", () => {
+    const existing = [createWorkflowNode("design-image", { x: 0, y: 0 })];
+    const added = [createWorkflowNode("design-image", { x: 0, y: 0 }), createWorkflowNode("design-image", { x: 0, y: 0 })];
+
+    expect(withUniqueLabels(added, existing).map((node) => node.data.label)).toEqual(["Design image 1", "Design image 2"]);
+  });
+
+  it("does not mutate the nodes it is given", () => {
+    const added = [createWorkflowNode("design-image", { x: 0, y: 0 })];
+
+    withUniqueLabels(added, [createWorkflowNode("design-image", { x: 0, y: 0 })]);
+
+    expect(added[0]?.data.label).toBe("Design image");
   });
 });
 

@@ -21,9 +21,36 @@ class TestResizeObserver implements ResizeObserver {
 
 // Verified missing in jsdom 30.1.2 and called unconditionally by radix primitives (Select, Popover,
 // Slider, ScrollArea) during layout measurement. jsdom already ships PointerEvent and DOMRect, so
-// only these six need standing in.
+// only these need standing in.
 if (typeof globalThis.ResizeObserver === "undefined") {
   globalThis.ResizeObserver = TestResizeObserver;
+}
+
+class TestIntersectionObserver implements IntersectionObserver {
+  readonly root = null;
+  readonly rootMargin = "0px";
+  readonly scrollMargin = "0px";
+  readonly thresholds = [0];
+
+  observe(): void {
+    return;
+  }
+
+  unobserve(): void {
+    return;
+  }
+
+  disconnect(): void {
+    return;
+  }
+
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+}
+
+if (typeof globalThis.IntersectionObserver === "undefined") {
+  globalThis.IntersectionObserver = TestIntersectionObserver;
 }
 
 if (typeof Element.prototype.hasPointerCapture !== "function") {

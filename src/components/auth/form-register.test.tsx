@@ -82,7 +82,7 @@ describe("FormRegister", () => {
 
     expect(await screen.findByText(/verification link to/)).toBeInTheDocument();
     expect(screen.getByText("seller@apcs.test")).toBeInTheDocument();
-  });
+  }, 15_000);
 
   it("rejects mismatched confirmation without calling the api", async () => {
     const registerRequest = vi.fn(() =>

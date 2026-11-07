@@ -30,7 +30,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { AbsoluteFill, Audio, Img, Sequence, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Audio, Img, Sequence, useCurrentFrame, Video } from "remotion";
 
 import { listMusicTracks, videoWorkflowKeys } from "@/api/video-workflow";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,7 @@ import {
 } from "@/components/workflows/config-panel/fields/standard-motion-editor";
 import { loadMusicPreview } from "@/helpers/music-preview";
 import type {
+  AiSceneVideo,
   AiVideoSceneOptions,
   GenerateVideoConfig,
   MockupAsset,
@@ -109,6 +110,10 @@ const sceneSourceFrames = (scene: AiVideoSceneOptions) =>
         : scene.durationSeconds * FPS
     )
   );
+const sceneSourceAssetId = (scene: AiVideoSceneOptions) =>
+  scene.startFrameMode === "studio" && scene.studioFrameId
+    ? scene.studioFrameId
+    : scene.mockupId;
 const sceneTrim = (scene: AiVideoSceneOptions) => {
   const sourceFrames = sceneSourceFrames(scene);
   const minimumFrames = Math.min(FPS, sourceFrames);
@@ -194,6 +199,20 @@ function standardMotionFrames(motion: string, base: Region): [Region, Region] {
   if (motion === "diagonal_down_left") return pan(base, -1, 1);
   return [base, base];
 }
+function resolveStandardMotion(
+  scene: TimelineScene,
+  index: number,
+  config: GenerateVideoConfig
+) {
+  const motion =
+    scene.standardMotionPreset ??
+    config.sceneMotionPresets?.[index] ??
+    config.standardOptions?.motionPreset ??
+    "zoom";
+  return motion === "varied"
+    ? (["zoom", "pan_left", "diagonal_up_right", "zoom_out"][index % 4] ?? "zoom")
+    : motion;
+}
 function defaultBaseCrop(image: MockupAsset, aspectRatio: number): Region {
   const sourceRatio = image.width / Math.max(1, image.height);
   const height = sourceRatio < aspectRatio ? sourceRatio / aspectRatio : 1;
@@ -224,13 +243,7 @@ function getStandardFrame(
       scene.standardStartRotation != null ||
       scene.standardEndRotation != null
   );
-  let motion: string =
-    scene.standardMotionPreset ??
-    config.sceneMotionPresets?.[index] ??
-    config.standardOptions?.motionPreset ??
-    "zoom";
-  if (motion === "varied")
-    motion = ["zoom", "pan_left", "diagonal_up_right", "zoom_out"][index % 4]!;
+  let motion = resolveStandardMotion(scene, index, config);
 
   let startCrop: Region;
   let endCrop: Region;
@@ -292,6 +305,55 @@ type Selection =
   | null;
 type TimelineScene = NonNullable<GenerateVideoConfig["aiScenes"]>[number];
 
+function TimelineAiVideoFilmstrip({
+  src,
+  trimStartFrames,
+  trimEndFrames,
+  sourceFrames,
+}: {
+  src: string;
+  trimStartFrames: number;
+  trimEndFrames: number;
+  sourceFrames: number;
+}) {
+  const start = trimStartFrames / Math.max(1, sourceFrames);
+  const end = 1 - trimEndFrames / Math.max(1, sourceFrames);
+  // The timeline should communicate the body of the clip, not repeat the initial pose.
+  // Keep its three stills around the middle of the visible portion after trimming.
+  const samplePoints = [0.35, 0.5, 0.65];
+
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 grid grid-cols-3 overflow-hidden opacity-90">
+      {samplePoints.map((samplePoint) => {
+        const progress = start + (end - start) * samplePoint;
+        const seekToPreviewFrame = (video: HTMLVideoElement) => {
+          if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+          const target = Math.min(
+            Math.max(0, video.duration * progress),
+            Math.max(0, video.duration - 0.05)
+          );
+          if (Math.abs(video.currentTime - target) >= 0.03) video.currentTime = target;
+          video.pause();
+        };
+        return (
+          <video
+            key={samplePoint}
+            src={src}
+            muted
+            playsInline
+            preload="metadata"
+            onLoadedMetadata={(event) => seekToPreviewFrame(event.currentTarget)}
+            onCanPlay={(event) => seekToPreviewFrame(event.currentTarget)}
+            onSeeked={(event) => event.currentTarget.pause()}
+            className="h-full w-full min-w-0 object-cover"
+            style={{ objectPosition: "50% 62%" }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 function sceneAtFrame(scenes: TimelineScene[], frame: number) {
   let offset = 0;
   for (let index = 0; index < scenes.length; index += 1) {
@@ -304,13 +366,38 @@ function sceneAtFrame(scenes: TimelineScene[], frame: number) {
   return null;
 }
 
+function transitionAtFrame(scenes: TimelineScene[], frame: number) {
+  if (scenes.length < 2) return null;
+  let boundaryFrame = sceneFrames(scenes[0]!);
+  for (let sceneIndex = 1; sceneIndex < scenes.length; sceneIndex += 1) {
+    const scene = scenes[sceneIndex]!;
+    const durationFrames = transitionFrames(scene, sceneIndex);
+    // The timeline draws each transition centered on its scene boundary, so playback must use
+    // the same left and right edges instead of starting the effect at the boundary itself.
+    const startFrame = boundaryFrame - Math.floor(durationFrames / 2);
+    if (durationFrames > 0 && frame >= startFrame && frame < startFrame + durationFrames) {
+      return {
+        sceneIndex,
+        boundaryFrame,
+        durationFrames,
+        localFrame: frame - startFrame,
+      };
+    }
+    boundaryFrame += sceneFrames(scene);
+  }
+  return null;
+}
+
 type PreviewTransitionStyle = ReturnType<typeof getTransitionFrameStyle>;
 
-function PreviewSceneImage({
+function PreviewSceneMedia({
   scene,
   sceneIndex,
   localFrame,
+  playbackStartFrame,
+  visible,
   assets,
+  sceneVideos,
   config,
   aspectRatio,
   transitionStyle,
@@ -318,12 +405,24 @@ function PreviewSceneImage({
   scene: TimelineScene;
   sceneIndex: number;
   localFrame: number;
+  playbackStartFrame: number;
+  visible: boolean;
   assets: MockupAsset[];
+  sceneVideos: AiSceneVideo[];
   config: GenerateVideoConfig;
   aspectRatio: number;
   transitionStyle?: PreviewTransitionStyle;
 }) {
-  const image = assets.find((asset) => asset.id === scene.mockupId) ?? assets[0];
+  const image = assets.find((asset) => asset.id === sceneSourceAssetId(scene)) ?? assets[0];
+  const generatedClip =
+    scene.mode !== "standard"
+      ? sceneVideos.find(
+          (clip) =>
+            clip.sceneOrder === sceneIndex && clip.status === "stored" && Boolean(clip.previewUrl)
+        )
+      : undefined;
+  const trim = sceneTrim(scene);
+  const playbackFrames = trim.sourceFrames - trim.trimStartFrames - trim.trimEndFrames;
   const progress = sceneProgress(scene, localFrame);
   const standardFrame =
     scene.mode === "standard" && image
@@ -342,7 +441,9 @@ function PreviewSceneImage({
   return (
     <AbsoluteFill
       style={{
-        opacity: style.opacity,
+        opacity: visible ? style.opacity : 0,
+        visibility: visible ? "visible" : "hidden",
+        pointerEvents: visible ? "auto" : "none",
         transform: style.transform,
         clipPath: style.clipPath as CSSProperties["clipPath"],
         filter: style.filter,
@@ -373,7 +474,7 @@ function PreviewSceneImage({
               style={{
                 width: "100%",
                 height: "100%",
-                objectFit: "contain",
+                objectFit: scene.mode === "standard" ? "contain" : "cover",
                 transform: standardFrame
                   ? `translate3d(0, 0, 0) scale(${standardFrame.scale}) rotate(${standardFrame.rotation}deg)`
                   : undefined,
@@ -387,8 +488,34 @@ function PreviewSceneImage({
             Choose a source image
           </AbsoluteFill>
         )}
+        {generatedClip?.previewUrl && (
+          <Sequence
+            from={playbackStartFrame}
+            durationInFrames={playbackFrames}
+            premountFor={playbackStartFrame}
+            postmountFor={FPS}
+            styleWhilePremounted={{ opacity: 1 }}
+            styleWhilePostmounted={{ opacity: 1 }}
+          >
+            <Video
+              src={generatedClip.previewUrl}
+              trimBefore={trim.trimStartFrames}
+              durationInFrames={playbackFrames}
+              muted
+              pauseWhenBuffering
+              preload="auto"
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+          </Sequence>
+        )}
       </AbsoluteFill>
-      {style.flashOpacity > 0 && (
+      {visible && style.flashOpacity > 0 && (
         <AbsoluteFill style={{ backgroundColor: "white", opacity: style.flashOpacity }} />
       )}
     </AbsoluteFill>
@@ -398,6 +525,7 @@ function PreviewSceneImage({
 function Preview({
   scenes,
   assets,
+  sceneVideos,
   edit,
   musicUrl,
   musicDurationInFrames,
@@ -408,6 +536,7 @@ function Preview({
 }: {
   scenes: TimelineScene[];
   assets: MockupAsset[];
+  sceneVideos: AiSceneVideo[];
   edit: VideoEditConfig;
   musicUrl?: string;
   musicDurationInFrames?: number;
@@ -418,14 +547,29 @@ function Preview({
 }) {
   const frame = useCurrentFrame();
   const activeScene = sceneAtFrame(scenes, frame);
-  const current = activeScene?.scene;
-  const currentIndex = activeScene?.index ?? 0;
-  const localFrame = activeScene?.localFrame ?? 0;
+  const activeTransition = transitionAtFrame(scenes, frame);
+  const currentIndex = activeTransition?.sceneIndex ?? activeScene?.index ?? 0;
+  const current = scenes[currentIndex];
+  const scenePlaybackStarts: number[] = [];
+  let playbackOffset = 0;
+  scenes.forEach((scene) => {
+    scenePlaybackStarts.push(playbackOffset);
+    playbackOffset += sceneFrames(scene);
+  });
+  const localFrame = activeTransition
+    ? Math.max(0, frame - activeTransition.boundaryFrame)
+    : (activeScene?.localFrame ?? 0);
   const [ratioWidth, ratioHeight] = aspectForFormat(config.outputFormat);
   const aspectRatio = ratioWidth / ratioHeight;
-  const boundaryFrames = current ? transitionFrames(current, currentIndex) : 0;
-  const isTransitioning = Boolean(currentIndex > 0 && boundaryFrames > 0 && localFrame < boundaryFrames);
-  const previousScene = isTransitioning ? scenes[currentIndex - 1] : undefined;
+  const boundaryFrames = activeTransition?.durationFrames ?? 0;
+  const previousScene = activeTransition ? scenes[currentIndex - 1] : undefined;
+  const previousLocalFrame =
+    previousScene && activeTransition
+      ? Math.min(
+          sceneFrames(previousScene) - 1,
+          Math.max(0, frame - (activeTransition.boundaryFrame - sceneFrames(previousScene)))
+        )
+      : 0;
   const transitionEffect = current?.transitionIn ?? "none";
   const musicPlaybackFrames = edit.music
     ? Math.max(0, durationInFrames - edit.music.startFrame)
@@ -435,12 +579,22 @@ function Preview({
       musicDurationInFrames &&
       edit.music.sourceOffsetFrames + musicPlaybackFrames > musicDurationInFrames
   );
-  const incomingTransition = isTransitioning
-    ? getTransitionFrameStyle(transitionEffect, localFrame, boundaryFrames, "incoming")
+  const incomingTransition = activeTransition
+    ? getTransitionFrameStyle(
+        transitionEffect,
+        activeTransition.localFrame,
+        boundaryFrames,
+        "incoming"
+      )
     : undefined;
-  const outgoingTransition = isTransitioning
+  const outgoingTransition = activeTransition
     ? {
-        ...getTransitionFrameStyle(transitionEffect, localFrame, boundaryFrames, "outgoing"),
+        ...getTransitionFrameStyle(
+          transitionEffect,
+          activeTransition.localFrame,
+          boundaryFrames,
+          "outgoing"
+        ),
         flashOpacity: 0,
       }
     : undefined;
@@ -475,28 +629,45 @@ function Preview({
           />
         </Sequence>
       )}
-      {previousScene && outgoingTransition && (
-        <PreviewSceneImage
-          scene={previousScene}
-          sceneIndex={currentIndex - 1}
-          localFrame={Math.max(0, sceneFrames(previousScene) - 1)}
-          assets={assets}
-          config={config}
-          aspectRatio={aspectRatio}
-          transitionStyle={outgoingTransition}
-        />
-      )}
-      {current ? (
-        <PreviewSceneImage
-          scene={current}
-          sceneIndex={currentIndex}
-          localFrame={localFrame}
-          assets={assets}
-          config={config}
-          aspectRatio={aspectRatio}
-          transitionStyle={incomingTransition}
-        />
-      ) : (
+      {scenes.map((scene, sceneIndex) => {
+        const isOutgoingTransitionScene = Boolean(
+          activeTransition && sceneIndex === currentIndex - 1
+        );
+        const isIncomingTransitionScene = Boolean(
+          activeTransition && sceneIndex === currentIndex
+        );
+        const isActiveScene = !activeTransition && sceneIndex === activeScene?.index;
+        const visible = isOutgoingTransitionScene || isIncomingTransitionScene || isActiveScene;
+        const sceneLocalFrame = isOutgoingTransitionScene
+          ? previousLocalFrame
+          : isIncomingTransitionScene
+            ? localFrame
+            : isActiveScene
+              ? (activeScene?.localFrame ?? 0)
+              : 0;
+        return (
+          <PreviewSceneMedia
+            key={`preview-scene-${sceneIndex}`}
+            scene={scene}
+            sceneIndex={sceneIndex}
+            localFrame={sceneLocalFrame}
+            playbackStartFrame={scenePlaybackStarts[sceneIndex] ?? 0}
+            visible={visible}
+            assets={assets}
+            sceneVideos={sceneVideos}
+            config={config}
+            aspectRatio={aspectRatio}
+            transitionStyle={
+              isOutgoingTransitionScene
+                ? outgoingTransition
+                : isIncomingTransitionScene
+                  ? incomingTransition
+                  : undefined
+            }
+          />
+        );
+      })}
+      {!current && (
         <AbsoluteFill style={{ display: "grid", placeItems: "center", color: "#94a3b8" }}>
           Choose a source image
         </AbsoluteFill>
@@ -831,9 +1002,16 @@ type Props = {
   disabled?: boolean;
   config: GenerateVideoConfig;
   assets: MockupAsset[];
+  sceneVideos?: AiSceneVideo[];
   onSave: (config: GenerateVideoConfig) => void;
 };
-export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props) {
+export function VideoTimelineEditor({
+  disabled,
+  config,
+  assets,
+  sceneVideos = [],
+  onSave,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<GenerateVideoConfig | null>(null);
   const [past, setPast] = useState<GenerateVideoConfig[]>([]);
@@ -876,9 +1054,9 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
         })()
       : undefined;
   const previewImage = selectedScene
-    ? assets.find((asset) => asset.id === selectedScene.scene.mockupId)
+    ? assets.find((asset) => asset.id === sceneSourceAssetId(selectedScene.scene))
     : previewScene
-      ? assets.find((asset) => asset.id === previewScene.scene.mockupId)
+      ? assets.find((asset) => asset.id === sceneSourceAssetId(previewScene.scene))
       : undefined;
   const musicTrackId = edit.music?.trackId;
   const musicMuted = edit.music?.muted ?? false;
@@ -899,6 +1077,7 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
     () => ({
       scenes,
       assets,
+      sceneVideos,
       edit,
       musicUrl: musicPreviewUrl,
       musicDurationInFrames,
@@ -907,7 +1086,17 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
       onSelect: setSelection,
       config: active,
     }),
-    [active, assets, edit, frameTotal, musicDurationInFrames, musicPreviewUrl, overlay?.id, scenes]
+    [
+      active,
+      assets,
+      edit,
+      frameTotal,
+      musicDurationInFrames,
+      musicPreviewUrl,
+      overlay?.id,
+      scenes,
+      sceneVideos,
+    ]
   );
   const commit = useCallback((recipe: (current: GenerateVideoConfig) => GenerateVideoConfig) =>
     setDraft((current) => {
@@ -1455,7 +1644,7 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
                   <div className="grid min-h-0 min-w-0 max-lg:grid-cols-1 lg:grid-cols-[minmax(28rem,1fr)_minmax(26rem,28rem)] lg:overflow-hidden xl:contents">
                     <section
                       ref={previewCanvasRef}
-                      className="bg-muted/55 relative flex min-h-[25rem] min-w-0 items-center justify-center p-6 max-sm:min-h-[16rem] max-sm:p-3 sm:p-8 lg:min-h-0 lg:p-8"
+                      className="bg-muted/55 relative flex min-h-[25rem] min-w-0 items-center justify-center overflow-hidden p-6 max-sm:min-h-[16rem] max-sm:p-3 sm:p-8 lg:min-h-0 lg:p-8"
                       aria-label="Video preview canvas"
                     >
                       <div
@@ -1561,6 +1750,9 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
                         <SceneInspector
                           scene={selectedScene.scene}
                           sceneNumber={selectedScene.index + 1}
+                          sceneIndex={selectedScene.index}
+                          image={previewImage}
+                          config={active}
                           endpoint={
                             selectedScene.localFrame /
                               Math.max(1, sceneFrames(selectedScene.scene) - 1) <=
@@ -1623,12 +1815,13 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
                       )}
                     </div>
                     <span className="text-muted-foreground hidden text-[11px] sm:inline">
-                  Click a boundary or drag a transition onto it
+                      Drag a scene edge to trim · click a boundary to edit its transition
                     </span>
                   </div>
                   <Timeline
                     scenes={scenes}
                     assets={assets}
+                    sceneVideos={sceneVideos}
                     edit={edit}
                     musicTrackName={track?.name ?? null}
                     totalFrames={frameTotal}
@@ -1678,17 +1871,41 @@ function OptionPickerEmpty() {
 function SceneInspector({
   scene,
   sceneNumber,
+  sceneIndex,
+  image,
+  config,
   endpoint,
   onReset,
   onChange,
 }: {
   scene: TimelineScene;
   sceneNumber: number;
+  sceneIndex: number;
+  image?: MockupAsset;
+  config: GenerateVideoConfig;
   endpoint: SceneTransformEndpoint;
   onReset: () => void;
   onChange: (changes: Partial<TimelineScene>) => void;
 }) {
-  const baseCrop = scene.standardBaseCrop ?? FULL_REGION;
+  const [ratioWidth, ratioHeight] = aspectForFormat(config.outputFormat);
+  const aspectRatio = ratioWidth / ratioHeight;
+  const baseCrop =
+    scene.standardBaseCrop ?? (image ? defaultBaseCrop(image, aspectRatio) : FULL_REGION);
+  const startFrame = image
+    ? getStandardFrame(scene, image, sceneIndex, 0, config, aspectRatio)
+    : {
+        crop: scene.standardStartCrop ?? baseCrop,
+        scale: scene.standardStartScale ?? 1,
+        rotation: scene.standardStartRotation ?? 0,
+      };
+  const endFrame = image
+    ? getStandardFrame(scene, image, sceneIndex, 1, config, aspectRatio)
+    : {
+        crop: scene.standardEndCrop ?? baseCrop,
+        scale: scene.standardEndScale ?? 1,
+        rotation: scene.standardEndRotation ?? 0,
+      };
+  const motion = resolveStandardMotion(scene, sceneIndex, config);
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
@@ -1708,7 +1925,7 @@ function SceneInspector({
       <label className="text-muted-foreground block space-y-2 text-sm font-medium">
         <span>Camera movement</span>
         <Select
-          value={scene.standardMotionPreset ?? "zoom"}
+          value={motion}
           onValueChange={(value) =>
             onChange(
               value === "custom"
@@ -1751,12 +1968,23 @@ function SceneInspector({
                 rotation: "standardEndRotation",
                 crop: "standardEndCrop",
               } as const);
-        const frameCrop = scene[fields.crop] ?? baseCrop;
-        const scale = scene[fields.scale] ?? 1;
-        const rotation = scene[fields.rotation] ?? 0;
+        const endpointFrame = frame === "start" ? startFrame : endFrame;
+        const frameCrop = scene[fields.crop] ?? endpointFrame.crop;
+        const scale = scene[fields.scale] ?? endpointFrame.scale;
+        const rotation = scene[fields.rotation] ?? endpointFrame.rotation;
         const position = cropPosition(baseCrop, frameCrop, scale);
         const changeFrame = (changes: Partial<TimelineScene>) =>
-          onChange({ ...changes, standardMotionPreset: "custom" });
+          onChange({
+            standardMotionPreset: "custom",
+            standardBaseCrop: baseCrop,
+            standardStartCrop: startFrame.crop,
+            standardEndCrop: endFrame.crop,
+            standardStartScale: startFrame.scale,
+            standardEndScale: endFrame.scale,
+            standardStartRotation: startFrame.rotation,
+            standardEndRotation: endFrame.rotation,
+            ...changes,
+          });
         const setPosition = (axis: "x" | "y", value: number) =>
           changeFrame({
             [fields.crop]: positionedCrop(
@@ -2500,6 +2728,7 @@ function TransitionInspector({
 function Timeline({
   scenes,
   assets,
+  sceneVideos,
   edit,
   musicTrackName,
   totalFrames,
@@ -2513,6 +2742,7 @@ function Timeline({
 }: {
   scenes: TimelineScene[];
   assets: MockupAsset[];
+  sceneVideos: AiSceneVideo[];
   edit: VideoEditConfig;
   musicTrackName: string | null;
   totalFrames: number;
@@ -2589,7 +2819,9 @@ function Timeline({
     onSeek(Math.min(maxFrame, Math.max(0, frame)));
     onSelect({ kind: "scene", sceneIndex });
   };
-  const selectScene = (sceneIndex: number) => onSelect({ kind: "scene", sceneIndex });
+  // Selecting a scene must also move the preview to it. Without seeking, the inspector
+  // would show the selected scene while the player still rendered the previous playhead.
+  const selectScene = (sceneIndex: number) => selectSceneFrame(sceneIndex);
   const resolveTrim = (
     edge: "start" | "end",
     sourceFrames: number,
@@ -2642,7 +2874,7 @@ function Timeline({
     edge: "start" | "end"
   ) => {
     const scene = scenes[sceneIndex];
-    if (!scene) return;
+    if (!scene || event.button !== 0) return;
     event.stopPropagation();
     event.preventDefault();
     const sceneElement = event.currentTarget.closest<HTMLElement>("[data-timeline-scene]");
@@ -2708,7 +2940,9 @@ function Timeline({
         trimStartFrames: gesture.pendingTrimStartFrames,
         trimEndFrames: gesture.pendingTrimEndFrames,
       });
-    } else if (!gesture.dragged) selectSceneFrame(gesture.sceneIndex, gesture.edge);
+    } else if (!gesture.dragged) {
+      selectSceneFrame(gesture.sceneIndex, gesture.edge);
+    }
   };
   const cancelSceneTrim = (event: PointerEvent<HTMLButtonElement>) => {
     if (trimGesture.current?.pointerId !== event.pointerId) return;
@@ -2727,7 +2961,8 @@ function Timeline({
     if (!scene) return;
     event.preventDefault();
     const trim = sceneTrim(scene);
-    const movementFrames = (event.key === "ArrowRight" ? 1 : -1) * (event.shiftKey ? FPS : 1);
+    const movementFrames =
+      (event.key === "ArrowRight" ? 1 : -1) * (event.shiftKey ? FPS : 1);
     applyTrim(
       sceneIndex,
       edge,
@@ -2803,7 +3038,16 @@ function Timeline({
             <div className="absolute inset-y-1.5 right-1.5 left-1.5 flex">
               {scenes.map((scene, index) => {
                 const duration = Math.max(1, sceneFrames(scene));
-                const asset = assets.find((item) => item.id === scene.mockupId);
+                const asset = assets.find((item) => item.id === sceneSourceAssetId(scene));
+                const generatedClip =
+                  scene.mode !== "standard"
+                    ? sceneVideos.find(
+                        (clip) =>
+                          clip.sceneOrder === index &&
+                          clip.status === "stored" &&
+                          Boolean(clip.previewUrl)
+                      )
+                    : undefined;
                 const isSelected = selection?.kind === "scene" && selection.sceneIndex === index;
                 const trim = sceneTrim(scene);
                 const pending = pendingTrim?.sceneIndex === index ? pendingTrim : null;
@@ -2842,7 +3086,14 @@ function Timeline({
                     >
                       <span className="sr-only">Select Scene {index + 1}</span>
                     </button>
-                    {asset && (
+                    {generatedClip?.previewUrl ? (
+                      <TimelineAiVideoFilmstrip
+                        src={generatedClip.previewUrl}
+                        trimStartFrames={trim.trimStartFrames}
+                        trimEndFrames={trim.trimEndFrames}
+                        sourceFrames={trim.sourceFrames}
+                      />
+                    ) : asset && (
                       <div
                         aria-hidden="true"
                         className="pointer-events-none absolute inset-0 opacity-75"
@@ -2871,6 +3122,11 @@ function Timeline({
                     <span className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-black/55 px-1.5 py-0.5 text-[10px] font-semibold text-white">
                       Scene {index + 1}
                     </span>
+                    {generatedClip && (
+                      <span className="bg-primary text-primary-foreground pointer-events-none absolute top-1 right-1 z-20 rounded px-1.5 py-0.5 text-[9px] leading-none font-semibold uppercase shadow-sm">
+                        Video
+                      </span>
+                    )}
                     <button
                       type="button"
                       onPointerDown={(event) => beginSceneTrim(event, index, "start")}
@@ -2888,11 +3144,15 @@ function Timeline({
                       style={
                         pending?.edge === "start" ? { left: `${startPreviewPercent}%` } : undefined
                       }
-                      className={`bg-background/95 text-primary focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute top-1/2 left-0 ${isSelected ? "z-40" : "z-30"} grid size-6 -translate-y-1/2 cursor-ew-resize touch-none place-items-center rounded-full shadow-sm transition-colors focus-visible:ring-2`}
-                      aria-label={`Trim start of Scene ${index + 1}. Click to edit its first frame; use arrow keys to trim one frame.`}
-                      title={`Drag to trim start of Scene ${index + 1}. Arrow keys trim by one frame; Shift + arrow trims by one second.`}
+                      className={`focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute inset-y-0 left-0 ${isSelected ? "z-40" : "z-20"} flex w-6 cursor-ew-resize touch-none items-center justify-start rounded-l-sm bg-transparent pl-1.5 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset`}
+                      aria-label={`Trim start of Scene ${index + 1}. Current duration ${seconds(duration)}. Use arrow keys to adjust by one frame.`}
+                      aria-keyshortcuts="ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight"
+                      title={`Drag to trim the start of Scene ${index + 1}. Arrow keys adjust one frame; Shift + arrow adjusts one second.`}
                     >
-                      <span className="size-2 rotate-45 bg-current" />
+                      <span
+                        aria-hidden="true"
+                        className={`bg-primary h-7 w-1 rounded-full shadow-sm transition-opacity ${isSelected || pending?.edge === "start" ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                      />
                     </button>
                     <button
                       type="button"
@@ -2911,11 +3171,15 @@ function Timeline({
                       style={
                         pending?.edge === "end" ? { right: `${endPreviewPercent}%` } : undefined
                       }
-                      className={`bg-background/95 text-primary focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute top-1/2 right-0 ${isSelected ? "z-40" : "z-30"} grid size-6 -translate-y-1/2 cursor-ew-resize touch-none place-items-center rounded-full shadow-sm transition-colors focus-visible:ring-2`}
-                      aria-label={`Trim end of Scene ${index + 1}. Click to edit its last frame; use arrow keys to trim one frame.`}
-                      title={`Drag to trim end of Scene ${index + 1}. Arrow keys trim by one frame; Shift + arrow trims by one second.`}
+                      className={`focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute inset-y-0 right-0 ${isSelected ? "z-40" : "z-20"} flex w-6 cursor-ew-resize touch-none items-center justify-end rounded-r-sm bg-transparent pr-1.5 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset`}
+                      aria-label={`Trim end of Scene ${index + 1}. Current duration ${seconds(duration)}. Use arrow keys to adjust by one frame.`}
+                      aria-keyshortcuts="ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight"
+                      title={`Drag to trim the end of Scene ${index + 1}. Arrow keys adjust one frame; Shift + arrow adjusts one second.`}
                     >
-                      <span className="size-2 rotate-45 bg-current" />
+                      <span
+                        aria-hidden="true"
+                        className={`bg-primary h-7 w-1 rounded-full shadow-sm transition-opacity ${isSelected || pending?.edge === "end" ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                      />
                     </button>
                   </div>
                 );
@@ -2985,7 +3249,7 @@ function Timeline({
                         ? `max(2rem, ${(frames / Math.max(1, totalFrames)) * 100}%)`
                         : "4rem",
                     }}
-                    className={`focus-visible:ring-ring absolute top-1/2 z-[25] grid h-8 -translate-x-1/2 -translate-y-1/2 place-items-center overflow-hidden rounded-md border transition-[background-color,border-color,box-shadow] focus-visible:ring-2 focus-visible:outline-none ${
+                    className={`focus-visible:ring-ring absolute top-1/2 ${hasTransition || isDragTarget ? "z-[25]" : "z-[15]"} grid h-8 -translate-x-1/2 -translate-y-1/2 place-items-center overflow-hidden rounded-md border transition-[background-color,border-color,box-shadow] focus-visible:ring-2 focus-visible:outline-none ${
                       isDragTarget
                         ? "border-primary bg-primary/25 text-primary ring-primary/20 shadow-sm ring-4"
                         : hasTransition && selectedBoundary

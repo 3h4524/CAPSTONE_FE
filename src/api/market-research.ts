@@ -33,8 +33,13 @@ export type MarketResearchSchedule = {
   minimumViralScore: number;
   topN: number;
   intervalMinutes: number;
+  batchSize: number;
+  runWindowMinutes: number;
   lastRunAtUtc: string | null;
   nextRunAtUtc: string | null;
+  windowStartedAtUtc: string | null;
+  windowEndsAtUtc: string | null;
+  nextQueryOffset: number;
 };
 
 export type MarketResearchResponse = {
@@ -58,7 +63,14 @@ export const getMarketResearchSchedule = async () => {
 };
 
 export const updateMarketResearchSchedule = async (
-  payload: Omit<MarketResearchSchedule, "lastRunAtUtc" | "nextRunAtUtc">
+  payload: Omit<
+    MarketResearchSchedule,
+    | "lastRunAtUtc"
+    | "nextRunAtUtc"
+    | "windowStartedAtUtc"
+    | "windowEndsAtUtc"
+    | "nextQueryOffset"
+  >
 ) => {
   const { data } = await api.put<MarketResearchSchedule>("/api/market-research/schedule", payload);
   return data;

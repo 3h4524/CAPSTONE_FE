@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import type { WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
 
+const AI_ADVANCED_CONTROLS_ENABLED = false;
+
 const wholeNumber = (label: string, min: number, max: number) =>
   z
     .number({ error: `Enter the ${label}.` })
@@ -26,7 +28,43 @@ const videoTransitionSchema = z.enum([
   "blur",
   "cut",
 ]);
-const timelineFrame = wholeNumber("timeline frame", 0, 900);
+const standardSceneMotions = [
+  "gentle",
+  "contain_gentle",
+  "static",
+  "pan",
+  "zoom",
+  "zoom_out",
+  "pan_left",
+  "pan_up",
+  "pan_down",
+  "diagonal_up_right",
+  "diagonal_up_left",
+  "diagonal_down_right",
+  "diagonal_down_left",
+  "rotate_cw",
+  "rotate_ccw",
+  "rotate_zoom_cw",
+  "rotate_zoom_ccw",
+  "custom",
+] as const;
+type StandardSceneMotion = (typeof standardSceneMotions)[number];
+const legacyAiCameraMotionAliases: Record<string, StandardSceneMotion> = {
+  locked: "static",
+  push_in: "zoom",
+  pull_back: "zoom_out",
+  pan_right: "pan",
+  orbit_left: "contain_gentle",
+  orbit_right: "contain_gentle",
+  gentle_tracking: "contain_gentle",
+  subtle_handheld: "contain_gentle",
+};
+const normalizeLegacyStandardMotion = (value: unknown) =>
+  typeof value === "string" ? (legacyAiCameraMotionAliases[value] ?? value) : value;
+const MIN_VIDEO_DURATION_SECONDS = 5;
+const MAX_VIDEO_DURATION_SECONDS = 15;
+const MAX_VIDEO_FRAMES = MAX_VIDEO_DURATION_SECONDS * 30;
+const timelineFrame = wholeNumber("timeline frame", 0, MAX_VIDEO_FRAMES);
 const videoOverlaySchema = z
   .object({
     id: z.string().min(1),
@@ -133,13 +171,14 @@ export const applyMockupConfigSchema = z.object({
 export const generateVideoConfigSchema = z
   .object({
     mode: z.enum(["standard", "ai_shot"]),
+    aiVideoModelKey: z.enum(["minimax_h3", "minimax_h3_lite"]).nullable().optional(),
     target: z.literal("etsy"),
     // Standard scenes use the selected image and camera movement directly. This
     // legacy field remains for stored workflow compatibility and AI fallback only.
     template: z.string().trim().min(1, "Choose a video template.").default("auto"),
     templateVersion: z.number().int().min(1).max(2).optional(),
     outputFormat: z.enum(["square", "portrait", "landscape"]).catch("portrait").default("portrait"),
-    durationSeconds: wholeNumber("video duration", 1, 30),
+    durationSeconds: wholeNumber("video duration", MIN_VIDEO_DURATION_SECONDS, MAX_VIDEO_DURATION_SECONDS),
     assetSelection: z.enum(["automatic", "manual"]),
     selectedMockupIds: z
       .array(z.string().uuid())
@@ -169,57 +208,20 @@ export const generateVideoConfigSchema = z
       .optional(),
     textOverlay: z.string().max(120),
     standardOptions: z.object({
-      motionPreset: z.enum([
-        "varied",
-        "gentle",
-        "contain_gentle",
-        "static",
-        "pan",
-        "zoom",
-        "zoom_out",
-        "pan_left",
-        "pan_up",
-        "pan_down",
-        "diagonal_up_right",
-        "diagonal_up_left",
-        "diagonal_down_right",
-        "diagonal_down_left",
-        "rotate_cw",
-        "rotate_ccw",
-        "rotate_zoom_cw",
-        "rotate_zoom_ccw",
-      ]),
+      motionPreset: z.preprocess(
+        normalizeLegacyStandardMotion,
+        z.enum(["varied", ...standardSceneMotions.filter((motion) => motion !== "custom")])
+      ),
       crop: z.literal("safe"),
       transition: videoTransitionSchema,
     }),
     sceneMotionPresets: z
-      .array(
-        z
-          .enum([
-            "gentle",
-            "contain_gentle",
-            "static",
-            "pan",
-            "zoom",
-            "zoom_out",
-            "pan_left",
-            "pan_up",
-            "pan_down",
-            "diagonal_up_right",
-            "diagonal_up_left",
-            "diagonal_down_right",
-            "diagonal_down_left",
-            "rotate_cw",
-            "rotate_ccw",
-            "rotate_zoom_cw",
-            "rotate_zoom_ccw",
-            "custom",
-          ])
-          .nullable()
-      )
+      .array(z.preprocess(normalizeLegacyStandardMotion, z.enum(standardSceneMotions).nullable()))
       .max(4)
       .optional(),
     fallbackToStandard: z.boolean(),
+    aiCharacterModelId: z.string().uuid().nullable().optional(),
+    sharedMockupId: z.string().uuid().nullable().optional(),
     aiShotOptions: z
       .object({
         coverage: z.enum(["single_scene", "full_video"]),
@@ -240,20 +242,20 @@ export const generateVideoConfigSchema = z
       .array(
         z.object({
           mode: z.enum(["ai", "standard"]).default("ai"),
+          aiVideoModelKey: z.enum(["minimax_h3", "minimax_h3_lite"]).nullable().optional(),
           mockupId: z.string().uuid().nullable(),
           templateCode: z.string().min(1),
-          durationSeconds: wholeNumber("scene duration", 1, 30),
+          subtemplateCode: z.string().min(1).nullable().optional(),
+          durationSeconds: wholeNumber("scene duration", 1, MAX_VIDEO_DURATION_SECONDS),
           framing: z.string().min(1),
           cameraAngle: z.string().min(1),
           cameraMovement: z.string().min(1),
           subjectMotion: z.string().min(1),
           motionIntensity: z.string().min(1),
           lighting: z.string().min(1),
-          extraInstructions: z
-            .string()
-            .trim()
-            .max(500, "Keep scene instructions under 500 characters.")
-            .nullable(),
+          extraInstructions: AI_ADVANCED_CONTROLS_ENABLED
+            ? z.string().trim().max(500, "Keep scene instructions under 500 characters.").nullable()
+            : z.unknown().transform(() => null),
           rightsConfirmed: z.boolean(),
           startFrameMode: z.enum(["direct", "studio"]).nullable().optional(),
           studioLayout: z.enum(["hanging_window", "flat_lay", "none"]).nullable().optional(),
@@ -265,28 +267,10 @@ export const generateVideoConfigSchema = z
             .nullable()
             .optional(),
           studioReferenceHashes: z.array(z.string().length(64)).max(3).nullable().optional(),
-          standardMotionPreset: z
-            .enum([
-              "gentle",
-              "contain_gentle",
-              "static",
-              "pan",
-              "zoom",
-              "zoom_out",
-              "pan_left",
-              "pan_up",
-              "pan_down",
-              "diagonal_up_right",
-              "diagonal_up_left",
-              "diagonal_down_right",
-              "diagonal_down_left",
-              "rotate_cw",
-              "rotate_ccw",
-              "rotate_zoom_cw",
-              "rotate_zoom_ccw",
-              "custom",
-            ])
-            .optional(),
+          standardMotionPreset: z.preprocess(
+            normalizeLegacyStandardMotion,
+            z.enum(standardSceneMotions).nullable().optional()
+          ),
           standardBaseCrop: videoRegionSchema.nullable().optional(),
           standardStartCrop: videoRegionSchema.nullable().optional(),
           standardEndCrop: videoRegionSchema.nullable().optional(),
@@ -294,7 +278,7 @@ export const generateVideoConfigSchema = z
           standardEndScale: z.number().finite().min(0.01).max(5).nullable().optional(),
           standardStartRotation: z.number().finite().min(-9999).max(9999).nullable().optional(),
           standardEndRotation: z.number().finite().min(-9999).max(9999).nullable().optional(),
-          displayDurationFrames: wholeNumber("scene duration", 30, 900).nullable().optional(),
+          displayDurationFrames: wholeNumber("scene duration", 30, MAX_VIDEO_FRAMES).nullable().optional(),
           trimStartFrames: timelineFrame.nullable().optional(),
           trimEndFrames: timelineFrame.nullable().optional(),
           transitionIn: videoTransitionSchema.nullable().optional(),
@@ -303,12 +287,14 @@ export const generateVideoConfigSchema = z
       )
       .max(4)
       .optional(),
-    aiGlobalInstructions: z
-      .string()
-      .trim()
-      .max(500, "Keep shared AI scene direction under 500 characters.")
-      .nullable()
-      .optional(),
+    aiGlobalInstructions: AI_ADVANCED_CONTROLS_ENABLED
+      ? z
+          .string()
+          .trim()
+          .max(500, "Keep shared AI scene direction under 500 characters.")
+          .nullable()
+          .optional()
+      : z.unknown().transform(() => null),
     aiStudioMode: z.enum(["direct", "studio"]).catch("direct").default("direct"),
     aiStudioLayout: z
       .enum(["hanging_window", "flat_lay"])
@@ -327,7 +313,7 @@ export const generateVideoConfigSchema = z
       });
     if (
       value.mode === "ai_shot" &&
-      !["auto", "product_showcase", "design_detail", "variant_showcase"].includes(value.template)
+      !["auto", "product_showcase", "design_detail", "variant_showcase", "product_on_model_pack"].includes(value.template)
     )
       ctx.addIssue({
         code: "custom",
@@ -354,20 +340,20 @@ export const generateVideoConfigSchema = z
             path: ["aiScenes", index, "mockupId"],
             message: `Choose an approved image for scene ${index + 1}.`,
           });
-        if (scene.mode === "ai" && ![4, 6, 8].includes(scene.durationSeconds)) {
+        if (scene.mode === "ai" && (scene.durationSeconds < 4 || scene.durationSeconds > 15)) {
           ctx.addIssue({
             code: "custom",
             path: ["aiScenes", index, "durationSeconds"],
-            message: `AI scene ${index + 1} must be 4, 6 or 8 seconds.`,
+            message: `AI scene ${index + 1} must be between 4 and 15 seconds.`,
           });
         }
       });
       const total = value.aiScenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
-      if (total > 30)
+      if (total < MIN_VIDEO_DURATION_SECONDS || total > MAX_VIDEO_DURATION_SECONDS)
         ctx.addIssue({
           code: "custom",
           path: ["aiScenes"],
-          message: "Scenes can total up to 30 seconds.",
+          message: "Scenes must total between 5 and 15 seconds.",
         });
       if (value.durationSeconds !== total)
         ctx.addIssue({
@@ -433,7 +419,7 @@ export const generateVideoConfigSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["aiShotOptions", "rightsConfirmed"],
-        message: "Confirm image rights for the visible adult person.",
+        message: "Confirm image rights for the people shown, with a parent's or guardian's consent for anyone under 18.",
       });
   });
 

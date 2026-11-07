@@ -35,13 +35,14 @@ const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
     target: "etsy",
     template: "auto",
     outputFormat: "portrait",
-    durationSeconds: 20,
+    durationSeconds: 12,
     assetSelection: "automatic",
     selectedMockupIds: [],
     sceneOrder: [],
     textOverlay: "",
     standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
     fallbackToStandard: true,
+    aiGlobalInstructions: null,
     aiStudioMode: "direct",
     aiStudioLayout: "hanging_window",
   },
@@ -404,13 +405,14 @@ describe("generateVideoConfigSchema", () => {
     target: "etsy",
     template: "auto",
     outputFormat: "portrait",
-    durationSeconds: 20,
+    durationSeconds: 12,
     assetSelection: "automatic",
     selectedMockupIds: [],
     sceneOrder: [],
     textOverlay: "",
     standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
     fallbackToStandard: true,
+    aiGlobalInstructions: null,
     aiStudioMode: "direct",
     aiStudioLayout: "hanging_window",
   };
@@ -446,7 +448,7 @@ describe("generateVideoConfigSchema", () => {
     expectIssue(result, "template", "Choose a video template.");
   });
 
-  it.each([3, 15, 20, 29, 30])("accepts a duration of %i seconds", (durationSeconds) => {
+  it.each([5, 12, 15])("accepts a duration of %i seconds", (durationSeconds) => {
     const result = generateVideoConfigSchema.safeParse({ ...valid, durationSeconds });
 
     expect(result.success).toBe(true);
@@ -454,8 +456,8 @@ describe("generateVideoConfigSchema", () => {
   });
 
   it.each([
-    { durationSeconds: 0, message: "The video duration must be at least 1." },
-    { durationSeconds: 31, message: "The video duration cannot exceed 30." },
+    { durationSeconds: 4, message: "The video duration must be at least 5." },
+    { durationSeconds: 16, message: "The video duration cannot exceed 15." },
   ])("rejects a duration of $durationSeconds seconds", ({ durationSeconds, message }) => {
     const result = generateVideoConfigSchema.safeParse({ ...valid, durationSeconds });
 

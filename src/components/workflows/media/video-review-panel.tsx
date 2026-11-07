@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { PreloadedVideo } from "@/components/workflows/media/preloaded-video";
 import { VideoPreviewFrame } from "@/components/workflows/media/video-preview-frame";
+import { VideoSceneQualityReview } from "@/components/workflows/media/video-scene-quality-review";
 import { VideoTimelineEditor } from "@/components/workflows/media/video-timeline-editor";
 import { confirmAiShot } from "@/helpers/confirm-ai-shot";
 import { getErrorMessage } from "@/helpers/error-message";
@@ -22,6 +23,7 @@ import { useMediaDownload } from "@/hooks/mutations/use-media-download";
 import { usePreviewVideoStoryboard } from "@/hooks/mutations/use-preview-video-storyboard";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
+import { useRunSceneVideos } from "@/hooks/queries/use-run-scene-videos";
 import { useRunVideos } from "@/hooks/queries/use-run-videos";
 import { useWorkflowVideoRuns } from "@/hooks/queries/use-workflow-video-runs";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
@@ -133,10 +135,14 @@ const VideoRunHistory = ({
 export const VideoReviewPanel = () => {
   const { run, runId, selectRun } = useWorkflowRuntime();
   const { data: videos, isPending } = useRunVideos(runId);
+  const { data: sceneVideos = [] } = useRunSceneVideos(runId);
   const { mutate: action, isPending: isActing } = useWorkflowRunAction();
   const { mutateAsync: previewStoryboard, isPending: isPreviewing } = usePreviewVideoStoryboard();
   const { mutate: download, isPending: isDownloading } = useMediaDownload();
   const [viewedId, setViewedId] = useState<string | null>(null);
+  const [editedTimelineConfigs, setEditedTimelineConfigs] = useState<
+    Record<string, GenerateVideoConfig>
+  >({});
   const video = videos?.find((v) => v.id === viewedId) ?? videos?.[0];
   const workflowId = useWorkflowStore((state) => state.workflowId);
   const {
@@ -170,14 +176,18 @@ export const VideoReviewPanel = () => {
   );
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const { data: editAssets = [] } = useMockupAssets(run?.productId ?? "");
+  const timelineConfig =
+    (video ? editedTimelineConfigs[video.id] : undefined) ??
+    video?.config ??
+    (generate?.data.config as GenerateVideoConfig | undefined);
   const candidateId = run?.nodes.find((n) => n.nodeType === "review-video")?.output.videoId;
   const canReview =
     run?.status === "waiting_for_review" &&
     video?.id === candidateId &&
     video?.status === "completed";
   const rerender = async () => {
-    if (!run || !generate) return;
-    const parsed = generateVideoConfigSchema.safeParse(generate.data.config);
+    if (!run || !timelineConfig) return;
+    const parsed = generateVideoConfigSchema.safeParse(timelineConfig);
     if (!parsed.success) {
       showToast("warning", parsed.error.issues[0]?.message ?? "Check video settings.");
       return;
@@ -186,8 +196,8 @@ export const VideoReviewPanel = () => {
       const storyboard = await previewStoryboard({
         productId: run.productId,
         config: parsed.data,
-        mockupIds: readStringArray(mockup?.data.config.mockupIds),
-        artworkGroupKey: readString(mockup?.data.config.artworkGroupKey),
+        mockupIds: video?.mockupIds ?? readStringArray(mockup?.data.config.mockupIds),
+        artworkGroupKey: video?.artworkGroupKey ?? readString(mockup?.data.config.artworkGroupKey),
       });
       const token = await confirmAiShot(run.id, parsed.data);
       if (token === null) return;
@@ -312,10 +322,13 @@ export const VideoReviewPanel = () => {
           <div>
             <dt className="text-muted-foreground text-[11px]">Quality check</dt>
             <dd className="mt-0.5 text-xs font-semibold">
-              {video.qa.fullDecode === true ? "Passed" : "Pending"}
+              {(typeof video.qa.technical === "object" && video.qa.technical !== null
+                ? (video.qa.technical as Record<string, unknown>).fullDecode
+                : video.qa.fullDecode) === true ? "Passed" : "Pending"}
             </dd>
           </div>
         </dl>
+        <VideoSceneQualityReview runId={runId} video={video} />
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
@@ -383,8 +396,20 @@ export const VideoReviewPanel = () => {
           >
             <RotateCcw aria-hidden="true" />
           </Button>
-          {generate && <VideoTimelineEditor config={generate.data.config as GenerateVideoConfig} assets={editAssets} disabled={isActing}
-            onSave={next => updateNodeConfig(generate.id, next)} />}
+          {generate && timelineConfig && (
+            <VideoTimelineEditor
+              config={timelineConfig}
+              assets={editAssets}
+              sceneVideos={sceneVideos}
+              disabled={isActing}
+              onSave={(next) => {
+                if (video) {
+                  setEditedTimelineConfigs((current) => ({ ...current, [video.id]: next }));
+                }
+                updateNodeConfig(generate.id, next);
+              }}
+            />
+          )}
         </div>
         {!canReview && (
           <p className="text-muted-foreground text-xs leading-relaxed">

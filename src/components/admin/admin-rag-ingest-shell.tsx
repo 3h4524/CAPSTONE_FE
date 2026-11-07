@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, CheckCircle2, FileText, Info, Loader2, RotateCcw, Upload } from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronDown, FileText, Info, Loader2, RotateCcw, Upload } from "lucide-react";
 
 import { ingestRagDocument, type RagIngestRequest } from "@/api/rag";
 import { AdminBottomNav } from "@/components/admin/admin-bottom-nav";
@@ -9,6 +9,7 @@ import { AdminMarketResearchPanel } from "@/components/admin/admin-market-resear
 import { AdminRagDocumentsPanel } from "@/components/admin/admin-rag-documents-panel";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
+import { RagSearchPlayground } from "@/components/admin/rag-search-playground";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -34,13 +35,19 @@ const CONTENT_TYPES = [
 
 const ACCEPTED_FILES = ".txt,.md,.csv,.json,.html,.htm";
 
-type AdminRagIngestShellProps = { fullName: string; onLogout: () => void };
+type AdminRagTab = "ingest" | "research" | "documents" | "search";
 
-const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) => {
+type AdminRagIngestShellProps = {
+  fullName: string;
+  onLogout: () => void;
+  initialTab?: AdminRagTab;
+};
+
+const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: AdminRagIngestShellProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState<"ingest" | "documents">("ingest");
+  const [activeTab, setActiveTab] = useState<AdminRagTab>(initialTab);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [fileName, setFileName] = useState("");
   const [title, setTitle] = useState("");
@@ -128,7 +135,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
         <AdminSidebar
           fullName={fullName}
           onLogout={onLogout}
-          activeItem="RAG Ingest"
+          activeItem={activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
           isMobileOpen={isMobileSidebarOpen}
           onClose={() => setIsMobileSidebarOpen(false)}
           isCollapsed={isSidebarCollapsed}
@@ -139,7 +146,7 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
             <AdminTopbar
               fullName={fullName}
               onMenuClick={() => setIsMobileSidebarOpen(true)}
-              pageTitle="RAG Knowledge Base"
+              pageTitle={activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
             />
             <main className="mx-auto max-w-[1600px] px-4 py-4 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -148,14 +155,15 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                     Knowledge base
                   </p>
                   <h1 className="font-display mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">
-                    RAG Knowledge Base
+                    {activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
                   </h1>
                   <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
-                    Ingest documents, review versions, and control which knowledge is active for
-                    retrieval.
+                    {activeTab === "research"
+                      ? "Manage the shared public Etsy dataset used by seller-facing Market Radar."
+                      : "Ingest documents, review versions, and control which knowledge is active for retrieval."}
                   </p>
                 </div>
-                <div className="flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+                <div className="flex flex-wrap rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
                   <Button
                     type="button"
                     size="sm"
@@ -167,18 +175,34 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                   <Button
                     type="button"
                     size="sm"
+                    variant={activeTab === "research" ? "default" : "ghost"}
+                    onClick={() => setActiveTab("research")}
+                  >
+                    Market Insights
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
                     variant={activeTab === "documents" ? "default" : "ghost"}
                     onClick={() => setActiveTab("documents")}
                   >
                     Documents & versions
                   </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={activeTab === "search" ? "default" : "ghost"}
+                    onClick={() => setActiveTab("search")}
+                  >
+                    Search playground
+                  </Button>
                 </div>
               </div>
 
-              <RagUsageGuide />
-
               <>
-                <div className={activeTab === "ingest" ? "mt-6" : "hidden"}>
+                {/* The guide only concerns adding knowledge, and folds away once read. */}
+                {activeTab === "ingest" && <RagUsageGuide />}
+                <div className={activeTab === "research" ? "mt-6" : "hidden"}>
                   <AdminMarketResearchPanel />
                 </div>
                 <div
@@ -403,13 +427,18 @@ const AdminRagIngestShell = ({ fullName, onLogout }: AdminRagIngestShellProps) =
                         )}
                       </Button>
                       <p className="mt-3 text-center text-[11px] leading-4 text-slate-400">
-                        The document will be chunked and embedded for semantic search.
+                        {!title.trim() || !content.trim()
+                          ? `Add ${!title.trim() && !content.trim() ? "a title and content" : !title.trim() ? "a title" : "content"} to ingest the document.`
+                          : "The document will be chunked and embedded for semantic search."}
                       </p>
                     </div>
                   </aside>
                 </div>
                 <div className={activeTab === "documents" ? "mt-6" : "hidden"}>
                   <AdminRagDocumentsPanel onIngest={() => setActiveTab("ingest")} />
+                </div>
+                <div className={activeTab === "search" ? "mt-6" : "hidden"}>
+                  <RagSearchPlayground />
                 </div>
               </>
             </main>
@@ -437,54 +466,72 @@ const Field = ({
   </label>
 );
 
-const RagUsageGuide = () => (
-  <section className="mt-6 rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 sm:p-5">
-    <div className="flex items-start gap-3">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm">
-        <Info className="size-4" />
+const RagUsageGuide = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <section className="mt-6 rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 sm:p-5">
+      <div className="flex items-start gap-3">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm">
+          <Info className="size-4" />
+        </div>
+        <div>
+          <h2 className="text-sm font-bold text-slate-900">
+            Quick guide: how to use the RAG knowledge base
+          </h2>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            Add trusted information here so the assistant can find and use it later.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="ml-auto shrink-0 text-indigo-700"
+          onClick={() => setIsOpen((value) => !value)}
+          aria-expanded={isOpen}
+        >
+          <ChevronDown className={`size-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+          {isOpen ? "Hide steps" : "Show steps"}
+        </Button>
       </div>
-      <div>
-        <h2 className="text-sm font-bold text-slate-900">
-          Quick guide: how to use the RAG knowledge base
-        </h2>
-        <p className="mt-1 text-xs leading-5 text-slate-500">
-          Add trusted information here so the assistant can find and use it later.
-        </p>
-      </div>
-    </div>
-    <div className="mt-4 grid gap-3 md:grid-cols-4">
-      <GuideStep
-        number="1"
-        title="Choose a source"
-        text="Paste content, upload a file, or run Etsy research for public listing signals."
-      />
-      <GuideStep
-        number="2"
-        title="Add metadata"
-        text="Enter a clear title, content type, language, and version so documents are easy to find."
-      />
-      <GuideStep
-        number="3"
-        title="Ingest document"
-        text="Click Ingest document. The system splits, embeds, and indexes the content for search."
-      />
-      <GuideStep
-        number="4"
-        title="Review versions"
-        text="Open Documents & versions to check status and manage which version is active."
-      />
-    </div>
-    <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-indigo-100 pt-3 text-[11px] leading-5 text-slate-500">
-      <span className="font-semibold text-indigo-700">Etsy tip:</span>
-      <span>
-        Run now automatically selects the top 3 listings and queues them for RAG. Enable a schedule
-        for recurring research.
-      </span>
-      <ArrowRight className="size-3.5 text-indigo-400" />
-      <span>Use only information you are allowed to store and retrieve.</span>
-    </div>
-  </section>
-);
+      {isOpen && (
+        <>
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            <GuideStep
+              number="1"
+              title="Choose a source"
+              text="Paste content, upload a file, or run Etsy research for public listing signals."
+            />
+            <GuideStep
+              number="2"
+              title="Add metadata"
+              text="Enter a clear title, content type, language, and version so documents are easy to find."
+            />
+            <GuideStep
+              number="3"
+              title="Ingest document"
+              text="Click Ingest document. The system splits, embeds, and indexes the content for search."
+            />
+            <GuideStep
+              number="4"
+              title="Review versions"
+              text="Open Documents & versions to check status and manage which version is active."
+            />
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-indigo-100 pt-3 text-[11px] leading-5 text-slate-500">
+            <span className="font-semibold text-indigo-700">Etsy tip:</span>
+            <span>
+              Run now automatically selects the top 3 listings and queues them for RAG. Enable a schedule
+              for recurring research.
+            </span>
+            <ArrowRight className="size-3.5 text-indigo-400" />
+            <span>Use only information you are allowed to store and retrieve.</span>
+          </div>
+        </>
+      )}
+    </section>
+  );
+};
 
 const GuideStep = ({ number, title, text }: { number: string; title: string; text: string }) => (
   <div className="rounded-lg border border-white/80 bg-white/80 p-3">

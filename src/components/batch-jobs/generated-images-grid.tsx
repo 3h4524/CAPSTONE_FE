@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { CircleAlert, RefreshCw } from "lucide-react";
 
+import { DesignTextCheckNote } from "@/components/batch-jobs/design-text-check-note";
 import { ImageLightbox } from "@/components/commons/data-display/image-lightbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -122,6 +123,7 @@ export const GeneratedImagesGrid = ({
                       Preview on mock-up
                     </Button>
                   </div>
+                  <DesignTextCheckNote check={image.textCheck} className="px-2 pb-2" />
                 </div>
               ))}
             </div>

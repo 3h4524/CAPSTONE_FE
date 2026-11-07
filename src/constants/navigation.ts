@@ -10,6 +10,7 @@ import {
   LifeBuoy,
   Palette,
   Settings,
+  Shirt,
   Users,
   WandSparkles,
   Workflow,
@@ -29,6 +30,7 @@ export const NAV_SECTIONS: AppNavSection[] = [
       { label: "Batches", href: "/batches", icon: Layers3 },
       { label: "My Styles", href: "/styles", icon: Palette },
       { label: "Design templates", href: "/design-templates", icon: WandSparkles },
+      { label: "Mock-up templates", href: "/mockups", icon: Shirt },
       { label: "API keys", href: "/api-keys", icon: KeyRound },
       { label: "Usage", href: "/usage", icon: Activity },
       { label: "Market Radar", href: "/market-opportunities", icon: Compass },
@@ -38,7 +40,7 @@ export const NAV_SECTIONS: AppNavSection[] = [
     label: "SYSTEM",
     items: [
       { label: "Support", href: "/support", icon: LifeBuoy },
-      { label: "Settings", href: "/settings", icon: Settings, disabled: true },
+      { label: "Settings", href: "/settings", icon: Settings },
       { label: "Billing", href: "/subscription", icon: CreditCard },
     ],
   },
@@ -67,6 +69,7 @@ export const isDesignTemplateForm = (pathname: string | null) =>
 export const ROUTE_TITLES = {
   dashboard: "Dashboard",
   "design-templates": "Design templates",
+  mockups: "Mock-up templates",
   profile: "Profile",
   "api-keys": "API keys",
   usage: "Usage",
@@ -76,4 +79,6 @@ export const ROUTE_TITLES = {
   styles: "My Styles",
   settings: "Settings",
   billing: "Billing",
+  "market-opportunities": "Market Radar",
+  "market-insights": "Market Insights",
 } as const;

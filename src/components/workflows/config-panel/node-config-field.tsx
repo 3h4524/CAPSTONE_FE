@@ -61,7 +61,7 @@ export const NodeConfigField = ({ field, control, videoMode }: NodeConfigFieldPr
           );
         case "number": {
           const value = readNumber(controller.value);
-          const max = field.name === "durationSeconds" ? (videoMode === "standard" ? 30 : 15) : field.max;
+          const max = field.name === "durationSeconds" ? 15 : field.max;
           if (max - field.min < MAX_BUTTON_CHOICES) {
             const choices = Array.from({ length: max - field.min + 1 }, (_, index) => {
               const amount = String(field.min + index);

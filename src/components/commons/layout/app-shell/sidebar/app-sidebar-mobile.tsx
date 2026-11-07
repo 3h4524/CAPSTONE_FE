@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +26,7 @@ type AppSidebarMobileProps = {
 
 export const AppSidebarMobile = ({ open, onOpenChange, side = "left" }: AppSidebarMobileProps) => {
   const router = useRouter();
+  const { t } = useTranslation("common");
   const { mutate: logout, isPending } = useLogout();
 
   const handleLogout = () => logout(undefined, { onSettled: () => router.replace("/login") });
@@ -34,9 +36,9 @@ export const AppSidebarMobile = ({ open, onOpenChange, side = "left" }: AppSideb
       <SheetContent side={side} className="flex flex-col">
         <SheetHeader>
           <SheetTitle className="text-left">APCS</SheetTitle>
-          <SheetDescription className="sr-only">Application navigation</SheetDescription>
+          <SheetDescription className="sr-only">{t("navigation.mobile")}</SheetDescription>
         </SheetHeader>
-        <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-4" aria-label="Mobile">
+        <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-4" aria-label={t("navigation.mobile")}>
           {NAV_SECTIONS.map((section) => (
             <NavSection key={section.label} section={section} collapsed={false} />
           ))}
@@ -45,7 +47,7 @@ export const AppSidebarMobile = ({ open, onOpenChange, side = "left" }: AppSideb
           <Button type="button" variant="ghost" className="justify-start" asChild>
             <Link href="/profile">
               <User />
-              <span>Profile</span>
+              <span>{t("account.profile")}</span>
             </Link>
           </Button>
           <Button
@@ -56,7 +58,7 @@ export const AppSidebarMobile = ({ open, onOpenChange, side = "left" }: AppSideb
             disabled={isPending}
           >
             <LogOut />
-            <span>Log out</span>
+            <span>{t("account.logout")}</span>
           </Button>
         </div>
       </SheetContent>

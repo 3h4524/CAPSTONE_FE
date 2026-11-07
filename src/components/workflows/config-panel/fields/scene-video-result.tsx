@@ -18,18 +18,19 @@ const STATUS_LABELS: Record<string, string> = {
 
 const ACTIVE_STATUSES = new Set(["pending", "submitting", "polling", "ready"]);
 
-export const SceneVideoResult = ({ sceneNumber, clip, runStarted, waitingForGeneration, canRegenerate, isRegenerating, onRegenerate }: {
+export const SceneVideoResult = ({ sceneNumber, clip, runStarted, waitingForGeneration, canGenerate, canRegenerate, isSubmitting, onGenerate }: {
   sceneNumber: number;
   clip?: AiSceneVideo;
   runStarted: boolean;
   waitingForGeneration: boolean;
+  canGenerate: boolean;
   canRegenerate: boolean;
-  isRegenerating: boolean;
-  onRegenerate: () => void;
+  isSubmitting: boolean;
+  onGenerate: () => void;
 }) => {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
-  const isGenerating = isRegenerating || Boolean(clip && ACTIVE_STATUSES.has(clip.status)) || waitingForGeneration;
-  const status = isRegenerating ? "Regenerating" : clip ? STATUS_LABELS[clip.status] ?? clip.status : runStarted ? "Waiting" : "Not generated";
+  const isGenerating = isSubmitting || Boolean(clip && ACTIVE_STATUSES.has(clip.status)) || waitingForGeneration;
+  const status = isSubmitting ? "Starting" : clip ? STATUS_LABELS[clip.status] ?? clip.status : runStarted ? "Waiting" : "Not generated";
   const statusClass = isGenerating
     ? "bg-muted text-muted-foreground"
     : clip?.status === "stored"
@@ -48,7 +49,7 @@ export const SceneVideoResult = ({ sceneNumber, clip, runStarted, waitingForGene
     </div>
 
     <div className="grid items-center gap-3 @min-[36rem]:grid-cols-[10rem_minmax(0,1fr)]">
-      {clip?.previewUrl && !isRegenerating
+      {clip?.previewUrl && !isSubmitting
         ? <button type="button" onClick={() => setIsVideoOpen(true)} aria-label={`Open video preview for scene ${sceneNumber}`}
           className="group focus-visible:outline-primary relative mx-auto block aspect-[9/16] w-40 overflow-hidden rounded-md bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
           <video muted playsInline preload="metadata" className="size-full object-contain" aria-hidden="true">
@@ -71,14 +72,19 @@ export const SceneVideoResult = ({ sceneNumber, clip, runStarted, waitingForGene
         {clip?.status === "stored" && <p className="leading-relaxed">This scene is ready to review. Other scenes can continue generating in the background.</p>}
         {isGenerating && <p className="text-muted-foreground leading-relaxed">AI is creating this clip. It will be shown here without waiting for the complete joined video.</p>}
         {!runStarted && <p className="text-muted-foreground leading-relaxed">Run the workflow after the scene setup is complete.</p>}
-        {runStarted && !clip && !waitingForGeneration && <p className="text-muted-foreground leading-relaxed">This scene is waiting for the video generation step.</p>}
+        {runStarted && !clip && !waitingForGeneration && <p className="text-muted-foreground leading-relaxed">
+          {canGenerate
+            ? "This scene has not been generated yet. Generate it to add it to the current video timeline."
+            : "This scene is waiting for the video generation step."}
+        </p>}
         {clip?.status === "failed" && <p className="text-destructive leading-relaxed">{clip.failure || "AI could not create this scene. Review its source and direction, then try again."}</p>}
-        {(clip?.status === "stored" || clip?.status === "failed") && <Button type="button" size="sm" variant="outline" disabled={!canRegenerate || isRegenerating} onClick={onRegenerate}
+        {((!clip && canGenerate) || clip?.status === "stored" || clip?.status === "failed") && <Button type="button" size="sm" variant="outline" disabled={clip ? !canRegenerate || isSubmitting : !canGenerate || isSubmitting} onClick={onGenerate}
           className="min-h-11 gap-2 px-4">
-          <RotateCcw aria-hidden="true" />
-          {isRegenerating ? "Starting again..." : "Regenerate this scene"}
+          {clip ? <RotateCcw aria-hidden="true" /> : <Play aria-hidden="true" />}
+          {isSubmitting ? "Starting..." : clip ? "Regenerate this scene" : "Generate this scene"}
         </Button>}
-        {(clip?.status === "stored" || clip?.status === "failed") && !canRegenerate && <p className="text-muted-foreground leading-relaxed">Scene regeneration becomes available while the run is waiting for review or after a generation failure.</p>}
+        {!clip && runStarted && !waitingForGeneration && !canGenerate && <p className="text-muted-foreground leading-relaxed">Generate this scene becomes available once the other AI scenes are ready.</p>}
+        {(clip?.status === "stored" || clip?.status === "failed") && !canRegenerate && <p className="text-muted-foreground leading-relaxed">Scene regeneration is available when the run is waiting for review, needs input, or has failed. For a cancelled run, the video step must have completed and all AI scenes must be stored.</p>}
       </div>
     </div>
     <Dialog open={isVideoOpen} onOpenChange={setIsVideoOpen}>

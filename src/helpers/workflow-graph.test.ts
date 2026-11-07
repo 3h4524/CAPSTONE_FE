@@ -60,7 +60,7 @@ const VALID_CONFIGS: Record<WorkflowNodeType, WorkflowNodeConfig> = {
     mode: "standard",
     target: "etsy",
     template: "auto",
-    durationSeconds: 20,
+    durationSeconds: 12,
     assetSelection: "automatic",
     selectedMockupIds: [],
     sceneOrder: [],
@@ -138,7 +138,7 @@ const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
       standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
       fallbackToStandard: true,
     },
-    "Generate Video: The video duration must be at least 1.",
+    "Generate Video: The video duration must be at least 5.",
   ],
   [
     "generate-listing",

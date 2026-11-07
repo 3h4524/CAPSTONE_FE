@@ -250,6 +250,23 @@ for (const [name, device] of [
   });
 }
 
+test.describe("on a small phone", () => {
+  test.use(SMALL_PHONE);
+
+  test("the new style form scrolls down to its last field", async ({ page }) => {
+    await page.goto("/styles");
+    await page.getByRole("button", { name: "New", exact: true }).click();
+
+    const form = page.getByRole("dialog").locator("[data-radix-scroll-area-viewport]");
+    await expect(form).toBeVisible();
+    const { clientHeight, scrollHeight } = await form.evaluate((element) => ({ clientHeight: element.clientHeight, scrollHeight: element.scrollHeight }));
+    expect(scrollHeight).toBeGreaterThan(clientHeight);
+
+    await form.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+    await expect.poll(() => form.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  });
+});
+
 test.describe("on a phone", () => {
   test.use(PHONE);
 
@@ -261,15 +278,17 @@ test.describe("on a phone", () => {
     await expect(page.getByRole("dialog").getByRole("link", { name: "API keys" })).toBeVisible();
   });
 
-  test("a batch can be picked from the list and its products load in steps", async ({ page }) => {
+  test("a batch can be picked from the list and its products show five to a page", async ({ page }) => {
     await page.goto("/batches");
     const picker = page.getByRole("button", { name: /Choose a batch/ });
     await expect(picker).toContainText("Summer outdoor");
 
     const products = page.getByRole("list", { name: "Products" }).getByRole("listitem");
-    await expect(products).toHaveCount(10);
-    await page.getByRole("button", { name: "Load 10 more" }).tap();
-    await expect(products).toHaveCount(20);
+    await expect(products).toHaveCount(5);
+    await expect(page.getByText("Page 1 of 5")).toBeVisible();
+    await page.getByRole("button", { name: "Next" }).tap();
+    await expect(page.getByText("Page 2 of 5")).toBeVisible();
+    await expect(products).toHaveCount(5);
     await expect(page.locator("main table")).toHaveCount(0);
 
     await picker.tap();

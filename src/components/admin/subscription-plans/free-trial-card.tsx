@@ -332,24 +332,25 @@ function PlanSettingsDialog({ open, settings, onClose }: { open: boolean; settin
           {ruleError && <p className="text-destructive text-xs">{ruleError}</p>}
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-6 py-4">
+        <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-6 py-4 max-md:px-4 max-md:py-3">
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="text-xs text-slate-500"
+            aria-label="Reset to defaults"
+            className="shrink-0 text-xs text-slate-500 max-md:px-2"
             onClick={() => {
               setValues(Object.fromEntries(settings.allowances.map((item) => [keyOf(item), String(item.default)])));
               setTrialDaysText(String(DEFAULT_TRIAL_DAYS));
             }}
           >
-            <RotateCcw className="size-3.5" /> Reset to defaults
+            <RotateCcw className="size-3.5" /> <span>Reset<span className="max-md:hidden"> to defaults</span></span>
           </Button>
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
+          <div className="flex gap-2 max-md:min-w-0 max-md:flex-1 max-md:justify-end">
+            <Button type="button" variant="outline" className="max-md:min-w-0 max-md:flex-1 max-md:px-3" onClick={onClose} disabled={mutation.isPending}>
               Cancel
             </Button>
-            <Button type="button" onClick={save} disabled={invalid.length > 0 || ruleError !== null || !trialPlan || mutation.isPending}>
+            <Button type="button" className="max-md:min-w-0 max-md:flex-1 max-md:px-3" onClick={save} disabled={invalid.length > 0 || ruleError !== null || !trialPlan || mutation.isPending}>
               {mutation.isPending && <Spinner className="size-4" />}
               Save
             </Button>

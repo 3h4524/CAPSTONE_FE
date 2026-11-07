@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { Card } from "@/components/ui/card";
+import { isDesignTemplateForm } from "@/constants/navigation";
 import { cn } from "@/utils/cn";
 
 type ContentAreaProps = {
@@ -19,7 +20,7 @@ export const ContentArea = ({ children }: ContentAreaProps) => {
   const pathname = usePathname();
   const isBare = BARE_ROUTES.some((route) => pathname === route || pathname?.startsWith(`${route}/`) === true);
 
-  const isBareOnPhone = BARE_ON_PHONE_ROUTES.includes(pathname ?? "");
+  const isBareOnPhone = BARE_ON_PHONE_ROUTES.includes(pathname ?? "") || isDesignTemplateForm(pathname);
 
   return (
     <main className="flex-1 overflow-y-auto p-4 lg:p-6">

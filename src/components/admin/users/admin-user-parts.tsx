@@ -27,7 +27,7 @@ export type AdminUserActions = {
 // The dialogs set their own width, so a phone needs its margins back; the column must also be
 // free to shrink, or a row of buttons that cannot wrap pushes the dialog past the screen.
 export const USER_DIALOG_ON_PHONE =
-  "max-md:max-h-[calc(100dvh-1.5rem)] max-md:max-w-[calc(100%-1.5rem)] max-md:grid-cols-[minmax(0,1fr)] max-md:overflow-y-auto max-md:rounded-2xl";
+  "max-md:max-w-[calc(100%-1.5rem)] max-md:grid-cols-[minmax(0,1fr)] max-md:overflow-y-auto max-md:rounded-2xl";
 
 // Keeps a long form's actions on screen while it scrolls under them.
 export const USER_DIALOG_FOOTER_ON_PHONE =

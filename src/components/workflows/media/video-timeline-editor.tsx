@@ -1341,7 +1341,7 @@ export function VideoTimelineEditor({ disabled, config, assets, onSave }: Props)
       <Dialog open={open} onOpenChange={(value) => (value ? start() : cancel())}>
         <DialogContent
           showCloseButton={false}
-          className="border-border bg-card text-card-foreground h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none gap-0 overflow-hidden rounded-xl p-0 shadow-2xl sm:h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-2rem)] xl:h-[min(90dvh,60rem)] xl:w-[min(96vw,88rem)] xl:max-w-[88rem]"
+          className="border-border bg-card text-card-foreground h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none gap-0 overflow-hidden rounded-xl p-0 shadow-2xl [--dialog-phone-height:100dvh] sm:h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-2rem)] xl:h-[min(90dvh,60rem)] xl:w-[min(96vw,88rem)] xl:max-w-[88rem]"
         >
           {draft && (
             <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden max-lg:grid-cols-1">

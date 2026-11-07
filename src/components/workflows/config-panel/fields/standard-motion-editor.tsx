@@ -1392,7 +1392,7 @@ export function StandardMotionEditor({
       <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? openEditor() : cancelEditor())}>
         <DialogContent
           showCloseButton={false}
-          className="border-border bg-card text-card-foreground h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden rounded-xl p-0 shadow-2xl max-lg:grid-cols-1 sm:h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-2rem)] xl:h-[min(90dvh,60rem)] xl:w-[min(94vw,88rem)] xl:max-w-[88rem]"
+          className="border-border bg-card text-card-foreground h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden rounded-xl p-0 shadow-2xl [--dialog-phone-height:100dvh] max-lg:grid-cols-1 sm:h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-2rem)] xl:h-[min(90dvh,60rem)] xl:w-[min(94vw,88rem)] xl:max-w-[88rem]"
         >
           <DialogHeader className="border-border bg-card flex-row items-center justify-between gap-4 border-b px-5 py-4 text-left sm:px-6">
             <div className="flex min-w-0 items-center gap-3">

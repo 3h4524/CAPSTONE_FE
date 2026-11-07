@@ -6,10 +6,14 @@ import {
   ArrowUpRight,
   ChevronLeft,
   ChevronRight,
+  Gauge,
   Inbox,
+  KeyRound,
   LifeBuoy,
+  type LucideIcon,
   Plus,
   RefreshCw,
+  Store,
 } from "lucide-react";
 
 import { SectionLoading } from "@/components/commons/loading/section-loading";
@@ -38,6 +42,8 @@ const PAGE_SIZE = 8;
 
 type HelpTopic = {
   id: string;
+  /** Shown beside the topic in the phone's list. */
+  icon: LucideIcon;
   title: string;
   description: string;
   steps: readonly string[];
@@ -48,6 +54,7 @@ type HelpTopic = {
 const HELP_TOPICS: readonly HelpTopic[] = [
   {
     id: "connect-etsy",
+    icon: Store,
     title: "Connect an Etsy shop",
     description:
       "Connect your Etsy shop so APCS can prepare and publish listings from your workspace.",
@@ -62,6 +69,7 @@ const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: "fix-api-key",
+    icon: KeyRound,
     title: "Fix an API key",
     description:
       "A key usually needs attention when it expired, was revoked, or no longer has the permissions APCS requires.",
@@ -76,6 +84,7 @@ const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: "understand-credits",
+    icon: Gauge,
     title: "Understand credits",
     description:
       "Your plan includes an allowance used by generation and publishing activity in the workspace.",
@@ -153,34 +162,41 @@ export function SupportCenter() {
 
       <div>
         <section
-          className="rounded-xl border border-slate-200 bg-white px-5 py-5 shadow-sm sm:px-6"
+          className="rounded-xl border border-slate-200 bg-white px-5 py-5 shadow-sm max-md:p-4 sm:px-6"
           aria-labelledby="support-help-heading"
         >
-          <div className="flex items-start gap-4">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#eef2fa] text-[#273750]">
+          <div className="flex items-start gap-4 max-md:items-center max-md:gap-3">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#eef2fa] text-[#273750] max-md:size-10">
               <LifeBuoy className="size-[18px]" aria-hidden="true" />
             </span>
             <div>
-              <h2 id="support-help-heading" className="font-display text-xl font-semibold tracking-tight">
+              <h2 id="support-help-heading" className="font-display text-xl font-semibold tracking-tight max-md:text-lg">
                 How can we help?
               </h2>
-              <p className="mt-1 max-w-xl text-sm leading-5 text-slate-600">
+              <p className="mt-1 max-w-xl text-sm leading-5 text-slate-600 max-md:mt-0 max-md:text-xs">
                 Choose a quick guide for the questions sellers ask most often.
               </p>
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2 sm:pl-[60px]" aria-label="Popular help topics">
+          <div className="mt-5 flex flex-wrap gap-2 max-md:mt-4 max-md:flex-col max-md:flex-nowrap max-md:gap-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl max-md:border max-md:border-slate-200 max-sm:pl-0 sm:pl-[60px]" aria-label="Popular help topics">
             {HELP_TOPICS.map((topic) => (
               <button
                 key={topic.id}
                 type="button"
                 aria-haspopup="dialog"
-                className="group inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-[border-color,background-color,color,transform] hover:-translate-y-0.5 hover:border-slate-300 hover:bg-[#f7f9fd] hover:text-[#273750] focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none active:translate-y-0"
+                className="group inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-[border-color,background-color,color,transform] hover:-translate-y-0.5 hover:border-slate-300 hover:bg-[#f7f9fd] hover:text-[#273750] focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none active:translate-y-0 max-md:min-h-15 max-md:w-full max-md:gap-3 max-md:rounded-none max-md:border-0 max-md:px-3 max-md:text-left"
                 onClick={() => setSelectedHelpTopic(topic)}
               >
-                {topic.title}
-                <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#eef2fa] text-[#273750] md:hidden" aria-hidden="true">
+                  <topic.icon className="size-4" />
+                </span>
+                <span className="max-md:min-w-0 max-md:flex-1">
+                  <span className="max-md:block max-md:font-semibold max-md:text-slate-900">{topic.title}</span>
+                  <span className="text-xs font-normal text-slate-500 max-md:block max-md:truncate md:hidden">{topic.description}</span>
+                </span>
+                <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 max-md:hidden" aria-hidden="true" />
+                <ChevronRight className="size-4 shrink-0 text-slate-400 md:hidden" aria-hidden="true" />
               </button>
             ))}
           </div>

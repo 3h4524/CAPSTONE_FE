@@ -60,6 +60,10 @@ export const ADMIN_MOBILE_TABS = [
   { label: "Support", href: "/admin/support-tickets", icon: Headphones },
 ];
 
+/** The template form: its own action sits at the foot of a phone's screen, where the tabs would be. */
+export const isDesignTemplateForm = (pathname: string | null) =>
+  /^\/design-templates\/(new|[^/]+\/edit)$/.test(pathname ?? "");
+
 export const ROUTE_TITLES = {
   dashboard: "Dashboard",
   "design-templates": "Design templates",

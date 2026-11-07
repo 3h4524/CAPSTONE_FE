@@ -2164,7 +2164,7 @@ export function AiShotOptions({
       >
         <DialogContent
           showCloseButton={false}
-          className="h-[90dvh] w-[calc(100%-2rem)] max-w-4xl overflow-visible border-0 bg-transparent p-0 shadow-none"
+          className="h-[90dvh] w-[calc(100%-2rem)] max-w-4xl overflow-visible border-0 bg-transparent p-0 shadow-none [--dialog-phone-height:100dvh]"
         >
           <button
             type="button"

@@ -14,6 +14,7 @@ import { BatchPicker } from "@/components/batches/batch-picker";
 import { BatchProductCard } from "@/components/batches/batch-product-card";
 import { BatchProductDialog } from "@/components/batches/batch-product-dialog";
 import { BatchSummaryCard } from "@/components/batches/batch-summary-card";
+import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { StatusBadge } from "@/components/commons/data-display/status-badge";
 import { TruncatedTooltip } from "@/components/commons/data-display/truncated-tooltip";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,9 @@ const pageNumbers = (current: number, count: number): Array<number | "gap"> => {
   const shown = [...new Set([1, current - 1, current, current + 1, count])].filter((item) => item >= 1 && item <= count).sort((a, b) => a - b);
   return shown.flatMap((item, index) => index > 0 && item - shown[index - 1] > 1 ? ["gap" as const, item] : [item]);
 };
+
+const PRODUCTS_PER_PAGE = 10;
+const PHONE_PRODUCTS_PER_PAGE = 5;
 
 export const BatchWorkspace = () => {
   const batchesQuery = useBatches();
@@ -93,12 +97,11 @@ export const BatchWorkspace = () => {
     const matchesSearch = `${product.name} ${product.niche ?? ""} ${product.keywords.join(" ")}`.toLowerCase().includes(search.toLowerCase());
     return matchesSearch && (activeFilter === "all" || statusLabel(product.status).toLowerCase() === activeFilter);
   }), [activeFilter, productsQuery.data, search]);
-  const pageSize = 10;
+  const pageSize = isPhone ? PHONE_PRODUCTS_PER_PAGE : PRODUCTS_PER_PAGE;
   const pageCount = Math.max(1, Math.ceil(products.length / pageSize));
   // Deleting the last product on the last page would otherwise leave an empty page.
   const currentPage = Math.min(page, pageCount);
-  // A phone adds each page to the list instead of replacing it: number buttons are too small a target.
-  const visibleProducts = products.slice(isPhone ? 0 : (currentPage - 1) * pageSize, currentPage * pageSize);
+  const visibleProducts = products.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const tableRef = useRef<HTMLDivElement>(null);
   const goToPage = (next: number) => {
     setPage(next);
@@ -287,7 +290,7 @@ export const BatchWorkspace = () => {
               ) : products.length === 0 ? (
                 <div className="max-md:bg-card rounded-xl border border-dashed py-12 text-center"><p className="font-medium">No products match these filters</p><p className="text-muted-foreground mt-1 text-sm">Try another status or search term.</p><Button variant="link" size="sm" className="mt-1" onClick={() => { setSearch(""); setFilter("all"); setPage(1); }}>Clear filters</Button></div>
               ) : isPhone ? <>
-                <ul className="space-y-3" aria-label="Products">
+                <ul id="batch-products" className="scroll-mt-3 space-y-3" aria-label="Products">
                   {visibleProducts.map((product) => (
                     <BatchProductCard
                       key={product.id}
@@ -301,8 +304,8 @@ export const BatchWorkspace = () => {
                     />
                   ))}
                 </ul>
-                <p className="text-muted-foreground text-center text-xs tabular-nums">Showing {visibleProducts.length} of {products.length} products</p>
-                {visibleProducts.length < products.length && <Button variant="outline" className="w-full bg-white" onClick={() => setPage(currentPage + 1)}>Load {Math.min(pageSize, products.length - visibleProducts.length)} more</Button>}
+                <p className="text-muted-foreground text-center text-xs tabular-nums">Showing {(currentPage - 1) * pageSize + 1}–{(currentPage - 1) * pageSize + visibleProducts.length} of {products.length} products</p>
+                <PhonePager page={currentPage} pageCount={pageCount} onPageChange={setPage} label="Product pages" anchorId="batch-products" />
               </> : <>
                 <div ref={tableRef} className="overflow-hidden rounded-lg border"><Table className="table-fixed"><TableHeader className="bg-muted/50"><TableRow><TableHead className={hasKeywords ? "w-[36%]" : "w-[44%]"}>Product</TableHead><TableHead className={`hidden sm:table-cell ${hasKeywords ? "w-[18%]" : "w-[22%]"}`}>Niche</TableHead>{hasKeywords && <TableHead className="hidden w-[22%] lg:table-cell">Keywords</TableHead>}<TableHead>Status</TableHead><TableHead className="w-28"><span className="sr-only">Actions</span></TableHead></TableRow></TableHeader><TableBody>{visibleProducts.map((product) => <TableRow key={product.id} className="group/row">
                   <TableCell className="font-medium"><TruncatedTooltip value={product.name} /><span className="text-muted-foreground mt-0.5 flex min-w-0 items-center gap-1.5 text-xs font-normal max-sm:flex-wrap max-sm:whitespace-normal"><span className="shrink-0">{productTypeLabels[product.productType]}</span>{product.customPrompt && <><span aria-hidden>·</span><span className="sm:shrink-0">Own image prompt</span></>}{product.productDescription && <><span aria-hidden>·</span><TruncatedTooltip value={product.productDescription} className="min-w-0 truncate" /></>}</span></TableCell>

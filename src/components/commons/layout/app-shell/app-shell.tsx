@@ -10,6 +10,7 @@ import { AppHeader } from "@/components/commons/layout/app-shell/header/app-head
 import { AppSidebar } from "@/components/commons/layout/app-shell/sidebar/app-sidebar";
 import { AppSidebarMobile } from "@/components/commons/layout/app-shell/sidebar/app-sidebar-mobile";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { isDesignTemplateForm } from "@/constants/navigation";
 
 type AppShellProps = {
   children: ReactNode;
@@ -48,7 +49,7 @@ export const AppShell = ({ children }: AppShellProps) => {
         <div className="flex min-w-0 flex-1 flex-col">
           <AppHeader onMobileMenu={() => openMobileMenu("left")} />
           <ContentArea>{children}</ContentArea>
-          <MobileBottomNav onOpenMore={() => openMobileMenu("right")} />
+          {!isDesignTemplateForm(pathname) && <MobileBottomNav onOpenMore={() => openMobileMenu("right")} />}
         </div>
       </div>
       <AppSidebarMobile open={mobileOpen} onOpenChange={setMobileOpen} side={mobileSide} />

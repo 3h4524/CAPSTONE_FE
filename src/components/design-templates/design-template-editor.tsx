@@ -41,8 +41,10 @@ import { useCreateDesignTemplate } from "@/hooks/mutations/use-create-design-tem
 import { useUpdateDesignTemplate } from "@/hooks/mutations/use-update-design-template";
 import { useDesignTemplate } from "@/hooks/queries/use-design-template";
 import { useDesignTemplateOptions } from "@/hooks/queries/use-design-template-options";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { type DesignTemplateFormValues, designTemplateSchema } from "@/schemas/design-template";
 import { useAuthStore } from "@/stores/auth";
+import { cn } from "@/utils/cn";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 type DesignTemplateEditorProps = {
@@ -61,6 +63,7 @@ const EMPTY_FORM: DesignTemplateFormValues = {
 export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) {
   const router = useRouter();
   const isEditing = Boolean(templateId);
+  const isPhone = useIsPhone();
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
   const [previewImageFailed, setPreviewImageFailed] = useState(false);
   const user = useAuthStore((state) => state.user);
@@ -79,6 +82,8 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
   const artStyle = form.watch("artStyle");
   const previewImageUrl = templateQuery.data?.previewImageUrl ?? null;
   const previewGenerationEnabled = optionsQuery.data?.previewGenerationEnabled ?? false;
+  // With nothing to show or generate yet, a phone keeps only the summary.
+  const showsPreview = previewGenerationEnabled || Boolean(previewImageUrl);
   const missingSubject = basePrompt.length > 0 && !basePrompt.includes("{subject}");
   const saving = createMutation.isPending || updateMutation.isPending;
   const loading =
@@ -192,7 +197,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
         aria-label="Loading template editor"
       >
         <div className="h-10 w-64 animate-pulse rounded bg-slate-200" />
-        <div className="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="mt-7 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="h-[680px] animate-pulse rounded-[22px] bg-slate-100" />
           <div className="h-80 animate-pulse rounded-[22px] bg-slate-100" />
         </div>
@@ -223,7 +228,8 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
   }
 
   return (
-    <main className="w-full min-w-0 p-4 sm:p-6">
+    // The bottom padding keeps the last section clear of the fixed save button.
+    <main className="w-full min-w-0 p-4 max-md:p-0 max-md:pb-20 sm:p-6">
       <button
         type="button"
         className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-950 focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
@@ -233,18 +239,18 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
         <ArrowLeft className="size-4" aria-hidden="true" />
         Back to library
       </button>
-      <header className="mt-4 flex items-start gap-4 border-b border-slate-200 pb-6 sm:gap-5">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#dce8fb] text-[#273750] sm:size-13">
+      <header className="mt-4 flex items-start gap-4 border-b border-slate-200 pb-6 max-md:mt-1 max-md:border-b-0 max-md:pb-0 sm:gap-5">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#dce8fb] text-[#273750] max-md:hidden sm:size-13">
           <WandSparkles className="size-5 sm:size-[22px]" aria-hidden="true" />
         </span>
         <div className="min-w-0">
           <p className="text-[11px] font-bold tracking-[0.16em] text-slate-500 uppercase">
             {isEditing ? "Personal template" : "New template"}
           </p>
-          <h1 className="font-display mt-1 text-3xl font-semibold tracking-[-0.03em] text-slate-950">
+          <h1 className="font-display mt-1 text-3xl font-semibold tracking-[-0.03em] text-slate-950 max-md:text-xl">
             {isEditing ? "Refine your prompt system" : "Build a reusable creative direction"}
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 max-md:mt-1 max-md:text-xs max-md:leading-5">
             Keep the structure stable and use placeholders for the product-specific details you will
             supply later.
           </p>
@@ -253,13 +259,13 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
 
       <form
         onSubmit={submit}
-        className="mt-7 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]"
+        className="mt-7 grid grid-cols-[minmax(0,1fr)] items-start gap-6 max-md:mt-4 max-md:gap-3 lg:grid-cols-[minmax(0,1fr)_320px]"
       >
-        <div className="space-y-6 rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_16px_45px_rgba(39,55,80,0.055)] sm:p-7">
-          <section className="grid gap-5 sm:grid-cols-2" aria-labelledby="template-identity-title">
+        <div className="min-w-0 space-y-6 rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_16px_45px_rgba(39,55,80,0.055)] max-md:space-y-3 max-md:border-0 max-md:bg-transparent max-md:p-0 max-md:shadow-none sm:p-7">
+          <section className="grid grid-cols-[minmax(0,1fr)] gap-5 max-md:gap-4 max-md:rounded-2xl max-md:border max-md:bg-white max-md:p-4 sm:grid-cols-2" aria-labelledby="template-identity-title">
             <h2
               id="template-identity-title"
-              className="font-display col-span-full text-xl font-semibold"
+              className="font-display col-span-full text-xl font-semibold max-md:text-base"
             >
               Template identity
             </h2>
@@ -336,10 +342,10 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
             />
           </section>
 
-          <section className="border-t border-slate-200 pt-6" aria-labelledby="prompt-title">
+          <section className="border-t border-slate-200 pt-6 max-md:rounded-2xl max-md:border max-md:bg-white max-md:p-4" aria-labelledby="prompt-title">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 id="prompt-title" className="font-display text-xl font-semibold">
+                <h2 id="prompt-title" className="font-display text-xl font-semibold max-md:text-base">
                   Prompt framework
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
@@ -353,8 +359,12 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
             <Textarea
               {...form.register("basePrompt")}
               rows={8}
-              placeholder="Example: Create a print-ready {style} illustration of {subject} for the {niche} niche using {keywords}. Isolated artwork, no product mockup."
-              className="mt-4 resize-y border-slate-300 font-mono text-[13px] leading-6"
+              placeholder={
+                isPhone
+                  ? "A print-ready {style} illustration of {subject}"
+                  : "Example: Create a print-ready {style} illustration of {subject} for the {niche} niche using {keywords}. Isolated artwork, no product mockup."
+              }
+              className="mt-4 resize-y border-slate-300 font-mono text-[13px] leading-6 max-md:max-h-52 max-md:min-h-28 max-md:text-base max-md:leading-6"
             />
             <FieldError message={form.formState.errors.basePrompt?.message} />
             <PlaceholderToolbar
@@ -385,10 +395,10 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
             />
           </section>
 
-          <section className="border-t border-slate-200 pt-6" aria-labelledby="examples-title">
-            <div className="flex items-end justify-between gap-4">
+          <section className="border-t border-slate-200 pt-6 max-md:rounded-2xl max-md:border max-md:bg-white max-md:p-4" aria-labelledby="examples-title">
+            <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
               <div>
-                <h2 id="examples-title" className="font-display text-xl font-semibold">
+                <h2 id="examples-title" className="font-display text-xl font-semibold max-md:text-base">
                   Examples
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
@@ -461,9 +471,9 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
           </section>
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-24">
+        <aside className="space-y-4 max-md:space-y-0 lg:sticky lg:top-24">
           <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-[#f7f7f4] shadow-[0_10px_30px_rgba(39,55,80,0.07)]">
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+            <div className={cn("flex items-center justify-between border-b border-slate-200 px-5 py-4", !showsPreview && "max-md:hidden")}>
               <div className="flex items-center gap-3">
                 <span className="flex size-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#273750] shadow-sm">
                   <WandSparkles className="size-[18px]" aria-hidden="true" />
@@ -479,7 +489,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                 Draft
               </span>
             </div>
-            <div className="border-b border-slate-200 bg-[#eef1ed] p-4">
+            <div className={cn("border-b border-slate-200 bg-[#eef1ed] p-4", !showsPreview && "max-md:hidden")}>
               <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-white/80 bg-white shadow-[0_10px_26px_rgba(39,55,80,0.08)]">
                 {previewImageUrl && !previewImageFailed ? (
                   <Image
@@ -524,18 +534,18 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                 AI preview generation will be available in a future update.
               </p>
             </div>
-            <div className="p-5">
-              <h2 className="font-display text-xl font-semibold tracking-[-0.02em] text-slate-950">
+            <div className="p-5 max-md:p-4">
+              <h2 className="font-display text-xl font-semibold tracking-[-0.02em] text-slate-950 max-md:text-base">
                 {form.watch("name") || "Untitled template"}
               </h2>
-              <p className="mt-2 text-sm leading-5 text-slate-600">
+              <p className="mt-2 text-sm leading-5 text-slate-600 max-md:mt-0.5 max-md:text-xs">
                 {nicheCategory || "Choose a niche"}{" "}
                 <span className="px-1 text-slate-300" aria-hidden="true">
                   /
                 </span>{" "}
                 {styleLabel}
               </p>
-              <div className="mt-5 space-y-2.5 border-t border-slate-200 pt-4 text-xs text-slate-600">
+              <div className="mt-5 space-y-2.5 border-t border-slate-200 pt-4 text-xs text-slate-600 max-md:hidden">
                 <p className="flex items-center gap-2">
                   <Check className="size-3.5 text-emerald-600" aria-hidden="true" />
                   <span>Personal and editable</span>
@@ -551,13 +561,16 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
               </div>
             </div>
           </div>
-          <Button type="submit" size="lg" className="min-h-12 w-full" disabled={saving}>
-            <Save aria-hidden="true" />
-            {saving ? "Saving..." : isEditing ? "Save changes" : "Create template"}
-          </Button>
-          {form.formState.isDirty && (
-            <p className="text-center text-xs text-amber-700">You have unsaved changes.</p>
-          )}
+          {/* Fixed to the foot of a phone's screen, where the tabs give way to it. */}
+          <div className="space-y-4 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-20 max-md:space-y-1 max-md:border-t max-md:bg-white max-md:px-4 max-md:py-3">
+            <Button type="submit" size="lg" className="min-h-12 w-full" disabled={saving}>
+              <Save aria-hidden="true" />
+              {saving ? "Saving..." : isEditing ? "Save changes" : "Create template"}
+            </Button>
+            {form.formState.isDirty && (
+              <p className="text-center text-xs text-amber-700">You have unsaved changes.</p>
+            )}
+          </div>
         </aside>
       </form>
       <Dialog open={isExitDialogOpen} onOpenChange={setIsExitDialogOpen}>

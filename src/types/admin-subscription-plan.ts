@@ -116,6 +116,8 @@ export type PlanFeatureImpact = {
 };
 
 // One change to the plans, Free or the trial, as the History tab lists it.
+export type PlanHistoryAction = "add" | "edit" | "delete";
+
 export type PlanHistoryEntry = {
   id: string;
   at: string;

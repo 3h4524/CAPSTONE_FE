@@ -8,8 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { usePlanHistory } from "@/hooks/queries/use-plan-history";
 import { useIsPhone } from "@/hooks/use-is-phone";
-import type { PlanHistoryEntry } from "@/types/admin-subscription-plan";
+import type { PlanHistoryAction, PlanHistoryEntry } from "@/types/admin-subscription-plan";
 import { cn } from "@/utils/cn";
+
+const ACTION_FILTERS: { value: PlanHistoryAction | undefined; label: string }[] = [
+  { value: undefined, label: "All" },
+  { value: "add", label: "Add" },
+  { value: "edit", label: "Edit" },
+  { value: "delete", label: "Delete" },
+];
 
 const DESKTOP_PAGE_SIZE = 10;
 const PHONE_PAGE_SIZE = 5;
@@ -34,13 +41,46 @@ const formatTime = (value: string) => new Date(value).toLocaleTimeString("en-GB"
 export function PlanHistoryPanel() {
   const isPhone = useIsPhone();
   const [page, setPage] = useState(1);
-  const { data, isLoading, isPlaceholderData } = usePlanHistory(page, isPhone ? PHONE_PAGE_SIZE : DESKTOP_PAGE_SIZE);
+  const [action, setAction] = useState<PlanHistoryAction>();
+  const { data, isLoading, isPlaceholderData } = usePlanHistory(page, isPhone ? PHONE_PAGE_SIZE : DESKTOP_PAGE_SIZE, action);
+  const filters = (
+    <div role="group" aria-label="Filter changes" className="flex gap-1.5 max-md:grid max-md:grid-cols-4">
+      {ACTION_FILTERS.map((filter) => (
+        <button
+          key={filter.label}
+          type="button"
+          aria-pressed={action === filter.value}
+          onClick={() => {
+            setAction(filter.value);
+            setPage(1);
+          }}
+          className={cn(
+            "rounded-full border px-3 py-1 text-xs font-semibold transition-colors max-md:min-h-9",
+            action === filter.value ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+          )}
+        >
+          {filter.label}
+        </button>
+      ))}
+    </div>
+  );
 
   if (isLoading || !data) {
     return <Card className="mt-6 h-64 animate-pulse rounded-2xl border border-slate-200/80 bg-white" />;
   }
 
   const entries = data.items;
+  if (data.totalCount === 0 && action) {
+    return (
+      <div className="mt-6 space-y-4">
+        {filters}
+        <Card className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
+          <p className="text-sm font-semibold text-slate-700">No changes of this kind yet</p>
+        </Card>
+      </div>
+    );
+  }
+
   if (data.totalCount === 0) {
     return (
       <Card className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
@@ -57,6 +97,7 @@ export function PlanHistoryPanel() {
 
   return (
     <div className={cn("mt-6 space-y-4 transition-opacity", isPlaceholderData && "opacity-60")}>
+      {filters}
       <p className="text-xs text-slate-500">
         <strong className="text-slate-800">{data.totalCount.toLocaleString()}</strong> changes to the plans, their features, the feature
         catalog, Free and the trial, newest first.

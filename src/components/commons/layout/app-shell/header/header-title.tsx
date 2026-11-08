@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 
+import { Logo } from "@/components/commons/icons/logo";
 import { ROUTE_TITLES } from "@/constants/navigation";
 import { capitalize } from "@/helpers/text";
 
@@ -30,14 +31,11 @@ export const HeaderTitle = () => {
   // On a phone the header is the brand and leads home; the page's name stays for screen readers.
   return (
     <>
-      <Link href="/dashboard" aria-label="APCS, go to the dashboard" className="flex min-w-0 items-center gap-2 md:hidden">
-        <span
-          aria-hidden="true"
-          className="bg-primary text-primary-foreground font-display flex size-9 shrink-0 items-center justify-center rounded-xl text-base font-bold"
-        >
-          A
+      <Link href="/dashboard" aria-label="Podivo, go to the dashboard" className="flex min-w-0 items-center gap-2 md:hidden">
+        <span aria-hidden="true" className="flex shrink-0">
+          <Logo height={36} width={36} />
         </span>
-        <span className="font-display truncate text-base font-bold tracking-tight">APCS</span>
+        <span className="font-display truncate text-base font-bold tracking-tight">Podivo</span>
       </Link>
       <h1 className="min-w-0 truncate text-base font-semibold max-md:sr-only">{title}</h1>
     </>

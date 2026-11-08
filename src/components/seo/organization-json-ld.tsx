@@ -20,6 +20,8 @@ export const OrganizationJsonLd = () => {
         "@id": organizationId,
         name: SITE_CONFIG.name,
         url: websiteUrl,
+        logo: getAbsoluteUrl("/apple-icon"),
+        description: SITE_CONFIG.description,
       },
       {
         "@type": "WebSite",

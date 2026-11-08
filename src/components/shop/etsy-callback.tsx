@@ -33,7 +33,7 @@ export function EtsyCallback() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-white p-6 text-center text-sm text-slate-600">
       {closeFailed ? (
-        <p>Done. You can close this window and return to APCS.</p>
+        <p>Done. You can close this window and return to Podivo.</p>
       ) : (
         <p className="flex items-center gap-2"><Loader2 className="size-4 animate-spin" />Finishing the Etsy connection…</p>
       )}

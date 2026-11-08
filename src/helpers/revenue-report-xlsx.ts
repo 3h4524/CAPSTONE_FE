@@ -26,7 +26,7 @@ const numberFormat = (kind: ReportColumnKind): string | undefined => {
 export async function toXlsx(sections: ReportSection[]): Promise<Blob> {
   const { default: ExcelJS } = await import("exceljs");
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "APCS Admin";
+  workbook.creator = "Podivo Admin";
   workbook.created = new Date();
 
   const sheets = new Map<string, Worksheet>();

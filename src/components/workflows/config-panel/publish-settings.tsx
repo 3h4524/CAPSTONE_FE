@@ -150,7 +150,7 @@ export function PrintifyPublishSettings({ node, disabled }: { node: WorkflowNode
           <Toggle id={`${node.id}-publish`} label="Publish to Etsy" disabled={disabled} checked={config.publishToEtsy !== false}
             description="Off creates the product on Printify only, for you to publish there."
             onChange={(next) => patch({ publishToEtsy: next })} />
-          <Toggle id={`${node.id}-media`} label="Add APCS mock-ups and video" disabled={disabled || config.publishToEtsy === false} checked={config.addMockups !== false}
+          <Toggle id={`${node.id}-media`} label="Add Podivo mock-ups and video" disabled={disabled || config.publishToEtsy === false} checked={config.addMockups !== false}
             description="Puts up to five approved mock-ups and the approved video in front of Printify's own images. Needs Etsy connected on the Shop page."
             onChange={(next) => patch({ addMockups: next })} />
           <PanelNotice tone="info">Whether the Etsy listing starts active or as a draft follows your Printify store&apos;s publishing settings.</PanelNotice>

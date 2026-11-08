@@ -32,6 +32,7 @@ export interface AiVideoSceneOptions {
   standardStartRotation?: number | null;
   standardEndRotation?: number | null;
   aiCropPosition?: { x: number; y: number } | null;
+  aiStartFrameCrop?: Region | null;
   displayDurationFrames?: number | null;
   trimStartFrames?: number | null;
   trimEndFrames?: number | null;

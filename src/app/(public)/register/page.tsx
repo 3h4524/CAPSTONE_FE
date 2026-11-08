@@ -6,12 +6,12 @@ import { GuestGuard } from "@/components/auth/guest-guard";
 import { SITE_CONFIG } from "@/constants/site";
 import { getPageMetadata } from "@/data/metadata";
 
-export const generateMetadata = (): Metadata =>
-  getPageMetadata({
-    title: "Create account",
-    description: SITE_CONFIG.description,
-    pathname: "/register",
-  });
+export const metadata: Metadata = getPageMetadata({
+  title: "Create account",
+  description: SITE_CONFIG.description,
+  pathname: "/register",
+  robots: { index: false, follow: false },
+});
 
 type RegisterPageProps = {
   searchParams: Promise<{ returnUrl?: string }>;

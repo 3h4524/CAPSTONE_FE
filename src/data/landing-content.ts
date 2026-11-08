@@ -58,7 +58,7 @@ export const HERO_CONTENT = {
 
 export const HERO_IMAGE = {
   src: "/images/landing/hero-dashboard.webp",
-  alt: "APCS Studio dashboard showing AI design generation progress and product mockup thumbnails",
+  alt: "Podivo Studio dashboard showing AI design generation progress and product mockup thumbnails",
 } as const;
 
 export const BENEFITS: Benefit[] = [
@@ -126,7 +126,7 @@ export const ECOSYSTEM_FEATURES: EcosystemFeature[] = [
 export const WORKFLOW_CONTENT = {
   eyebrow: "How it works",
   title: "From product idea to published listing in 4 steps",
-  description: "Upload once. APCS runs the AI workflow, scores SEO, and publishes everywhere.",
+  description: "Upload once. Podivo runs the AI workflow, scores SEO, and publishes everywhere.",
 } as const;
 
 export const WORKFLOW_STEPS: WorkflowStep[] = [
@@ -170,7 +170,7 @@ export const COMPARISON_CONTENT = {
   footnote: "Illustrative example based on 100 listings per month.",
   manualTitle: "Manual Process",
   manualTotal: { value: "110", unit: "hrs/mo" },
-  apcsTitle: "With APCS",
+  apcsTitle: "With Podivo",
   apcsTotal: { value: "6", unit: "hrs/mo" },
 } as const;
 
@@ -201,7 +201,7 @@ export const FAQS: Faq[] = [
   },
   {
     question: "Do I need additional hardware?",
-    answer: "No. APCS runs on the web, so your existing computer is enough to manage generation.",
+    answer: "No. Podivo runs on the web, so your existing computer is enough to manage generation.",
   },
   {
     question: "Does the plan cover everything?",
@@ -221,8 +221,8 @@ export const CTA_CONTENT = {
 } as const;
 
 export const FOOTER_CONTENT = {
-  brand: "APCS",
-  copyright: "AI POD Content Studio (APCS). All rights reserved.",
+  brand: "Podivo",
+  copyright: "Podivo. All rights reserved.",
   links: [
     { label: "Privacy Policy", href: "#" },
     { label: "Terms of Service", href: "#" },

@@ -253,7 +253,7 @@ export function ConnectionDialog({
                     onChange={(event) => setConfirmed(event.target.checked)}
                     className="accent-primary mt-0.5"
                   />
-                  I confirm this key is restricted to the permissions APCS needs.
+                  I confirm this key is restricted to the permissions Podivo needs.
                 </label>
               </div>
             </fieldset>

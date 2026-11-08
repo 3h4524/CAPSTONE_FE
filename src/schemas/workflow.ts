@@ -279,6 +279,7 @@ export const generateVideoConfigSchema = z
           standardStartRotation: z.number().finite().min(-9999).max(9999).nullable().optional(),
           standardEndRotation: z.number().finite().min(-9999).max(9999).nullable().optional(),
           aiCropPosition: z.object({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1) }).nullable().optional(),
+          aiStartFrameCrop: z.object({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1), width: z.number().finite().positive().max(1), height: z.number().finite().positive().max(1) }).refine(crop => crop.x + crop.width <= 1 && crop.y + crop.height <= 1, "The start frame crop must stay inside the image.").nullable().optional(),
           displayDurationFrames: wholeNumber("scene duration", 30, MAX_VIDEO_FRAMES).nullable().optional(),
           trimStartFrames: timelineFrame.nullable().optional(),
           trimEndFrames: timelineFrame.nullable().optional(),

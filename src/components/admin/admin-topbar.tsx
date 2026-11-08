@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Menu } from "lucide-react";
 
+import { Logo } from "@/components/commons/icons/logo";
 import { NotificationBell } from "@/components/commons/layout/app-shell/notifications/notification-bell";
 
 type AdminTopbarProps = {
@@ -15,14 +16,11 @@ const AdminTopbar = ({ onMenuClick, pageTitle = "Dashboard" }: AdminTopbarProps)
   <header className="sticky top-0 z-20 border-b border-slate-200 bg-[#f8fafc]">
     <div className="flex h-[52px] items-center justify-between gap-4 border-b border-slate-200 bg-white/80 px-4 max-md:h-16 md:px-7">
       <div className="flex min-w-0 items-center gap-3">
-        <Link href="/admin/dashboard" aria-label="APCS admin, go to the dashboard" className="flex min-w-0 items-center gap-2 md:hidden">
-          <span
-            aria-hidden="true"
-            className="bg-primary text-primary-foreground font-display flex size-9 shrink-0 items-center justify-center rounded-xl text-base font-bold"
-          >
-            A
+        <Link href="/admin/dashboard" aria-label="Podivo admin, go to the dashboard" className="flex min-w-0 items-center gap-2 md:hidden">
+          <span aria-hidden="true" className="flex shrink-0">
+            <Logo height={36} width={36} />
           </span>
-          <span className="font-display truncate text-base font-bold tracking-tight">APCS</span>
+          <span className="font-display truncate text-base font-bold tracking-tight">Podivo</span>
           <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-slate-500">ADMIN</span>
         </Link>
         <button

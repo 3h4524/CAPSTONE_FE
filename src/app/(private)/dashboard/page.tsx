@@ -5,7 +5,7 @@ import { getPageMetadata } from "@/data/metadata";
 
 export const metadata: Metadata = getPageMetadata({
   title: "Dashboard",
-  description: "Overview of your APCS workspace.",
+  description: "Overview of your Podivo workspace.",
   pathname: "/dashboard",
   robots: { index: false, follow: false },
 });

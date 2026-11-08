@@ -5,7 +5,7 @@ import { getPageMetadata } from "@/data/metadata";
 
 export const metadata: Metadata = getPageMetadata({
   title: "Support Center",
-  description: "Create and track APCS support tickets.",
+  description: "Create and track Podivo support tickets.",
   pathname: "/support",
   robots: { index: false, follow: false },
 });

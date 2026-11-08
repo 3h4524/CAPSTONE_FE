@@ -57,14 +57,14 @@ const HELP_TOPICS: readonly HelpTopic[] = [
     icon: Store,
     title: "Connect an Etsy shop",
     description:
-      "Connect your Etsy shop so APCS can prepare and publish listings from your workspace.",
+      "Connect your Etsy shop so Podivo can prepare and publish listings from your workspace.",
     steps: [
       "Open API keys from the Workspace menu and select Add API key.",
       "Choose Etsy and start the connection flow.",
       "Sign in to the correct Etsy account and approve the requested permissions.",
-      "Return to APCS and confirm that the connection status is Connected.",
+      "Return to Podivo and confirm that the connection status is Connected.",
     ],
-    note: "Use the Etsy account that owns the shop you want APCS to publish to.",
+    note: "Use the Etsy account that owns the shop you want Podivo to publish to.",
     ticketSubject: "Help connecting an Etsy shop",
   },
   {
@@ -72,14 +72,14 @@ const HELP_TOPICS: readonly HelpTopic[] = [
     icon: KeyRound,
     title: "Fix an API key",
     description:
-      "A key usually needs attention when it expired, was revoked, or no longer has the permissions APCS requires.",
+      "A key usually needs attention when it expired, was revoked, or no longer has the permissions Podivo requires.",
     steps: [
       "Open API keys and find the provider that needs attention.",
       "Confirm the key is still active in the provider account and has the required permissions.",
       "Select Edit, paste the replacement key, and save your changes.",
       "Run the connection check again and confirm the status is Connected.",
     ],
-    note: "For security, APCS only displays the masked credential. Never include a full API key in a support ticket.",
+    note: "For security, Podivo only displays the masked credential. Never include a full API key in a support ticket.",
     ticketSubject: "API key connection needs attention",
   },
   {

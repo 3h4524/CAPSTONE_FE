@@ -17,3 +17,12 @@ coverage
 dist
 build
 
+.env
+.env.*
+!.env.example
+e2e
+playwright-report
+test-results
+tests
+Dockerfile
+.github

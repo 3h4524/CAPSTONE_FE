@@ -379,12 +379,12 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
       <Warnings items={product.warnings} />
 
       {product.mediaAttached > 0 || (attachRequested && !syncMutation.isPending) ? (
-        <p className="text-sm text-slate-700">{product.mediaAttached} APCS image(s)/video added to the listing, in front of Printify&apos;s mock-ups.</p>
+        <p className="text-sm text-slate-700">{product.mediaAttached} Podivo image(s)/video added to the listing, in front of Printify&apos;s mock-ups.</p>
       ) : !draft.etsyConnected ? (
-        <p className="text-sm text-slate-600">Connect Etsy on the Shop page to add your APCS mock-ups and video to this listing.</p>
+        <p className="text-sm text-slate-600">Connect Etsy on the Shop page to add your Podivo mock-ups and video to this listing.</p>
       ) : (draft.mockups.length > 0 || draft.video) && (
         <section className="space-y-2">
-          <Label>Add your APCS mock-ups to the listing <span className="font-normal text-slate-500">({mockupIds.length} selected, shown first)</span></Label>
+          <Label>Add your Podivo mock-ups to the listing <span className="font-normal text-slate-500">({mockupIds.length} selected, shown first)</span></Label>
           <div className="grid grid-cols-5 gap-2 sm:grid-cols-8">
             {draft.mockups.map((mockup) => {
               const order = mockupIds.indexOf(mockup.id);

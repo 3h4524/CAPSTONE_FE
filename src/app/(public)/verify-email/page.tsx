@@ -5,12 +5,12 @@ import { VerifyEmailStatus } from "@/components/auth/verify-email-status";
 import { SITE_CONFIG } from "@/constants/site";
 import { getPageMetadata } from "@/data/metadata";
 
-export const generateMetadata = (): Metadata =>
-  getPageMetadata({
-    title: "Verify email",
-    description: SITE_CONFIG.description,
-    pathname: "/verify-email",
-  });
+export const metadata: Metadata = getPageMetadata({
+  title: "Verify email",
+  description: SITE_CONFIG.description,
+  pathname: "/verify-email",
+  robots: { index: false, follow: false },
+});
 
 const VerifyEmailPage = () => {
   return (

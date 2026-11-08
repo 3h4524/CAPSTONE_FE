@@ -20,8 +20,8 @@ Export `metadata` BẮT BUỘC annotate tường minh kiểu `Metadata` từ `"n
 
 ## Quy tắc
 
-1. **Title để bare** — KHÔNG tự gắn suffix `" | APCS"`. Root layout đã khai báo
-   `title.template = "%s | APCS"`, Next tự ráp. Hardcode suffix render ra title double.
+1. **Title để bare** — KHÔNG tự gắn suffix `" | Podivo"`. Root layout đã khai báo
+   `title.template = "%s | Podivo"`, Next tự ráp. Hardcode suffix render ra title double.
 2. **`pathname`** = path public của route (canonical + OG url). Route không có URL ổn
    định (`not-found`) được bỏ qua.
 3. **Route cần login** (mọi page dưới `(private)`, `(admin)`, trang auth) BẮT BUỘC

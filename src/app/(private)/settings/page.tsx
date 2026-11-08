@@ -5,7 +5,7 @@ import { getPageMetadata } from "@/data/metadata";
 
 export const metadata: Metadata = getPageMetadata({
   title: "Settings",
-  description: "Manage your APCS appearance, regional and notification preferences.",
+  description: "Manage your Podivo appearance, regional and notification preferences.",
   pathname: "/settings",
   robots: { index: false, follow: false },
 });

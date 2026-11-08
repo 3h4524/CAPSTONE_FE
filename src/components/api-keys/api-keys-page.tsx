@@ -271,7 +271,7 @@ export function ApiKeysPage() {
         <div className="max-md:contents">
           <h1 className="font-display text-3xl font-semibold tracking-tight max-md:text-xl">API keys</h1>
           <p className="text-muted-foreground mt-1 text-sm max-md:hidden">
-            Connect the services APCS uses to create and publish your products.
+            Connect the services Podivo uses to create and publish your products.
           </p>
           <p className="text-muted-foreground mt-2 flex items-center gap-1.5 text-xs max-md:col-span-2 max-md:mt-1">
             <LockKeyhole className="text-primary size-3.5 shrink-0" />

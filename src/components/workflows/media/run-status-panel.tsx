@@ -78,13 +78,13 @@ const PublishStepResult = ({ step }: { step: WorkflowNodeRun }) => {
   const attached = typeof step.output.mediaAttached === "number" ? step.output.mediaAttached : 0;
   const state = step.status === "succeeded" ? (url ? "On Etsy" : "Done") : step.status === "running" ? step.stage ?? "Running" : step.status === "failed" ? "Failed" : "Waiting";
   return (
-    <div className="space-y-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs">
+    <div className="space-y-1.5 rounded-md border border-ink-200 px-3 py-2 text-xs">
       <p className="flex items-center justify-between gap-2">
-        <span className="font-medium text-slate-800">{label}</span>
-        <span className={step.status === "succeeded" ? "text-emerald-700" : step.status === "failed" ? "text-rose-700" : "text-slate-500"}>{state}</span>
+        <span className="font-medium text-ink-800">{label}</span>
+        <span className={step.status === "succeeded" ? "text-emerald-700 dark:text-emerald-300" : step.status === "failed" ? "text-rose-700 dark:text-rose-300" : "text-ink-500"}>{state}</span>
       </p>
-      {step.status === "succeeded" && attached > 0 && <p className="text-slate-500">{attached} APCS image(s), video or file(s) added to the listing.</p>}
-      {warnings.length > 0 && <ul className="list-disc space-y-0.5 pl-4 text-amber-800">{warnings.map(item => <li key={item}>{item}</li>)}</ul>}
+      {step.status === "succeeded" && attached > 0 && <p className="text-ink-500">{attached} APCS image(s), video or file(s) added to the listing.</p>}
+      {warnings.length > 0 && <ul className="list-disc space-y-0.5 pl-4 text-amber-800 dark:text-amber-300">{warnings.map(item => <li key={item}>{item}</li>)}</ul>}
       {url && (
         <Button asChild size="sm" variant="outline">
           <a href={url} target="_blank" rel="noreferrer"><ExternalLink className="size-3.5" />{step.nodeType === "publish-etsy" ? "Open the Etsy draft" : "Open the Etsy listing"}</a>

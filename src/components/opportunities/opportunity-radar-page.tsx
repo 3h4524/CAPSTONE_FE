@@ -410,7 +410,7 @@ export function OpportunityRadarPage() {
                  />
               </div>
               <div className="flex flex-col items-stretch gap-1 sm:items-end">
-                <Button type="button" variant="primaryBlue" className={rankingIsStale ? "shrink-0 ring-2 ring-amber-300/70 ring-offset-2 ring-offset-[#17263f]" : "shrink-0"} onClick={() => refreshMutation.mutate()} disabled={refreshMutation.isPending}>
+                <Button type="button" variant="primaryBlue" className={rankingIsStale ? "shrink-0 ring-2 ring-amber-300/70 dark:ring-amber-500/40 ring-offset-2 ring-offset-[#17263f]" : "shrink-0"} onClick={() => refreshMutation.mutate()} disabled={refreshMutation.isPending}>
                   <RefreshCw className={refreshMutation.isPending ? "size-4 animate-spin" : "size-4"} />
                    {refreshMutation.isPending ? t("marketRadar.refreshing") : t("marketRadar.refresh")}
                  </Button>
@@ -619,7 +619,7 @@ function HeroStat({ label, value, suffix, accent, hint, onClick }: { label: stri
   );
   const className = "px-2 py-2 text-center sm:min-w-28 sm:px-4";
   const stat = onClick
-    ? <button type="button" onClick={onClick} className={`${className} rounded-none transition-colors hover:bg-white/[0.06] focus-visible:bg-white/[0.08] focus-visible:outline-none`}>{content}</button>
+    ? <button type="button" onClick={onClick} className={`${className} rounded-none transition-colors hover:bg-card/[0.06] focus-visible:bg-card/[0.08] focus-visible:outline-none`}>{content}</button>
     : <div className={className}>{content}</div>;
   if (!hint) return stat;
   return (
@@ -907,23 +907,23 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
             <VerdictIcon className="size-4" aria-hidden="true" />
             {formatVerdict(insight.verdict)}
           </span>
-          <p className="min-w-0 pt-1 text-sm leading-6 font-medium text-slate-800">{headline}</p>
+          <p className="min-w-0 pt-1 text-sm leading-6 font-medium text-ink-800">{headline}</p>
         </div>
         {nextStep && (
-          <p className="mt-2 flex items-start gap-2 text-sm leading-6 text-slate-700">
-            <Zap className="mt-1 size-4 shrink-0 text-blue-600" aria-hidden="true" />
-            <span><span className="font-semibold text-slate-900">{t("marketRadar.nextStepLabel", { defaultValue: "Next step:" })}</span> {nextStep}</span>
+          <p className="mt-2 flex items-start gap-2 text-sm leading-6 text-ink-700">
+            <Zap className="mt-1 size-4 shrink-0 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+            <span><span className="font-semibold text-ink-900">{t("marketRadar.nextStepLabel", { defaultValue: "Next step:" })}</span> {nextStep}</span>
           </p>
         )}
         {(insight.highlights.length > 0 || insight.risks.length > 0) && (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {insight.highlights.slice(0, 2).map((item) => (
-              <span key={item} title={item} className="inline-flex max-w-full items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs text-emerald-800 ring-1 ring-emerald-200">
+              <span key={item} title={item} className="inline-flex max-w-full items-center gap-1 rounded-full bg-card px-2.5 py-1 text-xs text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-500/30">
                 <Check className="size-3 shrink-0" aria-hidden="true" /><span className="truncate">{item}</span>
               </span>
             ))}
             {insight.risks.slice(0, 2).map((item) => (
-              <span key={item} title={item} className="inline-flex max-w-full items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs text-amber-800 ring-1 ring-amber-200">
+              <span key={item} title={item} className="inline-flex max-w-full items-center gap-1 rounded-full bg-card px-2.5 py-1 text-xs text-amber-800 dark:text-amber-300 ring-1 ring-amber-200 dark:ring-amber-500/30">
                 <TriangleAlert className="size-3 shrink-0" aria-hidden="true" /><span className="truncate">{item}</span>
               </span>
             ))}
@@ -1172,7 +1172,7 @@ function MetricTile({
         <span className={`shrink-0 font-bold ${footerClass}`}>{footerRight}</span>
       </div>
       {note && (
-        <p className="flex items-start gap-1.5 border-t border-slate-200 pt-2 text-[11px] leading-4 text-amber-700">
+        <p className="flex items-start gap-1.5 border-t border-ink-200 pt-2 text-[11px] leading-4 text-amber-700 dark:text-amber-300">
           <TriangleAlert className="mt-px size-3 shrink-0" aria-hidden="true" />
           <span>{note}</span>
         </p>
@@ -1986,7 +1986,7 @@ function ClampedTitle({ as: Tag, title, lines, className }: { as: "h3" | "p"; ti
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Tag tabIndex={0} className={`${className} ${lines === 1 ? "truncate" : "line-clamp-2"} cursor-default break-words outline-none focus-visible:ring-2 focus-visible:ring-blue-200`}>
+          <Tag tabIndex={0} className={`${className} ${lines === 1 ? "truncate" : "line-clamp-2"} cursor-default break-words outline-none focus-visible:ring-2 focus-visible:ring-blue-200 dark:focus-visible:ring-blue-500/30`}>
             {title}
           </Tag>
         </TooltipTrigger>

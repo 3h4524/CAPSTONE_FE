@@ -31,7 +31,7 @@ export function EtsyCallback() {
   }, [router, searchParams]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white p-6 text-center text-sm text-slate-600">
+    <main className="flex min-h-screen items-center justify-center bg-card p-6 text-center text-sm text-ink-600">
       {closeFailed ? (
         <p>Done. You can close this window and return to APCS.</p>
       ) : (

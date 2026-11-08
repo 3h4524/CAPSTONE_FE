@@ -354,7 +354,7 @@ const AdminMarketResearchPanel = () => {
           <Textarea
             value={queries}
             onChange={(event) => setQueries(event.target.value)}
-            className="mt-2 min-h-32 resize-y bg-card text-sm"
+            className="mt-2 max-h-[418px] min-h-32 resize-y overflow-y-auto bg-card text-sm"
             placeholder="One keyword per line, e.g. hiking shirt"
           />
           <span className="mt-1 block text-[11px] font-normal text-ink-400">

@@ -9,7 +9,6 @@ import { Progress } from "@/components/ui/progress";
 import { confirmAiShot } from "@/helpers/confirm-ai-shot";
 import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
-import { useMediaDownload } from "@/hooks/mutations/use-media-download";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { generateVideoConfigSchema } from "@/schemas/workflow";
@@ -19,7 +18,6 @@ import type { WorkflowNodeRun } from "@/types/video-workflow";
 export const RunStatusPanel = () => {
   const { run, isError, refetch } = useWorkflowRuntime();
   const { mutate: action, isPending } = useWorkflowRunAction();
-  const { mutate: download, isPending: isDownloading } = useMediaDownload();
   const [publishing, setPublishing] = useState(false);
   const [printing, setPrinting] = useState(false);
   const active = run?.nodes.find(n => n.status === "running");
@@ -57,7 +55,6 @@ export const RunStatusPanel = () => {
     {run.status === "failed" && <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => retry()}>Retry checkpoint</Button>{aiMode && <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => retry(true)}>Regenerate AI clips</Button>}</div>}
     {exportStep?.status === "succeeded" && (
       <div className="flex flex-wrap gap-2">
-        {typeof exportStep.output.exportId === "string" && <Button type="button" disabled={isDownloading} onClick={() => download({ id: String(exportStep.output.exportId), zip: true }, { onSuccess: url => window.location.assign(url) })}>Download approved ZIP</Button>}
         {/* Print-on-demand: Printify makes the item and publishes it to Etsy, linked so orders reach it. */}
         <Button type="button" variant="outline" onClick={() => setPrinting(true)}>Push to Printify</Button>
         {/* A listing sent straight to Etsy has no print provider: meant for digital downloads. */}

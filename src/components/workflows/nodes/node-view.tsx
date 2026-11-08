@@ -1,6 +1,7 @@
 "use client";
 
 import { ApprovalCard } from "@/components/workflows/nodes/approval-card";
+import { ExportZipCard } from "@/components/workflows/nodes/export-zip-card";
 import { ImageCard } from "@/components/workflows/nodes/image-card";
 import { ListingCard } from "@/components/workflows/nodes/listing-card";
 import { OutputCard } from "@/components/workflows/nodes/output-card";
@@ -29,6 +30,7 @@ export const NodeView = (props: NodeProps<WorkflowNode>) => {
     case "review-video":
       return <ApprovalCard {...props} />;
     case "export-zip":
+      return <ExportZipCard {...props} />;
     case "publish-etsy":
     case "publish-printify":
       return <OutputCard {...props} />;

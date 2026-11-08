@@ -331,7 +331,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     hasOutput: true,
     defaultConfig: {
       mode: "standard",
-      aiVideoModelKey: "minimax_h3",
+      aiVideoModelKey: "minimax_h3_lite",
       target: "etsy",
       template: "auto",
       templateVersion: 2,

@@ -199,6 +199,12 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
     previousStatus.current = status;
   }, [job?.status, queryClient]);
 
+  // Closing the open job forgets its mock-ups, so a job opened again must show them again
+  // (choosing another batch and coming back would otherwise leave the panel empty).
+  useEffect(() => {
+    autoMockupJobs.current.clear();
+  }, [batchJobId]);
+
   useEffect(() => {
     if (!isEditorReady || !hasMockupNode || !job || step !== "watching") return;
     if (!DESIGNS_READY_STATUSES.includes(job.status) || mockupState !== "idle") return;

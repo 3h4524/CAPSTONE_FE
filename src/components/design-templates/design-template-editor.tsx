@@ -496,6 +496,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                     fill
                     sizes="(max-width: 1023px) calc(100vw - 4rem), 288px"
                     src={previewImageUrl}
+                    unoptimized
                     alt={`Preview artwork for ${form.watch("name") || "untitled template"}`}
                     className="object-contain"
                     onError={() => setPreviewImageFailed(true)}

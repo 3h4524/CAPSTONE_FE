@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { garmentColorName } from "@/helpers/garment-colors";
-import { isAutomaticPlacement } from "@/helpers/mockup-template";
+import { isAutomaticPlacement, mockupViewLabel, parsePrintLayout, templateView } from "@/helpers/mockup-template";
 import { modelAttributesLabel } from "@/helpers/model-attributes";
 import type { MockupTemplate } from "@/types/mockup-templates";
 
@@ -32,6 +32,7 @@ export const MockupTemplateListItem = ({
   onDelete,
 }: MockupTemplateListItemProps) => {
   const [viewing, setViewing] = useState<number | null>(null);
+  const layout = template.kind === "model" ? null : parsePrintLayout(template.printAreaConfig);
 
   return (
     <Card className="overflow-hidden">
@@ -102,6 +103,17 @@ export const MockupTemplateListItem = ({
             <Badge variant="secondary">{modelAttributesLabel(template.attributes)}</Badge>
           )}
           {template.aiGenerated && <Badge variant="outline">Made with AI</Badge>}
+          {template.kind !== "model" && layout && layout.view !== "front" && (
+            <Badge variant="secondary">{mockupViewLabel(layout.view)}</Badge>
+          )}
+          {template.views && template.views.length > 0 && (
+            <Badge variant="secondary">
+              Front + {template.views.map((side) => mockupViewLabel(templateView(side)).toLowerCase()).join(", ")}
+            </Badge>
+          )}
+          {template.kind !== "model" && layout && layout.areas.length > 1 && (
+            <Badge variant="outline">{layout.areas.length} print areas</Badge>
+          )}
           {template.kind === "model" && (
             <Badge variant="secondary">
               {isAutomaticPlacement(template.printAreaConfig)

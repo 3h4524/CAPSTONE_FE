@@ -1,5 +1,15 @@
 import { api } from "@/api/client";
-import type { BatchMockupSelection, GarmentMaskPreview, GenerateAllMockupsResult, MockupImage, MockupOverride, MockupTemplate } from "@/types/mockup-templates";
+import type {
+  BatchMockupSelection,
+  GarmentMaskPreview,
+  GenerateAllMockupsResult,
+  MockupArea,
+  MockupAreaSource,
+  MockupImage,
+  MockupOverride,
+  MockupTemplate,
+  MockupView,
+} from "@/types/mockup-templates";
 
 export const mockupTemplateKeys = {
   all: ["mockup-templates"] as const,
@@ -18,9 +28,10 @@ export const applyBatchMockupTemplates = async (
   templateIds: string[],
   garmentColors: string[] = [],
   templateColors: Record<string, string[]> = {},
-  templateBackgrounds: Record<string, Record<string, string>> = {}
+  templateBackgrounds: Record<string, Record<string, string>> = {},
+  areaSources: Record<string, Record<string, MockupAreaSource>> = {}
 ): Promise<BatchMockupSelection> =>
-  (await api.put<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { templateIds, garmentColors, templateColors, templateBackgrounds })).data;
+  (await api.put<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { templateIds, garmentColors, templateColors, templateBackgrounds, areaSources })).data;
 
 export type SaveMockupTemplateInput = {
   name: string;
@@ -32,6 +43,12 @@ export type SaveMockupTemplateInput = {
   baseImage: File | null;
   allowRecolor: boolean;
   garmentColor: string | null;
+  /** The side of the garment the photo shows. */
+  view?: MockupView;
+  /** Every print area, the main one keyed "main"; x/y/width/height then only repeat the main one. */
+  areas?: MockupArea[];
+  /** On create: the photo is another side (`view`) of this template and is linked to it in the same save. */
+  mainTemplateId?: string;
 };
 
 const toTemplateForm = (input: SaveMockupTemplateInput) => {
@@ -45,6 +62,14 @@ const toTemplateForm = (input: SaveMockupTemplateInput) => {
   if (input.baseImage) form.append("baseImage", input.baseImage);
   form.append("allowRecolor", String(input.allowRecolor));
   if (input.garmentColor) form.append("garmentColor", input.garmentColor);
+  if (input.view) form.append("view", input.view);
+  if (input.areas?.length) {
+    form.append(
+      "areas",
+      JSON.stringify(input.areas.map(({ key, name, x, y, width, height, rotation, source }) => ({ key, name, x, y, width, height, rotation, source })))
+    );
+  }
+  if (input.mainTemplateId) form.append("mainTemplateId", input.mainTemplateId);
   return form;
 };
 
@@ -53,6 +78,10 @@ export const createMockupTemplate = async (input: SaveMockupTemplateInput): Prom
 
 export const updateMockupTemplate = async (id: string, input: SaveMockupTemplateInput): Promise<MockupTemplate> =>
   (await api.put<MockupTemplate>(`/api/mockup-templates/${id}`, toTemplateForm(input))).data;
+
+// Gives a template the photo of another side, a template of the Seller's own; null takes the side off (and removes it).
+export const setMockupTemplateView = async (id: string, view: MockupView, templateId: string | null): Promise<MockupTemplate> =>
+  (await api.put<MockupTemplate>(`/api/mockup-templates/${id}/views/${view}`, { templateId })).data;
 
 export const deleteMockupTemplate = async (id: string) => {
   await api.delete(`/api/mockup-templates/${id}`);
@@ -66,6 +95,8 @@ export type GenerateMockupImageInput = {
   width?: number;
   height?: number;
   garmentColor?: string;
+  /** The template's print areas as set for this mock-up; takes the place of x/y/width/height. */
+  areas?: MockupArea[];
 };
 
 export const generateMockupImage = async (designImageId: string, input: GenerateMockupImageInput): Promise<MockupImage> =>

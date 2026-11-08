@@ -120,6 +120,13 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
     : undefined;
   const editingDesignUrl =
     editingProduct?.images.find((image) => image.id === editing?.designImageId)?.imageUrl ?? null;
+  // The product's other designs, which a print area such as a sleeve can print instead of the mock-up's own. Only its
+  // own: the product's listing is written for them.
+  const designOptions = (editingProduct?.images ?? []).map((image, index) => ({
+    id: image.id,
+    label: `Design ${index + 1}`,
+    imageUrl: image.imageUrl,
+  }));
   const showEdited = (result: GenerateAllMockupsResult, changedCount: number) => {
     useWorkflowRunStore.getState().setMockupResult(result);
     setEditing(null);
@@ -248,6 +255,7 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
         productName={editingProduct?.productName ?? "Product"}
         productType={editingProduct?.productType ?? ""}
         designImageUrl={editingDesignUrl}
+        designOptions={designOptions}
         onOpenChange={(nextOpen) => !nextOpen && setEditing(null)}
         onSaved={showEdited}
       />

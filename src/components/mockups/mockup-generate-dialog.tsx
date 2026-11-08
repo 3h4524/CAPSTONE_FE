@@ -6,15 +6,16 @@ import Image from "next/image";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { GarmentColorPicker } from "@/components/mockups/garment-color-picker";
 import { PrintAreaEditor } from "@/components/mockups/print-area-editor";
+import { PrintAreaList } from "@/components/mockups/print-area-list";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { parsePrintArea, productTypeLabel } from "@/helpers/mockup-template";
+import { areaLabel, MAIN_AREA_KEY, parsePrintLayout, productTypeLabel, withViewTemplates } from "@/helpers/mockup-template";
 import { useGenerateMockupImage } from "@/hooks/mutations/use-generate-mockup-image";
 import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
-import type { MockupImage, MockupPrintArea } from "@/types/mockup-templates";
+import type { MockupArea, MockupImage } from "@/types/mockup-templates";
 
 type MockupGenerateDialogProps = {
   open: boolean;
@@ -27,12 +28,15 @@ type MockupGenerateDialogProps = {
 
 export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, productName, productType, onOpenChange }: MockupGenerateDialogProps) => {
   // Only templates for this product's own type: any other pick is rejected by the backend.
-  const { data: templates, isPending: isLoadingTemplates } = useMockupTemplates(productType || undefined, open);
+  const { data: listed, isPending: isLoadingTemplates } = useMockupTemplates(productType || undefined, open);
+  // Each template with the photos of its other sides (back, sleeves).
+  const templates = listed ? withViewTemplates(listed) : undefined;
   const { mutate: generate, isPending: isGenerating } = useGenerateMockupImage();
 
   const [templateId, setTemplateId] = useState("");
   const [advanced, setAdvanced] = useState(false);
-  const [position, setPosition] = useState<MockupPrintArea>({ x: 0, y: 0, width: 100, height: 100 });
+  const [areas, setAreas] = useState<MockupArea[]>([]);
+  const [activeKey, setActiveKey] = useState(MAIN_AREA_KEY);
   const [result, setResult] = useState<MockupImage | null>(null);
   const [garmentColor, setGarmentColor] = useState<string | null>(null);
 
@@ -47,16 +51,32 @@ export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, prod
 
   useEffect(() => {
     if (!selectedTemplate) return;
-    setPosition(parsePrintArea(selectedTemplate.printAreaConfig) ?? { x: 0, y: 0, width: 100, height: 100 });
+    setAreas(
+      parsePrintLayout(selectedTemplate.printAreaConfig)?.areas ?? [
+        { key: MAIN_AREA_KEY, name: null, x: 0, y: 0, width: 100, height: 100, rotation: 0, source: "same" },
+      ]
+    );
+    setActiveKey(MAIN_AREA_KEY);
     setGarmentColor(selectedTemplate.garmentColor);
   }, [selectedTemplate]);
 
   const close = () => onOpenChange(false);
+  const activeIndex = Math.max(0, areas.findIndex((area) => area.key === activeKey));
+  const active = areas[activeIndex];
+  const updateActive = (patch: Partial<MockupArea>) => setAreas(areas.map((area) => (area.key === active.key ? { ...area, ...patch } : area)));
+  const printsNothing = areas.length > 0 && areas.every((area) => area.source !== "same");
 
   const submit = () => {
     if (!designImageId || !templateId) return;
+    const [main] = areas;
+    // One straight area printing the design is sent as a plain position, as before there were several areas.
+    const placement = !advanced
+      ? {}
+      : areas.length === 1 && main.rotation === 0 && main.source === "same"
+        ? { x: main.x, y: main.y, width: main.width, height: main.height }
+        : { areas };
     generate(
-      { designImageId, input: { mockupTemplateId: templateId, ...(advanced ? position : {}), ...(garmentColor ? { garmentColor } : {}) } },
+      { designImageId, input: { mockupTemplateId: templateId, ...placement, ...(garmentColor ? { garmentColor } : {}) } },
       { onSuccess: setResult }
     );
   };
@@ -111,7 +131,7 @@ export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, prod
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
                 <p className="text-sm font-medium">Customize position</p>
-                <p className="text-muted-foreground text-xs">Off uses the template’s default print area.</p>
+                <p className="text-muted-foreground text-xs">Off uses the template’s own print areas.</p>
               </div>
               <Switch checked={advanced} onCheckedChange={setAdvanced} disabled={!selectedTemplate} />
             </div>
@@ -129,17 +149,39 @@ export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, prod
               </div>
             )}
 
-            {selectedTemplate && (
+            {selectedTemplate && active && (
               <div className="space-y-3">
                 <PrintAreaEditor
                   imageUrl={selectedTemplate.baseImageUrl}
-                  overlayImageUrl={designImageUrl ?? undefined}
+                  overlayImageUrl={active.source === "same" ? (designImageUrl ?? undefined) : undefined}
                   garmentMaskUrl={selectedTemplate.garmentMaskUrl ?? undefined}
                   garmentTint={garmentColor && selectedTemplate.garmentMaskUrl ? { color: garmentColor, maskUrl: selectedTemplate.garmentMaskUrl } : undefined}
-                  value={position}
-                  onChange={setPosition}
+                  value={active}
+                  onChange={(next) => updateActive({ x: next.x, y: next.y, width: next.width, height: next.height })}
+                  rotation={active.rotation}
+                  onRotationChange={(rotation) => updateActive({ rotation })}
+                  label={areaLabel(active, activeIndex)}
+                  otherAreas={areas
+                    .map((area, index) => ({
+                      key: area.key,
+                      label: areaLabel(area, index),
+                      area,
+                      rotation: area.rotation,
+                      overlayImageUrl: area.source === "same" ? (designImageUrl ?? undefined) : undefined,
+                    }))
+                    .filter((area) => area.key !== active.key)}
+                  onSelectArea={setActiveKey}
                   disabled={!advanced}
                 />
+                {advanced && (
+                  <PrintAreaList
+                    mode="mockup"
+                    areas={areas}
+                    activeKey={active.key}
+                    onSelect={setActiveKey}
+                    onChange={setAreas}
+                  />
+                )}
                 {selectedTemplate.realisticPrintReady && (
                   <p className="text-muted-foreground text-xs">The result also follows the fabric’s folds and shadows.</p>
                 )}
@@ -152,7 +194,7 @@ export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, prod
         <DialogFooter className="gap-2 pt-4">
           <Button type="button" variant="ghost" onClick={close}>{result ? "Close" : "Cancel"}</Button>
           {!result && (
-            <Button type="button" disabled={!templateId || isGenerating} onClick={submit}>
+            <Button type="button" disabled={!templateId || isGenerating || (advanced && printsNothing)} onClick={submit}>
               {isGenerating ? "Generating…" : "Generate"}
             </Button>
           )}

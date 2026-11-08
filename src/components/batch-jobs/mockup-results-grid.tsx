@@ -7,12 +7,17 @@ import { Pencil } from "lucide-react";
 import { HorizontalStrip } from "@/components/commons/data-display/horizontal-strip";
 import { ImageLightbox } from "@/components/commons/data-display/image-lightbox";
 import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
+import { MockupSidesStrip } from "@/components/mockups/mockup-sides-strip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { mockupLightboxImages } from "@/helpers/lightbox-images";
+import { groupMockupSides, templateSidesIndex } from "@/helpers/mockup-sides";
+import { mockupViewLabel } from "@/helpers/mockup-template";
+import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
 import type {
   GenerateAllMockupsResult,
   MockupImage,
+  MockupView,
   RemovedMockupSlot,
 } from "@/types/mockup-templates";
 import { cn } from "@/utils/cn";
@@ -42,15 +47,23 @@ export const MockupResultsGrid = ({
   disabled = false,
 }: MockupResultsGridProps) => {
   const [viewing, setViewing] = useState<number | null>(null);
+  // The side each card shows; its front until another is picked.
+  const [shownViews, setShownViews] = useState<Record<string, MockupView>>({});
   const gallery = mockupLightboxImages(result.images, productNameById);
+  // The front, back and sleeves of one design on one template go on one card.
+  const { data: templates } = useMockupTemplates();
+  const cards = groupMockupSides(result.images, templateSidesIndex(templates ?? []));
+  const withSides = cards.some((card) => card.sides.length > 1);
 
   return (
     <div className="space-y-4">
       <p className="text-muted-foreground text-sm">
         Generated {result.generatedCount} new mock-up{result.generatedCount === 1 ? "" : "s"}.
+        {withSides &&
+          " Each card holds a design’s front and other sides: pick one under its picture."}
         {strip &&
-          result.images.length > 1 &&
-          ` ${result.images.length} shown: scroll sideways or click one to view them large.`}
+          cards.length > 1 &&
+          ` ${cards.length} shown: scroll sideways or click one to view them large.`}
         {result.noDesignImageCount > 0 &&
           ` ${result.noDesignImageCount} products have no image yet.`}
         {result.noCompatibleTemplateCount > 0 &&
@@ -65,45 +78,64 @@ export const MockupResultsGrid = ({
           ))}
         </ul>
       )}
-      {result.images.length > 0 && (
-        <ImagesLayout
-          strip={strip}
-          count={result.images.length}
-          columnsClassName={columnsClassName}
-        >
-          {result.images.map((mockupImage, imageIndex) => {
+      {cards.length > 0 && (
+        <ImagesLayout strip={strip} count={cards.length} columnsClassName={columnsClassName}>
+          {cards.map((card) => {
+            const shown =
+              card.sides.find((side) => side.view === shownViews[card.key]) ?? card.sides[0];
+            const mockupImage = shown.image;
+            const imageIndex = result.images.findIndex((item) => item.id === mockupImage.id);
             const productName = productNameById.get(mockupImage.productId) ?? "Product";
+            const sideName =
+              card.sides.length > 1 ? ` (${mockupViewLabel(shown.view).toLowerCase()})` : "";
             return (
               <div
-                key={mockupImage.id}
+                key={card.key}
                 className={cn(
                   "group overflow-hidden rounded-lg border",
                   strip && "w-40 shrink-0 snap-start"
                 )}
               >
-                {/* Opens the mock-up large on the page rather than in a new tab. */}
-                <Button
-                  type="button"
-                  variant="none"
-                  aria-label={`View the mock-up of ${productName} larger`}
-                  onClick={() => setViewing(imageIndex)}
-                  className="block h-auto w-full cursor-zoom-in overflow-hidden rounded-none p-0 hover:translate-y-0"
-                >
-                  <Image
-                    src={mockupImage.mockupImageUrl}
-                    alt={productNameById.get(mockupImage.productId) ?? "Mock-up"}
-                    width={mockupImage.mockupWidthPx}
-                    height={mockupImage.mockupHeightPx}
-                    unoptimized
-                    className="bg-muted aspect-square w-full object-cover transition group-hover:scale-105"
-                  />
-                </Button>
+                <div>
+                  {/* Opens the mock-up large on the page rather than in a new tab. */}
+                  <Button
+                    type="button"
+                    variant="none"
+                    aria-label={`View the mock-up of ${productName}${sideName} larger`}
+                    onClick={() => setViewing(imageIndex)}
+                    className="block h-auto w-full cursor-zoom-in overflow-hidden rounded-none p-0 hover:translate-y-0"
+                  >
+                    <Image
+                      src={mockupImage.mockupImageUrl}
+                      alt={`${productNameById.get(mockupImage.productId) ?? "Mock-up"}${sideName}`}
+                      width={mockupImage.mockupWidthPx}
+                      height={mockupImage.mockupHeightPx}
+                      unoptimized
+                      className="bg-muted aspect-square w-full object-cover transition group-hover:scale-105"
+                    />
+                  </Button>
+                  {/* Under the picture, so it never covers the garment. */}
+                  {card.sides.length > 1 && (
+                    <MockupSidesStrip
+                      size="sm"
+                      className="justify-center rounded-none border-0 border-b bg-slate-50 px-2 py-1.5 shadow-none"
+                      active={shown.view}
+                      onSelect={(view) =>
+                        setShownViews((current) => ({ ...current, [card.key]: view }))
+                      }
+                      sides={card.sides.map((side) => ({
+                        view: side.view,
+                        thumbnail: side.image.mockupImageUrl,
+                      }))}
+                    />
+                  )}
+                </div>
                 <div className="text-muted-foreground flex items-center gap-1.5 p-2 text-xs">
                   {mockupImage.garmentColor && (
                     <GarmentColorSwatch hex={mockupImage.garmentColor} />
                   )}
                   <span className="min-w-0 flex-1 truncate">{productName}</span>
-                  {mockupImage.override && (
+                  {card.sides.some((side) => side.image.override) && (
                     <Badge
                       variant="outline"
                       className="border-slate-200 bg-slate-50 text-slate-700"

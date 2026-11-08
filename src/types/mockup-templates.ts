@@ -39,6 +39,8 @@ export interface MockupTemplate {
   attributes?: ModelAttributes | null;
   /** Whether the photo was made by AI rather than uploaded. */
   aiGenerated?: boolean;
+  /** Photos of the template's other sides (back, left sleeve, right sleeve), each a template of its own. */
+  views?: MockupTemplate[] | null;
 }
 
 export interface BatchMockupSelection {
@@ -50,6 +52,8 @@ export interface BatchMockupSelection {
   templateColors?: Record<string, string[]>;
   /** Background colors chosen per template, keyed by template id and then by garment color or "default". */
   templateBackgrounds?: Record<string, Record<string, string>>;
+  /** What each print area of a template prints, keyed by template id and then area key. */
+  areaSources?: Record<string, Record<string, MockupAreaSource>> | null;
 }
 
 export interface MockupPrintArea {
@@ -57,6 +61,39 @@ export interface MockupPrintArea {
   y: number;
   width: number;
   height: number;
+}
+
+/** Which side of the garment a template photo shows. */
+export type MockupView = "front" | "back" | "left" | "right" | "side";
+
+/**
+ * What is printed in a print area: the design the mock-up is made of, another design (named by `designImageId`), or
+ * nothing.
+ */
+export type MockupAreaSourceKind = "same" | "design" | "none";
+
+/** One print area of a template photo, such as the chest, a sleeve or the back of the neck. */
+export interface MockupArea extends MockupPrintArea {
+  /** "main" for the template's main area, else a short lowercase key such as "sleeve-left". */
+  key: string;
+  name: string | null;
+  /** Degrees the design is turned about the area's center, clockwise, from -180 to 180. */
+  rotation: number;
+  /** On a template, its default ("same" or "none"); on a mock-up, what it prints. */
+  source: MockupAreaSourceKind;
+  designImageId?: string | null;
+}
+
+/** A template's side of the garment and print areas, the main one first. */
+export interface MockupPrintLayout {
+  view: MockupView;
+  areas: MockupArea[];
+}
+
+/** What a run prints in one print area of a template. */
+export interface MockupAreaSource {
+  kind: MockupAreaSourceKind;
+  designImageId?: string | null;
 }
 
 export interface MockupImage {
@@ -88,6 +125,8 @@ export interface MockupOverride {
   printArea: MockupPrintArea | null;
   /** true when no mock-up is made there at all. */
   removed?: boolean;
+  /** The template's print areas as set for this mock-up alone; takes the place of `printArea`. */
+  areas?: MockupArea[] | null;
 }
 
 /** A mock-up the job's settings would make that was removed for its product alone. */

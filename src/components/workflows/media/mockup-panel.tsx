@@ -124,7 +124,7 @@ export const MockupPanel = ({ review }: { review: boolean }) => {
       {isPending ? <SectionLoading label="Loading mockups" className="py-8" />
         : isError ? <PanelNotice tone="error" action={<Button type="button" variant="outline" size="sm" className="h-7 bg-white px-3 text-xs hover:translate-y-0" onClick={() => refetch()}>Reload mockups</Button>}>Mock-ups could not be loaded.</PanelNotice>
           : !visibleAssets?.length ? <PanelEmptyState icon={ImageOff} title="No mockups yet. Upload images in Apply Mockup." />
-            : <div className="grid gap-3 @md:grid-cols-2">{visibleAssets.map(asset => <MockupCard key={asset.id} asset={asset} artworkGroups={artworkGroups} review={review} selectable={!review && !isRunning} selected={selected.includes(asset.id)} onSelect={choose} />)}</div>}
+            : <div className="grid gap-3 @md:grid-cols-2">{visibleAssets.map(asset => <MockupCard key={asset.id} asset={asset} review={review} selectable={!review && !isRunning} selected={selected.includes(asset.id)} onSelect={choose} />)}</div>}
     </div>
     {review && run?.status === "waiting_for_input" && (
       <div className="sticky bottom-0 -mx-5 border-t bg-white/95 px-5 py-3 backdrop-blur">

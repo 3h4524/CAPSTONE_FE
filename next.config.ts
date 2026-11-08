@@ -11,9 +11,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com", pathname: "/v05yzogx/**" }],
   },
   transpilePackages: ["@apcs/video-composition"],
-  images: {
-    remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
-  },
 };
 
 export default nextConfig;

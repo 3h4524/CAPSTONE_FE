@@ -348,6 +348,112 @@ function niceCeiling(value: number) {
   return step * magnitude;
 }
 
+export type NicheMapPoint = {
+  niche: string;
+  /** Percent of the top shops that already gain 3+ favorites a month: how crowded the top is. */
+  strongSharePercent: number;
+  /** Median favorites a month per top listing: how much buyers engage. */
+  favoritesPer30Days: number;
+  activeListingCount: number | null;
+  isOpening: boolean;
+};
+
+/**
+ * Niches placed by competition (x) against buyer interest (y). The shaded top-left quadrant is
+ * where buyers engage more than the median niche while fewer top shops are strong.
+ */
+export function NicheMapChart({
+  points,
+  splitX,
+  splitY,
+  selected,
+  onSelect,
+}: {
+  points: NicheMapPoint[];
+  splitX: number;
+  splitY: number;
+  selected: string | null;
+  onSelect: (niche: string) => void;
+}) {
+  const { t } = useTranslation("common");
+  const maxX = niceCeiling(Math.max(splitX * 2, ...points.map((point) => point.strongSharePercent), 10));
+  const maxY = niceCeiling(Math.max(splitY * 2, ...points.map((point) => point.favoritesPer30Days), 1));
+
+  return (
+    <div className="h-72 w-full [&_*:focus]:outline-none" role="img" aria-label={t("marketRadar.nicheMapLabel", { defaultValue: "Tracked niches by competition and buyer interest" })}>
+      <ResponsiveContainer>
+        <ScatterChart margin={{ top: 8, right: 16, bottom: 24, left: 12 }}>
+          <CartesianGrid stroke={chart.grid} strokeWidth={1} vertical={false} />
+          <ReferenceArea
+            x1={0}
+            x2={splitX}
+            y1={splitY}
+            y2={maxY}
+            fill={chart.series3}
+            fillOpacity={0.08}
+            stroke="none"
+            label={{ value: t("marketRadar.nicheMapOpening", { defaultValue: "Interest high, competition low" }), position: "insideTopLeft", offset: 8, fill: chart.inkSecondary, fontSize: 11 }}
+          />
+          <XAxis
+            type="number"
+            dataKey="strongSharePercent"
+            domain={[0, maxX]}
+            tick={axisTick}
+            tickLine={false}
+            axisLine={{ stroke: chart.grid }}
+            tickFormatter={(value: number) => `${value}%`}
+            label={{ value: t("marketRadar.nicheMapX", { defaultValue: "Strong shops among top sellers (competition)" }), position: "insideBottom", offset: -16, fill: chart.inkSecondary, fontSize: 11 }}
+          />
+          <YAxis
+            type="number"
+            dataKey="favoritesPer30Days"
+            scale="sqrt"
+            domain={[0, maxY]}
+            tick={axisTick}
+            tickLine={false}
+            axisLine={false}
+            width={44}
+            tickFormatter={(value: number) => compact(value)}
+            label={{ value: t("marketRadar.nicheMapY", { defaultValue: "Median favorites / month" }), angle: -90, position: "insideLeft", offset: 0, style: { textAnchor: "middle" }, fill: chart.inkSecondary, fontSize: 11 }}
+          />
+          <Tooltip
+            cursor={false}
+            content={({ active, payload }) => {
+              const point = active ? (payload?.[0]?.payload as NicheMapPoint | undefined) : undefined;
+              return point
+                ? <TooltipCard
+                    value={point.niche}
+                    label={t("marketRadar.nicheMapTooltip", { defaultValue: "{{fav}} favorites / month · {{share}}% strong shops", fav: point.favoritesPer30Days, share: point.strongSharePercent })}
+                    rows={[
+                      ...(point.activeListingCount == null ? [] : [t("marketRadar.nicheMapListings", { defaultValue: "{{value}} active listings", value: compact(point.activeListingCount) })]),
+                      t("marketRadar.nicheMapClick", { defaultValue: "Click to see this niche" }),
+                    ]}
+                  />
+                : null;
+            }}
+          />
+          <Scatter
+            data={points}
+            isAnimationActive={false}
+            shape="circle"
+            cursor="pointer"
+            onClick={(dot: { payload?: NicheMapPoint }) => { if (dot.payload) onSelect(dot.payload.niche); }}
+          >
+            {points.map((point) => (
+              <Cell
+                key={point.niche}
+                fill={point.isOpening ? chart.series3 : chart.series1}
+                stroke={point.niche === selected ? chart.inkPrimary : chart.surface}
+                strokeWidth={point.niche === selected ? 3 : 2}
+              />
+            ))}
+          </Scatter>
+        </ScatterChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 /** Three-step meter for an ordered level; the label beside it carries the word. */
 export function LevelMeter({ level }: { level: string }) {
   const filled = level === "high" ? 3 : level === "medium" ? 2 : level === "low" ? 1 : 0;

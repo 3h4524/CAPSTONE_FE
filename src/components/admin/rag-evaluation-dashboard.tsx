@@ -43,6 +43,7 @@ import {
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { RagCorpusHealthPanel } from "@/components/admin/rag-corpus-health-panel";
+import { RagKnownItemBenchmark } from "@/components/admin/rag-known-item-benchmark";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -458,6 +459,8 @@ const RagEvaluationDashboard = ({
                   )}
                 </CardContent>
               </Card>
+
+              <RagKnownItemBenchmark />
 
               <RagCorpusHealthPanel />
 

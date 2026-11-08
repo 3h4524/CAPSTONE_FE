@@ -31,6 +31,9 @@ import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useRetrieveMarketResearch } from "@/hooks/mutations/use-retrieve-market-research";
 import { useQuery } from "@/hooks/queries/use-query";
 
+// Matches MarketResearchScheduleService.MaximumQueries in the backend.
+const MAX_QUERIES = 300;
+
 const DEFAULT_QUERIES = [
   "personalized friend gift",
   "custom pet gift",
@@ -143,7 +146,7 @@ const AdminMarketResearchPanel = () => {
     suggestedQueries.forEach((query) => {
       if (!nextQueries.includes(query)) nextQueries.push(query);
     });
-    setQueries(nextQueries.slice(0, 100).join("\n"));
+    setQueries(nextQueries.slice(0, MAX_QUERIES).join("\n"));
   };
 
   const saveSchedule = () => {
@@ -355,7 +358,7 @@ const AdminMarketResearchPanel = () => {
             placeholder="One keyword per line, e.g. hiking shirt"
           />
           <span className="mt-1 block text-[11px] font-normal text-slate-400">
-            {normalizedQueries.length}/100 keywords · public Etsy data only
+            {normalizedQueries.length}/{MAX_QUERIES} keywords · public Etsy data only
           </span>
         </label>
         <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3">

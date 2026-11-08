@@ -270,14 +270,12 @@ describe("summarizeNodeConfig", () => {
   });
 
   it("reports an enabled switch and hides a disabled one", () => {
-    expect(summarizeNodeConfig("publish-etsy", { publishImmediately: true })).toEqual([
-      "Publish immediately",
-    ]);
-    expect(summarizeNodeConfig("publish-etsy", { publishImmediately: false })).toEqual([]);
+    expect(summarizeNodeConfig("generate-listing", { includeSeoScore: true })).toContain("SEO score");
+    expect(summarizeNodeConfig("generate-listing", { includeSeoScore: false })).not.toContain("SEO score");
   });
 
   it("reports a truthy-looking switch value as disabled", () => {
-    expect(summarizeNodeConfig("publish-etsy", { publishImmediately: "true" })).toEqual([]);
+    expect(summarizeNodeConfig("generate-listing", { includeSeoScore: "true" })).not.toContain("SEO score");
   });
 
   it("reports a source-select with a value", () => {

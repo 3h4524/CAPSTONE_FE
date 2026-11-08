@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useState } from "react";
-import { Award, Check, ChevronDown, ChevronsUpDown, Copy, GripVertical, Hourglass, Layers, LayoutGrid, Pencil, Plus, Star, Table2, Tag, Trash2, Users, X } from "lucide-react";
+import { Award, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, Copy, GripVertical, Hourglass, Layers, LayoutGrid, MoreHorizontal, Pencil, Plus, Star, Table2, Tag, Trash2, Users, X } from "lucide-react";
 
 import { AdminMetricCard } from "@/components/admin/admin-metric-card";
 import { addableFeatures,AddFeatureDialog } from "@/components/admin/subscription-plans/add-feature-dialog";
@@ -11,8 +11,10 @@ import { LimitEditDialog, type LimitTarget } from "@/components/admin/subscripti
 import { PlanCarousel } from "@/components/admin/subscription-plans/plan-carousel";
 import { PlanCompareTable } from "@/components/admin/subscription-plans/plan-compare-table";
 import { type FeatureTarget, RemoveFeatureDialog } from "@/components/admin/subscription-plans/remove-feature-dialog";
+import { PhonePlanCarousel, type PhonePlanItem } from "@/components/subscription/phone-plan-carousel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { catalogFeatures, isSafetyCap, type PlanFeatureDefinition } from "@/helpers/plan-features";
 import { useChangePlanFeatures } from "@/hooks/mutations/use-change-plan-features";
@@ -20,6 +22,7 @@ import { useReorderPlans } from "@/hooks/mutations/use-plan-tools";
 import { useSetRecommendedPlan } from "@/hooks/mutations/use-set-recommended-plan";
 import { useAdminFeatures } from "@/hooks/queries/use-admin-features";
 import { usePlanSettings } from "@/hooks/queries/use-plan-settings";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { AdminSubscriptionPlan } from "@/types/admin-subscription-plan";
 import type { AdminFeature } from "@/types/feature-catalog";
 import { cn } from "@/utils/cn";
@@ -56,6 +59,10 @@ const planLimits = (plan: AdminSubscriptionPlan, features: PlanFeatureDefinition
       const row = plan.features.find((feature) => feature.code === definition.code);
       return { ...definition, value: row ? (row.isEnabled ? row.limitValue : 0) : null };
     });
+
+// One card at a time with the next peeking in on a phone, as Sellers see the plans there.
+const PlanSlides = ({ items, initialKey }: { items: PhonePlanItem[]; initialKey?: string }) =>
+  useIsPhone() ? <PhonePlanCarousel items={items} initialKey={initialKey} /> : <PlanCarousel items={items} />;
 
 export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGridProps) {
   // Labels and order as the Admin set them in the feature catalog.
@@ -139,7 +146,7 @@ export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGri
   return (
     <div className="mt-6 space-y-5">
       {/* 4 KPI Metric Cards styled identically to Admin Dashboard */}
-      <section className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-3.5 max-md:grid-cols-2 max-md:gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         <AdminMetricCard
           icon={Tag}
           label="Plans on sale"
@@ -233,9 +240,12 @@ export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGri
         />
       ) : (
       /* Up to four plans fill one row; more slide sideways with arrows instead of wrapping. */
-      <PlanCarousel
+      <PlanSlides
+        initialKey={ordered.find((plan) => plan.tier === recommendedTier)?.id}
         items={ordered.map((plan, index) => ({
           key: plan.id,
+          label: plan.name,
+          isRecommended: plan.tier === recommendedTier,
           node: (
           <div
             draggable={armed === plan.id}
@@ -349,6 +359,7 @@ function PlanCard({
   onRemove: (code: string, label: string) => void;
   onEditLimit: (target: Omit<LimitTarget, "plan">) => void;
 }) {
+  const isPhone = useIsPhone();
   const included = includedFeatures(plan, definitions);
   // On a higher plan, the features the cheaper plan already has are said in one line, as Sellers see
   // it; the full list (to remove one) is a click away.
@@ -394,9 +405,9 @@ function PlanCard({
         />
       ))}
 
-      <div className="flex items-start justify-between gap-3 p-6 pb-4">
+      <div className="flex items-start justify-between gap-3 p-6 pb-4 max-md:p-5 max-md:pb-3">
         <div className="flex min-w-0 items-start gap-1.5">
-          {position.count > 1 && (
+          {!isPhone && position.count > 1 && (
             <button
               type="button"
               aria-label={`Move ${plan.name}: drag, or use the arrow keys`}
@@ -414,15 +425,37 @@ function PlanCard({
                 }
               }}
               className={cn(
-                "mt-0.5 -ml-1.5 cursor-grab rounded p-0.5 active:cursor-grabbing",
+                "mt-0.5 -ml-1.5 cursor-grab rounded p-0.5 active:cursor-grabbing [@media(pointer:coarse)]:hidden",
                 isDark ? "text-slate-400 hover:bg-white/10 hover:text-white" : "text-slate-300 hover:bg-slate-100 hover:text-slate-600"
               )}
             >
               <GripVertical className="size-4" />
             </button>
           )}
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className={cn("truncate text-lg font-bold tracking-tight", isDark ? "text-white" : "text-slate-900")}>{plan.name}</h3>
+          {!isPhone && position.count > 1 && (
+            <span className="-ml-2 hidden shrink-0 items-center [@media(pointer:coarse)]:inline-flex">
+              <button
+                type="button"
+                aria-label={`${plan.name}: move earlier`}
+                disabled={position.index === 0}
+                onClick={() => onMove(-1)}
+                className={cn("inline-flex size-10 items-center justify-center rounded disabled:opacity-30", isDark ? "text-slate-300" : "text-slate-500")}
+              >
+                <ChevronLeft className="size-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                aria-label={`${plan.name}: move later`}
+                disabled={position.index >= position.count - 1}
+                onClick={() => onMove(1)}
+                className={cn("inline-flex size-10 items-center justify-center rounded disabled:opacity-30", isDark ? "text-slate-300" : "text-slate-500")}
+              >
+                <ChevronRight className="size-4" aria-hidden="true" />
+              </button>
+            </span>
+          )}
+        <div className="flex flex-wrap items-center gap-2 max-sm:min-w-0">
+          <h3 className={cn("truncate text-lg font-bold tracking-tight max-sm:max-w-full", isDark ? "text-white" : "text-slate-900")}>{plan.name}</h3>
           <span
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase",
@@ -441,6 +474,40 @@ function PlanCard({
           )}
         </div>
         </div>
+        {isPhone ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm" className={iconButton} aria-label={`Actions for ${plan.name}`}>
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {position.count > 1 && (
+                <>
+                  <DropdownMenuItem disabled={position.index === 0} onClick={() => onMove(-1)}>
+                    <ChevronLeft className="size-3.5" /> Move earlier
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled={position.index >= position.count - 1} onClick={() => onMove(1)}>
+                    <ChevronRight className="size-3.5" /> Move later
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuItem disabled={isSavingRecommended || (!plan.isActive && !isRecommended)} onClick={onToggleRecommended}>
+                <Star className="size-3.5" /> {isRecommended ? "Stop recommending" : "Recommend"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onDuplicate}>
+                <Copy className="size-3.5" /> Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(plan)}>
+                <Pencil className="size-3.5" /> Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDelete(plan)}>
+                <Trash2 className={cn("size-3.5", plan.canDelete && "text-rose-500")} /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+        <>
         {/* Plan actions show on hover or keyboard focus, so a row of cards stays calm. */}
         <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-focus-within/card:opacity-100 group-hover/card:opacity-100 [@media(hover:none)]:opacity-100">
           <Button
@@ -490,11 +557,13 @@ function PlanCard({
             />
           </Button>
         </div>
+        </>
+        )}
       </div>
 
       <div className="px-6">
         <p className="flex items-baseline gap-1.5">
-          <span className={cn("text-4xl font-extrabold tracking-tight tabular-nums", isDark ? "text-white" : "text-slate-900")}>
+          <span className={cn("text-4xl font-extrabold tracking-tight tabular-nums max-md:text-3xl", isDark ? "text-white" : "text-slate-900")}>
             {formatVnd(plan.monthlyPriceVnd)}
           </span>
           <span className={cn("text-sm", isDark ? "text-slate-300" : "text-slate-500")}>/month</span>

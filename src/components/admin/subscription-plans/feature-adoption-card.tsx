@@ -14,6 +14,7 @@ import {
   splitAiLabel,
 } from "@/helpers/plan-adoption";
 import { getPlanColor } from "@/helpers/revenue-by-plan";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { FeatureAdoption, PlanGroupInsight } from "@/types/plan-insights";
 import { cn } from "@/utils/cn";
 
@@ -50,6 +51,7 @@ type Flag = { label: string; style: string; icon: LucideIcon };
  * (underused, a daily cap reached), so nothing needs reading above the table.
  */
 export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatures, onFeatureSelect }: FeatureAdoptionCardProps) {
+  const isPhone = useIsPhone();
   const features = orderFeatures(plans[0]?.adoption ?? []);
 
   // Each plan's cell for a feature, with the plan before it (by price) to compare with.
@@ -113,6 +115,35 @@ export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatu
 
         {plans.length === 0 ? (
           <p className="py-10 text-center text-sm text-slate-500">No Sellers have a plan yet.</p>
+        ) : isPhone ? (
+          <ul aria-label="Feature adoption by plan" className="divide-y divide-slate-100">
+            {features.map((feature) => {
+              const cells = cellsFor(feature.metric);
+              const flags = flagsFor(cells);
+              return (
+                <li key={feature.metric} className="space-y-2 px-4 py-3">
+                  <FeatureName
+                    label={feature.label}
+                    onSelect={reviewedFeatures?.has(feature.metric) ? () => onFeatureSelect?.(feature.metric) : undefined}
+                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    {cells.map((view) => (
+                      <div key={view.plan.key} className="min-w-0">
+                        <p className="mb-1 truncate text-xs font-medium text-slate-500">{view.plan.name}</p>
+                        <AdoptionCell view={view} feature={feature} underusedBelow={underusedBelow} days={days} />
+                      </div>
+                    ))}
+                  </div>
+                  {flags.map((flag) => (
+                    <span key={flag.label} className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium", flag.style)}>
+                      <flag.icon className="size-3 shrink-0" />
+                      {flag.label}
+                    </span>
+                  ))}
+                </li>
+              );
+            })}
+          </ul>
         ) : (
           <div className="overflow-x-auto">
             <table aria-label="Feature adoption by plan" className="w-full min-w-[760px] table-fixed border-collapse text-sm">

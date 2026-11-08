@@ -101,7 +101,7 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
           <Button
             size="sm"
             variant="outline"
-            className="h-8 rounded-md px-3 text-xs"
+            className="h-8 rounded-md px-3 text-xs max-md:hidden"
             onClick={() => refetch?.()}
           >
             <RefreshCw className="mr-1.5 size-3.5" />
@@ -109,7 +109,7 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
           </Button>
         </div>
 
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-8 text-center">
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-8 text-center max-md:p-4">
           <AlertTriangle className="mx-auto size-7 text-amber-500" />
           <p className="mt-2 text-sm font-semibold text-slate-800">AI Plan Review is currently unavailable</p>
           <p className="mx-auto mt-1 max-w-md text-xs text-slate-500">

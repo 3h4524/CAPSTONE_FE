@@ -21,7 +21,7 @@ export const ShortcutCheatsheet = () => (
         variant="outline"
         size="icon-sm"
         aria-label="Canvas shortcuts"
-        className="absolute top-3 right-3 z-10 rounded-full bg-white shadow-sm"
+        className="absolute top-3 right-3 z-10 rounded-full bg-white shadow-sm [@media(pointer:coarse)]:hidden"
       >
         <Keyboard aria-hidden="true" />
       </Button>

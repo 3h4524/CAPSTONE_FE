@@ -111,7 +111,7 @@ export function AllPlansDetail({
         </div>
       )}
 
-      <div className={cn("grid gap-8 px-6 py-6", bridge && "lg:grid-cols-2")}>
+      <div className={cn("grid gap-8 px-6 py-6 max-md:grid-cols-[minmax(0,1fr)] max-md:px-4", bridge && "lg:grid-cols-2")}>
         {bridge && (
           <Section icon={LineChart} title="MRR this period, all plans">
             <MrrBridgeStrip
@@ -124,7 +124,7 @@ export function AllPlansDetail({
         )}
 
         <Section icon={Table2} title="Plans side by side">
-          <div className="overflow-hidden rounded-xl border border-slate-200">
+          <div className="overflow-hidden rounded-xl border border-slate-200 max-md:overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50/70 text-left text-[11px] tracking-wide text-slate-500 uppercase">

@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
 import { useDownloadInvoice } from "@/hooks/mutations/use-download-invoice";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { RecentInvoice } from "@/types/subscription";
 import { cn } from "@/utils/cn";
 import { formatVnd } from "@/utils/format-currency";
@@ -58,6 +59,7 @@ type RecentInvoicesTableProps = {
 };
 
 export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
+  const isPhone = useIsPhone();
   const { mutate: downloadInvoice, isPending, variables } = useDownloadInvoice();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
@@ -83,28 +85,55 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
     }
   };
 
+  const renderActions = (invoice: RecentInvoice) => {
+    const isDownloadingThisRow = isPending && variables?.invoiceId === invoice.invoiceId;
+    return (
+      <div className="flex justify-end gap-1.5">
+                          <Button
+                            variant="outline"
+                            size="icon-sm"
+                            disabled={isDownloadingThisRow}
+                            onClick={() => downloadInvoice({ invoiceId: invoice.invoiceId, invoiceNumber: invoice.invoiceNumber })}
+                            aria-label={`Download invoice ${invoice.invoiceNumber}`}
+                          >
+                            {isDownloadingThisRow ? <Spinner className="size-4" /> : <Download className="size-4" />}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon-sm"
+                            disabled={viewing === invoice.invoiceId}
+                            onClick={() => void view(invoice.invoiceId)}
+                            aria-label={`View invoice ${invoice.invoiceNumber}`}
+                          >
+                            {viewing === invoice.invoiceId ? <Spinner className="size-4" /> : <Eye className="size-4" />}
+                          </Button>
+                        </div>
+    );
+  };
+
   return (
     <Card className="gap-0 rounded-2xl p-0 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-6 pt-5 pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-6 pt-5 pb-4 max-md:px-4">
         <div>
           <h2 className="text-lg font-semibold">Billing History</h2>
-          <p className="text-muted-foreground text-xs">Your latest invoices. Download any of them as a PDF.</p>
+          <p className="text-muted-foreground text-xs max-md:hidden">Your latest invoices. Download any of them as a PDF.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
+        <div className="flex flex-wrap items-center gap-2 max-md:w-full max-md:flex-nowrap">
+          <div className="relative max-md:min-w-0 max-md:flex-1">
             <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" aria-hidden="true" />
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search..."
               aria-label="Search invoices"
-              className="h-9 w-48 pl-9"
+              className="h-9 w-48 pl-9 max-md:w-full"
             />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9">
-                <SlidersHorizontal className="size-4" /> {status === "all" ? "Filter" : statusOf(status).label}
+              <Button variant="outline" size="sm" className="h-9 max-md:px-3" aria-label={status === "all" ? "Filter" : `Filter: ${statusOf(status).label}`}>
+                <SlidersHorizontal className="size-4" />
+                <span className={cn(status === "all" && "max-md:hidden")}>{status === "all" ? "Filter" : statusOf(status).label}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -118,15 +147,45 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm" className="h-9" disabled={shown.length === 0} onClick={() => exportCsv(shown)}>
-            <Upload className="size-4" /> Export
+          <Button variant="outline" size="sm" className="h-9 max-md:px-3" aria-label="Export" disabled={shown.length === 0} onClick={() => exportCsv(shown)}>
+            <Upload className="size-4" />
+            <span className="max-md:hidden">Export</span>
           </Button>
         </div>
       </div>
 
-      <div className="px-6 pb-2">
+      <div className="px-6 pb-2 max-md:px-4">
         {invoices.length === 0 ? (
           <p className="text-muted-foreground rounded-xl bg-slate-50 px-4 py-8 text-center text-sm">No invoices yet.</p>
+        ) : isPhone ? (
+          shown.length === 0 ? (
+            <p className="text-muted-foreground py-8 text-center text-sm">No invoices match your search.</p>
+          ) : (
+            <ul className="divide-y">
+              {shown.map((invoice) => {
+                const { label, dot, text } = statusOf(invoice.status);
+                return (
+                  <li key={invoice.invoiceId} className="space-y-1 py-3 text-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+                        <span className="font-medium text-slate-800">{invoice.planName}</span>
+                        <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium", text)}>
+                          <span className={cn("size-2 rounded-full", dot)} />
+                          {label}
+                        </span>
+                      </p>
+                      <span className="shrink-0 font-semibold tabular-nums">{formatVnd(invoice.totalAmountVnd)}</span>
+                    </div>
+                    <p className="text-muted-foreground flex justify-between gap-3 text-xs tabular-nums">
+                      <span className="min-w-0 truncate">{invoice.invoiceNumber}</span>
+                      <span className="shrink-0">{formatDate(invoice.invoiceDate)}</span>
+                    </p>
+                    {renderActions(invoice)}
+                  </li>
+                );
+              })}
+            </ul>
+          )
         ) : (
           <Table>
             <TableHeader>
@@ -147,7 +206,6 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
                 </TableRow>
               ) : (
                 shown.map((invoice) => {
-                  const isDownloadingThisRow = isPending && variables?.invoiceId === invoice.invoiceId;
                   const { label, dot, text } = statusOf(invoice.status);
                   return (
                     <TableRow key={invoice.invoiceId}>
@@ -164,26 +222,7 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-1.5">
-                          <Button
-                            variant="outline"
-                            size="icon-sm"
-                            disabled={isDownloadingThisRow}
-                            onClick={() => downloadInvoice({ invoiceId: invoice.invoiceId, invoiceNumber: invoice.invoiceNumber })}
-                            aria-label={`Download invoice ${invoice.invoiceNumber}`}
-                          >
-                            {isDownloadingThisRow ? <Spinner className="size-4" /> : <Download className="size-4" />}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon-sm"
-                            disabled={viewing === invoice.invoiceId}
-                            onClick={() => void view(invoice.invoiceId)}
-                            aria-label={`View invoice ${invoice.invoiceNumber}`}
-                          >
-                            {viewing === invoice.invoiceId ? <Spinner className="size-4" /> : <Eye className="size-4" />}
-                          </Button>
-                        </div>
+                        {renderActions(invoice)}
                       </TableCell>
                     </TableRow>
                   );
@@ -194,7 +233,7 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
         )}
       </div>
 
-      <p className="text-muted-foreground border-t px-6 py-4 text-xs">
+      <p className="text-muted-foreground border-t px-6 py-4 text-xs max-md:px-4">
         Payments are processed securely through PayOS. Plan changes take effect once payment is confirmed.
       </p>
     </Card>

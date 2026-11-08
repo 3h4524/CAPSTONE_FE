@@ -1,8 +1,8 @@
 "use client";
 
-import { type CSSProperties, useEffect, useRef } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Workflow } from "lucide-react";
+import { ListOrdered, Workflow } from "lucide-react";
 
 import { PageLoading } from "@/components/commons/layout/page-loading";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
@@ -12,6 +12,7 @@ import { WorkflowCanvas } from "@/components/workflows/canvas/workflow-canvas";
 import { NodeConfigPanel } from "@/components/workflows/config-panel/node-config-panel";
 import { NodePalette } from "@/components/workflows/palette/node-palette";
 import { ResizableAside } from "@/components/workflows/resizable-aside";
+import { WorkflowStepList } from "@/components/workflows/steps/workflow-step-list";
 import { WorkflowToolbar } from "@/components/workflows/toolbar/workflow-toolbar";
 import { SITE_CONFIG } from "@/constants/site";
 import { DEFAULT_WORKFLOW_DEFINITION, DEFAULT_WORKFLOW_NAME } from "@/constants/workflow";
@@ -22,6 +23,7 @@ import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
 import { useLatestWorkflowRun } from "@/hooks/queries/use-latest-workflow-run";
 import { useWorkflow } from "@/hooks/queries/use-workflow";
 import { useWorkflows } from "@/hooks/queries/use-workflows";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { useAssistantStore } from "@/stores/assistant";
 import { usePopupStore } from "@/stores/popup";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -34,6 +36,9 @@ export const WorkflowWorkspace = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedId = searchParams.get("id");
+  const isPhone = useIsPhone();
+  const [showsDiagram, setShowsDiagram] = useState(false);
+  const showsStepList = isPhone && !showsDiagram;
   const hasAutoCreatedRef = useRef(false);
   const restoredRunForWorkflow = useRef<string | null>(null);
   const openPopup = usePopupStore((state) => state.openPopup);
@@ -50,8 +55,13 @@ export const WorkflowWorkspace = () => {
     const input = state.nodes.find((node) => node.data.type === "product-input");
     return typeof input?.data.config.productId === "string" ? input.data.config.productId : "";
   });
+  const batchId = useWorkflowStore((state) => {
+    const input = state.nodes.find((node) => node.data.type === "product-input");
+    return typeof input?.data.config.batchId === "string" ? input.data.config.batchId : "";
+  });
   const resetProductDependentState = useWorkflowStore((state) => state.resetProductDependentState);
   const previousProductId = useRef(productId);
+  const previousBatch = useRef({ workflowId: loadedWorkflowId, batchId });
 
   const {
     data: workflows,
@@ -119,6 +129,26 @@ export const WorkflowWorkspace = () => {
     const query = params.toString();
     router.replace(query ? `/workflows?${query}` : "/workflows", { scroll: false });
   }, [productId, resetProductDependentState, router]);
+
+  // The open job belongs to one batch: choosing another batch on the same workflow closes it, so the steps
+  // stop showing that batch's designs and statuses. (Opening a workflow is not a change of batch.)
+  useEffect(() => {
+    const previous = previousBatch.current;
+    previousBatch.current = { workflowId: loadedWorkflowId, batchId };
+    if (!previous.batchId || previous.workflowId !== loadedWorkflowId || previous.batchId === batchId) return;
+    if (useWorkflowStore.getState().isRunning) return;
+
+    const run = useWorkflowRunStore.getState();
+    if (!run.batchJobId || run.job?.batchId === batchId) return;
+    run.reset();
+    resetProductDependentState();
+    const params = new URLSearchParams(window.location.search);
+    params.delete("job");
+    params.delete("then");
+    params.delete("run");
+    const query = params.toString();
+    router.replace(query ? `/workflows?${query}` : "/workflows", { scroll: false });
+  }, [loadedWorkflowId, batchId, resetProductDependentState, router]);
 
   useEffect(() => {
     if (workflows && workflows.length === 0 && loadedWorkflowId) resetEditor();
@@ -211,7 +241,7 @@ export const WorkflowWorkspace = () => {
 
   return (
     <div
-      className="flex min-h-[560px] flex-1 flex-col xl:pr-(--assistant-inset)"
+      className="flex min-h-0 flex-1 flex-col xl:pr-(--assistant-inset) [@media(min-height:560px)]:min-h-[560px]"
       style={{ "--assistant-inset": isAssistantOpen ? `${assistantWidth}px` : "0px" } as CSSProperties}
     >
       <WorkflowToolbar
@@ -220,6 +250,7 @@ export const WorkflowWorkspace = () => {
         isEditorReady={isEditorReady}
         onOpenWorkflow={openWorkflow}
         guardUnsavedChanges={guardUnsavedChanges}
+        showsPanelButtons={!showsStepList}
       />
       <AllowanceBanner />
       <div className="flex min-h-0 flex-1">
@@ -228,7 +259,19 @@ export const WorkflowWorkspace = () => {
         </aside>
         <div className="relative min-w-0 flex-1 bg-slate-100/70">
           {isEditorReady ? (
-            <WorkflowCanvas />
+            showsStepList ? (
+              <WorkflowStepList onShowDiagram={() => setShowsDiagram(true)} />
+            ) : (
+              <>
+                <WorkflowCanvas />
+                {isPhone && (
+                  <Button type="button" variant="outline" size="sm" className="absolute top-3 left-3 z-10 bg-white" onClick={() => setShowsDiagram(false)}>
+                    <ListOrdered aria-hidden="true" />
+                    Step list
+                  </Button>
+                )}
+              </>
+            )
           ) : isWorkflowError ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center" role="alert">
               <p className="font-semibold text-slate-900">This workflow could not be opened</p>

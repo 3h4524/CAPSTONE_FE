@@ -86,3 +86,11 @@ afterEach(() => {
 afterAll(() => {
   server.close();
 });
+
+// jsdom has no media queries, so components render their desktop layout.
+window.matchMedia ??= ((query: string) => ({
+  matches: false,
+  media: query,
+  addEventListener: () => {},
+  removeEventListener: () => {},
+})) as unknown as typeof window.matchMedia;

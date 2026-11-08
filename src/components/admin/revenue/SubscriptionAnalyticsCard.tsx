@@ -55,7 +55,7 @@ export function SubscriptionAnalyticsCard({
   const focus = FOCUS_BY_TAB[activeTab];
 
   return (
-    <Card className="flex h-full flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+    <Card className="flex h-full flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
       {/* Header */}
       <div className="flex flex-col gap-3 pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -84,13 +84,13 @@ export function SubscriptionAnalyticsCard({
           </div>
         </div>
 
-        <div className="inline-flex w-fit items-center gap-1 rounded-xl bg-slate-100/90 p-1 dark:bg-slate-800">
+        <div className="inline-flex w-fit items-center gap-1 rounded-xl bg-slate-100/90 p-1 max-md:flex max-md:w-full dark:bg-slate-800">
           {TABS.map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`cursor-pointer rounded-lg px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
+              className={`cursor-pointer rounded-lg px-2.5 py-1 text-xs font-semibold whitespace-nowrap transition-all duration-150 max-md:min-h-9 max-md:flex-1 max-md:px-1 ${
                 activeTab === tab
                   ? "bg-slate-900 text-white shadow-xs dark:bg-slate-100 dark:text-slate-900"
                   : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
@@ -186,7 +186,7 @@ export function SubscriptionAnalyticsCard({
           </div>
 
           {/* Right metrics column */}
-          <div className="flex flex-col justify-between py-1 pl-2 lg:col-span-4">
+          <div className="flex flex-col justify-between py-1 pl-2 max-md:grid max-md:grid-cols-2 max-md:gap-3 max-md:rounded-xl max-md:bg-slate-50 max-md:p-3 lg:col-span-4 dark:max-md:bg-slate-800/50">
             <MetricRow label="New Subscriptions" metric={data?.newSubscriptions} />
             <MetricRow label="Renewals" metric={data?.renewals} />
             <MetricRow label="Cancellations" metric={data?.cancellations} polarity="lower-is-better" />

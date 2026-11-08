@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 
@@ -26,5 +27,19 @@ export const HeaderTitle = () => {
     defaultValue: isTitleKey(segment) ? ROUTE_TITLES[segment] : capitalize(segment) || t("header.dashboard"),
   });
 
-  return <h1 className="min-w-0 truncate text-base font-semibold">{title}</h1>;
+  // On a phone the header is the brand and leads home; the page's name stays for screen readers.
+  return (
+    <>
+      <Link href="/dashboard" aria-label="APCS, go to the dashboard" className="flex min-w-0 items-center gap-2 md:hidden">
+        <span
+          aria-hidden="true"
+          className="bg-primary text-primary-foreground font-display flex size-9 shrink-0 items-center justify-center rounded-xl text-base font-bold"
+        >
+          A
+        </span>
+        <span className="font-display truncate text-base font-bold tracking-tight">APCS</span>
+      </Link>
+      <h1 className="min-w-0 truncate text-base font-semibold max-md:sr-only">{title}</h1>
+    </>
+  );
 };

@@ -1,3 +1,20 @@
+/** One person, or several people all dressed in the same mock-up. */
+export type ModelPeople = "single" | "group";
+export type ModelAgeGroup = "child" | "teen" | "adult" | "senior";
+export type ModelGender = "female" | "male";
+export type ModelGroupType = "family" | "friends" | "couple";
+
+/** Who is in a model photo: one person of an age group and gender, or a group of a kind. */
+export interface ModelAttributes {
+  people: ModelPeople;
+  ageGroup?: ModelAgeGroup | null;
+  gender?: ModelGender | null;
+  groupType?: ModelGroupType | null;
+}
+
+/** Narrows the model photos listed; a part left out matches any. */
+export type ModelPhotoFilter = Partial<ModelAttributes>;
+
 export interface MockupTemplate {
   id: string;
   name: string;
@@ -16,6 +33,12 @@ export interface MockupTemplate {
   garmentColor: string | null;
   /** Whether a run may put the garment on another background (the photo has been analyzed). */
   allowBackground?: boolean;
+  /** "garment" for a photo of the garment alone, "model" for a person wearing it (a model photo). */
+  kind?: "garment" | "model";
+  /** For a model photo, who is in it; null when not told. */
+  attributes?: ModelAttributes | null;
+  /** Whether the photo was made by AI rather than uploaded. */
+  aiGenerated?: boolean;
 }
 
 export interface BatchMockupSelection {
@@ -89,7 +112,11 @@ export interface GenerateAllMockupsResult {
 }
 
 export interface GarmentMaskPreview {
+  /** How many separate garments were found: one per person standing apart. */
+  garmentCount?: number | null;
   recolorable: boolean;
   reason: string | null;
   maskDataUrl: string | null;
+  /** For a model photo: the garment the person wears, found by the clothes model (opacity = garment). */
+  garmentDataUrl?: string | null;
 }

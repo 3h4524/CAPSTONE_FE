@@ -1,3 +1,4 @@
+import { AccountMenu } from "@/components/commons/layout/app-shell/account/account-menu";
 import { GlobalSearchTrigger } from "@/components/commons/layout/app-shell/header/global-search-trigger";
 import { HeaderTitle } from "@/components/commons/layout/app-shell/header/header-title";
 import { MobileMenuButton } from "@/components/commons/layout/app-shell/header/mobile-menu-button";
@@ -16,7 +17,12 @@ export const AppHeader = ({ onMobileMenu }: AppHeaderProps) => {
         <div className="mx-auto hidden w-full max-w-lg min-w-0 flex-1 px-2 md:block">
           <GlobalSearchTrigger />
         </div>
-        <NotificationBell />
+        <div className="ml-auto flex items-center gap-1 md:ml-0">
+          <NotificationBell />
+          <div className="min-w-0 md:hidden">
+            <AccountMenu collapsed side="bottom" inHeader />
+          </div>
+        </div>
       </div>
     </header>
   );

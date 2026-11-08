@@ -419,7 +419,7 @@ export const generateVideoConfigSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["aiShotOptions", "rightsConfirmed"],
-        message: "Confirm image rights for the visible adult person.",
+        message: "Confirm image rights for the people shown, with a parent's or guardian's consent for anyone under 18.",
       });
   });
 

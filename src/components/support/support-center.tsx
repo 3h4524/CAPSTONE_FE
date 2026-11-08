@@ -6,10 +6,14 @@ import {
   ArrowUpRight,
   ChevronLeft,
   ChevronRight,
+  Gauge,
   Inbox,
+  KeyRound,
   LifeBuoy,
+  type LucideIcon,
   Plus,
   RefreshCw,
+  Store,
 } from "lucide-react";
 
 import { SectionLoading } from "@/components/commons/loading/section-loading";
@@ -26,8 +30,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATEGORY_LABELS } from "@/constants/support";
 import { useSupportTickets } from "@/hooks/queries/use-support-tickets";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { useAuthStore } from "@/stores/auth";
 import type { SupportTicketSummary, TicketStatus } from "@/types/support";
 import { cn } from "@/utils/cn";
@@ -36,6 +42,8 @@ const PAGE_SIZE = 8;
 
 type HelpTopic = {
   id: string;
+  /** Shown beside the topic in the phone's list. */
+  icon: LucideIcon;
   title: string;
   description: string;
   steps: readonly string[];
@@ -46,6 +54,7 @@ type HelpTopic = {
 const HELP_TOPICS: readonly HelpTopic[] = [
   {
     id: "connect-etsy",
+    icon: Store,
     title: "Connect an Etsy shop",
     description:
       "Connect your Etsy shop so APCS can prepare and publish listings from your workspace.",
@@ -60,6 +69,7 @@ const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: "fix-api-key",
+    icon: KeyRound,
     title: "Fix an API key",
     description:
       "A key usually needs attention when it expired, was revoked, or no longer has the permissions APCS requires.",
@@ -74,6 +84,7 @@ const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: "understand-credits",
+    icon: Gauge,
     title: "Understand credits",
     description:
       "Your plan includes an allowance used by generation and publishing activity in the workspace.",
@@ -88,13 +99,16 @@ const HELP_TOPICS: readonly HelpTopic[] = [
   },
 ] as const;
 
-type TicketView = "all" | "open" | "in_progress" | "resolved" | "closed";
+const TICKET_VIEW_LABELS = { all: "All", open: "Open", in_progress: "In Progress", resolved: "Resolved", closed: "Closed" };
+type TicketView = keyof typeof TICKET_VIEW_LABELS;
+const TICKET_VIEWS = Object.keys(TICKET_VIEW_LABELS) as TicketView[];
 
 export function SupportCenter() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = useAuthStore((state) => state.user);
   const [pageNumber, setPageNumber] = useState(1);
+  const isPhone = useIsPhone();
   const [view, setView] = useState<TicketView>("all");
   const [selectedHelpTopic, setSelectedHelpTopic] = useState<HelpTopic | null>(null);
   const [draftSubject, setDraftSubject] = useState("");
@@ -148,68 +162,90 @@ export function SupportCenter() {
 
       <div>
         <section
-          className="rounded-xl border border-slate-200 bg-white px-5 py-5 shadow-sm sm:px-6"
+          className="rounded-xl border border-slate-200 bg-white px-5 py-5 shadow-sm max-md:p-4 sm:px-6"
           aria-labelledby="support-help-heading"
         >
-          <div className="flex items-start gap-4">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#eef2fa] text-[#273750]">
+          <div className="flex items-start gap-4 max-md:items-center max-md:gap-3">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#eef2fa] text-[#273750] max-md:size-10">
               <LifeBuoy className="size-[18px]" aria-hidden="true" />
             </span>
             <div>
-              <h2 id="support-help-heading" className="font-display text-xl font-semibold tracking-tight">
+              <h2 id="support-help-heading" className="font-display text-xl font-semibold tracking-tight max-md:text-lg">
                 How can we help?
               </h2>
-              <p className="mt-1 max-w-xl text-sm leading-5 text-slate-600">
+              <p className="mt-1 max-w-xl text-sm leading-5 text-slate-600 max-md:mt-0 max-md:text-xs">
                 Choose a quick guide for the questions sellers ask most often.
               </p>
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2 sm:pl-[60px]" aria-label="Popular help topics">
+          <div className="mt-5 flex flex-wrap gap-2 max-md:mt-4 max-md:flex-col max-md:flex-nowrap max-md:gap-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl max-md:border max-md:border-slate-200 max-sm:pl-0 sm:pl-[60px]" aria-label="Popular help topics">
             {HELP_TOPICS.map((topic) => (
               <button
                 key={topic.id}
                 type="button"
                 aria-haspopup="dialog"
-                className="group inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-[border-color,background-color,color,transform] hover:-translate-y-0.5 hover:border-slate-300 hover:bg-[#f7f9fd] hover:text-[#273750] focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none active:translate-y-0"
+                className="group inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-[border-color,background-color,color,transform] hover:-translate-y-0.5 hover:border-slate-300 hover:bg-[#f7f9fd] hover:text-[#273750] focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none active:translate-y-0 max-md:min-h-15 max-md:w-full max-md:gap-3 max-md:rounded-none max-md:border-0 max-md:px-3 max-md:text-left"
                 onClick={() => setSelectedHelpTopic(topic)}
               >
-                {topic.title}
-                <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#eef2fa] text-[#273750] md:hidden" aria-hidden="true">
+                  <topic.icon className="size-4" />
+                </span>
+                <span className="max-md:min-w-0 max-md:flex-1">
+                  <span className="max-md:block max-md:font-semibold max-md:text-slate-900">{topic.title}</span>
+                  <span className="text-xs font-normal text-slate-500 max-md:block max-md:truncate md:hidden">{topic.description}</span>
+                </span>
+                <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 max-md:hidden" aria-hidden="true" />
+                <ChevronRight className="size-4 shrink-0 text-slate-400 md:hidden" aria-hidden="true" />
               </button>
             ))}
           </div>
         </section>
 
         <section className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm" aria-labelledby="support-tickets-heading">
-          <div className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 px-5 py-4 max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:items-center max-md:gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[10px] font-bold tracking-[0.16em] text-slate-500">YOUR REQUESTS</p>
-              <h2 id="support-tickets-heading" className="font-display mt-1 text-xl font-semibold tracking-tight">
+              <h2 id="support-tickets-heading" className="font-display mt-1 text-xl font-semibold tracking-tight max-md:text-lg">
                 Support tickets
               </h2>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="border-border bg-background inline-flex self-start rounded-full border p-0.5" role="group" aria-label="Filter tickets">
-                {(["all", "open", "in_progress", "resolved", "closed"] as const).map((item) => (
+            <div className="flex flex-col gap-3 max-md:contents sm:flex-row sm:items-center">
+              {isPhone ? (
+                <Select value={view} onValueChange={(next) => selectView(next as TicketView)}>
+                  <SelectTrigger aria-label="Filter tickets" className="w-full bg-white max-md:col-span-2 max-md:row-start-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="w-(--radix-select-trigger-width) bg-white">
+                    {TICKET_VIEWS.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {TICKET_VIEW_LABELS[item]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+              <div className="border-border bg-background flex max-w-full flex-wrap self-start rounded-2xl border p-0.5 sm:inline-flex sm:flex-nowrap sm:rounded-full" role="group" aria-label="Filter tickets">
+                {TICKET_VIEWS.map((item) => (
                   <button
                     key={item}
                     type="button"
                     aria-pressed={view === item}
                     className={cn(
-                      "min-h-8 rounded-full px-3.5 text-sm font-medium capitalize transition-colors focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none",
+                      "min-h-8 rounded-full px-3.5 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none",
                       view === item
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                     onClick={() => selectView(item)}
                   >
-                    {item.replace("_", " ")}
+                    {TICKET_VIEW_LABELS[item]}
                   </button>
                 ))}
               </div>
-              <Button className="min-h-10 self-start px-4 sm:self-auto" onClick={() => openComposer()}>
-                <Plus aria-hidden="true" />New ticket
+              )}
+              <Button size="page-action" className="min-h-10 self-start px-4 max-md:col-start-2 max-md:row-start-1 sm:self-auto" aria-label="New ticket" onClick={() => openComposer()}>
+                <Plus aria-hidden="true" /><span>New<span className="max-md:hidden"> ticket</span></span>
               </Button>
             </div>
           </div>

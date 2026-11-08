@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PanelEmptyState } from "@/components/workflows/config-panel/layout/panel-empty-state";
 import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
 import { AiPromptReviewDialog } from "@/components/workflows/media/ai-prompt-review-dialog";
-import { LifestyleMockupForm } from "@/components/workflows/media/lifestyle-mockup-form";
+import { lifestyleGarmentsOf, LifestyleMockupForm } from "@/components/workflows/media/lifestyle-mockup-form";
 import { MockupCard } from "@/components/workflows/media/mockup-card";
 import { MockupUploadForm } from "@/components/workflows/media/mockup-upload-form";
+import { ModelPhotoMockupForm } from "@/components/workflows/media/model-photo-mockup-form";
 import { MAX_VIDEO_MOCKUPS } from "@/constants/workflow-panel";
 import { artworkGroupLabel } from "@/helpers/artwork-groups";
 import { confirmAiShot } from "@/helpers/confirm-ai-shot";
@@ -111,7 +112,8 @@ export const MockupPanel = ({ review }: { review: boolean }) => {
   }
   return <div className="@container space-y-5">
     {!review && <MockupUploadForm productId={run?.productId ?? productId} />}
-    <LifestyleMockupForm productId={run?.productId ?? productId} assets={visibleAssets ?? []} />
+    <ModelPhotoMockupForm productId={run?.productId ?? productId} assets={visibleAssets ?? []} />
+    <LifestyleMockupForm garments={lifestyleGarmentsOf(visibleAssets ?? [])} />
     {artworkGroups.length > 1 && <div className="space-y-2"><Label htmlFor="mockup-artwork-group">Artwork group</Label><Select value={activeGroup} onValueChange={selectArtworkGroup}><SelectTrigger id="mockup-artwork-group" className="w-full bg-white"><SelectValue /></SelectTrigger><SelectContent>{artworkGroups.map(group => <SelectItem key={group} value={group}>{artworkGroupLabel(group, artworkGroups)}</SelectItem>)}</SelectContent></Select></div>}
     <div className="space-y-3">
       <div className="flex items-baseline justify-between gap-2">

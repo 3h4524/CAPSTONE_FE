@@ -21,9 +21,10 @@ import { NavSection } from "./nav-section";
 type AppSidebarMobileProps = {
   open: boolean;
   onOpenChange: (value: boolean) => void;
+  side?: "left" | "right";
 };
 
-export const AppSidebarMobile = ({ open, onOpenChange }: AppSidebarMobileProps) => {
+export const AppSidebarMobile = ({ open, onOpenChange, side = "left" }: AppSidebarMobileProps) => {
   const router = useRouter();
   const { t } = useTranslation("common");
   const { mutate: logout, isPending } = useLogout();
@@ -32,7 +33,7 @@ export const AppSidebarMobile = ({ open, onOpenChange }: AppSidebarMobileProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="flex flex-col">
+      <SheetContent side={side} className="flex flex-col">
         <SheetHeader>
           <SheetTitle className="text-left">APCS</SheetTitle>
           <SheetDescription className="sr-only">{t("navigation.mobile")}</SheetDescription>

@@ -24,10 +24,12 @@ import { PanelSection } from "@/components/workflows/config-panel/layout/panel-s
 import { PanelStats } from "@/components/workflows/config-panel/layout/panel-stats";
 import { ListingContentResultPanel } from "@/components/workflows/config-panel/listing-content-result";
 import { NodeConfigField } from "@/components/workflows/config-panel/node-config-field";
+import { OwnPromptNotice } from "@/components/workflows/config-panel/own-prompt-notice";
 import { PlanLockNotice } from "@/components/workflows/config-panel/plan-lock-notice";
 import { PromptRecipe } from "@/components/workflows/config-panel/prompt-recipe";
 import { EtsyPublishSettings, PrintifyPublishSettings } from "@/components/workflows/config-panel/publish-settings";
 import { MockupPanel } from "@/components/workflows/media/mockup-panel";
+import { ModelPhotoSection } from "@/components/workflows/media/model-photo-section";
 import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
 import { StoryboardPanel } from "@/components/workflows/media/storyboard-panel";
 import { VideoReviewPanel } from "@/components/workflows/media/video-review-panel";
@@ -161,6 +163,8 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
             </PanelNotice>
           </div>
         )}
+        {/* Above the template and art style it is about. */}
+        {node.data.type === "prompt-synthesis" && <OwnPromptNotice className="mx-5 mt-4" />}
         <Form {...form}>
           <form onSubmit={(event) => event.preventDefault()}>
             {/* A fieldset is as wide as its widest line by default; min-w-0 keeps a long batch name inside the panel. */}
@@ -246,6 +250,14 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
             to="apply-mockup"
             automatic={node.data.config.mode === "auto"}
           />
+        )}
+        {node.data.type === "apply-mockup" && !hasVideo && (
+          <PanelSection
+            title="Model photos"
+            description="Put this product's mock-ups on a photo of a person in a plain, light tee, without AI."
+          >
+            <ModelPhotoSection />
+          </PanelSection>
         )}
         {node.data.type === "apply-mockup" && hasVideo && (
           <PanelSection

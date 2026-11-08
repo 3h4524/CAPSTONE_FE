@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { MetricDetail, RevenueMetricsDto } from "@/types/revenue";
 import { formatVnd } from "@/utils/format-currency";
 
@@ -30,6 +31,7 @@ export function RevenueMetricCards({
   metrics,
   isLoading,
 }: RevenueMetricCardsProps) {
+  const isPhone = useIsPhone();
   const cards = [
     {
       title: "Total Revenue",
@@ -156,12 +158,15 @@ export function RevenueMetricCards({
               }
               value={valueDisplay}
               exactValue={exactDisplay}
+              // Saying there is no comparison on every card only adds noise to a phone.
               context={
-                <Delta
-                  percent={metric?.percentageChange}
-                  suffix="vs previous period"
-                  polarity={config.polarity}
-                />
+                isPhone && metric?.percentageChange == null ? null : (
+                  <Delta
+                    percent={metric?.percentageChange}
+                    suffix="vs previous period"
+                    polarity={config.polarity}
+                  />
+                )
               }
               sparkline={rawPoints}
               icon={config.icon}

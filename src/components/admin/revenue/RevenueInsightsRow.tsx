@@ -20,9 +20,10 @@ export function RevenueInsightsRow({
   onReviewAlert,
 }: RevenueInsightsRowProps) {
   return (
-    <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+    // On a phone the three cards join the page's own column, so the alerts can come first.
+    <div className="grid grid-cols-1 gap-4 max-md:contents xl:grid-cols-12">
       {/* 1. Subscription Analytics (5 cols on xl) */}
-      <div className="flex h-full flex-col xl:col-span-5">
+      <div className="flex h-full flex-col max-md:order-2 xl:col-span-5">
         <SubscriptionAnalyticsCard
           data={data?.subscriptionAnalytics}
           isLoading={isLoading}
@@ -30,7 +31,7 @@ export function RevenueInsightsRow({
       </div>
 
       {/* 2. Revenue Forecast (4 cols on xl) */}
-      <div className="flex h-full flex-col xl:col-span-4">
+      <div className="flex h-full flex-col max-md:order-2 xl:col-span-4">
         <RevenueForecastCard
           data={data?.forecast}
           isLoading={isLoading}
@@ -38,7 +39,7 @@ export function RevenueInsightsRow({
       </div>
 
       {/* 3. Financial Alerts (3 cols on xl) */}
-      <div className="flex h-full flex-col xl:col-span-3">
+      <div className="flex h-full flex-col max-md:order-1 xl:col-span-3">
         <FinancialAlertsCard
           alerts={data?.financialAlerts}
           isLoading={isLoading}

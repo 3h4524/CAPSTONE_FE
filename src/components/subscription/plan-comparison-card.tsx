@@ -159,7 +159,7 @@ export const PlanComparisonCard = ({
   return (
     <Card
       className={cn(
-        "@container relative flex h-full flex-col gap-0 rounded-2xl p-6 shadow-sm",
+        "@container relative flex h-full flex-col gap-0 rounded-2xl p-6 shadow-sm max-md:p-5",
         isDark
           ? "isolate overflow-hidden border-slate-800 bg-linear-to-b from-slate-800 via-slate-900 to-slate-950 text-white shadow-2xl ring-1 shadow-slate-900/30 ring-white/10 ring-inset"
           : "border-slate-200 bg-white"

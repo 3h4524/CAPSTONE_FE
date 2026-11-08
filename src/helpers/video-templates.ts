@@ -33,8 +33,8 @@ export const getTemplateAvailability = (template: VideoTemplateCatalogItem, asse
   if (usable.length < requirements.minimumAssets)
     return { available: false, reason: `Approve at least ${requirements.minimumAssets} mockup${requirements.minimumAssets === 1 ? "" : "s"}.` };
   if (requirements.requiresDetail && !hasDetail)
-    return { available: false, reason: "An approved Artwork Detail image or an existing detail region is required." };
+    return { available: false, reason: "Add an Artwork Detail image or mark a detail region." };
   if (variants < requirements.minimumVariants)
-    return { available: false, reason: `At least ${requirements.minimumVariants} approved variants are required.` };
+    return { available: false, reason: `Name at least ${requirements.minimumVariants} approved variants.` };
   return { available: true, reason: null };
 };

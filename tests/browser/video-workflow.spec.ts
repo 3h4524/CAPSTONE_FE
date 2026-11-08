@@ -1,5 +1,4 @@
 import { DEFAULT_WORKFLOW_DEFINITION } from "@/constants/workflow";
-import { PLAN_FEATURES } from "@/helpers/plan-features";
 import type { MockupAsset, VideoStoryboard, VideoTemplateCatalogItem, WorkflowCapabilities, WorkflowRun } from "@/types/video-workflow";
 import { expect, test } from "@playwright/test";
 
@@ -53,8 +52,6 @@ test.beforeEach(async ({ page }) => {
     const path = new URL(route.request().url()).pathname;
     let json: unknown = [];
     if (path === "/api/auth/me") json = { id: productId, email: "fixture@example.test", fullName: "Video tester", roles: ["User", "Seller"] };
-    else if (path === "/api/allowances") json = { scope: null, resetsOn: null, mockupsPerRun: null, items: [] };
-    else if (path === "/api/subscriptions/entitlements") json = { hasPlan: true, planName: "Test", tier: "studio", isTrial: false, trialEndsAt: null, maxBatchSize: -1, maxConcurrentJobs: -1, prioritySupport: false, features: PLAN_FEATURES.map(feature => ({ code: feature.code, isEnabled: true, limitValue: null })) };
     else if (path === "/api/workflows/capabilities") json = capabilities;
     else if (path === "/api/workflows/video-templates") json = templates;
     else if (path === "/api/workflows") json = [workflow];
@@ -132,45 +129,25 @@ test("a Standard scene cannot use its new keyframe until it is reviewed and appr
   expect(payload.config.aiScenes[0]?.studioFrameId).toBe(generatedFrameId);
 });
 
-test("AI start frame crop opens and retains the selected framing", async ({ page }) => {
-  const cropWorkflow = structuredClone(workflow);
-  const video = cropWorkflow.definition.nodes.find(node => node.type === "generate-video")!;
-  video.config = { ...video.config, mode: "ai_shot", aiScenes: [{
-    mode: "ai", mockupId: mockupAsset.id, templateCode: "cinematic_product_showcase", durationSeconds: 5,
-    framing: "medium", cameraAngle: "three_quarter", cameraMovement: "push_in", subjectMotion: "none",
-    motionIntensity: "subtle", lighting: "soft_studio", extraInstructions: null, rightsConfirmed: false,
-    startFrameMode: "direct", studioLayout: "none", studioFrameId: null, studioPrompt: null, studioReferenceHashes: [],
-  }] };
-  await page.route(`**/api/workflows/${workflowId}`, async route => {
-    if (route.request().method() !== "GET") return route.fallback();
-    await route.fulfill({ json: cropWorkflow, headers: { "access-control-allow-origin": route.request().headers().origin ?? "http://127.0.0.1:3000", "access-control-allow-credentials": "true" } });
-  });
+test("mockup region editor supports drawing, keyboard movement and hides a single artwork group", async ({ page }) => {
   await page.goto(`/workflows?id=${workflowId}`);
-  await page.locator('.react-flow__node[data-id="video"]').click({ position: { x: 4, y: 14 } });
-  await page.getByRole("button", { name: /Choose start frame for scene 1/ }).click();
-  await page.getByRole("button", { name: /Use Hero ad48d1 for scene 1/ }).click();
-  await page.getByRole("button", { name: "Edit start frame" }).click();
-  const dialog = page.getByRole("dialog", { name: "Edit start frame" });
-  await expect(dialog.getByAltText("Start frame preview for scene 1")).toBeVisible();
-  await dialog.getByRole("slider", { name: /Zoom/ }).fill("2");
-  await dialog.getByRole("button", { name: "Save crop" }).click();
-  await expect(page.getByText("Crop applied")).toBeVisible();
-  await page.getByRole("button", { name: "Edit start frame" }).click();
-  await expect(dialog.getByRole("slider", { name: /Zoom/ })).toHaveValue("2");
-});
-
-test("mockup panels keep selection and review without image adjustment", async ({ page }) => {
-  await page.goto(`/workflows?id=${workflowId}`);
-  await page.locator('.react-flow__node[data-id="mockup"]').click({ position: { x: 4, y: 14 } });
-  await expect(page.getByText("Available mock-ups")).toBeVisible();
-  await expect(page.getByRole("checkbox", { name: "Use in this run" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Adjust image" })).toHaveCount(0);
+  await page.locator('.react-flow__node[data-id="mockup"]').click({ position: { x: 80, y: 70 } });
+  await page.getByRole("button", { name: "Adjust image" }).click();
+  const editor = page.getByLabel("Draw Product region on image");
+  await editor.scrollIntoViewIfNeeded();
+  const bounds = await editor.boundingBox();
+  if (!bounds) throw new Error("Region editor is not visible");
+  await page.mouse.move(bounds.x + bounds.width * 0.2, bounds.y + bounds.height * 0.2);
+  await page.mouse.down();
+  await page.mouse.move(bounds.x + bounds.width * 0.75, bounds.y + bounds.height * 0.8);
+  await page.mouse.up();
+  const productRegion = page.getByRole("button", { name: /^Product region/ });
+  await productRegion.focus();
+  await productRegion.press("ArrowRight");
+  await expect(page.getByRole("button", { name: "Save image settings" })).toBeEnabled();
+  await page.getByRole("button", { name: "Advanced information" }).click();
+  await expect(page.getByText("Image role", { exact: true })).toBeVisible();
   await expect(page.getByText("Artwork group", { exact: true })).toHaveCount(0);
-
-  await page.locator('.react-flow__node[data-id="approval"]').click({ position: { x: 4, y: 14 } });
-  await expect(page.getByText("Mock-ups to review")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Approve mockup" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Adjust image" })).toHaveCount(0);
 });
 
 test("refresh restores review and only current candidate can be approved", async ({ page }) => {

@@ -80,21 +80,8 @@ const resolvePreviewScene = (
   sourceKey: string
 ): ScenePlan => {
   const previewScene = { ...scene, mockupId: sourceKey };
-  if (scene.generationStrategy !== "standard" || configuredScene?.mode === "ai") {
-    const startFrameCrop = configuredScene?.aiStartFrameCrop ?? scene.sourceCrop ?? scene.crop;
-    return {
-      ...previewScene,
-      motion: "static",
-      transition: "none",
-      crop: startFrameCrop,
-      endCrop: startFrameCrop,
-      startScale: 1,
-      endScale: 1,
-      startRotation: 0,
-      endRotation: 0,
-    };
-  }
-  if (configuredScene?.mode !== "standard") return previewScene;
+  if (scene.generationStrategy !== "standard" || configuredScene?.mode !== "standard")
+    return previewScene;
 
   const baseCrop = configuredScene.standardBaseCrop ?? getStandardBaseCrop(asset, aspectRatio);
   const plan = resolveStandardMotionPlan(configuredScene, baseCrop, aspectRatio);

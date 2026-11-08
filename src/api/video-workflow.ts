@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import { api } from "@/api/client";
+import type { MockupMetadataFormValues } from "@/schemas/video-workflow";
 import type {
   AiCharacterCatalogItem,
   AiSceneVideo,
@@ -153,6 +154,12 @@ export const generateAiStudioFrame = async ({
       studioFrameForm(request)
     )
   ).data;
+export const updateMockupAsset = async ({
+  id,
+  expectedRevision,
+  ...values
+}: MockupMetadataFormValues & { id: string; expectedRevision: number }) =>
+  (await api.put<MockupAsset>(`/api/mockup-assets/${id}`, { ...values, expectedRevision })).data;
 export const reviewMockupAsset = async ({
   id,
   revision,

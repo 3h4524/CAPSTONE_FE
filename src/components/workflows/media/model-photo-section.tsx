@@ -10,6 +10,8 @@ import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowStore } from "@/stores/workflow";
 
+const NO_GROUPS: string[] = [];
+
 /**
  * Model photos for a workflow without a video: the form that puts the product's mock-ups on one, and the images it
  * made. A workflow with a video has the same form in its mock-up list.
@@ -45,6 +47,7 @@ export const ModelPhotoSection = () => {
             <MockupCard
               key={asset.id}
               asset={asset}
+              artworkGroups={NO_GROUPS}
               review={false}
               selectable={false}
               selected={false}

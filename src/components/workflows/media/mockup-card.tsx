@@ -1,10 +1,12 @@
 "use client";
+import { useState } from "react";
 import Image from "next/image";
-import { Check, X } from "lucide-react";
+import { Check, SlidersHorizontal, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { MockupMetadataForm } from "@/components/workflows/media/mockup-metadata-form";
 import { useReviewMockupAsset } from "@/hooks/mutations/use-review-mockup-asset";
 import type { MockupAsset } from "@/types/video-workflow";
 import { cn } from "@/utils/cn";
@@ -14,7 +16,8 @@ const APPROVAL_STYLES: Record<string, string> = {
   rejected: "bg-rose-100 text-rose-700",
 };
 
-export const MockupCard = ({ asset, selected, selectable, onSelect, review }: { asset: MockupAsset; selected: boolean; selectable: boolean; onSelect: (id: string, selected: boolean) => void; review: boolean }) => {
+export const MockupCard = ({ asset, artworkGroups, selected, selectable, onSelect, review }: { asset: MockupAsset; artworkGroups: string[]; selected: boolean; selectable: boolean; onSelect: (id: string, selected: boolean) => void; review: boolean }) => {
+  const [showMetadata, setShowMetadata] = useState(false);
   const { mutate: approve, isPending } = useReviewMockupAsset();
   return <div className={cn("overflow-hidden rounded-lg border bg-white transition-shadow", selected && "border-primary/50 ring-primary/15 ring-2", asset.approvalStatus === "rejected" && "opacity-75")}>
     <div className="relative bg-slate-50">
@@ -25,32 +28,9 @@ export const MockupCard = ({ asset, selected, selectable, onSelect, review }: { 
       <div className="flex flex-wrap items-center gap-1.5"><Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700">{asset.role}</Badge>{asset.variantKey && <span className="text-muted-foreground text-xs">Variant: {asset.variantKey}</span>}</div>
       {asset.warnings.map(w => <p key={w} className="rounded-md bg-amber-50 px-2 py-1.5 text-xs text-amber-900">{w}</p>)}
       {selectable && <label className="flex min-h-9 cursor-pointer items-center gap-2 text-sm font-medium"><Checkbox checked={selected} onCheckedChange={checked => onSelect(asset.id, checked === true)} />Use in this run</label>}
-      {review && (
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            type="button"
-            size="sm"
-            aria-label="Approve mockup"
-            className="h-10 w-full gap-1.5 rounded-md px-2.5 text-xs hover:translate-y-0"
-            disabled={isPending || asset.approvalStatus === "approved"}
-            onClick={() => approve({ id: asset.id, revision: asset.revision, approved: true })}
-          >
-            <Check aria-hidden="true" className="size-3.5" />
-            Approve
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-10 w-full gap-1.5 rounded-md border border-rose-200 px-2.5 text-xs text-rose-700 hover:translate-y-0 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-800"
-            disabled={isPending || asset.approvalStatus === "rejected"}
-            onClick={() => approve({ id: asset.id, revision: asset.revision, approved: false })}
-          >
-            <X aria-hidden="true" className="size-3.5" />
-            Reject
-          </Button>
-        </div>
-      )}
+      {(review || asset.sourceType !== "ai_generated") && <div className="flex flex-wrap gap-2">{review && <><Button type="button" size="sm" className="h-8 px-3 hover:translate-y-0" disabled={isPending || asset.approvalStatus === "approved"} onClick={() => approve({ id: asset.id, revision: asset.revision, approved: true })}><Check aria-hidden="true" />Approve mockup</Button><Button type="button" size="sm" variant="outline" className="h-8 px-3 hover:translate-y-0" disabled={isPending || asset.approvalStatus === "rejected"} onClick={() => approve({ id: asset.id, revision: asset.revision, approved: false })}><X aria-hidden="true" />Reject</Button></>}
+        {asset.sourceType !== "ai_generated" && <Button type="button" size="sm" variant="ghost" className="h-8 px-2.5 hover:translate-y-0" onClick={() => setShowMetadata(v => !v)} aria-expanded={showMetadata}><SlidersHorizontal aria-hidden="true" />Adjust image</Button>}</div>}
+      {showMetadata && asset.sourceType !== "ai_generated" && <div className="border-t pt-3"><MockupMetadataForm key={`${asset.id}-${asset.revision}`} asset={asset} artworkGroups={artworkGroups} /></div>}
     </div>
   </div>;
 };

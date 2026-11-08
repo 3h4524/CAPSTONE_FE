@@ -14,10 +14,10 @@ import {
   LoaderCircle,
   Lock,
   Minus,
-  Pencil,
   Plus,
   Sparkles,
   Trash2,
+  UsersRound,
   X,
 } from "lucide-react";
 
@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -44,7 +45,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AiStartFrameCropDialog } from "@/components/workflows/config-panel/fields/ai-start-frame-crop-dialog";
 import { SceneVideoResult } from "@/components/workflows/config-panel/fields/scene-video-result";
 import {
   getStandardBaseCrop,
@@ -53,7 +53,7 @@ import {
   StandardMotionPreview,
 } from "@/components/workflows/config-panel/fields/standard-motion-editor";
 import { VideoTimelineEditor } from "@/components/workflows/media/video-timeline-editor";
-import { type AiCharacter, getAiCharacter } from "@/constants/ai-characters";
+import { type AiCharacter, aiCharacterLabel, getAiCharacter } from "@/constants/ai-characters";
 import { confirmAiShot } from "@/helpers/confirm-ai-shot";
 import { getErrorMessage } from "@/helpers/error-message";
 import { hasFeature } from "@/helpers/plan-features";
@@ -408,11 +408,7 @@ export function AiShotOptions({
   const [scenePromptPreview, setScenePromptPreview] = useState<ScenePromptPreview | null>(null);
   const [isPreviewingScenePrompt, setIsPreviewingScenePrompt] = useState(false);
   const [previewFrame, setPreviewFrame] = useState<{ url: string; scene: number } | null>(null);
-  const [cropEditor, setCropEditor] = useState<{ sceneIndex: number; asset: MockupAsset } | null>(null);
-  const [rightsConfirmation, setRightsConfirmation] = useState<{
-    sceneIndex: number;
-    onConfirm: (confirmed: boolean) => void;
-  } | null>(null);
+  const [isCharacterPickerOpen, setIsCharacterPickerOpen] = useState(false);
   const [isSharedMockupPickerOpen, setIsSharedMockupPickerOpen] = useState(false);
   const [pendingPack, setPendingPack] = useState<VideoPackDefinition | null>(null);
   const [batchQuote, setBatchQuote] = useState<BatchFrameQuote[] | null>(null);
@@ -439,7 +435,9 @@ export function AiShotOptions({
   const { data: videoPacks = [], isPending: arePacksLoading } = useVideoPacks();
   const {
     data: aiCharacters = [],
+    isPending: areCharactersLoading,
     isError: areCharactersError,
+    refetch: refetchCharacters,
   } = useAiCharacterModels();
   const { data: allAssets = [], isPending: areAssetsLoading } = useMockupAssets(productId);
   const queryClient = useAppQueryClient();
@@ -457,8 +455,7 @@ export function AiShotOptions({
   const artworkGroupKey = readString(applyMockupNode?.data.config.artworkGroupKey);
   const rawScenes =
     (node?.data.config.aiScenes as AiVideoSceneOptions[] | undefined) ?? EMPTY_SCENES;
-  const defaultVideoModel =
-    node?.data.config.aiVideoModelKey === "minimax_h3" ? "minimax_h3" : "minimax_h3_lite";
+  const defaultVideoModel = node?.data.config.aiVideoModelKey === "minimax_h3_lite" ? "minimax_h3_lite" : "minimax_h3";
   const availableAssetIds = new Set(allAssets.map((asset) => asset.id));
   const availableArtworkGroups = new Set(
     allAssets
@@ -806,12 +803,35 @@ export function AiShotOptions({
     });
     onChange(next, seconds, effectiveSharedInstructions);
   };
+  const chooseAiCharacter = (characterId: string) => {
+    if (characterId === selectedAiCharacter?.id) {
+      setIsCharacterPickerOpen(false);
+      return;
+    }
+    const nextScenes = scenes.map((scene) => ({
+      ...scene,
+      studioFrameId: null,
+      studioReferenceHashes: [],
+    }));
+    const seconds = nextScenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
+    useWorkflowStore.getState().updateNodeConfig(nodeId, {
+      ...node.data.config,
+      aiCharacterModelId: characterId,
+      mode: workflowModeForScenes(nextScenes),
+      aiScenes: nextScenes,
+      durationSeconds: seconds,
+    });
+    onChange(nextScenes, seconds, sharedInstructions);
+    setIsCharacterPickerOpen(false);
+    queueMicrotask(() => saveWorkflow());
+    showToast(
+      "success",
+      "Shared model updated. Create new keyframes for scenes that need a person."
+    );
+  };
   const openScenePromptPreview = async (sceneOrder: number) => {
     if (!run || !node) return;
-    const currentNode = useWorkflowStore
-      .getState()
-      .nodes.find((item) => item.id === nodeId);
-    const parsed = generateVideoConfigSchema.safeParse(currentNode?.data.config ?? node.data.config);
+    const parsed = generateVideoConfigSchema.safeParse(node.data.config);
     if (!parsed.success) {
       showToast("warning", parsed.error.issues[0]?.message ?? "Check AI scene settings.");
       return;
@@ -885,11 +905,7 @@ export function AiShotOptions({
       setRegeneratingSceneIndex(null);
     }
   };
-  const prepareStudioFrame = async (
-    sceneIndex: number,
-    regenerate = false,
-    rightsConfirmed = false
-  ) => {
+  const prepareStudioFrame = async (sceneIndex: number, regenerate = false) => {
     const scene = scenes[sceneIndex];
     const sources = originalApproved;
     const source = scene?.mockupId
@@ -924,7 +940,7 @@ export function AiShotOptions({
         customPrompt,
         templateCode: scene.templateCode,
         references: [characterReference, ...manualReferences],
-        referenceRightsConfirmed: scene.rightsConfirmed || rightsConfirmed,
+        referenceRightsConfirmed: scene.rightsConfirmed,
         regenerate,
       };
       const quote = await quoteAiStudioFrame(request);
@@ -937,7 +953,6 @@ export function AiShotOptions({
         persistScene(sceneIndex, {
           startFrameMode: "studio",
           mockupId: source.id,
-          rightsConfirmed: scene.rightsConfirmed || rightsConfirmed,
           studioLayout: layout,
           studioFrameId: frame.id,
           standardBaseCrop: null,
@@ -976,7 +991,6 @@ export function AiShotOptions({
       persistScene(sceneIndex, {
         startFrameMode: "studio",
         mockupId: source.id,
-        rightsConfirmed: scene.rightsConfirmed || rightsConfirmed,
         studioLayout: layout,
         studioFrameId: frame.id,
         standardBaseCrop: null,
@@ -1000,32 +1014,9 @@ export function AiShotOptions({
     }
   };
   const changeScene = (index: number, changes: Partial<AiVideoSceneOptions>) =>
-    update(scenes.map((scene, position) => {
-      if (position !== index) return scene;
-      const next = { ...scene, ...changes };
-      const previousSource = scene.startFrameMode === "studio" ? scene.studioFrameId : scene.mockupId;
-      const nextSource = next.startFrameMode === "studio" ? next.studioFrameId : next.mockupId;
-      return previousSource === nextSource ? next : { ...next, aiStartFrameCrop: null };
-    }));
-  const requestSceneRightsConfirmation = (
-    sceneIndex: number,
-    onConfirm: (confirmed: boolean) => void
-  ) => {
-    const scene = scenes[sceneIndex];
-    const template = scene && catalog.find((item) => item.code === scene.templateCode);
-    if (!scene || !template?.requiresLifestyle || scene.rightsConfirmed) {
-      onConfirm(Boolean(scene?.rightsConfirmed));
-      return;
-    }
-    setRightsConfirmation({ sceneIndex, onConfirm });
-  };
-  const confirmSceneRights = () => {
-    if (!rightsConfirmation) return;
-    const { sceneIndex, onConfirm } = rightsConfirmation;
-    changeScene(sceneIndex, { rightsConfirmed: true, studioFrameId: null });
-    setRightsConfirmation(null);
-    onConfirm(true);
-  };
+    update(
+      scenes.map((scene, position) => (position === index ? { ...scene, ...changes } : scene))
+    );
   const persistScene = (index: number, changes: Partial<AiVideoSceneOptions>) => {
     changeScene(index, changes);
     queueMicrotask(() => saveWorkflow());
@@ -1080,7 +1071,6 @@ export function AiShotOptions({
       mockupId,
       startFrameMode: isProductOnModelPack ? ("studio" as const) : scene.startFrameMode,
       studioFrameId: null,
-      aiStartFrameCrop: null,
       studioReferenceHashes: [],
       standardBaseCrop: null,
       standardStartCrop: null,
@@ -1108,8 +1098,6 @@ export function AiShotOptions({
             mockupId: source.id,
             studioLayout: "none" as const,
             studioFrameId: frame.id,
-            aiStartFrameCrop: scene.studioFrameId === frame.id && scene.mockupId === source.id
-              ? scene.aiStartFrameCrop : null,
             studioReferenceHashes:
               studioMetadata(frame)?.references?.map((reference) => reference.contentHash) ?? [],
             standardBaseCrop: null,
@@ -1487,6 +1475,54 @@ export function AiShotOptions({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label="Shared model">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="bg-muted relative h-14 w-11 shrink-0 overflow-hidden rounded-md border">
+            {selectedAiCharacter && (
+              <Image
+                src={selectedAiCharacter.previewUrl}
+                alt=""
+                fill
+                sizes="44px"
+                unoptimized
+                className="object-cover"
+              />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">Shared model</p>
+            {selectedAiCharacter ? (
+              <p
+                className="text-muted-foreground truncate text-xs"
+                title={aiCharacterLabel(selectedAiCharacter)}
+              >
+                {selectedAiCharacter.name} · {aiCharacterLabel(selectedAiCharacter)}
+              </p>
+            ) : (
+              <p className="text-muted-foreground truncate text-xs">
+                {areCharactersLoading
+                  ? "Loading model catalog…"
+                  : areCharactersError
+                    ? "Model catalog unavailable"
+                    : "No active model available"}
+              </p>
+            )}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={disabled || areCharactersLoading || !selectedAiCharacter}
+            onClick={() => setIsCharacterPickerOpen(true)}
+          >
+            Choose model
+          </Button>
+        </div>
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          Used automatically for new lifestyle, creator and storytelling keyframes. Changing the
+          model clears generated keyframes because the on-camera identity changes.
+        </p>
+      </section>
       {isProductOnModelPack && (
         <>
           <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label="Shared mockup">
@@ -1783,6 +1819,124 @@ export function AiShotOptions({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <Dialog open={isCharacterPickerOpen} onOpenChange={setIsCharacterPickerOpen}>
+          <DialogContent
+            showCloseButton={false}
+            className="border-border/70 bg-background flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-4xl flex-col gap-0 overflow-hidden rounded-2xl p-0 shadow-2xl sm:!max-w-4xl"
+          >
+            <DialogHeader className="bg-muted/35 relative gap-0 px-5 py-5 text-left sm:px-7 sm:py-6 lg:px-8">
+              <div className="flex items-start gap-3 pr-12">
+                <div className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-xl">
+                  <UsersRound aria-hidden="true" className="size-5" strokeWidth={1.8} />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl leading-tight tracking-tight text-balance sm:text-2xl">
+                    Choose your shared model
+                  </DialogTitle>
+                  <DialogDescription className="mt-2 max-w-3xl text-sm leading-6">
+                    Choose one identity for new people-focused keyframes. It applies immediately and
+                    keeps this video&apos;s cast consistent.
+                  </DialogDescription>
+                </div>
+              </div>
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:bg-background hover:text-foreground absolute top-4 right-4 size-11 rounded-full hover:translate-y-0"
+                  aria-label="Close shared model picker"
+                >
+                  <X aria-hidden="true" className="size-5" />
+                </Button>
+              </DialogClose>
+            </DialogHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6 lg:px-8 lg:py-7">
+              {areCharactersLoading ? (
+                <p className="text-muted-foreground py-16 text-center text-sm" role="status">
+                  Loading shared models…
+                </p>
+              ) : areCharactersError ? (
+                <div className="flex flex-col items-center gap-3 py-16 text-center">
+                  <p className="text-muted-foreground text-sm">Could not load the model catalog.</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="min-h-11 px-5 hover:translate-y-0"
+                    onClick={() => void refetchCharacters()}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : aiCharacters.length === 0 ? (
+                <p className="text-muted-foreground py-16 text-center text-sm">
+                  No active shared models are available.
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5">
+                  {aiCharacters.map((character) => {
+                    const selected = character.id === selectedAiCharacter?.id;
+                    const identity = `${character.continent} · ${character.gender} · ${character.ageMin}–${character.ageMax}`;
+                    const profile = `${character.bodyType} build · ${character.skinTone} skin tone`;
+                    return (
+                      <button
+                        key={character.id}
+                        type="button"
+                        aria-pressed={selected}
+                        aria-label={`${selected ? "Selected: " : "Select "}${character.name}, ${identity}`}
+                        onClick={() => chooseAiCharacter(character.id)}
+                        className={`focus-visible:ring-ring group bg-muted/35 relative isolate cursor-pointer overflow-hidden rounded-2xl border-2 border-transparent text-left transition-[background-color,border-color,transform] duration-300 ease-out outline-none focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-1 motion-safe:active:scale-[0.985] motion-reduce:transition-none ${
+                          selected
+                            ? "border-primary bg-primary/8"
+                            : "hover:bg-muted/70 hover:border-border"
+                        }`}
+                      >
+                        <div className="bg-muted relative aspect-[4/5] overflow-hidden">
+                          <Image
+                            src={character.previewUrl}
+                            alt={`Portrait of ${character.name}`}
+                            fill
+                            sizes="(max-width: 640px) 46vw, (max-width: 1280px) 22vw, 280px"
+                            unoptimized
+                            className="object-cover transition-transform duration-700 ease-out motion-safe:group-hover:scale-[1.045] motion-reduce:transition-none"
+                          />
+                          {selected && (
+                            <span className="bg-primary text-primary-foreground absolute top-3 right-3 inline-flex size-8 items-center justify-center rounded-full transition-transform duration-300 ease-out motion-safe:group-hover:scale-110 motion-reduce:transition-none">
+                              <Check aria-hidden="true" className="size-4" strokeWidth={2.5} />
+                              <span className="sr-only">Selected</span>
+                            </span>
+                          )}
+                        </div>
+                        <span className="block min-w-0 px-3 py-2.5 sm:px-3.5">
+                          <span className="flex items-baseline justify-between gap-2">
+                            <span className="min-w-0 text-sm font-semibold tracking-tight">
+                              {character.name}
+                            </span>
+                            {character.isDefault && (
+                              <span className="text-primary hidden shrink-0 text-xs font-semibold lg:inline">
+                                Default
+                              </span>
+                            )}
+                          </span>
+                          <span
+                            className="text-muted-foreground mt-1.5 block min-h-8 text-[11px] leading-4 sm:text-xs"
+                            title={identity}
+                          >
+                            {identity}
+                          </span>
+                          <span className="text-muted-foreground/80 block min-h-8 text-[11px] leading-4 sm:text-xs">
+                            {profile}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
         <div className="space-y-2">
           <div>
             <p className="text-sm font-semibold">Scenes</p>
@@ -1816,6 +1970,9 @@ export function AiShotOptions({
               {scenes.length} {scenes.length === 1 ? "scene" : "scenes"}
             </span>
           </div>
+          {totalSeconds < MIN_VIDEO_DURATION_SECONDS && (
+            <p className="text-destructive text-xs">Add {MIN_VIDEO_DURATION_SECONDS - totalSeconds}s to reach the minimum video length.</p>
+          )}
         </div>
         {hasAiScenes && AI_ADVANCED_CONTROLS_ENABLED && (
           <label className="block space-y-1 text-xs font-medium">
@@ -1838,6 +1995,13 @@ export function AiShotOptions({
               guardrails
             </span>
           </label>
+        )}
+        {hasAiScenes && !AI_ADVANCED_CONTROLS_ENABLED && (
+          <p className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs leading-relaxed text-blue-900">
+            Advanced AI controls are temporarily disabled. Each AI scene uses the selected
+            template&apos;s default camera, motion, lighting, and prompt direction while prompt
+            templates are being tested.
+          </p>
         )}
         {hasAiScenes && isPending && (
           <p className="text-muted-foreground text-xs">Loading AI scene templates... </p>
@@ -1874,6 +2038,7 @@ export function AiShotOptions({
           const sceneReferenceHashes = normalizeReferenceHashes(scene.studioReferenceHashes);
           const currentScenePrompt = scene.studioPrompt?.trim() ?? "";
           const expectedPromptVersion = studioLayout === "none" && currentScenePrompt ? 10 : 9;
+          const needsRightsConfirmation = Boolean(template?.requiresLifestyle);
           const outputAspect = getVideoOutputFormat(outputFormat).aspectRatio;
           const reusableStudioFrames = allAssets.filter((frame) => {
             const metadata = studioMetadata(frame);
@@ -1957,12 +2122,6 @@ export function AiShotOptions({
               (keyframeToUse.id !== sceneFrame?.id || frameIsCurrentAndApproved)
           );
           const selectedStartFrame = selectedSourceFrame ?? selectedSource;
-          const editableAiFrame = scene.mode === "ai"
-            ? scene.startFrameMode === "studio"
-              ? sceneFrame?.approvalStatus === "approved" && sceneFrame.approvedRevision === sceneFrame.revision
-                ? sceneFrame : undefined
-              : selectedSource
-            : undefined;
           const otherDuration = totalSeconds - scene.durationSeconds;
           const maxDuration =
             scene.mode === "standard"
@@ -2018,7 +2177,7 @@ export function AiShotOptions({
                 : frameIsCurrentAndApproved
                   ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-200"
                   : "bg-destructive/10 text-destructive";
-          const selectSceneKeyframe = (rightsConfirmed = scene.rightsConfirmed) => {
+          const selectSceneKeyframe = () => {
             if (!keyframeToUse) return;
             const metadata = studioMetadata(keyframeToUse);
             persistScene(index, {
@@ -2028,7 +2187,6 @@ export function AiShotOptions({
                 (metadata?.layout as "hanging_window" | "flat_lay" | "none" | undefined) ??
                 studioLayout,
               studioFrameId: keyframeToUse.id,
-              rightsConfirmed,
               standardBaseCrop: null,
               standardStartCrop: null,
               standardEndCrop: null,
@@ -2253,45 +2411,24 @@ export function AiShotOptions({
                 </div>
               </header>
               {scene.mode === "ai" && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-medium">AI video model</span>
-                    <span className="text-muted-foreground text-[11px]">Choose per scene</span>
-                  </div>
-                  <div
-                    className="grid grid-cols-2 gap-2"
-                    role="group"
-                    aria-label={`Scene ${index + 1} AI video model`}
+                <label className="flex items-center justify-between gap-3 text-xs font-medium">
+                  <span>AI video quality</span>
+                  <Select
+                    disabled={disabled}
+                    value={scene.aiVideoModelKey ?? defaultVideoModel}
+                    onValueChange={(value: "minimax_h3" | "minimax_h3_lite") =>
+                      changeScene(index, { aiVideoModelKey: value })
+                    }
                   >
-                    {([
-                      { value: "minimax_h3_lite", label: "MiniMax-H3 Lite", isDefault: true },
-                      { value: "minimax_h3", label: "MiniMax-H3", isDefault: false },
-                    ] as const).map((option) => {
-                      const selected = (scene.aiVideoModelKey ?? defaultVideoModel) === option.value;
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          disabled={disabled}
-                          aria-pressed={selected}
-                          onClick={() => changeScene(index, { aiVideoModelKey: option.value })}
-                          className={`focus-visible:ring-ring min-h-12 rounded-md border px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
-                            selected
-                              ? "border-primary bg-primary/5 text-foreground"
-                              : "border-border bg-background text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                          }`}
-                        >
-                          <span className="block text-xs font-semibold">{option.label}</span>
-                          {option.isDefault && (
-                            <span className="text-muted-foreground mt-0.5 block text-[10px] font-normal">
-                              Default
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                    <SelectTrigger className="h-8 w-36" aria-label={`Scene ${index + 1} AI video quality`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="minimax_h3_lite">Economy</SelectItem>
+                      <SelectItem value="minimax_h3">Premium</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </label>
               )}
               {scene.mode !== "standard" && !isProductOnModelPack && (
                 <label className="flex flex-col gap-2 text-xs font-medium">
@@ -2405,57 +2542,32 @@ export function AiShotOptions({
                     Choose the image this scene starts from, or create a custom keyframe.
                   </p>
                 </div>
-                <div className="bg-background relative rounded-lg">
                 <button
                   type="button"
                   disabled={disabled}
                   onClick={() => setFramePicker({ sceneIndex: index, view: "library" })}
                   aria-label={`${selectedStartFrame ? "Change" : "Choose"} start frame for scene ${index + 1}`}
-                  className="hover:bg-muted/40 focus-visible:ring-ring group flex min-h-24 w-full cursor-pointer items-center gap-3 rounded-lg p-2.5 text-left transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  className="bg-background hover:bg-muted/40 focus-visible:ring-ring group flex min-h-24 w-full items-center gap-3 rounded-lg border p-2.5 text-left transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {selectedStartFrame ? (
-                    <span className="bg-muted relative flex h-[72px] w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border">
-                      {scene.mode === "ai" && scene.aiStartFrameCrop ? (
-                        <span
-                          aria-hidden="true"
-                          className="relative block h-full overflow-hidden"
-                          style={{ aspectRatio: outputFormat === "landscape" ? "16 / 9" : "9 / 16" }}
-                        >
-                          <Image
-                            src={selectedStartFrame.previewUrl}
-                            alt=""
-                            width={selectedStartFrame.width}
-                            height={selectedStartFrame.height}
-                            sizes="56px"
-                            unoptimized
-                            className="pointer-events-none absolute max-w-none select-none"
-                            style={{
-                              width: `${100 / scene.aiStartFrameCrop.width}%`,
-                              height: `${100 / scene.aiStartFrameCrop.height}%`,
-                              left: `${(-100 * scene.aiStartFrameCrop.x) / scene.aiStartFrameCrop.width}%`,
-                              top: `${(-100 * scene.aiStartFrameCrop.y) / scene.aiStartFrameCrop.height}%`,
-                            }}
-                          />
-                        </span>
-                      ) : (
-                        <Image
-                          src={selectedStartFrame.previewUrl}
-                          alt=""
-                          fill
-                          sizes="56px"
-                          unoptimized
-                          className="object-contain"
-                        />
-                      )}
+                    <span className="bg-muted relative h-20 w-16 shrink-0 overflow-hidden rounded-md border">
+                      <Image
+                        src={selectedStartFrame.previewUrl}
+                        alt=""
+                        fill
+                        sizes="64px"
+                        unoptimized
+                        className="object-contain"
+                      />
                     </span>
                   ) : (
-                    <span className="bg-muted text-muted-foreground flex h-[72px] w-14 shrink-0 items-center justify-center rounded-md border border-dashed">
+                    <span className="bg-muted text-muted-foreground flex h-20 w-16 shrink-0 items-center justify-center rounded-md border border-dashed">
                       <Plus aria-hidden="true" className="size-5" />
                     </span>
                   )}
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold">
-                      {selectedStartFrame ? "Selected image" : "Choose a start frame"}
+                    <span className="block text-sm font-semibold">
+                      {selectedStartFrame ? "Selected start frame" : "Choose a start frame"}
                     </span>
                     <span className="text-muted-foreground mt-1 block truncate text-xs">
                       {selectedSourceFrame
@@ -2464,24 +2576,11 @@ export function AiShotOptions({
                           ? `${selectedSource.role} · ${selectedSource.width} × ${selectedSource.height}${selectedSource.variantKey ? ` · ${selectedSource.variantKey}` : ""}`
                           : "Browse approved images or create a new keyframe"}
                     </span>
-                    {scene.mode === "ai" && scene.aiStartFrameCrop && (
-                      <span className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-700">
-                        <Check aria-hidden="true" className="size-3 shrink-0" /> Crop applied
-                      </span>
-                    )}
-                    <span className={`text-primary mt-1 block text-xs font-semibold ${editableAiFrame ? "pr-16" : ""}`}>
-                      {selectedStartFrame ? "Change" : "Choose"}
-                    </span>
+                  </span>
+                  <span className="text-primary shrink-0 px-1 text-xs font-semibold">
+                    {selectedStartFrame ? "Change" : "Choose"}
                   </span>
                 </button>
-                {editableAiFrame && (
-                    <span className="absolute inset-y-0 right-2 flex items-center">
-                      <Button type="button" variant="ghost" size="sm" aria-label="Edit start frame" className={`text-muted-foreground hover:text-foreground gap-1.5 px-2.5 text-xs shadow-none hover:translate-y-0 ${scene.aiStartFrameCrop ? "h-8" : "h-9"}`} disabled={disabled} onClick={() => setCropEditor({ sceneIndex: index, asset: editableAiFrame })}>
-                        <Pencil aria-hidden="true" className="size-3.5" /> Edit
-                      </Button>
-                    </span>
-                )}
-                </div>
 
                 <Dialog
                   open={framePicker?.sceneIndex === index}
@@ -2745,6 +2844,26 @@ export function AiShotOptions({
                               )}
                             </div>
                           </div>
+                          {needsRightsConfirmation && (
+                            <label className="bg-muted/30 flex min-h-11 items-start gap-3 rounded-md border p-3 text-xs leading-5">
+                              <input
+                                type="checkbox"
+                                disabled={disabled}
+                                checked={scene.rightsConfirmed}
+                                onChange={(event) =>
+                                  changeScene(index, {
+                                    rightsConfirmed: event.target.checked,
+                                    studioFrameId: null,
+                                  })
+                                }
+                                className="mt-1"
+                              />
+                              <span>
+                                I have the rights to use people visible in the selected product and
+                                reference images.
+                              </span>
+                            </label>
+                          )}
                           {(sceneFrame || preparingSceneIndex === index) && (
                             <section
                               className="bg-muted/40 space-y-3 rounded-md p-3"
@@ -2867,18 +2986,17 @@ export function AiShotOptions({
                                 disabled ||
                                 !selectedStudioSource ||
                                 preparingSceneIndex !== null ||
-                                (hasSceneKeyframe && !keyframeCanBeUsed)
+                                (hasSceneKeyframe && !keyframeCanBeUsed) ||
+                                (needsRightsConfirmation && !scene.rightsConfirmed)
                               }
-                              onClick={() =>
-                                requestSceneRightsConfirmation(index, (rightsConfirmed) => {
-                                  if (hasSceneKeyframe) {
-                                    selectSceneKeyframe(rightsConfirmed || scene.rightsConfirmed);
-                                    setFramePicker(null);
-                                    return;
-                                  }
-                                  void prepareStudioFrame(index, false, rightsConfirmed);
-                                })
-                              }
+                              onClick={() => {
+                                if (hasSceneKeyframe) {
+                                  selectSceneKeyframe();
+                                  setFramePicker(null);
+                                  return;
+                                }
+                                void prepareStudioFrame(index);
+                              }}
                               className="min-h-9 gap-2 px-4 font-semibold"
                             >
                               {preparingSceneIndex === index ? (
@@ -2909,13 +3027,10 @@ export function AiShotOptions({
                                 disabled={
                                   disabled ||
                                   !selectedStudioSource ||
-                                  preparingSceneIndex !== null
+                                  preparingSceneIndex !== null ||
+                                  (needsRightsConfirmation && !scene.rightsConfirmed)
                                 }
-                                onClick={() =>
-                                  requestSceneRightsConfirmation(index, (rightsConfirmed) =>
-                                    void prepareStudioFrame(index, true, rightsConfirmed)
-                                  )
-                                }
+                                onClick={() => void prepareStudioFrame(index, true)}
                               >
                                 Generate another
                               </Button>
@@ -2932,8 +3047,9 @@ export function AiShotOptions({
                             selectedStudioSource &&
                             !hasUsableDetail(selectedStudioSource) && (
                               <p className="rounded-md border border-blue-200 bg-blue-50 p-2 text-xs leading-relaxed text-blue-900">
-                                This image can be used directly. Create an approved close-up keyframe
-                                for the clearest detail. Review generated keyframes because fine print
+                                This image can be used directly. Mark an artwork/detail region for a
+                                tighter automatic crop, or create an approved close-up keyframe for
+                                the clearest detail. Review generated keyframes because fine print
                                 may be reinterpreted.
                               </p>
                             )}
@@ -2944,17 +3060,6 @@ export function AiShotOptions({
                 </Dialog>
                 </section>
               )}
-              {isProductOnModelPack && editableAiFrame && (
-                <div className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
-                  <div>
-                    <p className="text-sm font-semibold">Start frame</p>
-                    <p className="text-muted-foreground text-xs">{scene.aiStartFrameCrop ? "Crop applied" : "Approved keyframe"}</p>
-                  </div>
-                  <Button type="button" variant="ghost" size="sm" aria-label="Edit start frame" className="text-muted-foreground hover:text-foreground h-9 gap-1.5 px-2.5 text-xs shadow-none hover:translate-y-0" disabled={disabled} onClick={() => setCropEditor({ sceneIndex: index, asset: editableAiFrame })}>
-                    <Pencil aria-hidden="true" className="size-3.5" /> Edit
-                  </Button>
-                </div>
-              )}
               {scene.mode !== "standard" && (
                 <>
                   <div className="flex justify-center py-1" aria-hidden="true">
@@ -2962,18 +3067,13 @@ export function AiShotOptions({
                   </div>
                   <SceneVideoResult
                     sceneNumber={index + 1}
-                    aspectRatio={outputAspect}
                     clip={sceneVideo}
                     runStarted={Boolean(sceneRunId)}
                     waitingForGeneration={waitingForVideoGeneration}
                     canGenerate={canGenerateScene}
                     canRegenerate={canRegenerateScene}
                     isSubmitting={regeneratingSceneIndex === index}
-                    onGenerate={() =>
-                      requestSceneRightsConfirmation(index, () =>
-                        void openScenePromptPreview(index)
-                      )
-                    }
+                    onGenerate={() => void openScenePromptPreview(index)}
                   />
                 </>
               )}
@@ -3010,7 +3110,7 @@ export function AiShotOptions({
                             Preview this scene with the selected camera movement.
                           </p>
                         </div>
-                        <div className="grid items-center gap-4 @min-[22rem]:grid-cols-[6.5rem_minmax(0,1fr)] @min-[36rem]:grid-cols-[7.5rem_minmax(0,1fr)]">
+                        <div className="grid items-start gap-4 @min-[36rem]:grid-cols-[10rem_minmax(0,1fr)]">
                           <StandardMotionPreview
                             scene={scene}
                             sceneNumber={index + 1}
@@ -3018,7 +3118,7 @@ export function AiShotOptions({
                             source={editorSource}
                             aspectRatio={outputAspect}
                           />
-                          <div className="min-w-0 space-y-3">
+                          <div className="min-w-0 space-y-4">
                             <label className="flex flex-col gap-2 text-xs font-medium">
                               <span>Camera movement</span>
                               <Select
@@ -3050,17 +3150,26 @@ export function AiShotOptions({
                                 </SelectContent>
                               </Select>
                             </label>
-                            <StandardMotionEditor
-                              scene={scene}
-                              sceneNumber={index + 1}
-                              baseCrop={baseCrop}
-                              source={editorSource}
-                              aspectRatio={outputAspect}
-                              disabled={disabled}
-                              hasRenderedVideo={Boolean(sceneRunId)}
-                              onMotionPresetChange={setStandardMotion}
-                              onApply={(changes) => changeScene(index, changes)}
-                            />
+                            <div className="bg-background/70 space-y-2 rounded-lg border p-3">
+                              <div>
+                                <p className="text-xs font-semibold">Fine-tune the motion</p>
+                                <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                                  Adjust the first and last frame when the preset needs a more
+                                  precise crop.
+                                </p>
+                              </div>
+                              <StandardMotionEditor
+                                scene={scene}
+                                sceneNumber={index + 1}
+                                baseCrop={baseCrop}
+                                source={editorSource}
+                                aspectRatio={outputAspect}
+                                disabled={disabled}
+                                hasRenderedVideo={Boolean(sceneRunId)}
+                                onMotionPresetChange={setStandardMotion}
+                                onApply={(changes) => changeScene(index, changes)}
+                              />
+                            </div>
                           </div>
                         </div>
                       </section>
@@ -3072,12 +3181,32 @@ export function AiShotOptions({
                   {template?.requiresLifestyle
                     ? "Choose an approved product image. You may attach optional approved reference images and describe their use in the keyframe direction."
                     : template?.requiresDetail
-                      ? "Choose any approved mockup or keyframe. A close-up keyframe gives the clearest detail."
+                      ? "Choose any approved mockup or keyframe. Marking an artwork/detail region is optional; without one, the scene uses the full selected image, so a close-up keyframe gives the clearest detail."
                       : "Approve at least one product image before generating this scene."}{" "}
                   {effectiveChosenMockupIds.length > 0 || effectiveArtworkGroupKey
                     ? "Also check that the image is included in Apply Mockup's allowed images and selected artwork group."
                     : ""}
                 </p>
+              )}
+              {needsRightsConfirmation && (
+                <label className="flex items-start gap-2 text-xs leading-5">
+                  <input
+                    type="checkbox"
+                    disabled={disabled}
+                    checked={scene.rightsConfirmed}
+                    onChange={(event) =>
+                      changeScene(index, {
+                        rightsConfirmed: event.target.checked,
+                        studioFrameId: null,
+                      })
+                    }
+                    className="mt-1"
+                  />
+                  <span>
+                    I have the rights to use people visible in the selected product and reference
+                    images.
+                  </span>
+                </label>
               )}
               {scene.mode !== "standard" && AI_ADVANCED_CONTROLS_ENABLED && (
                 <details className="group bg-muted/20 rounded-md border p-2">
@@ -3163,63 +3292,23 @@ export function AiShotOptions({
             </article>
           );
         })}
-        {cropEditor && scenes[cropEditor.sceneIndex] && (
-          <AiStartFrameCropDialog
-            asset={cropEditor.asset}
-            sceneNumber={cropEditor.sceneIndex + 1}
-            landscape={outputFormat === "landscape"}
-            initialCrop={scenes[cropEditor.sceneIndex]?.aiStartFrameCrop}
-            automaticCrop={scenes[cropEditor.sceneIndex]?.startFrameMode !== "studio" && catalog.find(item => item.code === scenes[cropEditor.sceneIndex]?.templateCode)?.requiresDetail
-              ? [cropEditor.asset.regions.detail, cropEditor.asset.regions.artwork].find(region => region && Math.min(region.width * cropEditor.asset.width, region.height * cropEditor.asset.height) >= 512)
-              : null}
-            onClose={() => setCropEditor(null)}
-            onSave={(crop) => { persistScene(cropEditor.sceneIndex, { aiStartFrameCrop: crop }); setCropEditor(null); }}
-          />
-        )}
-        <Dialog
-          open={rightsConfirmation !== null}
-          onOpenChange={(open) => {
-            if (!open) setRightsConfirmation(null);
-          }}
-        >
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Confirm image rights</DialogTitle>
-              <DialogDescription>
-                This scene uses a person-focused template. Confirm that you have permission to use
-                people shown in the selected product and reference images before creating its
-                keyframe or video.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setRightsConfirmation(null)}
-              >
-                Cancel
-              </Button>
-              <Button type="button" onClick={confirmSceneRights}>
-                I have the rights
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
         <div className="space-y-2 py-1">
-          <div className="flex items-center gap-2">
-            <span aria-hidden="true" className="bg-border/70 h-px flex-1" />
+          <div className="flex items-center gap-3">
+            <span aria-hidden="true" className="border-border/80 flex-1 border-t border-dashed" />
             <Button
               type="button"
-              variant="ghost"
-              size="sm"
+              variant="outline"
+              size="icon"
               disabled={disabled || scenes.length >= 4 || totalSeconds + 1 > MAX_VIDEO_DURATION_SECONDS}
               onClick={addScene}
-              className="text-primary hover:bg-primary/5 h-10 gap-1.5 rounded-md px-3 text-[13px] font-semibold shadow-none transition-colors hover:translate-y-0 focus-visible:ring-2 focus-visible:ring-offset-2"
+              aria-label="Add scene"
+              title="Add scene"
+              className="border-primary/25 bg-background text-primary hover:border-primary/40 hover:bg-primary/5 size-9 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-offset-2"
             >
-              <Plus aria-hidden="true" className="size-4" strokeWidth={1.75} />
-              <span>Add scene</span>
+              <Plus aria-hidden="true" className="size-4" strokeWidth={2} />
+              <span className="sr-only">Add scene</span>
             </Button>
-            <span aria-hidden="true" className="bg-border/70 h-px flex-1" />
+            <span aria-hidden="true" className="border-border/80 flex-1 border-t border-dashed" />
           </div>
           {hasAiScenes && (
             <p className="text-muted-foreground text-center text-xs">
@@ -3227,32 +3316,23 @@ export function AiShotOptions({
             </p>
           )}
         </div>
-        <section aria-label="Full video editing" className="space-y-2 pt-1">
-          <p className="text-sm font-semibold">Full video</p>
-          <VideoTimelineEditor
-            disabled={disabled}
-            config={node.data.config as GenerateVideoConfig}
-            assets={allAssets}
-            sceneVideos={sceneVideos}
-            onSave={(next) => {
-              useWorkflowStore.getState().updateNodeConfig(nodeId, next);
-              onChange(next.aiScenes ?? [], next.durationSeconds, next.aiGlobalInstructions ?? null);
-            }}
-          />
-        </section>
-        <details className="group text-muted-foreground text-xs">
-          <summary className="hover:text-foreground flex min-h-9 cursor-pointer list-none items-center gap-1.5 font-medium transition-colors">
-            <ChevronDown aria-hidden="true" className="size-3.5 transition-transform group-open:rotate-180" />
-            About estimates and keyframes
-          </summary>
-          <p className="pb-1 leading-relaxed">
-            The AI estimate assumes each AI clip is new; the final quote accounts for reusable clips
-            before rendering. Standard scenes use smooth camera movement between the selected framing
-            points. Keyframes combine the shared model, an approved product source and up to two
-            optional visual references. Review AI clips and every generated keyframe for product
-            fidelity.
-          </p>
-        </details>
+        <VideoTimelineEditor
+          disabled={disabled}
+          config={node.data.config as GenerateVideoConfig}
+          assets={allAssets}
+          sceneVideos={sceneVideos}
+          onSave={(next) => {
+            useWorkflowStore.getState().updateNodeConfig(nodeId, next);
+            onChange(next.aiScenes ?? [], next.durationSeconds, next.aiGlobalInstructions ?? null);
+          }}
+        />
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          The AI estimate assumes each AI clip is new; the final quote accounts for reusable clips
+          before rendering. Standard scenes use smooth camera movement between the selected framing
+          points. Keyframes combine the shared model, an approved product source and up to two
+          optional visual references. Review AI clips and every generated keyframe for product
+          fidelity.
+        </p>
         <Dialog
           open={previewFrame !== null}
           onOpenChange={(open) => {

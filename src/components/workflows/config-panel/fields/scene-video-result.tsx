@@ -18,9 +18,8 @@ const STATUS_LABELS: Record<string, string> = {
 
 const ACTIVE_STATUSES = new Set(["pending", "submitting", "polling", "ready"]);
 
-export const SceneVideoResult = ({ sceneNumber, aspectRatio, clip, runStarted, waitingForGeneration, canGenerate, canRegenerate, isSubmitting, onGenerate }: {
+export const SceneVideoResult = ({ sceneNumber, clip, runStarted, waitingForGeneration, canGenerate, canRegenerate, isSubmitting, onGenerate }: {
   sceneNumber: number;
-  aspectRatio: string;
   clip?: AiSceneVideo;
   runStarted: boolean;
   waitingForGeneration: boolean;
@@ -30,7 +29,6 @@ export const SceneVideoResult = ({ sceneNumber, aspectRatio, clip, runStarted, w
   onGenerate: () => void;
 }) => {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
-  const previewAspect = aspectRatio.replace(":", " / ");
   const isGenerating = isSubmitting || Boolean(clip && ACTIVE_STATUSES.has(clip.status)) || waitingForGeneration;
   const status = isSubmitting ? "Starting" : clip ? STATUS_LABELS[clip.status] ?? clip.status : runStarted ? "Waiting" : "Not generated";
   const statusClass = isGenerating
@@ -50,25 +48,24 @@ export const SceneVideoResult = ({ sceneNumber, aspectRatio, clip, runStarted, w
       <span role="status" aria-atomic="true" className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusClass}`}>{status}</span>
     </div>
 
-    <div className="grid items-center gap-4 @min-[22rem]:grid-cols-[6.5rem_minmax(0,1fr)] @min-[36rem]:grid-cols-[7.5rem_minmax(0,1fr)]">
+    <div className="grid items-center gap-3 @min-[36rem]:grid-cols-[10rem_minmax(0,1fr)]">
       {clip?.previewUrl && !isSubmitting
         ? <button type="button" onClick={() => setIsVideoOpen(true)} aria-label={`Open video preview for scene ${sceneNumber}`}
-          className="group focus-visible:outline-primary relative mr-auto block w-full max-w-[7.5rem] overflow-hidden rounded-md bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-          style={{ aspectRatio: previewAspect }}>
+          className="group focus-visible:outline-primary relative mx-auto block aspect-[9/16] w-40 overflow-hidden rounded-md bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
           <video muted playsInline preload="metadata" className="size-full object-contain" aria-hidden="true">
             <source src={clip.previewUrl} type="video/mp4" />
           </video>
           <span aria-hidden="true" className="absolute inset-0 grid place-items-center bg-black/15 transition-colors group-hover:bg-black/30 group-focus-visible:bg-black/30">
-            <span className="grid size-10 place-items-center rounded-full bg-black/70 text-white shadow-lg transition-transform group-hover:scale-105">
-              <Play className="ml-0.5 size-4 fill-current" />
+            <span className="grid size-12 place-items-center rounded-full bg-black/70 text-white shadow-lg transition-transform group-hover:scale-105">
+              <Play className="ml-0.5 size-5 fill-current" />
             </span>
           </span>
         </button>
         : isGenerating
-          ? <div aria-hidden="true" className="bg-muted-foreground/10 mr-auto w-full max-w-[7.5rem] animate-pulse rounded-md" style={{ aspectRatio: previewAspect }} />
-          : <div className="bg-background/70 text-muted-foreground mr-auto flex w-full max-w-[7.5rem] flex-col items-center justify-center gap-2 rounded-md" style={{ aspectRatio: previewAspect }}>
+          ? <div aria-hidden="true" className="bg-muted-foreground/10 mx-auto aspect-[9/16] w-40 animate-pulse rounded-md" />
+          : <div className="bg-background/70 text-muted-foreground mx-auto flex aspect-[9/16] w-40 flex-col items-center justify-center gap-2 rounded-md">
             <Film aria-hidden="true" className="size-6" />
-            <span className="px-2 text-center text-[11px] leading-tight">{clip?.status === "failed" ? "Generation failed" : "Preview will appear here"}</span>
+            <span className="px-3 text-center text-xs">{clip?.status === "failed" ? "Generation failed" : "Preview will appear here"}</span>
           </div>}
 
       <div className="min-w-0 space-y-3 text-xs">

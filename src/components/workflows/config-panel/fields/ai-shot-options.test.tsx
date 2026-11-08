@@ -3,13 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AiShotOptions } from "@/components/workflows/config-panel/fields/ai-shot-options";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { Entitlements } from "@/types/subscription";
-import type { AiVideoSceneOptions, MockupAsset } from "@/types/video-workflow";
+import type { AiVideoSceneOptions } from "@/types/video-workflow";
 import type { WorkflowNode } from "@/types/workflow";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 let entitlements: Entitlements | undefined;
-let assets: MockupAsset[] = [];
 
 vi.mock("@/hooks/queries/use-entitlements", () => ({
   useEntitlements: () => ({ data: entitlements }),
@@ -24,7 +23,7 @@ vi.mock("@/hooks/queries/use-video-packs", () => ({
   useVideoPacks: () => ({ data: [], isPending: false }),
 }));
 vi.mock("@/hooks/queries/use-mockup-assets", () => ({
-  useMockupAssets: () => ({ data: assets, isPending: false }),
+  useMockupAssets: () => ({ data: [], isPending: false }),
 }));
 vi.mock("@/hooks/queries/use-run-scene-videos", () => ({
   useRunSceneVideos: () => ({ data: [] }),
@@ -88,14 +87,14 @@ const scene = (mode: AiVideoSceneOptions["mode"]): AiVideoSceneOptions => ({
   studioReferenceHashes: [],
 });
 
-const renderWithScene = (mode: AiVideoSceneOptions["mode"], changes: Partial<AiVideoSceneOptions> = {}) => {
+const renderWithScene = (mode: AiVideoSceneOptions["mode"]) => {
   const node = {
     id: "video",
     type: "workflow",
     position: { x: 0, y: 0 },
     data: {
       type: "generate-video",
-      config: { mode: mode === "ai" ? "ai_shot" : "standard", aiScenes: [{ ...scene(mode), ...changes }] },
+      config: { mode: mode === "ai" ? "ai_shot" : "standard", aiScenes: [scene(mode)] },
     },
   } as unknown as WorkflowNode;
   useWorkflowStore.setState({ nodes: [node] });
@@ -110,7 +109,6 @@ const openModeMenu = async () => {
 describe("AiShotOptions plan lock", () => {
   beforeEach(() => {
     entitlements = undefined;
-    assets = [];
     // jsdom has no matchMedia; the Standard motion preview asks it about reduced motion.
     vi.stubGlobal(
       "matchMedia",
@@ -162,28 +160,5 @@ describe("AiShotOptions plan lock", () => {
     renderWithScene("ai");
 
     expect(screen.queryByTitle(/not included in your plan/)).not.toBeInTheDocument();
-  });
-
-  it("saves an AI start frame crop and clears it when another image is selected", async () => {
-    const first = "11111111-1111-4111-8111-111111111111";
-    const second = "22222222-2222-4222-8222-222222222222";
-    assets = [first, second].map(id => ({
-      id, productId: "product", sourceType: "uploaded", role: "Hero", artworkGroupKey: "group",
-      variantKey: null, revision: 1, approvalStatus: "approved", approvedRevision: 1,
-      width: 1200, height: 1600, previewUrl: "/mockup.png", warnings: [],
-      regions: { focalPoint: null, product: null, artwork: null, detail: null },
-    }));
-    renderWithScene("ai", { mockupId: first });
-    await userEvent.click(screen.getByRole("button", { name: "Edit start frame" }));
-    fireEvent.change(screen.getByRole("slider", { name: /Zoom/ }), { target: { value: "2" } });
-    await userEvent.click(screen.getByRole("button", { name: "Save crop" }));
-
-    const saved = () => (useWorkflowStore.getState().nodes[0]!.data.config.aiScenes as AiVideoSceneOptions[])[0]!;
-    expect(saved().aiStartFrameCrop?.height).toBeCloseTo(0.5);
-    expect(screen.getByText("Crop applied")).toBeVisible();
-    await userEvent.click(screen.getByRole("button", { name: "Change start frame for scene 1" }));
-    await userEvent.click(screen.getByRole("button", { name: "Use Hero 222222 for scene 1" }));
-    expect(saved().mockupId).toBe(second);
-    expect(saved().aiStartFrameCrop).toBeNull();
   });
 });

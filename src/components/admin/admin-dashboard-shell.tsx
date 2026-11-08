@@ -260,7 +260,7 @@ const AdminDashboardContent = ({
               </div>
 
               <footer className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 text-[10px] text-slate-400 max-md:hidden">
-                <span>APCS Admin Console · Platform overview</span>
+                <span>Podivo Admin Console · Platform overview</span>
                 <span className="flex items-center gap-1">
                   <Activity className="size-3" /> Last synced just now
                 </span>

@@ -6,7 +6,7 @@ import { getPageMetadata } from "@/data/metadata";
 
 export const metadata: Metadata = getPageMetadata({
   title: "Shop",
-  description: "Connect your Etsy shop and see it in APCS.",
+  description: "Connect your Etsy shop and see it in Podivo.",
   pathname: "/shop",
   robots: { index: false, follow: false },
 });

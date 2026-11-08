@@ -9,7 +9,7 @@ test.describe("landing page", () => {
   });
 
   test("renders the hero heading and site navigation", async ({ page }) => {
-    await expect(page).toHaveTitle(/APCS/);
+    await expect(page).toHaveTitle(/Podivo/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible();
     await expect(page.getByRole("contentinfo")).toBeVisible();

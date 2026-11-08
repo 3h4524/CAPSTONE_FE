@@ -5,6 +5,25 @@ import { SITE_CONFIG } from "@/constants/site";
 export const getAbsoluteUrl = (pathname: string, origin: string = SITE_CONFIG.baseUrl) =>
   new URL(pathname, origin).toString();
 
+const getShareImage = () => ({
+  url: getAbsoluteUrl("/opengraph-image"),
+  width: 1200,
+  height: 630,
+  alt: `${SITE_CONFIG.name} — ${SITE_CONFIG.tagline}`,
+});
+
+const getBaseOpenGraph = () => ({
+  siteName: SITE_CONFIG.name,
+  images: [getShareImage()],
+  locale: SITE_CONFIG.ogLocale,
+  type: "website" as const,
+});
+
+const getBaseTwitter = () => ({
+  card: "summary_large_image" as const,
+  images: [getShareImage().url],
+});
+
 /**
  * Base Metadata shared by every route. Call this from the root layout, then
  * let individual routes override `title`/`description`/`openGraph`/etc. via
@@ -12,7 +31,6 @@ export const getAbsoluteUrl = (pathname: string, origin: string = SITE_CONFIG.ba
  */
 export const getSiteMetadata = (): Metadata => {
   const canonical = getAbsoluteUrl("/");
-  const ogImageUrl = getAbsoluteUrl("/opengraph-image");
 
   return {
     applicationName: SITE_CONFIG.name,
@@ -24,9 +42,6 @@ export const getSiteMetadata = (): Metadata => {
       template: `%s | ${SITE_CONFIG.name}`,
     },
     description: SITE_CONFIG.description,
-    icons: {
-      icon: [{ url: "/icons/favicon.svg", type: "image/svg+xml" }],
-    },
     authors: [{ name: SITE_CONFIG.name, url: canonical }],
     creator: SITE_CONFIG.name,
     publisher: SITE_CONFIG.name,
@@ -50,26 +65,15 @@ export const getSiteMetadata = (): Metadata => {
       canonical,
     },
     openGraph: {
+      ...getBaseOpenGraph(),
       title: SITE_CONFIG.name,
       description: SITE_CONFIG.description,
       url: canonical,
-      siteName: SITE_CONFIG.name,
-      images: [
-        {
-          url: ogImageUrl,
-          width: 1200,
-          height: 630,
-          alt: SITE_CONFIG.name,
-        },
-      ],
-      locale: SITE_CONFIG.locale,
-      type: "website",
     },
     twitter: {
-      card: "summary_large_image",
+      ...getBaseTwitter(),
       title: SITE_CONFIG.name,
       description: SITE_CONFIG.description,
-      images: [ogImageUrl],
     },
     appleWebApp: {
       title: SITE_CONFIG.name,
@@ -103,11 +107,13 @@ export const getPageMetadata = ({
     ...(robots ? { robots } : null),
     ...(canonical ? { alternates: { canonical } } : null),
     openGraph: {
+      ...getBaseOpenGraph(),
       title,
       description,
       ...(canonical ? { url: canonical } : null),
     },
     twitter: {
+      ...getBaseTwitter(),
       title,
       description,
     },

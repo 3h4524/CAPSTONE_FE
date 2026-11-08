@@ -83,7 +83,7 @@ const PublishStepResult = ({ step }: { step: WorkflowNodeRun }) => {
         <span className="font-medium text-slate-800">{label}</span>
         <span className={step.status === "succeeded" ? "text-emerald-700" : step.status === "failed" ? "text-rose-700" : "text-slate-500"}>{state}</span>
       </p>
-      {step.status === "succeeded" && attached > 0 && <p className="text-slate-500">{attached} APCS image(s), video or file(s) added to the listing.</p>}
+      {step.status === "succeeded" && attached > 0 && <p className="text-slate-500">{attached} Podivo image(s), video or file(s) added to the listing.</p>}
       {warnings.length > 0 && <ul className="list-disc space-y-0.5 pl-4 text-amber-800">{warnings.map(item => <li key={item}>{item}</li>)}</ul>}
       {url && (
         <Button asChild size="sm" variant="outline">

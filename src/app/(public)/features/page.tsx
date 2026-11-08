@@ -15,13 +15,12 @@ import {
 } from "@/data/features-content";
 import { getPageMetadata } from "@/data/metadata";
 
-export const generateMetadata = (): Metadata =>
-  getPageMetadata({
-    title: "Features",
-    description:
-      "Explore APCS features in detail: AI design generation, video creation, Etsy listing content, batch processing, and platform integrations.",
-    pathname: "/features",
-  });
+export const metadata: Metadata = getPageMetadata({
+  title: "Features",
+  description:
+    "Explore what Podivo automates: AI design generation, mockups, promo videos, SEO-optimized Etsy listings, batch processing and publishing to Etsy and Printify.",
+  pathname: "/features",
+});
 
 const FeaturesPage = () => {
   return (

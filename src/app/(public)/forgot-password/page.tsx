@@ -5,12 +5,12 @@ import { FormForgotPassword } from "@/components/auth/form-forgot-password";
 import { SITE_CONFIG } from "@/constants/site";
 import { getPageMetadata } from "@/data/metadata";
 
-export const generateMetadata = (): Metadata =>
-  getPageMetadata({
-    title: "Forgot password",
-    description: SITE_CONFIG.description,
-    pathname: "/forgot-password",
-  });
+export const metadata: Metadata = getPageMetadata({
+  title: "Forgot password",
+  description: SITE_CONFIG.description,
+  pathname: "/forgot-password",
+  robots: { index: false, follow: false },
+});
 
 const ForgotPasswordPage = () => {
   return (

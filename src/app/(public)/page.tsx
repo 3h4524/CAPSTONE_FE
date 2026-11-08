@@ -13,12 +13,11 @@ import { FaqJsonLd } from "@/components/seo/faq-json-ld";
 import { SITE_CONFIG } from "@/constants/site";
 import { getPageMetadata } from "@/data/metadata";
 
-export const generateMetadata = (): Metadata =>
-  getPageMetadata({
-    title: "Scale Your POD Empire at AI Speed",
-    description: SITE_CONFIG.description,
-    pathname: "/",
-  });
+export const metadata: Metadata = getPageMetadata({
+  title: "Scale Your POD Empire at AI Speed",
+  description: SITE_CONFIG.description,
+  pathname: "/",
+});
 
 const RootPage = async () => {
   const user = await getSessionUser();

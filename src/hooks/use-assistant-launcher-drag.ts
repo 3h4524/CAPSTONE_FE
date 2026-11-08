@@ -6,6 +6,7 @@ import { ASSISTANT_LAUNCHER_DRAG_THRESHOLD_PX, ASSISTANT_LAUNCHER_KEY_STEP_PX } 
 import {
   clampLauncherPosition,
   defaultLauncherPosition,
+  keepClearOfBottomTabs,
   type LauncherPosition,
   loadLauncherPosition,
   saveLauncherPosition,
@@ -28,7 +29,7 @@ export const useAssistantLauncherDrag = (pathname: string) => {
   const setLauncherPosition = useAssistantStore((state) => state.setLauncherPosition);
   const dragStart = useRef<DragStart | null>(null);
   const moved = useRef(false);
-  const position = stored ?? defaultLauncherPosition(pathname);
+  const position = keepClearOfBottomTabs(stored ?? defaultLauncherPosition(pathname), pathname);
 
   useEffect(() => {
     const saved = loadLauncherPosition();

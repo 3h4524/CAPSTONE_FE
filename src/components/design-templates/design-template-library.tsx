@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 
+import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { DeleteDesignTemplateDialog } from "@/components/design-templates/delete-design-template-dialog";
 import { DesignTemplateCard } from "@/components/design-templates/design-template-card";
 import { DesignTemplateCardSkeleton } from "@/components/design-templates/design-template-card-skeleton";
@@ -32,6 +33,7 @@ import { useCloneDesignTemplate } from "@/hooks/mutations/use-clone-design-templ
 import { useDeleteDesignTemplate } from "@/hooks/mutations/use-delete-design-template";
 import { useDesignTemplateOptions } from "@/hooks/queries/use-design-template-options";
 import { useDesignTemplates } from "@/hooks/queries/use-design-templates";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { useAuthStore } from "@/stores/auth";
 import type {
   DesignTemplateFilters,
@@ -41,6 +43,7 @@ import type {
 import { cn } from "@/utils/cn";
 
 const PAGE_SIZE = 12;
+const PHONE_PAGE_SIZE = 5;
 const ALL_FILTER = "all";
 const LIBRARY_TABS: Array<{
   value: DesignTemplateScope;
@@ -67,6 +70,7 @@ export function DesignTemplateLibrary() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const user = useAuthStore((state) => state.user);
+  const isPhone = useIsPhone();
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get("search") ?? "");
   const [scope, setScope] = useState<DesignTemplateScope>(readScope(searchParams.get("scope")));
@@ -79,13 +83,13 @@ export function DesignTemplateLibrary() {
   const filters = useMemo<DesignTemplateFilters>(
     () => ({
       pageNumber,
-      pageSize: PAGE_SIZE,
+      pageSize: isPhone ? PHONE_PAGE_SIZE : PAGE_SIZE,
       search: debouncedSearch || undefined,
       nicheCategory: niche === ALL_FILTER ? undefined : niche,
       artStyle: artStyle === ALL_FILTER ? undefined : artStyle,
       scope,
     }),
-    [artStyle, debouncedSearch, niche, pageNumber, scope]
+    [artStyle, debouncedSearch, isPhone, niche, pageNumber, scope]
   );
   const templatesQuery = useDesignTemplates(filters, Boolean(user));
   const cloneMutation = useCloneDesignTemplate();
@@ -95,6 +99,8 @@ export function DesignTemplateLibrary() {
   const isSystemTab = scope === "system";
 
   useEffect(() => {
+    // Runs on load too, where it would send a link to page 2, or a quick tap on Next, back to page 1.
+    if (search.trim() === debouncedSearch) return;
     const timeout = window.setTimeout(() => {
       setDebouncedSearch(search.trim());
       setPageNumber(1);
@@ -184,26 +190,30 @@ export function DesignTemplateLibrary() {
   const data = templatesQuery.data;
 
   return (
-    <div className="w-full min-w-0 p-4 text-[#161c22] sm:p-6">
+    <div className="w-full min-w-0 text-[#161c22] md:p-6">
       <main className="w-full min-w-0">
-        <header className="grid gap-6 border-b border-slate-200 pb-7 lg:grid-cols-[1fr_auto] lg:items-end">
+        <header className="grid gap-6 border-b border-slate-200 pb-7 max-md:flex max-md:items-center max-md:justify-between max-md:gap-3 max-md:border-0 max-md:pb-0 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
-            <p className="text-[11px] font-bold tracking-[0.17em] text-slate-500 uppercase">Creative library</p>
-            <h1 className="font-display mt-2 max-w-3xl text-3xl font-semibold tracking-[-0.035em] text-slate-950 sm:text-4xl">
-              Start with a structure. Make the artwork yours.
+            <p className="text-[11px] font-bold tracking-[0.17em] text-slate-500 uppercase max-md:hidden">Creative library</p>
+            <h1 className="font-display mt-2 max-w-3xl text-3xl font-semibold tracking-[-0.035em] text-slate-950 max-md:mt-0 max-md:text-xl max-md:tracking-tight sm:text-4xl">
+              <span className="md:hidden">Design templates</span>
+              <span className="max-md:hidden">Start with a structure. Make the artwork yours.</span>
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 max-md:hidden sm:text-base">
               Explore production-ready prompt systems or manage the reusable templates in your private workspace.
             </p>
           </div>
-          <Button size="lg" className="min-h-11 self-start px-5 lg:self-auto" onClick={() => router.push("/design-templates/new")}>
-            <Plus aria-hidden="true" />New personal template
+          <Button size="page-action" className="self-start max-md:shrink-0 md:h-11 md:min-h-11 md:px-5 md:text-base lg:self-auto" onClick={() => router.push("/design-templates/new")}>
+            <Plus aria-hidden="true" />
+            <span>
+              New<span className="max-md:hidden"> personal template</span>
+            </span>
           </Button>
         </header>
 
-        <section className="mt-6" aria-label="Template library controls">
+        <section className="mt-6 max-md:mt-4" aria-label="Template library controls">
           <div
-            className="grid gap-1.5 rounded-[20px] border border-slate-200 bg-slate-100/80 p-1.5 sm:grid-cols-2 lg:max-w-3xl"
+            className="grid grid-cols-2 gap-1.5 rounded-[20px] border border-slate-200 bg-slate-100/80 p-1.5 lg:max-w-3xl"
             role="tablist"
             aria-label="Template library"
           >
@@ -221,7 +231,7 @@ export function DesignTemplateLibrary() {
                   aria-controls={`${tab.value}-templates-panel`}
                   tabIndex={selected ? 0 : -1}
                   className={cn(
-                    "flex min-h-18 items-center gap-3 rounded-[15px] px-4 py-3 text-left transition-[background-color,color,box-shadow,transform] duration-200 focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none active:translate-y-px",
+                    "flex min-h-18 items-center gap-3 rounded-[15px] px-4 py-3 text-left transition-[background-color,color,box-shadow,transform] duration-200 focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none active:translate-y-px max-md:min-h-12 max-md:gap-2 max-md:px-2.5 max-md:py-2",
                     selected
                       ? "bg-[#273750] text-white shadow-[0_10px_24px_rgba(39,55,80,0.18)]"
                       : "text-slate-700 hover:bg-white hover:text-slate-950"
@@ -240,7 +250,7 @@ export function DesignTemplateLibrary() {
                 >
                   <span
                     className={cn(
-                      "flex size-10 shrink-0 items-center justify-center rounded-xl border",
+                      "flex size-10 shrink-0 items-center justify-center rounded-xl border max-md:size-8 max-md:rounded-lg",
                       selected
                         ? "border-white/15 bg-white/10 text-white"
                         : "border-slate-200 bg-white text-slate-600"
@@ -249,8 +259,16 @@ export function DesignTemplateLibrary() {
                     <Icon className="size-5" aria-hidden="true" />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-sm font-semibold sm:text-base">{tab.label}</span>
-                    <span className={cn("mt-0.5 block text-xs", selected ? "text-slate-300" : "text-slate-500")}>
+                    <span className="block text-sm font-semibold sm:text-base">
+                      {tab.value === "system" ? (
+                        <>
+                          System<span className="max-md:hidden"> templates</span>
+                        </>
+                      ) : (
+                        tab.label
+                      )}
+                    </span>
+                    <span className={cn("mt-0.5 block text-xs max-md:hidden", selected ? "text-slate-300" : "text-slate-500")}>
                       {tab.description}
                     </span>
                   </span>
@@ -259,8 +277,8 @@ export function DesignTemplateLibrary() {
             })}
           </div>
 
-          <div className="mt-5 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div>
+          <div className="mt-5 flex flex-col gap-3 max-md:mt-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="max-md:hidden">
               <p className="text-sm font-semibold text-slate-950">
                 {isSystemTab ? "Explore the system collection" : "Manage your personal collection"}
               </p>
@@ -270,8 +288,8 @@ export function DesignTemplateLibrary() {
                   : "Edit, review, or remove templates owned by your account."}
               </p>
             </div>
-            <div className="grid gap-2 sm:grid-cols-[minmax(220px,1fr)_190px_190px] xl:w-[720px]">
-              <div className="relative">
+            <div className="grid gap-2 max-sm:grid-cols-2 sm:grid-cols-[minmax(220px,1fr)_190px_190px] xl:w-[720px]">
+              <div className="relative max-sm:col-span-2">
                 <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
                 <Input
                   type="search"
@@ -283,7 +301,7 @@ export function DesignTemplateLibrary() {
                 />
               </div>
               <Select value={niche} onValueChange={selectNiche}>
-                <SelectTrigger className="min-h-10 w-full border-slate-300 bg-white">
+                <SelectTrigger className="min-h-10 w-full min-w-0 border-slate-300 bg-white">
                   <SelectValue placeholder="All niches" />
                 </SelectTrigger>
                 <SelectContent>
@@ -294,7 +312,7 @@ export function DesignTemplateLibrary() {
                 </SelectContent>
               </Select>
               <Select value={artStyle} onValueChange={selectArtStyle}>
-                <SelectTrigger className="min-h-10 w-full border-slate-300 bg-white">
+                <SelectTrigger className="min-h-10 w-full min-w-0 border-slate-300 bg-white">
                   <SelectValue placeholder="All styles" />
                 </SelectTrigger>
                 <SelectContent>
@@ -314,7 +332,7 @@ export function DesignTemplateLibrary() {
           aria-labelledby={`${scope}-templates-tab`}
         >
           {templatesQuery.isPending || optionsQuery.isPending ? (
-            <section className="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading templates">
+            <section className="mt-7 grid gap-5 max-md:mt-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading templates">
               {Array.from({ length: 6 }, (_, index) => <DesignTemplateCardSkeleton key={index} />)}
             </section>
           ) : templatesQuery.isError || optionsQuery.isError ? (
@@ -371,7 +389,7 @@ export function DesignTemplateLibrary() {
             </section>
           ) : (
             <>
-              <div className="mt-7 flex items-center justify-between gap-4">
+              <div className="mt-7 flex items-center justify-between gap-4 max-md:mt-4">
                 <p className="text-sm text-slate-600">
                   <span className="font-semibold text-slate-950">{data.totalCount}</span>{" "}
                   {isSystemTab ? "system" : "personal"} template{data.totalCount === 1 ? "" : "s"}
@@ -395,6 +413,11 @@ export function DesignTemplateLibrary() {
                   />
                 ))}
               </section>
+              {isPhone ? (
+                <div className="mt-4">
+                  <PhonePager page={data.pageNumber} pageCount={data.totalPages} onPageChange={goToPage} label="Template pages" />
+                </div>
+              ) : (
               <nav className="mt-8 flex items-center justify-between border-t border-slate-200 pt-5" aria-label="Template pages">
                 <p className="text-xs text-slate-500">Page {data.pageNumber} of {Math.max(1, data.totalPages)}</p>
                 <div className="flex items-center gap-2">
@@ -406,6 +429,7 @@ export function DesignTemplateLibrary() {
                   </Button>
                 </div>
               </nav>
+              )}
             </>
           )}
         </div>

@@ -105,7 +105,7 @@ export function FinancialAlertsCard({
   };
 
   return (
-    <Card className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+    <Card className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
       {/* Header */}
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2.5">
@@ -198,12 +198,12 @@ function AlertItem({
         <Icon className="size-4" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-2">
+        <div className="flex items-baseline justify-between gap-2 max-md:flex-wrap">
           <h4 className={`flex items-center gap-1.5 text-xs leading-tight font-bold ${style.title}`}>
             {isNew && <span aria-label="New" className="size-1.5 shrink-0 rounded-full bg-rose-500" />}
             {alert.title}
           </h4>
-          <span className="shrink-0 text-[10px] font-medium text-slate-400 dark:text-slate-500">{alert.scope}</span>
+          <span className="shrink-0 text-[10px] font-medium text-slate-400 max-md:max-w-full max-md:shrink max-md:wrap-anywhere dark:text-slate-500">{alert.scope}</span>
         </div>
         <p className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">{alert.description}</p>
         {(alert.amount != null || alert.actionStatus) && (

@@ -31,13 +31,13 @@ export const CurrentPlanCard = ({
   const isPastDue = subscription?.status === "past_due";
 
   return (
-    <Card>
-      <CardContent className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <Card className="max-md:py-4">
+      <CardContent className="flex flex-col justify-between gap-4 max-md:gap-3 max-md:px-4 sm:flex-row sm:items-center">
         <div className="space-y-1">
           <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
             Current plan
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-semibold">
               {subscription ? subscription.planName : "Free"}
             </h3>
@@ -53,7 +53,7 @@ export const CurrentPlanCard = ({
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-sm max-md:hidden">
             {isTrial
               ? `You're trying every ${subscription!.planName} feature for free. Choose a plan before ${formatDate(subscription!.trialEndsAt!)} to keep running your workflows.`
               : subscription
@@ -93,8 +93,8 @@ export const CurrentPlanCard = ({
             </div>
           )}
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold">
+        <div className="text-right max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:items-center max-md:gap-x-3 max-md:text-left">
+          <p className="text-2xl font-bold max-md:text-lg">
             {isTrial ? "Free trial" : subscription ? formatVnd(subscription.priceVnd) : "0 ₫"}
             {!isTrial && (
               <span className="text-muted-foreground text-sm font-normal">
@@ -113,7 +113,7 @@ export const CurrentPlanCard = ({
                   : "No plan yet"}
           </p>
           {subscription?.canRenew && !isPastDue && (
-            <Button variant="outline" size="sm" className="mt-2" onClick={onRenewClick}>
+            <Button variant="outline" size="sm" className="mt-2 max-md:col-start-2 max-md:row-span-2 max-md:row-start-1 max-md:mt-0" onClick={onRenewClick}>
               Renew now
             </Button>
           )}

@@ -17,6 +17,7 @@ import {
   pickPlanLeaders,
 } from "@/helpers/revenue-by-plan";
 import { CHANGE_TONE_CLASS, changeTone, formatChange } from "@/helpers/revenue-change";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { RevenueByPlanDto } from "@/types/revenue";
 import { formatVnd } from "@/utils/format-currency";
 
@@ -48,6 +49,7 @@ interface RevenueByPlanCardProps {
 }
 
 export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: RevenueByPlanCardProps) {
+  const isPhone = useIsPhone();
   // Shared by the donut and the table so hovering either highlights the same plan in both.
   const [activePlan, setActivePlan] = useState<string | null>(null);
   const [view, setView] = useState<View>("revenue");
@@ -78,7 +80,7 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
 
   return (
     <TooltipProvider delayDuration={150}>
-      <Card className="@container flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+      <Card className="@container flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -187,6 +189,13 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
 
             {/* Per-plan table */}
             <div className="flex min-w-0 flex-1 flex-col gap-3">
+              {isPhone ? (
+                <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {plans.map((plan, idx) => (
+                    <PlanSummary key={plan.planName} plan={plan} index={idx} view={view} isMostPurchased={plan.planName === leaders.mostPurchased} />
+                  ))}
+                </ul>
+              ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[520px] text-xs tabular-nums">
                   {view === "revenue" ? (
@@ -310,12 +319,56 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                   )}
                 </table>
               </div>
+              )}
 
             </div>
           </div>
         )}
       </Card>
     </TooltipProvider>
+  );
+}
+
+/** A plan on a phone: its main figure on the first line and the rest in one short line under it. */
+function PlanSummary({ plan, index, view, isMostPurchased }: { plan: RevenueByPlanDto; index: number; view: View; isMostPurchased: boolean }) {
+  const mrrDelta = plan.mrrEnd - plan.mrrStart;
+  const isRevenue = view === "revenue";
+  const main = isRevenue
+    ? formatVnd(plan.amount)
+    : mrrDelta === 0
+      ? "0 ₫"
+      : `${mrrDelta > 0 ? "+" : "−"}${formatVnd(Math.abs(mrrDelta))}`;
+  const details = isRevenue
+    ? [
+        `${plan.percentage}%`,
+        `${plan.purchaseCount} ${plan.purchaseCount === 1 ? "purchase" : "purchases"}`,
+        plan.arpu == null ? null : `ARPU ${formatVnd(plan.arpu)}`,
+        formatChange(plan.percentageChange, plan.amount),
+      ]
+    : [
+        `MRR ${formatVnd(plan.mrrEnd)}`,
+        `${plan.customers.start} → ${plan.customers.end} customers`,
+        plan.retentionRate == null ? null : `${plan.retentionRate}% retained`,
+      ];
+
+  return (
+    <li className="py-2.5 text-xs tabular-nums">
+      <p className="flex items-center gap-1.5">
+        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: getPlanColor(plan.planName, index) }} />
+        <span className="min-w-0 truncate font-semibold text-slate-800 dark:text-slate-100">{plan.planName}</span>
+        {isRevenue && isMostPurchased && (
+          <Star className="h-3 w-3 shrink-0 fill-orange-500 text-orange-500" role="img" aria-label="Most purchased" />
+        )}
+        <span
+          className={`ml-auto shrink-0 font-semibold ${
+            isRevenue ? "text-slate-900 dark:text-slate-100" : CHANGE_TONE_CLASS[changeTone(plan.mrrChangePercent)]
+          }`}
+        >
+          {main}
+        </span>
+      </p>
+      <p className="mt-0.5 pl-4 text-[11px] text-slate-500 dark:text-slate-400">{details.filter(Boolean).join(" · ")}</p>
+    </li>
   );
 }
 
@@ -387,9 +440,9 @@ function FlowLine({ label, value, tone, strong }: { label: string; value: string
 
 function Stat({ label, value, emphasis = false }: { label: string; value: string; emphasis?: boolean }) {
   return (
-    <div className="min-w-0 px-3 first:pl-0 last:pr-0">
+    <div className="min-w-0 px-3 first:pl-0 last:pr-0 max-md:flex-1">
       <p className="text-[10px] font-semibold tracking-wide whitespace-nowrap text-slate-400 uppercase">{label}</p>
-      <p className={`font-bold whitespace-nowrap text-slate-900 dark:text-slate-100 ${emphasis ? "text-base tracking-tight" : "text-sm"}`}>
+      <p className={`font-bold whitespace-nowrap text-slate-900 max-md:wrap-anywhere max-md:whitespace-normal dark:text-slate-100 ${emphasis ? "text-base tracking-tight" : "text-sm"}`}>
         {value}
       </p>
     </div>

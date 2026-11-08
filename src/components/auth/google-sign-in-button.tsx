@@ -37,6 +37,10 @@ const loadGoogleScript = (): Promise<void> => {
   return scriptLoadPromise;
 };
 
+// Google draws its button at a fixed width, between these two.
+const MIN_BUTTON_WIDTH = 200;
+const MAX_BUTTON_WIDTH = 400;
+
 type GoogleSignInButtonProps = {
   text: "signin_with" | "signup_with";
   clientId: string;
@@ -58,6 +62,24 @@ export const GoogleSignInButton = ({
     }
 
     let cancelled = false;
+    let observer: ResizeObserver | undefined;
+    let drawnWidth = 0;
+
+    // The width is fixed once drawn, so a narrower screen or a turned phone needs a new button.
+    const draw = () => {
+      const width = Math.min(MAX_BUTTON_WIDTH, Math.max(MIN_BUTTON_WIDTH, container.clientWidth));
+      if (width === drawnWidth || !window.google) return;
+      drawnWidth = width;
+      container.replaceChildren();
+      window.google.accounts.id.renderButton(container, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        shape: "rectangular",
+        text,
+        width,
+      });
+    };
 
     loadGoogleScript()
       .then(() => {
@@ -70,14 +92,9 @@ export const GoogleSignInButton = ({
           callback: (response) => googleLogin(response.credential),
         });
 
-        window.google.accounts.id.renderButton(container, {
-          type: "standard",
-          theme: "outline",
-          size: "large",
-          shape: "rectangular",
-          text,
-          width: container.offsetWidth,
-        });
+        draw();
+        observer = new ResizeObserver(draw);
+        observer.observe(container);
       })
       .catch((error: unknown) => {
         // eslint-disable-next-line no-console
@@ -86,8 +103,9 @@ export const GoogleSignInButton = ({
 
     return () => {
       cancelled = true;
+      observer?.disconnect();
     };
   }, [clientId, googleLogin, text]);
 
-  return <div ref={containerRef} className="flex w-full justify-center" />;
+  return <div ref={containerRef} className="flex w-full min-w-0 justify-center overflow-hidden" />;
 };

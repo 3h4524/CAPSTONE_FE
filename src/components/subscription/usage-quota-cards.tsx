@@ -25,8 +25,8 @@ export const UsageQuotaCards = ({ quotas }: UsageQuotaCardsProps) => {
       {quotas.map((quota) => {
         const Icon = QUOTA_ICONS[quota.quotaCode] ?? ImageIcon;
         return (
-          <Card key={quota.quotaCode}>
-            <CardContent className="space-y-3">
+          <Card key={quota.quotaCode} className="max-md:py-3">
+            <CardContent className="space-y-3 max-md:px-4">
               <div className="flex items-center gap-3">
                 <div className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg">
                   <Icon className="size-4" />

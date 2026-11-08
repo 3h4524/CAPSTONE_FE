@@ -202,7 +202,7 @@ export function NumberStepperControls({
         onPointerCancel={cancelPress}
         onLostPointerCapture={stopRepeating}
         onClick={() => handleClick(step)}
-        className="border-input bg-background text-muted-foreground hover:bg-muted focus-visible:ring-ring/40 flex h-[17px] w-6 items-center justify-center rounded-t-sm border focus-visible:z-10 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+        className="border-input bg-background text-muted-foreground hover:bg-muted focus-visible:ring-ring/40 flex h-[17px] w-6 items-center justify-center rounded-t-sm border focus-visible:z-10 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 [@media(pointer:coarse)]:h-6 [@media(pointer:coarse)]:w-8"
       >
         <ChevronUp aria-hidden="true" className="size-3" />
       </button>
@@ -215,7 +215,7 @@ export function NumberStepperControls({
         onPointerCancel={cancelPress}
         onLostPointerCapture={stopRepeating}
         onClick={() => handleClick(-step)}
-        className="border-input bg-background text-muted-foreground hover:bg-muted focus-visible:ring-ring/40 flex h-[17px] w-6 items-center justify-center rounded-b-sm border focus-visible:z-10 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+        className="border-input bg-background text-muted-foreground hover:bg-muted focus-visible:ring-ring/40 flex h-[17px] w-6 items-center justify-center rounded-b-sm border focus-visible:z-10 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 [@media(pointer:coarse)]:h-6 [@media(pointer:coarse)]:w-8"
       >
         <ChevronDown aria-hidden="true" className="size-3" />
       </button>
@@ -1392,7 +1392,7 @@ export function StandardMotionEditor({
       <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? openEditor() : cancelEditor())}>
         <DialogContent
           showCloseButton={false}
-          className="border-border bg-card text-card-foreground h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden rounded-xl p-0 shadow-2xl sm:h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-2rem)] xl:h-[min(90dvh,60rem)] xl:w-[min(94vw,88rem)] xl:max-w-[88rem]"
+          className="border-border bg-card text-card-foreground h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden rounded-xl p-0 shadow-2xl [--dialog-phone-height:100dvh] max-lg:grid-cols-1 sm:h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-2rem)] xl:h-[min(90dvh,60rem)] xl:w-[min(94vw,88rem)] xl:max-w-[88rem]"
         >
           <DialogHeader className="border-border bg-card flex-row items-center justify-between gap-4 border-b px-5 py-4 text-left sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
@@ -1424,11 +1424,11 @@ export function StandardMotionEditor({
             </Button>
           </DialogHeader>
 
-          <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
-            <div className="grid min-h-0 overflow-y-auto lg:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)] lg:overflow-hidden">
+          <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden max-lg:grid-cols-1">
+            <div className="grid min-h-0 overflow-y-auto max-lg:grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)] lg:overflow-hidden">
               <section
                 ref={previewCanvasRef}
-                className="bg-muted/55 relative flex min-h-[26rem] items-center justify-center p-4 pb-14 sm:p-6 sm:pb-16 lg:min-h-0 xl:p-8 xl:pb-18"
+                className="bg-muted/55 relative flex min-h-[26rem] items-center justify-center p-4 pb-14 max-sm:min-h-[16rem] sm:p-6 sm:pb-16 lg:min-h-0 xl:p-8 xl:pb-18"
                 aria-label="Motion preview canvas"
               >
                 <div

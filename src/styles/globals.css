@@ -217,6 +217,24 @@
   }
 }
 
+/* iOS Safari zooms the page when a focused field's text is under 16px, so phones get 16px everywhere.
+   Unlayered on purpose: it has to beat the text-size utilities on individual fields. */
+@media (max-width: 767.98px) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]),
+  textarea,
+  select {
+    font-size: 1rem;
+  }
+}
+
+/* React Flow's zoom buttons are 26px, too small for a finger. */
+@media (pointer: coarse) {
+  .react-flow .react-flow__controls-button {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
 /* Custom scrollbar to match the technical aesthetic */
 ::-webkit-scrollbar {
   width: 8px;

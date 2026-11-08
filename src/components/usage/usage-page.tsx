@@ -30,6 +30,13 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { showToast } from "@/helpers/toast";
 import { useUsageOverview } from "@/hooks/queries/use-usage-overview";
+import { useIsPhone } from "@/hooks/use-is-phone";
+
+// The backend sends this name when the Seller has no subscription, which leaves them on the free allowance.
+const NO_PLAN_NAME = "No active plan";
+
+const formatResetDate = (value: string) =>
+  new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(value));
 
 const ranges = [
   { label: "Last 30 days", days: 30 },
@@ -40,6 +47,7 @@ const ranges = [
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
 export function UsagePage() {
+  const isPhone = useIsPhone();
   const [days, setDays] = useState(30);
   const { data, isLoading, isError } = useUsageOverview(days);
   const chart = useMemo(() => data?.dailyActivity ?? [], [data]);
@@ -78,14 +86,15 @@ export function UsagePage() {
   const max = Math.max(...chart.map((item) => Math.max(item.images, item.videos)), 1);
   const totalActivity = chart.reduce((sum, item) => sum + item.images + item.videos, 0);
   const activeRange = ranges.find((r) => r.days === days) ?? ranges[0];
+  const hasPlan = Boolean(data.allowance.planName) && data.allowance.planName !== NO_PLAN_NAME;
 
   return (
-    <div className="w-full min-w-0 space-y-6 p-4 sm:p-6">
+    <div className="w-full min-w-0 space-y-4 md:space-y-6 md:p-6">
       {/* Header */}
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Usage</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 max-md:text-xl sm:text-3xl">Usage</h1>
+          <p className="text-muted-foreground mt-1 text-sm max-md:hidden">
             Understand this month&apos;s production volume and estimated provider costs.
           </p>
         </div>
@@ -115,7 +124,7 @@ export function UsagePage() {
       </header>
 
       {/* Top 4 KPI Cards */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
           {
             label: "Design images",
@@ -139,22 +148,26 @@ export function UsagePage() {
             label: "Estimated API cost",
             value: money.format(data.summary.estimatedCostUsd),
             note: "heuristic estimate",
+            phoneNote: "estimated",
             icon: Database,
           },
-        ].map(({ label, value, note, icon: Icon }) => (
+        ].map(({ label, value, note, phoneNote, icon: Icon }) => (
           <Card
             key={label}
-            className="group flex-row items-center justify-between gap-3 rounded-2xl border-slate-200/80 px-5 py-3.5 shadow-2xs transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+            className="group flex-row items-center justify-between gap-3 rounded-2xl border-slate-200/80 px-5 py-3.5 shadow-2xs transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md max-sm:relative max-sm:items-start max-sm:px-3.5 max-sm:py-3"
           >
             <div className="min-w-0">
-              <p className="text-muted-foreground truncate text-xs font-medium">{label}</p>
+              <p className="text-muted-foreground truncate text-xs font-medium max-sm:pr-7 max-sm:whitespace-normal">{label}</p>
               <p className="mt-1 text-2xl leading-tight font-semibold tracking-tight text-slate-900 tabular-nums">
                 {value}
               </p>
-              <p className="text-muted-foreground mt-0.5 truncate text-[11px]">{note}</p>
+              <p className="text-muted-foreground mt-0.5 truncate text-[11px]">
+                <span className="md:hidden">{phoneNote ?? note}</span>
+                <span className="max-md:hidden">{note}</span>
+              </p>
             </div>
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#eef4fb] text-[#4f709c] ring-1 ring-[#dbe7f4] transition-transform duration-300 ring-inset group-hover:scale-110">
-              <Icon className="size-5" aria-hidden="true" />
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#eef4fb] text-[#4f709c] ring-1 ring-[#dbe7f4] transition-transform duration-300 ring-inset group-hover:scale-110 max-sm:absolute max-sm:top-2.5 max-sm:right-2.5 max-sm:size-8">
+              <Icon className="size-5 max-sm:size-4" aria-hidden="true" />
             </span>
           </Card>
         ))}
@@ -174,9 +187,6 @@ export function UsagePage() {
             {totalActivity === 0 ? (
               <div className="py-2">
                 <div className="relative flex h-48 w-full items-center justify-center border-b border-l border-slate-200 pl-4">
-                  <span className="absolute top-1/2 -left-6 -translate-y-1/2 -rotate-90 text-[10px] font-medium text-slate-400">
-                    Images
-                  </span>
                   <div className="flex flex-col items-center justify-center text-center">
                     <BarChart3 className="size-8 stroke-[1.5] text-slate-400" />
                     <p className="mt-3 text-sm font-semibold text-slate-900">
@@ -187,9 +197,16 @@ export function UsagePage() {
                     </p>
                   </div>
                 </div>
-                <div className="mt-2 text-center text-[10px] font-medium text-slate-400">
-                  <span>Videos</span>
-                </div>
+                <ul className="mt-2 flex items-center justify-center gap-4 text-xs text-slate-600" aria-label="Chart legend">
+                  <li className="flex items-center gap-1.5">
+                    <span className="size-2.5 rounded-full bg-[#2563eb]" aria-hidden="true" />
+                    Images
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <span className="size-2.5 rounded-full bg-[#94a3b8]" aria-hidden="true" />
+                    Videos
+                  </li>
+                </ul>
               </div>
             ) : (
               <div>
@@ -197,7 +214,7 @@ export function UsagePage() {
                   {chart.map((item) => (
                     <div
                       key={item.date}
-                      className="flex flex-1 items-end gap-px"
+                      className="flex h-full flex-1 items-end gap-px"
                       title={`${item.date}: ${item.images} images, ${item.videos} videos`}
                     >
                       <div
@@ -211,31 +228,36 @@ export function UsagePage() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-2 text-center text-[10px] font-medium text-slate-400">
-                  <span>Videos</span>
-                </div>
+                <ul className="mt-2 flex items-center justify-center gap-4 text-xs text-slate-600" aria-label="Chart legend">
+                  <li className="flex items-center gap-1.5">
+                    <span className="size-2.5 rounded-full bg-[#2563eb]" aria-hidden="true" />
+                    Images
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <span className="size-2.5 rounded-full bg-[#94a3b8]" aria-hidden="true" />
+                    Videos
+                  </li>
+                </ul>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* AI requests this period */}
-        <Card className="flex flex-col justify-between gap-0 rounded-2xl border-slate-200/80 p-5 shadow-2xs sm:p-6">
+        <Card className="flex flex-col justify-between gap-0 rounded-2xl border-slate-200/80 p-5 shadow-2xs max-md:order-first sm:p-6">
           <div>
             {/* Top row: Plan badge + Manage link */}
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-slate-100/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-600">
                 <span
-                  className={`size-1.5 rounded-full ${
-                    data.allowance.planName ? "bg-emerald-500" : "bg-slate-400"
-                  }`}
+                  className={`size-1.5 rounded-full ${hasPlan ? "bg-emerald-500" : "bg-slate-400"}`}
                   aria-hidden="true"
                 />
-                {data.allowance.planName || "No active plan"}
+                {hasPlan ? data.allowance.planName : "Free plan"}
               </span>
               <Link
                 href="/subscription"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                className="max-md:text-primary inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
               >
                 Manage <ExternalLink className="size-3" />
               </Link>
@@ -264,7 +286,8 @@ export function UsagePage() {
             <div className="mt-3 flex items-center gap-2 text-xs text-slate-600">
               <CalendarDays className="size-4 shrink-0 text-slate-500" />
               <span>
-                Period ends {data.allowance.resetDate} · {data.allowance.daysRemaining} days remaining
+                Period ends <span className="max-md:hidden">{data.allowance.resetDate}</span>
+                <span className="md:hidden">{formatResetDate(data.allowance.resetDate)}</span> · {data.allowance.daysRemaining} days remaining
               </span>
             </div>
 
@@ -288,7 +311,16 @@ export function UsagePage() {
             ) : (
               <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-[#eff4fa] p-3 text-xs text-slate-700">
                 <Info className="size-4 shrink-0 text-slate-500" />
-                <span>No monthly limit. Fair use applies.</span>
+                {hasPlan ? (
+                  <span>No monthly limit. Fair use applies.</span>
+                ) : (
+                  <span>
+                    Free allowance applies.{" "}
+                    <Link href="/subscription" className="text-primary font-semibold underline underline-offset-2">
+                      See plans
+                    </Link>
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -324,8 +356,28 @@ export function UsagePage() {
             <Download className="size-3.5" /> Export CSV
           </Button>
         </div>
+        {isPhone && data.costs.length > 0 ? (
+          <ul className="divide-y divide-slate-100 border-t border-slate-200/80">
+            {data.costs.map((row) => (
+              <li key={`${row.provider}-${row.service}`} className="space-y-1.5 px-5 py-3.5 text-sm">
+                <p className="flex justify-between gap-3">
+                  <span className="font-medium text-slate-900">{row.provider}</span>
+                  <span className="text-right text-slate-600">{row.service}</span>
+                </p>
+                <p className="flex justify-between gap-3">
+                  <span className="text-slate-600">Requests: {row.requests.toLocaleString()}</span>
+                  <span className="text-slate-900">{money.format(row.estimatedCostUsd)}</span>
+                </p>
+                <div className="flex items-center gap-2">
+                  <Progress value={row.sharePercent} className="h-1.5 flex-1" />
+                  <span className="text-xs text-slate-600">{row.sharePercent}%</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-sm max-md:hidden">
             <thead className="border-y border-slate-200/80 bg-[#f1f5f9] text-[10px] font-bold tracking-wider text-slate-700 uppercase">
               <tr>
                 {["PROVIDER", "SERVICE", "REQUESTS", "ESTIMATED COST", "SHARE"].map(
@@ -369,6 +421,7 @@ export function UsagePage() {
             </div>
           )}
         </div>
+        )}
       </Card>
     </div>
   );

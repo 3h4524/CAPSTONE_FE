@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Settings, User } from "lucide-react";
+import { CreditCard, LogOut, Settings, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { UserAvatar } from "@/components/commons/layout/app-shell/account/user-avatar";
@@ -26,9 +26,11 @@ import { cn } from "@/utils/cn";
 type AccountMenuProps = {
   collapsed: boolean;
   side?: "top" | "bottom";
+  /** The phone header has no sidebar beside it, so the menu also leads to Billing. */
+  inHeader?: boolean;
 };
 
-export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
+export const AccountMenu = ({ collapsed, side = "top", inHeader = false }: AccountMenuProps) => {
   const router = useRouter();
   const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
@@ -48,6 +50,8 @@ export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
     }
   }, [clearSession, profileQuery.error, profileQuery.isError]);
 
+  const firstName = user?.fullName.trim().split(/\s+/)[0] ?? "";
+
   const handleLogout = () => logout(undefined, { onSettled: () => router.replace("/login") });
 
   return (
@@ -60,10 +64,12 @@ export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
           title={user?.fullName ?? t("account.account")}
           className={cn(
             "h-auto w-full items-center gap-2.5 rounded-lg p-2 text-left",
-            collapsed ? "justify-center" : "justify-start"
+            collapsed ? "justify-center" : "justify-start",
+            inHeader && "w-auto max-w-36 gap-2 rounded-full border p-1 pr-3 [@media(pointer:coarse)]:min-h-10"
           )}
         >
-          <UserAvatar />
+          <UserAvatar accent={inHeader} className={cn(inHeader && "size-7")} />
+          {inHeader && <span className="min-w-0 truncate text-sm font-semibold">{firstName}</span>}
           {!collapsed && (
             <span className="hidden min-w-0 flex-1 sm:block">
               {user ? (
@@ -95,6 +101,14 @@ export const AccountMenu = ({ collapsed, side = "top" }: AccountMenuProps) => {
             <span>{t("account.settings")}</span>
           </Link>
         </DropdownMenuItem>
+        {inHeader && (
+          <DropdownMenuItem asChild className="focus:bg-muted focus:text-primary">
+            <Link href="/subscription">
+              <CreditCard />
+              <span>Billing</span>
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="focus:bg-muted focus:text-primary" onClick={handleLogout} disabled={isPending}>
           <LogOut />

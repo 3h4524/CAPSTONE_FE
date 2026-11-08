@@ -22,9 +22,11 @@ import {
   suspendAdminUser,
   unlockAdminUser} from "@/api/admin";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { USER_DIALOG_ON_PHONE } from "@/components/admin/users/admin-user-parts";
 import { AdminUsersTable } from "@/components/admin/users/admin-users-table";
 import { BanUserModal } from "@/components/admin/users/ban-user-modal";
 import { EditUserModal } from "@/components/admin/users/edit-user-modal";
+import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,16 +41,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAdminOperations } from "@/hooks/queries/use-admin-operations";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { AdminUserDto, GetUsersRequest } from "@/types/admin";
+import { cn } from "@/utils/cn";
 import { formatVnd } from "@/utils/format-currency";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+const DESKTOP_PAGE_SIZE = 10;
+const PHONE_PAGE_SIZE = 5;
+
 export default function AdminUsersPage() {
   const queryClient = useQueryClient();
+  const isPhone = useIsPhone();
 
   const [request, setRequest] = useState<GetUsersRequest>({
     pageIndex: 1,
-    pageSize: 10,
+    pageSize: DESKTOP_PAGE_SIZE,
     searchTerm: "",
     role: "All",
     plan: "All",
@@ -64,15 +73,19 @@ export default function AdminUsersPage() {
   const [userToBan, setUserToBan] = useState<AdminUserDto | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
+  const pageRequest = { ...request, pageSize: isPhone ? PHONE_PAGE_SIZE : DESKTOP_PAGE_SIZE };
   const { data: result, isLoading, isError } = useQuery({
-    queryKey: ["adminUsers", request],
-    queryFn: () => getAdminUsers(request),
+    queryKey: ["adminUsers", pageRequest],
+    queryFn: () => getAdminUsers(pageRequest),
   });
 
   const { data: metrics } = useQuery({
     queryKey: ["adminMetrics"],
     queryFn: () => getAdminDashboardMetrics("year"),
   });
+
+  const { data: operations } = useAdminOperations("year");
+  const paidShare = metrics?.totalUsers ? Math.round((metrics.activePaidUsers / metrics.totalUsers) * 100) : 0;
 
   const { data: plansData } = useQuery({
     queryKey: ["adminPlans"],
@@ -171,18 +184,21 @@ export default function AdminUsersPage() {
   return (
     <AdminShell pageTitle="users">
       <>
-        <div className="flex h-full flex-col gap-6 p-0">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex h-full flex-col gap-6 p-0 max-md:gap-3">
+          <div className="flex flex-col gap-4 max-md:flex-row max-md:items-center max-md:justify-between sm:flex-row sm:items-center sm:justify-between">
             <div>
 
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">Users Management</h1>
-              <p className="mt-1 text-sm text-slate-500">
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                Users<span className="max-md:hidden"> Management</span>
+              </h1>
+              <p className="mt-1 text-sm text-slate-500 max-md:hidden">
                 Search, filter, and manage registered user accounts.
               </p>
             </div>
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
+                size="page-action"
                 className="gap-2"
                 onClick={handleExportCSV}
                 disabled={(!result || result.items.length === 0) || isExporting}
@@ -193,28 +209,31 @@ export default function AdminUsersPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
+          <div className="grid grid-cols-1 gap-4 max-md:grid-cols-2 max-md:gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm max-md:p-3.5">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-slate-500">Total Users</p>
                 <Users className="h-4 w-4 text-slate-400" />
               </div>
               <div className="mt-2">
                 <p className="text-2xl font-bold text-slate-900">{metrics?.totalUsers || 0}</p>
-                <p className="mt-1 text-xs text-slate-400">+12% from last month</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {operations ? `${operations.activeSellers.toLocaleString()} active sellers this year` : "All registered accounts"}
+                </p>
               </div>
             </div>
-            <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm max-md:p-3.5">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-slate-500">Active Paid Users</p>
                 <CreditCard className="h-4 w-4 text-slate-400" />
               </div>
               <div className="mt-2">
                 <p className="text-2xl font-bold text-slate-900">{metrics?.activePaidUsers || 0}</p>
-                <p className="mt-1 text-xs text-slate-400">85% active rate</p>
+                <p className="mt-1 text-xs text-slate-400">{paidShare}% of all users</p>
               </div>
             </div>
-            <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            {/* The Dashboard shows this and Active Jobs: a phone goes straight on to the users. */}
+            <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm max-md:hidden">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-slate-500">Total Revenue</p>
                 <DollarSign className="h-4 w-4 text-slate-400" />
@@ -226,27 +245,27 @@ export default function AdminUsersPage() {
                 <p className="mt-1 text-xs text-slate-400">Collected this year</p>
               </div>
             </div>
-            <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm max-md:hidden">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-slate-500">Active Jobs</p>
                 <Activity className="h-4 w-4 text-slate-400" />
               </div>
               <div className="mt-2">
                 <p className="text-2xl font-bold text-slate-900">{metrics?.activeBatchJobs || 0}</p>
-                <p className="mt-1 text-xs text-slate-400">Normal workload</p>
+                <p className="mt-1 text-xs text-slate-400">{(metrics?.totalBatchJobs ?? 0).toLocaleString()} jobs in total</p>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm max-md:gap-3 max-md:border-0 max-md:bg-transparent max-md:p-0 max-md:shadow-none">
             {/* Top Filters & Search */}
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative w-72">
+              <div className="flex flex-wrap items-center gap-3 max-[359px]:grid-cols-2 max-md:grid max-md:w-full max-md:grid-cols-3 max-md:gap-2">
+                <div className="relative w-72 max-md:col-span-full max-md:w-full">
                   <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-slate-400" />
                   <Input
                     placeholder="Search by name, email, or ID..."
-                    className="w-full pl-9"
+                    className="w-full bg-white pl-9"
                     value={request.searchTerm}
                     onChange={handleSearch}
                   />
@@ -256,7 +275,7 @@ export default function AdminUsersPage() {
                   value={request.role}
                   onValueChange={(val) => setRequest((prev) => ({ ...prev, role: val, pageIndex: 1 }))}
                 >
-                  <SelectTrigger className="w-[120px]">
+                  <SelectTrigger className="w-[120px] bg-white max-md:w-full max-md:px-2 max-md:text-xs">
                     <SelectValue placeholder="All roles" />
                   </SelectTrigger>
                   <SelectContent>
@@ -270,7 +289,7 @@ export default function AdminUsersPage() {
                   value={request.plan}
                   onValueChange={(val) => setRequest((prev) => ({ ...prev, plan: val, pageIndex: 1 }))}
                 >
-                  <SelectTrigger className="w-[120px]">
+                  <SelectTrigger className="w-[120px] bg-white max-md:w-full max-md:px-2 max-md:text-xs">
                     <SelectValue placeholder="All plans" />
                   </SelectTrigger>
                   <SelectContent>
@@ -285,7 +304,7 @@ export default function AdminUsersPage() {
                   value={request.status}
                   onValueChange={(val) => setRequest((prev) => ({ ...prev, status: val, pageIndex: 1 }))}
                 >
-                  <SelectTrigger className="w-[130px]">
+                  <SelectTrigger className="w-[130px] bg-white max-[359px]:col-span-2 max-md:w-full max-md:px-2 max-md:text-xs">
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
@@ -323,10 +342,18 @@ export default function AdminUsersPage() {
                     onUnlock={(user) => unlockMutation.mutate(user.id)}
                     onCopyId={handleCopyId}
                   />
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-slate-500">
+                  <div className="flex items-center justify-between max-md:flex-col max-md:items-stretch max-md:gap-3">
+                    <p className="text-sm text-slate-500 max-md:text-center max-md:text-xs">
                       Showing {result.items.length} of {result.totalCount} users
                     </p>
+                    {isPhone ? (
+                      <PhonePager
+                        page={request.pageIndex || 1}
+                        pageCount={result.totalPages}
+                        onPageChange={handlePageChange}
+                        label="User pages"
+                      />
+                    ) : (
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
@@ -348,6 +375,7 @@ export default function AdminUsersPage() {
                         Next
                       </Button>
                     </div>
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -356,19 +384,19 @@ export default function AdminUsersPage() {
         </div>
 
         <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-          <DialogContent className="max-w-[480px] overflow-hidden rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl">
-            <div className="relative p-8">
+          <DialogContent className={cn("max-w-[480px] overflow-hidden rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl", USER_DIALOG_ON_PHONE)}>
+            <div className="relative p-8 max-md:p-5">
               {/* Header: Clean & Centered */}
               <div className="flex flex-col items-center text-center">
-                <div className="flex size-24 items-center justify-center rounded-full border border-slate-100 bg-white p-1.5 shadow-sm">
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-900 text-3xl font-bold text-white">
+                <div className="flex size-24 items-center justify-center rounded-full border border-slate-100 bg-white p-1.5 shadow-sm max-md:size-16">
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-900 text-3xl font-bold text-white max-md:text-xl">
                     {selectedUser?.fullName.substring(0, 2).toUpperCase()}
                   </div>
                 </div>
-                <DialogTitle className="mt-5 text-2xl font-bold tracking-tight text-slate-900">
+                <DialogTitle className="mt-5 text-2xl font-bold tracking-tight wrap-anywhere text-slate-900 max-md:mt-3 max-md:text-xl">
                   {selectedUser?.fullName}
                 </DialogTitle>
-                <p className="mt-1.5 text-sm font-medium text-slate-500">
+                <p className="mt-1.5 text-sm font-medium wrap-anywhere text-slate-500">
                   {selectedUser?.email}
                 </p>
                 <div className="mt-4">
@@ -392,8 +420,8 @@ export default function AdminUsersPage() {
                   {/* Info Blocks */}
                   <div className="flex flex-col gap-4">
                     {/* Row 1: ID & Role */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+                    <div className="grid grid-cols-2 gap-4 max-md:gap-2.5">
+                      <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                         <div className="mb-2 flex items-center gap-2">
                           <Shield className="size-4 text-slate-400" />
                           <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">User ID</span>
@@ -405,7 +433,7 @@ export default function AdminUsersPage() {
                           </button>
                         </div>
                       </div>
-                      <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+                      <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                         <div className="mb-2 flex items-center gap-2">
                           <Users className="size-4 text-slate-400" />
                           <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Role</span>
@@ -415,15 +443,15 @@ export default function AdminUsersPage() {
                     </div>
 
                     {/* Row 2: Plan & Date */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+                    <div className="grid grid-cols-2 gap-4 max-md:gap-2.5">
+                      <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                         <div className="mb-2 flex items-center gap-2">
                           <Zap className="size-4 text-amber-500" />
                           <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Plan</span>
                         </div>
                         <span className="text-sm font-semibold text-slate-900">{selectedUser.plan}</span>
                       </div>
-                      <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+                      <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                         <div className="mb-2 flex items-center gap-2">
                           <Calendar className="size-4 text-slate-400" />
                           <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Joined Date</span>
@@ -433,7 +461,7 @@ export default function AdminUsersPage() {
                     </div>
 
                     {/* Row 3: Jobs & Cost */}
-                    <div className="flex items-center justify-between rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+                    <div className="flex items-center justify-between rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                       <div>
                         <div className="mb-1 flex items-center gap-2">
                           <Activity className="size-4 text-emerald-500" />
@@ -452,7 +480,7 @@ export default function AdminUsersPage() {
                   </div>
 
                   {/* Footer Actions */}
-                  <div className="mt-2 flex items-center justify-center gap-3">
+                  <div className="mt-2 flex items-center justify-center gap-3 max-md:grid max-md:grid-cols-2 max-md:gap-2.5">
                     <Button variant="outline" className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900" onClick={() => setIsViewModalOpen(false)}>
                       Close
                     </Button>
@@ -469,7 +497,7 @@ export default function AdminUsersPage() {
                     {selectedUser.accountStatus.toLowerCase() !== "suspended" && (
                       <Button
                         variant="outline"
-                        className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-rose-600 shadow-sm transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+                        className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-rose-600 shadow-sm transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 max-md:col-span-2"
                         onClick={() => {
                           setIsViewModalOpen(false);
                           handleSuspendUser(selectedUser);

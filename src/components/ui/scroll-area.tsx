@@ -7,8 +7,9 @@ import { cn } from "@/utils/cn";
 
 function ScrollArea({ className, children, ...props }: React.ComponentProps<typeof ScrollAreaPrimitive.Root>) {
   return (
-    <ScrollAreaPrimitive.Root className={cn("relative overflow-hidden", className)} {...props}>
-      <ScrollAreaPrimitive.Viewport className="size-full rounded-[inherit]">
+    <ScrollAreaPrimitive.Root className={cn("relative flex flex-col overflow-hidden", className)} {...props}>
+      {/* Flex, not h-full: a dialog that only sets max-height has no definite height for a percentage to resolve against. */}
+      <ScrollAreaPrimitive.Viewport className="min-h-0 w-full flex-auto rounded-[inherit]">
         {children}
       </ScrollAreaPrimitive.Viewport>
       <ScrollAreaPrimitive.Scrollbar

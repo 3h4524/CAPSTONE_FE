@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 
 import { notificationApi } from "@/api/notifications";
 import { supportTicketKeys } from "@/api/support-tickets";
+import { isTransientHubError, signalrLogger } from "@/helpers/signalr-logger";
 import { adminSupportTicketsKeys } from "@/hooks/queries/use-admin-support-tickets";
 import { sellerDashboardKeys } from "@/hooks/queries/use-dashboard-summary";
 import { notificationKeys } from "@/hooks/queries/use-notifications";
 import type { NotificationDto } from "@/types/notification";
 import type { HubConnection } from "@microsoft/signalr";
-import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import { HubConnectionBuilder } from "@microsoft/signalr";
 import { useQueryClient } from "@tanstack/react-query";
 
 let sharedConnection: HubConnection | null = null;
@@ -30,7 +31,7 @@ export const useNotificationHub = () => {
             withCredentials: true,
           })
           .withAutomaticReconnect()
-          .configureLogging(LogLevel.Warning)
+          .configureLogging(signalrLogger)
           .build();
 
         // Lắng nghe sự kiện ReceiveNotification
@@ -67,8 +68,11 @@ export const useNotificationHub = () => {
           const wasStoppedDuringNegotiation =
             err instanceof Error && err.message.includes("stopped during negotiation");
           if (mounted && !wasStoppedDuringNegotiation) {
+            // An API that is restarting is not a page error: notifications resume once it is back.
             // eslint-disable-next-line no-console
-            console.error("SignalR NotificationHub Connection Error: ", err);
+            if (isTransientHubError(err)) console.warn("Notification hub not connected yet:", err);
+            // eslint-disable-next-line no-console
+            else console.error("SignalR NotificationHub Connection Error: ", err);
           }
         }
       } else {

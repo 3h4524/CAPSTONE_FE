@@ -71,8 +71,8 @@ const VALID_CONFIGS: Record<WorkflowNodeType, WorkflowNodeConfig> = {
   "review-video": {},
   "generate-listing": { model: "gpt-4o", tone: "friendly", includeSeoScore: true },
   "export-zip": {},
-  "publish-etsy": { publishImmediately: false },
-  "publish-printify": { publishImmediately: false },
+  "publish-etsy": { listingType: "download", price: 4.99, quantity: 999, taxonomyId: 2078, taxonomyPath: "Digital", whoMade: "i_did", whenMade: "made_to_order", shippingProfileId: null, includeVideo: true },
+  "publish-printify": { blueprintId: 145, blueprintTitle: "Tee", printProviderId: 99, printProviderTitle: "Monster Digital", colors: ["White"], sizes: ["M"], targetProfit: 10, designId: null, publishToEtsy: true, addMockups: true },
 };
 
 const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
@@ -147,10 +147,14 @@ const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
   ],
   [
     "publish-etsy",
-    { publishImmediately: null },
-    "Publish to Etsy: Invalid input: expected boolean, received null",
+    { listingType: "download", price: null, quantity: 999, taxonomyId: null, taxonomyPath: null, whoMade: "i_did", whenMade: "made_to_order", shippingProfileId: null, includeVideo: true },
+    "Publish to Etsy: Set a price.",
   ],
-  ["publish-printify", {}, "Push to Printify: Invalid input: expected boolean, received undefined"],
+  [
+    "publish-printify",
+    { blueprintId: null, blueprintTitle: null, printProviderId: null, printProviderTitle: null, colors: [], sizes: [], targetProfit: 10, designId: null, publishToEtsy: true, addMockups: true },
+    "Push to Printify: Choose a product type.",
+  ],
 ];
 
 const node = (id: string) => buildWorkflowNode({ id });

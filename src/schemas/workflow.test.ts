@@ -11,7 +11,8 @@ import {
   generateVideoConfigSchema,
   productInputConfigSchema,
   promptSynthesisConfigSchema,
-  publishConfigSchema,
+  publishEtsyConfigSchema,
+  publishPrintifyConfigSchema,
   workflowMetaSchema,
   workflowNodeConfigSchemas,
 } from "@/schemas/workflow";
@@ -49,8 +50,29 @@ const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
   "review-video": {},
   "generate-listing": { model: "gpt-4o", tone: "friendly", includeSeoScore: true },
   "export-zip": {},
-  "publish-etsy": { publishImmediately: false },
-  "publish-printify": { publishImmediately: true },
+  "publish-etsy": {
+    listingType: "download",
+    price: 4.99,
+    quantity: 999,
+    taxonomyId: 2078,
+    taxonomyPath: "Craft Supplies & Tools > Digital",
+    whoMade: "i_did",
+    whenMade: "made_to_order",
+    shippingProfileId: null,
+    includeVideo: true,
+  },
+  "publish-printify": {
+    blueprintId: 145,
+    blueprintTitle: "Unisex Softstyle T-Shirt",
+    printProviderId: 99,
+    printProviderTitle: "Monster Digital",
+    colors: ["White"],
+    sizes: ["M"],
+    targetProfit: 10,
+    designId: null,
+    publishToEtsy: true,
+    addMockups: true,
+  },
 };
 
 // These node types declare no field of their own, so an empty config is already valid for them.
@@ -81,9 +103,9 @@ describe("workflowNodeConfigSchemas", () => {
     expect(Object.keys(workflowNodeConfigSchemas)).toHaveLength(12);
   });
 
-  it("shares a single schema between the two publish node types", () => {
-    expect(workflowNodeConfigSchemas["publish-etsy"]).toBe(workflowNodeConfigSchemas["publish-printify"]);
-    expect(workflowNodeConfigSchemas["publish-etsy"]).toBe(publishConfigSchema);
+  it("gives each publish node type its own schema", () => {
+    expect(workflowNodeConfigSchemas["publish-etsy"]).toBe(publishEtsyConfigSchema);
+    expect(workflowNodeConfigSchemas["publish-printify"]).toBe(publishPrintifyConfigSchema);
   });
 
   it.each(nodeEntries)("accepts the valid $0 config", (nodeType, config) => {
@@ -593,28 +615,35 @@ describe("exportZipConfigSchema", () => {
   });
 });
 
-describe("publishConfigSchema", () => {
-  it("accepts publishImmediately set to true or false", () => {
-    const enabled = publishConfigSchema.safeParse({ publishImmediately: true });
-    const disabled = publishConfigSchema.safeParse({ publishImmediately: false });
+describe("publishPrintifyConfigSchema", () => {
+  const valid = validNodeConfigs["publish-printify"];
 
-    expect(enabled.success).toBe(true);
-    expect(disabled.success).toBe(true);
+  it("asks for a product type first", () => {
+    expectIssue(publishPrintifyConfigSchema.safeParse({ ...valid, blueprintId: null }), "blueprintId", "Choose a product type.");
   });
 
-  it("rejects a config without publishImmediately", () => {
-    const result = publishConfigSchema.safeParse({});
-
-    expectIssue(result, "publishImmediately");
+  it("asks for at least one color and size", () => {
+    expectIssue(publishPrintifyConfigSchema.safeParse({ ...valid, sizes: [] }), "colors", "Choose at least one color and one size.");
   });
 
-  it.each(["yes", 1, null])("rejects %j for publishImmediately", (publishImmediately) => {
-    const result = publishConfigSchema.safeParse({ publishImmediately });
-
-    expectIssue(result, "publishImmediately");
+  it("rejects a negative profit", () => {
+    expectIssue(publishPrintifyConfigSchema.safeParse({ ...valid, targetProfit: -1 }), "targetProfit");
   });
 });
 
+describe("publishEtsyConfigSchema", () => {
+  const valid = validNodeConfigs["publish-etsy"];
+
+  it("asks for a price and a category", () => {
+    expectIssue(publishEtsyConfigSchema.safeParse({ ...valid, price: null }), "price", "Set a price.");
+    expectIssue(publishEtsyConfigSchema.safeParse({ ...valid, taxonomyId: null }), "taxonomyId", "Choose an Etsy category.");
+  });
+
+  it("needs a shipping profile only for a physical listing", () => {
+    expectIssue(publishEtsyConfigSchema.safeParse({ ...valid, listingType: "physical" }), "shippingProfileId");
+    expect(publishEtsyConfigSchema.safeParse({ ...valid, listingType: "physical", shippingProfileId: 5 }).success).toBe(true);
+  });
+});
 describe("workflowMetaSchema", () => {
   const valid = { name: "Summer workflow", description: "Covers the whole summer drop" };
 

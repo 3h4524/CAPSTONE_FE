@@ -3,9 +3,10 @@
 import { useEffect } from "react";
 
 import { Log } from "@/helpers/log";
+import { signalrLogger } from "@/helpers/signalr-logger";
 import { adminTestReportKeys } from "@/hooks/queries/use-admin-test-reports";
 import type { HubConnection } from "@microsoft/signalr";
-import { HubConnectionBuilder, HubConnectionState, LogLevel } from "@microsoft/signalr";
+import { HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
 import { useQueryClient } from "@tanstack/react-query";
 
 let sharedConnection: HubConnection | null = null;
@@ -29,7 +30,7 @@ export function useTestReportEvents() {
             withCredentials: true,
           })
           .withAutomaticReconnect()
-          .configureLogging(LogLevel.Warning)
+          .configureLogging(signalrLogger)
           .build();
 
         sharedConnection.on("TestReportRunChanged", applyChange);

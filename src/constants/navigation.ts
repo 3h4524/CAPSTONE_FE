@@ -11,6 +11,7 @@ import {
   Palette,
   Settings,
   Shirt,
+  Store,
   Users,
   WandSparkles,
   Workflow,
@@ -26,6 +27,7 @@ export const NAV_SECTIONS: AppNavSection[] = [
   {
     label: "WORKSPACE",
     items: [
+      { label: "Shop", href: "/shop", icon: Store },
       { label: "Workflows", href: "/workflows", icon: Workflow },
       { label: "Batches", href: "/batches", icon: Layers3 },
       { label: "My Styles", href: "/styles", icon: Palette },
@@ -68,6 +70,7 @@ export const isDesignTemplateForm = (pathname: string | null) =>
 
 export const ROUTE_TITLES = {
   dashboard: "Dashboard",
+  shop: "Shop",
   "design-templates": "Design templates",
   mockups: "Mock-up templates",
   profile: "Profile",

@@ -1,0 +1,138 @@
+name: Deploy production
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+env:
+  WIF_PROVIDER: projects/1035893227434/locations/global/workloadIdentityPools/github/providers/github-actions
+  DEPLOYER_SA: apcs-deployer@apcs-prod.iam.gserviceaccount.com
+  RELEASE_TAG: ${{ github.ref_name }}
+
+jobs:
+  guard:
+    name: Tag is on the production branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require a release tag
+        if: github.ref_type != 'tag'
+        run: |
+          echo "::error::Run this workflow from a v* tag (for a rollback, pick the older tag as the ref)."
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify the tagged commit belongs to production
+        run: |
+          git fetch --no-tags origin production
+          if ! git merge-base --is-ancestor HEAD origin/production; then
+            echo "::error::$RELEASE_TAG is not on the production branch. Merge into production first, then tag."
+            exit 1
+          fi
+
+  image:
+    name: Quality gates and image
+    needs: guard
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load build settings
+        run: grep -vE '^\s*(#|$)' deploy/fe.build.env >> "$GITHUB_ENV"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install, lint, typecheck, test
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec eslint . --max-warnings=0
+          pnpm exec tsc --noEmit
+          pnpm test
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER_SA }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${REGISTRY%%/*}" --quiet
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=${{ env.NEXT_PUBLIC_API_BASE_URL }}
+            NEXT_PUBLIC_SITE_URL=${{ env.NEXT_PUBLIC_SITE_URL }}
+            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ env.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+            GOOGLE_ANALYTICS_MEASUREMENT_ID=${{ env.GOOGLE_ANALYTICS_MEASUREMENT_ID }}
+          tags: |
+            ${{ env.REGISTRY }}/apcs-fe:${{ env.RELEASE_TAG }}
+            ${{ env.REGISTRY }}/apcs-fe:${{ github.sha }}
+          cache-from: type=gha,scope=fe
+          cache-to: type=gha,mode=max,scope=fe
+
+  deploy:
+    name: Release on the VM
+    needs: [guard, image]
+    if: always() && needs.guard.result == 'success' && (needs.image.result == 'success' || (github.event_name == 'workflow_dispatch' && needs.image.result == 'skipped'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load build settings
+        run: grep -vE '^\s*(#|$)' deploy/fe.build.env >> "$GITHUB_ENV"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER_SA }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Release the frontend
+        run: |
+          gcloud compute ssh "$VM_NAME" --zone "$GCP_ZONE" --project "$GCP_PROJECT" --tunnel-through-iap --quiet \
+            --command "sudo -iu deploy /opt/apcs/deploy/scripts/release.sh fe $RELEASE_TAG"
+
+      - name: Smoke test
+        run: curl -fsS -o /dev/null --retry 10 --retry-delay 6 --retry-all-errors "https://$APP_DOMAIN/"

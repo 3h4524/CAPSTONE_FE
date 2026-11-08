@@ -3,6 +3,7 @@ import {
   DEFAULT_WORKFLOW_NAME,
   DEFAULT_WORKFLOW_POSITIONS,
   DUPLICATE_NODE_OFFSET,
+  PUBLISH_NODE_TYPES,
   RUN_ORDER,
   WORKFLOW_NODE_DEFINITIONS,
 } from "@/constants/workflow";
@@ -173,6 +174,9 @@ const validateVideoPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): Wo
 
 export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
   const issues: WorkflowIssue[] = [...validateVideoPipeline(nodes, edges)];
+  // Publishing sends the approved package, so it needs the video steps and comes after Export ZIP.
+  if (nodes.some((node) => PUBLISH_NODE_TYPES.includes(node.data.type)) && !nodes.some((node) => node.data.type === "generate-video"))
+    issues.push({ id: "publish-needs-video", nodeId: null, message: "Push to Printify and Publish to Etsy come after Export ZIP: add the video steps first." });
   const missingTemplates = findMissingMockupTemplates(nodes);
   if (missingTemplates) issues.push(missingTemplates);
   const inputNodes = nodes.filter((node) => node.data.type === "product-input");

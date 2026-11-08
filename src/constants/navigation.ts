@@ -8,6 +8,7 @@ import {
   LifeBuoy,
   Palette,
   Settings,
+  Store,
   WandSparkles,
   Workflow,
 } from "lucide-react";
@@ -22,6 +23,7 @@ export const NAV_SECTIONS: AppNavSection[] = [
   {
     label: "WORKSPACE",
     items: [
+      { label: "Shop", href: "/shop", icon: Store },
       { label: "Workflows", href: "/workflows", icon: Workflow },
       { label: "Batches", href: "/batches", icon: Layers3 },
       { label: "My Styles", href: "/styles", icon: Palette },
@@ -43,6 +45,7 @@ export const NAV_SECTIONS: AppNavSection[] = [
 
 export const ROUTE_TITLES = {
   dashboard: "Dashboard",
+  shop: "Shop",
   "design-templates": "Design templates",
   profile: "Profile",
   "api-keys": "API keys",

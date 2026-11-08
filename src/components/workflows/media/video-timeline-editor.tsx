@@ -1540,11 +1540,11 @@ export function VideoTimelineEditor({
       <Dialog open={open} onOpenChange={(value) => (value ? start() : cancel())}>
         <DialogContent
           showCloseButton={false}
-          className="border-border bg-card text-card-foreground h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none gap-0 overflow-hidden rounded-xl p-0 shadow-2xl sm:h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-2rem)] xl:h-[min(90dvh,60rem)] xl:w-[min(96vw,88rem)] xl:max-w-[88rem]"
+          className="border-border bg-card text-card-foreground h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none gap-0 overflow-hidden rounded-xl p-0 shadow-2xl [--dialog-phone-height:100dvh] sm:h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-2rem)] xl:h-[min(90dvh,60rem)] xl:w-[min(96vw,88rem)] xl:max-w-[88rem]"
         >
           {draft && (
-            <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
-              <DialogHeader className="border-border bg-card flex-row items-center justify-between gap-4 border-b px-5 py-4 text-left sm:px-6">
+            <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden max-lg:grid-cols-1">
+              <DialogHeader className="border-border bg-card flex-row items-center justify-between gap-4 border-b px-5 py-4 text-left max-sm:flex-wrap max-sm:gap-1 max-sm:px-3 max-sm:py-2 sm:px-6">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="bg-primary/10 text-primary grid size-9 shrink-0 place-items-center rounded-lg">
                     <Clapperboard className="size-4" />
@@ -1556,7 +1556,7 @@ export function VideoTimelineEditor({
                     </DialogDescription>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 max-sm:ml-auto">
                   <Button
                     type="button"
                     size="icon-sm"
@@ -1591,8 +1591,8 @@ export function VideoTimelineEditor({
                   </Button>
                 </div>
               </DialogHeader>
-              <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
-                <div className="grid min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-y-auto lg:overflow-hidden xl:grid-cols-[minmax(32rem,1.15fr)_minmax(22rem,0.85fr)_minmax(26rem,28rem)] xl:grid-rows-1">
+              <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden max-lg:grid-cols-1">
+                <div className="grid min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-y-auto max-lg:grid-cols-1 lg:overflow-hidden xl:grid-cols-[minmax(32rem,1.15fr)_minmax(22rem,0.85fr)_minmax(26rem,28rem)] xl:grid-rows-1">
                   <aside
                     className="border-border bg-card border-b p-2 lg:flex lg:items-start lg:gap-2 xl:grid xl:min-h-0 xl:grid-rows-[auto_minmax(0,1fr)] xl:overflow-hidden xl:border-r xl:border-b-0"
                     aria-label="Video editing tools"
@@ -1651,10 +1651,10 @@ export function VideoTimelineEditor({
                       )}
                     </div>
                   </aside>
-                  <div className="grid min-h-0 min-w-0 lg:grid-cols-[minmax(28rem,1fr)_minmax(26rem,28rem)] lg:overflow-hidden xl:contents">
+                  <div className="grid min-h-0 min-w-0 max-lg:grid-cols-1 lg:grid-cols-[minmax(28rem,1fr)_minmax(26rem,28rem)] lg:overflow-hidden xl:contents">
                     <section
                       ref={previewCanvasRef}
-                      className="bg-muted/55 relative flex min-h-[25rem] min-w-0 items-center justify-center overflow-hidden p-6 sm:p-8 lg:min-h-0 lg:p-8"
+                      className="bg-muted/55 relative flex min-h-[25rem] min-w-0 items-center justify-center overflow-hidden p-6 max-sm:min-h-[16rem] max-sm:p-3 sm:p-8 lg:min-h-0 lg:p-8"
                       aria-label="Video preview canvas"
                     >
                       <div

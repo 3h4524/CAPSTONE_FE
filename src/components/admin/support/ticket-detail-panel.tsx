@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Calendar, CheckCircle2, Copy, Download, FileText, Folder, Headphones, Maximize2, Minimize2, Paperclip, Send, Star, User, X } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle2, Copy, Download, FileText, Folder, Headphones, Maximize2, Minimize2, Paperclip, Send, Star, User, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -9,17 +9,36 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useReplyAdminTicket, useUpdateAdminTicketStatus } from "@/hooks/mutations/use-admin-support-reply";
 import { useAdminSupportTicketDetail } from "@/hooks/queries/use-admin-support-tickets";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { useSupportHub } from "@/hooks/use-support-hub";
-import type { TicketStatus } from "@/types/support";
+import type { SupportTicketAttachment,TicketStatus } from "@/types/support";
 import { cn } from "@/utils/cn";
 
 type TicketDetailPanelProps = {
   ticketId: string | null;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  /** Returns to the ticket list on narrow screens, where the list and detail panels swap. */
+  onBack?: () => void;
 };
 
-export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: TicketDetailPanelProps) => {
+const fileDetails = (file: SupportTicketAttachment) => {
+  const size = file.fileSizeMb < 1 ? `${Math.max(1, Math.round(file.fileSizeMb * 1024))} KB` : `${file.fileSizeMb.toFixed(1)} MB`;
+  const extension = file.fileName.split(".").pop()?.toUpperCase();
+  return extension ? `${size} • ${extension}` : size;
+};
+
+const BackToListButton = ({ onClick }: { onClick: () => void }) => (
+  <Button variant="ghost" size="sm" className="-ml-2 self-start px-2 md:hidden" onClick={onClick}>
+    <ArrowLeft className="size-4" aria-hidden="true" />
+    All tickets
+  </Button>
+);
+
+export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack }: TicketDetailPanelProps) => {
+  const isPhone = useIsPhone();
+  // One short line on a phone, so the messages keep the room; a tap shows it all.
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const { data: ticket, isLoading, isError } = useAdminSupportTicketDetail(ticketId || undefined);
   useSupportHub(ticketId || undefined);
   const { mutate: sendReply, isPending: isSending } = useReplyAdminTicket();
@@ -90,16 +109,22 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Spinner className="size-8 text-indigo-600" />
+      <div className="flex h-full flex-col">
+        {onBack && <div className="p-4 md:hidden"><BackToListButton onClick={onBack} /></div>}
+        <div className="flex flex-1 items-center justify-center">
+          <Spinner className="size-8 text-indigo-600" />
+        </div>
       </div>
     );
   }
 
   if (isError || !ticket) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-red-500">
-        Failed to load ticket details.
+      <div className="flex h-full flex-col">
+        {onBack && <div className="p-4 md:hidden"><BackToListButton onClick={onBack} /></div>}
+        <div className="flex flex-1 items-center justify-center text-sm text-red-500">
+          Failed to load ticket details.
+        </div>
       </div>
     );
   }
@@ -107,11 +132,12 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-white">
       {/* Header */}
-      <div className="z-10 flex flex-col items-start justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] sm:flex-row sm:items-center">
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-xl font-bold text-slate-900">{ticket.subject}</h2>
-            <span className="text-sm font-medium text-slate-500">#{ticket.ticketNumber}</span>
+      <div className="relative z-10 flex flex-col items-start justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] max-md:gap-0 max-md:px-4 max-md:py-2 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 flex-col gap-2 max-md:w-full max-md:gap-1">
+          {onBack && <BackToListButton onClick={onBack} />}
+          <div className="flex flex-wrap items-center gap-3 max-md:gap-x-2 max-md:gap-y-0">
+            <h2 className="text-xl font-bold wrap-anywhere text-slate-900 max-md:w-full max-md:text-base">{ticket.subject}</h2>
+            <span className="text-sm font-medium wrap-anywhere text-slate-500 max-md:text-xs">#{ticket.ticketNumber}</span>
             <button 
               onClick={() => {
                 navigator.clipboard.writeText(ticket.ticketNumber);
@@ -122,23 +148,35 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
               <Copy className="size-4" />
             </button>
           </div>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 sm:gap-6">
-            <div className="flex items-center gap-2">
-              <Folder className="size-4 text-slate-400" />
+          <div
+            className={cn(
+              "flex flex-wrap items-center gap-4 text-sm text-slate-600 max-md:gap-x-3 max-md:gap-y-1 max-md:text-xs sm:gap-6",
+              !isSummaryOpen && "max-md:flex-nowrap max-md:overflow-hidden"
+            )}
+            {...(isPhone && {
+              role: "button",
+              tabIndex: 0,
+              "aria-expanded": isSummaryOpen,
+              "aria-label": "Show the ticket's details",
+              onClick: () => setIsSummaryOpen((open) => !open),
+            })}
+          >
+            <div className="flex shrink-0 items-center gap-2 max-md:gap-1">
+              <Folder className="size-4 text-slate-400 max-md:size-3.5" />
               <span className="capitalize">{ticket.category.replace("_", " ")}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <User className="size-4 text-slate-400" />
-              <span className="font-medium text-slate-700">{ticket.requesterName}</span>
+            <div className="flex items-center gap-2 max-md:min-w-0 max-md:gap-1">
+              <User className="size-4 shrink-0 text-slate-400 max-md:size-3.5" />
+              <span className={cn("font-medium text-slate-700", !isSummaryOpen && "max-md:truncate")}>{ticket.requesterName}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="size-4 text-slate-400" />
+            <div className="flex shrink-0 items-center gap-2 max-md:gap-1">
+              <Calendar className="size-4 text-slate-400 max-md:size-3.5" />
               <span>{formatRelativeDate(ticket.createdAtUtc)}</span>
             </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 max-md:absolute max-md:top-2 max-md:right-4">
           <Select 
             value={ticket.status} 
             onValueChange={(val) => handleStatusChange(val as TicketStatus)}
@@ -172,23 +210,23 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
       </div>
 
       {/* Chat History */}
-      <div ref={scrollRef} className="flex-1 space-y-8 overflow-y-auto bg-white p-6 md:px-10">
+      <div ref={scrollRef} className="min-h-0 flex-1 space-y-8 overflow-y-auto bg-white p-4 max-md:space-y-4 md:p-6 md:px-10">
         
         {/* Original Request */}
-        <div className="flex gap-4">
-          <Avatar className="mt-1 size-10">
+        <div className="flex gap-4 max-md:gap-2.5">
+          <Avatar className="mt-1 size-10 max-md:size-8">
             <AvatarFallback className="bg-slate-200 text-sm font-semibold text-slate-600">
               {ticket.requesterName.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className="max-w-[70%] flex-1">
+          <div className="max-w-[85%] min-w-0 flex-1 max-md:max-w-none md:max-w-[70%]">
             <div className="mb-1.5 flex items-baseline gap-2">
-              <span className="text-[15px] font-bold text-slate-900">{ticket.requesterName}</span>
-              <span className="text-[13px] font-medium text-slate-500">
+              <span className="text-[15px] font-bold text-slate-900 max-md:min-w-0 max-md:truncate max-md:text-sm">{ticket.requesterName}</span>
+              <span className="text-[13px] font-medium text-slate-500 max-md:shrink-0 max-md:text-xs max-md:whitespace-nowrap">
                 {formatRelativeDate(ticket.createdAtUtc)}
               </span>
             </div>
-            <div className="rounded-2xl rounded-tl-sm border border-slate-100 bg-white p-4 text-[15px] leading-relaxed whitespace-pre-wrap text-slate-800 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+            <div className="rounded-2xl rounded-tl-sm border border-slate-100 bg-white p-4 text-[15px] leading-relaxed whitespace-pre-wrap text-slate-800 shadow-[0_1px_2px_rgba(0,0,0,0.05)] max-md:px-3 max-md:py-2 max-md:text-sm">
               {ticket.description}
               {ticket.attachments && ticket.attachments.length > 0 && (
                 <div className="mt-4 flex flex-col gap-3">
@@ -200,10 +238,10 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={file.downloadUrl} alt={file.fileName} className="w-full object-cover transition-opacity hover:opacity-90" />
                         </a>
-                        <div className="flex items-center justify-between border-t border-slate-100 bg-white p-3">
-                           <div className="flex flex-col">
-                             <span className="max-w-[200px] truncate text-[13px] font-semibold text-slate-900">{file.fileName}</span>
-                             <span className="text-[11px] font-medium tracking-wide text-slate-500">421 KB • JPG</span>
+                        <div className="flex items-center justify-between gap-2 border-t border-slate-100 bg-white p-3 max-md:p-2">
+                           <div className="flex min-w-0 flex-col">
+                             <span className="max-w-[200px] truncate text-[13px] font-semibold text-slate-900 max-md:max-w-36">{file.fileName}</span>
+                             <span className="text-[11px] font-medium tracking-wide text-slate-500">{fileDetails(file)}</span>
                            </div>
                            <a href={file.downloadUrl} download className="flex size-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50">
                               <Download className="size-4" />
@@ -216,12 +254,12 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
                         href={file.downloadUrl} 
                         target="_blank" 
                         rel="noreferrer"
-                        className="flex w-fit items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-[13px] font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+                        className="flex w-fit max-w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-[13px] font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
                       >
                         <div className="flex size-8 items-center justify-center rounded-md bg-slate-100 text-slate-500">
                           <FileText className="size-4" />
                         </div>
-                        <span className="max-w-[200px] truncate">{file.fileName}</span>
+                        <span className="max-w-[200px] min-w-0 truncate">{file.fileName}</span>
                       </a>
                     );
                   })}
@@ -235,22 +273,23 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
         {ticket.replies.map((reply) => {
           const isAdmin = reply.authorRole === "Admin";
           return (
-            <div key={reply.id} className={cn("group flex gap-4", isAdmin && "flex-row-reverse")}>
-              <Avatar className="mt-1 size-10">
+            <div key={reply.id} className={cn("group flex gap-4 max-md:gap-2.5", isAdmin && "flex-row-reverse")}>
+              <Avatar className="mt-1 size-10 max-md:size-8">
                 <AvatarFallback className={cn("text-sm font-semibold", isAdmin ? "bg-slate-200 text-slate-700" : "bg-slate-200 text-slate-600")}>
                   {isAdmin ? reply.authorName.substring(0, 1).toUpperCase() : reply.authorName.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className={cn("flex max-w-[70%] flex-col", isAdmin ? "items-end" : "items-start")}>
-                <div className={cn("mb-1.5 flex items-baseline gap-2", isAdmin && "flex-row-reverse")}>
-                  <span className="text-[15px] font-bold text-slate-900">{reply.authorName}</span>
-                  <span className="text-[13px] font-medium text-slate-500">
+              <div className={cn("flex max-w-[85%] min-w-0 flex-col max-md:max-w-none max-md:flex-1 md:max-w-[70%]", isAdmin ? "items-end" : "items-start")}>
+                <div className={cn("mb-1.5 flex max-w-full items-baseline gap-2", isAdmin && "flex-row-reverse")}>
+                  <span className="text-[15px] font-bold text-slate-900 max-md:min-w-0 max-md:truncate max-md:text-sm">{reply.authorName}</span>
+                  <span className="text-[13px] font-medium text-slate-500 max-md:shrink-0 max-md:text-xs max-md:whitespace-nowrap">
                     {formatRelativeDate(reply.createdAtUtc)}
                   </span>
                 </div>
                 <div 
                   className={cn(
-                    "rounded-2xl p-4 text-[15px] leading-relaxed whitespace-pre-wrap",
+                    "max-w-full rounded-2xl p-4 text-[15px] leading-relaxed whitespace-pre-wrap max-md:px-3 max-md:py-2 max-md:text-sm",
+                    !reply.replyText && "max-md:p-1.5",
                     isAdmin 
                       ? "rounded-tr-sm bg-[#eff6ff] text-slate-800"
                       : "rounded-tl-sm border border-slate-100 bg-white text-slate-800 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
@@ -258,7 +297,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
                 >
                   {reply.replyText}
                   {reply.attachments && reply.attachments.length > 0 && (
-                    <div className="mt-4 flex flex-col gap-3">
+                    <div className={cn("mt-4 flex flex-col gap-3", !reply.replyText && "max-md:mt-0")}>
                       {reply.attachments.map((file) => {
                         const isImage = file.mimeType?.includes("image") || file.fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
                         return isImage ? (
@@ -267,10 +306,10 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={file.downloadUrl} alt={file.fileName} className="w-full object-cover transition-opacity hover:opacity-90" />
                             </a>
-                            <div className="flex items-center justify-between border-t border-slate-100 bg-white p-3">
-                               <div className="flex flex-col">
-                                 <span className="max-w-[200px] truncate text-[13px] font-semibold text-slate-900">{file.fileName}</span>
-                                 <span className="text-[11px] font-medium tracking-wide text-slate-500">421 KB • JPG</span>
+                            <div className="flex items-center justify-between gap-2 border-t border-slate-100 bg-white p-3 max-md:p-2">
+                               <div className="flex min-w-0 flex-col">
+                                 <span className="max-w-[200px] truncate text-[13px] font-semibold text-slate-900 max-md:max-w-36">{file.fileName}</span>
+                                 <span className="text-[11px] font-medium tracking-wide text-slate-500">{fileDetails(file)}</span>
                                </div>
                                <a href={file.downloadUrl} download className="flex size-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50">
                                   <Download className="size-4" />
@@ -283,12 +322,12 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
                             href={file.downloadUrl} 
                             target="_blank" 
                             rel="noreferrer"
-                            className="flex w-fit items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-[13px] font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+                            className="flex w-fit max-w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-[13px] font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
                           >
                             <div className="flex size-8 items-center justify-center rounded-md bg-slate-100 text-slate-500">
                               <FileText className="size-4" />
                             </div>
-                            <span className="max-w-[200px] truncate">{file.fileName}</span>
+                            <span className="max-w-[200px] min-w-0 truncate">{file.fileName}</span>
                           </a>
                         );
                       })}
@@ -303,10 +342,10 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
 
       {/* Reply Box */}
       {ticket.status !== "closed" && ticket.status !== "resolved" ? (
-        <div className="border-t border-slate-200 bg-slate-50 p-4">
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all focus-within:ring-1 focus-within:ring-slate-300">
+        <div className="border-t border-slate-200 bg-slate-50 p-4 max-md:p-2">
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all focus-within:ring-1 focus-within:ring-slate-300 max-md:flex max-md:flex-wrap max-md:items-end max-md:rounded-3xl max-md:p-0.5">
             {attachments.length > 0 && (
-              <div className="flex flex-wrap gap-2 p-4 pb-0">
+              <div className="flex flex-wrap gap-2 p-4 pb-0 max-md:order-first max-md:w-full max-md:p-2 max-md:pb-0">
                 {attachments.map((file, index) => (
                   <div key={index} className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
                     <FileText className="size-3.5 text-slate-400" />
@@ -321,7 +360,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               placeholder="Type a reply..."
-              className="min-h-[60px] resize-none border-none bg-transparent p-3 text-[14px] focus-visible:ring-0"
+              className="min-h-[60px] resize-none border-none bg-transparent p-3 text-base focus-visible:ring-0 max-md:max-h-28 max-md:min-h-10 max-md:w-0 max-md:min-w-0 max-md:flex-1 max-md:rounded-none max-md:px-1 max-md:py-2 max-md:leading-6 max-md:shadow-none md:text-[14px]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -331,9 +370,9 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
                 }
               }}
             />
-            <div className="flex items-center justify-between border-t border-slate-100 bg-white p-2">
-              <div className="flex items-center gap-1 text-slate-400">
-                <Button variant="ghost" size="icon" className="size-9 rounded-full hover:bg-slate-100" onClick={() => fileInputRef.current?.click()}>
+            <div className="flex items-center justify-between border-t border-slate-100 bg-white p-2 max-md:contents">
+              <div className="flex items-center gap-1 text-slate-400 max-md:order-first">
+                <Button variant="ghost" size="icon" aria-label="Attach a file" className="size-9 rounded-full hover:bg-slate-100 max-md:size-10 [@media(pointer:coarse)]:min-h-10 [@media(pointer:coarse)]:min-w-10" onClick={() => fileInputRef.current?.click()}>
                   <Paperclip className="size-5" />
                 </Button>
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" multiple accept="image/*,.pdf,.doc,.docx,.txt" />
@@ -341,10 +380,10 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand }: Tick
               <Button 
                 onClick={handleSend} 
                 disabled={isSending || (!replyText.trim() && attachments.length === 0)}
-                className="h-8 gap-2 rounded-lg bg-[#1e293b] px-5 text-sm font-medium text-white shadow-sm hover:bg-slate-800"
+                className="h-8 gap-2 rounded-lg bg-[#1e293b] px-5 text-sm font-medium text-white shadow-sm hover:bg-slate-800 max-md:order-3 max-md:size-10 max-md:rounded-full max-md:p-0 max-md:disabled:bg-slate-200 max-md:disabled:text-slate-400 max-md:disabled:opacity-100 [@media(pointer:coarse)]:min-h-10"
               >
                 {isSending ? <Spinner className="size-4" /> : <Send className="size-4" />}
-                Send Reply
+                <span className="max-md:sr-only">Send<span className="max-md:hidden"> Reply</span></span>
               </Button>
             </div>
           </div>

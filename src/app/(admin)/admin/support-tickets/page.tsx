@@ -32,13 +32,24 @@ function AdminSupportTicketsContent() {
     // Optional: Reset selected ticket if tab changes, but usually keep it if possible
   };
 
+  const handleBackToList = () => {
+    setSelectedTicketId(null);
+    setIsExpanded(false);
+  };
+
   return (
-    <AdminShell pageTitle="support-tickets">
-      <div className="flex h-[calc(100vh-150px)] w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <AdminShell pageTitle="support-tickets" fillsPhoneScreen hidesPhoneTabs={selectedTicketId !== null}>
+      <div className="flex h-[calc(100dvh-150px)] w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm max-md:h-auto max-md:min-h-0 max-md:flex-1 max-md:rounded-none max-md:border-0 max-md:shadow-none">
         <div className="grid h-full min-h-0 w-full grid-cols-12 divide-x divide-slate-200">
-          {/* Left Panel: Ticket List */}
-          <div className={cn("hidden h-full min-h-0 flex-col overflow-hidden", isExpanded ? "hidden" : "col-span-4 md:flex")}>
-            <TicketListPanel 
+          {/* Left Panel: Ticket List. Below md the two panels swap: list first, then the selected ticket. */}
+          <div
+            className={cn(
+              "h-full min-h-0 flex-col overflow-hidden",
+              isExpanded ? "hidden" : "col-span-12 md:col-span-4 md:flex",
+              !isExpanded && (selectedTicketId ? "hidden" : "flex")
+            )}
+          >
+            <TicketListPanel
               filters={filters}
               onFiltersChange={handleFiltersChange}
               selectedTicketId={selectedTicketId}
@@ -47,11 +58,18 @@ function AdminSupportTicketsContent() {
           </div>
 
           {/* Right Panel: Ticket Detail (Chat) */}
-          <div className={cn("flex h-full min-h-0 flex-col overflow-hidden", isExpanded ? "col-span-12" : "col-span-12 md:col-span-8")}>
-            <TicketDetailPanel 
-              ticketId={selectedTicketId} 
+          <div
+            className={cn(
+              "h-full min-h-0 flex-col overflow-hidden md:flex",
+              isExpanded ? "col-span-12" : "col-span-12 md:col-span-8",
+              selectedTicketId || isExpanded ? "flex" : "hidden"
+            )}
+          >
+            <TicketDetailPanel
+              ticketId={selectedTicketId}
               isExpanded={isExpanded}
               onToggleExpand={() => setIsExpanded(!isExpanded)}
+              onBack={handleBackToList}
             />
           </div>
         </div>

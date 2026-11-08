@@ -1,9 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { Check, Pencil, Plus } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { isSafetyCap, type PlanFeatureDefinition } from "@/helpers/plan-features";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { AdminSubscriptionPlan } from "@/types/admin-subscription-plan";
 import type { AdminFeature } from "@/types/feature-catalog";
 import { cn } from "@/utils/cn";
@@ -31,6 +35,7 @@ const settingOf = (plan: AdminSubscriptionPlan, feature: PlanFeatureDefinition) 
 // Every plan side by side, one feature per row, so the Admin can set several plans on one screen.
 // A click adds a feature at once; removing one or changing a limit asks first, as on the cards.
 export function PlanCompareTable({ plans, features, catalog, isAdding, onAdd, onRemove, onEditLimit }: PlanCompareTableProps) {
+  const isPhone = useIsPhone();
   const byCode = new Map(catalog.map((feature) => [feature.code, feature]));
   // A feature hidden from the add list keeps its row while any plan still has it.
   const rows = features.filter(
@@ -41,10 +46,25 @@ export function PlanCompareTable({ plans, features, catalog, isAdding, onAdd, on
   );
   const groups = [...new Set(rows.map((feature) => feature.group))];
 
+  if (isPhone && plans.length > 1) {
+    return (
+      <PhonePlanCompare
+        plans={plans}
+        rows={rows}
+        groups={groups}
+        units={byCode}
+        isAdding={isAdding}
+        onAdd={onAdd}
+        onRemove={onRemove}
+        onEditLimit={onEditLimit}
+      />
+    );
+  }
+
   return (
     <Card className="gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-0 shadow-xs">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-sm">
+        <table className="w-full min-w-[640px] border-collapse text-sm max-md:[&_th:first-child]:sticky max-md:[&_th:first-child]:left-0 max-md:[&_th:first-child]:z-1 max-md:[&_th:first-child]:w-36 max-md:[&_th:first-child]:bg-white">
           <thead className="sticky top-0 z-10 bg-white">
             <tr className="border-b border-slate-200">
               <th scope="col" className="w-[38%] px-5 py-4 text-left text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
@@ -109,7 +129,7 @@ export function PlanCompareTable({ plans, features, catalog, isAdding, onAdd, on
 function GroupRow({ label, span }: { label: string; span: number }) {
   return (
     <tr className="bg-slate-50/80">
-      <th colSpan={span} scope="colgroup" className="px-5 py-2 text-left text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
+      <th colSpan={span} scope="colgroup" className="px-5 py-2 text-left text-[11px] font-semibold tracking-wide text-slate-500 uppercase max-md:px-3">
         {label}
       </th>
     </tr>
@@ -140,52 +160,228 @@ function FeatureGroup({
       <GroupRow label={group} span={plans.length + 1} />
       {rows.map((feature) => (
         <tr key={feature.code} className="border-b border-slate-100 hover:bg-slate-50/60">
-          <th scope="row" className="px-5 py-2.5 text-left font-normal text-slate-700">
+          <th scope="row" className="px-5 py-2.5 text-left font-normal wrap-anywhere text-slate-700 max-md:px-3">
             {feature.label}
             {isSafetyCap(feature.code) && <span className="ml-1 text-xs text-slate-400">· hidden from Sellers</span>}
           </th>
-          {plans.map((plan) => {
-            const { isOn, limit } = settingOf(plan, feature);
-            if (feature.kind === "limit") {
-              const unit = units.get(feature.code)?.unit;
-              return (
-                <td key={plan.id} className="px-4 py-1.5 text-center">
-                  <button
-                    type="button"
-                    aria-label={`Change ${feature.label} on ${plan.name}`}
-                    onClick={() => onEditLimit(plan, feature, limit)}
-                    className="group inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-semibold text-slate-700 tabular-nums hover:bg-slate-100"
-                  >
-                    {limit === null ? "No limit" : `${limit.toLocaleString()}${unit ? ` ${unit}` : ""}`}
-                    <Pencil className="size-3 text-slate-300 group-hover:text-slate-600" />
-                  </button>
-                </td>
-              );
-            }
-            return (
-              <td key={plan.id} className="px-4 py-1.5 text-center">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={isOn}
-                  aria-label={`${feature.label} on ${plan.name}`}
-                  title={isOn ? "Remove from this plan" : "Add to this plan"}
-                  disabled={!isOn && isAdding}
-                  onClick={() => (isOn ? onRemove(plan, feature.code, feature.label) : onAdd(plan, feature.code))}
-                  className={cn(
-                    "inline-flex size-7 items-center justify-center rounded-full border transition-colors disabled:opacity-40",
-                    isOn
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-                      : "border-dashed border-slate-200 text-slate-300 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
-                  )}
-                >
-                  {isOn ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
-                </button>
-              </td>
-            );
-          })}
+          {plans.map((plan) => (
+            <PlanCell
+              key={plan.id}
+              plan={plan}
+              feature={feature}
+              unit={units.get(feature.code)?.unit}
+              isAdding={isAdding}
+              onAdd={onAdd}
+              onRemove={onRemove}
+              onEditLimit={onEditLimit}
+            />
+          ))}
         </tr>
       ))}
     </>
+  );
+}
+
+function PlanCell({
+  plan,
+  feature,
+  unit,
+  isAdding,
+  onAdd,
+  onRemove,
+  onEditLimit,
+}: {
+  plan: AdminSubscriptionPlan;
+  feature: PlanFeatureDefinition;
+  unit?: string | null;
+  isAdding: boolean;
+  onAdd: PlanCompareTableProps["onAdd"];
+  onRemove: PlanCompareTableProps["onRemove"];
+  onEditLimit: PlanCompareTableProps["onEditLimit"];
+}) {
+  const { isOn, limit } = settingOf(plan, feature);
+  if (feature.kind === "limit") {
+    return (
+      <td className="px-4 py-1.5 text-center max-md:px-1">
+        <button
+          type="button"
+          aria-label={`Change ${feature.label} on ${plan.name}`}
+          onClick={() => onEditLimit(plan, feature, limit)}
+          className="group inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-semibold text-slate-700 tabular-nums hover:bg-slate-100 max-md:min-h-10 max-md:flex-col max-md:justify-center max-md:gap-0 max-md:px-1"
+        >
+          <span className="max-md:hidden">{limit === null ? "No limit" : `${limit.toLocaleString()}${unit ? ` ${unit}` : ""}`}</span>
+          <span className="md:hidden">{limit === null ? "No limit" : limit.toLocaleString()}</span>
+          {limit !== null && unit && <span className="text-[10px] leading-tight font-normal wrap-anywhere text-slate-400 md:hidden">{unit}</span>}
+          <Pencil className="size-3 text-slate-300 group-hover:text-slate-600 max-md:hidden" />
+        </button>
+      </td>
+    );
+  }
+  return (
+    <td className="px-4 py-1.5 text-center max-md:px-1">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={isOn}
+        aria-label={`${feature.label} on ${plan.name}`}
+        title={isOn ? "Remove from this plan" : "Add to this plan"}
+        disabled={!isOn && isAdding}
+        onClick={() => (isOn ? onRemove(plan, feature.code, feature.label) : onAdd(plan, feature.code))}
+        className={cn(
+          "inline-flex size-7 items-center justify-center rounded-full border transition-colors disabled:opacity-40 max-md:size-9",
+          isOn
+            ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+            : "border-dashed border-slate-200 text-slate-300 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+        )}
+      >
+        {isOn ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
+      </button>
+    </td>
+  );
+}
+
+const sameSetting = (a: AdminSubscriptionPlan, b: AdminSubscriptionPlan, feature: PlanFeatureDefinition) => {
+  const left = settingOf(a, feature);
+  const right = settingOf(b, feature);
+  return left.isOn === right.isOn && left.limit === right.limit;
+};
+
+const RUN_LIMITS = [
+  { label: "Products per run", valueOf: (plan: AdminSubscriptionPlan) => plan.maxBatchSize },
+  { label: "Design jobs at once", valueOf: (plan: AdminSubscriptionPlan) => plan.maxConcurrentJobs },
+];
+
+/**
+ * Two plans at a time on a phone, chosen above the table: every plan side by side has no room there.
+ * It starts on what sets them apart, which is usually what the Admin came to look at.
+ */
+function PhonePlanCompare({
+  plans,
+  rows,
+  groups,
+  units,
+  isAdding,
+  onAdd,
+  onRemove,
+  onEditLimit,
+}: {
+  plans: AdminSubscriptionPlan[];
+  rows: PlanFeatureDefinition[];
+  groups: string[];
+  units: Map<string, AdminFeature>;
+  isAdding: boolean;
+  onAdd: PlanCompareTableProps["onAdd"];
+  onRemove: PlanCompareTableProps["onRemove"];
+  onEditLimit: PlanCompareTableProps["onEditLimit"];
+}) {
+  const [leftId, setLeftId] = useState(plans[0].id);
+  const [rightId, setRightId] = useState(plans[1].id);
+  const [differencesOnly, setDifferencesOnly] = useState(true);
+  // A plan deleted while chosen falls back to the first one that is not the other side.
+  const left = plans.find((plan) => plan.id === leftId) ?? plans.find((plan) => plan.id !== rightId) ?? plans[0];
+  const right = plans.find((plan) => plan.id === rightId && plan.id !== left.id) ?? plans.find((plan) => plan.id !== left.id) ?? plans[1];
+  const pair = [left, right];
+
+  // Choosing the plan already on the other side swaps them, so the two always differ.
+  const choose = (side: "left" | "right", id: string) => {
+    const other = side === "left" ? right.id : left.id;
+    const current = side === "left" ? left.id : right.id;
+    (side === "left" ? setLeftId : setRightId)(id);
+    if (id === other) (side === "left" ? setRightId : setLeftId)(current);
+  };
+
+  const runLimits = RUN_LIMITS.filter((row) => !differencesOnly || row.valueOf(left) !== row.valueOf(right));
+  const shownRows = rows.filter((feature) => !differencesOnly || !sameSetting(left, right, feature));
+  const total = RUN_LIMITS.length + rows.length;
+  const shown = runLimits.length + shownRows.length;
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        {pair.map((plan, index) => (
+          <div key={index} className="min-w-0 rounded-xl border border-slate-200 bg-white p-2.5">
+            <Select value={plan.id} onValueChange={(id) => choose(index === 0 ? "left" : "right", id)}>
+              <SelectTrigger aria-label={index === 0 ? "First plan" : "Second plan"} className="w-full bg-white font-semibold">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper" className="w-(--radix-select-trigger-width) bg-white">
+                {plans.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="mt-2 text-xs font-semibold text-slate-700 tabular-nums">{formatVnd(plan.monthlyPriceVnd)}/month</p>
+            <p className="text-[11px] text-slate-400">{plan.activeSubscriberCount.toLocaleString()} subscribers</p>
+          </div>
+        ))}
+      </div>
+
+      <label className="flex min-h-11 items-center justify-between gap-3 text-xs font-medium text-slate-600">
+        <span>
+          Only what differs <span className="text-slate-400 tabular-nums">· {differencesOnly ? `${shown} of ${total}` : `all ${total}`}</span>
+        </span>
+        <Switch checked={differencesOnly} onCheckedChange={setDifferencesOnly} aria-label="Only what differs" />
+      </label>
+
+      {shown === 0 ? (
+        <p className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
+          {left.name} and {right.name} match on every feature.
+        </p>
+      ) : (
+        <Card className="gap-0 rounded-2xl border border-slate-200/80 bg-white p-0 shadow-xs">
+          <table className="w-full table-fixed border-collapse text-sm">
+            <colgroup>
+              <col />
+              <col className="w-20" />
+              <col className="w-20" />
+            </colgroup>
+            <thead className="sticky top-16 z-10 bg-white">
+              <tr className="border-b border-slate-200 text-[11px] font-semibold text-slate-500">
+                <th scope="col" className="rounded-tl-2xl bg-white px-3 py-2 text-left">Feature</th>
+                {pair.map((plan) => (
+                  <th key={plan.id} scope="col" className="truncate bg-white px-1 py-2 text-center last:rounded-tr-2xl">
+                    {plan.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {runLimits.length > 0 && <GroupRow label="Run limits" span={3} />}
+              {runLimits.map((row) => (
+                <tr key={row.label} className="border-b border-slate-100">
+                  <th scope="row" className="px-3 py-2.5 text-left font-normal wrap-anywhere text-slate-700">{row.label}</th>
+                  {pair.map((plan) => (
+                    <td key={plan.id} className="px-1 py-2.5 text-center font-semibold text-slate-700 tabular-nums">
+                      {formatRunLimit(row.valueOf(plan))}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              {groups.map((group) => {
+                const groupRows = shownRows.filter((feature) => feature.group === group);
+                return (
+                  groupRows.length > 0 && (
+                    <FeatureGroup
+                      key={group}
+                      group={group}
+                      rows={groupRows}
+                      plans={pair}
+                      units={units}
+                      isAdding={isAdding}
+                      onAdd={onAdd}
+                      onRemove={onRemove}
+                      onEditLimit={onEditLimit}
+                    />
+                  )
+                );
+              })}
+            </tbody>
+          </table>
+        </Card>
+      )}
+      <p className="text-[11px] text-slate-400">Run limits are set on Edit plan.</p>
+    </div>
   );
 }

@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { ASSISTANT_LAUNCHER_STORAGE_KEY } from "@/constants/assistant";
+import { ASSISTANT_LAUNCHER_PHONE_BOTTOM_PX, ASSISTANT_LAUNCHER_STORAGE_KEY } from "@/constants/assistant";
 import {
   clampLauncherPosition,
   defaultLauncherPosition,
+  keepClearOfBottomTabs,
   loadLauncherPosition,
   saveLauncherPosition,
 } from "@/helpers/assistant-launcher-position";
@@ -11,6 +12,34 @@ import {
 const viewport = { width: 1000, height: 800 };
 
 describe("defaultLauncherPosition", () => {
+  describe("on a phone", () => {
+    const desktopWidth = window.innerWidth;
+
+    beforeEach(() => {
+      window.innerWidth = 375;
+    });
+
+    afterEach(() => {
+      window.innerWidth = desktopWidth;
+    });
+
+    it("sits above the bottom tabs on Seller pages", () => {
+      expect(defaultLauncherPosition("/dashboard").bottom).toBe(ASSISTANT_LAUNCHER_PHONE_BOTTOM_PX);
+    });
+
+    it("lifts a launcher dragged onto the bottom tabs", () => {
+      expect(keepClearOfBottomTabs({ right: 8, bottom: 8 }, "/batches").bottom).toBe(ASSISTANT_LAUNCHER_PHONE_BOTTOM_PX);
+    });
+
+    it("leaves a launcher dragged higher up where it is", () => {
+      expect(keepClearOfBottomTabs({ right: 8, bottom: 300 }, "/batches").bottom).toBe(300);
+    });
+
+    it("stays above the bottom tabs on admin pages too", () => {
+      expect(defaultLauncherPosition("/admin/users").bottom).toBe(ASSISTANT_LAUNCHER_PHONE_BOTTOM_PX);
+    });
+  });
+
   it("sits above the minimap on the workflow editor", () => {
     expect(defaultLauncherPosition("/workflows").bottom).toBeGreaterThan(defaultLauncherPosition("/dashboard").bottom);
   });

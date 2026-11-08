@@ -4,9 +4,9 @@ import { CTA_CONTENT } from "@/data/landing-content";
 
 export const CtaSection = () => {
   return (
-    <section id="signup" className="scroll-mt-16 pb-16 md:pb-24">
+    <section id="signup" className="scroll-mt-16 pb-10 md:pb-24">
       <Container>
-        <div className="bg-primary text-primary-foreground rounded-lg px-6 py-14 text-center md:p-16">
+        <div className="bg-primary text-primary-foreground rounded-lg px-6 py-9 text-center md:p-16">
           <h2 className="font-display mx-auto max-w-2xl text-3xl font-bold tracking-tight text-balance md:text-4xl">
             {CTA_CONTENT.title}
           </h2>
@@ -16,7 +16,7 @@ export const CtaSection = () => {
           <Button
             variant="defaultWithTextWhite"
             size="lg"
-            className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 mt-8"
+            className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 mt-6 md:mt-8"
             asChild
           >
             <a href={CTA_CONTENT.primaryCta.href}>

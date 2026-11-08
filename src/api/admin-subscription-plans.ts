@@ -6,6 +6,7 @@ import type {
   DuplicatedPlan,
   PlanFeatureChanges,
   PlanFeatureImpact,
+  PlanHistoryAction,
   PlanHistoryEntry,
   UpdateSubscriptionPlanInput,
 } from "@/types/admin-subscription-plan";
@@ -17,7 +18,8 @@ export const adminSubscriptionPlanKeys = {
   detail: (id: string) => [...adminSubscriptionPlanKeys.all, id] as const,
   insights: () => [...adminSubscriptionPlanKeys.all, "insights"] as const,
   aiReview: () => [...adminSubscriptionPlanKeys.all, "ai-review"] as const,
-  history: (pageNumber: number, pageSize: number) => [...adminSubscriptionPlanKeys.all, "history", pageNumber, pageSize] as const,
+  history: (pageNumber: number, pageSize: number, action?: PlanHistoryAction) =>
+    [...adminSubscriptionPlanKeys.all, "history", pageNumber, pageSize, action] as const,
   featureImpact: (planId: string, code: string, limitValue?: number | null) =>
     [...adminSubscriptionPlanKeys.all, planId, "impact", code, limitValue === undefined ? "remove" : (limitValue ?? "none")] as const,
 };
@@ -122,9 +124,13 @@ export const reorderPlans = async (planIds: string[]): Promise<void> => {
 };
 
 // One page of plan changes, newest first.
-export const getPlanHistory = async (pageNumber: number, pageSize: number): Promise<PagedResult<PlanHistoryEntry>> => {
+export const getPlanHistory = async (
+  pageNumber: number,
+  pageSize: number,
+  action?: PlanHistoryAction
+): Promise<PagedResult<PlanHistoryEntry>> => {
   const { data } = await api.get<PagedResult<PlanHistoryEntry>>("/api/admin/subscription-plans/history", {
-    params: { pageNumber, pageSize },
+    params: { pageNumber, pageSize, action },
   });
   return data;
 };

@@ -29,6 +29,8 @@ type WorkflowToolbarProps = {
   isEditorReady: boolean;
   onOpenWorkflow: (id: string | null) => void;
   guardUnsavedChanges: (action: () => void) => void;
+  /** Off on the phone's step list, which has no canvas to add nodes to. */
+  showsPanelButtons?: boolean;
 };
 
 export const WorkflowToolbar = ({
@@ -37,6 +39,7 @@ export const WorkflowToolbar = ({
   isEditorReady,
   onOpenWorkflow,
   guardUnsavedChanges,
+  showsPanelButtons = true,
 }: WorkflowToolbarProps) => {
   const [metaDialogMode, setMetaDialogMode] = useState<MetaDialogMode | null>(null);
   const openPopup = usePopupStore((state) => state.openPopup);
@@ -112,9 +115,9 @@ export const WorkflowToolbar = ({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b bg-white px-3 py-2">
+    <div className="flex flex-wrap items-center gap-2 border-b bg-white px-3 py-2 max-sm:gap-1 max-sm:px-2">
       <WorkflowBackButton guardUnsavedChanges={guardUnsavedChanges} />
-      <EditorPanelSheets />
+      {showsPanelButtons && <EditorPanelSheets />}
       <WorkflowSwitcher
         workflows={workflows}
         activeWorkflowId={activeWorkflowId}

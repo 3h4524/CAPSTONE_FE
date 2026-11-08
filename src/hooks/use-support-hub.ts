@@ -5,10 +5,11 @@ import { useEffect, useRef } from "react";
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { supportTicketKeys } from "@/api/support-tickets";
+import { isTransientHubError, signalrLogger } from "@/helpers/signalr-logger";
 import { adminSupportTicketsKeys } from "@/hooks/queries/use-admin-support-tickets";
 import type { SupportTicketReply } from "@/types/support";
 import type { HubConnection } from "@microsoft/signalr";
-import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import { HubConnectionBuilder } from "@microsoft/signalr";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Singleton connection to ensure we only have one socket open
@@ -27,7 +28,7 @@ export const useSupportHub = (ticketId?: string) => {
           withCredentials: true,
         })
         .withAutomaticReconnect()
-        .configureLogging(LogLevel.Information)
+        .configureLogging(signalrLogger)
         .build();
     }
     const connection = sharedConnection;
@@ -70,7 +71,6 @@ export const useSupportHub = (ticketId?: string) => {
             sharedStartPromise = null;
           });
           await sharedStartPromise;
-          console.log("🟢 Đã cắm cáp WebSocket thành công!");
         } else if (sharedStartPromise) {
           await sharedStartPromise;
         }
@@ -80,7 +80,9 @@ export const useSupportHub = (ticketId?: string) => {
           await connection.invoke("JoinTicket", ticketId);
         }
       } catch (err) {
-        console.error("🔴 Lỗi cắm cáp WebSocket: ", err);
+        // An API that is restarting is not a page error: the chat works again once it is back.
+        if (isTransientHubError(err)) console.warn("Support hub not connected yet:", err);
+        else console.error("Support hub connection failed:", err);
       }
     };
 

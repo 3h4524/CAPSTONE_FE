@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { TestReportRun } from "@/types/admin-test-reports";
 
 type TestReportRunTableProps = {
@@ -31,6 +32,7 @@ const formatStartedAt = (startedAtUtc: string) =>
 
 export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps) => {
   const router = useRouter();
+  const isPhone = useIsPhone();
 
   if (isLoading) {
     return (
@@ -50,6 +52,44 @@ export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps)
           Press “Run tests” to run the suite on this machine. The report is kept here.
         </p>
       </div>
+    );
+  }
+
+  if (isPhone) {
+    return (
+      <ul className="divide-y">
+        {runs.map((run) => (
+          <li key={run.runId}>
+            <Link href={`/admin/test-reports/${run.runId}`} className="flex items-center gap-3 px-1 py-3" aria-label={`Open the report of ${run.runId}`}>
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <p className="font-mono text-xs text-slate-600">{formatStartedAt(run.startedAtUtc)}</p>
+                <TestReportStatusBadge status={run.status} />
+                <p className="truncate font-mono text-xs text-slate-500">
+                  {run.branch ?? "—"}
+                  {run.commitSha ? ` @ ${run.commitSha}` : ""}
+                </p>
+                <dl className="grid grid-cols-4 gap-2 text-[10px] text-slate-500">
+                  {[
+                    ["Passed", run.passedTests, "text-emerald-600"],
+                    ["Failed", run.failedTests, "text-rose-600"],
+                    ["Flaky", run.flakyTests, "text-amber-600"],
+                    ["Skipped", run.skippedTests, "text-slate-400"],
+                  ].map(([label, count, tone]) => (
+                    <div key={label}>
+                      <dt>{label}</dt>
+                      <dd className={`font-mono text-xs ${tone}`}>{count}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="font-mono text-xs text-slate-500">
+                  <RunTook run={run} />
+                </p>
+              </div>
+              <ArrowRight className="size-4 shrink-0 text-slate-400" aria-hidden="true" />
+            </Link>
+          </li>
+        ))}
+      </ul>
     );
   }
 

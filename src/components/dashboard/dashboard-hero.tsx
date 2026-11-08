@@ -30,7 +30,16 @@ const MERCH_FADE = "linear-gradient(to right, transparent 0%, black 15%)";
 
 // The one action as a soft pill with dark text: clear on the card, easy on the eye.
 const PRIMARY_ACTION =
-  "inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-slate-900 shadow-sm ring-1 ring-slate-300 backdrop-blur transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md";
+  "inline-flex items-center gap-1.5 max-sm:w-full max-sm:justify-center rounded-full bg-white px-4 py-2 text-slate-900 shadow-sm ring-1 ring-slate-300 backdrop-blur transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md";
+
+// What Sellers make, shown on phones where the wide product photo has no room.
+const MERCH_TILES = [
+  { label: "Plate", src: "/images/dashboard/merch-plate.webp" },
+  { label: "Satchel", src: "/images/dashboard/merch-satchel.webp" },
+  { label: "Floral Tee", src: "/images/dashboard/merch-tee.webp" },
+  { label: "Cap", src: "/images/dashboard/merch-cap.webp" },
+  { label: "Ceramic Mug", src: "/images/dashboard/merch-mug.webp" },
+];
 
 /** The welcome card: who is signed in, what needs them today, and the one next step. */
 export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
@@ -38,7 +47,7 @@ export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
   const firstName = getFirstName(fullName);
 
   return (
-    <section className="group relative flex h-full min-h-52 flex-col justify-between overflow-hidden rounded-2xl border border-[#cbd3dc] bg-linear-to-r from-[#e3e7ec] via-[#dde2e8] to-[#dbe0e6] p-6 text-slate-900 shadow-sm transition-shadow duration-300 hover:shadow-md">
+    <section className="group max-sm:border-border max-sm:bg-card relative flex h-full min-h-52 flex-col justify-between overflow-hidden rounded-2xl border border-[#cbd3dc] bg-linear-to-r from-[#e3e7ec] via-[#dde2e8] to-[#dbe0e6] p-6 text-slate-900 shadow-sm transition-shadow duration-300 hover:shadow-md max-sm:bg-none max-sm:p-5">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-y-0 right-0 hidden aspect-[1024/682] max-w-[62%] sm:block"
@@ -55,7 +64,7 @@ export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
       </div>
 
       <div className="relative z-10 max-w-[55%] min-w-0 max-sm:max-w-full">
-        <p className="text-xs font-semibold text-slate-900">{today()}</p>
+        <p className="text-xs font-semibold text-slate-900 max-sm:text-[11px] max-sm:tracking-wider max-sm:text-slate-500 max-sm:uppercase">{today()}</p>
         <h1
           className="mt-1 truncate text-2xl font-bold tracking-tight text-slate-900"
           title={fullName ?? undefined}
@@ -65,7 +74,16 @@ export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
         <p className="mt-1 text-sm text-slate-700">{describeGreeting(items)}</p>
       </div>
 
-      <div className="relative z-10 mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium">
+      <ul className="bg-muted/40 relative z-10 mt-4 grid grid-cols-5 gap-1.5 rounded-xl p-2 ring-1 ring-slate-200 sm:hidden">
+        {MERCH_TILES.map(({ label, src }) => (
+          <li key={label} className="min-w-0 text-center">
+            <Image src={src} alt="" width={56} height={56} className="mx-auto aspect-square w-full max-w-14 rounded-lg object-cover" />
+            <span className="mt-1 block text-[10px] leading-tight font-medium text-slate-700">{label}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="relative z-10 mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium max-sm:mt-4">
         {items.length > 0 ? (
           <button type="button" onClick={onOpenActions} className={PRIMARY_ACTION}>
             See what needs you
@@ -82,7 +100,7 @@ export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
         )}
         <Link
           href="/market-opportunities"
-          className="inline-flex items-center gap-1.5 text-slate-900 transition hover:text-black"
+          className="inline-flex items-center gap-1.5 text-slate-900 transition hover:text-black max-sm:min-h-10 max-sm:w-full max-sm:justify-center"
         >
           <Compass className="size-4" aria-hidden="true" />
           Find a niche in Market Radar

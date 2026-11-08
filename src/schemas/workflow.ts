@@ -461,9 +461,49 @@ export const generateListingConfigSchema = z.object({
 
 export const exportZipConfigSchema = z.object({});
 
-export const publishConfigSchema = z.object({
-  publishImmediately: z.boolean(),
-});
+/** Push to Printify: the catalog choices, and the profit each sale should leave after Printify's cost and Etsy's fees. */
+export const publishPrintifyConfigSchema = z
+  .object({
+    blueprintId: z.number().int().positive().nullable(),
+    blueprintTitle: z.string().nullable(),
+    printProviderId: z.number().int().positive().nullable(),
+    printProviderTitle: z.string().nullable(),
+    colors: z.array(z.string()),
+    sizes: z.array(z.string()),
+    targetProfit: z
+      .number({ error: "Set the profit per item." })
+      .min(0, "The profit cannot be negative.")
+      .max(500, "Keep the profit per item at $500 or less."),
+    designId: z.string().nullable(),
+    publishToEtsy: z.boolean(),
+    addMockups: z.boolean(),
+  })
+  .superRefine((value, context) => {
+    if (!value.blueprintId) context.addIssue({ code: "custom", path: ["blueprintId"], message: "Choose a product type." });
+    else if (!value.printProviderId) context.addIssue({ code: "custom", path: ["printProviderId"], message: "Choose a print provider." });
+    else if (value.colors.length === 0 || value.sizes.length === 0)
+      context.addIssue({ code: "custom", path: ["colors"], message: "Choose at least one color and one size." });
+  });
+
+/** Publish to Etsy: one draft listing; a physical one needs a shipping profile. */
+export const publishEtsyConfigSchema = z
+  .object({
+    listingType: z.enum(["download", "physical"]),
+    price: z.number().positive("Set a price.").max(50000).nullable(),
+    quantity: z.number().int().min(1, "Quantity is at least 1.").max(999, "Quantity is at most 999."),
+    taxonomyId: z.number().int().positive().nullable(),
+    taxonomyPath: z.string().nullable(),
+    whoMade: z.enum(["i_did", "someone_else", "collective"]),
+    whenMade: z.string().min(1),
+    shippingProfileId: z.number().int().positive().nullable(),
+    includeVideo: z.boolean(),
+  })
+  .superRefine((value, context) => {
+    if (!value.price) context.addIssue({ code: "custom", path: ["price"], message: "Set a price." });
+    else if (!value.taxonomyId) context.addIssue({ code: "custom", path: ["taxonomyId"], message: "Choose an Etsy category." });
+    else if (value.listingType === "physical" && !value.shippingProfileId)
+      context.addIssue({ code: "custom", path: ["shippingProfileId"], message: "A physical listing needs a shipping profile." });
+  });
 
 export const workflowNodeConfigSchemas: Record<
   WorkflowNodeType,
@@ -479,8 +519,8 @@ export const workflowNodeConfigSchemas: Record<
   "review-video": z.object({}),
   "generate-listing": generateListingConfigSchema,
   "export-zip": exportZipConfigSchema,
-  "publish-etsy": publishConfigSchema,
-  "publish-printify": publishConfigSchema,
+  "publish-etsy": publishEtsyConfigSchema,
+  "publish-printify": publishPrintifyConfigSchema,
 };
 
 export const workflowMetaSchema = z.object({

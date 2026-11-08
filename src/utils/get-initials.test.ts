@@ -20,6 +20,9 @@ const cases: Array<[string, string, string]> = [
   ["a name with an accented first name", "Élodie Durand", "ÉD"],
   ["a name with digits", "Agent 007", "A0"],
   ["a name with a trailing hyphen", "Jean-Luc Picard", "JP"],
+  ["a last word in brackets", "Nguyen (Team)", "NT"],
+  ["a bracket on its own", "Nguyen ( Team )", "NT"],
+  ["only punctuation", "( )", "?"],
 ];
 
 describe("getInitials", () => {

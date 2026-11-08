@@ -14,6 +14,7 @@ import {
   percentChange,
   periodDays,
 } from "@/helpers/admin-dashboard";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { AdminOperationsDto } from "@/types/admin";
 
 type AdminOperationsRowProps = {
@@ -40,7 +41,7 @@ const DOT: Record<DashboardTone, string> = {
 };
 
 const AdminOperationsRow = ({ operations, isLoading }: AdminOperationsRowProps) => (
-  <div className="grid gap-4.5 lg:grid-cols-3">
+  <div className="grid grid-cols-1 gap-4.5 lg:grid-cols-3">
     <OperationsCard
       title="Throughput"
       subtitle="Products created and sellers at work"
@@ -76,7 +77,7 @@ const OperationsCard = ({
   href: string;
   children: React.ReactNode;
 }) => (
-  <section className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+  <section className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] max-md:p-4">
     <div className="flex items-start justify-between gap-3">
       <div>
         <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
@@ -84,7 +85,7 @@ const OperationsCard = ({
       </div>
       <Link
         href={href}
-        className="flex shrink-0 items-center gap-0.5 text-xs font-medium text-slate-500 hover:text-slate-900"
+        className="flex shrink-0 items-center gap-0.5 text-xs font-medium text-slate-500 hover:text-slate-900 max-md:-my-1.5 max-md:min-h-8"
       >
         Details <ArrowUpRight className="size-3" />
       </Link>
@@ -270,6 +271,7 @@ const Funnel = ({ operations }: { operations: AdminOperationsDto }) => {
 };
 
 const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
+  const isPhone = useIsPhone();
   const summary = aiSummary(operations.aiUsage, operations.funnel.products);
   const overall = failureTone(summary.failureRate);
 
@@ -300,6 +302,24 @@ const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
       </p>
       {operations.aiUsage.length === 0 ? (
         <p className="mt-4 text-xs text-slate-400">No AI calls in this period.</p>
+      ) : isPhone ? (
+        <ul className="mt-3 divide-y divide-slate-100 text-xs">
+          {operations.aiUsage.map((feature) => {
+            const rate = feature.calls > 0 ? (feature.failed / feature.calls) * 100 : 0;
+            return (
+              <li key={feature.feature} className="py-2">
+                <p className="flex justify-between gap-3">
+                  <span className="min-w-0 truncate font-medium text-slate-700">{aiFeatureLabel(feature.feature)}</span>
+                  <span className="shrink-0 font-semibold text-slate-800 tabular-nums">{formatUsd(feature.costUsd)}</span>
+                </p>
+                <p className="mt-0.5 text-slate-500 tabular-nums">
+                  {feature.calls.toLocaleString()} calls ·{" "}
+                  <span className={`font-semibold ${TEXT[failureTone(rate)]}`}>{rate.toFixed(1)}% failed</span>
+                </p>
+              </li>
+            );
+          })}
+        </ul>
       ) : (
         <table className="mt-3 w-full text-left text-xs">
           <thead className="text-[11px] text-slate-400">

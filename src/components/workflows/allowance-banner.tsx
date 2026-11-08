@@ -19,7 +19,7 @@ export const AllowanceBanner = () => {
   return (
     <div
       aria-label="Plan allowance"
-      className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-slate-50 px-4 py-2 text-xs text-slate-600"
+      className="scrollbar-hide flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-slate-50 px-4 py-2 text-xs text-slate-600 max-md:flex-nowrap max-md:overflow-x-auto max-md:whitespace-nowrap [@media(max-height:500px)]:hidden"
     >
       <span className="flex items-center gap-1.5 font-semibold text-slate-800">
         <Gauge className="size-3.5" aria-hidden="true" />

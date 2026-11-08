@@ -1,7 +1,9 @@
 import {
   Activity,
+  BarChart3,
   Compass,
   CreditCard,
+  Headphones,
   KeyRound,
   Layers3,
   LayoutDashboard,
@@ -9,6 +11,8 @@ import {
   Palette,
   Settings,
   Shirt,
+  Store,
+  Users,
   WandSparkles,
   Workflow,
 } from "lucide-react";
@@ -23,6 +27,7 @@ export const NAV_SECTIONS: AppNavSection[] = [
   {
     label: "WORKSPACE",
     items: [
+      { label: "Shop", href: "/shop", icon: Store },
       { label: "Workflows", href: "/workflows", icon: Workflow },
       { label: "Batches", href: "/batches", icon: Layers3 },
       { label: "My Styles", href: "/styles", icon: Palette },
@@ -43,8 +48,29 @@ export const NAV_SECTIONS: AppNavSection[] = [
   },
 ];
 
+/** The phone's bottom tabs. Every other page stays reachable from the More tab. */
+export const MOBILE_TABS = [
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Workflows", href: "/workflows", icon: Workflow },
+  { label: "Batches", href: "/batches", icon: Layers3 },
+  { label: "Radar", href: "/market-opportunities", icon: Compass },
+];
+
+/** The Admin's bottom tabs; More opens the sidebar for the other pages. */
+export const ADMIN_MOBILE_TABS = [
+  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Revenue", href: "/admin/revenue", icon: BarChart3 },
+  { label: "Support", href: "/admin/support-tickets", icon: Headphones },
+];
+
+/** The template form: its own action sits at the foot of a phone's screen, where the tabs would be. */
+export const isDesignTemplateForm = (pathname: string | null) =>
+  /^\/design-templates\/(new|[^/]+\/edit)$/.test(pathname ?? "");
+
 export const ROUTE_TITLES = {
   dashboard: "Dashboard",
+  shop: "Shop",
   "design-templates": "Design templates",
   mockups: "Mock-up templates",
   profile: "Profile",

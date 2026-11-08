@@ -16,6 +16,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { DailyJobsPointDto } from "@/types/system-statistics";
 
 import { formatDateLabel, movingAverage } from "./statistics-insights";
@@ -37,11 +38,15 @@ const TODAY_COLOR = "#cbd5e1";
 const PEAK_COLOR = "#f97316";
 const TREND_COLOR = "#0f172a";
 
+// The row around the chart only sets a minimum height on a phone, which a percentage cannot follow.
+const PHONE_CHART_HEIGHT = 300;
+
 export function DailyJobsBarChart({
   dailyJobs = [],
   isLoading,
   periodEnd,
 }: DailyJobsBarChartProps) {
+  const isPhone = useIsPhone();
   const stats = useMemo(() => {
     if (dailyJobs.length === 0) {
       return { total: 0, avg: 0, peakIndex: -1, peak: { date: "-", count: 0 } };
@@ -110,7 +115,7 @@ export function DailyJobsBarChart({
   };
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
+    <div className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs max-md:p-4">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
@@ -182,7 +187,7 @@ export function DailyJobsBarChart({
             </div>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={isPhone ? PHONE_CHART_HEIGHT : "100%"}>
             <ComposedChart data={chartData} margin={{ top: 22, right: 12, left: -22, bottom: 0 }} barCategoryGap={3}>
               <CartesianGrid vertical={false} stroke="#f1f5f9" />
               <XAxis

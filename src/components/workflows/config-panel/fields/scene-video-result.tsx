@@ -88,7 +88,7 @@ export const SceneVideoResult = ({ sceneNumber, clip, runStarted, waitingForGene
       </div>
     </div>
     <Dialog open={isVideoOpen} onOpenChange={setIsVideoOpen}>
-      <DialogContent showCloseButton={false} className="h-[90dvh] w-[calc(100%-2rem)] max-w-5xl border-0 bg-transparent p-0 shadow-none">
+      <DialogContent showCloseButton={false} className="h-[90dvh] w-[calc(100%-2rem)] max-w-5xl overflow-visible border-0 bg-transparent p-0 shadow-none [--dialog-phone-height:100dvh]">
         <button type="button" aria-label="Close video preview" onClick={() => setIsVideoOpen(false)}
           className="absolute -top-9 right-0 z-10 inline-flex size-8 items-center justify-center text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
           <X aria-hidden="true" className="size-6" />

@@ -32,7 +32,7 @@ export function DesignTemplateCard({
     <article className="group flex min-h-full flex-col overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_1px_2px_rgba(39,55,80,0.04)] transition-[box-shadow,border-color] duration-300 ease-out hover:border-slate-300 hover:shadow-[0_14px_34px_rgba(39,55,80,0.09)] motion-reduce:transition-none">
       <button
         type="button"
-        className="relative aspect-[4/3] w-full overflow-hidden bg-[#eef1ed] text-left focus-visible:ring-3 focus-visible:ring-[#273750]/25 focus-visible:outline-none focus-visible:ring-inset"
+        className="relative aspect-[4/3] w-full overflow-hidden bg-[#eef1ed] text-left focus-visible:ring-3 focus-visible:ring-[#273750]/25 focus-visible:outline-none focus-visible:ring-inset max-md:aspect-video"
         onClick={() => onView(template.id)}
         aria-label={`View ${template.name}`}
       >
@@ -62,26 +62,26 @@ export function DesignTemplateCard({
         </span>
       </button>
 
-      <div className="flex flex-1 flex-col p-5">
+      <div className="flex flex-1 flex-col p-5 max-md:p-4">
         <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold tracking-[0.04em] text-slate-500">
           <span>{template.nicheCategory ?? "General"}</span>
           <span className="size-1 rounded-full bg-slate-300" aria-hidden="true" />
           <span className="capitalize">{styleLabel}</span>
         </div>
-        <h2 className="font-display mt-4 text-xl font-semibold tracking-tight text-slate-950">
+        <h2 className="font-display mt-4 text-xl font-semibold tracking-tight text-slate-950 max-md:mt-2 max-md:text-lg">
           {template.name}
         </h2>
-        <p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-slate-600">
+        <p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-slate-600 max-md:mt-1 max-md:min-h-0">
           {template.styleDescription ?? "A personal prompt framework ready for your next collection."}
         </p>
-        <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-xs text-slate-500">
-          <span>{template.usageCount.toLocaleString()} uses</span>
+        <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-xs text-slate-500 max-md:mt-3 max-md:pt-3">
+          <span className={cn(template.usageCount === 0 && "max-md:invisible")}>{template.usageCount.toLocaleString()} uses</span>
           <span className="inline-flex items-center gap-1.5">
             <CalendarDays className="size-3.5" aria-hidden="true" />
             <time dateTime={template.updatedAtUtc}>{formatDate(template.updatedAtUtc)}</time>
           </span>
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-2 max-md:mt-3">
           <Button
             type="button"
             variant="outline"

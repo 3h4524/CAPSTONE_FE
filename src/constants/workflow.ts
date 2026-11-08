@@ -80,11 +80,15 @@ export const BATCH_RUN_NODE_TYPES: WorkflowNodeType[] = [
   "apply-mockup",
 ];
 
+// The publish steps run on the server after the ZIP: Printify publishes to Etsy, then a direct Etsy listing.
+export const PUBLISH_NODE_TYPES: WorkflowNodeType[] = ["publish-printify", "publish-etsy"];
+
 export const VIDEO_RUN_NODE_TYPES: WorkflowNodeType[] = [
   "approval-gate",
   "generate-video",
   "review-video",
   "export-zip",
+  ...PUBLISH_NODE_TYPES,
 ];
 
 export const RUNNABLE_NODE_TYPES: WorkflowNodeType[] = [
@@ -104,16 +108,9 @@ export const RUN_ORDER: WorkflowNodeType[] = [
   "generate-video",
   "review-video",
   "export-zip",
+  ...PUBLISH_NODE_TYPES,
 ];
 
-const PUBLISH_FIELDS = [
-  {
-    kind: "switch",
-    name: "publishImmediately",
-    label: "Publish immediately",
-    description: "Make the listing live right away instead of saving it as a draft.",
-  },
-] as const;
 
 export const WORKFLOW_CATEGORIES: WorkflowCategoryDefinition[] = [
   {
@@ -434,31 +431,53 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     icon: Archive,
     category: "output",
     hasInput: true,
-    hasOutput: false,
+    // Push to Printify or Publish to Etsy may follow the ZIP.
+    hasOutput: true,
     defaultConfig: {},
     fields: [],
   },
   "publish-etsy": {
     type: "publish-etsy",
     label: "Publish to Etsy",
-    description: "Create Etsy listings from the finished products.",
+    description: "Create an Etsy draft listing. A digital download delivers the approved designs.",
     icon: Store,
     category: "output",
     hasInput: true,
     hasOutput: false,
-    defaultConfig: { publishImmediately: false },
-    fields: [...PUBLISH_FIELDS],
+    defaultConfig: {
+      listingType: "download",
+      price: null,
+      quantity: 999,
+      taxonomyId: null,
+      taxonomyPath: null,
+      whoMade: "i_did",
+      whenMade: "made_to_order",
+      shippingProfileId: null,
+      includeVideo: true,
+    },
+    fields: [],
   },
   "publish-printify": {
     type: "publish-printify",
     label: "Push to Printify",
-    description: "Send the designs and listing content to Printify.",
+    description: "Create the product on Printify, which publishes it to Etsy and prints each order.",
     icon: ShoppingBag,
     category: "output",
     hasInput: true,
-    hasOutput: false,
-    defaultConfig: { publishImmediately: false },
-    fields: [...PUBLISH_FIELDS],
+    hasOutput: true,
+    defaultConfig: {
+      blueprintId: null,
+      blueprintTitle: null,
+      printProviderId: null,
+      printProviderTitle: null,
+      colors: [],
+      sizes: [],
+      targetProfit: 10,
+      designId: null,
+      publishToEtsy: true,
+      addMockups: true,
+    },
+    fields: [],
   },
 };
 

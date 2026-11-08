@@ -27,6 +27,7 @@ import { NodeConfigField } from "@/components/workflows/config-panel/node-config
 import { OwnPromptNotice } from "@/components/workflows/config-panel/own-prompt-notice";
 import { PlanLockNotice } from "@/components/workflows/config-panel/plan-lock-notice";
 import { PromptRecipe } from "@/components/workflows/config-panel/prompt-recipe";
+import { EtsyPublishSettings, PrintifyPublishSettings } from "@/components/workflows/config-panel/publish-settings";
 import { MockupPanel } from "@/components/workflows/media/mockup-panel";
 import { ModelPhotoSection } from "@/components/workflows/media/model-photo-section";
 import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
@@ -68,6 +69,7 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
   const selectNode = useWorkflowStore((state) => state.selectNode);
   const overview = useNodeOverview(node);
   const settingsLocked = isRunning && !(waitingReview && node.data.type === "generate-video");
+  const isPublishNode = node.data.type === "publish-printify" || node.data.type === "publish-etsy";
 
   const form = useForm<WorkflowNodeConfig, unknown, WorkflowNodeConfig>({
     resolver: zodResolver(workflowNodeConfigSchemas[node.data.type]),
@@ -224,7 +226,7 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
                   {rest.length > 0 && (
                     <div className="space-y-6 px-5 py-5">{rest.map(renderField)}</div>
                   )}
-                  {definition.fields.length === 0 && (
+                  {definition.fields.length === 0 && !isPublishNode && (
                     <p className="text-muted-foreground px-5 py-5 text-xs">
                       This step has no settings.
                     </p>
@@ -234,6 +236,9 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
             </fieldset>
           </form>
         </Form>
+        {/* The publish steps read Printify's catalog and the Etsy shop, so they have panels of their own. */}
+        {node.data.type === "publish-printify" && <PrintifyPublishSettings node={node} disabled={settingsLocked} />}
+        {node.data.type === "publish-etsy" && <EtsyPublishSettings node={node} disabled={settingsLocked} />}
         {node.data.type === "product-input" && (
           <PreviousRunsSelect batchId={readString(node.data.config.batchId)} />
         )}

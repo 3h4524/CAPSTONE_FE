@@ -137,6 +137,8 @@ export type RagEvaluationCaseResult = {
   failure: string | null;
   results: RagSearchDiagnosticResult[];
   diagnostics?: RagSearchDiagnostics;
+  /** 1-based rank of the first expected result, or null when it was not retrieved. */
+  matchedRank?: number | null;
 };
 
 export type RagEvaluationTypeMetrics = {
@@ -160,6 +162,23 @@ export type RagEvaluationResponse = {
   averageLatencyMs: number;
   cases: RagEvaluationCaseResult[];
   typeMetrics: RagEvaluationTypeMetrics[];
+  meanReciprocalRank?: number;
+};
+
+export type RagKnownItemBenchmarkRequest = {
+  sampleSize?: number;
+  seed?: number;
+  caseSetId?: string;
+};
+
+export type RagKnownItemBenchmarkResponse = {
+  caseSetId: string;
+  seed: number;
+  sampleSize: number;
+  caseSetCreatedAt: string;
+  reusedCaseSet: boolean;
+  topK: number;
+  evaluation: RagEvaluationResponse;
 };
 
 export type RagCorpusHealthTypeMetrics = {
@@ -264,6 +283,12 @@ export const getRagCorpusHealth = async (params: { contentType?: string; staleDa
 
 export const reingestRagDocuments = async (payload: RagReingestRequest = {}) => {
   const { data } = await api.post<RagReingestResponse>("/api/rag/admin/reingest", payload);
+  return data;
+};
+
+/** Samples a new known-item case set, or runs a saved one again when caseSetId is given. */
+export const runKnownItemBenchmark = async (payload: RagKnownItemBenchmarkRequest) => {
+  const { data } = await api.post<RagKnownItemBenchmarkResponse>("/api/rag/admin/benchmark/known-item", payload);
   return data;
 };
 

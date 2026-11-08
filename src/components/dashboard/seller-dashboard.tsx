@@ -51,12 +51,12 @@ export const SellerDashboard = () => {
     );
 
   return (
-    <div className="w-full min-w-0 space-y-4 p-4 sm:p-6">
+    <div className="flex w-full min-w-0 flex-col gap-4 md:block md:space-y-4 md:p-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-sm max-md:hidden">
           Overview of the last <span className="text-foreground font-medium">{days} days</span>
         </p>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 max-md:w-full max-md:justify-between">
           <PeriodSwitcher value={days} onChange={setDays} />
           <ExportButton summary={summary} />
         </div>
@@ -94,7 +94,7 @@ export const SellerDashboard = () => {
       {/* 3. How production and AI spend moved over the period, split 7 : 3. */}
       <section
         className={cn(
-          "grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]",
+          "grid grid-cols-1 gap-4 max-md:order-last lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]",
           reveal(2).className
         )}
         style={reveal(2).style}

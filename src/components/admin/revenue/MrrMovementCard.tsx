@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { BarChart3 } from "lucide-react";
+import { BarChart3,ChevronDown } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -15,6 +15,7 @@ import {
 
 import { Card } from "@/components/ui/card";
 import { bridgeRows, bridgeSummary, MRR_MOVEMENT_COLORS as COLORS, signedVnd } from "@/helpers/revenue-mrr-movement";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { PlanAiReviewResponse } from "@/types/plan-ai-review";
 import type { MrrMovementDto } from "@/types/revenue";
 import { formatCompactVndAmount, formatVnd } from "@/utils/format-currency";
@@ -39,6 +40,10 @@ const shortDate = (iso: string) => {
 };
 
 export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview }: MrrMovementCardProps) {
+  const isPhone = useIsPhone();
+  // A phone shows the chart first and keeps the per-plan breakdown folded.
+  const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
+  const showsBreakdown = !isPhone || isBreakdownOpen;
   const [selected, setSelected] = useState<string | null>(null);
 
   const months = useMemo(
@@ -72,7 +77,7 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
   const chartEnd = lastMonth ? shortDate(endDate) : "";
 
   return (
-    <Card className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+    <Card className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-400">
@@ -159,7 +164,7 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
         </div>
 
         {/* The selected period, per plan */}
-        {bridge && (
+        {bridge && showsBreakdown && (
           <div className="flex min-w-0 flex-2 flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-800/40">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
@@ -191,7 +196,7 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
             <div className="flex flex-col gap-1.5 text-xs tabular-nums">
               <BridgeLine label={`MRR on ${shortDate(previousDay(startDate))}`} value={formatVnd(bridge.start)} strong />
               {rows.map((row) => (
-                <div key={row.label} className="grid grid-cols-[104px_minmax(0,1fr)_128px] items-center gap-2">
+                <div key={row.label} className="grid grid-cols-[104px_minmax(0,1fr)_128px] items-center gap-2 max-md:grid-cols-[84px_minmax(0,1fr)_auto]">
                   <span className="text-slate-600 dark:text-slate-300">{row.label}</span>
                   <span className="h-3 overflow-hidden rounded bg-slate-200/70 dark:bg-slate-700/60">
                     <span
@@ -228,7 +233,18 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
       </div>
 
       {/* Full width under both, so the chart and the bridge keep the same height. */}
-      {bridge && <WhyCustomersLeave planName={bridge.planName} aiReview={aiReview} />}
+      {bridge && showsBreakdown && <WhyCustomersLeave planName={bridge.planName} aiReview={aiReview} />}
+      {bridge && isPhone && (
+        <button
+          type="button"
+          aria-expanded={isBreakdownOpen}
+          className="flex min-h-11 items-center justify-center gap-1 text-xs font-semibold text-slate-600"
+          onClick={() => setIsBreakdownOpen((open) => !open)}
+        >
+          {isBreakdownOpen ? "Hide breakdown" : "Show breakdown"}
+          <ChevronDown className={`size-3.5 transition-transform ${isBreakdownOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+        </button>
+      )}
     </Card>
   );
 }

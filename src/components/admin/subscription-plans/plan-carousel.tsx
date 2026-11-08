@@ -52,7 +52,7 @@ export function PlanCarousel({ items }: { items: { key: string; node: ReactNode 
     <div
       ref={scroller}
       onScroll={track}
-      className={cn("flex", slides ? "min-w-0 flex-1 snap-x snap-mandatory overflow-x-auto scroll-smooth pb-1" : "flex-wrap")}
+      className={cn("flex", slides ? "min-w-0 flex-1 snap-x snap-mandatory overflow-x-auto scroll-smooth pb-1 max-sm:order-first max-sm:basis-full" : "flex-wrap")}
       style={{ gap: GAP, scrollbarWidth: slides ? "none" : undefined }}
       aria-label={slides ? `Plans ${first + 1} to ${last} of ${items.length}` : undefined}
     >
@@ -73,7 +73,7 @@ export function PlanCarousel({ items }: { items: { key: string; node: ReactNode 
   // The arrows sit in their own space beside the cards, never over them.
   return (
     <div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 max-sm:flex-wrap max-sm:justify-center">
         <ArrowButton side="left" disabled={first <= 0} onClick={() => go(-1)} />
         {scrollerNode}
         <ArrowButton side="right" disabled={last >= items.length} onClick={() => go(1)} />

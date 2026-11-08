@@ -10,12 +10,13 @@ import { toXlsx } from "@/helpers/revenue-report-xlsx";
 import { useAdminSubscriptionPlans } from "@/hooks/queries/use-admin-subscription-plans";
 import { usePlanAiReview } from "@/hooks/queries/use-plan-ai-review";
 import { useRevenueCharts, useRevenueInsights, useRevenueInvoices, useRevenueMetrics } from "@/hooks/queries/use-revenue";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { RevenueFilterDto, TransactionStatus } from "@/types/revenue";
 
 import { MrrMovementCard } from "./MrrMovementCard";
 import { RevenueByPlanCard } from "./RevenueByPlanCard";
 import { RevenueFilterBar } from "./RevenueFilterBar";
-import { type ReportFormat, RevenueGrowthCard } from "./RevenueGrowthCard";
+import { type ReportFormat, RevenueExportMenu,RevenueGrowthCard } from "./RevenueGrowthCard";
 import { RevenueInsightsRow } from "./RevenueInsightsRow";
 import { RevenueInvoiceTable, type TransactionTableFilter } from "./RevenueInvoiceTable";
 import { RevenueMetricCards } from "./RevenueMetricCards";
@@ -24,6 +25,7 @@ const TRANSACTIONS_PAGE_SIZE = 5;
 
 
 export function RevenueDashboard() {
+  const isPhone = useIsPhone();
   const [filter, setFilter] = useState<RevenueFilterDto>({
     startDate: `${new Date().getFullYear()}-01-01`, // First day of current year
     endDate: new Date().toISOString().split("T")[0], // Today
@@ -120,6 +122,7 @@ export function RevenueDashboard() {
         <RevenueFilterBar
           filter={filter}
           onFilterChange={handleFilterChange}
+          actions={isPhone ? <RevenueExportMenu compact onExport={handleExport} isExporting={isExporting} /> : undefined}
         />
 
         <RevenueMetricCards
@@ -129,18 +132,22 @@ export function RevenueDashboard() {
 
         {/* From the total down: how MRR moved, then which plans moved it. The revenue trend over
             time lives on the Admin Dashboard. */}
-        <MrrMovementCard
-          data={insightsData?.mrrMovement}
-          isLoading={isLoadingInsights}
-          startDate={filter.startDate}
-          endDate={filter.endDate}
-          aiReview={aiReview}
-        />
+        <div className="min-w-0 max-md:order-2">
+          <MrrMovementCard
+            data={insightsData?.mrrMovement}
+            isLoading={isLoadingInsights}
+            startDate={filter.startDate}
+            endDate={filter.endDate}
+            aiReview={aiReview}
+          />
+        </div>
 
-        <RevenueByPlanCard
-          plans={chartsData?.byPlan}
-          isLoading={isLoadingCharts}
-        />
+        <div className="min-w-0 max-md:order-2">
+          <RevenueByPlanCard
+            plans={chartsData?.byPlan}
+            isLoading={isLoadingCharts}
+          />
+        </div>
 
         <RevenueInsightsRow
           data={insightsData}
@@ -148,7 +155,7 @@ export function RevenueDashboard() {
           onReviewAlert={handleReviewAlert}
         />
 
-        <div id="recent-transactions" className="grid scroll-mt-4 grid-cols-1 gap-4 xl:grid-cols-4">
+        <div id="recent-transactions" className="grid scroll-mt-4 grid-cols-1 gap-4 max-md:order-2 max-md:scroll-mt-20 xl:grid-cols-4">
           <div className="min-w-0 xl:col-span-3">
             <RevenueInvoiceTable
               data={invoicesData}

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { AlertTriangle, Clock, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
+import { USER_DIALOG_FOOTER_ON_PHONE,USER_DIALOG_ON_PHONE } from "@/components/admin/users/admin-user-parts";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import type { AdminUserDto } from "@/types/admin";
 import { cn } from "@/utils/cn";
+
 
 
 interface BanUserModalProps {
@@ -53,16 +55,16 @@ export const BanUserModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-[480px] overflow-y-auto rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden">
-        <div className="relative p-8 pb-6">
+      <DialogContent className={cn("max-h-[90vh] max-w-[480px] overflow-y-auto rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden", USER_DIALOG_ON_PHONE)}>
+        <div className="relative p-8 pb-6 max-md:p-5 max-md:pb-0">
           <div className="flex flex-col items-center text-center">
-            <div className="flex size-24 items-center justify-center rounded-full border border-slate-100 bg-white p-1.5 shadow-sm">
+            <div className="flex size-24 items-center justify-center rounded-full border border-slate-100 bg-white p-1.5 shadow-sm max-md:size-16">
               <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-900">
                 <ShieldAlert className="size-10 text-white" />
               </div>
             </div>
 
-            <DialogTitle className="mt-5 text-2xl font-bold tracking-tight text-slate-900">
+            <DialogTitle className="mt-5 text-2xl font-bold tracking-tight text-slate-900 max-md:mt-3 max-md:text-xl">
               Suspend User Account
             </DialogTitle>
             <p className="mt-1 text-sm font-medium text-slate-500">
@@ -70,7 +72,7 @@ export const BanUserModal = ({
             </p>
           </div>
 
-          <div className="mt-8 flex flex-col gap-5">
+          <div className="mt-8 flex flex-col gap-5 max-md:mt-5 max-md:gap-3">
             <div className="rounded-xl border border-slate-200 bg-slate-100/60 p-3 text-sm text-slate-700">
               <div className="flex gap-2">
                 <AlertTriangle className="size-5 shrink-0 text-slate-600" />
@@ -133,7 +135,7 @@ export const BanUserModal = ({
             </div>
           </div>
 
-          <div className="mt-8 flex gap-3">
+          <div className={cn("mt-8 flex gap-3", USER_DIALOG_FOOTER_ON_PHONE)}>
             <Button 
               variant="outline" 
               className="h-11 flex-1 rounded-xl border-slate-200 font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900" 
@@ -146,9 +148,10 @@ export const BanUserModal = ({
               className="h-11 flex-1 gap-2 rounded-xl bg-slate-900 font-semibold text-white shadow-sm transition-all hover:bg-slate-800"
               onClick={handleConfirm} 
               disabled={isLoading}
+              aria-label={isLoading ? undefined : "Confirm Suspension"}
             >
               <Clock className="size-4" />
-              {isLoading ? "Suspending..." : "Confirm Suspension"}
+              {isLoading ? "Suspending..." : <span>Confirm<span className="max-md:hidden"> Suspension</span></span>}
             </Button>
           </div>
         </div>

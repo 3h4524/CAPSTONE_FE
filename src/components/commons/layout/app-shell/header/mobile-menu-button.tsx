@@ -23,7 +23,7 @@ export const MobileMenuButton = ({ onClick }: MobileMenuButtonProps) => {
           size="icon"
           onClick={onClick}
           aria-label="Open menu"
-          className="lg:hidden"
+          className="max-md:hidden lg:hidden"
         >
           <Menu />
         </Button>

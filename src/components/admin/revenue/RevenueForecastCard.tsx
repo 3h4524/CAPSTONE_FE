@@ -71,7 +71,7 @@ export function RevenueForecastCard({
         : null;
 
   return (
-    <Card className="flex h-full flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+    <Card className="flex h-full flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
       {/* Header */}
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2.5">

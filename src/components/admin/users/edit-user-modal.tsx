@@ -5,6 +5,7 @@ import { Activity, Calendar, Camera, Loader2, Mail, ShieldAlert, ShieldCheck, Us
 import { toast } from "sonner";
 
 import { sendResetPasswordLink, updateAdminUser } from "@/api/admin";
+import { USER_DIALOG_FOOTER_ON_PHONE,USER_DIALOG_ON_PHONE } from "@/components/admin/users/admin-user-parts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -129,13 +130,13 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-[480px] overflow-y-auto rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden">
-        <div className="relative p-8 pb-6">
+      <DialogContent className={cn("max-h-[90vh] max-w-[480px] overflow-y-auto rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden", USER_DIALOG_ON_PHONE)}>
+        <div className="relative p-8 pb-6 max-md:p-5 max-md:pb-0">
           
           {/* Header & Avatar: Matching View Detail exactly */}
           <div className="flex flex-col items-center text-center">
             <div className="group relative cursor-pointer">
-              <div className="flex size-24 items-center justify-center rounded-full border border-slate-100 bg-white p-1.5 shadow-sm">
+              <div className="flex size-24 items-center justify-center rounded-full border border-slate-100 bg-white p-1.5 shadow-sm max-md:size-16">
                 <Avatar className="h-full w-full">
                   <AvatarImage src={formData.avatarUrl || ""} alt={formData.fullName} className="rounded-full object-cover" />
                   <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-slate-900 text-3xl font-bold text-white">
@@ -146,14 +147,14 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
 
               {/* Overlay Edit Button */}
               <div
-                className="absolute inset-0 m-1.5 flex items-center justify-center rounded-full bg-black/50 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100"
+                className="absolute inset-0 m-1.5 flex items-center justify-center rounded-full bg-black/50 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100 [@media(hover:none)]:opacity-100"
                 onClick={() => setIsEditingAvatar(!isEditingAvatar)}
               >
                 <Camera className="size-6 text-white drop-shadow-md" />
               </div>
             </div>
 
-            <DialogTitle className="mt-5 text-2xl font-bold tracking-tight text-slate-900">
+            <DialogTitle className="mt-5 text-2xl font-bold tracking-tight text-slate-900 max-md:mt-3 max-md:text-xl">
               Edit User Profile
             </DialogTitle>
             <p className="mt-1 text-sm font-medium text-slate-500">
@@ -161,7 +162,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
             </p>
           </div>
 
-          <div className="mt-8 flex flex-col gap-5">
+          <div className="mt-8 flex flex-col gap-5 max-md:mt-5 max-md:gap-3">
 
             {/* Avatar URL Edit Field */}
             {isEditingAvatar && (
@@ -326,7 +327,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
           </div>
 
           {/* Footer Actions */}
-          <div className="mt-8 flex items-center justify-center gap-3">
+          <div className={cn("mt-8 flex items-center justify-center gap-3", USER_DIALOG_FOOTER_ON_PHONE)}>
             <Button 
               type="button" 
               variant="outline" 

@@ -105,7 +105,7 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
 
             <TestReportRunTrend runs={list?.items ?? []} currentRunId={runId} />
 
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               <TestReportFailureGroups files={data.files} />
               <TestReportFileFailures files={data.files} />
             </div>

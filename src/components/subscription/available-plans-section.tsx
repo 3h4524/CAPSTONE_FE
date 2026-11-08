@@ -3,8 +3,10 @@
 import { type ReactNode,useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { AvailablePlan, BillingCycle } from "@/types/subscription";
 
+import { PhonePlanCarousel } from "./phone-plan-carousel";
 import { PlanComparisonCard, type PlanEmphasis } from "./plan-comparison-card";
 
 type AvailablePlansSectionProps = {
@@ -16,6 +18,8 @@ type AvailablePlansSectionProps = {
   onDowngradeClick: (plan: AvailablePlan) => void;
   // The free trial card, shown first in the same row as the plans.
   trialOffer?: ReactNode;
+  // The trial's name on a phone's plan tabs.
+  trialLabel?: string;
 };
 
 // The plan in effect is marked current; the one an Admin marked Recommended is shown dark.
@@ -40,7 +44,9 @@ export const AvailablePlansSection = ({
   onUpgradeClick,
   onDowngradeClick,
   trialOffer,
+  trialLabel = "Trial",
 }: AvailablePlansSectionProps) => {
+  const isPhone = useIsPhone();
   const currentPlanPrice = plans.find((plan) => plan.isCurrentPlan)?.monthlyPriceUsd ?? null;
   const emphasis = emphasisOf(plans, hasActivePaidPlan);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -48,9 +54,11 @@ export const AvailablePlansSection = ({
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   const cardItems = [
-    ...(trialOffer ? [{ key: "trial-offer", node: trialOffer }] : []),
+    ...(trialOffer ? [{ key: "trial-offer", label: trialLabel, node: trialOffer }] : []),
     ...plans.map((plan) => ({
       key: plan.planId,
+      label: plan.name,
+      isRecommended: emphasis.get(plan.planId) === "recommended",
       node: (
         <PlanComparisonCard
           key={plan.planId}
@@ -99,6 +107,15 @@ export const AvailablePlansSection = ({
       behavior: "smooth",
     });
   };
+
+  if (isPhone) {
+    const opening = plans.find((plan) => emphasis.get(plan.planId) === "current") ?? plans.find((plan) => plan.isRecommended);
+    return (
+      <section aria-label="Available plans">
+        <PhonePlanCarousel key={totalCards} items={cardItems} initialKey={opening?.planId} />
+      </section>
+    );
+  }
 
   return (
     <section aria-label="Available plans" className="relative">

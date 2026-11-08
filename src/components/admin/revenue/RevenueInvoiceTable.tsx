@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Eye, Receipt, Search } from "lucide-react";
 
+import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { Card } from "@/components/ui/card";
 import {
   Dialog,
@@ -20,6 +21,7 @@ import {
   TRANSACTION_STATUS_STYLE,
   TRANSACTION_STATUSES,
 } from "@/helpers/revenue-transactions";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { RevenueInvoiceDto, TransactionStatus } from "@/types/revenue";
 import { formatVnd } from "@/utils/format-currency";
 
@@ -47,7 +49,7 @@ interface RevenueInvoiceTableProps {
 }
 
 const SELECT_CLASS =
-  "h-9 cursor-pointer appearance-none rounded-lg border border-slate-200 bg-white pr-8 pl-3 text-xs font-medium text-slate-700 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200";
+  "h-9 cursor-pointer appearance-none rounded-lg border border-slate-200 bg-white pr-8 pl-3 text-xs font-medium text-slate-700 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 max-md:w-full max-md:text-base max-md:font-normal";
 
 export function RevenueInvoiceTable({
   data,
@@ -60,6 +62,7 @@ export function RevenueInvoiceTable({
   page,
   onPageChange,
 }: RevenueInvoiceTableProps) {
+  const isPhone = useIsPhone();
   const [searchInput, setSearchInput] = useState(tableFilter.search);
   const [selected, setSelected] = useState<RevenueInvoiceDto | null>(null);
 
@@ -77,7 +80,7 @@ export function RevenueInvoiceTable({
   const lastRow = Math.min(page * pageSize, totalCount);
 
   return (
-    <Card className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+    <Card className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
       {/* Header + toolbar */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
@@ -87,20 +90,20 @@ export function RevenueInvoiceTable({
           <h3 className="text-sm font-bold whitespace-nowrap text-slate-900 dark:text-slate-100">Recent Transactions</h3>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-full sm:w-72">
+        <div className="flex flex-wrap items-center gap-2 max-md:grid max-md:grid-cols-2">
+          <div className="relative w-full max-md:col-span-2 sm:w-72">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-slate-400" />
             <input
               type="search"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search invoice, customer, email or user ID..."
+              placeholder={isPhone ? "Search transactions" : "Search invoice, customer, email or user ID..."}
               aria-label="Search transactions"
-              className="h-9 w-full rounded-lg border border-slate-200 bg-white pr-3 pl-8 text-xs text-slate-700 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+              className="h-9 w-full rounded-lg border border-slate-200 bg-white pr-3 pl-8 text-xs text-slate-700 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none max-md:text-base dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             />
           </div>
 
-          <div className="relative">
+          <div className="relative max-md:min-w-0">
             <select
               aria-label="Filter by plan"
               value={tableFilter.plan}
@@ -117,7 +120,7 @@ export function RevenueInvoiceTable({
             <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 text-slate-400" />
           </div>
 
-          <div className="relative">
+          <div className="relative max-md:min-w-0">
             <select
               aria-label="Filter by status"
               value={tableFilter.status}
@@ -136,7 +139,7 @@ export function RevenueInvoiceTable({
 
           <div
             title="Change the period with the date filter at the top of the page"
-            className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs whitespace-nowrap text-slate-600 dark:border-slate-800 dark:text-slate-300"
+            className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs whitespace-nowrap text-slate-600 max-md:hidden dark:border-slate-800 dark:text-slate-300"
           >
             <Calendar className="size-3.5 text-slate-400" />
             {formatRangeDate(startDate)} – {formatRangeDate(endDate)}
@@ -145,6 +148,50 @@ export function RevenueInvoiceTable({
       </div>
 
       {/* Table */}
+      {isPhone ? (
+        isLoading ? (
+          <p className="py-8 text-center text-sm text-slate-400">Loading transactions…</p>
+        ) : !data || data.items.length === 0 ? (
+          <p className="py-8 text-center text-sm text-slate-400">No transactions match these filters.</p>
+        ) : (
+          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            {data.items.map((invoice) => {
+              const status = getTransactionStatusStyle(invoice.status);
+              const planColor = getPlanColor(invoice.planName);
+              return (
+                <li key={invoice.id} className="space-y-1.5 py-3 text-xs tabular-nums">
+                  <p className="font-medium text-slate-700 dark:text-slate-200">{invoice.invoiceNumber}</p>
+                  <div>
+                    <p className="font-semibold text-slate-900 dark:text-slate-100">{invoice.customerName}</p>
+                    <p className="truncate text-[11px] text-slate-400">{invoice.customerEmail}</p>
+                  </div>
+                  <p className="flex items-center justify-between gap-2">
+                    <span className="inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold" style={{ backgroundColor: `${planColor}1a`, color: planColor }}>
+                      {invoice.planName}
+                    </span>
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">{formatVnd(invoice.amount)}</span>
+                  </p>
+                  <p className="flex items-center justify-between gap-2 text-slate-500 dark:text-slate-400">
+                    <span>{invoice.paymentMethod ?? "—"}</span>
+                    <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${status.className}`}>{status.label}</span>
+                  </p>
+                  <div className="flex items-center justify-between gap-2 text-slate-500 dark:text-slate-400">
+                    <span>{formatTransactionDate(invoice.paymentDate, invoice.createdAt)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelected(invoice)}
+                      className="inline-flex min-h-10 cursor-pointer items-center gap-1 rounded-md border border-slate-200 px-3 text-[11px] font-medium text-slate-600 dark:border-slate-800 dark:text-slate-300"
+                    >
+                      <Eye className="size-3" />
+                      View
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )
+      ) : (
       <div className="overflow-x-auto">
         <table className="w-full min-w-[820px] text-xs tabular-nums">
           <thead>
@@ -233,6 +280,7 @@ export function RevenueInvoiceTable({
           </tbody>
         </table>
       </div>
+      )}
 
       {/* Footer: count + numbered pager */}
       <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
@@ -241,8 +289,10 @@ export function RevenueInvoiceTable({
           <span className="font-semibold text-slate-700 dark:text-slate-200">{lastRow}</span> of{" "}
           <span className="font-semibold text-slate-700 dark:text-slate-200">{totalCount}</span> transactions
         </p>
-        {totalPages > 1 && (
-          <nav aria-label="Transactions pages" className="flex items-center gap-1">
+        {isPhone ? (
+          <PhonePager page={page} pageCount={totalPages} onPageChange={onPageChange} label="Transactions pages" anchorId="recent-transactions" />
+        ) : totalPages > 1 && (
+          <nav aria-label="Transactions pages" className="flex flex-wrap items-center gap-1">
             <PagerButton label="Previous page" disabled={page <= 1 || isLoading} onClick={() => onPageChange(page - 1)}>
               <ChevronLeft className="size-3.5" />
             </PagerButton>
@@ -299,7 +349,7 @@ function PagerButton({
       aria-current={active ? "page" : undefined}
       disabled={disabled}
       onClick={onClick}
-      className={`inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={`inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 max-md:h-10 max-md:min-w-10 ${
         active
           ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
           : "border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-800 dark:text-slate-300"

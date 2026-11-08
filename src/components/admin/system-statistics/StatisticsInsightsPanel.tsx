@@ -83,7 +83,7 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
 
   return (
     <>
-      <div className="flex h-full flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
+      <div className="flex h-full flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs max-md:p-4">
         {/* Card Header matching Dashboard Style */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div className="flex items-center gap-3">

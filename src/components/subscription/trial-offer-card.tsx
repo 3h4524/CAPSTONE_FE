@@ -23,7 +23,7 @@ export const TrialOfferCard = ({ trialDays, planName, allowances, isStarting, on
   ];
 
   return (
-    <Card className="@container relative flex h-full flex-col gap-0 rounded-2xl border-slate-200 bg-white p-6 shadow-sm">
+    <Card className="@container relative flex h-full flex-col gap-0 rounded-2xl border-slate-200 bg-white p-6 shadow-sm max-md:p-5">
       {/* Rivets in the corners, a quiet frame for the card. */}
       {["top-3 left-3", "top-3 right-3", "bottom-3 left-3", "bottom-3 right-3"].map((spot) => (
         <span key={spot} aria-hidden="true" className={`absolute size-1.5 rounded-full bg-slate-200 ${spot}`} />

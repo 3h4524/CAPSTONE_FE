@@ -3,6 +3,7 @@
 import { type PointerEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { MockupPrintArea } from "@/types/mockup-templates";
 import { cn } from "@/utils/cn";
 
@@ -34,6 +35,13 @@ type PrintAreaEditorProps = {
 };
 
 const clamp = (value: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, value));
+
+const PRINT_AREA_FIELDS: { field: keyof Bounds; label: string }[] = [
+  { field: "x", label: "Left" },
+  { field: "y", label: "Top" },
+  { field: "width", label: "Width" },
+  { field: "height", label: "Height" },
+];
 
 // Snap distance in on-screen pixels, independent of image zoom.
 const SNAP_SCREEN_PX = 10;
@@ -121,7 +129,7 @@ const Handles = ({ className }: { className: string }) => (
         key={handle}
         data-handle={handle}
         className={cn(
-          "absolute size-3 rounded-sm border-2 bg-white",
+          "absolute size-3 rounded-sm border-2 bg-white [@media(pointer:coarse)]:size-7 [@media(pointer:coarse)]:translate-x-0! [@media(pointer:coarse)]:translate-y-0!",
           className,
           handle === "nw" && "top-0 left-0 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize",
           handle === "ne" && "top-0 right-0 translate-x-1/2 -translate-y-1/2 cursor-nesw-resize",
@@ -309,6 +317,8 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
       const point = toNatural(event.clientX, event.clientY);
       dragRef.current = { mode: "move", startX: point.x, startY: point.y, origin: activeRect };
     } else {
+      // A stray tap beside the box must not replace an area that was already placed.
+      if (event.pointerType === "touch" && activeRect.width > 1 && activeRect.height > 1) return;
       const anchor = toNatural(event.clientX, event.clientY);
       dragRef.current = { mode: "new", anchorX: anchor.x, anchorY: anchor.y };
       setActive({ x: anchor.x, y: anchor.y, width: 1, height: 1 });
@@ -358,6 +368,17 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
     setSnap({ h: false, v: false });
   };
 
+  const setField = (field: keyof Bounds, raw: string) => {
+    const number = Number(raw);
+    if (!natural || raw === "" || !Number.isFinite(number)) return;
+    const next = { ...value, [field]: Math.round(number) };
+    next.width = clamp(next.width, 1, natural.width);
+    next.height = clamp(next.height, 1, natural.height);
+    next.x = clamp(next.x, 0, natural.width - next.width);
+    next.y = clamp(next.y, 0, natural.height - next.height);
+    onChange(next);
+  };
+
   const toggleGarmentEditing = () => {
     if (!editingGarment && !garmentBounds && natural) {
       setGarmentBounds({ x: 0, y: 0, width: natural.width, height: natural.height });
@@ -376,7 +397,7 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
     <div className="space-y-1.5">
       <div
         ref={wrapRef}
-        className={cn("relative inline-block max-w-full rounded-lg leading-none", interactive ? "cursor-crosshair" : "cursor-default")}
+        className={cn("relative inline-block max-w-full rounded-lg leading-none", interactive ? "cursor-crosshair touch-none" : "cursor-default")}
         style={cutOut ? { backgroundColor: background ?? undefined } : undefined}
         data-testid="print-area-photo"
         onPointerDown={handlePointerDown}
@@ -502,6 +523,22 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
             ? `The ${printedThing} is entirely off the garment, so nothing of it would be printed. Move it onto the garment.`
             : `Part of the ${printedThing} is off the garment. Mock-ups cut it off at the garment’s edge.`}
         </p>
+      )}
+      {natural && !disabled && !editingGarment && (
+        <div className="hidden grid-cols-4 gap-2 [@media(pointer:coarse)]:grid" role="group" aria-label="Exact print area, in pixels">
+          {PRINT_AREA_FIELDS.map(({ field, label }) => (
+            <label key={field} className="text-muted-foreground min-w-0 space-y-1 text-xs">
+              {label}
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={value[field]}
+                onChange={(event) => setField(field, event.target.value)}
+                className="h-10 px-2"
+              />
+            </label>
+          ))}
+        </div>
       )}
       {natural && (
         <div className="flex flex-wrap items-center justify-between gap-2">

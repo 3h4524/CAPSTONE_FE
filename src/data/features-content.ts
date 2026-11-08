@@ -84,11 +84,11 @@ export const PLATFORMS_FEATURE: FeatureDetail = {
   title: "Platform Integrations",
   tagline: "Publish everywhere in one click",
   description:
-    "Approved listings go live straight from APCS. Designs, mockups, videos, and copy are packaged and pushed to Etsy and connected marketplaces with inventory in sync.",
+    "Approved listings go live straight from Podivo. Designs, mockups, videos, and copy are packaged and pushed to Etsy and connected marketplaces with inventory in sync.",
   bullets: [
     "One-click publish to Etsy with all assets attached",
     "Printify connection for seamless fulfillment",
-    "Listings stay in sync when you edit in APCS",
+    "Listings stay in sync when you edit in Podivo",
     "Draft mode for final review before going live",
   ],
 };

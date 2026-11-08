@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 
+import { Logo } from "@/components/commons/icons/logo";
 import { Container } from "@/components/commons/layout/container";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -31,8 +32,11 @@ export const SiteHeader = () => {
   return (
     <header className="bg-background/90 sticky top-0 z-50 border-b backdrop-blur-xl">
       <Container className="flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="font-display text-lg font-bold tracking-tight">
-          APCS
+        <Link href="/" className="font-display flex items-center gap-2 text-lg font-bold tracking-tight">
+          <span aria-hidden="true" className="flex shrink-0">
+            <Logo height={32} width={32} />
+          </span>
+          Podivo
         </Link>
         <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
           {NAV_LINKS.map((link) => {
@@ -73,7 +77,7 @@ export const SiteHeader = () => {
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle className="font-display text-left">APCS</SheetTitle>
+              <SheetTitle className="font-display text-left">Podivo</SheetTitle>
               <SheetDescription className="sr-only">Site navigation</SheetDescription>
             </SheetHeader>
             <nav className="flex flex-col gap-1 px-4" aria-label="Mobile">

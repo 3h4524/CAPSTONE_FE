@@ -20,6 +20,7 @@ import {
   Users,
 } from "lucide-react";
 
+import { Logo } from "@/components/commons/icons/logo";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -96,7 +97,14 @@ const AdminSidebar = ({
           isCollapsed ? "justify-center" : "justify-between"
         )}
       >
-        {!isCollapsed && <div className="text-base font-bold tracking-tight text-ink-900">APCS</div>}
+        {!isCollapsed && (
+          <div className="flex items-center gap-2 text-base font-bold tracking-tight text-ink-900">
+            <span aria-hidden="true" className="flex shrink-0">
+              <Logo height={30} width={30} />
+            </span>
+            Podivo
+          </div>
+        )}
         <Button
           type="button"
           variant="ghost"

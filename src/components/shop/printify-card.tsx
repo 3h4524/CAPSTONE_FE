@@ -56,7 +56,7 @@ export function PrintifyCard() {
             </div>
             <p className="text-xs text-ink-500">
               {connected
-                ? `${connection.shopTitle} · publishes to ${connection.salesChannel ?? "no channel"} · ${connection.productsCreated} product(s) sent from APCS${connection.keyName ? ` · key “${connection.keyName}”` : ""}`
+                ? `${connection.shopTitle} · publishes to ${connection.salesChannel ?? "no channel"} · ${connection.productsCreated} product(s) sent from Podivo${connection.keyName ? ` · key “${connection.keyName}”` : ""}`
                 : state?.text ?? "Prints and ships your designs when an Etsy order comes in."}
             </p>
           </div>

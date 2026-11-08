@@ -140,7 +140,7 @@ function TicketDetailContent({
           {ticket.replies.map((reply) => (
             <ConversationItem
               key={reply.id}
-              author={reply.authorRole === "Admin" ? "APCS Support" : "You"}
+              author={reply.authorRole === "Admin" ? "Podivo Support" : "You"}
               initials={reply.authorRole === "Admin" ? "A" : getInitials(ticket.requesterName)}
               message={reply.replyText}
               createdAt={reply.createdAtUtc}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { Logo } from "@/components/commons/icons/logo";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -35,7 +36,12 @@ export const AppSidebarMobile = ({ open, onOpenChange, side = "left" }: AppSideb
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side={side} className="flex flex-col">
         <SheetHeader>
-          <SheetTitle className="text-left">APCS</SheetTitle>
+          <SheetTitle className="flex items-center gap-2 text-left">
+            <span aria-hidden="true" className="flex shrink-0">
+              <Logo height={28} width={28} />
+            </span>
+            Podivo
+          </SheetTitle>
           <SheetDescription className="sr-only">{t("navigation.mobile")}</SheetDescription>
         </SheetHeader>
         <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-4" aria-label={t("navigation.mobile")}>

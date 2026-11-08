@@ -4,12 +4,6 @@ import { useEffect } from "react";
 import { Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Form } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ApprovalFlow } from "@/components/workflows/config-panel/approval-flow";
@@ -85,9 +79,8 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
       ? "ai_shot"
       : "standard"
     : videoMode;
-  const videoFields = definition.fields.filter((field) => field.name === "outputFormat");
-  const advancedVideoFields = definition.fields.filter(
-    (field) => field.name === "textOverlay" || field.name === "standardOptions.transition"
+  const videoFields = definition.fields.filter(
+    (field) => field.name === "outputFormat" || field.name === "standardOptions.transition"
   );
   const { grouped, rest } = groupPanelFields(
     definition.fields,
@@ -182,14 +175,6 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
                       videoMode={String(outputMode ?? "ai_shot")}
                     />
                   ))}
-                  <Accordion type="single" collapsible>
-                    <AccordionItem value="advanced-video">
-                      <AccordionTrigger>Caption and transition</AccordionTrigger>
-                      <AccordionContent className="space-y-5">
-                        {advancedVideoFields.map(renderField)}
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
                   <AiShotOptions
                     nodeId={node.id}
                     disabled={isRunning && !waitingReview}
@@ -285,7 +270,9 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
         {((isVideoRunNode(node.data.type) && node.data.type !== "approval-gate") ||
           node.data.type === "generate-listing") && (
           <div className="space-y-4 px-5 pb-5">
-            {isVideoRunNode(node.data.type) && <RunStatusPanel />}
+            {isVideoRunNode(node.data.type) && node.data.type !== "generate-video" && (
+              <RunStatusPanel />
+            )}
             {node.data.type === "generate-listing" && <ListingContentResultPanel />}
             {node.data.type === "generate-video" && <StoryboardPanel node={node} />}
             {(node.data.type === "review-video" || node.data.type === "generate-video") && (

@@ -2,6 +2,7 @@
 
 import { Fragment } from "react";
 
+import { Logo } from "@/components/commons/icons/logo";
 import { AccountMenu } from "@/components/commons/layout/app-shell/account/account-menu";
 import { Separator } from "@/components/ui/separator";
 import { NAV_SECTIONS } from "@/constants/navigation";
@@ -25,9 +26,12 @@ export const AppSidebar = () => {
         className={cn("flex items-center p-3", isCollapsed ? "justify-center" : "justify-between")}
       >
         <span
-          className={cn("font-display text-lg font-bold tracking-tight", isCollapsed && "hidden")}
+          className={cn("font-display flex items-center gap-2 text-lg font-bold tracking-tight", isCollapsed && "hidden")}
         >
-          APCS
+          <span aria-hidden="true" className="flex shrink-0">
+            <Logo height={32} width={32} />
+          </span>
+          Podivo
         </span>
         <CollapseToggle />
       </div>

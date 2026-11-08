@@ -4,12 +4,12 @@ import { FormChangePassword } from "@/components/auth/form-change-password";
 import { SITE_CONFIG } from "@/constants/site";
 import { getPageMetadata } from "@/data/metadata";
 
-export const generateMetadata = (): Metadata =>
-  getPageMetadata({
-    title: "Change password",
-    description: SITE_CONFIG.description,
-    pathname: "/change-password",
-  });
+export const metadata: Metadata = getPageMetadata({
+  title: "Change password",
+  description: SITE_CONFIG.description,
+  pathname: "/change-password",
+  robots: { index: false, follow: false },
+});
 
 const ChangePasswordPage = () => {
   return (

@@ -5,7 +5,7 @@ import { getPageMetadata } from "@/data/metadata";
 
 export const metadata: Metadata = getPageMetadata({
   title: "Profile",
-  description: "Manage your APCS profile and preferences.",
+  description: "Manage your Podivo profile and preferences.",
   pathname: "/profile",
   robots: { index: false, follow: false },
 });

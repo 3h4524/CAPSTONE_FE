@@ -6,12 +6,12 @@ import { FormResetPassword } from "@/components/auth/form-reset-password";
 import { SITE_CONFIG } from "@/constants/site";
 import { getPageMetadata } from "@/data/metadata";
 
-export const generateMetadata = (): Metadata =>
-  getPageMetadata({
-    title: "Reset password",
-    description: SITE_CONFIG.description,
-    pathname: "/reset-password",
-  });
+export const metadata: Metadata = getPageMetadata({
+  title: "Reset password",
+  description: SITE_CONFIG.description,
+  pathname: "/reset-password",
+  robots: { index: false, follow: false },
+});
 
 const ResetPasswordPage = () => {
   return (

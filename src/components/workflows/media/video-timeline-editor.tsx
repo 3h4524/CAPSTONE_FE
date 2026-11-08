@@ -12,6 +12,7 @@ import {
 } from "react";
 import {
   Check,
+  ChevronRight,
   Clapperboard,
   GripVertical,
   Loader2,
@@ -510,6 +511,7 @@ function PreviewSceneMedia({
                 width: "100%",
                 height: "100%",
                 objectFit: "cover",
+                objectPosition: `${(scene.aiCropPosition?.x ?? 0.5) * 100}% ${(scene.aiCropPosition?.y ?? 0.5) * 100}%`,
               }}
             />
           </Sequence>
@@ -1363,6 +1365,15 @@ export function VideoTimelineEditor({
         : current
     );
   };
+  const commitSelectedSceneTransform = (changes: Partial<TimelineScene>) => {
+    if (!selectedScene) return;
+    commit((current) => ({
+      ...current,
+      aiScenes: (current.aiScenes ?? []).map((scene, index) =>
+        index === selectedScene.index ? { ...scene, ...changes } : scene
+      ),
+    }));
+  };
   const resetSelectedSceneTransform = () => {
     if (!selectedScene) return;
     commit((current) => ({
@@ -1515,17 +1526,20 @@ export function VideoTimelineEditor({
       <Button
         type="button"
         variant="outline"
-        className="h-auto min-h-11 w-full justify-between gap-3 px-3 py-2 text-left"
+        className="group border-border/80 bg-background hover:border-primary/30 hover:bg-muted/40 hover:text-primary min-h-16 w-full justify-start gap-3 rounded-lg border px-3 py-3 text-left whitespace-normal transition-colors hover:translate-y-0"
         disabled={disabled || scenes.length === 0}
         onClick={start}
       >
-        <span className="flex min-w-0 items-center gap-2">
-          <Clapperboard className="text-primary size-4 shrink-0" />
-          <span className="truncate">Edit full video</span>
+        <span className="bg-muted text-primary flex size-9 shrink-0 items-center justify-center rounded-md">
+          <Clapperboard aria-hidden="true" className="size-4" />
         </span>
-        <span className="text-muted-foreground shrink-0 text-[11px] font-normal">
-          Timeline, text, music
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold">Edit full video</span>
+          <span className="text-muted-foreground mt-0.5 block text-xs leading-relaxed font-normal">
+            Adjust timeline, text and music
+          </span>
         </span>
+        <ChevronRight aria-hidden="true" className="text-muted-foreground group-hover:text-primary size-4 shrink-0 transition-colors" />
       </Button>
       <Dialog open={open} onOpenChange={(value) => (value ? start() : cancel())}>
         <DialogContent
@@ -1763,6 +1777,8 @@ export function VideoTimelineEditor({
                           onReset={resetSelectedSceneTransform}
                           onChange={changeSelectedSceneTransform}
                         />
+                      ) : selectedScene ? (
+                        <AiCropInspector scene={selectedScene.scene} sceneNumber={selectedScene.index + 1} onChange={commitSelectedSceneTransform} />
                       ) : selection?.kind === "music" ? (
                         <MusicInspector
                           edit={edit}
@@ -1864,6 +1880,19 @@ function OptionPickerEmpty() {
       <p className="text-muted-foreground mt-1.5 text-sm leading-6">
         Select Music or Transition above to choose what you want to add.
       </p>
+    </div>
+  );
+}
+
+function AiCropInspector({ scene, sceneNumber, onChange }: { scene: TimelineScene; sceneNumber: number; onChange: (changes: Partial<TimelineScene>) => void }) {
+  const position = scene.aiCropPosition ?? { x: 0.5, y: 0.5 };
+  return (
+    <div className="space-y-5">
+      <Title icon={<SlidersHorizontal />} name="Frame position" description={`Scene ${sceneNumber}`} />
+      <p className="text-muted-foreground text-sm">Adjust the visible part of the AI video. The preview matches the final render.</p>
+      <Range label="Horizontal position" value={Math.round(position.x * 100)} min={0} max={100} step={1} display={`${Math.round(position.x * 100)}%`} onChange={(value) => onChange({ aiCropPosition: { ...position, x: value / 100 } })} />
+      <Range label="Vertical position" value={Math.round(position.y * 100)} min={0} max={100} step={1} display={`${Math.round(position.y * 100)}%`} onChange={(value) => onChange({ aiCropPosition: { ...position, y: value / 100 } })} />
+      <Button type="button" variant="outline" onClick={() => onChange({ aiCropPosition: { x: 0.5, y: 0.5 } })}>Center frame</Button>
     </div>
   );
 }

@@ -8,6 +8,7 @@ export const metadata: Metadata = getPageMetadata({
   title: "Access denied",
   description: "You do not have permission to access this page.",
   pathname: "/unauthorized",
+  robots: { index: false, follow: false },
 });
 
 const UnauthorizedRoute = async () => {

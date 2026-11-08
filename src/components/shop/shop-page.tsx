@@ -29,7 +29,7 @@ const outcomeMessages: Record<EtsyConnectionOutcome, { text: string; failed: boo
 const permissions = [
   { icon: Store, title: "Read your shop", detail: "Name, listings count, sales and reviews, to show them here." },
   { icon: Eye, title: "Read your listings", detail: "To compare what you sell with the Market Radar." },
-  { icon: Receipt, title: "Read your orders", detail: "Revenue, orders per day and fulfilment time. APCS never changes or ships an order." },
+  { icon: Receipt, title: "Read your orders", detail: "Revenue, orders per day and fulfilment time. Podivo never changes or ships an order." },
   { icon: PencilLine, title: "Create draft listings", detail: "To send workflow designs, mockups and videos as drafts. Nothing goes live until you publish it on Etsy." },
 ];
 
@@ -147,7 +147,7 @@ function ConnectGate({ data, connecting, onConnect }: { data: MyShop; connecting
         <h2 className="text-xl font-semibold text-ink-900">Connect your Etsy shop</h2>
         <p className="max-w-md text-sm leading-6 text-ink-600">
           Connect once to see your shop here and send what your workflows make straight to Etsy as drafts.
-          You sign in on Etsy; APCS never sees your Etsy password.
+          You sign in on Etsy; Podivo never sees your Etsy password.
         </p>
       </div>
       <ul className="divide-y divide-ink-100 border-y border-ink-100">
@@ -327,8 +327,8 @@ function ConnectedShop({
         <div className="flex flex-col gap-2 border-t border-ink-100 bg-ink-50/60 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-ink-500">
             {data.reconnectByUtc && !needsReconnect
-              ? `Etsy asks you to confirm the connection again by ${formatDate(data.reconnectByUtc)}; APCS renews access automatically until then.`
-              : "Disconnecting removes the stored Etsy tokens from APCS."}
+              ? `Etsy asks you to confirm the connection again by ${formatDate(data.reconnectByUtc)}; Podivo renews access automatically until then.`
+              : "Disconnecting removes the stored Etsy tokens from Podivo."}
           </p>
           {confirmDisconnect ? (
             <div className="flex shrink-0 items-center gap-2">

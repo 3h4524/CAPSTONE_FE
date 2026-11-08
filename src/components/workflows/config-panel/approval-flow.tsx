@@ -19,7 +19,7 @@ export const ApprovalFlow = ({ from, to, automatic }: ApprovalFlowProps) => {
       {steps.map((step, index) => (
         <Fragment key={step}>
           {index > 0 && <ChevronRight className="size-3 shrink-0" aria-hidden="true" />}
-          <span className={index === 1 ? "font-medium text-slate-900" : undefined}>{step}</span>
+          <span className={index === 1 ? "font-medium text-ink-900" : undefined}>{step}</span>
         </Fragment>
       ))}
     </p>

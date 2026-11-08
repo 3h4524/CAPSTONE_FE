@@ -76,13 +76,13 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
       {isPending && value.length > 0 ? (
         <SectionLoading label="Loading mock-up templates" className="justify-start rounded-lg border px-3 py-3 [&_svg]:size-4 [&>span]:text-xs" />
       ) : selectedTemplates.length > 0 ? (
-        <ul className="divide-y overflow-hidden rounded-lg border bg-white" aria-label="Selected mock-up templates">
+        <ul className="divide-y overflow-hidden rounded-lg border bg-card" aria-label="Selected mock-up templates">
           {selectedTemplates.map((template) => {
             const colors = template.allowRecolor ? (templateColors[template.id] ?? defaultTemplateColors(template)) : [];
             // Chosen for a product type the next run has nothing to make for: kept, but not used.
             const unused = productTypeCounts !== undefined && !(template.productType.toLowerCase() in productTypeCounts);
             return (
-              <li key={template.id} className={cn("flex items-center gap-3 px-2.5 py-2", unused && "bg-slate-50/80")}>
+              <li key={template.id} className={cn("flex items-center gap-3 px-2.5 py-2", unused && "bg-ink-50/80")}>
                 <Image
                   src={template.previewImageUrl ?? template.baseImageUrl}
                   alt=""
@@ -92,7 +92,7 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
                   className={cn("bg-muted size-10 shrink-0 rounded-md object-cover", unused && "opacity-60")}
                 />
                 <div className="min-w-0 flex-1 space-y-1">
-                  <p className="truncate text-sm font-medium text-slate-900">{template.name}</p>
+                  <p className="truncate text-sm font-medium text-ink-900">{template.name}</p>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-muted-foreground text-xs">{productTypeLabel(template.productType)}</span>
                     {colors.length > 0 && (
@@ -102,7 +102,7 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
                         ))}
                       </span>
                     )}
-                    {unused && <span className="text-xs font-medium text-amber-700">· not used in this run</span>}
+                    {unused && <span className="text-xs font-medium text-amber-700 dark:text-amber-300">· not used in this run</span>}
                   </div>
                 </div>
               </li>

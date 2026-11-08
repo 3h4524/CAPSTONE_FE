@@ -190,16 +190,16 @@ export function DesignTemplateLibrary() {
   const data = templatesQuery.data;
 
   return (
-    <div className="w-full min-w-0 text-[#161c22] md:p-6">
+    <div className="w-full min-w-0 text-foreground md:p-6">
       <main className="w-full min-w-0">
-        <header className="grid gap-6 border-b border-slate-200 pb-7 max-md:flex max-md:items-center max-md:justify-between max-md:gap-3 max-md:border-0 max-md:pb-0 lg:grid-cols-[1fr_auto] lg:items-end">
+        <header className="grid gap-6 border-b border-ink-200 pb-7 max-md:flex max-md:items-center max-md:justify-between max-md:gap-3 max-md:border-0 max-md:pb-0 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
-            <p className="text-[11px] font-bold tracking-[0.17em] text-slate-500 uppercase max-md:hidden">Creative library</p>
-            <h1 className="font-display mt-2 max-w-3xl text-3xl font-semibold tracking-[-0.035em] text-slate-950 max-md:mt-0 max-md:text-xl max-md:tracking-tight sm:text-4xl">
+            <p className="text-[11px] font-bold tracking-[0.17em] text-ink-500 uppercase max-md:hidden">Creative library</p>
+            <h1 className="font-display mt-2 max-w-3xl text-3xl font-semibold tracking-[-0.035em] text-ink-900 max-md:mt-0 max-md:text-xl max-md:tracking-tight sm:text-4xl">
               <span className="md:hidden">Design templates</span>
               <span className="max-md:hidden">Start with a structure. Make the artwork yours.</span>
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 max-md:hidden sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-600 max-md:hidden sm:text-base">
               Explore production-ready prompt systems or manage the reusable templates in your private workspace.
             </p>
           </div>
@@ -213,7 +213,7 @@ export function DesignTemplateLibrary() {
 
         <section className="mt-6 max-md:mt-4" aria-label="Template library controls">
           <div
-            className="grid grid-cols-2 gap-1.5 rounded-[20px] border border-slate-200 bg-slate-100/80 p-1.5 lg:max-w-3xl"
+            className="grid grid-cols-2 gap-1.5 rounded-[20px] border border-ink-200 bg-ink-100/80 p-1.5 lg:max-w-3xl"
             role="tablist"
             aria-label="Template library"
           >
@@ -231,10 +231,10 @@ export function DesignTemplateLibrary() {
                   aria-controls={`${tab.value}-templates-panel`}
                   tabIndex={selected ? 0 : -1}
                   className={cn(
-                    "flex min-h-18 items-center gap-3 rounded-[15px] px-4 py-3 text-left transition-[background-color,color,box-shadow,transform] duration-200 focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none active:translate-y-px max-md:min-h-12 max-md:gap-2 max-md:px-2.5 max-md:py-2",
+                    "flex min-h-18 items-center gap-3 rounded-[15px] px-4 py-3 text-left transition-[background-color,color,box-shadow,transform] duration-200 focus-visible:ring-3 focus-visible:ring-primary/20 focus-visible:outline-none active:translate-y-px max-md:min-h-12 max-md:gap-2 max-md:px-2.5 max-md:py-2",
                     selected
-                      ? "bg-[#273750] text-white shadow-[0_10px_24px_rgba(39,55,80,0.18)]"
-                      : "text-slate-700 hover:bg-white hover:text-slate-950"
+                      ? "bg-primary text-primary-foreground shadow-[0_10px_24px_rgba(39,55,80,0.18)]"
+                      : "text-ink-700 hover:bg-card hover:text-ink-900"
                   )}
                   onClick={() => selectScope(tab.value)}
                   onKeyDown={(event) => {
@@ -252,8 +252,8 @@ export function DesignTemplateLibrary() {
                     className={cn(
                       "flex size-10 shrink-0 items-center justify-center rounded-xl border max-md:size-8 max-md:rounded-lg",
                       selected
-                        ? "border-white/15 bg-white/10 text-white"
-                        : "border-slate-200 bg-white text-slate-600"
+                        ? "border-primary-foreground/15 bg-primary-foreground/10 text-primary-foreground"
+                        : "border-ink-200 bg-card text-ink-600"
                     )}
                   >
                     <Icon className="size-5" aria-hidden="true" />
@@ -268,7 +268,7 @@ export function DesignTemplateLibrary() {
                         tab.label
                       )}
                     </span>
-                    <span className={cn("mt-0.5 block text-xs max-md:hidden", selected ? "text-slate-300" : "text-slate-500")}>
+                    <span className={cn("mt-0.5 block text-xs max-md:hidden", selected ? "text-primary-foreground/70" : "text-ink-500")}>
                       {tab.description}
                     </span>
                   </span>
@@ -279,10 +279,10 @@ export function DesignTemplateLibrary() {
 
           <div className="mt-5 flex flex-col gap-3 max-md:mt-3 xl:flex-row xl:items-center xl:justify-between">
             <div className="max-md:hidden">
-              <p className="text-sm font-semibold text-slate-950">
+              <p className="text-sm font-semibold text-ink-900">
                 {isSystemTab ? "Explore the system collection" : "Manage your personal collection"}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-ink-500">
                 {isSystemTab
                   ? "View curated prompt structures and clone the ones that fit your next product."
                   : "Edit, review, or remove templates owned by your account."}
@@ -290,18 +290,18 @@ export function DesignTemplateLibrary() {
             </div>
             <div className="grid gap-2 max-sm:grid-cols-2 sm:grid-cols-[minmax(220px,1fr)_190px_190px] xl:w-[720px]">
               <div className="relative max-sm:col-span-2">
-                <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+                <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-500" aria-hidden="true" />
                 <Input
                   type="search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder={isSystemTab ? "Search system templates" : "Search my templates"}
                   aria-label={isSystemTab ? "Search system templates" : "Search personal templates"}
-                  className="min-h-10 border-slate-300 bg-white pl-10"
+                  className="min-h-10 border-ink-300 bg-card pl-10"
                 />
               </div>
               <Select value={niche} onValueChange={selectNiche}>
-                <SelectTrigger className="min-h-10 w-full min-w-0 border-slate-300 bg-white">
+                <SelectTrigger className="min-h-10 w-full min-w-0 border-ink-300 bg-card">
                   <SelectValue placeholder="All niches" />
                 </SelectTrigger>
                 <SelectContent>
@@ -312,7 +312,7 @@ export function DesignTemplateLibrary() {
                 </SelectContent>
               </Select>
               <Select value={artStyle} onValueChange={selectArtStyle}>
-                <SelectTrigger className="min-h-10 w-full min-w-0 border-slate-300 bg-white">
+                <SelectTrigger className="min-h-10 w-full min-w-0 border-ink-300 bg-card">
                   <SelectValue placeholder="All styles" />
                 </SelectTrigger>
                 <SelectContent>
@@ -336,10 +336,10 @@ export function DesignTemplateLibrary() {
               {Array.from({ length: 6 }, (_, index) => <DesignTemplateCardSkeleton key={index} />)}
             </section>
           ) : templatesQuery.isError || optionsQuery.isError ? (
-            <section className="mt-7 flex min-h-80 flex-col items-center justify-center rounded-[22px] border border-slate-200 bg-white p-8 text-center">
-              <Layers3 className="size-9 text-slate-400" aria-hidden="true" />
+            <section className="mt-7 flex min-h-80 flex-col items-center justify-center rounded-[22px] border border-ink-200 bg-card p-8 text-center">
+              <Layers3 className="size-9 text-ink-400" aria-hidden="true" />
               <h2 className="font-display mt-4 text-xl font-semibold">The library could not be loaded</h2>
-              <p className="mt-2 text-sm text-slate-500">Check your connection and try again.</p>
+              <p className="mt-2 text-sm text-ink-500">Check your connection and try again.</p>
               <Button
                 variant="outline"
                 className="mt-5 min-w-36"
@@ -352,14 +352,14 @@ export function DesignTemplateLibrary() {
               </Button>
             </section>
           ) : !data || data.items.length === 0 ? (
-            <section className="mt-7 flex min-h-80 flex-col items-center justify-center rounded-[22px] border border-dashed border-slate-300 bg-[#fafaf8] p-8 text-center">
-              <span className="flex size-12 items-center justify-center rounded-xl bg-white shadow-sm">
+            <section className="mt-7 flex min-h-80 flex-col items-center justify-center rounded-[22px] border border-dashed border-ink-300 bg-ink-50 p-8 text-center">
+              <span className="flex size-12 items-center justify-center rounded-xl bg-card shadow-sm">
                 {hasFilters ? (
-                  <SlidersHorizontal className="size-5 text-slate-500" aria-hidden="true" />
+                  <SlidersHorizontal className="size-5 text-ink-500" aria-hidden="true" />
                 ) : isSystemTab ? (
-                  <Layers3 className="size-5 text-slate-500" aria-hidden="true" />
+                  <Layers3 className="size-5 text-ink-500" aria-hidden="true" />
                 ) : (
-                  <FolderOpen className="size-5 text-slate-500" aria-hidden="true" />
+                  <FolderOpen className="size-5 text-ink-500" aria-hidden="true" />
                 )}
               </span>
               <h2 className="font-display mt-4 text-xl font-semibold">
@@ -369,7 +369,7 @@ export function DesignTemplateLibrary() {
                     ? "No system templates are available"
                     : "Create your first personal template"}
               </h2>
-              <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
+              <p className="mt-2 max-w-md text-sm leading-6 text-ink-500">
                 {hasFilters
                   ? "Broaden the search or reset the filters to see more prompt systems."
                   : isSystemTab
@@ -390,8 +390,8 @@ export function DesignTemplateLibrary() {
           ) : (
             <>
               <div className="mt-7 flex items-center justify-between gap-4 max-md:mt-4">
-                <p className="text-sm text-slate-600">
-                  <span className="font-semibold text-slate-950">{data.totalCount}</span>{" "}
+                <p className="text-sm text-ink-600">
+                  <span className="font-semibold text-ink-900">{data.totalCount}</span>{" "}
                   {isSystemTab ? "system" : "personal"} template{data.totalCount === 1 ? "" : "s"}
                 </p>
                 {hasFilters && (
@@ -418,8 +418,8 @@ export function DesignTemplateLibrary() {
                   <PhonePager page={data.pageNumber} pageCount={data.totalPages} onPageChange={goToPage} label="Template pages" />
                 </div>
               ) : (
-              <nav className="mt-8 flex items-center justify-between border-t border-slate-200 pt-5" aria-label="Template pages">
-                <p className="text-xs text-slate-500">Page {data.pageNumber} of {Math.max(1, data.totalPages)}</p>
+              <nav className="mt-8 flex items-center justify-between border-t border-ink-200 pt-5" aria-label="Template pages">
+                <p className="text-xs text-ink-500">Page {data.pageNumber} of {Math.max(1, data.totalPages)}</p>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" disabled={pageNumber <= 1} onClick={() => goToPage(pageNumber - 1)}>
                     <ChevronLeft aria-hidden="true" />Previous

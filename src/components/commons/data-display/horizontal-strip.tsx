@@ -82,7 +82,7 @@ export const HorizontalStrip = ({
           size="icon-sm"
           aria-label={`Earlier ${itemsLabel}`}
           onClick={() => scrollBy(-1)}
-          className="absolute top-[40%] left-1 z-10 -translate-y-1/2 rounded-full bg-white/95 shadow-sm hover:-translate-y-1/2"
+          className="absolute top-[40%] left-1 z-10 -translate-y-1/2 rounded-full bg-card/95 shadow-sm hover:-translate-y-1/2"
         >
           <ChevronLeft aria-hidden="true" />
         </Button>
@@ -94,7 +94,7 @@ export const HorizontalStrip = ({
           size="icon-sm"
           aria-label={`More ${itemsLabel}`}
           onClick={() => scrollBy(1)}
-          className="absolute top-[40%] right-1 z-10 -translate-y-1/2 rounded-full bg-white/95 shadow-sm hover:-translate-y-1/2"
+          className="absolute top-[40%] right-1 z-10 -translate-y-1/2 rounded-full bg-card/95 shadow-sm hover:-translate-y-1/2"
         >
           <ChevronRight aria-hidden="true" />
         </Button>

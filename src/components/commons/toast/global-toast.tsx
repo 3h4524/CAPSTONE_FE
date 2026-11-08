@@ -3,10 +3,14 @@
 import { Toaster } from "sonner";
 
 import { DEFAULT_POSITION_NOTIFICATION } from "@/helpers/toast";
+import { useIsDarkTheme } from "@/hooks/use-is-dark-theme";
 
 export function GlobalToast() {
+  const isDark = useIsDarkTheme();
+
   return (
     <Toaster
+      theme={isDark ? "dark" : "light"}
       position={DEFAULT_POSITION_NOTIFICATION}
       className="toaster group whitespace-pre-line"
       toastOptions={{

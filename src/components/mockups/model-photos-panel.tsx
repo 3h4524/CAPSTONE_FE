@@ -95,12 +95,12 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
         <SectionLoading label="Loading model photos" />
       ) : isError || !photos ? (
         <div
-          className="flex flex-col items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white p-8 text-center"
+          className="flex flex-col items-center justify-center gap-4 rounded-xl border border-ink-200 bg-card p-8 text-center"
           role="alert"
         >
-          <UserRound className="size-8 text-slate-400" aria-hidden="true" />
+          <UserRound className="size-8 text-ink-400" aria-hidden="true" />
           <div>
-            <p className="font-semibold text-slate-900">Model photos unavailable</p>
+            <p className="font-semibold text-ink-900">Model photos unavailable</p>
             <p className="text-muted-foreground mt-1 text-sm">
               We could not load the model photos. Check your connection and try again.
             </p>
@@ -110,8 +110,8 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
           </Button>
         </div>
       ) : photos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
-          <p className="font-semibold text-slate-900">
+        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-ink-300 bg-card p-8 text-center">
+          <p className="font-semibold text-ink-900">
             {filtered ? "No model photos of these people" : "No model photos yet"}
           </p>
           <p className="text-muted-foreground text-sm">

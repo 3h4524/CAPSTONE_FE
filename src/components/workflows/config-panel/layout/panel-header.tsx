@@ -32,7 +32,7 @@ export const PanelHeader = ({ node, onClose, children }: PanelHeaderProps) => {
       <div className="flex items-start gap-3">
         <Icon className={cn("mt-0.5 size-4.5 shrink-0", theme.icon)} aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-base leading-snug font-semibold text-slate-900">{node.data.label}</h2>
+          <h2 className="truncate text-base leading-snug font-semibold text-ink-900">{node.data.label}</h2>
           <p className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-xs">
             {category && <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold", theme.chip)}>{category.label}</span>}
             {position && <span className="truncate">Step {position.index + 1} of {position.steps.length}</span>}
@@ -43,7 +43,7 @@ export const PanelHeader = ({ node, onClose, children }: PanelHeaderProps) => {
           type="button"
           variant="ghost"
           size="icon-sm"
-          className="-mt-1 -mr-2 shrink-0 text-slate-500 hover:translate-y-0"
+          className="-mt-1 -mr-2 shrink-0 text-ink-500 hover:translate-y-0"
           aria-label="Close node settings"
           onClick={onClose}
         >

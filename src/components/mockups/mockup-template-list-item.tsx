@@ -40,7 +40,7 @@ export const MockupTemplateListItem = ({
         type="button"
         onClick={() => setViewing(0)}
         aria-label={`View ${template.name} larger`}
-        className="relative block aspect-[4/3] w-full shrink-0 cursor-zoom-in overflow-hidden bg-slate-100"
+        className="relative block aspect-[4/3] w-full shrink-0 cursor-zoom-in overflow-hidden bg-ink-100"
       >
         <Image
           src={template.baseImageUrl}
@@ -85,7 +85,7 @@ export const MockupTemplateListItem = ({
       />
       <CardContent className="flex flex-col gap-2 p-4">
         <div className="flex items-center gap-2">
-          <p className="min-w-0 flex-1 truncate font-semibold text-slate-900">{template.name}</p>
+          <p className="min-w-0 flex-1 truncate font-semibold text-ink-900">{template.name}</p>
           <PhotoSourceTag system={template.isSystemTemplate} />
         </div>
         <div className="flex flex-wrap gap-1.5">

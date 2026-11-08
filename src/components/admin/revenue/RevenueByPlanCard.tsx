@@ -63,9 +63,9 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
 
   if (isLoading || !plansProp) {
     return (
-      <Card className="h-[420px] animate-pulse rounded-2xl border border-slate-200/80 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-        <div className="h-6 w-36 rounded bg-slate-200 dark:bg-slate-800" />
-        <div className="mt-4 h-[320px] rounded-xl bg-slate-100 dark:bg-slate-800/60" />
+      <Card className="h-[420px] animate-pulse rounded-2xl border border-ink-200/80 bg-card p-5 dark:border-slate-800 dark:bg-slate-900">
+        <div className="h-6 w-36 rounded bg-ink-200 dark:bg-slate-800" />
+        <div className="mt-4 h-[320px] rounded-xl bg-ink-100 dark:bg-slate-800/60" />
       </Card>
     );
   }
@@ -73,14 +73,14 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
   const rowProps = (planName: string) => ({
     onMouseEnter: () => setActivePlan(planName),
     onMouseLeave: () => setActivePlan(null),
-    className: `border-b border-slate-100 align-middle transition-colors last:border-0 dark:border-slate-800 ${
-      activePlan === planName ? "bg-slate-50 dark:bg-slate-800/60" : ""
+    className: `border-b border-ink-100 align-middle transition-colors last:border-0 dark:border-slate-800 ${
+      activePlan === planName ? "bg-ink-50 dark:bg-slate-800/60" : ""
     } ${activePlan !== null && activePlan !== planName ? "opacity-45" : ""}`,
   });
 
   return (
     <TooltipProvider delayDuration={150}>
-      <Card className="@container flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
+      <Card className="@container flex flex-col gap-4 rounded-2xl border border-ink-200/80 bg-card p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -88,14 +88,14 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
               <Package className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Revenue by Plan</h3>
-              <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+              <h3 className="text-sm font-bold text-ink-900 dark:text-slate-100">Revenue by Plan</h3>
+              <p className="text-[11px] font-medium text-ink-400 dark:text-slate-500">
                 {VIEWS.find((v) => v.key === view)!.description}
               </p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div role="tablist" aria-label="Revenue by plan view" className="flex rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">
+            <div role="tablist" aria-label="Revenue by plan view" className="flex rounded-lg bg-ink-100 p-0.5 dark:bg-slate-800">
               {VIEWS.map((item) => (
                 <button
                   key={item.key}
@@ -105,8 +105,8 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                   onClick={() => setView(item.key)}
                   className={`cursor-pointer rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
                     view === item.key
-                      ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-slate-100"
-                      : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                      ? "bg-card text-ink-900 shadow-xs dark:bg-slate-700 dark:text-slate-100"
+                      : "text-ink-500 hover:text-ink-800 dark:text-slate-400 dark:hover:text-slate-200"
                   }`}
                 >
                   {item.label}
@@ -117,13 +117,13 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
         </div>
 
         {plans.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-slate-200 py-10 text-xs text-slate-400 dark:border-slate-800">
+          <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-ink-200 py-10 text-xs text-ink-400 dark:border-slate-800">
             No plan revenue in this period.
           </div>
         ) : (
           <div className="flex flex-col gap-5 @3xl:flex-row">
             {/* Donut + headline numbers */}
-            <div className="flex shrink-0 flex-col items-center justify-center gap-4 rounded-xl bg-slate-50/80 px-4 py-3 @3xl:w-96 dark:bg-slate-800/40">
+            <div className="flex shrink-0 flex-col items-center justify-center gap-4 rounded-xl bg-ink-50/80 px-4 py-3 @3xl:w-96 dark:bg-slate-800/40">
               <div className="relative size-36 shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -132,10 +132,10 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                         if (!active || !payload?.length) return null;
                         const data = payload[0].payload as RevenueByPlanDto;
                         return (
-                          <div className="rounded-xl border border-slate-200/80 bg-white px-2.5 py-1.5 text-center shadow-lg dark:border-slate-800 dark:bg-slate-900">
-                            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{data.planName}</p>
-                            <p className="text-xs font-extrabold text-slate-900 dark:text-slate-100">{formatVnd(data.amount)}</p>
-                            <p className="text-[10px] text-slate-400">{data.percentage}% of revenue</p>
+                          <div className="rounded-xl border border-ink-200/80 bg-card px-2.5 py-1.5 text-center shadow-lg dark:border-slate-800 dark:bg-slate-900">
+                            <p className="text-xs font-bold text-ink-800 dark:text-slate-200">{data.planName}</p>
+                            <p className="text-xs font-extrabold text-ink-900 dark:text-slate-100">{formatVnd(data.amount)}</p>
+                            <p className="text-[10px] text-ink-400">{data.percentage}% of revenue</p>
                           </div>
                         );
                       }}
@@ -160,7 +160,7 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                           />
                         ))
                       ) : (
-                        <Cell fill="#e2e8f0" className="dark:fill-slate-700" />
+                        <Cell fill="var(--ink-200)" className="dark:fill-slate-700" />
                       )}
                     </Pie>
                   </PieChart>
@@ -168,19 +168,19 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                 {/* The hovered plan, or the top plan, in the hole of the donut. */}
                 {centerPlan && totalPlanRevenue > 0 && (
                   <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <span className="text-lg leading-none font-bold tracking-tight text-slate-900 tabular-nums dark:text-slate-100">
+                    <span className="text-lg leading-none font-bold tracking-tight text-ink-900 tabular-nums dark:text-slate-100">
                       {centerPlan.percentage}%
                     </span>
-                    <span className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                    <span className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-ink-500 dark:text-slate-400">
                       <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: getPlanColor(centerPlan.planName, plans.indexOf(centerPlan)) }} />
                       {centerPlan.planName}
                     </span>
-                    <span className="text-[9px] text-slate-400">of revenue</span>
+                    <span className="text-[9px] text-ink-400">of revenue</span>
                   </div>
                 )}
               </div>
               {/* The three headline figures side by side under the donut, split by faint rules. */}
-              <div className="flex w-full justify-between divide-x divide-slate-200/80 dark:divide-slate-700/60">
+              <div className="flex w-full justify-between divide-x divide-ink-200/80 dark:divide-slate-700/60">
                 <Stat label="Total revenue" value={formatVnd(totalPlanRevenue)} emphasis />
                 <Stat label="Plans · Purchases" value={`${plans.length} · ${totalPurchases}`} />
                 {topPlan && totalPlanRevenue > 0 && <Stat label="Top plan" value={`${topPlan.planName} · ${topPlan.percentage}%`} />}
@@ -190,7 +190,7 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
             {/* Per-plan table */}
             <div className="flex min-w-0 flex-1 flex-col gap-3">
               {isPhone ? (
-                <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+                <ul className="divide-y divide-ink-100 dark:divide-slate-800">
                   {plans.map((plan, idx) => (
                     <PlanSummary key={plan.planName} plan={plan} index={idx} view={view} isMostPurchased={plan.planName === leaders.mostPurchased} />
                   ))}
@@ -201,7 +201,7 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                   {view === "revenue" ? (
                     <>
                       <thead>
-                        <tr className="border-b border-slate-100 text-[10px] font-semibold tracking-wide text-slate-400 uppercase dark:border-slate-800">
+                        <tr className="border-b border-ink-100 text-[10px] font-semibold tracking-wide text-ink-400 uppercase dark:border-slate-800">
                           <th className="w-[1%] pr-6 pb-2 text-left font-semibold whitespace-nowrap">Plan</th>
                           <HeaderCell label="Revenue" help={HELP.revenue} />
                           <HeaderCell label="Growth" help={HELP.growth} />
@@ -214,13 +214,13 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                           <tr key={plan.planName} {...rowProps(plan.planName)}>
                             <PlanCell plan={plan} index={idx} badge={plan.planName === leaders.mostPurchased ? `Most successful payments in this period (${plan.purchaseCount})` : null} />
                             <td className="px-2 py-3 text-center whitespace-nowrap">
-                              <div className="font-semibold text-slate-900 dark:text-slate-100">{formatVnd(plan.amount)}</div>
-                              <div className="text-[10px] text-slate-400">{plan.percentage}% of total</div>
+                              <div className="font-semibold text-ink-900 dark:text-slate-100">{formatVnd(plan.amount)}</div>
+                              <div className="text-[10px] text-ink-400">{plan.percentage}% of total</div>
                             </td>
                             <td className="px-2 py-3 text-center whitespace-nowrap">
                               {plan.percentageChange == null ? (
                                 <Hint text="The previous period had no revenue for this plan, so there is no percentage to compare.">
-                                  <span className="inline-flex cursor-help rounded-full bg-slate-100 px-1.5 py-px text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                                  <span className="inline-flex cursor-help rounded-full bg-ink-100 px-1.5 py-px text-[10px] font-semibold text-ink-500 dark:bg-slate-800 dark:text-slate-400">
                                     {formatChange(plan.percentageChange, plan.amount)}
                                   </span>
                                 </Hint>
@@ -231,14 +231,14 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                               )}
                             </td>
                             <td className="px-2 py-3 text-center whitespace-nowrap">
-                              <div className="font-semibold text-slate-900 dark:text-slate-100">{plan.purchaseCount}</div>
+                              <div className="font-semibold text-ink-900 dark:text-slate-100">{plan.purchaseCount}</div>
                               {plan.uniqueCustomers != null && (
-                                <div className="text-[10px] text-slate-400">
+                                <div className="text-[10px] text-ink-400">
                                   {plan.uniqueCustomers} {plan.uniqueCustomers === 1 ? "customer" : "customers"}
                                 </div>
                               )}
                             </td>
-                            <td className="px-2 py-3 text-center font-semibold whitespace-nowrap text-slate-900 dark:text-slate-100">
+                            <td className="px-2 py-3 text-center font-semibold whitespace-nowrap text-ink-900 dark:text-slate-100">
                               <span className="inline-flex items-center gap-1">
                                 {plan.planName === leaders.topArpu && <LeaderStar label="Highest ARPU" />}
                                 {plan.arpu != null ? formatVnd(plan.arpu) : "—"}
@@ -251,7 +251,7 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                   ) : (
                     <>
                       <thead>
-                        <tr className="border-b border-slate-100 text-[10px] font-semibold tracking-wide text-slate-400 uppercase dark:border-slate-800">
+                        <tr className="border-b border-ink-100 text-[10px] font-semibold tracking-wide text-ink-400 uppercase dark:border-slate-800">
                           <th className="w-[1%] pr-6 pb-2 text-left font-semibold whitespace-nowrap">Plan</th>
                           <HeaderCell label="MRR change" help={HELP.mrrChange} />
                           <HeaderCell label="Customers" help={HELP.customers} />
@@ -271,14 +271,14 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                                   {mrrDelta === 0 ? "0 ₫" : `${mrrDelta > 0 ? "+" : "−"}${formatVnd(Math.abs(mrrDelta))}`}
                                   {plan.mrrChangePercent != null && ` (${formatChange(plan.mrrChangePercent, plan.mrrEnd)})`}
                                 </div>
-                                <div className="text-[10px] text-slate-400">MRR {formatVnd(plan.mrrEnd)}</div>
+                                <div className="text-[10px] text-ink-400">MRR {formatVnd(plan.mrrEnd)}</div>
                               </td>
                               <td className="px-2 py-3 text-center whitespace-nowrap">
                                 {/* Start to end at a glance; who stopped, switched and joined on hover. */}
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <span className="inline-flex cursor-help items-center gap-1.5">
-                                      <span className="font-semibold text-slate-900 dark:text-slate-100">
+                                      <span className="font-semibold text-ink-900 dark:text-slate-100">
                                         {plan.customers.start} → {plan.customers.end}
                                       </span>
                                       <NetChip value={plan.customers.end - plan.customers.start} />
@@ -292,12 +292,12 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                               <td className="px-2 py-3 text-center whitespace-nowrap">
                                 {plan.retentionRate == null ? (
                                   <Hint text={`Not enough data: ${plan.customers.start} customer(s) at the start of the period, at least 5 needed.`}>
-                                    <span className="cursor-help font-semibold text-slate-400">—</span>
+                                    <span className="cursor-help font-semibold text-ink-400">—</span>
                                   </Hint>
                                 ) : (
                                   <span
                                     className={`inline-flex items-center gap-1 font-semibold ${
-                                      lowRetention ? "text-orange-600 dark:text-orange-400" : "text-slate-900 dark:text-slate-100"
+                                      lowRetention ? "text-orange-600 dark:text-orange-400" : "text-ink-900 dark:text-slate-100"
                                     }`}
                                   >
                                     {plan.planName === leaders.topRetention && <LeaderStar label="Highest retention" />}
@@ -305,7 +305,7 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                                   </span>
                                 )}
                                 {plan.customers.start > 0 && (
-                                  <div className="text-[10px] text-slate-400">
+                                  <div className="text-[10px] text-ink-400">
                                     {retained} of {plan.customers.start} still paying
                                     {plan.customers.switchedOut > 0 && ` (${plan.customers.switchedOut} on another plan)`}
                                   </div>
@@ -355,19 +355,19 @@ function PlanSummary({ plan, index, view, isMostPurchased }: { plan: RevenueByPl
     <li className="py-2.5 text-xs tabular-nums">
       <p className="flex items-center gap-1.5">
         <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: getPlanColor(plan.planName, index) }} />
-        <span className="min-w-0 truncate font-semibold text-slate-800 dark:text-slate-100">{plan.planName}</span>
+        <span className="min-w-0 truncate font-semibold text-ink-800 dark:text-slate-100">{plan.planName}</span>
         {isRevenue && isMostPurchased && (
           <Star className="h-3 w-3 shrink-0 fill-orange-500 text-orange-500" role="img" aria-label="Most purchased" />
         )}
         <span
           className={`ml-auto shrink-0 font-semibold ${
-            isRevenue ? "text-slate-900 dark:text-slate-100" : CHANGE_TONE_CLASS[changeTone(plan.mrrChangePercent)]
+            isRevenue ? "text-ink-900 dark:text-slate-100" : CHANGE_TONE_CLASS[changeTone(plan.mrrChangePercent)]
           }`}
         >
           {main}
         </span>
       </p>
-      <p className="mt-0.5 pl-4 text-[11px] text-slate-500 dark:text-slate-400">{details.filter(Boolean).join(" · ")}</p>
+      <p className="mt-0.5 pl-4 text-[11px] text-ink-500 dark:text-slate-400">{details.filter(Boolean).join(" · ")}</p>
     </li>
   );
 }
@@ -377,7 +377,7 @@ function PlanCell({ plan, index, badge }: { plan: RevenueByPlanDto; index: numbe
     <td className="py-3 pr-6 whitespace-nowrap">
       <div className="flex min-w-0 items-center gap-x-1.5">
         <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: getPlanColor(plan.planName, index) }} />
-        <span className="font-semibold text-slate-800 dark:text-slate-100">{plan.planName}</span>
+        <span className="font-semibold text-ink-800 dark:text-slate-100">{plan.planName}</span>
         {badge && (
           <Hint text={badge}>
             <span className="inline-flex cursor-help items-center gap-1 rounded-full bg-orange-50 px-1.5 py-px text-[9px] font-semibold whitespace-nowrap text-orange-700 ring-1 ring-orange-200/70 dark:bg-orange-950/40 dark:text-orange-300 dark:ring-orange-800/60">
@@ -397,7 +397,7 @@ function NetChip({ value }: { value: number }) {
       ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
       : value < 0
         ? "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
-        : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400";
+        : "bg-ink-100 text-ink-500 dark:bg-slate-800 dark:text-slate-400";
   return (
     <span className={`rounded-full px-1.5 py-px text-[10px] font-semibold ${tone}`}>
       {value > 0 ? "+" : value < 0 ? "−" : "±"}
@@ -424,7 +424,7 @@ function CustomerFlow({ planName, flow }: { planName: string; flow: RevenueByPla
       <div className="mt-0.5 border-t border-white/15 pt-1">
         <FlowLine label="At the end" value={String(flow.end)} strong />
       </div>
-      <p className="mt-1 text-[10px] text-slate-300">{flow.stayed} stayed on the plan the whole period.</p>
+      <p className="mt-1 text-[10px] text-ink-300">{flow.stayed} stayed on the plan the whole period.</p>
     </div>
   );
 }
@@ -441,8 +441,8 @@ function FlowLine({ label, value, tone, strong }: { label: string; value: string
 function Stat({ label, value, emphasis = false }: { label: string; value: string; emphasis?: boolean }) {
   return (
     <div className="min-w-0 px-3 first:pl-0 last:pr-0 max-md:flex-1">
-      <p className="text-[10px] font-semibold tracking-wide whitespace-nowrap text-slate-400 uppercase">{label}</p>
-      <p className={`font-bold whitespace-nowrap text-slate-900 max-md:wrap-anywhere max-md:whitespace-normal dark:text-slate-100 ${emphasis ? "text-base tracking-tight" : "text-sm"}`}>
+      <p className="text-[10px] font-semibold tracking-wide whitespace-nowrap text-ink-400 uppercase">{label}</p>
+      <p className={`font-bold whitespace-nowrap text-ink-900 max-md:wrap-anywhere max-md:whitespace-normal dark:text-slate-100 ${emphasis ? "text-base tracking-tight" : "text-sm"}`}>
         {value}
       </p>
     </div>
@@ -455,7 +455,7 @@ function HeaderCell({ label, help }: { label: string; help: string }) {
       <Hint text={help}>
         <button
           type="button"
-          className="inline-flex cursor-help items-center gap-0.5 uppercase hover:text-slate-600 focus:outline-none dark:hover:text-slate-300"
+          className="inline-flex cursor-help items-center gap-0.5 uppercase hover:text-ink-600 focus:outline-none dark:hover:text-slate-300"
         >
           {label}
           <HelpCircle className="h-2.5 w-2.5" />

@@ -70,17 +70,17 @@ export function FeatureEditDialog({ feature, groups, onClose }: FeatureEditDialo
     <Dialog open={feature !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="flex max-h-[calc(100dvh-20px)] w-[calc(100%-20px)] max-w-[560px] flex-col gap-0 overflow-hidden rounded-[24px] border-0 bg-white p-0 shadow-[0_28px_80px_rgba(15,23,42,0.28)]"
+        className="flex max-h-[calc(100dvh-20px)] w-[calc(100%-20px)] max-w-[560px] flex-col gap-0 overflow-hidden rounded-[24px] border-0 bg-card p-0 shadow-[0_28px_80px_rgba(15,23,42,0.28)]"
       >
         <DialogHeader className="relative flex-row items-start gap-3 px-5 pt-6 pr-16 pb-3 text-left sm:px-6">
-          <div className="text-primary flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#f3f6fc]">
+          <div className="text-primary flex size-10 shrink-0 items-center justify-center rounded-xl bg-ink-100">
             <SlidersHorizontal className="size-[18px]" aria-hidden="true" />
           </div>
           <div className="min-w-0 space-y-1">
-            <p className="text-[10px] font-bold tracking-[0.16em] text-slate-500">EDIT FEATURE</p>
+            <p className="text-[10px] font-bold tracking-[0.16em] text-ink-500">EDIT FEATURE</p>
             <DialogTitle className="font-display truncate text-xl tracking-[-0.02em]">{feature?.label}</DialogTitle>
             <DialogDescription className="leading-5">
-              <span className="font-mono text-[11px] text-slate-400">{feature?.code}</span> ·{" "}
+              <span className="font-mono text-[11px] text-ink-400">{feature?.code}</span> ·{" "}
               {isLimit ? "Limit" : "On/off"}. The code and type are built in; this changes how the feature is shown and offered.
             </DialogDescription>
           </div>
@@ -88,7 +88,7 @@ export function FeatureEditDialog({ feature, groups, onClose }: FeatureEditDialo
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 size-10 rounded-lg text-slate-500 hover:translate-y-0 hover:bg-slate-100"
+            className="absolute top-4 right-4 size-10 rounded-lg text-ink-500 hover:translate-y-0 hover:bg-ink-100"
             onClick={onClose}
             aria-label="Close"
           >
@@ -140,7 +140,7 @@ export function FeatureEditDialog({ feature, groups, onClose }: FeatureEditDialo
                 </Field>
               </div>
             )}
-            <div className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+            <div className="divide-y divide-ink-100 rounded-xl border border-ink-200">
               <SwitchRow
                 control={control}
                 name="isActive"
@@ -156,7 +156,7 @@ export function FeatureEditDialog({ feature, groups, onClose }: FeatureEditDialo
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 border-t border-slate-100 px-5 py-4 sm:px-6">
+          <div className="flex justify-end gap-2 border-t border-ink-100 px-5 py-4 sm:px-6">
             <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
               Cancel
             </Button>
@@ -184,7 +184,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="text-sm font-medium text-slate-700">
+      <label htmlFor={htmlFor} className="text-sm font-medium text-ink-700">
         {label}
       </label>
       {children}
@@ -215,8 +215,8 @@ function SwitchRow({
       render={({ field }) => (
         <div className="flex items-center justify-between gap-4 px-4 py-3">
           <div>
-            <p className="text-sm font-medium text-slate-700">{title}</p>
-            <p className="text-xs text-slate-400">{hint}</p>
+            <p className="text-sm font-medium text-ink-700">{title}</p>
+            <p className="text-xs text-ink-400">{hint}</p>
           </div>
           <Switch checked={field.value} onCheckedChange={field.onChange} aria-label={title} />
         </div>

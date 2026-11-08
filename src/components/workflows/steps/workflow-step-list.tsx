@@ -64,7 +64,7 @@ export const WorkflowStepList = ({ onShowDiagram }: WorkflowStepListProps) => {
             >
               {item}
               {item === "checks" && issues.length > 0 && (
-                <span className="rounded-full bg-amber-100 px-1.5 text-[11px] text-amber-800 tabular-nums">{issues.length}</span>
+                <span className="rounded-full bg-amber-100 dark:bg-amber-500/15 px-1.5 text-[11px] text-amber-800 dark:text-amber-300 tabular-nums">{issues.length}</span>
               )}
             </button>
           ))}

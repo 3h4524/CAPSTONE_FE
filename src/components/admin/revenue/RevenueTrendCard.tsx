@@ -193,16 +193,16 @@ export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueT
   const trendData = useMemo(() => buildTrendSeries(trend ?? [], filter), [trend, filter]);
 
   return (
-    <Card className="flex h-full flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+    <Card className="flex h-full flex-col justify-between rounded-2xl border border-ink-200/80 bg-card p-5 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
       {/* Header */}
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fef3f0] text-[#e07a5f] dark:bg-orange-950/40">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink-100 text-[#e07a5f] dark:bg-orange-950/40">
             <TrendingUp className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Revenue Trend</h3>
-            <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+            <h3 className="text-sm font-bold text-ink-900 dark:text-slate-100">Revenue Trend</h3>
+            <p className="text-[11px] font-medium text-ink-400 dark:text-slate-500">
               Total revenue (collected) vs. previous period
             </p>
           </div>
@@ -211,11 +211,11 @@ export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueT
         <div className="flex flex-wrap items-center gap-3">
           {/* Legend */}
           <div className="flex items-center gap-3 text-[11px] font-medium">
-            <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+            <div className="flex items-center gap-1.5 text-ink-700 dark:text-slate-300">
               <span className="h-0.5 w-3.5 rounded-full bg-[#e07a5f]" />
               <span>Current period</span>
             </div>
-            <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
+            <div className="flex items-center gap-1.5 text-ink-400 dark:text-slate-500">
               <span className="h-0.5 w-3.5 border-b-2 border-dashed border-[#48a999]" />
               <span>Previous period</span>
             </div>
@@ -227,7 +227,7 @@ export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueT
       {/* Chart Area: Area Spline with gradient & dashed comparison */}
       <div className="h-[250px] w-full">
         {isLoading || !trend ? (
-          <div className="h-full w-full animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/60" />
+          <div className="h-full w-full animate-pulse rounded-xl bg-ink-100 dark:bg-slate-800/60" />
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={trendData} margin={{ top: 18, right: 12, left: -20, bottom: 0 }}>
@@ -237,20 +237,20 @@ export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueT
                   <stop offset="100%" stopColor="#e07a5f" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-800/80" />
-              <XAxis dataKey="dateLabel" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} dy={6} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} tickFormatter={formatTrendYAxis} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ink-100)" className="dark:stroke-slate-800/80" />
+              <XAxis dataKey="dateLabel" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "var(--ink-400)" }} dy={6} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "var(--ink-400)" }} tickFormatter={formatTrendYAxis} />
               <Tooltip
-                cursor={{ stroke: "#94a3b8", strokeWidth: 1, strokeDasharray: "3 3" }}
+                cursor={{ stroke: "var(--ink-400)", strokeWidth: 1, strokeDasharray: "3 3" }}
                 content={({ active, payload, label }) => {
                   if (!active || !payload || payload.length === 0) return null;
                   const currentVal = Number(payload.find((p) => p.dataKey === "amount")?.value || 0);
                   return (
-                    <div className="relative -translate-y-2 rounded-xl border border-slate-200/90 bg-white px-3.5 py-2 text-center shadow-xl dark:border-slate-800 dark:bg-slate-900">
-                      <p className="text-[11px] font-medium text-slate-400">{label}</p>
-                      <p className="mt-0.5 text-sm font-bold text-slate-900 dark:text-slate-100">{formatVnd(currentVal)}</p>
+                    <div className="relative -translate-y-2 rounded-xl border border-ink-200/90 bg-card px-3.5 py-2 text-center shadow-xl dark:border-slate-800 dark:bg-slate-900">
+                      <p className="text-[11px] font-medium text-ink-400">{label}</p>
+                      <p className="mt-0.5 text-sm font-bold text-ink-900 dark:text-slate-100">{formatVnd(currentVal)}</p>
                       {/* Pointer caret arrow pointing down to active dot */}
-                      <div className="absolute -bottom-1.5 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 border-r border-b border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-900" />
+                      <div className="absolute -bottom-1.5 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 border-r border-b border-ink-200/90 bg-card dark:border-slate-800 dark:bg-slate-900" />
                     </div>
                   );
                 }}
@@ -264,7 +264,7 @@ export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueT
                 strokeWidth={2.4}
                 fill="url(#revenueTrendGrad)"
                 dot={false}
-                activeDot={{ r: 4.5, fill: "#e07a5f", stroke: "#ffffff", strokeWidth: 2 }}
+                activeDot={{ r: 4.5, fill: "#e07a5f", stroke: "var(--card)", strokeWidth: 2 }}
               />
               {/* Previous period smooth dashed line */}
               <Line

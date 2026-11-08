@@ -96,13 +96,13 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
     <div className="space-y-5">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-[10px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+          <p className="text-[10px] font-bold tracking-[0.16em] text-ink-400 uppercase">
             Knowledge base
           </p>
-          <h1 className="font-display mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">
+          <h1 className="font-display mt-1 text-2xl font-bold tracking-tight text-ink-900 sm:text-[28px]">
             Documents & versions
           </h1>
-          <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
+          <p className="mt-1 max-w-2xl text-xs leading-5 text-ink-500">
             Track every ingested version, inspect its chunks, and choose which completed version is
             active for retrieval.
           </p>
@@ -124,7 +124,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
         </div>
       </div>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <section className="rounded-xl border border-ink-200 bg-card p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row">
           <Input
             value={searchTerm}
@@ -153,7 +153,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
               ))}
             </SelectContent>
           </Select>
-          <span className="self-center text-xs text-slate-400">
+          <span className="self-center text-xs text-ink-400">
             {filteredDocuments.length} of {documentsQuery.data?.length ?? 0} documents
           </span>
           <Select value={pageSize} onValueChange={setPageSize}>
@@ -172,7 +172,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
       </section>
 
       <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_390px]">
-        <section className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <section className="min-w-0 overflow-hidden rounded-xl border border-ink-200 bg-card shadow-sm">
           {documentsQuery.isPending ? (
             <PanelMessage text="Loading RAG documents..." />
           ) : documentsQuery.isError ? (
@@ -213,7 +213,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
           )}
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm xl:sticky xl:top-4">
+        <section className="rounded-xl border border-ink-200 bg-card p-5 shadow-sm xl:sticky xl:top-4">
           {!selectedId ? (
             <PanelMessage text="Select a document to inspect its version and chunks." />
           ) : detailQuery.isPending ? (
@@ -249,8 +249,8 @@ const DocumentPagination = ({
   onPrevious: () => void;
   onNext: () => void;
 }) => (
-  <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-4 py-3">
-    <p className="text-xs text-slate-500">
+  <div className="flex items-center justify-between border-t border-ink-100 bg-ink-50/50 px-4 py-3">
+    <p className="text-xs text-ink-500">
       Page {page} of {totalPages}
     </p>
     <div className="flex items-center gap-2">
@@ -279,15 +279,15 @@ const DocumentRow = ({
   isSelected: boolean;
   onSelect: () => void;
 }) => (
-  <TableRow className={cn("cursor-pointer", isSelected && "bg-slate-50")} onClick={onSelect}>
+  <TableRow className={cn("cursor-pointer", isSelected && "bg-ink-50")} onClick={onSelect}>
     <TableCell>
       <div className="max-w-[230px]">
-        <p className="truncate text-xs font-semibold text-slate-800">{document.title}</p>
-        <p className="mt-1 truncate text-[11px] text-slate-400">{document.sourceId}</p>
+        <p className="truncate text-xs font-semibold text-ink-800">{document.title}</p>
+        <p className="mt-1 truncate text-[11px] text-ink-400">{document.sourceId}</p>
       </div>
     </TableCell>
     <TableCell>
-      <span className="text-xs font-medium text-slate-700">
+      <span className="text-xs font-medium text-ink-700">
         {document.version || "Unversioned"}
       </span>
     </TableCell>
@@ -295,13 +295,13 @@ const DocumentRow = ({
       <StatusBadge status={document.status} />
     </TableCell>
     <TableCell>
-      <span className="text-xs text-slate-600">{document.chunkCount}</span>
+      <span className="text-xs text-ink-600">{document.chunkCount}</span>
     </TableCell>
     <TableCell>
-      <span className="text-[11px] text-slate-500">{formatDate(document.updatedAt)}</span>
+      <span className="text-[11px] text-ink-500">{formatDate(document.updatedAt)}</span>
     </TableCell>
     <TableCell>
-      <ChevronRight className="size-4 text-slate-300" />
+      <ChevronRight className="size-4 text-ink-300" />
     </TableCell>
   </TableRow>
 );
@@ -339,10 +339,10 @@ const DocumentDetail = ({
 
   return (
     <div>
-      <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+      <div className="flex items-start justify-between gap-3 border-b border-ink-100 pb-4">
         <div className="min-w-0">
-          <p className="text-sm leading-5 font-bold text-slate-900">{detail.title}</p>
-          <p className="mt-1 truncate text-[11px] text-slate-400">{detail.sourceId}</p>
+          <p className="text-sm leading-5 font-bold text-ink-900">{detail.title}</p>
+          <p className="mt-1 truncate text-[11px] text-ink-400">{detail.sourceId}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {detail.sourceUrl && (
@@ -387,7 +387,7 @@ const DocumentDetail = ({
         />
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 border-y border-slate-100 py-4 text-xs">
+      <div className="mt-4 grid grid-cols-2 gap-3 border-y border-ink-100 py-4 text-xs">
         <Meta label="Version" value={detail.version || "Unversioned"} />
         <Meta label="Chunks" value={String(detail.chunkCount)} />
         <Meta label="Type" value={detail.contentType} />
@@ -396,16 +396,16 @@ const DocumentDetail = ({
         <Meta label="Updated" value={formatDate(detail.updatedAt)} />
       </div>
       {detail.ingestionError && (
-        <div className="my-4 rounded-lg bg-rose-50 p-3 text-xs leading-5 text-rose-700">
+        <div className="my-4 rounded-lg bg-rose-50 dark:bg-rose-500/10 p-3 text-xs leading-5 text-rose-700 dark:text-rose-300">
           {detail.ingestionError}
         </div>
       )}
       {qualityWarnings.length > 0 && (
-        <div className="my-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
-          <div className="flex items-center gap-2 text-xs font-bold text-amber-800">
+        <div className="my-4 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-3">
+          <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300">
             <AlertTriangle className="size-3.5" /> Quality checks
           </div>
-          <ul className="mt-2 space-y-1 text-[11px] leading-5 text-amber-700">
+          <ul className="mt-2 space-y-1 text-[11px] leading-5 text-amber-700 dark:text-amber-300">
             {qualityWarnings.map((warning) => (
               <li key={warning}>• {warning}</li>
             ))}
@@ -428,31 +428,31 @@ const DocumentDetail = ({
       <div className="mt-5">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold text-slate-900">Listing content</p>
-            <p className="mt-1 text-[11px] text-slate-400">
+            <p className="text-xs font-bold text-ink-900">Listing content</p>
+            <p className="mt-1 text-[11px] text-ink-400">
               Expand a chunk to inspect the stored title, description, tags and signals.
             </p>
           </div>
-          <span className="shrink-0 text-[10px] text-slate-400">{chunks.length} chunks</span>
+          <span className="shrink-0 text-[10px] text-ink-400">{chunks.length} chunks</span>
         </div>
         <div className="mt-3 max-h-[430px] space-y-2 overflow-x-hidden overflow-y-auto pr-1">
           {chunks.map((chunk) => (
             <details
               key={chunk.id}
-              className="group rounded-lg border border-slate-200 bg-white shadow-sm"
+              className="group rounded-lg border border-ink-200 bg-card shadow-sm"
             >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-xs font-semibold text-slate-700 [&::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-xs font-semibold text-ink-700 [&::-webkit-details-marker]:hidden">
                 Chunk {chunk.chunkIndex + 1}
-                <span className="ml-auto text-[10px] font-normal text-slate-400">
+                <span className="ml-auto text-[10px] font-normal text-ink-400">
                   {chunk.tokenCount} tokens
                 </span>
-                <span className="text-slate-300 transition-transform group-open:rotate-90">›</span>
+                <span className="text-ink-300 transition-transform group-open:rotate-90">›</span>
               </summary>
-              <div className="border-t border-slate-100 bg-slate-50/60 px-3 py-3">
+              <div className="border-t border-ink-100 bg-ink-50/60 px-3 py-3">
                 <div className="mb-2 flex justify-end">
                   <CopyButton value={chunk.content} />
                 </div>
-                <p className="min-w-0 text-[11px] leading-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap text-slate-600">
+                <p className="min-w-0 text-[11px] leading-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap text-ink-600">
                   {chunk.content}
                 </p>
               </div>
@@ -475,14 +475,14 @@ const SignalCard = ({
   icon?: React.ReactNode;
   tone: "indigo" | "rose" | "sky" | "slate";
 }) => (
-  <div className="min-w-0 rounded-lg border border-slate-100 bg-slate-50/70 px-2.5 py-2">
+  <div className="min-w-0 rounded-lg border border-ink-100 bg-ink-50/70 px-2.5 py-2">
     <div
-      className={`flex items-center gap-1 text-[10px] font-semibold tracking-wide uppercase ${tone === "rose" ? "text-rose-500" : tone === "sky" ? "text-sky-500" : tone === "indigo" ? "text-indigo-500" : "text-slate-400"}`}
+      className={`flex items-center gap-1 text-[10px] font-semibold tracking-wide uppercase ${tone === "rose" ? "text-rose-500" : tone === "sky" ? "text-sky-500" : tone === "indigo" ? "text-indigo-500" : "text-ink-400"}`}
     >
       {icon}
       {label}
     </div>
-    <p className="mt-1 truncate text-xs font-bold text-slate-800">{value}</p>
+    <p className="mt-1 truncate text-xs font-bold text-ink-800">{value}</p>
   </div>
 );
 
@@ -511,8 +511,8 @@ const StatusBadge = ({ status }: { status: RagAdminDocument["status"] }) => (
     className={cn(
       "text-[10px]",
       status === "ready" && "bg-emerald-600 hover:bg-emerald-600",
-      (status === "queued" || status === "processing") && "text-amber-700",
-      status === "superseded" && "text-slate-500"
+      (status === "queued" || status === "processing") && "text-amber-700 dark:text-amber-300",
+      status === "superseded" && "text-ink-500"
     )}
   >
     {status}
@@ -520,12 +520,12 @@ const StatusBadge = ({ status }: { status: RagAdminDocument["status"] }) => (
 );
 const Meta = ({ label, value }: { label: string; value: string }) => (
   <div>
-    <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">{label}</p>
-    <p className="mt-1 truncate text-xs font-medium text-slate-700">{value}</p>
+    <p className="text-[10px] font-semibold tracking-wide text-ink-400 uppercase">{label}</p>
+    <p className="mt-1 truncate text-xs font-medium text-ink-700">{value}</p>
   </div>
 );
 const PanelMessage = ({ text }: { text: string }) => (
-  <div className="flex min-h-40 items-center justify-center px-5 text-center text-xs text-slate-400">
+  <div className="flex min-h-40 items-center justify-center px-5 text-center text-xs text-ink-400">
     {text}
   </div>
 );

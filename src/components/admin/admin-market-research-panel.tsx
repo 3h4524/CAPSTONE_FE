@@ -240,15 +240,15 @@ const AdminMarketResearchPanel = () => {
   };
 
   return (
-    <section className="space-y-5 rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-white to-white p-5 shadow-sm sm:p-6">
+    <section className="space-y-5 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-50/80 dark:from-indigo-500/10 via-card to-card p-5 shadow-sm sm:p-6">
       <Header />
-      <section className="rounded-xl border border-indigo-100 bg-white/80 p-4">
+      <section className="rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-card/80 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="flex items-center gap-2 text-sm font-bold text-slate-900">
+            <p className="flex items-center gap-2 text-sm font-bold text-ink-900">
               <Clock3 className="size-4 text-indigo-500" /> Automatic refresh
             </p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-ink-500">
               {enabled
                 ? scheduleQuery.data?.nextRunAtUtc
                   ? `Next run ${formatDate(scheduleQuery.data.nextRunAtUtc)}`
@@ -256,7 +256,7 @@ const AdminMarketResearchPanel = () => {
                 : "Paused — use Run now for a one-off research pass"}
             </p>
           </div>
-          <label className="flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm">
+          <label className="flex cursor-pointer items-center gap-2 rounded-full border border-ink-200 bg-card px-3 py-2 text-xs font-semibold text-ink-700 shadow-sm">
             <Switch
               checked={enabled}
               onCheckedChange={setEnabled}
@@ -275,7 +275,7 @@ const AdminMarketResearchPanel = () => {
               step={1}
               value={intervalMinutes}
               onChange={(event) => setIntervalMinutes(event.target.value)}
-              className="mt-2 bg-white"
+              className="mt-2 bg-card"
             />
           </Field>
           <Field label="Candidates / keyword">
@@ -346,23 +346,23 @@ const AdminMarketResearchPanel = () => {
         </div>
       </section>
       <div className="space-y-3">
-        <label className="block text-xs font-semibold text-slate-700">
+        <label className="block text-xs font-semibold text-ink-700">
           Niches / keywords <span className="text-rose-500">*</span>
           <Textarea
             value={queries}
             onChange={(event) => setQueries(event.target.value)}
-            className="mt-2 min-h-32 resize-y bg-white text-sm"
+            className="mt-2 min-h-32 resize-y bg-card text-sm"
             placeholder="One keyword per line, e.g. hiking shirt"
           />
-          <span className="mt-1 block text-[11px] font-normal text-slate-400">
+          <span className="mt-1 block text-[11px] font-normal text-ink-400">
             {normalizedQueries.length}/100 keywords · public Etsy data only
           </span>
         </label>
-        <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3">
+        <div className="rounded-lg border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/10 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-xs font-semibold text-slate-700">Suggested niches</p>
-              <p className="mt-1 text-[11px] font-normal text-slate-500">
+              <p className="text-xs font-semibold text-ink-700">Suggested niches</p>
+              <p className="mt-1 text-[11px] font-normal text-ink-500">
                 Start with a preset if you are not sure which keywords to research.
               </p>
             </div>
@@ -376,7 +376,7 @@ const AdminMarketResearchPanel = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => addSuggestedNiche(niche.queries)}
-                className="h-8 border-indigo-200 bg-white text-[11px] text-indigo-700 hover:bg-indigo-100"
+                className="h-8 border-indigo-200 dark:border-indigo-500/30 bg-card text-[11px] text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/15"
               >
                 {niche.label}
               </Button>
@@ -386,7 +386,7 @@ const AdminMarketResearchPanel = () => {
         <div className="flex flex-wrap items-center justify-end gap-3">
           {/* Say why the button is off, so it never looks broken. */}
           {!normalizedQueries.length && (
-            <p className="text-xs text-slate-500">Add at least one keyword above, or pick a suggested niche, to run.</p>
+            <p className="text-xs text-ink-500">Add at least one keyword above, or pick a suggested niche, to run.</p>
           )}
           <Button
             type="button"
@@ -441,13 +441,13 @@ const ResearchHistory = ({
   isLoading: boolean;
   onSelect: (entry: ResearchHistoryEntry) => void;
 }) => (
-  <div className="border-t border-indigo-100 pt-4">
+  <div className="border-t border-indigo-100 dark:border-indigo-500/30 pt-4">
     <div className="flex items-center justify-between gap-3">
       <div>
-        <p className="text-xs font-bold text-slate-800">Recent research history</p>
-        <p className="mt-1 text-[11px] text-slate-400">Saved locally for quick reuse by admin.</p>
+        <p className="text-xs font-bold text-ink-800">Recent research history</p>
+        <p className="mt-1 text-[11px] text-ink-400">Saved locally for quick reuse by admin.</p>
       </div>
-      <span className="text-[10px] text-slate-400">{history.length}/5 runs</span>
+      <span className="text-[10px] text-ink-400">{history.length}/5 runs</span>
     </div>
     {history.length ? (
       <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-5">
@@ -465,11 +465,11 @@ const ResearchHistory = ({
                   disabled={isLoading}
                   aria-pressed={selectedId === entry.id}
                   aria-label={`${runLabel}: ${nicheLabel}`}
-                  className={`rounded-lg border p-3 text-left transition hover:border-indigo-300 hover:bg-indigo-50/40 disabled:cursor-wait disabled:opacity-60 ${selectedId === entry.id ? "border-indigo-400 bg-indigo-50/70 ring-1 ring-indigo-200" : "border-slate-200 bg-white"}`}
+                  className={`rounded-lg border p-3 text-left transition hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 disabled:cursor-wait disabled:opacity-60 ${selectedId === entry.id ? "border-indigo-400 bg-indigo-50/70 dark:bg-indigo-500/10 ring-1 ring-indigo-200 dark:ring-indigo-500/30" : "border-ink-200 bg-card"}`}
                 >
-                  <p className="truncate text-[11px] font-semibold text-slate-700">{runLabel}</p>
-                  <p className="mt-2 text-[10px] text-slate-400">{formatDate(entry.createdAt)}</p>
-                  <p className="mt-1 text-[10px] text-slate-500">
+                  <p className="truncate text-[11px] font-semibold text-ink-700">{runLabel}</p>
+                  <p className="mt-2 text-[10px] text-ink-400">{formatDate(entry.createdAt)}</p>
+                  <p className="mt-1 text-[10px] text-ink-500">
                     {entry.retrievedCount} scanned · {entry.selectedCount} selected · avg{" "}
                     {entry.averageScore.toFixed(1)}
                   </p>
@@ -479,7 +479,7 @@ const ResearchHistory = ({
                 side="top"
                 align="start"
                 sideOffset={8}
-                className="w-fit max-w-[min(28rem,calc(100vw-2rem))] min-w-64 rounded-xl border border-slate-700 bg-slate-950 p-3 text-white shadow-xl"
+                className="w-fit max-w-[min(28rem,calc(100vw-2rem))] min-w-64 rounded-xl border border-slate-700 bg-slate-900 p-3 text-white shadow-xl"
               >
                 <p className="text-[10px] font-semibold tracking-[0.14em] text-indigo-300 uppercase">
                   Niches researched ({entry.queries.length})
@@ -494,7 +494,7 @@ const ResearchHistory = ({
                     </span>
                   ))}
                 </div>
-                <p className="mt-3 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                <p className="mt-3 border-t border-slate-800 pt-2 text-[10px] text-white/60">
                   {entry.result
                     ? "Click to restore this snapshot"
                     : "Click to run this research again"}
@@ -505,7 +505,7 @@ const ResearchHistory = ({
         })}
       </div>
     ) : (
-      <p className="mt-3 rounded-lg border border-dashed border-slate-200 p-3 text-[11px] text-slate-400">
+      <p className="mt-3 rounded-lg border border-dashed border-ink-200 p-3 text-[11px] text-ink-400">
         Your completed research runs will appear here.
       </p>
     )}
@@ -518,19 +518,19 @@ const Header = () => (
       <p className="text-[10px] font-bold tracking-[0.16em] text-indigo-500 uppercase">
         Etsy trend intelligence
       </p>
-      <h2 className="mt-1 flex items-center gap-2 text-base font-bold text-slate-900">
+      <h2 className="mt-1 flex items-center gap-2 text-base font-bold text-ink-900">
         <Sparkles className="size-4 text-indigo-500" /> Public listing research
       </h2>
-      <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
+      <p className="mt-1 max-w-2xl text-xs leading-5 text-ink-500">
         Turn Etsy signals into searchable trend references. The schedule runs in the background;
         every selected listing is queued for RAG automatically.
       </p>
     </div>
-    <Badge className="w-fit border-indigo-100 bg-white text-indigo-600">Admin only</Badge>
+    <Badge className="w-fit border-indigo-100 dark:border-indigo-500/30 bg-card text-indigo-600 dark:text-indigo-400">Admin only</Badge>
   </div>
 );
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <label className="block text-xs font-semibold text-slate-700">
+  <label className="block text-xs font-semibold text-ink-700">
     {label}
     {children}
   </label>
@@ -550,17 +550,17 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
   const topKeyword =
     Object.entries(keywordCounts).sort(([, first], [, second]) => second - first)[0]?.[0] ?? "—";
   return (
-    <div className="border-t border-indigo-100 pt-5">
+    <div className="border-t border-indigo-100 dark:border-indigo-500/30 pt-5">
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
         <div>
-          <p className="text-[10px] font-bold tracking-[0.16em] text-emerald-600 uppercase">
+          <p className="text-[10px] font-bold tracking-[0.16em] text-emerald-600 dark:text-emerald-400 uppercase">
             Latest research snapshot
           </p>
-          <h3 className="mt-1 text-base font-bold text-slate-900">
+          <h3 className="mt-1 text-base font-bold text-ink-900">
             What Etsy is signalling right now
           </h3>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-ink-500">
           {result.selectedCount} high-signal references queued to RAG across the selected niches
         </p>
       </div>
@@ -594,10 +594,10 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
           tone="indigo"
         />
       </div>
-      <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <div className="mt-4 overflow-hidden rounded-lg border border-ink-200 bg-card">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-xs">
-            <thead className="bg-slate-50 text-[10px] tracking-wide text-slate-400 uppercase">
+            <thead className="bg-ink-50 text-[10px] tracking-wide text-ink-400 uppercase">
               <tr>
                 <th className="px-4 py-3">Rank / listing</th>
                 <th className="px-4 py-3">Matched keyword</th>
@@ -608,10 +608,10 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
             </thead>
             <tbody>
               {items.map((item, index) => (
-                <tr key={item.ragDocumentId} className="border-t border-slate-100">
+                <tr key={item.ragDocumentId} className="border-t border-ink-100">
                   <td className="px-4 py-3">
                     <div className="flex max-w-[280px] items-center gap-3">
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-indigo-50 font-bold text-indigo-600">
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-500/10 font-bold text-indigo-600 dark:text-indigo-400">
                         {index + 1}
                       </span>
                       <div className="min-w-0">
@@ -621,7 +621,7 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
                               href={item.url ?? undefined}
                               target="_blank"
                               rel="noreferrer"
-                              className="flex min-w-0 items-center gap-1 truncate font-semibold text-slate-800 hover:text-indigo-600"
+                              className="flex min-w-0 items-center gap-1 truncate font-semibold text-ink-800 hover:text-indigo-600 dark:hover:text-indigo-400"
                             >
                               <span className="truncate">{item.title}</span>
                               <ExternalLink className="size-3 shrink-0" />
@@ -631,19 +631,19 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
                             {item.title}
                           </TooltipContent>
                         </Tooltip>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[10px] text-ink-400">
                           Listing #{item.externalListingId}
                         </span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{item.matchedQuery || "—"}</td>
+                  <td className="px-4 py-3 text-ink-600">{item.matchedQuery || "—"}</td>
                   <td className="px-4 py-3">
                     <div className="w-28">
-                      <div className="mb-1 flex justify-between font-bold text-slate-700">
+                      <div className="mb-1 flex justify-between font-bold text-ink-700">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="cursor-help border-b border-dashed border-slate-300">
+                            <span className="cursor-help border-b border-dashed border-ink-300">
                               {(Number(item.viralScore) || 0).toFixed(1)}
                             </span>
                           </TooltipTrigger>
@@ -665,12 +665,12 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
                             </p>
                           </TooltipContent>
                         </Tooltip>
-                        <span className="text-[10px] text-slate-400">/100</span>
+                        <span className="text-[10px] text-ink-400">/100</span>
                       </div>
                       <Progress value={item.viralScore} className="h-1.5" />
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate-500">
+                  <td className="px-4 py-3 text-ink-500">
                     <div className="flex gap-3">
                       <span className="inline-flex items-center gap-1">
                         <Heart className="size-3 text-rose-400" />
@@ -683,7 +683,7 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">
+                    <Badge className="border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
                       <Database className="mr-1 size-3" /> Queued
                     </Badge>
                   </td>
@@ -693,12 +693,12 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
           </table>
         </div>
         {!items.length && (
-          <p className="p-8 text-center text-xs text-slate-400">
+          <p className="p-8 text-center text-xs text-ink-400">
             No listings met the minimum trend score. Lower the threshold or broaden the keywords.
           </p>
         )}
       </div>
-      <p className="mt-3 text-[11px] leading-5 text-slate-400">
+      <p className="mt-3 text-[11px] leading-5 text-ink-400">
         Favorites and views are observed public signals, not sales claims. Use this snapshot for
         direction, keywords and structure — not for copying listing content.
       </p>
@@ -707,17 +707,17 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
 };
 
 const ResearchEmptyState = () => (
-  <div className="border-t border-indigo-100 pt-5">
+  <div className="border-t border-indigo-100 dark:border-indigo-500/30 pt-5">
     <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
       <div>
-        <p className="text-[10px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+        <p className="text-[10px] font-bold tracking-[0.16em] text-ink-400 uppercase">
           Research insights
         </p>
-        <h3 className="mt-1 text-base font-bold text-slate-900">
+        <h3 className="mt-1 text-base font-bold text-ink-900">
           Your latest snapshot will appear here
         </h3>
       </div>
-      <p className="text-xs text-slate-400">Run a research pass to populate the metrics</p>
+      <p className="text-xs text-ink-400">Run a research pass to populate the metrics</p>
     </div>
     <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
       <Metric label="Listings scanned" value="—" icon={<Search className="size-4" />} />
@@ -750,14 +750,14 @@ const Metric = ({
   icon: React.ReactNode;
   tone?: string;
 }) => (
-  <div className="rounded-lg border border-slate-100 bg-white p-3">
+  <div className="rounded-lg border border-ink-100 bg-card p-3">
     <div
-      className={`mb-2 flex size-7 items-center justify-center rounded-md ${tone === "emerald" ? "bg-emerald-50 text-emerald-600" : tone === "indigo" ? "bg-indigo-50 text-indigo-600" : "bg-slate-100 text-slate-500"}`}
+      className={`mb-2 flex size-7 items-center justify-center rounded-md ${tone === "emerald" ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : tone === "indigo" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" : "bg-ink-100 text-ink-500"}`}
     >
       {icon}
     </div>
-    <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">{label}</p>
-    <p className="mt-1 text-lg font-bold text-slate-900">{value}</p>
+    <p className="text-[10px] font-semibold tracking-wide text-ink-400 uppercase">{label}</p>
+    <p className="mt-1 text-lg font-bold text-ink-900">{value}</p>
   </div>
 );
 const formatCompact = (value: number | null) =>

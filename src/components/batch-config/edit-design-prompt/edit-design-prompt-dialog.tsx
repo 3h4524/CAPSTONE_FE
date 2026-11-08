@@ -56,7 +56,7 @@ export const EditDesignPromptDialog = ({ rowId, open, onOpenChange }: EditDesign
         ) : isPromptError || !prompt ? (
           <div className="flex flex-col items-center justify-center gap-4 p-8 text-center" role="alert">
             <div>
-              <p className="font-semibold text-slate-900">Prompt unavailable</p>
+              <p className="font-semibold text-ink-900">Prompt unavailable</p>
               <p className="text-muted-foreground mt-1 text-sm">We could not load this prompt. Check your connection and try again.</p>
             </div>
             <div className="flex gap-2">
@@ -156,7 +156,7 @@ const EditDesignPromptContent = ({ prompt, pending, onSave, onRestore, onClose }
             <FormTextareaField id="prompt-custom" label="Custom image prompt" placeholder="Leave empty to use the design template" registration={register("customPrompt")} error={errors.customPrompt} rows={3} />
             <p className="text-muted-foreground -mt-2 text-xs">Replaces the design template and art style for this product, so describe the style in the prompt. With it, Subject holds the words to print; leave Subject empty for a design without words.</p>
             {customPromptWarnings(values.customPrompt, values.subject).map((warning) => (
-              <p key={warning} className="-mt-2 text-xs text-amber-700">{warning.replace("Design text", "Subject")}</p>
+              <p key={warning} className="-mt-2 text-xs text-amber-700 dark:text-amber-300">{warning.replace("Design text", "Subject")}</p>
             ))}
             <FormInputField id="prompt-subject" label={customPrompt ? "Subject (words to print)" : "Subject"} type="text" placeholder={customPrompt ? "Leave empty for no words" : "Space cat"} registration={register("subject")} error={errors.subject} required={!customPrompt} />
             {customPrompt ? (

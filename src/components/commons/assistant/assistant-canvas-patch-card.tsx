@@ -67,13 +67,13 @@ export const AssistantCanvasPatchCard = ({ messageId, actionId, payload, state }
   return (
     <Card className="gap-0 rounded-xl py-3 shadow-none">
       <CardContent className="flex flex-col gap-2.5 px-3">
-      <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Proposed canvas changes</p>
-      <ul className="flex flex-col gap-1.5 text-sm text-slate-800">
+      <p className="text-xs font-semibold tracking-wide text-ink-500 uppercase">Proposed canvas changes</p>
+      <ul className="flex flex-col gap-1.5 text-sm text-ink-800">
         {changes.map((change, index) => (
           <li key={`${change.title}-${index}`} className="flex flex-col gap-0.5">
             <span>{change.title}</span>
             {change.details.map((detail) => (
-              <span key={detail} className="rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-600">
+              <span key={detail} className="rounded-md bg-ink-50 px-2 py-1 text-xs text-ink-600">
                 {detail}
               </span>
             ))}
@@ -81,7 +81,7 @@ export const AssistantCanvasPatchCard = ({ messageId, actionId, payload, state }
         ))}
       </ul>
       {payload.warnings.map((warning) => (
-        <p key={warning} className="rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-700">
+        <p key={warning} className="rounded-md bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs text-amber-700 dark:text-amber-300">
           {warning}
         </p>
       ))}
@@ -100,7 +100,7 @@ export const AssistantCanvasPatchCard = ({ messageId, actionId, payload, state }
           <AssistantChip label="Dismiss" variant="ghost" disabled={isStreaming} onClick={() => settle("dismissed")} />
         </div>
       ) : (
-        <p className="text-xs font-medium text-slate-500">{STATE_TEXT[state]}</p>
+        <p className="text-xs font-medium text-ink-500">{STATE_TEXT[state]}</p>
       )}
       </CardContent>
     </Card>

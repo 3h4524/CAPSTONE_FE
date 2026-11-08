@@ -15,7 +15,7 @@ type IssueRowProps = {
 const IssueRow = ({ issue, onFix }: IssueRowProps) => {
   const { nodeId } = issue;
   return (
-    <li className="flex items-start gap-2 text-sm text-amber-900">
+    <li className="flex items-start gap-2 text-sm text-amber-900 dark:text-amber-300">
       <span className="mt-2 size-1.5 shrink-0 rounded-full bg-amber-500" aria-hidden="true" />
       <span className="min-w-0 flex-1 leading-snug">{issue.message}</span>
       {nodeId && (
@@ -42,17 +42,17 @@ export const WorkflowChecksSummary = ({ issues, onFix, onViewAll }: WorkflowChec
   if (issues.length === 0) return null;
 
   return (
-    <section aria-label="Workflow checks" className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+    <section aria-label="Workflow checks" className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-4">
       <div className="flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-700" aria-hidden="true" />
+        <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold text-amber-950">
+          <h2 className="text-sm font-semibold text-amber-950 dark:text-amber-300">
             {issues.length} workflow {issues.length === 1 ? "check needs" : "checks need"} attention
           </h2>
-          <p className="mt-0.5 text-xs text-amber-800">Fix these before you run this workflow.</p>
+          <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-300">Fix these before you run this workflow.</p>
         </div>
         {issues.length > SUMMARY_LENGTH && (
-          <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 bg-white px-3 text-xs" onClick={onViewAll}>
+          <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 bg-card px-3 text-xs" onClick={onViewAll}>
             View
           </Button>
         )}
@@ -75,7 +75,7 @@ type WorkflowChecksListProps = {
 export const WorkflowChecksList = ({ issues, onFix }: WorkflowChecksListProps) => {
   if (issues.length === 0) {
     return (
-      <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800" role="status">
+      <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 p-4 text-sm text-emerald-800 dark:text-emerald-300" role="status">
         <CheckCircle2 className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
         Every step is connected and configured. Press Run to start the batch.
       </div>
@@ -83,7 +83,7 @@ export const WorkflowChecksList = ({ issues, onFix }: WorkflowChecksListProps) =
   }
 
   return (
-    <ul aria-label="Workflow issues" className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+    <ul aria-label="Workflow issues" className="space-y-3 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-4">
       {issues.map((issue) => (
         <IssueRow key={issue.id} issue={issue} onFix={onFix} />
       ))}

@@ -2,8 +2,8 @@ import type { PanelStat, PanelStatTone } from "@/helpers/workflow-panel";
 import { cn } from "@/utils/cn";
 
 const VALUE_TONES: Record<PanelStatTone, string> = {
-  default: "text-slate-900",
-  warning: "text-amber-700",
+  default: "text-ink-900",
+  warning: "text-amber-700 dark:text-amber-300",
   muted: "text-muted-foreground",
 };
 

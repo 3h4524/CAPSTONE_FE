@@ -30,9 +30,9 @@ export const RunToolbar = ({
   onUpload,
   onDelete,
 }: RunToolbarProps) => (
-  <section className="relative flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] sm:px-6 lg:flex-row lg:items-end lg:justify-between">
+  <section className="relative flex flex-col gap-4 rounded-xl border border-ink-200 bg-card p-5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] sm:px-6 lg:flex-row lg:items-end lg:justify-between">
     <div className="flex min-w-0 flex-col gap-2">
-      <label htmlFor="image-eval-run" className="text-xs font-semibold text-slate-600">
+      <label htmlFor="image-eval-run" className="text-xs font-semibold text-ink-600">
         Evaluation run
       </label>
       <Select
@@ -52,12 +52,12 @@ export const RunToolbar = ({
         </SelectContent>
       </Select>
       {selectedRun ? (
-        <p className="text-[13px] text-slate-500">
-          <span className="font-medium text-slate-700">{selectedRun.imageCount} images</span> ·{" "}
+        <p className="text-[13px] text-ink-500">
+          <span className="font-medium text-ink-700">{selectedRun.imageCount} images</span> ·{" "}
           {selectedRun.productCount} products · {selectedRun.versions.length} prompt versions ·
           uploaded {formatImageQualityDate(selectedRun.createdAtUtc)}
           {selectedRun.uploadedBy ? ` by ${selectedRun.uploadedBy}` : ""}
-          {selectedRun.notes ? <span className="block text-slate-500">{selectedRun.notes}</span> : null}
+          {selectedRun.notes ? <span className="block text-ink-500">{selectedRun.notes}</span> : null}
         </p>
       ) : null}
     </div>

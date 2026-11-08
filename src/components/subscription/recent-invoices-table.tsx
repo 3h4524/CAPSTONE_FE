@@ -23,12 +23,12 @@ const formatDate = (isoDate: string) =>
 
 // Each status as a coloured dot and a word.
 const STATUS: Record<string, { label: string; dot: string; text: string }> = {
-  paid: { label: "Paid", dot: "bg-emerald-500", text: "text-emerald-600" },
-  pending: { label: "Processing", dot: "bg-orange-500", text: "text-orange-600" },
-  failed: { label: "Failed", dot: "bg-rose-500", text: "text-rose-600" },
-  cancelled: { label: "Cancelled", dot: "bg-slate-400", text: "text-slate-500" },
+  paid: { label: "Paid", dot: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
+  pending: { label: "Processing", dot: "bg-orange-500", text: "text-orange-600 dark:text-orange-400" },
+  failed: { label: "Failed", dot: "bg-rose-500", text: "text-rose-600 dark:text-rose-400" },
+  cancelled: { label: "Cancelled", dot: "bg-ink-400", text: "text-ink-500" },
 };
-const statusOf = (status: string) => STATUS[status] ?? { label: status, dot: "bg-slate-400", text: "text-slate-500" };
+const statusOf = (status: string) => STATUS[status] ?? { label: status, dot: "bg-ink-400", text: "text-ink-500" };
 
 // The invoices on show as a CSV file, for the Seller's own bookkeeping.
 const exportCsv = (invoices: RecentInvoice[]) => {
@@ -156,7 +156,7 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
 
       <div className="px-6 pb-2 max-md:px-4">
         {invoices.length === 0 ? (
-          <p className="text-muted-foreground rounded-xl bg-slate-50 px-4 py-8 text-center text-sm">No invoices yet.</p>
+          <p className="text-muted-foreground rounded-xl bg-ink-50 px-4 py-8 text-center text-sm">No invoices yet.</p>
         ) : isPhone ? (
           shown.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center text-sm">No invoices match your search.</p>
@@ -168,7 +168,7 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
                   <li key={invoice.invoiceId} className="space-y-1 py-3 text-sm">
                     <div className="flex items-start justify-between gap-3">
                       <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
-                        <span className="font-medium text-slate-800">{invoice.planName}</span>
+                        <span className="font-medium text-ink-800">{invoice.planName}</span>
                         <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium", text)}>
                           <span className={cn("size-2 rounded-full", dot)} />
                           {label}
@@ -190,11 +190,11 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="bg-slate-50 font-medium first:rounded-l-lg">Plan Name</TableHead>
-                <TableHead className="bg-slate-50 font-medium">Amount</TableHead>
-                <TableHead className="bg-slate-50 font-medium">Invoice Date</TableHead>
-                <TableHead className="bg-slate-50 font-medium">Status</TableHead>
-                <TableHead className="bg-slate-50 text-right font-medium last:rounded-r-lg">Action</TableHead>
+                <TableHead className="bg-ink-50 font-medium first:rounded-l-lg">Plan Name</TableHead>
+                <TableHead className="bg-ink-50 font-medium">Amount</TableHead>
+                <TableHead className="bg-ink-50 font-medium">Invoice Date</TableHead>
+                <TableHead className="bg-ink-50 font-medium">Status</TableHead>
+                <TableHead className="bg-ink-50 text-right font-medium last:rounded-r-lg">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -210,7 +210,7 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
                   return (
                     <TableRow key={invoice.invoiceId}>
                       <TableCell className="py-3.5">
-                        <p className="font-medium text-slate-800">{invoice.planName}</p>
+                        <p className="font-medium text-ink-800">{invoice.planName}</p>
                         <p className="text-muted-foreground text-xs">{invoice.invoiceNumber}</p>
                       </TableCell>
                       <TableCell className="tabular-nums">{formatVnd(invoice.totalAmountVnd)}</TableCell>

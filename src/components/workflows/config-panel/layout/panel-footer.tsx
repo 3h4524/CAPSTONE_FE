@@ -42,15 +42,15 @@ export const PanelFooter = ({ node }: PanelFooterProps) => {
       <p className="flex min-w-0 flex-1 items-center gap-2 text-xs" role="status">
         {firstIssue ? (
           <>
-            <AlertTriangle className="size-3.5 shrink-0 text-amber-600" aria-hidden="true" />
-            <span className="truncate text-amber-800" title={issues.map((issue) => issue.message).join("\n")}>
+            <AlertTriangle className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            <span className="truncate text-amber-800 dark:text-amber-300" title={issues.map((issue) => issue.message).join("\n")}>
               {issues.length > 1 ? `${issues.length} issues · ` : ""}
               {issueTextForNode(firstIssue.message, node.data.label)}
             </span>
           </>
         ) : (
           <>
-            <CheckCircle2 className="size-3.5 shrink-0 text-emerald-600" aria-hidden="true" />
+            <CheckCircle2 className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
             <span className="text-muted-foreground">Ready to run</span>
           </>
         )}

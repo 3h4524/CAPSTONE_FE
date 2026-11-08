@@ -56,7 +56,7 @@ export const FormInputField = ({
           {label}
         </FormLabel>
         {draft && (
-          <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700">
+          <Badge variant="outline" className="border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300">
             Draft
           </Badge>
         )}
@@ -87,7 +87,7 @@ export const FormInputField = ({
         )}
       </div>
       {hint && (
-        <p id={hintId} className="text-xs text-gray-500">
+        <p id={hintId} className="text-xs text-ink-500">
           {hint}
         </p>
       )}

@@ -21,7 +21,7 @@ export const ShortcutCheatsheet = () => (
         variant="outline"
         size="icon-sm"
         aria-label="Canvas shortcuts"
-        className="absolute top-3 right-3 z-10 rounded-full bg-white shadow-sm [@media(pointer:coarse)]:hidden"
+        className="absolute top-3 right-3 z-10 rounded-full bg-card shadow-sm [@media(pointer:coarse)]:hidden"
       >
         <Keyboard aria-hidden="true" />
       </Button>
@@ -34,10 +34,10 @@ export const ShortcutCheatsheet = () => (
       <ul className="space-y-2.5">
         {WORKFLOW_CANVAS_SHORTCUTS.map((shortcut) => (
           <li key={shortcut.action} className="flex items-center justify-between gap-4 text-sm">
-            <span className="text-slate-700">{shortcut.action}</span>
+            <span className="text-ink-700">{shortcut.action}</span>
             <span className="flex shrink-0 items-center gap-1">
               {shortcut.keys.map((key) => (
-                <kbd key={key} className="rounded border bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] text-slate-700">
+                <kbd key={key} className="rounded border bg-ink-100 px-1.5 py-0.5 font-mono text-[11px] text-ink-700">
                   {key}
                 </kbd>
               ))}

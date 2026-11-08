@@ -47,15 +47,15 @@ const RagSearchPlayground = () => {
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-[10px] font-bold tracking-[0.16em] text-slate-400 uppercase">Correctness lab</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Search playground</h2>
-        <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
+        <p className="text-[10px] font-bold tracking-[0.16em] text-ink-400 uppercase">Correctness lab</p>
+        <h2 className="mt-1 text-2xl font-bold tracking-tight text-ink-900">Search playground</h2>
+        <p className="mt-1 max-w-2xl text-xs leading-5 text-ink-500">
           Run a real retrieval query and inspect vector, lexical, metadata, and reranking signals.
         </p>
       </div>
 
-      <Card className="border-slate-200 bg-white shadow-sm">
-        <CardHeader className="border-b border-slate-100 pb-4">
+      <Card className="border-ink-200 bg-card shadow-sm">
+        <CardHeader className="border-b border-ink-100 pb-4">
           <CardTitle className="flex items-center gap-2 text-sm"><SlidersHorizontal className="size-4 text-indigo-500" /> Query and filters</CardTitle>
           <CardDescription className="mt-1 text-xs">These values are sent to the live admin diagnostics endpoint.</CardDescription>
         </CardHeader>
@@ -83,25 +83,25 @@ const RagSearchPlayground = () => {
           </div>
           <div className="space-y-3">
             {diagnostics.results.map((item, index) => (
-              <Card key={item.result.chunkId} className="border-slate-200 bg-white shadow-sm">
+              <Card key={item.result.chunkId} className="border-ink-200 bg-card shadow-sm">
                 <CardContent className="space-y-3 pt-5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2"><Badge variant="outline">#{index + 1}</Badge><h3 className="text-sm font-bold text-slate-900">{item.result.title}</h3></div>
-                    <Badge className="bg-indigo-50 text-indigo-700">Final {item.finalScore.toFixed(3)}</Badge>
+                    <div className="flex items-center gap-2"><Badge variant="outline">#{index + 1}</Badge><h3 className="text-sm font-bold text-ink-900">{item.result.title}</h3></div>
+                    <Badge className="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300">Final {item.finalScore.toFixed(3)}</Badge>
                   </div>
-                  <p className="text-xs leading-5 text-slate-600">{item.result.content}</p>
-                  <div className="grid gap-2 text-[11px] text-slate-500 sm:grid-cols-5">
+                  <p className="text-xs leading-5 text-ink-600">{item.result.content}</p>
+                  <div className="grid gap-2 text-[11px] text-ink-500 sm:grid-cols-5">
                     <Score label="Semantic" value={item.semanticScore} />
                     <Score label="Lexical" value={item.lexicalScore} />
                     <Score label="Viral" value={item.viralScore} />
                     <Score label="Freshness" value={item.freshnessScore} />
                     <Score label="Similarity" value={item.result.similarity} />
                   </div>
-                  <div className="flex flex-wrap gap-2 text-[10px] text-slate-400"><span>Source: {item.result.sourceId ?? "—"}</span><span>Chunk: {item.result.chunkId}</span>{item.result.sourceUrl && <a className="text-indigo-600 hover:underline" href={item.result.sourceUrl} target="_blank" rel="noreferrer">Open source</a>}</div>
+                  <div className="flex flex-wrap gap-2 text-[10px] text-ink-400"><span>Source: {item.result.sourceId ?? "—"}</span><span>Chunk: {item.result.chunkId}</span>{item.result.sourceUrl && <a className="text-indigo-600 dark:text-indigo-400 hover:underline" href={item.result.sourceUrl} target="_blank" rel="noreferrer">Open source</a>}</div>
                 </CardContent>
               </Card>
             ))}
-            {diagnostics.results.length === 0 && <Card><CardContent className="pt-5 text-sm text-slate-500">No matching chunks were retrieved.</CardContent></Card>}
+            {diagnostics.results.length === 0 && <Card><CardContent className="pt-5 text-sm text-ink-500">No matching chunks were retrieved.</CardContent></Card>}
           </div>
         </>
       )}
@@ -109,7 +109,7 @@ const RagSearchPlayground = () => {
   );
 };
 
-const Metric = ({ label, value }: { label: string; value: string }) => <Card className="border-slate-200 bg-white shadow-sm"><CardContent className="pt-4"><p className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">{label}</p><p className="mt-1 text-lg font-bold text-slate-900">{value}</p></CardContent></Card>;
-const Score = ({ label, value }: { label: string; value: number }) => <span><strong className="text-slate-700">{label}:</strong> {value.toFixed(3)}</span>;
+const Metric = ({ label, value }: { label: string; value: string }) => <Card className="border-ink-200 bg-card shadow-sm"><CardContent className="pt-4"><p className="text-[10px] font-bold tracking-wide text-ink-400 uppercase">{label}</p><p className="mt-1 text-lg font-bold text-ink-900">{value}</p></CardContent></Card>;
+const Score = ({ label, value }: { label: string; value: number }) => <span><strong className="text-ink-700">{label}:</strong> {value.toFixed(3)}</span>;
 
 export { RagSearchPlayground };

@@ -130,7 +130,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
   };
 
   return (
-    <div className="relative h-dvh min-h-0 overflow-hidden bg-[#f8fafc] text-slate-900">
+    <div className="relative h-dvh min-h-0 overflow-hidden bg-ink-50 text-ink-900 dark:bg-background">
       <div className="flex h-full min-h-0">
         <AdminSidebar
           fullName={fullName}
@@ -141,7 +141,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
-        <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden dark:lg:bg-panel dark:lg:my-2 dark:lg:mr-2 dark:lg:h-[calc(100dvh-1rem)] dark:lg:rounded-xl dark:lg:border">
           <div className="min-h-0 flex-1 overflow-y-auto">
             <AdminTopbar
               fullName={fullName}
@@ -151,19 +151,19 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
             <main className="mx-auto max-w-[1600px] px-4 py-4 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
-                  <p className="text-[10px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+                  <p className="text-[10px] font-bold tracking-[0.16em] text-ink-400 uppercase">
                     Knowledge base
                   </p>
-                  <h1 className="font-display mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">
+                  <h1 className="font-display mt-1 text-2xl font-bold tracking-tight text-ink-900 sm:text-[28px]">
                     {activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
                   </h1>
-                  <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
+                  <p className="mt-1 max-w-2xl text-xs leading-5 text-ink-500">
                     {activeTab === "research"
                       ? "Manage the shared public Etsy dataset used by seller-facing Market Radar."
                       : "Ingest documents, review versions, and control which knowledge is active for retrieval."}
                   </p>
                 </div>
-                <div className="flex flex-wrap rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+                <div className="flex flex-wrap rounded-lg border border-ink-200 bg-card p-1 shadow-sm">
                   <Button
                     type="button"
                     size="sm"
@@ -212,11 +212,11 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                       : "hidden"
                   }
                 >
-                  <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-                    <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                  <section className="rounded-xl border border-ink-200 bg-card p-5 shadow-sm sm:p-6">
+                    <div className="flex items-center justify-between gap-3 border-b border-ink-100 pb-4">
                       <div>
-                        <h2 className="text-sm font-bold text-slate-900">Document content</h2>
-                        <p className="mt-1 text-xs text-slate-400">
+                        <h2 className="text-sm font-bold text-ink-900">Document content</h2>
+                        <p className="mt-1 text-xs text-ink-400">
                           Plain text is sent to the RAG ingestion pipeline.
                         </p>
                       </div>
@@ -252,12 +252,12 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                         }
                       }}
                       className={cn(
-                        "mt-5 flex min-h-28 w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 text-center transition-all hover:border-slate-400 hover:bg-slate-50",
+                        "mt-5 flex min-h-28 w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 text-center transition-all hover:border-ink-400 hover:bg-ink-50",
                         isDraggingFile &&
                           "border-primary bg-primary/5 ring-primary/20 scale-[1.01] cursor-copy ring-2",
                         fileName
-                          ? "border-emerald-200 bg-emerald-50/40"
-                          : "border-slate-300 bg-slate-50/60"
+                          ? "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-500/10"
+                          : "border-ink-300 bg-ink-50/60"
                       )}
                       onDragOver={(event) => {
                         event.preventDefault();
@@ -278,25 +278,25 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                           <span className="text-primary mt-2 text-xs font-semibold">
                             Release to upload
                           </span>
-                          <span className="mt-1 text-[11px] text-slate-400">
+                          <span className="mt-1 text-[11px] text-ink-400">
                             Your document will be loaded here
                           </span>
                         </>
                       ) : fileName ? (
                         <>
                           <CheckCircle2 className="size-6 text-emerald-500" />
-                          <span className="mt-2 max-w-full truncate text-xs font-semibold text-slate-700">
+                          <span className="mt-2 max-w-full truncate text-xs font-semibold text-ink-700">
                             {fileName}
                           </span>
-                          <span className="mt-1 text-[11px] text-slate-400">Click to replace</span>
+                          <span className="mt-1 text-[11px] text-ink-400">Click to replace</span>
                         </>
                       ) : (
                         <>
-                          <FileText className="size-6 text-slate-400" />
-                          <span className="mt-2 text-xs font-semibold text-slate-600">
+                          <FileText className="size-6 text-ink-400" />
+                          <span className="mt-2 text-xs font-semibold text-ink-600">
                             Drop a document here or browse
                           </span>
-                          <span className="mt-1 text-[11px] text-slate-400">
+                          <span className="mt-1 text-[11px] text-ink-400">
                             TXT, MD, CSV, JSON, or HTML
                           </span>
                         </>
@@ -317,7 +317,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                     </div>
 
                     <label
-                      className="mt-5 block text-xs font-semibold text-slate-700"
+                      className="mt-5 block text-xs font-semibold text-ink-700"
                       htmlFor="rag-content"
                     >
                       Content <span className="text-rose-500">*</span>
@@ -329,14 +329,14 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                       placeholder="Paste or review the document content…"
                       className="mt-2 min-h-[300px] resize-y text-sm leading-6"
                     />
-                    <p className="mt-2 text-right text-[11px] text-slate-400">
+                    <p className="mt-2 text-right text-[11px] text-ink-400">
                       {content.length.toLocaleString()} characters
                     </p>
                   </section>
 
-                  <aside className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-                    <h2 className="text-sm font-bold text-slate-900">Document metadata</h2>
-                    <p className="mt-1 text-xs leading-5 text-slate-400">
+                  <aside className="rounded-xl border border-ink-200 bg-card p-5 shadow-sm sm:p-6">
+                    <h2 className="text-sm font-bold text-ink-900">Document metadata</h2>
+                    <p className="mt-1 text-xs leading-5 text-ink-400">
                       These fields help retrieval target the right knowledge.
                     </p>
                     <div className="mt-5 space-y-4">
@@ -409,7 +409,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                         </Field>
                       </div>
                     </div>
-                    <div className="mt-6 border-t border-slate-100 pt-5">
+                    <div className="mt-6 border-t border-ink-100 pt-5">
                       <Button
                         type="button"
                         className="w-full"
@@ -426,7 +426,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                           </>
                         )}
                       </Button>
-                      <p className="mt-3 text-center text-[11px] leading-4 text-slate-400">
+                      <p className="mt-3 text-center text-[11px] leading-4 text-ink-400">
                         {!title.trim() || !content.trim()
                           ? `Add ${!title.trim() && !content.trim() ? "a title and content" : !title.trim() ? "a title" : "content"} to ingest the document.`
                           : "The document will be chunked and embedded for semantic search."}
@@ -459,7 +459,7 @@ const Field = ({
   required?: boolean;
   children: React.ReactNode;
 }) => (
-  <label className="block text-xs font-semibold text-slate-700">
+  <label className="block text-xs font-semibold text-ink-700">
     {label}
     {required && <span className="text-rose-500"> *</span>}
     <span className="mt-2 block">{children}</span>
@@ -469,16 +469,16 @@ const Field = ({
 const RagUsageGuide = () => {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <section className="mt-6 rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 sm:p-5">
+    <section className="mt-6 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/60 dark:bg-indigo-500/10 p-4 sm:p-5">
       <div className="flex items-start gap-3">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-card text-indigo-600 dark:text-indigo-400 shadow-sm">
           <Info className="size-4" />
         </div>
         <div>
-          <h2 className="text-sm font-bold text-slate-900">
+          <h2 className="text-sm font-bold text-ink-900">
             Quick guide: how to use the RAG knowledge base
           </h2>
-          <p className="mt-1 text-xs leading-5 text-slate-500">
+          <p className="mt-1 text-xs leading-5 text-ink-500">
             Add trusted information here so the assistant can find and use it later.
           </p>
         </div>
@@ -486,7 +486,7 @@ const RagUsageGuide = () => {
           type="button"
           variant="ghost"
           size="sm"
-          className="ml-auto shrink-0 text-indigo-700"
+          className="ml-auto shrink-0 text-indigo-700 dark:text-indigo-300"
           onClick={() => setIsOpen((value) => !value)}
           aria-expanded={isOpen}
         >
@@ -518,8 +518,8 @@ const RagUsageGuide = () => {
               text="Open Documents & versions to check status and manage which version is active."
             />
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-indigo-100 pt-3 text-[11px] leading-5 text-slate-500">
-            <span className="font-semibold text-indigo-700">Etsy tip:</span>
+          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-indigo-100 dark:border-indigo-500/30 pt-3 text-[11px] leading-5 text-ink-500">
+            <span className="font-semibold text-indigo-700 dark:text-indigo-300">Etsy tip:</span>
             <span>
               Run now automatically selects the top 3 listings and queues them for RAG. Enable a schedule
               for recurring research.
@@ -534,14 +534,14 @@ const RagUsageGuide = () => {
 };
 
 const GuideStep = ({ number, title, text }: { number: string; title: string; text: string }) => (
-  <div className="rounded-lg border border-white/80 bg-white/80 p-3">
+  <div className="rounded-lg border border-white/80 bg-card/80 p-3">
     <div className="flex items-center gap-2">
-      <span className="flex size-6 items-center justify-center rounded-full bg-indigo-100 text-[11px] font-bold text-indigo-700">
+      <span className="flex size-6 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-500/15 text-[11px] font-bold text-indigo-700 dark:text-indigo-300">
         {number}
       </span>
-      <p className="text-xs font-bold text-slate-800">{title}</p>
+      <p className="text-xs font-bold text-ink-800">{title}</p>
     </div>
-    <p className="mt-2 text-[11px] leading-5 text-slate-500">{text}</p>
+    <p className="mt-2 text-[11px] leading-5 text-ink-500">{text}</p>
   </div>
 );
 

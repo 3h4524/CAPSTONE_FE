@@ -71,14 +71,14 @@ export function RevenueForecastCard({
         : null;
 
   return (
-    <Card className="flex h-full flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
+    <Card className="flex h-full flex-col justify-between rounded-2xl border border-ink-200/80 bg-card p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
       {/* Header */}
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
             <BarChart3 className="h-5 w-5" />
           </div>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+          <h3 className="text-sm font-bold text-ink-900 dark:text-slate-100">
             Revenue Forecast
           </h3>
         </div>
@@ -88,13 +88,13 @@ export function RevenueForecastCard({
           <select
             value={timeHorizon}
             onChange={(e) => setTimeHorizon(Number(e.target.value) as TimeHorizon)}
-            className="h-8 cursor-pointer appearance-none rounded-xl border border-slate-200/90 bg-slate-50/70 pr-7 pl-3 text-xs font-semibold text-slate-700 shadow-2xs transition-all hover:border-slate-300 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+            className="h-8 cursor-pointer appearance-none rounded-xl border border-ink-200/90 bg-ink-50/70 pr-7 pl-3 text-xs font-semibold text-ink-700 shadow-2xs transition-all hover:border-ink-300 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
           >
             <option value={3}>3 months</option>
             <option value={6}>6 months</option>
             <option value={12}>12 months</option>
           </select>
-          <ChevronDown className="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2 text-slate-400" />
+          <ChevronDown className="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2 text-ink-400" />
         </div>
       </div>
 
@@ -112,10 +112,10 @@ export function RevenueForecastCard({
       <div className="h-[210px] w-full">
         {isLoading ? (
           <div className="flex h-full w-full items-center justify-center">
-            <div className="h-40 w-full animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
+            <div className="h-40 w-full animate-pulse rounded-lg bg-ink-100 dark:bg-slate-800" />
           </div>
         ) : chartData.length === 0 ? (
-          <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
+          <div className="flex h-full w-full items-center justify-center text-xs text-ink-400">
             No revenue recorded yet.
           </div>
         ) : (
@@ -130,22 +130,22 @@ export function RevenueForecastCard({
                   <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.6} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ink-200)" opacity={0.6} />
               <XAxis
                 dataKey="monthLabel"
                 tickLine={false}
                 axisLine={false}
                 minTickGap={24}
-                tick={{ fontSize: 10, fill: "#94a3b8" }}
+                tick={{ fontSize: 10, fill: "var(--ink-400)" }}
               />
               <YAxis
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 10, fill: "#94a3b8" }}
+                tick={{ fontSize: 10, fill: "var(--ink-400)" }}
                 tickFormatter={formatYAxis}
               />
               <Tooltip
-                cursor={{ stroke: "#cbd5e1", strokeWidth: 1, strokeDasharray: "3 3" }}
+                cursor={{ stroke: "var(--ink-300)", strokeWidth: 1, strokeDasharray: "3 3" }}
                 content={({ active, payload, label }) => {
                   if (!active || !payload?.length) return null;
                   const item = payload[0]?.payload;
@@ -154,22 +154,22 @@ export function RevenueForecastCard({
                   const pct = item?.percentageChangeVsCurrent ?? 0;
 
                   return (
-                    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-800 dark:bg-slate-900">
-                      <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">
+                    <div className="rounded-xl border border-ink-200 bg-card p-3 shadow-lg dark:border-slate-800 dark:bg-slate-900">
+                      <p className="text-xs font-semibold text-ink-400 dark:text-slate-500">
                         Week of {label} {isF ? "(Forecast)" : "(Actual)"}
                       </p>
                       <div className="mt-1 flex items-baseline gap-2">
-                        <span className="text-base font-bold text-slate-900 dark:text-slate-100">
+                        <span className="text-base font-bold text-ink-900 dark:text-slate-100">
                           {formatVnd(val)}
                         </span>
                       </div>
                       {isF && (
                         <>
-                          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                          <p className="mt-1 text-[11px] text-ink-500 dark:text-slate-400">
                             95%: {formatVnd(item?.conservative ?? 0)} –{" "}
                             {formatVnd(item?.optimistic ?? 0)}
                           </p>
-                          <p className="mt-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                          <p className="mt-0.5 text-[11px] font-semibold text-ink-600 dark:text-slate-300">
                             {pct >= 0 ? `+${pct}%` : `${pct}%`} vs. last completed week
                           </p>
                         </>
@@ -236,7 +236,7 @@ export function RevenueForecastCard({
 
       {/* Model summary */}
       {!isLoading && showForecast && (
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-[11px] text-ink-500 dark:text-slate-400">
           <span>
             Linear regression over the {sampleWeeks} weeks before today, R² = {(data?.rSquared ?? 0).toFixed(2)}
           </span>
@@ -253,7 +253,7 @@ export function RevenueForecastCard({
       )}
 
       {/* Bottom Legend */}
-      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1 border-t border-slate-100 pt-2 text-[10px] font-medium text-slate-500 dark:border-slate-800 dark:text-slate-400">
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1 border-t border-ink-100 pt-2 text-[10px] font-medium text-ink-500 dark:border-slate-800 dark:text-slate-400">
         <div className="flex items-center gap-1.5">
           <span className="h-0.5 w-3 rounded-full bg-blue-600" />
           <span>Actual</span>

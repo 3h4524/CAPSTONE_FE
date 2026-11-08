@@ -51,7 +51,7 @@ export function TicketDropzone({ files, onChange, disabled }: TicketDropzoneProp
     <div className="space-y-2">
       <div
         className={cn(
-          "focus-within:border-ring focus-within:ring-ring/15 flex min-h-20 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-[#f7f9fd] px-4 py-4 text-center transition-[border-color,background-color,box-shadow] focus-within:ring-3 hover:border-slate-400 hover:bg-[#f3f6fb]",
+          "focus-within:border-ring focus-within:ring-ring/15 flex min-h-20 items-center justify-center rounded-xl border border-dashed border-ink-300 bg-ink-50 px-4 py-4 text-center transition-[border-color,background-color,box-shadow] focus-within:ring-3 hover:border-ink-400 hover:bg-ink-100",
           disabled && "pointer-events-none opacity-60"
         )}
         onDragOver={(event) => event.preventDefault()}
@@ -60,7 +60,7 @@ export function TicketDropzone({ files, onChange, disabled }: TicketDropzoneProp
           addFiles(Array.from(event.dataTransfer.files));
         }}
       >
-        <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-slate-600">
+        <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-ink-600">
           <span>Drag files here or</span>
           <label htmlFor={inputId} className="text-primary cursor-pointer font-medium underline underline-offset-2">
             browse
@@ -79,15 +79,15 @@ export function TicketDropzone({ files, onChange, disabled }: TicketDropzoneProp
           />
         </div>
       </div>
-      <p className="text-[11px] text-slate-500">Accepted: images, PDF, TXT, LOG — max 10 MB each</p>
+      <p className="text-[11px] text-ink-500">Accepted: images, PDF, TXT, LOG — max 10 MB each</p>
       {error ? <p role="alert" className="text-destructive text-xs">{error}</p> : null}
       {files.length > 0 ? (
         <ul className="grid gap-2" aria-label="Selected attachments">
           {files.map((file, index) => (
-            <li key={`${file.name}-${file.lastModified}`} className="border-border flex items-center gap-3 rounded-lg border bg-white px-3 py-2">
-              <FileText className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
+            <li key={`${file.name}-${file.lastModified}`} className="border-border flex items-center gap-3 rounded-lg border bg-card px-3 py-2">
+              <FileText className="size-4 shrink-0 text-ink-500" aria-hidden="true" />
               <span className="min-w-0 flex-1 truncate text-sm font-medium">{file.name}</span>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-ink-500">
                 {formatBytes(file.size)} · {disabled ? "Uploading…" : "Ready"}
               </span>
               <Button

@@ -62,19 +62,19 @@ export function PlanCompareTable({ plans, features, catalog, isAdding, onAdd, on
   }
 
   return (
-    <Card className="gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-0 shadow-xs">
+    <Card className="gap-0 overflow-hidden rounded-2xl border border-ink-200/80 bg-card p-0 shadow-xs">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-sm max-md:[&_th:first-child]:sticky max-md:[&_th:first-child]:left-0 max-md:[&_th:first-child]:z-1 max-md:[&_th:first-child]:w-36 max-md:[&_th:first-child]:bg-white">
-          <thead className="sticky top-0 z-10 bg-white">
-            <tr className="border-b border-slate-200">
-              <th scope="col" className="w-[38%] px-5 py-4 text-left text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
+        <table className="w-full min-w-[640px] border-collapse text-sm max-md:[&_th:first-child]:sticky max-md:[&_th:first-child]:left-0 max-md:[&_th:first-child]:z-1 max-md:[&_th:first-child]:w-36 max-md:[&_th:first-child]:bg-card">
+          <thead className="sticky top-0 z-10 bg-card">
+            <tr className="border-b border-ink-200">
+              <th scope="col" className="w-[38%] px-5 py-4 text-left text-[11px] font-semibold tracking-wide text-ink-500 uppercase">
                 Feature
               </th>
               {plans.map((plan) => (
                 <th key={plan.id} scope="col" className="px-4 py-4 text-center align-bottom">
-                  <p className="font-bold text-slate-900">{plan.name}</p>
-                  <p className="text-xs font-normal text-slate-500 tabular-nums">{formatVnd(plan.monthlyPriceVnd)} / month</p>
-                  <p className="text-[11px] font-normal text-slate-400">
+                  <p className="font-bold text-ink-900">{plan.name}</p>
+                  <p className="text-xs font-normal text-ink-500 tabular-nums">{formatVnd(plan.monthlyPriceVnd)} / month</p>
+                  <p className="text-[11px] font-normal text-ink-400">
                     {plan.activeSubscriberCount.toLocaleString()} subscribers
                   </p>
                 </th>
@@ -83,24 +83,24 @@ export function PlanCompareTable({ plans, features, catalog, isAdding, onAdd, on
           </thead>
           <tbody>
             <GroupRow label="Run limits" span={plans.length + 1} />
-            <tr className="border-b border-slate-100">
-              <th scope="row" className="px-5 py-2.5 text-left font-normal text-slate-700">
+            <tr className="border-b border-ink-100">
+              <th scope="row" className="px-5 py-2.5 text-left font-normal text-ink-700">
                 Products per run
-                <span className="ml-1 text-xs text-slate-400">· set on Edit plan</span>
+                <span className="ml-1 text-xs text-ink-400">· set on Edit plan</span>
               </th>
               {plans.map((plan) => (
-                <td key={plan.id} className="px-4 py-2.5 text-center font-semibold text-slate-700 tabular-nums">
+                <td key={plan.id} className="px-4 py-2.5 text-center font-semibold text-ink-700 tabular-nums">
                   {formatRunLimit(plan.maxBatchSize)}
                 </td>
               ))}
             </tr>
-            <tr className="border-b border-slate-100">
-              <th scope="row" className="px-5 py-2.5 text-left font-normal text-slate-700">
+            <tr className="border-b border-ink-100">
+              <th scope="row" className="px-5 py-2.5 text-left font-normal text-ink-700">
                 Design jobs at once
-                <span className="ml-1 text-xs text-slate-400">· set on Edit plan</span>
+                <span className="ml-1 text-xs text-ink-400">· set on Edit plan</span>
               </th>
               {plans.map((plan) => (
-                <td key={plan.id} className="px-4 py-2.5 text-center font-semibold text-slate-700 tabular-nums">
+                <td key={plan.id} className="px-4 py-2.5 text-center font-semibold text-ink-700 tabular-nums">
                   {formatRunLimit(plan.maxConcurrentJobs)}
                 </td>
               ))}
@@ -128,8 +128,8 @@ export function PlanCompareTable({ plans, features, catalog, isAdding, onAdd, on
 
 function GroupRow({ label, span }: { label: string; span: number }) {
   return (
-    <tr className="bg-slate-50/80">
-      <th colSpan={span} scope="colgroup" className="px-5 py-2 text-left text-[11px] font-semibold tracking-wide text-slate-500 uppercase max-md:px-3">
+    <tr className="bg-ink-50/80">
+      <th colSpan={span} scope="colgroup" className="px-5 py-2 text-left text-[11px] font-semibold tracking-wide text-ink-500 uppercase max-md:px-3">
         {label}
       </th>
     </tr>
@@ -159,10 +159,10 @@ function FeatureGroup({
     <>
       <GroupRow label={group} span={plans.length + 1} />
       {rows.map((feature) => (
-        <tr key={feature.code} className="border-b border-slate-100 hover:bg-slate-50/60">
-          <th scope="row" className="px-5 py-2.5 text-left font-normal wrap-anywhere text-slate-700 max-md:px-3">
+        <tr key={feature.code} className="border-b border-ink-100 hover:bg-ink-50/60">
+          <th scope="row" className="px-5 py-2.5 text-left font-normal wrap-anywhere text-ink-700 max-md:px-3">
             {feature.label}
-            {isSafetyCap(feature.code) && <span className="ml-1 text-xs text-slate-400">· hidden from Sellers</span>}
+            {isSafetyCap(feature.code) && <span className="ml-1 text-xs text-ink-400">· hidden from Sellers</span>}
           </th>
           {plans.map((plan) => (
             <PlanCell
@@ -207,12 +207,12 @@ function PlanCell({
           type="button"
           aria-label={`Change ${feature.label} on ${plan.name}`}
           onClick={() => onEditLimit(plan, feature, limit)}
-          className="group inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-semibold text-slate-700 tabular-nums hover:bg-slate-100 max-md:min-h-10 max-md:flex-col max-md:justify-center max-md:gap-0 max-md:px-1"
+          className="group inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-semibold text-ink-700 tabular-nums hover:bg-ink-100 max-md:min-h-10 max-md:flex-col max-md:justify-center max-md:gap-0 max-md:px-1"
         >
           <span className="max-md:hidden">{limit === null ? "No limit" : `${limit.toLocaleString()}${unit ? ` ${unit}` : ""}`}</span>
           <span className="md:hidden">{limit === null ? "No limit" : limit.toLocaleString()}</span>
-          {limit !== null && unit && <span className="text-[10px] leading-tight font-normal wrap-anywhere text-slate-400 md:hidden">{unit}</span>}
-          <Pencil className="size-3 text-slate-300 group-hover:text-slate-600 max-md:hidden" />
+          {limit !== null && unit && <span className="text-[10px] leading-tight font-normal wrap-anywhere text-ink-400 md:hidden">{unit}</span>}
+          <Pencil className="size-3 text-ink-300 group-hover:text-ink-600 max-md:hidden" />
         </button>
       </td>
     );
@@ -230,8 +230,8 @@ function PlanCell({
         className={cn(
           "inline-flex size-7 items-center justify-center rounded-full border transition-colors disabled:opacity-40 max-md:size-9",
           isOn
-            ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-            : "border-dashed border-slate-200 text-slate-300 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+            ? "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:border-rose-200 dark:hover:border-rose-500/30 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400"
+            : "border-dashed border-ink-200 text-ink-300 hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300"
         )}
       >
         {isOn ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
@@ -299,12 +299,12 @@ function PhonePlanCompare({
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
         {pair.map((plan, index) => (
-          <div key={index} className="min-w-0 rounded-xl border border-slate-200 bg-white p-2.5">
+          <div key={index} className="min-w-0 rounded-xl border border-ink-200 bg-card p-2.5">
             <Select value={plan.id} onValueChange={(id) => choose(index === 0 ? "left" : "right", id)}>
-              <SelectTrigger aria-label={index === 0 ? "First plan" : "Second plan"} className="w-full bg-white font-semibold">
+              <SelectTrigger aria-label={index === 0 ? "First plan" : "Second plan"} className="w-full bg-card font-semibold">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent position="popper" className="w-(--radix-select-trigger-width) bg-white">
+              <SelectContent position="popper" className="w-(--radix-select-trigger-width) bg-card">
                 {plans.map((option) => (
                   <SelectItem key={option.id} value={option.id}>
                     {option.name}
@@ -312,36 +312,36 @@ function PhonePlanCompare({
                 ))}
               </SelectContent>
             </Select>
-            <p className="mt-2 text-xs font-semibold text-slate-700 tabular-nums">{formatVnd(plan.monthlyPriceVnd)}/month</p>
-            <p className="text-[11px] text-slate-400">{plan.activeSubscriberCount.toLocaleString()} subscribers</p>
+            <p className="mt-2 text-xs font-semibold text-ink-700 tabular-nums">{formatVnd(plan.monthlyPriceVnd)}/month</p>
+            <p className="text-[11px] text-ink-400">{plan.activeSubscriberCount.toLocaleString()} subscribers</p>
           </div>
         ))}
       </div>
 
-      <label className="flex min-h-11 items-center justify-between gap-3 text-xs font-medium text-slate-600">
+      <label className="flex min-h-11 items-center justify-between gap-3 text-xs font-medium text-ink-600">
         <span>
-          Only what differs <span className="text-slate-400 tabular-nums">· {differencesOnly ? `${shown} of ${total}` : `all ${total}`}</span>
+          Only what differs <span className="text-ink-400 tabular-nums">· {differencesOnly ? `${shown} of ${total}` : `all ${total}`}</span>
         </span>
         <Switch checked={differencesOnly} onCheckedChange={setDifferencesOnly} aria-label="Only what differs" />
       </label>
 
       {shown === 0 ? (
-        <p className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
+        <p className="rounded-xl border border-dashed border-ink-300 bg-card p-6 text-center text-sm text-ink-500">
           {left.name} and {right.name} match on every feature.
         </p>
       ) : (
-        <Card className="gap-0 rounded-2xl border border-slate-200/80 bg-white p-0 shadow-xs">
+        <Card className="gap-0 rounded-2xl border border-ink-200/80 bg-card p-0 shadow-xs">
           <table className="w-full table-fixed border-collapse text-sm">
             <colgroup>
               <col />
               <col className="w-20" />
               <col className="w-20" />
             </colgroup>
-            <thead className="sticky top-16 z-10 bg-white">
-              <tr className="border-b border-slate-200 text-[11px] font-semibold text-slate-500">
-                <th scope="col" className="rounded-tl-2xl bg-white px-3 py-2 text-left">Feature</th>
+            <thead className="sticky top-16 z-10 bg-card">
+              <tr className="border-b border-ink-200 text-[11px] font-semibold text-ink-500">
+                <th scope="col" className="rounded-tl-2xl bg-card px-3 py-2 text-left">Feature</th>
                 {pair.map((plan) => (
-                  <th key={plan.id} scope="col" className="truncate bg-white px-1 py-2 text-center last:rounded-tr-2xl">
+                  <th key={plan.id} scope="col" className="truncate bg-card px-1 py-2 text-center last:rounded-tr-2xl">
                     {plan.name}
                   </th>
                 ))}
@@ -350,10 +350,10 @@ function PhonePlanCompare({
             <tbody>
               {runLimits.length > 0 && <GroupRow label="Run limits" span={3} />}
               {runLimits.map((row) => (
-                <tr key={row.label} className="border-b border-slate-100">
-                  <th scope="row" className="px-3 py-2.5 text-left font-normal wrap-anywhere text-slate-700">{row.label}</th>
+                <tr key={row.label} className="border-b border-ink-100">
+                  <th scope="row" className="px-3 py-2.5 text-left font-normal wrap-anywhere text-ink-700">{row.label}</th>
                   {pair.map((plan) => (
-                    <td key={plan.id} className="px-1 py-2.5 text-center font-semibold text-slate-700 tabular-nums">
+                    <td key={plan.id} className="px-1 py-2.5 text-center font-semibold text-ink-700 tabular-nums">
                       {formatRunLimit(row.valueOf(plan))}
                     </td>
                   ))}
@@ -381,7 +381,7 @@ function PhonePlanCompare({
           </table>
         </Card>
       )}
-      <p className="text-[11px] text-slate-400">Run limits are set on Edit plan.</p>
+      <p className="text-[11px] text-ink-400">Run limits are set on Edit plan.</p>
     </div>
   );
 }

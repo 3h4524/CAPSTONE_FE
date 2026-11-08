@@ -35,12 +35,12 @@ export const PromptRecipe = ({ config }: PromptRecipeProps) => {
 
   return (
     <PanelSection title="Prompt preview" description="Each product's prompt is built from these parts.">
-      <dl className="divide-y rounded-md border bg-slate-50/60 text-xs">
+      <dl className="divide-y rounded-md border bg-ink-50/60 text-xs">
         {parts.map((part) => (
           <div key={part.label} className="flex gap-3 px-3 py-2.5">
             <dt className="text-muted-foreground w-20 shrink-0">{part.label}</dt>
             <dd className="min-w-0 flex-1 space-y-1">
-              <p className={cn("line-clamp-4 leading-relaxed wrap-break-word", part.text ? "text-slate-800" : "text-muted-foreground")}>{part.text ?? part.empty}</p>
+              <p className={cn("line-clamp-4 leading-relaxed wrap-break-word", part.text ? "text-ink-800" : "text-muted-foreground")}>{part.text ?? part.empty}</p>
               {part.note && <p className="text-muted-foreground line-clamp-2 leading-relaxed">{part.note}</p>}
             </dd>
           </div>

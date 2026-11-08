@@ -7,10 +7,10 @@ export const ModelPhotoLibrary = () => (
   <AdminShell pageTitle="Model Photos">
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1.5">
-        <h2 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+        <h2 className="font-display text-xl font-bold tracking-tight text-ink-900 sm:text-2xl">
           Model photo library
         </h2>
-        <p className="max-w-3xl text-sm leading-relaxed text-slate-600">
+        <p className="max-w-3xl text-sm leading-relaxed text-ink-600">
           Sellers put a mock-up on one of these photos in their video workflow. The person’s garment
           is recolored to the mock-up’s color and the design is printed where it sits on the
           mock-up, without AI.

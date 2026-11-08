@@ -40,7 +40,7 @@ export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxPro
         </div>
         {image && (
           <>
-            <div className="relative flex min-h-60 items-center justify-center overflow-hidden rounded-md bg-slate-100">
+            <div className="relative flex min-h-60 items-center justify-center overflow-hidden rounded-md bg-ink-100">
               <Image
                 key={image.id}
                 src={image.url}
@@ -59,7 +59,7 @@ export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxPro
                     aria-label="Previous image"
                     disabled={!hasPrevious}
                     onClick={() => onIndexChange(position - 1)}
-                    className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-white/90 shadow-sm hover:-translate-y-1/2"
+                    className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-card/90 shadow-sm hover:-translate-y-1/2"
                   >
                     <ChevronLeft aria-hidden="true" />
                   </Button>
@@ -70,7 +70,7 @@ export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxPro
                     aria-label="Next image"
                     disabled={!hasNext}
                     onClick={() => onIndexChange(position + 1)}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-white/90 shadow-sm hover:-translate-y-1/2"
+                    className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-card/90 shadow-sm hover:-translate-y-1/2"
                   >
                     <ChevronRight aria-hidden="true" />
                   </Button>

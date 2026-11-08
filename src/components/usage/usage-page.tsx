@@ -93,7 +93,7 @@ export function UsagePage() {
       {/* Header */}
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 max-md:text-xl sm:text-3xl">Usage</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-ink-900 max-md:text-xl sm:text-3xl">Usage</h1>
           <p className="text-muted-foreground mt-1 text-sm max-md:hidden">
             Understand this month&apos;s production volume and estimated provider costs.
           </p>
@@ -103,10 +103,10 @@ export function UsagePage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-9 gap-1.5 rounded-xl border-slate-200 px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50"
+              className="h-9 gap-1.5 rounded-xl border-ink-200 px-3.5 text-xs font-medium text-ink-700 shadow-2xs hover:bg-ink-50"
             >
               {activeRange.label}
-              <ChevronDown className="size-3.5 text-slate-500" />
+              <ChevronDown className="size-3.5 text-ink-500" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40 rounded-xl">
@@ -154,11 +154,11 @@ export function UsagePage() {
         ].map(({ label, value, note, phoneNote, icon: Icon }) => (
           <Card
             key={label}
-            className="group flex-row items-center justify-between gap-3 rounded-2xl border-slate-200/80 px-5 py-3.5 shadow-2xs transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md max-sm:relative max-sm:items-start max-sm:px-3.5 max-sm:py-3"
+            className="group flex-row items-center justify-between gap-3 rounded-2xl border-ink-200/80 px-5 py-3.5 shadow-2xs transition duration-300 hover:-translate-y-0.5 hover:border-ink-300 hover:shadow-md max-sm:relative max-sm:items-start max-sm:px-3.5 max-sm:py-3"
           >
             <div className="min-w-0">
               <p className="text-muted-foreground truncate text-xs font-medium max-sm:pr-7 max-sm:whitespace-normal">{label}</p>
-              <p className="mt-1 text-2xl leading-tight font-semibold tracking-tight text-slate-900 tabular-nums">
+              <p className="mt-1 text-2xl leading-tight font-semibold tracking-tight text-ink-900 tabular-nums">
                 {value}
               </p>
               <p className="text-muted-foreground mt-0.5 truncate text-[11px]">
@@ -166,7 +166,7 @@ export function UsagePage() {
                 <span className="max-md:hidden">{note}</span>
               </p>
             </div>
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#eef4fb] text-[#4f709c] ring-1 ring-[#dbe7f4] transition-transform duration-300 ring-inset group-hover:scale-110 max-sm:absolute max-sm:top-2.5 max-sm:right-2.5 max-sm:size-8">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-ink-100 text-[#4f709c] dark:text-[#a0b4cf] ring-1 ring-ink-200 transition-transform duration-300 ring-inset group-hover:scale-110 max-sm:absolute max-sm:top-2.5 max-sm:right-2.5 max-sm:size-8">
               <Icon className="size-5 max-sm:size-4" aria-hidden="true" />
             </span>
           </Card>
@@ -176,41 +176,41 @@ export function UsagePage() {
       {/* Middle Section */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         {/* Daily Activity / Generation volume */}
-        <Card className="rounded-2xl border-slate-200/80 shadow-2xs">
+        <Card className="rounded-2xl border-ink-200/80 shadow-2xs">
           <CardHeader className="pb-3">
-            <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+            <p className="text-[10px] font-bold tracking-wider text-ink-500 uppercase">
               DAILY ACTIVITY
             </p>
-            <h2 className="mt-0.5 text-base font-bold text-slate-900">Generation volume</h2>
+            <h2 className="mt-0.5 text-base font-bold text-ink-900">Generation volume</h2>
           </CardHeader>
           <CardContent className="pt-0">
             {totalActivity === 0 ? (
               <div className="py-2">
-                <div className="relative flex h-48 w-full items-center justify-center border-b border-l border-slate-200 pl-4">
+                <div className="relative flex h-48 w-full items-center justify-center border-b border-l border-ink-200 pl-4">
                   <div className="flex flex-col items-center justify-center text-center">
-                    <BarChart3 className="size-8 stroke-[1.5] text-slate-400" />
-                    <p className="mt-3 text-sm font-semibold text-slate-900">
+                    <BarChart3 className="size-8 stroke-[1.5] text-ink-400" />
+                    <p className="mt-3 text-sm font-semibold text-ink-900">
                       No generation activity yet
                     </p>
-                    <p className="mt-0.5 text-xs text-slate-500">
+                    <p className="mt-0.5 text-xs text-ink-500">
                       Start a workflow to see usage here.
                     </p>
                   </div>
                 </div>
-                <ul className="mt-2 flex items-center justify-center gap-4 text-xs text-slate-600" aria-label="Chart legend">
+                <ul className="mt-2 flex items-center justify-center gap-4 text-xs text-ink-600" aria-label="Chart legend">
                   <li className="flex items-center gap-1.5">
                     <span className="size-2.5 rounded-full bg-[#2563eb]" aria-hidden="true" />
                     Images
                   </li>
                   <li className="flex items-center gap-1.5">
-                    <span className="size-2.5 rounded-full bg-[#94a3b8]" aria-hidden="true" />
+                    <span className="size-2.5 rounded-full bg-ink-400" aria-hidden="true" />
                     Videos
                   </li>
                 </ul>
               </div>
             ) : (
               <div>
-                <div className="flex h-48 items-end gap-px border-b border-l border-slate-200 px-2">
+                <div className="flex h-48 items-end gap-px border-b border-l border-ink-200 px-2">
                   {chart.map((item) => (
                     <div
                       key={item.date}
@@ -222,19 +222,19 @@ export function UsagePage() {
                         style={{ height: `${(item.images / max) * 100}%` }}
                       />
                       <div
-                        className="w-1/2 bg-[#94a3b8]"
+                        className="w-1/2 bg-ink-400"
                         style={{ height: `${(item.videos / max) * 100}%` }}
                       />
                     </div>
                   ))}
                 </div>
-                <ul className="mt-2 flex items-center justify-center gap-4 text-xs text-slate-600" aria-label="Chart legend">
+                <ul className="mt-2 flex items-center justify-center gap-4 text-xs text-ink-600" aria-label="Chart legend">
                   <li className="flex items-center gap-1.5">
                     <span className="size-2.5 rounded-full bg-[#2563eb]" aria-hidden="true" />
                     Images
                   </li>
                   <li className="flex items-center gap-1.5">
-                    <span className="size-2.5 rounded-full bg-[#94a3b8]" aria-hidden="true" />
+                    <span className="size-2.5 rounded-full bg-ink-400" aria-hidden="true" />
                     Videos
                   </li>
                 </ul>
@@ -244,20 +244,20 @@ export function UsagePage() {
         </Card>
 
         {/* AI requests this period */}
-        <Card className="flex flex-col justify-between gap-0 rounded-2xl border-slate-200/80 p-5 shadow-2xs max-md:order-first sm:p-6">
+        <Card className="flex flex-col justify-between gap-0 rounded-2xl border-ink-200/80 p-5 shadow-2xs max-md:order-first sm:p-6">
           <div>
             {/* Top row: Plan badge + Manage link */}
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-slate-100/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-600">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-ink-200/80 bg-ink-100/90 px-2.5 py-0.5 text-[11px] font-medium text-ink-600">
                 <span
-                  className={`size-1.5 rounded-full ${hasPlan ? "bg-emerald-500" : "bg-slate-400"}`}
+                  className={`size-1.5 rounded-full ${hasPlan ? "bg-emerald-500" : "bg-ink-400"}`}
                   aria-hidden="true"
                 />
                 {hasPlan ? data.allowance.planName : "Free plan"}
               </span>
               <Link
                 href="/subscription"
-                className="max-md:text-primary inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                className="max-md:text-primary inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline"
               >
                 Manage <ExternalLink className="size-3" />
               </Link>
@@ -265,26 +265,26 @@ export function UsagePage() {
 
             {/* Title row: Sparkles icon + AI requests this period */}
             <div className="mt-3 flex items-center gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#eff4fa] text-[#4f709c] ring-1 ring-[#dbe7f4] ring-inset">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-ink-100 text-[#4f709c] dark:text-[#a0b4cf] ring-1 ring-ink-200 ring-inset">
                 <Sparkles className="size-5" />
               </span>
-              <h2 className="text-base leading-tight font-bold text-slate-900">
+              <h2 className="text-base leading-tight font-bold text-ink-900">
                 AI requests this period
               </h2>
             </div>
 
             <div className="mt-5 flex items-baseline gap-2">
-              <p className="text-4xl font-bold tracking-tight text-slate-900">
+              <p className="text-4xl font-bold tracking-tight text-ink-900">
                 {data.allowance.used.toLocaleString()}
               </p>
-              <span className="text-sm font-medium text-slate-600">
+              <span className="text-sm font-medium text-ink-600">
                 requests this period
                 {data.allowance.limit > 0 && ` / ${data.allowance.limit.toLocaleString()}`}
               </span>
             </div>
 
-            <div className="mt-3 flex items-center gap-2 text-xs text-slate-600">
-              <CalendarDays className="size-4 shrink-0 text-slate-500" />
+            <div className="mt-3 flex items-center gap-2 text-xs text-ink-600">
+              <CalendarDays className="size-4 shrink-0 text-ink-500" />
               <span>
                 Period ends <span className="max-md:hidden">{data.allowance.resetDate}</span>
                 <span className="md:hidden">{formatResetDate(data.allowance.resetDate)}</span> · {data.allowance.daysRemaining} days remaining
@@ -301,16 +301,16 @@ export function UsagePage() {
               <div
                 className={`mt-4 flex items-center gap-2.5 rounded-xl p-3 text-xs ${
                   data.allowance.atRisk
-                    ? "bg-rose-50 text-rose-700"
-                    : "bg-[#eff4fa] text-slate-700"
+                    ? "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                    : "bg-ink-100 text-ink-700"
                 }`}
               >
-                <Info className="size-4 shrink-0 text-slate-500" />
+                <Info className="size-4 shrink-0 text-ink-500" />
                 <span>{data.allowance.atRisk ? "At risk" : "On track"} based on current usage pace.</span>
               </div>
             ) : (
-              <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-[#eff4fa] p-3 text-xs text-slate-700">
-                <Info className="size-4 shrink-0 text-slate-500" />
+              <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-ink-100 p-3 text-xs text-ink-700">
+                <Info className="size-4 shrink-0 text-ink-500" />
                 {hasPlan ? (
                   <span>No monthly limit. Fair use applies.</span>
                 ) : (
@@ -328,20 +328,20 @@ export function UsagePage() {
       </div>
 
       {/* Bottom Table: Cost detail / By provider */}
-      <Card className="gap-0 overflow-hidden rounded-2xl border-slate-200/80 py-0 shadow-2xs">
+      <Card className="gap-0 overflow-hidden rounded-2xl border-ink-200/80 py-0 shadow-2xs">
         <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-6">
           <div className="flex items-center gap-3.5">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#eff4fa] text-[#4f709c] ring-1 ring-[#dbe7f4] ring-inset">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-ink-100 text-[#4f709c] dark:text-[#a0b4cf] ring-1 ring-ink-200 ring-inset">
               <ReceiptText className="size-5" />
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900">By provider</h2>
-                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-600 tabular-nums">
+                <h2 className="text-base font-bold text-ink-900">By provider</h2>
+                <span className="rounded-full bg-ink-100 px-2.5 py-0.5 text-[11px] font-semibold text-ink-600 tabular-nums">
                   {data.costs.length} {data.costs.length === 1 ? "service" : "services"}
                 </span>
               </div>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-xs text-ink-500">
                 Track requests and estimated expenditure per connected provider
               </p>
             </div>
@@ -350,27 +350,27 @@ export function UsagePage() {
             variant="outline"
             size="sm"
             disabled={data.costs.length === 0}
-            className="h-8.5 gap-1.5 rounded-xl border-slate-200 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 disabled:opacity-40"
+            className="h-8.5 gap-1.5 rounded-xl border-ink-200 text-xs font-medium text-ink-700 shadow-2xs hover:bg-ink-50 disabled:opacity-40"
             onClick={exportCsv}
           >
             <Download className="size-3.5" /> Export CSV
           </Button>
         </div>
         {isPhone && data.costs.length > 0 ? (
-          <ul className="divide-y divide-slate-100 border-t border-slate-200/80">
+          <ul className="divide-y divide-ink-100 border-t border-ink-200/80">
             {data.costs.map((row) => (
               <li key={`${row.provider}-${row.service}`} className="space-y-1.5 px-5 py-3.5 text-sm">
                 <p className="flex justify-between gap-3">
-                  <span className="font-medium text-slate-900">{row.provider}</span>
-                  <span className="text-right text-slate-600">{row.service}</span>
+                  <span className="font-medium text-ink-900">{row.provider}</span>
+                  <span className="text-right text-ink-600">{row.service}</span>
                 </p>
                 <p className="flex justify-between gap-3">
-                  <span className="text-slate-600">Requests: {row.requests.toLocaleString()}</span>
-                  <span className="text-slate-900">{money.format(row.estimatedCostUsd)}</span>
+                  <span className="text-ink-600">Requests: {row.requests.toLocaleString()}</span>
+                  <span className="text-ink-900">{money.format(row.estimatedCostUsd)}</span>
                 </p>
                 <div className="flex items-center gap-2">
                   <Progress value={row.sharePercent} className="h-1.5 flex-1" />
-                  <span className="text-xs text-slate-600">{row.sharePercent}%</span>
+                  <span className="text-xs text-ink-600">{row.sharePercent}%</span>
                 </div>
               </li>
             ))}
@@ -378,7 +378,7 @@ export function UsagePage() {
         ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm max-md:hidden">
-            <thead className="border-y border-slate-200/80 bg-[#f1f5f9] text-[10px] font-bold tracking-wider text-slate-700 uppercase">
+            <thead className="border-y border-ink-200/80 bg-ink-100 text-[10px] font-bold tracking-wider text-ink-700 uppercase">
               <tr>
                 {["PROVIDER", "SERVICE", "REQUESTS", "ESTIMATED COST", "SHARE"].map(
                   (heading) => (
@@ -390,21 +390,21 @@ export function UsagePage() {
               </tr>
             </thead>
             {data.costs.length > 0 && (
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-ink-100">
                 {data.costs.map((row) => (
-                  <tr key={`${row.provider}-${row.service}`} className="hover:bg-slate-50/50">
-                    <td className="px-5 py-3.5 font-medium text-slate-900">{row.provider}</td>
-                    <td className="px-5 py-3.5 text-slate-600">{row.service}</td>
-                    <td className="px-5 py-3.5 text-slate-600">
+                  <tr key={`${row.provider}-${row.service}`} className="hover:bg-ink-50/50">
+                    <td className="px-5 py-3.5 font-medium text-ink-900">{row.provider}</td>
+                    <td className="px-5 py-3.5 text-ink-600">{row.service}</td>
+                    <td className="px-5 py-3.5 text-ink-600">
                       {row.requests.toLocaleString()}
                     </td>
-                    <td className="px-5 py-3.5 text-slate-900">
+                    <td className="px-5 py-3.5 text-ink-900">
                       {money.format(row.estimatedCostUsd)}
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2">
                         <Progress value={row.sharePercent} className="h-1.5 w-20" />
-                        <span className="text-xs text-slate-600">{row.sharePercent}%</span>
+                        <span className="text-xs text-ink-600">{row.sharePercent}%</span>
                       </div>
                     </td>
                   </tr>
@@ -414,8 +414,8 @@ export function UsagePage() {
           </table>
           {data.costs.length === 0 && (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Layers className="size-8 stroke-[1.5] text-slate-300" />
-              <p className="mt-3 text-xs text-slate-600">
+              <Layers className="size-8 stroke-[1.5] text-ink-300" />
+              <p className="mt-3 text-xs text-ink-600">
                 There&apos;s no usage activity in this time range yet.
               </p>
             </div>

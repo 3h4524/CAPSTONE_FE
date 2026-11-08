@@ -36,28 +36,28 @@ export const TestReportMetricCards = ({
       value: String(totalRuns),
       note: "Runs kept on this machine",
       icon: Layers,
-      tone: "bg-slate-100 text-slate-600",
+      tone: "bg-ink-100 text-ink-600",
     },
     {
       label: "Pass rate",
       value: `${passRate}%`,
       note: "Of every test of the latest runs",
       icon: CheckCircle2,
-      tone: "bg-emerald-50 text-emerald-600",
+      tone: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
     },
     {
       label: "Failing tests",
       value: String(failingTests),
       note: "Tests that did not pass at all",
       icon: AlertTriangle,
-      tone: "bg-rose-50 text-rose-500",
+      tone: "bg-rose-50 dark:bg-rose-500/10 text-rose-500",
     },
     {
       label: "Flaky tests",
       value: String(flakyTests),
       note: "Passed only after a retry",
       icon: FlaskConical,
-      tone: "bg-amber-50 text-amber-600",
+      tone: "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400",
     },
   ];
 
@@ -66,10 +66,10 @@ export const TestReportMetricCards = ({
       {cards.map(({ label, value, note, icon: Icon, tone }) => (
         <article
           key={label}
-          className="rounded-lg border border-slate-200 bg-white p-4 shadow-[0_2px_8px_rgba(15,23,42,0.02)] sm:p-5"
+          className="rounded-lg border border-ink-200 bg-card p-4 shadow-[0_2px_8px_rgba(15,23,42,0.02)] sm:p-5"
         >
           <div className="flex items-start justify-between gap-3">
-            <p className="text-[9px] font-bold tracking-[0.13em] text-slate-400 uppercase">
+            <p className="text-[9px] font-bold tracking-[0.13em] text-ink-400 uppercase">
               {label}
             </p>
             <span className={cn("flex size-6 items-center justify-center rounded", tone)}>
@@ -77,13 +77,13 @@ export const TestReportMetricCards = ({
             </span>
           </div>
           {isLoading ? (
-            <div className="mt-3 h-7 w-16 animate-pulse rounded bg-slate-100" />
+            <div className="mt-3 h-7 w-16 animate-pulse rounded bg-ink-100" />
           ) : (
-            <p className="font-display mt-3 text-2xl font-bold tracking-tight text-slate-900">
+            <p className="font-display mt-3 text-2xl font-bold tracking-tight text-ink-900">
               {value}
             </p>
           )}
-          <p className="mt-2 text-[10px] text-slate-400">{note}</p>
+          <p className="mt-2 text-[10px] text-ink-400">{note}</p>
         </article>
       ))}
     </div>

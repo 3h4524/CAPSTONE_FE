@@ -20,7 +20,7 @@ export const AdminUsersTable = ({ users, ...actions }: AdminUsersTableProps) => 
     return (
       <div>
         {users.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-500">No users found.</p>
+          <p className="py-8 text-center text-sm text-ink-500">No users found.</p>
         ) : (
           <ul className="space-y-2.5">
             {users.map((user) => (
@@ -33,32 +33,32 @@ export const AdminUsersTable = ({ users, ...actions }: AdminUsersTableProps) => 
   }
 
   return (
-    <div className="rounded-md border border-slate-200 bg-white shadow-sm">
+    <div className="rounded-md border border-ink-200 bg-card shadow-sm">
       <Table>
         <TableHeader>
-          <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
-            <TableHead className="w-12 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase">
+          <TableRow className="bg-ink-50/80 hover:bg-ink-50/80">
+            <TableHead className="w-12 text-center text-xs font-semibold tracking-wider text-ink-500 uppercase">
               NO.
             </TableHead>
-            <TableHead className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+            <TableHead className="text-xs font-semibold tracking-wider text-ink-500 uppercase">
               USER
             </TableHead>
-            <TableHead className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+            <TableHead className="text-xs font-semibold tracking-wider text-ink-500 uppercase">
               ROLE
             </TableHead>
-            <TableHead className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+            <TableHead className="text-xs font-semibold tracking-wider text-ink-500 uppercase">
               PLAN
             </TableHead>
-            <TableHead className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+            <TableHead className="text-xs font-semibold tracking-wider text-ink-500 uppercase">
               STATUS
             </TableHead>
-            <TableHead className="w-28 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase">
+            <TableHead className="w-28 text-center text-xs font-semibold tracking-wider text-ink-500 uppercase">
               JOBS
             </TableHead>
-            <TableHead className="w-32 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase">
+            <TableHead className="w-32 text-center text-xs font-semibold tracking-wider text-ink-500 uppercase">
               PLAN PRICE
             </TableHead>
-            <TableHead className="w-28 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase">
+            <TableHead className="w-28 text-center text-xs font-semibold tracking-wider text-ink-500 uppercase">
               ACTIONS
             </TableHead>
           </TableRow>
@@ -66,14 +66,14 @@ export const AdminUsersTable = ({ users, ...actions }: AdminUsersTableProps) => 
         <TableBody>
           {users.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center text-slate-500">
+              <TableCell colSpan={8} className="h-24 text-center text-ink-500">
                 No users found.
               </TableCell>
             </TableRow>
           ) : (
             users.map((user, index) => (
-              <TableRow key={user.id} className="hover:bg-slate-50/80">
-                <TableCell className="text-center font-medium text-slate-500">
+              <TableRow key={user.id} className="hover:bg-ink-50/80">
+                <TableCell className="text-center font-medium text-ink-500">
                   {index + 1}
                 </TableCell>
                 <TableCell>
@@ -88,10 +88,10 @@ export const AdminUsersTable = ({ users, ...actions }: AdminUsersTableProps) => 
                 <TableCell>
                   <UserStatus user={user} />
                 </TableCell>
-                <TableCell className="text-center font-medium text-slate-700">
+                <TableCell className="text-center font-medium text-ink-700">
                   {user.totalJobs}
                 </TableCell>
-                <TableCell className="text-center font-medium text-slate-600">
+                <TableCell className="text-center font-medium text-ink-600">
                   {formatVnd(user.monthlyApiCost)}
                 </TableCell>
                 <TableCell className="text-center">

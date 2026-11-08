@@ -30,12 +30,12 @@ const chart = {
   series1: "#2a78d6",
   series2: "#eb6834",
   series3: "#1baf7a",
-  seriesWash: "#cde2fb",
-  surface: "#ffffff",
-  grid: "#e1e0d9",
-  axis: "#898781",
-  inkPrimary: "#0b0b0b",
-  inkSecondary: "#52514e",
+  seriesWash: "color-mix(in srgb, #2a78d6 25%, transparent)",
+  surface: "var(--card)",
+  grid: "var(--ink-200)",
+  axis: "var(--ink-500)",
+  inkPrimary: "var(--ink-900)",
+  inkSecondary: "var(--ink-600)",
 };
 
 const axisTick = { fill: chart.axis, fontSize: 11 };
@@ -50,10 +50,10 @@ function money(value: number) {
 
 function TooltipCard({ value, label, rows }: { value: string; label: string; rows?: string[] }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-md">
-      <p className="text-sm font-semibold text-slate-900 tabular-nums">{value}</p>
-      <p className="text-slate-500">{label}</p>
-      {rows?.map((row) => <p key={row} className="mt-0.5 text-slate-500">{row}</p>)}
+    <div className="rounded-lg border border-ink-200 bg-card px-3 py-2 text-xs shadow-md">
+      <p className="text-sm font-semibold text-ink-900 tabular-nums">{value}</p>
+      <p className="text-ink-500">{label}</p>
+      {rows?.map((row) => <p key={row} className="mt-0.5 text-ink-500">{row}</p>)}
     </div>
   );
 }
@@ -151,18 +151,18 @@ export function ShareDonut({ tiers }: { tiers: MarketShareTiers }) {
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-lg font-bold text-slate-900">{tiers.topFivePercent}%</span>
-          <span className="text-[9px] font-bold tracking-wide text-slate-500 uppercase">{t("marketRadar.topFiveShort", { defaultValue: "Top 5" })}</span>
+          <span className="text-lg font-bold text-ink-900">{tiers.topFivePercent}%</span>
+          <span className="text-[9px] font-bold tracking-wide text-ink-500 uppercase">{t("marketRadar.topFiveShort", { defaultValue: "Top 5" })}</span>
         </div>
       </div>
       <ul className="min-w-0 flex-1 space-y-1.5">
         {data.map((slice) => (
           <li key={slice.name} className="flex items-center justify-between gap-2 text-xs">
-            <span className="flex min-w-0 items-center gap-1.5 text-slate-600">
+            <span className="flex min-w-0 items-center gap-1.5 text-ink-600">
               <span className="size-2.5 shrink-0 rounded-sm" style={{ background: slice.color }} />
               <span className="truncate">{slice.name}</span>
             </span>
-            <span className="font-semibold text-slate-900 tabular-nums">{slice.value}%</span>
+            <span className="font-semibold text-ink-900 tabular-nums">{slice.value}%</span>
           </li>
         ))}
       </ul>
@@ -279,18 +279,18 @@ export function PriceInterestScatter({ points, p25, p75, currency }: { points: M
             height={28}
             iconType="circle"
             iconSize={8}
-            formatter={(value: string) => <span className="text-xs text-slate-600">{value}</span>}
+            formatter={(value: string) => <span className="text-xs text-ink-600">{value}</span>}
           />
           <Scatter name={oldLabel} data={established} fill={chart.series1} stroke={chart.surface} strokeWidth={2} isAnimationActive={false} shape="circle" cursor="pointer" onClick={openListing} />
           <Scatter name={newLabel} data={fresh} fill={chart.series2} stroke={chart.surface} strokeWidth={2} isAnimationActive={false} shape="circle" cursor="pointer" onClick={openListing} />
         </ScatterChart>
       </ResponsiveContainer>
     </div>
-    <p className="mt-1 text-[11px] text-slate-500">
+    <p className="mt-1 text-[11px] text-ink-500">
       {t("marketRadar.listPriceNote", { defaultValue: "Prices are the list prices Etsy reports, before sales and coupons. Shops running a sale charge less at checkout, and buyers abroad may see a converted price with VAT added." })}
     </p>
     {hiddenCount > 0 && (
-      <p className="mt-1 text-[11px] text-slate-400">
+      <p className="mt-1 text-[11px] text-ink-400">
         {t("marketRadar.scatterHidden", { defaultValue: "{{count}} listing(s) priced above {{price}} are not shown; they are in the table.", count: hiddenCount, price: compact(priceCap) })}
       </p>
     )}
@@ -326,10 +326,10 @@ function median(values: number[]) {
 
 function BandStat({ label, value, hint, emphasis }: { label: string; value: string; hint: string; emphasis?: boolean }) {
   return (
-    <div className={`rounded-lg border px-3 py-2 ${emphasis ? "border-blue-200 bg-blue-50" : "border-slate-100 bg-slate-50"}`}>
-      <p className="truncate text-[11px] text-slate-500" title={label}>{label}</p>
-      <p className="text-base font-semibold text-slate-900 tabular-nums">{value}</p>
-      <p className="text-[11px] text-slate-400">{hint}</p>
+    <div className={`rounded-lg border px-3 py-2 ${emphasis ? "border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10" : "border-ink-100 bg-ink-50"}`}>
+      <p className="truncate text-[11px] text-ink-500" title={label}>{label}</p>
+      <p className="text-base font-semibold text-ink-900 tabular-nums">{value}</p>
+      <p className="text-[11px] text-ink-400">{hint}</p>
     </div>
   );
 }

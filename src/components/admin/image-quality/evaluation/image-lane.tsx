@@ -13,22 +13,22 @@ export const ImageLane = ({ title, images, versionLabels, isAfter = false }: Ima
   <div
     className={cn(
       "flex min-w-0 flex-col gap-3 rounded-lg p-4",
-      isAfter ? "bg-sky-50/70 ring-1 ring-sky-100" : "bg-slate-50 ring-1 ring-slate-100"
+      isAfter ? "bg-sky-50/70 dark:bg-sky-500/10 ring-1 ring-sky-100 dark:ring-sky-500/30" : "bg-ink-50 ring-1 ring-ink-100"
     )}
   >
     <h4
       className={cn(
         "flex items-baseline gap-2 text-sm font-semibold",
-        isAfter ? "text-sky-900" : "text-slate-700"
+        isAfter ? "text-sky-900 dark:text-sky-300" : "text-ink-700"
       )}
     >
       {title}
-      <span className="text-xs font-normal text-slate-500">
+      <span className="text-xs font-normal text-ink-500">
         {images.length} {images.length === 1 ? "image" : "images"}
       </span>
     </h4>
     {images.length === 0 ? (
-      <p className="text-[13px] text-slate-500">No image on this side.</p>
+      <p className="text-[13px] text-ink-500">No image on this side.</p>
     ) : (
       <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
         {images.map((image) => (

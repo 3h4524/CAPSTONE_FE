@@ -30,6 +30,8 @@ export const ContentArea = ({ children }: ContentAreaProps) => {
         <Card
           className={cn(
             "mx-auto flex min-h-full w-full flex-col gap-0 overflow-hidden rounded-xl py-0 shadow-sm",
+            // Dark: the shell panel already frames the page, so this card dissolves into it.
+            "dark:lg:rounded-none dark:lg:border-0 dark:lg:bg-transparent dark:lg:shadow-none",
             isBareOnPhone && "max-md:overflow-visible max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none"
           )}
         >

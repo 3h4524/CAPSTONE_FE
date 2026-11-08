@@ -34,13 +34,13 @@ export function TicketDetailDialog({ ticketId, onClose }: TicketDetailDialogProp
     <Dialog open={Boolean(ticketId)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="flex h-[calc(100dvh-40px)] max-h-[720px] w-[calc(100%-40px)] max-w-[840px] flex-col gap-0 overflow-hidden rounded-2xl border-slate-200 bg-white p-0 shadow-2xl duration-200 [--dialog-phone-height:100dvh] motion-reduce:animate-none motion-reduce:transition-none max-md:h-dvh max-md:max-h-none max-md:w-full max-md:max-w-none max-md:rounded-none max-md:border-0"
+        className="flex h-[calc(100dvh-40px)] max-h-[720px] w-[calc(100%-40px)] max-w-[840px] flex-col gap-0 overflow-hidden rounded-2xl border-ink-200 bg-card p-0 shadow-2xl duration-200 [--dialog-phone-height:100dvh] motion-reduce:animate-none motion-reduce:transition-none max-md:h-dvh max-md:max-h-none max-md:w-full max-md:max-w-none max-md:rounded-none max-md:border-0"
       >
         {detailQuery.isPending ? (
           <SectionLoading label="Loading ticket details" />
         ) : detailQuery.isError || !detailQuery.data ? (
           <div className="flex min-h-64 flex-col items-center justify-center gap-4 p-8 text-center">
-            <MessageSquareText className="size-8 text-slate-400" aria-hidden="true" />
+            <MessageSquareText className="size-8 text-ink-400" aria-hidden="true" />
             <div>
               <DialogTitle>Ticket unavailable</DialogTitle>
               <DialogDescription className="mt-2">We could not load this ticket. It may no longer be available.</DialogDescription>
@@ -104,7 +104,7 @@ function TicketDetailContent({
 
   return (
     <>
-      <DialogHeader className="relative gap-3 border-b border-slate-100 px-5 py-5 pr-16 text-left max-md:gap-1 max-md:px-4 max-md:py-2 max-md:pr-4 sm:px-6">
+      <DialogHeader className="relative gap-3 border-b border-ink-100 px-5 py-5 pr-16 text-left max-md:gap-1 max-md:px-4 max-md:py-2 max-md:pr-4 sm:px-6">
         <div className="flex min-h-11 items-center justify-between gap-3 md:hidden">
           <Button type="button" variant="ghost" size="sm" className="-ml-2 px-2 hover:translate-y-0" onClick={onClose}>
             <ArrowLeft className="size-4" aria-hidden="true" />
@@ -112,7 +112,7 @@ function TicketDetailContent({
           </Button>
           <TicketStatusBadge status={ticket.status} />
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold tracking-[0.12em] text-slate-500 max-md:order-last max-md:gap-x-1.5 max-md:gap-y-1 max-md:text-[10px]">
+        <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold tracking-[0.12em] text-ink-500 max-md:order-last max-md:gap-x-1.5 max-md:gap-y-1 max-md:text-[10px]">
           <span>{ticket.ticketNumber}</span>
           <span aria-hidden="true">·</span>
           <span>{CATEGORY_LABELS[ticket.category].toUpperCase()}</span>
@@ -127,7 +127,7 @@ function TicketDetailContent({
         </Button>
       </DialogHeader>
 
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto bg-white">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto bg-card">
         <div className="space-y-6 px-5 py-6 max-md:space-y-4 max-md:px-4 max-md:py-4 sm:px-6">
           <ConversationItem
             author="You"
@@ -152,7 +152,7 @@ function TicketDetailContent({
         </div>
       </div>
 
-      <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-5 py-5 max-md:p-2 sm:px-6">
+      <div className="shrink-0 border-t border-ink-200 bg-ink-50 px-5 py-5 max-md:p-2 sm:px-6">
         {canReply ? (
           <form
             className="flex flex-col"
@@ -163,10 +163,10 @@ function TicketDetailContent({
             }))}
           >
             <div className="mb-3 flex items-center justify-between max-md:sr-only">
-              <label htmlFor="ticket-reply" className="text-[15px] font-semibold text-slate-900">Add a reply</label>
+              <label htmlFor="ticket-reply" className="text-[15px] font-semibold text-ink-900">Add a reply</label>
             </div>
             
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all focus-within:ring-1 focus-within:ring-slate-300 max-md:flex max-md:flex-wrap max-md:items-end max-md:rounded-3xl max-md:p-0.5">
+            <div className="overflow-hidden rounded-xl border border-ink-200 bg-card shadow-sm transition-all focus-within:ring-1 focus-within:ring-ink-300 max-md:flex max-md:flex-wrap max-md:items-end max-md:rounded-3xl max-md:p-0.5">
               {files.length > 0 && (
                 <div className="p-4 pb-0 max-md:order-first max-md:w-full max-md:p-2 max-md:pb-0">
                   <TicketDropzone files={files} onChange={setFiles} disabled={replyMutation.isPending} />
@@ -191,9 +191,9 @@ function TicketDetailContent({
                   }
                 }}
               />
-              <div className="flex items-center justify-between border-t border-slate-100 bg-white p-3 max-md:contents">
+              <div className="flex items-center justify-between border-t border-ink-100 bg-card p-3 max-md:contents">
                 <div className="flex items-center gap-3 max-md:order-first">
-                  <label aria-label="Attach a file" className="flex h-9 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-100 max-md:size-10 max-md:rounded-full max-md:px-0">
+                  <label aria-label="Attach a file" className="flex h-9 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 text-[13px] font-semibold text-ink-600 transition-colors hover:bg-ink-100 max-md:size-10 max-md:rounded-full max-md:px-0">
                     <Paperclip className="size-4 max-md:size-5" aria-hidden="true" />
                     <span className="max-md:sr-only">Attach</span>
                     <input
@@ -208,9 +208,9 @@ function TicketDetailContent({
                       }}
                     />
                   </label>
-                  <span className="hidden text-xs text-slate-500 sm:inline">Typical response within 1 business day</span>
+                  <span className="hidden text-xs text-ink-500 sm:inline">Typical response within 1 business day</span>
                 </div>
-                <Button type="submit" aria-label="Send reply" className="h-10 gap-2 rounded-lg bg-[#1e293b] px-6 font-medium text-white shadow-sm hover:bg-slate-800 max-md:order-3 max-md:size-10 max-md:rounded-full max-md:p-0 max-md:disabled:bg-slate-200 max-md:disabled:text-slate-400 max-md:disabled:opacity-100 [@media(pointer:coarse)]:min-h-10" disabled={replyMutation.isPending || (!replyTextValue.trim() && files.length === 0)}>
+                <Button type="submit" aria-label="Send reply" className="h-10 gap-2 rounded-lg bg-ink-800 px-6 font-medium text-card shadow-sm hover:bg-ink-900 max-md:order-3 max-md:size-10 max-md:rounded-full max-md:p-0 max-md:disabled:bg-ink-200 max-md:disabled:text-ink-400 max-md:disabled:opacity-100 [@media(pointer:coarse)]:min-h-10" disabled={replyMutation.isPending || (!replyTextValue.trim() && files.length === 0)}>
                   {replyMutation.isPending ? <Spinner aria-hidden="true" className="size-4" /> : <Send aria-hidden="true" className="size-4" />}
                   <span className="max-md:sr-only">Send reply</span>
                 </Button>
@@ -225,7 +225,7 @@ function TicketDetailContent({
             onRate={(rating) => ratingMutation.mutate({ id: ticket.id, rating })}
           />
         ) : (
-          <p className="py-2 text-center text-sm text-slate-600">This ticket is closed and can no longer receive replies.</p>
+          <p className="py-2 text-center text-sm text-ink-600">This ticket is closed and can no longer receive replies.</p>
         )}
       </div>
     </>
@@ -251,21 +251,21 @@ function ConversationItem({
 }) {
   return (
     <div className={cn("flex w-full gap-4 max-md:gap-2.5", !support && "flex-row-reverse")}>
-      <div className={cn("mt-1 flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold max-md:size-8 max-md:text-xs", support ? "bg-slate-200 text-slate-700" : "bg-blue-100 text-blue-700")}>
+      <div className={cn("mt-1 flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold max-md:size-8 max-md:text-xs", support ? "bg-ink-200 text-ink-700" : "bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300")}>
         {initials}
       </div>
       <div className={cn("flex max-w-[85%] min-w-0 flex-col max-md:max-w-none max-md:flex-1", !support ? "items-end" : "items-start")}>
         <div className={cn("mb-1.5 flex max-w-full items-baseline gap-2", !support && "flex-row-reverse")}>
-          <span className="text-[15px] font-bold text-slate-900 max-md:min-w-0 max-md:truncate max-md:text-sm">{author}</span>
-          <span className="text-[13px] font-medium text-slate-500 max-md:shrink-0 max-md:text-xs max-md:whitespace-nowrap">{formatTime(createdAt)}</span>
+          <span className="text-[15px] font-bold text-ink-900 max-md:min-w-0 max-md:truncate max-md:text-sm">{author}</span>
+          <span className="text-[13px] font-medium text-ink-500 max-md:shrink-0 max-md:text-xs max-md:whitespace-nowrap">{formatTime(createdAt)}</span>
         </div>
         <div 
           className={cn(
             "max-w-full min-w-0 rounded-2xl p-4 text-left text-[15px] leading-relaxed whitespace-pre-wrap shadow-[0_1px_2px_rgba(0,0,0,0.05)] max-md:px-3 max-md:py-2 max-md:text-sm",
             !message && "max-md:p-1.5",
             !support 
-              ? "rounded-tr-sm bg-[#eff6ff] text-slate-800" 
-              : "rounded-tl-sm border border-slate-100 bg-white text-slate-800"
+              ? "rounded-tr-sm bg-ink-100 text-ink-800" 
+              : "rounded-tl-sm border border-ink-100 bg-card text-ink-800"
           )}
         >
           {message}
@@ -274,15 +274,15 @@ function ConversationItem({
               {attachments.map((attachment) => {
                 const isImage = attachment.mimeType?.includes("image") || attachment.fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
                 return isImage ? (
-                  <div key={attachment.id} className="relative max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-sm">
-                    <a href={attachment.downloadUrl} target="_blank" rel="noreferrer" className="block max-h-[250px] overflow-hidden bg-slate-50">
+                  <div key={attachment.id} className="relative max-w-sm overflow-hidden rounded-xl border border-ink-200 bg-card text-left shadow-sm">
+                    <a href={attachment.downloadUrl} target="_blank" rel="noreferrer" className="block max-h-[250px] overflow-hidden bg-ink-50">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={attachment.downloadUrl} alt={attachment.fileName} className="w-full object-cover transition-opacity hover:opacity-90" />
                     </a>
-                    <div className="flex items-center justify-between gap-2 border-t border-slate-100 bg-white p-3 max-md:p-2">
+                    <div className="flex items-center justify-between gap-2 border-t border-ink-100 bg-card p-3 max-md:p-2">
                        <div className="flex min-w-0 flex-col">
-                         <span className="max-w-[200px] truncate text-[13px] font-semibold text-slate-900 max-md:max-w-none">{attachment.fileName}</span>
-                         <span className="text-[11px] font-medium tracking-wide text-slate-500">Attachment</span>
+                         <span className="max-w-[200px] truncate text-[13px] font-semibold text-ink-900 max-md:max-w-none">{attachment.fileName}</span>
+                         <span className="text-[11px] font-medium tracking-wide text-ink-500">Attachment</span>
                        </div>
                        <Button type="button" variant="ghost" size="icon" className="size-8" onClick={() => onDownload(attachment)}>
                           <Download className="size-4" />
@@ -290,7 +290,7 @@ function ConversationItem({
                     </div>
                   </div>
                 ) : (
-                  <Button key={attachment.id} type="button" variant="outline" size="sm" className="max-w-full bg-white text-slate-700 hover:translate-y-0" onClick={() => onDownload(attachment)}>
+                  <Button key={attachment.id} type="button" variant="outline" size="sm" className="max-w-full bg-card text-ink-700 hover:translate-y-0" onClick={() => onDownload(attachment)}>
                     <Download className="size-4" aria-hidden="true" />
                     <span className="truncate">{attachment.fileName}</span>
                   </Button>
@@ -306,9 +306,9 @@ function ConversationItem({
 
 function RatingPanel({ rating, pending, onRate }: { rating: number | null; pending: boolean; onRate: (rating: number) => void }) {
   return (
-    <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 text-center">
-      <p className="font-semibold text-slate-800">How was your support experience?</p>
-      <p className="mt-1 text-sm text-slate-600">Your feedback helps us improve.</p>
+    <div className="rounded-xl border border-emerald-100 dark:border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-500/10 p-4 text-center">
+      <p className="font-semibold text-ink-800">How was your support experience?</p>
+      <p className="mt-1 text-sm text-ink-600">Your feedback helps us improve.</p>
       <div className="mt-3 flex justify-center gap-1" aria-label={rating ? `Rated ${rating} out of 5` : "Rate from 1 to 5 stars"}>
         {[1, 2, 3, 4, 5].map((value) => (
           <button
@@ -319,11 +319,11 @@ function RatingPanel({ rating, pending, onRate }: { rating: number | null; pendi
             onClick={() => onRate(value)}
             aria-label={`${value} star${value === 1 ? "" : "s"}`}
           >
-            <Star className={`size-6 ${rating && value <= rating ? "fill-amber-400 text-amber-500" : "text-slate-400"}`} aria-hidden="true" />
+            <Star className={`size-6 ${rating && value <= rating ? "fill-amber-400 text-amber-500" : "text-ink-400"}`} aria-hidden="true" />
           </button>
         ))}
       </div>
-      {rating ? <p className="mt-1 text-sm font-medium text-emerald-700">You rated this ticket {rating}/5.</p> : null}
+      {rating ? <p className="mt-1 text-sm font-medium text-emerald-700 dark:text-emerald-300">You rated this ticket {rating}/5.</p> : null}
     </div>
   );
 }

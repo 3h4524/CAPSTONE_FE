@@ -5,13 +5,17 @@ import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import { FormInputField } from "@/components/commons/forms/form-input-field";
 import { FormTextareaField } from "@/components/commons/forms/form-textarea-field";
 import type { ProfileFormValues } from "@/schemas/profile";
+import type { AccountVariant } from "@/types/profile";
 
 type PersonalFormProps = {
   register: UseFormRegister<ProfileFormValues>;
   errors: FieldErrors<ProfileFormValues>;
+  variant?: AccountVariant;
 };
 
-export const PersonalForm = ({ register, errors }: PersonalFormProps) => {
+export const PersonalForm = ({ register, errors, variant = "seller" }: PersonalFormProps) => {
+  const isAdmin = variant === "admin";
+
   return (
     <section className="space-y-3">
       <h2 className="text-sm font-semibold">Personal information</h2>
@@ -28,7 +32,7 @@ export const PersonalForm = ({ register, errors }: PersonalFormProps) => {
       />
       <FormInputField
         id="email"
-        label="Business email"
+        label={isAdmin ? "Email" : "Business email"}
         type="email"
         placeholder="you@example.com"
         registration={register("email")}
@@ -38,23 +42,28 @@ export const PersonalForm = ({ register, errors }: PersonalFormProps) => {
         maxLength={254}
         required
       />
-      <FormInputField
-        id="shopName"
-        label="Shop name"
-        type="text"
-        placeholder="Your shop name"
-        registration={register("shopName")}
-        error={errors.shopName}
-        maxLength={100}
-      />
-      <FormTextareaField
-        id="shopDescription"
-        label="Shop description"
-        placeholder="A short description of your shop"
-        registration={register("shopDescription")}
-        error={errors.shopDescription}
-        rows={2}
-      />
+      {/* Admins run no shop, so the shop fields are seller-only. */}
+      {!isAdmin && (
+        <>
+          <FormInputField
+            id="shopName"
+            label="Shop name"
+            type="text"
+            placeholder="Your shop name"
+            registration={register("shopName")}
+            error={errors.shopName}
+            maxLength={100}
+          />
+          <FormTextareaField
+            id="shopDescription"
+            label="Shop description"
+            placeholder="A short description of your shop"
+            registration={register("shopDescription")}
+            error={errors.shopDescription}
+            rows={2}
+          />
+        </>
+      )}
     </section>
   );
 };

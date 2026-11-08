@@ -31,7 +31,7 @@ export const USER_DIALOG_ON_PHONE =
 
 // Keeps a long form's actions on screen while it scrolls under them.
 export const USER_DIALOG_FOOTER_ON_PHONE =
-  "max-md:sticky max-md:bottom-0 max-md:z-10 max-md:-mx-5 max-md:mt-4 max-md:border-t max-md:bg-slate-50 max-md:px-5 max-md:py-3";
+  "max-md:sticky max-md:bottom-0 max-md:z-10 max-md:-mx-5 max-md:mt-4 max-md:border-t max-md:bg-ink-50 max-md:px-5 max-md:py-3";
 
 // The pieces of a user, shared by the desktop table's row and the phone's card.
 
@@ -43,17 +43,17 @@ export const UserRoles = ({ user }: { user: AdminUserDto }) => (
                           key={role} 
                           className={cn(
                             "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium",
-                            (role.toLowerCase() === "admin" || role.toLowerCase() === "super admin") && "border-rose-200 bg-rose-50 text-rose-700",
-                            role.toLowerCase() === "seller" && "border-emerald-200 bg-emerald-50 text-emerald-700",
-                            role.toLowerCase() === "user" && "border-slate-200 bg-slate-50 text-slate-700",
-                            !["admin", "super admin", "seller", "user"].includes(role.toLowerCase()) && "border-slate-200 bg-slate-50 text-slate-700"
+                            (role.toLowerCase() === "admin" || role.toLowerCase() === "super admin") && "border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300",
+                            role.toLowerCase() === "seller" && "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+                            role.toLowerCase() === "user" && "border-ink-200 bg-ink-50 text-ink-700",
+                            !["admin", "super admin", "seller", "user"].includes(role.toLowerCase()) && "border-ink-200 bg-ink-50 text-ink-700"
                           )}
                         >
                           {role}
                         </span>
                       ))
                     ) : (
-                      <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-500">
+                      <span className="inline-flex items-center rounded-md border border-ink-200 bg-ink-50 px-2 py-0.5 text-xs font-medium text-ink-500">
                         User
                       </span>
                     )}
@@ -64,10 +64,10 @@ export const UserPlan = ({ user }: { user: AdminUserDto }) => (
   <span
                     className={cn(
                       "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium",
-                      user.plan.toLowerCase() === "free" && "border-slate-200 bg-slate-50 text-slate-600",
-                      user.plan.toLowerCase() === "starter" && "border-sky-200 bg-sky-50 text-sky-700",
-                      user.plan.toLowerCase() === "creator" && "border-indigo-200 bg-indigo-50 text-indigo-700",
-                      user.plan.toLowerCase() === "studio" && "border-violet-200 bg-violet-50 text-violet-700"
+                      user.plan.toLowerCase() === "free" && "border-ink-200 bg-ink-50 text-ink-600",
+                      user.plan.toLowerCase() === "starter" && "border-sky-200 dark:border-sky-500/30 bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300",
+                      user.plan.toLowerCase() === "creator" && "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300",
+                      user.plan.toLowerCase() === "studio" && "border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300"
                     )}
                   >
                     {user.plan}
@@ -78,9 +78,9 @@ export const UserStatus = ({ user }: { user: AdminUserDto }) => (
   <span
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium",
-                      user.accountStatus.toLowerCase() === "active" && "border-emerald-200 bg-emerald-50 text-emerald-700",
-                      user.accountStatus.toLowerCase() === "pending_verification" && "border-amber-200 bg-amber-50 text-amber-700",
-                      user.accountStatus.toLowerCase() === "suspended" && "border-rose-200 bg-rose-50 text-rose-700"
+                      user.accountStatus.toLowerCase() === "active" && "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+                      user.accountStatus.toLowerCase() === "pending_verification" && "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300",
+                      user.accountStatus.toLowerCase() === "suspended" && "border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300"
                     )}
                   >
                     <span className={cn(
@@ -96,7 +96,7 @@ export const UserStatus = ({ user }: { user: AdminUserDto }) => (
 export const UserActions = ({ user, onView, onEdit, onSuspend, onUnlock, onCopyId }: AdminUserActions & { user: AdminUserDto }) => (
   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-slate-900 max-md:size-10">
+                      <Button variant="ghost" className="h-8 w-8 p-0 text-ink-500 hover:text-ink-900 max-md:size-10">
                         <span className="sr-only">Open menu</span>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
@@ -104,26 +104,26 @@ export const UserActions = ({ user, onView, onEdit, onSuspend, onUnlock, onCopyI
                     <DropdownMenuContent align="end" className="w-[160px]">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem onClick={() => onCopyId(user.id)} className="cursor-pointer">
-                        <Copy className="mr-2 h-4 w-4 text-slate-400" />
+                        <Copy className="mr-2 h-4 w-4 text-ink-400" />
                         Copy User ID
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => onView(user)} className="cursor-pointer">
-                        <Eye className="mr-2 h-4 w-4 text-slate-400" />
+                        <Eye className="mr-2 h-4 w-4 text-ink-400" />
                         View details
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onEdit(user)} className="cursor-pointer">
-                        <Edit2 className="mr-2 h-4 w-4 text-slate-400" />
+                        <Edit2 className="mr-2 h-4 w-4 text-ink-400" />
                         Edit user
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {user.accountStatus.toLowerCase() === "suspended" ? (
-                        <DropdownMenuItem onClick={() => onUnlock(user)} className="cursor-pointer text-emerald-600 focus:bg-emerald-50 focus:text-emerald-700">
+                        <DropdownMenuItem onClick={() => onUnlock(user)} className="cursor-pointer text-emerald-600 dark:text-emerald-400 focus:bg-emerald-50 dark:focus:bg-emerald-500/10 focus:text-emerald-700 dark:focus:text-emerald-300">
                           <ShieldCheck className="mr-2 h-4 w-4" />
                           Unlock account
                         </DropdownMenuItem>
                       ) : (
-                        <DropdownMenuItem onClick={() => onSuspend(user)} className="cursor-pointer text-rose-600 focus:bg-rose-50 focus:text-rose-700">
+                        <DropdownMenuItem onClick={() => onSuspend(user)} className="cursor-pointer text-rose-600 dark:text-rose-400 focus:bg-rose-50 dark:focus:bg-rose-500/10 focus:text-rose-700 dark:focus:text-rose-300">
                           <ShieldAlert className="mr-2 h-4 w-4" />
                           Suspend account
                         </DropdownMenuItem>
@@ -136,7 +136,7 @@ export const UserIdentity = ({ user }: { user: AdminUserDto }) => (
   <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9 border-0">
                       <AvatarImage src={user.avatarUrl || ""} alt={user.fullName} />
-                      <AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 text-xs font-bold text-slate-700">
+                      <AvatarFallback className="bg-gradient-to-br from-ink-100 to-ink-200 text-xs font-bold text-ink-700">
                         {user.fullName
                           .split(" ")
                           .map((n) => n[0])
@@ -146,15 +146,15 @@ export const UserIdentity = ({ user }: { user: AdminUserDto }) => (
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-slate-900">{user.fullName}</span>
-                      <span className="text-xs text-slate-500">{user.email}</span>
+                      <span className="text-sm font-medium text-ink-900">{user.fullName}</span>
+                      <span className="text-xs text-ink-500">{user.email}</span>
                     </div>
                   </div>
 );
 
 /** A user on the phone, where eight columns have no room. */
 export const AdminUserCard = ({ user, actions }: { user: AdminUserDto; actions: AdminUserActions }) => (
-  <li className="space-y-2.5 rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-2xs">
+  <li className="space-y-2.5 rounded-xl border border-ink-200/80 bg-card p-3.5 shadow-2xs">
     <div className="flex items-start gap-2">
       <button
         type="button"
@@ -171,10 +171,10 @@ export const AdminUserCard = ({ user, actions }: { user: AdminUserDto; actions: 
       <UserPlan user={user} />
       <UserStatus user={user} />
     </div>
-    <p className="text-xs text-slate-500">
-      <span className="font-medium text-slate-700 tabular-nums">{user.totalJobs.toLocaleString()}</span>{" "}
+    <p className="text-xs text-ink-500">
+      <span className="font-medium text-ink-700 tabular-nums">{user.totalJobs.toLocaleString()}</span>{" "}
       {user.totalJobs === 1 ? "job" : "jobs"} ·{" "}
-      <span className="font-medium text-slate-700 tabular-nums">{formatVnd(user.monthlyApiCost)}</span>/month
+      <span className="font-medium text-ink-700 tabular-nums">{formatVnd(user.monthlyApiCost)}</span>/month
     </p>
   </li>
 );

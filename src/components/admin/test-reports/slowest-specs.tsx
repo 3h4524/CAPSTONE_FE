@@ -33,7 +33,7 @@ export const TestReportSlowestSpecs = ({
 
   if (slowest.length === 0) {
     return (
-      <p className="px-5 py-10 text-center text-xs text-slate-400">
+      <p className="px-5 py-10 text-center text-xs text-ink-400">
         The run covered no test.
       </p>
     );
@@ -42,15 +42,15 @@ export const TestReportSlowestSpecs = ({
   const slowestTime = slowest[0]?.durationMs ?? 1;
 
   return (
-    <ul className="divide-y divide-slate-100">
+    <ul className="divide-y divide-ink-100">
       {slowest.map((spec) => (
         <li key={`${spec.file}:${spec.title}`} className="px-5 py-3">
           <div className="flex items-center gap-3">
             <TestReportStatusBadge status={spec.status} className="shrink-0" />
-            <span className="min-w-0 flex-1 truncate text-xs text-slate-700">
+            <span className="min-w-0 flex-1 truncate text-xs text-ink-700">
               {spec.title}
             </span>
-            <span className="flex shrink-0 items-center gap-1 font-mono text-[11px] text-slate-500">
+            <span className="flex shrink-0 items-center gap-1 font-mono text-[11px] text-ink-500">
               <Timer className="size-3" />
               {spec.durationMs < 1000
                 ? `${spec.durationMs} ms`
@@ -58,13 +58,13 @@ export const TestReportSlowestSpecs = ({
             </span>
           </div>
           <div className="mt-1.5 flex items-center gap-2">
-            <div className="h-1 flex-1 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-1 flex-1 overflow-hidden rounded-full bg-ink-100">
               <div
-                className="h-full rounded-full bg-slate-400"
+                className="h-full rounded-full bg-ink-400"
                 style={{ width: `${Math.max(4, (spec.durationMs / slowestTime) * 100)}%` }}
               />
             </div>
-            <span className="shrink-0 font-mono text-[10px] text-slate-400">
+            <span className="shrink-0 font-mono text-[10px] text-ink-400">
               {spec.file}
             </span>
           </div>

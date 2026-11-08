@@ -25,7 +25,7 @@ export const ImageGallery = ({ comparison, versions }: ImageGalleryProps) => {
       description="The images behind the comparison, before on the left and after on the right. Transparent artwork sits on grey. A note is the check by eye where it disagreed with OCR."
     >
       {lanes.length === 0 ? (
-        <p className="px-6 py-12 text-center text-sm text-slate-500">
+        <p className="px-6 py-12 text-center text-sm text-ink-500">
           No image matches the versions picked above.
         </p>
       ) : (

@@ -152,60 +152,60 @@ export function SupportCenter() {
   };
 
   return (
-    <div className="w-full min-w-0 p-4 text-[#161c22] sm:p-6">
+    <div className="w-full min-w-0 p-4 text-foreground sm:p-6">
       <header className="mb-6">
         <h1 className="font-display text-3xl font-semibold tracking-tight">Support center</h1>
-        <p className="mt-1 max-w-2xl text-sm text-slate-600">
+        <p className="mt-1 max-w-2xl text-sm text-ink-600">
           Find setup guidance, contact the support team, and track your requests.
         </p>
       </header>
 
       <div>
         <section
-          className="rounded-xl border border-slate-200 bg-white px-5 py-5 shadow-sm max-md:p-4 sm:px-6"
+          className="rounded-xl border border-ink-200 bg-card px-5 py-5 shadow-sm max-md:p-4 sm:px-6"
           aria-labelledby="support-help-heading"
         >
           <div className="flex items-start gap-4 max-md:items-center max-md:gap-3">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#eef2fa] text-[#273750] max-md:size-10">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-ink-100 text-primary max-md:size-10">
               <LifeBuoy className="size-[18px]" aria-hidden="true" />
             </span>
             <div>
               <h2 id="support-help-heading" className="font-display text-xl font-semibold tracking-tight max-md:text-lg">
                 How can we help?
               </h2>
-              <p className="mt-1 max-w-xl text-sm leading-5 text-slate-600 max-md:mt-0 max-md:text-xs">
+              <p className="mt-1 max-w-xl text-sm leading-5 text-ink-600 max-md:mt-0 max-md:text-xs">
                 Choose a quick guide for the questions sellers ask most often.
               </p>
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2 max-md:mt-4 max-md:flex-col max-md:flex-nowrap max-md:gap-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl max-md:border max-md:border-slate-200 max-sm:pl-0 sm:pl-[60px]" aria-label="Popular help topics">
+          <div className="mt-5 flex flex-wrap gap-2 max-md:mt-4 max-md:flex-col max-md:flex-nowrap max-md:gap-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl max-md:border max-md:border-ink-200 max-sm:pl-0 sm:pl-[60px]" aria-label="Popular help topics">
             {HELP_TOPICS.map((topic) => (
               <button
                 key={topic.id}
                 type="button"
                 aria-haspopup="dialog"
-                className="group inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-[border-color,background-color,color,transform] hover:-translate-y-0.5 hover:border-slate-300 hover:bg-[#f7f9fd] hover:text-[#273750] focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none active:translate-y-0 max-md:min-h-15 max-md:w-full max-md:gap-3 max-md:rounded-none max-md:border-0 max-md:px-3 max-md:text-left"
+                className="group inline-flex min-h-10 items-center gap-2 rounded-lg border border-ink-200 bg-card px-3 text-sm font-medium text-ink-700 transition-[border-color,background-color,color,transform] hover:-translate-y-0.5 hover:border-ink-300 hover:bg-ink-50 hover:text-primary focus-visible:ring-3 focus-visible:ring-primary/20 focus-visible:outline-none active:translate-y-0 max-md:min-h-15 max-md:w-full max-md:gap-3 max-md:rounded-none max-md:border-0 max-md:px-3 max-md:text-left"
                 onClick={() => setSelectedHelpTopic(topic)}
               >
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#eef2fa] text-[#273750] md:hidden" aria-hidden="true">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-ink-100 text-primary md:hidden" aria-hidden="true">
                   <topic.icon className="size-4" />
                 </span>
                 <span className="max-md:min-w-0 max-md:flex-1">
-                  <span className="max-md:block max-md:font-semibold max-md:text-slate-900">{topic.title}</span>
-                  <span className="text-xs font-normal text-slate-500 max-md:block max-md:truncate md:hidden">{topic.description}</span>
+                  <span className="max-md:block max-md:font-semibold max-md:text-ink-900">{topic.title}</span>
+                  <span className="text-xs font-normal text-ink-500 max-md:block max-md:truncate md:hidden">{topic.description}</span>
                 </span>
                 <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 max-md:hidden" aria-hidden="true" />
-                <ChevronRight className="size-4 shrink-0 text-slate-400 md:hidden" aria-hidden="true" />
+                <ChevronRight className="size-4 shrink-0 text-ink-400 md:hidden" aria-hidden="true" />
               </button>
             ))}
           </div>
         </section>
 
-        <section className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm" aria-labelledby="support-tickets-heading">
+        <section className="mt-4 overflow-hidden rounded-xl border border-ink-200 bg-card shadow-sm" aria-labelledby="support-tickets-heading">
           <div className="flex flex-col gap-4 px-5 py-4 max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:items-center max-md:gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-bold tracking-[0.16em] text-slate-500">YOUR REQUESTS</p>
+              <p className="text-[10px] font-bold tracking-[0.16em] text-ink-500">YOUR REQUESTS</p>
               <h2 id="support-tickets-heading" className="font-display mt-1 text-xl font-semibold tracking-tight max-md:text-lg">
                 Support tickets
               </h2>
@@ -213,10 +213,10 @@ export function SupportCenter() {
             <div className="flex flex-col gap-3 max-md:contents sm:flex-row sm:items-center">
               {isPhone ? (
                 <Select value={view} onValueChange={(next) => selectView(next as TicketView)}>
-                  <SelectTrigger aria-label="Filter tickets" className="w-full bg-white max-md:col-span-2 max-md:row-start-2">
+                  <SelectTrigger aria-label="Filter tickets" className="w-full bg-card max-md:col-span-2 max-md:row-start-2">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="w-(--radix-select-trigger-width) bg-white">
+                  <SelectContent position="popper" className="w-(--radix-select-trigger-width) bg-card">
                     {TICKET_VIEWS.map((item) => (
                       <SelectItem key={item} value={item}>
                         {TICKET_VIEW_LABELS[item]}
@@ -232,7 +232,7 @@ export function SupportCenter() {
                     type="button"
                     aria-pressed={view === item}
                     className={cn(
-                      "min-h-8 rounded-full px-3.5 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none",
+                      "min-h-8 rounded-full px-3.5 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-3 focus-visible:ring-primary/20 focus-visible:outline-none",
                       view === item
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -253,21 +253,21 @@ export function SupportCenter() {
           {ticketsQuery.isPending ? (
             <SectionLoading label="Loading tickets" />
           ) : ticketsQuery.isError ? (
-            <div className="flex min-h-72 flex-col items-center justify-center border-t border-slate-200 p-8 text-center">
-              <LifeBuoy className="size-8 text-slate-400" aria-hidden="true" />
+            <div className="flex min-h-72 flex-col items-center justify-center border-t border-ink-200 p-8 text-center">
+              <LifeBuoy className="size-8 text-ink-400" aria-hidden="true" />
               <h3 className="mt-4 font-semibold">Tickets could not be loaded</h3>
-              <p className="mt-1 text-sm text-slate-500">Try refreshing this list.</p>
-              <Button variant="outline" className="mt-4 min-h-10 border-slate-300 px-4 hover:translate-y-0" onClick={() => ticketsQuery.refetch()}>
+              <p className="mt-1 text-sm text-ink-500">Try refreshing this list.</p>
+              <Button variant="outline" className="mt-4 min-h-10 border-ink-300 px-4 hover:translate-y-0" onClick={() => ticketsQuery.refetch()}>
                 <RefreshCw aria-hidden="true" />Refresh
               </Button>
             </div>
           ) : ticketsQuery.data.items.length === 0 ? (
-            <div className="flex min-h-72 flex-col items-center justify-center border-t border-slate-200 p-8 text-center">
-              <span className="flex size-12 items-center justify-center rounded-xl bg-[#f1f4fa]">
-                <Inbox className="size-5 text-slate-500" aria-hidden="true" />
+            <div className="flex min-h-72 flex-col items-center justify-center border-t border-ink-200 p-8 text-center">
+              <span className="flex size-12 items-center justify-center rounded-xl bg-ink-100">
+                <Inbox className="size-5 text-ink-500" aria-hidden="true" />
               </span>
               <h3 className="font-display mt-4 text-xl font-semibold">No tickets here</h3>
-              <p className="mt-1 max-w-sm text-sm text-slate-500">
+              <p className="mt-1 max-w-sm text-sm text-ink-500">
                 {view === "all" ? "New conversations will appear in this list." : `You do not have any ${view} tickets.`}
               </p>
               <Button className="mt-5 min-h-10 px-4 hover:translate-y-0" onClick={() => openComposer()}>
@@ -278,15 +278,15 @@ export function SupportCenter() {
             <>
               <TicketTable tickets={ticketsQuery.data.items} onOpen={openTicket} selectedTicketId={ticketId} localReadState={localReadState} setLocalReadState={setLocalReadState} />
               <TicketCards tickets={ticketsQuery.data.items} onOpen={openTicket} selectedTicketId={ticketId} localReadState={localReadState} setLocalReadState={setLocalReadState} />
-              <div className="flex min-h-14 items-center justify-between gap-3 border-t border-slate-200 px-5 py-2 sm:px-7">
-                <p className="text-xs text-slate-500">
+              <div className="flex min-h-14 items-center justify-between gap-3 border-t border-ink-200 px-5 py-2 sm:px-7">
+                <p className="text-xs text-ink-500">
                   Showing {ticketsQuery.data.items.length} of {ticketsQuery.data.totalCount} ticket{ticketsQuery.data.totalCount === 1 ? "" : "s"}
                 </p>
                 <div className="flex items-center gap-1">
                   <Button variant="ghost" size="icon" className="size-9 rounded-lg hover:translate-y-0" disabled={pageNumber <= 1} onClick={() => setPageNumber((page) => page - 1)} aria-label="Previous page">
                     <ChevronLeft aria-hidden="true" />
                   </Button>
-                  <span className="min-w-14 text-center text-xs font-medium text-slate-600 tabular-nums">
+                  <span className="min-w-14 text-center text-xs font-medium text-ink-600 tabular-nums">
                     {pageNumber} / {Math.max(1, ticketsQuery.data.totalPages)}
                   </span>
                   <Button variant="ghost" size="icon" className="size-9 rounded-lg hover:translate-y-0" disabled={pageNumber >= ticketsQuery.data.totalPages} onClick={() => setPageNumber((page) => page + 1)} aria-label="Next page">
@@ -308,7 +308,7 @@ export function SupportCenter() {
         {selectedHelpTopic ? (
           <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
             <DialogHeader>
-              <p className="text-[10px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+              <p className="text-[10px] font-semibold tracking-[0.16em] text-ink-500 uppercase">
                 Quick guide
               </p>
               <DialogTitle className="font-display text-xl tracking-tight">
@@ -321,8 +321,8 @@ export function SupportCenter() {
 
             <ol className="space-y-3" aria-label={`Steps for ${selectedHelpTopic.title}`}>
               {selectedHelpTopic.steps.map((step, index) => (
-                <li key={step} className="flex gap-3 text-sm leading-5 text-slate-700">
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-[#eef2fa] text-xs font-semibold text-[#273750]">
+                <li key={step} className="flex gap-3 text-sm leading-5 text-ink-700">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-ink-100 text-xs font-semibold text-primary">
                     {index + 1}
                   </span>
                   <span className="pt-0.5">{step}</span>
@@ -330,8 +330,8 @@ export function SupportCenter() {
               ))}
             </ol>
 
-            <div className="rounded-lg border border-slate-200 bg-[#f7f9fd] px-4 py-3 text-xs leading-5 text-slate-600">
-              <span className="font-semibold text-slate-800">Good to know:</span>{" "}
+            <div className="rounded-lg border border-ink-200 bg-ink-50 px-4 py-3 text-xs leading-5 text-ink-600">
+              <span className="font-semibold text-ink-800">Good to know:</span>{" "}
               {selectedHelpTopic.note}
             </div>
 
@@ -366,9 +366,9 @@ export function SupportCenter() {
 
 function TicketTable({ tickets, onOpen, selectedTicketId, localReadState, setLocalReadState }: { tickets: SupportTicketSummary[]; onOpen: (id: string) => void; selectedTicketId: string | null; localReadState: Record<string, string>; setLocalReadState: React.Dispatch<React.SetStateAction<Record<string, string>>> }) {
   return (
-    <div className="hidden overflow-x-auto border-t border-slate-200 md:block">
+    <div className="hidden overflow-x-auto border-t border-ink-200 md:block">
       <table className="w-full min-w-[760px] border-collapse text-left text-sm">
-        <thead className="bg-[#f7f9fd] text-[11px] font-semibold tracking-[0.02em] text-slate-600">
+        <thead className="bg-ink-50 text-[11px] font-semibold tracking-[0.02em] text-ink-600">
           <tr>
             <th scope="col" className="w-[39%] px-7 py-3 font-semibold">Ticket</th>
             <th scope="col" className="px-4 py-3 font-semibold">Category</th>
@@ -388,7 +388,7 @@ function TicketTable({ tickets, onOpen, selectedTicketId, localReadState, setLoc
               role="button"
               tabIndex={0}
               aria-label={`Open ${ticket.subject}`}
-              className="group cursor-pointer border-t border-slate-200 transition-colors first:border-t-0 hover:bg-[#eef2f8] focus-visible:bg-[#eef2f8] focus-visible:outline-none focus-visible:[&>td]:ring-3 focus-visible:[&>td]:ring-[#273750]/20 focus-visible:[&>td]:ring-inset"
+              className="group cursor-pointer border-t border-ink-200 transition-colors first:border-t-0 hover:bg-ink-100 focus-visible:bg-ink-100 focus-visible:outline-none focus-visible:[&>td]:ring-3 focus-visible:[&>td]:ring-primary/20 focus-visible:[&>td]:ring-inset"
               onClick={() => {
                 if (typeof window !== "undefined") {
                   localStorage.setItem(`read_ticket_seller_${ticket.id}`, ticket.updatedAtUtc);
@@ -407,21 +407,21 @@ function TicketTable({ tickets, onOpen, selectedTicketId, localReadState, setLoc
                 }
               }}
             >
-              <td className="border-l-[3px] border-l-transparent px-7 py-3.5 transition-[border-color] group-hover:border-l-slate-400 group-focus-visible:border-l-slate-400">
+              <td className="border-l-[3px] border-l-transparent px-7 py-3.5 transition-[border-color] group-hover:border-l-ink-400 group-focus-visible:border-l-ink-400">
                 <div className="flex items-center gap-2">
-                  <span className={cn("block max-w-[430px] truncate group-hover:text-[#273750]", hasUnread ? "font-bold text-slate-900" : "font-semibold text-slate-900")}>{ticket.subject}</span>
+                  <span className={cn("block max-w-[430px] truncate group-hover:text-primary", hasUnread ? "font-bold text-ink-900" : "font-semibold text-ink-900")}>{ticket.subject}</span>
                   {hasUnread && (
-                    <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] leading-none font-bold text-rose-600 uppercase shadow-sm">New</span>
+                    <span className="shrink-0 rounded-full bg-rose-100 dark:bg-rose-500/15 px-1.5 py-0.5 text-[10px] leading-none font-bold text-rose-600 dark:text-rose-400 uppercase shadow-sm">New</span>
                   )}
                 </div>
-                <span className="mt-1 block text-[11px] text-slate-500">
-                  #{ticket.ticketNumber} {ticket.lastMessageSnippet && <span className={cn("ml-1", hasUnread ? "font-semibold text-slate-800" : "")}>• {ticket.lastMessageSnippet}</span>}
+                <span className="mt-1 block text-[11px] text-ink-500">
+                  #{ticket.ticketNumber} {ticket.lastMessageSnippet && <span className={cn("ml-1", hasUnread ? "font-semibold text-ink-800" : "")}>• {ticket.lastMessageSnippet}</span>}
                 </span>
               </td>
-              <td className="px-4 py-3.5 text-slate-600">{CATEGORY_LABELS[ticket.category]}</td>
+              <td className="px-4 py-3.5 text-ink-600">{CATEGORY_LABELS[ticket.category]}</td>
               <td className="px-4 py-3.5"><TicketPriorityBadge priority={ticket.priority} /></td>
               <td className="px-4 py-3.5"><TicketStatusBadge status={ticket.status} /></td>
-              <td className="px-4 py-3.5 text-xs text-slate-600"><time dateTime={ticket.updatedAtUtc}>{formatRelativeDate(ticket.updatedAtUtc)}</time></td>
+              <td className="px-4 py-3.5 text-xs text-ink-600"><time dateTime={ticket.updatedAtUtc}>{formatRelativeDate(ticket.updatedAtUtc)}</time></td>
             </tr>
             );
           })}
@@ -433,14 +433,14 @@ function TicketTable({ tickets, onOpen, selectedTicketId, localReadState, setLoc
 
 function TicketCards({ tickets, onOpen, selectedTicketId, localReadState, setLocalReadState }: { tickets: SupportTicketSummary[]; onOpen: (id: string) => void; selectedTicketId: string | null; localReadState: Record<string, string>; setLocalReadState: React.Dispatch<React.SetStateAction<Record<string, string>>> }) {
   return (
-    <ul className="divide-y divide-slate-200 border-t border-slate-200 md:hidden">
+    <ul className="divide-y divide-ink-200 border-t border-ink-200 md:hidden">
       {tickets.map((ticket) => {
         const isSelected = selectedTicketId === ticket.id;
         const isReadLocally = isSelected || (typeof window !== "undefined" && localStorage.getItem(`read_ticket_seller_${ticket.id}`) === ticket.updatedAtUtc) || localReadState[ticket.id] === ticket.updatedAtUtc;
         const hasUnread = ticket.hasUnreadMessages && !isReadLocally;
         return (
         <li key={ticket.id}>
-          <button type="button" className="group w-full border-l-[3px] border-l-transparent px-5 py-4 text-left transition-[border-color,background-color] hover:border-l-slate-400 hover:bg-[#eef2f8] focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none focus-visible:ring-inset" onClick={() => {
+          <button type="button" className="group w-full border-l-[3px] border-l-transparent px-5 py-4 text-left transition-[border-color,background-color] hover:border-l-ink-400 hover:bg-ink-100 focus-visible:ring-3 focus-visible:ring-primary/20 focus-visible:outline-none focus-visible:ring-inset" onClick={() => {
             if (typeof window !== "undefined") {
               localStorage.setItem(`read_ticket_seller_${ticket.id}`, ticket.updatedAtUtc);
               setLocalReadState(prev => ({ ...prev, [ticket.id]: ticket.updatedAtUtc }));
@@ -450,22 +450,22 @@ function TicketCards({ tickets, onOpen, selectedTicketId, localReadState, setLoc
             <span className="flex items-start justify-between gap-4">
               <span className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className={cn("block truncate", hasUnread ? "font-bold text-slate-900" : "font-semibold text-slate-900")}>{ticket.subject}</span>
+                  <span className={cn("block truncate", hasUnread ? "font-bold text-ink-900" : "font-semibold text-ink-900")}>{ticket.subject}</span>
                   {hasUnread && (
-                    <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] leading-none font-bold text-rose-600 uppercase shadow-sm">New</span>
+                    <span className="shrink-0 rounded-full bg-rose-100 dark:bg-rose-500/15 px-1.5 py-0.5 text-[10px] leading-none font-bold text-rose-600 dark:text-rose-400 uppercase shadow-sm">New</span>
                   )}
                 </div>
-                <span className="mt-1 block text-[11px] text-slate-500">
+                <span className="mt-1 block text-[11px] text-ink-500">
                   {ticket.ticketNumber} · {CATEGORY_LABELS[ticket.category]}
-                  {ticket.lastMessageSnippet && <span className={cn("mt-0.5 block truncate", hasUnread ? "font-semibold text-slate-800" : "text-slate-400")}>{ticket.lastMessageSnippet}</span>}
+                  {ticket.lastMessageSnippet && <span className={cn("mt-0.5 block truncate", hasUnread ? "font-semibold text-ink-800" : "text-ink-400")}>{ticket.lastMessageSnippet}</span>}
                 </span>
               </span>
-              <ChevronRight className="mt-0.5 size-4 shrink-0 text-slate-400" aria-hidden="true" />
+              <ChevronRight className="mt-0.5 size-4 shrink-0 text-ink-400" aria-hidden="true" />
             </span>
             <span className="mt-3 flex flex-wrap items-center gap-2">
               <TicketPriorityBadge priority={ticket.priority} />
               <TicketStatusBadge status={ticket.status} />
-              <time className="ml-auto text-xs text-slate-500" dateTime={ticket.updatedAtUtc}>{formatRelativeDate(ticket.updatedAtUtc)}</time>
+              <time className="ml-auto text-xs text-ink-500" dateTime={ticket.updatedAtUtc}>{formatRelativeDate(ticket.updatedAtUtc)}</time>
             </span>
           </button>
         </li>

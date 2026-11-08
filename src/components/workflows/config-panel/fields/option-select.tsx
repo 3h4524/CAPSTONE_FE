@@ -53,7 +53,7 @@ export const OptionSelect = ({
       <PanelNotice
         tone="error"
         action={onRetry && (
-          <Button type="button" variant="link" size="sm" className="h-auto px-0 text-xs text-rose-900 hover:translate-y-0" onClick={onRetry}>Retry</Button>
+          <Button type="button" variant="link" size="sm" className="h-auto px-0 text-xs text-rose-900 dark:text-rose-300 hover:translate-y-0" onClick={onRetry}>Retry</Button>
         )}
       >
         Options could not be loaded.
@@ -72,7 +72,7 @@ export const OptionSelect = ({
 
   // Inside a form the id comes from FormControl; an explicit id={undefined} here would wipe it out.
   const trigger = (
-    <SelectTrigger {...(standaloneId ? { id: standaloneId } : {})} className={cn("w-full min-w-0 bg-white", withImages && "pl-1.5 data-[size=default]:h-10")}>
+    <SelectTrigger {...(standaloneId ? { id: standaloneId } : {})} className={cn("w-full min-w-0 bg-card", withImages && "pl-1.5 data-[size=default]:h-10")}>
       <SelectValue placeholder={placeholder}>
         {rich && selected ? (
           <span className="flex min-w-0 items-center gap-2">

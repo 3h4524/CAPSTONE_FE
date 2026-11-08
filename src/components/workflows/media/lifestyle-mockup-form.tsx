@@ -114,8 +114,8 @@ const GarmentPicker = ({
           title={garment.label}
           onClick={toggle}
           className={cn(
-            "relative overflow-hidden rounded-md border bg-white text-left transition-shadow disabled:opacity-60",
-            chosen ? "border-primary ring-primary/25 ring-2" : "hover:border-slate-400"
+            "relative overflow-hidden rounded-md border bg-card text-left transition-shadow disabled:opacity-60",
+            chosen ? "border-primary ring-primary/25 ring-2" : "hover:border-ink-400"
           )}
         >
           {garment.imageUrl ? (
@@ -125,18 +125,18 @@ const GarmentPicker = ({
               width={240}
               height={240}
               unoptimized
-              className="aspect-square w-full bg-slate-50 object-contain"
+              className="aspect-square w-full bg-ink-50 object-contain"
             />
           ) : (
-            <span className="flex aspect-square w-full items-center justify-center bg-slate-50 text-xs text-slate-500">
+            <span className="flex aspect-square w-full items-center justify-center bg-ink-50 text-xs text-ink-500">
               No picture
             </span>
           )}
-          <span className="block truncate px-1.5 py-1 text-[11px] text-slate-700">
+          <span className="block truncate px-1.5 py-1 text-[11px] text-ink-700">
             {garment.label}
           </span>
           {chosen && (
-            <span className="bg-primary absolute top-1 right-1 flex size-5 items-center justify-center rounded-full text-white">
+            <span className="bg-primary absolute top-1 right-1 flex size-5 items-center justify-center rounded-full text-primary-foreground">
               <Check className="size-3.5" aria-hidden="true" />
             </span>
           )}
@@ -166,9 +166,9 @@ const GarmentChooser = ({
   const shown = chosen.slice(0, 4);
   return (
     <>
-      <div id={id} className="flex items-center gap-3 rounded-md border bg-white p-2">
+      <div id={id} className="flex items-center gap-3 rounded-md border bg-card p-2">
         {shown.length === 0 ? (
-          <span className="flex size-20 shrink-0 items-center justify-center rounded border border-dashed bg-slate-50 text-[11px] text-slate-500">
+          <span className="flex size-20 shrink-0 items-center justify-center rounded border border-dashed bg-ink-50 text-[11px] text-ink-500">
             None
           </span>
         ) : (
@@ -183,14 +183,14 @@ const GarmentChooser = ({
                   height={96}
                   unoptimized
                   className={cn(
-                    "shrink-0 rounded border bg-slate-50 object-contain",
+                    "shrink-0 rounded border bg-ink-50 object-contain",
                     shown.length === 1 ? "size-20" : "size-14"
                   )}
                 />
               ) : (
                 <span
                   key={garment.id}
-                  className="flex size-14 shrink-0 items-center justify-center rounded border bg-slate-50 text-[10px] text-slate-500"
+                  className="flex size-14 shrink-0 items-center justify-center rounded border bg-ink-50 text-[10px] text-ink-500"
                 >
                   No picture
                 </span>
@@ -198,7 +198,7 @@ const GarmentChooser = ({
             )}
           </span>
         )}
-        <span className="line-clamp-2 min-w-0 flex-1 text-sm text-slate-800">
+        <span className="line-clamp-2 min-w-0 flex-1 text-sm text-ink-800">
           {chosen.length === 0
             ? "Choose a mockup"
             : chosen.length === 1
@@ -269,11 +269,11 @@ const Step = ({
 }) => (
   <section className="space-y-2.5">
     <div className="flex items-start gap-2.5">
-      <span className="bg-primary mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white">
+      <span className="bg-primary mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-primary-foreground">
         {number}
       </span>
       <div className="min-w-0">
-        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-ink-900">{title}</h3>
         {hint && <p className="text-muted-foreground text-xs leading-relaxed">{hint}</p>}
       </div>
     </div>
@@ -305,7 +305,7 @@ const UploadPhoto = ({
     <label
       className={cn(
         // Relative, so the hidden input sits inside it: focusing it never scrolls the panel away.
-        "relative flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 transition-colors hover:border-slate-400",
+        "relative flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-ink-300 bg-ink-50 p-3 transition-colors hover:border-ink-400",
         disabled && "pointer-events-none opacity-60"
       )}
     >
@@ -327,15 +327,15 @@ const UploadPhoto = ({
           width={64}
           height={80}
           unoptimized
-          className="h-20 w-16 shrink-0 rounded border bg-white object-cover"
+          className="h-20 w-16 shrink-0 rounded border bg-card object-cover"
         />
       ) : (
-        <span className="flex h-20 w-16 shrink-0 items-center justify-center rounded border bg-white text-slate-400">
+        <span className="flex h-20 w-16 shrink-0 items-center justify-center rounded border bg-card text-ink-400">
           <ImagePlus className="size-5" aria-hidden="true" />
         </span>
       )}
       <span className="min-w-0 flex-1 text-xs leading-relaxed">
-        <span className="block truncate font-medium text-slate-800">
+        <span className="block truncate font-medium text-ink-800">
           {value ? value.name : "Choose a photo"}
         </span>
         <span className="text-muted-foreground block">
@@ -384,7 +384,7 @@ const LibraryModelPicker = ({
         </Button>
       </div>
       {filtering && (
-        <div className="flex flex-wrap gap-x-6 gap-y-3 rounded-md border bg-slate-50 p-2.5">
+        <div className="flex flex-wrap gap-x-6 gap-y-3 rounded-md border bg-ink-50 p-2.5">
           <PhotoSourceFilter value={source} onChange={setSource} disabled={disabled} />
           <ModelPhotoFilterBar value={filter} onChange={setFilter} disabled={disabled} />
         </div>
@@ -392,7 +392,7 @@ const LibraryModelPicker = ({
       {isPending ? (
         <p className="text-muted-foreground text-xs">Loading model photos…</p>
       ) : isError ? (
-        <p role="alert" className="text-xs text-red-600">
+        <p role="alert" className="text-xs text-red-600 dark:text-red-400">
           Model photos could not be loaded.
         </p>
       ) : (photos ?? []).length === 0 ? (
@@ -419,8 +419,8 @@ const LibraryModelPicker = ({
                 title={photo.name}
                 onClick={() => onChange(photo.id)}
                 className={cn(
-                  "relative w-36 shrink-0 snap-start overflow-hidden rounded-md border bg-slate-50 text-left transition-shadow disabled:opacity-60",
-                  chosen ? "border-primary ring-primary/25 ring-2" : "hover:border-slate-400"
+                  "relative w-36 shrink-0 snap-start overflow-hidden rounded-md border bg-ink-50 text-left transition-shadow disabled:opacity-60",
+                  chosen ? "border-primary ring-primary/25 ring-2" : "hover:border-ink-400"
                 )}
               >
                 <Image
@@ -432,11 +432,11 @@ const LibraryModelPicker = ({
                   className="aspect-4/5 w-full object-cover"
                 />
                 <PhotoSourceTag system={photo.isSystemTemplate} className="absolute top-1 left-1" />
-                <span className="block truncate px-1.5 py-1 text-[11px] text-slate-700">
+                <span className="block truncate px-1.5 py-1 text-[11px] text-ink-700">
                   {modelAttributesLabel(photo.attributes) ?? photo.name}
                 </span>
                 {chosen && (
-                  <span className="bg-primary absolute top-1 right-1 flex size-5 items-center justify-center rounded-full text-white">
+                  <span className="bg-primary absolute top-1 right-1 flex size-5 items-center justify-center rounded-full text-primary-foreground">
                     <Check className="size-3.5" aria-hidden="true" />
                   </span>
                 )}
@@ -541,7 +541,7 @@ export const LifestyleMockupForm = ({
     <Accordion type="single" collapsible className="rounded-lg border px-3">
       <AccordionItem value="lifestyle">
         <AccordionTrigger className="py-2.5 hover:no-underline">
-          <span className="text-sm font-medium text-slate-900">AI lifestyle image</span>
+          <span className="text-sm font-medium text-ink-900">AI lifestyle image</span>
         </AccordionTrigger>
         <AccordionContent className="space-y-4">
           <Form {...form}>
@@ -591,7 +591,7 @@ export const LifestyleMockupForm = ({
                         <div
                           role="group"
                           aria-label="People to dress"
-                          className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1"
+                          className="grid grid-cols-2 gap-1 rounded-lg bg-ink-100 p-1"
                         >
                           {SOURCE_OPTIONS.map((option) => {
                             const picked = field.value === option.value;
@@ -606,14 +606,14 @@ export const LifestyleMockupForm = ({
                                 className={cn(
                                   "rounded-md px-2 py-1.5 text-left transition-colors disabled:opacity-60",
                                   picked
-                                    ? "bg-white shadow-sm ring-1 ring-slate-200"
-                                    : "hover:bg-white/60"
+                                    ? "bg-card shadow-sm ring-1 ring-ink-200"
+                                    : "hover:bg-card/60"
                                 )}
                               >
                                 <span
                                   className={cn(
                                     "block text-xs font-semibold",
-                                    picked ? "text-slate-900" : "text-slate-600"
+                                    picked ? "text-ink-900" : "text-ink-600"
                                   )}
                                 >
                                   {option.label}
@@ -679,7 +679,7 @@ export const LifestyleMockupForm = ({
                                   className="mt-0.5"
                                 />
                               </FormControl>
-                              <FormLabel className="text-xs leading-relaxed font-normal text-slate-700">
+                              <FormLabel className="text-xs leading-relaxed font-normal text-ink-700">
                                 I have the rights to this photo, and the consent of a parent or
                                 guardian for anyone under 18 in it.
                               </FormLabel>
@@ -695,8 +695,8 @@ export const LifestyleMockupForm = ({
               <Step number={3} title="Make the images">
                 <div className="space-y-2">
                   {chosen.length > 0 && !locked && (
-                    <p className="flex items-baseline justify-between gap-2 rounded-md bg-slate-50 px-2.5 py-1.5 text-xs">
-                      <span className="text-slate-700">
+                    <p className="flex items-baseline justify-between gap-2 rounded-md bg-ink-50 px-2.5 py-1.5 text-xs">
+                      <span className="text-ink-700">
                         {chosen.length} image{chosen.length === 1 ? "" : "s"}
                       </span>
                       <span className="text-muted-foreground">
@@ -767,14 +767,14 @@ const LifestyleResults = ({
   }));
   return (
     <section className="space-y-2 border-t pt-4" aria-label="Lifestyle images">
-      <p className="text-xs font-medium text-slate-700">{title}</p>
+      <p className="text-xs font-medium text-ink-700">{title}</p>
       <div className="grid grid-cols-2 gap-2 @sm:grid-cols-3">
         {made.map((asset, index) => (
           <button
             key={asset.id}
             type="button"
             onClick={() => setViewing(index)}
-            className="block cursor-zoom-in overflow-hidden rounded-md border bg-slate-50 transition-colors hover:border-slate-400"
+            className="block cursor-zoom-in overflow-hidden rounded-md border bg-ink-50 transition-colors hover:border-ink-400"
             aria-label={`View lifestyle image ${index + 1} larger`}
           >
             <Image

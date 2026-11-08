@@ -18,17 +18,17 @@ export const VersionChip = ({ version, isSelected, onToggle }: VersionChipProps)
     className={cn(
       "focus-visible:ring-ring/50 inline-flex max-w-full items-center gap-1.5 rounded-full border px-3 py-1.5 text-left text-[13px] transition-colors outline-none focus-visible:ring-[3px]",
       isSelected
-        ? "border-sky-700 bg-sky-50 font-medium text-slate-900"
-        : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"
+        ? "border-sky-700 bg-sky-50 dark:bg-sky-500/10 font-medium text-ink-900"
+        : "border-ink-200 bg-card text-ink-600 hover:border-ink-400"
     )}
   >
-    {isSelected ? <Check className="size-3.5 shrink-0 text-sky-700" /> : null}
+    {isSelected ? <Check className="size-3.5 shrink-0 text-sky-700 dark:text-sky-300" /> : null}
     <span className="truncate">{version.label}</span>
-    <span className="shrink-0 rounded-full bg-slate-100 px-1.5 font-mono text-[11px] text-slate-600">
+    <span className="shrink-0 rounded-full bg-ink-100 px-1.5 font-mono text-[11px] text-ink-600">
       {version.imageCount}
     </span>
     {version.phase === "trial" ? (
-      <span className="shrink-0 text-[11px] font-normal text-slate-400 italic">
+      <span className="shrink-0 text-[11px] font-normal text-ink-400 italic">
         {IMAGE_EVAL_PHASE_LABELS.trial.toLowerCase()}
       </span>
     ) : null}

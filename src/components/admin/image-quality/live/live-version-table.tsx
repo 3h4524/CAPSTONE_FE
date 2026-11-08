@@ -31,7 +31,7 @@ export const LiveVersionTable = ({ versions }: LiveVersionTableProps) => (
             <TableHead
               key={column.label}
               className={cn(
-                "text-xs font-semibold text-slate-600",
+                "text-xs font-semibold text-ink-600",
                 column.isNumeric && "text-right",
                 index === 0 && "pl-5 sm:pl-6",
                 index === COLUMNS.length - 1 && "pr-5 sm:pr-6"

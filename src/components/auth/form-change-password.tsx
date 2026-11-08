@@ -39,7 +39,7 @@ export const FormChangePassword = () => {
   if (!isSignedIn) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">You need to sign in to change your password.</p>
+        <p className="text-sm text-ink-600">You need to sign in to change your password.</p>
         <Link href="/login" className="text-primary text-sm font-medium hover:underline">
           Go to login
         </Link>
@@ -94,7 +94,7 @@ export const FormChangePassword = () => {
       />
 
       {isError && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
           {getErrorMessage(error, "Could not change your password.")}
         </p>
       )}

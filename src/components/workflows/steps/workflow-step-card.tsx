@@ -47,15 +47,15 @@ export const WorkflowStepCard = ({ node, stepNumber, issue, isExpanded, opensFul
           <Icon className="size-5" aria-hidden="true" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold text-slate-900">{node.data.label}</span>
+          <span className="block truncate text-sm font-semibold text-ink-900">{node.data.label}</span>
           {issue ? (
-            <span className="mt-0.5 flex items-center gap-1 text-xs text-amber-800">
+            <span className="mt-0.5 flex items-center gap-1 text-xs text-amber-800 dark:text-amber-300">
               <AlertTriangle className="size-3 shrink-0" aria-hidden="true" />
               <span className="truncate">Needs attention</span>
             </span>
           ) : pill ? null : (
             <span className="text-muted-foreground mt-0.5 flex items-center gap-1 text-xs">
-              <CheckCircle2 className="size-3 shrink-0 text-emerald-600" aria-hidden="true" />
+              <CheckCircle2 className="size-3 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
               Ready
             </span>
           )}

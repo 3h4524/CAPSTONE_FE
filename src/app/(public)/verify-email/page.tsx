@@ -16,7 +16,7 @@ const VerifyEmailPage = () => {
   return (
     <main className="mx-auto flex w-full max-w-sm flex-col gap-6 px-4 py-16">
       <h1 className="font-display text-2xl font-bold">Verify your email</h1>
-      <Suspense fallback={<p className="text-sm text-gray-600">Loading...</p>}>
+      <Suspense fallback={<p className="text-sm text-ink-600">Loading...</p>}>
         <VerifyEmailStatus />
       </Suspense>
     </main>

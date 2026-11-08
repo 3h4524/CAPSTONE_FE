@@ -415,12 +415,12 @@ export const ModelPhotoFormDialog = ({
                   }}
                 />
                 {attributesError && (
-                  <p role="alert" className="text-sm text-red-600">
+                  <p role="alert" className="text-sm text-red-600 dark:text-red-400">
                     {attributesError}
                   </p>
                 )}
                 {attributes.people === "group" && person?.garmentCount != null && (
-                  <p role="status" className="text-xs text-slate-600">
+                  <p role="status" className="text-xs text-ink-600">
                     {person.garmentCount === 1
                       ? "Found 1 shirt. People standing close together count as one: leave a gap between them so each one gets the design."
                       : `Found ${person.garmentCount} shirts: each one gets the design.`}
@@ -428,7 +428,7 @@ export const ModelPhotoFormDialog = ({
                 )}
               </section>
               {shownSize && Math.max(shownSize.width, shownSize.height) < MIN_SHARP_PHOTO_SIDE && (
-                <p role="status" className="text-xs text-amber-700">
+                <p role="status" className="text-xs text-amber-700 dark:text-amber-300">
                   This photo is small ({shownSize.width} × {shownSize.height} px): the garment’s
                   edge and the print will look rough. Use a photo at least {MIN_SHARP_PHOTO_SIDE} px
                   on its longer side.
@@ -437,7 +437,7 @@ export const ModelPhotoFormDialog = ({
               {shownPhoto && (
                 <section className="space-y-2" aria-labelledby="model-photo-garment">
                   <div>
-                    <p id="model-photo-garment" className="text-sm font-medium text-slate-900">
+                    <p id="model-photo-garment" className="text-sm font-medium text-ink-900">
                       1. The garment
                     </p>
                     <p className="text-muted-foreground mt-0.5 text-xs">
@@ -502,7 +502,7 @@ export const ModelPhotoFormDialog = ({
                     </div>
                   )}
                   {selectionError && (
-                    <p role="alert" className="text-sm text-red-600">
+                    <p role="alert" className="text-sm text-red-600 dark:text-red-400">
                       {selectionError}
                     </p>
                   )}
@@ -510,7 +510,7 @@ export const ModelPhotoFormDialog = ({
               )}
               {shownPhoto && shownSize && (
                 <section className="space-y-3" aria-labelledby="model-photo-placement">
-                  <p id="model-photo-placement" className="text-sm font-medium text-slate-900">
+                  <p id="model-photo-placement" className="text-sm font-medium text-ink-900">
                     2. Where the design goes
                   </p>
                   <RadioGroup
@@ -544,7 +544,7 @@ export const ModelPhotoFormDialog = ({
                           className="mt-0.5"
                         />
                         <span className="space-y-0.5">
-                          <span className="block text-sm font-medium text-slate-900">
+                          <span className="block text-sm font-medium text-ink-900">
                             {option.label}
                           </span>
                           <span className="text-muted-foreground block text-xs">
@@ -577,7 +577,7 @@ export const ModelPhotoFormDialog = ({
                           />
                         </div>
                         {(errors.x || errors.y || errors.width || errors.height) && (
-                          <p role="alert" className="text-sm text-red-600">
+                          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
                             Draw a print area on the photo.
                           </p>
                         )}

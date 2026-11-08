@@ -98,7 +98,7 @@ export const RegionEditor = ({ imageUrl, width, height, value, onChange }: {
           {active === name && <button type="button" className="border-background bg-foreground focus-visible:ring-ring absolute -right-2 -bottom-2 size-5 cursor-se-resize rounded-sm border-2 outline-none focus-visible:ring-2" aria-label={`Resize ${regionLabels[name]} region. Use arrow keys to resize.`} onPointerDown={event => startDrag(event, "resize", name, region)} onKeyDown={event => adjustWithKeyboard(event, "resize")} />}
         </div>;
       })}
-      {value.focalPoint && <span className="pointer-events-none absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-rose-500 shadow" style={{ left: `${value.focalPoint.x * 100}%`, top: `${value.focalPoint.y * 100}%` }} aria-hidden="true" />}
+      {value.focalPoint && <span className="pointer-events-none absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-card bg-rose-500 shadow" style={{ left: `${value.focalPoint.x * 100}%`, top: `${value.focalPoint.y * 100}%` }} aria-hidden="true" />}
     </div>
     <div className="flex flex-wrap gap-2" aria-label={`${regionLabels[active]} region controls`}>
       {!value[active] && <Button type="button" size="sm" variant="outline" onClick={() => setRegion(active, { x: 0.2, y: 0.2, width: 0.6, height: 0.6 })}>Add {regionLabels[active]} region</Button>}

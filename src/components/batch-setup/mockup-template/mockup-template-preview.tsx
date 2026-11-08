@@ -40,7 +40,7 @@ export const MockupTemplatePreview = ({ template, color, background, designUrl, 
 
   return (
     <div
-      className={cn("relative w-full overflow-hidden rounded-lg bg-slate-100", className)}
+      className={cn("relative w-full overflow-hidden rounded-lg bg-ink-100", className)}
       style={{ aspectRatio: `${width} / ${height}`, backgroundColor: cutOut ? (background ?? undefined) : undefined }}
       data-testid="mockup-preview"
     >

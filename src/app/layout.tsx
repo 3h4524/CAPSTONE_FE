@@ -6,6 +6,7 @@ import { GlobalToast } from "@/components/commons/toast/global-toast";
 import { OrganizationJsonLd } from "@/components/seo/organization-json-ld";
 import { SITE_CONFIG } from "@/constants/site";
 import { getSiteMetadata } from "@/data/metadata";
+import { THEME_BOOT_SCRIPT } from "@/helpers/theme";
 import { I18nProvider } from "@/providers/global/i18n-provider";
 import { ReactQueryProvider } from "@/providers/global/query-client-provider";
 import { GoogleAnalytics } from "@next/third-parties/google";
@@ -37,8 +38,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang={SITE_CONFIG.locale}>
+    <html lang={SITE_CONFIG.locale} suppressHydrationWarning>
       <head>
+        {/* Paints the signed-in user's last theme before hydration so dark mode never flashes white. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <OrganizationJsonLd />
       </head>
       <body className={`${inter.variable} ${display.variable} font-sans antialiased`}>

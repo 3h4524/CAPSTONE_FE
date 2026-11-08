@@ -44,9 +44,11 @@ export const AppShell = ({ children }: AppShellProps) => {
   return (
     <TooltipProvider>
       {/* Relative so the hidden inputs behind selects and switches stay clipped, instead of making the page itself scroll. */}
-      <div className="bg-muted/40 relative flex h-dvh overflow-hidden">
+      <div className="bg-muted/40 dark:bg-background relative flex h-dvh overflow-hidden">
         <AppSidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
+        {/* Dark, desktop: the whole right column (header + page) is one raised, rounded panel. */}
+        <div className="dark:lg:bg-panel flex min-w-0 flex-1 flex-col dark:lg:my-2 dark:lg:mr-2 dark:lg:overflow-hidden dark:lg:rounded-xl dark:lg:border">
+
           <AppHeader onMobileMenu={() => openMobileMenu("left")} />
           <ContentArea>{children}</ContentArea>
           {!isDesignTemplateForm(pathname) && <MobileBottomNav onOpenMore={() => openMobileMenu("right")} />}

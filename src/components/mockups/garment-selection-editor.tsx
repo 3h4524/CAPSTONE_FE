@@ -291,7 +291,7 @@ export const GarmentSelectionEditor = ({
 
   if (loadError) {
     return (
-      <p role="alert" className="text-sm text-red-600">
+      <p role="alert" className="text-sm text-red-600 dark:text-red-400">
         The photo could not be read for selecting the garment. Choose the photo again.
       </p>
     );
@@ -328,7 +328,7 @@ export const GarmentSelectionEditor = ({
                 {label}
               </Button>
             ))}
-            <span className="mx-1 h-5 w-px bg-slate-200" aria-hidden="true" />
+            <span className="mx-1 h-5 w-px bg-ink-200" aria-hidden="true" />
             <Button
               type="button"
               size="sm"
@@ -365,7 +365,7 @@ export const GarmentSelectionEditor = ({
               </Button>
             )}
           </div>
-          <label className="flex items-center gap-3 text-xs text-slate-700">
+          <label className="flex items-center gap-3 text-xs text-ink-700">
             <span className="w-28 shrink-0">
               {tool === "wand" ? "Color tolerance" : "Brush size"}
             </span>
@@ -401,7 +401,7 @@ export const GarmentSelectionEditor = ({
           alt="Model photo"
           crossOrigin="anonymous"
           draggable={false}
-          className="block max-h-105 max-w-full rounded-lg ring-1 ring-slate-200 select-none ring-inset"
+          className="block max-h-105 max-w-full rounded-lg ring-1 ring-ink-200 select-none ring-inset"
         />
         <canvas
           ref={canvasRef}
@@ -421,7 +421,7 @@ export const GarmentSelectionEditor = ({
         />
         {!photo && (
           <div
-            className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/60"
+            className="absolute inset-0 flex items-center justify-center rounded-lg bg-card/60"
             role="status"
             aria-label="Preparing the photo"
           >

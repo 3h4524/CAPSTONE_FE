@@ -52,14 +52,14 @@ export function MrrBridgeStrip({
     <div aria-label="MRR bridge" className={cn("text-xs tabular-nums", className)}>
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4">
         <Total label={`MRR ${formatDay(dayBefore(periodStart))}`} value={bridge.start} muted />
-        <ArrowRight className="size-4 text-slate-300" aria-hidden="true" />
+        <ArrowRight className="size-4 text-ink-300" aria-hidden="true" />
         <Total label={`MRR ${formatDay(periodEnd)}`} value={bridge.end} />
       </div>
 
       <p
         className={cn(
           "mt-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-          net >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+          net >= 0 ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300"
         )}
       >
         <Trend className="size-3.5" />
@@ -75,31 +75,31 @@ export function MrrBridgeStrip({
       </p>
 
       {movements.length > 0 && (
-        <ul className="mt-5 divide-y divide-slate-100 border-t border-slate-100">
+        <ul className="mt-5 divide-y divide-ink-100 border-t border-ink-100">
           {movements.map((row) => {
-            const color = MOVEMENT_COLOR[row.label] ?? "#94a3b8";
+            const color = MOVEMENT_COLOR[row.label] ?? "var(--ink-400)";
             const share = bridge.start > 0 ? Math.round((Math.abs(row.value) / bridge.start) * 100) : null;
             return (
               <li key={row.label} className="grid grid-cols-[7rem_minmax(0,1fr)_auto] items-center gap-4 py-3">
                 <div>
-                  <p className="flex items-center gap-1.5 font-medium text-slate-700">
+                  <p className="flex items-center gap-1.5 font-medium text-ink-700">
                     <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
                     {row.label}
                   </p>
-                  {share !== null && <p className="mt-0.5 pl-3.5 text-[11px] text-slate-400">{share}% of start</p>}
+                  {share !== null && <p className="mt-0.5 pl-3.5 text-[11px] text-ink-400">{share}% of start</p>}
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-2 overflow-hidden rounded-full bg-ink-100">
                   <div
                     className="h-full rounded-full"
                     style={{ width: `${Math.max((Math.abs(row.value) / largest) * 100, 2)}%`, backgroundColor: color }}
                   />
                 </div>
                 <div className="text-right">
-                  <p className={cn("text-sm font-semibold", row.value >= 0 ? "text-slate-900" : "text-rose-700")}>
+                  <p className={cn("text-sm font-semibold", row.value >= 0 ? "text-ink-900" : "text-rose-700 dark:text-rose-300")}>
                     {row.value >= 0 ? "+" : "−"}
                     {formatCompactVndAmount(Math.abs(row.value))}
                   </p>
-                  <p className="text-[11px] text-slate-400">{signedVnd(row.value)}</p>
+                  <p className="text-[11px] text-ink-400">{signedVnd(row.value)}</p>
                 </div>
               </li>
             );
@@ -113,11 +113,11 @@ export function MrrBridgeStrip({
 function Total({ label, value, muted = false }: { label: string; value: number; muted?: boolean }) {
   return (
     <div className="min-w-0">
-      <p className="text-slate-500">{label}</p>
-      <p className={cn("mt-1 text-2xl font-semibold tracking-tight", muted ? "text-slate-500" : "text-slate-900")}>
+      <p className="text-ink-500">{label}</p>
+      <p className={cn("mt-1 text-2xl font-semibold tracking-tight", muted ? "text-ink-500" : "text-ink-900")}>
         {formatCompactVndAmount(value)}
       </p>
-      <p className="text-[11px] text-slate-400">{formatVnd(value)}</p>
+      <p className="text-[11px] text-ink-400">{formatVnd(value)}</p>
     </div>
   );
 }

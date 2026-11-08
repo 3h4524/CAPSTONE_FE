@@ -241,7 +241,7 @@ export const MockupTemplateFormDialog = ({ open, template, onClose }: MockupTemp
               </div>
               <MockupPhotoDropzone previewUrl={shownPhoto} error={fileError} disabled={pending} onSelect={pickFile} onRemove={() => setPhotoFile(null)} />
               <div>
-                <p className="text-sm font-medium text-slate-900">Print area</p>
+                <p className="text-sm font-medium text-ink-900">Print area</p>
                 <p className="text-muted-foreground mt-0.5 text-xs">Where the design lands on the photo. Sellers can still override this per image.
                   {maskPreviewPending && " Finding the garment in the photo… this takes a few seconds."}
                 </p>
@@ -262,7 +262,7 @@ export const MockupTemplateFormDialog = ({ open, template, onClose }: MockupTemp
                   <p className="text-muted-foreground mt-2 text-xs">Add a base photo to mark the print area.</p>
                 )}
                 {(errors.x || errors.y || errors.width || errors.height) && (
-                  <p role="alert" className="mt-1 text-sm text-red-600">Draw a print area on the photo.</p>
+                  <p role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400">Draw a print area on the photo.</p>
                 )}
               </div>
               <div className="flex items-start gap-3 rounded-lg border p-3">
@@ -277,12 +277,12 @@ export const MockupTemplateFormDialog = ({ open, template, onClose }: MockupTemp
               {allowRecolor && (
                 <div className="space-y-2 rounded-lg border p-3">
                   <div>
-                    <p className="text-sm font-medium text-slate-900">Garment color</p>
+                    <p className="text-sm font-medium text-ink-900">Garment color</p>
                     <p className="text-muted-foreground text-xs">
                       Mock-ups from this template use this color, unless a batch picks its own colors. None keeps the photo’s color.
                     </p>
                     {recolorProblem && (
-                      <p role="alert" className="mt-1 text-sm text-red-600">
+                      <p role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400">
                         This photo can’t be recolored: {recolorProblem} Use a white or light-gray garment on a plain background.
                       </p>
                     )}

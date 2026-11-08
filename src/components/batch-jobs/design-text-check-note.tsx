@@ -19,7 +19,7 @@ export const DesignTextCheckNote = ({ check, className }: DesignTextCheckNotePro
   return (
     <p
       title={summary.read}
-      className={cn("flex items-start gap-1 text-[11px] leading-snug", warning ? "text-amber-700" : "text-emerald-700", className)}
+      className={cn("flex items-start gap-1 text-[11px] leading-snug", warning ? "text-amber-700 dark:text-amber-300" : "text-emerald-700 dark:text-emerald-300", className)}
     >
       <Icon className="mt-px size-3 shrink-0" aria-hidden="true" />
       <span>

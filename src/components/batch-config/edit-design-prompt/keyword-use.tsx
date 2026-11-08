@@ -12,7 +12,7 @@ export const KeywordUse = ({ motifs, ignoredKeywords }: KeywordUseProps) => {
 
   return (
     <div className="space-y-1 text-xs">
-      <p className="font-semibold tracking-wide text-slate-500 uppercase">From the product&apos;s keywords</p>
+      <p className="font-semibold tracking-wide text-ink-500 uppercase">From the product&apos;s keywords</p>
       <p>
         <span className="text-muted-foreground">Drawn: </span>
         {motifs.length > 0 ? motifs : "Nothing"}

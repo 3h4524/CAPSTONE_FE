@@ -24,9 +24,9 @@ export const EvaluationPanel = () => {
   const renderContent = () => {
     if (isRunsError) {
       return (
-        <div className="rounded-xl border border-slate-200 bg-white px-5 py-14 text-center">
-          <p className="text-sm font-semibold text-slate-700">The evaluation runs could not be read</p>
-          <p className="mt-1 text-[13px] text-slate-500">The backend that keeps them did not answer.</p>
+        <div className="rounded-xl border border-ink-200 bg-card px-5 py-14 text-center">
+          <p className="text-sm font-semibold text-ink-700">The evaluation runs could not be read</p>
+          <p className="mt-1 text-[13px] text-ink-500">The backend that keeps them did not answer.</p>
         </div>
       );
     }

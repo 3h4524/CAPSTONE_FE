@@ -42,14 +42,14 @@ export const ChoiceButtons = ({ choices, value, label, onChange, className, ...p
           aria-pressed={active}
           onClick={() => onChange(choice.value)}
           className={cn(
-            "h-auto min-w-0 flex-col gap-1 rounded-md px-1 py-1.5 text-xs font-medium text-slate-600 hover:translate-y-0 hover:text-slate-900",
-            active && "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
+            "h-auto min-w-0 flex-col gap-1 rounded-md px-1 py-1.5 text-xs font-medium text-ink-600 hover:translate-y-0 hover:text-ink-900",
+            active && "bg-card text-ink-900 shadow-sm ring-1 ring-ink-200"
           )}
         >
           {choice.ratio && (
             <span className="flex size-6 items-center justify-center" aria-hidden="true">
               <span
-                className={cn("rounded-[3px] border-[1.5px]", active ? "border-primary bg-primary/10" : "border-slate-400")}
+                className={cn("rounded-[3px] border-[1.5px]", active ? "border-primary bg-primary/10" : "border-ink-400")}
                 style={{ width: width * scale, height: height * scale }}
               />
             </span>

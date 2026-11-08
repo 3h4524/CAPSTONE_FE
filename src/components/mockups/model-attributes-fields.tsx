@@ -35,7 +35,7 @@ export const ChoiceChips = <T extends string>({
   ];
   return (
     <div className="space-y-1.5">
-      <p className="text-xs font-medium text-slate-700">{label}</p>
+      <p className="text-xs font-medium text-ink-700">{label}</p>
       <div role="group" aria-label={label} className="flex flex-wrap gap-1.5">
         {choices.map((choice) => {
           const chosen = (value ?? null) === choice.value;
@@ -49,8 +49,8 @@ export const ChoiceChips = <T extends string>({
               className={cn(
                 "h-8 rounded-full border px-3 text-xs font-medium transition-colors disabled:opacity-60",
                 chosen
-                  ? "border-primary bg-primary text-white"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-ink-200 bg-card text-ink-700 hover:border-ink-400"
               )}
             >
               {choice.label}
@@ -211,7 +211,7 @@ export const PhotoSourceTag = ({ system, className }: { system: boolean; classNa
   <span
     className={cn(
       "inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-semibold",
-      system ? "bg-primary text-white" : "border-primary text-primary border bg-white",
+      system ? "bg-primary text-primary-foreground" : "border-primary text-primary border bg-card",
       className
     )}
   >

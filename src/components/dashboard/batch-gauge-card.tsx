@@ -10,9 +10,9 @@ const formatTime = (iso: string) =>
   new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 
 const STATUS_STYLES: Record<string, { tone: RingTone; chip: string }> = {
-  running: { tone: "brand", chip: "bg-emerald-50 text-emerald-700" },
-  queued: { tone: "slate", chip: "bg-slate-100 text-slate-600" },
-  paused: { tone: "brand", chip: "bg-slate-100 text-slate-700 border border-slate-200/60" },
+  running: { tone: "brand", chip: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" },
+  queued: { tone: "slate", chip: "bg-ink-100 text-ink-600" },
+  paused: { tone: "brand", chip: "bg-ink-100 text-ink-700 border border-ink-200/60" },
 };
 
 /** The newest unfinished batch job as a progress ring; an invitation to start one when none runs. */
@@ -52,13 +52,13 @@ export const BatchGaugeCard = ({ batches }: { batches: ActiveBatch[] }) => {
               <span className="text-muted-foreground text-[11px]">complete</span>
             </RingGauge>
           </Link>
-          <dl className="grid grid-cols-2 gap-2 divide-x divide-slate-200 rounded-xl border border-slate-100 bg-slate-50/80 p-3 text-center text-xs">
+          <dl className="grid grid-cols-2 gap-2 divide-x divide-ink-200 rounded-xl border border-ink-100 bg-ink-50/80 p-3 text-center text-xs">
             <div>
               <dt className="text-muted-foreground">Done</dt>
               <dd className="font-semibold tabular-nums">
                 {batch.processed}/{batch.total}
                 {batch.failed > 0 && (
-                  <span className="text-rose-600"> · {batch.failed} failed</span>
+                  <span className="text-rose-600 dark:text-rose-400"> · {batch.failed} failed</span>
                 )}
               </dd>
             </div>
@@ -76,7 +76,7 @@ export const BatchGaugeCard = ({ batches }: { batches: ActiveBatch[] }) => {
           <div className="mt-auto flex items-center justify-between gap-2 text-xs font-medium">
             <Link
               href={batch.url}
-              className="inline-flex items-center gap-1 text-slate-800 hover:text-black hover:underline"
+              className="inline-flex items-center gap-1 text-ink-800 hover:text-black hover:underline"
             >
               Open batch
               <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -95,7 +95,7 @@ export const BatchGaugeCard = ({ batches }: { batches: ActiveBatch[] }) => {
           </RingGauge>
           <Link
             href="/workflows"
-            className="inline-flex items-center gap-1 text-xs font-medium text-[#c2410c] hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-medium text-[#c2410c] dark:text-[#eda182] hover:underline"
           >
             Start a batch
             <ArrowRight className="size-3.5" aria-hidden="true" />

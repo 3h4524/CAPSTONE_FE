@@ -21,7 +21,7 @@ const DOT: Record<Tone, string> = {
   amber: "bg-amber-400",
   orange: "bg-orange-400",
   rose: "bg-rose-500",
-  slate: "bg-slate-400",
+  slate: "bg-ink-400",
 };
 
 // The backend sends a tone with each batch job; tickets only have a status.
@@ -57,11 +57,11 @@ const JobStatus = ({ job }: { job: BatchJobDto }) => {
   const tone = toneOf(job.status, job.tone);
   const finished = job.progressPercentage === "100%";
   return (
-    <span className="inline-flex items-center gap-1.5 text-slate-700 capitalize">
+    <span className="inline-flex items-center gap-1.5 text-ink-700 capitalize">
       <span className={`size-1.5 rounded-full ${DOT[tone]}`} aria-hidden="true" />
       {job.status.toLowerCase()}
       {!finished && tone !== "rose" && (
-        <span className="text-xs text-slate-400 tabular-nums">{job.progressPercentage}</span>
+        <span className="text-xs text-ink-400 tabular-nums">{job.progressPercentage}</span>
       )}
     </span>
   );
@@ -70,16 +70,16 @@ const JobStatus = ({ job }: { job: BatchJobDto }) => {
 const BatchJobCard = ({ job, now }: { job: BatchJobDto; now?: Date }) => (
   <li className="space-y-0.5 py-2.5 text-sm">
     <div className="flex items-start justify-between gap-3">
-      <p className="min-w-0 truncate font-medium text-slate-900">{job.batchName ?? job.name}</p>
+      <p className="min-w-0 truncate font-medium text-ink-900">{job.batchName ?? job.name}</p>
       <span className="shrink-0 text-xs">
         <JobStatus job={job} />
       </span>
     </div>
-    <p className="truncate text-xs text-slate-400">
+    <p className="truncate text-xs text-ink-400">
       {job.batchName ? job.name : "Batch job"}
       {job.createdAt && ` · ${timeAgo(job.createdAt, now)}`}
     </p>
-    <p className="flex justify-between gap-3 text-xs text-slate-600">
+    <p className="flex justify-between gap-3 text-xs text-ink-600">
       <span className="min-w-0 truncate">{job.userName}</span>
       <span className="shrink-0 tabular-nums">
         {job.itemCount.toLocaleString()} products{job.aiCostUsd ? ` · ${formatUsd(job.aiCostUsd)}` : ""}
@@ -113,7 +113,7 @@ const BatchJobsPanel = ({
   const shown = isPhone ? jobs.slice(0, PHONE_LATEST_ITEMS) : jobs;
 
   return (
-  <section className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+  <section className="flex flex-col overflow-hidden rounded-xl border border-ink-200 bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
     <div className="p-5 pb-3 max-md:p-4 max-md:pb-2">
       <PanelHeading
         title="Latest batch jobs"
@@ -126,8 +126,8 @@ const BatchJobsPanel = ({
       />
     </div>
     {isPhone ? (
-      <ul className="divide-y divide-slate-100 px-4 pb-1.5">
-        {shown.length === 0 && <li className="py-6 text-center text-xs text-slate-400">No batch jobs yet.</li>}
+      <ul className="divide-y divide-ink-100 px-4 pb-1.5">
+        {shown.length === 0 && <li className="py-6 text-center text-xs text-ink-400">No batch jobs yet.</li>}
         {shown.map((job, index) => (
           <BatchJobCard key={`${job.name}-${index}`} job={job} now={now} />
         ))}
@@ -135,7 +135,7 @@ const BatchJobsPanel = ({
     ) : (
     <div className="flex-1 overflow-x-auto">
       <table className="w-full min-w-[620px] table-fixed text-left text-sm">
-        <thead className="border-y border-slate-100 bg-slate-50/60 text-xs text-slate-500">
+        <thead className="border-y border-ink-100 bg-ink-50/60 text-xs text-ink-500">
           <tr>
             <th className="w-[43%] px-5 py-2 font-medium">Batch</th>
             <th className="w-[19%] px-4 py-2 font-medium whitespace-nowrap">Seller</th>
@@ -144,31 +144,31 @@ const BatchJobsPanel = ({
             <th className="w-[15%] px-5 py-2 font-medium whitespace-nowrap">Status</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-ink-100">
           {jobs.length === 0 && (
             <tr>
-              <td colSpan={5} className="p-6 text-center text-xs text-slate-400">
+              <td colSpan={5} className="p-6 text-center text-xs text-ink-400">
                 No batch jobs yet.
               </td>
             </tr>
           )}
           {jobs.map((job, index) => {
             return (
-              <tr key={`${job.name}-${index}`} className="hover:bg-slate-50/60">
+              <tr key={`${job.name}-${index}`} className="hover:bg-ink-50/60">
                 <td className="px-5 py-2.5">
-                  <p className="truncate font-medium text-slate-900" title={job.batchName ?? job.name}>
+                  <p className="truncate font-medium text-ink-900" title={job.batchName ?? job.name}>
                     {job.batchName ?? job.name}
                   </p>
-                  <p className="truncate text-xs text-slate-400">
+                  <p className="truncate text-xs text-ink-400">
                     {job.batchName ? job.name : "Batch job"}
                     {job.createdAt && ` · ${timeAgo(job.createdAt, now)}`}
                   </p>
                 </td>
-                <td className="px-4 py-2.5 whitespace-nowrap text-slate-600">{job.userName}</td>
-                <td className="px-4 py-2.5 text-left whitespace-nowrap text-slate-700 tabular-nums">
+                <td className="px-4 py-2.5 whitespace-nowrap text-ink-600">{job.userName}</td>
+                <td className="px-4 py-2.5 text-left whitespace-nowrap text-ink-700 tabular-nums">
                   {job.itemCount.toLocaleString()}
                 </td>
-                <td className="px-4 py-2.5 text-left whitespace-nowrap text-slate-700 tabular-nums">
+                <td className="px-4 py-2.5 text-left whitespace-nowrap text-ink-700 tabular-nums">
                   {job.aiCostUsd ? formatUsd(job.aiCostUsd) : "—"}
                 </td>
                 <td className="px-5 py-2.5 whitespace-nowrap">
@@ -193,7 +193,7 @@ const TicketsPanel = ({ tickets }: { tickets: SupportTicketDto[] }) => {
   ).length;
 
   return (
-    <section className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] max-md:p-4">
+    <section className="flex flex-col rounded-xl border border-ink-200 bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] max-md:p-4">
       <PanelHeading
         title="Latest support tickets"
         subtitle={
@@ -201,9 +201,9 @@ const TicketsPanel = ({ tickets }: { tickets: SupportTicketDto[] }) => {
         }
         action={<PanelLink href="/admin/support-tickets" label="All tickets" />}
       />
-      <ul className="mt-3 flex-1 divide-y divide-slate-100">
+      <ul className="mt-3 flex-1 divide-y divide-ink-100">
         {tickets.length === 0 && (
-          <li className="py-6 text-center text-xs text-slate-400">No tickets found.</li>
+          <li className="py-6 text-center text-xs text-ink-400">No tickets found.</li>
         )}
         {shown.map((ticket) => {
           const tone = toneOf(ticket.status);
@@ -211,16 +211,16 @@ const TicketsPanel = ({ tickets }: { tickets: SupportTicketDto[] }) => {
           return (
             <li key={ticket.id} className="flex items-center justify-between gap-3 py-2.5 max-md:flex-wrap max-md:gap-2">
               <div className="min-w-0 flex-1 max-md:basis-full">
-                <p className="truncate text-sm font-medium text-slate-900" title={ticket.issue}>
+                <p className="truncate text-sm font-medium text-ink-900" title={ticket.issue}>
                   {ticket.issue}
                 </p>
-                <p className="mt-0.5 truncate text-xs text-slate-400">
+                <p className="mt-0.5 truncate text-xs text-ink-400">
                   {ticket.userName}
                   {ticket.priority && ` · ${ticket.priority} priority`}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3 max-md:w-full max-md:justify-between">
-                <span className="inline-flex w-24 items-center gap-1.5 text-xs text-slate-600">
+                <span className="inline-flex w-24 items-center gap-1.5 text-xs text-ink-600">
                   <span className={`size-1.5 rounded-full ${DOT[tone]}`} aria-hidden="true" />
                   {formatTicketStatus(ticket.status)}
                 </span>
@@ -228,8 +228,8 @@ const TicketsPanel = ({ tickets }: { tickets: SupportTicketDto[] }) => {
                   href={`/admin/support-tickets?ticketId=${ticket.id}`}
                   className={`inline-flex h-7 min-w-[54px] items-center justify-center rounded-lg border px-2.5 text-xs font-medium transition-all max-md:h-9 max-md:min-w-16 ${
                     isDone
-                      ? "border-slate-200 bg-slate-50/70 text-slate-600 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
-                      : "border-sky-200 bg-sky-50/70 text-sky-700 hover:border-sky-300 hover:bg-sky-100 hover:text-sky-900"
+                      ? "border-ink-200 bg-ink-50/70 text-ink-600 hover:border-ink-300 hover:bg-ink-100 hover:text-ink-900"
+                      : "border-sky-200 dark:border-sky-500/30 bg-sky-50/70 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 hover:border-sky-300 dark:hover:border-sky-500/40 hover:bg-sky-100 dark:hover:bg-sky-500/15 hover:text-sky-900 dark:hover:text-sky-300"
                   }`}
                 >
                   {isDone ? "View" : "Reply"}
@@ -254,8 +254,8 @@ const PanelHeading = ({
 }) => (
   <div className="flex items-start justify-between gap-4">
     <div>
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-      <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p>
+      <h3 className="text-sm font-semibold text-ink-900">{title}</h3>
+      <p className="mt-0.5 text-xs text-ink-400">{subtitle}</p>
     </div>
     {action}
   </div>
@@ -264,7 +264,7 @@ const PanelHeading = ({
 const PanelLink = ({ href, label }: { href: string; label: string }) => (
   <Link
     href={href}
-    className="flex shrink-0 items-center gap-0.5 text-xs font-medium text-slate-500 hover:text-slate-900"
+    className="flex shrink-0 items-center gap-0.5 text-xs font-medium text-ink-500 hover:text-ink-900"
   >
     {label}
     <ArrowUpRight className="size-3" />

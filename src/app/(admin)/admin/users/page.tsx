@@ -188,10 +188,10 @@ export default function AdminUsersPage() {
           <div className="flex flex-col gap-4 max-md:flex-row max-md:items-center max-md:justify-between sm:flex-row sm:items-center sm:justify-between">
             <div>
 
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              <h1 className="text-2xl font-bold tracking-tight text-ink-900">
                 Users<span className="max-md:hidden"> Management</span>
               </h1>
-              <p className="mt-1 text-sm text-slate-500 max-md:hidden">
+              <p className="mt-1 text-sm text-ink-500 max-md:hidden">
                 Search, filter, and manage registered user accounts.
               </p>
             </div>
@@ -210,62 +210,62 @@ export default function AdminUsersPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 max-md:grid-cols-2 max-md:gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm max-md:p-3.5">
+            <div className="relative overflow-hidden rounded-xl border border-ink-200/80 bg-card p-5 shadow-sm max-md:p-3.5">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-slate-500">Total Users</p>
-                <Users className="h-4 w-4 text-slate-400" />
+                <p className="text-sm font-medium text-ink-500">Total Users</p>
+                <Users className="h-4 w-4 text-ink-400" />
               </div>
               <div className="mt-2">
-                <p className="text-2xl font-bold text-slate-900">{metrics?.totalUsers || 0}</p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="text-2xl font-bold text-ink-900">{metrics?.totalUsers || 0}</p>
+                <p className="mt-1 text-xs text-ink-400">
                   {operations ? `${operations.activeSellers.toLocaleString()} active sellers this year` : "All registered accounts"}
                 </p>
               </div>
             </div>
-            <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm max-md:p-3.5">
+            <div className="relative overflow-hidden rounded-xl border border-ink-200/80 bg-card p-5 shadow-sm max-md:p-3.5">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-slate-500">Active Paid Users</p>
-                <CreditCard className="h-4 w-4 text-slate-400" />
+                <p className="text-sm font-medium text-ink-500">Active Paid Users</p>
+                <CreditCard className="h-4 w-4 text-ink-400" />
               </div>
               <div className="mt-2">
-                <p className="text-2xl font-bold text-slate-900">{metrics?.activePaidUsers || 0}</p>
-                <p className="mt-1 text-xs text-slate-400">{paidShare}% of all users</p>
+                <p className="text-2xl font-bold text-ink-900">{metrics?.activePaidUsers || 0}</p>
+                <p className="mt-1 text-xs text-ink-400">{paidShare}% of all users</p>
               </div>
             </div>
             {/* The Dashboard shows this and Active Jobs: a phone goes straight on to the users. */}
-            <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm max-md:hidden">
+            <div className="relative overflow-hidden rounded-xl border border-ink-200/80 bg-card p-5 shadow-sm max-md:hidden">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-slate-500">Total Revenue</p>
-                <DollarSign className="h-4 w-4 text-slate-400" />
+                <p className="text-sm font-medium text-ink-500">Total Revenue</p>
+                <DollarSign className="h-4 w-4 text-ink-400" />
               </div>
               <div className="mt-2">
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-2xl font-bold text-ink-900">
                   {formatVnd(metrics?.totalRevenue || 0)}
                 </p>
-                <p className="mt-1 text-xs text-slate-400">Collected this year</p>
+                <p className="mt-1 text-xs text-ink-400">Collected this year</p>
               </div>
             </div>
-            <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm max-md:hidden">
+            <div className="relative overflow-hidden rounded-xl border border-ink-200/80 bg-card p-5 shadow-sm max-md:hidden">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-slate-500">Active Jobs</p>
-                <Activity className="h-4 w-4 text-slate-400" />
+                <p className="text-sm font-medium text-ink-500">Active Jobs</p>
+                <Activity className="h-4 w-4 text-ink-400" />
               </div>
               <div className="mt-2">
-                <p className="text-2xl font-bold text-slate-900">{metrics?.activeBatchJobs || 0}</p>
-                <p className="mt-1 text-xs text-slate-400">{(metrics?.totalBatchJobs ?? 0).toLocaleString()} jobs in total</p>
+                <p className="text-2xl font-bold text-ink-900">{metrics?.activeBatchJobs || 0}</p>
+                <p className="mt-1 text-xs text-ink-400">{(metrics?.totalBatchJobs ?? 0).toLocaleString()} jobs in total</p>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm max-md:gap-3 max-md:border-0 max-md:bg-transparent max-md:p-0 max-md:shadow-none">
+          <div className="flex flex-col gap-4 rounded-xl border border-ink-200/80 bg-card p-4 shadow-sm max-md:gap-3 max-md:border-0 max-md:bg-transparent max-md:p-0 max-md:shadow-none">
             {/* Top Filters & Search */}
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-3 max-[359px]:grid-cols-2 max-md:grid max-md:w-full max-md:grid-cols-3 max-md:gap-2">
                 <div className="relative w-72 max-md:col-span-full max-md:w-full">
-                  <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-slate-400" />
+                  <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-ink-400" />
                   <Input
                     placeholder="Search by name, email, or ID..."
-                    className="w-full bg-white pl-9"
+                    className="w-full bg-card pl-9"
                     value={request.searchTerm}
                     onChange={handleSearch}
                   />
@@ -275,7 +275,7 @@ export default function AdminUsersPage() {
                   value={request.role}
                   onValueChange={(val) => setRequest((prev) => ({ ...prev, role: val, pageIndex: 1 }))}
                 >
-                  <SelectTrigger className="w-[120px] bg-white max-md:w-full max-md:px-2 max-md:text-xs">
+                  <SelectTrigger className="w-[120px] bg-card max-md:w-full max-md:px-2 max-md:text-xs">
                     <SelectValue placeholder="All roles" />
                   </SelectTrigger>
                   <SelectContent>
@@ -289,7 +289,7 @@ export default function AdminUsersPage() {
                   value={request.plan}
                   onValueChange={(val) => setRequest((prev) => ({ ...prev, plan: val, pageIndex: 1 }))}
                 >
-                  <SelectTrigger className="w-[120px] bg-white max-md:w-full max-md:px-2 max-md:text-xs">
+                  <SelectTrigger className="w-[120px] bg-card max-md:w-full max-md:px-2 max-md:text-xs">
                     <SelectValue placeholder="All plans" />
                   </SelectTrigger>
                   <SelectContent>
@@ -304,7 +304,7 @@ export default function AdminUsersPage() {
                   value={request.status}
                   onValueChange={(val) => setRequest((prev) => ({ ...prev, status: val, pageIndex: 1 }))}
                 >
-                  <SelectTrigger className="w-[130px] bg-white max-[359px]:col-span-2 max-md:w-full max-md:px-2 max-md:text-xs">
+                  <SelectTrigger className="w-[130px] bg-card max-[359px]:col-span-2 max-md:w-full max-md:px-2 max-md:text-xs">
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
@@ -321,7 +321,7 @@ export default function AdminUsersPage() {
             {/* Data Table */}
             <div className="mt-2">
               {isLoading ? (
-                <div className="flex h-64 items-center justify-center text-sm text-slate-500">
+                <div className="flex h-64 items-center justify-center text-sm text-ink-500">
                   Loading users...
                 </div>
               ) : isError ? (
@@ -329,7 +329,7 @@ export default function AdminUsersPage() {
                   Failed to load user list. Please try again or contact support.
                 </div>
               ) : result && result.items.length === 0 ? (
-                <div className="flex h-64 items-center justify-center text-sm text-slate-500">
+                <div className="flex h-64 items-center justify-center text-sm text-ink-500">
                   No users match the search or filter criteria.
                 </div>
               ) : result ? (
@@ -343,7 +343,7 @@ export default function AdminUsersPage() {
                     onCopyId={handleCopyId}
                   />
                   <div className="flex items-center justify-between max-md:flex-col max-md:items-stretch max-md:gap-3">
-                    <p className="text-sm text-slate-500 max-md:text-center max-md:text-xs">
+                    <p className="text-sm text-ink-500 max-md:text-center max-md:text-xs">
                       Showing {result.items.length} of {result.totalCount} users
                     </p>
                     {isPhone ? (
@@ -363,7 +363,7 @@ export default function AdminUsersPage() {
                       >
                         Previous
                       </Button>
-                      <div className="px-2 text-sm text-slate-600">
+                      <div className="px-2 text-sm text-ink-600">
                         Page {result.pageNumber} of {result.totalPages}
                       </div>
                       <Button
@@ -384,30 +384,30 @@ export default function AdminUsersPage() {
         </div>
 
         <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-          <DialogContent className={cn("max-w-[480px] overflow-hidden rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl", USER_DIALOG_ON_PHONE)}>
+          <DialogContent className={cn("max-w-[480px] overflow-hidden rounded-[24px] border border-ink-200/50 bg-ink-50 p-0 shadow-2xl", USER_DIALOG_ON_PHONE)}>
             <div className="relative p-8 max-md:p-5">
               {/* Header: Clean & Centered */}
               <div className="flex flex-col items-center text-center">
-                <div className="flex size-24 items-center justify-center rounded-full border border-slate-100 bg-white p-1.5 shadow-sm max-md:size-16">
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-900 text-3xl font-bold text-white max-md:text-xl">
+                <div className="flex size-24 items-center justify-center rounded-full border border-ink-100 bg-card p-1.5 shadow-sm max-md:size-16">
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-ink-900 text-3xl font-bold text-card max-md:text-xl">
                     {selectedUser?.fullName.substring(0, 2).toUpperCase()}
                   </div>
                 </div>
-                <DialogTitle className="mt-5 text-2xl font-bold tracking-tight wrap-anywhere text-slate-900 max-md:mt-3 max-md:text-xl">
+                <DialogTitle className="mt-5 text-2xl font-bold tracking-tight wrap-anywhere text-ink-900 max-md:mt-3 max-md:text-xl">
                   {selectedUser?.fullName}
                 </DialogTitle>
-                <p className="mt-1.5 text-sm font-medium wrap-anywhere text-slate-500">
+                <p className="mt-1.5 text-sm font-medium wrap-anywhere text-ink-500">
                   {selectedUser?.email}
                 </p>
                 <div className="mt-4">
                   {selectedUser?.accountStatus.toLowerCase() === "active" && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100/60 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-emerald-700 ring-1 ring-emerald-600/20 ring-inset">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100/60 dark:bg-emerald-500/15 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-600/20 ring-inset">
                       <span className="size-1.5 rounded-full bg-emerald-500" />
                       Active Account
                     </span>
                   )}
                   {selectedUser?.accountStatus.toLowerCase() === "suspended" && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-100/60 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-rose-700 ring-1 ring-rose-600/20 ring-inset">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-100/60 dark:bg-rose-500/15 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-rose-700 dark:text-rose-300 ring-1 ring-rose-600/20 ring-inset">
                       <span className="size-1.5 rounded-full bg-rose-500" />
                       Suspended Account
                     </span>
@@ -421,72 +421,72 @@ export default function AdminUsersPage() {
                   <div className="flex flex-col gap-4">
                     {/* Row 1: ID & Role */}
                     <div className="grid grid-cols-2 gap-4 max-md:gap-2.5">
-                      <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
+                      <div className="rounded-2xl border border-ink-100/60 bg-card p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                         <div className="mb-2 flex items-center gap-2">
-                          <Shield className="size-4 text-slate-400" />
-                          <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">User ID</span>
+                          <Shield className="size-4 text-ink-400" />
+                          <span className="text-[10px] font-bold tracking-wider text-ink-400 uppercase">User ID</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="mr-2 truncate font-mono text-sm font-semibold text-slate-700" title={selectedUser.id}>{selectedUser.id.substring(0, 8)}...</span>
-                          <button onClick={() => handleCopyId(selectedUser.id)} className="text-slate-400 transition-colors hover:text-slate-900">
+                          <span className="mr-2 truncate font-mono text-sm font-semibold text-ink-700" title={selectedUser.id}>{selectedUser.id.substring(0, 8)}...</span>
+                          <button onClick={() => handleCopyId(selectedUser.id)} className="text-ink-400 transition-colors hover:text-ink-900">
                             <Copy className="size-4" />
                           </button>
                         </div>
                       </div>
-                      <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
+                      <div className="rounded-2xl border border-ink-100/60 bg-card p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                         <div className="mb-2 flex items-center gap-2">
-                          <Users className="size-4 text-slate-400" />
-                          <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Role</span>
+                          <Users className="size-4 text-ink-400" />
+                          <span className="text-[10px] font-bold tracking-wider text-ink-400 uppercase">Role</span>
                         </div>
-                        <span className="text-sm font-semibold text-slate-900">{selectedUser.roles.join(", ") || "None"}</span>
+                        <span className="text-sm font-semibold text-ink-900">{selectedUser.roles.join(", ") || "None"}</span>
                       </div>
                     </div>
 
                     {/* Row 2: Plan & Date */}
                     <div className="grid grid-cols-2 gap-4 max-md:gap-2.5">
-                      <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
+                      <div className="rounded-2xl border border-ink-100/60 bg-card p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                         <div className="mb-2 flex items-center gap-2">
                           <Zap className="size-4 text-amber-500" />
-                          <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Plan</span>
+                          <span className="text-[10px] font-bold tracking-wider text-ink-400 uppercase">Plan</span>
                         </div>
-                        <span className="text-sm font-semibold text-slate-900">{selectedUser.plan}</span>
+                        <span className="text-sm font-semibold text-ink-900">{selectedUser.plan}</span>
                       </div>
-                      <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
+                      <div className="rounded-2xl border border-ink-100/60 bg-card p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                         <div className="mb-2 flex items-center gap-2">
-                          <Calendar className="size-4 text-slate-400" />
-                          <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Joined Date</span>
+                          <Calendar className="size-4 text-ink-400" />
+                          <span className="text-[10px] font-bold tracking-wider text-ink-400 uppercase">Joined Date</span>
                         </div>
-                        <span className="text-sm font-semibold text-slate-900">{new Date(selectedUser.createdAt).toLocaleDateString()}</span>
+                        <span className="text-sm font-semibold text-ink-900">{new Date(selectedUser.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
 
                     {/* Row 3: Jobs & Cost */}
-                    <div className="flex items-center justify-between rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
+                    <div className="flex items-center justify-between rounded-2xl border border-ink-100/60 bg-card p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                       <div>
                         <div className="mb-1 flex items-center gap-2">
                           <Activity className="size-4 text-emerald-500" />
-                          <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Active Jobs</span>
+                          <span className="text-[10px] font-bold tracking-wider text-ink-400 uppercase">Active Jobs</span>
                         </div>
-                        <span className="text-xl font-bold text-slate-900">{selectedUser.totalJobs}</span>
+                        <span className="text-xl font-bold text-ink-900">{selectedUser.totalJobs}</span>
                       </div>
-                      <div className="h-10 w-px bg-slate-100"></div>
+                      <div className="h-10 w-px bg-ink-100"></div>
                       <div className="text-right">
                         <div className="mb-1 flex items-center justify-end gap-2">
-                          <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Plan Price</span>
+                          <span className="text-[10px] font-bold tracking-wider text-ink-400 uppercase">Plan Price</span>
                         </div>
-                        <span className="text-xl font-bold text-slate-900">{formatVnd(selectedUser.monthlyApiCost)}</span>
+                        <span className="text-xl font-bold text-ink-900">{formatVnd(selectedUser.monthlyApiCost)}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Footer Actions */}
                   <div className="mt-2 flex items-center justify-center gap-3 max-md:grid max-md:grid-cols-2 max-md:gap-2.5">
-                    <Button variant="outline" className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900" onClick={() => setIsViewModalOpen(false)}>
+                    <Button variant="outline" className="h-11 flex-1 rounded-xl border-ink-200 bg-card font-semibold text-ink-700 shadow-sm hover:bg-ink-50 hover:text-ink-900" onClick={() => setIsViewModalOpen(false)}>
                       Close
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900"
+                      className="h-11 flex-1 rounded-xl border-ink-200 bg-card font-semibold text-ink-700 shadow-sm hover:bg-ink-50 hover:text-ink-900"
                       onClick={() => {
                         setIsViewModalOpen(false);
                         if (selectedUser) handleEditUser(selectedUser);
@@ -497,7 +497,7 @@ export default function AdminUsersPage() {
                     {selectedUser.accountStatus.toLowerCase() !== "suspended" && (
                       <Button
                         variant="outline"
-                        className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-rose-600 shadow-sm transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 max-md:col-span-2"
+                        className="h-11 flex-1 rounded-xl border-ink-200 bg-card font-semibold text-rose-600 dark:text-rose-400 shadow-sm transition-colors hover:border-rose-200 dark:hover:border-rose-500/30 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-700 dark:hover:text-rose-300 max-md:col-span-2"
                         onClick={() => {
                           setIsViewModalOpen(false);
                           handleSuspendUser(selectedUser);

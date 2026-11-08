@@ -21,7 +21,7 @@ export function FeatureImpactNote({
 }) {
   if (isLoading || !impact) {
     return (
-      <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
+      <div className="flex items-center gap-2 rounded-xl bg-ink-50 px-4 py-3 text-sm text-ink-500">
         <Spinner className="size-4" /> Checking who this reaches…
       </div>
     );
@@ -33,13 +33,13 @@ export function FeatureImpactNote({
     <div
       className={cn(
         "flex gap-3 rounded-xl px-4 py-3 text-sm",
-        impact.isReduction ? "bg-amber-50 text-amber-900" : "bg-slate-50 text-slate-600"
+        impact.isReduction ? "bg-amber-50 dark:bg-amber-500/10 text-amber-900 dark:text-amber-300" : "bg-ink-50 text-ink-600"
       )}
     >
       {impact.isReduction ? (
-        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" aria-hidden="true" />
+        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
       ) : (
-        <Info className="mt-0.5 size-4 shrink-0 text-slate-400" aria-hidden="true" />
+        <Info className="mt-0.5 size-4 shrink-0 text-ink-400" aria-hidden="true" />
       )}
       <ul className="space-y-1">
         {impact.isReduction ? (

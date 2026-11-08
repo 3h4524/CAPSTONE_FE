@@ -41,11 +41,11 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
   if (isError) {
     return (
       <AdminShell pageTitle="Test report">
-        <div className="rounded-lg border border-rose-200 bg-rose-50/50 px-5 py-14 text-center">
-          <p className="text-sm font-semibold text-rose-800">
+        <div className="rounded-lg border border-rose-200 dark:border-rose-500/30 bg-rose-50/50 dark:bg-rose-500/10 px-5 py-14 text-center">
+          <p className="text-sm font-semibold text-rose-800 dark:text-rose-300">
             This report could not be read
           </p>
-          <p className="mt-1 text-xs text-rose-600">
+          <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
             The backend that keeps the reports did not answer.
           </p>
           <Button variant="outline" className="mt-4" onClick={() => refetch()}>
@@ -61,8 +61,8 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
     return (
       <AdminShell pageTitle="Test report">
         <div className="space-y-4">
-          <div className="h-36 animate-pulse rounded-xl bg-slate-100" />
-          <div className="h-64 animate-pulse rounded-xl bg-slate-100" />
+          <div className="h-36 animate-pulse rounded-xl bg-ink-100" />
+          <div className="h-64 animate-pulse rounded-xl bg-ink-100" />
         </div>
       </AdminShell>
     );
@@ -72,7 +72,7 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
     <AdminShell pageTitle="Test report">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <Button variant="ghost" size="sm" asChild className="gap-2 text-slate-500">
+          <Button variant="ghost" size="sm" asChild className="gap-2 text-ink-500">
             <Link href="/admin/test-reports">
               <ArrowLeft className="size-4" />
               All test reports
@@ -91,7 +91,7 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
 
         <TestReportVerdict run={data.run} />
         {isRunning ? (
-          <p className="rounded-xl border border-sky-100 bg-sky-50/40 px-5 py-4 text-xs leading-relaxed text-slate-600">
+          <p className="rounded-xl border border-sky-100 dark:border-sky-500/30 bg-sky-50/40 dark:bg-sky-500/10 px-5 py-4 text-xs leading-relaxed text-ink-600">
             This page follows the live state, so the verdict above flips the moment the suite
             lands — the took on this page counts up while it is still going. The arrow above
             still forces a pull if you want one.
@@ -110,12 +110,12 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
               <TestReportFileFailures files={data.files} />
             </div>
 
-            <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-              <div className="border-b border-slate-100 px-5 py-4">
-                <h3 className="text-xs font-bold tracking-wide text-slate-800 uppercase">
+            <section className="overflow-hidden rounded-xl border border-ink-200 bg-card">
+              <div className="border-b border-ink-100 px-5 py-4">
+                <h3 className="text-xs font-bold tracking-wide text-ink-800 uppercase">
                   The slowest tests
                 </h3>
-                <p className="mt-0.5 text-[10px] text-slate-400">
+                <p className="mt-0.5 text-[10px] text-ink-400">
                   The tests that took the most time in this run.
                 </p>
               </div>

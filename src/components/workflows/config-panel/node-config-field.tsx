@@ -110,7 +110,7 @@ export const NodeConfigField = ({ field, control, videoMode }: NodeConfigFieldPr
               <FormControl>
                 <Textarea
                   rows={3}
-                  className="min-h-20 resize-y bg-white"
+                  className="min-h-20 resize-y bg-card"
                   placeholder={field.placeholder}
                   value={text}
                   onChange={controller.onChange}

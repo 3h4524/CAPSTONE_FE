@@ -49,14 +49,14 @@ export const NodePaletteItem = ({ definition, disabled: disabledByEditor, onAdd 
     >
       <Icon className={cn("mt-0.5 size-4 shrink-0", theme.icon)} aria-hidden="true" />
       <span className="min-w-0">
-        <span className="block text-[13px] leading-5 font-semibold text-slate-800">{definition.label}</span>
+        <span className="block text-[13px] leading-5 font-semibold text-ink-800">{definition.label}</span>
         {capability && !capability.enabled && <Badge variant="outline" className="mt-1 text-[10px]">Not executable yet</Badge>}
         {lockedByPlan && (
           <Badge variant="outline" className="mt-1 gap-1 text-[10px]" title="Not included in your plan">
             <Lock className="size-3" aria-hidden="true" /> Pro
           </Badge>
         )}
-        <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">{definition.description}</span>
+        <span className="mt-0.5 block text-[11px] leading-snug text-ink-500">{definition.description}</span>
       </span>
     </Button>
   );

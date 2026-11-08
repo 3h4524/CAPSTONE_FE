@@ -141,7 +141,7 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
           <section className="space-y-3 border-t pt-5" aria-label="Mock-ups">
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-slate-900">Mock-ups</h3>
+                <h3 className="text-sm font-semibold text-ink-900">Mock-ups</h3>
                 <p className="text-muted-foreground mt-0.5 text-xs">
                   Uses the {chosenTemplateCount} template{chosenTemplateCount === 1 ? "" : "s"}{" "}
                   chosen in this node&apos;s Settings.
@@ -213,7 +213,7 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
           </section>
         ) : (
           <section className="space-y-3 border-t pt-5" aria-label="Generated images">
-            <h3 className="text-sm font-semibold text-slate-900">Generated images</h3>
+            <h3 className="text-sm font-semibold text-ink-900">Generated images</h3>
             {job.products.some(shownInResults) ? (
               <GeneratedImagesGrid
                 products={job.products}

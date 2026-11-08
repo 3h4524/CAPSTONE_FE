@@ -18,7 +18,7 @@ const HANDLE_CLASS_NAME =
   "group/connect flex! size-2.5! cursor-crosshair! items-center! justify-center! border-0! bg-transparent! before:absolute before:size-10 before:rounded-full before:content-['']";
 
 const HANDLE_DOT_CLASS_NAME =
-  "border-wf-accent/70 bg-white pointer-events-none absolute size-2.5 rounded-full border shadow-sm transition-[transform,background-color,border-color] duration-150 group-hover/connect:scale-125 motion-reduce:transition-none";
+  "border-wf-accent/70 bg-card pointer-events-none absolute size-2.5 rounded-full border shadow-sm transition-[transform,background-color,border-color] duration-150 group-hover/connect:scale-125 motion-reduce:transition-none";
 
 const HANDLE_ACTION_CLASS_NAME =
   "bg-wf-surface text-wf-accent border-wf-line pointer-events-none absolute grid size-7 scale-90 place-items-center rounded-full border opacity-0 shadow-md transition-[opacity,transform,background-color,color,box-shadow] duration-200 ease-out group-hover/connect:scale-105 group-hover/connect:bg-wf-accent group-hover/connect:text-wf-surface motion-reduce:transition-none";
@@ -104,7 +104,7 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
         <div className={cn("flex items-center gap-2 border-b px-2.5 py-2", theme.header)}>
           <NodeName label={data.label} Icon={definition.icon} iconClassName={theme.icon} />
           {!runnable && data.status === "idle" ? (
-            <span className="shrink-0 rounded-full border border-slate-200 bg-white/80 px-1.5 py-0.5 text-[9px] leading-none font-semibold tracking-wide text-slate-500 uppercase">
+            <span className="shrink-0 rounded-full border border-ink-200 bg-card/80 px-1.5 py-0.5 text-[9px] leading-none font-semibold tracking-wide text-ink-500 uppercase">
               Planned
             </span>
           ) : pill ? (

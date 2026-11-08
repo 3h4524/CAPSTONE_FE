@@ -87,8 +87,8 @@ export function PlanInsightsPanel({ focusPlan }: { focusPlan?: string | null }) 
 function LoadingState() {
   return (
     <div className="space-y-4">
-      <Card className="h-28 animate-pulse rounded-2xl border border-slate-200 bg-white" />
-      <Card className="h-80 animate-pulse rounded-2xl border border-slate-200 bg-white" />
+      <Card className="h-28 animate-pulse rounded-2xl border border-ink-200 bg-card" />
+      <Card className="h-80 animate-pulse rounded-2xl border border-ink-200 bg-card" />
     </div>
   );
 }
@@ -133,7 +133,7 @@ function InsightsContent({
         <PipelineCard data={data} />
       </Group>
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-ink-500">
         Plans under {data.minimumSample} subscribers are marked “not enough data”. Cost estimate:{" "}
         {data.unitCosts
           .map(
@@ -148,11 +148,11 @@ function InsightsContent({
 }
 
 const VERDICT_STYLE: Record<PlanVerdict["tone"], { chip: string; accent: string }> = {
-  danger: { chip: "bg-[#e76e50]/12 text-[#c4553a]", accent: "border-t-[#e76e50]" },
-  warning: { chip: "bg-amber-100 text-amber-800", accent: "border-t-amber-400" },
-  info: { chip: "bg-[#5b7aa6]/12 text-[#3f5f8a]", accent: "border-t-[#5b7aa6]" },
-  success: { chip: "bg-[#2a9d8f]/12 text-[#21796e]", accent: "border-t-[#2a9d8f]" },
-  neutral: { chip: "bg-slate-100 text-slate-600", accent: "border-t-slate-200" },
+  danger: { chip: "bg-[#e76e50]/12 text-[#c4553a] dark:text-[#dea091]", accent: "border-t-[#e76e50]" },
+  warning: { chip: "bg-amber-100 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300", accent: "border-t-amber-400" },
+  info: { chip: "bg-[#5b7aa6]/12 text-[#3f5f8a] dark:text-[#9db4d2]", accent: "border-t-[#5b7aa6]" },
+  success: { chip: "bg-[#2a9d8f]/12 text-[#21796e] dark:text-[#8fe0d6]", accent: "border-t-[#2a9d8f]" },
+  neutral: { chip: "bg-ink-100 text-ink-600", accent: "border-t-ink-200" },
 };
 
 // One card per paid plan: the verdict the rules reached, the figures behind it and what to do.
@@ -166,25 +166,25 @@ function VerdictCards({ data }: { data: PlanInsights }) {
           return (
             <Card
               key={verdict.key}
-              className={cn("gap-0 rounded-2xl border border-t-4 border-slate-200 bg-white p-5 shadow-none", style.accent)}
+              className={cn("gap-0 rounded-2xl border border-t-4 border-ink-200 bg-card p-5 shadow-none", style.accent)}
             >
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[15px] font-semibold text-slate-900">{verdict.name}</p>
+                <p className="text-[15px] font-semibold text-ink-900">{verdict.name}</p>
                 <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", style.chip)}>
                   {verdict.verdictLabel}
                 </span>
               </div>
-              <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
+              <ul className="mt-3 space-y-1.5 text-sm text-ink-600">
                 {verdict.evidence.map((line) => (
                   <li key={line} className="flex gap-2">
-                    <span className="mt-2 size-1 shrink-0 rounded-full bg-slate-400" />
+                    <span className="mt-2 size-1 shrink-0 rounded-full bg-ink-400" />
                     <span>{line}</span>
                   </li>
                 ))}
               </ul>
               {verdict.action && (
-                <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                  <span className="font-semibold text-slate-900">Next step: </span>
+                <p className="mt-4 rounded-lg bg-ink-50 px-3 py-2 text-sm text-ink-700">
+                  <span className="font-semibold text-ink-900">Next step: </span>
                   {verdict.action}
                 </p>
               )}
@@ -192,7 +192,7 @@ function VerdictCards({ data }: { data: PlanInsights }) {
           );
         })}
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-ink-500">
         Judged by fixed rules on the last {data.days} days: a plan priced {rules.premiumPriceRatio}× or more above
         the one below whose Sellers use no more is overpriced; the plan keeping the fewest customers (under{" "}
         {rules.lowRetentionRate}%) is a retention risk; Sellers already making as many designs and mockups as a
@@ -239,14 +239,14 @@ function SectionNav({ days }: { days: number }) {
   return (
     <nav
       aria-label="Plan Insights sections"
-      className="sticky top-[53px] z-10 -mx-1 flex items-center justify-between gap-3 bg-[#f8fafc]/90 px-1 py-2 backdrop-blur max-md:top-[65px]"
+      className="sticky top-[53px] z-10 -mx-1 flex items-center justify-between gap-3 bg-ink-50/90 px-1 py-2 backdrop-blur max-md:top-[65px]"
     >
       {isPhone ? (
         <Select value={active} onValueChange={jumpTo}>
-          <SelectTrigger aria-label="Jump to a section" className="w-full bg-white">
+          <SelectTrigger aria-label="Jump to a section" className="w-full bg-card">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent position="popper" className="w-(--radix-select-trigger-width) bg-white">
+          <SelectContent position="popper" className="w-(--radix-select-trigger-width) bg-card">
             {SECTIONS.map((section) => (
               <SelectItem key={section.id} value={section.id}>
                 {section.label}
@@ -255,7 +255,7 @@ function SectionNav({ days }: { days: number }) {
           </SelectContent>
         </Select>
       ) : (
-      <div className="flex gap-1 overflow-x-auto rounded-full border border-slate-200 bg-white p-1 shadow-xs">
+      <div className="flex gap-1 overflow-x-auto rounded-full border border-ink-200 bg-card p-1 shadow-xs">
         {SECTIONS.map((section) => (
           <a
             key={section.id}
@@ -267,7 +267,7 @@ function SectionNav({ days }: { days: number }) {
             aria-current={active === section.id ? "location" : undefined}
             className={cn(
               "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
-              active === section.id ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+              active === section.id ? "bg-ink-900 text-card" : "text-ink-500 hover:bg-ink-100 hover:text-ink-800"
             )}
           >
             {section.label}
@@ -275,7 +275,7 @@ function SectionNav({ days }: { days: number }) {
         ))}
       </div>
       )}
-      <span className="hidden shrink-0 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600 sm:inline">
+      <span className="hidden shrink-0 rounded-full border border-ink-200 bg-card px-3.5 py-1.5 text-xs font-medium text-ink-600 sm:inline">
         Last {days} days
       </span>
     </nav>
@@ -286,8 +286,8 @@ function Group({ id, label, description, children }: { id: string; label: string
   return (
     <section id={id} className="scroll-mt-32 space-y-4">
       <div>
-        <h2 className="text-lg font-semibold tracking-tight text-slate-900">{label}</h2>
-        {description && <p className="mt-0.5 max-w-3xl text-sm text-slate-500">{description}</p>}
+        <h2 className="text-lg font-semibold tracking-tight text-ink-900">{label}</h2>
+        {description && <p className="mt-0.5 max-w-3xl text-sm text-ink-500">{description}</p>}
       </div>
       {children}
     </section>
@@ -311,15 +311,15 @@ function Panel({
   return (
     <Card
       className={cn(
-        "gap-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-none",
+        "gap-0 rounded-2xl border border-ink-200 bg-card p-6 shadow-none",
         className
       )}
     >
       {(title || aside) && (
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            {title && <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>}
-            {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+            {title && <h3 className="text-[15px] font-semibold text-ink-900">{title}</h3>}
+            {subtitle && <p className="mt-1 text-sm text-ink-500">{subtitle}</p>}
           </div>
           {aside}
         </div>
@@ -330,7 +330,7 @@ function Panel({
 }
 
 function Empty({ text }: { text: string }) {
-  return <p className="py-10 text-center text-sm text-slate-400">{text}</p>;
+  return <p className="py-10 text-center text-sm text-ink-400">{text}</p>;
 }
 
 // Percentage points the conversion moved since the period before; both count finished trials only.
@@ -342,7 +342,7 @@ function ConversionChange({ trial }: { trial: PlanInsights["trial"] }) {
     <span
       className={cn(
         "flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
-        delta > 0 ? "bg-[#2a9d8f]/10 text-[#21796e]" : "bg-[#e76e50]/10 text-[#c4553a]"
+        delta > 0 ? "bg-[#2a9d8f]/10 text-[#21796e] dark:text-[#8fe0d6]" : "bg-[#e76e50]/10 text-[#c4553a] dark:text-[#dea091]"
       )}
     >
       {delta > 0 ? <ArrowUpRight className="size-3.5" /> : <ArrowDownRight className="size-3.5" />}
@@ -388,7 +388,7 @@ function TrialCard({ data }: { data: PlanInsights }) {
 
   return (
     <Panel className="p-0">
-      <dl className="grid grid-cols-2 divide-slate-100 border-b border-slate-100 lg:grid-cols-4 lg:divide-x">
+      <dl className="grid grid-cols-2 divide-ink-100 border-b border-ink-100 lg:grid-cols-4 lg:divide-x">
         <Figure label="Converted" hint={`${converted} of ${finished} finished trials`}>
           <span className="flex items-center gap-2">
             {formatRate(trial.conversionRate)}
@@ -407,8 +407,8 @@ function TrialCard({ data }: { data: PlanInsights }) {
       </dl>
 
       <div className="px-6 pt-5 pb-6">
-        <p className="text-sm font-semibold text-slate-900">What trial users used</p>
-        <p className="mt-0.5 text-xs text-slate-500">
+        <p className="text-sm font-semibold text-ink-900">What trial users used</p>
+        <p className="mt-0.5 text-xs text-ink-500">
           Share of finished trials that used each feature at least once, the widest gap between those who bought and those who did not first.
           {trial.previousConversionRate !== null && <> Conversion was {formatRate(trial.previousConversionRate)} the {data.days} days before.</>}
         </p>
@@ -419,33 +419,33 @@ function TrialCard({ data }: { data: PlanInsights }) {
           <div className="max-md:overflow-x-auto">
           <table className="mt-3 w-full border-collapse text-sm tabular-nums">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+              <tr className="border-b border-ink-200 text-left text-xs text-ink-500">
                 <th scope="col" className="py-2 pr-4 font-medium">Feature</th>
                 <th scope="col" className="w-[28%] px-4 py-2 font-medium">Bought</th>
                 <th scope="col" className="w-[28%] px-4 py-2 font-medium">Back to Free</th>
                 <th scope="col" className="py-2 pl-4 text-right font-medium">Gap</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-ink-100">
               {used.map((item) => {
                 const { name, ai } = splitAiLabel(item.label);
                 return (
-                  <tr key={item.metric} className="hover:bg-slate-50/70">
-                    <th scope="row" className="py-2.5 pr-4 text-left font-normal text-slate-800">
+                  <tr key={item.metric} className="hover:bg-ink-50/70">
+                    <th scope="row" className="py-2.5 pr-4 text-left font-normal text-ink-800">
                       {name}
-                      {ai && <span className="ml-1.5 rounded bg-[#5b7aa6]/12 px-1 py-px text-[10px] font-semibold text-[#3f5f8a]">AI</span>}
+                      {ai && <span className="ml-1.5 rounded bg-[#5b7aa6]/12 px-1 py-px text-[10px] font-semibold text-[#3f5f8a] dark:text-[#9db4d2]">AI</span>}
                     </th>
                     <td className="px-4 py-2.5">
                       <ShareBar value={item.convertedRate ?? 0} color={TEAL} />
                     </td>
                     <td className="px-4 py-2.5">
-                      <ShareBar value={item.notConvertedRate ?? 0} color="bg-slate-400" />
+                      <ShareBar value={item.notConvertedRate ?? 0} color="bg-ink-400" />
                     </td>
                     <td className="py-2.5 pl-4 text-right">
                       <span
                         className={cn(
                           "rounded px-1.5 py-px text-[11px] font-semibold",
-                          item.gap >= 20 ? "bg-[#2a9d8f]/15 text-[#21796e]" : item.gap < 0 ? "bg-[#e76e50]/12 text-[#c4553a]" : "bg-slate-100 text-slate-600"
+                          item.gap >= 20 ? "bg-[#2a9d8f]/15 text-[#21796e] dark:text-[#8fe0d6]" : item.gap < 0 ? "bg-[#e76e50]/12 text-[#c4553a] dark:text-[#dea091]" : "bg-ink-100 text-ink-600"
                         )}
                         title="Percentage points more of the trials that bought used it"
                       >
@@ -461,7 +461,7 @@ function TrialCard({ data }: { data: PlanInsights }) {
 </div>
         )}
         {unused.length > 0 && (
-          <p className="mt-3 text-xs text-slate-500">Not used in any trial: {unused.map((item) => splitAiLabel(item.label).name).join(", ")}.</p>
+          <p className="mt-3 text-xs text-ink-500">Not used in any trial: {unused.map((item) => splitAiLabel(item.label).name).join(", ")}.</p>
         )}
       </div>
     </Panel>
@@ -471,9 +471,9 @@ function TrialCard({ data }: { data: PlanInsights }) {
 function Figure({ label, hint, children }: { label: string; hint: string; children: React.ReactNode }) {
   return (
     <div className="px-6 py-5">
-      <dt className="text-xs font-medium text-slate-500">{label}</dt>
-      <dd className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{children}</dd>
-      <dd className="mt-0.5 text-xs text-slate-500">{hint}</dd>
+      <dt className="text-xs font-medium text-ink-500">{label}</dt>
+      <dd className="mt-1 text-2xl font-semibold tracking-tight text-ink-900 tabular-nums">{children}</dd>
+      <dd className="mt-0.5 text-xs text-ink-500">{hint}</dd>
     </div>
   );
 }
@@ -482,8 +482,8 @@ function Figure({ label, hint, children }: { label: string; hint: string; childr
 function ShareBar({ value, color }: { value: number; color: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="w-12 shrink-0 font-semibold text-slate-900">{formatShare(value)}</span>
-      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+      <span className="w-12 shrink-0 font-semibold text-ink-900">{formatShare(value)}</span>
+      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-ink-100">
         <span className={cn("block h-full rounded-full", color)} style={{ width: `${Math.min(100, value)}%` }} />
       </span>
     </div>
@@ -538,16 +538,16 @@ function PipelineCard({ data }: { data: PlanInsights }) {
   });
 
   return (
-    <Card className="gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-none">
+    <Card className="gap-4 rounded-2xl border border-ink-200 bg-card p-5 shadow-none">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-slate-900">Production pipeline</h3>
+          <h3 className="text-base font-semibold text-ink-900">Production pipeline</h3>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            <span className="font-semibold text-[#5f8a4c]">
+            <span className="font-semibold text-[#5f8a4c] dark:text-[#b0cca3]">
               {inProgress.toLocaleString()} in progress
             </span>
             {bottleneckStages.length > 0 && (
-              <span className="font-semibold text-rose-600">
+              <span className="font-semibold text-rose-600 dark:text-rose-400">
                 {" "}
                 · {bottleneckStages.length.toLocaleString()} stuck
               </span>
@@ -558,7 +558,7 @@ function PipelineCard({ data }: { data: PlanInsights }) {
         </div>
         <Link
           href="/batches"
-          className="inline-flex items-center gap-1 text-xs font-medium text-slate-800 hover:text-black hover:underline"
+          className="inline-flex items-center gap-1 text-xs font-medium text-ink-800 hover:text-black hover:underline"
         >
           Open batches
           <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -577,7 +577,7 @@ function PipelineCard({ data }: { data: PlanInsights }) {
           {/* The line joining the steps, from the first circle's centre to the last's. */}
           <span
             aria-hidden="true"
-            className="absolute top-[17px] h-0.5 rounded-full bg-slate-200"
+            className="absolute top-[17px] h-0.5 rounded-full bg-ink-200"
             style={{
               left: `calc(100% / (${data.pipeline.length * 2}))`,
               right: `calc(100% / (${data.pipeline.length * 2}))`,
@@ -602,10 +602,10 @@ function PipelineCard({ data }: { data: PlanInsights }) {
                     isBusiest
                       ? "border-[#2fae93] bg-[#2fae93] text-white shadow-md shadow-emerald-900/10"
                       : isBottleneck
-                        ? "border-rose-400 bg-white text-rose-600 ring-2 ring-rose-100"
+                        ? "border-rose-400 bg-card text-rose-600 dark:text-rose-400 ring-2 ring-rose-100 dark:ring-rose-500/30"
                         : isReviewStage
-                          ? "border-amber-400 bg-white text-amber-700 ring-2 ring-amber-100"
-                          : "border-slate-200 bg-white text-slate-700"
+                          ? "border-amber-400 bg-card text-amber-700 dark:text-amber-300 ring-2 ring-amber-100 dark:ring-amber-500/30"
+                          : "border-ink-200 bg-card text-ink-700"
                   )}
                   title={
                     isBusiest
@@ -620,7 +620,7 @@ function PipelineCard({ data }: { data: PlanInsights }) {
                 <span
                   className={cn(
                     "mt-2 flex max-w-full items-center gap-1 text-xs",
-                    isBusiest ? "font-semibold text-slate-900" : "text-slate-600"
+                    isBusiest ? "font-semibold text-ink-900" : "text-ink-600"
                   )}
                 >
                   <Icon className="size-3.5 shrink-0" aria-hidden="true" />
@@ -631,51 +631,51 @@ function PipelineCard({ data }: { data: PlanInsights }) {
 
                 <div
                   className={cn(
-                    "mt-3 flex w-full flex-1 flex-col gap-1 rounded-xl border bg-white p-2.5 shadow-sm shadow-slate-900/5 transition duration-300 hover:-translate-y-0.5 hover:shadow-md",
+                    "mt-3 flex w-full flex-1 flex-col gap-1 rounded-xl border bg-card p-2.5 shadow-sm shadow-slate-900/5 transition duration-300 hover:-translate-y-0.5 hover:shadow-md",
                     isBottleneck
-                      ? "border-rose-300"
+                      ? "border-rose-300 dark:border-rose-500/40"
                       : isReviewStage && stage.products > 0
-                        ? "border-amber-300"
-                        : "border-slate-200/80",
+                        ? "border-amber-300 dark:border-amber-500/40"
+                        : "border-ink-200/80",
                     !isLive && "border-dashed opacity-60"
                   )}
                 >
                   <span
                     className={cn(
-                      "text-lg leading-none font-semibold text-slate-900 tabular-nums",
-                      (stage.products === 0 || !isLive) && "text-slate-400"
+                      "text-lg leading-none font-semibold text-ink-900 tabular-nums",
+                      (stage.products === 0 || !isLive) && "text-ink-400"
                     )}
                   >
                     {isLive ? stage.products.toLocaleString() : "—"}
                   </span>
-                  <span className="text-[11px] text-slate-500 tabular-nums">
+                  <span className="text-[11px] text-ink-500 tabular-nums">
                     {isLive ? `${share.toFixed(1)}% of products` : "Not live yet"}
                   </span>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-ink-100">
                     <div
                       className={cn(
                         "h-full rounded-full transition-all duration-300",
-                        isBottleneck ? "bg-rose-500" : isBusiest ? "bg-[#2fae93]" : "bg-slate-200"
+                        isBottleneck ? "bg-rose-500" : isBusiest ? "bg-[#2fae93]" : "bg-ink-200"
                       )}
                       style={{ width: `${Math.min(100, isLive ? share : 0)}%` }}
                     />
                   </div>
                   <div className="mt-0.5 h-5">
                     {isBottleneck ? (
-                      <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold text-rose-600">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-rose-600 dark:text-rose-400">
                         <Hourglass className="size-3" aria-hidden="true" />
                         {lost > 0 ? `${lost.toLocaleString()} stuck` : `−${drop}% drop`}
                       </span>
                     ) : isReviewStage && stage.products > 0 ? (
-                      <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                      <span className="rounded-md bg-amber-100 dark:bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300">
                         Waits on review
                       </span>
                     ) : drop > 0 ? (
-                      <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                      <span className="rounded-md bg-ink-100 px-1.5 py-0.5 text-[10px] font-medium text-ink-600">
                         −{drop}% drop
                       </span>
                     ) : !isLive ? (
-                      <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-400">
+                      <span className="rounded-md bg-ink-100 px-1.5 py-0.5 text-[10px] text-ink-400">
                         Not live yet
                       </span>
                     ) : null}
@@ -688,7 +688,7 @@ function PipelineCard({ data }: { data: PlanInsights }) {
         </div>
       </ArrowScroller>
 
-      <ul className="text-muted-foreground flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-100 pt-3 text-[11px]">
+      <ul className="text-muted-foreground flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-ink-100 pt-3 text-[11px]">
         <li className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full bg-[#2fae93]" />
           Where most products are

@@ -44,14 +44,14 @@ export const MockupTemplateCard = ({ template, selected, onToggle, onFocusTempla
     onPointerEnter={() => onFocusTemplate?.(template.id)}
     onFocusCapture={() => onFocusTemplate?.(template.id)}
     className={cn(
-      "flex cursor-pointer items-start gap-3 rounded-xl border bg-white p-3 transition-colors",
-      selected ? "border-primary ring-primary/20 ring-2" : "border-slate-200 hover:border-slate-300"
+      "flex cursor-pointer items-start gap-3 rounded-xl border bg-card p-3 transition-colors",
+      selected ? "border-primary ring-primary/20 ring-2" : "border-ink-200 hover:border-ink-300"
     )}
   >
     <Checkbox checked={selected} onCheckedChange={() => onToggle(template.id)} aria-label={template.name} className="mt-1" />
     <TemplateThumbnail template={template} />
     <span className="min-w-0">
-      <span className="block truncate text-sm font-semibold text-slate-900">{template.name}</span>
+      <span className="block truncate text-sm font-semibold text-ink-900">{template.name}</span>
       <span className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1.5 text-xs">
         <span className="line-clamp-2">{template.productType}</span>
         {template.allowRecolor && <span>· recolorable</span>}

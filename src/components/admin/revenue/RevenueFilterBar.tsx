@@ -112,10 +112,10 @@ export function RevenueFilterBar({ filter,
       {/* Title & Subtitle */}
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 max-md:text-xl sm:text-3xl dark:text-slate-100">
+          <h1 className="text-2xl font-bold tracking-tight text-ink-900 max-md:text-xl sm:text-3xl dark:text-slate-100">
             Revenue Intelligence
           </h1>
-          <p className="mt-1 text-sm font-medium text-slate-500 max-md:hidden dark:text-slate-400">
+          <p className="mt-1 text-sm font-medium text-ink-500 max-md:hidden dark:text-slate-400">
             Track revenue, subscriptions, and financial performance with real-time insights.
           </p>
         </div>
@@ -125,17 +125,17 @@ export function RevenueFilterBar({ filter,
       {/* Right Controls Bar */}
       <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
         {/* Date Range Picker Pill */}
-        <div className="flex items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3 py-1.5 shadow-2xs max-md:w-full dark:border-slate-800 dark:bg-slate-900">
-          <Calendar className="h-4 w-4 shrink-0 text-slate-400 max-md:hidden dark:text-slate-500" />
+        <div className="flex items-center gap-2 rounded-xl border border-ink-200/90 bg-card px-3 py-1.5 shadow-2xs max-md:w-full dark:border-slate-800 dark:bg-slate-900">
+          <Calendar className="h-4 w-4 shrink-0 text-ink-400 max-md:hidden dark:text-slate-500" />
           <input
             type="date"
             value={filter.startDate}
             max={filter.endDate && filter.endDate < todayStr ? filter.endDate : todayStr}
             onChange={(e) => handleChange("startDate", e.target.value)}
             onClick={(e) => e.currentTarget.showPicker?.()}
-            className="cursor-pointer border-none bg-transparent p-0 text-xs font-semibold text-slate-700 outline-none focus:ring-0 max-md:min-w-0 max-md:flex-1 max-md:text-base dark:text-slate-200 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden"
+            className="cursor-pointer border-none bg-transparent p-0 text-xs font-semibold text-ink-700 outline-none focus:ring-0 max-md:min-w-0 max-md:flex-1 max-md:text-base dark:text-slate-200 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden"
           />
-          <span className="text-xs text-slate-300 dark:text-slate-600">–</span>
+          <span className="text-xs text-ink-300 dark:text-slate-600">–</span>
           <input
             type="date"
             value={filter.endDate}
@@ -143,13 +143,13 @@ export function RevenueFilterBar({ filter,
             max={todayStr}
             onChange={(e) => handleChange("endDate", e.target.value)}
             onClick={(e) => e.currentTarget.showPicker?.()}
-            className="cursor-pointer border-none bg-transparent p-0 text-xs font-semibold text-slate-700 outline-none focus:ring-0 max-md:min-w-0 max-md:flex-1 max-md:text-base dark:text-slate-200 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden"
+            className="cursor-pointer border-none bg-transparent p-0 text-xs font-semibold text-ink-700 outline-none focus:ring-0 max-md:min-w-0 max-md:flex-1 max-md:text-base dark:text-slate-200 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden"
           />
         </div>
 
         {/* Period Preset Segmented Pill */}
-        <div className="flex items-center gap-1 rounded-xl border border-slate-200/90 bg-slate-50/80 p-1 shadow-2xs max-md:w-full dark:border-slate-800 dark:bg-slate-900">
-          <span className="px-2 text-[11px] font-semibold text-slate-400 max-md:hidden dark:text-slate-500">
+        <div className="flex items-center gap-1 rounded-xl border border-ink-200/90 bg-ink-50/80 p-1 shadow-2xs max-md:w-full dark:border-slate-800 dark:bg-slate-900">
+          <span className="px-2 text-[11px] font-semibold text-ink-400 max-md:hidden dark:text-slate-500">
             Period:
           </span>
           {[
@@ -168,7 +168,7 @@ export function RevenueFilterBar({ filter,
               }
               className={`cursor-pointer rounded-lg px-2.5 py-1 text-xs font-semibold transition-all duration-150 max-md:min-h-9 max-md:flex-1 max-md:px-1 ${item.active
                   ? "bg-slate-900 text-white shadow-xs dark:bg-slate-100 dark:text-slate-900"
-                  : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                  : "text-ink-500 hover:text-ink-800 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
             >
               {item.label}

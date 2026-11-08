@@ -105,14 +105,14 @@ export function FinancialAlertsCard({
   };
 
   return (
-    <Card className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
+    <Card className="flex h-full flex-col rounded-2xl border border-ink-200/80 bg-card p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
       {/* Header */}
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
             <Bell className="h-5 w-5" />
           </div>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Financial Alerts</h3>
+          <h3 className="text-sm font-bold text-ink-900 dark:text-slate-100">Financial Alerts</h3>
           {unseenCount > 0 && (
             <span
               title={`${unseenCount} new alert${unseenCount === 1 ? "" : "s"} — open View all to mark as read`}
@@ -127,7 +127,7 @@ export function FinancialAlertsCard({
           <button
             type="button"
             onClick={openAll}
-            className="cursor-pointer text-xs font-semibold text-slate-400 transition-colors hover:text-slate-700 dark:hover:text-slate-200"
+            className="cursor-pointer text-xs font-semibold text-ink-400 transition-colors hover:text-ink-700 dark:hover:text-slate-200"
           >
             View all ({list.length})
           </button>
@@ -138,15 +138,15 @@ export function FinancialAlertsCard({
         {isLoading ? (
           Array.from({ length: VISIBLE_ALERTS }).map((_, i) => (
             <div key={i} className="flex animate-pulse items-center gap-3">
-              <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800" />
+              <div className="size-8 rounded-full bg-ink-100 dark:bg-slate-800" />
               <div className="flex-1 space-y-1">
-                <div className="h-3.5 w-24 rounded bg-slate-100 dark:bg-slate-800" />
-                <div className="h-3 w-40 rounded bg-slate-100 dark:bg-slate-800" />
+                <div className="h-3.5 w-24 rounded bg-ink-100 dark:bg-slate-800" />
+                <div className="h-3 w-40 rounded bg-ink-100 dark:bg-slate-800" />
               </div>
             </div>
           ))
         ) : list.length === 0 ? (
-          <p className="py-6 text-center text-xs text-slate-400">No alert data for this period.</p>
+          <p className="py-6 text-center text-xs text-ink-400">No alert data for this period.</p>
         ) : (
           list
             .slice(0, VISIBLE_ALERTS)
@@ -203,14 +203,14 @@ function AlertItem({
             {isNew && <span aria-label="New" className="size-1.5 shrink-0 rounded-full bg-rose-500" />}
             {alert.title}
           </h4>
-          <span className="shrink-0 text-[10px] font-medium text-slate-400 max-md:max-w-full max-md:shrink max-md:wrap-anywhere dark:text-slate-500">{alert.scope}</span>
+          <span className="shrink-0 text-[10px] font-medium text-ink-400 max-md:max-w-full max-md:shrink max-md:wrap-anywhere dark:text-slate-500">{alert.scope}</span>
         </div>
-        <p className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">{alert.description}</p>
+        <p className="mt-0.5 text-[11px] leading-snug text-ink-500 dark:text-slate-400">{alert.description}</p>
         {(alert.amount != null || alert.actionStatus) && (
           <div className="mt-1 flex items-center justify-between gap-2">
             {alert.amount != null ? (
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                <span className="font-semibold text-slate-800 tabular-nums dark:text-slate-200">
+              <span className="text-[11px] text-ink-500 dark:text-slate-400">
+                <span className="font-semibold text-ink-800 tabular-nums dark:text-slate-200">
                   {formatVnd(alert.amount)}
                 </span>{" "}
                 {alert.amountLabel}

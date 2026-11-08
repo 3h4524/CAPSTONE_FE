@@ -136,7 +136,7 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
   }, [node.id, node.data.config, node.data.type, updateNodeConfig, setValue]);
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-card">
       {showHeader && <PanelHeader node={node} onClose={() => selectNode(null)} />}
       {/* Radix lays the content out as a table that grows to its widest line; block keeps it inside the panel. */}
       <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:block!">

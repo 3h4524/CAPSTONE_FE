@@ -22,7 +22,7 @@ export const VerifyEmailStatus = () => {
   if (!token) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-ink-600">
           This link is missing its verification token. Enter your email to get a new one.
         </p>
         <FormResendVerification />
@@ -31,17 +31,17 @@ export const VerifyEmailStatus = () => {
   }
 
   if (isPending) {
-    return <p className="text-sm text-gray-600">Verifying your email...</p>;
+    return <p className="text-sm text-ink-600">Verifying your email...</p>;
   }
 
   if (isSuccess) {
-    return <p className="text-sm text-green-700">Your email is verified. You can sign in now.</p>;
+    return <p className="text-sm text-green-700 dark:text-green-300">Your email is verified. You can sign in now.</p>;
   }
 
   if (isError) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-red-600 dark:text-red-400">
           {getErrorMessage(error, "This verification link is invalid or expired.")}
         </p>
         <FormResendVerification />

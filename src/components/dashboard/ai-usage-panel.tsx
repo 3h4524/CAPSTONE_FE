@@ -17,7 +17,7 @@ const FEATURE_COLORS: Record<string, string> = {
   video: "#f4a261",
   listing: "#e07a5f",
   seo: "#e2b05a",
-  integration: "#94a3b8",
+  integration: "var(--ink-400)",
 };
 const FALLBACK_COLOR = "#b8a99a";
 
@@ -46,7 +46,7 @@ const SpendDonut = ({ usage, total }: { usage: AiFeatureCost[]; total: number })
             <stop offset="100%" stopColor="#2fae93" />
           </linearGradient>
         </defs>
-        <circle cx="50" cy="50" r={RADIUS} fill="none" strokeWidth="11" stroke="#e6f4f2" />
+        <circle cx="50" cy="50" r={RADIUS} fill="none" strokeWidth="11" stroke="color-mix(in srgb, #2fae93 16%, transparent)" />
         {usage.map((feature) => {
           const length = total > 0 ? (feature.costUsd / total) * CIRCUMFERENCE : 0;
           const slice = Math.max(0, length - gap);
@@ -108,7 +108,7 @@ export const AiUsagePanel = ({ usage }: { usage: AiFeatureCost[] }) => {
         </div>
         <Link
           href="/usage"
-          className="inline-flex items-center gap-1 text-xs font-medium text-[#c2410c] hover:underline"
+          className="inline-flex items-center gap-1 text-xs font-medium text-[#c2410c] dark:text-[#eda182] hover:underline"
         >
           Details
           <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -116,7 +116,7 @@ export const AiUsagePanel = ({ usage }: { usage: AiFeatureCost[] }) => {
       </div>
 
       {calls === 0 ? (
-        <p className="text-muted-foreground flex flex-1 items-center justify-center rounded-xl bg-[#fbf7f2] p-6 text-xs">
+        <p className="text-muted-foreground flex flex-1 items-center justify-center rounded-xl bg-ink-100 p-6 text-xs">
           No AI calls in this period. Run a batch to see costs here.
         </p>
       ) : (
@@ -129,7 +129,7 @@ export const AiUsagePanel = ({ usage }: { usage: AiFeatureCost[] }) => {
                   key={stat.label}
                   className={cn(
                     "flex items-center justify-between gap-3 rounded-xl px-3 py-2",
-                    stat.alert ? "bg-rose-50" : "bg-[#fbf7f2]"
+                    stat.alert ? "bg-rose-50 dark:bg-rose-500/10" : "bg-ink-100"
                   )}
                 >
                   <div className="min-w-0">
@@ -137,7 +137,7 @@ export const AiUsagePanel = ({ usage }: { usage: AiFeatureCost[] }) => {
                     <p
                       className={cn(
                         "text-[10px]",
-                        stat.alert ? "text-rose-600" : "text-muted-foreground"
+                        stat.alert ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"
                       )}
                     >
                       {stat.hint}
@@ -146,7 +146,7 @@ export const AiUsagePanel = ({ usage }: { usage: AiFeatureCost[] }) => {
                   <dd
                     className={cn(
                       "shrink-0 text-sm font-semibold tabular-nums",
-                      stat.alert && "text-rose-600"
+                      stat.alert && "text-rose-600 dark:text-rose-400"
                     )}
                   >
                     {stat.value}

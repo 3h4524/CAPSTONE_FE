@@ -19,9 +19,9 @@ export function RemoveFeatureDialog({ target, onClose }: { target: FeatureTarget
 
   return (
     <Dialog open={target !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[calc(100%-20px)] max-w-[480px] gap-0 rounded-[24px] border-0 bg-white p-0">
+      <DialogContent className="w-[calc(100%-20px)] max-w-[480px] gap-0 rounded-[24px] border-0 bg-card p-0">
         <DialogHeader className="flex-row items-start gap-3 px-6 pt-6 pb-3 text-left">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400">
             <MinusCircle className="size-[18px]" aria-hidden="true" />
           </div>
           <div className="space-y-1">
@@ -34,7 +34,7 @@ export function RemoveFeatureDialog({ target, onClose }: { target: FeatureTarget
         <div className="px-6 py-3">
           <FeatureImpactNote impact={impact.data} isLoading={impact.isLoading} planName={target?.plan.name ?? ""} />
         </div>
-        <div className="flex justify-end gap-2 border-t border-slate-100 px-6 py-4">
+        <div className="flex justify-end gap-2 border-t border-ink-100 px-6 py-4">
           <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
             Cancel
           </Button>

@@ -1,7 +1,6 @@
 import axios from "axios";
 
 import { api } from "@/api/client";
-import type { MockupMetadataFormValues } from "@/schemas/video-workflow";
 import type {
   AiCharacterCatalogItem,
   AiSceneVideo,
@@ -105,21 +104,6 @@ export const listMockupAssets = async (id: string) =>
   (await api.get<MockupAsset[]>(`/api/products/${id}/mockup-assets`)).data;
 export const uploadMockupAsset = async ({ productId, file }: { productId: string; file: File }) =>
   (await api.postForm<MockupAsset>(`/api/products/${productId}/mockup-assets`, { file })).data;
-export const generateLifestyleMockup = async ({
-  productId,
-  garmentMockupId,
-  file,
-}: {
-  productId: string;
-  garmentMockupId: string;
-  file: File;
-}) =>
-  (
-    await api.postForm<MockupAsset>(`/api/products/${productId}/mockup-assets/lifestyle`, {
-      garmentMockupId,
-      file,
-    })
-  ).data;
 const studioFrameForm = (request: AiStudioFrameRequest) => {
   const form = new FormData();
   form.append("sourceMockupId", request.sourceMockupId);
@@ -155,12 +139,6 @@ export const generateAiStudioFrame = async ({
       studioFrameForm(request)
     )
   ).data;
-export const updateMockupAsset = async ({
-  id,
-  expectedRevision,
-  ...values
-}: MockupMetadataFormValues & { id: string; expectedRevision: number }) =>
-  (await api.put<MockupAsset>(`/api/mockup-assets/${id}`, { ...values, expectedRevision })).data;
 export const reviewMockupAsset = async ({
   id,
   revision,

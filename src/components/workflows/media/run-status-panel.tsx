@@ -6,7 +6,6 @@ import { Progress } from "@/components/ui/progress";
 import { confirmAiShot } from "@/helpers/confirm-ai-shot";
 import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
-import { useMediaDownload } from "@/hooks/mutations/use-media-download";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { generateVideoConfigSchema } from "@/schemas/workflow";
@@ -15,7 +14,6 @@ import { useWorkflowStore } from "@/stores/workflow";
 export const RunStatusPanel = () => {
   const { run, isError, refetch } = useWorkflowRuntime();
   const { mutate: action, isPending } = useWorkflowRunAction();
-  const { mutate: download, isPending: isDownloading } = useMediaDownload();
   const active = run?.nodes.find(n => n.status === "running");
   const exportStep = run?.nodes.find(n => n.nodeType === "export-zip");
   const aiMode = useWorkflowStore(state => {
@@ -48,6 +46,5 @@ export const RunStatusPanel = () => {
       <span>{run.errorMessage}</span>
     </p>}
     {run.status === "failed" && <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => retry()}>Retry checkpoint</Button>{aiMode && <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => retry(true)}>Regenerate AI clips</Button>}</div>}
-    {exportStep?.status === "succeeded" && typeof exportStep.output.exportId === "string" && <Button type="button" disabled={isDownloading} onClick={() => download({ id: String(exportStep.output.exportId), zip: true }, { onSuccess: url => window.location.assign(url) })}>Download approved ZIP</Button>}
   </div>;
 };

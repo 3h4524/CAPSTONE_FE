@@ -503,6 +503,21 @@ describe("generateVideoConfigSchema", () => {
     expect(result.success && result.data.mode).toBe("ai_shot");
   });
 
+  it("preserves the AI start frame crop and rejects a crop outside the image", () => {
+    const crop = { x: 0.2, y: 0.3, width: 0.4, height: 0.5 };
+    const scene = {
+      mode: "ai", mockupId: "11111111-1111-4111-8111-111111111111", templateCode: "cinematic_product_showcase",
+      durationSeconds: 5, framing: "medium", cameraAngle: "three_quarter", cameraMovement: "push_in",
+      subjectMotion: "none", motionIntensity: "subtle", lighting: "soft_studio", extraInstructions: null,
+      rightsConfirmed: false, aiStartFrameCrop: crop,
+    };
+    const config = { ...valid, mode: "ai_shot", durationSeconds: 5, aiScenes: [scene] };
+    const parsed = generateVideoConfigSchema.safeParse(config);
+    expect(parsed.success && parsed.data.aiScenes?.[0]?.aiStartFrameCrop).toEqual(crop);
+    const invalid = generateVideoConfigSchema.safeParse({ ...config, aiScenes: [{ ...scene, aiStartFrameCrop: { ...crop, x: 0.8 } }] });
+    expect(invalid.success).toBe(false);
+  });
+
   it("requires the ai shot scene settings when the mode is ai_shot", () => {
     const result = generateVideoConfigSchema.safeParse({ ...valid, mode: "ai_shot" });
 

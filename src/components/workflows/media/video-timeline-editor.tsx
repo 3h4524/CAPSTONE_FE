@@ -12,6 +12,7 @@ import {
 } from "react";
 import {
   Check,
+  ChevronRight,
   Clapperboard,
   GripVertical,
   Loader2,
@@ -1525,17 +1526,20 @@ export function VideoTimelineEditor({
       <Button
         type="button"
         variant="outline"
-        className="h-auto min-h-11 w-full justify-between gap-3 px-3 py-2 text-left"
+        className="group border-border/80 bg-background hover:border-primary/30 hover:bg-muted/40 hover:text-primary min-h-16 w-full justify-start gap-3 rounded-lg border px-3 py-3 text-left whitespace-normal transition-colors hover:translate-y-0"
         disabled={disabled || scenes.length === 0}
         onClick={start}
       >
-        <span className="flex min-w-0 items-center gap-2">
-          <Clapperboard className="text-primary size-4 shrink-0" />
-          <span className="truncate">Edit full video</span>
+        <span className="bg-muted text-primary flex size-9 shrink-0 items-center justify-center rounded-md">
+          <Clapperboard aria-hidden="true" className="size-4" />
         </span>
-        <span className="text-muted-foreground shrink-0 text-[11px] font-normal">
-          Timeline, text, music
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold">Edit full video</span>
+          <span className="text-muted-foreground mt-0.5 block text-xs leading-relaxed font-normal">
+            Adjust timeline, text and music
+          </span>
         </span>
+        <ChevronRight aria-hidden="true" className="text-muted-foreground group-hover:text-primary size-4 shrink-0 transition-colors" />
       </Button>
       <Dialog open={open} onOpenChange={(value) => (value ? start() : cancel())}>
         <DialogContent

@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { DEFAULT_WORKFLOW_DEFINITION } from "@/constants/workflow";
-import { clampRegion, createRegion, moveRegion, resizeRegion } from "@/helpers/regions";
 import { getVideoOutputFormat, getVideoOutputFormats } from "@/helpers/video-output-formats";
 import {
   createFramingCrop,
@@ -587,7 +586,7 @@ test("template availability explains missing variant and detail requirements", (
       template({ requirements: { minimumAssets: 1, requiresDetail: true, minimumVariants: 0 } }),
       [hero]
     ),
-    { available: false, reason: "Add an Artwork Detail image or mark a detail region." }
+    { available: false, reason: "An approved Artwork Detail image or an existing detail region is required." }
   );
   assert.deepEqual(
     getTemplateAvailability(
@@ -607,34 +606,8 @@ test("template availability tolerates missing catalog requirements", () => {
   );
   assert.deepEqual(
     getTemplateAvailability(template({ code: "design_detail", requirements: null }), [hero]),
-    { available: false, reason: "Add an Artwork Detail image or mark a detail region." }
+    { available: false, reason: "An approved Artwork Detail image or an existing detail region is required." }
   );
-});
-test("region drawing and keyboard-style adjustments stay inside the image", () => {
-  assert.deepEqual(createRegion({ x: 0.8, y: 0.9 }, { x: 0.2, y: 0.3 }), {
-    x: 0.2,
-    y: 0.3,
-    width: 0.6,
-    height: 0.6,
-  });
-  assert.deepEqual(moveRegion({ x: 0.8, y: 0.8, width: 0.3, height: 0.3 }, 0.1, 0.1), {
-    x: 0.7,
-    y: 0.7,
-    width: 0.3,
-    height: 0.3,
-  });
-  assert.deepEqual(resizeRegion({ x: 0.8, y: 0.8, width: 0.1, height: 0.1 }, 0.5, 0.5), {
-    x: 0.8,
-    y: 0.8,
-    width: 0.2,
-    height: 0.2,
-  });
-  assert.deepEqual(clampRegion({ x: -1, y: -1, width: 0.001, height: 0.001 }), {
-    x: 0,
-    y: 0,
-    width: 0.04,
-    height: 0.04,
-  });
 });
 test("default pipeline cannot bypass either approval gate", () => {
   const nodes = toWorkflowNodes(DEFAULT_WORKFLOW_DEFINITION);

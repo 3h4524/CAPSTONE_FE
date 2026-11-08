@@ -20,7 +20,6 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/components/workflows/media/lifestyle-mockup-form", () => ({ LifestyleMockupForm: () => null }));
 vi.mock("@/components/workflows/media/mockup-card", () => ({ MockupCard: () => null }));
 vi.mock("@/components/workflows/media/mockup-upload-form", () => ({ MockupUploadForm: () => null }));
 vi.mock("@/helpers/confirm-ai-shot", () => ({ confirmAiShot: mocks.confirmAiShot }));

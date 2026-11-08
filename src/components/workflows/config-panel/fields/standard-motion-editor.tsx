@@ -9,6 +9,7 @@ import {
   Diamond,
   Minus,
   Pause,
+  Pencil,
   Play,
   Plus,
   RotateCcw,
@@ -760,7 +761,7 @@ export function StandardMotionPreview({
           startPreview();
         }
       }}
-      className="focus-visible:ring-ring relative mr-auto ml-0 w-40 max-w-full cursor-pointer overflow-hidden rounded-md bg-black shadow-md outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+      className="focus-visible:ring-ring relative mr-auto ml-0 w-full max-w-[7.5rem] cursor-pointer overflow-hidden rounded-md bg-black shadow-md outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
       style={{ aspectRatio: previewAspect }}
     >
       {motion === "contain_gentle" ? (
@@ -1372,22 +1373,15 @@ export function StandardMotionEditor({
       <Button
         type="button"
         variant="outline"
+        size="sm"
         disabled={disabled}
         onClick={openEditor}
-        className="h-auto min-h-11 w-full max-w-full flex-wrap justify-between gap-x-3 gap-y-1 px-3 py-2 text-left whitespace-normal"
+        aria-label={`Edit motion for scene ${sceneNumber}`}
+        className="h-10 gap-2 border px-3 text-xs shadow-none hover:translate-y-0"
       >
-        <span className="flex min-w-0 items-center gap-2">
-          <SlidersHorizontal className="text-primary size-4 shrink-0" aria-hidden="true" />
-          <span className="truncate">Advanced · first and last frame</span>
-        </span>
-        <span className="text-muted-foreground shrink-0 text-[11px] font-normal">Open editor</span>
+        <Pencil className="size-3.5" aria-hidden="true" />
+        Edit motion
       </Button>
-      {!source && (
-        <p className="text-muted-foreground text-[11px]">
-          You can set up the motion now. Choose an approved start frame to preview it on the
-          product.
-        </p>
-      )}
 
       <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? openEditor() : cancelEditor())}>
         <DialogContent

@@ -13,7 +13,7 @@ import nextPlugin from "@next/eslint-plugin-next";
 // Use the adaptive tokens instead: ink-50…900, card, background, foreground, muted, border.
 // Classes behind a `dark:` variant, translucent white overlays (bg-white/10) and the dark half of
 // the scale (always-dark islands such as video players) are allowed.
-const HARDCODED_NEUTRAL = String.raw`(^|\s)((?!dark:)[a-z0-9\-\[\]&@*>.=]+:)*(text-(slate|gray|zinc|neutral|stone)-(300|400|500|600|700|800|900|950)|(bg|border|border-[trblxy]|divide|ring|from|via|to)-(slate|gray|zinc|neutral|stone)-(50|100|200|300|400)|bg-white(?=\s|$|\x2F[5-9]\d))(?![\w-])`;
+const HARDCODED_NEUTRAL = String.raw`(^|\s)((?!dark:)[a-z0-9_\-\[\]&@*>.=]+:)*(text-(slate|gray|zinc|neutral|stone)-(300|400|500|600|700|800|900|950)|(bg|border|border-[trblxy]|divide|ring|from|via|to)-(slate|gray|zinc|neutral|stone)-(50|100|200|300|400)|bg-white(?=\s|$|\x2F[5-9]\d))(?![\w-])`;
 const HARDCODED_NEUTRAL_MESSAGE =
   "Hard-coded light neutral breaks dark mode. Use ink-* / bg-card / text-foreground tokens (see src/styles/globals.css).";
 

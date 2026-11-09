@@ -201,11 +201,11 @@ export const PlanComparisonCard = ({
           <span className={cn("text-3xl font-bold tracking-tight tabular-nums @md:text-4xl", isDark ? "text-white" : "text-ink-900")}>
             {formatVnd(showsAnnual ? plan.annualPriceVnd! : plan.monthlyPriceVnd)}
           </span>
-          <span className={cn("text-sm", isDark ? "text-ink-300" : "text-ink-500")}>
+          <span className={cn("text-sm", isDark ? "text-white/80" : "text-ink-500")}>
             /{showsAnnual ? "year" : "month"}
           </span>
         </p>
-        <p className={cn("mt-1 min-h-4 text-xs", isDark ? "text-ink-400" : "text-ink-500")}>
+        <p className={cn("mt-1 min-h-4 text-xs", isDark ? "text-white/60" : "text-ink-500")}>
           {showsAnnual
             ? `≈ ${formatVnd(Math.round(plan.annualPriceVnd! / 12))} a month`
             : cycle === "annual"
@@ -232,7 +232,7 @@ export const PlanComparisonCard = ({
       </Button>
 
       {plan.description && (
-        <p className={cn("mt-5 text-sm @md:mt-7 @md:text-[15px]", isDark ? "text-ink-300" : "text-ink-500")}>{plan.description}</p>
+        <p className={cn("mt-5 text-sm @md:mt-7 @md:text-[15px]", isDark ? "text-white/80" : "text-ink-500")}>{plan.description}</p>
       )}
 
       {basePlan && (
@@ -256,7 +256,7 @@ export const PlanComparisonCard = ({
           </li>
         ))}
         {more > 0 && (
-          <li className={cn("pl-6.5 text-xs", isDark ? "text-ink-400" : "text-ink-500")}>
+          <li className={cn("pl-6.5 text-xs", isDark ? "text-white/60" : "text-ink-500")}>
             + {more} more, listed at checkout
           </li>
         )}

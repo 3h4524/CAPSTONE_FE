@@ -369,7 +369,7 @@ function PlanCard({
   const listed = baseCodes && !showAllFeatures ? included.filter((feature) => !baseCodes.has(feature.code)) : included;
   const limits = planLimits(plan, definitions);
   const isDark = isRecommended;
-  const iconButton = isDark ? "text-ink-300 hover:bg-white/10 hover:text-white" : undefined;
+  const iconButton = isDark ? "text-white/80 hover:bg-white/10 hover:text-white" : undefined;
   // Each card opens its own sections; "Show all details" opens or closes them all.
   const [isMissingOpen, setIsMissingOpen] = useState(showDetails);
   const [isLimitsOpen, setIsLimitsOpen] = useState(showDetails);
@@ -426,7 +426,7 @@ function PlanCard({
               }}
               className={cn(
                 "mt-0.5 -ml-1.5 cursor-grab rounded p-0.5 active:cursor-grabbing [@media(pointer:coarse)]:hidden",
-                isDark ? "text-ink-400 hover:bg-white/10 hover:text-white" : "text-ink-300 hover:bg-ink-100 hover:text-ink-600"
+                isDark ? "text-white/60 hover:bg-white/10 hover:text-white" : "text-ink-300 hover:bg-ink-100 hover:text-ink-600"
               )}
             >
               <GripVertical className="size-4" />
@@ -439,7 +439,7 @@ function PlanCard({
                 aria-label={`${plan.name}: move earlier`}
                 disabled={position.index === 0}
                 onClick={() => onMove(-1)}
-                className={cn("inline-flex size-10 items-center justify-center rounded disabled:opacity-30", isDark ? "text-ink-300" : "text-ink-500")}
+                className={cn("inline-flex size-10 items-center justify-center rounded disabled:opacity-30", isDark ? "text-white/80" : "text-ink-500")}
               >
                 <ChevronLeft className="size-4" aria-hidden="true" />
               </button>
@@ -448,7 +448,7 @@ function PlanCard({
                 aria-label={`${plan.name}: move later`}
                 disabled={position.index >= position.count - 1}
                 onClick={() => onMove(1)}
-                className={cn("inline-flex size-10 items-center justify-center rounded disabled:opacity-30", isDark ? "text-ink-300" : "text-ink-500")}
+                className={cn("inline-flex size-10 items-center justify-center rounded disabled:opacity-30", isDark ? "text-white/80" : "text-ink-500")}
               >
                 <ChevronRight className="size-4" aria-hidden="true" />
               </button>
@@ -553,7 +553,7 @@ function PlanCard({
             onClick={() => onDelete(plan)}
           >
             <Trash2
-              className={cn("size-3.5", plan.canDelete ? "text-rose-500" : isDark ? "text-ink-400" : "text-ink-300")}
+              className={cn("size-3.5", plan.canDelete ? "text-rose-500" : isDark ? "text-white/60" : "text-ink-300")}
             />
           </Button>
         </div>
@@ -566,14 +566,14 @@ function PlanCard({
           <span className={cn("text-4xl font-extrabold tracking-tight tabular-nums max-md:text-3xl", isDark ? "text-white" : "text-ink-900")}>
             {formatVnd(plan.monthlyPriceVnd)}
           </span>
-          <span className={cn("text-sm", isDark ? "text-ink-300" : "text-ink-500")}>/month</span>
+          <span className={cn("text-sm", isDark ? "text-white/80" : "text-ink-500")}>/month</span>
         </p>
-        <p className={cn("mt-1 min-h-4 text-xs", isDark ? "text-ink-300" : "text-ink-500")}>
+        <p className={cn("mt-1 min-h-4 text-xs", isDark ? "text-white/80" : "text-ink-500")}>
           {plan.annualPriceVnd !== null ? `or ${formatVnd(plan.annualPriceVnd)} a year` : ""}
         </p>
         {/* Two lines tall when any plan has a description, so the figures below line up across cards. */}
         {hasDescriptions && (
-          <p className={cn("mt-3 line-clamp-2 min-h-10 text-xs leading-5", isDark ? "text-ink-300" : "text-ink-500")}>
+          <p className={cn("mt-3 line-clamp-2 min-h-10 text-xs leading-5", isDark ? "text-white/80" : "text-ink-500")}>
             {plan.description}
           </p>
         )}
@@ -598,7 +598,7 @@ function PlanCard({
 
       <div className="flex-1 px-6 pt-5">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className={cn("flex items-center gap-1.5 text-[11px] font-semibold tracking-wide uppercase", isDark ? "text-ink-300" : "text-ink-600")}>
+          <p className={cn("flex items-center gap-1.5 text-[11px] font-semibold tracking-wide uppercase", isDark ? "text-white/80" : "text-ink-600")}>
             Features
             <span
               className={cn(
@@ -613,7 +613,7 @@ function PlanCard({
             <button
               type="button"
               onClick={() => setShowAllFeatures((value) => !value)}
-              className={cn("text-[11px] font-semibold", isDark ? "text-ink-300 hover:text-white" : "text-ink-500 hover:text-ink-900")}
+              className={cn("text-[11px] font-semibold", isDark ? "text-white/80 hover:text-white" : "text-ink-500 hover:text-ink-900")}
             >
               {showAllFeatures ? "Show only what's new" : `Show all ${included.length}`}
             </button>
@@ -651,7 +651,7 @@ function PlanCard({
                   onClick={() => onRemove(feature.code, feature.label)}
                   className={cn(
                     "rounded p-0.5 opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100",
-                    isDark ? "text-ink-400 hover:bg-rose-500/20 hover:text-rose-300" : "text-ink-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
+                    isDark ? "text-white/60 hover:bg-rose-500/20 hover:text-rose-300" : "text-ink-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                   )}
                 >
                   <X className="size-3.5" />
@@ -666,7 +666,7 @@ function PlanCard({
       <div className={cn("mt-5 divide-y border-t px-6 pb-4", isDark ? "divide-white/10 border-white/10" : "divide-ink-100 border-ink-100")}>
         {/* A plan with every feature keeps the row, so the footers of side-by-side cards line up. */}
         {missing.length === 0 && (
-          <p className={cn("py-2.5 text-[11px] font-semibold tracking-wide uppercase", isDark ? "text-ink-400" : "text-ink-400")}>
+          <p className={cn("py-2.5 text-[11px] font-semibold tracking-wide uppercase", isDark ? "text-white/60" : "text-ink-400")}>
             Every feature included
           </p>
         )}
@@ -695,7 +695,7 @@ function PlanCard({
               {missing.map((feature) => (
                 <li
                   key={feature.code}
-                  className={cn("group flex items-center gap-2 py-0.5 text-xs", isDark ? "text-ink-400" : "text-ink-400")}
+                  className={cn("group flex items-center gap-2 py-0.5 text-xs", isDark ? "text-white/60" : "text-ink-400")}
                 >
                   <span className="min-w-0 flex-1 truncate">{feature.label}</span>
                   <button
@@ -706,7 +706,7 @@ function PlanCard({
                     onClick={() => onQuickAdd(feature.code)}
                     className={cn(
                       "rounded p-0.5 opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100 disabled:opacity-40 [@media(hover:none)]:opacity-100",
-                      isDark ? "text-ink-400 hover:bg-emerald-500/20 hover:text-emerald-300" : "text-ink-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
+                      isDark ? "text-white/60 hover:bg-emerald-500/20 hover:text-emerald-300" : "text-ink-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
                     )}
                   >
                     <Plus className="size-3.5" />
@@ -728,10 +728,10 @@ function PlanCard({
         {isLimitsOpen && (
         <ul className="mt-1.5 grid gap-x-6 gap-y-0.5 @lg:grid-cols-2">
           {limits.map((limit) => (
-            <li key={limit.code} className={cn("group flex items-center gap-2 text-[11px]", isDark ? "text-ink-300" : "text-ink-500")}>
+            <li key={limit.code} className={cn("group flex items-center gap-2 text-[11px]", isDark ? "text-white/80" : "text-ink-500")}>
               <span className="min-w-0 flex-1 truncate">
                 {limit.label}
-                {isSafetyCap(limit.code) && <span className={isDark ? "text-ink-400" : "text-ink-400"}> · hidden from Sellers</span>}
+                {isSafetyCap(limit.code) && <span className={isDark ? "text-white/60" : "text-ink-400"}> · hidden from Sellers</span>}
               </span>
               <span className={cn("font-semibold tabular-nums", isDark ? "text-slate-100" : "text-ink-700")}>
                 {limit.value === null ? "No limit" : `${limit.value.toLocaleString()}${units.get(limit.code) ? ` ${units.get(limit.code)}` : ""}`}
@@ -742,7 +742,7 @@ function PlanCard({
                 onClick={() => onEditLimit({ code: limit.code, label: limit.label, current: limit.value, unit: units.get(limit.code) ?? null })}
                 className={cn(
                   "rounded p-0.5",
-                  isDark ? "text-ink-400 hover:bg-white/10 hover:text-white" : "text-ink-300 hover:bg-ink-100 hover:text-ink-700"
+                  isDark ? "text-white/60 hover:bg-white/10 hover:text-white" : "text-ink-300 hover:bg-ink-100 hover:text-ink-700"
                 )}
               >
                 <Pencil className="size-3" />
@@ -776,7 +776,7 @@ function SectionToggle({
       onClick={onToggle}
       className={cn(
         "-ml-1 flex items-center gap-1 rounded-md px-1 py-0.5 text-[11px] font-semibold tracking-wide uppercase",
-        isDark ? "text-ink-300 hover:text-white" : "text-ink-500 hover:text-ink-900"
+        isDark ? "text-white/80 hover:text-white" : "text-ink-500 hover:text-ink-900"
       )}
     >
       <ChevronDown className={cn("size-3.5 transition-transform", !isOpen && "-rotate-90")} />
@@ -837,7 +837,7 @@ function Stat({
         {value}
         {extra}
       </p>
-      <p className={cn("text-[10px] font-semibold tracking-wide uppercase", isDark ? "text-ink-300" : "text-ink-400")}>{label}</p>
+      <p className={cn("text-[10px] font-semibold tracking-wide uppercase", isDark ? "text-white/80" : "text-ink-400")}>{label}</p>
     </div>
   );
 }

@@ -22,6 +22,7 @@ import {
 } from "recharts";
 
 import type { MarketListingPoint, MarketShareTiers, MarketSupplyPoint } from "@/api/market-opportunities";
+import { useIsPhone } from "@/hooks/use-is-phone";
 
 // Chart roles from the validated reference palette (light surface). The first three
 // categorical slots pass the all-pairs CVD and normal-vision checks; slot 3 (aqua) is
@@ -176,6 +177,7 @@ export function ShareDonut({ tiers }: { tiers: MarketShareTiers }) {
  */
 export function PriceInterestScatter({ points, p25, p75, currency }: { points: MarketListingPoint[]; p25: number | null; p75: number | null; currency: string | null }) {
   const { t } = useTranslation("common");
+  const isPhone = useIsPhone();
   // A handful of very expensive listings would squeeze every other dot against the axis,
   // so the price axis stops at the 95th percentile and the rest is reported below the chart.
   const priceCap = useMemo(() => {
@@ -189,6 +191,7 @@ export function PriceInterestScatter({ points, p25, p75, currency }: { points: M
   const fresh = visible.filter((point) => point.isNew);
   const newLabel = t("marketRadar.seriesNew", { defaultValue: "New listings (under 90 days)" });
   const oldLabel = t("marketRadar.seriesEstablished", { defaultValue: "Established listings" });
+  const bandLabel = t("marketRadar.typicalPriceBand", { defaultValue: "Typical price (middle 50%)" });
   const priceAxis = currency
     ? t("marketRadar.listPriceAxisCurrency", { defaultValue: "List price before discounts ({{currency}})", currency })
     : t("marketRadar.listPriceAxis", { defaultValue: "List price before discounts" });
@@ -218,6 +221,14 @@ export function PriceInterestScatter({ points, p25, p75, currency }: { points: M
         />
       </div>
     )}
+    {/* A phone is too narrow for the chart's own legend and band label: they wrap onto the plot, so they sit above it. */}
+    {isPhone && (
+      <ul className="text-ink-600 mt-3 mb-1 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+        <ScatterLegendItem label={oldLabel} swatch="size-2 rounded-full" color={chart.series1} />
+        <ScatterLegendItem label={newLabel} swatch="size-2 rounded-full" color={chart.series2} />
+        {p25 != null && p75 != null && <ScatterLegendItem label={bandLabel} swatch="h-2.5 w-4 rounded-sm" color={chart.seriesWash} />}
+      </ul>
+    )}
     <div className="h-80 w-full [&_*:focus]:outline-none" role="img" aria-label={t("marketRadar.scatterLabel", { defaultValue: "Price against favorites per month for the top listings" })}>
       <ResponsiveContainer>
         <ScatterChart margin={{ top: 8, right: 16, bottom: 24, left: 12 }}>
@@ -229,7 +240,7 @@ export function PriceInterestScatter({ points, p25, p75, currency }: { points: M
               fill={chart.series1}
               fillOpacity={0.06}
               stroke="none"
-              label={{ value: t("marketRadar.typicalPriceBand", { defaultValue: "Typical price (middle 50%)" }), position: "insideTop", offset: 6, fill: chart.inkSecondary, fontSize: 11 }}
+              label={isPhone ? undefined : { value: bandLabel, position: "insideTop", offset: 6, fill: chart.inkSecondary, fontSize: 11 }}
             />
           )}
           <XAxis
@@ -273,14 +284,16 @@ export function PriceInterestScatter({ points, p25, p75, currency }: { points: M
                 : null;
             }}
           />
-          <Legend
-            verticalAlign="top"
-            align="left"
-            height={28}
-            iconType="circle"
-            iconSize={8}
-            formatter={(value: string) => <span className="text-ink-600 text-xs">{value}</span>}
-          />
+          {!isPhone && (
+            <Legend
+              verticalAlign="top"
+              align="left"
+              height={28}
+              iconType="circle"
+              iconSize={8}
+              formatter={(value: string) => <span className="text-ink-600 text-xs">{value}</span>}
+            />
+          )}
           <Scatter name={oldLabel} data={established} fill={chart.series1} stroke={chart.surface} strokeWidth={2} isAnimationActive={false} shape="circle" cursor="pointer" onClick={openListing} />
           <Scatter name={newLabel} data={fresh} fill={chart.series2} stroke={chart.surface} strokeWidth={2} isAnimationActive={false} shape="circle" cursor="pointer" onClick={openListing} />
         </ScatterChart>
@@ -322,6 +335,15 @@ function median(values: number[]) {
   const middle = Math.floor(sorted.length / 2);
   const value = sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
   return Math.round(value * 10) / 10;
+}
+
+function ScatterLegendItem({ label, swatch, color }: { label: string; swatch: string; color: string }) {
+  return (
+    <li className="flex items-center gap-1.5">
+      <span className={`${swatch} shrink-0`} style={{ background: color }} />
+      {label}
+    </li>
+  );
 }
 
 function BandStat({ label, value, hint, emphasis }: { label: string; value: string; hint: string; emphasis?: boolean }) {

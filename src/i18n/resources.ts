@@ -5,7 +5,7 @@ export const resources = {
         sections: { overview: "Overview", workspace: "Workspace", system: "System" },
         items: {
           dashboard: "Dashboard", shop: "Shop", workflows: "Workflows", batches: "Batches", styles: "My Styles",
-          templates: "Design templates", apiKeys: "API keys", usage: "Usage", marketRadar: "Market Radar",
+          templates: "Design templates", mockups: "Mock-up templates", apiKeys: "API keys", usage: "Usage", marketRadar: "Market Radar",
           support: "Support", settings: "Settings", billing: "Billing",
         },
         primary: "Primary navigation", mobile: "Mobile navigation",
@@ -138,7 +138,7 @@ export const resources = {
         sections: { overview: "Tổng quan", workspace: "Không gian làm việc", system: "Hệ thống" },
         items: {
           dashboard: "Bảng điều khiển", shop: "Cửa hàng", workflows: "Quy trình", batches: "Lô sản phẩm", styles: "Phong cách của tôi",
-          templates: "Mẫu thiết kế", apiKeys: "API keys", usage: "Sử dụng", marketRadar: "Market Radar",
+          templates: "Mẫu thiết kế", mockups: "Mẫu mock-up", apiKeys: "API keys", usage: "Sử dụng", marketRadar: "Market Radar",
           support: "Hỗ trợ", settings: "Cài đặt", billing: "Thanh toán",
         },
         primary: "Điều hướng chính", mobile: "Điều hướng trên điện thoại",

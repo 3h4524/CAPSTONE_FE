@@ -23,7 +23,7 @@ export const SectionCard = ({
       className
     )}
   >
-    <div className="flex flex-col justify-between gap-3 border-b border-ink-100 px-5 py-4 sm:flex-row sm:items-start sm:px-6">
+    <div className="flex flex-col justify-between gap-3 border-b border-ink-100 px-5 py-4 max-md:px-4 max-md:py-3 sm:flex-row sm:items-start sm:px-6">
       <div className="min-w-0">
         <h3 className="text-base font-semibold text-ink-900">{title}</h3>
         {description ? (

@@ -40,7 +40,7 @@ export const EvaluationPanel = () => {
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 max-md:gap-3">
       <RunToolbar
         runs={runList}
         selectedRun={selectedRun}

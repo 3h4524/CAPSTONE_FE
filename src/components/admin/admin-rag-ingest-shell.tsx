@@ -22,6 +22,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { showToast } from "@/helpers/toast";
 import { useMutation } from "@/hooks/mutations/use-mutation";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { cn } from "@/utils/cn";
 
 const CONTENT_TYPES = [
@@ -36,6 +37,13 @@ const CONTENT_TYPES = [
 const ACCEPTED_FILES = ".txt,.md,.csv,.json,.html,.htm";
 
 type AdminRagTab = "ingest" | "research" | "documents" | "search";
+
+const RAG_TABS: { value: AdminRagTab; label: string; shortLabel: string }[] = [
+  { value: "ingest", label: "Ingest document", shortLabel: "Ingest" },
+  { value: "research", label: "Market Insights", shortLabel: "Insights" },
+  { value: "documents", label: "Documents & versions", shortLabel: "Docs" },
+  { value: "search", label: "Search playground", shortLabel: "Search" },
+];
 
 type AdminRagIngestShellProps = {
   fullName: string;
@@ -58,6 +66,9 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
   const [language, setLanguage] = useState("en");
   const [contentType, setContentType] = useState<RagIngestRequest["contentType"]>("listing");
   const [content, setContent] = useState("");
+  const isPhone = useIsPhone();
+  // Only the title and type are required, so a phone keeps the optional fields one tap away.
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   useEffect(() => {
     const previousHtmlOverflow = document.documentElement.style.overflow;
@@ -142,15 +153,16 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
         <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden dark:lg:bg-panel dark:lg:my-2 dark:lg:mr-2 dark:lg:h-[calc(100dvh-1rem)] dark:lg:rounded-xl dark:lg:border">
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="relative min-h-0 flex-1 overflow-y-auto">
             <AdminTopbar
               fullName={fullName}
               onMenuClick={() => setIsMobileSidebarOpen(true)}
               pageTitle={activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
             />
             <main className="mx-auto max-w-[1600px] px-4 py-4 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]">
-              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-                <div>
+              <div className="flex flex-col justify-between gap-4 max-md:gap-3 md:flex-row md:items-end">
+                {/* These two tabs open with a heading of their own. */}
+                <div className={cn((activeTab === "documents" || activeTab === "search") && "max-md:hidden")}>
                   <p className="text-[10px] font-bold tracking-[0.16em] text-ink-400 uppercase">
                     Knowledge base
                   </p>
@@ -163,56 +175,37 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                       : "Ingest documents, review versions, and control which knowledge is active for retrieval."}
                   </p>
                 </div>
-                <div className="flex flex-wrap rounded-lg border border-ink-200 bg-card p-1 shadow-sm">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={activeTab === "ingest" ? "default" : "ghost"}
-                    onClick={() => setActiveTab("ingest")}
-                  >
-                    Ingest document
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={activeTab === "research" ? "default" : "ghost"}
-                    onClick={() => setActiveTab("research")}
-                  >
-                    Market Insights
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={activeTab === "documents" ? "default" : "ghost"}
-                    onClick={() => setActiveTab("documents")}
-                  >
-                    Documents & versions
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={activeTab === "search" ? "default" : "ghost"}
-                    onClick={() => setActiveTab("search")}
-                  >
-                    Search playground
-                  </Button>
+                <div className="flex flex-wrap rounded-lg border border-ink-200 bg-card p-1 shadow-sm max-md:grid max-md:grid-cols-4 max-md:gap-1">
+                  {RAG_TABS.map((tab) => (
+                    <Button
+                      key={tab.value}
+                      type="button"
+                      size="sm"
+                      variant={activeTab === tab.value ? "default" : "ghost"}
+                      className="max-md:min-h-10 max-md:min-w-0 max-md:px-1 max-md:text-xs"
+                      onClick={() => setActiveTab(tab.value)}
+                    >
+                      <span className="max-md:hidden">{tab.label}</span>
+                      <span className="md:hidden">{tab.shortLabel}</span>
+                    </Button>
+                  ))}
                 </div>
               </div>
 
               <>
                 {/* The guide only concerns adding knowledge, and folds away once read. */}
                 {activeTab === "ingest" && <RagUsageGuide />}
-                <div className={activeTab === "research" ? "mt-6" : "hidden"}>
+                <div className={activeTab === "research" ? "mt-6 max-md:mt-3" : "hidden"}>
                   <AdminMarketResearchPanel />
                 </div>
                 <div
                   className={
                     activeTab === "ingest"
-                      ? "mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]"
+                      ? "mt-5 grid gap-5 max-md:mt-3 max-md:grid-cols-[minmax(0,1fr)] max-md:gap-3 xl:grid-cols-[minmax(0,1fr)_340px]"
                       : "hidden"
                   }
                 >
-                  <section className="rounded-xl border border-ink-200 bg-card p-5 shadow-sm sm:p-6">
+                  <section className="rounded-xl border border-ink-200 bg-card p-5 shadow-sm max-md:p-4 sm:p-6">
                     <div className="flex items-center justify-between gap-3 border-b border-ink-100 pb-4">
                       <div>
                         <h2 className="text-sm font-bold text-ink-900">Document content</h2>
@@ -234,6 +227,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                           type="button"
                           variant="outline"
                           size="sm"
+                          className="max-md:hidden"
                           onClick={() => inputRef.current?.click()}
                         >
                           <Upload className="size-3.5" /> Choose file
@@ -288,13 +282,17 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                           <span className="mt-2 max-w-full truncate text-xs font-semibold text-ink-700">
                             {fileName}
                           </span>
-                          <span className="mt-1 text-[11px] text-ink-400">Click to replace</span>
+                          <span className="mt-1 text-[11px] text-ink-400 max-md:hidden">Click to replace</span>
+                          <span className="mt-1 text-[11px] text-ink-400 md:hidden">Tap to replace</span>
                         </>
                       ) : (
                         <>
                           <FileText className="size-6 text-ink-400" />
-                          <span className="mt-2 text-xs font-semibold text-ink-600">
+                          <span className="mt-2 text-xs font-semibold text-ink-600 max-md:hidden">
                             Drop a document here or browse
+                          </span>
+                          <span className="mt-2 text-xs font-semibold text-ink-600 md:hidden">
+                            Tap to choose a file
                           </span>
                           <span className="mt-1 text-[11px] text-ink-400">
                             TXT, MD, CSV, JSON, or HTML
@@ -327,14 +325,14 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                       value={content}
                       onChange={(event) => setContent(event.target.value)}
                       placeholder="Paste or review the document content…"
-                      className="mt-2 min-h-[300px] resize-y text-sm leading-6"
+                      className="mt-2 min-h-[300px] resize-y text-sm leading-6 max-md:min-h-40 max-md:text-base"
                     />
                     <p className="mt-2 text-right text-[11px] text-ink-400">
                       {content.length.toLocaleString()} characters
                     </p>
                   </section>
 
-                  <aside className="rounded-xl border border-ink-200 bg-card p-5 shadow-sm sm:p-6">
+                  <aside className="rounded-xl border border-ink-200 bg-card p-5 shadow-sm max-md:p-4 sm:p-6">
                     <h2 className="text-sm font-bold text-ink-900">Document metadata</h2>
                     <p className="mt-1 text-xs leading-5 text-ink-400">
                       These fields help retrieval target the right knowledge.
@@ -370,12 +368,23 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                           </SelectContent>
                         </Select>
                       </Field>
+                      <button
+                        type="button"
+                        aria-expanded={isMoreOpen}
+                        onClick={() => setIsMoreOpen((open) => !open)}
+                        className="flex min-h-10 w-full items-center justify-between text-xs font-semibold text-ink-700 md:hidden"
+                      >
+                        More details
+                        <ChevronDown className={cn("size-4 text-ink-400 transition-transform", isMoreOpen && "rotate-180")} aria-hidden="true" />
+                      </button>
+                      <div className={cn("space-y-4", !isMoreOpen && "max-md:hidden")}>
                       <Field label="Source id">
                         <Input
                           value={sourceId}
                           onChange={(event) => setSourceId(event.target.value)}
-                          placeholder="faq-about-apcs (same id replaces the older version)"
+                          placeholder={isPhone ? "faq-about-apcs" : "faq-about-apcs (same id replaces the older version)"}
                         />
+                        <span className="mt-1 block text-[11px] font-normal text-ink-400 md:hidden">The same id replaces the older version.</span>
                       </Field>
                       <Field label="Source type">
                         <Input
@@ -408,6 +417,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                           />
                         </Field>
                       </div>
+                      </div>
                     </div>
                     <div className="mt-6 border-t border-ink-100 pt-5">
                       <Button
@@ -434,10 +444,10 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                     </div>
                   </aside>
                 </div>
-                <div className={activeTab === "documents" ? "mt-6" : "hidden"}>
+                <div className={activeTab === "documents" ? "mt-6 max-md:mt-3" : "hidden"}>
                   <AdminRagDocumentsPanel onIngest={() => setActiveTab("ingest")} />
                 </div>
-                <div className={activeTab === "search" ? "mt-6" : "hidden"}>
+                <div className={activeTab === "search" ? "mt-6 max-md:mt-3" : "hidden"}>
                   <RagSearchPlayground />
                 </div>
               </>
@@ -469,12 +479,13 @@ const Field = ({
 const RagUsageGuide = () => {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <section className="mt-6 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/60 dark:bg-indigo-500/10 p-4 sm:p-5">
-      <div className="flex items-start gap-3">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-card text-indigo-600 dark:text-indigo-400 shadow-sm">
+    <section className="mt-6 rounded-xl border border-ink-200 bg-card p-4 shadow-sm max-md:mt-3 sm:p-5">
+      <div className="flex items-start gap-3 max-md:flex-wrap max-md:gap-y-1">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-ink-100 text-ink-600">
           <Info className="size-4" />
         </div>
-        <div>
+        {/* On a phone the text keeps the row beside the icon and the button drops below it. */}
+        <div className="max-md:basis-[calc(100%-2.75rem)]">
           <h2 className="text-sm font-bold text-ink-900">
             Quick guide: how to use the RAG knowledge base
           </h2>
@@ -486,7 +497,7 @@ const RagUsageGuide = () => {
           type="button"
           variant="ghost"
           size="sm"
-          className="ml-auto shrink-0 text-indigo-700 dark:text-indigo-300"
+          className="ml-auto shrink-0"
           onClick={() => setIsOpen((value) => !value)}
           aria-expanded={isOpen}
         >
@@ -518,13 +529,13 @@ const RagUsageGuide = () => {
               text="Open Documents & versions to check status and manage which version is active."
             />
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-indigo-100 dark:border-indigo-500/30 pt-3 text-[11px] leading-5 text-ink-500">
-            <span className="font-semibold text-indigo-700 dark:text-indigo-300">Etsy tip:</span>
+          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-ink-100 pt-3 text-[11px] leading-5 text-ink-500">
+            <span className="font-semibold text-ink-800">Etsy tip:</span>
             <span>
               Run now automatically selects the top 3 listings and queues them for RAG. Enable a schedule
               for recurring research.
             </span>
-            <ArrowRight className="size-3.5 text-indigo-400" />
+            <ArrowRight className="size-3.5 text-ink-400" />
             <span>Use only information you are allowed to store and retrieve.</span>
           </div>
         </>
@@ -534,9 +545,9 @@ const RagUsageGuide = () => {
 };
 
 const GuideStep = ({ number, title, text }: { number: string; title: string; text: string }) => (
-  <div className="rounded-lg border border-white/80 bg-card/80 p-3">
+  <div className="rounded-lg border border-ink-100 bg-ink-50/60 p-3">
     <div className="flex items-center gap-2">
-      <span className="flex size-6 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-500/15 text-[11px] font-bold text-indigo-700 dark:text-indigo-300">
+      <span className="flex size-6 items-center justify-center rounded-full bg-ink-100 text-[11px] font-bold text-ink-700">
         {number}
       </span>
       <p className="text-xs font-bold text-ink-800">{title}</p>

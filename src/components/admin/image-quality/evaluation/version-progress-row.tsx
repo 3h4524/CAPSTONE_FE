@@ -9,7 +9,7 @@ type VersionProgressRowProps = {
   stats: ImageEvalVersionStats;
 };
 
-const PHASE_TONES = {
+export const PHASE_TONES = {
   before: "bg-ink-100 text-ink-600",
   after: "bg-sky-100 dark:bg-sky-500/15 text-sky-900 dark:text-sky-300",
   trial: "bg-card text-ink-400 ring-1 ring-ink-200",

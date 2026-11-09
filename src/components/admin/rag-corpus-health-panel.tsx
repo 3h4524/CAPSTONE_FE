@@ -8,9 +8,10 @@ import {
   type RagCorpusHealthResponse,
   reingestRagDocuments,
 } from "@/api/rag";
+import { RagCardAbout } from "@/components/admin/rag-card-about";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { showToast } from "@/helpers/toast";
 
 const contentTypes = ["", "listing", "policy", "image", "video", "keyword"];
@@ -73,7 +74,7 @@ const RagCorpusHealthPanel = () => {
 
   return (
     <Card className="border-ink-200 bg-card shadow-sm">
-      <CardHeader>
+      <CardHeader className="max-md:px-4">
         <div className="flex flex-col justify-between gap-3 xl:flex-row xl:items-start">
           <div className="min-w-0">
             <CardTitle className="flex flex-wrap items-center gap-2 text-base">
@@ -96,17 +97,17 @@ const RagCorpusHealthPanel = () => {
                 </Badge>
               )}
             </CardTitle>
-            <CardDescription className="mt-1 max-w-3xl text-xs leading-5">
+            <RagCardAbout>
               Inspect whether the indexed documents, chunks and active-model embeddings are still healthy.
               This is a corpus check, not a generated-answer score.
-            </CardDescription>
+            </RagCardAbout>
           </div>
           {/* One row of controls; on narrow screens it wraps as a whole instead of leaving a button behind. */}
-          <div className="flex shrink-0 flex-wrap items-center gap-2 xl:flex-nowrap">
+          <div className="flex shrink-0 flex-wrap items-center gap-2 max-md:grid max-md:grid-cols-2 xl:flex-nowrap">
             <select
               value={contentType}
               onChange={(event) => setContentType(event.target.value)}
-              className="h-8 rounded-md border border-ink-200 bg-card px-2 text-[11px] text-ink-700 outline-none focus:border-indigo-400"
+              className="h-8 rounded-md border border-ink-200 bg-card px-2 text-[11px] text-ink-700 outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base max-[400px]:col-span-2"
               aria-label="Corpus content type"
             >
               {contentTypes.map((value) => (
@@ -115,7 +116,7 @@ const RagCorpusHealthPanel = () => {
                 </option>
               ))}
             </select>
-            <label className="flex h-8 items-center gap-1 rounded-md border border-ink-200 bg-card px-2 text-[11px] text-ink-600">
+            <label className="flex h-8 items-center gap-1 rounded-md border border-ink-200 bg-card px-2 text-[11px] text-ink-600 max-md:h-11 max-md:justify-between max-[400px]:col-span-2">
               Stale after
               <input
                 type="number"
@@ -123,26 +124,26 @@ const RagCorpusHealthPanel = () => {
                 max={3650}
                 value={staleDays}
                 onChange={(event) => setStaleDays(Math.max(1, Number(event.target.value) || 1))}
-                className="w-12 bg-transparent text-center font-semibold outline-none"
+                className="w-12 bg-transparent text-center font-semibold outline-none max-md:text-base"
                 aria-label="Stale document days"
               />
               days
             </label>
-            <Button type="button" variant="outline" size="sm" onClick={() => void loadHealth()} disabled={isLoading}>
+            <Button type="button" variant="outline" size="sm" className="max-md:min-h-10 max-md:px-2" onClick={() => void loadHealth()} disabled={isLoading}>
               <RefreshCw className={`size-3.5 ${isLoading ? "animate-spin" : ""}`} />
               Refresh
             </Button>
-            <Button type="button" size="sm" onClick={() => void reingestRecommended()} disabled={isReingesting}>
+            <Button type="button" size="sm" className="max-md:min-h-10 max-md:px-2" onClick={() => void reingestRecommended()} disabled={isReingesting}>
               <RotateCw className="size-3.5" />
               {isReingesting ? "Queueing…" : "Re-ingest issues"}
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-5 max-md:space-y-4 max-md:px-4">
         {health && (
           <>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+            <div className="grid gap-3 max-md:grid-cols-2 max-md:gap-2 sm:grid-cols-2 lg:grid-cols-6">
               <HealthMetric label="Documents" value={health.totalDocuments} detail={`${health.readyDocuments} ready`} />
               <HealthMetric label="Chunks" value={health.totalChunks} detail={`${health.currentModelEmbeddings} active embeddings`} />
               <HealthMetric label="Embedding coverage" value={`${currentModelCoverage}%`} detail="active model / chunks" />
@@ -153,7 +154,7 @@ const RagCorpusHealthPanel = () => {
 
             {/* What needs doing comes first, as a row of findings; the per-type table follows at full width. */}
             <div>
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-between gap-2 max-md:flex-wrap">
                 <p className="text-xs font-bold text-ink-800">Actionable findings</p>
                 <p className="text-[10px] text-ink-400">
                   Active embedding models: {health.embeddingModels.length > 0 ? health.embeddingModels.join(", ") : "none"}
@@ -186,7 +187,43 @@ const RagCorpusHealthPanel = () => {
               )}
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-ink-200">
+            <div className="md:hidden">
+              <p className="text-xs font-bold text-ink-800">Breakdown by content type</p>
+              {health.byContentType.length === 0 ? (
+                <p className="mt-2 rounded-xl border border-ink-200 px-4 py-6 text-center text-xs text-ink-500">No RAG documents match this filter.</p>
+              ) : (
+                <ul className="mt-2 divide-y divide-ink-100 rounded-xl border border-ink-200">
+                  {health.byContentType.map((metric) => (
+                    <li key={metric.contentType} className="space-y-2 p-3 tabular-nums">
+                      <p className="flex items-center justify-between gap-2 text-xs">
+                        <span className="font-semibold text-ink-800 capitalize">{metric.contentType}</span>
+                        <span className="text-[11px] text-ink-500">{metric.readyDocuments} ready / {metric.documentCount} docs</span>
+                      </p>
+                      <dl className="grid grid-cols-3 gap-2 text-xs">
+                        <div>
+                          <dt className="text-[10px] tracking-wide text-ink-400 uppercase">Chunks</dt>
+                          <dd className="mt-0.5 text-ink-600">{metric.chunkCount}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[10px] tracking-wide text-ink-400 uppercase">Embeddings</dt>
+                          <dd className="mt-0.5 text-ink-600">{metric.currentModelEmbeddings}/{metric.chunkCount}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[10px] tracking-wide text-ink-400 uppercase">Issues</dt>
+                          <dd className="mt-0.5 font-semibold">
+                            <span className={metric.missingEmbeddingChunkCount > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{metric.missingEmbeddingChunkCount} miss</span>
+                            <span className="text-ink-400"> / </span>
+                            <span className={metric.staleReadyDocumentCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}>{metric.staleReadyDocumentCount} stale</span>
+                          </dd>
+                        </div>
+                      </dl>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-ink-200 max-md:hidden">
               <table className="w-full min-w-[720px] text-left text-xs">
                 <thead className="bg-ink-50 text-[10px] tracking-wide text-ink-400 uppercase">
                   <tr>

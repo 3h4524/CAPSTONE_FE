@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -40,16 +40,21 @@ import {
   type RagSearchDiagnosticResult,
   type RagSearchDiagnostics,
 } from "@/api/rag";
+import { AdminBottomNav } from "@/components/admin/admin-bottom-nav";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
+import { RagCardAbout } from "@/components/admin/rag-card-about";
 import { RagCorpusHealthPanel } from "@/components/admin/rag-corpus-health-panel";
 import { RagKnownItemBenchmark } from "@/components/admin/rag-known-item-benchmark";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { showToast } from "@/helpers/toast";
+import { useIsPhone } from "@/hooks/use-is-phone";
+import { cn } from "@/utils/cn";
 
 type EvaluationContentType = "listing" | "image" | "video" | "policy" | "keyword";
 
@@ -111,6 +116,7 @@ const RagEvaluationDashboard = ({
   const [isBenchmarkOpen, setIsBenchmarkOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const isPhone = useIsPhone();
   const [filter, setFilter] = useState<"all" | EvaluationCase["verdict"]>("all");
   const [contentTypeFilter, setContentTypeFilter] = useState<"all" | EvaluationContentType>("all");
   const [listingProductId, setListingProductId] = useState("");
@@ -301,7 +307,8 @@ const RagEvaluationDashboard = ({
       };
       setRuns((current) => [nextRun, ...current]);
       setSelectedRunId(nextRun.id);
-      setSelectedCaseId(nextRun.casesData[0]?.id ?? null);
+      // On a phone a selected case opens over the page, which a finished run should not do by itself.
+      setSelectedCaseId(isPhone ? null : (nextRun.casesData[0]?.id ?? null));
       setIsBenchmarkOpen(true);
       showToast("success", "Evaluation run completed.");
     } catch {
@@ -323,14 +330,14 @@ const RagEvaluationDashboard = ({
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
-        <div className="min-h-0 min-w-0 flex-1 overflow-hidden dark:lg:bg-panel dark:lg:my-2 dark:lg:mr-2 dark:lg:rounded-xl dark:lg:border">
-          <div className="h-full min-h-0 overflow-y-auto">
+        <div className="min-h-0 min-w-0 flex-1 overflow-hidden max-md:flex max-md:flex-col dark:lg:bg-panel dark:lg:my-2 dark:lg:mr-2 dark:lg:rounded-xl dark:lg:border">
+          <div className="h-full min-h-0 overflow-y-auto max-md:h-auto max-md:flex-1">
             <AdminTopbar
               fullName={fullName}
               pageTitle="RAG Evaluation"
               onMenuClick={() => setIsMobileSidebarOpen(true)}
             />
-            <main className="mx-auto max-w-[1600px] space-y-5 px-4 py-4 sm:px-[calc(1.5rem+1cm)] sm:py-5 2xl:max-w-[1720px]">
+            <main className="mx-auto max-w-[1600px] space-y-5 px-4 py-4 max-md:space-y-3 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]">
               <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
                 <div>
                   <p className="text-[10px] font-bold tracking-[0.16em] text-indigo-500 uppercase">
@@ -351,7 +358,7 @@ const RagEvaluationDashboard = ({
                       setSelectedRunId(event.target.value);
                       setSelectedCaseId(null);
                     }}
-                    className="h-9 rounded-md border border-ink-200 bg-card px-3 text-xs font-medium text-ink-700 shadow-sm outline-none focus:border-indigo-400"
+                    className="h-9 rounded-md border border-ink-200 bg-card px-3 text-xs font-medium text-ink-700 shadow-sm outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
                   >
                     {runs.map((run) => (
                       <option key={run.id} value={run.id}>
@@ -361,7 +368,7 @@ const RagEvaluationDashboard = ({
                     </select>
                   )}
                   {datasetCases.length > 0 && (
-                    <Button type="button" onClick={runEvaluation} disabled={isRunning} size="sm">
+                    <Button type="button" className="max-md:w-full" onClick={runEvaluation} disabled={isRunning} size="sm">
                     <Play className="size-3.5" /> {isRunning ? "Running..." : "Run evaluation"}
                     </Button>
                   )}
@@ -369,7 +376,7 @@ const RagEvaluationDashboard = ({
               </header>
 
               <Card className="border-emerald-100 dark:border-emerald-500/30 bg-card shadow-sm">
-                <CardHeader>
+                <CardHeader className="max-md:px-4">
                   <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
                     <div>
                       <CardTitle className="flex items-center gap-2 text-base">
@@ -378,10 +385,10 @@ const RagEvaluationDashboard = ({
                         </span>
                         Production listing retrieval
                       </CardTitle>
-                      <CardDescription className="mt-1 max-w-3xl text-xs leading-5">
+                      <RagCardAbout>
                         Replay the end-user listing flow from a product input. The backend builds the
                         same production query, then retrieves policy Top 5 and listing references Top 3.
-                      </CardDescription>
+                      </RagCardAbout>
                     </div>
                     <Badge
                       variant="outline"
@@ -392,7 +399,7 @@ const RagEvaluationDashboard = ({
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 max-md:px-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Input
                       value={listingProductId}
@@ -434,14 +441,14 @@ const RagEvaluationDashboard = ({
                     </ol>
                   )}
                   {listingTrace && (
-                    <div className="space-y-4 rounded-xl border border-emerald-100 dark:border-emerald-500/30 bg-emerald-50/30 dark:bg-emerald-500/10 p-4">
+                    <div className="space-y-4 rounded-xl border border-emerald-100 dark:border-emerald-500/30 bg-emerald-50/30 dark:bg-emerald-500/10 p-4 max-md:p-2.5">
                       {/* The coverage block already lists every input field, the product's name and type included. */}
                       <ProductInputCoverage trace={listingTrace} />
                       <div>
                         <p className="text-[10px] font-bold tracking-wide text-ink-400 uppercase">
                           Production query
                         </p>
-                        <p className="mt-2 rounded-lg border border-emerald-100 dark:border-emerald-500/30 bg-card p-3 text-xs leading-5 whitespace-pre-wrap text-ink-600">
+                        <p className="mt-2 rounded-lg border border-emerald-100 dark:border-emerald-500/30 bg-card p-3 text-xs leading-5 whitespace-pre-wrap text-ink-600 max-md:[overflow-wrap:anywhere]">
                           {listingTrace.productionQuery}
                         </p>
                       </div>
@@ -466,7 +473,7 @@ const RagEvaluationDashboard = ({
 
               <Card className="border-indigo-100 dark:border-indigo-500/30 bg-card shadow-sm">
                 {/* Collapsed, the card is only its header: no divider or empty body below it. */}
-                <CardHeader className={isBenchmarkOpen ? "border-b border-indigo-100 dark:border-indigo-500/30 pb-4" : undefined}>
+                <CardHeader className={cn("max-md:px-4", isBenchmarkOpen && "border-b border-indigo-100 dark:border-indigo-500/30 pb-4")}>
                   <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
                     <div>
                       <CardTitle className="flex items-center gap-2 text-base">
@@ -475,10 +482,10 @@ const RagEvaluationDashboard = ({
                         </span>
                         Advanced offline benchmark
                       </CardTitle>
-                      <CardDescription className="mt-1 max-w-3xl text-xs leading-5">
+                      <RagCardAbout>
                         Use labeled evidence cases when you need a measurable Recall@K regression check.
                         Production listing retrieval above remains the primary RAG inspection flow.
-                      </CardDescription>
+                      </RagCardAbout>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <Badge variant="outline" className="w-fit text-[10px]">
@@ -502,7 +509,7 @@ const RagEvaluationDashboard = ({
                   </div>
                 </CardHeader>
                 {isBenchmarkOpen && (
-                <CardContent className="space-y-4 pt-5">
+                <CardContent className="space-y-4 pt-5 max-md:px-4">
                   <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_150px_150px_minmax(0,1fr)_auto]">
                     <Input
                       value={draftCase.question}
@@ -520,7 +527,7 @@ const RagEvaluationDashboard = ({
                           contentType: event.target.value as EvaluationContentType,
                         }))
                       }
-                      className="h-9 rounded-md border border-ink-200 bg-card px-3 text-xs text-ink-700 outline-none focus:border-indigo-400"
+                      className="h-9 rounded-md border border-ink-200 bg-card px-3 text-xs text-ink-700 outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
                       aria-label="Content type"
                     >
                       {evaluationContentTypes.map((type) => (
@@ -537,7 +544,7 @@ const RagEvaluationDashboard = ({
                           category: event.target.value as EvaluationCase["category"],
                         }))
                       }
-                      className="h-9 rounded-md border border-ink-200 bg-card px-3 text-xs text-ink-700 outline-none focus:border-indigo-400"
+                      className="h-9 rounded-md border border-ink-200 bg-card px-3 text-xs text-ink-700 outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
                       aria-label="Evaluation category"
                     >
                       {(["Retrieval"] as const).map(
@@ -577,7 +584,7 @@ const RagEvaluationDashboard = ({
                         >
                           {item.contentType}
                         </Badge>
-                        <span className="max-w-[220px] truncate">{item.question}</span>
+                        <span className="max-w-[220px] min-w-0 truncate">{item.question}</span>
                         <button
                           type="button"
                           onClick={() => removeEvaluationCase(item.id)}
@@ -606,7 +613,7 @@ const RagEvaluationDashboard = ({
 
               {runs.length > 0 ? (
                 <>
-              <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+              <section className="grid gap-3 max-md:grid-cols-2 max-md:gap-2 max-md:[&>:first-child]:col-span-2 sm:grid-cols-2 xl:grid-cols-5">
                 <MetricCard
                   icon={Gauge}
                   label="Overall quality"
@@ -645,7 +652,7 @@ const RagEvaluationDashboard = ({
               </section>
 
               <Card className="border-ink-200 bg-card shadow-sm">
-                <CardHeader className="border-b border-ink-100 pb-4">
+                <CardHeader className="border-b border-ink-100 pb-4 max-md:px-4">
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <Target className="size-4 text-indigo-500" />
                     Accuracy by content type
@@ -654,7 +661,25 @@ const RagEvaluationDashboard = ({
                     Compare retrieval accuracy and evidence coverage for each indexed content type.
                   </CardDescription>
                 </CardHeader>
-                <div className="overflow-x-auto">
+                <ul className="divide-y divide-ink-100 md:hidden">
+                  {selectedRun.typeMetrics.map((metric) => (
+                    <li key={metric.contentType} className="space-y-2 p-4">
+                      <p className="flex items-center justify-between gap-2 text-xs">
+                        <span className="font-semibold text-ink-800 capitalize">{metric.contentType}</span>
+                        <span className="text-[11px] text-ink-500">{metric.caseCount} cases · {Math.round(metric.averageLatencyMs)} ms</span>
+                      </p>
+                      <PhoneScores
+                        scores={[
+                          ["Recall @5", metric.retrievalScore],
+                          ["Context coverage", metric.contextCoverageScore],
+                          ["Citation", metric.citationScore],
+                          ["Abstention", metric.abstentionScore],
+                        ]}
+                      />
+                    </li>
+                  ))}
+                </ul>
+                <div className="overflow-x-auto max-md:hidden">
                   <table className="w-full min-w-[820px] text-left text-xs">
                     <thead className="bg-ink-50 text-[10px] tracking-wide text-ink-400 uppercase">
                       <tr>
@@ -686,7 +711,16 @@ const RagEvaluationDashboard = ({
                 </div>
               </Card>
 
-              {selectedCase && (
+              {/* Above the list the detail would open out of sight, so a phone shows it over the page. */}
+              {selectedCase && isPhone && (
+                <Dialog open onOpenChange={(open) => !open && setSelectedCaseId(null)}>
+                  <DialogContent showCloseButton={false} className="grid-cols-[minmax(0,1fr)] p-0" aria-describedby={undefined}>
+                    <DialogTitle className="sr-only">Case detail</DialogTitle>
+                    <CaseDetail item={selectedCase} onClose={() => setSelectedCaseId(null)} />
+                  </DialogContent>
+                </Dialog>
+              )}
+              {selectedCase && !isPhone && (
                 <Card className="border-indigo-100 dark:border-indigo-500/30 bg-card shadow-sm">
                   <CardHeader className="border-b border-indigo-100 dark:border-indigo-500/30 pb-4">
                     <CardTitle className="flex items-center gap-2 text-sm">
@@ -701,9 +735,9 @@ const RagEvaluationDashboard = ({
                 </Card>
               )}
 
-              <section className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
+              <section className="grid gap-5 max-md:grid-cols-[minmax(0,1fr)] max-md:gap-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
                 <Card className="border-ink-200 bg-card shadow-sm">
-                  <CardHeader className="border-b border-ink-100 pb-4">
+                  <CardHeader className="border-b border-ink-100 pb-4 max-md:px-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <CardTitle className="flex items-center gap-2 text-sm">
@@ -719,7 +753,7 @@ const RagEvaluationDashboard = ({
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-5">
+                  <CardContent className="pt-5 max-md:px-4">
                     <div className="h-[250px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart
@@ -781,7 +815,7 @@ const RagEvaluationDashboard = ({
                   </CardContent>
                 </Card>
                 <Card className="border-ink-200 bg-card shadow-sm">
-                  <CardHeader className="border-b border-ink-100 pb-4">
+                  <CardHeader className="border-b border-ink-100 pb-4 max-md:px-4">
                     <CardTitle className="flex items-center gap-2 text-sm">
                       <AlertTriangle className="size-4 text-amber-500" />
                       Failure patterns
@@ -790,7 +824,7 @@ const RagEvaluationDashboard = ({
                       Where the current run needs attention.
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="pt-5">
+                  <CardContent className="pt-5 max-md:px-4">
                     <div className="h-[220px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
@@ -836,7 +870,7 @@ const RagEvaluationDashboard = ({
                 </Card>
               </section>
 
-              <section className="grid gap-5 lg:grid-cols-3">
+              <section className="grid gap-5 max-md:gap-3 lg:grid-cols-3">
                 <InsightCard
                   icon={Search}
                   tone="indigo"
@@ -858,7 +892,7 @@ const RagEvaluationDashboard = ({
               </section>
 
               <Card className="overflow-hidden border-ink-200 bg-card shadow-sm">
-                <CardHeader className="border-b border-ink-100 pb-4">
+                <CardHeader className="border-b border-ink-100 pb-4 max-md:px-4">
                   <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                     <div>
                       <CardTitle className="flex items-center gap-2 text-sm">
@@ -869,13 +903,13 @@ const RagEvaluationDashboard = ({
                         Inspect each question, retrieved source and evaluation verdict.
                       </CardDescription>
                     </div>
-                    <div className="flex flex-wrap items-center justify-end gap-2">
+                    <div className="flex flex-wrap items-center justify-end gap-2 max-md:w-full">
                       <select
                         value={contentTypeFilter}
                         onChange={(event) =>
                           setContentTypeFilter(event.target.value as "all" | EvaluationContentType)
                         }
-                        className="h-8 rounded-md border border-ink-200 bg-card px-2 text-[11px] font-medium text-ink-600 outline-none focus:border-indigo-400"
+                        className="h-8 rounded-md border border-ink-200 bg-card px-2 text-[11px] font-medium text-ink-600 outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
                         aria-label="Filter by content type"
                       >
                         <option value="all">All content types</option>
@@ -885,13 +919,13 @@ const RagEvaluationDashboard = ({
                           </option>
                         ))}
                       </select>
-                      <div className="flex gap-1 rounded-lg bg-ink-100 p-1">
+                      <div className="flex gap-1 rounded-lg bg-ink-100 p-1 max-md:grid max-md:w-full max-md:grid-cols-4">
                       {(["all", "pass", "review", "fail"] as const).map((value) => (
                         <button
                           key={value}
                           type="button"
                           onClick={() => setFilter(value)}
-                          className={`rounded-md px-2.5 py-1.5 text-[11px] font-semibold capitalize transition ${filter === value ? "bg-card text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-800"}`}
+                          className={`rounded-md px-2.5 py-1.5 text-[11px] font-semibold capitalize transition max-md:min-h-9 max-md:px-0.5 max-md:text-[10px] ${filter === value ? "bg-card text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-800"}`}
                         >
                           {value === "all"
                             ? `All (${visibleCases.length})`
@@ -902,7 +936,33 @@ const RagEvaluationDashboard = ({
                     </div>
                   </div>
                 </CardHeader>
-                <div className="overflow-x-auto">
+                <ul className="divide-y divide-ink-100 md:hidden">
+                  {visibleCases.map((item) => (
+                    <li key={item.id}>
+                      <button type="button" onClick={() => setSelectedCaseId(item.id)} className="w-full space-y-2 p-4 text-left">
+                        <span className="flex items-start justify-between gap-2">
+                          <span className="min-w-0">
+                            <span className="line-clamp-2 text-xs font-semibold text-ink-800">{item.question}</span>
+                            <span className="mt-0.5 block truncate text-[10px] text-ink-400">{item.source}</span>
+                          </span>
+                          <Verdict verdict={item.verdict} />
+                        </span>
+                        <span className="flex flex-wrap gap-1.5">
+                          <Badge variant="outline" className="border-indigo-200 dark:border-indigo-500/30 text-[10px] text-indigo-700 dark:text-indigo-300">{item.contentType}</Badge>
+                          <Badge variant="outline" className="text-[10px]">{item.category}</Badge>
+                        </span>
+                        <PhoneScores
+                          scores={[
+                            ["Retrieval", item.retrieval],
+                            ["Context coverage", item.groundedness],
+                            ["Citation", item.citation],
+                          ]}
+                        />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <div className="overflow-x-auto max-md:hidden">
                   <table className="w-full min-w-[860px] text-left text-xs">
                     <thead className="bg-ink-50 text-[10px] tracking-wide text-ink-400 uppercase">
                       <tr>
@@ -975,6 +1035,7 @@ const RagEvaluationDashboard = ({
               )}
             </main>
           </div>
+          <AdminBottomNav onOpenMore={() => setIsMobileSidebarOpen(true)} />
         </div>
       </div>
     </div>
@@ -1003,14 +1064,14 @@ const MetricCard = ({
   };
   return (
     <Card className="border-ink-200 bg-card shadow-sm">
-      <CardContent className="flex items-center gap-3 pt-5">
+      <CardContent className="flex items-center gap-3 pt-5 max-md:px-3">
         <div
-          className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${tones[tone]}`}
+          className={`flex size-9 shrink-0 items-center justify-center rounded-xl max-md:hidden ${tones[tone]}`}
         >
           <Icon className="size-4" />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-[10px] font-bold tracking-[0.12em] text-ink-400 uppercase">
+          <p className="truncate text-[10px] font-bold tracking-[0.12em] text-ink-400 uppercase max-md:whitespace-normal">
             {label}
           </p>
           <p className="mt-1 text-xl font-bold text-ink-900">{value}</p>
@@ -1020,6 +1081,18 @@ const MetricCard = ({
     </Card>
   );
 };
+
+/** A row of scores stacked in two columns, for a phone, where the table's columns do not fit. */
+const PhoneScores = ({ scores }: { scores: [label: string, value: number][] }) => (
+  <span className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5 text-[11px] text-ink-500">
+    {scores.map(([label, value]) => (
+      <Fragment key={label}>
+        <span>{label}</span>
+        <ScoreBar value={value} />
+      </Fragment>
+    ))}
+  </span>
+);
 
 const ScoreBar = ({ value }: { value: number }) => (
   <div className="flex min-w-24 items-center gap-2">
@@ -1053,7 +1126,7 @@ const Verdict = ({ verdict }: { verdict: EvaluationCase["verdict"] }) =>
   );
 
 const CaseDetail = ({ item, onClose }: { item: EvaluationCase; onClose: () => void }) => (
-  <div className="border-t border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/10 p-5">
+  <div className="border-t border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/10 p-5 max-md:border-t-0 max-md:p-4">
     <div className="flex items-start justify-between gap-4">
       <div>
         <p className="text-[10px] font-bold tracking-[0.14em] text-indigo-500 uppercase">
@@ -1071,7 +1144,7 @@ const CaseDetail = ({ item, onClose }: { item: EvaluationCase; onClose: () => vo
       <DetailBlock label="Model answer" value={item.answer} />
       <DetailBlock label="Retrieved source" value={item.source} />
     </div>
-    <div className="mt-5 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-card p-4">
+    <div className="mt-5 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-card p-4 max-md:p-3">
       <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
         <div>
           <p className="text-[10px] font-bold tracking-wide text-ink-400 uppercase">
@@ -1143,7 +1216,7 @@ const RetrievedResultCard = ({
     <p className="mt-0.5 truncate text-[10px] text-ink-400" title={`${diagnostic.result.sourceId ?? "n/a"} / ${diagnostic.result.chunkId}`}>
       source {diagnostic.result.sourceId ?? "n/a"} · chunk {diagnostic.result.chunkId}
     </p>
-    <p className={`mt-3 text-xs leading-5 whitespace-pre-wrap text-ink-600 ${isLong && !isExpanded ? "line-clamp-4" : ""}`}>
+    <p className={`mt-3 text-xs leading-5 whitespace-pre-wrap text-ink-600 max-md:[overflow-wrap:anywhere] ${isLong && !isExpanded ? "line-clamp-4" : ""}`}>
       {diagnostic.result.content}
     </p>
     {isLong && (
@@ -1215,7 +1288,7 @@ const ProductInputCoverage = ({
               )}
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold text-ink-500">{field.label}</p>
-                <p className="truncate text-[11px] text-ink-700">
+                <p className="truncate text-[11px] text-ink-700 max-md:line-clamp-2 max-md:whitespace-normal">
                   {populated ? field.value : "Missing"}
                 </p>
               </div>
@@ -1368,7 +1441,7 @@ const EmptyTraceSummary = ({ label, diagnostics }: TraceSection) => {
         <AlertTriangle className="size-4 shrink-0 text-amber-500" />
         <p className="text-xs font-bold text-ink-800">{label}</p>
         <span className="text-xs text-amber-700 dark:text-amber-300">No context returned · 0 retrieved</span>
-        {reason && <span className="min-w-0 flex-1 truncate text-[11px] text-ink-500" title={reason}>{reason}</span>}
+        {reason && <span className="min-w-0 flex-1 truncate text-[11px] text-ink-500 max-md:basis-full max-md:whitespace-normal" title={reason}>{reason}</span>}
         <Button
           type="button"
           variant="ghost"

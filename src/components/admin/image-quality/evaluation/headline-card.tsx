@@ -18,11 +18,11 @@ export const HeadlineCard = ({ result }: HeadlineCardProps) => {
   const pValue = formatImageEvalPValue(result.pValue);
 
   return (
-    <article className="relative flex flex-col gap-3 rounded-xl border border-ink-200 bg-card p-5 shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
+    <article className="relative flex flex-col gap-3 rounded-xl border border-ink-200 bg-card p-5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] max-md:gap-1.5 max-md:p-3">
       <p className="text-[13px] font-semibold text-ink-600">{result.definition.label}</p>
-      <p className="font-display flex items-center gap-2.5 text-3xl font-bold tracking-tight text-ink-900 tabular-nums">
+      <p className="font-display flex items-center gap-2.5 text-3xl font-bold tracking-tight text-ink-900 tabular-nums max-md:flex-wrap max-md:gap-1 max-md:text-lg">
         <span className="text-ink-400">{formatImageEvalValue(result, result.before)}</span>
-        <ArrowRight className="size-5 text-ink-400" aria-label="to" />
+        <ArrowRight className="size-5 text-ink-400 max-md:size-3.5" aria-label="to" />
         <span>{formatImageEvalValue(result, result.after)}</span>
       </p>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[13px] text-ink-500">

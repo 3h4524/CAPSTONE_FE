@@ -16,14 +16,14 @@ export const VersionChip = ({ version, isSelected, onToggle }: VersionChipProps)
     aria-pressed={isSelected}
     onClick={onToggle}
     className={cn(
-      "focus-visible:ring-ring/50 inline-flex max-w-full items-center gap-1.5 rounded-full border px-3 py-1.5 text-left text-[13px] transition-colors outline-none focus-visible:ring-[3px]",
+      "focus-visible:ring-ring/50 inline-flex max-w-full items-center gap-1.5 rounded-full border px-3 py-1.5 text-left text-[13px] transition-colors outline-none focus-visible:ring-[3px] max-md:rounded-2xl",
       isSelected
         ? "border-sky-700 bg-sky-50 dark:bg-sky-500/10 font-medium text-ink-900"
         : "border-ink-200 bg-card text-ink-600 hover:border-ink-400"
     )}
   >
     {isSelected ? <Check className="size-3.5 shrink-0 text-sky-700 dark:text-sky-300" /> : null}
-    <span className="truncate">{version.label}</span>
+    <span className="truncate max-md:whitespace-normal">{version.label}</span>
     <span className="shrink-0 rounded-full bg-ink-100 px-1.5 font-mono text-[11px] text-ink-600">
       {version.imageCount}
     </span>

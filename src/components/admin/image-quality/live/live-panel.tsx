@@ -60,8 +60,8 @@ export const LivePanel = () => {
   };
 
   return (
-    <div className="flex flex-col gap-5">
-      <section className="relative flex flex-col justify-between gap-3 rounded-xl border border-ink-200 bg-card p-5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] sm:flex-row sm:items-center sm:px-6">
+    <div className="flex flex-col gap-5 max-md:gap-3">
+      <section className="relative flex flex-col justify-between gap-3 rounded-xl border border-ink-200 bg-card p-5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] max-md:p-4 sm:flex-row sm:items-center sm:px-6">
         <div>
           <h3 className="text-base font-semibold text-ink-900">
             Generation by prompt version
@@ -75,7 +75,7 @@ export const LivePanel = () => {
           value={range}
           onValueChange={(value) => isImageQualityLiveRange(value) && setRange(value)}
         >
-          <SelectTrigger className="h-10 w-44 text-sm" aria-label="Period">
+          <SelectTrigger className="h-10 w-44 text-sm max-md:w-full" aria-label="Period">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

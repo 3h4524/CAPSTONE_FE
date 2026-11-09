@@ -32,7 +32,7 @@ export const ImageGallery = ({ comparison, versions }: ImageGalleryProps) => {
         <Accordion
           type="multiple"
           defaultValue={firstProduct ? [firstProduct] : []}
-          className="px-5 sm:px-6"
+          className="px-5 max-md:px-4 sm:px-6"
         >
           {lanes.map((lane) => (
             <ProductImages key={lane.product} lane={lane} versionLabels={labels} />

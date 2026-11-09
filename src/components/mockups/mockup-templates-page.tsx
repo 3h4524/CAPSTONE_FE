@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ImageIcon, Plus, UserRound } from "lucide-react";
 
 import { SectionLoading } from "@/components/commons/loading/section-loading";
+import { MockupCardGrid } from "@/components/mockups/mockup-card-grid";
 import { MockupTemplateFormDialog } from "@/components/mockups/mockup-template-form-dialog";
 import { MockupTemplateListItem } from "@/components/mockups/mockup-template-list-item";
 import { ModelPhotosPanel } from "@/components/mockups/model-photos-panel";
@@ -41,12 +42,12 @@ export const MockupTemplatesPage = () => {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
+    <div className="flex w-full min-w-0 flex-col gap-6 max-md:gap-3 md:p-6">
       <div>
         <h1 className="text-xl font-semibold text-ink-900">Mock-up Templates</h1>
-        <p className="text-muted-foreground mt-1 text-sm">Browse system mock-ups, manage the product photos you uploaded, and the photos of people your mock-ups are put on.</p>
+        <p className="text-muted-foreground mt-1 text-sm max-md:hidden">Browse system mock-ups, manage the product photos you uploaded, and the photos of people your mock-ups are put on.</p>
       </div>
-      <Tabs defaultValue="templates" className="gap-5">
+      <Tabs defaultValue="templates" className="gap-5 max-md:gap-3">
         <TabsList className="w-full sm:w-fit">
           <TabsTrigger value="templates" className="px-4">
             <ImageIcon aria-hidden="true" />
@@ -57,9 +58,9 @@ export const MockupTemplatesPage = () => {
             Model photos
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="templates" className="flex flex-col gap-4">
+        <TabsContent value="templates" className="flex flex-col gap-4 max-md:gap-3">
           <div className="flex justify-end">
-            <Button type="button" onClick={openCreate} disabled={isDeleting}>
+            <Button type="button" className="max-md:w-full" onClick={openCreate} disabled={isDeleting}>
               <Plus aria-hidden="true" />
               New template
             </Button>
@@ -82,11 +83,14 @@ export const MockupTemplatesPage = () => {
               <Button type="button" onClick={openCreate}>New template</Button>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {templates.map((template) => (
+            <MockupCardGrid
+              items={templates}
+              pagerLabel="Mock-up template pages"
+              className="xl:grid-cols-4"
+              renderItem={(template) => (
                 <MockupTemplateListItem key={template.id} template={template} busy={isDeleting} onEdit={openEdit} onDelete={askDelete} />
-              ))}
-            </div>
+              )}
+            />
           )}
         </TabsContent>
         <TabsContent value="models">

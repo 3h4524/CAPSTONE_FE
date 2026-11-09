@@ -1,9 +1,11 @@
 import { useMemo } from "react";
 
 import { ComparisonGroupRows } from "@/components/admin/image-quality/evaluation/comparison-group-rows";
+import { ComparisonPhoneList } from "@/components/admin/image-quality/evaluation/comparison-phone-list";
 import { SectionCard } from "@/components/admin/image-quality/section-card";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { groupImageEvalMetrics } from "@/helpers/image-eval-comparison";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { ImageEvalComparison } from "@/types/admin-image-quality";
 
 type ComparisonTableProps = {
@@ -12,12 +14,20 @@ type ComparisonTableProps = {
 
 export const ComparisonTable = ({ comparison }: ComparisonTableProps) => {
   const groups = useMemo(() => groupImageEvalMetrics(comparison.metrics), [comparison.metrics]);
+  const isPhone = useIsPhone();
 
   return (
     <SectionCard
       title="Before and after"
       description="Every metric on the same images. Rates are tested with a two-sided Fisher exact test on image counts; a p-value under 0.05 is in bold. Means are not tested."
     >
+      {isPhone ? (
+        <ComparisonPhoneList
+          groups={groups}
+          beforeImageCount={comparison.beforeImages.length}
+          afterImageCount={comparison.afterImages.length}
+        />
+      ) : (
       <Table className="min-w-190">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
@@ -46,6 +56,7 @@ export const ComparisonTable = ({ comparison }: ComparisonTableProps) => {
           ))}
         </TableBody>
       </Table>
+      )}
     </SectionCard>
   );
 };

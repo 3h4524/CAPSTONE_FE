@@ -19,7 +19,8 @@ export const NavSection = ({ section, collapsed }: NavSectionProps) => {
     label: t(`navigation.sections.${sectionKey}`),
     items: section.items.map((item) => ({
       ...item,
-      label: t(`navigation.items.${navigationItemKey(item.href)}`),
+      // A page without a translation yet still shows its name, never the key.
+      label: t(`navigation.items.${navigationItemKey(item.href)}`, { defaultValue: item.label }),
     })),
   };
 

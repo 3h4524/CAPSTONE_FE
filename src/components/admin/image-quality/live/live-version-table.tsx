@@ -1,6 +1,8 @@
+import { LiveVersionCard } from "@/components/admin/image-quality/live/live-version-card";
 import { LiveVersionRow } from "@/components/admin/image-quality/live/live-version-row";
 import { SectionCard } from "@/components/admin/image-quality/section-card";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { ImageQualityLiveVersion } from "@/types/admin-image-quality";
 import { cn } from "@/utils/cn";
 
@@ -19,11 +21,21 @@ const COLUMNS = [
   { label: "Cost / image", isNumeric: true },
 ] as const;
 
-export const LiveVersionTable = ({ versions }: LiveVersionTableProps) => (
+export const LiveVersionTable = ({ versions }: LiveVersionTableProps) => {
+  const isPhone = useIsPhone();
+
+  return (
   <SectionCard
     title="Every version"
     description="One row per image provider and prompt version, oldest first. The counts behind every rate sit next to it."
   >
+    {isPhone ? (
+      <ul className="divide-y divide-ink-100">
+        {versions.map((version) => (
+          <LiveVersionCard key={version.key} version={version} />
+        ))}
+      </ul>
+    ) : (
     <Table className="min-w-240">
       <TableHeader>
         <TableRow className="hover:bg-transparent">
@@ -48,5 +60,7 @@ export const LiveVersionTable = ({ versions }: LiveVersionTableProps) => (
         ))}
       </TableBody>
     </Table>
+    )}
   </SectionCard>
-);
+  );
+};

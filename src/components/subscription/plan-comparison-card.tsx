@@ -196,9 +196,9 @@ export const PlanComparisonCard = ({
         </span>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-5 @md:mt-7">
         <p className="flex items-baseline gap-1.5">
-          <span className={cn("text-3xl font-bold tracking-tight tabular-nums", isDark ? "text-white" : "text-ink-900")}>
+          <span className={cn("text-3xl font-bold tracking-tight tabular-nums @md:text-4xl", isDark ? "text-white" : "text-ink-900")}>
             {formatVnd(showsAnnual ? plan.annualPriceVnd! : plan.monthlyPriceVnd)}
           </span>
           <span className={cn("text-sm", isDark ? "text-ink-300" : "text-ink-500")}>
@@ -218,7 +218,7 @@ export const PlanComparisonCard = ({
 
       <Button
         className={cn(
-          "mt-5 w-full",
+          "mt-5 w-full @md:mt-7 @md:h-11",
           isDark &&
             !isCurrent &&
             "bg-card text-ink-900 shadow-[0_0_16px_rgba(255,255,255,0.25)] hover:bg-ink-100",
@@ -232,16 +232,16 @@ export const PlanComparisonCard = ({
       </Button>
 
       {plan.description && (
-        <p className={cn("mt-5 text-sm", isDark ? "text-ink-300" : "text-ink-500")}>{plan.description}</p>
+        <p className={cn("mt-5 text-sm @md:mt-7 @md:text-[15px]", isDark ? "text-ink-300" : "text-ink-500")}>{plan.description}</p>
       )}
 
       {basePlan && (
-        <p className={cn("mt-5 text-sm font-semibold", isDark ? "text-white" : "text-ink-900")}>
+        <p className={cn("mt-5 text-sm font-semibold @md:mt-7 @md:text-[15px]", isDark ? "text-white" : "text-ink-900")}>
           Everything in {basePlan.name}
           {added.length > 0 ? ", plus:" : "."}
         </p>
       )}
-      <ul className={cn("grid flex-1 content-start gap-x-6 gap-y-2.5 text-sm @md:grid-cols-2", basePlan ? "mt-3" : "mt-5")}>
+      <ul className={cn("grid flex-1 content-start gap-x-6 gap-y-2.5 text-sm @md:gap-y-3.5 @md:text-[15px] @2xl:grid-cols-2", basePlan ? "mt-3 @md:mt-4" : "mt-5 @md:mt-7")}>
         {included.map((line) => (
           <li key={line.label} className={cn("flex items-start gap-2.5", isDark ? "text-slate-100" : "text-ink-700")}>
             <span

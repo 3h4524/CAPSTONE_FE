@@ -1,10 +1,13 @@
 "use client";
 
 
+import { useState } from "react";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, Check, Clock, Globe2, Heart, Image as ImageIcon, Package, Star, Tag, Timer, TrendingUp, Truck } from "lucide-react";
 
 import type { ListingIssue, OrderInsights, ShopInsights, ShopListingRow } from "@/api/shop";
 import { Card } from "@/components/ui/card";
+import { useIsPhone } from "@/hooks/use-is-phone";
+import { cn } from "@/utils/cn";
 
 const money = (value: number | null | undefined, currency: string | null) =>
   value == null ? "—" : new Intl.NumberFormat(undefined, { style: "currency", currency: currency ?? "USD", maximumFractionDigits: 2 }).format(value);
@@ -19,6 +22,9 @@ const issueLabel: Record<ListingIssue, { label: string; hint: string }> = {
   viewed_not_favorited: { label: "Views, no favorites", hint: "40+ views and no favorite: check photos, price or title" },
 };
 
+// A phone lists the latest few; the rest open on request.
+const PHONE_LISTINGS = 5;
+
 const stateLabels: Record<string, string> = { active: "Active", draft: "Draft", inactive: "Inactive", sold_out: "Sold out", expired: "Expired" };
 
 /** Section names the backend reports when Etsy could not answer them. */
@@ -27,22 +33,23 @@ const sectionLabels: Record<string, string> = { listings: "listings", orders: "o
 export function ShopInsightsPanel({ insights }: { insights: ShopInsights }) {
   const currency = insights.currency;
   return (
-    <div className="flex flex-col gap-4">
+    // On a phone the grids open up and these orders apply: what needs doing comes first.
+    <div className="flex flex-col gap-4 max-md:gap-3">
       {insights.unavailableSections.length > 0 && (
         <p className="flex items-start gap-2 rounded-xl border border-ink-200 bg-ink-50 px-4 py-3 text-sm text-ink-700">
           <AlertTriangle className="mt-0.5 size-4 shrink-0 text-ink-500" />
           Etsy did not answer for {insights.unavailableSections.map((section) => sectionLabels[section] ?? section).join(", ")} this time. Use Sync now to try again.
         </p>
       )}
-      <KpiRow insights={insights} />
-      <div className="grid gap-4 xl:grid-cols-3">
-        <OrdersChart orders={insights.orders} currency={currency} />
-        <Attention insights={insights} />
+      <KpiRow insights={insights} className="max-md:order-2" />
+      <div className="grid gap-4 max-md:contents xl:grid-cols-3">
+        <OrdersChart orders={insights.orders} currency={currency} className="max-md:order-4" />
+        <Attention insights={insights} className="max-md:order-1" />
       </div>
-      {insights.listings && <ListingsCard insights={insights} />}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <BestSellers orders={insights.orders} currency={currency} />
-        <ReviewsCard insights={insights} />
+      {insights.listings && <ListingsCard insights={insights} className="max-md:order-3" />}
+      <div className="grid gap-4 max-md:contents lg:grid-cols-2">
+        <BestSellers orders={insights.orders} currency={currency} className="max-md:order-5" />
+        <ReviewsCard insights={insights} className="max-md:order-6" />
       </div>
     </div>
   );
@@ -59,53 +66,53 @@ function Change({ current, previous }: { current: number; previous: number }) {
   );
 }
 
-function Kpi({ label, value, footer, icon: Icon }: { label: string; value: string; footer: React.ReactNode; icon: typeof Package }) {
+function Kpi({ label, value, footer, icon: Icon, className }: { label: React.ReactNode; value: string; footer: React.ReactNode; icon: typeof Package; className?: string }) {
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-ink-200 bg-card p-4 shadow-xs">
+    <div className={cn("flex flex-col gap-2 rounded-xl border border-ink-200 bg-card p-4 shadow-xs max-md:gap-1 max-md:p-3.5", className)}>
       <p className="flex items-center gap-1.5 text-xs font-semibold text-ink-500"><Icon className="size-3.5" />{label}</p>
-      <p className="truncate text-2xl font-bold text-ink-900 tabular-nums">{value}</p>
+      <p className="truncate text-2xl font-bold text-ink-900 tabular-nums max-md:text-xl">{value}</p>
       <div className="mt-auto text-[11px] text-ink-500">{footer}</div>
     </div>
   );
 }
 
-function KpiRow({ insights }: { insights: ShopInsights }) {
+function KpiRow({ insights, className }: { insights: ShopInsights; className?: string }) {
   const orders = insights.orders;
   const counts = insights.listings?.countsByState;
   const feeShare = orders?.fees != null && orders.net != null && orders.fees + orders.net > 0 ? Math.round((orders.fees / (orders.fees + orders.net)) * 100) : null;
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <Kpi icon={TrendingUp} label="Revenue, last 30 days" value={orders ? money(orders.revenue, insights.currency) : "—"}
+    <div className={cn("grid grid-cols-2 gap-3 max-md:gap-2 lg:grid-cols-4", className)}>
+      <Kpi icon={TrendingUp} label={<>Revenue<span className="max-md:hidden">, last 30 days</span><span className="md:hidden"> (30d)</span></>} value={orders ? money(orders.revenue, insights.currency) : "—"}
         footer={orders ? <Change current={orders.revenue} previous={orders.previousRevenue} /> : "Orders unavailable"} />
-      <Kpi icon={Package} label="Orders, last 30 days" value={orders ? orders.orders.toLocaleString() : "—"}
+      <Kpi icon={Package} label={<>Orders<span className="max-md:hidden">, last 30 days</span><span className="md:hidden"> (30d)</span></>} value={orders ? orders.orders.toLocaleString() : "—"}
         footer={orders ? <Change current={orders.orders} previous={orders.previousOrders} /> : "Orders unavailable"} />
-      <Kpi icon={Check} label="Received after Etsy fees" value={orders?.net != null ? money(orders.net, insights.currency) : "—"}
+      <Kpi icon={Check} label="Received after Etsy fees" className={orders?.net != null ? "max-md:col-span-2" : "max-md:hidden"} value={orders?.net != null ? money(orders.net, insights.currency) : "—"}
         footer={orders?.net != null
           ? `Fees ${money(orders.fees, insights.currency)}${feeShare != null ? ` (${feeShare}%)` : ""} · from ${orders.feeSampleOrders} of ${orders.orders} orders`
           : "Shown once a paid order exists"} />
-      <Kpi icon={Tag} label="Active listings" value={counts ? (counts.active ?? 0).toLocaleString() : "—"}
+      <Kpi icon={Tag} label="Active listings" className="max-md:hidden" value={counts ? (counts.active ?? 0).toLocaleString() : "—"}
         footer={counts ? `${counts.draft ?? 0} draft · ${counts.sold_out ?? 0} sold out · ${counts.expired ?? 0} expired` : "Listings unavailable"} />
     </div>
   );
 }
 
-function OrdersChart({ orders, currency }: { orders: OrderInsights | null; currency: string | null }) {
+function OrdersChart({ orders, currency, className }: { orders: OrderInsights | null; currency: string | null; className?: string }) {
   const peak = Math.max(1, ...(orders?.daily.map((day) => day.orders) ?? [0]));
   return (
-    <Card className="gap-0 border-ink-200 bg-card py-0 shadow-sm xl:col-span-2">
-      <div className="flex items-start justify-between gap-3 px-5 pt-5">
+    <Card className={cn("gap-0 border-ink-200 bg-card py-0 shadow-sm xl:col-span-2", className)}>
+      <div className="flex items-start justify-between gap-3 px-5 pt-5 max-md:px-4 max-md:pt-4">
         <div>
           <h3 className="text-sm font-semibold text-ink-900">Orders per day</h3>
-          <p className="text-xs text-ink-500">Last 30 days, canceled orders left out{orders?.truncated ? "; only the newest 500 orders were read" : ""}.</p>
+          <p className="text-xs text-ink-500 max-md:hidden">Last 30 days, canceled orders left out{orders?.truncated ? "; only the newest 500 orders were read" : ""}.</p>
         </div>
-        {orders && <p className="text-right text-xs text-ink-500">Average order<br /><span className="text-sm font-semibold text-ink-900">{money(orders.averageOrderValue, currency)}</span></p>}
+        {orders && orders.orders > 0 && <p className="text-right text-xs text-ink-500">Average order<br /><span className="text-sm font-semibold text-ink-900">{money(orders.averageOrderValue, currency)}</span></p>}
       </div>
       {!orders ? (
-        <p className="px-5 py-10 text-center text-sm text-ink-400">Orders could not be read.</p>
+        <p className="px-5 py-10 text-center text-sm text-ink-400 max-md:px-4 max-md:pt-1 max-md:pb-4 max-md:text-left max-md:text-xs">Orders could not be read.</p>
       ) : orders.orders === 0 ? (
-        <p className="px-5 py-10 text-center text-sm text-ink-400">No orders in the last 30 days yet.</p>
+        <p className="px-5 py-10 text-center text-sm text-ink-400 max-md:px-4 max-md:pt-1 max-md:pb-4 max-md:text-left max-md:text-xs">No orders in the last 30 days yet.</p>
       ) : (
-        <div className="px-5 pt-4 pb-5">
+        <div className="px-5 pt-4 pb-5 max-md:px-4 max-md:pb-4">
           <div className="flex h-36 items-end gap-1" role="img" aria-label="Orders per day over the last 30 days">
             {orders.daily.map((day) => (
               <div key={day.day} className="group relative flex h-full flex-1 items-end">
@@ -127,31 +134,41 @@ function OrdersChart({ orders, currency }: { orders: OrderInsights | null; curre
   );
 }
 
-function AttentionRow({ icon: Icon, label, value, tone, hint }: { icon: typeof Truck; label: string; value: string; tone: "warn" | "ok" | "neutral"; hint?: string }) {
+function AttentionRow({ icon: Icon, label, value, tone, hint, isQuiet }: { icon: typeof Truck; label: string; value: string; tone: "warn" | "ok" | "neutral"; hint?: string; isQuiet?: boolean }) {
   const color = tone === "warn" ? "text-amber-700 dark:text-amber-300" : tone === "ok" ? "text-emerald-700 dark:text-emerald-300" : "text-ink-900";
   return (
-    <li className="flex items-center justify-between gap-3 py-2.5" title={hint}>
+    <li className={cn("flex items-center justify-between gap-3 py-2.5", (tone === "ok" || isQuiet) && "max-md:hidden")} title={hint}>
       <span className="flex items-center gap-2 text-sm text-ink-600"><Icon className="size-4 text-ink-400" />{label}</span>
       <span className={`text-sm font-semibold tabular-nums ${color}`}>{value}</span>
     </li>
   );
 }
 
-function Attention({ insights }: { insights: ShopInsights }) {
+function Attention({ insights, className }: { insights: ShopInsights; className?: string }) {
   const orders = insights.orders;
   const issues = insights.listings?.issues;
+  const hasWork = Boolean(
+    orders && (orders.awaitingShipment > 0 || orders.lateShipments > 0 || orders.refundedOrders > 0) ||
+    issues && (issues.lowStock > 0 || issues.expiring > 0)
+  );
   return (
-    <Card className="gap-0 border-ink-200 bg-card py-0 shadow-sm">
-      <div className="px-5 pt-5">
+    <Card className={cn("gap-0 border-ink-200 bg-card py-0 shadow-sm", className)}>
+      <div className="px-5 pt-5 max-md:px-4 max-md:pt-4">
         <h3 className="text-sm font-semibold text-ink-900">Needs attention</h3>
-        <p className="text-xs text-ink-500">What to act on today.</p>
+        <p className="text-xs text-ink-500 max-md:hidden">What to act on today.</p>
       </div>
-      <ul className="divide-y divide-ink-100 px-5 pb-3">
+      {/* A phone lists only what needs doing, or says there is nothing. */}
+      {(orders || issues) && !hasWork && (
+        <p className="flex items-center gap-1.5 px-4 pt-1 pb-4 text-xs font-medium text-emerald-700 md:hidden dark:text-emerald-300">
+          <Check className="size-3.5" aria-hidden="true" />All clear
+        </p>
+      )}
+      <ul className="divide-y divide-ink-100 px-5 pb-3 max-md:px-4 max-md:pb-1">
         {orders && (
           <>
             <AttentionRow icon={Truck} label="Paid, not shipped" value={String(orders.awaitingShipment)} tone={orders.awaitingShipment > 0 ? "warn" : "ok"} />
             <AttentionRow icon={AlertTriangle} label="Past expected ship date" value={String(orders.lateShipments)} tone={orders.lateShipments > 0 ? "warn" : "ok"} />
-            <AttentionRow icon={Timer} label="Average time to ship" tone="neutral"
+            <AttentionRow icon={Timer} label="Average time to ship" tone="neutral" isQuiet={orders.averageFulfillmentHours == null || !hasWork}
               value={orders.averageFulfillmentHours == null ? "—" : orders.averageFulfillmentHours >= 48 ? `${(orders.averageFulfillmentHours / 24).toFixed(1)} days` : `${Math.round(orders.averageFulfillmentHours)} h`}
               hint={`From payment to shipment, over ${orders.fulfillmentSampleSize} item(s)`} />
             <AttentionRow icon={ArrowDownRight} label="Refunds, last 30 days" value={orders.refundedOrders === 0 ? "0" : `${orders.refundedOrders} · ${money(orders.refunded, insights.currency)}`} tone={orders.refundedOrders > 0 ? "warn" : "ok"} />
@@ -169,8 +186,12 @@ function Attention({ insights }: { insights: ShopInsights }) {
   );
 }
 
-function ListingsCard({ insights }: { insights: ShopInsights }) {
+function ListingsCard({ insights, className }: { insights: ShopInsights; className?: string }) {
   const listings = insights.listings!;
+  const isPhone = useIsPhone();
+  const [showsAll, setShowsAll] = useState(false);
+  const allRows = listings.recent.slice(0, 12);
+  const rows = isPhone && !showsAll ? allRows.slice(0, PHONE_LISTINGS) : allRows;
   const issueCounts = [
     { key: "few_tags" as const, count: listings.issues.fewTags },
     { key: "few_photos" as const, count: listings.issues.fewPhotos },
@@ -180,31 +201,40 @@ function ListingsCard({ insights }: { insights: ShopInsights }) {
   ].filter((item) => item.count > 0);
 
   return (
-    <Card className="gap-0 border-ink-200 bg-card py-0 shadow-sm">
-      <div className="flex flex-col gap-3 px-5 pt-5 sm:flex-row sm:items-start sm:justify-between">
+    <Card className={cn("gap-0 border-ink-200 bg-card py-0 shadow-sm", className)}>
+      <div className="flex flex-col gap-3 px-5 pt-5 max-md:gap-2 max-md:px-4 max-md:pt-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-sm font-semibold text-ink-900">Listings</h3>
-          <p className="text-xs text-ink-500">The {listings.recent.length} most recently updated active listings, checked for common gaps.</p>
+          <p className="text-xs text-ink-500 max-md:hidden">The {listings.recent.length} most recently updated active listings, checked for common gaps.</p>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {Object.entries(stateLabels).map(([state, label]) => (
-            <span key={state} className="rounded-full bg-ink-100 px-2.5 py-1 text-xs text-ink-700">{label} <span className="font-semibold tabular-nums">{listings.countsByState[state] ?? 0}</span></span>
+            <span key={state} className={cn("rounded-full bg-ink-100 px-2.5 py-1 text-xs text-ink-700", !listings.countsByState[state] && "max-md:hidden")}>{label} <span className="font-semibold tabular-nums">{listings.countsByState[state] ?? 0}</span></span>
           ))}
         </div>
       </div>
       {issueCounts.length > 0 && (
-        <div className="mx-5 mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-300">
+        <div className={cn("mx-5 mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-300 max-md:mx-4", listings.recent.length <= 1 && "max-md:hidden")}>
           <AlertTriangle className="size-3.5" />
           {issueCounts.map((item) => <span key={item.key} title={issueLabel[item.key].hint}><span className="font-semibold">{item.count}</span> {issueLabel[item.key].label.toLowerCase()}</span>)}
           <span className="text-amber-700 dark:text-amber-300">of {listings.issues.checked} checked</span>
         </div>
       )}
       {listings.recent.length === 0 ? (
-        <p className="px-5 py-10 text-center text-sm text-ink-400">No active listings yet. Workflow drafts will appear here once they are published on Etsy.</p>
+        <p className="px-5 py-10 text-center text-sm text-ink-400 max-md:px-4 max-md:pt-1 max-md:pb-4 max-md:text-left max-md:text-xs">No active listings yet. Workflow drafts will appear here once they are published on Etsy.</p>
       ) : (
         <ul className="mt-3 divide-y divide-ink-100 border-t border-ink-100">
-          {listings.recent.slice(0, 12).map((listing) => <ListingRow key={listing.listingId} listing={listing} currency={insights.currency} />)}
+          {rows.map((listing) => <ListingRow key={listing.listingId} listing={listing} currency={insights.currency} />)}
         </ul>
+      )}
+      {isPhone && allRows.length > PHONE_LISTINGS && (
+        <button
+          type="button"
+          className="min-h-11 w-full border-t border-ink-100 text-xs font-semibold text-ink-700"
+          onClick={() => setShowsAll((value) => !value)}
+        >
+          {showsAll ? "Show fewer" : `Show all ${allRows.length}`}
+        </button>
       )}
     </Card>
   );
@@ -212,7 +242,7 @@ function ListingsCard({ insights }: { insights: ShopInsights }) {
 
 function ListingRow({ listing, currency }: { listing: ShopListingRow; currency: string | null }) {
   return (
-    <li className="flex flex-col gap-2 px-5 py-3 sm:flex-row sm:items-center sm:gap-4">
+    <li className="flex flex-col gap-2 px-5 py-3 max-md:px-4 sm:flex-row sm:items-center sm:gap-4">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         {listing.imageUrl ? (
           // Etsy-hosted image; next/image would need the Etsy CDN whitelisted.
@@ -244,18 +274,18 @@ function ListingRow({ listing, currency }: { listing: ShopListingRow; currency: 
   );
 }
 
-function BestSellers({ orders, currency }: { orders: OrderInsights | null; currency: string | null }) {
+function BestSellers({ orders, currency, className }: { orders: OrderInsights | null; currency: string | null; className?: string }) {
   const peak = Math.max(1, ...(orders?.topListings.map((item) => item.revenue) ?? [0]));
   return (
-    <Card className="gap-0 border-ink-200 bg-card py-0 shadow-sm">
-      <div className="px-5 pt-5">
+    <Card className={cn("gap-0 border-ink-200 bg-card py-0 shadow-sm", className)}>
+      <div className="px-5 pt-5 max-md:px-4 max-md:pt-4">
         <h3 className="text-sm font-semibold text-ink-900">Best sellers, last 30 days</h3>
-        <p className="text-xs text-ink-500">By revenue, and where buyers order from.</p>
+        <p className="text-xs text-ink-500 max-md:hidden">By revenue, and where buyers order from.</p>
       </div>
       {!orders || orders.topListings.length === 0 ? (
-        <p className="px-5 py-10 text-center text-sm text-ink-400">No sales in the last 30 days yet.</p>
+        <p className="px-5 py-10 text-center text-sm text-ink-400 max-md:px-4 max-md:pt-1 max-md:pb-4 max-md:text-left max-md:text-xs">No sales in the last 30 days yet.</p>
       ) : (
-        <div className="space-y-4 px-5 py-4">
+        <div className="space-y-4 px-5 py-4 max-md:px-4">
           <ul className="space-y-2">
             {orders.topListings.map((item) => (
               <li key={item.listingId ?? item.title} className="text-xs">
@@ -279,19 +309,19 @@ function BestSellers({ orders, currency }: { orders: OrderInsights | null; curre
   );
 }
 
-function ReviewsCard({ insights }: { insights: ShopInsights }) {
+function ReviewsCard({ insights, className }: { insights: ShopInsights; className?: string }) {
   const reviews = insights.reviews;
   const peak = Math.max(1, ...Object.values(reviews?.distribution ?? {}));
   return (
-    <Card className="gap-0 border-ink-200 bg-card py-0 shadow-sm">
-      <div className="px-5 pt-5">
+    <Card className={cn("gap-0 border-ink-200 bg-card py-0 shadow-sm", className)}>
+      <div className="px-5 pt-5 max-md:px-4 max-md:pt-4">
         <h3 className="text-sm font-semibold text-ink-900">Reviews</h3>
-        <p className="text-xs text-ink-500">{reviews ? `From the newest ${reviews.sampled} review(s).` : "Reviews could not be read."}</p>
+        <p className={cn("text-xs text-ink-500", (!reviews || reviews.sampled === 0) && "max-md:hidden")}>{reviews ? `From the newest ${reviews.sampled} review(s).` : "Reviews could not be read."}</p>
       </div>
       {!reviews || reviews.sampled === 0 ? (
-        <p className="px-5 py-10 text-center text-sm text-ink-400">No reviews yet.</p>
+        <p className="px-5 py-10 text-center text-sm text-ink-400 max-md:px-4 max-md:pt-1 max-md:pb-4 max-md:text-left max-md:text-xs">No reviews yet.</p>
       ) : (
-        <div className="grid gap-4 px-5 py-4 sm:grid-cols-[8rem_1fr]">
+        <div className="grid gap-4 px-5 py-4 max-md:px-4 sm:grid-cols-[8rem_1fr]">
           <div>
             <p className="flex items-center gap-1 text-3xl font-bold text-ink-900 tabular-nums">{reviews.average?.toFixed(1)}<Star className="size-5 fill-amber-400 text-amber-400" /></p>
             <div className="mt-2 space-y-1">

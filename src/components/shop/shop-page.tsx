@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { AlertTriangle, CheckCircle2, ExternalLink, Eye, Heart, Loader2, Package, PencilLine, Receipt, RefreshCw, ShieldCheck, ShoppingBag, Star, Store, Unplug } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, Eye, Heart, Loader2, Package, PencilLine, Receipt, RefreshCw, ShieldCheck, ShoppingBag, Star, Store, Unplug } from "lucide-react";
 import { toast } from "sonner";
 
 import { disconnectEtsy, type EtsyConnectionOutcome, getMyShop, getShopInsights, type MyShop } from "@/api/shop";
@@ -11,7 +11,9 @@ import { PrintifyCard } from "@/components/shop/printify-card";
 import { ShopInsightsPanel } from "@/components/shop/shop-insights";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { useAuthStore } from "@/stores/auth";
+import { cn } from "@/utils/cn";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const shopKey = (userId?: string) => ["my-shop", userId] as const;
@@ -92,7 +94,8 @@ export function ShopPage() {
   const connecting = etsyConnect.starting || etsyConnect.waiting;
 
   return (
-    <div className="flex w-full min-w-0 flex-col gap-5 p-4 sm:p-6">
+    // The bottom padding keeps the last line clear of the floating assistant button.
+    <div className="flex w-full min-w-0 flex-col gap-5 max-md:gap-3 max-md:pb-14 md:p-6">
       {etsyConnect.waiting && (
         <div className="flex flex-col gap-2 rounded-xl border border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 px-4 py-3 text-sm text-orange-900 dark:text-orange-300 sm:flex-row sm:items-center sm:justify-between" role="status">
           <span className="flex items-center gap-2"><Loader2 className="size-4 animate-spin" />Finish signing in to Etsy in the popup window.</span>
@@ -197,6 +200,11 @@ function ConnectedShop({
 }) {
   const shop = data.shop!;
   const needsReconnect = data.status === "reconnect_required";
+  const isPhone = useIsPhone();
+  // Rarely needed on a phone, so they open on request; Disconnect stays in view.
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  // Etsy reports 0.0 for a shop nobody has reviewed, which reads as a bad score on a small card.
+  const hasNoReviews = isPhone && shop.reviewCount === 0;
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.user?.id);
   // Insights need a working grant; a lost one is fixed by reconnecting first.
@@ -224,13 +232,13 @@ function ConnectedShop({
     {
       icon: Star,
       label: "Rating",
-      value: shop.reviewAverage == null ? null : `${shop.reviewAverage.toFixed(1)} / 5`,
-      hint: shop.reviewCount == null ? undefined : `${shop.reviewCount} reviews`,
+      value: shop.reviewAverage == null || hasNoReviews ? null : `${shop.reviewAverage.toFixed(1)} / 5`,
+      hint: hasNoReviews ? "No reviews yet" : shop.reviewCount == null ? undefined : `${shop.reviewCount} reviews`,
     },
   ];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 max-md:gap-3">
       {needsReconnect && (
         <div className="flex flex-col gap-3 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="flex items-start gap-2 text-sm text-amber-900 dark:text-amber-300">
@@ -250,18 +258,18 @@ function ConnectedShop({
       )}
 
       <Card className="gap-0 overflow-hidden border-ink-200 bg-card py-0 shadow-sm">
-        <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-4">
+        <div className="flex flex-col gap-4 px-5 py-5 max-md:gap-3 max-md:p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-4 max-md:gap-3">
             {shop.iconUrl ? (
               // Etsy-hosted shop icon; next/image would need the Etsy CDN whitelisted.
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={shop.iconUrl} alt="" className="size-14 shrink-0 rounded-xl object-cover ring-1 ring-ink-200" />
+              <img src={shop.iconUrl} alt="" className="size-14 shrink-0 rounded-xl object-cover ring-1 ring-ink-200 max-md:size-11" />
             ) : (
-              <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-[#F1641E] text-white"><Store className="size-7" /></span>
+              <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-[#F1641E] text-white max-md:size-11"><Store className="size-7 max-md:size-5" /></span>
             )}
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate text-xl font-semibold text-ink-900">{shop.shopName}</h2>
+                <h2 className="truncate text-xl font-semibold text-ink-900 max-md:text-lg">{shop.shopName}</h2>
                 <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${needsReconnect ? "bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 ring-amber-200 dark:ring-amber-500/30" : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 ring-emerald-200 dark:ring-emerald-500/30"}`}>
                   {needsReconnect ? "Reconnect needed" : "Connected"}
                 </span>
@@ -270,15 +278,15 @@ function ConnectedShop({
               {shop.title && <p className="mt-0.5 truncate text-sm text-ink-500">{shop.title}</p>}
             </div>
           </div>
-          <div className="flex shrink-0 flex-col items-start gap-1 self-start sm:items-end sm:self-center">
-            <div className="flex gap-2">
+          <div className="flex shrink-0 flex-col items-start gap-1 self-start max-md:w-full max-md:self-stretch sm:items-end sm:self-center">
+            <div className="flex gap-2 max-md:w-full">
               {canReadInsights && (
-                <Button type="button" variant="outline" size="sm" onClick={sync} disabled={syncing}>
+                <Button type="button" variant="outline" size="sm" className="max-md:flex-1 max-md:px-2" onClick={sync} disabled={syncing}>
                   <RefreshCw className={syncing ? "size-3.5 animate-spin" : "size-3.5"} />{syncing ? "Syncing…" : "Sync now"}
                 </Button>
               )}
               {shop.url && (
-                <Button asChild variant="outline" size="sm">
+                <Button asChild variant="outline" size="sm" className="max-md:flex-1 max-md:px-2">
                   <a href={shop.url} target="_blank" rel="noreferrer"><ExternalLink className="size-3.5" />View on Etsy</a>
                 </Button>
               )}
@@ -288,11 +296,11 @@ function ConnectedShop({
         </div>
 
         {/* Lifetime figures straight from Etsy's shop record; the panel below covers the last 30 days. */}
-        <div className="grid grid-cols-2 gap-3 border-t border-ink-100 px-5 py-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 border-t border-ink-100 px-5 py-4 max-md:gap-2 max-md:p-4 lg:grid-cols-4">
           {stats.map((stat) => (
-            <div key={stat.label} className="rounded-xl bg-ink-50 px-4 py-3">
+            <div key={stat.label} className="rounded-xl bg-ink-50 px-4 py-3 max-md:px-3 max-md:py-2.5">
               <p className="flex items-center gap-1.5 text-xs font-semibold text-ink-500"><stat.icon className="size-3.5" />{stat.label}</p>
-              <p className="mt-1 text-2xl font-bold text-ink-900 tabular-nums">{stat.value == null ? "—" : typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}</p>
+              <p className="mt-1 text-2xl font-bold text-ink-900 tabular-nums max-md:text-xl">{stat.value == null ? "—" : typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}</p>
               {stat.hint && <p className="text-[11px] text-ink-500">{stat.hint}</p>}
             </div>
           ))}
@@ -317,21 +325,30 @@ function ConnectedShop({
       <PrintifyCard />
 
       <Card className="gap-0 overflow-hidden border-ink-200 bg-card py-0 shadow-sm">
-        <dl className="grid gap-x-6 gap-y-2 border-t border-ink-100 px-5 py-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+        <button
+          type="button"
+          aria-expanded={isDetailsOpen}
+          className="flex min-h-12 w-full items-center justify-between px-4 text-sm font-semibold text-ink-800 md:hidden"
+          onClick={() => setIsDetailsOpen((open) => !open)}
+        >
+          Connection details
+          <ChevronDown className={cn("size-4 text-ink-400 transition-transform", isDetailsOpen && "rotate-180")} aria-hidden="true" />
+        </button>
+        <dl className={cn("grid gap-x-6 gap-y-2 border-t border-ink-100 px-5 py-4 text-sm max-md:grid-cols-2 max-md:px-4 sm:grid-cols-2 lg:grid-cols-4", !isDetailsOpen && "max-md:hidden")}>
           <Fact label="Shop ID" value={shop.shopId} />
           <Fact label="Currency" value={shop.currencyCode ?? "—"} />
           <Fact label="Connected since" value={formatDate(data.connectedAtUtc)} />
           <Fact label="Last synced" value={formatDate(data.lastSyncAtUtc)} />
         </dl>
 
-        <div className="flex flex-col gap-2 border-t border-ink-100 bg-ink-50/60 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-ink-500">
+        <div className="flex flex-col gap-2 border-t border-ink-100 bg-ink-50/60 px-5 py-3 max-md:px-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className={cn("text-xs text-ink-500", !isDetailsOpen && "max-md:hidden")}>
             {data.reconnectByUtc && !needsReconnect
               ? `Etsy asks you to confirm the connection again by ${formatDate(data.reconnectByUtc)}; Podivo renews access automatically until then.`
               : "Disconnecting removes the stored Etsy tokens from Podivo."}
           </p>
           {confirmDisconnect ? (
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2 max-md:flex-wrap">
               <span className="text-xs font-medium text-ink-700">Disconnect this shop?</span>
               <Button type="button" size="sm" variant="outline" onClick={onCancelDisconnect} disabled={disconnecting}>Cancel</Button>
               <Button type="button" size="sm" className="bg-rose-600 text-white hover:bg-rose-700" onClick={onDisconnect} disabled={disconnecting}>
@@ -339,7 +356,7 @@ function ConnectedShop({
               </Button>
             </div>
           ) : (
-            <Button type="button" size="sm" variant="outline" className="shrink-0" onClick={onAskDisconnect}><Unplug className="size-3.5" />Disconnect</Button>
+            <Button type="button" size="sm" variant="outline" className="shrink-0 max-md:self-end" onClick={onAskDisconnect}><Unplug className="size-3.5" />Disconnect</Button>
           )}
         </div>
       </Card>

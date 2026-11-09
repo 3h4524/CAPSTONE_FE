@@ -56,7 +56,7 @@ export const AdminShell = ({ children, pageTitle, fillsPhoneScreen = false, hide
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
         <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden dark:lg:bg-panel dark:lg:my-2 dark:lg:mr-2 dark:lg:h-[calc(100dvh-1rem)] dark:lg:rounded-xl dark:lg:border">
-          <div className={cn("min-h-0 flex-1 overflow-y-auto", fillsPhoneScreen && "max-md:flex max-md:flex-col max-md:overflow-hidden")}>
+          <div className={cn("relative min-h-0 flex-1 overflow-y-auto", fillsPhoneScreen && "max-md:flex max-md:flex-col max-md:overflow-hidden")}>
             <AdminTopbar fullName={user.fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} pageTitle={pageTitle} />
             <main className={cn("mx-auto max-w-[1600px] px-4 py-4 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]", fillsPhoneScreen && "max-md:flex max-md:min-h-0 max-md:w-full max-md:flex-1 max-md:flex-col max-md:p-0")}>
               {children}

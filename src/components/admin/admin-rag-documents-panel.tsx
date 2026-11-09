@@ -17,6 +17,7 @@ import {
 import type { RagAdminDocument } from "@/api/rag";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -36,6 +37,7 @@ import {
 import { useActivateAdminRagDocument } from "@/hooks/mutations/use-activate-admin-rag-document";
 import { useAdminRagDocument } from "@/hooks/queries/use-admin-rag-document";
 import { useAdminRagDocuments } from "@/hooks/queries/use-admin-rag-documents";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { cn } from "@/utils/cn";
 
 const STATUS_OPTIONS = [
@@ -65,6 +67,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
   });
   const detailQuery = useAdminRagDocument(selectedId);
   const activateMutation = useActivateAdminRagDocument();
+  const isPhone = useIsPhone();
   const filteredDocuments = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     if (!normalizedSearch) return documentsQuery.data ?? [];
@@ -92,9 +95,28 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
     ]);
   };
 
+  const detailPanel = !selectedId ? (
+    <PanelMessage text="Select a document to inspect its version and chunks." />
+  ) : detailQuery.isPending ? (
+    <PanelMessage text="Loading document detail..." />
+  ) : detailQuery.data ? (
+    <DocumentDetail
+      detail={detailQuery.data.document}
+      chunks={detailQuery.data.chunks}
+      onActivate={() =>
+        activateMutation.mutate(detailQuery.data.document.id, {
+          onSuccess: () => void detailQuery.refetch(),
+        })
+      }
+      isActivating={activateMutation.isPending}
+    />
+  ) : (
+    <PanelMessage text="Document detail is unavailable." />
+  );
+
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div className="space-y-5 max-md:space-y-3">
+      <div className="flex flex-col justify-between gap-4 max-md:gap-3 sm:flex-row sm:items-end">
         <div>
           <p className="text-[10px] font-bold tracking-[0.16em] text-ink-400 uppercase">
             Knowledge base
@@ -107,7 +129,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
             active for retrieval.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 max-md:grid max-md:grid-cols-2">
           <Button
             type="button"
             variant="outline"
@@ -125,24 +147,24 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
       </div>
 
       <section className="rounded-xl border border-ink-200 bg-card p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col gap-3 max-md:grid max-md:grid-cols-2 max-md:gap-2 md:flex-row">
           <Input
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search title or listing ID"
-            className="sm:max-w-xs"
+            className="max-md:col-span-2 md:max-w-xs"
           />
           <Input
             value={sourceId}
             onChange={(event) => setSourceId(event.target.value)}
             placeholder="Filter by source ID"
-            className="sm:max-w-xs"
+            className="md:max-w-xs"
           />
           <Select
             value={status || "all"}
             onValueChange={(value) => setStatus(value === "all" ? "" : value)}
           >
-            <SelectTrigger className="w-full sm:w-[162px]">
+            <SelectTrigger className="w-full md:w-[162px]">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -157,7 +179,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
             {filteredDocuments.length} of {documentsQuery.data?.length ?? 0} documents
           </span>
           <Select value={pageSize} onValueChange={setPageSize}>
-            <SelectTrigger className="w-full sm:ml-auto sm:w-[130px]">
+            <SelectTrigger className="w-full max-md:w-32 max-md:justify-self-end md:ml-auto md:w-[130px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -171,12 +193,20 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_390px]">
-        <section className="min-w-0 overflow-hidden rounded-xl border border-ink-200 bg-card shadow-sm">
+      <div className="grid grid-cols-1 items-start gap-5 max-md:gap-3 xl:grid-cols-[minmax(0,1fr)_390px]">
+        <section className="min-w-0 overflow-hidden rounded-xl border border-ink-200 bg-card shadow-sm max-md:overflow-visible max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none">
           {documentsQuery.isPending ? (
             <PanelMessage text="Loading RAG documents..." />
           ) : documentsQuery.isError ? (
             <PanelMessage text="Could not load RAG documents." />
+          ) : documentsQuery.data?.length && isPhone ? (
+            <ul className="space-y-2">
+              {visibleDocuments.map((document) => (
+                <li key={document.id}>
+                  <DocumentCard document={document} onSelect={() => setSelectedId(document.id)} />
+                </li>
+              ))}
+            </ul>
           ) : documentsQuery.data?.length ? (
             <Table>
               <TableHeader>
@@ -213,26 +243,17 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
           )}
         </section>
 
-        <section className="rounded-xl border border-ink-200 bg-card p-5 shadow-sm xl:sticky xl:top-4">
-          {!selectedId ? (
-            <PanelMessage text="Select a document to inspect its version and chunks." />
-          ) : detailQuery.isPending ? (
-            <PanelMessage text="Loading document detail..." />
-          ) : detailQuery.data ? (
-            <DocumentDetail
-              detail={detailQuery.data.document}
-              chunks={detailQuery.data.chunks}
-              onActivate={() =>
-                activateMutation.mutate(detailQuery.data.document.id, {
-                  onSuccess: () => void detailQuery.refetch(),
-                })
-              }
-              isActivating={activateMutation.isPending}
-            />
-          ) : (
-            <PanelMessage text="Document detail is unavailable." />
-          )}
-        </section>
+        {/* Below a long list the detail would open out of sight, so a phone shows it over the list. */}
+        {isPhone ? (
+          <Dialog open={Boolean(selectedId)} onOpenChange={(open) => !open && setSelectedId(null)}>
+            <DialogContent className="grid-cols-[minmax(0,1fr)] p-4" aria-describedby={undefined}>
+              <DialogTitle className="sr-only">Document detail</DialogTitle>
+              {detailPanel}
+            </DialogContent>
+          </Dialog>
+        ) : (
+          <section className="rounded-xl border border-ink-200 bg-card p-5 shadow-sm xl:sticky xl:top-4">{detailPanel}</section>
+        )}
       </div>
     </div>
   );
@@ -249,7 +270,7 @@ const DocumentPagination = ({
   onPrevious: () => void;
   onNext: () => void;
 }) => (
-  <div className="flex items-center justify-between border-t border-ink-100 bg-ink-50/50 px-4 py-3">
+  <div className="flex items-center justify-between border-t border-ink-100 bg-ink-50/50 px-4 py-3 max-md:border-t-0 max-md:bg-transparent max-md:px-0">
     <p className="text-xs text-ink-500">
       Page {page} of {totalPages}
     </p>
@@ -268,6 +289,26 @@ const DocumentPagination = ({
       </Button>
     </div>
   </div>
+);
+
+/** A document on a phone: everything its table row shows, without the columns. */
+const DocumentCard = ({ document, onSelect }: { document: RagAdminDocument; onSelect: () => void }) => (
+  <button type="button" onClick={onSelect} className="w-full rounded-xl border border-ink-200 bg-card p-3 text-left shadow-xs">
+    <span className="flex items-start justify-between gap-2">
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-semibold text-ink-800">{document.title}</span>
+        <span className="mt-0.5 block truncate text-[11px] text-ink-400">{document.sourceId}</span>
+      </span>
+      <StatusBadge status={document.status} />
+    </span>
+    <span className="mt-2 flex items-center justify-between gap-2 border-t border-ink-100 pt-2 text-[11px] text-ink-500">
+      <span className="min-w-0 truncate">{document.version || "Unversioned"} · {document.chunkCount} chunks</span>
+      <span className="flex shrink-0 items-center gap-1">
+        {formatDate(document.updatedAt)}
+        <ChevronRight className="size-3.5 text-ink-300" aria-hidden="true" />
+      </span>
+    </span>
+  </button>
 );
 
 const DocumentRow = ({
@@ -339,7 +380,7 @@ const DocumentDetail = ({
 
   return (
     <div>
-      <div className="flex items-start justify-between gap-3 border-b border-ink-100 pb-4">
+      <div className="flex items-start justify-between gap-3 border-b border-ink-100 pb-4 max-md:pr-8">
         <div className="min-w-0">
           <p className="text-sm leading-5 font-bold text-ink-900">{detail.title}</p>
           <p className="mt-1 truncate text-[11px] text-ink-400">{detail.sourceId}</p>
@@ -365,7 +406,7 @@ const DocumentDetail = ({
         <SignalCard
           label="Trend score"
           value={viralScore == null ? "—" : `${viralScore.toFixed(1)}/100`}
-          tone="indigo"
+          tone="slate"
         />
         <SignalCard
           label="Favorites"
@@ -435,7 +476,7 @@ const DocumentDetail = ({
           </div>
           <span className="shrink-0 text-[10px] text-ink-400">{chunks.length} chunks</span>
         </div>
-        <div className="mt-3 max-h-[430px] space-y-2 overflow-x-hidden overflow-y-auto pr-1">
+        <div className="mt-3 max-h-[430px] space-y-2 overflow-x-hidden overflow-y-auto pr-1 max-md:max-h-none max-md:pr-0">
           {chunks.map((chunk) => (
             <details
               key={chunk.id}
@@ -473,11 +514,11 @@ const SignalCard = ({
   label: string;
   value: string;
   icon?: React.ReactNode;
-  tone: "indigo" | "rose" | "sky" | "slate";
+  tone: "rose" | "sky" | "slate";
 }) => (
   <div className="min-w-0 rounded-lg border border-ink-100 bg-ink-50/70 px-2.5 py-2">
     <div
-      className={`flex items-center gap-1 text-[10px] font-semibold tracking-wide uppercase ${tone === "rose" ? "text-rose-500" : tone === "sky" ? "text-sky-500" : tone === "indigo" ? "text-indigo-500" : "text-ink-400"}`}
+      className={`flex items-center gap-1 text-[10px] font-semibold tracking-wide uppercase ${tone === "rose" ? "text-rose-500" : tone === "sky" ? "text-sky-500" : "text-ink-400"}`}
     >
       {icon}
       {label}

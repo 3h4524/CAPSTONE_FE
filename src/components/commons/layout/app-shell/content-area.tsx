@@ -14,7 +14,7 @@ type ContentAreaProps = {
 // Pages whose own cards sit straight on the shell background, without the white page card.
 const BARE_ROUTES = ["/subscription"];
 // The same on phones only, where these pages need the page card's width for their own cards.
-const BARE_ON_PHONE_ROUTES = ["/dashboard", "/batches", "/styles", "/design-templates", "/api-keys", "/usage", "/market-opportunities"];
+const BARE_ON_PHONE_ROUTES = ["/dashboard", "/batches", "/styles", "/design-templates", "/api-keys", "/usage", "/market-opportunities", "/shop", "/settings", "/mockups"];
 
 export const ContentArea = ({ children }: ContentAreaProps) => {
   const pathname = usePathname();
@@ -23,7 +23,7 @@ export const ContentArea = ({ children }: ContentAreaProps) => {
   const isBareOnPhone = BARE_ON_PHONE_ROUTES.includes(pathname ?? "") || isDesignTemplateForm(pathname);
 
   return (
-    <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+    <main className="relative flex-1 overflow-y-auto p-4 lg:p-6">
       {isBare ? (
         <div className="mx-auto flex min-h-full w-full flex-col">{children}</div>
       ) : (

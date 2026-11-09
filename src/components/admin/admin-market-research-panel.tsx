@@ -243,13 +243,13 @@ const AdminMarketResearchPanel = () => {
   };
 
   return (
-    <section className="space-y-5 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-50/80 dark:from-indigo-500/10 via-card to-card p-5 shadow-sm sm:p-6">
+    <section className="space-y-5 rounded-xl border border-ink-200 bg-card p-5 shadow-sm max-md:space-y-4 max-md:p-4 sm:p-6">
       <Header />
-      <section className="rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-card/80 p-4">
+      <section className="rounded-xl border border-ink-200 bg-card p-4 max-md:p-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="flex items-center gap-2 text-sm font-bold text-ink-900">
-              <Clock3 className="size-4 text-indigo-500" /> Automatic refresh
+              <Clock3 className="size-4 text-ink-500" /> Automatic refresh
             </p>
             <p className="mt-1 text-xs text-ink-500">
               {enabled
@@ -264,12 +264,11 @@ const AdminMarketResearchPanel = () => {
               checked={enabled}
               onCheckedChange={setEnabled}
               size="sm"
-              className="data-[state=checked]:bg-indigo-500"
             />{" "}
             Enable schedule
           </label>
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+        <div className="mt-4 grid gap-3 max-md:grid-cols-2 max-md:items-end md:grid-cols-2 xl:grid-cols-6">
           <Field label="Run frequency (minutes)">
             <Input
               type="number"
@@ -337,7 +336,7 @@ const AdminMarketResearchPanel = () => {
             type="button"
             onClick={saveSchedule}
             disabled={saveMutation.isPending}
-            className="h-10 min-w-44"
+            className="h-10 min-w-44 max-md:w-full"
           >
             {saveMutation.isPending ? (
               <Loader2 className="size-4 animate-spin" />
@@ -354,14 +353,14 @@ const AdminMarketResearchPanel = () => {
           <Textarea
             value={queries}
             onChange={(event) => setQueries(event.target.value)}
-            className="mt-2 max-h-[418px] min-h-32 resize-y overflow-y-auto bg-card text-sm"
+            className="mt-2 max-h-[418px] min-h-32 resize-y overflow-y-auto bg-card text-sm max-md:max-h-56 max-md:text-base"
             placeholder="One keyword per line, e.g. hiking shirt"
           />
           <span className="mt-1 block text-[11px] font-normal text-ink-400">
             {normalizedQueries.length}/{MAX_QUERIES} keywords · public Etsy data only
           </span>
         </label>
-        <div className="rounded-lg border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/10 p-3">
+        <div className="rounded-lg border border-ink-200 bg-ink-50/60 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p className="text-xs font-semibold text-ink-700">Suggested niches</p>
@@ -369,7 +368,7 @@ const AdminMarketResearchPanel = () => {
                 Start with a preset if you are not sure which keywords to research.
               </p>
             </div>
-            <span className="text-[10px] font-medium text-indigo-500">Click to add keywords</span>
+            <span className="text-[10px] font-medium text-ink-500">Click to add keywords</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {SUGGESTED_NICHES.map((niche) => (
@@ -379,7 +378,7 @@ const AdminMarketResearchPanel = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => addSuggestedNiche(niche.queries)}
-                className="h-8 border-indigo-200 dark:border-indigo-500/30 bg-card text-[11px] text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/15"
+                className="h-8 text-[11px]"
               >
                 {niche.label}
               </Button>
@@ -395,7 +394,7 @@ const AdminMarketResearchPanel = () => {
             type="button"
             onClick={runNow}
             disabled={retrieveMutation.isPending || !normalizedQueries.length}
-            className="h-10 min-w-44"
+            className="h-10 min-w-44 max-md:w-full"
           >
             {retrieveMutation.isPending ? (
               <>
@@ -444,7 +443,7 @@ const ResearchHistory = ({
   isLoading: boolean;
   onSelect: (entry: ResearchHistoryEntry) => void;
 }) => (
-  <div className="border-t border-indigo-100 dark:border-indigo-500/30 pt-4">
+  <div className="border-t border-ink-100 pt-4">
     <div className="flex items-center justify-between gap-3">
       <div>
         <p className="text-xs font-bold text-ink-800">Recent research history</p>
@@ -468,13 +467,20 @@ const ResearchHistory = ({
                   disabled={isLoading}
                   aria-pressed={selectedId === entry.id}
                   aria-label={`${runLabel}: ${nicheLabel}`}
-                  className={`rounded-lg border p-3 text-left transition hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 disabled:cursor-wait disabled:opacity-60 ${selectedId === entry.id ? "border-indigo-400 bg-indigo-50/70 dark:bg-indigo-500/10 ring-1 ring-indigo-200 dark:ring-indigo-500/30" : "border-ink-200 bg-card"}`}
+                  className={`rounded-lg border p-3 text-left transition hover:border-ink-400 hover:bg-ink-50 disabled:cursor-wait disabled:opacity-60 ${selectedId === entry.id ? "border-primary bg-ink-50 ring-1 ring-primary/30" : "border-ink-200 bg-card"}`}
                 >
                   <p className="truncate text-[11px] font-semibold text-ink-700">{runLabel}</p>
                   <p className="mt-2 text-[10px] text-ink-400">{formatDate(entry.createdAt)}</p>
                   <p className="mt-1 text-[10px] text-ink-500">
                     {entry.retrievedCount} scanned · {entry.selectedCount} selected · avg{" "}
                     {entry.averageScore.toFixed(1)}
+                  </p>
+                  {/* A phone has no hover, so what the tooltip says is written on the card. */}
+                  <p className="mt-1 line-clamp-2 text-[10px] text-ink-500 md:hidden">
+                    {entry.queries.length} niches: {nicheLabel}
+                  </p>
+                  <p className="mt-1 text-[10px] font-medium text-ink-600 md:hidden">
+                    {entry.result ? "Tap to restore this snapshot" : "Tap to run this research again"}
                   </p>
                 </button>
               </TooltipTrigger>
@@ -484,7 +490,7 @@ const ResearchHistory = ({
                 sideOffset={8}
                 className="w-fit max-w-[min(28rem,calc(100vw-2rem))] min-w-64 rounded-xl border border-slate-700 bg-slate-900 p-3 text-white shadow-xl"
               >
-                <p className="text-[10px] font-semibold tracking-[0.14em] text-indigo-300 uppercase">
+                <p className="text-[10px] font-semibold tracking-[0.14em] text-slate-300 uppercase">
                   Niches researched ({entry.queries.length})
                 </p>
                 <div className="mt-2 flex max-h-48 flex-wrap content-start gap-1.5 overflow-y-auto pr-1 [scrollbar-color:#475569_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-600 [&::-webkit-scrollbar-track]:bg-transparent">
@@ -518,18 +524,18 @@ const ResearchHistory = ({
 const Header = () => (
   <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
     <div>
-      <p className="text-[10px] font-bold tracking-[0.16em] text-indigo-500 uppercase">
+      <p className="text-[10px] font-bold tracking-[0.16em] text-ink-400 uppercase">
         Etsy trend intelligence
       </p>
       <h2 className="mt-1 flex items-center gap-2 text-base font-bold text-ink-900">
-        <Sparkles className="size-4 text-indigo-500" /> Public listing research
+        <Sparkles className="size-4 text-ink-500" /> Public listing research
       </h2>
       <p className="mt-1 max-w-2xl text-xs leading-5 text-ink-500">
         Turn Etsy signals into searchable trend references. The schedule runs in the background;
         every selected listing is queued for RAG automatically.
       </p>
     </div>
-    <Badge className="w-fit border-indigo-100 dark:border-indigo-500/30 bg-card text-indigo-600 dark:text-indigo-400">Admin only</Badge>
+    <Badge variant="outline" className="w-fit">Admin only</Badge>
   </div>
 );
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
@@ -553,7 +559,7 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
   const topKeyword =
     Object.entries(keywordCounts).sort(([, first], [, second]) => second - first)[0]?.[0] ?? "—";
   return (
-    <div className="border-t border-indigo-100 dark:border-indigo-500/30 pt-5">
+    <div className="border-t border-ink-100 pt-5">
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
         <div>
           <p className="text-[10px] font-bold tracking-[0.16em] text-emerald-600 dark:text-emerald-400 uppercase">
@@ -567,7 +573,7 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
           {result.selectedCount} high-signal references queued to RAG across the selected niches
         </p>
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="mt-4 grid grid-cols-2 gap-3 max-md:gap-2 max-md:[&>:last-child]:col-span-2 lg:grid-cols-5">
         <Metric
           label="Listings scanned"
           value={result.retrievedCount.toLocaleString()}
@@ -583,7 +589,6 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
           label="Average trend score"
           value={avgScore.toFixed(1)}
           icon={<Sparkles className="size-4" />}
-          tone="indigo"
         />
         <Metric
           label="Observed favorites"
@@ -594,11 +599,13 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
           label="Top keyword"
           value={topKeyword}
           icon={<Search className="size-4" />}
-          tone="indigo"
         />
       </div>
       <div className="mt-4 overflow-hidden rounded-lg border border-ink-200 bg-card">
-        <div className="overflow-x-auto">
+        <ul className="divide-y divide-ink-100 md:hidden">
+          {items.map((item, index) => <ResearchResultCard key={item.ragDocumentId} item={item} rank={index + 1} />)}
+        </ul>
+        <div className="overflow-x-auto max-md:hidden">
           <table className="w-full min-w-[720px] text-left text-xs">
             <thead className="bg-ink-50 text-[10px] tracking-wide text-ink-400 uppercase">
               <tr>
@@ -614,7 +621,7 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
                 <tr key={item.ragDocumentId} className="border-t border-ink-100">
                   <td className="px-4 py-3">
                     <div className="flex max-w-[280px] items-center gap-3">
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-500/10 font-bold text-indigo-600 dark:text-indigo-400">
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ink-100 font-bold text-ink-600">
                         {index + 1}
                       </span>
                       <div className="min-w-0">
@@ -624,7 +631,7 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
                               href={item.url ?? undefined}
                               target="_blank"
                               rel="noreferrer"
-                              className="flex min-w-0 items-center gap-1 truncate font-semibold text-ink-800 hover:text-indigo-600 dark:hover:text-indigo-400"
+                              className="flex min-w-0 items-center gap-1 truncate font-semibold text-ink-800 hover:underline"
                             >
                               <span className="truncate">{item.title}</span>
                               <ExternalLink className="size-3 shrink-0" />
@@ -709,8 +716,45 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
   );
 };
 
+/** One result on a phone: the table's columns, and the score drivers its tooltip holds. */
+const ResearchResultCard = ({ item, rank }: { item: MarketResearchResponse["items"][number]; rank: number }) => (
+  <li className="space-y-2 p-3 text-[11px] text-ink-500">
+    <div className="flex items-start gap-2">
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ink-100 text-xs font-bold text-ink-600">
+        {rank}
+      </span>
+      <div className="min-w-0 flex-1">
+        <a href={item.url ?? undefined} target="_blank" rel="noreferrer" className="line-clamp-2 text-xs font-semibold text-ink-800">
+          {item.title}
+        </a>
+        <span className="text-[10px] text-ink-400">Listing #{item.externalListingId}</span>
+      </div>
+      <Badge className="shrink-0 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+        <Database className="mr-1 size-3" /> Queued
+      </Badge>
+    </div>
+    <div className="flex items-center gap-2">
+      <span className="font-bold text-ink-700 tabular-nums">{(Number(item.viralScore) || 0).toFixed(1)}</span>
+      <span className="text-[10px] text-ink-400">/100</span>
+      <Progress value={item.viralScore} className="h-1.5 flex-1" />
+    </div>
+    <p>
+      Favorites: {formatScoreDriver(item.scoreBreakdown?.favoritesScore, item.scoreBreakdown?.favoritesWeight)}
+      <br />
+      Views: {formatScoreDriver(item.scoreBreakdown?.viewsScore, item.scoreBreakdown?.viewsWeight)}
+    </p>
+    <div className="flex items-center justify-between gap-3">
+      <span className="min-w-0 truncate">{item.matchedQuery || "—"}</span>
+      <span className="flex shrink-0 gap-3">
+        <span className="inline-flex items-center gap-1"><Heart className="size-3 text-rose-400" />{formatCompact(item.favorites)}</span>
+        <span className="inline-flex items-center gap-1"><Eye className="size-3 text-sky-400" />{formatCompact(item.views)}</span>
+      </span>
+    </div>
+  </li>
+);
+
 const ResearchEmptyState = () => (
-  <div className="border-t border-indigo-100 dark:border-indigo-500/30 pt-5">
+  <div className="border-t border-ink-100 pt-5">
     <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
       <div>
         <p className="text-[10px] font-bold tracking-[0.16em] text-ink-400 uppercase">
@@ -722,7 +766,7 @@ const ResearchEmptyState = () => (
       </div>
       <p className="text-xs text-ink-400">Run a research pass to populate the metrics</p>
     </div>
-    <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
+    <div className="mt-4 grid grid-cols-2 gap-3 max-md:gap-2 max-md:[&>:last-child]:col-span-2 lg:grid-cols-5">
       <Metric label="Listings scanned" value="—" icon={<Search className="size-4" />} />
       <Metric
         label="Selected for RAG"
@@ -734,10 +778,9 @@ const ResearchEmptyState = () => (
         label="Average trend score"
         value="—"
         icon={<Sparkles className="size-4" />}
-        tone="indigo"
       />
       <Metric label="Observed favorites" value="—" icon={<Heart className="size-4" />} />
-      <Metric label="Top keyword" value="—" icon={<Search className="size-4" />} tone="indigo" />
+      <Metric label="Top keyword" value="—" icon={<Search className="size-4" />} />
     </div>
   </div>
 );
@@ -755,7 +798,7 @@ const Metric = ({
 }) => (
   <div className="rounded-lg border border-ink-100 bg-card p-3">
     <div
-      className={`mb-2 flex size-7 items-center justify-center rounded-md ${tone === "emerald" ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : tone === "indigo" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" : "bg-ink-100 text-ink-500"}`}
+      className={`mb-2 flex size-7 items-center justify-center rounded-md ${tone === "emerald" ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-ink-100 text-ink-500"}`}
     >
       {icon}
     </div>

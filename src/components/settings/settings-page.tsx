@@ -26,6 +26,14 @@ type SettingsDraft = {
   newsletterSubscribed: boolean;
 };
 
+// Sits on the bottom tabs (56px and a 1px border). The right padding leaves the assistant button its place.
+const PHONE_SAVE_BAR_CLASS_NAME =
+  "fixed inset-x-0 bottom-[57px] z-20 flex gap-2 border-t border-ink-200 bg-card py-2 pr-[4.5rem] pl-4 md:hidden";
+
+// A framed row on larger screens; on a phone the rows of a card are divided by a line.
+const ROW_CLASS_NAME =
+  "flex items-center justify-between gap-4 rounded-xl border border-ink-200/80 bg-ink-50/35 px-3.5 py-3 max-md:rounded-none max-md:border-x-0 max-md:border-t-0 max-md:bg-transparent max-md:px-0 max-md:pt-0 max-md:pb-3 max-md:last:border-b-0 max-md:last:pb-0";
+
 const fromProfile = (profile: Profile): SettingsDraft => ({
   timezone: profile.timezone,
   language: profile.language,
@@ -86,25 +94,28 @@ export const SettingsPage = ({ variant = "seller" }: SettingsPageProps) => {
     if (data) setDraft(fromProfile(data));
   };
 
+  const saved = data ? fromProfile(data) : draft;
+  const hasChanges = (Object.keys(draft) as (keyof SettingsDraft)[]).some((key) => draft[key] !== saved[key]);
+
   return (
     // The admin shell already pads its page area, so the admin variant adds none of its own.
-    <div className={cn("mx-auto flex w-full max-w-6xl flex-col gap-6", !isAdmin && "p-4 sm:p-6 lg:p-8")}>
-      <section className="relative overflow-hidden rounded-2xl border border-ink-200 bg-gradient-to-br from-card via-card to-blue-50/70 dark:to-blue-500/10 px-5 py-5 shadow-sm sm:px-7 sm:py-6">
+    <div className={cn("mx-auto flex w-full max-w-6xl flex-col gap-6 max-md:gap-3", !isAdmin && "md:p-6 lg:p-8", hasChanges ? "max-md:pb-20" : "max-md:pb-14")}>
+      <section className="relative overflow-hidden rounded-2xl border border-ink-200 bg-gradient-to-br from-card via-card to-blue-50/70 dark:to-blue-500/10 px-5 py-5 shadow-sm max-md:p-4 sm:px-7 sm:py-6">
         <div className="pointer-events-none absolute -top-20 -right-16 size-56 rounded-full bg-blue-100/70 dark:bg-blue-500/15 blur-3xl" />
         <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <p className="flex items-center gap-2 text-[11px] font-bold tracking-[0.16em] text-blue-600 dark:text-blue-400 uppercase"><span className="size-1.5 rounded-full bg-blue-600" />{t("settings.eyebrow")}</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink-900">{t("settings.title")}</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-500">{t("settings.description")}</p>
+            <p className="flex items-center gap-2 text-[11px] font-bold tracking-[0.16em] text-blue-600 dark:text-blue-400 uppercase max-md:hidden"><span className="size-1.5 rounded-full bg-blue-600" />{t("settings.eyebrow")}</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink-900 max-md:mt-0 max-md:text-2xl">{t("settings.title")}</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-500 max-md:hidden">{t("settings.description")}</p>
           </div>
-          <div className="flex shrink-0 items-center gap-2 rounded-xl border border-ink-200 bg-card/85 p-1 shadow-sm backdrop-blur">
+          <div className="flex shrink-0 items-center gap-2 rounded-xl border border-ink-200 bg-card/85 p-1 shadow-sm backdrop-blur max-md:hidden">
             <Button type="button" variant="ghost" className="text-ink-500 hover:bg-ink-50 hover:text-ink-900" onClick={discard} disabled={isSaving}>{t("settings.discard")}</Button>
             <Button type="button" className="min-w-32 shadow-sm" onClick={save} disabled={isSaving}>{isSaving ? t("settings.saving") : <><Check className="size-4" />{t("settings.save")}</>}</Button>
           </div>
         </div>
       </section>
 
-      <div className="grid items-start gap-5 lg:grid-cols-2">
+      <div className="grid items-start gap-5 max-md:grid-cols-[minmax(0,1fr)] max-md:gap-3 lg:grid-cols-2">
         <SettingsCard icon={<Palette className="size-4" />} title={t("settings.appearance")} description={t("settings.appearanceDescription")}>
           <div className="max-w-md">
             <SettingSelect label={t("settings.language")} value={draft.language} options={languageOptions} onChange={(value) => update("language", value)} />
@@ -130,11 +141,19 @@ export const SettingsPage = ({ variant = "seller" }: SettingsPageProps) => {
             <SettingsRow title={t("settings.twoFactor")} description={t("settings.twoFactorDescription")} trailing={<span className="rounded-full bg-ink-100 px-2.5 py-1 text-[11px] font-medium text-ink-500">{t("settings.comingSoon")}</span>} />
           )}
           {isAdmin && (
-            <SettingsRow title={t("settings.password")} description={t("settings.passwordDescription")} trailing={<Button asChild type="button" variant="outline" size="sm" className="shrink-0"><Link href="/change-password"><KeyRound className="size-3.5" />{t("settings.changePassword")}</Link></Button>} />
+            <SettingsRow stacksOnPhone title={t("settings.password")} description={t("settings.passwordDescription")} trailing={<Button asChild type="button" variant="outline" size="sm" className="shrink-0 max-sm:w-full"><Link href="/change-password"><KeyRound className="size-3.5" />{t("settings.changePassword")}</Link></Button>} />
           )}
-          <SettingsRow title={t("settings.accountProfile")} description={t(isAdmin ? "settings.adminAccountProfileDescription" : "settings.accountProfileDescription")} trailing={<Button asChild type="button" variant="outline" size="sm" className="shrink-0"><Link href={isAdmin ? "/admin/profile" : "/profile"}><UserRound className="size-3.5" />{t("settings.openProfile")}</Link></Button>} />
+          <SettingsRow stacksOnPhone title={t("settings.accountProfile")} description={t(isAdmin ? "settings.adminAccountProfileDescription" : "settings.accountProfileDescription")} trailing={<Button asChild type="button" variant="outline" size="sm" className="shrink-0 max-sm:w-full"><Link href={isAdmin ? "/admin/profile" : "/profile"}><UserRound className="size-3.5" />{t("settings.openProfile")}</Link></Button>} />
         </SettingsCard>
       </div>
+
+      {/* A phone scrolls past the page's own buttons, so the choice to save follows the change. */}
+      {hasChanges && (
+        <div className={PHONE_SAVE_BAR_CLASS_NAME}>
+          <Button type="button" variant="outline" className="flex-1 px-2" onClick={discard} disabled={isSaving}>{t("settings.discard")}</Button>
+          <Button type="button" className="flex-1 px-2" onClick={save} disabled={isSaving}>{isSaving ? t("settings.saving") : <><Check className="size-4" />{t("settings.save")}</>}</Button>
+        </div>
+      )}
     </div>
   );
 };
@@ -142,8 +161,8 @@ export const SettingsPage = ({ variant = "seller" }: SettingsPageProps) => {
 function SettingsCard({ icon, title, description, children }: { icon: ReactNode; title: string; description: string; children: ReactNode }) {
   return (
     <Card className="gap-0 overflow-hidden rounded-2xl border-ink-200/90 bg-card py-0 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
-      <CardHeader className="gap-3 border-b border-ink-100 bg-ink-50/45 px-5 py-4 sm:px-6"><div className="flex items-start gap-3"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 ring-1 ring-blue-100 dark:ring-blue-500/30">{icon}</span><div className="min-w-0"><CardTitle className="text-[15px] text-ink-900">{title}</CardTitle><CardDescription className="mt-1 leading-5">{description}</CardDescription></div></div></CardHeader>
-      <CardContent className="space-y-3 px-5 py-5 sm:px-6">{children}</CardContent>
+      <CardHeader className="gap-3 border-b border-ink-100 bg-ink-50/45 px-5 py-4 max-md:px-4 max-md:py-3 sm:px-6"><div className="flex items-start gap-3 max-md:items-center"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 ring-1 ring-blue-100 dark:ring-blue-500/30">{icon}</span><div className="min-w-0"><CardTitle className="text-[15px] text-ink-900">{title}</CardTitle><CardDescription className="mt-1 leading-5 max-md:hidden">{description}</CardDescription></div></div></CardHeader>
+      <CardContent className="space-y-3 px-5 py-5 max-md:p-4 sm:px-6">{children}</CardContent>
     </Card>
   );
 }
@@ -153,13 +172,14 @@ function SettingSelect({ label, value, options, onChange }: { label: string; val
 }
 
 function ToggleRow({ id, label, description, checked, onChange }: { id: string; label: string; description: string; checked: boolean; onChange: (value: boolean) => void }) {
-  return <div className="flex items-center justify-between gap-4 rounded-xl border border-ink-200/80 bg-ink-50/35 px-3.5 py-3"><div className="min-w-0"><Label htmlFor={id} className="text-sm font-medium text-ink-800">{label}</Label><p className="mt-0.5 text-xs leading-5 text-ink-500">{description}</p></div><Switch id={id} checked={checked} onCheckedChange={onChange} /> </div>;
+  // The switch is small for a finger, so on a phone the whole row is its label.
+  return <div className={cn(ROW_CLASS_NAME, "relative")}><div className="min-w-0"><Label htmlFor={id} className="text-sm font-medium text-ink-800">{label}</Label><p className="mt-0.5 text-xs leading-5 text-ink-500">{description}</p></div><Switch id={id} checked={checked} onCheckedChange={onChange} /><label htmlFor={id} aria-hidden="true" className="absolute inset-0 md:hidden" /></div>;
 }
 
 function InfoNote({ children }: { children: ReactNode }) {
-  return <div className="rounded-xl border border-ink-100 bg-ink-50 px-3.5 py-2.5 text-xs leading-5 text-ink-500">{children}</div>;
+  return <div className="rounded-xl border border-ink-100 bg-ink-50 px-3.5 py-2.5 text-xs leading-5 text-ink-500 max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:p-0">{children}</div>;
 }
 
-function SettingsRow({ title, description, trailing }: { title: string; description: string; trailing: ReactNode }) {
-  return <div className="flex items-center justify-between gap-4 rounded-xl border border-ink-200/80 bg-ink-50/35 px-3.5 py-3"><div className="min-w-0"><p className="text-sm font-medium text-ink-800">{title}</p><p className="mt-0.5 text-xs leading-5 text-ink-500">{description}</p></div>{trailing}</div>;
+function SettingsRow({ title, description, trailing, stacksOnPhone }: { title: string; description: string; trailing: ReactNode; stacksOnPhone?: boolean }) {
+  return <div className={cn(ROW_CLASS_NAME, stacksOnPhone && "max-sm:flex-col max-sm:items-stretch max-sm:gap-2")}><div className="min-w-0"><p className="text-sm font-medium text-ink-800">{title}</p><p className="mt-0.5 text-xs leading-5 text-ink-500">{description}</p></div>{trailing}</div>;
 }

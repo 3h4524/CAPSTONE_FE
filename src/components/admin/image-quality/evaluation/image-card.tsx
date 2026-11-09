@@ -16,7 +16,7 @@ export const ImageCard = ({ image, versionLabel, isAfter }: ImageCardProps) => {
   const source = image.thumbnailUrl ?? image.imageUrl;
 
   return (
-    <figure className="m-0 flex min-w-0 flex-col gap-2.5 rounded-lg bg-card p-2.5 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+    <figure className="m-0 flex min-w-0 flex-col gap-2.5 rounded-lg bg-card p-2.5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] max-md:w-40 max-md:shrink-0 max-md:snap-start">
       {source ? (
         <a
           href={image.imageUrl ?? source}

@@ -24,7 +24,7 @@ export const ProductImages = ({ lane, versionLabels }: ProductImagesProps) => (
         </span>
       </span>
     </AccordionTrigger>
-    <AccordionContent className="grid gap-4 pb-5 lg:grid-cols-2">
+    <AccordionContent className="grid gap-4 pb-5 max-md:grid-cols-[minmax(0,1fr)] max-md:gap-3 max-md:pb-4 lg:grid-cols-2">
       <ImageLane title="Before" images={lane.before} versionLabels={versionLabels} />
       <ImageLane title="After" images={lane.after} versionLabels={versionLabels} isAfter />
     </AccordionContent>

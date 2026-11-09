@@ -2,7 +2,7 @@
 
 import { Fragment, type ReactNode, useEffect, useMemo, useState } from "react";
 import type { TFunction } from "i18next";
-import { ArrowRight, BarChart3, Bookmark, Check, ChevronLeft, ChevronRight, CircleHelp, Clock, Compass, GitCompareArrows, LayoutGrid, List, type LucideIcon, Pencil, Radar, RefreshCw, SlidersHorizontal, Sparkles, Target, TriangleAlert, Trophy, Users, X, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Clock, Compass, GitCompareArrows, LayoutGrid, List, type LucideIcon, Pencil, Radar, RefreshCw, SlidersHorizontal, Sparkles, Target, TriangleAlert, Trophy, Users, X, Zap } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -23,14 +23,17 @@ import {
 } from "@/api/market-opportunities";
 import { translateTexts, type TranslationItem } from "@/api/translations";
 import { LevelMeter, PriceInterestScatter, ShareDonut, StrongSellerBar, SupplySparkline } from "@/components/opportunities/market-charts";
-import { CompetitorLeaderboard, CompetitorPriceStrip, InfoTip, ListingAgeBars, MiniStats, NicheMapCard, NicheSelect, PriceSweetSpot, ProfileImpactCard, SeasonalWindowCard } from "@/components/opportunities/market-insights";
+import { buildNicheMap, CompetitorLeaderboard, CompetitorPriceStrip, InfoTip, ListingAgeBars, MiniStats, NicheMapCard, NicheSelect, PriceSweetSpot, ProfileImpactCard, SeasonalWindowCard, TapHint } from "@/components/opportunities/market-insights";
+import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { useAuthStore } from "@/stores/auth";
+import { cn } from "@/utils/cn";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const profileKey = ["seller-research-profile"] as const;
@@ -81,6 +84,8 @@ const stateFilters = [
   { value: "acted", label: "Acted" },
 ];
 const opportunitiesPerPage = 5;
+// Two columns are as many as a phone can compare side by side.
+const phoneCompareLimit = 2;
 
 // Same thresholds everywhere a score is coloured: strong, worth a look, weak.
 const scoreTone = (score: number) =>
@@ -123,6 +128,7 @@ export function OpportunityRadarPage() {
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [opportunityPage, setOpportunityPage] = useState(1);
   const [tab, setTab] = useState<RadarTab>("radar");
+  const isPhone = useIsPhone();
   const canLoadSellerData = isHydrated && Boolean(userId);
   const locale = i18n.resolvedLanguage?.toLowerCase().startsWith("vi") ? "vi" : "en";
   const sellerProfileQueryKey = profileQueryKey(userId);
@@ -364,7 +370,7 @@ export function OpportunityRadarPage() {
     onCompare: () => {
       setCompareIds((current) => {
         if (current.includes(item.id)) return current.filter((id) => id !== item.id);
-        if (current.length >= 3) {
+        if (current.length >= (isPhone ? phoneCompareLimit : 3)) {
            toast.info(t("marketRadar.compareDescription"));
           return current;
         }
@@ -373,17 +379,20 @@ export function OpportunityRadarPage() {
     },
   });
 
+  // The pager brings its own room for the floating assistant button; every other view needs it here.
+  const showsPhonePager = isPhone && tab === "radar" && opportunities.length > opportunitiesPerPage;
+
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="flex w-full min-w-0 flex-col gap-5 p-4 sm:p-6">
-        <section className="relative overflow-hidden rounded-2xl bg-[#17263f] px-5 py-5 text-white shadow-[0_16px_40px_rgba(23,38,63,0.2)] sm:px-6">
+      <div className={cn("flex w-full min-w-0 flex-col gap-5 max-md:gap-3 md:p-6", !showsPhonePager && "max-md:pb-14")}>
+        <section className="relative overflow-hidden rounded-2xl bg-[#17263f] px-5 py-5 text-white shadow-[0_16px_40px_rgba(23,38,63,0.2)] max-md:p-4 sm:px-6">
           <div className="absolute -top-24 -right-20 size-72 rounded-full bg-blue-400/20 blur-3xl" />
-          <div className="relative flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+          <div className="relative flex flex-col gap-5 max-md:gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex min-w-0 items-center gap-4">
               <span className="hidden size-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-blue-200 sm:flex"><Compass className="size-5" /></span>
               <div className="min-w-0">
                  <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{t("marketRadar.title")}</h1>
-                 <p className="mt-0.5 text-sm text-ink-300">{t("marketRadar.subtitle")}</p>
+                 <p className="mt-0.5 text-sm text-ink-300 max-md:text-xs">{t("marketRadar.subtitle")}</p>
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -409,7 +418,7 @@ export function OpportunityRadarPage() {
                    onClick={newCount > 0 ? () => { setTab("radar"); setActiveState("new"); } : undefined}
                  />
               </div>
-              <div className="flex flex-col items-stretch gap-1 sm:items-end">
+              <div className="flex flex-col items-stretch gap-1 max-sm:flex-row-reverse max-sm:items-center max-sm:justify-between max-sm:gap-3 sm:items-end">
                 <Button type="button" variant="primaryBlue" className={rankingIsStale ? "shrink-0 ring-2 ring-amber-300/70 dark:ring-amber-500/40 ring-offset-2 ring-offset-[#17263f]" : "shrink-0"} onClick={() => refreshMutation.mutate()} disabled={refreshMutation.isPending}>
                   <RefreshCw className={refreshMutation.isPending ? "size-4 animate-spin" : "size-4"} />
                    {refreshMutation.isPending ? t("marketRadar.refreshing") : t("marketRadar.refresh")}
@@ -432,15 +441,15 @@ export function OpportunityRadarPage() {
           active={tab}
           onChange={setTab}
           tabs={[
-            { value: "radar", label: t("marketRadar.tabRadar", { defaultValue: "Opportunity radar" }), badge: String(allOpportunities.length), icon: Radar },
-            { value: "niche", label: t("marketRadar.tabNiche", { defaultValue: "Niche overview" }), badge: nicheInsight ? formatVerdict(nicheInsight.verdict) : undefined, icon: BarChart3 },
-            { value: "competitors", label: t("marketRadar.tabCompetitors", { defaultValue: "Competitors" }), badge: nicheInsight && nicheInsight.signals.sellerCount > 0 ? t("marketRadar.strongBadge", { defaultValue: "{{count}} strong", count: nicheInsight.signals.strongSellerCount }) : undefined, icon: Users },
-            { value: "profile", label: t("marketRadar.tabProfile", { defaultValue: "Seller profile" }), badge: hasProfile ? t("marketRadar.ready") : t("marketRadar.setup"), icon: SlidersHorizontal },
+            { value: "radar", label: t("marketRadar.tabRadar", { defaultValue: "Opportunity radar" }), shortLabel: t("marketRadar.tabRadarShort", { defaultValue: "Radar" }), badge: String(allOpportunities.length), icon: Radar },
+            { value: "niche", label: t("marketRadar.tabNiche", { defaultValue: "Niche overview" }), shortLabel: t("marketRadar.tabNicheShort", { defaultValue: "Niche" }), badge: nicheInsight ? formatVerdict(nicheInsight.verdict) : undefined, icon: BarChart3 },
+            { value: "competitors", label: t("marketRadar.tabCompetitors", { defaultValue: "Competitors" }), shortLabel: t("marketRadar.tabCompetitorsShort", { defaultValue: "Rivals" }), badge: nicheInsight && nicheInsight.signals.sellerCount > 0 ? t("marketRadar.strongBadge", { defaultValue: "{{count}} strong", count: nicheInsight.signals.strongSellerCount }) : undefined, icon: Users },
+            { value: "profile", label: t("marketRadar.tabProfile", { defaultValue: "Seller profile" }), shortLabel: t("marketRadar.tabProfileShort", { defaultValue: "Profile" }), badge: hasProfile ? t("marketRadar.ready") : t("marketRadar.setup"), icon: SlidersHorizontal },
           ]}
         />
 
         {tab === "profile" && (        <Card className="gap-0 border-ink-200 bg-card py-0 shadow-sm">
-          <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 px-5 py-4 max-md:p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"><SlidersHorizontal className="size-4" /></span>
               <div>
@@ -463,7 +472,7 @@ export function OpportunityRadarPage() {
                  {t("marketRadar.loadingProfile", { defaultValue: "Loading your saved seller profile..." })}
               </div>
             ) : (
-              <form className="grid gap-5 border-t border-ink-100 p-5 lg:grid-cols-2" onSubmit={(event) => { event.preventDefault(); saveMutation.mutate(profile); }}>
+              <form className="grid gap-5 border-t border-ink-100 p-5 max-md:p-4 lg:grid-cols-2" onSubmit={(event) => { event.preventDefault(); saveMutation.mutate(profile); }}>
                 <div className="flex flex-wrap items-center justify-between gap-2 lg:col-span-2">
                   <p className="text-xs text-ink-500">{t("marketRadar.profilePresetHint", { defaultValue: "Match the profile to the apparel dataset to improve relevance and seller fit." })}</p>
                   <Button type="button" variant="outline" size="sm" onClick={() => setProfile(apparelProfilePreset)}>
@@ -541,11 +550,21 @@ export function OpportunityRadarPage() {
           <ComparePanel items={comparedOpportunities} onRemove={(id) => setCompareIds((current) => current.filter((itemId) => itemId !== id))} />
         )}
 
-        <section className="space-y-4">
+        <section id="radar-opportunities" className="space-y-4 max-md:scroll-mt-20 max-md:space-y-3">
           <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-end">
              <div><h2 className="text-lg font-semibold text-ink-900">{t("marketRadar.recommended")}</h2><p className="mt-1 text-sm text-ink-500">{t("marketRadar.recommendedDescription")}</p></div>
             <div className="flex min-w-0 items-center gap-2">
-              <div className="flex min-w-0 flex-1 overflow-x-auto rounded-xl border border-ink-200 bg-card p-1 lg:flex-none">
+              <select
+                aria-label={t("marketRadar.filterByState", { defaultValue: "Filter opportunities" })}
+                value={activeState}
+                onChange={(event) => setActiveState(event.target.value)}
+                className="h-11 w-full rounded-xl border border-ink-200 bg-card px-3 text-base text-ink-800 md:hidden"
+              >
+                {stateFilters.map((filter) => (
+                  <option key={filter.value} value={filter.value}>{t(`marketRadar.${filter.value}`, { defaultValue: filter.label })} ({stateCounts[filter.value] ?? 0})</option>
+                ))}
+              </select>
+              <div className="flex min-w-0 flex-1 overflow-x-auto rounded-xl border border-ink-200 bg-card p-1 max-md:hidden lg:flex-none">
                 {stateFilters.map((filter) => (
                   <button
                     key={filter.value}
@@ -559,7 +578,7 @@ export function OpportunityRadarPage() {
                   </button>
                 ))}
               </div>
-              <div className="flex shrink-0 rounded-xl border border-ink-200 bg-card p-1">
+              <div className="flex shrink-0 rounded-xl border border-ink-200 bg-card p-1 max-md:hidden">
                  {([["cards", LayoutGrid, t("marketRadar.cardView")], ["list", List, t("marketRadar.listView")]] as const).map(([value, Icon, label]) => (
                   <button key={value} type="button" aria-label={label} title={label} aria-pressed={view === value} onClick={() => setView(value)} className={"rounded-lg p-1.5 transition-colors " + (view === value ? "bg-ink-100 text-ink-900" : "text-ink-400 hover:text-ink-700")}>
                     <Icon className="size-4" />
@@ -581,16 +600,24 @@ export function OpportunityRadarPage() {
               onBuild={() => refreshMutation.mutate()}
               onSetup={() => setProfileOpen(true)}
             />
-          ) : view === "list" ? (
+          ) : view === "list" && !isPhone ? (
             <Card className="gap-0 overflow-hidden border-ink-200 bg-card py-0 shadow-sm">
                {pagedOpportunities.map((item) => <OpportunityRow key={item.id} item={item} {...actionsFor(item)} />)}
             </Card>
           ) : (
-             <div className="grid items-start gap-4 lg:grid-cols-2">
+             <div className="grid items-start gap-4 max-md:grid-cols-[minmax(0,1fr)] max-md:gap-3 lg:grid-cols-2">
                {pagedOpportunities.map((item) => <OpportunityCard key={item.id} item={item} featured={activeState === "all" && item.rank === 1} {...actionsFor(item)} />)}
             </div>
           )}
-          {opportunities.length > opportunitiesPerPage && (
+          {opportunities.length > opportunitiesPerPage && (isPhone ? (
+            <PhonePager
+              page={opportunityPage}
+              pageCount={opportunityPageCount}
+              onPageChange={setOpportunityPage}
+              label={t("marketRadar.opportunityPages", { defaultValue: "Opportunity pages" })}
+              anchorId="radar-opportunities"
+            />
+          ) : (
             <OpportunityPagination
               page={opportunityPage}
               pageCount={opportunityPageCount}
@@ -598,7 +625,7 @@ export function OpportunityRadarPage() {
               pageSize={opportunitiesPerPage}
               onPageChange={setOpportunityPage}
             />
-          )}
+          ))}
         </section>
           </>
         )}
@@ -622,6 +649,8 @@ function HeroStat({ label, value, suffix, accent, hint, onClick }: { label: stri
     ? <button type="button" onClick={onClick} className={`${className} rounded-none transition-colors hover:bg-card/[0.06] focus-visible:bg-card/[0.08] focus-visible:outline-none`}>{content}</button>
     : <div className={className}>{content}</div>;
   if (!hint) return stat;
+  // A stat with its own action keeps that action on a tap, so only the others open their hint.
+  if (!onClick) return <TapHint content={hint} contentClassName="max-w-56 text-center">{stat}</TapHint>;
   return (
     <Tooltip>
       <TooltipTrigger asChild>{stat}</TooltipTrigger>
@@ -832,11 +861,38 @@ function NicheInsightSection({
         </div>
       ) : (
         <>
-          <NicheMapCard insights={insights} selected={selected?.niche ?? null} onSelect={onSelect} />
+          <NichePicker insights={insights} selected={selected?.niche ?? null} onSelect={onSelect} />
           {selected && <NicheConclusionCard key={selected.niche} insight={selected} minimumPrice={minimumPrice} maximumPrice={maximumPrice} />}
         </>
       )}
     </section>
+  );
+}
+
+/** The map suits a pointer; a phone picks from a list and opens the same map on request. */
+function NichePicker({ insights, selected, onSelect }: { insights: SellerNicheMarketInsight[]; selected: string | null; onSelect: (niche: string) => void }) {
+  const { t } = useTranslation("common");
+  const isPhone = useIsPhone();
+  const [isMapOpen, setIsMapOpen] = useState(false);
+  if (!isPhone) return <NicheMapCard insights={insights} selected={selected} onSelect={onSelect} />;
+  const hasMap = buildNicheMap(insights).points.length >= 3;
+
+  return (
+    <div className="space-y-2">
+      {selected && <NicheSelect insights={insights} selected={selected} onSelect={onSelect} />}
+      {hasMap && (
+        <button
+          type="button"
+          aria-expanded={isMapOpen}
+          onClick={() => setIsMapOpen((open) => !open)}
+          className="flex min-h-11 w-full items-center justify-between rounded-xl border border-ink-200 bg-card px-4 text-sm font-semibold text-ink-800"
+        >
+          {t("marketRadar.nicheMapTitle", { defaultValue: "Niche map" })}
+          <ChevronDown className={cn("size-4 text-ink-400 transition-transform", isMapOpen && "rotate-180")} aria-hidden="true" />
+        </button>
+      )}
+      {hasMap && isMapOpen && <NicheMapCard insights={insights} selected={selected} onSelect={onSelect} />}
+    </div>
   );
 }
 
@@ -845,6 +901,8 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
   const locale = i18n.resolvedLanguage?.toLowerCase().startsWith("vi") ? "vi" : "en";
   const insight = useLocalizedNiche(source, locale);
   const [showWhy, setShowWhy] = useState(false);
+  // A phone shows the four figures first; what each one means opens on request.
+  const [showTileDetails, setShowTileDetails] = useState(false);
   const { marketSupply, signals } = insight;
   const unavailable = t("marketRadar.notEnoughData", { defaultValue: "Not enough data" });
   const verdictStyle = insight.verdict === "worth_following"
@@ -881,7 +939,7 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
 
   return (
     <Card className="gap-0 overflow-hidden border-ink-200 bg-card py-0 shadow-sm">
-      <div className="flex flex-col gap-3 px-5 pt-5 pb-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-3 px-5 pt-5 pb-4 max-md:px-4 max-md:pt-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <h3 className="text-lg font-semibold text-ink-900 capitalize">{insight.niche}</h3>
           <p className="mt-0.5 text-sm text-ink-500">
@@ -901,7 +959,7 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
       </div>
 
       {/* The verdict leads: what it means and the strongest reasons, before any figure. */}
-      <div className={`mx-5 mb-4 rounded-xl border px-4 py-3 ${verdictStyle.panel}`}>
+      <div className={`mx-5 mb-4 rounded-xl border px-4 py-3 max-md:mx-4 max-md:px-3 ${verdictStyle.panel}`}>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
           <span className={`inline-flex shrink-0 items-center gap-1.5 self-start rounded-lg px-3 py-1.5 text-sm font-bold capitalize ${verdictStyle.badge}`}>
             <VerdictIcon className="size-4" aria-hidden="true" />
@@ -918,21 +976,23 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
         {(insight.highlights.length > 0 || insight.risks.length > 0) && (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {insight.highlights.slice(0, 2).map((item) => (
-              <span key={item} title={item} className="inline-flex max-w-full items-center gap-1 rounded-full bg-card px-2.5 py-1 text-xs text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-500/30">
-                <Check className="size-3 shrink-0" aria-hidden="true" /><span className="truncate">{item}</span>
+              <span key={item} title={item} className="inline-flex max-w-full items-center gap-1 rounded-full bg-card px-2.5 py-1 text-xs text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-500/30 max-md:items-start max-md:rounded-lg">
+                <Check className="size-3 shrink-0 max-md:mt-0.5" aria-hidden="true" /><span className="truncate max-md:whitespace-normal">{item}</span>
               </span>
             ))}
             {insight.risks.slice(0, 2).map((item) => (
-              <span key={item} title={item} className="inline-flex max-w-full items-center gap-1 rounded-full bg-card px-2.5 py-1 text-xs text-amber-800 dark:text-amber-300 ring-1 ring-amber-200 dark:ring-amber-500/30">
-                <TriangleAlert className="size-3 shrink-0" aria-hidden="true" /><span className="truncate">{item}</span>
+              <span key={item} title={item} className="inline-flex max-w-full items-center gap-1 rounded-full bg-card px-2.5 py-1 text-xs text-amber-800 dark:text-amber-300 ring-1 ring-amber-200 dark:ring-amber-500/30 max-md:items-start max-md:rounded-lg">
+                <TriangleAlert className="size-3 shrink-0 max-md:mt-0.5" aria-hidden="true" /><span className="truncate max-md:whitespace-normal">{item}</span>
               </span>
             ))}
           </div>
         )}
       </div>
 
-      <div className="grid gap-3 px-5 pb-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 px-5 pb-3 max-md:grid-cols-2 max-md:gap-2 max-md:px-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricTile
+          phoneBrief={!showTileDetails}
+          isBadgeQuiet={Math.round(marketSupply.changePercent ?? 0) === 0}
           label={t("marketRadar.tileMarket", { defaultValue: "Market size" })}
           value={marketSupply.activeListingCount == null ? "—" : compactNumber(marketSupply.activeListingCount)}
           badge={marketSupply.changePercent == null ? undefined : formatSigned(marketSupply.changePercent)}
@@ -945,6 +1005,7 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
           footerRight={marketSupply.sizePercentile == null ? unavailable : t("marketRadar.sizeRankShort", { defaultValue: "{{value}}/100 vs niches", value: Math.round(marketSupply.sizePercentile) })}
         />
         <MetricTile
+          phoneBrief={!showTileDetails}
           label={t("marketRadar.tileStrongSellers", { defaultValue: "Strong competitors" })}
           value={signals.sellerCount > 0 ? `${signals.strongSellerCount} / ${signals.sellerCount}` : "—"}
           badge={strongShare == null ? undefined : t("marketRadar.strongShareBadge", { defaultValue: "{{value}}% strong", value: strongShare })}
@@ -958,6 +1019,7 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
           footerTone={concentration?.tone}
         />
         <MetricTile
+          phoneBrief={!showTileDetails}
           label={t("marketRadar.tileRising", { defaultValue: "New listings already in the top" })}
           // A count, not a change: no sign, so it does not read like the supply trend.
           value={String(signals.risingNewListingCount)}
@@ -971,6 +1033,7 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
           footerTone={signals.risingNewListingCount > 0 ? "good" : undefined}
         />
         <MetricTile
+          phoneBrief={!showTileDetails}
           label={t("marketRadar.tileDemand", { defaultValue: "Buyer interest" })}
           value={signals.medianFavoritesPer30Days == null ? "—" : String(Math.round(signals.medianFavoritesPer30Days * 10) / 10)}
           badge={demand.label}
@@ -983,6 +1046,17 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
           footerTone={activeShare == null ? undefined : activeShare >= 50 ? "good" : activeShare < 25 ? "warn" : undefined}
         />
       </div>
+      <button
+        type="button"
+        aria-expanded={showTileDetails}
+        onClick={() => setShowTileDetails((open) => !open)}
+        className="mx-4 mb-2 inline-flex min-h-10 items-center gap-1 text-xs font-semibold text-blue-700 md:hidden dark:text-blue-300"
+      >
+        <ChevronRight className={`size-3.5 transition-transform ${showTileDetails ? "rotate-90" : ""}`} />
+        {showTileDetails
+          ? t("marketRadar.hideFigureDetails", { defaultValue: "Hide figure details" })
+          : t("marketRadar.showFigureDetails", { defaultValue: "Show figure details" })}
+      </button>
 
       <PriceSweetSpot
         points={signals.points}
@@ -1010,7 +1084,7 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
                 <tbody className="divide-y divide-ink-100">
                   {[...signals.points].sort((a, b) => b.favoritesPer30Days - a.favoritesPer30Days).map((point) => (
                     <tr key={`${point.title}-${point.price}-${point.ageDays}`}>
-                      <td className="max-w-64 truncate px-3 py-1.5" title={point.title}>
+                      <td className="max-w-64 truncate px-3 py-1.5 max-md:max-w-36" title={point.title}>
                         {point.url
                           ? <a className="text-blue-700 dark:text-blue-300 hover:underline" href={point.url} target="_blank" rel="noreferrer">{point.title}</a>
                           : <span className="text-ink-700">{point.title}</span>}
@@ -1038,7 +1112,8 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
           {insight.keywords.length > 0 && (
             <div>
               <p className="text-[10px] font-bold tracking-[0.12em] text-ink-500 uppercase">{t("marketRadar.compareKeywords", { defaultValue: "Compare keywords" })}</p>
-              <div className="mt-2 overflow-x-auto rounded-lg border border-ink-100">
+              <KeywordCards keywords={insight.keywords} />
+              <div className="mt-2 overflow-x-auto rounded-lg border border-ink-100 max-md:hidden">
                 <table className="w-full min-w-[32rem] text-left text-sm">
                   <thead className="bg-ink-50 text-[10px] tracking-[0.08em] text-ink-400 uppercase">
                     <tr>
@@ -1067,6 +1142,40 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
         </div>
       )}
     </Card>
+  );
+}
+
+/** The keyword comparison as one block per keyword, so a phone does not scroll a table sideways. */
+function KeywordCards({ keywords }: { keywords: SellerNicheMarketInsight["keywords"] }) {
+  const { t } = useTranslation("common");
+  const termClassName = "text-[10px] font-semibold tracking-[0.08em] text-ink-400 uppercase";
+
+  return (
+    <ul className="mt-2 divide-y divide-ink-100 rounded-lg border border-ink-100 md:hidden">
+      {keywords.map((keyword) => (
+        <li key={keyword.keyword} className="space-y-2 p-3">
+          <p className="text-sm font-medium break-words text-ink-800">{keyword.keyword}</p>
+          <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+            <div className="col-span-2">
+              <dt className={termClassName}>{t("marketRadar.tileMarket", { defaultValue: "Market size" })}</dt>
+              <dd className="mt-1"><SizeBar percentile={keyword.sizePercentile} count={keyword.activeListingCount} level={keyword.competitionLevel} /></dd>
+            </div>
+            <div>
+              <dt className={termClassName}>{t("marketRadar.tileStrongSellers", { defaultValue: "Strong competitors" })}</dt>
+              <dd className="mt-1 text-ink-700 tabular-nums">{keyword.signals.sellerCount > 0 ? `${keyword.signals.strongSellerCount} / ${keyword.signals.sellerCount}` : "—"}</dd>
+            </div>
+            <div>
+              <dt className={termClassName}>{t("marketRadar.tileRising", { defaultValue: "New listings rising" })}</dt>
+              <dd className={cn("mt-1 font-semibold tabular-nums", keyword.signals.risingNewListingCount > 0 ? "text-emerald-700 dark:text-emerald-300" : "text-ink-400")}>{keyword.signals.risingNewListingCount}</dd>
+            </div>
+            <div className="col-span-2">
+              <dt className={termClassName}>{t("marketRadar.keywordScore", { defaultValue: "Score" })}</dt>
+              <dd className="mt-1"><ScoreMeter value={keyword.keywordScore} tone={keyword.keywordScore >= 70 ? "green" : keyword.keywordScore >= 40 ? "amber" : "slate"} /></dd>
+            </div>
+          </dl>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -1128,6 +1237,8 @@ function MetricTile({
   chart,
   note,
   info,
+  phoneBrief,
+  isBadgeQuiet,
 }: {
   label: string;
   value: string;
@@ -1145,6 +1256,10 @@ function MetricTile({
   footerTone?: "good" | "warn";
   /** A caution shown under the tile, for a figure that is easy to misread. */
   note?: string;
+  /** On a phone, leaves the caption and footer for when the seller asks for them. */
+  phoneBrief?: boolean;
+  /** The badge says nothing worth a line while the tile is brief, such as a change of 0%. */
+  isBadgeQuiet?: boolean;
 }) {
   const badgeClass = badgeTone === "up" ? "text-emerald-700 dark:text-emerald-300" : badgeTone === "down" ? "text-rose-700 dark:text-rose-300" : "text-ink-500";
   const footerClass = footerTone === "good"
@@ -1153,21 +1268,21 @@ function MetricTile({
       ? "rounded-full bg-amber-100 dark:bg-amber-500/15 px-2 py-0.5 text-amber-800 dark:text-amber-300"
       : "text-ink-700";
   return (
-    <div className="flex flex-col gap-3 rounded-xl bg-ink-50 p-4">
+    <div className="flex flex-col gap-3 rounded-xl bg-ink-50 p-4 max-md:gap-2 max-md:p-3">
       <p className="flex items-center gap-1 text-xs font-semibold text-ink-500">{label}{info && <InfoTip text={info} label={label} />}</p>
       <div>
-        <div className="flex items-baseline justify-between gap-2">
-          <p className="truncate text-2xl font-bold tracking-tight text-ink-900 tabular-nums">{value}</p>
-          {badge && <span className={`shrink-0 text-[11px] font-bold ${badgeClass}`}>{badge}</span>}
+        <div className="flex items-baseline justify-between gap-2 max-md:flex-wrap max-md:gap-y-0">
+          <p className="truncate text-2xl font-bold tracking-tight text-ink-900 tabular-nums max-md:text-xl">{value}</p>
+          {badge && <span className={cn("shrink-0 text-[11px] font-bold", badgeClass, phoneBrief && isBadgeQuiet && "max-md:hidden")}>{badge}</span>}
         </div>
-        {caption && <p className="mt-0.5 text-xs text-ink-500">{caption}</p>}
+        {caption && <p className={cn("mt-0.5 text-xs text-ink-500", phoneBrief && "max-md:hidden")}>{caption}</p>}
       </div>
       {chart ?? (
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink-200">
           <div className="h-full rounded-full bg-blue-600" style={{ width: `${Math.min(Math.max(progress ?? 0, 0), 100)}%` }} />
         </div>
       )}
-      <div className="mt-auto flex items-center justify-between gap-2 text-[11px]">
+      <div className={cn("mt-auto flex items-center justify-between gap-2 text-[11px]", phoneBrief && "max-md:hidden")}>
         <span className="truncate text-ink-500">{footerLeft}</span>
         <span className={`shrink-0 font-bold ${footerClass}`}>{footerRight}</span>
       </div>
@@ -1247,12 +1362,12 @@ function RadarTabs({
 }: {
   active: RadarTab;
   onChange: (tab: RadarTab) => void;
-  tabs: Array<{ value: RadarTab; label: string; badge?: string; icon: LucideIcon }>;
+  tabs: Array<{ value: RadarTab; label: string; shortLabel: string; badge?: string; icon: LucideIcon }>;
 }) {
   return (
-    <div className="sticky top-0 z-20 -mx-4 bg-ink-50/90 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 dark:mx-0 dark:bg-card/90 dark:px-0 dark:sm:mx-0 dark:sm:px-0 dark:max-md:bg-background/90 dark:lg:bg-panel/90">
-      <div role="tablist" className="flex gap-1 overflow-x-auto rounded-xl bg-ink-100 p-1">
-        {tabs.map(({ value, label, badge, icon: Icon }) => {
+    <div className="sticky top-0 z-20 -mx-4 bg-ink-50/90 px-4 py-2 backdrop-blur md:-mx-6 md:px-6 dark:mx-0 dark:bg-card/90 dark:px-0 dark:sm:mx-0 dark:sm:px-0 dark:max-md:bg-background/90 dark:lg:bg-panel/90">
+      <div role="tablist" className="flex gap-1 overflow-x-auto rounded-xl bg-ink-100 p-1 max-md:grid max-md:grid-cols-4">
+        {tabs.map(({ value, label, shortLabel, badge, icon: Icon }) => {
           const selected = active === value;
           return (
             <button
@@ -1261,11 +1376,12 @@ function RadarTabs({
               role="tab"
               aria-selected={selected}
               onClick={() => onChange(value)}
-              className={"flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition-all sm:px-4 " + (selected ? "bg-card font-semibold text-ink-900 shadow-sm" : "text-ink-500 hover:bg-card/60 hover:text-ink-800")}
+              className={"flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition-all max-md:min-h-12 max-md:min-w-0 max-md:flex-col max-md:justify-center max-md:gap-0.5 max-md:px-1 max-md:py-1 max-md:text-[11px] sm:px-4 " + (selected ? "bg-card font-semibold text-ink-900 shadow-sm" : "text-ink-500 hover:bg-card/60 hover:text-ink-800")}
             >
               <Icon className={"size-4 " + (selected ? "text-blue-600 dark:text-blue-400" : "")} />
-              {label}
-              {badge && <span className={"rounded-full px-2 py-0.5 text-[11px] font-semibold " + (selected ? "bg-blue-600 text-white" : "bg-card text-ink-600")}>{badge}</span>}
+              <span className="max-md:hidden">{label}</span>
+              <span className="md:hidden">{shortLabel}</span>
+              {badge && <span className={"rounded-full px-2 py-0.5 text-[11px] font-semibold max-md:hidden " + (selected ? "bg-blue-600 text-white" : "bg-card text-ink-600")}>{badge}</span>}
             </button>
           );
         })}
@@ -1356,7 +1472,7 @@ function CompetitorPanel({
 
   return (
     <Card className="gap-0 overflow-hidden border-ink-200 bg-card py-0 shadow-sm">
-      <div className="flex flex-col gap-3 border-b border-ink-100 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-3 border-b border-ink-100 px-5 py-4 max-md:p-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-semibold text-ink-900">{t("marketRadar.competitorTitle", { defaultValue: "Who you compete with" })}</h3>
@@ -1369,7 +1485,7 @@ function CompetitorPanel({
         <NicheSelect insights={insights} selected={source.niche} onSelect={onSelect} />
       </div>
 
-      <div className="grid gap-3 p-5 md:grid-cols-3">
+      <div className="grid gap-3 p-5 max-md:grid-cols-[minmax(0,1fr)] max-md:p-4 md:grid-cols-3">
         <MetricTile
           label={t("marketRadar.concentration", { defaultValue: "Who holds the top listings" })}
           value={topShare == null ? "—" : `${topShare}%`}
@@ -1428,10 +1544,24 @@ function CompetitorPanel({
       </div>
 
       {signals.risingListings.length > 0 && (
-        <div className="border-t border-ink-100 px-5 py-4">
+        <div className="border-t border-ink-100 px-5 py-4 max-md:px-4">
           <p className="text-sm font-semibold text-ink-900">{t("marketRadar.listingsToLearnFrom", { defaultValue: "New listings to learn from" })}</p>
           <p className="text-xs text-ink-500">{t("marketRadar.listingsToLearnFromDescription", { defaultValue: "Under 90 days old and already gaining favorites. Study them; do not copy them." })}</p>
-          <div className="mt-3 overflow-x-auto rounded-lg border border-ink-100">
+          <ul className="mt-3 space-y-2 md:hidden">
+            {signals.risingListings.map((listing) => (
+              <li key={`${listing.title}-${listing.url}`} className="rounded-lg border border-ink-100 p-3">
+                {listing.url
+                  ? <a className="line-clamp-2 text-sm text-blue-700 dark:text-blue-300" href={listing.url} target="_blank" rel="noreferrer">{listing.title}</a>
+                  : <p className="line-clamp-2 text-sm text-ink-800">{listing.title}</p>}
+                <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-ink-500 tabular-nums">
+                  <span>{t("marketRadar.age", { defaultValue: "Age" })}: {t("marketRadar.daysShort", { defaultValue: "{{value}} d", value: listing.ageDays })}</span>
+                  <span>{t("marketRadar.favoritesPerMonth", { defaultValue: "Favorites / month" })}: <span className="font-semibold text-emerald-700 dark:text-emerald-300">{listing.favoritesPer30Days}</span></span>
+                  <span>{listing.price == null ? "—" : `${formatMoney(listing.price)} ${listing.currency ?? ""}`}</span>
+                </p>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-3 overflow-x-auto rounded-lg border border-ink-100 max-md:hidden">
             <table className="w-full min-w-[30rem] text-left text-sm">
               <thead className="bg-ink-50 text-[10px] tracking-[0.08em] text-ink-400 uppercase">
                 <tr>
@@ -1513,7 +1643,7 @@ function LevelMetric({ label, level, detail, unavailable }: { label: string; lev
         {known && <LevelMeter level={level} />}
         <span className="truncate text-sm font-semibold text-ink-800 capitalize">{known ? level : unavailable}</span>
       </div>
-      <p className="truncate text-[11px] text-ink-500">{detail}</p>
+      <p className="truncate text-[11px] text-ink-500 max-md:whitespace-normal">{detail}</p>
     </div>
   );
 }
@@ -1556,9 +1686,18 @@ function RadarSnapshot({
       ? t("marketRadar.nextActionSaved", { defaultValue: "Use the evidence to shape a differentiated listing concept." })
       : t("marketRadar.nextActionReview", { defaultValue: "Review the evidence and run the AI analyst before committing time." });
 
+  const metrics = (
+    <>
+      <SnapshotMetric label={t("marketRadar.newToReview")} value={String(newCount)} detail={t("marketRadar.opportunities")} />
+      <SnapshotMetric label={t("marketRadar.saved")} value={String(savedCount)} detail={t("marketRadar.shortlisted")} />
+      <SnapshotMetric label={t("marketRadar.acted")} value={String(actedCount)} detail={t("marketRadar.inProgress")} />
+      <SnapshotMetric label={t("marketRadar.evidence")} value={String(insight.evidenceCount)} detail={`${insight.confidenceLabel} ${t("marketRadar.confidence").toLowerCase()}`} />
+    </>
+  );
+
   return (
     <Card className="gap-0 overflow-hidden border-blue-100 dark:border-blue-500/30 bg-gradient-to-br from-blue-50/80 dark:from-blue-500/10 via-card to-card py-0 shadow-sm">
-      <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-stretch lg:justify-between">
+      <div className="flex flex-col gap-4 p-5 max-md:p-4 lg:flex-row lg:items-stretch lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="flex items-center gap-1.5 text-xs font-bold tracking-[0.12em] text-blue-700 dark:text-blue-300 uppercase"><Target className="size-3.5" />{t("marketRadar.todayRadar")}</span>
@@ -1567,23 +1706,19 @@ function RadarSnapshot({
           <div className="mt-3 flex items-start gap-3">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-sm font-bold text-white">#{topOpportunity.rank ?? 1}</span>
             <div className="min-w-0">
-              <h2 className="truncate text-lg font-semibold text-ink-900">{topOpportunity.title}</h2>
+              <h2 className="truncate text-lg font-semibold text-ink-900 max-md:line-clamp-3 max-md:text-base max-md:whitespace-normal">{topOpportunity.title}</h2>
               <p className="mt-1 text-sm leading-5 text-ink-600">{topOpportunity.fitExplanation ?? t("marketRadar.strongestMatch", { defaultValue: "Strongest current match for your seller profile." })}</p>
               <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-ink-500"><ArrowRight className="mt-0.5 size-3.5 shrink-0 text-blue-600 dark:text-blue-400" />{nextAction}</p>
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button type="button" variant="primaryBlue" size="sm" onClick={onAnalyze} disabled={analyzing}><Sparkles className="size-3.5" />{analyzing ? t("marketRadar.analyzing") : t("marketRadar.analyzeTopPick", { defaultValue: "Analyze top pick" })}</Button>
+          <div className="mt-4 flex flex-wrap gap-2 max-md:grid max-md:grid-cols-2">
+            <Button type="button" variant="primaryBlue" size="sm" className="max-md:col-span-2 max-md:min-h-11" onClick={onAnalyze} disabled={analyzing}><Sparkles className="size-3.5" />{analyzing ? t("marketRadar.analyzing") : t("marketRadar.analyzeTopPick", { defaultValue: "Analyze top pick" })}</Button>
             <Button type="button" variant="outline" size="sm" onClick={() => onState(isActed ? "new" : "acted")}><Check className={isActed ? "size-3.5 fill-current" : "size-3.5"} />{isActed ? t("marketRadar.markedActed") : t("marketRadar.markActed")}</Button>
             <Button type="button" variant="ghost" size="sm" onClick={() => onState(isSaved ? "new" : "saved")}><Bookmark className={isSaved ? "size-3.5 fill-current" : "size-3.5"} />{isSaved ? t("marketRadar.saved") : t("marketRadar.saveTopPick")}</Button>
           </div>
         </div>
-        <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:w-[28rem] lg:grid-cols-2">
-          <SnapshotMetric label={t("marketRadar.newToReview")} value={String(newCount)} detail={t("marketRadar.opportunities")} />
-          <SnapshotMetric label={t("marketRadar.saved")} value={String(savedCount)} detail={t("marketRadar.shortlisted")} />
-          <SnapshotMetric label={t("marketRadar.acted")} value={String(actedCount)} detail={t("marketRadar.inProgress")} />
-          <SnapshotMetric label={t("marketRadar.evidence")} value={String(insight.evidenceCount)} detail={`${insight.confidenceLabel} ${t("marketRadar.confidence").toLowerCase()}`} />
-        </div>
+        {/* These counts repeat the hero and the filter, so a phone keeps them in the details below. */}
+        <div className="grid shrink-0 grid-cols-2 gap-2 max-md:hidden sm:grid-cols-4 lg:w-[28rem] lg:grid-cols-2">{metrics}</div>
       </div>
       <details className="group border-t border-blue-100 dark:border-blue-500/30">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 text-xs font-semibold text-ink-600 marker:hidden [&::-webkit-details-marker]:hidden">
@@ -1591,7 +1726,8 @@ function RadarSnapshot({
           <span className="hidden group-open:inline">{t("marketRadar.collapse")}</span>
           <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
         </summary>
-      <div className="grid gap-3 border-t border-blue-100 dark:border-blue-500/30 px-5 py-4 sm:grid-cols-2 lg:grid-cols-7">
+      <div className="grid grid-cols-2 gap-2 border-t border-blue-100 px-4 py-4 md:hidden dark:border-blue-500/30">{metrics}</div>
+      <div className="grid gap-3 border-t border-blue-100 dark:border-blue-500/30 px-5 py-4 max-md:grid-cols-2 max-md:px-4 sm:grid-cols-2 lg:grid-cols-7">
         <NicheMarketMetrics item={topOpportunity} />
         <InsightMetric label={t("marketRadar.typicalPrice")} value={price} detail={insight.priceLabel} />
         <InsightMetric label={t("marketRadar.confidence", { defaultValue: "Confidence" })} value={insight.evidenceQuality} detail={`${insight.distinctListingCount} listings · ${insight.observationPeriodCount} day(s)`} />
@@ -1652,6 +1788,7 @@ function rowWinners(row: CompareRow, items: SellerOpportunity[]) {
 
 function ComparePanel({ items, onRemove }: { items: SellerOpportunity[]; onRemove: (id: string) => void }) {
   const { t } = useTranslation("common");
+  const isPhone = useIsPhone();
   const level = (value: string | undefined) =>
     value ? t(`marketRadar.level.${value}`, { defaultValue: value.charAt(0).toUpperCase() + value.slice(1) }) : "—";
   const currencies = new Set(items.map(itemCurrency).filter(Boolean));
@@ -1766,9 +1903,9 @@ function ComparePanel({ items, onRemove }: { items: SellerOpportunity[]; onRemov
 
   return (
     <Card className="gap-0 overflow-hidden border-ink-200 bg-card py-0 shadow-sm">
-      <div className="flex items-center justify-between gap-3 border-b border-ink-100 px-5 py-4">
+      <div className="flex items-center justify-between gap-3 border-b border-ink-100 px-5 py-4 max-md:p-4">
         <div className="flex items-center gap-2"><GitCompareArrows className="size-4 text-blue-600 dark:text-blue-400" /><div><h2 className="font-semibold text-ink-900">{t("marketRadar.compareTitle")}</h2><p className="text-xs text-ink-500">{t("marketRadar.compareDescription")}</p></div></div>
-        <span className="rounded-full bg-blue-50 dark:bg-blue-500/10 px-2 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300">{items.length}/3</span>
+        <span className="rounded-full bg-blue-50 dark:bg-blue-500/10 px-2 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300">{items.length}/{isPhone ? phoneCompareLimit : 3}</span>
       </div>
 
       {items.length > 1 && (
@@ -1798,6 +1935,7 @@ function ComparePanel({ items, onRemove }: { items: SellerOpportunity[]; onRemov
         </div>
       )}
 
+      {isPhone ? <PhoneCompareRows items={items} rows={rows} winners={winners} winCount={winCount} contested={contested} onRemove={onRemove} /> : (
       <TooltipProvider delayDuration={200}>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[40rem] table-fixed text-left text-sm">
@@ -1855,7 +1993,67 @@ function ComparePanel({ items, onRemove }: { items: SellerOpportunity[]; onRemov
           </table>
         </div>
       </TooltipProvider>
+      )}
     </Card>
+  );
+}
+
+/** The comparison as one block per signal, so a phone reads it without scrolling a table sideways. */
+function PhoneCompareRows({
+  items,
+  rows,
+  winners,
+  winCount,
+  contested,
+  onRemove,
+}: {
+  items: SellerOpportunity[];
+  rows: CompareRow[];
+  winners: Record<string, Set<string>>;
+  winCount: (item: SellerOpportunity) => number;
+  contested: number;
+  onRemove: (id: string) => void;
+}) {
+  const { t } = useTranslation("common");
+  const columns = { gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` };
+
+  return (
+    <div>
+      <div className="grid gap-2 bg-ink-50 p-3" style={columns}>
+        {items.map((item) => (
+          <div key={item.id} className="flex min-w-0 items-start gap-1">
+            <div className="min-w-0 flex-1">
+              <p className="line-clamp-3 text-xs font-semibold text-ink-800">{item.title}</p>
+              <p className="mt-0.5 text-[11px] break-words text-ink-500">
+                {item.niche}
+                {items.length > 1 && contested > 0 && ` · ${t("marketRadar.compareWins", { defaultValue: "best on {{count}} of {{total}}", count: winCount(item), total: contested })}`}
+              </p>
+            </div>
+            <button type="button" aria-label={t("marketRadar.compareRemove", { defaultValue: "Remove {{title}} from comparison", title: item.title })} className="-m-1 flex size-8 shrink-0 items-center justify-center text-ink-400" onClick={() => onRemove(item.id)}><X className="size-3.5" /></button>
+          </div>
+        ))}
+      </div>
+      {rows.map((row) => (
+        <div key={row.key} className="border-t border-ink-100 px-3 py-2.5">
+          <p className="flex items-center gap-1 text-xs font-medium text-ink-600">{row.label}<InfoTip text={row.hint} label={row.label} /></p>
+          <div className="mt-1 grid gap-2" style={columns}>
+            {items.map((item) => {
+              const isBest = winners[row.key].has(item.id);
+              const detail = row.detail?.(item);
+              return (
+                <div key={item.id} className={cn("min-w-0 rounded-md px-1.5 py-1", isBest && "bg-emerald-50/60 dark:bg-emerald-500/10")}>
+                  <p className={cn("flex items-center gap-1 text-sm font-semibold break-words tabular-nums", isBest ? "text-emerald-700 dark:text-emerald-300" : "text-ink-800")}>
+                    <span className="min-w-0">{row.value(item)}</span>
+                    {isBest && <Check className="size-3.5 shrink-0" aria-label={t("marketRadar.compareBest", { defaultValue: "Best" })} />}
+                  </p>
+                  {detail && <p className="mt-0.5 text-[11px] break-words text-ink-500">{detail}</p>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -1879,7 +2077,7 @@ function CompareInsight({
   return (
     <div className={`rounded-xl border px-3 py-3 ${toneClass}`}>
       <p className="text-[10px] font-bold tracking-[0.1em] text-ink-500 uppercase">{label}</p>
-      <p className="mt-1 truncate text-sm font-semibold text-ink-900" title={title}>{title}</p>
+      <p className="mt-1 truncate text-sm font-semibold text-ink-900 max-md:line-clamp-2 max-md:whitespace-normal" title={title}>{title}</p>
       <p className="mt-1 text-xs text-ink-600">{detail}</p>
     </div>
   );
@@ -1894,8 +2092,8 @@ function CompactProfileSummary({ profile }: { profile: SellerResearchProfileInpu
 
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-ink-100 px-5 py-3">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm text-ink-700" title={profile.shopGoal ?? undefined}>{profile.shopGoal || t("marketRadar.notSet")}</p>
+      <div className="min-w-0 flex-1 max-md:basis-full">
+        <p className="truncate text-sm text-ink-700 max-md:line-clamp-3 max-md:whitespace-normal" title={profile.shopGoal ?? undefined}>{profile.shopGoal || t("marketRadar.notSet")}</p>
         <p className="mt-0.5 text-[11px] text-ink-400">{categories.length > 0 ? categories.join(" · ") : t("marketRadar.notSet")}</p>
       </div>
       <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -1965,17 +2163,20 @@ function OpportunityMeta({ item, featured = false }: { item: SellerOpportunity; 
   );
 }
 
+// Four equal actions under a full-width Analyze, each with its icon above a short label.
+const PHONE_ACTION = "max-md:h-auto max-md:min-h-12 max-md:flex-col max-md:gap-0.5 max-md:px-0 max-md:text-[11px] max-md:leading-tight max-md:whitespace-normal";
+
 function OpportunityActions({ item, busy, analysis, analyzing, onAnalyze, onState, isCompared, onCompare, compact = false }: CardActions & { item: SellerOpportunity; compact?: boolean }) {
   const { t } = useTranslation("common");
   const isSaved = item.state === "saved";
   const isActed = item.state === "acted";
   return (
     <>
-      <Button type="button" variant="primaryBlue" size="sm" className="px-3 sm:px-4" disabled={analyzing} onClick={onAnalyze}><Sparkles className="size-3.5" />{analyzing ? t("marketRadar.analyzing") : compact ? t("marketRadar.analyze") : analysis ? t("marketRadar.analyzeAgain") : <>{t("marketRadar.analyze")}<span className="hidden sm:inline">&nbsp;{t("marketRadar.withAi", { defaultValue: "with AI" })}</span></>}</Button>
-      <Button type="button" variant="outline" size="sm" className={"px-3 sm:px-4 " + (isSaved ? "border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:border-amber-400 hover:text-amber-800 dark:hover:text-amber-300" : "")} disabled={busy} onClick={() => onState(isSaved ? "new" : "saved")}><Bookmark className={isSaved ? "size-3.5 fill-current" : "size-3.5"} />{isSaved ? t("marketRadar.saved") : t("marketRadar.save")}</Button>
-      <Button type="button" variant="outline" size="sm" className={"px-3 sm:px-4 " + (isActed ? "border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "")} disabled={busy} onClick={() => onState(isActed ? "new" : "acted")}><Check className={isActed ? "size-3.5 fill-current" : "size-3.5"} />{isActed ? t("marketRadar.acted") : t("marketRadar.markActed")}</Button>
-      <Button type="button" variant="ghost" size="sm" className={"px-3 sm:px-4 " + (isCompared ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300" : "text-ink-500")} onClick={onCompare}><GitCompareArrows className="size-3.5" />{isCompared ? t("marketRadar.compared") : t("marketRadar.compare")}</Button>
-      <Button type="button" variant="ghost" size="sm" className={"px-3 text-ink-500 sm:px-4 " + (compact ? "" : "ml-auto")} disabled={busy} onClick={() => onState("ignored")}>{t("marketRadar.ignore")}</Button>
+      <Button type="button" variant="primaryBlue" size="sm" className="px-3 max-md:col-span-4 max-md:min-h-11 sm:px-4" disabled={analyzing} onClick={onAnalyze}><Sparkles className="size-3.5" />{analyzing ? t("marketRadar.analyzing") : compact ? t("marketRadar.analyze") : analysis ? t("marketRadar.analyzeAgain") : <>{t("marketRadar.analyze")}<span>&nbsp;{t("marketRadar.withAi", { defaultValue: "with AI" })}</span></>}</Button>
+      <Button type="button" variant="outline" size="sm" className={PHONE_ACTION + " px-3 sm:px-4 " + (isSaved ? "border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:border-amber-400 hover:text-amber-800 dark:hover:text-amber-300" : "")} disabled={busy} onClick={() => onState(isSaved ? "new" : "saved")}><Bookmark className={isSaved ? "size-3.5 fill-current" : "size-3.5"} />{isSaved ? t("marketRadar.saved") : t("marketRadar.save")}</Button>
+      <Button type="button" variant="outline" size="sm" className={PHONE_ACTION + " px-3 sm:px-4 " + (isActed ? "border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "")} disabled={busy} onClick={() => onState(isActed ? "new" : "acted")}><Check className={isActed ? "size-3.5 fill-current" : "size-3.5"} />{isActed ? t("marketRadar.acted") : <><span className="max-md:hidden">{t("marketRadar.markActed")}</span><span className="md:hidden">{t("marketRadar.acted")}</span></>}</Button>
+      <Button type="button" variant="ghost" size="sm" className={PHONE_ACTION + " px-3 sm:px-4 " + (isCompared ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300" : "text-ink-500")} onClick={onCompare}><GitCompareArrows className="size-3.5" />{isCompared ? t("marketRadar.compared") : t("marketRadar.compare")}</Button>
+      <Button type="button" variant="ghost" size="sm" className={PHONE_ACTION + " px-3 text-ink-500 max-md:ml-0 sm:px-4 " + (compact ? "" : "ml-auto")} disabled={busy} onClick={() => onState("ignored")}><X className="size-3.5 md:hidden" aria-hidden="true" />{t("marketRadar.ignore")}</Button>
     </>
   );
 }
@@ -1984,14 +2185,11 @@ function OpportunityActions({ item, busy, analysis, analyzing, onAnalyze, onStat
 function ClampedTitle({ as: Tag, title, lines, className }: { as: "h3" | "p"; title: string; lines: 1 | 2; className: string }) {
   return (
     <TooltipProvider delayDuration={300}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Tag tabIndex={0} className={`${className} ${lines === 1 ? "truncate" : "line-clamp-2"} cursor-default break-words outline-none focus-visible:ring-2 focus-visible:ring-blue-200 dark:focus-visible:ring-blue-500/30`}>
-            {title}
-          </Tag>
-        </TooltipTrigger>
-        <TooltipContent className="max-w-md text-sm leading-5">{title}</TooltipContent>
-      </Tooltip>
+      <TapHint content={title} contentClassName="max-w-md text-sm leading-5">
+        <Tag tabIndex={0} className={`${className} ${lines === 1 ? "truncate" : "line-clamp-2"} cursor-default break-words outline-none focus-visible:ring-2 focus-visible:ring-blue-200 dark:focus-visible:ring-blue-500/30`}>
+          {title}
+        </Tag>
+      </TapHint>
     </TooltipProvider>
   );
 }
@@ -2000,18 +2198,18 @@ function OpportunityCard({ item, featured, ...actions }: CardActions & { item: S
   const { t } = useTranslation("common");
   return (
     <Card className={"flex flex-col gap-0 bg-card py-0 shadow-sm transition-shadow hover:shadow-md " + (featured ? "border-amber-200 dark:border-amber-500/30 ring-1 ring-amber-100 dark:ring-amber-500/30 lg:col-span-2" : "border-ink-200")}>
-      <div className={"flex flex-1 flex-col gap-4 p-5 " + (featured ? "bg-gradient-to-br from-amber-50/60 dark:from-amber-500/10 via-card to-card" : "")}>
+      <div className={"flex flex-1 flex-col gap-4 p-5 max-md:gap-3 max-md:p-4 " + (featured ? "bg-gradient-to-br from-amber-50/60 dark:from-amber-500/10 via-card to-card" : "")}>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <OpportunityMeta item={item} featured={featured} />
-            <ClampedTitle as="h3" title={item.title} lines={2} className={"mt-2 leading-snug font-semibold text-ink-900 " + (featured ? "text-xl" : "text-lg")} />
+            <ClampedTitle as="h3" title={item.title} lines={2} className={"mt-2 leading-snug font-semibold text-ink-900 max-md:text-base " + (featured ? "text-xl" : "text-lg")} />
             <p className="mt-0.5 text-sm text-ink-500 capitalize">{item.category ?? item.niche}</p>
           </div>
           <ScoreRing item={item} />
         </div>
 
         {featured ? (
-          <div className="grid gap-4 lg:grid-cols-[1fr_minmax(0,26rem)] lg:items-center">
+          <div className="grid gap-4 max-md:grid-cols-[minmax(0,1fr)] lg:grid-cols-[1fr_minmax(0,26rem)] lg:items-center">
             <ListingOverview summary={item.summary} />
             <ScoreBars item={item} />
           </div>
@@ -2050,7 +2248,7 @@ function OpportunityCard({ item, featured, ...actions }: CardActions & { item: S
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 border-t border-ink-100 px-5 py-3">
+      <div className="flex flex-wrap items-center gap-2 border-t border-ink-100 px-5 py-3 max-md:grid max-md:grid-cols-4 max-md:gap-1 max-md:px-3">
         <OpportunityActions item={item} {...actions} />
       </div>
     </Card>
@@ -2066,11 +2264,11 @@ function OpportunityInsights({ item, compact = false }: { item: SellerOpportunit
 
   return (
     <div className={(compact ? "" : "space-y-3 ") + "rounded-xl border border-ink-100 bg-ink-50/80 p-3"}>
-        <div className="grid gap-3 sm:grid-cols-5">
+        <div className="grid gap-3 max-md:grid-cols-2 sm:grid-cols-5">
         <NicheMarketMetrics item={item} />
-        <InsightMetric label={insight.priceLabel === "observed" ? t("marketRadar.observedPrice") : t("marketRadar.typicalPrice")} value={priceText} detail={insight.minimumPrice == null || insight.maximumPrice == null ? t("marketRadar.limitedPriceData") : `${insight.minimumPrice.toFixed(0)}–${insight.maximumPrice.toFixed(0)} range`} />
-        <InsightMetric label={t("marketRadar.confidence", { defaultValue: "Confidence" })} value={insight.evidenceQuality} detail={`${insight.distinctListingCount} listings · ${insight.observationPeriodCount} day(s)`} />
-        <InsightMetric label={t("marketRadar.freshness", { defaultValue: "Freshness" })} value={formatFreshness(insight.freshnessLabel, t)} detail={freshnessDetail(insight, t)} tone={insight.freshnessLabel === "fresh" ? "up" : insight.freshnessLabel === "stale" ? "down" : undefined} />
+        <InsightMetric className={compact ? "max-md:col-span-2" : undefined} label={insight.priceLabel === "observed" ? t("marketRadar.observedPrice") : t("marketRadar.typicalPrice")} value={priceText} detail={insight.minimumPrice == null || insight.maximumPrice == null ? t("marketRadar.limitedPriceData") : `${insight.minimumPrice.toFixed(0)}–${insight.maximumPrice.toFixed(0)} range`} />
+        <InsightMetric className={compact ? "max-md:hidden" : undefined} label={t("marketRadar.confidence", { defaultValue: "Confidence" })} value={insight.evidenceQuality} detail={`${insight.distinctListingCount} listings · ${insight.observationPeriodCount} day(s)`} />
+        <InsightMetric className={compact ? "max-md:hidden" : undefined} label={t("marketRadar.freshness", { defaultValue: "Freshness" })} value={formatFreshness(insight.freshnessLabel, t)} detail={freshnessDetail(insight, t)} tone={insight.freshnessLabel === "fresh" ? "up" : insight.freshnessLabel === "stale" ? "down" : undefined} />
       </div>
       {!compact && <>
       {item.nicheMarket && item.nicheMarket.risingNewListingCount > 0 && (
@@ -2141,13 +2339,13 @@ function ListingOverview({ summary }: { summary: string | null }) {
   );
 }
 
-function InsightMetric({ label, value, detail, tone }: { label: string; value: string; detail: string; tone?: string }) {
+function InsightMetric({ label, value, detail, tone, className }: { label: string; value: string; detail: string; tone?: string; className?: string }) {
   const valueTone = tone === "up" ? "text-emerald-700 dark:text-emerald-300" : tone === "down" ? "text-rose-700 dark:text-rose-300" : "text-ink-800";
   return (
-    <div className="min-w-0">
+    <div className={cn("min-w-0", className)}>
       <p className="text-[10px] font-semibold tracking-[0.08em] text-ink-400 uppercase">{label}</p>
       <p className={`mt-0.5 truncate text-sm font-semibold capitalize ${valueTone}`}>{value}</p>
-      <p className="truncate text-[11px] text-ink-500">{detail}</p>
+      <p className="truncate text-[11px] text-ink-500 max-md:whitespace-normal">{detail}</p>
     </div>
   );
 }
@@ -2290,15 +2488,12 @@ function FitScoreTooltip({ item, children }: { item: SellerOpportunity; children
   const adjustedMarket = Math.round(item.fitBreakdown.evidenceAdjustedMarketScore ?? item.marketOpportunityScore);
   const fit = Math.round(item.sellerFitScore);
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side="left" className="max-w-64 space-y-1 bg-[#17263f] px-3 py-2 text-xs text-white">
+    <TapHint side="left" contentClassName="max-w-64 space-y-1 bg-[#17263f] px-3 py-2 text-xs text-white" content={<>
         <p className="font-semibold text-white">{t("marketRadar.fitFormula", { defaultValue: "Fit score = 60% Market + 40% Seller fit" })}</p>
         <p className="text-ink-300 tabular-nums">{adjustedMarket} × 0.6 + {fit} × 0.4 = {Math.round(item.finalScore)}</p>
         <p className="text-ink-400">{rawMarket} raw market → {adjustedMarket} {t("marketRadar.adjustedMarket", { defaultValue: "adjusted market" })} after evidence and freshness.</p>
         <p className="text-ink-400">{t("marketRadar.confidenceExplanation", { defaultValue: "Confidence shows how much evidence backs the market score. It does not change the fit score." })}</p>
-      </TooltipContent>
-    </Tooltip>
+    </>}>{children}</TapHint>
   );
 }
 

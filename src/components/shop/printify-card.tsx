@@ -45,7 +45,7 @@ export function PrintifyCard() {
 
   return (
     <Card className="gap-0 overflow-hidden border-ink-200 bg-card py-0 shadow-sm">
-      <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 px-5 py-4 max-md:p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white"><Printer className="size-5" /></span>
           <div className="min-w-0">
@@ -61,11 +61,11 @@ export function PrintifyCard() {
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 gap-2">
-          <Button type="button" size="sm" variant="outline" onClick={() => checkMutation.mutate()} disabled={checkMutation.isPending || connectionQuery.isPending}>
+        <div className="flex shrink-0 gap-2 max-md:grid max-md:grid-cols-2">
+          <Button type="button" size="sm" variant="outline" className="max-md:px-2" onClick={() => checkMutation.mutate()} disabled={checkMutation.isPending || connectionQuery.isPending}>
             <RefreshCw className={checkMutation.isPending ? "size-3.5 animate-spin" : "size-3.5"} />Check connection
           </Button>
-          <Button asChild size="sm" variant={state?.fixOnApiKeys ? "default" : "outline"}>
+          <Button asChild size="sm" variant={state?.fixOnApiKeys ? "default" : "outline"} className="max-md:px-2">
             <Link href="/api-keys"><KeyRound className="size-3.5" />{connection?.status === "not_connected" ? "Add Printify key" : "Manage key"}</Link>
           </Button>
         </div>

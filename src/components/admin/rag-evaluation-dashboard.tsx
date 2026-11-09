@@ -319,7 +319,7 @@ const RagEvaluationDashboard = ({
   };
 
   return (
-    <div className="h-dvh min-h-0 overflow-hidden bg-ink-50 text-ink-900 dark:bg-background">
+    <div className="bg-ink-50 text-ink-900 dark:bg-background h-dvh min-h-0 overflow-hidden">
       <div className="flex h-full min-h-0">
         <AdminSidebar
           fullName={fullName}
@@ -330,7 +330,7 @@ const RagEvaluationDashboard = ({
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
-        <div className="min-h-0 min-w-0 flex-1 overflow-hidden max-md:flex max-md:flex-col dark:lg:bg-panel dark:lg:my-2 dark:lg:mr-2 dark:lg:rounded-xl dark:lg:border">
+        <div className="dark:lg:bg-panel min-h-0 min-w-0 flex-1 overflow-hidden max-md:flex max-md:flex-col dark:lg:my-2 dark:lg:mr-2 dark:lg:rounded-xl dark:lg:border">
           <div className="h-full min-h-0 overflow-y-auto max-md:h-auto max-md:flex-1">
             <AdminTopbar
               fullName={fullName}
@@ -343,10 +343,10 @@ const RagEvaluationDashboard = ({
                   <p className="text-[10px] font-bold tracking-[0.16em] text-indigo-500 uppercase">
                     RAG quality lab
                   </p>
-                  <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink-900 sm:text-[28px]">
+                  <h1 className="text-ink-900 mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
                     RAG Evaluation
                   </h1>
-                  <p className="mt-1 max-w-2xl text-xs leading-5 text-ink-500">
+                  <p className="text-ink-500 mt-1 max-w-2xl text-xs leading-5">
                     Inspect retrieval traces and corpus health before RAG reaches seller-facing workflows.
                   </p>
                 </div>
@@ -358,7 +358,7 @@ const RagEvaluationDashboard = ({
                       setSelectedRunId(event.target.value);
                       setSelectedCaseId(null);
                     }}
-                    className="h-9 rounded-md border border-ink-200 bg-card px-3 text-xs font-medium text-ink-700 shadow-sm outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
+                    className="border-ink-200 bg-card text-ink-700 h-9 rounded-md border px-3 text-xs font-medium shadow-sm outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
                   >
                     {runs.map((run) => (
                       <option key={run.id} value={run.id}>
@@ -375,12 +375,12 @@ const RagEvaluationDashboard = ({
                 </div>
               </header>
 
-              <Card className="border-emerald-100 dark:border-emerald-500/30 bg-card shadow-sm">
+              <Card className="bg-card border-emerald-100 shadow-sm dark:border-emerald-500/30">
                 <CardHeader className="max-md:px-4">
                   <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
                     <div>
                       <CardTitle className="flex items-center gap-2 text-base">
-                        <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                        <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
                           <Search className="size-4" />
                         </span>
                         Production listing retrieval
@@ -392,7 +392,7 @@ const RagEvaluationDashboard = ({
                     </div>
                     <Badge
                       variant="outline"
-                      className="w-fit border-emerald-200 dark:border-emerald-500/30 text-[10px] text-emerald-700 dark:text-emerald-300"
+                      className="w-fit border-emerald-200 text-[10px] text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-300"
                       title="Runs retrieval only; no listing is written."
                     >
                       Read only
@@ -417,38 +417,38 @@ const RagEvaluationDashboard = ({
                       <Search className="size-3.5" />
                       {isListingTraceRunning ? "Running..." : "Run production flow"}
                     </Button>
-                    <p className="text-[11px] text-ink-400">
+                    <p className="text-ink-400 text-[11px]">
                       Paste the ID of a product to replay the retrieval its listing would use.
                     </p>
                   </div>
                   {!listingTrace && !isListingTraceRunning && (
-                    <ol className="grid gap-2 rounded-xl border border-dashed border-ink-200 bg-ink-50/60 p-4 sm:grid-cols-3">
+                    <ol className="border-ink-200 bg-ink-50/60 grid gap-2 rounded-xl border border-dashed p-4 sm:grid-cols-3">
                       {[
                         ["Product input", "Name, type, niche, audience, keywords and notes."],
                         ["Production query", "The same query the listing generator builds."],
                         ["Retrieved context", "Policy Top 5 and listing references Top 3, with scores."],
                       ].map(([title, text], index) => (
                         <li key={title} className="flex gap-2.5">
-                          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-card text-[10px] font-bold text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-500/30">
+                          <span className="bg-card flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-200 dark:text-emerald-300 dark:ring-emerald-500/30">
                             {index + 1}
                           </span>
                           <span>
-                            <span className="block text-xs font-semibold text-ink-700">{title}</span>
-                            <span className="block text-[11px] leading-5 text-ink-500">{text}</span>
+                            <span className="text-ink-700 block text-xs font-semibold">{title}</span>
+                            <span className="text-ink-500 block text-[11px] leading-5">{text}</span>
                           </span>
                         </li>
                       ))}
                     </ol>
                   )}
                   {listingTrace && (
-                    <div className="space-y-4 rounded-xl border border-emerald-100 dark:border-emerald-500/30 bg-emerald-50/30 dark:bg-emerald-500/10 p-4 max-md:p-2.5">
+                    <div className="space-y-4 rounded-xl border border-emerald-100 bg-emerald-50/30 p-4 max-md:p-2.5 dark:border-emerald-500/30 dark:bg-emerald-500/10">
                       {/* The coverage block already lists every input field, the product's name and type included. */}
                       <ProductInputCoverage trace={listingTrace} />
                       <div>
-                        <p className="text-[10px] font-bold tracking-wide text-ink-400 uppercase">
+                        <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">
                           Production query
                         </p>
-                        <p className="mt-2 rounded-lg border border-emerald-100 dark:border-emerald-500/30 bg-card p-3 text-xs leading-5 whitespace-pre-wrap text-ink-600 max-md:[overflow-wrap:anywhere]">
+                        <p className="bg-card text-ink-600 mt-2 rounded-lg border border-emerald-100 p-3 text-xs leading-5 whitespace-pre-wrap max-md:[overflow-wrap:anywhere] dark:border-emerald-500/30">
                           {listingTrace.productionQuery}
                         </p>
                       </div>
@@ -458,7 +458,7 @@ const RagEvaluationDashboard = ({
                           { label: "Listing references · Top 3", diagnostics: listingTrace.listingContext },
                         ]}
                       />
-                      <p className="text-[11px] text-ink-500">
+                      <p className="text-ink-500 text-[11px]">
                         Retrieval completed in {Math.round(listingTrace.durationMs)} ms. This trace
                         mirrors the retrieval stage used before listing generation; it does not write a new listing.
                       </p>
@@ -471,13 +471,13 @@ const RagEvaluationDashboard = ({
 
               <RagCorpusHealthPanel />
 
-              <Card className="border-indigo-100 dark:border-indigo-500/30 bg-card shadow-sm">
+              <Card className="bg-card border-indigo-100 shadow-sm dark:border-indigo-500/30">
                 {/* Collapsed, the card is only its header: no divider or empty body below it. */}
-                <CardHeader className={cn("max-md:px-4", isBenchmarkOpen && "border-b border-indigo-100 dark:border-indigo-500/30 pb-4")}>
+                <CardHeader className={cn("max-md:px-4", isBenchmarkOpen && "border-b border-indigo-100 pb-4 dark:border-indigo-500/30")}>
                   <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
                     <div>
                       <CardTitle className="flex items-center gap-2 text-base">
-                        <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                        <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
                           <FlaskConical className="size-4" />
                         </span>
                         Advanced offline benchmark
@@ -527,7 +527,7 @@ const RagEvaluationDashboard = ({
                           contentType: event.target.value as EvaluationContentType,
                         }))
                       }
-                      className="h-9 rounded-md border border-ink-200 bg-card px-3 text-xs text-ink-700 outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
+                      className="border-ink-200 bg-card text-ink-700 h-9 rounded-md border px-3 text-xs outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
                       aria-label="Content type"
                     >
                       {evaluationContentTypes.map((type) => (
@@ -544,7 +544,7 @@ const RagEvaluationDashboard = ({
                           category: event.target.value as EvaluationCase["category"],
                         }))
                       }
-                      className="h-9 rounded-md border border-ink-200 bg-card px-3 text-xs text-ink-700 outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
+                      className="border-ink-200 bg-card text-ink-700 h-9 rounded-md border px-3 text-xs outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
                       aria-label="Evaluation category"
                     >
                       {(["Retrieval"] as const).map(
@@ -567,7 +567,7 @@ const RagEvaluationDashboard = ({
                       <Plus className="size-3.5" /> Add case
                     </Button>
                   </div>
-                  <div className="flex flex-wrap gap-2 text-[11px] text-ink-500">
+                  <div className="text-ink-500 flex flex-wrap gap-2 text-[11px]">
                     <span>Use evidence text copied from the expected chunk.</span>
                     <span>For image/video, index caption, OCR, transcript or metadata first.</span>
                   </div>
@@ -575,12 +575,12 @@ const RagEvaluationDashboard = ({
                     {datasetCases.map((item) => (
                       <div
                         key={item.id}
-                        className="inline-flex max-w-full items-center gap-2 rounded-full border border-ink-200 bg-ink-50 px-2.5 py-1 text-[11px] text-ink-600"
+                        className="border-ink-200 bg-ink-50 text-ink-600 inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-[11px]"
                       >
-                        <span className="font-semibold text-ink-800">{item.id}</span>
+                        <span className="text-ink-800 font-semibold">{item.id}</span>
                         <Badge
                           variant="outline"
-                          className="border-indigo-200 dark:border-indigo-500/30 px-1.5 py-0 text-[9px] text-indigo-700 dark:text-indigo-300"
+                          className="border-indigo-200 px-1.5 py-0 text-[9px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300"
                         >
                           {item.contentType}
                         </Badge>
@@ -588,7 +588,7 @@ const RagEvaluationDashboard = ({
                         <button
                           type="button"
                           onClick={() => removeEvaluationCase(item.id)}
-                          className="rounded-full p-0.5 text-ink-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400"
+                          className="text-ink-400 rounded-full p-0.5 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                           aria-label={`Remove ${item.id}`}
                         >
                           <Trash2 className="size-3" />
@@ -602,7 +602,7 @@ const RagEvaluationDashboard = ({
 
               {isBenchmarkOpen && (
               <>
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/60 dark:bg-indigo-500/10 px-3 py-2 text-[11px] text-indigo-800 dark:text-indigo-300">
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-[11px] text-indigo-800 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300">
                 <FlaskConical className="size-3.5" />{" "}
                 <span className="font-semibold">Evaluation preview</span>
                 <span className="text-indigo-600 dark:text-indigo-400">
@@ -613,7 +613,7 @@ const RagEvaluationDashboard = ({
 
               {runs.length > 0 ? (
                 <>
-              <section className="grid gap-3 max-md:grid-cols-2 max-md:gap-2 max-md:[&>:first-child]:col-span-2 sm:grid-cols-2 xl:grid-cols-5">
+              <section className="grid gap-3 max-md:grid-cols-2 max-md:gap-2 sm:grid-cols-2 xl:grid-cols-5 max-md:[&>:first-child]:col-span-2">
                 <MetricCard
                   icon={Gauge}
                   label="Overall quality"
@@ -652,7 +652,7 @@ const RagEvaluationDashboard = ({
               </section>
 
               <Card className="border-ink-200 bg-card shadow-sm">
-                <CardHeader className="border-b border-ink-100 pb-4 max-md:px-4">
+                <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <Target className="size-4 text-indigo-500" />
                     Accuracy by content type
@@ -661,12 +661,12 @@ const RagEvaluationDashboard = ({
                     Compare retrieval accuracy and evidence coverage for each indexed content type.
                   </CardDescription>
                 </CardHeader>
-                <ul className="divide-y divide-ink-100 md:hidden">
+                <ul className="divide-ink-100 divide-y md:hidden">
                   {selectedRun.typeMetrics.map((metric) => (
                     <li key={metric.contentType} className="space-y-2 p-4">
                       <p className="flex items-center justify-between gap-2 text-xs">
-                        <span className="font-semibold text-ink-800 capitalize">{metric.contentType}</span>
-                        <span className="text-[11px] text-ink-500">{metric.caseCount} cases · {Math.round(metric.averageLatencyMs)} ms</span>
+                        <span className="text-ink-800 font-semibold capitalize">{metric.contentType}</span>
+                        <span className="text-ink-500 text-[11px]">{metric.caseCount} cases · {Math.round(metric.averageLatencyMs)} ms</span>
                       </p>
                       <PhoneScores
                         scores={[
@@ -681,7 +681,7 @@ const RagEvaluationDashboard = ({
                 </ul>
                 <div className="overflow-x-auto max-md:hidden">
                   <table className="w-full min-w-[820px] text-left text-xs">
-                    <thead className="bg-ink-50 text-[10px] tracking-wide text-ink-400 uppercase">
+                    <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-wide uppercase">
                       <tr>
                         <th className="px-5 py-3">Content type</th>
                         <th className="px-3 py-3">Cases</th>
@@ -694,16 +694,16 @@ const RagEvaluationDashboard = ({
                     </thead>
                     <tbody>
                       {selectedRun.typeMetrics.map((metric) => (
-                        <tr key={metric.contentType} className="border-t border-ink-100">
-                          <td className="px-5 py-3 font-semibold text-ink-800 capitalize">
+                        <tr key={metric.contentType} className="border-ink-100 border-t">
+                          <td className="text-ink-800 px-5 py-3 font-semibold capitalize">
                             {metric.contentType}
                           </td>
-                          <td className="px-3 py-3 text-ink-500">{metric.caseCount}</td>
+                          <td className="text-ink-500 px-3 py-3">{metric.caseCount}</td>
                           <td className="px-3 py-3"><ScoreBar value={metric.retrievalScore} /></td>
                           <td className="px-3 py-3"><ScoreBar value={metric.contextCoverageScore} /></td>
                           <td className="px-3 py-3"><ScoreBar value={metric.citationScore} /></td>
                           <td className="px-3 py-3"><ScoreBar value={metric.abstentionScore} /></td>
-                          <td className="px-5 py-3 text-ink-500">{Math.round(metric.averageLatencyMs)} ms</td>
+                          <td className="text-ink-500 px-5 py-3">{Math.round(metric.averageLatencyMs)} ms</td>
                         </tr>
                       ))}
                     </tbody>
@@ -721,8 +721,8 @@ const RagEvaluationDashboard = ({
                 </Dialog>
               )}
               {selectedCase && !isPhone && (
-                <Card className="border-indigo-100 dark:border-indigo-500/30 bg-card shadow-sm">
-                  <CardHeader className="border-b border-indigo-100 dark:border-indigo-500/30 pb-4">
+                <Card className="bg-card border-indigo-100 shadow-sm dark:border-indigo-500/30">
+                  <CardHeader className="border-b border-indigo-100 pb-4 dark:border-indigo-500/30">
                     <CardTitle className="flex items-center gap-2 text-sm">
                       <Search className="size-4 text-indigo-500" />
                       Retrieved chunks for this case
@@ -737,7 +737,7 @@ const RagEvaluationDashboard = ({
 
               <section className="grid gap-5 max-md:grid-cols-[minmax(0,1fr)] max-md:gap-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
                 <Card className="border-ink-200 bg-card shadow-sm">
-                  <CardHeader className="border-b border-ink-100 pb-4 max-md:px-4">
+                  <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <CardTitle className="flex items-center gap-2 text-sm">
@@ -807,7 +807,7 @@ const RagEvaluationDashboard = ({
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="mt-3 flex flex-wrap gap-4 text-[11px] text-ink-500">
+                    <div className="text-ink-500 mt-3 flex flex-wrap gap-4 text-[11px]">
                       <LegendDot color="bg-indigo-500" label="Recall @5" />
                        <LegendDot color="bg-emerald-500" label="Context coverage" />
                       <LegendDot color="bg-violet-500" label="Citation accuracy" />
@@ -815,7 +815,7 @@ const RagEvaluationDashboard = ({
                   </CardContent>
                 </Card>
                 <Card className="border-ink-200 bg-card shadow-sm">
-                  <CardHeader className="border-b border-ink-100 pb-4 max-md:px-4">
+                  <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
                     <CardTitle className="flex items-center gap-2 text-sm">
                       <AlertTriangle className="size-4 text-amber-500" />
                       Failure patterns
@@ -862,7 +862,7 @@ const RagEvaluationDashboard = ({
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
-                    <p className="mt-2 text-[11px] leading-5 text-ink-500">
+                    <p className="text-ink-500 mt-2 text-[11px] leading-5">
                       Most actionable issue: prevent unsupported product claims when the retrieved
                       source does not contain the attribute.
                     </p>
@@ -891,12 +891,12 @@ const RagEvaluationDashboard = ({
                 />
               </section>
 
-              <Card className="overflow-hidden border-ink-200 bg-card shadow-sm">
-                <CardHeader className="border-b border-ink-100 pb-4 max-md:px-4">
+              <Card className="border-ink-200 bg-card overflow-hidden shadow-sm">
+                <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
                   <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                     <div>
                       <CardTitle className="flex items-center gap-2 text-sm">
-                        <Database className="size-4 text-ink-500" />
+                        <Database className="text-ink-500 size-4" />
                         Test cases
                       </CardTitle>
                       <CardDescription className="mt-1 text-xs">
@@ -909,7 +909,7 @@ const RagEvaluationDashboard = ({
                         onChange={(event) =>
                           setContentTypeFilter(event.target.value as "all" | EvaluationContentType)
                         }
-                        className="h-8 rounded-md border border-ink-200 bg-card px-2 text-[11px] font-medium text-ink-600 outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
+                        className="border-ink-200 bg-card text-ink-600 h-8 rounded-md border px-2 text-[11px] font-medium outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
                         aria-label="Filter by content type"
                       >
                         <option value="all">All content types</option>
@@ -919,7 +919,7 @@ const RagEvaluationDashboard = ({
                           </option>
                         ))}
                       </select>
-                      <div className="flex gap-1 rounded-lg bg-ink-100 p-1 max-md:grid max-md:w-full max-md:grid-cols-4">
+                      <div className="bg-ink-100 flex gap-1 rounded-lg p-1 max-md:grid max-md:w-full max-md:grid-cols-4">
                       {(["all", "pass", "review", "fail"] as const).map((value) => (
                         <button
                           key={value}
@@ -936,19 +936,19 @@ const RagEvaluationDashboard = ({
                     </div>
                   </div>
                 </CardHeader>
-                <ul className="divide-y divide-ink-100 md:hidden">
+                <ul className="divide-ink-100 divide-y md:hidden">
                   {visibleCases.map((item) => (
                     <li key={item.id}>
                       <button type="button" onClick={() => setSelectedCaseId(item.id)} className="w-full space-y-2 p-4 text-left">
                         <span className="flex items-start justify-between gap-2">
                           <span className="min-w-0">
-                            <span className="line-clamp-2 text-xs font-semibold text-ink-800">{item.question}</span>
-                            <span className="mt-0.5 block truncate text-[10px] text-ink-400">{item.source}</span>
+                            <span className="text-ink-800 line-clamp-2 text-xs font-semibold">{item.question}</span>
+                            <span className="text-ink-400 mt-0.5 block truncate text-[10px]">{item.source}</span>
                           </span>
                           <Verdict verdict={item.verdict} />
                         </span>
                         <span className="flex flex-wrap gap-1.5">
-                          <Badge variant="outline" className="border-indigo-200 dark:border-indigo-500/30 text-[10px] text-indigo-700 dark:text-indigo-300">{item.contentType}</Badge>
+                          <Badge variant="outline" className="border-indigo-200 text-[10px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300">{item.contentType}</Badge>
                           <Badge variant="outline" className="text-[10px]">{item.category}</Badge>
                         </span>
                         <PhoneScores
@@ -964,7 +964,7 @@ const RagEvaluationDashboard = ({
                 </ul>
                 <div className="overflow-x-auto max-md:hidden">
                   <table className="w-full min-w-[860px] text-left text-xs">
-                    <thead className="bg-ink-50 text-[10px] tracking-wide text-ink-400 uppercase">
+                    <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-wide uppercase">
                       <tr>
                         <th className="px-5 py-3">Question</th>
                         <th className="px-3 py-3">Type</th>
@@ -980,16 +980,16 @@ const RagEvaluationDashboard = ({
                         <tr
                           key={item.id}
                           onClick={() => setSelectedCaseId(item.id)}
-                          className={`cursor-pointer border-t border-ink-100 transition hover:bg-ink-50 ${selectedCaseId === item.id ? "bg-indigo-50/50 dark:bg-indigo-500/10" : ""}`}
+                          className={`border-ink-100 hover:bg-ink-50 cursor-pointer border-t transition ${selectedCaseId === item.id ? "bg-indigo-50/50 dark:bg-indigo-500/10" : ""}`}
                         >
                           <td className="max-w-[360px] px-5 py-3.5">
-                            <p className="truncate font-semibold text-ink-800">{item.question}</p>
-                            <p className="mt-1 truncate text-[10px] text-ink-400">
+                            <p className="text-ink-800 truncate font-semibold">{item.question}</p>
+                            <p className="text-ink-400 mt-1 truncate text-[10px]">
                               {item.source}
                             </p>
                           </td>
                           <td className="px-3 py-3.5">
-                            <Badge variant="outline" className="border-indigo-200 dark:border-indigo-500/30 text-[10px] text-indigo-700 dark:text-indigo-300">
+                            <Badge variant="outline" className="border-indigo-200 text-[10px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300">
                               {item.contentType}
                             </Badge>
                           </td>
@@ -1022,8 +1022,8 @@ const RagEvaluationDashboard = ({
                   <CardContent className="flex items-start gap-3 py-5">
                     <CircleHelp className="mt-0.5 size-4 shrink-0 text-indigo-500" />
                     <div>
-                      <p className="text-sm font-semibold text-ink-900">No benchmark result yet</p>
-                      <p className="mt-1 text-xs leading-5 text-ink-500">
+                      <p className="text-ink-900 text-sm font-semibold">No benchmark result yet</p>
+                      <p className="text-ink-500 mt-1 text-xs leading-5">
                         The live listing trace and corpus health above are the RAG inspection tools. Add a
                         labeled evidence case only when you want a measurable Recall@K result; no sample score is shown here.
                       </p>
@@ -1071,11 +1071,11 @@ const MetricCard = ({
           <Icon className="size-4" />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-[10px] font-bold tracking-[0.12em] text-ink-400 uppercase max-md:whitespace-normal">
+          <p className="text-ink-400 truncate text-[10px] font-bold tracking-[0.12em] uppercase max-md:whitespace-normal">
             {label}
           </p>
-          <p className="mt-1 text-xl font-bold text-ink-900">{value}</p>
-          <p className="truncate text-[10px] text-ink-500">{detail}</p>
+          <p className="text-ink-900 mt-1 text-xl font-bold">{value}</p>
+          <p className="text-ink-500 truncate text-[10px]">{detail}</p>
         </div>
       </CardContent>
     </Card>
@@ -1084,7 +1084,7 @@ const MetricCard = ({
 
 /** A row of scores stacked in two columns, for a phone, where the table's columns do not fit. */
 const PhoneScores = ({ scores }: { scores: [label: string, value: number][] }) => (
-  <span className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5 text-[11px] text-ink-500">
+  <span className="text-ink-500 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5 text-[11px]">
     {scores.map(([label, value]) => (
       <Fragment key={label}>
         <span>{label}</span>
@@ -1103,36 +1103,36 @@ const ScoreBar = ({ value }: { value: number }) => (
         value >= 85 ? "bg-emerald-500" : value >= 70 ? "bg-amber-400" : "bg-rose-500"
       }
     />
-    <span className="w-8 text-right text-[10px] font-semibold text-ink-600">{value}</span>
+    <span className="text-ink-600 w-8 text-right text-[10px] font-semibold">{value}</span>
   </div>
 );
 
 const Verdict = ({ verdict }: { verdict: EvaluationCase["verdict"] }) =>
   verdict === "pass" ? (
-    <Badge className="border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+    <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
       <CheckCircle2 className="mr-1 size-3" />
       Pass
     </Badge>
   ) : verdict === "review" ? (
-    <Badge className="border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300">
+    <Badge className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
       <AlertTriangle className="mr-1 size-3" />
       Review
     </Badge>
   ) : (
-    <Badge className="border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300">
+    <Badge className="border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
       <XCircle className="mr-1 size-3" />
       Fail
     </Badge>
   );
 
 const CaseDetail = ({ item, onClose }: { item: EvaluationCase; onClose: () => void }) => (
-  <div className="border-t border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/10 p-5 max-md:border-t-0 max-md:p-4">
+  <div className="border-t border-indigo-100 bg-indigo-50/40 p-5 max-md:border-t-0 max-md:p-4 dark:border-indigo-500/30 dark:bg-indigo-500/10">
     <div className="flex items-start justify-between gap-4">
       <div>
         <p className="text-[10px] font-bold tracking-[0.14em] text-indigo-500 uppercase">
           Case detail - {item.id}
         </p>
-        <h3 className="mt-1 max-w-3xl text-sm font-bold text-ink-900">{item.question}</h3>
+        <h3 className="text-ink-900 mt-1 max-w-3xl text-sm font-bold">{item.question}</h3>
       </div>
       <Button type="button" variant="ghost" size="sm" onClick={onClose}>
         Close
@@ -1144,13 +1144,13 @@ const CaseDetail = ({ item, onClose }: { item: EvaluationCase; onClose: () => vo
       <DetailBlock label="Model answer" value={item.answer} />
       <DetailBlock label="Retrieved source" value={item.source} />
     </div>
-    <div className="mt-5 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-card p-4 max-md:p-3">
+    <div className="bg-card mt-5 rounded-xl border border-indigo-100 p-4 max-md:p-3 dark:border-indigo-500/30">
       <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
         <div>
-          <p className="text-[10px] font-bold tracking-wide text-ink-400 uppercase">
+          <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">
             Retrieved results
           </p>
-          <p className="mt-1 text-xs text-ink-500">
+          <p className="text-ink-500 mt-1 text-xs">
             Inspect the actual chunks returned for this question before trusting the verdict.
           </p>
         </div>
@@ -1168,14 +1168,14 @@ const CaseDetail = ({ item, onClose }: { item: EvaluationCase; onClose: () => vo
           ))}
         </div>
       ) : (
-        <p className="mt-3 rounded-lg border border-dashed border-ink-200 bg-ink-50 px-3 py-4 text-xs text-ink-500">
+        <p className="border-ink-200 bg-ink-50 text-ink-500 mt-3 rounded-lg border border-dashed px-3 py-4 text-xs">
           No live retrieved result is attached to this case yet. Run the evaluation to fetch results
           from the RAG API.
         </p>
       )}
     </div>
     {item.failure && (
-      <p className="mt-4 flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+      <p className="mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
         <AlertTriangle className="size-4 shrink-0" />
         Failure pattern: {item.failure}
       </p>
@@ -1193,16 +1193,16 @@ const RetrievedResultCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const isLong = diagnostic.result.content.length > 320;
   return (
-  <div className="rounded-lg border border-ink-200 bg-ink-50/70 p-3">
+  <div className="border-ink-200 bg-ink-50/70 rounded-lg border p-3">
     {/* Rank and scores on one line, then the title and its source on their own full-width lines. */}
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div className="flex items-center gap-2">
-        <Badge className="border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300">#{rank}</Badge>
+        <Badge className="border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300">#{rank}</Badge>
         <Badge variant="outline" className="text-[10px]">
           {diagnostic.result.contentType}
         </Badge>
       </div>
-      <div className="flex flex-wrap gap-1.5 text-[10px] text-ink-500">
+      <div className="text-ink-500 flex flex-wrap gap-1.5 text-[10px]">
         <ScorePill label="semantic" value={diagnostic.semanticScore} />
         <ScorePill label="lexical" value={diagnostic.lexicalScore} />
         <ScorePill label="viral" value={diagnostic.viralScore} />
@@ -1210,20 +1210,20 @@ const RetrievedResultCard = ({
         <ScorePill label="final" value={diagnostic.finalScore} emphasis />
       </div>
     </div>
-    <p className="mt-2 line-clamp-2 text-xs font-semibold text-ink-800" title={diagnostic.result.title}>
+    <p className="text-ink-800 mt-2 line-clamp-2 text-xs font-semibold" title={diagnostic.result.title}>
       {diagnostic.result.title}
     </p>
-    <p className="mt-0.5 truncate text-[10px] text-ink-400" title={`${diagnostic.result.sourceId ?? "n/a"} / ${diagnostic.result.chunkId}`}>
+    <p className="text-ink-400 mt-0.5 truncate text-[10px]" title={`${diagnostic.result.sourceId ?? "n/a"} / ${diagnostic.result.chunkId}`}>
       source {diagnostic.result.sourceId ?? "n/a"} · chunk {diagnostic.result.chunkId}
     </p>
-    <p className={`mt-3 text-xs leading-5 whitespace-pre-wrap text-ink-600 max-md:[overflow-wrap:anywhere] ${isLong && !isExpanded ? "line-clamp-4" : ""}`}>
+    <p className={`text-ink-600 mt-3 text-xs leading-5 whitespace-pre-wrap max-md:[overflow-wrap:anywhere] ${isLong && !isExpanded ? "line-clamp-4" : ""}`}>
       {diagnostic.result.content}
     </p>
     {isLong && (
       <button
         type="button"
         onClick={() => setIsExpanded((value) => !value)}
-        className="mt-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+        className="mt-1 text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
       >
         {isExpanded ? "Show less" : "Show more"}
       </button>
@@ -1236,7 +1236,7 @@ const RetrievedResultCard = ({
 const ScorePill = ({ label, value, emphasis = false }: { label: string; value: number; emphasis?: boolean }) => (
   <span
     className={`rounded-full border px-2 py-1 tabular-nums ${
-      emphasis ? "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 font-semibold text-indigo-700 dark:text-indigo-300" : "border-ink-200 bg-card"
+      emphasis ? "border-indigo-200 bg-indigo-50 font-semibold text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-ink-200 bg-card"
     }`}
   >
     {label} {value.toFixed(3)}
@@ -1261,17 +1261,17 @@ const ProductInputCoverage = ({
   const missingFields = fields.filter((field) => !field.value?.trim()).map((field) => field.label);
 
   return (
-    <div className="rounded-xl border border-ink-200 bg-card p-3">
+    <div className="border-ink-200 bg-card rounded-xl border p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-xs font-bold text-ink-800">Product input coverage</p>
-          <p className="mt-1 text-[11px] text-ink-500">
+          <p className="text-ink-800 text-xs font-bold">Product input coverage</p>
+          <p className="text-ink-500 mt-1 text-[11px]">
             Fields used to build the production query and metadata filters.
           </p>
         </div>
         <Badge
           variant="outline"
-          className={missingFields.length === 0 ? "border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300" : "border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300"}
+          className={missingFields.length === 0 ? "border-emerald-200 text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-300" : "border-amber-200 text-amber-700 dark:border-amber-500/30 dark:text-amber-300"}
         >
           {populatedCount}/{fields.length} populated
         </Badge>
@@ -1280,15 +1280,15 @@ const ProductInputCoverage = ({
         {fields.map((field) => {
           const populated = Boolean(field.value?.trim());
           return (
-            <div key={field.label} className="flex min-w-0 items-start gap-2 rounded-lg bg-ink-50 px-2.5 py-2">
+            <div key={field.label} className="bg-ink-50 flex min-w-0 items-start gap-2 rounded-lg px-2.5 py-2">
               {populated ? (
                 <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-emerald-500" />
               ) : (
                 <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
               )}
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold text-ink-500">{field.label}</p>
-                <p className="truncate text-[11px] text-ink-700 max-md:line-clamp-2 max-md:whitespace-normal">
+                <p className="text-ink-500 text-[10px] font-semibold">{field.label}</p>
+                <p className="text-ink-700 truncate text-[11px] max-md:line-clamp-2 max-md:whitespace-normal">
                   {populated ? field.value : "Missing"}
                 </p>
               </div>
@@ -1338,7 +1338,7 @@ const RetrievalInsight = ({ diagnostics }: { diagnostics: RagSearchDiagnostics }
       </div>
 
       <div>
-        <p className="text-[10px] font-bold tracking-wide text-ink-400 uppercase">Retrieval funnel</p>
+        <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">Retrieval funnel</p>
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
           <FunnelMetric label="Before metadata filter" value={beforeMetadata} />
           <FunnelMetric label="Metadata removed" value={metadataFiltered} tone={metadataFiltered > 0 ? "warning" : "default"} />
@@ -1357,7 +1357,7 @@ const RetrievalInsight = ({ diagnostics }: { diagnostics: RagSearchDiagnostics }
 
       {appliedFilters.length > 0 && (
         <div>
-          <p className="text-[10px] font-bold tracking-wide text-ink-400 uppercase">Applied filters</p>
+          <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">Applied filters</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {appliedFilters.map((filter) => (
               <Badge key={filter} variant="outline" className="max-w-full truncate text-[10px] font-normal">
@@ -1369,8 +1369,8 @@ const RetrievalInsight = ({ diagnostics }: { diagnostics: RagSearchDiagnostics }
       )}
 
       {warnings.length > 0 && (
-        <div className="rounded-lg border border-amber-100 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 px-3 py-2">
-          <p className="flex items-center gap-2 text-[10px] font-bold tracking-wide text-amber-800 dark:text-amber-300 uppercase">
+        <div className="rounded-lg border border-amber-100 bg-amber-50/60 px-3 py-2 dark:border-amber-500/30 dark:bg-amber-500/10">
+          <p className="flex items-center gap-2 text-[10px] font-bold tracking-wide text-amber-800 uppercase dark:text-amber-300">
             <AlertTriangle className="size-3.5" /> Why this result needs attention
           </p>
           <ul className="mt-1.5 space-y-1 text-[11px] leading-5 text-amber-800 dark:text-amber-300">
@@ -1391,16 +1391,16 @@ const FunnelMetric = ({
   value: number;
   tone?: "default" | "warning" | "success";
 }) => (
-  <div className={`rounded-lg border px-2.5 py-2 ${tone === "warning" ? "border-amber-100 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10" : tone === "success" ? "border-emerald-100 dark:border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-500/10" : "border-ink-100 bg-ink-50"}`}>
-    <p className="text-[10px] leading-4 text-ink-500">{label}</p>
-    <p className="mt-1 text-sm font-bold text-ink-800">{value}</p>
+  <div className={`rounded-lg border px-2.5 py-2 ${tone === "warning" ? "border-amber-100 bg-amber-50/60 dark:border-amber-500/30 dark:bg-amber-500/10" : tone === "success" ? "border-emerald-100 bg-emerald-50/60 dark:border-emerald-500/30 dark:bg-emerald-500/10" : "border-ink-100 bg-ink-50"}`}>
+    <p className="text-ink-500 text-[10px] leading-4">{label}</p>
+    <p className="text-ink-800 mt-1 text-sm font-bold">{value}</p>
   </div>
 );
 
 const ScoreMetric = ({ label, value }: { label: string; value: number }) => (
-  <div className="rounded-lg border border-ink-100 bg-ink-50 px-2.5 py-2">
-    <p className="text-[10px] text-ink-500">{label}</p>
-    <p className="mt-1 text-sm font-bold text-ink-800">{value.toFixed(3)}</p>
+  <div className="border-ink-100 bg-ink-50 rounded-lg border px-2.5 py-2">
+    <p className="text-ink-500 text-[10px]">{label}</p>
+    <p className="text-ink-800 mt-1 text-sm font-bold">{value.toFixed(3)}</p>
   </div>
 );
 
@@ -1436,12 +1436,12 @@ const EmptyTraceSummary = ({ label, diagnostics }: TraceSection) => {
   const [isOpen, setIsOpen] = useState(false);
   const reason = diagnostics.warnings?.[0];
   return (
-    <div className="rounded-xl border border-amber-100 dark:border-amber-500/30 bg-card">
+    <div className="bg-card rounded-xl border border-amber-100 dark:border-amber-500/30">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5">
         <AlertTriangle className="size-4 shrink-0 text-amber-500" />
-        <p className="text-xs font-bold text-ink-800">{label}</p>
+        <p className="text-ink-800 text-xs font-bold">{label}</p>
         <span className="text-xs text-amber-700 dark:text-amber-300">No context returned · 0 retrieved</span>
-        {reason && <span className="min-w-0 flex-1 truncate text-[11px] text-ink-500 max-md:basis-full max-md:whitespace-normal" title={reason}>{reason}</span>}
+        {reason && <span className="text-ink-500 min-w-0 flex-1 truncate text-[11px] max-md:basis-full max-md:whitespace-normal" title={reason}>{reason}</span>}
         <Button
           type="button"
           variant="ghost"
@@ -1455,7 +1455,7 @@ const EmptyTraceSummary = ({ label, diagnostics }: TraceSection) => {
         </Button>
       </div>
       {isOpen && (
-        <div className="border-t border-amber-100 dark:border-amber-500/30 px-3 pb-3">
+        <div className="border-t border-amber-100 px-3 pb-3 dark:border-amber-500/30">
           <RetrievalInsight diagnostics={diagnostics} />
         </div>
       )}
@@ -1470,9 +1470,9 @@ const ListingTraceResults = ({
   label: string;
   diagnostics: ListingRetrievalEvaluationResponse["policyContext"];
 }) => (
-  <div className="rounded-xl border border-ink-200 bg-card p-3">
+  <div className="border-ink-200 bg-card rounded-xl border p-3">
     <div className="flex items-center justify-between gap-2">
-      <p className="text-xs font-bold text-ink-800">{label}</p>
+      <p className="text-ink-800 text-xs font-bold">{label}</p>
       <Badge variant="outline" className="text-[10px]">
         {diagnostics.results.length} retrieved
       </Badge>
@@ -1480,7 +1480,7 @@ const ListingTraceResults = ({
     <RetrievalInsight diagnostics={diagnostics} />
     <div className="mt-3 space-y-3">
       {diagnostics.results.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-ink-200 bg-ink-50 px-3 py-4 text-xs text-ink-500">
+        <p className="border-ink-200 bg-ink-50 text-ink-500 rounded-lg border border-dashed px-3 py-4 text-xs">
           No context was retrieved.
         </p>
       ) : (
@@ -1493,9 +1493,9 @@ const ListingTraceResults = ({
 );
 
 const DetailBlock = ({ label, value }: { label: string; value: string }) => (
-  <div className="rounded-lg border border-white/80 bg-card p-3">
-    <p className="text-[10px] font-bold tracking-wide text-ink-400 uppercase">{label}</p>
-    <p className="mt-2 text-xs leading-5 text-ink-600">{value}</p>
+  <div className="bg-card rounded-lg border border-white/80 p-3">
+    <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">{label}</p>
+    <p className="text-ink-600 mt-2 text-xs leading-5">{value}</p>
   </div>
 );
 
@@ -1518,8 +1518,8 @@ const InsightCard = ({
   return (
     <div className={`rounded-xl border p-4 ${styles[tone]}`}>
       <Icon className="size-4" />
-      <p className="mt-3 text-sm font-bold text-ink-900">{title}</p>
-      <p className="mt-1 text-xs leading-5 text-ink-600">{text}</p>
+      <p className="text-ink-900 mt-3 text-sm font-bold">{title}</p>
+      <p className="text-ink-600 mt-1 text-xs leading-5">{text}</p>
     </div>
   );
 };

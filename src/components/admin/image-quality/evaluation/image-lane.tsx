@@ -26,7 +26,7 @@ export const ImageLane = ({ title, images, versionLabels, isAfter = false }: Ima
   <div
     className={cn(
       "flex min-w-0 flex-col gap-3 rounded-lg p-4 max-md:p-3",
-      isAfter ? "bg-sky-50/70 dark:bg-sky-500/10 ring-1 ring-sky-100 dark:ring-sky-500/30" : "bg-ink-50 ring-1 ring-ink-100"
+      isAfter ? "bg-sky-50/70 ring-1 ring-sky-100 dark:bg-sky-500/10 dark:ring-sky-500/30" : "bg-ink-50 ring-ink-100 ring-1"
     )}
   >
     <h4
@@ -36,12 +36,12 @@ export const ImageLane = ({ title, images, versionLabels, isAfter = false }: Ima
       )}
     >
       {title}
-      <span className="text-xs font-normal text-ink-500">
+      <span className="text-ink-500 text-xs font-normal">
         {images.length} {images.length === 1 ? "image" : "images"}
       </span>
     </h4>
     {images.length === 0 ? (
-      <p className="text-[13px] text-ink-500">No image on this side.</p>
+      <p className="text-ink-500 text-[13px]">No image on this side.</p>
     ) : isPhone ? (
       // Side by side the images compare at a glance; stacked, one would fill the screen.
       <HorizontalStrip itemsLabel={`${title.toLowerCase()} images`} itemCount={images.length} className="gap-3">

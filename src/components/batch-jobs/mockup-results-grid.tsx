@@ -135,7 +135,7 @@ export const MockupResultsGrid = ({
           className="space-y-1.5 rounded-lg border border-dashed p-3 text-xs"
           aria-label="Removed mock-ups"
         >
-          <p className="font-medium text-ink-700">Removed for single products</p>
+          <p className="text-ink-700 font-medium">Removed for single products</p>
           <ul className="space-y-1">
             {result.removed.map((slot) => (
               <li key={slot.slotKey} className="flex items-center gap-1.5">

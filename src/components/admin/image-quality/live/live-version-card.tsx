@@ -15,17 +15,17 @@ import type { ImageQualityLiveVersion } from "@/types/admin-image-quality";
 
 const Figure = ({ label, value, detail }: { label: string; value: ReactNode; detail?: string }) => (
   <div className="min-w-0">
-    <dt className="text-[11px] text-ink-500">{label}</dt>
-    <dd className="mt-0.5 font-mono text-sm text-ink-800">
+    <dt className="text-ink-500 text-[11px]">{label}</dt>
+    <dd className="text-ink-800 mt-0.5 font-mono text-sm">
       {value}
-      {detail ? <span className="block text-[11px] text-ink-500">{detail}</span> : null}
+      {detail ? <span className="text-ink-500 block text-[11px]">{detail}</span> : null}
     </dd>
   </div>
 );
 
 const Rate = ({ label, children }: { label: string; children: ReactNode }) => (
   <div>
-    <p className="mb-1 text-[11px] text-ink-500">{label}</p>
+    <p className="text-ink-500 mb-1 text-[11px]">{label}</p>
     {children}
   </div>
 );

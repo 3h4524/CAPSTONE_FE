@@ -48,7 +48,7 @@ export const RunStatusPanel = () => {
   if (!run) return null;
   return <div className="space-y-3 rounded-lg border p-3" aria-live="polite"><p className="text-sm font-medium">Run: {run.status.replaceAll("_", " ")}</p><p className="text-muted-foreground text-xs">Snapshot revision {run.workflowRevision} · run r{run.revision}</p>
     {active && <><p className="text-xs">{active.stage ?? active.nodeType} · {active.progress}%</p><Progress value={active.progress} aria-label="Render progress" /></>}
-    {run.errorMessage && <p className="flex items-start gap-2 rounded-md border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-3 py-2.5 text-xs leading-relaxed text-rose-900 dark:text-rose-300" role="alert">
+    {run.errorMessage && <p className="flex items-start gap-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs leading-relaxed text-rose-900 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300" role="alert">
       <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-rose-700 dark:text-rose-300" aria-hidden="true" />
       <span>{run.errorMessage}</span>
     </p>}
@@ -75,9 +75,9 @@ const PublishStepResult = ({ step }: { step: WorkflowNodeRun }) => {
   const attached = typeof step.output.mediaAttached === "number" ? step.output.mediaAttached : 0;
   const state = step.status === "succeeded" ? (url ? "On Etsy" : "Done") : step.status === "running" ? step.stage ?? "Running" : step.status === "failed" ? "Failed" : "Waiting";
   return (
-    <div className="space-y-1.5 rounded-md border border-ink-200 px-3 py-2 text-xs">
+    <div className="border-ink-200 space-y-1.5 rounded-md border px-3 py-2 text-xs">
       <p className="flex items-center justify-between gap-2">
-        <span className="font-medium text-ink-800">{label}</span>
+        <span className="text-ink-800 font-medium">{label}</span>
         <span className={step.status === "succeeded" ? "text-emerald-700 dark:text-emerald-300" : step.status === "failed" ? "text-rose-700 dark:text-rose-300" : "text-ink-500"}>{state}</span>
       </p>
       {step.status === "succeeded" && attached > 0 && <p className="text-ink-500">{attached} Podivo image(s), video or file(s) added to the listing.</p>}

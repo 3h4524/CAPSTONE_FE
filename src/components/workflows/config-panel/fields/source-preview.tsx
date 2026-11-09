@@ -13,7 +13,7 @@ export const SourcePreview = ({ imageUrl, title, tags, description }: SourcePrev
   <div className="flex gap-3 rounded-md border p-2">
     <OptionThumbnail imageUrl={imageUrl} className="size-14" />
     <div className="min-w-0 flex-1 space-y-0.5 py-0.5">
-      <p className="truncate text-sm font-medium text-ink-900">{title}</p>
+      <p className="text-ink-900 truncate text-sm font-medium">{title}</p>
       {tags.length > 0 && <p className="text-muted-foreground truncate text-xs">{tags.join(" · ")}</p>}
       {description && <p className="text-muted-foreground line-clamp-2 text-xs leading-relaxed">{description}</p>}
     </div>

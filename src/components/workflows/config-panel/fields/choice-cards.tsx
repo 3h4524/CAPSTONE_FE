@@ -30,7 +30,7 @@ export const ChoiceCards = ({ name, options, value, onChange, className, ...prop
         >
           <RadioGroupItem id={id} value={option.value} className="mt-0.5" />
           <span className="min-w-0 space-y-0.5">
-            <span className="block text-sm font-medium text-ink-900">{option.label}</span>
+            <span className="text-ink-900 block text-sm font-medium">{option.label}</span>
             {option.description && <span className="text-muted-foreground block text-xs leading-relaxed">{option.description}</span>}
           </span>
         </label>

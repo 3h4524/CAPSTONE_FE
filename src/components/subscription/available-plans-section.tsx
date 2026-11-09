@@ -131,7 +131,7 @@ export const AvailablePlansSection = ({
             onClick={() => scroll("left")}
             aria-label="Previous plan"
             disabled={!canScrollLeft}
-            className="absolute top-1/2 -left-3 z-30 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-ink-200 bg-card text-ink-700 shadow-lg transition-all duration-200 hover:scale-105 hover:bg-ink-50 active:scale-95 disabled:pointer-events-none disabled:opacity-25 sm:-left-5 sm:size-11"
+            className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 absolute top-1/2 -left-3 z-30 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-25 sm:-left-5 sm:size-11"
           >
             <ChevronLeft className="size-5 stroke-[2.5] sm:size-6" />
           </button>
@@ -140,7 +140,7 @@ export const AvailablePlansSection = ({
             onClick={() => scroll("right")}
             aria-label="Next plan"
             disabled={!canScrollRight}
-            className="absolute top-1/2 -right-3 z-30 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-ink-200 bg-card text-ink-700 shadow-lg transition-all duration-200 hover:scale-105 hover:bg-ink-50 active:scale-95 disabled:pointer-events-none disabled:opacity-25 sm:-right-5 sm:size-11"
+            className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 absolute top-1/2 -right-3 z-30 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-25 sm:-right-5 sm:size-11"
           >
             <ChevronRight className="size-5 stroke-[2.5] sm:size-6" />
           </button>

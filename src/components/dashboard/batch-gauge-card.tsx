@@ -52,7 +52,7 @@ export const BatchGaugeCard = ({ batches }: { batches: ActiveBatch[] }) => {
               <span className="text-muted-foreground text-[11px]">complete</span>
             </RingGauge>
           </Link>
-          <dl className="grid grid-cols-2 gap-2 divide-x divide-ink-200 rounded-xl border border-ink-100 bg-ink-50/80 p-3 text-center text-xs">
+          <dl className="divide-ink-200 border-ink-100 bg-ink-50/80 grid grid-cols-2 gap-2 divide-x rounded-xl border p-3 text-center text-xs">
             <div>
               <dt className="text-muted-foreground">Done</dt>
               <dd className="font-semibold tabular-nums">
@@ -76,7 +76,7 @@ export const BatchGaugeCard = ({ batches }: { batches: ActiveBatch[] }) => {
           <div className="mt-auto flex items-center justify-between gap-2 text-xs font-medium">
             <Link
               href={batch.url}
-              className="inline-flex items-center gap-1 text-ink-800 hover:text-black hover:underline"
+              className="text-ink-800 inline-flex items-center gap-1 hover:text-black hover:underline"
             >
               Open batch
               <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -95,7 +95,7 @@ export const BatchGaugeCard = ({ batches }: { batches: ActiveBatch[] }) => {
           </RingGauge>
           <Link
             href="/workflows"
-            className="inline-flex items-center gap-1 text-xs font-medium text-[#c2410c] dark:text-[#eda182] hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-medium text-[#c2410c] hover:underline dark:text-[#eda182]"
           >
             Start a batch
             <ArrowRight className="size-3.5" aria-hidden="true" />

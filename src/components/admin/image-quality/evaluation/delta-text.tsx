@@ -24,9 +24,9 @@ export const DeltaText = ({ result }: DeltaTextProps) => {
     <span
       className={cn(
         "relative inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-semibold whitespace-nowrap",
-        tone === "better" && "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300",
-        tone === "worse" && "bg-rose-50 dark:bg-rose-500/10 text-rose-800 dark:text-rose-300",
-        (tone === "same" || tone === "none") && "font-normal text-ink-500"
+        tone === "better" && "bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300",
+        tone === "worse" && "bg-rose-50 text-rose-800 dark:bg-rose-500/10 dark:text-rose-300",
+        (tone === "same" || tone === "none") && "text-ink-500 font-normal"
       )}
     >
       <Icon className="size-4" aria-hidden="true" />

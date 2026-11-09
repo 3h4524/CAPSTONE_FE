@@ -78,7 +78,7 @@ const RagCorpusHealthPanel = () => {
         <div className="flex flex-col justify-between gap-3 xl:flex-row xl:items-start">
           <div className="min-w-0">
             <CardTitle className="flex flex-wrap items-center gap-2 text-base">
-              <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+              <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
                 <Database className="size-4" />
               </span>
               RAG corpus health
@@ -87,8 +87,8 @@ const RagCorpusHealthPanel = () => {
                   variant="outline"
                   className={
                     health.issues.length === 0
-                      ? "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-[10px] text-emerald-700 dark:text-emerald-300"
-                      : "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-[10px] text-amber-700 dark:text-amber-300"
+                      ? "border-emerald-200 bg-emerald-50 text-[10px] text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                      : "border-amber-200 bg-amber-50 text-[10px] text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
                   }
                 >
                   {health.issues.length === 0
@@ -107,7 +107,7 @@ const RagCorpusHealthPanel = () => {
             <select
               value={contentType}
               onChange={(event) => setContentType(event.target.value)}
-              className="h-8 rounded-md border border-ink-200 bg-card px-2 text-[11px] text-ink-700 outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base max-[400px]:col-span-2"
+              className="border-ink-200 bg-card text-ink-700 h-8 rounded-md border px-2 text-[11px] outline-none focus:border-indigo-400 max-[400px]:col-span-2 max-md:h-11 max-md:w-full max-md:text-base"
               aria-label="Corpus content type"
             >
               {contentTypes.map((value) => (
@@ -116,7 +116,7 @@ const RagCorpusHealthPanel = () => {
                 </option>
               ))}
             </select>
-            <label className="flex h-8 items-center gap-1 rounded-md border border-ink-200 bg-card px-2 text-[11px] text-ink-600 max-md:h-11 max-md:justify-between max-[400px]:col-span-2">
+            <label className="border-ink-200 bg-card text-ink-600 flex h-8 items-center gap-1 rounded-md border px-2 text-[11px] max-[400px]:col-span-2 max-md:h-11 max-md:justify-between">
               Stale after
               <input
                 type="number"
@@ -155,13 +155,13 @@ const RagCorpusHealthPanel = () => {
             {/* What needs doing comes first, as a row of findings; the per-type table follows at full width. */}
             <div>
               <div className="flex items-center justify-between gap-2 max-md:flex-wrap">
-                <p className="text-xs font-bold text-ink-800">Actionable findings</p>
-                <p className="text-[10px] text-ink-400">
+                <p className="text-ink-800 text-xs font-bold">Actionable findings</p>
+                <p className="text-ink-400 text-[10px]">
                   Active embedding models: {health.embeddingModels.length > 0 ? health.embeddingModels.join(", ") : "none"}
                 </p>
               </div>
               {health.issues.length === 0 ? (
-                <p className="mt-2 flex items-center gap-2 rounded-lg border border-emerald-100 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-3 text-xs text-emerald-700 dark:text-emerald-300">
+                <p className="mt-2 flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-3 text-xs text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
                   <CheckCircle2 className="size-4 shrink-0" /> No corpus health issue detected.
                 </p>
               ) : (
@@ -174,12 +174,12 @@ const RagCorpusHealthPanel = () => {
                       <AlertTriangle className="mt-0.5 size-4 shrink-0" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-2">
-                          <span className="text-xs font-semibold text-ink-800 capitalize">
+                          <span className="text-ink-800 text-xs font-semibold capitalize">
                             {issue.code.replaceAll("_", " ")}
                           </span>
                           <span className="text-sm font-bold tabular-nums">{issue.count}</span>
                         </div>
-                        <p className="mt-1 text-[11px] leading-5 text-ink-600">{issue.description}</p>
+                        <p className="text-ink-600 mt-1 text-[11px] leading-5">{issue.description}</p>
                       </div>
                     </div>
                   ))}
@@ -188,28 +188,28 @@ const RagCorpusHealthPanel = () => {
             </div>
 
             <div className="md:hidden">
-              <p className="text-xs font-bold text-ink-800">Breakdown by content type</p>
+              <p className="text-ink-800 text-xs font-bold">Breakdown by content type</p>
               {health.byContentType.length === 0 ? (
-                <p className="mt-2 rounded-xl border border-ink-200 px-4 py-6 text-center text-xs text-ink-500">No RAG documents match this filter.</p>
+                <p className="border-ink-200 text-ink-500 mt-2 rounded-xl border px-4 py-6 text-center text-xs">No RAG documents match this filter.</p>
               ) : (
-                <ul className="mt-2 divide-y divide-ink-100 rounded-xl border border-ink-200">
+                <ul className="divide-ink-100 border-ink-200 mt-2 divide-y rounded-xl border">
                   {health.byContentType.map((metric) => (
                     <li key={metric.contentType} className="space-y-2 p-3 tabular-nums">
                       <p className="flex items-center justify-between gap-2 text-xs">
-                        <span className="font-semibold text-ink-800 capitalize">{metric.contentType}</span>
-                        <span className="text-[11px] text-ink-500">{metric.readyDocuments} ready / {metric.documentCount} docs</span>
+                        <span className="text-ink-800 font-semibold capitalize">{metric.contentType}</span>
+                        <span className="text-ink-500 text-[11px]">{metric.readyDocuments} ready / {metric.documentCount} docs</span>
                       </p>
                       <dl className="grid grid-cols-3 gap-2 text-xs">
                         <div>
-                          <dt className="text-[10px] tracking-wide text-ink-400 uppercase">Chunks</dt>
-                          <dd className="mt-0.5 text-ink-600">{metric.chunkCount}</dd>
+                          <dt className="text-ink-400 text-[10px] tracking-wide uppercase">Chunks</dt>
+                          <dd className="text-ink-600 mt-0.5">{metric.chunkCount}</dd>
                         </div>
                         <div>
-                          <dt className="text-[10px] tracking-wide text-ink-400 uppercase">Embeddings</dt>
-                          <dd className="mt-0.5 text-ink-600">{metric.currentModelEmbeddings}/{metric.chunkCount}</dd>
+                          <dt className="text-ink-400 text-[10px] tracking-wide uppercase">Embeddings</dt>
+                          <dd className="text-ink-600 mt-0.5">{metric.currentModelEmbeddings}/{metric.chunkCount}</dd>
                         </div>
                         <div>
-                          <dt className="text-[10px] tracking-wide text-ink-400 uppercase">Issues</dt>
+                          <dt className="text-ink-400 text-[10px] tracking-wide uppercase">Issues</dt>
                           <dd className="mt-0.5 font-semibold">
                             <span className={metric.missingEmbeddingChunkCount > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{metric.missingEmbeddingChunkCount} miss</span>
                             <span className="text-ink-400"> / </span>
@@ -223,9 +223,9 @@ const RagCorpusHealthPanel = () => {
               )}
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-ink-200 max-md:hidden">
+            <div className="border-ink-200 overflow-x-auto rounded-xl border max-md:hidden">
               <table className="w-full min-w-[720px] text-left text-xs">
-                <thead className="bg-ink-50 text-[10px] tracking-wide text-ink-400 uppercase">
+                <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-wide uppercase">
                   <tr>
                     <th className="px-4 py-3">Content type</th>
                     <th className="px-3 py-3 text-right">Documents</th>
@@ -238,12 +238,12 @@ const RagCorpusHealthPanel = () => {
                 </thead>
                 <tbody className="tabular-nums">
                   {health.byContentType.map((metric) => (
-                    <tr key={metric.contentType} className="border-t border-ink-100 hover:bg-ink-50/60">
-                      <td className="px-4 py-3 font-semibold text-ink-800 capitalize">{metric.contentType}</td>
-                      <td className="px-3 py-3 text-right text-ink-600">{metric.documentCount}</td>
-                      <td className="px-3 py-3 text-right text-ink-600">{metric.readyDocuments}</td>
-                      <td className="px-3 py-3 text-right text-ink-600">{metric.chunkCount}</td>
-                      <td className="px-3 py-3 text-right text-ink-600">{metric.currentModelEmbeddings}/{metric.chunkCount}</td>
+                    <tr key={metric.contentType} className="border-ink-100 hover:bg-ink-50/60 border-t">
+                      <td className="text-ink-800 px-4 py-3 font-semibold capitalize">{metric.contentType}</td>
+                      <td className="text-ink-600 px-3 py-3 text-right">{metric.documentCount}</td>
+                      <td className="text-ink-600 px-3 py-3 text-right">{metric.readyDocuments}</td>
+                      <td className="text-ink-600 px-3 py-3 text-right">{metric.chunkCount}</td>
+                      <td className="text-ink-600 px-3 py-3 text-right">{metric.currentModelEmbeddings}/{metric.chunkCount}</td>
                       <td className={`px-3 py-3 text-right font-semibold ${metric.missingEmbeddingChunkCount > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
                         {metric.missingEmbeddingChunkCount}
                       </td>
@@ -254,7 +254,7 @@ const RagCorpusHealthPanel = () => {
                   ))}
                   {health.byContentType.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="px-4 py-6 text-center text-xs text-ink-500">
+                      <td colSpan={7} className="text-ink-500 px-4 py-6 text-center text-xs">
                         No RAG documents match this filter.
                       </td>
                     </tr>
@@ -283,17 +283,17 @@ const HealthMetric = ({
   <div
     className={`rounded-xl border p-3 ${
       tone === "error"
-        ? "border-rose-100 dark:border-rose-500/30 bg-rose-50/60 dark:bg-rose-500/10"
+        ? "border-rose-100 bg-rose-50/60 dark:border-rose-500/30 dark:bg-rose-500/10"
         : tone === "warning"
-          ? "border-amber-100 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10"
+          ? "border-amber-100 bg-amber-50/60 dark:border-amber-500/30 dark:bg-amber-500/10"
           : "border-ink-200 bg-ink-50/60"
     }`}
   >
-    <p className="text-[10px] font-bold tracking-wide text-ink-400 uppercase">{label}</p>
+    <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">{label}</p>
     <p className={`mt-1 text-xl font-bold tabular-nums ${tone === "error" ? "text-rose-600 dark:text-rose-400" : tone === "warning" ? "text-amber-600 dark:text-amber-400" : tone === "good" ? "text-emerald-600 dark:text-emerald-400" : "text-ink-900"}`}>
       {value}
     </p>
-    <p className="mt-1 text-[10px] text-ink-500">{detail}</p>
+    <p className="text-ink-500 mt-1 text-[10px]">{detail}</p>
   </div>
 );
 

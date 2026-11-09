@@ -50,10 +50,10 @@ function money(value: number) {
 
 function TooltipCard({ value, label, rows }: { value: string; label: string; rows?: string[] }) {
   return (
-    <div className="rounded-lg border border-ink-200 bg-card px-3 py-2 text-xs shadow-md">
-      <p className="text-sm font-semibold text-ink-900 tabular-nums">{value}</p>
+    <div className="border-ink-200 bg-card rounded-lg border px-3 py-2 text-xs shadow-md">
+      <p className="text-ink-900 text-sm font-semibold tabular-nums">{value}</p>
       <p className="text-ink-500">{label}</p>
-      {rows?.map((row) => <p key={row} className="mt-0.5 text-ink-500">{row}</p>)}
+      {rows?.map((row) => <p key={row} className="text-ink-500 mt-0.5">{row}</p>)}
     </div>
   );
 }
@@ -151,18 +151,18 @@ export function ShareDonut({ tiers }: { tiers: MarketShareTiers }) {
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-lg font-bold text-ink-900">{tiers.topFivePercent}%</span>
-          <span className="text-[9px] font-bold tracking-wide text-ink-500 uppercase">{t("marketRadar.topFiveShort", { defaultValue: "Top 5" })}</span>
+          <span className="text-ink-900 text-lg font-bold">{tiers.topFivePercent}%</span>
+          <span className="text-ink-500 text-[9px] font-bold tracking-wide uppercase">{t("marketRadar.topFiveShort", { defaultValue: "Top 5" })}</span>
         </div>
       </div>
       <ul className="min-w-0 flex-1 space-y-1.5">
         {data.map((slice) => (
           <li key={slice.name} className="flex items-center justify-between gap-2 text-xs">
-            <span className="flex min-w-0 items-center gap-1.5 text-ink-600">
+            <span className="text-ink-600 flex min-w-0 items-center gap-1.5">
               <span className="size-2.5 shrink-0 rounded-sm" style={{ background: slice.color }} />
               <span className="truncate">{slice.name}</span>
             </span>
-            <span className="font-semibold text-ink-900 tabular-nums">{slice.value}%</span>
+            <span className="text-ink-900 font-semibold tabular-nums">{slice.value}%</span>
           </li>
         ))}
       </ul>
@@ -279,18 +279,18 @@ export function PriceInterestScatter({ points, p25, p75, currency }: { points: M
             height={28}
             iconType="circle"
             iconSize={8}
-            formatter={(value: string) => <span className="text-xs text-ink-600">{value}</span>}
+            formatter={(value: string) => <span className="text-ink-600 text-xs">{value}</span>}
           />
           <Scatter name={oldLabel} data={established} fill={chart.series1} stroke={chart.surface} strokeWidth={2} isAnimationActive={false} shape="circle" cursor="pointer" onClick={openListing} />
           <Scatter name={newLabel} data={fresh} fill={chart.series2} stroke={chart.surface} strokeWidth={2} isAnimationActive={false} shape="circle" cursor="pointer" onClick={openListing} />
         </ScatterChart>
       </ResponsiveContainer>
     </div>
-    <p className="mt-1 text-[11px] text-ink-500">
+    <p className="text-ink-500 mt-1 text-[11px]">
       {t("marketRadar.listPriceNote", { defaultValue: "Prices are the list prices Etsy reports, before sales and coupons. Shops running a sale charge less at checkout, and buyers abroad may see a converted price with VAT added." })}
     </p>
     {hiddenCount > 0 && (
-      <p className="mt-1 text-[11px] text-ink-400">
+      <p className="text-ink-400 mt-1 text-[11px]">
         {t("marketRadar.scatterHidden", { defaultValue: "{{count}} listing(s) priced above {{price}} are not shown; they are in the table.", count: hiddenCount, price: compact(priceCap) })}
       </p>
     )}
@@ -326,10 +326,10 @@ function median(values: number[]) {
 
 function BandStat({ label, value, hint, emphasis }: { label: string; value: string; hint: string; emphasis?: boolean }) {
   return (
-    <div className={`rounded-lg border px-3 py-2 ${emphasis ? "border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10" : "border-ink-100 bg-ink-50"}`}>
-      <p className="truncate text-[11px] text-ink-500" title={label}>{label}</p>
-      <p className="text-base font-semibold text-ink-900 tabular-nums">{value}</p>
-      <p className="text-[11px] text-ink-400">{hint}</p>
+    <div className={`rounded-lg border px-3 py-2 ${emphasis ? "border-blue-200 bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10" : "border-ink-100 bg-ink-50"}`}>
+      <p className="text-ink-500 truncate text-[11px]" title={label}>{label}</p>
+      <p className="text-ink-900 text-base font-semibold tabular-nums">{value}</p>
+      <p className="text-ink-400 text-[11px]">{hint}</p>
     </div>
   );
 }

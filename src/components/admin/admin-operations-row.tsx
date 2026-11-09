@@ -77,15 +77,15 @@ const OperationsCard = ({
   href: string;
   children: React.ReactNode;
 }) => (
-  <section className="flex flex-col rounded-xl border border-ink-200 bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] max-md:p-4">
+  <section className="border-ink-200 bg-card flex flex-col rounded-xl border p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] max-md:p-4">
     <div className="flex items-start justify-between gap-3">
       <div>
-        <h3 className="text-sm font-semibold text-ink-900">{title}</h3>
-        <p className="mt-0.5 text-xs text-ink-400">{subtitle}</p>
+        <h3 className="text-ink-900 text-sm font-semibold">{title}</h3>
+        <p className="text-ink-400 mt-0.5 text-xs">{subtitle}</p>
       </div>
       <Link
         href={href}
-        className="flex shrink-0 items-center gap-0.5 text-xs font-medium text-ink-500 hover:text-ink-900 max-md:-my-1.5 max-md:min-h-8"
+        className="text-ink-500 hover:text-ink-900 flex shrink-0 items-center gap-0.5 text-xs font-medium max-md:-my-1.5 max-md:min-h-8"
       >
         Details <ArrowUpRight className="size-3" />
       </Link>
@@ -96,9 +96,9 @@ const OperationsCard = ({
 
 const Placeholder = ({ isLoading }: { isLoading: boolean }) =>
   isLoading ? (
-    <div className="h-48 animate-pulse rounded-lg bg-ink-100" />
+    <div className="bg-ink-100 h-48 animate-pulse rounded-lg" />
   ) : (
-    <p className="flex h-48 items-center justify-center text-xs text-ink-400">
+    <p className="text-ink-400 flex h-48 items-center justify-center text-xs">
       Could not load this period.
     </p>
   );
@@ -113,17 +113,17 @@ const Headline = ({
   aside?: React.ReactNode;
 }) => (
   <div className="flex items-end justify-between gap-3">
-    <p className="font-display text-2xl font-semibold tracking-tight text-ink-900 tabular-nums">
+    <p className="font-display text-ink-900 text-2xl font-semibold tracking-tight tabular-nums">
       {value}
-      <span className="ml-1 text-[11px] font-medium text-ink-400">{unit}</span>
+      <span className="text-ink-400 ml-1 text-[11px] font-medium">{unit}</span>
     </p>
-    {aside && <div className="text-right text-xs text-ink-500">{aside}</div>}
+    {aside && <div className="text-ink-500 text-right text-xs">{aside}</div>}
   </div>
 );
 
 const Insight = ({ tone, children }: { tone: DashboardTone; children: React.ReactNode }) => (
   <div className="mt-auto pt-4">
-    <p className="flex gap-2 border-t border-ink-100 pt-3 text-xs leading-relaxed text-ink-600">
+    <p className="border-ink-100 text-ink-600 flex gap-2 border-t pt-3 text-xs leading-relaxed">
       <span className={`mt-1.5 size-1.5 shrink-0 rounded-full ${DOT[tone]}`} aria-hidden="true" />
       <span>{children}</span>
     </p>
@@ -150,21 +150,21 @@ const Throughput = ({ operations }: { operations: AdminOperationsDto }) => {
         unit="products"
         aside={
           <>
-            <span className="font-semibold text-ink-800 tabular-nums">
+            <span className="text-ink-800 font-semibold tabular-nums">
               {perDay.toLocaleString(undefined, { maximumFractionDigits: 1 })}
             </span>{" "}
             a day
           </>
         }
       />
-      <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-500">
+      <dl className="text-ink-500 mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
         <div className="flex gap-1">
           <dt>Batch jobs</dt>
-          <dd className="font-semibold text-ink-800 tabular-nums">{jobs.toLocaleString()}</dd>
+          <dd className="text-ink-800 font-semibold tabular-nums">{jobs.toLocaleString()}</dd>
         </div>
         <div className="flex items-center gap-1">
           <dt>Active sellers</dt>
-          <dd className="font-semibold text-ink-800 tabular-nums">
+          <dd className="text-ink-800 font-semibold tabular-nums">
             {operations.activeSellers.toLocaleString()}
           </dd>
           {sellersChange !== null && (
@@ -190,7 +190,7 @@ const Throughput = ({ operations }: { operations: AdminOperationsDto }) => {
           />
         ))}
       </div>
-      <div className="mt-1 flex justify-between text-[10px] text-ink-400">
+      <div className="text-ink-400 mt-1 flex justify-between text-[10px]">
         <span>{bucketLabel(buckets[0].start, operations.bucket)}</span>
         <span>{bucketLabel(buckets[buckets.length - 1].start, operations.bucket)}</span>
       </div>
@@ -224,17 +224,17 @@ const Funnel = ({ operations }: { operations: AdminOperationsDto }) => {
         {steps.map((step, index) => (
           <li key={step.key}>
             <div className="flex items-baseline justify-between gap-2 text-xs">
-              <span className="font-medium text-ink-700">{step.label}</span>
-              <span className="text-[10px] text-ink-400">
-                <span className="text-xs font-semibold text-ink-800 tabular-nums">
+              <span className="text-ink-700 font-medium">{step.label}</span>
+              <span className="text-ink-400 text-[10px]">
+                <span className="text-ink-800 text-xs font-semibold tabular-nums">
                   {step.count.toLocaleString()}
                 </span>
                 {index > 0 && ` · ${step.fromPrevious.toFixed(1)}% of previous`}
               </span>
             </div>
-            <div className="mt-1 h-2 overflow-hidden rounded-full bg-ink-100">
+            <div className="bg-ink-100 mt-1 h-2 overflow-hidden rounded-full">
               <div
-                className="h-full rounded-full bg-ink-600 transition-all duration-500"
+                className="bg-ink-600 h-full rounded-full transition-all duration-500"
                 style={{ width: `${step.ofCreated}%` }}
               />
             </div>
@@ -283,7 +283,7 @@ const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
         aside={
           summary.costPerProduct !== null && (
             <>
-              <span className="font-semibold text-ink-800 tabular-nums">
+              <span className="text-ink-800 font-semibold tabular-nums">
                 {formatUsd(summary.costPerProduct)}
               </span>{" "}
               per product
@@ -291,8 +291,8 @@ const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
           )
         }
       />
-      <p className="mt-2 flex items-center gap-1 text-xs text-ink-500">
-        <span className="font-semibold text-ink-800 tabular-nums">
+      <p className="text-ink-500 mt-2 flex items-center gap-1 text-xs">
+        <span className="text-ink-800 font-semibold tabular-nums">
           {summary.calls.toLocaleString()}
         </span>{" "}
         calls ·
@@ -301,18 +301,18 @@ const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
         </span>
       </p>
       {operations.aiUsage.length === 0 ? (
-        <p className="mt-4 text-xs text-ink-400">No AI calls in this period.</p>
+        <p className="text-ink-400 mt-4 text-xs">No AI calls in this period.</p>
       ) : isPhone ? (
-        <ul className="mt-3 divide-y divide-ink-100 text-xs">
+        <ul className="divide-ink-100 mt-3 divide-y text-xs">
           {operations.aiUsage.map((feature) => {
             const rate = feature.calls > 0 ? (feature.failed / feature.calls) * 100 : 0;
             return (
               <li key={feature.feature} className="py-2">
                 <p className="flex justify-between gap-3">
-                  <span className="min-w-0 truncate font-medium text-ink-700">{aiFeatureLabel(feature.feature)}</span>
-                  <span className="shrink-0 font-semibold text-ink-800 tabular-nums">{formatUsd(feature.costUsd)}</span>
+                  <span className="text-ink-700 min-w-0 truncate font-medium">{aiFeatureLabel(feature.feature)}</span>
+                  <span className="text-ink-800 shrink-0 font-semibold tabular-nums">{formatUsd(feature.costUsd)}</span>
                 </p>
-                <p className="mt-0.5 text-ink-500 tabular-nums">
+                <p className="text-ink-500 mt-0.5 tabular-nums">
                   {feature.calls.toLocaleString()} calls ·{" "}
                   <span className={`font-semibold ${TEXT[failureTone(rate)]}`}>{rate.toFixed(1)}% failed</span>
                 </p>
@@ -322,7 +322,7 @@ const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
         </ul>
       ) : (
         <table className="mt-3 w-full text-left text-xs">
-          <thead className="text-[11px] text-ink-400">
+          <thead className="text-ink-400 text-[11px]">
             <tr>
               <th className="py-1 font-medium">Feature</th>
               <th className="py-1 text-right font-medium">Calls</th>
@@ -330,13 +330,13 @@ const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
               <th className="py-1 text-right font-medium">Cost</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink-100">
+          <tbody className="divide-ink-100 divide-y">
             {operations.aiUsage.map((feature) => {
               const rate = feature.calls > 0 ? (feature.failed / feature.calls) * 100 : 0;
               return (
                 <tr key={feature.feature}>
-                  <td className="py-1.5 text-ink-700">{aiFeatureLabel(feature.feature)}</td>
-                  <td className="py-1.5 text-right text-ink-600 tabular-nums">
+                  <td className="text-ink-700 py-1.5">{aiFeatureLabel(feature.feature)}</td>
+                  <td className="text-ink-600 py-1.5 text-right tabular-nums">
                     {feature.calls.toLocaleString()}
                   </td>
                   <td className="py-1.5 text-right">
@@ -344,7 +344,7 @@ const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
                       {rate.toFixed(1)}%
                     </span>
                   </td>
-                  <td className="py-1.5 text-right font-medium text-ink-800 tabular-nums">
+                  <td className="text-ink-800 py-1.5 text-right font-medium tabular-nums">
                     {formatUsd(feature.costUsd)}
                   </td>
                 </tr>

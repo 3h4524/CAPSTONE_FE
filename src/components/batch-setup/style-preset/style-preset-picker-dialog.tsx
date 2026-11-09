@@ -29,9 +29,9 @@ export const StylePresetPickerDialog = ({ open, initialId, onOpenChange, onApply
           <SectionLoading label="Loading art styles" />
         ) : isPresetsError || !presets ? (
           <div className="flex flex-col items-center justify-center gap-4 p-8 text-center" role="alert">
-            <ImageIcon className="size-8 text-ink-400" aria-hidden="true" />
+            <ImageIcon className="text-ink-400 size-8" aria-hidden="true" />
             <div>
-              <p className="font-semibold text-ink-900">Art styles unavailable</p>
+              <p className="text-ink-900 font-semibold">Art styles unavailable</p>
               <p className="text-muted-foreground mt-1 text-sm">We could not load art styles. Check your connection and try again.</p>
             </div>
             <div className="flex gap-2">

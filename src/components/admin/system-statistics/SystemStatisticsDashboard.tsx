@@ -76,7 +76,7 @@ export function SystemStatisticsDashboard() {
         />
 
         {isError ? (
-          <div className="my-8 flex flex-col items-center justify-center rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-card p-8 text-center shadow-2xs">
+          <div className="bg-card my-8 flex flex-col items-center justify-center rounded-2xl border border-rose-200 p-8 text-center shadow-2xs dark:border-rose-500/30">
             <AlertCircle className="mb-3 h-10 w-10 text-rose-500" />
             <h3 className="text-base font-semibold text-rose-900 dark:text-rose-300">
               Failed to load system statistics
@@ -87,7 +87,7 @@ export function SystemStatisticsDashboard() {
             <Button
               onClick={() => refetch()}
               variant="outline"
-              className="mt-4 cursor-pointer gap-2 border-rose-200 dark:border-rose-500/30 bg-card hover:bg-rose-50 dark:hover:bg-rose-500/10"
+              className="bg-card mt-4 cursor-pointer gap-2 border-rose-200 hover:bg-rose-50 dark:border-rose-500/30 dark:hover:bg-rose-500/10"
             >
               <RefreshCw className="h-4 w-4 text-rose-500" />
               <span>Retry</span>

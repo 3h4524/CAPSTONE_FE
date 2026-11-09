@@ -76,7 +76,7 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
       {isPending && value.length > 0 ? (
         <SectionLoading label="Loading mock-up templates" className="justify-start rounded-lg border px-3 py-3 [&_svg]:size-4 [&>span]:text-xs" />
       ) : selectedTemplates.length > 0 ? (
-        <ul className="divide-y overflow-hidden rounded-lg border bg-card" aria-label="Selected mock-up templates">
+        <ul className="bg-card divide-y overflow-hidden rounded-lg border" aria-label="Selected mock-up templates">
           {selectedTemplates.map((template) => {
             const colors = template.allowRecolor ? (templateColors[template.id] ?? defaultTemplateColors(template)) : [];
             // Chosen for a product type the next run has nothing to make for: kept, but not used.
@@ -92,7 +92,7 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
                   className={cn("bg-muted size-10 shrink-0 rounded-md object-cover", unused && "opacity-60")}
                 />
                 <div className="min-w-0 flex-1 space-y-1">
-                  <p className="truncate text-sm font-medium text-ink-900">{template.name}</p>
+                  <p className="text-ink-900 truncate text-sm font-medium">{template.name}</p>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-muted-foreground text-xs">{productTypeLabel(template.productType)}</span>
                     {colors.length > 0 && (

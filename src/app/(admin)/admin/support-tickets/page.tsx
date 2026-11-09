@@ -39,8 +39,8 @@ function AdminSupportTicketsContent() {
 
   return (
     <AdminShell pageTitle="support-tickets" fillsPhoneScreen hidesPhoneTabs={selectedTicketId !== null}>
-      <div className="flex h-[calc(100dvh-150px)] w-full overflow-hidden rounded-lg border border-ink-200 bg-card shadow-sm max-md:h-auto max-md:min-h-0 max-md:flex-1 max-md:rounded-none max-md:border-0 max-md:shadow-none">
-        <div className="grid h-full min-h-0 w-full grid-cols-12 divide-x divide-ink-200">
+      <div className="border-ink-200 bg-card flex h-[calc(100dvh-150px)] w-full overflow-hidden rounded-lg border shadow-sm max-md:h-auto max-md:min-h-0 max-md:flex-1 max-md:rounded-none max-md:border-0 max-md:shadow-none">
+        <div className="divide-ink-200 grid h-full min-h-0 w-full grid-cols-12 divide-x">
           {/* Left Panel: Ticket List. Below md the two panels swap: list first, then the selected ticket. */}
           <div
             className={cn(

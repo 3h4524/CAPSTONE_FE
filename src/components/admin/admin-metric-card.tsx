@@ -30,26 +30,26 @@ export const AdminMetricCard = ({
 }: AdminMetricCardProps) => {
   return (
     <article
-      className={`relative flex min-w-0 flex-col rounded-xl border border-ink-200/80 bg-card px-3.5 py-2.5 shadow-2xs ${className}`}
+      className={`border-ink-200/80 bg-card relative flex min-w-0 flex-col rounded-xl border px-3.5 py-2.5 shadow-2xs ${className}`}
     >
       <div className="flex h-full flex-col justify-between">
         <div>
           <div className="flex items-center justify-between gap-1">
-            <div className="truncate text-[11px] leading-none font-medium text-ink-500 max-md:leading-tight">{label}</div>
+            <div className="text-ink-500 truncate text-[11px] leading-none font-medium max-md:leading-tight">{label}</div>
             {Icon && (
               <Icon
-                className="size-3.5 shrink-0 text-ink-400"
+                className="text-ink-400 size-3.5 shrink-0"
                 aria-hidden="true"
               />
             )}
           </div>
           <div
-            className="mt-1 truncate text-lg leading-tight font-bold tracking-tight text-ink-900 tabular-nums max-md:text-base md:text-[19px]"
+            className="text-ink-900 mt-1 truncate text-lg leading-tight font-bold tracking-tight tabular-nums max-md:text-base md:text-[19px]"
             title={exactValue}
           >
             {value}
           </div>
-          <div className="mt-0.5 truncate text-[10.5px] leading-tight text-ink-400 max-md:text-xs max-md:whitespace-normal max-md:empty:hidden">{context}</div>
+          <div className="text-ink-400 mt-0.5 truncate text-[10.5px] leading-tight max-md:text-xs max-md:whitespace-normal max-md:empty:hidden">{context}</div>
         </div>
 
         <div className="mt-1 flex h-3 items-end pt-0.5 max-md:empty:hidden">
@@ -58,9 +58,9 @@ export const AdminMetricCard = ({
               <Sparkline points={sparkline} />
             </div>
           ) : progress !== undefined ? (
-            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-ink-100">
+            <div className="bg-ink-100 h-1.5 w-20 overflow-hidden rounded-full">
               <div
-                className="h-full rounded-full bg-ink-600 transition-all duration-500"
+                className="bg-ink-600 h-full rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
               />
             </div>

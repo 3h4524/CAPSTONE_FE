@@ -27,8 +27,8 @@ export const MockupTemplateDetail = ({ template, colors = [], backgrounds, desig
 
   if (!template) {
     return (
-      <div className="flex h-full flex-col justify-center gap-2 rounded-xl bg-ink-50 p-5 text-sm">
-        <p className="font-semibold text-ink-900">No template to preview</p>
+      <div className="bg-ink-50 flex h-full flex-col justify-center gap-2 rounded-xl p-5 text-sm">
+        <p className="text-ink-900 font-semibold">No template to preview</p>
         <p className="text-muted-foreground">Point at a template on the left to see how it looks.</p>
       </div>
     );
@@ -41,10 +41,10 @@ export const MockupTemplateDetail = ({ template, colors = [], backgrounds, desig
 
   return (
     <ScrollArea className="h-full [&>[data-radix-scroll-area-viewport]>div]:block!">
-      <div className="flex flex-col gap-4 rounded-xl bg-ink-50 p-5" aria-live="polite">
+      <div className="bg-ink-50 flex flex-col gap-4 rounded-xl p-5" aria-live="polite">
         <MockupTemplatePreview template={template} color={previewColor} background={background} designUrl={designUrl} />
         <div>
-          <p className="font-semibold text-ink-900">{template.name}</p>
+          <p className="text-ink-900 font-semibold">{template.name}</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <Badge variant="secondary">{template.productType}</Badge>
             <Badge variant="outline">{template.outputWidthPx} x {template.outputHeightPx}</Badge>
@@ -53,7 +53,7 @@ export const MockupTemplateDetail = ({ template, colors = [], backgrounds, desig
         </div>
         {template.allowRecolor && colors.length > 1 && (
           <div>
-            <p className="text-xs font-semibold tracking-wide text-ink-500 uppercase">Preview color</p>
+            <p className="text-ink-500 text-xs font-semibold tracking-wide uppercase">Preview color</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {colors.map((hex) => (
                 <button

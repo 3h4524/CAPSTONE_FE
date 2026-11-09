@@ -98,7 +98,7 @@ export const PrintQuadEditor = ({
           src={imageUrl}
           alt="Model photo"
           draggable={false}
-          className="block max-h-105 max-w-full rounded-lg ring-1 ring-ink-200 select-none ring-inset"
+          className="ring-ink-200 block max-h-105 max-w-full rounded-lg ring-1 select-none ring-inset"
         />
         {garmentMaskUrl && (
           <div

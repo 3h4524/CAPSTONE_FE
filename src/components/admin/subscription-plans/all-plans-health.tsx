@@ -38,25 +38,25 @@ export function AllPlansTile({
       aria-selected={selected}
       onClick={onSelect}
       className={cn(
-        "relative overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        "bg-card relative overflow-hidden rounded-2xl border p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
         selected ? "border-[#2a9d8f] bg-[#2a9d8f]/5 shadow-md ring-2 ring-[#2a9d8f]/25" : "border-ink-200 shadow-xs"
       )}
     >
-      <p className="text-[11px] font-semibold tracking-wide text-ink-500 uppercase">All plans</p>
+      <p className="text-ink-500 text-[11px] font-semibold tracking-wide uppercase">All plans</p>
       <p className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1 tabular-nums">
         {paying !== undefined ? (
           <>
-            <span className="text-3xl leading-none font-bold tracking-tight text-ink-900">{paying.toLocaleString()}</span>{" "}
-            <span className="text-sm text-ink-500">paying</span>
+            <span className="text-ink-900 text-3xl leading-none font-bold tracking-tight">{paying.toLocaleString()}</span>{" "}
+            <span className="text-ink-500 text-sm">paying</span>
             {onTrial ? (
-              <span className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-semibold text-ink-700">
+              <span className="bg-ink-100 text-ink-700 rounded-full px-2 py-0.5 text-[11px] font-semibold">
                 <span className="sr-only"> · </span>
                 {onTrial.toLocaleString()} on trial
               </span>
             ) : null}
           </>
         ) : (
-          <span className="text-3xl leading-none font-bold tracking-tight text-ink-900">
+          <span className="text-ink-900 text-3xl leading-none font-bold tracking-tight">
             {planCount} plan{planCount === 1 ? "" : "s"}
           </span>
         )}
@@ -65,7 +65,7 @@ export function AllPlansTile({
         <p
           className={cn(
             "mt-3 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums",
-            net >= 0 ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300"
+            net >= 0 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
           )}
         >
           <Trend className="size-3.5" />
@@ -98,13 +98,13 @@ export function AllPlansDetail({
   onPick: (plan: string) => void;
 }) {
   return (
-    <Card id="ai-review-all" role="tabpanel" className="gap-0 overflow-hidden rounded-2xl border border-ink-200 bg-card p-0 shadow-none">
+    <Card id="ai-review-all" role="tabpanel" className="border-ink-200 bg-card gap-0 overflow-hidden rounded-2xl border p-0 shadow-none">
       {overall && (
-        <div className="flex gap-4 border-b border-ink-100 bg-ink-50 px-6 py-5">
+        <div className="border-ink-100 bg-ink-50 flex gap-4 border-b px-6 py-5">
           <span aria-hidden="true" className="w-1 shrink-0 rounded-full bg-[#2a9d8f]" />
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold tracking-wide text-ink-500 uppercase">Across all plans</p>
-            <p className="mt-1 text-[15px] leading-relaxed text-ink-700">
+            <p className="text-ink-500 text-[11px] font-semibold tracking-wide uppercase">Across all plans</p>
+            <p className="text-ink-700 mt-1 text-[15px] leading-relaxed">
               <Figures text={overall} />
             </p>
           </div>
@@ -118,16 +118,16 @@ export function AllPlansDetail({
               bridge={bridge}
               periodStart={snapshot.periodStart}
               periodEnd={snapshot.periodEnd}
-              className="rounded-xl border border-ink-200 p-4"
+              className="border-ink-200 rounded-xl border p-4"
             />
           </Section>
         )}
 
         <Section icon={Table2} title="Plans side by side">
-          <div className="overflow-hidden rounded-xl border border-ink-200 max-md:overflow-x-auto">
+          <div className="border-ink-200 overflow-hidden rounded-xl border max-md:overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="bg-ink-50/70 text-left text-[11px] tracking-wide text-ink-500 uppercase">
+                <tr className="bg-ink-50/70 text-ink-500 text-left text-[11px] tracking-wide uppercase">
                   <th scope="col" className="px-4 py-2 font-semibold">Plan</th>
                   <th scope="col" className="px-2 py-2 font-semibold">Health</th>
                   <th scope="col" className="px-2 py-2 font-semibold">Outlook</th>
@@ -135,7 +135,7 @@ export function AllPlansDetail({
                   <th scope="col" className="w-8" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-ink-100">
+              <tbody className="divide-ink-100 divide-y">
                 {plans.map((plan) => {
                   const Outlook = OUTLOOK_ICON[plan.outlook.direction];
                   const previous = previousScores.find((item) => item.plan === plan.plan);
@@ -143,9 +143,9 @@ export function AllPlansDetail({
                     <tr
                       key={plan.plan}
                       onClick={() => onPick(plan.plan)}
-                      className="cursor-pointer hover:bg-ink-50"
+                      className="hover:bg-ink-50 cursor-pointer"
                     >
-                      <th scope="row" className="px-4 py-3 text-left font-bold text-ink-900">
+                      <th scope="row" className="text-ink-900 px-4 py-3 text-left font-bold">
                         <button type="button" onClick={() => onPick(plan.plan)} className="hover:underline">
                           {planName(snapshot, plan.plan)}
                         </button>
@@ -160,10 +160,10 @@ export function AllPlansDetail({
                           <Outlook className="size-3.5" /> {OUTLOOK_LABEL[plan.outlook.direction]}
                         </span>
                       </td>
-                      <td className="px-2 py-3 text-right text-xs text-ink-400 tabular-nums">
+                      <td className="text-ink-400 px-2 py-3 text-right text-xs tabular-nums">
                         {previous ? `${STATUS_LABEL[previous.status]} · ${previous.score ?? "—"}` : "First review"}
                       </td>
-                      <td className="pr-3 text-ink-300">
+                      <td className="text-ink-300 pr-3">
                         <ChevronRight className="size-4" />
                       </td>
                     </tr>

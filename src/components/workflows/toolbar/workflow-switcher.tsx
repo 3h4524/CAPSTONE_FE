@@ -37,7 +37,7 @@ export const WorkflowSwitcher = ({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button type="button" variant="ghost" size="sm" className="max-w-72 min-w-0 px-2" disabled={disabled}>
-          <span className="truncate text-base font-semibold text-ink-900">{name || "Workflow"}</span>
+          <span className="text-ink-900 truncate text-base font-semibold">{name || "Workflow"}</span>
           <ChevronsUpDown className="text-muted-foreground" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>

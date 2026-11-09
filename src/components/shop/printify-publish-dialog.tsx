@@ -59,11 +59,11 @@ export function PrintifyPublishDialog({ productId, open, onOpenChange }: { produ
         </DialogHeader>
         <Steps current={!product ? 1 : product.state === "created" ? 2 : 3} />
         {draftQuery.isPending ? (
-          <p className="flex items-center gap-2 py-10 text-sm text-ink-500"><Loader2 className="size-4 animate-spin" />Preparing…</p>
+          <p className="text-ink-500 flex items-center gap-2 py-10 text-sm"><Loader2 className="size-4 animate-spin" />Preparing…</p>
         ) : draftQuery.isError || !draft ? (
           <p className="py-6 text-sm text-rose-700 dark:text-rose-300">{getErrorMessage(draftQuery.error) || "The product could not be loaded."}</p>
         ) : draft.connection.status !== "connected" ? (
-          <div className="space-y-3 py-4 text-sm text-ink-700">
+          <div className="text-ink-700 space-y-3 py-4 text-sm">
             <p>{notReady[draft.connection.status as keyof typeof notReady] ?? notReady.not_connected}</p>
             {draft.connection.status !== "unavailable" && draft.connection.status !== "no_store" && (
               <Button asChild size="sm"><Link href="/api-keys"><KeyRound className="size-4" />Open API Keys</Link></Button>
@@ -86,12 +86,12 @@ function Steps({ current }: { current: number }) {
   return (
     <ol className="flex items-center gap-2 text-xs">
       {steps.map((label, index) => (
-        <li key={label} className={`flex items-center gap-1.5 ${index + 1 === current ? "font-semibold text-ink-900" : index + 1 < current ? "text-emerald-700 dark:text-emerald-300" : "text-ink-400"}`}>
+        <li key={label} className={`flex items-center gap-1.5 ${index + 1 === current ? "text-ink-900 font-semibold" : index + 1 < current ? "text-emerald-700 dark:text-emerald-300" : "text-ink-400"}`}>
           <span className={`flex size-5 items-center justify-center rounded-full text-[11px] ${index + 1 < current ? "bg-emerald-600 text-white" : index + 1 === current ? "bg-ink-900 text-card" : "bg-ink-200 text-ink-500"}`}>
             {index + 1 < current ? <Check className="size-3" /> : index + 1}
           </span>
           {label}
-          {index < steps.length - 1 && <span className="mx-1 h-px w-6 bg-ink-200" />}
+          {index < steps.length - 1 && <span className="bg-ink-200 mx-1 h-px w-6" />}
         </li>
       ))}
     </ol>
@@ -179,7 +179,7 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
     <div className="space-y-5">
       <Warnings items={draft.warnings} />
       {resumable && (
-        <div className="flex flex-col gap-2 rounded-md border border-ink-200 bg-ink-50 px-3 py-2 text-xs text-ink-600 sm:flex-row sm:items-center sm:justify-between">
+        <div className="border-ink-200 bg-ink-50 text-ink-600 flex flex-col gap-2 rounded-md border px-3 py-2 text-xs sm:flex-row sm:items-center sm:justify-between">
           <span>Last sent {new Date(resumable.attemptedAtUtc).toLocaleString()} · {resumable.state}
             {resumable.etsyUrl && <> · <a className="underline" href={resumable.etsyUrl} target="_blank" rel="noreferrer">Etsy listing</a></>}</span>
           <Button type="button" size="sm" variant="outline" onClick={() => resumeMutation.mutate()} disabled={resumeMutation.isPending}>
@@ -190,14 +190,14 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
 
       <section className="space-y-2">
         <Label>Design to print</Label>
-        {draft.designs.length === 0 ? <p className="text-sm text-ink-500">No approved design.</p> : (
+        {draft.designs.length === 0 ? <p className="text-ink-500 text-sm">No approved design.</p> : (
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
             {draft.designs.map((design) => (
               <button key={design.id} type="button" onClick={() => setDesignId(design.id)} aria-pressed={designId === design.id}
                 className={`relative overflow-hidden rounded-md border-2 ${designId === design.id ? "border-emerald-600" : "border-transparent opacity-60 hover:opacity-100"}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={design.previewUrl} alt="" className="aspect-square w-full bg-[repeating-conic-gradient(#f1f5f9_0_25%,#fff_0_50%)] bg-[length:16px_16px] object-contain" />
-                <span className="block px-1 py-0.5 text-[10px] text-ink-500">{design.width}×{design.height}</span>
+                <span className="text-ink-500 block px-1 py-0.5 text-[10px]">{design.width}×{design.height}</span>
               </button>
             ))}
           </div>
@@ -208,7 +208,7 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
         <BlueprintPicker value={blueprint} onChange={(next) => { setBlueprint(next); setProviderId(null); }} />
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="printify-provider">Print provider</Label>
-          {providersQuery.isFetching ? <p className="text-xs text-ink-500">Loading providers…</p> : (
+          {providersQuery.isFetching ? <p className="text-ink-500 text-xs">Loading providers…</p> : (
             <select id="printify-provider" className={selectClass} value={providerId ?? ""} disabled={!providersQuery.data?.length}
               onChange={(event) => setProviderId(Number(event.target.value) || null)}>
               {!providersQuery.data?.length && <option value="">Choose a product type first</option>}
@@ -217,7 +217,7 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
               ))}
             </select>
           )}
-          <p className="text-xs text-ink-500">Providers in the United States are listed first: they reach US buyers fastest.</p>
+          <p className="text-ink-500 text-xs">Providers in the United States are listed first: they reach US buyers fastest.</p>
         </div>
       </section>
 
@@ -225,7 +225,7 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
         <section className="space-y-3">
           <ChipGroup label="Colors" options={catalog.colors} selected={colors} onToggle={(value) => toggle(colors, value, setColors)} />
           <ChipGroup label="Sizes" options={catalog.sizes} selected={sizes} onToggle={(value) => toggle(sizes, value, setSizes)} />
-          <p className="text-xs text-ink-500">
+          <p className="text-ink-500 text-xs">
             {variantIds.length} variant(s)
             {catalog.usShippingFirstItem != null && ` · US shipping charged to the buyer: ${money(catalog.usShippingFirstItem)} for one item${catalog.usShippingAdditionalItem != null ? `, ${money(catalog.usShippingAdditionalItem)} each extra` : ""}`}
           </p>
@@ -244,7 +244,7 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
         </div>
         <div className="grid gap-3 sm:grid-cols-[1fr_160px]">
           <div className="space-y-1.5">
-            <div className="flex justify-between"><Label htmlFor="printify-tags">Tags <span className="font-normal text-ink-500">(comma-separated)</span></Label><span className="text-xs text-ink-400">{tags.length}/{MAX_TAGS}</span></div>
+            <div className="flex justify-between"><Label htmlFor="printify-tags">Tags <span className="text-ink-500 font-normal">(comma-separated)</span></Label><span className="text-ink-400 text-xs">{tags.length}/{MAX_TAGS}</span></div>
             <Input id="printify-tags" value={tagText} onChange={(event) => setTagText(event.target.value)} />
           </div>
           <div className="space-y-1.5">
@@ -255,10 +255,10 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
       </section>
 
       {(createMutation.isError || resumeMutation.isError) && (
-        <p className="rounded-md border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-3 py-2 text-sm text-rose-800 dark:text-rose-300">{getErrorMessage(createMutation.error ?? resumeMutation.error)}</p>
+        <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{getErrorMessage(createMutation.error ?? resumeMutation.error)}</p>
       )}
       <DialogFooter className="items-center gap-3 sm:justify-between">
-        <p className="text-xs text-ink-500">{problems[0] ?? "Creates the product on Printify only. You set final prices next, with Printify's costs."}</p>
+        <p className="text-ink-500 text-xs">{problems[0] ?? "Creates the product on Printify only. You set final prices next, with Printify's costs."}</p>
         <Button type="button" className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => createMutation.mutate()} disabled={problems.length > 0 || createMutation.isPending}>
           {createMutation.isPending && <Loader2 className="size-4 animate-spin" />}{createMutation.isPending ? "Creating on Printify…" : "Create on Printify"}
         </Button>
@@ -287,7 +287,7 @@ function PriceStep({ draft, product, onPublished }: { draft: PrintifyDraft; prod
   return (
     <div className="space-y-4">
       <Warnings items={product.warnings} />
-      {product.alreadyCreated && <p className="text-xs text-ink-500">This design was already sent with the same settings; continuing with that Printify product.</p>}
+      {product.alreadyCreated && <p className="text-ink-500 text-xs">This design was already sent with the same settings; continuing with that Printify product.</p>}
       <div className="flex flex-wrap items-end gap-2">
         <div className="space-y-1">
           <Label htmlFor="printify-bulk" className="text-xs">Set every price to</Label>
@@ -300,34 +300,34 @@ function PriceStep({ draft, product, onPublished }: { draft: PrintifyDraft; prod
           Suggest (≈ $10 profit each)
         </Button>
       </div>
-      <div className="overflow-x-auto rounded-md border border-ink-200">
+      <div className="border-ink-200 overflow-x-auto rounded-md border">
         <table className="w-full text-sm">
-          <thead className="bg-ink-50 text-xs text-ink-500">
+          <thead className="bg-ink-50 text-ink-500 text-xs">
             <tr><th className="px-3 py-2 text-left font-medium">Variant</th><th className="px-3 py-2 text-right font-medium">Printify cost</th><th className="px-3 py-2 text-right font-medium">Your price</th><th className="px-3 py-2 text-right font-medium">Etsy fees*</th><th className="px-3 py-2 text-right font-medium">Profit*</th></tr>
           </thead>
-          <tbody className="divide-y divide-ink-100">
+          <tbody className="divide-ink-100 divide-y">
             {rows.map(({ variant, price, fees, profit }) => (
               <tr key={variant.id}>
-                <td className="px-3 py-1.5 text-ink-800">{variant.title}</td>
-                <td className="px-3 py-1.5 text-right text-ink-600 tabular-nums">{money(variant.cost)}</td>
+                <td className="text-ink-800 px-3 py-1.5">{variant.title}</td>
+                <td className="text-ink-600 px-3 py-1.5 text-right tabular-nums">{money(variant.cost)}</td>
                 <td className="px-3 py-1.5 text-right">
                   <Input className="ml-auto h-7 w-24 text-right" type="number" min="1" step="0.01" value={prices[variant.id]}
                     onChange={(event) => setPrices((current) => ({ ...current, [variant.id]: event.target.value }))} />
                 </td>
-                <td className="px-3 py-1.5 text-right text-ink-500 tabular-nums">{price >= 1 ? money(fees) : "—"}</td>
+                <td className="text-ink-500 px-3 py-1.5 text-right tabular-nums">{price >= 1 ? money(fees) : "—"}</td>
                 <td className={`px-3 py-1.5 text-right font-medium tabular-nums ${profit < 0 ? "text-rose-600 dark:text-rose-400" : profit < 3 ? "text-amber-600 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-300"}`}>{price >= 1 ? money(profit) : "—"}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-ink-500">
+      <p className="text-ink-500 text-xs">
         * Estimated with Etsy&apos;s US fees on price plus {money(shipping)} shipping, which the buyer pays and Printify charges you. Currency conversion to your payout account may take about 2.5% more.
         {thin > 0 && <span className="text-amber-700 dark:text-amber-300"> {thin} variant(s) leave less than $3.</span>}
       </p>
-      {publishMutation.isError && <p className="rounded-md border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-3 py-2 text-sm text-rose-800 dark:text-rose-300">{getErrorMessage(publishMutation.error)}</p>}
+      {publishMutation.isError && <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{getErrorMessage(publishMutation.error)}</p>}
       <DialogFooter className="items-center gap-3 sm:justify-between">
-        <p className="text-xs text-ink-500">{problems[0] ?? `Printify publishes to ${draft.connection.shopTitle ?? "your store"} on Etsy. Whether it lands as active or draft follows your Printify store's publishing settings.`}</p>
+        <p className="text-ink-500 text-xs">{problems[0] ?? `Printify publishes to ${draft.connection.shopTitle ?? "your store"} on Etsy. Whether it lands as active or draft follows your Printify store's publishing settings.`}</p>
         <Button type="button" className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => publishMutation.mutate()} disabled={problems.length > 0 || publishMutation.isPending}>
           {publishMutation.isPending && <Loader2 className="size-4 animate-spin" />}{publishMutation.isPending ? "Asking Printify…" : "Publish to Etsy"}
         </Button>
@@ -359,9 +359,9 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
 
   if (!published)
     return (
-      <div className="space-y-3 py-6 text-center text-sm text-ink-600">
+      <div className="text-ink-600 space-y-3 py-6 text-center text-sm">
         <Loader2 className="mx-auto size-6 animate-spin text-emerald-600 dark:text-emerald-400" />
-        <p className="font-medium text-ink-900">Printify is publishing to Etsy…</p>
+        <p className="text-ink-900 font-medium">Printify is publishing to Etsy…</p>
         <p>This usually takes under a minute. You can close this window; publishing continues on Printify.</p>
         <Warnings items={product.warnings} />
       </div>
@@ -369,7 +369,7 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start gap-3 rounded-md border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-3 text-sm text-emerald-900 dark:text-emerald-300">
+      <div className="flex items-start gap-3 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
         <CheckCircle2 className="mt-0.5 size-5 shrink-0" />
         <div className="space-y-1">
           <p className="font-medium">On Etsy, linked to Printify.</p>
@@ -379,12 +379,12 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
       <Warnings items={product.warnings} />
 
       {product.mediaAttached > 0 || (attachRequested && !syncMutation.isPending) ? (
-        <p className="text-sm text-ink-700">{product.mediaAttached} Podivo image(s)/video added to the listing, in front of Printify&apos;s mock-ups.</p>
+        <p className="text-ink-700 text-sm">{product.mediaAttached} Podivo image(s)/video added to the listing, in front of Printify&apos;s mock-ups.</p>
       ) : !draft.etsyConnected ? (
-        <p className="text-sm text-ink-600">Connect Etsy on the Shop page to add your Podivo mock-ups and video to this listing.</p>
+        <p className="text-ink-600 text-sm">Connect Etsy on the Shop page to add your Podivo mock-ups and video to this listing.</p>
       ) : (draft.mockups.length > 0 || draft.video) && (
         <section className="space-y-2">
-          <Label>Add your Podivo mock-ups to the listing <span className="font-normal text-ink-500">({mockupIds.length} selected, shown first)</span></Label>
+          <Label>Add your Podivo mock-ups to the listing <span className="text-ink-500 font-normal">({mockupIds.length} selected, shown first)</span></Label>
           <div className="grid grid-cols-5 gap-2 sm:grid-cols-8">
             {draft.mockups.map((mockup) => {
               const order = mockupIds.indexOf(mockup.id);
@@ -399,7 +399,7 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
             })}
           </div>
           {draft.video && (
-            <label className="flex items-center gap-2 text-sm text-ink-700">
+            <label className="text-ink-700 flex items-center gap-2 text-sm">
               <input type="checkbox" checked={includeVideo} onChange={(event) => setIncludeVideo(event.target.checked)} />Add the approved video ({draft.video.durationSeconds}s)
             </label>
           )}
@@ -408,7 +408,7 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
           </Button>
         </section>
       )}
-      {syncMutation.isError && <p className="rounded-md border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-3 py-2 text-sm text-rose-800 dark:text-rose-300">{getErrorMessage(syncMutation.error)}</p>}
+      {syncMutation.isError && <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{getErrorMessage(syncMutation.error)}</p>}
 
       <DialogFooter>
         {product.etsyUrl && (
@@ -436,28 +436,28 @@ export function BlueprintPicker({ value, onChange }: { value: Pick<PrintifyBluep
     <div className="space-y-1.5 sm:col-span-2">
       <Label htmlFor="printify-blueprint">Product type</Label>
       {value && !editing ? (
-        <div className="flex items-center justify-between gap-3 rounded-md border border-ink-200 px-3 py-2 text-sm">
-          <span className="truncate text-ink-800">{value.title}</span>
-          <button type="button" className="shrink-0 text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:underline" onClick={() => setEditing(true)}>Change</button>
+        <div className="border-ink-200 flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm">
+          <span className="text-ink-800 truncate">{value.title}</span>
+          <button type="button" className="shrink-0 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-300" onClick={() => setEditing(true)}>Change</button>
         </div>
       ) : (
         <>
           <div className="relative">
-            <Search className="absolute top-2.5 left-2.5 size-4 text-ink-400" />
+            <Search className="text-ink-400 absolute top-2.5 left-2.5 size-4" />
             <Input id="printify-blueprint" className="pl-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="e.g. gildan 64000, bella canvas 3001, mug 11oz" />
           </div>
-          {results.isFetching && <p className="text-xs text-ink-500">Searching…</p>}
+          {results.isFetching && <p className="text-ink-500 text-xs">Searching…</p>}
           {results.isError && <p className="text-xs text-rose-700 dark:text-rose-300">{getErrorMessage(results.error)}</p>}
           {results.data && (
-            <ul className="max-h-48 overflow-y-auto rounded-md border border-ink-200 text-sm">
-              {results.data.length === 0 && <li className="px-3 py-2 text-ink-500">Nothing matches.</li>}
+            <ul className="border-ink-200 max-h-48 overflow-y-auto rounded-md border text-sm">
+              {results.data.length === 0 && <li className="text-ink-500 px-3 py-2">Nothing matches.</li>}
               {results.data.map((item) => (
                 <li key={item.id}>
-                  <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-ink-50" onClick={() => { onChange(item); setEditing(false); }}>
+                  <button type="button" className="hover:bg-ink-50 flex w-full items-center gap-2 px-3 py-1.5 text-left" onClick={() => { onChange(item); setEditing(false); }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="size-8 shrink-0 rounded object-cover" /> : <span className="size-8 shrink-0 rounded bg-ink-100" />}
+                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="size-8 shrink-0 rounded object-cover" /> : <span className="bg-ink-100 size-8 shrink-0 rounded" />}
                     <span className="min-w-0 flex-1 truncate">{item.title}</span>
-                    <span className="shrink-0 text-xs text-ink-400">{item.brand} {item.model}</span>
+                    <span className="text-ink-400 shrink-0 text-xs">{item.brand} {item.model}</span>
                   </button>
                 </li>
               ))}
@@ -472,13 +472,13 @@ export function BlueprintPicker({ value, onChange }: { value: Pick<PrintifyBluep
 export function ChipGroup({ label, options, selected, onToggle }: { label: string; options: string[]; selected: string[]; onToggle: (value: string) => void }) {
   return (
     <div className="space-y-1.5">
-      <Label>{label} <span className="font-normal text-ink-500">({selected.length}/{options.length})</span></Label>
+      <Label>{label} <span className="text-ink-500 font-normal">({selected.length}/{options.length})</span></Label>
       <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
         {options.map((option) => {
           const on = selected.includes(option);
           return (
             <button key={option} type="button" onClick={() => onToggle(option)} aria-pressed={on}
-              className={`rounded-full border px-2.5 py-0.5 text-xs ${on ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300" : "border-ink-200 text-ink-600 hover:border-ink-300"}`}>
+              className={`rounded-full border px-2.5 py-0.5 text-xs ${on ? "border-emerald-600 bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300" : "border-ink-200 text-ink-600 hover:border-ink-300"}`}>
               {option}
             </button>
           );
@@ -491,7 +491,7 @@ export function ChipGroup({ label, options, selected, onToggle }: { label: strin
 function Warnings({ items }: { items: string[] }) {
   if (items.length === 0) return null;
   return (
-    <ul className="list-disc space-y-0.5 rounded-md border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 py-2 pr-3 pl-7 text-left text-xs text-amber-900 dark:text-amber-300">
+    <ul className="list-disc space-y-0.5 rounded-md border border-amber-200 bg-amber-50 py-2 pr-3 pl-7 text-left text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
       {items.map((item) => <li key={item}>{item}</li>)}
     </ul>
   );

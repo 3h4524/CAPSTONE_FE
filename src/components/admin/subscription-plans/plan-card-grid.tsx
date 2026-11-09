@@ -116,7 +116,7 @@ export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGri
         {Array.from({ length: 4 }).map((_, index) => (
           <Card
             key={index}
-            className="h-80 animate-pulse rounded-2xl border border-ink-200/80 bg-card"
+            className="border-ink-200/80 bg-card h-80 animate-pulse rounded-2xl border"
           />
         ))}
       </div>
@@ -125,10 +125,10 @@ export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGri
 
   if (plans.length === 0) {
     return (
-      <Card className="mt-6 rounded-2xl border border-dashed border-ink-300 bg-card p-10 text-center">
-        <Layers className="mx-auto size-6 text-ink-400" />
-        <p className="mt-2 text-sm font-semibold text-ink-700">No subscription plans yet</p>
-        <p className="text-xs text-ink-400">Create the first one with “Create new plan”.</p>
+      <Card className="border-ink-300 bg-card mt-6 rounded-2xl border border-dashed p-10 text-center">
+        <Layers className="text-ink-400 mx-auto size-6" />
+        <p className="text-ink-700 mt-2 text-sm font-semibold">No subscription plans yet</p>
+        <p className="text-ink-400 text-xs">Create the first one with “Create new plan”.</p>
       </Card>
     );
   }
@@ -153,7 +153,7 @@ export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGri
           value={
             <span className="flex items-baseline gap-1.5">
               <span>{sellingPlans.length}</span>
-              <span className="text-xs font-normal text-ink-400 tabular-nums">
+              <span className="text-ink-400 text-xs font-normal tabular-nums">
                 of {plans.length}
               </span>
             </span>
@@ -190,7 +190,7 @@ export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGri
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[11px] font-semibold tracking-wide text-ink-500 uppercase">
+        <p className="text-ink-500 text-[11px] font-semibold tracking-wide uppercase">
           {plans.length} plan{plans.length === 1 ? "" : "s"}
         </p>
         <div className="flex items-center gap-2">
@@ -199,13 +199,13 @@ export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGri
               type="button"
               aria-pressed={showDetails}
               onClick={() => setShowDetails((value) => !value)}
-              className="flex items-center gap-1 rounded-lg border border-ink-200 bg-card px-2.5 py-1.5 text-[11px] font-semibold text-ink-600 transition-colors hover:text-ink-900"
+              className="border-ink-200 bg-card text-ink-600 hover:text-ink-900 flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-colors"
             >
               <ChevronsUpDown className="size-3" />
               {showDetails ? "Hide all details" : "Show all details"}
             </button>
           )}
-        <div className="flex rounded-lg border border-ink-200 bg-card p-0.5" role="tablist" aria-label="Plans layout">
+        <div className="border-ink-200 bg-card flex rounded-lg border p-0.5" role="tablist" aria-label="Plans layout">
           {(["cards", "compare"] as const).map((item) => (
             <button
               key={item}
@@ -385,8 +385,8 @@ function PlanCard({
         isDark
           ? "border-slate-800 bg-linear-to-b from-slate-800 via-slate-900 to-slate-950 text-white shadow-xl ring-1 shadow-slate-900/20 ring-white/10 ring-inset hover:shadow-2xl"
           : plan.isActive
-            ? "border-ink-200 bg-linear-to-b from-sky-50/80 dark:from-sky-500/10 via-card to-card"
-            : "border-dashed border-ink-300 bg-ink-50/60"
+            ? "border-ink-200 via-card to-card bg-linear-to-b from-sky-50/80 dark:from-sky-500/10"
+            : "border-ink-300 bg-ink-50/60 border-dashed"
       )}
     >
       {isDark && (
@@ -467,7 +467,7 @@ function PlanCard({
           </span>
           {/* Beside the sale status, the same size, so it adds no row and the cards stay level. */}
           {isDark && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-300/40 dark:border-orange-500/40 bg-orange-400/15 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-orange-200 uppercase">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-300/40 bg-orange-400/15 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-orange-200 uppercase dark:border-orange-500/40">
               <span className="size-1.5 rounded-full bg-orange-300" />
               Recommended
             </span>
@@ -582,7 +582,7 @@ function PlanCard({
       <div
         className={cn(
           "mx-6 mt-4 grid grid-cols-3 divide-x rounded-xl py-3 text-center",
-          isDark ? "divide-white/10 bg-white/5 ring-1 ring-white/10" : "divide-ink-100 bg-card shadow-xs ring-1 ring-ink-200"
+          isDark ? "divide-white/10 bg-white/5 ring-1 ring-white/10" : "divide-ink-100 bg-card ring-ink-200 shadow-xs ring-1"
         )}
       >
         <Stat
@@ -603,7 +603,7 @@ function PlanCard({
             <span
               className={cn(
                 "rounded-full px-1.5 py-px text-[10px] tabular-nums",
-                isDark ? "bg-orange-500/20 text-orange-200" : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                isDark ? "bg-orange-500/20 text-orange-200" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
               )}
             >
               {included.length}
@@ -626,7 +626,7 @@ function PlanCard({
           </p>
         )}
         {included.length === 0 ? (
-          <p className="text-xs text-ink-400">No features yet. Add the ones this plan sells.</p>
+          <p className="text-ink-400 text-xs">No features yet. Add the ones this plan sells.</p>
         ) : (
           // A wide card lists the features in two columns.
           <ul className="grid gap-x-6 gap-y-1 @lg:grid-cols-2">
@@ -638,7 +638,7 @@ function PlanCard({
                 <span
                   className={cn(
                     "flex size-4 shrink-0 items-center justify-center rounded-full",
-                    isDark ? "bg-orange-500/20 text-orange-300" : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    isDark ? "bg-orange-500/20 text-orange-300" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
                   )}
                 >
                   <Check className="size-3" strokeWidth={3} />
@@ -651,7 +651,7 @@ function PlanCard({
                   onClick={() => onRemove(feature.code, feature.label)}
                   className={cn(
                     "rounded p-0.5 opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100",
-                    isDark ? "text-ink-400 hover:bg-rose-500/20 hover:text-rose-300" : "text-ink-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400"
+                    isDark ? "text-ink-400 hover:bg-rose-500/20 hover:text-rose-300" : "text-ink-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                   )}
                 >
                   <X className="size-3.5" />
@@ -706,7 +706,7 @@ function PlanCard({
                     onClick={() => onQuickAdd(feature.code)}
                     className={cn(
                       "rounded p-0.5 opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100 disabled:opacity-40 [@media(hover:none)]:opacity-100",
-                      isDark ? "text-ink-400 hover:bg-emerald-500/20 hover:text-emerald-300" : "text-ink-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300"
+                      isDark ? "text-ink-400 hover:bg-emerald-500/20 hover:text-emerald-300" : "text-ink-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
                     )}
                   >
                     <Plus className="size-3.5" />
@@ -833,7 +833,7 @@ function Stat({
           isDark ? "text-white" : "text-ink-900"
         )}
       >
-        {icon && <Users className="size-3.5 text-ink-400" />}
+        {icon && <Users className="text-ink-400 size-3.5" />}
         {value}
         {extra}
       </p>

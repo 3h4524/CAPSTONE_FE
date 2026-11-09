@@ -420,7 +420,7 @@ export const ModelPhotoFormDialog = ({
                   </p>
                 )}
                 {attributes.people === "group" && person?.garmentCount != null && (
-                  <p role="status" className="text-xs text-ink-600">
+                  <p role="status" className="text-ink-600 text-xs">
                     {person.garmentCount === 1
                       ? "Found 1 shirt. People standing close together count as one: leave a gap between them so each one gets the design."
                       : `Found ${person.garmentCount} shirts: each one gets the design.`}
@@ -437,7 +437,7 @@ export const ModelPhotoFormDialog = ({
               {shownPhoto && (
                 <section className="space-y-2" aria-labelledby="model-photo-garment">
                   <div>
-                    <p id="model-photo-garment" className="text-sm font-medium text-ink-900">
+                    <p id="model-photo-garment" className="text-ink-900 text-sm font-medium">
                       1. The garment
                     </p>
                     <p className="text-muted-foreground mt-0.5 text-xs">
@@ -510,7 +510,7 @@ export const ModelPhotoFormDialog = ({
               )}
               {shownPhoto && shownSize && (
                 <section className="space-y-3" aria-labelledby="model-photo-placement">
-                  <p id="model-photo-placement" className="text-sm font-medium text-ink-900">
+                  <p id="model-photo-placement" className="text-ink-900 text-sm font-medium">
                     2. Where the design goes
                   </p>
                   <RadioGroup
@@ -544,7 +544,7 @@ export const ModelPhotoFormDialog = ({
                           className="mt-0.5"
                         />
                         <span className="space-y-0.5">
-                          <span className="block text-sm font-medium text-ink-900">
+                          <span className="text-ink-900 block text-sm font-medium">
                             {option.label}
                           </span>
                           <span className="text-muted-foreground block text-xs">

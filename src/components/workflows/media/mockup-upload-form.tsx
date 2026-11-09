@@ -16,7 +16,7 @@ export const MockupUploadForm = ({ productId }: { productId: string }) => {
   return <Form {...form}><form onSubmit={form.handleSubmit(values => upload({ productId, file: values.file }, { onSuccess: () => form.reset() }))}>
     <FormField control={form.control} name="file" render={({ field }) => <FormItem>
       <FormLabel>Upload mockup</FormLabel>
-      <FormControl><Input type="file" accept="image/jpeg,image/png,image/webp" className="text-muted-foreground file:bg-muted h-9 cursor-pointer bg-card py-1 text-xs file:mr-2 file:h-6.5 file:rounded file:px-2.5 file:text-xs file:text-ink-700" onChange={e => field.onChange(e.target.files?.[0])} /></FormControl>
+      <FormControl><Input type="file" accept="image/jpeg,image/png,image/webp" className="text-muted-foreground file:bg-muted bg-card file:text-ink-700 h-9 cursor-pointer py-1 text-xs file:mr-2 file:h-6.5 file:rounded file:px-2.5 file:text-xs" onChange={e => field.onChange(e.target.files?.[0])} /></FormControl>
       <FormMessage />
       <div className="flex items-start justify-between gap-3">
         <FormDescription className="text-xs leading-relaxed">JPEG, PNG or static WebP · 20 MB per image. Choose at most 8 for a run.</FormDescription>

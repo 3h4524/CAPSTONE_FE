@@ -20,11 +20,11 @@ export const DesignOutputPreview = ({ config }: { config: WorkflowNodeConfig }) 
 
   return (
     <PanelSection title="Preview">
-      <div className="flex min-h-22 flex-wrap items-center justify-center gap-2 rounded-md border bg-ink-50/60 px-3 py-4" aria-hidden="true">
+      <div className="bg-ink-50/60 flex min-h-22 flex-wrap items-center justify-center gap-2 rounded-md border px-3 py-4" aria-hidden="true">
         {Array.from({ length: variants }, (_, index) => (
           <span
             key={index}
-            className="text-muted-foreground flex items-center justify-center rounded-sm border border-ink-300 bg-card text-xs tabular-nums"
+            className="text-muted-foreground border-ink-300 bg-card flex items-center justify-center rounded-sm border text-xs tabular-nums"
             style={{ width: tile.width, height: tile.height }}
           >
             {index + 1}

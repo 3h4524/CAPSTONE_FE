@@ -65,11 +65,11 @@ export const TestReportsDashboard = () => {
   return (
     <AdminShell pageTitle="Test Reports">
       <div className="flex flex-col gap-5">
-        <section className="rounded-lg border border-ink-200 bg-card p-5 shadow-[0_2px_8px_rgba(15,23,42,0.02)] sm:p-6">
+        <section className="border-ink-200 bg-card rounded-lg border p-5 shadow-[0_2px_8px_rgba(15,23,42,0.02)] sm:p-6">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
             <div>
-              <h2 className="text-sm font-bold text-ink-900">End-to-end test reports</h2>
-              <p className="mt-1 max-w-2xl text-[11px] leading-relaxed text-ink-500">
+              <h2 className="text-ink-900 text-sm font-bold">End-to-end test reports</h2>
+              <p className="text-ink-500 mt-1 max-w-2xl text-[11px] leading-relaxed">
                 Every run of the Playwright suite is kept on the machine that made it. Press
                 “Run tests” to run the suite here; the running row counts up here and flips by
                 itself the moment the suite lands.
@@ -99,13 +99,13 @@ export const TestReportsDashboard = () => {
           isLoading={isLoading}
         />
 
-        <section className="overflow-hidden rounded-lg border border-ink-200 bg-card shadow-[0_2px_8px_rgba(15,23,42,0.02)]">
-          <div className="flex flex-col justify-between gap-3 border-b border-ink-100 px-5 py-4 sm:flex-row sm:items-center">
+        <section className="border-ink-200 bg-card overflow-hidden rounded-lg border shadow-[0_2px_8px_rgba(15,23,42,0.02)]">
+          <div className="border-ink-100 flex flex-col justify-between gap-3 border-b px-5 py-4 sm:flex-row sm:items-center">
             <div>
-              <h3 className="text-xs font-bold tracking-wide text-ink-800 uppercase">
+              <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
                 Test runs
               </h3>
-              <p className="mt-0.5 text-[10px] text-ink-400">
+              <p className="text-ink-400 mt-0.5 text-[10px]">
                 Newest first. Open a run to see every test it covered.
               </p>
             </div>
@@ -144,10 +144,10 @@ export const TestReportsDashboard = () => {
 
           {isError ? (
             <div className="px-5 py-14 text-center">
-              <p className="text-sm font-semibold text-ink-700">
+              <p className="text-ink-700 text-sm font-semibold">
                 The list of runs could not be read
               </p>
-              <p className="mt-1 text-xs text-ink-400">
+              <p className="text-ink-400 mt-1 text-xs">
                 The backend that keeps the reports did not answer.
               </p>
             </div>

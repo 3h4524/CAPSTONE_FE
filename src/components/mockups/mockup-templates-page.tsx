@@ -44,7 +44,7 @@ export const MockupTemplatesPage = () => {
   return (
     <div className="flex w-full min-w-0 flex-col gap-6 max-md:gap-3 md:p-6">
       <div>
-        <h1 className="text-xl font-semibold text-ink-900">Mock-up Templates</h1>
+        <h1 className="text-ink-900 text-xl font-semibold">Mock-up Templates</h1>
         <p className="text-muted-foreground mt-1 text-sm max-md:hidden">Browse system mock-ups, manage the product photos you uploaded, and the photos of people your mock-ups are put on.</p>
       </div>
       <Tabs defaultValue="templates" className="gap-5 max-md:gap-3">
@@ -68,17 +68,17 @@ export const MockupTemplatesPage = () => {
           {isLoadingTemplates ? (
             <SectionLoading label="Loading mock-up templates" />
           ) : isTemplatesError || !templates ? (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-ink-200 bg-card p-8 text-center" role="alert">
-              <ImageIcon className="size-8 text-ink-400" aria-hidden="true" />
+            <div className="border-ink-200 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border p-8 text-center" role="alert">
+              <ImageIcon className="text-ink-400 size-8" aria-hidden="true" />
               <div>
-                <p className="font-semibold text-ink-900">Mock-up templates unavailable</p>
+                <p className="text-ink-900 font-semibold">Mock-up templates unavailable</p>
                 <p className="text-muted-foreground mt-1 text-sm">We could not load mock-up templates. Check your connection and try again.</p>
               </div>
               <Button type="button" onClick={() => refetchTemplates()}>Try again</Button>
             </div>
           ) : templates.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-ink-300 bg-card p-8 text-center">
-              <p className="font-semibold text-ink-900">No mock-up templates yet</p>
+            <div className="border-ink-300 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed p-8 text-center">
+              <p className="text-ink-900 font-semibold">No mock-up templates yet</p>
               <p className="text-muted-foreground text-sm">Upload a product photo to start compositing designs onto it.</p>
               <Button type="button" onClick={openCreate}>New template</Button>
             </div>

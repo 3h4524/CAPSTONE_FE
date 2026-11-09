@@ -108,7 +108,7 @@ export const AiUsagePanel = ({ usage }: { usage: AiFeatureCost[] }) => {
         </div>
         <Link
           href="/usage"
-          className="inline-flex items-center gap-1 text-xs font-medium text-[#c2410c] dark:text-[#eda182] hover:underline"
+          className="inline-flex items-center gap-1 text-xs font-medium text-[#c2410c] hover:underline dark:text-[#eda182]"
         >
           Details
           <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -116,7 +116,7 @@ export const AiUsagePanel = ({ usage }: { usage: AiFeatureCost[] }) => {
       </div>
 
       {calls === 0 ? (
-        <p className="text-muted-foreground flex flex-1 items-center justify-center rounded-xl bg-ink-100 p-6 text-xs">
+        <p className="text-muted-foreground bg-ink-100 flex flex-1 items-center justify-center rounded-xl p-6 text-xs">
           No AI calls in this period. Run a batch to see costs here.
         </p>
       ) : (

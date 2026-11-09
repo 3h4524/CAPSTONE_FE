@@ -114,20 +114,20 @@ export const MockupPanel = ({ review }: { review: boolean }) => {
     {!review && <MockupUploadForm productId={run?.productId ?? productId} />}
     <ModelPhotoMockupForm productId={run?.productId ?? productId} assets={visibleAssets ?? []} />
     <LifestyleMockupForm garments={lifestyleGarmentsOf(visibleAssets ?? [])} />
-    {artworkGroups.length > 1 && <div className="space-y-2"><Label htmlFor="mockup-artwork-group">Artwork group</Label><Select value={activeGroup} onValueChange={selectArtworkGroup}><SelectTrigger id="mockup-artwork-group" className="w-full bg-card"><SelectValue /></SelectTrigger><SelectContent>{artworkGroups.map(group => <SelectItem key={group} value={group}>{artworkGroupLabel(group, artworkGroups)}</SelectItem>)}</SelectContent></Select></div>}
+    {artworkGroups.length > 1 && <div className="space-y-2"><Label htmlFor="mockup-artwork-group">Artwork group</Label><Select value={activeGroup} onValueChange={selectArtworkGroup}><SelectTrigger id="mockup-artwork-group" className="bg-card w-full"><SelectValue /></SelectTrigger><SelectContent>{artworkGroups.map(group => <SelectItem key={group} value={group}>{artworkGroupLabel(group, artworkGroups)}</SelectItem>)}</SelectContent></Select></div>}
     <div className="space-y-3">
       <div className="flex items-baseline justify-between gap-2">
-        <p className="text-sm font-medium text-ink-900">{review ? "Mock-ups to review" : "Available mock-ups"}</p>
-        {selected.length > 0 && <p className="text-xs font-medium text-ink-700 tabular-nums">{`${selected.length}/${MAX_VIDEO_MOCKUPS} selected`}</p>}
+        <p className="text-ink-900 text-sm font-medium">{review ? "Mock-ups to review" : "Available mock-ups"}</p>
+        {selected.length > 0 && <p className="text-ink-700 text-xs font-medium tabular-nums">{`${selected.length}/${MAX_VIDEO_MOCKUPS} selected`}</p>}
       </div>
       {!selected.length && <p className="text-muted-foreground -mt-2 text-xs">Automatic: up to 8 approved mockups from one artwork group.</p>}
       {isPending ? <SectionLoading label="Loading mockups" className="py-8" />
-        : isError ? <PanelNotice tone="error" action={<Button type="button" variant="outline" size="sm" className="h-7 bg-card px-3 text-xs hover:translate-y-0" onClick={() => refetch()}>Reload mockups</Button>}>Mock-ups could not be loaded.</PanelNotice>
+        : isError ? <PanelNotice tone="error" action={<Button type="button" variant="outline" size="sm" className="bg-card h-7 px-3 text-xs hover:translate-y-0" onClick={() => refetch()}>Reload mockups</Button>}>Mock-ups could not be loaded.</PanelNotice>
           : !visibleAssets?.length ? <PanelEmptyState icon={ImageOff} title="No mockups yet. Upload images in Apply Mockup." />
             : <div className="grid gap-3 @md:grid-cols-2">{visibleAssets.map(asset => <MockupCard key={asset.id} asset={asset} review={review} selectable={!review && !isRunning} selected={selected.includes(asset.id)} onSelect={choose} />)}</div>}
     </div>
     {review && run?.status === "waiting_for_input" && (
-      <div className="sticky bottom-0 -mx-5 border-t bg-card/95 px-5 py-3 backdrop-blur">
+      <div className="bg-card/95 sticky bottom-0 -mx-5 border-t px-5 py-3 backdrop-blur">
         <Button type="button" className="w-full hover:translate-y-0" disabled={isActing || isPreviewing} onClick={() => void continueWithMockups()}>{isPreviewing ? "Preparing prompt preview…" : "Review prompt before creating video"}</Button>
       </div>
     )}

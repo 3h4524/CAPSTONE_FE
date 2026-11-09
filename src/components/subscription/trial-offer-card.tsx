@@ -23,15 +23,15 @@ export const TrialOfferCard = ({ trialDays, planName, allowances, isStarting, on
   ];
 
   return (
-    <Card className="@container relative flex h-full flex-col gap-0 rounded-2xl border-ink-200 bg-card p-6 shadow-sm max-md:p-5">
+    <Card className="border-ink-200 bg-card @container relative flex h-full flex-col gap-0 rounded-2xl p-6 shadow-sm max-md:p-5">
       {/* Rivets in the corners, a quiet frame for the card. */}
       {["top-3 left-3", "top-3 right-3", "bottom-3 left-3", "bottom-3 right-3"].map((spot) => (
-        <span key={spot} aria-hidden="true" className={`absolute size-1.5 rounded-full bg-ink-200 ${spot}`} />
+        <span key={spot} aria-hidden="true" className={`bg-ink-200 absolute size-1.5 rounded-full ${spot}`} />
       ))}
 
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-base font-semibold text-ink-900">{planName} trial</h3>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-card px-2.5 py-0.5 text-[11px] font-semibold tracking-wide text-ink-700 uppercase">
+        <h3 className="text-ink-900 text-base font-semibold">{planName} trial</h3>
+        <span className="border-ink-200 bg-card text-ink-700 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide uppercase">
           <span className="size-1.5 rounded-full bg-violet-500" />
           Free trial
         </span>
@@ -39,10 +39,10 @@ export const TrialOfferCard = ({ trialDays, planName, allowances, isStarting, on
 
       <div className="mt-5 @md:mt-7">
         <p className="flex items-baseline gap-1.5">
-          <span className="text-3xl font-bold tracking-tight text-ink-900 tabular-nums @md:text-4xl">{formatVnd(0)}</span>
-          <span className="text-sm text-ink-500">/{trialDays} days</span>
+          <span className="text-ink-900 text-3xl font-bold tracking-tight tabular-nums @md:text-4xl">{formatVnd(0)}</span>
+          <span className="text-ink-500 text-sm">/{trialDays} days</span>
         </p>
-        <p className="mt-1 min-h-4 text-xs text-ink-500">No payment needed</p>
+        <p className="text-ink-500 mt-1 min-h-4 text-xs">No payment needed</p>
       </div>
 
       <Button className="mt-5 w-full @md:mt-7 @md:h-11" onClick={onStart} disabled={isStarting}>
@@ -51,8 +51,8 @@ export const TrialOfferCard = ({ trialDays, planName, allowances, isStarting, on
 
       <ul className="mt-5 grid flex-1 content-start gap-x-6 gap-y-2.5 text-sm @md:mt-7 @md:gap-y-3.5 @md:text-[15px] @2xl:grid-cols-2">
         {lines.map((line) => (
-          <li key={line} className="flex items-start gap-2.5 text-ink-700">
-            <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400">
+          <li key={line} className="text-ink-700 flex items-start gap-2.5">
+            <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
               <Check className="size-3" strokeWidth={3} />
             </span>
             {line}

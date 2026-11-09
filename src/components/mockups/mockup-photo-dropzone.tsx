@@ -27,7 +27,7 @@ export const MockupPhotoDropzone = ({ label = "Base mock-up photo", previewUrl, 
       <div className={cn("flex flex-col gap-3", previewUrl && "sm:flex-row sm:items-stretch")}>
         {previewUrl && (
           <div className="relative w-fit sm:w-1/2">
-            <Image src={previewUrl} alt="Mock-up base photo" width={320} height={180} unoptimized className="aspect-video h-full w-full rounded-lg object-cover ring-1 ring-ink-200 ring-inset" />
+            <Image src={previewUrl} alt="Mock-up base photo" width={320} height={180} unoptimized className="ring-ink-200 aspect-video h-full w-full rounded-lg object-cover ring-1 ring-inset" />
             <Button
               type="button"
               variant="secondary"
@@ -44,7 +44,7 @@ export const MockupPhotoDropzone = ({ label = "Base mock-up photo", previewUrl, 
         <label
           htmlFor={inputId}
           className={cn(
-            "flex min-h-20 flex-1 cursor-pointer items-center justify-center rounded-xl border border-dashed border-ink-300 bg-ink-50 px-4 py-4 text-center transition-colors hover:border-ink-400",
+            "border-ink-300 bg-ink-50 hover:border-ink-400 flex min-h-20 flex-1 cursor-pointer items-center justify-center rounded-xl border border-dashed px-4 py-4 text-center transition-colors",
             dragging && "border-primary bg-primary/5",
             disabled && "pointer-events-none opacity-60"
           )}
@@ -60,7 +60,7 @@ export const MockupPhotoDropzone = ({ label = "Base mock-up photo", previewUrl, 
             if (file) onSelect(file);
           }}
         >
-          <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-ink-600">
+          <div className="text-ink-600 flex flex-wrap items-center justify-center gap-2 text-sm">
             <ImagePlus className="size-4" aria-hidden="true" />
             <span>{previewUrl ? "Drag another photo here or browse" : "Drag a photo here or browse"}</span>
             <input
@@ -78,7 +78,7 @@ export const MockupPhotoDropzone = ({ label = "Base mock-up photo", previewUrl, 
           </div>
         </label>
       </div>
-      <p className="text-[11px] text-ink-500">Images up to 10 MB</p>
+      <p className="text-ink-500 text-[11px]">Images up to 10 MB</p>
       {error ? <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p> : null}
     </div>
   );

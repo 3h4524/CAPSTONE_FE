@@ -129,7 +129,7 @@ const Handles = ({ className }: { className: string }) => (
         key={handle}
         data-handle={handle}
         className={cn(
-          "absolute size-3 rounded-sm border-2 bg-card [@media(pointer:coarse)]:size-7 [@media(pointer:coarse)]:translate-x-0! [@media(pointer:coarse)]:translate-y-0!",
+          "bg-card absolute size-3 rounded-sm border-2 [@media(pointer:coarse)]:size-7 [@media(pointer:coarse)]:translate-x-0! [@media(pointer:coarse)]:translate-y-0!",
           className,
           handle === "nw" && "top-0 left-0 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize",
           handle === "ne" && "top-0 right-0 translate-x-1/2 -translate-y-1/2 cursor-nesw-resize",
@@ -411,7 +411,7 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
           ref={imgRef}
           src={imageUrl}
           alt="Mock-up base photo"
-          className="block max-h-105 max-w-full rounded-lg ring-1 ring-ink-200 select-none ring-inset"
+          className="ring-ink-200 block max-h-105 max-w-full rounded-lg ring-1 select-none ring-inset"
           draggable={false}
           style={cutOut}
           crossOrigin="anonymous" // required to read pixels back for garment detection

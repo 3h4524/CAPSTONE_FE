@@ -44,17 +44,17 @@ export function PrintifyCard() {
   const connected = connection?.status === "connected";
 
   return (
-    <Card className="gap-0 overflow-hidden border-ink-200 bg-card py-0 shadow-sm">
+    <Card className="border-ink-200 bg-card gap-0 overflow-hidden py-0 shadow-sm">
       <div className="flex flex-col gap-3 px-5 py-4 max-md:p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white"><Printer className="size-5" /></span>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-semibold text-ink-900">Printify</h3>
-              {connectionQuery.isPending && <Loader2 className="size-3.5 animate-spin text-ink-400" />}
+              <h3 className="text-ink-900 font-semibold">Printify</h3>
+              {connectionQuery.isPending && <Loader2 className="text-ink-400 size-3.5 animate-spin" />}
               {state && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${state.tone}`}>{state.badge}</span>}
             </div>
-            <p className="text-xs text-ink-500">
+            <p className="text-ink-500 text-xs">
               {connected
                 ? `${connection.shopTitle} · publishes to ${connection.salesChannel ?? "no channel"} · ${connection.productsCreated} product(s) sent from Podivo${connection.keyName ? ` · key “${connection.keyName}”` : ""}`
                 : state?.text ?? "Prints and ships your designs when an Etsy order comes in."}
@@ -71,7 +71,7 @@ export function PrintifyCard() {
         </div>
       </div>
       {connected && connection.salesChannel !== "etsy" && (
-        <p className="flex items-start gap-2 border-t border-amber-100 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-5 py-2.5 text-xs text-amber-900 dark:text-amber-300">
+        <p className="flex items-start gap-2 border-t border-amber-100 bg-amber-50 px-5 py-2.5 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
           <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
           This Printify store is not linked to Etsy, so products published from it will not reach your Etsy shop. Link it on Printify (My stores → Add new store → Etsy).
         </p>

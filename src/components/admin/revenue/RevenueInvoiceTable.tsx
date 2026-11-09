@@ -80,26 +80,26 @@ export function RevenueInvoiceTable({
   const lastRow = Math.min(page * pageSize, totalCount);
 
   return (
-    <Card className="flex h-full flex-col rounded-2xl border border-ink-200/80 bg-card p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
+    <Card className="border-ink-200/80 bg-card flex h-full flex-col rounded-2xl border p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
       {/* Header + toolbar */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
             <Receipt className="h-5 w-5" />
           </div>
-          <h3 className="text-sm font-bold whitespace-nowrap text-ink-900 dark:text-slate-100">Recent Transactions</h3>
+          <h3 className="text-ink-900 text-sm font-bold whitespace-nowrap dark:text-slate-100">Recent Transactions</h3>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 max-md:grid max-md:grid-cols-2">
           <div className="relative w-full max-md:col-span-2 sm:w-72">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-ink-400" />
+            <Search className="text-ink-400 pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
             <input
               type="search"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder={isPhone ? "Search transactions" : "Search invoice, customer, email or user ID..."}
               aria-label="Search transactions"
-              className="h-9 w-full rounded-lg border border-ink-200 bg-card pr-3 pl-8 text-xs text-ink-700 placeholder:text-ink-400 focus:border-blue-400 focus:outline-none max-md:text-base dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+              className="border-ink-200 bg-card text-ink-700 placeholder:text-ink-400 h-9 w-full rounded-lg border pr-3 pl-8 text-xs focus:border-blue-400 focus:outline-none max-md:text-base dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             />
           </div>
 
@@ -117,7 +117,7 @@ export function RevenueInvoiceTable({
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 text-ink-400" />
+            <ChevronDown className="text-ink-400 pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2" />
           </div>
 
           <div className="relative max-md:min-w-0">
@@ -134,14 +134,14 @@ export function RevenueInvoiceTable({
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 text-ink-400" />
+            <ChevronDown className="text-ink-400 pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2" />
           </div>
 
           <div
             title="Change the period with the date filter at the top of the page"
-            className="flex h-9 items-center gap-1.5 rounded-lg border border-ink-200 px-3 text-xs whitespace-nowrap text-ink-600 max-md:hidden dark:border-slate-800 dark:text-slate-300"
+            className="border-ink-200 text-ink-600 flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs whitespace-nowrap max-md:hidden dark:border-slate-800 dark:text-slate-300"
           >
-            <Calendar className="size-3.5 text-ink-400" />
+            <Calendar className="text-ink-400 size-3.5" />
             {formatRangeDate(startDate)} – {formatRangeDate(endDate)}
           </div>
         </div>
@@ -150,37 +150,37 @@ export function RevenueInvoiceTable({
       {/* Table */}
       {isPhone ? (
         isLoading ? (
-          <p className="py-8 text-center text-sm text-ink-400">Loading transactions…</p>
+          <p className="text-ink-400 py-8 text-center text-sm">Loading transactions…</p>
         ) : !data || data.items.length === 0 ? (
-          <p className="py-8 text-center text-sm text-ink-400">No transactions match these filters.</p>
+          <p className="text-ink-400 py-8 text-center text-sm">No transactions match these filters.</p>
         ) : (
-          <ul className="divide-y divide-ink-100 dark:divide-slate-800">
+          <ul className="divide-ink-100 divide-y dark:divide-slate-800">
             {data.items.map((invoice) => {
               const status = getTransactionStatusStyle(invoice.status);
               const planColor = getPlanColor(invoice.planName);
               return (
                 <li key={invoice.id} className="space-y-1.5 py-3 text-xs tabular-nums">
-                  <p className="font-medium text-ink-700 dark:text-slate-200">{invoice.invoiceNumber}</p>
+                  <p className="text-ink-700 font-medium dark:text-slate-200">{invoice.invoiceNumber}</p>
                   <div>
-                    <p className="font-semibold text-ink-900 dark:text-slate-100">{invoice.customerName}</p>
-                    <p className="truncate text-[11px] text-ink-400">{invoice.customerEmail}</p>
+                    <p className="text-ink-900 font-semibold dark:text-slate-100">{invoice.customerName}</p>
+                    <p className="text-ink-400 truncate text-[11px]">{invoice.customerEmail}</p>
                   </div>
                   <p className="flex items-center justify-between gap-2">
                     <span className="inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold" style={{ backgroundColor: `${planColor}1a`, color: planColor }}>
                       {invoice.planName}
                     </span>
-                    <span className="font-semibold text-ink-900 dark:text-slate-100">{formatVnd(invoice.amount)}</span>
+                    <span className="text-ink-900 font-semibold dark:text-slate-100">{formatVnd(invoice.amount)}</span>
                   </p>
-                  <p className="flex items-center justify-between gap-2 text-ink-500 dark:text-slate-400">
+                  <p className="text-ink-500 flex items-center justify-between gap-2 dark:text-slate-400">
                     <span>{invoice.paymentMethod ?? "—"}</span>
                     <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${status.className}`}>{status.label}</span>
                   </p>
-                  <div className="flex items-center justify-between gap-2 text-ink-500 dark:text-slate-400">
+                  <div className="text-ink-500 flex items-center justify-between gap-2 dark:text-slate-400">
                     <span>{formatTransactionDate(invoice.paymentDate, invoice.createdAt)}</span>
                     <button
                       type="button"
                       onClick={() => setSelected(invoice)}
-                      className="inline-flex min-h-10 cursor-pointer items-center gap-1 rounded-md border border-ink-200 px-3 text-[11px] font-medium text-ink-600 dark:border-slate-800 dark:text-slate-300"
+                      className="border-ink-200 text-ink-600 inline-flex min-h-10 cursor-pointer items-center gap-1 rounded-md border px-3 text-[11px] font-medium dark:border-slate-800 dark:text-slate-300"
                     >
                       <Eye className="size-3" />
                       View
@@ -195,7 +195,7 @@ export function RevenueInvoiceTable({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[820px] text-xs tabular-nums">
           <thead>
-            <tr className="border-b border-ink-100 text-left text-[11px] font-semibold text-ink-500 dark:border-slate-800 dark:text-slate-400">
+            <tr className="border-ink-100 text-ink-500 border-b text-left text-[11px] font-semibold dark:border-slate-800 dark:text-slate-400">
               <th className="py-2.5 pr-3 font-semibold">Invoice No.</th>
               <th className="px-3 py-2.5 font-semibold">Customer</th>
               <th className="px-3 py-2.5 font-semibold">Plan</th>
@@ -209,17 +209,17 @@ export function RevenueInvoiceTable({
           <tbody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="border-b border-ink-100 last:border-0 dark:border-slate-800">
+                <tr key={i} className="border-ink-100 border-b last:border-0 dark:border-slate-800">
                   {Array.from({ length: 8 }).map((__, j) => (
                     <td key={j} className="px-3 py-3 first:pl-0 last:pr-0">
-                      <div className="h-3.5 w-full max-w-24 animate-pulse rounded bg-ink-100 dark:bg-slate-800" />
+                      <div className="bg-ink-100 h-3.5 w-full max-w-24 animate-pulse rounded dark:bg-slate-800" />
                     </td>
                   ))}
                 </tr>
               ))
             ) : !data || data.items.length === 0 ? (
               <tr>
-                <td colSpan={8} className="h-32 text-center text-ink-400">
+                <td colSpan={8} className="text-ink-400 h-32 text-center">
                   No transactions match these filters.
                 </td>
               </tr>
@@ -230,16 +230,16 @@ export function RevenueInvoiceTable({
                 return (
                   <tr
                     key={invoice.id}
-                    className="border-b border-ink-100 transition-colors last:border-0 hover:bg-ink-50/70 dark:border-slate-800 dark:hover:bg-slate-800/40"
+                    className="border-ink-100 hover:bg-ink-50/70 border-b transition-colors last:border-0 dark:border-slate-800 dark:hover:bg-slate-800/40"
                   >
-                    <td className="py-3 pr-3 font-medium whitespace-nowrap text-ink-700 dark:text-slate-200">
+                    <td className="text-ink-700 py-3 pr-3 font-medium whitespace-nowrap dark:text-slate-200">
                       {invoice.invoiceNumber}
                     </td>
                     <td className="px-3 py-3">
-                      <div className="font-semibold whitespace-nowrap text-ink-900 dark:text-slate-100">
+                      <div className="text-ink-900 font-semibold whitespace-nowrap dark:text-slate-100">
                         {invoice.customerName}
                       </div>
-                      <div className="max-w-[180px] truncate text-[11px] text-ink-400">{invoice.customerEmail}</div>
+                      <div className="text-ink-400 max-w-[180px] truncate text-[11px]">{invoice.customerEmail}</div>
                     </td>
                     <td className="px-3 py-3">
                       <span
@@ -249,10 +249,10 @@ export function RevenueInvoiceTable({
                         {invoice.planName}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-right font-semibold whitespace-nowrap text-ink-900 dark:text-slate-100">
+                    <td className="text-ink-900 px-3 py-3 text-right font-semibold whitespace-nowrap dark:text-slate-100">
                       {formatVnd(invoice.amount)}
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-ink-600 dark:text-slate-300">
+                    <td className="text-ink-600 px-3 py-3 whitespace-nowrap dark:text-slate-300">
                       {invoice.paymentMethod ?? <span className="text-ink-400">—</span>}
                     </td>
                     <td className="px-3 py-3">
@@ -260,14 +260,14 @@ export function RevenueInvoiceTable({
                         {status.label}
                       </span>
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-ink-500 dark:text-slate-400">
+                    <td className="text-ink-500 px-3 py-3 whitespace-nowrap dark:text-slate-400">
                       {formatTransactionDate(invoice.paymentDate, invoice.createdAt)}
                     </td>
                     <td className="py-3 pl-3 text-right">
                       <button
                         type="button"
                         onClick={() => setSelected(invoice)}
-                        className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-ink-200 px-2 py-1 text-[11px] font-medium text-ink-600 transition-colors hover:border-ink-300 hover:text-ink-900 dark:border-slate-700 dark:text-slate-300"
+                        className="border-ink-200 text-ink-600 hover:border-ink-300 hover:text-ink-900 inline-flex cursor-pointer items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium transition-colors dark:border-slate-700 dark:text-slate-300"
                       >
                         <Eye className="size-3" />
                         View
@@ -283,11 +283,11 @@ export function RevenueInvoiceTable({
       )}
 
       {/* Footer: count + numbered pager */}
-      <div className="mt-4 flex flex-col gap-3 border-t border-ink-100 pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
-        <p className="text-xs text-ink-500">
-          Showing <span className="font-semibold text-ink-700 dark:text-slate-200">{firstRow}</span> –{" "}
-          <span className="font-semibold text-ink-700 dark:text-slate-200">{lastRow}</span> of{" "}
-          <span className="font-semibold text-ink-700 dark:text-slate-200">{totalCount}</span> transactions
+      <div className="border-ink-100 mt-4 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
+        <p className="text-ink-500 text-xs">
+          Showing <span className="text-ink-700 font-semibold dark:text-slate-200">{firstRow}</span> –{" "}
+          <span className="text-ink-700 font-semibold dark:text-slate-200">{lastRow}</span> of{" "}
+          <span className="text-ink-700 font-semibold dark:text-slate-200">{totalCount}</span> transactions
         </p>
         {isPhone ? (
           <PhonePager page={page} pageCount={totalPages} onPageChange={onPageChange} label="Transactions pages" anchorId="recent-transactions" />
@@ -298,7 +298,7 @@ export function RevenueInvoiceTable({
             </PagerButton>
             {getPageItems(page, totalPages).map((item, i) =>
               item === "…" ? (
-                <span key={`gap-${i}`} className="px-1.5 text-xs text-ink-400">
+                <span key={`gap-${i}`} className="text-ink-400 px-1.5 text-xs">
                   …
                 </span>
               ) : (
@@ -352,7 +352,7 @@ function PagerButton({
       className={`inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 max-md:h-10 max-md:min-w-10 ${
         active
           ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-          : "border border-ink-200 text-ink-600 hover:border-ink-300 hover:text-ink-900 dark:border-slate-800 dark:text-slate-300"
+          : "border-ink-200 text-ink-600 hover:border-ink-300 hover:text-ink-900 border dark:border-slate-800 dark:text-slate-300"
       }`}
     >
       {children}

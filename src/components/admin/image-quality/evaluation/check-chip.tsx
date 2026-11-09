@@ -11,7 +11,7 @@ export const CheckChip = ({ label, isPassed }: CheckChipProps) => (
   <span
     className={cn(
       "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap",
-      isPassed ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300" : "bg-rose-50 dark:bg-rose-500/10 text-rose-800 dark:text-rose-300"
+      isPassed ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-rose-50 text-rose-800 dark:bg-rose-500/10 dark:text-rose-300"
     )}
   >
     {isPassed ? (

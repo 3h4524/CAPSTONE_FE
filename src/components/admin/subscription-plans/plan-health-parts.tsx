@@ -38,16 +38,16 @@ export const OUTLOOK_CHIP = {
 export function FindingList({ title, tone, items, className }: { title: string; tone: string; items: string[]; className?: string }) {
   return (
     <div className={className}>
-      <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink-900">
+      <p className="text-ink-900 mb-3 flex items-center gap-2 text-sm font-semibold">
         <span className={cn("size-2 rounded-full", tone)} />
         {title}
       </p>
       {items.length === 0 ? (
-        <p className="text-sm text-ink-400">None noted.</p>
+        <p className="text-ink-400 text-sm">None noted.</p>
       ) : (
-        <ul className="space-y-1.5 text-sm text-ink-600">
+        <ul className="text-ink-600 space-y-1.5 text-sm">
           {items.map((item) => (
-            <li key={item} className="rounded-xl border border-ink-200 bg-card p-3">
+            <li key={item} className="border-ink-200 bg-card rounded-xl border p-3">
               <Figures text={item} />
             </li>
           ))}
@@ -65,7 +65,7 @@ export function Pill({ level }: { level: keyof typeof LEVEL_STYLE }) {
 
 export function Bar({ value, color }: { value: number; color: string }) {
   return (
-    <div className="h-1.5 overflow-hidden rounded-full bg-ink-100">
+    <div className="bg-ink-100 h-1.5 overflow-hidden rounded-full">
       <div className={cn("h-full rounded-full", color)} style={{ width: `${Math.min(100, value)}%` }} />
     </div>
   );
@@ -84,8 +84,8 @@ export function Section({
 }) {
   return (
     <div className={className}>
-      <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink-900">
-        <Icon className="size-4 text-ink-400" />
+      <h3 className="text-ink-900 mb-3 flex items-center gap-2 text-sm font-semibold">
+        <Icon className="text-ink-400 size-4" />
         {title}
       </h3>
       {children}

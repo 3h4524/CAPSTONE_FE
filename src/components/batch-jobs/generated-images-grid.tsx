@@ -53,7 +53,7 @@ export const GeneratedImagesGrid = ({
       {shown.map((product) => (
         <div key={product.id}>
           <div className="mb-3 flex items-center gap-2">
-            <h4 className="min-w-0 truncate text-sm font-medium text-ink-900">{product.productName}</h4>
+            <h4 className="text-ink-900 min-w-0 truncate text-sm font-medium">{product.productName}</h4>
             {product.productType && <Badge variant="outline" className="border-ink-200 bg-ink-50 text-ink-700">{productTypeLabel(product.productType)}</Badge>}
             {onRegenerate &&
               (IN_PROGRESS_STATUSES.includes(product.status) ? (
@@ -79,8 +79,8 @@ export const GeneratedImagesGrid = ({
               className={cn(
                 "mb-3 flex items-start gap-2 rounded-md border px-3 py-2 text-xs leading-relaxed",
                 product.images.length === 0
-                  ? "border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 text-rose-900 dark:text-rose-300"
-                  : "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-900 dark:text-amber-300"
+                  ? "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+                  : "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
               )}
             >
               <CircleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />

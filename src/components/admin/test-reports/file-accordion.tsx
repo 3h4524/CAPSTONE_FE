@@ -31,7 +31,7 @@ export const TestReportFileAccordion = ({ files }: TestReportFileAccordionProps)
     );
 
   return (
-    <div className="divide-y divide-ink-100">
+    <div className="divide-ink-100 divide-y">
       {files.map((file) => {
         const key = `${file.project}:${file.file}`;
         const isOpen = openFiles.includes(key);
@@ -41,20 +41,20 @@ export const TestReportFileAccordion = ({ files }: TestReportFileAccordionProps)
             <button
               type="button"
               onClick={() => toggle(key)}
-              className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-ink-50/70"
+              className="hover:bg-ink-50/70 flex w-full items-center gap-3 px-5 py-3 text-left transition-colors"
               aria-expanded={isOpen}
             >
               <ChevronDown
                 className={cn(
-                  "size-4 shrink-0 text-ink-400 transition-transform",
+                  "text-ink-400 size-4 shrink-0 transition-transform",
                   isOpen && "rotate-180"
                 )}
               />
-              <FileCode2 className="size-4 shrink-0 text-ink-400" />
-              <span className="min-w-0 flex-1 truncate font-mono text-xs text-ink-700">
+              <FileCode2 className="text-ink-400 size-4 shrink-0" />
+              <span className="text-ink-700 min-w-0 flex-1 truncate font-mono text-xs">
                 {file.file}
               </span>
-              <span className="hidden shrink-0 rounded bg-ink-100 px-1.5 py-0.5 text-[10px] font-medium text-ink-500 sm:inline">
+              <span className="bg-ink-100 text-ink-500 hidden shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium sm:inline">
                 {file.project}
               </span>
               <span className="flex shrink-0 items-center gap-2 font-mono text-[11px]">
@@ -81,7 +81,7 @@ export const TestReportFileAccordion = ({ files }: TestReportFileAccordionProps)
             </button>
 
             {isOpen && (
-              <ul className="border-t border-ink-100 bg-ink-50/40">
+              <ul className="border-ink-100 bg-ink-50/40 border-t">
                 {file.specs.map((spec) => (
                   <TestReportSpecRow
                     key={`${file.file}:${spec.title}`}

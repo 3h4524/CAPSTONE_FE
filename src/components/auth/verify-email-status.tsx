@@ -22,7 +22,7 @@ export const VerifyEmailStatus = () => {
   if (!token) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-ink-600">
+        <p className="text-ink-600 text-sm">
           This link is missing its verification token. Enter your email to get a new one.
         </p>
         <FormResendVerification />
@@ -31,7 +31,7 @@ export const VerifyEmailStatus = () => {
   }
 
   if (isPending) {
-    return <p className="text-sm text-ink-600">Verifying your email...</p>;
+    return <p className="text-ink-600 text-sm">Verifying your email...</p>;
   }
 
   if (isSuccess) {

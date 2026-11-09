@@ -27,7 +27,7 @@ const SelectedNodePanel = ({ node }: { node: WorkflowNode }) => {
   if (!hasRun || !RESULT_NODE_TYPES.includes(node.data.type)) return <NodeConfigForm node={node} />;
 
   return (
-    <div className="flex h-full flex-col bg-card">
+    <div className="bg-card flex h-full flex-col">
       <PanelHeader node={node} onClose={() => selectNode(null)}>
         <div className="bg-muted/70 grid grid-cols-2 gap-1 rounded-lg p-1" role="group" aria-label="Node panel view">
           {(["results", "settings"] as const).map((item) => (
@@ -39,7 +39,7 @@ const SelectedNodePanel = ({ node }: { node: WorkflowNode }) => {
               aria-pressed={view === item}
               onClick={() => setView(item)}
               className={cn(
-                "h-7 rounded-md px-3 text-xs font-semibold text-ink-600 hover:translate-y-0 hover:text-ink-900",
+                "text-ink-600 hover:text-ink-900 h-7 rounded-md px-3 text-xs font-semibold hover:translate-y-0",
                 view === item && "bg-card text-ink-900 shadow-sm"
               )}
             >

@@ -39,7 +39,7 @@ export const FormRegister = () => {
   if (registeredEmail) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-ink-600">
+        <p className="text-ink-600 text-sm">
           We sent a verification link to <span className="font-medium">{registeredEmail}</span>.
           Open it to activate your account.
         </p>

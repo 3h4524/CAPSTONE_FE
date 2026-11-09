@@ -66,10 +66,10 @@ export const TestReportMetricCards = ({
       {cards.map(({ label, value, note, icon: Icon, tone }) => (
         <article
           key={label}
-          className="rounded-lg border border-ink-200 bg-card p-4 shadow-[0_2px_8px_rgba(15,23,42,0.02)] sm:p-5"
+          className="border-ink-200 bg-card rounded-lg border p-4 shadow-[0_2px_8px_rgba(15,23,42,0.02)] sm:p-5"
         >
           <div className="flex items-start justify-between gap-3">
-            <p className="text-[9px] font-bold tracking-[0.13em] text-ink-400 uppercase">
+            <p className="text-ink-400 text-[9px] font-bold tracking-[0.13em] uppercase">
               {label}
             </p>
             <span className={cn("flex size-6 items-center justify-center rounded", tone)}>
@@ -77,13 +77,13 @@ export const TestReportMetricCards = ({
             </span>
           </div>
           {isLoading ? (
-            <div className="mt-3 h-7 w-16 animate-pulse rounded bg-ink-100" />
+            <div className="bg-ink-100 mt-3 h-7 w-16 animate-pulse rounded" />
           ) : (
-            <p className="font-display mt-3 text-2xl font-bold tracking-tight text-ink-900">
+            <p className="font-display text-ink-900 mt-3 text-2xl font-bold tracking-tight">
               {value}
             </p>
           )}
-          <p className="mt-2 text-[10px] text-ink-400">{note}</p>
+          <p className="text-ink-400 mt-2 text-[10px]">{note}</p>
         </article>
       ))}
     </div>

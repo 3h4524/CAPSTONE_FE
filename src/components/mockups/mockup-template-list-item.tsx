@@ -45,10 +45,10 @@ export const MockupTemplateListItem = ({
         onClick={() => setViewing(0)}
         disabled={isImageBroken}
         aria-label={`View ${template.name} larger`}
-        className="relative block aspect-[4/3] w-full shrink-0 cursor-zoom-in overflow-hidden bg-ink-100 disabled:cursor-default"
+        className="bg-ink-100 relative block aspect-[4/3] w-full shrink-0 cursor-zoom-in overflow-hidden disabled:cursor-default"
       >
         {isImageBroken ? (
-          <span className="absolute inset-0 flex items-center justify-center text-ink-400">
+          <span className="text-ink-400 absolute inset-0 flex items-center justify-center">
             <ImageIcon className="size-8" aria-hidden="true" />
           </span>
         ) : (
@@ -99,7 +99,7 @@ export const MockupTemplateListItem = ({
       <CardContent className="flex flex-col gap-2 p-4 max-md:p-2.5">
         <div className="flex items-center gap-2">
           {/* Names often differ only at the end, so a phone gives them a second line. */}
-          <p className="min-w-0 flex-1 truncate font-semibold text-ink-900 max-md:line-clamp-2 max-md:text-sm max-md:whitespace-normal">{template.name}</p>
+          <p className="text-ink-900 min-w-0 flex-1 truncate font-semibold max-md:line-clamp-2 max-md:text-sm max-md:whitespace-normal">{template.name}</p>
           <PhotoSourceTag system={template.isSystemTemplate} className="max-md:hidden" />
         </div>
         <div className="flex flex-wrap gap-1.5 max-md:[&>*]:max-w-full max-md:[&>*]:whitespace-normal">

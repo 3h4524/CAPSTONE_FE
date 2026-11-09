@@ -68,16 +68,16 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
               <Activity className="size-[18px]" />
             </div>
             <div>
-              <h2 id="ai-review-title" className="flex items-center gap-1.5 text-lg font-semibold tracking-tight text-ink-900">
+              <h2 id="ai-review-title" className="text-ink-900 flex items-center gap-1.5 text-lg font-semibold tracking-tight">
                 Plan health
               </h2>
-              <p className="text-xs text-ink-400">Loading AI review...</p>
+              <p className="text-ink-400 text-xs">Loading AI review...</p>
             </div>
           </div>
         </div>
-        <Card className="flex h-56 flex-col items-center justify-center rounded-2xl border border-ink-200 bg-card p-6">
-          <Loader2 className="size-6 animate-spin text-ink-400" />
-          <p className="mt-2 text-xs text-ink-400">Analyzing plan performance and subscriber health metrics...</p>
+        <Card className="border-ink-200 bg-card flex h-56 flex-col items-center justify-center rounded-2xl border p-6">
+          <Loader2 className="text-ink-400 size-6 animate-spin" />
+          <p className="text-ink-400 mt-2 text-xs">Analyzing plan performance and subscriber health metrics...</p>
         </Card>
       </section>
     );
@@ -92,10 +92,10 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
               <Activity className="size-[18px]" />
             </div>
             <div>
-              <h2 id="ai-review-title" className="flex items-center gap-1.5 text-lg font-semibold tracking-tight text-ink-900">
+              <h2 id="ai-review-title" className="text-ink-900 flex items-center gap-1.5 text-lg font-semibold tracking-tight">
                 Plan health
               </h2>
-              <p className="text-xs text-ink-500">AI analysis unavailable</p>
+              <p className="text-ink-500 text-xs">AI analysis unavailable</p>
             </div>
           </div>
           <Button
@@ -109,10 +109,10 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
           </Button>
         </div>
 
-        <div className="rounded-xl border border-dashed border-ink-300 bg-card px-6 py-8 text-center max-md:p-4">
+        <div className="border-ink-300 bg-card rounded-xl border border-dashed px-6 py-8 text-center max-md:p-4">
           <AlertTriangle className="mx-auto size-7 text-amber-500" />
-          <p className="mt-2 text-sm font-semibold text-ink-800">AI Plan Review is currently unavailable</p>
-          <p className="mx-auto mt-1 max-w-md text-xs text-ink-500">
+          <p className="text-ink-800 mt-2 text-sm font-semibold">AI Plan Review is currently unavailable</p>
+          <p className="text-ink-500 mx-auto mt-1 max-w-md text-xs">
             Unable to connect to the AI review service or the server returned an error. The rule-based checks below still apply.
           </p>
           <div className="mt-4 flex items-center justify-center gap-2">
@@ -143,18 +143,18 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
             <Activity className="size-[18px]" />
           </div>
           <div>
-            <h2 id="ai-review-title" className="flex items-center gap-1.5 text-lg font-semibold tracking-tight text-ink-900">
+            <h2 id="ai-review-title" className="text-ink-900 flex items-center gap-1.5 text-lg font-semibold tracking-tight">
               Plan health
               {/* A plain title tooltip: the caveat stays one hover away instead of a third line. */}
               <span
-                className="cursor-help text-ink-400"
+                className="text-ink-400 cursor-help"
                 title="Written by AI. Every figure it quotes is checked against the data. It shows what goes together, not proven causes."
               >
                 <Info className="size-3.5" aria-label="About this review" />
               </span>
             </h2>
             {snapshot && (
-              <p className="text-xs text-ink-500" title={snapshot.model ?? undefined}>
+              <p className="text-ink-500 text-xs" title={snapshot.model ?? undefined}>
                 AI review of {formatPeriod(snapshot.periodStart, snapshot.periodEnd)} · Generated {formatDay(snapshot.generatedAt)}
                 {data.nextRefreshAt && <> · Next refresh {formatDay(data.nextRefreshAt)}</>}
               </p>
@@ -172,7 +172,7 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
             {data.isGenerating ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
             {data.isGenerating ? "Generating…" : "Regenerate"}
           </Button>
-          {blocker && !data.isGenerating && <span className="text-[11px] text-ink-400">{blocker}</span>}
+          {blocker && !data.isGenerating && <span className="text-ink-400 text-[11px]">{blocker}</span>}
         </div>
       </div>
 
@@ -226,7 +226,7 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
         </>
       ) : (
         !data.isGenerating && (
-          <p className="rounded-xl border border-dashed border-ink-300 bg-card px-4 py-6 text-center text-sm text-ink-500">
+          <p className="border-ink-300 bg-card text-ink-500 rounded-xl border border-dashed px-4 py-6 text-center text-sm">
             No AI review yet. {data.isConfigured ? "Press Regenerate to write the first one, or wait for the scheduled one." : ""}
             {" "}The rule-based checks below still apply.
           </p>
@@ -246,12 +246,12 @@ function StatusNotes({ data }: { data: PlanAiReviewResponse }) {
         </p>
       )}
       {!data.isConfigured && (
-        <p className="flex items-center gap-2 rounded-lg border border-ink-200 bg-ink-50 px-3 py-1.5 text-xs text-ink-600">
+        <p className="border-ink-200 bg-ink-50 text-ink-600 flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs">
           <Info className="size-3.5 shrink-0" /> AI reviews are off: no Gemini key is set on the server.
         </p>
       )}
       {data.lastFailedAt && !data.isGenerating && (
-        <p className="flex items-center gap-2 rounded-lg border border-amber-200/70 dark:border-amber-500/30 bg-amber-50/70 dark:bg-amber-500/10 px-3 py-1.5 text-xs text-amber-900 dark:text-amber-300">
+        <p className="flex items-center gap-2 rounded-lg border border-amber-200/70 bg-amber-50/70 px-3 py-1.5 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
           <AlertTriangle className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
           The last attempt on {formatDay(data.lastFailedAt)} did not pass the checks
           {data.latest ? ", so this is the previous review." : "."} It will be tried again automatically.

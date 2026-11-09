@@ -16,17 +16,17 @@ export function IntegrationHealthCards({
 }: IntegrationHealthCardsProps) {
   if (isLoading || !integrationStatus) {
     return (
-      <div className="flex h-full flex-col justify-between rounded-2xl border border-ink-200/80 bg-card p-5 shadow-2xs max-md:p-4">
-        <div className="flex items-center gap-3 border-b border-ink-100 pb-3">
-          <div className="h-9 w-9 animate-pulse rounded-lg bg-ink-100" />
+      <div className="border-ink-200/80 bg-card flex h-full flex-col justify-between rounded-2xl border p-5 shadow-2xs max-md:p-4">
+        <div className="border-ink-100 flex items-center gap-3 border-b pb-3">
+          <div className="bg-ink-100 h-9 w-9 animate-pulse rounded-lg" />
           <div className="space-y-1.5">
-            <div className="h-4 w-28 animate-pulse rounded bg-ink-100" />
-            <div className="h-3 w-48 animate-pulse rounded bg-ink-100" />
+            <div className="bg-ink-100 h-4 w-28 animate-pulse rounded" />
+            <div className="bg-ink-100 h-3 w-48 animate-pulse rounded" />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3 pt-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl bg-ink-100" />
+            <div key={i} className="bg-ink-100 h-20 animate-pulse rounded-xl" />
           ))}
         </div>
       </div>
@@ -36,8 +36,8 @@ export function IntegrationHealthCards({
   const renderStatusBadge = (rate: number, total: number) => {
     if (total === 0) {
       return (
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-ink-500">
-          <span className="h-1.5 w-1.5 rounded-full bg-ink-400" />
+        <span className="text-ink-500 inline-flex items-center gap-1.5 text-[11px] font-medium">
+          <span className="bg-ink-400 h-1.5 w-1.5 rounded-full" />
           Inactive
         </span>
       );
@@ -59,15 +59,15 @@ export function IntegrationHealthCards({
   };
 
   return (
-    <div className="flex h-full flex-col justify-between rounded-2xl border border-ink-200/80 bg-card p-5 shadow-2xs max-md:p-4">
+    <div className="border-ink-200/80 bg-card flex h-full flex-col justify-between rounded-2xl border p-5 shadow-2xs max-md:p-4">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-ink-100 pb-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink-100 text-ink-600">
+      <div className="border-ink-100 flex items-center gap-3 border-b pb-3">
+        <div className="bg-ink-100 text-ink-600 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">
           <Plug className="h-5 w-5" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-ink-900">Integrations</h3>
-          <p className="text-xs text-ink-500">
+          <h3 className="text-ink-900 text-sm font-bold">Integrations</h3>
+          <p className="text-ink-500 text-xs">
             Uploads and shares sent to Etsy, Printify and social channels
           </p>
         </div>
@@ -76,17 +76,17 @@ export function IntegrationHealthCards({
       {/* 2x2 Grid of Channels */}
       <div className="grid grid-cols-1 gap-3 pt-3 max-[359px]:grid-cols-1 max-md:grid-cols-2 max-md:gap-2 sm:grid-cols-2">
         {/* Etsy */}
-        <div className="flex items-center justify-between gap-2 rounded-xl border border-ink-200/80 bg-ink-50/70 p-3.5 transition-all hover:bg-ink-50 max-md:flex-wrap max-md:p-2.5">
+        <div className="border-ink-200/80 bg-ink-50/70 hover:bg-ink-50 flex items-center justify-between gap-2 rounded-xl border p-3.5 transition-all max-md:flex-wrap max-md:p-2.5">
           <div className="flex min-w-0 items-center gap-2.5 max-md:gap-2">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f97316] text-[10px] font-bold text-white shadow-2xs">
               Etsy
             </div>
-            <span className="text-xs font-semibold text-ink-800">
+            <span className="text-ink-800 text-xs font-semibold">
               Etsy Marketplace
             </span>
           </div>
           <div className="min-w-0 text-right">
-            <span className="text-sm font-bold text-ink-900">
+            <span className="text-ink-900 text-sm font-bold">
               {integrationStatus.etsyTotal.toLocaleString()}
             </span>
             <div>
@@ -99,17 +99,17 @@ export function IntegrationHealthCards({
         </div>
 
         {/* Printify */}
-        <div className="flex items-center justify-between gap-2 rounded-xl border border-ink-200/80 bg-ink-50/70 p-3.5 transition-all hover:bg-ink-50 max-md:flex-wrap max-md:p-2.5">
+        <div className="border-ink-200/80 bg-ink-50/70 hover:bg-ink-50 flex items-center justify-between gap-2 rounded-xl border p-3.5 transition-all max-md:flex-wrap max-md:p-2.5">
           <div className="flex min-w-0 items-center gap-2.5 max-md:gap-2">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#22c55e] text-[11px] font-bold text-white shadow-2xs">
               P
             </div>
-            <span className="text-xs font-semibold text-ink-800">
+            <span className="text-ink-800 text-xs font-semibold">
               Printify Fulfillment
             </span>
           </div>
           <div className="min-w-0 text-right">
-            <span className="text-sm font-bold text-ink-900">
+            <span className="text-ink-900 text-sm font-bold">
               {integrationStatus.printifyTotal.toLocaleString()}
             </span>
             <div>
@@ -122,17 +122,17 @@ export function IntegrationHealthCards({
         </div>
 
         {/* Social Media */}
-        <div className="flex items-center justify-between gap-2 rounded-xl border border-ink-200/80 bg-ink-50/70 p-3.5 transition-all hover:bg-ink-50 max-md:flex-wrap max-md:p-2.5">
+        <div className="border-ink-200/80 bg-ink-50/70 hover:bg-ink-50 flex items-center justify-between gap-2 rounded-xl border p-3.5 transition-all max-md:flex-wrap max-md:p-2.5">
           <div className="flex min-w-0 items-center gap-2.5 max-md:gap-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ink-200/80 text-ink-700">
+            <div className="bg-ink-200/80 text-ink-700 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
               <Share2 className="h-4 w-4" />
             </div>
-            <span className="text-xs font-semibold text-ink-800">
+            <span className="text-ink-800 text-xs font-semibold">
               Social Media Shares
             </span>
           </div>
           <div className="min-w-0 text-right">
-            <span className="text-sm font-bold text-ink-900">
+            <span className="text-ink-900 text-sm font-bold">
               {integrationStatus.socialMediaTotal.toLocaleString()}
             </span>
             <div>
@@ -145,12 +145,12 @@ export function IntegrationHealthCards({
         </div>
 
         {/* Sync Incidents */}
-        <div className="flex items-center justify-between gap-2 rounded-xl border border-ink-200/80 bg-ink-50/70 p-3.5 transition-all hover:bg-ink-50 max-md:flex-wrap max-md:p-2.5">
+        <div className="border-ink-200/80 bg-ink-50/70 hover:bg-ink-50 flex items-center justify-between gap-2 rounded-xl border p-3.5 transition-all max-md:flex-wrap max-md:p-2.5">
           <div className="flex min-w-0 items-center gap-2.5 max-md:gap-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">
               <AlertTriangle className="h-4 w-4" />
             </div>
-            <span className="text-xs font-semibold text-ink-800">
+            <span className="text-ink-800 text-xs font-semibold">
               Sync Incidents
             </span>
           </div>
@@ -171,8 +171,8 @@ export function IntegrationHealthCards({
                   Action Req
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-ink-500">
-                  <span className="h-1.5 w-1.5 rounded-full bg-ink-400" />
+                <span className="text-ink-500 inline-flex items-center gap-1.5 text-[11px] font-medium">
+                  <span className="bg-ink-400 h-1.5 w-1.5 rounded-full" />
                   No traffic
                 </span>
               )}

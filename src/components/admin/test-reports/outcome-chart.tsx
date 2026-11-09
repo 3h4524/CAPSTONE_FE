@@ -38,7 +38,7 @@ export const TestReportOutcomeChart = ({
 
   if (total === 0) {
     return (
-      <div className="flex h-[220px] items-center justify-center text-xs text-ink-400">
+      <div className="text-ink-400 flex h-[220px] items-center justify-center text-xs">
         The run covered no test.
       </div>
     );
@@ -72,8 +72,8 @@ export const TestReportOutcomeChart = ({
         </PieChart>
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-display text-2xl font-bold text-ink-900">{total}</span>
-        <span className="text-[10px] tracking-wide text-ink-400 uppercase">tests</span>
+        <span className="font-display text-ink-900 text-2xl font-bold">{total}</span>
+        <span className="text-ink-400 text-[10px] tracking-wide uppercase">tests</span>
       </div>
     </div>
   );

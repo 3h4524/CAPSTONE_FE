@@ -58,7 +58,7 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
   if (!manual) {
     return (
       <section className="space-y-3 border-t pt-5" aria-label="Approval">
-        <h3 className="text-sm font-semibold text-ink-900">Approval</h3>
+        <h3 className="text-ink-900 text-sm font-semibold">Approval</h3>
         <PanelNotice tone="info">
           {job.requireApproval === false
             ? "This run approves every design automatically, so they continue to the mock-ups without a review."
@@ -71,7 +71,7 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
   if (!designsReady) {
     return (
       <section className="space-y-3 border-t pt-5" aria-label="Approval">
-        <h3 className="text-sm font-semibold text-ink-900">Review designs</h3>
+        <h3 className="text-ink-900 text-sm font-semibold">Review designs</h3>
         <PanelNotice>The designs are still being generated. You can review them as soon as the job finishes.</PanelNotice>
       </section>
     );
@@ -82,13 +82,13 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
 
   return (
     <section className="space-y-4" aria-label="Review designs">
-      <div className="sticky top-0 z-10 -mx-5 space-y-3 border-y bg-card/95 px-5 py-3 backdrop-blur">
+      <div className="bg-card/95 sticky top-0 z-10 -mx-5 space-y-3 border-y px-5 py-3 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-ink-900">Review designs</h3>
+          <h3 className="text-ink-900 text-sm font-semibold">Review designs</h3>
           <p className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums" aria-live="polite">
             <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />{counts.approved} approved</span>
             <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-rose-500" aria-hidden="true" />{counts.rejected} rejected</span>
-            <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-ink-400" aria-hidden="true" />{counts.pending} to review</span>
+            <span className="flex items-center gap-1.5"><span className="bg-ink-400 size-1.5 rounded-full" aria-hidden="true" />{counts.pending} to review</span>
           </p>
         </div>
         <div className="grid grid-cols-1 gap-2 @xs:grid-cols-2">
@@ -159,7 +159,7 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
                     className={cn(
                       "overflow-hidden rounded-lg border",
                       status === "approved" && "border-emerald-300 dark:border-emerald-500/40",
-                      status === "rejected" && "border-rose-300 dark:border-rose-500/40 opacity-70"
+                      status === "rejected" && "border-rose-300 opacity-70 dark:border-rose-500/40"
                     )}
                   >
                     {/* Opens the design large on the page rather than in a new tab. */}

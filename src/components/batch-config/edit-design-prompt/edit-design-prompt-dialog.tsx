@@ -56,7 +56,7 @@ export const EditDesignPromptDialog = ({ rowId, open, onOpenChange }: EditDesign
         ) : isPromptError || !prompt ? (
           <div className="flex flex-col items-center justify-center gap-4 p-8 text-center" role="alert">
             <div>
-              <p className="font-semibold text-ink-900">Prompt unavailable</p>
+              <p className="text-ink-900 font-semibold">Prompt unavailable</p>
               <p className="text-muted-foreground mt-1 text-sm">We could not load this prompt. Check your connection and try again.</p>
             </div>
             <div className="flex gap-2">

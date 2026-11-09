@@ -41,7 +41,7 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
   if (isError) {
     return (
       <AdminShell pageTitle="Test report">
-        <div className="rounded-lg border border-rose-200 dark:border-rose-500/30 bg-rose-50/50 dark:bg-rose-500/10 px-5 py-14 text-center">
+        <div className="rounded-lg border border-rose-200 bg-rose-50/50 px-5 py-14 text-center dark:border-rose-500/30 dark:bg-rose-500/10">
           <p className="text-sm font-semibold text-rose-800 dark:text-rose-300">
             This report could not be read
           </p>
@@ -61,8 +61,8 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
     return (
       <AdminShell pageTitle="Test report">
         <div className="space-y-4">
-          <div className="h-36 animate-pulse rounded-xl bg-ink-100" />
-          <div className="h-64 animate-pulse rounded-xl bg-ink-100" />
+          <div className="bg-ink-100 h-36 animate-pulse rounded-xl" />
+          <div className="bg-ink-100 h-64 animate-pulse rounded-xl" />
         </div>
       </AdminShell>
     );
@@ -72,7 +72,7 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
     <AdminShell pageTitle="Test report">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <Button variant="ghost" size="sm" asChild className="gap-2 text-ink-500">
+          <Button variant="ghost" size="sm" asChild className="text-ink-500 gap-2">
             <Link href="/admin/test-reports">
               <ArrowLeft className="size-4" />
               All test reports
@@ -91,7 +91,7 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
 
         <TestReportVerdict run={data.run} />
         {isRunning ? (
-          <p className="rounded-xl border border-sky-100 dark:border-sky-500/30 bg-sky-50/40 dark:bg-sky-500/10 px-5 py-4 text-xs leading-relaxed text-ink-600">
+          <p className="text-ink-600 rounded-xl border border-sky-100 bg-sky-50/40 px-5 py-4 text-xs leading-relaxed dark:border-sky-500/30 dark:bg-sky-500/10">
             This page follows the live state, so the verdict above flips the moment the suite
             lands — the took on this page counts up while it is still going. The arrow above
             still forces a pull if you want one.
@@ -110,12 +110,12 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
               <TestReportFileFailures files={data.files} />
             </div>
 
-            <section className="overflow-hidden rounded-xl border border-ink-200 bg-card">
-              <div className="border-b border-ink-100 px-5 py-4">
-                <h3 className="text-xs font-bold tracking-wide text-ink-800 uppercase">
+            <section className="border-ink-200 bg-card overflow-hidden rounded-xl border">
+              <div className="border-ink-100 border-b px-5 py-4">
+                <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
                   The slowest tests
                 </h3>
-                <p className="mt-0.5 text-[10px] text-ink-400">
+                <p className="text-ink-400 mt-0.5 text-[10px]">
                   The tests that took the most time in this run.
                 </p>
               </div>

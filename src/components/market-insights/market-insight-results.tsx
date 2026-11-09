@@ -82,7 +82,7 @@ export function MarketInsightResults({ data }: MarketInsightResultsProps) {
             <div className="flex items-center justify-between border-b pb-3 text-sm"><span className="text-muted-foreground">Average views</span><span className="font-semibold">{formatDecimal(data.averageViews)}</span></div>
             <div className="flex items-center justify-between border-b pb-3 text-sm"><span className="text-muted-foreground">New listings</span><span className="font-semibold">{data.newListingCount.toLocaleString()}</span></div>
             <div className="flex items-center justify-between text-sm"><span className="text-muted-foreground">Observation periods</span><span className="font-semibold">{data.observationPeriodCount.toLocaleString()}</span></div>
-            <p className="rounded-lg bg-amber-50 dark:bg-amber-500/10 p-3 text-xs leading-5 text-amber-800 dark:text-amber-300">Favorites and views are public listing signals. They are not Etsy search volume, sales, or revenue.</p>
+            <p className="rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">Favorites and views are public listing signals. They are not Etsy search volume, sales, or revenue.</p>
           </CardContent>
         </Card>
       </div>

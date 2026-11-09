@@ -52,11 +52,11 @@ export const TestReportRunTrend = ({ runs, currentRunId }: TestReportRunTrendPro
   }
 
   return (
-    <section className="rounded-xl border border-ink-200 bg-card p-5">
-      <h3 className="text-xs font-bold tracking-wide text-ink-800 uppercase">
+    <section className="border-ink-200 bg-card rounded-xl border p-5">
+      <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
         Pass rate over the runs
       </h3>
-      <p className="mt-0.5 mb-3 text-[10px] text-ink-400">
+      <p className="text-ink-400 mt-0.5 mb-3 text-[10px]">
         Every run kept on this machine, oldest first. The big dot is this run.
       </p>
 

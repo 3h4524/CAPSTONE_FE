@@ -55,7 +55,7 @@ export function SubscriptionAnalyticsCard({
   const focus = FOCUS_BY_TAB[activeTab];
 
   return (
-    <Card className="flex h-full flex-col justify-between rounded-2xl border border-ink-200/80 bg-card p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
+    <Card className="border-ink-200/80 bg-card flex h-full flex-col justify-between rounded-2xl border p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
       {/* Header */}
       <div className="flex flex-col gap-3 pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -63,13 +63,13 @@ export function SubscriptionAnalyticsCard({
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
               <TrendingUp className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-ink-900 dark:text-slate-100">
+            <h3 className="text-ink-900 text-sm font-bold dark:text-slate-100">
               Subscription Analytics
             </h3>
           </div>
 
           {/* Legend: the focused series stays solid, the rest fade with the chart */}
-          <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-ink-600 dark:text-slate-400">
+          <div className="text-ink-600 flex flex-wrap items-center gap-3 text-[11px] font-medium dark:text-slate-400">
             {SERIES.map((s) => (
               <div
                 key={s.key}
@@ -84,7 +84,7 @@ export function SubscriptionAnalyticsCard({
           </div>
         </div>
 
-        <div className="inline-flex w-fit items-center gap-1 rounded-xl bg-ink-100/90 p-1 max-md:flex max-md:w-full dark:bg-slate-800">
+        <div className="bg-ink-100/90 inline-flex w-fit items-center gap-1 rounded-xl p-1 max-md:flex max-md:w-full dark:bg-slate-800">
           {TABS.map((tab) => (
             <button
               key={tab}
@@ -109,10 +109,10 @@ export function SubscriptionAnalyticsCard({
           <div className="h-[210px] w-full lg:col-span-8">
             {isLoading ? (
               <div className="flex h-full w-full items-center justify-center">
-                <div className="h-40 w-full animate-pulse rounded-lg bg-ink-100 dark:bg-slate-800" />
+                <div className="bg-ink-100 h-40 w-full animate-pulse rounded-lg dark:bg-slate-800" />
               </div>
             ) : points.length === 0 ? (
-              <div className="flex h-full w-full items-center justify-center text-xs text-ink-400">
+              <div className="text-ink-400 flex h-full w-full items-center justify-center text-xs">
                 No subscription data recorded in this period.
               </div>
             ) : (
@@ -140,8 +140,8 @@ export function SubscriptionAnalyticsCard({
                     content={({ active, payload, label }) => {
                       if (!active || !payload?.length) return null;
                       return (
-                        <div className="rounded-xl border border-ink-200 bg-card p-2.5 shadow-md dark:border-slate-800 dark:bg-slate-900">
-                          <p className="mb-1 text-xs font-semibold text-ink-700 dark:text-slate-300">
+                        <div className="border-ink-200 bg-card rounded-xl border p-2.5 shadow-md dark:border-slate-800 dark:bg-slate-900">
+                          <p className="text-ink-700 mb-1 text-xs font-semibold dark:text-slate-300">
                             {label}
                           </p>
                           {payload.map((item) => (
@@ -151,7 +151,7 @@ export function SubscriptionAnalyticsCard({
                                 style={{ backgroundColor: item.color }}
                               />
                               <span className="text-ink-500 dark:text-slate-400">{item.name}:</span>
-                              <span className="font-semibold text-ink-900 dark:text-slate-100">
+                              <span className="text-ink-900 font-semibold dark:text-slate-100">
                                 {item.value}
                               </span>
                             </div>
@@ -186,7 +186,7 @@ export function SubscriptionAnalyticsCard({
           </div>
 
           {/* Right metrics column */}
-          <div className="flex flex-col justify-between py-1 pl-2 max-md:grid max-md:grid-cols-2 max-md:gap-3 max-md:rounded-xl max-md:bg-ink-50 max-md:p-3 lg:col-span-4 dark:max-md:bg-slate-800/50">
+          <div className="max-md:bg-ink-50 flex flex-col justify-between py-1 pl-2 max-md:grid max-md:grid-cols-2 max-md:gap-3 max-md:rounded-xl max-md:p-3 lg:col-span-4 dark:max-md:bg-slate-800/50">
             <MetricRow label="New Subscriptions" metric={data?.newSubscriptions} />
             <MetricRow label="Renewals" metric={data?.renewals} />
             <MetricRow label="Cancellations" metric={data?.cancellations} polarity="lower-is-better" />
@@ -232,9 +232,9 @@ function MetricRow({
 
   return (
     <div>
-      <span className="text-[11px] font-medium text-ink-400 dark:text-slate-500">{label}</span>
+      <span className="text-ink-400 text-[11px] font-medium dark:text-slate-500">{label}</span>
       <div className="mt-0.5 flex items-baseline gap-2">
-        <span className="text-base font-bold text-ink-900 dark:text-slate-100">{formatValue(value)}</span>
+        <span className="text-ink-900 text-base font-bold dark:text-slate-100">{formatValue(value)}</span>
         <span
           title={changeTitle}
           className={`flex cursor-help items-center text-xs font-semibold ${CHANGE_TONE_CLASS[tone]}`}
@@ -244,7 +244,7 @@ function MetricRow({
           {formatChange(pct, value, changeUnit)}
         </span>
       </div>
-      {hint && <p className="text-[10px] text-ink-400 dark:text-slate-500">{hint}</p>}
+      {hint && <p className="text-ink-400 text-[10px] dark:text-slate-500">{hint}</p>}
     </div>
   );
 }

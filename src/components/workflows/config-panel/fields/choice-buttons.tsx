@@ -42,8 +42,8 @@ export const ChoiceButtons = ({ choices, value, label, onChange, className, ...p
           aria-pressed={active}
           onClick={() => onChange(choice.value)}
           className={cn(
-            "h-auto min-w-0 flex-col gap-1 rounded-md px-1 py-1.5 text-xs font-medium text-ink-600 hover:translate-y-0 hover:text-ink-900",
-            active && "bg-card text-ink-900 shadow-sm ring-1 ring-ink-200"
+            "text-ink-600 hover:text-ink-900 h-auto min-w-0 flex-col gap-1 rounded-md px-1 py-1.5 text-xs font-medium hover:translate-y-0",
+            active && "bg-card text-ink-900 ring-ink-200 shadow-sm ring-1"
           )}
         >
           {choice.ratio && (

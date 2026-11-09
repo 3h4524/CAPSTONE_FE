@@ -11,7 +11,7 @@ export const ComparisonGroupRows = ({ group }: ComparisonGroupRowsProps) => (
     <TableRow className="bg-ink-50 hover:bg-ink-50">
       <TableCell
         colSpan={5}
-        className="py-2 pl-5 text-xs font-bold tracking-wide text-ink-700 uppercase sm:pl-6"
+        className="text-ink-700 py-2 pl-5 text-xs font-bold tracking-wide uppercase sm:pl-6"
       >
         {group.label}
       </TableCell>

@@ -61,9 +61,9 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
 
   if (isLoading || !data) {
     return (
-      <Card className="h-[380px] animate-pulse rounded-2xl border border-ink-200/80 bg-card p-5 dark:border-slate-800 dark:bg-slate-900">
-        <div className="h-6 w-40 rounded bg-ink-200 dark:bg-slate-800" />
-        <div className="mt-4 h-[280px] rounded-xl bg-ink-100 dark:bg-slate-800/60" />
+      <Card className="border-ink-200/80 bg-card h-[380px] animate-pulse rounded-2xl border p-5 dark:border-slate-800 dark:bg-slate-900">
+        <div className="bg-ink-200 h-6 w-40 rounded dark:bg-slate-800" />
+        <div className="bg-ink-100 mt-4 h-[280px] rounded-xl dark:bg-slate-800/60" />
       </Card>
     );
   }
@@ -77,20 +77,20 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
   const chartEnd = lastMonth ? shortDate(endDate) : "";
 
   return (
-    <Card className="flex flex-col gap-4 rounded-2xl border border-ink-200/80 bg-card p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
+    <Card className="border-ink-200/80 bg-card flex flex-col gap-4 rounded-2xl border p-5 shadow-xs transition-shadow hover:shadow-md max-md:p-4 dark:border-slate-800 dark:bg-slate-900">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-400">
             <BarChart3 className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-ink-900 dark:text-slate-100">MRR Movement</h3>
-            <p className="text-[11px] font-medium text-ink-400 dark:text-slate-500">
+            <h3 className="text-ink-900 text-sm font-bold dark:text-slate-100">MRR Movement</h3>
+            <p className="text-ink-400 text-[11px] font-medium dark:text-slate-500">
               Where monthly recurring revenue came from and where it went
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-ink-600 dark:text-slate-300">
+        <div className="text-ink-600 flex flex-wrap items-center gap-3 text-[11px] font-medium dark:text-slate-300">
           {(["new", "expansion", "contraction", "churn"] as const).map((key) => (
             <span key={key} className="flex items-center gap-1.5 capitalize">
               <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: COLORS[key] }} />
@@ -103,7 +103,7 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
       <div className="flex flex-col gap-5 lg:flex-row">
         {/* Six months of movement */}
         <div className="flex min-w-0 flex-3 flex-col gap-2">
-          <span className="text-[11px] font-semibold text-ink-500 dark:text-slate-400">
+          <span className="text-ink-500 text-[11px] font-semibold dark:text-slate-400">
             6 months ending {chartEnd}
           </span>
           <div className="h-[260px] w-full">
@@ -125,15 +125,15 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
                     if (!active || !payload?.length) return null;
                     const point = payload[0].payload as (typeof months)[number];
                     return (
-                      <div className="rounded-xl border border-ink-200/90 bg-card px-3 py-2 text-xs shadow-xl dark:border-slate-800 dark:bg-slate-900">
-                        <p className="mb-1 font-bold text-ink-900 dark:text-slate-100">{label}</p>
+                      <div className="border-ink-200/90 bg-card rounded-xl border px-3 py-2 text-xs shadow-xl dark:border-slate-800 dark:bg-slate-900">
+                        <p className="text-ink-900 mb-1 font-bold dark:text-slate-100">{label}</p>
                         {(["new", "expansion", "contraction", "churn"] as const).map((key) => (
-                          <p key={key} className="flex justify-between gap-4 text-ink-600 capitalize dark:text-slate-300">
+                          <p key={key} className="text-ink-600 flex justify-between gap-4 capitalize dark:text-slate-300">
                             <span>{key}</span>
                             <span className="tabular-nums">{signedVnd(point[key])}</span>
                           </p>
                         ))}
-                        <p className="mt-1 flex justify-between gap-4 border-t border-ink-100 pt-1 font-bold dark:border-slate-800">
+                        <p className="border-ink-100 mt-1 flex justify-between gap-4 border-t pt-1 font-bold dark:border-slate-800">
                           <span>Net</span>
                           <span className={`tabular-nums ${point.net >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
                             {signedVnd(point.net)}
@@ -158,19 +158,19 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
               </span>
             ))}
           </div>
-          <p className="text-[11px] text-ink-400 dark:text-slate-500">
+          <p className="text-ink-400 text-[11px] dark:text-slate-500">
             Net change per month, built from paid invoices. Bars above the line add MRR, bars below remove it.
           </p>
         </div>
 
         {/* The selected period, per plan */}
         {bridge && showsBreakdown && (
-          <div className="flex min-w-0 flex-2 flex-col gap-3 rounded-xl border border-ink-100 bg-ink-50/80 p-4 dark:border-slate-800 dark:bg-slate-800/40">
+          <div className="border-ink-100 bg-ink-50/80 flex min-w-0 flex-2 flex-col gap-3 rounded-xl border p-4 dark:border-slate-800 dark:bg-slate-800/40">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs font-bold text-ink-900 dark:text-slate-100">
+              <span className="text-ink-900 text-xs font-bold dark:text-slate-100">
                 {shortDate(startDate)} – {shortDate(endDate)} by plan
               </span>
-              <div role="tablist" aria-label="MRR movement plan" className="flex flex-wrap gap-1 rounded-lg bg-ink-200/70 p-0.5 dark:bg-slate-800">
+              <div role="tablist" aria-label="MRR movement plan" className="bg-ink-200/70 flex flex-wrap gap-1 rounded-lg p-0.5 dark:bg-slate-800">
                 {bridges.map((b) => {
                   const isSelected = b.planName === bridge.planName;
                   return (
@@ -198,7 +198,7 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
               {rows.map((row) => (
                 <div key={row.label} className="grid grid-cols-[104px_minmax(0,1fr)_128px] items-center gap-2 max-md:grid-cols-[84px_minmax(0,1fr)_auto]">
                   <span className="text-ink-600 dark:text-slate-300">{row.label}</span>
-                  <span className="h-3 overflow-hidden rounded bg-ink-200/70 dark:bg-slate-700/60">
+                  <span className="bg-ink-200/70 h-3 overflow-hidden rounded dark:bg-slate-700/60">
                     <span
                       className="block h-3"
                       style={{ width: `${(Math.abs(row.value) / largest) * 100}%`, backgroundColor: row.color }}
@@ -238,7 +238,7 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
         <button
           type="button"
           aria-expanded={isBreakdownOpen}
-          className="flex min-h-11 items-center justify-center gap-1 text-xs font-semibold text-ink-600 dark:text-slate-300"
+          className="text-ink-600 flex min-h-11 items-center justify-center gap-1 text-xs font-semibold dark:text-slate-300"
           onClick={() => setIsBreakdownOpen((open) => !open)}
         >
           {isBreakdownOpen ? "Hide breakdown" : "Show breakdown"}
@@ -253,7 +253,7 @@ function BridgeLine({ label, value, strong, tone }: { label: string; value: stri
   const toneClass =
     tone === "good" ? "text-emerald-600 dark:text-emerald-400" : tone === "bad" ? "text-rose-600 dark:text-rose-400" : "text-ink-900 dark:text-slate-100";
   return (
-    <div className="flex items-center justify-between gap-2 border-t border-ink-200/70 pt-1.5 first:border-0 first:pt-0 dark:border-slate-700/60">
+    <div className="border-ink-200/70 flex items-center justify-between gap-2 border-t pt-1.5 first:border-0 first:pt-0 dark:border-slate-700/60">
       <span className={`text-ink-600 dark:text-slate-300 ${strong ? "font-semibold" : ""}`}>{label}</span>
       <span className={`${strong ? "font-bold" : ""} ${toneClass}`}>{value}</span>
     </div>

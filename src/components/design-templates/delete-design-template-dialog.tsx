@@ -28,12 +28,12 @@ export function DeleteDesignTemplateDialog({
 }: DeleteDesignTemplateDialogProps) {
   return (
     <Dialog open={Boolean(template)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent showCloseButton={false} className="rounded-2xl border-ink-200 sm:max-w-md">
+      <DialogContent showCloseButton={false} className="border-ink-200 rounded-2xl sm:max-w-md">
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="absolute top-3 right-3 size-11 rounded-lg text-ink-500 hover:translate-y-0 hover:bg-ink-100"
+          className="text-ink-500 hover:bg-ink-100 absolute top-3 right-3 size-11 rounded-lg hover:translate-y-0"
           onClick={onClose}
           disabled={deleting}
           aria-label="Close delete template dialog"
@@ -41,7 +41,7 @@ export function DeleteDesignTemplateDialog({
           <X aria-hidden="true" />
         </Button>
         <DialogHeader className="pr-12">
-          <span className="mb-2 flex size-11 items-center justify-center rounded-xl bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300">
+          <span className="mb-2 flex size-11 items-center justify-center rounded-xl bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300">
             <AlertTriangle className="size-5" aria-hidden="true" />
           </span>
           <DialogTitle>Delete personal template?</DialogTitle>

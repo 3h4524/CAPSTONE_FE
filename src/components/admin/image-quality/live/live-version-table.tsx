@@ -30,7 +30,7 @@ export const LiveVersionTable = ({ versions }: LiveVersionTableProps) => {
     description="One row per image provider and prompt version, oldest first. The counts behind every rate sit next to it."
   >
     {isPhone ? (
-      <ul className="divide-y divide-ink-100">
+      <ul className="divide-ink-100 divide-y">
         {versions.map((version) => (
           <LiveVersionCard key={version.key} version={version} />
         ))}
@@ -43,7 +43,7 @@ export const LiveVersionTable = ({ versions }: LiveVersionTableProps) => {
             <TableHead
               key={column.label}
               className={cn(
-                "text-xs font-semibold text-ink-600",
+                "text-ink-600 text-xs font-semibold",
                 column.isNumeric && "text-right",
                 index === 0 && "pl-5 sm:pl-6",
                 index === COLUMNS.length - 1 && "pr-5 sm:pr-6"

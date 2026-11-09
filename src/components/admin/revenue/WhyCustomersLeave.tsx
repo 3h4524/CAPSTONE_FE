@@ -29,20 +29,20 @@ export function WhyCustomersLeave({ planName, aiReview }: WhyCustomersLeaveProps
   const focus = planName ? insights.plans[0]?.planKey : undefined;
 
   return (
-    <div className="rounded-xl border border-ink-100 bg-ink-50/80 p-4 dark:border-slate-800 dark:bg-slate-800/40">
+    <div className="border-ink-100 bg-ink-50/80 rounded-xl border p-4 dark:border-slate-800 dark:bg-slate-800/40">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <h4 className="flex items-center gap-1.5 text-xs font-bold text-ink-900 dark:text-slate-100">
+          <h4 className="text-ink-900 flex items-center gap-1.5 text-xs font-bold dark:text-slate-100">
             <UserMinus className="size-3.5 text-rose-500" /> Why customers leave
           </h4>
-          <p className="mt-0.5 flex items-center gap-1 text-[11px] text-ink-500 dark:text-slate-400">
+          <p className="text-ink-500 mt-0.5 flex items-center gap-1 text-[11px] dark:text-slate-400">
             <Sparkles className="size-3 text-[#5b7aa6] dark:text-[#a2b4cd]" /> AI review of {insights.period}, whatever period is selected above.
             Links, not proven causes.
           </p>
         </div>
         <Link
           href={`/admin/subscription-plans?view=insights${focus ? `&plan=${focus}` : ""}`}
-          className="text-xs font-semibold text-[#3f5f8a] dark:text-[#9db4d2] hover:underline dark:text-slate-200"
+          className="text-xs font-semibold text-[#3f5f8a] hover:underline dark:text-[#9db4d2] dark:text-slate-200"
         >
           See details in Plan Insights →
         </Link>
@@ -59,8 +59,8 @@ export function WhyCustomersLeave({ planName, aiReview }: WhyCustomersLeaveProps
 
 function PlanColumn({ plan, showName, reasons }: { plan: PlanChurnInsight; showName: boolean; reasons: number }) {
   return (
-    <div className="flex flex-col gap-1.5 rounded-lg bg-card p-3 text-xs leading-relaxed dark:bg-slate-900">
-      {showName && <p className="font-semibold text-ink-900 dark:text-slate-100">{plan.planName}</p>}
+    <div className="bg-card flex flex-col gap-1.5 rounded-lg p-3 text-xs leading-relaxed dark:bg-slate-900">
+      {showName && <p className="text-ink-900 font-semibold dark:text-slate-100">{plan.planName}</p>}
       {plan.reasons.length === 0 ? (
         <p className="text-ink-500 dark:text-slate-400">{plan.note}</p>
       ) : (
@@ -71,7 +71,7 @@ function PlanColumn({ plan, showName, reasons }: { plan: PlanChurnInsight; showN
               {reason.confidence}
             </span>
             <span>
-              <span className="font-medium text-ink-800 dark:text-slate-200">{reason.pattern}</span>{" "}
+              <span className="text-ink-800 font-medium dark:text-slate-200">{reason.pattern}</span>{" "}
               <span className="text-ink-500 dark:text-slate-400">{reason.evidence}</span>
             </span>
           </div>

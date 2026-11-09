@@ -53,7 +53,7 @@ export const ConnectionCredential = ({ connection }: { connection: ApiKeyConnect
   <div className="flex flex-wrap items-center gap-1.5">
     {connection.authType === "OAuth" ? (
       <span className="inline-flex max-w-52 items-center gap-1.5 truncate" title={connection.credential}>
-        <span className="rounded bg-violet-50 dark:bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700 dark:text-violet-300">OAuth</span>
+        <span className="rounded bg-violet-50 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">OAuth</span>
         {connection.credential}
       </span>
     ) : (
@@ -77,7 +77,7 @@ export const ConnectionStatus = ({ connection, now }: { connection: ApiKeyConnec
       <span
         className={cn(
           "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap",
-          connected ? "bg-success-background text-success-text" : "bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300"
+          connected ? "bg-success-background text-success-text" : "bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300"
         )}
       >
         <span aria-hidden="true" className={cn("size-1.5 rounded-full", connected ? "bg-success-text" : "bg-amber-500")} />

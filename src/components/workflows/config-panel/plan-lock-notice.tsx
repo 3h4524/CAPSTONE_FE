@@ -33,7 +33,7 @@ export const PlanLockNotice = ({
       {issues.map((issue) => (
         <div
           key={issue.message}
-          className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5 text-xs text-amber-900 dark:text-amber-300"
+          className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
         >
           <p className="flex items-start gap-1.5">
             <Lock className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
@@ -45,7 +45,7 @@ export const PlanLockNotice = ({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="h-7 bg-card text-xs"
+                className="bg-card h-7 text-xs"
                 disabled={disabled}
                 onClick={() => onFix(issue.fix!.patch)}
               >
@@ -54,7 +54,7 @@ export const PlanLockNotice = ({
             )}
             <Link
               href={SUBSCRIPTION_PATH}
-              className="font-semibold text-amber-900 dark:text-amber-300 underline underline-offset-2"
+              className="font-semibold text-amber-900 underline underline-offset-2 dark:text-amber-300"
             >
               View plans
             </Link>

@@ -86,8 +86,8 @@ export function DailyJobsBarChart({
     const diff = point.count - stats.avg;
 
     return (
-      <div className="rounded-xl border border-ink-200/90 bg-card px-3.5 py-2.5 shadow-md">
-        <div className="flex items-center gap-1.5 text-[11px] font-medium text-ink-400">
+      <div className="border-ink-200/90 bg-card rounded-xl border px-3.5 py-2.5 shadow-md">
+        <div className="text-ink-400 flex items-center gap-1.5 text-[11px] font-medium">
           <Calendar className="h-3 w-3" />
           <span>
             {formatDateLabel(point.dateLabel, { weekday: "short", month: "short", day: "numeric" })}
@@ -95,12 +95,12 @@ export function DailyJobsBarChart({
           </span>
         </div>
         <div className="mt-1 flex items-baseline gap-1.5">
-          <span className="text-lg font-bold tracking-tight text-ink-900">
+          <span className="text-ink-900 text-lg font-bold tracking-tight">
             {point.count.toLocaleString()}
           </span>
-          <span className="text-xs text-ink-500">jobs</span>
+          <span className="text-ink-500 text-xs">jobs</span>
         </div>
-        <div className="mt-1 space-y-0.5 text-[11px] text-ink-500">
+        <div className="text-ink-500 mt-1 space-y-0.5 text-[11px]">
           <div>
             <span className={diff >= 0 ? "font-semibold text-emerald-600 dark:text-emerald-400" : "font-semibold"}>
               {diff >= 0 ? "+" : "−"}
@@ -115,23 +115,23 @@ export function DailyJobsBarChart({
   };
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-ink-200/80 bg-card p-5 shadow-2xs max-md:p-4">
+    <div className="border-ink-200/80 bg-card flex h-full flex-col rounded-2xl border p-5 shadow-2xs max-md:p-4">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink-100 text-ink-600">
+          <div className="bg-ink-100 text-ink-600 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">
             <CalendarDays className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-ink-900">Daily batch jobs</h3>
+            <h3 className="text-ink-900 text-sm font-bold">Daily batch jobs</h3>
             {isLoading ? (
-              <div className="mt-1 h-3.5 w-52 animate-pulse rounded bg-ink-100" />
+              <div className="bg-ink-100 mt-1 h-3.5 w-52 animate-pulse rounded" />
             ) : (
               !isEmpty && (
-                <p className="text-xs text-ink-500">
-                  {dailyJobs.length} days · avg <span className="font-semibold text-ink-700">{stats.avg}</span>/day
+                <p className="text-ink-500 text-xs">
+                  {dailyJobs.length} days · avg <span className="text-ink-700 font-semibold">{stats.avg}</span>/day
                   {stats.peak.count > 0 && (
                     <>
-                      {" "}· peak <span className="font-semibold text-ink-700">{stats.peak.count}</span> on{" "}
+                      {" "}· peak <span className="text-ink-700 font-semibold">{stats.peak.count}</span> on{" "}
                       {formatDateLabel(stats.peak.date)}
                     </>
                   )}
@@ -142,14 +142,14 @@ export function DailyJobsBarChart({
         </div>
 
         {!isEmpty && !isLoading && (
-          <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-ink-500">
+          <div className="text-ink-500 flex flex-wrap items-center gap-3 text-[11px] font-medium">
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: BAR_COLOR }} />
               Jobs per day
             </span>
             {hasTrendLine && (
               <span className="flex items-center gap-1.5">
-                <span className="h-0.5 w-3.5 rounded-full bg-ink-900" />
+                <span className="bg-ink-900 h-0.5 w-3.5 rounded-full" />
                 7-day average
               </span>
             )}
@@ -167,21 +167,21 @@ export function DailyJobsBarChart({
             {[35, 55, 25, 75, 45, 90, 60, 40, 65, 80, 50, 70].map((h, i) => (
               <div
                 key={i}
-                className="w-full animate-pulse rounded-t bg-ink-100"
+                className="bg-ink-100 w-full animate-pulse rounded-t"
                 style={{ height: `${h}%` }}
               />
             ))}
           </div>
         ) : isEmpty ? (
           <div className="flex h-full flex-col items-center justify-center gap-2.5 text-center">
-            <div className="rounded-xl bg-ink-100 p-3 text-ink-400">
+            <div className="bg-ink-100 text-ink-400 rounded-xl p-3">
               <BarChart2 className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-ink-700">
+              <p className="text-ink-700 text-sm font-medium">
                 No batch jobs in this timeframe
               </p>
-              <p className="text-xs text-ink-400">
+              <p className="text-ink-400 text-xs">
                 Jobs will appear here as sellers start generation runs.
               </p>
             </div>

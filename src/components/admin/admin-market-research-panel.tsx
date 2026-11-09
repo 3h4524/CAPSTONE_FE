@@ -243,15 +243,15 @@ const AdminMarketResearchPanel = () => {
   };
 
   return (
-    <section className="space-y-5 rounded-xl border border-ink-200 bg-card p-5 shadow-sm max-md:space-y-4 max-md:p-4 sm:p-6">
+    <section className="border-ink-200 bg-card space-y-5 rounded-xl border p-5 shadow-sm max-md:space-y-4 max-md:p-4 sm:p-6">
       <Header />
-      <section className="rounded-xl border border-ink-200 bg-card p-4 max-md:p-3">
+      <section className="border-ink-200 bg-card rounded-xl border p-4 max-md:p-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="flex items-center gap-2 text-sm font-bold text-ink-900">
-              <Clock3 className="size-4 text-ink-500" /> Automatic refresh
+            <p className="text-ink-900 flex items-center gap-2 text-sm font-bold">
+              <Clock3 className="text-ink-500 size-4" /> Automatic refresh
             </p>
-            <p className="mt-1 text-xs text-ink-500">
+            <p className="text-ink-500 mt-1 text-xs">
               {enabled
                 ? scheduleQuery.data?.nextRunAtUtc
                   ? `Next run ${formatDate(scheduleQuery.data.nextRunAtUtc)}`
@@ -259,7 +259,7 @@ const AdminMarketResearchPanel = () => {
                 : "Paused — use Run now for a one-off research pass"}
             </p>
           </div>
-          <label className="flex cursor-pointer items-center gap-2 rounded-full border border-ink-200 bg-card px-3 py-2 text-xs font-semibold text-ink-700 shadow-sm">
+          <label className="border-ink-200 bg-card text-ink-700 flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold shadow-sm">
             <Switch
               checked={enabled}
               onCheckedChange={setEnabled}
@@ -277,7 +277,7 @@ const AdminMarketResearchPanel = () => {
               step={1}
               value={intervalMinutes}
               onChange={(event) => setIntervalMinutes(event.target.value)}
-              className="mt-2 bg-card"
+              className="bg-card mt-2"
             />
           </Field>
           <Field label="Candidates / keyword">
@@ -348,27 +348,27 @@ const AdminMarketResearchPanel = () => {
         </div>
       </section>
       <div className="space-y-3">
-        <label className="block text-xs font-semibold text-ink-700">
+        <label className="text-ink-700 block text-xs font-semibold">
           Niches / keywords <span className="text-rose-500">*</span>
           <Textarea
             value={queries}
             onChange={(event) => setQueries(event.target.value)}
-            className="mt-2 max-h-[418px] min-h-32 resize-y overflow-y-auto bg-card text-sm max-md:max-h-56 max-md:text-base"
+            className="bg-card mt-2 max-h-[418px] min-h-32 resize-y overflow-y-auto text-sm max-md:max-h-56 max-md:text-base"
             placeholder="One keyword per line, e.g. hiking shirt"
           />
-          <span className="mt-1 block text-[11px] font-normal text-ink-400">
+          <span className="text-ink-400 mt-1 block text-[11px] font-normal">
             {normalizedQueries.length}/{MAX_QUERIES} keywords · public Etsy data only
           </span>
         </label>
-        <div className="rounded-lg border border-ink-200 bg-ink-50/60 p-3">
+        <div className="border-ink-200 bg-ink-50/60 rounded-lg border p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-xs font-semibold text-ink-700">Suggested niches</p>
-              <p className="mt-1 text-[11px] font-normal text-ink-500">
+              <p className="text-ink-700 text-xs font-semibold">Suggested niches</p>
+              <p className="text-ink-500 mt-1 text-[11px] font-normal">
                 Start with a preset if you are not sure which keywords to research.
               </p>
             </div>
-            <span className="text-[10px] font-medium text-ink-500">Click to add keywords</span>
+            <span className="text-ink-500 text-[10px] font-medium">Click to add keywords</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {SUGGESTED_NICHES.map((niche) => (
@@ -388,7 +388,7 @@ const AdminMarketResearchPanel = () => {
         <div className="flex flex-wrap items-center justify-end gap-3">
           {/* Say why the button is off, so it never looks broken. */}
           {!normalizedQueries.length && (
-            <p className="text-xs text-ink-500">Add at least one keyword above, or pick a suggested niche, to run.</p>
+            <p className="text-ink-500 text-xs">Add at least one keyword above, or pick a suggested niche, to run.</p>
           )}
           <Button
             type="button"
@@ -443,13 +443,13 @@ const ResearchHistory = ({
   isLoading: boolean;
   onSelect: (entry: ResearchHistoryEntry) => void;
 }) => (
-  <div className="border-t border-ink-100 pt-4">
+  <div className="border-ink-100 border-t pt-4">
     <div className="flex items-center justify-between gap-3">
       <div>
-        <p className="text-xs font-bold text-ink-800">Recent research history</p>
-        <p className="mt-1 text-[11px] text-ink-400">Saved locally for quick reuse by admin.</p>
+        <p className="text-ink-800 text-xs font-bold">Recent research history</p>
+        <p className="text-ink-400 mt-1 text-[11px]">Saved locally for quick reuse by admin.</p>
       </div>
-      <span className="text-[10px] text-ink-400">{history.length}/5 runs</span>
+      <span className="text-ink-400 text-[10px]">{history.length}/5 runs</span>
     </div>
     {history.length ? (
       <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-5">
@@ -467,19 +467,19 @@ const ResearchHistory = ({
                   disabled={isLoading}
                   aria-pressed={selectedId === entry.id}
                   aria-label={`${runLabel}: ${nicheLabel}`}
-                  className={`rounded-lg border p-3 text-left transition hover:border-ink-400 hover:bg-ink-50 disabled:cursor-wait disabled:opacity-60 ${selectedId === entry.id ? "border-primary bg-ink-50 ring-1 ring-primary/30" : "border-ink-200 bg-card"}`}
+                  className={`hover:border-ink-400 hover:bg-ink-50 rounded-lg border p-3 text-left transition disabled:cursor-wait disabled:opacity-60 ${selectedId === entry.id ? "border-primary bg-ink-50 ring-primary/30 ring-1" : "border-ink-200 bg-card"}`}
                 >
-                  <p className="truncate text-[11px] font-semibold text-ink-700">{runLabel}</p>
-                  <p className="mt-2 text-[10px] text-ink-400">{formatDate(entry.createdAt)}</p>
-                  <p className="mt-1 text-[10px] text-ink-500">
+                  <p className="text-ink-700 truncate text-[11px] font-semibold">{runLabel}</p>
+                  <p className="text-ink-400 mt-2 text-[10px]">{formatDate(entry.createdAt)}</p>
+                  <p className="text-ink-500 mt-1 text-[10px]">
                     {entry.retrievedCount} scanned · {entry.selectedCount} selected · avg{" "}
                     {entry.averageScore.toFixed(1)}
                   </p>
                   {/* A phone has no hover, so what the tooltip says is written on the card. */}
-                  <p className="mt-1 line-clamp-2 text-[10px] text-ink-500 md:hidden">
+                  <p className="text-ink-500 mt-1 line-clamp-2 text-[10px] md:hidden">
                     {entry.queries.length} niches: {nicheLabel}
                   </p>
-                  <p className="mt-1 text-[10px] font-medium text-ink-600 md:hidden">
+                  <p className="text-ink-600 mt-1 text-[10px] font-medium md:hidden">
                     {entry.result ? "Tap to restore this snapshot" : "Tap to run this research again"}
                   </p>
                 </button>
@@ -490,7 +490,7 @@ const ResearchHistory = ({
                 sideOffset={8}
                 className="w-fit max-w-[min(28rem,calc(100vw-2rem))] min-w-64 rounded-xl border border-slate-700 bg-slate-900 p-3 text-white shadow-xl"
               >
-                <p className="text-[10px] font-semibold tracking-[0.14em] text-slate-300 uppercase">
+                <p className="text-[10px] font-semibold tracking-[0.14em] text-white/70 uppercase">
                   Niches researched ({entry.queries.length})
                 </p>
                 <div className="mt-2 flex max-h-48 flex-wrap content-start gap-1.5 overflow-y-auto pr-1 [scrollbar-color:#475569_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-600 [&::-webkit-scrollbar-track]:bg-transparent">
@@ -514,7 +514,7 @@ const ResearchHistory = ({
         })}
       </div>
     ) : (
-      <p className="mt-3 rounded-lg border border-dashed border-ink-200 p-3 text-[11px] text-ink-400">
+      <p className="border-ink-200 text-ink-400 mt-3 rounded-lg border border-dashed p-3 text-[11px]">
         Your completed research runs will appear here.
       </p>
     )}
@@ -524,13 +524,13 @@ const ResearchHistory = ({
 const Header = () => (
   <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
     <div>
-      <p className="text-[10px] font-bold tracking-[0.16em] text-ink-400 uppercase">
+      <p className="text-ink-400 text-[10px] font-bold tracking-[0.16em] uppercase">
         Etsy trend intelligence
       </p>
-      <h2 className="mt-1 flex items-center gap-2 text-base font-bold text-ink-900">
-        <Sparkles className="size-4 text-ink-500" /> Public listing research
+      <h2 className="text-ink-900 mt-1 flex items-center gap-2 text-base font-bold">
+        <Sparkles className="text-ink-500 size-4" /> Public listing research
       </h2>
-      <p className="mt-1 max-w-2xl text-xs leading-5 text-ink-500">
+      <p className="text-ink-500 mt-1 max-w-2xl text-xs leading-5">
         Turn Etsy signals into searchable trend references. The schedule runs in the background;
         every selected listing is queued for RAG automatically.
       </p>
@@ -539,7 +539,7 @@ const Header = () => (
   </div>
 );
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <label className="block text-xs font-semibold text-ink-700">
+  <label className="text-ink-700 block text-xs font-semibold">
     {label}
     {children}
   </label>
@@ -559,21 +559,21 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
   const topKeyword =
     Object.entries(keywordCounts).sort(([, first], [, second]) => second - first)[0]?.[0] ?? "—";
   return (
-    <div className="border-t border-ink-100 pt-5">
+    <div className="border-ink-100 border-t pt-5">
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
         <div>
-          <p className="text-[10px] font-bold tracking-[0.16em] text-emerald-600 dark:text-emerald-400 uppercase">
+          <p className="text-[10px] font-bold tracking-[0.16em] text-emerald-600 uppercase dark:text-emerald-400">
             Latest research snapshot
           </p>
-          <h3 className="mt-1 text-base font-bold text-ink-900">
+          <h3 className="text-ink-900 mt-1 text-base font-bold">
             What Etsy is signalling right now
           </h3>
         </div>
-        <p className="text-xs text-ink-500">
+        <p className="text-ink-500 text-xs">
           {result.selectedCount} high-signal references queued to RAG across the selected niches
         </p>
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3 max-md:gap-2 max-md:[&>:last-child]:col-span-2 lg:grid-cols-5">
+      <div className="mt-4 grid grid-cols-2 gap-3 max-md:gap-2 lg:grid-cols-5 max-md:[&>:last-child]:col-span-2">
         <Metric
           label="Listings scanned"
           value={result.retrievedCount.toLocaleString()}
@@ -601,13 +601,13 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
           icon={<Search className="size-4" />}
         />
       </div>
-      <div className="mt-4 overflow-hidden rounded-lg border border-ink-200 bg-card">
-        <ul className="divide-y divide-ink-100 md:hidden">
+      <div className="border-ink-200 bg-card mt-4 overflow-hidden rounded-lg border">
+        <ul className="divide-ink-100 divide-y md:hidden">
           {items.map((item, index) => <ResearchResultCard key={item.ragDocumentId} item={item} rank={index + 1} />)}
         </ul>
         <div className="overflow-x-auto max-md:hidden">
           <table className="w-full min-w-[720px] text-left text-xs">
-            <thead className="bg-ink-50 text-[10px] tracking-wide text-ink-400 uppercase">
+            <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-wide uppercase">
               <tr>
                 <th className="px-4 py-3">Rank / listing</th>
                 <th className="px-4 py-3">Matched keyword</th>
@@ -618,10 +618,10 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
             </thead>
             <tbody>
               {items.map((item, index) => (
-                <tr key={item.ragDocumentId} className="border-t border-ink-100">
+                <tr key={item.ragDocumentId} className="border-ink-100 border-t">
                   <td className="px-4 py-3">
                     <div className="flex max-w-[280px] items-center gap-3">
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ink-100 font-bold text-ink-600">
+                      <span className="bg-ink-100 text-ink-600 flex size-7 shrink-0 items-center justify-center rounded-full font-bold">
                         {index + 1}
                       </span>
                       <div className="min-w-0">
@@ -631,7 +631,7 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
                               href={item.url ?? undefined}
                               target="_blank"
                               rel="noreferrer"
-                              className="flex min-w-0 items-center gap-1 truncate font-semibold text-ink-800 hover:underline"
+                              className="text-ink-800 flex min-w-0 items-center gap-1 truncate font-semibold hover:underline"
                             >
                               <span className="truncate">{item.title}</span>
                               <ExternalLink className="size-3 shrink-0" />
@@ -641,19 +641,19 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
                             {item.title}
                           </TooltipContent>
                         </Tooltip>
-                        <span className="text-[10px] text-ink-400">
+                        <span className="text-ink-400 text-[10px]">
                           Listing #{item.externalListingId}
                         </span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-ink-600">{item.matchedQuery || "—"}</td>
+                  <td className="text-ink-600 px-4 py-3">{item.matchedQuery || "—"}</td>
                   <td className="px-4 py-3">
                     <div className="w-28">
-                      <div className="mb-1 flex justify-between font-bold text-ink-700">
+                      <div className="text-ink-700 mb-1 flex justify-between font-bold">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="cursor-help border-b border-dashed border-ink-300">
+                            <span className="border-ink-300 cursor-help border-b border-dashed">
                               {(Number(item.viralScore) || 0).toFixed(1)}
                             </span>
                           </TooltipTrigger>
@@ -675,12 +675,12 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
                             </p>
                           </TooltipContent>
                         </Tooltip>
-                        <span className="text-[10px] text-ink-400">/100</span>
+                        <span className="text-ink-400 text-[10px]">/100</span>
                       </div>
                       <Progress value={item.viralScore} className="h-1.5" />
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-ink-500">
+                  <td className="text-ink-500 px-4 py-3">
                     <div className="flex gap-3">
                       <span className="inline-flex items-center gap-1">
                         <Heart className="size-3 text-rose-400" />
@@ -693,7 +693,7 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <Badge className="border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                    <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
                       <Database className="mr-1 size-3" /> Queued
                     </Badge>
                   </td>
@@ -703,12 +703,12 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
           </table>
         </div>
         {!items.length && (
-          <p className="p-8 text-center text-xs text-ink-400">
+          <p className="text-ink-400 p-8 text-center text-xs">
             No listings met the minimum trend score. Lower the threshold or broaden the keywords.
           </p>
         )}
       </div>
-      <p className="mt-3 text-[11px] leading-5 text-ink-400">
+      <p className="text-ink-400 mt-3 text-[11px] leading-5">
         Favorites and views are observed public signals, not sales claims. Use this snapshot for
         direction, keywords and structure — not for copying listing content.
       </p>
@@ -718,24 +718,24 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
 
 /** One result on a phone: the table's columns, and the score drivers its tooltip holds. */
 const ResearchResultCard = ({ item, rank }: { item: MarketResearchResponse["items"][number]; rank: number }) => (
-  <li className="space-y-2 p-3 text-[11px] text-ink-500">
+  <li className="text-ink-500 space-y-2 p-3 text-[11px]">
     <div className="flex items-start gap-2">
-      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ink-100 text-xs font-bold text-ink-600">
+      <span className="bg-ink-100 text-ink-600 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold">
         {rank}
       </span>
       <div className="min-w-0 flex-1">
-        <a href={item.url ?? undefined} target="_blank" rel="noreferrer" className="line-clamp-2 text-xs font-semibold text-ink-800">
+        <a href={item.url ?? undefined} target="_blank" rel="noreferrer" className="text-ink-800 line-clamp-2 text-xs font-semibold">
           {item.title}
         </a>
-        <span className="text-[10px] text-ink-400">Listing #{item.externalListingId}</span>
+        <span className="text-ink-400 text-[10px]">Listing #{item.externalListingId}</span>
       </div>
       <Badge className="shrink-0 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
         <Database className="mr-1 size-3" /> Queued
       </Badge>
     </div>
     <div className="flex items-center gap-2">
-      <span className="font-bold text-ink-700 tabular-nums">{(Number(item.viralScore) || 0).toFixed(1)}</span>
-      <span className="text-[10px] text-ink-400">/100</span>
+      <span className="text-ink-700 font-bold tabular-nums">{(Number(item.viralScore) || 0).toFixed(1)}</span>
+      <span className="text-ink-400 text-[10px]">/100</span>
       <Progress value={item.viralScore} className="h-1.5 flex-1" />
     </div>
     <p>
@@ -754,19 +754,19 @@ const ResearchResultCard = ({ item, rank }: { item: MarketResearchResponse["item
 );
 
 const ResearchEmptyState = () => (
-  <div className="border-t border-ink-100 pt-5">
+  <div className="border-ink-100 border-t pt-5">
     <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
       <div>
-        <p className="text-[10px] font-bold tracking-[0.16em] text-ink-400 uppercase">
+        <p className="text-ink-400 text-[10px] font-bold tracking-[0.16em] uppercase">
           Research insights
         </p>
-        <h3 className="mt-1 text-base font-bold text-ink-900">
+        <h3 className="text-ink-900 mt-1 text-base font-bold">
           Your latest snapshot will appear here
         </h3>
       </div>
-      <p className="text-xs text-ink-400">Run a research pass to populate the metrics</p>
+      <p className="text-ink-400 text-xs">Run a research pass to populate the metrics</p>
     </div>
-    <div className="mt-4 grid grid-cols-2 gap-3 max-md:gap-2 max-md:[&>:last-child]:col-span-2 lg:grid-cols-5">
+    <div className="mt-4 grid grid-cols-2 gap-3 max-md:gap-2 lg:grid-cols-5 max-md:[&>:last-child]:col-span-2">
       <Metric label="Listings scanned" value="—" icon={<Search className="size-4" />} />
       <Metric
         label="Selected for RAG"
@@ -796,14 +796,14 @@ const Metric = ({
   icon: React.ReactNode;
   tone?: string;
 }) => (
-  <div className="rounded-lg border border-ink-100 bg-card p-3">
+  <div className="border-ink-100 bg-card rounded-lg border p-3">
     <div
-      className={`mb-2 flex size-7 items-center justify-center rounded-md ${tone === "emerald" ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-ink-100 text-ink-500"}`}
+      className={`mb-2 flex size-7 items-center justify-center rounded-md ${tone === "emerald" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-ink-100 text-ink-500"}`}
     >
       {icon}
     </div>
-    <p className="text-[10px] font-semibold tracking-wide text-ink-400 uppercase">{label}</p>
-    <p className="mt-1 text-lg font-bold text-ink-900">{value}</p>
+    <p className="text-ink-400 text-[10px] font-semibold tracking-wide uppercase">{label}</p>
+    <p className="text-ink-900 mt-1 text-lg font-bold">{value}</p>
   </div>
 );
 const formatCompact = (value: number | null) =>

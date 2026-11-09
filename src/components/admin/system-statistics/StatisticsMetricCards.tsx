@@ -44,14 +44,14 @@ export function StatisticsMetricCards({
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="flex flex-col justify-between rounded-xl border border-ink-200/80 bg-card p-3.5 shadow-2xs"
+            className="border-ink-200/80 bg-card flex flex-col justify-between rounded-xl border p-3.5 shadow-2xs"
           >
             <div className="flex items-center justify-between">
-              <div className="h-3 w-16 animate-pulse rounded bg-ink-100" />
-              <div className="h-3.5 w-3.5 animate-pulse rounded bg-ink-100" />
+              <div className="bg-ink-100 h-3 w-16 animate-pulse rounded" />
+              <div className="bg-ink-100 h-3.5 w-3.5 animate-pulse rounded" />
             </div>
-            <div className="my-2 h-6 w-20 animate-pulse rounded bg-ink-100" />
-            <div className="h-2.5 w-28 animate-pulse rounded bg-ink-100" />
+            <div className="bg-ink-100 my-2 h-6 w-20 animate-pulse rounded" />
+            <div className="bg-ink-100 h-2.5 w-28 animate-pulse rounded" />
           </div>
         ))}
       </div>

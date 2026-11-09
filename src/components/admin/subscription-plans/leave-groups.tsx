@@ -18,14 +18,14 @@ export function LeaveGroups({ signal }: { signal: PlanChurnSignal }) {
   const empty = signal.leaveGroups.filter((group) => group.left === 0);
 
   return (
-    <div aria-label="Leave groups" className="overflow-hidden rounded-xl border border-ink-200 text-sm">
-      <p className="px-4 pt-3 text-xs text-ink-500">
+    <div aria-label="Leave groups" className="border-ink-200 overflow-hidden rounded-xl border text-sm">
+      <p className="text-ink-500 px-4 pt-3 text-xs">
         What the {signal.left} customers who left did before leaving, one group each, against the {signal.stayed} who stayed.
       </p>
       <div className="overflow-x-auto">
         <table className="mt-2 w-full min-w-[560px] border-collapse">
           <thead>
-            <tr className="border-y border-ink-100 bg-ink-50/70 text-left text-[11px] font-semibold tracking-wide text-ink-500 uppercase">
+            <tr className="border-ink-100 bg-ink-50/70 text-ink-500 border-y text-left text-[11px] font-semibold tracking-wide uppercase">
               <th scope="col" className="px-4 py-2 font-semibold">Before leaving</th>
               <th scope="col" className="px-2 py-2 text-right font-semibold">Left</th>
               <th scope="col" className="px-2 py-2 text-right font-semibold">Stayed</th>
@@ -34,23 +34,23 @@ export function LeaveGroups({ signal }: { signal: PlanChurnSignal }) {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink-100">
+          <tbody className="divide-ink-100 divide-y">
             {groups.map((group) => (
-              <tr key={group.key} className="align-top hover:bg-ink-50/60">
+              <tr key={group.key} className="hover:bg-ink-50/60 align-top">
                 <th scope="row" className="px-4 py-2.5 text-left font-normal">
                   <span className={cn("font-semibold", group.notable ? "text-ink-900" : "text-ink-700")}>{group.label}</span>
                   {group.notable && (
                     <span className="ml-1.5 rounded bg-[#e76e50]/12 px-1.5 py-px text-[10px] font-semibold text-[#c4553a] dark:text-[#dea091]">Notable</span>
                   )}
-                  <span className="mt-0.5 block text-xs text-ink-400">{leaveGroupDescription(group, signal)}</span>
+                  <span className="text-ink-400 mt-0.5 block text-xs">{leaveGroupDescription(group, signal)}</span>
                 </th>
                 <td className="px-2 py-2.5 text-right whitespace-nowrap tabular-nums">
-                  <span className="font-semibold text-ink-900">{group.leftRate ?? 0}%</span>
-                  <span className="block text-[11px] text-ink-400">
+                  <span className="text-ink-900 font-semibold">{group.leftRate ?? 0}%</span>
+                  <span className="text-ink-400 block text-[11px]">
                     {group.left} of {signal.left}
                   </span>
                 </td>
-                <td className="px-2 py-2.5 text-right font-semibold whitespace-nowrap text-ink-900 tabular-nums">
+                <td className="text-ink-900 px-2 py-2.5 text-right font-semibold whitespace-nowrap tabular-nums">
                   {group.stayedRate ?? 0}%
                 </td>
                 <td className="px-4 py-3">
@@ -61,7 +61,7 @@ export function LeaveGroups({ signal }: { signal: PlanChurnSignal }) {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ink-100 px-4 py-2 text-[11px] text-ink-500">
+      <div className="border-ink-100 text-ink-500 flex flex-wrap items-center justify-between gap-2 border-t px-4 py-2 text-[11px]">
         <span className="flex gap-4">
           <Key color={LEFT} label="Left" />
           <Key color={STAYED} label="Stayed" />
@@ -81,7 +81,7 @@ export function PairBars({ left, stayed, leftFirst = true }: { left: number; sta
   return (
     <div className="space-y-[3px]" role="img" aria-label={bars.map((bar) => bar.label).join(", ")}>
       {(leftFirst ? bars : bars.reverse()).map((bar) => (
-        <div key={bar.key} title={bar.label} className="h-2 rounded-sm bg-ink-100">
+        <div key={bar.key} title={bar.label} className="bg-ink-100 h-2 rounded-sm">
           <div
             className="h-full rounded-sm"
             style={{ width: `${Math.max(bar.value > 0 ? 2 : 0, Math.min(100, bar.value))}%`, backgroundColor: bar.color }}

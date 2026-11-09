@@ -68,7 +68,7 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
         </div>
         <Link
           href="/batches"
-          className="inline-flex shrink-0 items-center gap-1 text-xs font-medium whitespace-nowrap text-ink-800 hover:text-black hover:underline"
+          className="text-ink-800 inline-flex shrink-0 items-center gap-1 text-xs font-medium whitespace-nowrap hover:text-black hover:underline"
         >
           Open batches
           <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -80,7 +80,7 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
           {/* The line joining the steps, from the first circle's centre to the last's. */}
           <span
             aria-hidden="true"
-            className="absolute top-[17px] right-[calc(100%/16)] left-[calc(100%/16)] hidden h-0.5 rounded-full bg-ink-200 lg:block"
+            className="bg-ink-200 absolute top-[17px] right-[calc(100%/16)] left-[calc(100%/16)] hidden h-0.5 rounded-full lg:block"
           />
           {stages.map((stage, index) => {
             const Icon = STAGE_ICONS[stage.stage];
@@ -115,7 +115,7 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
                 <span
                   className={cn(
                     "mt-2 flex max-w-full items-center gap-1 text-xs max-lg:mt-0 max-lg:min-w-0 max-lg:flex-1",
-                    isBusiest ? "font-semibold text-ink-900" : "text-ink-600"
+                    isBusiest ? "text-ink-900 font-semibold" : "text-ink-600"
                   )}
                 >
                   <Icon className="size-3.5 shrink-0 max-lg:hidden" aria-hidden="true" />
@@ -143,7 +143,7 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
                   <span className="text-muted-foreground text-[11px] tabular-nums">
                     {share.toFixed(1)}% of products
                   </span>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-ink-100">
+                  <div className="bg-ink-100 h-1.5 overflow-hidden rounded-full">
                     <div
                       className={cn(
                         "h-full rounded-full",
@@ -154,12 +154,12 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
                   </div>
                   <div className="mt-0.5 h-5 max-lg:h-auto max-lg:empty:hidden">
                     {isStuck ? (
-                      <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-rose-600 dark:text-rose-400">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">
                         <Hourglass className="size-3" aria-hidden="true" />
                         {stage.stuckCount} stuck
                       </span>
                     ) : waitsOnSeller ? (
-                      <span className="rounded-md bg-amber-100 dark:bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300">
+                      <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
                         Waits on you
                       </span>
                     ) : null}

@@ -66,10 +66,10 @@ export const TestReportVerdict = ({ run }: TestReportVerdictProps) => {
           </span>
 
           <div className="min-w-0 flex-1">
-            <h2 className="font-display text-xl font-bold tracking-tight text-ink-900">
+            <h2 className="font-display text-ink-900 text-xl font-bold tracking-tight">
               {title}
             </h2>
-            <p className="mt-1 text-xs text-ink-500">
+            <p className="text-ink-500 mt-1 text-xs">
               {run.status === "running" ? (
                 <>
                   The Playwright suite is going on this machine — took{" "}
@@ -99,7 +99,7 @@ export const TestReportVerdict = ({ run }: TestReportVerdictProps) => {
         </div>
 
         {run.status === "failed" && run.knownIssueTests > 0 && (
-          <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50/80 dark:bg-amber-500/10 px-3.5 py-3">
+          <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/80 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
             <FlaskConical className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
               <span className="font-bold">{run.knownIssueTests} failures</span> are the tests

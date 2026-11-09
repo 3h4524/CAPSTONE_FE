@@ -31,23 +31,23 @@ export const ComparisonTable = ({ comparison }: ComparisonTableProps) => {
       <Table className="min-w-190">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="w-[44%] pl-5 text-xs font-semibold text-ink-600 sm:pl-6">
+            <TableHead className="text-ink-600 w-[44%] pl-5 text-xs font-semibold sm:pl-6">
               Metric
             </TableHead>
-            <TableHead className="text-right text-xs font-semibold text-ink-600">
+            <TableHead className="text-ink-600 text-right text-xs font-semibold">
               Before
-              <span className="block text-[11px] font-normal text-ink-400">
+              <span className="text-ink-400 block text-[11px] font-normal">
                 {comparison.beforeImages.length} images
               </span>
             </TableHead>
-            <TableHead className="bg-sky-50/70 dark:bg-sky-500/10 text-right text-xs font-semibold text-sky-900 dark:text-sky-300">
+            <TableHead className="bg-sky-50/70 text-right text-xs font-semibold text-sky-900 dark:bg-sky-500/10 dark:text-sky-300">
               After
               <span className="block text-[11px] font-normal text-sky-800/70 dark:text-sky-300">
                 {comparison.afterImages.length} images
               </span>
             </TableHead>
-            <TableHead className="text-xs font-semibold text-ink-600">Change</TableHead>
-            <TableHead className="pr-5 text-xs font-semibold text-ink-600 sm:pr-6">Test</TableHead>
+            <TableHead className="text-ink-600 text-xs font-semibold">Change</TableHead>
+            <TableHead className="text-ink-600 pr-5 text-xs font-semibold sm:pr-6">Test</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

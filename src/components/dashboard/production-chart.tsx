@@ -24,7 +24,7 @@ export const ProductionChart = ({ trend }: { trend: TrendPoint[] }) => {
         <div>
           <h2 className="text-base font-semibold">Production overview</h2>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            <span className="font-semibold text-ink-800">{total.toLocaleString()} added</span>
+            <span className="text-ink-800 font-semibold">{total.toLocaleString()} added</span>
             {" · "}
             {finished.toLocaleString()} finished in this period
           </p>

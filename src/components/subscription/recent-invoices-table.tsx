@@ -156,7 +156,7 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
 
       <div className="px-6 pb-2 max-md:px-4">
         {invoices.length === 0 ? (
-          <p className="text-muted-foreground rounded-xl bg-ink-50 px-4 py-8 text-center text-sm">No invoices yet.</p>
+          <p className="text-muted-foreground bg-ink-50 rounded-xl px-4 py-8 text-center text-sm">No invoices yet.</p>
         ) : isPhone ? (
           shown.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center text-sm">No invoices match your search.</p>
@@ -168,7 +168,7 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
                   <li key={invoice.invoiceId} className="space-y-1 py-3 text-sm">
                     <div className="flex items-start justify-between gap-3">
                       <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
-                        <span className="font-medium text-ink-800">{invoice.planName}</span>
+                        <span className="text-ink-800 font-medium">{invoice.planName}</span>
                         <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium", text)}>
                           <span className={cn("size-2 rounded-full", dot)} />
                           {label}
@@ -210,7 +210,7 @@ export const RecentInvoicesTable = ({ invoices }: RecentInvoicesTableProps) => {
                   return (
                     <TableRow key={invoice.invoiceId}>
                       <TableCell className="py-3.5">
-                        <p className="font-medium text-ink-800">{invoice.planName}</p>
+                        <p className="text-ink-800 font-medium">{invoice.planName}</p>
                         <p className="text-muted-foreground text-xs">{invoice.invoiceNumber}</p>
                       </TableCell>
                       <TableCell className="tabular-nums">{formatVnd(invoice.totalAmountVnd)}</TableCell>

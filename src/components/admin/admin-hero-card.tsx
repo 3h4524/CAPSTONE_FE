@@ -39,7 +39,7 @@ export const AdminHeroCard = ({
   };
 
   return (
-    <section className="group relative order-first flex h-full min-h-64 flex-col justify-between overflow-hidden rounded-2xl border border-ink-300 bg-linear-to-r from-ink-200 via-ink-200 to-ink-300 p-6 text-ink-900 shadow-sm dark:border-border dark:bg-card dark:bg-[radial-gradient(120%_140%_at_0%_0%,rgba(45,212,191,0.12),transparent_55%)] dark:shadow-none transition-shadow duration-300 hover:shadow-md max-md:min-h-0 max-md:p-4 md:order-none dark:md:justify-center">
+    <section className="group border-ink-300 from-ink-200 via-ink-200 to-ink-300 text-ink-900 dark:border-border dark:bg-card relative order-first flex h-full min-h-64 flex-col justify-between overflow-hidden rounded-2xl border bg-linear-to-r p-6 shadow-sm transition-shadow duration-300 hover:shadow-md max-md:min-h-0 max-md:p-4 md:order-none dark:bg-[radial-gradient(120%_140%_at_0%_0%,rgba(45,212,191,0.12),transparent_55%)] dark:shadow-none dark:md:justify-center">
       {/* Light: the whole product photo on the right. Dark: same layout as the seller hero, a
           full-height studio shot whose left edge dissolves into the card behind a scrim. */}
       <div
@@ -68,11 +68,11 @@ export const AdminHeroCard = ({
 
       {/* Text Info */}
       <div className="relative z-10 max-w-[56%] min-w-0 max-md:max-w-full dark:md:max-w-[48%]">
-        <p className="text-xs font-semibold text-ink-900 dark:text-ink-500">{today()}</p>
-        <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-ink-900 max-md:text-xl">
+        <p className="text-ink-900 dark:text-ink-500 text-xs font-semibold">{today()}</p>
+        <h2 className="text-ink-900 mt-1.5 text-2xl font-bold tracking-tight max-md:text-xl">
           Welcome back, {firstName}
         </h2>
-        <p className="mt-2 text-sm leading-snug text-ink-700">
+        <p className="text-ink-700 mt-2 text-sm leading-snug">
           {describeAttention()}
         </p>
       </div>
@@ -82,7 +82,7 @@ export const AdminHeroCard = ({
         <button
           type="button"
           onClick={onOpenHealthCheck}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-ink-800 px-5 py-2.5 text-sm font-semibold text-white shadow-sm dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 transition-all duration-200 hover:scale-105 hover:bg-ink-900 active:scale-95"
+          className="bg-ink-800 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 hover:bg-ink-900 inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-105 active:scale-95"
         >
           Health check
           <ArrowRight className="size-4" aria-hidden="true" />

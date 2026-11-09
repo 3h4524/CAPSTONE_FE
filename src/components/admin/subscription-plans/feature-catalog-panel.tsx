@@ -61,7 +61,7 @@ export function FeatureCatalogPanel() {
   const [page, setPage] = useState(1);
 
   if (isLoading || !features) {
-    return <Card className="mt-6 h-96 animate-pulse rounded-2xl border border-ink-200/80 bg-card" />;
+    return <Card className="border-ink-200/80 bg-card mt-6 h-96 animate-pulse rounded-2xl border" />;
   }
 
   const groups = [...new Set(features.map((feature) => feature.group))];
@@ -90,10 +90,10 @@ export function FeatureCatalogPanel() {
               setPage(1);
             }}
           >
-            <SelectTrigger aria-label="Filter features" className="w-full bg-card">
+            <SelectTrigger aria-label="Filter features" className="bg-card w-full">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent position="popper" className="w-(--radix-select-trigger-width) bg-card">
+            <SelectContent position="popper" className="bg-card w-(--radix-select-trigger-width)">
               {FILTERS.map((item) => {
                 const count = features.filter(item.keep).length;
                 if (item.key !== "all" && count === 0) return null;
@@ -132,7 +132,7 @@ export function FeatureCatalogPanel() {
         </div>
         )}
         <label className="relative block lg:w-72">
-          <Search className="absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-ink-400" aria-hidden="true" />
+          <Search className="text-ink-400 absolute top-1/2 left-3 size-3.5 -translate-y-1/2" aria-hidden="true" />
           <input
             type="search"
             value={query}
@@ -142,7 +142,7 @@ export function FeatureCatalogPanel() {
             }}
             placeholder="Search by name or code"
             aria-label="Search features"
-            className="h-9 w-full rounded-lg border border-ink-200 bg-card pr-3 pl-8 text-sm outline-none placeholder:text-ink-400 focus:border-ink-400"
+            className="border-ink-200 bg-card placeholder:text-ink-400 focus:border-ink-400 h-9 w-full rounded-lg border pr-3 pl-8 text-sm outline-none"
           />
         </label>
       </div>
@@ -154,26 +154,26 @@ export function FeatureCatalogPanel() {
             if (rows.length === 0) return null;
             return (
               <section key={group} className="space-y-2">
-                <h3 className="text-[11px] font-semibold tracking-wide text-ink-400 uppercase">{group}</h3>
+                <h3 className="text-ink-400 text-[11px] font-semibold tracking-wide uppercase">{group}</h3>
                 {rows.map((feature) => (
                   <FeatureCard key={feature.code} feature={feature} onEdit={setEditing} />
                 ))}
               </section>
             );
           })}
-          {shown.length === 0 && <p className="py-10 text-center text-sm text-ink-500">No feature matches.</p>}
-          <p className="text-xs text-ink-400">
+          {shown.length === 0 && <p className="text-ink-500 py-10 text-center text-sm">No feature matches.</p>}
+          <p className="text-ink-400 text-xs">
             {features.length} features in {groups.length} groups. New features are built by developers; here you choose how they are
             shown and offered.
           </p>
           <PhonePager page={current} pageCount={totalPages} onPageChange={setPage} label="Feature pages" />
         </div>
       ) : (
-      <Card className="gap-0 overflow-hidden rounded-2xl border border-ink-200 bg-card p-0 shadow-none">
+      <Card className="border-ink-200 bg-card gap-0 overflow-hidden rounded-2xl border p-0 shadow-none">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] border-collapse text-sm">
             <thead>
-              <tr className="border-b border-ink-200 bg-ink-50/70 text-left text-[11px] font-semibold tracking-wide text-ink-500 uppercase">
+              <tr className="border-ink-200 bg-ink-50/70 text-ink-500 border-b text-left text-[11px] font-semibold tracking-wide uppercase">
                 <th scope="col" className="px-5 py-2.5">Feature</th>
                 <th scope="col" className="px-3 py-2.5">Type</th>
                 <th scope="col" className="px-3 py-2.5">Plans</th>
@@ -189,10 +189,10 @@ export function FeatureCatalogPanel() {
               const rows = pageRows.filter((feature) => feature.group === group);
               if (rows.length === 0) return null;
               return (
-                <tbody key={group} className="border-b border-ink-100 last:border-b-0">
+                <tbody key={group} className="border-ink-100 border-b last:border-b-0">
                   <tr>
                     <th colSpan={7} scope="colgroup" className="bg-card px-5 pt-4 pb-1.5 text-left">
-                      <h3 className="text-[11px] font-semibold tracking-wide text-ink-400 uppercase">{group}</h3>
+                      <h3 className="text-ink-400 text-[11px] font-semibold tracking-wide uppercase">{group}</h3>
                     </th>
                   </tr>
                   {rows.map((feature) => (
@@ -203,9 +203,9 @@ export function FeatureCatalogPanel() {
             })}
           </table>
         </div>
-        {shown.length === 0 && <p className="py-10 text-center text-sm text-ink-500">No feature matches.</p>}
+        {shown.length === 0 && <p className="text-ink-500 py-10 text-center text-sm">No feature matches.</p>}
         {totalPages > 1 && (
-          <nav aria-label="Feature pages" className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-100 px-5 py-2.5 text-xs text-ink-500">
+          <nav aria-label="Feature pages" className="border-ink-100 text-ink-500 flex flex-wrap items-center justify-between gap-3 border-t px-5 py-2.5 text-xs">
             <span className="tabular-nums">
               {(current - 1) * pageSize + 1}–{(current - 1) * pageSize + pageRows.length} of {ordered.length}
             </span>
@@ -222,7 +222,7 @@ export function FeatureCatalogPanel() {
             </div>
           </nav>
         )}
-        <p className="border-t border-ink-100 px-5 py-2.5 text-[11px] text-ink-400">
+        <p className="border-ink-100 text-ink-400 border-t px-5 py-2.5 text-[11px]">
           {features.length} features in {groups.length} groups. New features are built by developers; here you choose how they are shown and
           offered.
         </p>
@@ -249,7 +249,7 @@ const FeatureOffered = ({ feature }: { feature: AdminFeature }) =>
   feature.isActive ? (
           <span className="text-ink-500">Offered</span>
         ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-ink-200/70 px-2 py-0.5 font-semibold text-ink-600">
+          <span className="bg-ink-200/70 text-ink-600 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold">
             <EyeOff className="size-3" aria-hidden="true" /> Hidden
           </span>
         );
@@ -257,25 +257,25 @@ const FeatureOffered = ({ feature }: { feature: AdminFeature }) =>
 /** A feature on a phone, where the table's seven columns have no room. */
 function FeatureCard({ feature, onEdit }: { feature: AdminFeature; onEdit: (feature: AdminFeature) => void }) {
   return (
-    <article className={cn("rounded-xl border border-ink-200 bg-card p-3.5 shadow-2xs", !feature.isActive && "bg-ink-50/60")}>
+    <article className={cn("border-ink-200 bg-card rounded-xl border p-3.5 shadow-2xs", !feature.isActive && "bg-ink-50/60")}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-1.5">
             <span className={cn("text-sm font-semibold", feature.isActive ? "text-ink-900" : "text-ink-500")}>{feature.label}</span>
-            <span className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-semibold text-ink-600">
+            <span className="bg-ink-100 text-ink-600 rounded-full px-2 py-0.5 text-[11px] font-semibold">
               {feature.kind === "limit" ? "Limit" : "On/off"}
             </span>
           </p>
-          {feature.description && <p className="mt-1 text-xs text-ink-500">{feature.description}</p>}
-          <p className="mt-1 font-mono text-[11px] wrap-anywhere text-ink-400">{feature.code}</p>
+          {feature.description && <p className="text-ink-500 mt-1 text-xs">{feature.description}</p>}
+          <p className="text-ink-400 mt-1 font-mono text-[11px] wrap-anywhere">{feature.code}</p>
         </div>
         <Button variant="ghost" size="icon-sm" aria-label={`Edit ${feature.label}`} onClick={() => onEdit(feature)}>
           <Pencil className="size-3.5" />
         </Button>
       </div>
-      <div className="mt-2.5 space-y-2 border-t border-ink-100 pt-2.5 text-xs">
+      <div className="border-ink-100 mt-2.5 space-y-2 border-t pt-2.5 text-xs">
         {feature.plans.length === 0 ? (
-          <span className="inline-block rounded-full bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300">In no plan</span>
+          <span className="inline-block rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">In no plan</span>
         ) : (
           <span className="flex flex-wrap gap-1">
             {feature.plans.map((plan) => (
@@ -302,23 +302,23 @@ function FeatureCard({ feature, onEdit }: { feature: AdminFeature; onEdit: (feat
 function FeatureRow({ feature, plans, onEdit }: { feature: AdminFeature; plans: string[]; onEdit: (feature: AdminFeature) => void }) {
   const edited = formatEdited(feature);
   return (
-    <tr className={cn("group align-top hover:bg-ink-50/70", !feature.isActive && "bg-ink-50/50")}>
+    <tr className={cn("group hover:bg-ink-50/70 align-top", !feature.isActive && "bg-ink-50/50")}>
       <th scope="row" className="px-5 py-3 text-left font-normal">
         <p className={cn("font-semibold", feature.isActive ? "text-ink-900" : "text-ink-500")}>{feature.label}</p>
-        {feature.description && <p className="mt-0.5 max-w-md text-xs text-ink-500">{feature.description}</p>}
-        <p className="mt-1 flex flex-wrap gap-x-3 text-[11px] text-ink-400">
+        {feature.description && <p className="text-ink-500 mt-0.5 max-w-md text-xs">{feature.description}</p>}
+        <p className="text-ink-400 mt-1 flex flex-wrap gap-x-3 text-[11px]">
           <span className="font-mono">{feature.code}</span>
           {edited && <span>{edited}</span>}
         </p>
       </th>
       <td className="px-3 py-3">
-        <span className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-ink-600">
+        <span className="bg-ink-100 text-ink-600 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap">
           {feature.kind === "limit" ? "Limit" : "On/off"}
         </span>
       </td>
       <td className="px-3 py-3">
         {feature.plans.length === 0 ? (
-          <span className="rounded-full bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300">In no plan</span>
+          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">In no plan</span>
         ) : (
           // One chip per plan, filled when the plan includes it, so coverage reads down the column.
           <span className="flex flex-wrap gap-1">
@@ -330,7 +330,7 @@ function FeatureRow({ feature, plans, onEdit }: { feature: AdminFeature; plans: 
                   aria-label={`${plan}: ${included ? "included" : "not included"}`}
                   className={cn(
                     "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap",
-                    included ? "border-[#2a9d8f]/30 bg-[#2a9d8f]/10 text-[#21796e] dark:text-[#8fe0d6]" : "border-dashed border-ink-200 text-ink-400"
+                    included ? "border-[#2a9d8f]/30 bg-[#2a9d8f]/10 text-[#21796e] dark:text-[#8fe0d6]" : "border-ink-200 text-ink-400 border-dashed"
                   )}
                 >
                   {included && <Check className="size-3" aria-hidden="true" />}
@@ -344,7 +344,7 @@ function FeatureRow({ feature, plans, onEdit }: { feature: AdminFeature; plans: 
       <td className="px-3 py-3 text-xs whitespace-nowrap">
         <FeatureTrial feature={feature} />
       </td>
-      <td className="px-3 py-3 text-xs whitespace-nowrap text-ink-600 tabular-nums">
+      <td className="text-ink-600 px-3 py-3 text-xs whitespace-nowrap tabular-nums">
         {feature.kind === "limit" ? limitSummary(feature) : <span className="text-ink-300">—</span>}
       </td>
       <td className="px-3 py-3 text-xs whitespace-nowrap">

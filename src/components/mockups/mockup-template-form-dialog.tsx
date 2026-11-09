@@ -241,7 +241,7 @@ export const MockupTemplateFormDialog = ({ open, template, onClose }: MockupTemp
               </div>
               <MockupPhotoDropzone previewUrl={shownPhoto} error={fileError} disabled={pending} onSelect={pickFile} onRemove={() => setPhotoFile(null)} />
               <div>
-                <p className="text-sm font-medium text-ink-900">Print area</p>
+                <p className="text-ink-900 text-sm font-medium">Print area</p>
                 <p className="text-muted-foreground mt-0.5 text-xs">Where the design lands on the photo. Sellers can still override this per image.
                   {maskPreviewPending && " Finding the garment in the photo… this takes a few seconds."}
                 </p>
@@ -277,7 +277,7 @@ export const MockupTemplateFormDialog = ({ open, template, onClose }: MockupTemp
               {allowRecolor && (
                 <div className="space-y-2 rounded-lg border p-3">
                   <div>
-                    <p className="text-sm font-medium text-ink-900">Garment color</p>
+                    <p className="text-ink-900 text-sm font-medium">Garment color</p>
                     <p className="text-muted-foreground text-xs">
                       Mock-ups from this template use this color, unless a batch picks its own colors. None keeps the photo’s color.
                     </p>

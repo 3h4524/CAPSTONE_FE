@@ -57,7 +57,7 @@ export const AllowancePanel = () => {
           </p>
         </div>
         {allowances.scope && (
-          <span className="shrink-0 rounded-full border border-ink-200 bg-ink-50 px-2.5 py-0.5 text-[11px] font-semibold text-ink-700">
+          <span className="border-ink-200 bg-ink-50 text-ink-700 shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold">
             {SCOPE_LABELS[allowances.scope]}
           </span>
         )}
@@ -86,7 +86,7 @@ export const AllowancePanel = () => {
 
       <Link
         href="/subscription"
-        className="mt-auto inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-ink-800 hover:text-black hover:underline"
+        className="text-ink-800 mt-auto inline-flex items-center justify-center gap-1.5 text-xs font-semibold hover:text-black hover:underline"
       >
         {usedUp.length > 0 ? "Upgrade to keep going" : "Compare plans"}
         <ArrowRight className="size-3.5" aria-hidden="true" />

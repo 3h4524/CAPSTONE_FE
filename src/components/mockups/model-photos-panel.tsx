@@ -97,10 +97,10 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
         type="button"
         aria-expanded={areFiltersOpen}
         onClick={() => setAreFiltersOpen((open) => !open)}
-        className="flex min-h-11 items-center justify-between rounded-xl border border-ink-200 bg-card px-4 text-sm font-semibold text-ink-800 md:hidden"
+        className="border-ink-200 bg-card text-ink-800 flex min-h-11 items-center justify-between rounded-xl border px-4 text-sm font-semibold md:hidden"
       >
         {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : "Filters"}
-        <ChevronDown className={cn("size-4 text-ink-400 transition-transform", areFiltersOpen && "rotate-180")} aria-hidden="true" />
+        <ChevronDown className={cn("text-ink-400 size-4 transition-transform", areFiltersOpen && "rotate-180")} aria-hidden="true" />
       </button>
       <div className={cn("flex flex-wrap gap-x-6 gap-y-3", !areFiltersOpen && "max-md:hidden")}>
         {scope === "seller" && <PhotoSourceFilter value={source} onChange={setSource} />}
@@ -110,12 +110,12 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
         <SectionLoading label="Loading model photos" />
       ) : isError || !photos ? (
         <div
-          className="flex flex-col items-center justify-center gap-4 rounded-xl border border-ink-200 bg-card p-8 text-center"
+          className="border-ink-200 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border p-8 text-center"
           role="alert"
         >
-          <UserRound className="size-8 text-ink-400" aria-hidden="true" />
+          <UserRound className="text-ink-400 size-8" aria-hidden="true" />
           <div>
-            <p className="font-semibold text-ink-900">Model photos unavailable</p>
+            <p className="text-ink-900 font-semibold">Model photos unavailable</p>
             <p className="text-muted-foreground mt-1 text-sm">
               We could not load the model photos. Check your connection and try again.
             </p>
@@ -125,8 +125,8 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
           </Button>
         </div>
       ) : photos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-ink-300 bg-card p-8 text-center">
-          <p className="font-semibold text-ink-900">
+        <div className="border-ink-300 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed p-8 text-center">
+          <p className="text-ink-900 font-semibold">
             {filtered ? "No model photos of these people" : "No model photos yet"}
           </p>
           <p className="text-muted-foreground text-sm">

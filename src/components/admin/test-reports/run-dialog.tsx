@@ -29,7 +29,7 @@ export const TestReportRunDialog = ({
     <DialogContent className="sm:max-w-lg">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
-          <FlaskConical className="size-5 text-ink-500" />
+          <FlaskConical className="text-ink-500 size-5" />
           Run the end-to-end suite
         </DialogTitle>
         <DialogDescription>
@@ -38,17 +38,17 @@ export const TestReportRunDialog = ({
         </DialogDescription>
       </DialogHeader>
 
-      <ul className="space-y-3 text-sm text-ink-600">
+      <ul className="text-ink-600 space-y-3 text-sm">
         <li className="flex gap-3">
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <span>
             The seller{" "}
-            <span className="font-mono text-xs text-ink-800">e2e.seller@apcs.test</span> is
+            <span className="text-ink-800 font-mono text-xs">e2e.seller@apcs.test</span> is
             registered and confirmed before every run, so the suite never needs a manual sign-in.
           </span>
         </li>
         <li className="flex gap-3">
-          <RefreshCw className="mt-0.5 size-4 shrink-0 text-ink-500" />
+          <RefreshCw className="text-ink-500 mt-0.5 size-4 shrink-0" />
           <span>
             Every run starts from a clean reset of the test data, while the report history stays in
             the store — this dialog only asks the backend to append one more run there.

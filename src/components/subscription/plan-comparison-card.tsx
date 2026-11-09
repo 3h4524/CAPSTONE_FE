@@ -187,7 +187,7 @@ export const PlanComparisonCard = ({
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide uppercase",
             isDark
-              ? "border-orange-300/40 dark:border-orange-500/40 bg-orange-400/15 text-orange-200"
+              ? "border-orange-300/40 bg-orange-400/15 text-orange-200 dark:border-orange-500/40"
               : "border-ink-200 bg-card text-ink-700"
           )}
         >
@@ -221,7 +221,7 @@ export const PlanComparisonCard = ({
           "mt-5 w-full @md:mt-7 @md:h-11",
           isDark &&
             !isCurrent &&
-            "bg-card text-ink-900 shadow-[0_0_16px_rgba(255,255,255,0.25)] hover:bg-ink-100",
+            "bg-card text-ink-900 hover:bg-ink-100 shadow-[0_0_16px_rgba(255,255,255,0.25)]",
           isCurrent && "bg-ink-100 text-ink-700 hover:bg-ink-100 disabled:opacity-100"
         )}
         variant={isCurrent ? "secondary" : isDark ? "secondary" : "default"}
@@ -247,7 +247,7 @@ export const PlanComparisonCard = ({
             <span
               className={cn(
                 "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full",
-                isDark ? "bg-orange-500/20 text-orange-300" : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                isDark ? "bg-orange-500/20 text-orange-300" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
               )}
             >
               <Check className="size-3" strokeWidth={3} />

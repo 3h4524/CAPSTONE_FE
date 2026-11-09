@@ -95,12 +95,12 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
 
   if (!ticketId) {
     return (
-      <div className="flex h-full flex-col items-center justify-center bg-ink-50/50 p-8 text-center">
-        <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-ink-100 text-ink-400">
+      <div className="bg-ink-50/50 flex h-full flex-col items-center justify-center p-8 text-center">
+        <div className="bg-ink-100 text-ink-400 mb-4 flex size-16 items-center justify-center rounded-full">
           <Headphones className="size-8" />
         </div>
-        <h3 className="mb-2 text-lg font-semibold text-ink-900">Select a ticket</h3>
-        <p className="max-w-sm text-sm text-ink-500">
+        <h3 className="text-ink-900 mb-2 text-lg font-semibold">Select a ticket</h3>
+        <p className="text-ink-500 max-w-sm text-sm">
           Choose a support ticket from the list on the left to view details and respond to the user.
         </p>
       </div>
@@ -130,27 +130,27 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
   }
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col bg-card">
+    <div className="bg-card relative flex min-h-0 flex-1 flex-col">
       {/* Header */}
-      <div className="relative z-10 flex flex-col items-start justify-between gap-4 border-b border-ink-200 bg-card px-6 py-5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] max-md:gap-0 max-md:px-4 max-md:py-2 sm:flex-row sm:items-center">
+      <div className="border-ink-200 bg-card relative z-10 flex flex-col items-start justify-between gap-4 border-b px-6 py-5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] max-md:gap-0 max-md:px-4 max-md:py-2 sm:flex-row sm:items-center">
         <div className="flex min-w-0 flex-col gap-2 max-md:w-full max-md:gap-1">
           {onBack && <BackToListButton onClick={onBack} />}
           <div className="flex flex-wrap items-center gap-3 max-md:gap-x-2 max-md:gap-y-0">
-            <h2 className="text-xl font-bold wrap-anywhere text-ink-900 max-md:w-full max-md:text-base">{ticket.subject}</h2>
-            <span className="text-sm font-medium wrap-anywhere text-ink-500 max-md:text-xs">#{ticket.ticketNumber}</span>
+            <h2 className="text-ink-900 text-xl font-bold wrap-anywhere max-md:w-full max-md:text-base">{ticket.subject}</h2>
+            <span className="text-ink-500 text-sm font-medium wrap-anywhere max-md:text-xs">#{ticket.ticketNumber}</span>
             <button 
               onClick={() => {
                 navigator.clipboard.writeText(ticket.ticketNumber);
                 toast.success("Copied ticket ID");
               }}
-              className="text-ink-400 transition-colors hover:text-ink-600"
+              className="text-ink-400 hover:text-ink-600 transition-colors"
             >
               <Copy className="size-4" />
             </button>
           </div>
           <div
             className={cn(
-              "flex flex-wrap items-center gap-4 text-sm text-ink-600 max-md:gap-x-3 max-md:gap-y-1 max-md:text-xs sm:gap-6",
+              "text-ink-600 flex flex-wrap items-center gap-4 text-sm max-md:gap-x-3 max-md:gap-y-1 max-md:text-xs sm:gap-6",
               !isSummaryOpen && "max-md:flex-nowrap max-md:overflow-hidden"
             )}
             {...(isPhone && {
@@ -162,15 +162,15 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
             })}
           >
             <div className="flex shrink-0 items-center gap-2 max-md:gap-1">
-              <Folder className="size-4 text-ink-400 max-md:size-3.5" />
+              <Folder className="text-ink-400 size-4 max-md:size-3.5" />
               <span className="capitalize">{ticket.category.replace("_", " ")}</span>
             </div>
             <div className="flex items-center gap-2 max-md:min-w-0 max-md:gap-1">
-              <User className="size-4 shrink-0 text-ink-400 max-md:size-3.5" />
-              <span className={cn("font-medium text-ink-700", !isSummaryOpen && "max-md:truncate")}>{ticket.requesterName}</span>
+              <User className="text-ink-400 size-4 shrink-0 max-md:size-3.5" />
+              <span className={cn("text-ink-700 font-medium", !isSummaryOpen && "max-md:truncate")}>{ticket.requesterName}</span>
             </div>
             <div className="flex shrink-0 items-center gap-2 max-md:gap-1">
-              <Calendar className="size-4 text-ink-400 max-md:size-3.5" />
+              <Calendar className="text-ink-400 size-4 max-md:size-3.5" />
               <span>{formatRelativeDate(ticket.createdAtUtc)}</span>
             </div>
           </div>
@@ -182,7 +182,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
             onValueChange={(val) => handleStatusChange(val as TicketStatus)}
             disabled={isUpdatingStatus}
           >
-            <SelectTrigger className="h-9 w-[130px] rounded-full border-ink-200 bg-card text-sm font-medium shadow-sm focus:ring-1 focus:ring-ink-300">
+            <SelectTrigger className="border-ink-200 bg-card focus:ring-ink-300 h-9 w-[130px] rounded-full text-sm font-medium shadow-sm focus:ring-1">
               <div className="flex items-center gap-2">
                 <div className={cn("size-2 rounded-full", ticket.status === "resolved" || ticket.status === "closed" ? "bg-emerald-500" : ticket.status === "in_progress" ? "bg-amber-500" : "bg-blue-600")} />
                 <SelectValue placeholder="Status" />
@@ -200,7 +200,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
               variant="outline"
               size="icon"
               onClick={onToggleExpand}
-              className="hidden h-9 w-9 text-ink-500 shadow-none md:flex"
+              className="text-ink-500 hidden h-9 w-9 shadow-none md:flex"
               title={isExpanded ? "Collapse" : "Expand"}
             >
               {isExpanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
@@ -210,40 +210,40 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
       </div>
 
       {/* Chat History */}
-      <div ref={scrollRef} className="min-h-0 flex-1 space-y-8 overflow-y-auto bg-card p-4 max-md:space-y-4 md:p-6 md:px-10">
+      <div ref={scrollRef} className="bg-card min-h-0 flex-1 space-y-8 overflow-y-auto p-4 max-md:space-y-4 md:p-6 md:px-10">
         
         {/* Original Request */}
         <div className="flex gap-4 max-md:gap-2.5">
           <Avatar className="mt-1 size-10 max-md:size-8">
-            <AvatarFallback className="bg-ink-200 text-sm font-semibold text-ink-600">
+            <AvatarFallback className="bg-ink-200 text-ink-600 text-sm font-semibold">
               {ticket.requesterName.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="max-w-[85%] min-w-0 flex-1 max-md:max-w-none md:max-w-[70%]">
             <div className="mb-1.5 flex items-baseline gap-2">
-              <span className="text-[15px] font-bold text-ink-900 max-md:min-w-0 max-md:truncate max-md:text-sm">{ticket.requesterName}</span>
-              <span className="text-[13px] font-medium text-ink-500 max-md:shrink-0 max-md:text-xs max-md:whitespace-nowrap">
+              <span className="text-ink-900 text-[15px] font-bold max-md:min-w-0 max-md:truncate max-md:text-sm">{ticket.requesterName}</span>
+              <span className="text-ink-500 text-[13px] font-medium max-md:shrink-0 max-md:text-xs max-md:whitespace-nowrap">
                 {formatRelativeDate(ticket.createdAtUtc)}
               </span>
             </div>
-            <div className="rounded-2xl rounded-tl-sm border border-ink-100 bg-card p-4 text-[15px] leading-relaxed whitespace-pre-wrap text-ink-800 shadow-[0_1px_2px_rgba(0,0,0,0.05)] max-md:px-3 max-md:py-2 max-md:text-sm">
+            <div className="border-ink-100 bg-card text-ink-800 rounded-2xl rounded-tl-sm border p-4 text-[15px] leading-relaxed whitespace-pre-wrap shadow-[0_1px_2px_rgba(0,0,0,0.05)] max-md:px-3 max-md:py-2 max-md:text-sm">
               {ticket.description}
               {ticket.attachments && ticket.attachments.length > 0 && (
                 <div className="mt-4 flex flex-col gap-3">
                   {ticket.attachments.map((file) => {
                     const isImage = file.mimeType?.includes("image") || file.fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
                     return isImage ? (
-                      <div key={file.id} className="relative max-w-sm overflow-hidden rounded-xl border border-ink-200 bg-card shadow-sm">
-                        <a href={file.downloadUrl} target="_blank" rel="noreferrer" className="block max-h-[250px] overflow-hidden bg-ink-50">
+                      <div key={file.id} className="border-ink-200 bg-card relative max-w-sm overflow-hidden rounded-xl border shadow-sm">
+                        <a href={file.downloadUrl} target="_blank" rel="noreferrer" className="bg-ink-50 block max-h-[250px] overflow-hidden">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={file.downloadUrl} alt={file.fileName} className="w-full object-cover transition-opacity hover:opacity-90" />
                         </a>
-                        <div className="flex items-center justify-between gap-2 border-t border-ink-100 bg-card p-3 max-md:p-2">
+                        <div className="border-ink-100 bg-card flex items-center justify-between gap-2 border-t p-3 max-md:p-2">
                            <div className="flex min-w-0 flex-col">
-                             <span className="max-w-[200px] truncate text-[13px] font-semibold text-ink-900 max-md:max-w-36">{file.fileName}</span>
-                             <span className="text-[11px] font-medium tracking-wide text-ink-500">{fileDetails(file)}</span>
+                             <span className="text-ink-900 max-w-[200px] truncate text-[13px] font-semibold max-md:max-w-36">{file.fileName}</span>
+                             <span className="text-ink-500 text-[11px] font-medium tracking-wide">{fileDetails(file)}</span>
                            </div>
-                           <a href={file.downloadUrl} download className="flex size-8 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors hover:bg-ink-50">
+                           <a href={file.downloadUrl} download className="border-ink-200 text-ink-500 hover:bg-ink-50 flex size-8 items-center justify-center rounded-lg border transition-colors">
                               <Download className="size-4" />
                            </a>
                         </div>
@@ -254,9 +254,9 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
                         href={file.downloadUrl} 
                         target="_blank" 
                         rel="noreferrer"
-                        className="flex w-fit max-w-full items-center gap-3 rounded-lg border border-ink-200 bg-card px-3 py-2.5 text-[13px] font-medium text-ink-700 shadow-sm transition-colors hover:bg-ink-50"
+                        className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 flex w-fit max-w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-[13px] font-medium shadow-sm transition-colors"
                       >
-                        <div className="flex size-8 items-center justify-center rounded-md bg-ink-100 text-ink-500">
+                        <div className="bg-ink-100 text-ink-500 flex size-8 items-center justify-center rounded-md">
                           <FileText className="size-4" />
                         </div>
                         <span className="max-w-[200px] min-w-0 truncate">{file.fileName}</span>
@@ -281,8 +281,8 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
               </Avatar>
               <div className={cn("flex max-w-[85%] min-w-0 flex-col max-md:max-w-none max-md:flex-1 md:max-w-[70%]", isAdmin ? "items-end" : "items-start")}>
                 <div className={cn("mb-1.5 flex max-w-full items-baseline gap-2", isAdmin && "flex-row-reverse")}>
-                  <span className="text-[15px] font-bold text-ink-900 max-md:min-w-0 max-md:truncate max-md:text-sm">{reply.authorName}</span>
-                  <span className="text-[13px] font-medium text-ink-500 max-md:shrink-0 max-md:text-xs max-md:whitespace-nowrap">
+                  <span className="text-ink-900 text-[15px] font-bold max-md:min-w-0 max-md:truncate max-md:text-sm">{reply.authorName}</span>
+                  <span className="text-ink-500 text-[13px] font-medium max-md:shrink-0 max-md:text-xs max-md:whitespace-nowrap">
                     {formatRelativeDate(reply.createdAtUtc)}
                   </span>
                 </div>
@@ -291,8 +291,8 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
                     "max-w-full rounded-2xl p-4 text-[15px] leading-relaxed whitespace-pre-wrap max-md:px-3 max-md:py-2 max-md:text-sm",
                     !reply.replyText && "max-md:p-1.5",
                     isAdmin 
-                      ? "rounded-tr-sm bg-ink-100 text-ink-800"
-                      : "rounded-tl-sm border border-ink-100 bg-card text-ink-800 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+                      ? "bg-ink-100 text-ink-800 rounded-tr-sm"
+                      : "border-ink-100 bg-card text-ink-800 rounded-tl-sm border shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
                   )}
                 >
                   {reply.replyText}
@@ -301,17 +301,17 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
                       {reply.attachments.map((file) => {
                         const isImage = file.mimeType?.includes("image") || file.fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
                         return isImage ? (
-                          <div key={file.id} className="relative max-w-sm overflow-hidden rounded-xl border border-ink-200 bg-card text-left shadow-sm">
-                            <a href={file.downloadUrl} target="_blank" rel="noreferrer" className="block max-h-[250px] overflow-hidden bg-ink-50">
+                          <div key={file.id} className="border-ink-200 bg-card relative max-w-sm overflow-hidden rounded-xl border text-left shadow-sm">
+                            <a href={file.downloadUrl} target="_blank" rel="noreferrer" className="bg-ink-50 block max-h-[250px] overflow-hidden">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={file.downloadUrl} alt={file.fileName} className="w-full object-cover transition-opacity hover:opacity-90" />
                             </a>
-                            <div className="flex items-center justify-between gap-2 border-t border-ink-100 bg-card p-3 max-md:p-2">
+                            <div className="border-ink-100 bg-card flex items-center justify-between gap-2 border-t p-3 max-md:p-2">
                                <div className="flex min-w-0 flex-col">
-                                 <span className="max-w-[200px] truncate text-[13px] font-semibold text-ink-900 max-md:max-w-36">{file.fileName}</span>
-                                 <span className="text-[11px] font-medium tracking-wide text-ink-500">{fileDetails(file)}</span>
+                                 <span className="text-ink-900 max-w-[200px] truncate text-[13px] font-semibold max-md:max-w-36">{file.fileName}</span>
+                                 <span className="text-ink-500 text-[11px] font-medium tracking-wide">{fileDetails(file)}</span>
                                </div>
-                               <a href={file.downloadUrl} download className="flex size-8 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition-colors hover:bg-ink-50">
+                               <a href={file.downloadUrl} download className="border-ink-200 text-ink-500 hover:bg-ink-50 flex size-8 items-center justify-center rounded-lg border transition-colors">
                                   <Download className="size-4" />
                                </a>
                             </div>
@@ -322,9 +322,9 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
                             href={file.downloadUrl} 
                             target="_blank" 
                             rel="noreferrer"
-                            className="flex w-fit max-w-full items-center gap-3 rounded-lg border border-ink-200 bg-card px-3 py-2.5 text-[13px] font-medium text-ink-700 shadow-sm transition-colors hover:bg-ink-50"
+                            className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 flex w-fit max-w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-[13px] font-medium shadow-sm transition-colors"
                           >
-                            <div className="flex size-8 items-center justify-center rounded-md bg-ink-100 text-ink-500">
+                            <div className="bg-ink-100 text-ink-500 flex size-8 items-center justify-center rounded-md">
                               <FileText className="size-4" />
                             </div>
                             <span className="max-w-[200px] min-w-0 truncate">{file.fileName}</span>
@@ -342,15 +342,15 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
 
       {/* Reply Box */}
       {ticket.status !== "closed" && ticket.status !== "resolved" ? (
-        <div className="border-t border-ink-200 bg-ink-50 p-4 max-md:p-2">
-          <div className="overflow-hidden rounded-xl border border-ink-200 bg-card shadow-sm transition-all focus-within:ring-1 focus-within:ring-ink-300 max-md:flex max-md:flex-wrap max-md:items-end max-md:rounded-3xl max-md:p-0.5">
+        <div className="border-ink-200 bg-ink-50 border-t p-4 max-md:p-2">
+          <div className="border-ink-200 bg-card focus-within:ring-ink-300 overflow-hidden rounded-xl border shadow-sm transition-all focus-within:ring-1 max-md:flex max-md:flex-wrap max-md:items-end max-md:rounded-3xl max-md:p-0.5">
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-2 p-4 pb-0 max-md:order-first max-md:w-full max-md:p-2 max-md:pb-0">
                 {attachments.map((file, index) => (
-                  <div key={index} className="flex items-center gap-1.5 rounded-lg border border-ink-200 bg-ink-50 px-3 py-1.5 text-xs font-medium text-ink-600">
-                    <FileText className="size-3.5 text-ink-400" />
+                  <div key={index} className="border-ink-200 bg-ink-50 text-ink-600 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium">
+                    <FileText className="text-ink-400 size-3.5" />
                     <span className="max-w-[150px] truncate">{file.name}</span>
-                    <button onClick={() => removeAttachment(index)} className="ml-1 text-ink-400 hover:text-ink-700"><X className="size-3" /></button>
+                    <button onClick={() => removeAttachment(index)} className="text-ink-400 hover:text-ink-700 ml-1"><X className="size-3" /></button>
                   </div>
                 ))}
               </div>
@@ -370,9 +370,9 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
                 }
               }}
             />
-            <div className="flex items-center justify-between border-t border-ink-100 bg-card p-2 max-md:contents">
-              <div className="flex items-center gap-1 text-ink-400 max-md:order-first">
-                <Button variant="ghost" size="icon" aria-label="Attach a file" className="size-9 rounded-full hover:bg-ink-100 max-md:size-10 [@media(pointer:coarse)]:min-h-10 [@media(pointer:coarse)]:min-w-10" onClick={() => fileInputRef.current?.click()}>
+            <div className="border-ink-100 bg-card flex items-center justify-between border-t p-2 max-md:contents">
+              <div className="text-ink-400 flex items-center gap-1 max-md:order-first">
+                <Button variant="ghost" size="icon" aria-label="Attach a file" className="hover:bg-ink-100 size-9 rounded-full max-md:size-10 [@media(pointer:coarse)]:min-h-10 [@media(pointer:coarse)]:min-w-10" onClick={() => fileInputRef.current?.click()}>
                   <Paperclip className="size-5" />
                 </Button>
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" multiple accept="image/*,.pdf,.doc,.docx,.txt" />
@@ -380,7 +380,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
               <Button 
                 onClick={handleSend} 
                 disabled={isSending || (!replyText.trim() && attachments.length === 0)}
-                className="h-8 gap-2 rounded-lg bg-ink-800 px-5 text-sm font-medium text-card shadow-sm hover:bg-ink-900 max-md:order-3 max-md:size-10 max-md:rounded-full max-md:p-0 max-md:disabled:bg-ink-200 max-md:disabled:text-ink-400 max-md:disabled:opacity-100 [@media(pointer:coarse)]:min-h-10"
+                className="bg-ink-800 text-card hover:bg-ink-900 max-md:disabled:bg-ink-200 max-md:disabled:text-ink-400 h-8 gap-2 rounded-lg px-5 text-sm font-medium shadow-sm max-md:order-3 max-md:size-10 max-md:rounded-full max-md:p-0 max-md:disabled:opacity-100 [@media(pointer:coarse)]:min-h-10"
               >
                 {isSending ? <Spinner className="size-4" /> : <Send className="size-4" />}
                 <span className="max-md:sr-only">Send<span className="max-md:hidden"> Reply</span></span>
@@ -389,10 +389,10 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
           </div>
         </div>
       ) : (
-        <div className="border-t border-ink-200 bg-ink-50 px-6 py-6 text-center">
+        <div className="border-ink-200 bg-ink-50 border-t px-6 py-6 text-center">
           {ticket.satisfactionRating ? (
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-ink-900">Customer Satisfaction</h3>
+              <h3 className="text-ink-900 text-sm font-semibold">Customer Satisfaction</h3>
               <div className="mt-2 flex items-center justify-center gap-1">
                 {[1, 2, 3, 4, 5].map((value) => (
                   <Star
@@ -409,10 +409,10 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
               <p className="mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">Rated {ticket.satisfactionRating}/5</p>
             </div>
           ) : ticket.status === "resolved" ? (
-            <div className="mb-4 text-sm text-ink-500">Waiting for customer to rate the support experience.</div>
+            <div className="text-ink-500 mb-4 text-sm">Waiting for customer to rate the support experience.</div>
           ) : null}
-          <div className="flex items-center justify-center gap-2 text-xs font-medium text-ink-500">
-            <CheckCircle2 className="size-4 text-ink-400" />
+          <div className="text-ink-500 flex items-center justify-center gap-2 text-xs font-medium">
+            <CheckCircle2 className="text-ink-400 size-4" />
             <span>This ticket is {ticket.status}. No further replies can be added.</span>
           </div>
         </div>

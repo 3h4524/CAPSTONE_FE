@@ -29,9 +29,9 @@ export function DuplicatePlanDialog({ plan, onClose }: { plan: AdminSubscription
 
   return (
     <Dialog open={plan !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[calc(100%-20px)] max-w-[460px] gap-0 rounded-[24px] border-0 bg-card p-0">
+      <DialogContent className="bg-card w-[calc(100%-20px)] max-w-[460px] gap-0 rounded-[24px] border-0 p-0">
         <DialogHeader className="flex-row items-start gap-3 px-6 pt-6 pb-3 text-left">
-          <div className="text-primary flex size-10 shrink-0 items-center justify-center rounded-xl bg-ink-100">
+          <div className="text-primary bg-ink-100 flex size-10 shrink-0 items-center justify-center rounded-xl">
             <Copy className="size-[18px]" aria-hidden="true" />
           </div>
           <div className="space-y-1">
@@ -43,25 +43,25 @@ export function DuplicatePlanDialog({ plan, onClose }: { plan: AdminSubscription
         </DialogHeader>
         <div className="space-y-4 px-6 py-3">
           <div className="space-y-1.5">
-            <label htmlFor="duplicate-name" className="text-sm font-medium text-ink-700">
+            <label htmlFor="duplicate-name" className="text-ink-700 text-sm font-medium">
               New plan name
             </label>
             <Input id="duplicate-name" value={name} onChange={(event) => setName(event.target.value)} aria-invalid={nameError !== null} />
             {nameError && <p className="text-destructive text-xs">{nameError}</p>}
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="duplicate-tier" className="text-sm font-medium text-ink-700">
+            <label htmlFor="duplicate-tier" className="text-ink-700 text-sm font-medium">
               Tier slug
             </label>
             <Input id="duplicate-tier" value={tier} onChange={(event) => setTier(event.target.value)} aria-invalid={tierError !== null} />
             {tierError ? (
               <p className="text-destructive text-xs">{tierError}</p>
             ) : (
-              <p className="text-[11px] text-ink-400">Cannot be changed later.</p>
+              <p className="text-ink-400 text-[11px]">Cannot be changed later.</p>
             )}
           </div>
         </div>
-        <div className="flex justify-end gap-2 border-t border-ink-100 px-6 py-4">
+        <div className="border-ink-100 flex justify-end gap-2 border-t px-6 py-4">
           <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
             Cancel
           </Button>

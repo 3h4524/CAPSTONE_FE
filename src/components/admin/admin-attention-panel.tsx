@@ -176,15 +176,15 @@ const AdminAttentionPanel = (props: AdminAttentionPanelProps) => {
   const issues = checks.filter((check) => check.status !== "ok").length;
 
   return (
-    <section className="flex flex-col rounded-xl border border-ink-200 bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+    <section className="border-ink-200 bg-card flex flex-col rounded-xl border p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-sm font-semibold text-ink-900">Health checks</h3>
-        <p className="text-xs text-ink-400">
+        <h3 className="text-ink-900 text-sm font-semibold">Health checks</h3>
+        <p className="text-ink-400 text-xs">
           {issues > 0 ? `${issues} of ${checks.length} need attention` : "All areas healthy"}
         </p>
       </div>
 
-      <ul className="mt-3 flex-1 divide-y divide-ink-100">
+      <ul className="divide-ink-100 mt-3 flex-1 divide-y">
         {checks.map((check) => (
           <li key={check.key} className="py-3 first:pt-1 last:pb-0">
             <div className="flex items-start gap-3">
@@ -195,18 +195,18 @@ const AdminAttentionPanel = (props: AdminAttentionPanelProps) => {
               />
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-3">
-                  <p className="text-xs font-medium text-ink-500">{check.label}</p>
+                  <p className="text-ink-500 text-xs font-medium">{check.label}</p>
                   {check.status !== "ok" && (
                     <Link
                       href={check.href}
-                      className="flex shrink-0 items-center gap-0.5 text-xs font-medium text-ink-700 hover:text-ink-900"
+                      className="text-ink-700 hover:text-ink-900 flex shrink-0 items-center gap-0.5 text-xs font-medium"
                     >
                       {check.action} <ArrowRight className="size-3" />
                     </Link>
                   )}
                 </div>
                 <p
-                  className={`mt-0.5 text-sm ${check.status === "ok" ? "text-ink-500" : "font-medium text-ink-900"}`}
+                  className={`mt-0.5 text-sm ${check.status === "ok" ? "text-ink-500" : "text-ink-900 font-medium"}`}
                 >
                   <span className="sr-only">{STATUS_STYLES[check.status].badge}: </span>
                   {check.summary}
@@ -218,9 +218,9 @@ const AdminAttentionPanel = (props: AdminAttentionPanelProps) => {
                         key={detail.key}
                         className="flex items-baseline justify-between gap-3 text-xs"
                       >
-                        <span className="min-w-0 truncate text-ink-500">{detail.text}</span>
+                        <span className="text-ink-500 min-w-0 truncate">{detail.text}</span>
                         {detail.figure && (
-                          <span className="shrink-0 text-ink-700 tabular-nums">
+                          <span className="text-ink-700 shrink-0 tabular-nums">
                             {detail.figure}
                           </span>
                         )}

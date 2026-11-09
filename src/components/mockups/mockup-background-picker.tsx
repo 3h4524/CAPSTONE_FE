@@ -19,7 +19,7 @@ type MockupBackgroundPickerProps = {
 export const MockupBackgroundSwatch = ({ hex, className }: { hex: string; className?: string }) => (
   <span
     title={`Background: ${mockupBackgroundName(hex)}`}
-    className={cn("inline-block size-3.5 shrink-0 rounded-sm border border-ink-300", className)}
+    className={cn("border-ink-300 inline-block size-3.5 shrink-0 rounded-sm border", className)}
     style={{ backgroundColor: hex }}
   />
 );
@@ -61,7 +61,7 @@ export const MockupBackgroundPicker = ({ value, onChange, disabled = false }: Mo
             disabled={disabled}
             onClick={() => onChange(hex)}
             className={cn(
-              "flex size-6 items-center justify-center rounded-sm border border-ink-300 transition disabled:opacity-40",
+              "border-ink-300 flex size-6 items-center justify-center rounded-sm border transition disabled:opacity-40",
               isChosen(hex) && "ring-primary ring-2 ring-offset-2"
             )}
             style={{ backgroundColor: hex }}

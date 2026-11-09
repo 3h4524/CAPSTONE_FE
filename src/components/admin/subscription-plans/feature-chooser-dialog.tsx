@@ -52,14 +52,14 @@ export function FeatureChooserDialog({ open, title, description, candidates, isP
     <Dialog open={open} onOpenChange={(next) => !next && close()}>
       <DialogContent
         showCloseButton={false}
-        className="flex max-h-[calc(100dvh-20px)] w-[calc(100%-20px)] max-w-[560px] flex-col gap-0 overflow-hidden rounded-3xl border-0 bg-card p-0 shadow-[0_28px_80px_rgba(15,23,42,0.28)]"
+        className="bg-card flex max-h-[calc(100dvh-20px)] w-[calc(100%-20px)] max-w-[560px] flex-col gap-0 overflow-hidden rounded-3xl border-0 p-0 shadow-[0_28px_80px_rgba(15,23,42,0.28)]"
       >
         <DialogHeader className="relative flex-row items-start gap-3 px-5 pt-6 pr-16 pb-3 text-left sm:px-6">
-          <div className="text-primary flex size-10 shrink-0 items-center justify-center rounded-xl bg-ink-100">
+          <div className="text-primary bg-ink-100 flex size-10 shrink-0 items-center justify-center rounded-xl">
             <Plus className="size-[18px]" aria-hidden="true" />
           </div>
           <div className="space-y-1">
-            <p className="text-[10px] font-bold tracking-[0.16em] text-ink-500">ADD FEATURES</p>
+            <p className="text-ink-500 text-[10px] font-bold tracking-[0.16em]">ADD FEATURES</p>
             <DialogTitle className="font-display text-xl tracking-[-0.02em]">{title}</DialogTitle>
             <DialogDescription className="leading-5">{description}</DialogDescription>
           </div>
@@ -67,7 +67,7 @@ export function FeatureChooserDialog({ open, title, description, candidates, isP
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 size-10 rounded-lg text-ink-500 hover:translate-y-0 hover:bg-ink-100"
+            className="text-ink-500 hover:bg-ink-100 absolute top-4 right-4 size-10 rounded-lg hover:translate-y-0"
             onClick={close}
             aria-label="Close"
           >
@@ -77,7 +77,7 @@ export function FeatureChooserDialog({ open, title, description, candidates, isP
 
         <div className="px-5 pb-2 sm:px-6">
           <div className="relative">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-400" aria-hidden="true" />
+            <Search className="text-ink-400 absolute top-1/2 left-3 size-4 -translate-y-1/2" aria-hidden="true" />
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -90,19 +90,19 @@ export function FeatureChooserDialog({ open, title, description, candidates, isP
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-3 sm:px-6">
           {shown.length === 0 ? (
-            <p className="rounded-xl bg-ink-50 px-4 py-6 text-center text-sm text-ink-500">
+            <p className="bg-ink-50 text-ink-500 rounded-xl px-4 py-6 text-center text-sm">
               {query ? "No feature matches your search." : "Every feature on offer is already included."}
             </p>
           ) : (
             groups.map((group) => (
               <div key={group}>
-                <p className="mb-1.5 text-[11px] font-semibold tracking-wide text-ink-500 uppercase">{group}</p>
-                <ul className="divide-y divide-ink-100 rounded-xl border border-ink-200">
+                <p className="text-ink-500 mb-1.5 text-[11px] font-semibold tracking-wide uppercase">{group}</p>
+                <ul className="divide-ink-100 border-ink-200 divide-y rounded-xl border">
                   {shown
                     .filter((feature) => feature.group === group)
                     .map((feature) => (
                       <li key={feature.code}>
-                        <label className="flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-ink-50">
+                        <label className="hover:bg-ink-50 flex cursor-pointer items-start gap-3 px-4 py-3">
                           <Checkbox
                             className="mt-0.5"
                             checked={picked.includes(feature.code)}
@@ -110,11 +110,11 @@ export function FeatureChooserDialog({ open, title, description, candidates, isP
                             aria-label={feature.label}
                           />
                           <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-medium text-ink-800">{feature.label}</span>
-                            {feature.description && <span className="block text-xs text-ink-500">{feature.description}</span>}
+                            <span className="text-ink-800 block text-sm font-medium">{feature.label}</span>
+                            {feature.description && <span className="text-ink-500 block text-xs">{feature.description}</span>}
                           </span>
                           {feature.plans.length > 0 && (
-                            <span className="shrink-0 rounded-full bg-ink-100 px-2 py-0.5 text-[10px] font-semibold text-ink-500">
+                            <span className="bg-ink-100 text-ink-500 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold">
                               In {feature.plans.join(", ")}
                             </span>
                           )}
@@ -127,7 +127,7 @@ export function FeatureChooserDialog({ open, title, description, candidates, isP
           )}
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-ink-100 px-5 py-4 sm:px-6">
+        <div className="border-ink-100 flex justify-end gap-2 border-t px-5 py-4 sm:px-6">
           <Button type="button" variant="outline" onClick={close} disabled={isPending}>
             Cancel
           </Button>

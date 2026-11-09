@@ -42,7 +42,7 @@ export const WorkflowChecksSummary = ({ issues, onFix, onViewAll }: WorkflowChec
   if (issues.length === 0) return null;
 
   return (
-    <section aria-label="Workflow checks" className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-4">
+    <section aria-label="Workflow checks" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
       <div className="flex items-start gap-3">
         <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden="true" />
         <div className="min-w-0 flex-1">
@@ -52,7 +52,7 @@ export const WorkflowChecksSummary = ({ issues, onFix, onViewAll }: WorkflowChec
           <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-300">Fix these before you run this workflow.</p>
         </div>
         {issues.length > SUMMARY_LENGTH && (
-          <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 bg-card px-3 text-xs" onClick={onViewAll}>
+          <Button type="button" variant="outline" size="sm" className="bg-card h-8 shrink-0 px-3 text-xs" onClick={onViewAll}>
             View
           </Button>
         )}
@@ -75,7 +75,7 @@ type WorkflowChecksListProps = {
 export const WorkflowChecksList = ({ issues, onFix }: WorkflowChecksListProps) => {
   if (issues.length === 0) {
     return (
-      <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 p-4 text-sm text-emerald-800 dark:text-emerald-300" role="status">
+      <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300" role="status">
         <CheckCircle2 className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
         Every step is connected and configured. Press Run to start the batch.
       </div>
@@ -83,7 +83,7 @@ export const WorkflowChecksList = ({ issues, onFix }: WorkflowChecksListProps) =
   }
 
   return (
-    <ul aria-label="Workflow issues" className="space-y-3 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-4">
+    <ul aria-label="Workflow issues" className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
       {issues.map((issue) => (
         <IssueRow key={issue.id} issue={issue} onFix={onFix} />
       ))}

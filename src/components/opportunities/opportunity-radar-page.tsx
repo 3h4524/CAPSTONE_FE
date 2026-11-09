@@ -22,9 +22,9 @@ import {
   updateSellerOpportunityState,
 } from "@/api/market-opportunities";
 import { translateTexts, type TranslationItem } from "@/api/translations";
+import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { LevelMeter, PriceInterestScatter, ShareDonut, StrongSellerBar, SupplySparkline } from "@/components/opportunities/market-charts";
 import { buildNicheMap, CompetitorLeaderboard, CompetitorPriceStrip, InfoTip, ListingAgeBars, MiniStats, NicheMapCard, NicheSelect, PriceSweetSpot, ProfileImpactCard, SeasonalWindowCard, TapHint } from "@/components/opportunities/market-insights";
-import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -392,11 +392,11 @@ export function OpportunityRadarPage() {
               <span className="hidden size-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-blue-200 sm:flex"><Compass className="size-5" /></span>
               <div className="min-w-0">
                  <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{t("marketRadar.title")}</h1>
-                 <p className="mt-0.5 text-sm text-ink-300 max-md:text-xs">{t("marketRadar.subtitle")}</p>
+                 <p className="text-ink-300 mt-0.5 text-sm max-md:text-xs">{t("marketRadar.subtitle")}</p>
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="grid grid-cols-3 divide-x divide-white/10 rounded-xl border border-white/10 bg-card/[0.06]">
+              <div className="bg-card/[0.06] grid grid-cols-3 divide-x divide-white/10 rounded-xl border border-white/10">
                  <HeroStat
                    label={t("marketRadar.heroStrongFit", { defaultValue: "Strong fit" })}
                    value={allOpportunities.length ? String(heroStats.strong) : "—"}
@@ -419,7 +419,7 @@ export function OpportunityRadarPage() {
                  />
               </div>
               <div className="flex flex-col items-stretch gap-1 max-sm:flex-row-reverse max-sm:items-center max-sm:justify-between max-sm:gap-3 sm:items-end">
-                <Button type="button" variant="primaryBlue" className={rankingIsStale ? "shrink-0 ring-2 ring-amber-300/70 dark:ring-amber-500/40 ring-offset-2 ring-offset-[#17263f]" : "shrink-0"} onClick={() => refreshMutation.mutate()} disabled={refreshMutation.isPending}>
+                <Button type="button" variant="primaryBlue" className={rankingIsStale ? "shrink-0 ring-2 ring-amber-300/70 ring-offset-2 ring-offset-[#17263f] dark:ring-amber-500/40" : "shrink-0"} onClick={() => refreshMutation.mutate()} disabled={refreshMutation.isPending}>
                   <RefreshCw className={refreshMutation.isPending ? "size-4 animate-spin" : "size-4"} />
                    {refreshMutation.isPending ? t("marketRadar.refreshing") : t("marketRadar.refresh")}
                  </Button>
@@ -429,7 +429,7 @@ export function OpportunityRadarPage() {
                      {t("marketRadar.newDataAvailable", { defaultValue: "New market data · ranked {{value}}", value: timeAgo(lastEvaluatedAt, locale) })}
                    </p>
                  ) : lastEvaluatedAt && (
-                   <p className="flex items-center justify-center gap-1 text-[11px] text-ink-400"><Clock className="size-3" />{t("marketRadar.updated", { value: timeAgo(lastEvaluatedAt, locale) })}</p>
+                   <p className="text-ink-400 flex items-center justify-center gap-1 text-[11px]"><Clock className="size-3" />{t("marketRadar.updated", { value: timeAgo(lastEvaluatedAt, locale) })}</p>
                  )}
               </div>
             </div>
@@ -448,13 +448,13 @@ export function OpportunityRadarPage() {
           ]}
         />
 
-        {tab === "profile" && (        <Card className="gap-0 border-ink-200 bg-card py-0 shadow-sm">
+        {tab === "profile" && (        <Card className="border-ink-200 bg-card gap-0 py-0 shadow-sm">
           <div className="flex flex-col gap-3 px-5 py-4 max-md:p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"><SlidersHorizontal className="size-4" /></span>
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"><SlidersHorizontal className="size-4" /></span>
               <div>
-                 <h2 className="font-semibold text-ink-900">{t("marketRadar.sellerProfile")}</h2>
-                 <p className="text-sm text-ink-500">{t("marketRadar.sellerProfileDescription")}</p>
+                 <h2 className="text-ink-900 font-semibold">{t("marketRadar.sellerProfile")}</h2>
+                 <p className="text-ink-500 text-sm">{t("marketRadar.sellerProfileDescription")}</p>
               </div>
             </div>
             {hasProfile && (
@@ -468,13 +468,13 @@ export function OpportunityRadarPage() {
 
           {profileOpen && (
             canLoadSellerData && profileQuery.isPending ? (
-              <div className="flex min-h-40 items-center justify-center text-sm text-ink-500" role="status">
+              <div className="text-ink-500 flex min-h-40 items-center justify-center text-sm" role="status">
                  {t("marketRadar.loadingProfile", { defaultValue: "Loading your saved seller profile..." })}
               </div>
             ) : (
-              <form className="grid gap-5 border-t border-ink-100 p-5 max-md:p-4 lg:grid-cols-2" onSubmit={(event) => { event.preventDefault(); saveMutation.mutate(profile); }}>
+              <form className="border-ink-100 grid gap-5 border-t p-5 max-md:p-4 lg:grid-cols-2" onSubmit={(event) => { event.preventDefault(); saveMutation.mutate(profile); }}>
                 <div className="flex flex-wrap items-center justify-between gap-2 lg:col-span-2">
-                  <p className="text-xs text-ink-500">{t("marketRadar.profilePresetHint", { defaultValue: "Match the profile to the apparel dataset to improve relevance and seller fit." })}</p>
+                  <p className="text-ink-500 text-xs">{t("marketRadar.profilePresetHint", { defaultValue: "Match the profile to the apparel dataset to improve relevance and seller fit." })}</p>
                   <Button type="button" variant="outline" size="sm" onClick={() => setProfile(apparelProfilePreset)}>
                     {t("marketRadar.useApparelPreset", { defaultValue: "Use apparel preset" })}
                   </Button>
@@ -552,19 +552,19 @@ export function OpportunityRadarPage() {
 
         <section id="radar-opportunities" className="space-y-4 max-md:scroll-mt-20 max-md:space-y-3">
           <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-end">
-             <div><h2 className="text-lg font-semibold text-ink-900">{t("marketRadar.recommended")}</h2><p className="mt-1 text-sm text-ink-500">{t("marketRadar.recommendedDescription")}</p></div>
+             <div><h2 className="text-ink-900 text-lg font-semibold">{t("marketRadar.recommended")}</h2><p className="text-ink-500 mt-1 text-sm">{t("marketRadar.recommendedDescription")}</p></div>
             <div className="flex min-w-0 items-center gap-2">
               <select
                 aria-label={t("marketRadar.filterByState", { defaultValue: "Filter opportunities" })}
                 value={activeState}
                 onChange={(event) => setActiveState(event.target.value)}
-                className="h-11 w-full rounded-xl border border-ink-200 bg-card px-3 text-base text-ink-800 md:hidden"
+                className="border-ink-200 bg-card text-ink-800 h-11 w-full rounded-xl border px-3 text-base md:hidden"
               >
                 {stateFilters.map((filter) => (
                   <option key={filter.value} value={filter.value}>{t(`marketRadar.${filter.value}`, { defaultValue: filter.label })} ({stateCounts[filter.value] ?? 0})</option>
                 ))}
               </select>
-              <div className="flex min-w-0 flex-1 overflow-x-auto rounded-xl border border-ink-200 bg-card p-1 max-md:hidden lg:flex-none">
+              <div className="border-ink-200 bg-card flex min-w-0 flex-1 overflow-x-auto rounded-xl border p-1 max-md:hidden lg:flex-none">
                 {stateFilters.map((filter) => (
                   <button
                     key={filter.value}
@@ -578,7 +578,7 @@ export function OpportunityRadarPage() {
                   </button>
                 ))}
               </div>
-              <div className="flex shrink-0 rounded-xl border border-ink-200 bg-card p-1 max-md:hidden">
+              <div className="border-ink-200 bg-card flex shrink-0 rounded-xl border p-1 max-md:hidden">
                  {([["cards", LayoutGrid, t("marketRadar.cardView")], ["list", List, t("marketRadar.listView")]] as const).map(([value, Icon, label]) => (
                   <button key={value} type="button" aria-label={label} title={label} aria-pressed={view === value} onClick={() => setView(value)} className={"rounded-lg p-1.5 transition-colors " + (view === value ? "bg-ink-100 text-ink-900" : "text-ink-400 hover:text-ink-700")}>
                     <Icon className="size-4" />
@@ -590,7 +590,7 @@ export function OpportunityRadarPage() {
           {opportunitiesQuery.isPending ? (
              <div className="grid gap-4 lg:grid-cols-2">{[0, 1, 2, 3].map((index) => <OpportunitySkeleton key={index} />)}</div>
           ) : opportunitiesQuery.isError ? (
-             <div className="rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 p-10 text-center text-sm text-red-700 dark:text-red-300">{t("errors.loadOpportunities")}</div>
+             <div className="rounded-xl border border-red-200 bg-red-50 p-10 text-center text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">{t("errors.loadOpportunities")}</div>
           ) : opportunities.length === 0 ? (
             <EmptyRadar
               hasProfile={hasProfile}
@@ -601,7 +601,7 @@ export function OpportunityRadarPage() {
               onSetup={() => setProfileOpen(true)}
             />
           ) : view === "list" && !isPhone ? (
-            <Card className="gap-0 overflow-hidden border-ink-200 bg-card py-0 shadow-sm">
+            <Card className="border-ink-200 bg-card gap-0 overflow-hidden py-0 shadow-sm">
                {pagedOpportunities.map((item) => <OpportunityRow key={item.id} item={item} {...actionsFor(item)} />)}
             </Card>
           ) : (
@@ -639,14 +639,14 @@ function HeroStat({ label, value, suffix, accent, hint, onClick }: { label: stri
     <>
       <p className="text-lg font-semibold tabular-nums">
         <span className={accent ?? "text-white"}>{value}</span>
-        {suffix && <span className="ml-0.5 text-xs font-medium text-ink-400">{suffix}</span>}
+        {suffix && <span className="text-ink-400 ml-0.5 text-xs font-medium">{suffix}</span>}
       </p>
-      <p className="text-[9px] font-medium tracking-[0.08em] whitespace-nowrap text-ink-400 uppercase sm:text-[10px] sm:tracking-[0.12em]">{label}</p>
+      <p className="text-ink-400 text-[9px] font-medium tracking-[0.08em] whitespace-nowrap uppercase sm:text-[10px] sm:tracking-[0.12em]">{label}</p>
     </>
   );
   const className = "px-2 py-2 text-center sm:min-w-28 sm:px-4";
   const stat = onClick
-    ? <button type="button" onClick={onClick} className={`${className} rounded-none transition-colors hover:bg-card/[0.06] focus-visible:bg-card/[0.08] focus-visible:outline-none`}>{content}</button>
+    ? <button type="button" onClick={onClick} className={`${className} hover:bg-card/[0.06] focus-visible:bg-card/[0.08] rounded-none transition-colors focus-visible:outline-none`}>{content}</button>
     : <div className={className}>{content}</div>;
   if (!hint) return stat;
   // A stat with its own action keeps that action on a tap, so only the others open their hint.
@@ -677,7 +677,7 @@ function OpportunityPagination({
   const last = Math.min(page * pageSize, total);
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-ink-200 bg-card px-4 py-3 text-sm text-ink-500 sm:flex-row sm:items-center sm:justify-between">
+    <div className="border-ink-200 bg-card text-ink-500 flex flex-col gap-3 rounded-xl border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
       <span>{first}–{last} {t("marketRadar.of", { defaultValue: "of" })} {total}</span>
       <div className="flex items-center justify-between gap-2 sm:justify-end">
         <Button
@@ -691,7 +691,7 @@ function OpportunityPagination({
           <ChevronLeft className="size-4" />
           <span className="hidden sm:inline">{t("marketRadar.previous", { defaultValue: "Previous" })}</span>
         </Button>
-        <span className="min-w-20 text-center text-xs font-medium text-ink-600">
+        <span className="text-ink-600 min-w-20 text-center text-xs font-medium">
           {t("marketRadar.page", { defaultValue: "Page" })} {page} / {pageCount}
         </span>
         <Button
@@ -729,26 +729,26 @@ function LegacyMarketSignalSection({
     <section className="space-y-3">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="flex items-center gap-2 text-xs font-bold tracking-[0.12em] text-blue-700 dark:text-blue-300 uppercase"><BarChart3 className="size-3.5" />{t("marketRadar.marketSignals", { defaultValue: "Market signals for your profile" })}</p>
-          <p className="mt-1 text-sm text-ink-500">{t("marketRadar.marketSignalsDescription", { defaultValue: "Keyword-level insights from the shared public Etsy dataset, matched to your seller profile." })}</p>
+          <p className="flex items-center gap-2 text-xs font-bold tracking-[0.12em] text-blue-700 uppercase dark:text-blue-300"><BarChart3 className="size-3.5" />{t("marketRadar.marketSignals", { defaultValue: "Market signals for your profile" })}</p>
+          <p className="text-ink-500 mt-1 text-sm">{t("marketRadar.marketSignalsDescription", { defaultValue: "Keyword-level insights from the shared public Etsy dataset, matched to your seller profile." })}</p>
         </div>
       </div>
       {!hasProfile ? (
-        <div className="rounded-xl border border-dashed border-blue-200 dark:border-blue-500/30 bg-blue-50/60 dark:bg-blue-500/10 p-6 text-sm text-blue-800 dark:text-blue-300">
+        <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50/60 p-6 text-sm text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
           {t("marketRadar.marketSignalsSetup", { defaultValue: "Save your seller profile above to match public Etsy market signals to your niche." })}
         </div>
       ) : loading ? (
-        <div className="rounded-xl border border-ink-200 bg-card p-8 text-center text-sm text-ink-500" role="status">
+        <div className="border-ink-200 bg-card text-ink-500 rounded-xl border p-8 text-center text-sm" role="status">
           {t("marketRadar.marketSignalsLoading", { defaultValue: "Loading public Etsy market signals..." })}
         </div>
       ) : error ? (
-        <div className="rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 p-6 text-sm text-red-700 dark:text-red-300">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
           {t("marketRadar.marketSignalsError", { defaultValue: "Market signals could not be loaded. Try refreshing the radar." })}
         </div>
       ) : insights.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-ink-300 bg-card p-8 text-center text-sm text-ink-500">
+        <div className="border-ink-300 bg-card text-ink-500 rounded-xl border border-dashed p-8 text-center text-sm">
           <p>{t("marketRadar.noMatchingSignals", { defaultValue: "No collected market signals match this seller profile yet." })}</p>
-          <p className="mt-2 text-xs text-ink-400">{t("marketRadar.noMatchingSignalsHint", { defaultValue: "These signals come from public Etsy snapshots collected by the admin Market Insights job." })}</p>
+          <p className="text-ink-400 mt-2 text-xs">{t("marketRadar.noMatchingSignalsHint", { defaultValue: "These signals come from public Etsy snapshots collected by the admin Market Insights job." })}</p>
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
@@ -764,33 +764,33 @@ function LegacyMarketSignalSection({
               : insight.medianPrice.toFixed(2);
 
             return (
-              <Card key={insight.query} className="gap-0 overflow-hidden border-ink-200 bg-card py-0 shadow-sm">
-                <div className="flex items-start justify-between gap-3 border-b border-ink-100 px-5 py-4">
+              <Card key={insight.query} className="border-ink-200 bg-card gap-0 overflow-hidden py-0 shadow-sm">
+                <div className="border-ink-100 flex items-start justify-between gap-3 border-b px-5 py-4">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold tracking-[0.12em] text-ink-400 uppercase">{t("marketRadar.keywordSignal", { defaultValue: "Keyword signal" })}</p>
-                    <h3 className="mt-1 truncate text-base font-semibold text-ink-900 capitalize" title={insight.query}>{insight.query}</h3>
+                    <p className="text-ink-400 text-[10px] font-bold tracking-[0.12em] uppercase">{t("marketRadar.keywordSignal", { defaultValue: "Keyword signal" })}</p>
+                    <h3 className="text-ink-900 mt-1 truncate text-base font-semibold capitalize" title={insight.query}>{insight.query}</h3>
                   </div>
-                  <span className="shrink-0 rounded-full bg-blue-50 dark:bg-blue-500/10 px-2 py-1 text-[11px] font-semibold text-blue-700 dark:text-blue-300">{formatInsightType(insight.insightType)}</span>
+                  <span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">{formatInsightType(insight.insightType)}</span>
                 </div>
                 <details className="group">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 border-b border-ink-100 px-5 py-3 text-xs font-semibold text-ink-600 marker:hidden [&::-webkit-details-marker]:hidden">
+                <summary className="border-ink-100 text-ink-600 flex cursor-pointer list-none items-center justify-between gap-3 border-b px-5 py-3 text-xs font-semibold marker:hidden [&::-webkit-details-marker]:hidden">
                   <span className="group-open:hidden">{t("marketRadar.viewSignals", { defaultValue: "View market signals" })}</span>
                   <span className="hidden group-open:inline">{t("marketRadar.collapse")}</span>
                   <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
                 </summary>
-                <div className="border-b border-blue-100 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/10 px-5 py-4">
-                  <p className="text-[10px] font-bold tracking-[0.12em] text-blue-700 dark:text-blue-300 uppercase">{t("marketRadar.actionableInsight", { defaultValue: "Actionable insight" })}</p>
-                  <p className="mt-1 text-sm leading-6 font-semibold text-ink-900">{insight.recommendation}</p>
+                <div className="border-b border-blue-100 bg-blue-50/50 px-5 py-4 dark:border-blue-500/30 dark:bg-blue-500/10">
+                  <p className="text-[10px] font-bold tracking-[0.12em] text-blue-700 uppercase dark:text-blue-300">{t("marketRadar.actionableInsight", { defaultValue: "Actionable insight" })}</p>
+                  <p className="text-ink-900 mt-1 text-sm leading-6 font-semibold">{insight.recommendation}</p>
                   <div className="mt-3 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <p className="text-[10px] font-bold tracking-[0.12em] text-ink-500 uppercase">{t("marketRadar.actionPlan", { defaultValue: "Action plan" })}</p>
-                      <ol className="mt-2 space-y-1.5 text-xs leading-5 text-ink-700">
+                      <p className="text-ink-500 text-[10px] font-bold tracking-[0.12em] uppercase">{t("marketRadar.actionPlan", { defaultValue: "Action plan" })}</p>
+                      <ol className="text-ink-700 mt-2 space-y-1.5 text-xs leading-5">
                         {insight.actionPlan.slice(0, 3).map((step, index) => <li key={step}><span className="mr-1.5 font-semibold text-blue-700 dark:text-blue-300">{index + 1}.</span>{step}</li>)}
                       </ol>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold tracking-[0.12em] text-ink-500 uppercase">{t("marketRadar.risks", { defaultValue: "Risk" })}</p>
-                      <ul className="mt-2 space-y-1.5 text-xs leading-5 text-ink-600">
+                      <p className="text-ink-500 text-[10px] font-bold tracking-[0.12em] uppercase">{t("marketRadar.risks", { defaultValue: "Risk" })}</p>
+                      <ul className="text-ink-600 mt-2 space-y-1.5 text-xs leading-5">
                         {insight.risks.slice(0, 2).map((risk) => <li key={risk}>• {risk}</li>)}
                       </ul>
                     </div>
@@ -806,11 +806,11 @@ function LegacyMarketSignalSection({
                   <InsightMetric label={t("marketRadar.seasonality", { defaultValue: "Seasonality" })} value={insight.seasonality} detail={insight.newListingCount.toLocaleString() + " new listings"} />
                 </div>
                 {insight.topTags.length > 0 && (
-                  <div className="border-t border-ink-100 px-5 py-3">
-                    <p className="text-[10px] font-bold tracking-[0.12em] text-ink-400 uppercase">{t("marketRadar.topTags", { defaultValue: "Top tags" })}</p>
+                  <div className="border-ink-100 border-t px-5 py-3">
+                    <p className="text-ink-400 text-[10px] font-bold tracking-[0.12em] uppercase">{t("marketRadar.topTags", { defaultValue: "Top tags" })}</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {insight.topTags.slice(0, 6).map((tag) => (
-                        <span key={tag.tag} className="rounded-full bg-ink-50 px-2 py-1 text-[11px] text-ink-600 ring-1 ring-ink-200">{tag.tag} · {tag.listingCount}</span>
+                        <span key={tag.tag} className="bg-ink-50 text-ink-600 ring-ink-200 rounded-full px-2 py-1 text-[11px] ring-1">{tag.tag} · {tag.listingCount}</span>
                       ))}
                     </div>
                   </div>
@@ -849,15 +849,15 @@ function NicheInsightSection({
   return (
     <section className="space-y-3">
       {!hasProfile ? (
-        <div className="rounded-xl border border-dashed border-blue-200 dark:border-blue-500/30 bg-blue-50/60 dark:bg-blue-500/10 p-6 text-sm text-blue-800 dark:text-blue-300">{t("marketRadar.marketSignalsSetup", { defaultValue: "Save your seller profile above to match public Etsy market signals to your niche." })}</div>
+        <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50/60 p-6 text-sm text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">{t("marketRadar.marketSignalsSetup", { defaultValue: "Save your seller profile above to match public Etsy market signals to your niche." })}</div>
       ) : loading ? (
-        <div className="rounded-xl border border-ink-200 bg-card p-8 text-center text-sm text-ink-500" role="status">{t("marketRadar.marketSignalsLoading", { defaultValue: "Calculating your niche conclusion from public Etsy data..." })}</div>
+        <div className="border-ink-200 bg-card text-ink-500 rounded-xl border p-8 text-center text-sm" role="status">{t("marketRadar.marketSignalsLoading", { defaultValue: "Calculating your niche conclusion from public Etsy data..." })}</div>
       ) : error ? (
-        <div className="rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 p-6 text-sm text-red-700 dark:text-red-300">{t("marketRadar.marketSignalsError", { defaultValue: "The niche conclusion could not be loaded. Try refreshing the radar." })}</div>
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">{t("marketRadar.marketSignalsError", { defaultValue: "The niche conclusion could not be loaded. Try refreshing the radar." })}</div>
       ) : insights.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-ink-300 bg-card p-8 text-center text-sm text-ink-500">
+        <div className="border-ink-300 bg-card text-ink-500 rounded-xl border border-dashed p-8 text-center text-sm">
           <p>{t("marketRadar.noMatchingSignals", { defaultValue: "No market group matches this seller profile yet." })}</p>
-          <p className="mt-2 text-xs text-ink-400">{t("marketRadar.noMatchingSignalsHint", { defaultValue: "Run the admin Market Insights collection with keywords close to this niche." })}</p>
+          <p className="text-ink-400 mt-2 text-xs">{t("marketRadar.noMatchingSignalsHint", { defaultValue: "Run the admin Market Insights collection with keywords close to this niche." })}</p>
         </div>
       ) : (
         <>
@@ -885,10 +885,10 @@ function NichePicker({ insights, selected, onSelect }: { insights: SellerNicheMa
           type="button"
           aria-expanded={isMapOpen}
           onClick={() => setIsMapOpen((open) => !open)}
-          className="flex min-h-11 w-full items-center justify-between rounded-xl border border-ink-200 bg-card px-4 text-sm font-semibold text-ink-800"
+          className="border-ink-200 bg-card text-ink-800 flex min-h-11 w-full items-center justify-between rounded-xl border px-4 text-sm font-semibold"
         >
           {t("marketRadar.nicheMapTitle", { defaultValue: "Niche map" })}
-          <ChevronDown className={cn("size-4 text-ink-400 transition-transform", isMapOpen && "rotate-180")} aria-hidden="true" />
+          <ChevronDown className={cn("text-ink-400 size-4 transition-transform", isMapOpen && "rotate-180")} aria-hidden="true" />
         </button>
       )}
       {hasMap && isMapOpen && <NicheMapCard insights={insights} selected={selected} onSelect={onSelect} />}
@@ -938,11 +938,11 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
   }[insight.demandProxy];
 
   return (
-    <Card className="gap-0 overflow-hidden border-ink-200 bg-card py-0 shadow-sm">
+    <Card className="border-ink-200 bg-card gap-0 overflow-hidden py-0 shadow-sm">
       <div className="flex flex-col gap-3 px-5 pt-5 pb-4 max-md:px-4 max-md:pt-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <h3 className="text-lg font-semibold text-ink-900 capitalize">{insight.niche}</h3>
-          <p className="mt-0.5 text-sm text-ink-500">
+          <h3 className="text-ink-900 text-lg font-semibold capitalize">{insight.niche}</h3>
+          <p className="text-ink-500 mt-0.5 text-sm">
             {t("marketRadar.confidenceLine", {
               defaultValue: "Confidence {{quality}} · {{listings}} top listings · {{days}} day(s) of data",
               quality: insight.evidenceQuality,
@@ -965,23 +965,23 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
             <VerdictIcon className="size-4" aria-hidden="true" />
             {formatVerdict(insight.verdict)}
           </span>
-          <p className="min-w-0 pt-1 text-sm leading-6 font-medium text-ink-800">{headline}</p>
+          <p className="text-ink-800 min-w-0 pt-1 text-sm leading-6 font-medium">{headline}</p>
         </div>
         {nextStep && (
-          <p className="mt-2 flex items-start gap-2 text-sm leading-6 text-ink-700">
+          <p className="text-ink-700 mt-2 flex items-start gap-2 text-sm leading-6">
             <Zap className="mt-1 size-4 shrink-0 text-blue-600 dark:text-blue-400" aria-hidden="true" />
-            <span><span className="font-semibold text-ink-900">{t("marketRadar.nextStepLabel", { defaultValue: "Next step:" })}</span> {nextStep}</span>
+            <span><span className="text-ink-900 font-semibold">{t("marketRadar.nextStepLabel", { defaultValue: "Next step:" })}</span> {nextStep}</span>
           </p>
         )}
         {(insight.highlights.length > 0 || insight.risks.length > 0) && (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {insight.highlights.slice(0, 2).map((item) => (
-              <span key={item} title={item} className="inline-flex max-w-full items-center gap-1 rounded-full bg-card px-2.5 py-1 text-xs text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-500/30 max-md:items-start max-md:rounded-lg">
+              <span key={item} title={item} className="bg-card inline-flex max-w-full items-center gap-1 rounded-full px-2.5 py-1 text-xs text-emerald-800 ring-1 ring-emerald-200 max-md:items-start max-md:rounded-lg dark:text-emerald-300 dark:ring-emerald-500/30">
                 <Check className="size-3 shrink-0 max-md:mt-0.5" aria-hidden="true" /><span className="truncate max-md:whitespace-normal">{item}</span>
               </span>
             ))}
             {insight.risks.slice(0, 2).map((item) => (
-              <span key={item} title={item} className="inline-flex max-w-full items-center gap-1 rounded-full bg-card px-2.5 py-1 text-xs text-amber-800 dark:text-amber-300 ring-1 ring-amber-200 dark:ring-amber-500/30 max-md:items-start max-md:rounded-lg">
+              <span key={item} title={item} className="bg-card inline-flex max-w-full items-center gap-1 rounded-full px-2.5 py-1 text-xs text-amber-800 ring-1 ring-amber-200 max-md:items-start max-md:rounded-lg dark:text-amber-300 dark:ring-amber-500/30">
                 <TriangleAlert className="size-3 shrink-0 max-md:mt-0.5" aria-hidden="true" /><span className="truncate max-md:whitespace-normal">{item}</span>
               </span>
             ))}
@@ -1067,13 +1067,13 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
         p75={signals.priceP75}
         details={signals.points.length > 0 ? (
         <>
-          <p className="text-xs text-ink-500">{t("marketRadar.scatterSubtitleShort", { defaultValue: "Each dot is a top listing: right is pricier, up gets more favorites. Orange dots are under 90 days old." })}</p>
+          <p className="text-ink-500 text-xs">{t("marketRadar.scatterSubtitleShort", { defaultValue: "Each dot is a top listing: right is pricier, up gets more favorites. Orange dots are under 90 days old." })}</p>
           <PriceInterestScatter points={signals.points} p25={signals.priceP25} p75={signals.priceP75} currency={signals.priceCurrency} />
           <details className="mt-1">
-            <summary className="cursor-pointer text-xs font-semibold text-ink-500">{t("marketRadar.showAsTable", { defaultValue: "Show as table" })}</summary>
-            <div className="mt-2 max-h-64 overflow-auto rounded-lg border border-ink-100">
+            <summary className="text-ink-500 cursor-pointer text-xs font-semibold">{t("marketRadar.showAsTable", { defaultValue: "Show as table" })}</summary>
+            <div className="border-ink-100 mt-2 max-h-64 overflow-auto rounded-lg border">
               <table className="w-full text-left text-xs">
-                <thead className="sticky top-0 bg-ink-50 text-[10px] tracking-[0.08em] text-ink-400 uppercase">
+                <thead className="bg-ink-50 text-ink-400 sticky top-0 text-[10px] tracking-[0.08em] uppercase">
                   <tr>
                     <th className="px-3 py-2 font-semibold">{t("marketRadar.listing", { defaultValue: "Listing" })}</th>
                     <th className="px-3 py-2 font-semibold">{t("marketRadar.listPrice", { defaultValue: "List price" })}</th>
@@ -1081,17 +1081,17 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
                     <th className="px-3 py-2 font-semibold">{t("marketRadar.age", { defaultValue: "Age" })}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-ink-100">
+                <tbody className="divide-ink-100 divide-y">
                   {[...signals.points].sort((a, b) => b.favoritesPer30Days - a.favoritesPer30Days).map((point) => (
                     <tr key={`${point.title}-${point.price}-${point.ageDays}`}>
                       <td className="max-w-64 truncate px-3 py-1.5 max-md:max-w-36" title={point.title}>
                         {point.url
-                          ? <a className="text-blue-700 dark:text-blue-300 hover:underline" href={point.url} target="_blank" rel="noreferrer">{point.title}</a>
+                          ? <a className="text-blue-700 hover:underline dark:text-blue-300" href={point.url} target="_blank" rel="noreferrer">{point.title}</a>
                           : <span className="text-ink-700">{point.title}</span>}
                       </td>
-                      <td className="px-3 py-1.5 text-ink-600 tabular-nums">{formatMoney(point.price)}</td>
-                      <td className="px-3 py-1.5 font-semibold text-ink-800 tabular-nums">{point.favoritesPer30Days}</td>
-                      <td className="px-3 py-1.5 text-ink-600 tabular-nums">{t("marketRadar.daysShort", { defaultValue: "{{value}} d", value: point.ageDays })}</td>
+                      <td className="text-ink-600 px-3 py-1.5 tabular-nums">{formatMoney(point.price)}</td>
+                      <td className="text-ink-800 px-3 py-1.5 font-semibold tabular-nums">{point.favoritesPer30Days}</td>
+                      <td className="text-ink-600 px-3 py-1.5 tabular-nums">{t("marketRadar.daysShort", { defaultValue: "{{value}} d", value: point.ageDays })}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1103,19 +1103,19 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
       />
 
       {showWhy && (
-        <div className="space-y-5 border-t border-ink-100 px-5 py-5">
-          <p className="text-sm leading-6 text-ink-600">{insight.conclusion}</p>
+        <div className="border-ink-100 space-y-5 border-t px-5 py-5">
+          <p className="text-ink-600 text-sm leading-6">{insight.conclusion}</p>
           <div className="grid gap-4 lg:grid-cols-2">
             <ReasonPanel tone="good" title={t("marketRadar.whyTitle", { defaultValue: "What the data shows" })} items={insight.highlights} empty={unavailable} />
             <ReasonPanel tone="warn" title={t("marketRadar.watchOutTitle", { defaultValue: "Watch out" })} items={insight.risks} empty={unavailable} />
           </div>
           {insight.keywords.length > 0 && (
             <div>
-              <p className="text-[10px] font-bold tracking-[0.12em] text-ink-500 uppercase">{t("marketRadar.compareKeywords", { defaultValue: "Compare keywords" })}</p>
+              <p className="text-ink-500 text-[10px] font-bold tracking-[0.12em] uppercase">{t("marketRadar.compareKeywords", { defaultValue: "Compare keywords" })}</p>
               <KeywordCards keywords={insight.keywords} />
-              <div className="mt-2 overflow-x-auto rounded-lg border border-ink-100 max-md:hidden">
+              <div className="border-ink-100 mt-2 overflow-x-auto rounded-lg border max-md:hidden">
                 <table className="w-full min-w-[32rem] text-left text-sm">
-                  <thead className="bg-ink-50 text-[10px] tracking-[0.08em] text-ink-400 uppercase">
+                  <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-[0.08em] uppercase">
                     <tr>
                       <th className="px-3 py-2 font-semibold">{t("marketRadar.keyword", { defaultValue: "Keyword" })}</th>
                       <th className="px-3 py-2 font-semibold">{t("marketRadar.tileMarket", { defaultValue: "Market size" })}</th>
@@ -1124,12 +1124,12 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
                       <th className="px-3 py-2 font-semibold">{t("marketRadar.keywordScore", { defaultValue: "Score" })}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-ink-100">
+                  <tbody className="divide-ink-100 divide-y">
                     {insight.keywords.map((keyword) => (
                       <tr key={keyword.keyword} className="hover:bg-ink-50/80">
-                        <td className="max-w-48 truncate px-3 py-2.5 font-medium text-ink-800" title={keyword.keyword}>{keyword.keyword}</td>
+                        <td className="text-ink-800 max-w-48 truncate px-3 py-2.5 font-medium" title={keyword.keyword}>{keyword.keyword}</td>
                         <td className="px-3 py-2.5"><SizeBar percentile={keyword.sizePercentile} count={keyword.activeListingCount} level={keyword.competitionLevel} /></td>
-                        <td className="px-3 py-2.5 text-ink-700 tabular-nums">{keyword.signals.sellerCount > 0 ? `${keyword.signals.strongSellerCount} / ${keyword.signals.sellerCount}` : "—"}</td>
+                        <td className="text-ink-700 px-3 py-2.5 tabular-nums">{keyword.signals.sellerCount > 0 ? `${keyword.signals.strongSellerCount} / ${keyword.signals.sellerCount}` : "—"}</td>
                         <td className={`px-3 py-2.5 font-semibold tabular-nums ${keyword.signals.risingNewListingCount > 0 ? "text-emerald-700 dark:text-emerald-300" : "text-ink-400"}`}>{keyword.signals.risingNewListingCount}</td>
                         <td className="px-3 py-2.5"><ScoreMeter value={keyword.keywordScore} tone={keyword.keywordScore >= 70 ? "green" : keyword.keywordScore >= 40 ? "amber" : "slate"} /></td>
                       </tr>
@@ -1151,10 +1151,10 @@ function KeywordCards({ keywords }: { keywords: SellerNicheMarketInsight["keywor
   const termClassName = "text-[10px] font-semibold tracking-[0.08em] text-ink-400 uppercase";
 
   return (
-    <ul className="mt-2 divide-y divide-ink-100 rounded-lg border border-ink-100 md:hidden">
+    <ul className="divide-ink-100 border-ink-100 mt-2 divide-y rounded-lg border md:hidden">
       {keywords.map((keyword) => (
         <li key={keyword.keyword} className="space-y-2 p-3">
-          <p className="text-sm font-medium break-words text-ink-800">{keyword.keyword}</p>
+          <p className="text-ink-800 text-sm font-medium break-words">{keyword.keyword}</p>
           <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
             <div className="col-span-2">
               <dt className={termClassName}>{t("marketRadar.tileMarket", { defaultValue: "Market size" })}</dt>
@@ -1162,7 +1162,7 @@ function KeywordCards({ keywords }: { keywords: SellerNicheMarketInsight["keywor
             </div>
             <div>
               <dt className={termClassName}>{t("marketRadar.tileStrongSellers", { defaultValue: "Strong competitors" })}</dt>
-              <dd className="mt-1 text-ink-700 tabular-nums">{keyword.signals.sellerCount > 0 ? `${keyword.signals.strongSellerCount} / ${keyword.signals.sellerCount}` : "—"}</dd>
+              <dd className="text-ink-700 mt-1 tabular-nums">{keyword.signals.sellerCount > 0 ? `${keyword.signals.strongSellerCount} / ${keyword.signals.sellerCount}` : "—"}</dd>
             </div>
             <div>
               <dt className={termClassName}>{t("marketRadar.tileRising", { defaultValue: "New listings rising" })}</dt>
@@ -1268,26 +1268,26 @@ function MetricTile({
       ? "rounded-full bg-amber-100 dark:bg-amber-500/15 px-2 py-0.5 text-amber-800 dark:text-amber-300"
       : "text-ink-700";
   return (
-    <div className="flex flex-col gap-3 rounded-xl bg-ink-50 p-4 max-md:gap-2 max-md:p-3">
-      <p className="flex items-center gap-1 text-xs font-semibold text-ink-500">{label}{info && <InfoTip text={info} label={label} />}</p>
+    <div className="bg-ink-50 flex flex-col gap-3 rounded-xl p-4 max-md:gap-2 max-md:p-3">
+      <p className="text-ink-500 flex items-center gap-1 text-xs font-semibold">{label}{info && <InfoTip text={info} label={label} />}</p>
       <div>
         <div className="flex items-baseline justify-between gap-2 max-md:flex-wrap max-md:gap-y-0">
-          <p className="truncate text-2xl font-bold tracking-tight text-ink-900 tabular-nums max-md:text-xl">{value}</p>
+          <p className="text-ink-900 truncate text-2xl font-bold tracking-tight tabular-nums max-md:text-xl">{value}</p>
           {badge && <span className={cn("shrink-0 text-[11px] font-bold", badgeClass, phoneBrief && isBadgeQuiet && "max-md:hidden")}>{badge}</span>}
         </div>
-        {caption && <p className={cn("mt-0.5 text-xs text-ink-500", phoneBrief && "max-md:hidden")}>{caption}</p>}
+        {caption && <p className={cn("text-ink-500 mt-0.5 text-xs", phoneBrief && "max-md:hidden")}>{caption}</p>}
       </div>
       {chart ?? (
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink-200">
+        <div className="bg-ink-200 h-1.5 w-full overflow-hidden rounded-full">
           <div className="h-full rounded-full bg-blue-600" style={{ width: `${Math.min(Math.max(progress ?? 0, 0), 100)}%` }} />
         </div>
       )}
       <div className={cn("mt-auto flex items-center justify-between gap-2 text-[11px]", phoneBrief && "max-md:hidden")}>
-        <span className="truncate text-ink-500">{footerLeft}</span>
+        <span className="text-ink-500 truncate">{footerLeft}</span>
         <span className={`shrink-0 font-bold ${footerClass}`}>{footerRight}</span>
       </div>
       {note && (
-        <p className="flex items-start gap-1.5 border-t border-ink-200 pt-2 text-[11px] leading-4 text-amber-700 dark:text-amber-300">
+        <p className="border-ink-200 flex items-start gap-1.5 border-t pt-2 text-[11px] leading-4 text-amber-700 dark:text-amber-300">
           <TriangleAlert className="mt-px size-3 shrink-0" aria-hidden="true" />
           <span>{note}</span>
         </p>
@@ -1300,14 +1300,14 @@ function ReasonPanel({ title, items, empty, tone }: { title: string; items: stri
   const Icon = tone === "good" ? Check : TriangleAlert;
   const color = tone === "good" ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300";
   return (
-    <div className="rounded-xl bg-ink-50 p-4">
+    <div className="bg-ink-50 rounded-xl p-4">
       <p className={`flex items-center gap-1.5 text-sm font-bold ${color}`}><Icon className="size-4" />{title}</p>
       {items.length === 0 ? (
-        <p className="mt-2 text-xs text-ink-400">{empty}</p>
+        <p className="text-ink-400 mt-2 text-xs">{empty}</p>
       ) : (
         <ul className="mt-2 space-y-2">
           {items.map((item) => (
-            <li key={item} className="flex gap-2 text-sm leading-5 text-ink-700">
+            <li key={item} className="text-ink-700 flex gap-2 text-sm leading-5">
               <Icon className={`mt-0.5 size-3.5 shrink-0 ${color}`} />
               <span>{item}</span>
             </li>
@@ -1323,10 +1323,10 @@ function SizeBar({ percentile, count, level }: { percentile: number | null; coun
   const color = level === "low" ? "bg-emerald-500" : level === "medium" ? "bg-amber-500" : level === "high" ? "bg-rose-500" : "bg-ink-300";
   return (
     <div className="flex min-w-32 items-center gap-2">
-      <div className="h-1.5 w-16 rounded-full bg-ink-100">
+      <div className="bg-ink-100 h-1.5 w-16 rounded-full">
         <div className={`h-1.5 rounded-full ${color}`} style={{ width: `${Math.max(8, percentile ?? 0)}%` }} />
       </div>
-      <span className="text-xs text-ink-500 tabular-nums">{compactNumber(count)}</span>
+      <span className="text-ink-500 text-xs tabular-nums">{compactNumber(count)}</span>
     </div>
   );
 }
@@ -1365,8 +1365,8 @@ function RadarTabs({
   tabs: Array<{ value: RadarTab; label: string; shortLabel: string; badge?: string; icon: LucideIcon }>;
 }) {
   return (
-    <div className="sticky top-0 z-20 -mx-4 bg-ink-50/90 px-4 py-2 backdrop-blur md:-mx-6 md:px-6 dark:mx-0 dark:bg-card/90 dark:px-0 dark:sm:mx-0 dark:sm:px-0 dark:max-md:bg-background/90 dark:lg:bg-panel/90">
-      <div role="tablist" className="flex gap-1 overflow-x-auto rounded-xl bg-ink-100 p-1 max-md:grid max-md:grid-cols-4">
+    <div className="bg-ink-50/90 dark:bg-card/90 dark:max-md:bg-background/90 dark:lg:bg-panel/90 sticky top-0 z-20 -mx-4 px-4 py-2 backdrop-blur md:-mx-6 md:px-6 dark:mx-0 dark:px-0 dark:sm:mx-0 dark:sm:px-0">
+      <div role="tablist" className="bg-ink-100 flex gap-1 overflow-x-auto rounded-xl p-1 max-md:grid max-md:grid-cols-4">
         {tabs.map(({ value, label, shortLabel, badge, icon: Icon }) => {
           const selected = active === value;
           return (
@@ -1413,13 +1413,13 @@ function CompetitorSection({
   const locale = i18n.resolvedLanguage?.toLowerCase().startsWith("vi") ? "vi" : "en";
 
   if (!hasProfile) {
-    return <div className="rounded-xl border border-dashed border-blue-200 dark:border-blue-500/30 bg-blue-50/60 dark:bg-blue-500/10 p-6 text-sm text-blue-800 dark:text-blue-300">{t("marketRadar.marketSignalsSetup", { defaultValue: "Save your seller profile to match public Etsy market signals to your niche." })}</div>;
+    return <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50/60 p-6 text-sm text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">{t("marketRadar.marketSignalsSetup", { defaultValue: "Save your seller profile to match public Etsy market signals to your niche." })}</div>;
   }
   if (loading) {
-    return <div className="rounded-xl border border-ink-200 bg-card p-8 text-center text-sm text-ink-500" role="status">{t("marketRadar.marketSignalsLoading", { defaultValue: "Calculating your niche from public Etsy data..." })}</div>;
+    return <div className="border-ink-200 bg-card text-ink-500 rounded-xl border p-8 text-center text-sm" role="status">{t("marketRadar.marketSignalsLoading", { defaultValue: "Calculating your niche from public Etsy data..." })}</div>;
   }
   if (error || !source) {
-    return <div className="rounded-xl border border-dashed border-ink-300 bg-card p-8 text-center text-sm text-ink-500">{t("marketRadar.noMatchingSignals", { defaultValue: "No market group matches this seller profile yet." })}</div>;
+    return <div className="border-ink-300 bg-card text-ink-500 rounded-xl border border-dashed p-8 text-center text-sm">{t("marketRadar.noMatchingSignals", { defaultValue: "No market group matches this seller profile yet." })}</div>;
   }
   return (
     <CompetitorPanel
@@ -1471,16 +1471,16 @@ function CompetitorPanel({
         : null;
 
   return (
-    <Card className="gap-0 overflow-hidden border-ink-200 bg-card py-0 shadow-sm">
-      <div className="flex flex-col gap-3 border-b border-ink-100 px-5 py-4 max-md:p-4 sm:flex-row sm:items-start sm:justify-between">
+    <Card className="border-ink-200 bg-card gap-0 overflow-hidden py-0 shadow-sm">
+      <div className="border-ink-100 flex flex-col gap-3 border-b px-5 py-4 max-md:p-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-semibold text-ink-900">{t("marketRadar.competitorTitle", { defaultValue: "Who you compete with" })}</h3>
+            <h3 className="text-ink-900 text-lg font-semibold">{t("marketRadar.competitorTitle", { defaultValue: "Who you compete with" })}</h3>
             {signals.sellerCount > 0 && (
-              <span className="rounded-full bg-ink-100 px-2.5 py-0.5 text-xs font-semibold text-ink-700">{t("marketRadar.shopsAtTop", { defaultValue: "{{count}} shops at the top", count: signals.sellerCount })}</span>
+              <span className="bg-ink-100 text-ink-700 rounded-full px-2.5 py-0.5 text-xs font-semibold">{t("marketRadar.shopsAtTop", { defaultValue: "{{count}} shops at the top", count: signals.sellerCount })}</span>
             )}
           </div>
-          <p className="text-sm text-ink-500 capitalize">{insight.niche}</p>
+          <p className="text-ink-500 text-sm capitalize">{insight.niche}</p>
         </div>
         <NicheSelect insights={insights} selected={source.niche} onSelect={onSelect} />
       </div>
@@ -1544,16 +1544,16 @@ function CompetitorPanel({
       </div>
 
       {signals.risingListings.length > 0 && (
-        <div className="border-t border-ink-100 px-5 py-4 max-md:px-4">
-          <p className="text-sm font-semibold text-ink-900">{t("marketRadar.listingsToLearnFrom", { defaultValue: "New listings to learn from" })}</p>
-          <p className="text-xs text-ink-500">{t("marketRadar.listingsToLearnFromDescription", { defaultValue: "Under 90 days old and already gaining favorites. Study them; do not copy them." })}</p>
+        <div className="border-ink-100 border-t px-5 py-4 max-md:px-4">
+          <p className="text-ink-900 text-sm font-semibold">{t("marketRadar.listingsToLearnFrom", { defaultValue: "New listings to learn from" })}</p>
+          <p className="text-ink-500 text-xs">{t("marketRadar.listingsToLearnFromDescription", { defaultValue: "Under 90 days old and already gaining favorites. Study them; do not copy them." })}</p>
           <ul className="mt-3 space-y-2 md:hidden">
             {signals.risingListings.map((listing) => (
-              <li key={`${listing.title}-${listing.url}`} className="rounded-lg border border-ink-100 p-3">
+              <li key={`${listing.title}-${listing.url}`} className="border-ink-100 rounded-lg border p-3">
                 {listing.url
                   ? <a className="line-clamp-2 text-sm text-blue-700 dark:text-blue-300" href={listing.url} target="_blank" rel="noreferrer">{listing.title}</a>
-                  : <p className="line-clamp-2 text-sm text-ink-800">{listing.title}</p>}
-                <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-ink-500 tabular-nums">
+                  : <p className="text-ink-800 line-clamp-2 text-sm">{listing.title}</p>}
+                <p className="text-ink-500 mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs tabular-nums">
                   <span>{t("marketRadar.age", { defaultValue: "Age" })}: {t("marketRadar.daysShort", { defaultValue: "{{value}} d", value: listing.ageDays })}</span>
                   <span>{t("marketRadar.favoritesPerMonth", { defaultValue: "Favorites / month" })}: <span className="font-semibold text-emerald-700 dark:text-emerald-300">{listing.favoritesPer30Days}</span></span>
                   <span>{listing.price == null ? "—" : `${formatMoney(listing.price)} ${listing.currency ?? ""}`}</span>
@@ -1561,9 +1561,9 @@ function CompetitorPanel({
               </li>
             ))}
           </ul>
-          <div className="mt-3 overflow-x-auto rounded-lg border border-ink-100 max-md:hidden">
+          <div className="border-ink-100 mt-3 overflow-x-auto rounded-lg border max-md:hidden">
             <table className="w-full min-w-[30rem] text-left text-sm">
-              <thead className="bg-ink-50 text-[10px] tracking-[0.08em] text-ink-400 uppercase">
+              <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-[0.08em] uppercase">
                 <tr>
                   <th className="px-3 py-2 font-semibold">{t("marketRadar.listing", { defaultValue: "Listing" })}</th>
                   <th className="px-3 py-2 font-semibold">{t("marketRadar.age", { defaultValue: "Age" })}</th>
@@ -1571,17 +1571,17 @@ function CompetitorPanel({
                   <th className="px-3 py-2 font-semibold">{t("marketRadar.listPrice", { defaultValue: "List price" })}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-ink-100">
+              <tbody className="divide-ink-100 divide-y">
                 {signals.risingListings.map((listing) => (
                   <tr key={`${listing.title}-${listing.url}`} className="hover:bg-ink-50/80">
                     <td className="max-w-72 truncate px-3 py-2.5">
                       {listing.url
-                        ? <a className="text-blue-700 dark:text-blue-300 hover:underline" href={listing.url} target="_blank" rel="noreferrer" title={listing.title}>{listing.title}</a>
+                        ? <a className="text-blue-700 hover:underline dark:text-blue-300" href={listing.url} target="_blank" rel="noreferrer" title={listing.title}>{listing.title}</a>
                         : <span title={listing.title}>{listing.title}</span>}
                     </td>
-                    <td className="px-3 py-2.5 text-ink-600 tabular-nums">{t("marketRadar.daysShort", { defaultValue: "{{value}} d", value: listing.ageDays })}</td>
-                    <td className="px-3 py-2.5 font-semibold text-emerald-700 dark:text-emerald-300 tabular-nums">{listing.favoritesPer30Days}</td>
-                    <td className="px-3 py-2.5 text-ink-600 tabular-nums">{listing.price == null ? "—" : `${formatMoney(listing.price)} ${listing.currency ?? ""}`}</td>
+                    <td className="text-ink-600 px-3 py-2.5 tabular-nums">{t("marketRadar.daysShort", { defaultValue: "{{value}} d", value: listing.ageDays })}</td>
+                    <td className="px-3 py-2.5 font-semibold text-emerald-700 tabular-nums dark:text-emerald-300">{listing.favoritesPer30Days}</td>
+                    <td className="text-ink-600 px-3 py-2.5 tabular-nums">{listing.price == null ? "—" : `${formatMoney(listing.price)} ${listing.currency ?? ""}`}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1601,7 +1601,7 @@ function CompetitorPanel({
         maximumPrice={maximumPrice}
       />
 
-      <p className="border-t border-ink-100 px-5 py-3 text-[11px] text-ink-400">
+      <p className="border-ink-100 text-ink-400 border-t px-5 py-3 text-[11px]">
         {t("marketRadar.publicSignalsNote", { defaultValue: "Favorites are public interest signals from Etsy, not sales or revenue." })}
       </p>
     </Card>
@@ -1638,12 +1638,12 @@ function LevelMetric({ label, level, detail, unavailable }: { label: string; lev
   const known = level === "low" || level === "medium" || level === "high";
   return (
     <div className="min-w-0">
-      <p className="text-[10px] font-semibold tracking-[0.08em] text-ink-400 uppercase">{label}</p>
+      <p className="text-ink-400 text-[10px] font-semibold tracking-[0.08em] uppercase">{label}</p>
       <div className="mt-1 flex items-center gap-2">
         {known && <LevelMeter level={level} />}
-        <span className="truncate text-sm font-semibold text-ink-800 capitalize">{known ? level : unavailable}</span>
+        <span className="text-ink-800 truncate text-sm font-semibold capitalize">{known ? level : unavailable}</span>
       </div>
-      <p className="truncate text-[11px] text-ink-500 max-md:whitespace-normal">{detail}</p>
+      <p className="text-ink-500 truncate text-[11px] max-md:whitespace-normal">{detail}</p>
     </div>
   );
 }
@@ -1696,19 +1696,19 @@ function RadarSnapshot({
   );
 
   return (
-    <Card className="gap-0 overflow-hidden border-blue-100 dark:border-blue-500/30 bg-gradient-to-br from-blue-50/80 dark:from-blue-500/10 via-card to-card py-0 shadow-sm">
+    <Card className="via-card to-card gap-0 overflow-hidden border-blue-100 bg-gradient-to-br from-blue-50/80 py-0 shadow-sm dark:border-blue-500/30 dark:from-blue-500/10">
       <div className="flex flex-col gap-4 p-5 max-md:p-4 lg:flex-row lg:items-stretch lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="flex items-center gap-1.5 text-xs font-bold tracking-[0.12em] text-blue-700 dark:text-blue-300 uppercase"><Target className="size-3.5" />{t("marketRadar.todayRadar")}</span>
-            <span className="rounded-full bg-card px-2 py-0.5 text-[11px] text-ink-500 ring-1 ring-blue-100 dark:ring-blue-500/30">{t("marketRadar.topOpportunity")}</span>
+            <span className="flex items-center gap-1.5 text-xs font-bold tracking-[0.12em] text-blue-700 uppercase dark:text-blue-300"><Target className="size-3.5" />{t("marketRadar.todayRadar")}</span>
+            <span className="bg-card text-ink-500 rounded-full px-2 py-0.5 text-[11px] ring-1 ring-blue-100 dark:ring-blue-500/30">{t("marketRadar.topOpportunity")}</span>
           </div>
           <div className="mt-3 flex items-start gap-3">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-sm font-bold text-white">#{topOpportunity.rank ?? 1}</span>
             <div className="min-w-0">
-              <h2 className="truncate text-lg font-semibold text-ink-900 max-md:line-clamp-3 max-md:text-base max-md:whitespace-normal">{topOpportunity.title}</h2>
-              <p className="mt-1 text-sm leading-5 text-ink-600">{topOpportunity.fitExplanation ?? t("marketRadar.strongestMatch", { defaultValue: "Strongest current match for your seller profile." })}</p>
-              <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-ink-500"><ArrowRight className="mt-0.5 size-3.5 shrink-0 text-blue-600 dark:text-blue-400" />{nextAction}</p>
+              <h2 className="text-ink-900 truncate text-lg font-semibold max-md:line-clamp-3 max-md:text-base max-md:whitespace-normal">{topOpportunity.title}</h2>
+              <p className="text-ink-600 mt-1 text-sm leading-5">{topOpportunity.fitExplanation ?? t("marketRadar.strongestMatch", { defaultValue: "Strongest current match for your seller profile." })}</p>
+              <p className="text-ink-500 mt-2 flex items-start gap-1.5 text-xs leading-5"><ArrowRight className="mt-0.5 size-3.5 shrink-0 text-blue-600 dark:text-blue-400" />{nextAction}</p>
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2 max-md:grid max-md:grid-cols-2">
@@ -1721,13 +1721,13 @@ function RadarSnapshot({
         <div className="grid shrink-0 grid-cols-2 gap-2 max-md:hidden sm:grid-cols-4 lg:w-[28rem] lg:grid-cols-2">{metrics}</div>
       </div>
       <details className="group border-t border-blue-100 dark:border-blue-500/30">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 text-xs font-semibold text-ink-600 marker:hidden [&::-webkit-details-marker]:hidden">
+        <summary className="text-ink-600 flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 text-xs font-semibold marker:hidden [&::-webkit-details-marker]:hidden">
           <span className="group-open:hidden">{t("marketRadar.viewTopDetails", { defaultValue: "View top opportunity details" })}</span>
           <span className="hidden group-open:inline">{t("marketRadar.collapse")}</span>
           <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
         </summary>
       <div className="grid grid-cols-2 gap-2 border-t border-blue-100 px-4 py-4 md:hidden dark:border-blue-500/30">{metrics}</div>
-      <div className="grid gap-3 border-t border-blue-100 dark:border-blue-500/30 px-5 py-4 max-md:grid-cols-2 max-md:px-4 sm:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-3 border-t border-blue-100 px-5 py-4 max-md:grid-cols-2 max-md:px-4 sm:grid-cols-2 lg:grid-cols-7 dark:border-blue-500/30">
         <NicheMarketMetrics item={topOpportunity} />
         <InsightMetric label={t("marketRadar.typicalPrice")} value={price} detail={insight.priceLabel} />
         <InsightMetric label={t("marketRadar.confidence", { defaultValue: "Confidence" })} value={insight.evidenceQuality} detail={`${insight.distinctListingCount} listings · ${insight.observationPeriodCount} day(s)`} />
@@ -1743,10 +1743,10 @@ function RadarSnapshot({
 
 function SnapshotMetric({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
-    <div className="rounded-xl border border-blue-100 dark:border-blue-500/30 bg-card/80 px-3 py-2.5">
-      <p className="text-[10px] font-semibold tracking-[0.08em] text-ink-400 uppercase">{label}</p>
-      <p className="mt-1 text-xl font-semibold text-ink-900 tabular-nums">{value}</p>
-      <p className="text-[11px] text-ink-500">{detail}</p>
+    <div className="bg-card/80 rounded-xl border border-blue-100 px-3 py-2.5 dark:border-blue-500/30">
+      <p className="text-ink-400 text-[10px] font-semibold tracking-[0.08em] uppercase">{label}</p>
+      <p className="text-ink-900 mt-1 text-xl font-semibold tabular-nums">{value}</p>
+      <p className="text-ink-500 text-[11px]">{detail}</p>
     </div>
   );
 }
@@ -1902,14 +1902,14 @@ function ComparePanel({ items, onRemove }: { items: SellerOpportunity[]; onRemov
   const sweep = decided.length === verdicts.length && decided.every((verdict) => verdict.item!.id === decided[0].item!.id);
 
   return (
-    <Card className="gap-0 overflow-hidden border-ink-200 bg-card py-0 shadow-sm">
-      <div className="flex items-center justify-between gap-3 border-b border-ink-100 px-5 py-4 max-md:p-4">
-        <div className="flex items-center gap-2"><GitCompareArrows className="size-4 text-blue-600 dark:text-blue-400" /><div><h2 className="font-semibold text-ink-900">{t("marketRadar.compareTitle")}</h2><p className="text-xs text-ink-500">{t("marketRadar.compareDescription")}</p></div></div>
-        <span className="rounded-full bg-blue-50 dark:bg-blue-500/10 px-2 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300">{items.length}/{isPhone ? phoneCompareLimit : 3}</span>
+    <Card className="border-ink-200 bg-card gap-0 overflow-hidden py-0 shadow-sm">
+      <div className="border-ink-100 flex items-center justify-between gap-3 border-b px-5 py-4 max-md:p-4">
+        <div className="flex items-center gap-2"><GitCompareArrows className="size-4 text-blue-600 dark:text-blue-400" /><div><h2 className="text-ink-900 font-semibold">{t("marketRadar.compareTitle")}</h2><p className="text-ink-500 text-xs">{t("marketRadar.compareDescription")}</p></div></div>
+        <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">{items.length}/{isPhone ? phoneCompareLimit : 3}</span>
       </div>
 
       {items.length > 1 && (
-        <div className="border-b border-ink-100 bg-ink-50/70 p-4">
+        <div className="border-ink-100 bg-ink-50/70 border-b p-4">
           {sweep ? (
             <CompareInsight
               label={t("marketRadar.compareSweep", { defaultValue: "Clear winner" })}
@@ -1918,7 +1918,7 @@ function ComparePanel({ items, onRemove }: { items: SellerOpportunity[]; onRemov
               tone="blue"
             />
           ) : decided.length === 0 ? (
-            <p className="text-xs text-ink-500">{t("marketRadar.compareNoVerdict", { defaultValue: "These opportunities are too close to call on score, competition and demand." })}</p>
+            <p className="text-ink-500 text-xs">{t("marketRadar.compareNoVerdict", { defaultValue: "These opportunities are too close to call on score, competition and demand." })}</p>
           ) : (
             <div className="grid gap-3 lg:grid-cols-3">
               {verdicts.map((verdict) => (
@@ -1943,7 +1943,7 @@ function ComparePanel({ items, onRemove }: { items: SellerOpportunity[]; onRemov
               <col className="w-48" />
               {items.map((item) => <col key={item.id} />)}
             </colgroup>
-            <thead className="bg-ink-50 text-xs text-ink-500">
+            <thead className="bg-ink-50 text-ink-500 text-xs">
               <tr>
                 <th className="px-5 py-3 align-top font-medium">{t("marketRadar.signal")}</th>
                 {items.map((item) => (
@@ -1952,16 +1952,16 @@ function ComparePanel({ items, onRemove }: { items: SellerOpportunity[]; onRemov
                       <div className="min-w-0 flex-1">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <p className="truncate text-sm font-semibold text-ink-800">{item.title}</p>
+                            <p className="text-ink-800 truncate text-sm font-semibold">{item.title}</p>
                           </TooltipTrigger>
                           <TooltipContent className="max-w-sm">{item.title}</TooltipContent>
                         </Tooltip>
-                        <p className="mt-0.5 truncate text-[11px] font-normal text-ink-500">
+                        <p className="text-ink-500 mt-0.5 truncate text-[11px] font-normal">
                           {item.niche}
                           {items.length > 1 && contested > 0 && ` · ${t("marketRadar.compareWins", { defaultValue: "best on {{count}} of {{total}}", count: winCount(item), total: contested })}`}
                         </p>
                       </div>
-                      <button type="button" aria-label={t("marketRadar.compareRemove", { defaultValue: "Remove {{title}} from comparison", title: item.title })} className="shrink-0 text-ink-400 hover:text-ink-700" onClick={() => onRemove(item.id)}><X className="size-3.5" /></button>
+                      <button type="button" aria-label={t("marketRadar.compareRemove", { defaultValue: "Remove {{title}} from comparison", title: item.title })} className="text-ink-400 hover:text-ink-700 shrink-0" onClick={() => onRemove(item.id)}><X className="size-3.5" /></button>
                     </div>
                   </th>
                 ))}
@@ -1969,10 +1969,10 @@ function ComparePanel({ items, onRemove }: { items: SellerOpportunity[]; onRemov
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.key} className="border-t border-ink-100">
-                  <th className="px-5 py-2.5 align-top text-xs font-medium text-ink-600">
+                <tr key={row.key} className="border-ink-100 border-t">
+                  <th className="text-ink-600 px-5 py-2.5 align-top text-xs font-medium">
                     {row.label}
-                    <p className="mt-0.5 text-[10px] leading-4 font-normal text-ink-400">{row.hint}</p>
+                    <p className="text-ink-400 mt-0.5 text-[10px] leading-4 font-normal">{row.hint}</p>
                   </th>
                   {items.map((item) => {
                     const isBest = winners[row.key].has(item.id);
@@ -1983,7 +1983,7 @@ function ComparePanel({ items, onRemove }: { items: SellerOpportunity[]; onRemov
                           <span className={`truncate font-semibold tabular-nums ${isBest ? "text-emerald-700 dark:text-emerald-300" : "text-ink-800"}`}>{row.value(item)}</span>
                           {isBest && <Check className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-label={t("marketRadar.compareBest", { defaultValue: "Best" })} />}
                         </div>
-                        {detail && <p className="mt-0.5 truncate text-[11px] text-ink-500" title={detail}>{detail}</p>}
+                        {detail && <p className="text-ink-500 mt-0.5 truncate text-[11px]" title={detail}>{detail}</p>}
                       </td>
                     );
                   })}
@@ -2019,23 +2019,23 @@ function PhoneCompareRows({
 
   return (
     <div>
-      <div className="grid gap-2 bg-ink-50 p-3" style={columns}>
+      <div className="bg-ink-50 grid gap-2 p-3" style={columns}>
         {items.map((item) => (
           <div key={item.id} className="flex min-w-0 items-start gap-1">
             <div className="min-w-0 flex-1">
-              <p className="line-clamp-3 text-xs font-semibold text-ink-800">{item.title}</p>
-              <p className="mt-0.5 text-[11px] break-words text-ink-500">
+              <p className="text-ink-800 line-clamp-3 text-xs font-semibold">{item.title}</p>
+              <p className="text-ink-500 mt-0.5 text-[11px] break-words">
                 {item.niche}
                 {items.length > 1 && contested > 0 && ` · ${t("marketRadar.compareWins", { defaultValue: "best on {{count}} of {{total}}", count: winCount(item), total: contested })}`}
               </p>
             </div>
-            <button type="button" aria-label={t("marketRadar.compareRemove", { defaultValue: "Remove {{title}} from comparison", title: item.title })} className="-m-1 flex size-8 shrink-0 items-center justify-center text-ink-400" onClick={() => onRemove(item.id)}><X className="size-3.5" /></button>
+            <button type="button" aria-label={t("marketRadar.compareRemove", { defaultValue: "Remove {{title}} from comparison", title: item.title })} className="text-ink-400 -m-1 flex size-8 shrink-0 items-center justify-center" onClick={() => onRemove(item.id)}><X className="size-3.5" /></button>
           </div>
         ))}
       </div>
       {rows.map((row) => (
-        <div key={row.key} className="border-t border-ink-100 px-3 py-2.5">
-          <p className="flex items-center gap-1 text-xs font-medium text-ink-600">{row.label}<InfoTip text={row.hint} label={row.label} /></p>
+        <div key={row.key} className="border-ink-100 border-t px-3 py-2.5">
+          <p className="text-ink-600 flex items-center gap-1 text-xs font-medium">{row.label}<InfoTip text={row.hint} label={row.label} /></p>
           <div className="mt-1 grid gap-2" style={columns}>
             {items.map((item) => {
               const isBest = winners[row.key].has(item.id);
@@ -2046,7 +2046,7 @@ function PhoneCompareRows({
                     <span className="min-w-0">{row.value(item)}</span>
                     {isBest && <Check className="size-3.5 shrink-0" aria-label={t("marketRadar.compareBest", { defaultValue: "Best" })} />}
                   </p>
-                  {detail && <p className="mt-0.5 text-[11px] break-words text-ink-500">{detail}</p>}
+                  {detail && <p className="text-ink-500 mt-0.5 text-[11px] break-words">{detail}</p>}
                 </div>
               );
             })}
@@ -2076,9 +2076,9 @@ function CompareInsight({
       : "border-blue-100 dark:border-blue-500/30 bg-blue-50/70 dark:bg-blue-500/10";
   return (
     <div className={`rounded-xl border px-3 py-3 ${toneClass}`}>
-      <p className="text-[10px] font-bold tracking-[0.1em] text-ink-500 uppercase">{label}</p>
-      <p className="mt-1 truncate text-sm font-semibold text-ink-900 max-md:line-clamp-2 max-md:whitespace-normal" title={title}>{title}</p>
-      <p className="mt-1 text-xs text-ink-600">{detail}</p>
+      <p className="text-ink-500 text-[10px] font-bold tracking-[0.1em] uppercase">{label}</p>
+      <p className="text-ink-900 mt-1 truncate text-sm font-semibold max-md:line-clamp-2 max-md:whitespace-normal" title={title}>{title}</p>
+      <p className="text-ink-600 mt-1 text-xs">{detail}</p>
     </div>
   );
 }
@@ -2091,13 +2091,13 @@ function CompactProfileSummary({ profile }: { profile: SellerResearchProfileInpu
     : null;
 
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-ink-100 px-5 py-3">
+    <div className="border-ink-100 flex flex-wrap items-center gap-x-5 gap-y-2 border-t px-5 py-3">
       <div className="min-w-0 flex-1 max-md:basis-full">
-        <p className="truncate text-sm text-ink-700 max-md:line-clamp-3 max-md:whitespace-normal" title={profile.shopGoal ?? undefined}>{profile.shopGoal || t("marketRadar.notSet")}</p>
-        <p className="mt-0.5 text-[11px] text-ink-400">{categories.length > 0 ? categories.join(" · ") : t("marketRadar.notSet")}</p>
+        <p className="text-ink-700 truncate text-sm max-md:line-clamp-3 max-md:whitespace-normal" title={profile.shopGoal ?? undefined}>{profile.shopGoal || t("marketRadar.notSet")}</p>
+        <p className="text-ink-400 mt-0.5 text-[11px]">{categories.length > 0 ? categories.join(" · ") : t("marketRadar.notSet")}</p>
       </div>
       <div className="flex flex-wrap items-center gap-2 text-xs">
-        {price && <span className="rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 text-blue-700 dark:text-blue-300 ring-1 ring-blue-100 dark:ring-blue-500/30">{price}</span>}
+        {price && <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/30">{price}</span>}
         {profile.targetAudiences.length > 0 && <span className="text-ink-500">{profile.targetAudiences.length} {t("marketRadar.audiences", { defaultValue: "audiences" })}</span>}
         {profile.preferredKeywords.length > 0 && <span className="text-ink-500">{profile.preferredKeywords.length} {t("marketRadar.keywords", { defaultValue: "keywords" })}</span>}
       </div>
@@ -2109,7 +2109,7 @@ function ProfileField({ id, label, value, onChange, placeholder }: { id: string;
   const { t } = useTranslation("common");
   return (
     <div className="space-y-2">
-      <div className="flex items-baseline justify-between gap-2"><Label htmlFor={id}>{label}</Label><span className="text-[11px] text-ink-400">{t("marketRadar.separateWithCommas")}</span></div>
+      <div className="flex items-baseline justify-between gap-2"><Label htmlFor={id}>{label}</Label><span className="text-ink-400 text-[11px]">{t("marketRadar.separateWithCommas")}</span></div>
       <Input id={id} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
     </div>
   );
@@ -2118,13 +2118,13 @@ function ProfileField({ id, label, value, onChange, placeholder }: { id: string;
 function EmptyRadar({ hasProfile, filtered, stateName, building, onBuild, onSetup }: { hasProfile: boolean; filtered: boolean; stateName: string; building: boolean; onBuild: () => void; onSetup: () => void }) {
   const { t } = useTranslation("common");
   if (filtered) {
-    return <div className="rounded-xl border border-dashed border-ink-300 bg-card p-10 text-center text-sm text-ink-500">{t("marketRadar.noData", { state: stateName.toLowerCase() })}</div>;
+    return <div className="border-ink-300 bg-card text-ink-500 rounded-xl border border-dashed p-10 text-center text-sm">{t("marketRadar.noData", { state: stateName.toLowerCase() })}</div>;
   }
   return (
-    <div className="rounded-xl border border-dashed border-ink-300 bg-card p-12 text-center">
-      <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"><Sparkles className="size-6" /></span>
-      <h3 className="mt-4 font-semibold text-ink-900">{hasProfile ? t("marketRadar.radarReady") : t("marketRadar.setupProfile")}</h3>
-      <p className="mx-auto mt-1 max-w-md text-sm text-ink-500">
+    <div className="border-ink-300 bg-card rounded-xl border border-dashed p-12 text-center">
+      <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"><Sparkles className="size-6" /></span>
+      <h3 className="text-ink-900 mt-4 font-semibold">{hasProfile ? t("marketRadar.radarReady") : t("marketRadar.setupProfile")}</h3>
+      <p className="text-ink-500 mx-auto mt-1 max-w-md text-sm">
         {hasProfile
           ? t("marketRadar.radarReadyDescription", { defaultValue: "Your profile is saved. Build the radar after market data has been collected by the research sync." })
           : t("marketRadar.setupProfileDescription", { defaultValue: "Tell the radar about your shop goal, audiences and price range so opportunities can be ranked for you." })}
@@ -2140,13 +2140,13 @@ function EmptyRadar({ hasProfile, filtered, stateName, building, onBuild, onSetu
 
 function OpportunitySkeleton() {
   return (
-    <div className="animate-pulse rounded-xl border border-ink-200 bg-card p-5">
+    <div className="border-ink-200 bg-card animate-pulse rounded-xl border p-5">
       <div className="flex justify-between gap-4">
-        <div className="flex-1 space-y-3"><div className="h-3 w-24 rounded bg-ink-100" /><div className="h-5 w-2/3 rounded bg-ink-100" /><div className="h-3 w-20 rounded bg-ink-100" /></div>
-        <div className="size-14 rounded-full bg-ink-100" />
+        <div className="flex-1 space-y-3"><div className="bg-ink-100 h-3 w-24 rounded" /><div className="bg-ink-100 h-5 w-2/3 rounded" /><div className="bg-ink-100 h-3 w-20 rounded" /></div>
+        <div className="bg-ink-100 size-14 rounded-full" />
       </div>
-      <div className="mt-5 h-3 w-full rounded bg-ink-100" /><div className="mt-2 h-3 w-4/5 rounded bg-ink-100" />
-      <div className="mt-5 h-16 rounded-xl bg-ink-50" />
+      <div className="bg-ink-100 mt-5 h-3 w-full rounded" /><div className="bg-ink-100 mt-2 h-3 w-4/5 rounded" />
+      <div className="bg-ink-50 mt-5 h-16 rounded-xl" />
     </div>
   );
 }
@@ -2157,7 +2157,7 @@ function OpportunityMeta({ item, featured = false }: { item: SellerOpportunity; 
     <div className="flex flex-wrap items-center gap-2">
       <span className="rounded-md bg-[#17263f] px-1.5 py-0.5 text-[11px] font-semibold text-white tabular-nums">#{item.rank ?? "—"}</span>
       {featured && <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 px-2 py-0.5 text-[11px] font-semibold text-white"><Trophy className="size-3" />{t("marketRadar.topPick")}</span>}
-      <span className="text-[11px] font-semibold tracking-[0.12em] text-ink-400 uppercase">{item.platform}</span>
+      <span className="text-ink-400 text-[11px] font-semibold tracking-[0.12em] uppercase">{item.platform}</span>
       <span className={"rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 " + stateStyle[item.state]}>{stateLabel[item.state]}</span>
     </div>
   );
@@ -2203,7 +2203,7 @@ function OpportunityCard({ item, featured, ...actions }: CardActions & { item: S
           <div className="min-w-0">
             <OpportunityMeta item={item} featured={featured} />
             <ClampedTitle as="h3" title={item.title} lines={2} className={"mt-2 leading-snug font-semibold text-ink-900 max-md:text-base " + (featured ? "text-xl" : "text-lg")} />
-            <p className="mt-0.5 text-sm text-ink-500 capitalize">{item.category ?? item.niche}</p>
+            <p className="text-ink-500 mt-0.5 text-sm capitalize">{item.category ?? item.niche}</p>
           </div>
           <ScoreRing item={item} />
         </div>
@@ -2217,14 +2217,14 @@ function OpportunityCard({ item, featured, ...actions }: CardActions & { item: S
           <>
             <ScoreBars item={item} compact />
             <OpportunityInsights item={item} compact />
-            <details className="group rounded-xl border border-ink-100 bg-ink-50/60 px-3 py-2">
-              <summary className="cursor-pointer list-none text-xs font-semibold text-ink-600 marker:hidden [&::-webkit-details-marker]:hidden">
+            <details className="group border-ink-100 bg-ink-50/60 rounded-xl border px-3 py-2">
+              <summary className="text-ink-600 cursor-pointer list-none text-xs font-semibold marker:hidden [&::-webkit-details-marker]:hidden">
                 <span className="group-open:hidden">{t("marketRadar.viewDetails", { defaultValue: "View supporting details" })}</span>
                 <span className="hidden group-open:inline">{t("marketRadar.collapse", { defaultValue: "Collapse details" })}</span>
               </summary>
-              <div className="mt-3 space-y-3 border-t border-ink-200 pt-3">
+              <div className="border-ink-200 mt-3 space-y-3 border-t pt-3">
                 <ListingOverview summary={item.summary} />
-                <p className="flex items-start gap-1.5 text-xs leading-5 text-ink-500"><CircleHelp className="mt-0.5 size-3.5 shrink-0" />{item.fitExplanation ?? t("marketRadar.rankedContext")}</p>
+                <p className="text-ink-500 flex items-start gap-1.5 text-xs leading-5"><CircleHelp className="mt-0.5 size-3.5 shrink-0" />{item.fitExplanation ?? t("marketRadar.rankedContext")}</p>
                 <OpportunityInsights item={item} />
                 {actions.analysis && <AnalysisPanel analysis={actions.analysis} />}
               </div>
@@ -2234,21 +2234,21 @@ function OpportunityCard({ item, featured, ...actions }: CardActions & { item: S
 
         {featured && <OpportunityInsights item={item} />}
 
-        {featured && <p className="flex items-start gap-1.5 text-xs leading-5 text-ink-500"><CircleHelp className="mt-0.5 size-3.5 shrink-0" />{item.fitExplanation ?? t("marketRadar.rankedContext")}</p>}
+        {featured && <p className="text-ink-500 flex items-start gap-1.5 text-xs leading-5"><CircleHelp className="mt-0.5 size-3.5 shrink-0" />{item.fitExplanation ?? t("marketRadar.rankedContext")}</p>}
 
         {featured && actions.analysis && (
-          <details className="group rounded-xl border border-blue-100 dark:border-blue-500/30 bg-blue-50/30 dark:bg-blue-500/10">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink-700 marker:hidden [&::-webkit-details-marker]:hidden">
+          <details className="group rounded-xl border border-blue-100 bg-blue-50/30 dark:border-blue-500/30 dark:bg-blue-500/10">
+            <summary className="text-ink-700 flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold marker:hidden [&::-webkit-details-marker]:hidden">
               <span className="group-open:hidden">{t("marketRadar.viewAiAnalysis", { defaultValue: "View AI analysis" })}</span>
               <span className="hidden group-open:inline">{t("marketRadar.collapse")}</span>
               <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
             </summary>
-            <div className="border-t border-blue-100 dark:border-blue-500/30 p-3"><AnalysisPanel analysis={actions.analysis} /></div>
+            <div className="border-t border-blue-100 p-3 dark:border-blue-500/30"><AnalysisPanel analysis={actions.analysis} /></div>
           </details>
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 border-t border-ink-100 px-5 py-3 max-md:grid max-md:grid-cols-4 max-md:gap-1 max-md:px-3">
+      <div className="border-ink-100 flex flex-wrap items-center gap-2 border-t px-5 py-3 max-md:grid max-md:grid-cols-4 max-md:gap-1 max-md:px-3">
         <OpportunityActions item={item} {...actions} />
       </div>
     </Card>
@@ -2272,32 +2272,32 @@ function OpportunityInsights({ item, compact = false }: { item: SellerOpportunit
       </div>
       {!compact && <>
       {item.nicheMarket && item.nicheMarket.risingNewListingCount > 0 && (
-        <p className="rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-2 text-xs leading-5 text-emerald-800 dark:text-emerald-300">
+        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
           {t("marketRadar.nicheOpenForNewSellers", { defaultValue: "{{count}} listing(s) under 90 days old in this niche already gain favorites quickly." , count: item.nicheMarket.risingNewListingCount })}
         </p>
       )}
       {insight.evidenceQuality === "insufficient" && (
-        <p className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs leading-5 text-amber-800 dark:text-amber-300">
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
           {t("marketRadar.earlySignal", { defaultValue: "Early signal only — collect more listings and observation periods before making a large investment." })}
         </p>
       )}
 
       <details className="group">
-        <summary className="cursor-pointer text-xs font-semibold text-ink-600 marker:text-ink-400">{t("marketRadar.whyScore")}</summary>
+        <summary className="text-ink-600 marker:text-ink-400 cursor-pointer text-xs font-semibold">{t("marketRadar.whyScore")}</summary>
         <div className="mt-2 flex flex-wrap gap-1.5">
           {Object.entries(insight.marketScoreBreakdown)
             .filter(([key]) => !["formulaVersion", "viralScore"].includes(key))
             .map(([key, value]) => (
-              <span key={key} className="rounded-full bg-card px-2 py-1 text-[11px] text-ink-600 ring-1 ring-ink-200">
+              <span key={key} className="bg-card text-ink-600 ring-ink-200 rounded-full px-2 py-1 text-[11px] ring-1">
                 {humanizeInsightKey(key)}: {typeof value === "number" ? value.toFixed(0) : value}
               </span>
             ))}
         </div>
-        <div className="mt-2 space-y-1 text-xs text-ink-500">
+        <div className="text-ink-500 mt-2 space-y-1 text-xs">
           <p>{t("marketRadar.observedFrom", { from: new Date(insight.firstObservedAt).toLocaleDateString(), to: new Date(insight.lastObservedAt).toLocaleDateString() })}</p>
           {insight.evidence.slice(0, 3).map((evidence) => (
             <p key={`${evidence.title}-${evidence.observedAt}`} className="truncate">
-              {evidence.sourceUrl ? <a className="text-blue-600 dark:text-blue-400 hover:underline" href={evidence.sourceUrl} target="_blank" rel="noreferrer">{evidence.title}</a> : evidence.title}
+              {evidence.sourceUrl ? <a className="text-blue-600 hover:underline dark:text-blue-400" href={evidence.sourceUrl} target="_blank" rel="noreferrer">{evidence.title}</a> : evidence.title}
               {evidence.views != null && evidence.favorites != null ? ` · ${evidence.favorites} favorites / ${evidence.views} views` : ""}
             </p>
           ))}
@@ -2312,23 +2312,23 @@ function ListingOverview({ summary }: { summary: string | null }) {
   const { t } = useTranslation("common");
   const sections = splitSummarySections(summary);
   return (
-    <details className="group rounded-xl border border-ink-100 bg-ink-50/70 p-3">
+    <details className="group border-ink-100 bg-ink-50/70 rounded-xl border p-3">
       <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
         <div className="flex items-start justify-between gap-3">
-          <p className="line-clamp-2 min-h-12 text-sm leading-6 text-ink-600">
+          <p className="text-ink-600 line-clamp-2 min-h-12 text-sm leading-6">
             {cleanSummary(summary)}
           </p>
-          <span className="shrink-0 pt-1 text-xs font-semibold text-blue-600 dark:text-blue-400 group-open:text-ink-500">
+          <span className="group-open:text-ink-500 shrink-0 pt-1 text-xs font-semibold text-blue-600 dark:text-blue-400">
             <span className="group-open:hidden">{t("marketRadar.readFull")}</span>
             <span className="hidden group-open:inline">{t("marketRadar.collapse")}</span>
           </span>
         </div>
       </summary>
-      <div className="mt-3 max-h-72 space-y-3 overflow-y-auto border-t border-ink-200 pt-3 text-sm leading-6 text-ink-700">
+      <div className="border-ink-200 text-ink-700 mt-3 max-h-72 space-y-3 overflow-y-auto border-t pt-3 text-sm leading-6">
         {sections.map((section, index) => (
           <div key={`${section.slice(0, 24)}-${index}`} className={isSummaryHeading(section) ? "space-y-1" : undefined}>
             {isSummaryHeading(section) ? (
-              <h4 className="text-xs font-bold tracking-[0.12em] text-ink-500 uppercase">{section}</h4>
+              <h4 className="text-ink-500 text-xs font-bold tracking-[0.12em] uppercase">{section}</h4>
             ) : (
               <p className="whitespace-pre-wrap">{section}</p>
             )}
@@ -2343,9 +2343,9 @@ function InsightMetric({ label, value, detail, tone, className }: { label: strin
   const valueTone = tone === "up" ? "text-emerald-700 dark:text-emerald-300" : tone === "down" ? "text-rose-700 dark:text-rose-300" : "text-ink-800";
   return (
     <div className={cn("min-w-0", className)}>
-      <p className="text-[10px] font-semibold tracking-[0.08em] text-ink-400 uppercase">{label}</p>
+      <p className="text-ink-400 text-[10px] font-semibold tracking-[0.08em] uppercase">{label}</p>
       <p className={`mt-0.5 truncate text-sm font-semibold capitalize ${valueTone}`}>{value}</p>
-      <p className="truncate text-[11px] text-ink-500 max-md:whitespace-normal">{detail}</p>
+      <p className="text-ink-500 truncate text-[11px] max-md:whitespace-normal">{detail}</p>
     </div>
   );
 }
@@ -2355,8 +2355,8 @@ function ScoreMeter({ value, tone = "blue" }: { value: number; tone?: "blue" | "
   const bar = tone === "green" ? "bg-emerald-500" : tone === "amber" ? "bg-amber-500" : tone === "slate" ? "bg-ink-400" : "bg-blue-500";
   return (
     <div className="w-28 min-w-28">
-      <div className="flex items-center justify-between gap-2 text-xs font-semibold text-ink-700 tabular-nums"><span>{score}</span><span className="text-[10px] font-normal text-ink-400">/100</span></div>
-      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-ink-200"><div className={`h-full rounded-full ${bar}`} style={{ width: `${Math.min(Math.max(score, 0), 100)}%` }} /></div>
+      <div className="text-ink-700 flex items-center justify-between gap-2 text-xs font-semibold tabular-nums"><span>{score}</span><span className="text-ink-400 text-[10px] font-normal">/100</span></div>
+      <div className="bg-ink-200 mt-1 h-1.5 overflow-hidden rounded-full"><div className={`h-full rounded-full ${bar}`} style={{ width: `${Math.min(Math.max(score, 0), 100)}%` }} /></div>
     </div>
   );
 }
@@ -2367,8 +2367,8 @@ function ScoreComposition({ item }: { item: SellerOpportunity }) {
   const marketContribution = adjustedMarket * 0.6;
   const sellerContribution = item.sellerFitScore * 0.4;
   return (
-    <div className="border-t border-blue-100 dark:border-blue-500/30 bg-blue-50/30 dark:bg-blue-500/10 px-5 py-4">
-      <p className="text-[10px] font-bold tracking-[0.12em] text-ink-500 uppercase">{t("marketRadar.scoreComposition", { defaultValue: "Score composition" })}</p>
+    <div className="border-t border-blue-100 bg-blue-50/30 px-5 py-4 dark:border-blue-500/30 dark:bg-blue-500/10">
+      <p className="text-ink-500 text-[10px] font-bold tracking-[0.12em] uppercase">{t("marketRadar.scoreComposition", { defaultValue: "Score composition" })}</p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <ContributionBar label={`${t("marketRadar.market")} · 60%`} value={marketContribution} detail={`${Math.round(adjustedMarket)}/100`} tone="blue" />
         <ContributionBar label={`${t("marketRadar.sellerFit")} · 40%`} value={sellerContribution} detail={`${Math.round(item.sellerFitScore)}/100`} tone="green" />
@@ -2380,8 +2380,8 @@ function ScoreComposition({ item }: { item: SellerOpportunity }) {
 function ContributionBar({ label, value, detail, tone }: { label: string; value: number; detail: string; tone: "blue" | "green" }) {
   return (
     <div>
-      <div className="flex items-center justify-between gap-2 text-xs text-ink-600"><span>{label}</span><span className="font-semibold text-ink-800 tabular-nums">{detail}</span></div>
-      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-card ring-1 ring-blue-100 dark:ring-blue-500/30"><div className={`h-full rounded-full ${tone === "green" ? "bg-emerald-500" : "bg-blue-500"}`} style={{ width: `${Math.min(Math.max(value, 0), 100)}%` }} /></div>
+      <div className="text-ink-600 flex items-center justify-between gap-2 text-xs"><span>{label}</span><span className="text-ink-800 font-semibold tabular-nums">{detail}</span></div>
+      <div className="bg-card mt-1.5 h-2 overflow-hidden rounded-full ring-1 ring-blue-100 dark:ring-blue-500/30"><div className={`h-full rounded-full ${tone === "green" ? "bg-emerald-500" : "bg-blue-500"}`} style={{ width: `${Math.min(Math.max(value, 0), 100)}%` }} /></div>
     </div>
   );
 }
@@ -2433,11 +2433,11 @@ function OpportunityRow({ item, ...actions }: CardActions & { item: SellerOpport
   const score = Math.round(item.finalScore);
   return (
     <Fragment>
-      <div className="grid gap-3 border-b border-ink-100 px-4 py-3 last:border-b-0 hover:bg-ink-50/60 md:grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,16rem)_auto] md:items-center md:gap-5">
+      <div className="border-ink-100 hover:bg-ink-50/60 grid gap-3 border-b px-4 py-3 last:border-b-0 md:grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,16rem)_auto] md:items-center md:gap-5">
         <div className="min-w-0">
           <OpportunityMeta item={item} />
-          <ClampedTitle as="p" title={item.title} lines={1} className="mt-1 font-semibold text-ink-900" />
-          <p className="truncate text-xs text-ink-500"><span className="capitalize">{item.category ?? item.niche}</span>{item.fitExplanation ? ` · ${item.fitExplanation}` : ` · ${t("marketRadar.rankedContext")}`}</p>
+          <ClampedTitle as="p" title={item.title} lines={1} className="text-ink-900 mt-1 font-semibold" />
+          <p className="text-ink-500 truncate text-xs"><span className="capitalize">{item.category ?? item.niche}</span>{item.fitExplanation ? ` · ${item.fitExplanation}` : ` · ${t("marketRadar.rankedContext")}`}</p>
         </div>
         <FitScoreTooltip item={item}>
           <button type="button" className={"w-fit cursor-help text-2xl font-bold tabular-nums md:mx-auto " + scoreTone(score).text} aria-label={`Fit score ${score}. How is this calculated?`}>{score}</button>
@@ -2446,8 +2446,8 @@ function OpportunityRow({ item, ...actions }: CardActions & { item: SellerOpport
         <div className="flex flex-wrap items-center gap-1.5 md:justify-end"><OpportunityActions item={item} {...actions} compact /></div>
       </div>
       {actions.analysis && (
-        <details className="group border-b border-ink-100 bg-ink-50/60 px-4 py-2">
-          <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-semibold text-ink-600 marker:hidden [&::-webkit-details-marker]:hidden">
+        <details className="group border-ink-100 bg-ink-50/60 border-b px-4 py-2">
+          <summary className="text-ink-600 flex cursor-pointer list-none items-center justify-between text-xs font-semibold marker:hidden [&::-webkit-details-marker]:hidden">
             <span className="group-open:hidden">{t("marketRadar.viewAiAnalysis", { defaultValue: "View AI analysis" })}</span>
             <span className="hidden group-open:inline">{t("marketRadar.collapse")}</span>
             <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
@@ -2462,13 +2462,13 @@ function OpportunityRow({ item, ...actions }: CardActions & { item: SellerOpport
 function AnalysisPanel({ analysis }: { analysis: OpportunityAnalysis }) {
   const { t } = useTranslation("common");
   return (
-    <div className="rounded-xl border border-blue-100 dark:border-blue-500/30 bg-gradient-to-br from-blue-50/80 dark:from-blue-500/10 to-indigo-50/40 dark:to-indigo-500/10 p-4 text-sm text-ink-700">
+    <div className="text-ink-700 rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/80 to-indigo-50/40 p-4 text-sm dark:border-blue-500/30 dark:from-blue-500/10 dark:to-indigo-500/10">
       <div className="flex items-center justify-between gap-2">
-        <p className="flex items-center gap-1.5 font-semibold text-ink-900"><Sparkles className="size-4 text-blue-600 dark:text-blue-400" />{t("marketRadar.aiAnalyst", { defaultValue: "AI analyst" })}</p>
-        <span className="rounded-full bg-card px-2 py-0.5 text-[11px] text-ink-500 ring-1 ring-blue-100 dark:ring-blue-500/30">{analysis.model}</span>
+        <p className="text-ink-900 flex items-center gap-1.5 font-semibold"><Sparkles className="size-4 text-blue-600 dark:text-blue-400" />{t("marketRadar.aiAnalyst", { defaultValue: "AI analyst" })}</p>
+        <span className="bg-card text-ink-500 rounded-full px-2 py-0.5 text-[11px] ring-1 ring-blue-100 dark:ring-blue-500/30">{analysis.model}</span>
       </div>
       <p className="mt-2 leading-6">{analysis.summary}</p>
-      <p className="mt-3 rounded-lg border-l-2 border-blue-500 bg-card/70 px-3 py-2 font-medium text-blue-900 dark:text-blue-300">{analysis.recommendation}</p>
+      <p className="bg-card/70 mt-3 rounded-lg border-l-2 border-blue-500 px-3 py-2 font-medium text-blue-900 dark:text-blue-300">{analysis.recommendation}</p>
       {analysis.actionPlan.length > 0 && (
         <ol className="mt-3 space-y-1.5">
           {analysis.actionPlan.slice(0, 3).map((step, index) => (
@@ -2476,7 +2476,7 @@ function AnalysisPanel({ analysis }: { analysis: OpportunityAnalysis }) {
           ))}
         </ol>
       )}
-      <p className="mt-3 text-xs text-ink-500">{analysis.confidenceNote}</p>
+      <p className="text-ink-500 mt-3 text-xs">{analysis.confidenceNote}</p>
     </div>
   );
 }
@@ -2513,7 +2513,7 @@ function ScoreRing({ item }: { item: SellerOpportunity }) {
           </svg>
           <span className={"absolute inset-0 flex items-center justify-center text-base font-bold tabular-nums " + tone.text}>{score}</span>
         </span>
-        <span className="mt-1 flex items-center gap-0.5 text-[10px] tracking-wider text-ink-400 uppercase">{t("marketRadar.fitScore")}<CircleHelp className="size-2.5" /></span>
+        <span className="text-ink-400 mt-1 flex items-center gap-0.5 text-[10px] tracking-wider uppercase">{t("marketRadar.fitScore")}<CircleHelp className="size-2.5" /></span>
       </button>
     </FitScoreTooltip>
   );
@@ -2534,8 +2534,8 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
   const score = Math.round(value);
   return (
     <div className="min-w-0">
-      <div className="flex items-baseline justify-between gap-1"><p className="truncate text-[11px] text-ink-500">{label}</p><p className="text-sm font-semibold text-ink-800 tabular-nums">{score}</p></div>
-      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-ink-200"><div className={"h-full rounded-full " + scoreTone(score).bar} style={{ width: `${Math.min(Math.max(score, 0), 100)}%` }} /></div>
+      <div className="flex items-baseline justify-between gap-1"><p className="text-ink-500 truncate text-[11px]">{label}</p><p className="text-ink-800 text-sm font-semibold tabular-nums">{score}</p></div>
+      <div className="bg-ink-200 mt-1.5 h-1.5 overflow-hidden rounded-full"><div className={"h-full rounded-full " + scoreTone(score).bar} style={{ width: `${Math.min(Math.max(score, 0), 100)}%` }} /></div>
     </div>
   );
 }

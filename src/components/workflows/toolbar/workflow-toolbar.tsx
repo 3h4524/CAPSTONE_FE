@@ -115,7 +115,7 @@ export const WorkflowToolbar = ({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b bg-card px-3 py-2 max-sm:gap-1 max-sm:px-2">
+    <div className="bg-card flex flex-wrap items-center gap-2 border-b px-3 py-2 max-sm:gap-1 max-sm:px-2">
       <WorkflowBackButton guardUnsavedChanges={guardUnsavedChanges} />
       {showsPanelButtons && <EditorPanelSheets />}
       <WorkflowSwitcher

@@ -35,7 +35,7 @@ export const FormForgotPassword = () => {
   if (submittedEmail) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-ink-600">
+        <p className="text-ink-600 text-sm">
           If an account exists for <span className="font-medium">{submittedEmail}</span>, we sent
           a link to reset your password. Open it to continue.
         </p>

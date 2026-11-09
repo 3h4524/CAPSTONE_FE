@@ -38,7 +38,7 @@ export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps)
     return (
       <div className="space-y-2 p-5">
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="h-10 animate-pulse rounded bg-ink-100" />
+          <div key={index} className="bg-ink-100 h-10 animate-pulse rounded" />
         ))}
       </div>
     );
@@ -47,8 +47,8 @@ export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps)
   if (runs.length === 0) {
     return (
       <div className="px-5 py-14 text-center">
-        <p className="text-sm font-semibold text-ink-700">No test run yet</p>
-        <p className="mt-1 text-xs text-ink-400">
+        <p className="text-ink-700 text-sm font-semibold">No test run yet</p>
+        <p className="text-ink-400 mt-1 text-xs">
           Press “Run tests” to run the suite on this machine. The report is kept here.
         </p>
       </div>
@@ -62,13 +62,13 @@ export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps)
           <li key={run.runId}>
             <Link href={`/admin/test-reports/${run.runId}`} className="flex items-center gap-3 px-1 py-3" aria-label={`Open the report of ${run.runId}`}>
               <div className="min-w-0 flex-1 space-y-1.5">
-                <p className="font-mono text-xs text-ink-600">{formatStartedAt(run.startedAtUtc)}</p>
+                <p className="text-ink-600 font-mono text-xs">{formatStartedAt(run.startedAtUtc)}</p>
                 <TestReportStatusBadge status={run.status} />
-                <p className="truncate font-mono text-xs text-ink-500">
+                <p className="text-ink-500 truncate font-mono text-xs">
                   {run.branch ?? "—"}
                   {run.commitSha ? ` @ ${run.commitSha}` : ""}
                 </p>
-                <dl className="grid grid-cols-4 gap-2 text-[10px] text-ink-500">
+                <dl className="text-ink-500 grid grid-cols-4 gap-2 text-[10px]">
                   {[
                     ["Passed", run.passedTests, "text-emerald-600 dark:text-emerald-400"],
                     ["Failed", run.failedTests, "text-rose-600 dark:text-rose-400"],
@@ -81,11 +81,11 @@ export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps)
                     </div>
                   ))}
                 </dl>
-                <p className="font-mono text-xs text-ink-500">
+                <p className="text-ink-500 font-mono text-xs">
                   <RunTook run={run} />
                 </p>
               </div>
-              <ArrowRight className="size-4 shrink-0 text-ink-400" aria-hidden="true" />
+              <ArrowRight className="text-ink-400 size-4 shrink-0" aria-hidden="true" />
             </Link>
           </li>
         ))}
@@ -112,10 +112,10 @@ export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps)
         {runs.map((run) => (
           <TableRow
             key={run.runId}
-            className="cursor-pointer hover:bg-ink-50/70"
+            className="hover:bg-ink-50/70 cursor-pointer"
             onClick={() => router.push(`/admin/test-reports/${run.runId}`)}
           >
-            <TableCell className="font-mono text-xs whitespace-nowrap text-ink-600">
+            <TableCell className="text-ink-600 font-mono text-xs whitespace-nowrap">
               <Link
                 href={`/admin/test-reports/${run.runId}`}
                 className="hover:text-ink-900 hover:underline"
@@ -127,7 +127,7 @@ export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps)
             <TableCell>
               <TestReportStatusBadge status={run.status} />
             </TableCell>
-            <TableCell className="max-w-[220px] truncate font-mono text-xs text-ink-500">
+            <TableCell className="text-ink-500 max-w-[220px] truncate font-mono text-xs">
               {run.branch ?? "—"}
               {run.commitSha ? ` @ ${run.commitSha}` : ""}
             </TableCell>
@@ -140,16 +140,16 @@ export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps)
             <TableCell className="text-right font-mono text-xs text-amber-600 dark:text-amber-400">
               {run.flakyTests}
             </TableCell>
-            <TableCell className="text-right font-mono text-xs text-ink-400">
+            <TableCell className="text-ink-400 text-right font-mono text-xs">
               {run.skippedTests}
             </TableCell>
-            <TableCell className="text-right font-mono text-xs whitespace-nowrap text-ink-500">
+            <TableCell className="text-ink-500 text-right font-mono text-xs whitespace-nowrap">
               <RunTook run={run} />
             </TableCell>
             <TableCell>
               <Link
                 href={`/admin/test-reports/${run.runId}`}
-                className="inline-flex size-7 items-center justify-center rounded text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-700"
+                className="text-ink-400 hover:bg-ink-100 hover:text-ink-700 inline-flex size-7 items-center justify-center rounded transition-colors"
                 aria-label={`Open the report of ${run.runId}`}
                 onClick={(event) => event.stopPropagation()}
               >

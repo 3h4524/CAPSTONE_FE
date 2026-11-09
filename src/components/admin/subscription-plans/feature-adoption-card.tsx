@@ -85,9 +85,9 @@ export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatu
 
   return (
     <TooltipProvider delayDuration={120}>
-      <Card className="gap-0 overflow-hidden rounded-2xl border border-ink-200 bg-card p-0 shadow-none">
+      <Card className="border-ink-200 bg-card gap-0 overflow-hidden rounded-2xl border p-0 shadow-none">
         {/* How to read it, in view: the bar, the orange of underused, and the drop mark. */}
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-ink-100 bg-ink-50/60 px-5 py-3 text-xs text-ink-500">
+        <div className="border-ink-100 bg-ink-50/60 text-ink-500 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b px-5 py-3 text-xs">
           <p>Share of each plan’s Sellers who used a feature at least once in the last {days} days.</p>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <span className="flex items-center gap-1.5">
@@ -97,7 +97,7 @@ export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatu
               <span className={cn("h-1.5 w-5 rounded-full", BAR_UNDERUSED)} /> Underused, under {underusedBelow}%
             </span>
             <span className="flex items-center gap-1 font-semibold text-[#c4553a] dark:text-[#dea091]">
-              ▼<span className="font-normal text-ink-500">{MIN_DROP_POINTS}+ points below the cheaper plan</span>
+              ▼<span className="text-ink-500 font-normal">{MIN_DROP_POINTS}+ points below the cheaper plan</span>
             </span>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -105,7 +105,7 @@ export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatu
                   <Info className="size-3.5" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs text-xs text-background">
+              <TooltipContent side="top" className="text-background max-w-xs text-xs">
                 The figure is the share; the small one the Sellers behind it. Hover a figure for how often the typical user used it.
                 Underused uses the same {underusedBelow}% rule as the AI review.
               </TooltipContent>
@@ -114,9 +114,9 @@ export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatu
         </div>
 
         {plans.length === 0 ? (
-          <p className="py-10 text-center text-sm text-ink-500">No Sellers have a plan yet.</p>
+          <p className="text-ink-500 py-10 text-center text-sm">No Sellers have a plan yet.</p>
         ) : isPhone ? (
-          <ul aria-label="Feature adoption by plan" className="divide-y divide-ink-100">
+          <ul aria-label="Feature adoption by plan" className="divide-ink-100 divide-y">
             {features.map((feature) => {
               const cells = cellsFor(feature.metric);
               const flags = flagsFor(cells);
@@ -129,7 +129,7 @@ export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatu
                   <div className="grid grid-cols-2 gap-3">
                     {cells.map((view) => (
                       <div key={view.plan.key} className="min-w-0">
-                        <p className="mb-1 truncate text-xs font-medium text-ink-500">{view.plan.name}</p>
+                        <p className="text-ink-500 mb-1 truncate text-xs font-medium">{view.plan.name}</p>
                         <AdoptionCell view={view} feature={feature} underusedBelow={underusedBelow} days={days} />
                       </div>
                     ))}
@@ -155,26 +155,26 @@ export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatu
                 <col style={{ width: `${FLAGS_COLUMN}%` }} />
               </colgroup>
               <thead>
-                <tr className="border-b border-ink-200 text-left">
-                  <th scope="col" className="px-5 py-3 text-xs font-medium text-ink-500">
+                <tr className="border-ink-200 border-b text-left">
+                  <th scope="col" className="text-ink-500 px-5 py-3 text-xs font-medium">
                     Feature
                   </th>
                   {plans.map((plan, index) => (
                     <th key={plan.key} scope="col" className="px-5 py-3 font-normal">
-                      <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-900">
+                      <span className="text-ink-900 flex items-center gap-1.5 text-sm font-semibold">
                         <span className="size-2 rounded-full" style={{ backgroundColor: getPlanColor(plan.name, index) }} />
                         {plan.name}
-                        <span className="text-xs font-normal text-ink-400">· {plan.subscribers.toLocaleString()} Sellers</span>
+                        <span className="text-ink-400 text-xs font-normal">· {plan.subscribers.toLocaleString()} Sellers</span>
                       </span>
                       {!plan.hasEnoughData && <span className="text-xs text-amber-800 dark:text-amber-300">Not enough data</span>}
                     </th>
                   ))}
-                  <th scope="col" className="px-5 py-3 text-xs font-medium text-ink-500">
+                  <th scope="col" className="text-ink-500 px-5 py-3 text-xs font-medium">
                     What stands out
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-ink-100">
+              <tbody className="divide-ink-100 divide-y">
                 {features.map((feature) => {
                   const cells = cellsFor(feature.metric);
                   const flags = flagsFor(cells);
@@ -228,12 +228,12 @@ function FeatureName({ label, onSelect }: { label: string; onSelect?: () => void
       type="button"
       onClick={onSelect}
       title="Open the AI review of this feature"
-      className="text-left text-sm text-ink-800 underline-offset-2 hover:text-[#3f5f8a] dark:hover:text-[#9db4d2] hover:underline focus-visible:underline focus-visible:outline-none"
+      className="text-ink-800 text-left text-sm underline-offset-2 hover:text-[#3f5f8a] hover:underline focus-visible:underline focus-visible:outline-none dark:hover:text-[#9db4d2]"
     >
       {content}
     </button>
   ) : (
-    <span className="text-sm text-ink-800">{content}</span>
+    <span className="text-ink-800 text-sm">{content}</span>
   );
 }
 
@@ -251,7 +251,7 @@ function AdoptionCell({
   const { plan, cell, previous } = view;
   const { name } = splitAiLabel(feature.label);
   if (!cell || !cell.includedInPlan) {
-    return <span className="text-xs text-ink-400">Not in plan</span>;
+    return <span className="text-ink-400 text-xs">Not in plan</span>;
   }
 
   const underused = isUnderused(cell.rate, underusedBelow);
@@ -281,11 +281,11 @@ function AdoptionCell({
                 ▼{drop.toFixed(1)} vs {previous.name}
               </span>
             )}
-            <span className="ml-auto text-[11px] text-ink-400">
+            <span className="text-ink-400 ml-auto text-[11px]">
               {cell.users}/{plan.subscribers}
             </span>
           </div>
-          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-ink-100">
+          <div className="bg-ink-100 mt-1.5 h-1.5 overflow-hidden rounded-full">
             <div
               className={cn("h-full rounded-full", underused ? BAR_UNDERUSED : BAR)}
               style={{ width: `${Math.min(100, Math.max(cell.rate, cell.rate > 0 ? 2 : 0))}%` }}
@@ -293,7 +293,7 @@ function AdoptionCell({
           </div>
         </div>
       </TooltipTrigger>
-      <TooltipContent side="top" className="w-60 space-y-0.5 p-3 text-xs text-background [&_p]:text-background">
+      <TooltipContent side="top" className="text-background [&_p]:text-background w-60 space-y-0.5 p-3 text-xs">
         <p className="font-semibold">
           {name} · {plan.name}
         </p>

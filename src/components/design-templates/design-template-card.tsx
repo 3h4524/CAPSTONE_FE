@@ -29,10 +29,10 @@ export function DesignTemplateCard({
   const styleLabel = template.artStyle?.replaceAll("_", " ") ?? "Unstyled";
 
   return (
-    <article className="group flex min-h-full flex-col overflow-hidden rounded-[18px] border border-ink-200 bg-card shadow-[0_1px_2px_rgba(39,55,80,0.04)] transition-[box-shadow,border-color] duration-300 ease-out hover:border-ink-300 hover:shadow-[0_14px_34px_rgba(39,55,80,0.09)] motion-reduce:transition-none">
+    <article className="group border-ink-200 bg-card hover:border-ink-300 flex min-h-full flex-col overflow-hidden rounded-[18px] border shadow-[0_1px_2px_rgba(39,55,80,0.04)] transition-[box-shadow,border-color] duration-300 ease-out hover:shadow-[0_14px_34px_rgba(39,55,80,0.09)] motion-reduce:transition-none">
       <button
         type="button"
-        className="relative aspect-[4/3] w-full overflow-hidden bg-ink-100 text-left focus-visible:ring-3 focus-visible:ring-primary/25 focus-visible:outline-none focus-visible:ring-inset max-md:aspect-video"
+        className="bg-ink-100 focus-visible:ring-primary/25 relative aspect-[4/3] w-full overflow-hidden text-left focus-visible:ring-3 focus-visible:outline-none focus-visible:ring-inset max-md:aspect-video"
         onClick={() => onView(template.id)}
         aria-label={`View ${template.name}`}
       >
@@ -47,7 +47,7 @@ export function DesignTemplateCard({
           />
         ) : (
           <span className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_30%_20%,#f4ead5,transparent_42%),linear-gradient(145deg,#e8ede8,#d8dfdc)]">
-            <Sparkles className="size-8 text-ink-500" aria-hidden="true" />
+            <Sparkles className="text-ink-500 size-8" aria-hidden="true" />
           </span>
         )}
         <span
@@ -63,18 +63,18 @@ export function DesignTemplateCard({
       </button>
 
       <div className="flex flex-1 flex-col p-5 max-md:p-4">
-        <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold tracking-[0.04em] text-ink-500">
+        <div className="text-ink-500 flex flex-wrap items-center gap-2 text-[11px] font-semibold tracking-[0.04em]">
           <span>{template.nicheCategory ?? "General"}</span>
-          <span className="size-1 rounded-full bg-ink-300" aria-hidden="true" />
+          <span className="bg-ink-300 size-1 rounded-full" aria-hidden="true" />
           <span className="capitalize">{styleLabel}</span>
         </div>
-        <h2 className="font-display mt-4 text-xl font-semibold tracking-tight text-ink-900 max-md:mt-2 max-md:text-lg">
+        <h2 className="font-display text-ink-900 mt-4 text-xl font-semibold tracking-tight max-md:mt-2 max-md:text-lg">
           {template.name}
         </h2>
-        <p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-ink-600 max-md:mt-1 max-md:min-h-0">
+        <p className="text-ink-600 mt-2 line-clamp-2 min-h-10 text-sm leading-5 max-md:mt-1 max-md:min-h-0">
           {template.styleDescription ?? "A personal prompt framework ready for your next collection."}
         </p>
-        <div className="mt-5 flex items-center justify-between border-t border-ink-100 pt-4 text-xs text-ink-500 max-md:mt-3 max-md:pt-3">
+        <div className="border-ink-100 text-ink-500 mt-5 flex items-center justify-between border-t pt-4 text-xs max-md:mt-3 max-md:pt-3">
           <span className={cn(template.usageCount === 0 && "max-md:invisible")}>{template.usageCount.toLocaleString()} uses</span>
           <span className="inline-flex items-center gap-1.5">
             <CalendarDays className="size-3.5" aria-hidden="true" />
@@ -86,7 +86,7 @@ export function DesignTemplateCard({
             type="button"
             variant="outline"
             size="sm"
-            className="min-h-9 flex-1 border-ink-300 px-3 hover:translate-y-0"
+            className="border-ink-300 min-h-9 flex-1 px-3 hover:translate-y-0"
             onClick={() => onView(template.id)}
           >
             <Eye aria-hidden="true" />View
@@ -117,7 +117,7 @@ export function DesignTemplateCard({
               type="button"
               variant="ghost"
               size="icon-sm"
-              className="min-h-9 text-ink-500 hover:translate-y-0 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-700 dark:hover:text-red-300"
+              className="text-ink-500 min-h-9 hover:translate-y-0 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-500/10 dark:hover:text-red-300"
               onClick={() => onDelete(template)}
               aria-label={`Delete ${template.name}`}
             >

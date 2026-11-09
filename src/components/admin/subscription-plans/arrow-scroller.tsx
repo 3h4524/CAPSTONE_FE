@@ -125,7 +125,7 @@ function EdgeArrow({ side, visible, onClick }: { side: "left" | "right"; visible
         tabIndex={visible ? 0 : -1}
         onClick={onClick}
         className={cn(
-          "flex size-9 items-center justify-center rounded-full border border-ink-200 bg-card text-ink-600 shadow-md transition hover:scale-105 hover:text-ink-900",
+          "border-ink-200 bg-card text-ink-600 hover:text-ink-900 flex size-9 items-center justify-center rounded-full border shadow-md transition hover:scale-105",
           visible && "pointer-events-auto"
         )}
       >

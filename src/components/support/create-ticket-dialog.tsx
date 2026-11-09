@@ -77,20 +77,20 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="flex max-h-[calc(100dvh-20px)] w-[calc(100%-20px)] max-w-[840px] flex-col gap-0 overflow-hidden rounded-[24px] border-0 bg-card p-0 shadow-[0_28px_80px_rgba(15,23,42,0.28)] duration-200 motion-reduce:animate-none motion-reduce:transition-none"
+        className="bg-card flex max-h-[calc(100dvh-20px)] w-[calc(100%-20px)] max-w-[840px] flex-col gap-0 overflow-hidden rounded-[24px] border-0 p-0 shadow-[0_28px_80px_rgba(15,23,42,0.28)] duration-200 motion-reduce:animate-none motion-reduce:transition-none"
       >
         <DialogHeader className="relative flex-row items-start gap-3 px-5 pt-6 pr-16 pb-3 text-left sm:px-6 sm:pt-7">
-          <div className="text-primary flex size-10 shrink-0 items-center justify-center rounded-xl bg-ink-100">
+          <div className="text-primary bg-ink-100 flex size-10 shrink-0 items-center justify-center rounded-xl">
             <Headset className="size-[18px]" aria-hidden="true" />
           </div>
           <div className="space-y-1">
-            <p className="text-[10px] font-bold tracking-[0.16em] text-ink-500">NEW REQUEST</p>
+            <p className="text-ink-500 text-[10px] font-bold tracking-[0.16em]">NEW REQUEST</p>
             <DialogTitle className="font-display text-xl tracking-[-0.02em]">Contact support</DialogTitle>
             <DialogDescription className="leading-5">
               Include the batch, provider, or error message if one is involved.
             </DialogDescription>
           </div>
-          <Button type="button" variant="ghost" size="icon" className="absolute top-4 right-4 size-10 rounded-lg text-ink-500 hover:translate-y-0 hover:bg-ink-100" onClick={onClose} aria-label="Close new ticket">
+          <Button type="button" variant="ghost" size="icon" className="text-ink-500 hover:bg-ink-100 absolute top-4 right-4 size-10 rounded-lg hover:translate-y-0" onClick={onClose} aria-label="Close new ticket">
             <X aria-hidden="true" />
           </Button>
         </DialogHeader>
@@ -103,7 +103,7 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
                   id="support-subject"
                   placeholder="Short summary of the issue"
                   autoFocus
-                  className="min-h-12 rounded-xl border-ink-300 bg-card px-3.5 focus-visible:border-primary focus-visible:ring-primary/15"
+                  className="border-ink-300 bg-card focus-visible:border-primary focus-visible:ring-primary/15 min-h-12 rounded-xl px-3.5"
                   aria-invalid={Boolean(errors.subject)}
                   {...register("subject")}
                 />
@@ -116,19 +116,19 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
                     control={control}
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger id="support-category" className="min-h-12 w-full rounded-xl border-ink-300 bg-card px-3.5 focus-visible:border-primary focus-visible:ring-primary/15" aria-invalid={Boolean(errors.category)}>
+                        <SelectTrigger id="support-category" className="border-ink-300 bg-card focus-visible:border-primary focus-visible:ring-primary/15 min-h-12 w-full rounded-xl px-3.5" aria-invalid={Boolean(errors.category)}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent
                           position="popper"
                           align="start"
-                          className="w-[var(--radix-select-trigger-width)] rounded-xl border-ink-200 bg-card p-1 shadow-[0_14px_30px_rgba(15,23,42,0.14)]"
+                          className="border-ink-200 bg-card w-[var(--radix-select-trigger-width)] rounded-xl p-1 shadow-[0_14px_30px_rgba(15,23,42,0.14)]"
                         >
                           {SUPPORT_CATEGORIES.map((category) => (
                             <SelectItem
                               key={category.value}
                               value={category.value}
-                              className="rounded-lg px-3 py-2.5 text-sm text-ink-700 focus:bg-ink-100 focus:text-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                              className="text-ink-700 focus:bg-ink-100 focus:text-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground rounded-lg px-3 py-2.5 text-sm"
                             >
                               {category.label}
                             </SelectItem>
@@ -144,19 +144,19 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
                     control={control}
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger id="support-priority" className="min-h-12 w-full rounded-xl border-ink-300 bg-card px-3.5 whitespace-nowrap focus-visible:border-primary focus-visible:ring-primary/15 [&>span:first-child]:truncate" aria-invalid={Boolean(errors.priority)}>
+                        <SelectTrigger id="support-priority" className="border-ink-300 bg-card focus-visible:border-primary focus-visible:ring-primary/15 min-h-12 w-full rounded-xl px-3.5 whitespace-nowrap [&>span:first-child]:truncate" aria-invalid={Boolean(errors.priority)}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent
                           position="popper"
                           align="start"
-                          className="w-[var(--radix-select-trigger-width)] rounded-xl border-ink-200 bg-card p-1 shadow-[0_14px_30px_rgba(15,23,42,0.14)]"
+                          className="border-ink-200 bg-card w-[var(--radix-select-trigger-width)] rounded-xl p-1 shadow-[0_14px_30px_rgba(15,23,42,0.14)]"
                         >
                           {SUPPORT_PRIORITIES.map((priority) => (
                             <SelectItem
                               key={priority.value}
                               value={priority.value}
-                              className="rounded-lg px-3 py-2.5 text-sm text-ink-700 focus:bg-ink-100 focus:text-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                              className="text-ink-700 focus:bg-ink-100 focus:text-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground rounded-lg px-3 py-2.5 text-sm"
                             >
                               {priority.label}
                             </SelectItem>
@@ -172,23 +172,23 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
                 <Textarea
                   id="support-description"
                   placeholder="Describe what you expected and what you saw..."
-                  className="min-h-32 resize-y rounded-xl border-ink-300 bg-card px-3.5 py-3 focus-visible:border-primary focus-visible:ring-primary/15"
+                  className="border-ink-300 bg-card focus-visible:border-primary focus-visible:ring-primary/15 min-h-32 resize-y rounded-xl px-3.5 py-3"
                   aria-invalid={Boolean(errors.description)}
                   {...register("description")}
                 />
               </Field>
 
               <div className="space-y-2">
-                <p className="text-sm font-semibold text-ink-700">
-                  Attachments <span className="font-normal text-ink-500">(optional)</span>
+                <p className="text-ink-700 text-sm font-semibold">
+                  Attachments <span className="text-ink-500 font-normal">(optional)</span>
                 </p>
                 <TicketDropzone files={files} onChange={setFiles} disabled={mutation.isPending} />
               </div>
             </div>
           </ScrollArea>
 
-          <div className="flex shrink-0 justify-end gap-2 bg-card px-5 pt-4 pb-6 sm:px-6">
-            <Button type="button" variant="outline" className="min-h-11 border-ink-300 px-5 hover:translate-y-0 hover:border-ink-400 hover:text-primary" onClick={onClose} disabled={mutation.isPending}>
+          <div className="bg-card flex shrink-0 justify-end gap-2 px-5 pt-4 pb-6 sm:px-6">
+            <Button type="button" variant="outline" className="border-ink-300 hover:border-ink-400 hover:text-primary min-h-11 px-5 hover:translate-y-0" onClick={onClose} disabled={mutation.isPending}>
               Cancel
             </Button>
             <Button type="submit" className="min-h-11 px-5 shadow-[0_8px_18px_rgba(39,55,80,0.2)] hover:-translate-y-0.5" disabled={mutation.isPending}>
@@ -215,7 +215,7 @@ function Field({
 }) {
   return (
     <div className="min-w-0 space-y-1.5">
-      <label htmlFor={htmlFor} className="text-sm font-semibold text-ink-700">{label}</label>
+      <label htmlFor={htmlFor} className="text-ink-700 text-sm font-semibold">{label}</label>
       {children}
       {error ? <p role="alert" className="text-destructive text-xs">{error}</p> : null}
     </div>

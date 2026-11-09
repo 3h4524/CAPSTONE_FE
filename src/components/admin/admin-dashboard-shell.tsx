@@ -100,7 +100,7 @@ const AdminDashboardContent = ({
   );
 
   return (
-    <div className="relative h-dvh overflow-hidden bg-ink-50 text-ink-900 dark:bg-background">
+    <div className="bg-ink-50 text-ink-900 dark:bg-background relative h-dvh overflow-hidden">
       <div className="flex h-dvh">
         <AdminSidebar
           fullName={fullName}
@@ -110,7 +110,7 @@ const AdminDashboardContent = ({
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
-        <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden dark:lg:bg-panel dark:lg:my-2 dark:lg:mr-2 dark:lg:h-[calc(100dvh-1rem)] dark:lg:rounded-xl dark:lg:border">
+        <div className="dark:lg:bg-panel flex h-dvh min-w-0 flex-1 flex-col overflow-hidden dark:lg:my-2 dark:lg:mr-2 dark:lg:h-[calc(100dvh-1rem)] dark:lg:rounded-xl dark:lg:border">
           <div className="min-h-0 flex-1 overflow-y-auto">
             <AdminTopbar fullName={fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} />
             <main className="mx-auto max-w-[1600px] px-4 py-4 max-md:flex max-md:flex-col max-md:gap-3.5 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]">
@@ -118,13 +118,13 @@ const AdminDashboardContent = ({
               <div className="flex flex-col justify-between gap-4 max-md:gap-0 lg:flex-row lg:items-end">
                 {/* A phone opens on the greeting, so the title is left to screen readers. */}
                 <div className="max-md:sr-only">
-                  <p className="text-[10px] font-bold tracking-[0.16em] text-ink-400 uppercase">
+                  <p className="text-ink-400 text-[10px] font-bold tracking-[0.16em] uppercase">
                     Platform overview
                   </p>
-                  <h1 className="font-display mt-1 text-2xl font-bold tracking-tight text-ink-900 sm:text-[28px]">
+                  <h1 className="font-display text-ink-900 mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
                     Admin Dashboard
                   </h1>
-                  <p className="mt-1 text-xs text-ink-400">
+                  <p className="text-ink-400 mt-1 text-xs">
                     Growth, production and what needs your attention, for the period you pick.
                   </p>
                 </div>
@@ -134,10 +134,10 @@ const AdminDashboardContent = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8.5 cursor-pointer gap-1.5 rounded-xl border-ink-200 bg-card px-3.5 text-xs font-medium text-ink-700 shadow-2xs hover:bg-ink-50 max-md:flex-1"
+                        className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 h-8.5 cursor-pointer gap-1.5 rounded-xl px-3.5 text-xs font-medium shadow-2xs max-md:flex-1"
                       >
                         {rangeLabel}
-                        <ChevronDown className="size-3.5 text-ink-500" />
+                        <ChevronDown className="text-ink-500 size-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-36 rounded-xl">
@@ -156,7 +156,7 @@ const AdminDashboardContent = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8.5 cursor-pointer gap-1.5 rounded-xl border-ink-200 bg-card px-3.5 text-xs font-medium text-ink-700 shadow-2xs hover:bg-ink-50 max-md:flex-1"
+                    className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 h-8.5 cursor-pointer gap-1.5 rounded-xl px-3.5 text-xs font-medium shadow-2xs max-md:flex-1"
                     onClick={onExport}
                     disabled={isExporting}
                   >
@@ -259,7 +259,7 @@ const AdminDashboardContent = ({
                 />
               </div>
 
-              <footer className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-ink-200 pt-3 text-[10px] text-ink-400 max-md:hidden">
+              <footer className="border-ink-200 text-ink-400 mt-6 flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-[10px] max-md:hidden">
                 <span>Podivo Admin Console · Platform overview</span>
                 <span className="flex items-center gap-1">
                   <Activity className="size-3" /> Last synced just now

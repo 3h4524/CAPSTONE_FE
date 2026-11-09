@@ -217,7 +217,7 @@ export const MockupImageEditDialog = ({ batchJobId, image, images, productName, 
               )}
 
               {duplicate && (
-                <p role="alert" className="rounded-md bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:text-amber-300">
+                <p role="alert" className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:bg-amber-500/10 dark:text-amber-300">
                   This would look exactly like another mock-up of this design ({duplicateName}). Choose another garment color, or remove this
                   mock-up instead.
                 </p>

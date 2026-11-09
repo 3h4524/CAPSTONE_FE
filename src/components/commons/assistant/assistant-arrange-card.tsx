@@ -49,9 +49,9 @@ export const AssistantArrangeCard = ({ messageId, actionId, payload, state }: As
   return (
     <Card className="gap-0 rounded-xl py-3 shadow-none">
       <CardContent className="flex flex-col gap-2.5 px-3">
-        <p className="text-xs font-semibold tracking-wide text-ink-500 uppercase">Proposed layout</p>
-        <p className="text-sm text-ink-800">{describeArrangement(payload)}</p>
-        <p className="rounded-md bg-ink-50 px-2 py-1 text-xs text-ink-600">Only the positions of the nodes change.</p>
+        <p className="text-ink-500 text-xs font-semibold tracking-wide uppercase">Proposed layout</p>
+        <p className="text-ink-800 text-sm">{describeArrangement(payload)}</p>
+        <p className="bg-ink-50 text-ink-600 rounded-md px-2 py-1 text-xs">Only the positions of the nodes change.</p>
         {state === "idle" ? (
           <div className="flex flex-wrap gap-2 pt-0.5">
             <TooltipProvider>
@@ -67,7 +67,7 @@ export const AssistantArrangeCard = ({ messageId, actionId, payload, state }: As
             <AssistantChip label="Dismiss" variant="ghost" disabled={isStreaming} onClick={() => settle("dismissed")} />
           </div>
         ) : (
-          <p className="text-xs font-medium text-ink-500">{STATE_TEXT[state]}</p>
+          <p className="text-ink-500 text-xs font-medium">{STATE_TEXT[state]}</p>
         )}
       </CardContent>
     </Card>

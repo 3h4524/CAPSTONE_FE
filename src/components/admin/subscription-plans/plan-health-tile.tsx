@@ -33,7 +33,7 @@ export function PlanTile({
       aria-selected={selected}
       onClick={onSelect}
       className={cn(
-        "relative flex items-center gap-4 overflow-hidden rounded-2xl border bg-card p-4 pt-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        "bg-card relative flex items-center gap-4 overflow-hidden rounded-2xl border p-4 pt-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
         selected ? cn("shadow-md ring-2", style.selected, style.ring) : "border-ink-200 shadow-xs"
       )}
     >
@@ -42,7 +42,7 @@ export function PlanTile({
       <ScoreRing score={plan.score} stroke={style.stroke} className={style.score} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-base font-bold tracking-tight text-ink-900">{name}</p>
+          <p className="text-ink-900 truncate text-base font-bold tracking-tight">{name}</p>
           <span
             className={cn(
               "flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold",
@@ -55,7 +55,7 @@ export function PlanTile({
         <span className={cn("mt-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold", style.chip)}>
           {STATUS_LABEL[plan.status]}
         </span>
-        <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-ink-400">
+        <div className="text-ink-400 mt-1.5 flex items-center gap-1.5 text-[11px]">
           <span>{previous ? `Last review: ${STATUS_LABEL[previous.status]} · ${previous.score ?? "—"}` : "First review"}</span>
           {showDelta && delta !== null && (
             <span

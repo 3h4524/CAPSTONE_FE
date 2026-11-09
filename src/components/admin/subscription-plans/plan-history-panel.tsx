@@ -66,7 +66,7 @@ export function PlanHistoryPanel() {
   );
 
   if (isLoading || !data) {
-    return <Card className="mt-6 h-64 animate-pulse rounded-2xl border border-ink-200/80 bg-card" />;
+    return <Card className="border-ink-200/80 bg-card mt-6 h-64 animate-pulse rounded-2xl border" />;
   }
 
   const entries = data.items;
@@ -74,8 +74,8 @@ export function PlanHistoryPanel() {
     return (
       <div className="mt-6 space-y-4">
         {filters}
-        <Card className="rounded-2xl border border-dashed border-ink-300 bg-card p-10 text-center">
-          <p className="text-sm font-semibold text-ink-700">No changes of this kind yet</p>
+        <Card className="border-ink-300 bg-card rounded-2xl border border-dashed p-10 text-center">
+          <p className="text-ink-700 text-sm font-semibold">No changes of this kind yet</p>
         </Card>
       </div>
     );
@@ -83,10 +83,10 @@ export function PlanHistoryPanel() {
 
   if (data.totalCount === 0) {
     return (
-      <Card className="mt-6 rounded-2xl border border-dashed border-ink-300 bg-card p-10 text-center">
-        <History className="mx-auto size-6 text-ink-400" />
-        <p className="mt-2 text-sm font-semibold text-ink-700">No changes yet</p>
-        <p className="text-xs text-ink-400">Plan edits, features, limits and Free or trial settings show up here.</p>
+      <Card className="border-ink-300 bg-card mt-6 rounded-2xl border border-dashed p-10 text-center">
+        <History className="text-ink-400 mx-auto size-6" />
+        <p className="text-ink-700 mt-2 text-sm font-semibold">No changes yet</p>
+        <p className="text-ink-400 text-xs">Plan edits, features, limits and Free or trial settings show up here.</p>
       </Card>
     );
   }
@@ -98,33 +98,33 @@ export function PlanHistoryPanel() {
   return (
     <div className={cn("mt-6 space-y-4 transition-opacity", isPlaceholderData && "opacity-60")}>
       {filters}
-      <p className="text-xs text-ink-500">
+      <p className="text-ink-500 text-xs">
         <strong className="text-ink-800">{data.totalCount.toLocaleString()}</strong> changes to the plans, their features, the feature
         catalog, Free and the trial, newest first.
       </p>
       {days.map((day) => (
-        <Card key={day} className="gap-0 overflow-hidden rounded-2xl border border-ink-200/80 bg-card p-0 shadow-xs">
-          <p className="border-b border-ink-100 bg-ink-50/80 px-5 py-2 text-[11px] font-semibold tracking-wide text-ink-500 uppercase">
+        <Card key={day} className="border-ink-200/80 bg-card gap-0 overflow-hidden rounded-2xl border p-0 shadow-xs">
+          <p className="border-ink-100 bg-ink-50/80 text-ink-500 border-b px-5 py-2 text-[11px] font-semibold tracking-wide uppercase">
             {day}
           </p>
-          <ul className="divide-y divide-ink-100">
+          <ul className="divide-ink-100 divide-y">
             {entries
               .filter((entry) => formatDay(entry.at) === day)
               .map((entry) => {
                 const { icon: Icon, label } = KIND[entry.kind] ?? KIND.other;
                 return (
                   <li key={entry.id} className="flex items-start gap-3 px-5 py-3 max-md:px-3.5">
-                    <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-ink-100 text-ink-500">
+                    <span className="bg-ink-100 text-ink-500 mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg">
                       <Icon className="size-3.5" aria-hidden="true" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-ink-800">{entry.summary}</p>
-                      <p className="mt-0.5 text-[11px] text-ink-400">
+                      <p className="text-ink-800 text-sm">{entry.summary}</p>
+                      <p className="text-ink-400 mt-0.5 text-[11px]">
                         {label}
                         {entry.planName && ` · ${entry.planName}`} · {entry.actorName ?? "Unknown admin"}
                       </p>
                     </div>
-                    <time dateTime={entry.at} className="shrink-0 text-xs text-ink-400 tabular-nums">
+                    <time dateTime={entry.at} className="text-ink-400 shrink-0 text-xs tabular-nums">
                       {formatTime(entry.at)}
                     </time>
                   </li>
@@ -137,7 +137,7 @@ export function PlanHistoryPanel() {
       {isPhone ? (
         <PhonePager page={data.pageNumber} pageCount={data.totalPages} onPageChange={setPage} label="History pages" />
       ) : data.totalPages > 1 && (
-        <nav aria-label="History pages" className="flex flex-wrap items-center justify-between gap-3 text-xs text-ink-500">
+        <nav aria-label="History pages" className="text-ink-500 flex flex-wrap items-center justify-between gap-3 text-xs">
           <span className="tabular-nums">
             {first.toLocaleString()}–{last.toLocaleString()} of {data.totalCount.toLocaleString()}
           </span>

@@ -18,7 +18,7 @@ export const PHASE_TONES = {
 export const VersionProgressRow = ({ stats }: VersionProgressRowProps) => (
   <TableRow className={cn(stats.version.phase === "trial" && "text-ink-500")}>
     <TableCell className="py-2.5 pl-5 whitespace-normal sm:pl-6">
-      <span className="flex flex-wrap items-center gap-2 text-sm font-medium text-ink-900">
+      <span className="text-ink-900 flex flex-wrap items-center gap-2 text-sm font-medium">
         {stats.version.label}
         <span
           className={cn(
@@ -30,7 +30,7 @@ export const VersionProgressRow = ({ stats }: VersionProgressRowProps) => (
         </span>
       </span>
     </TableCell>
-    <TableCell className="text-right font-mono text-sm text-ink-600">{stats.letteredCount}</TableCell>
+    <TableCell className="text-ink-600 text-right font-mono text-sm">{stats.letteredCount}</TableCell>
     <TableCell>
       <RateMeter value={stats.textOk} />
     </TableCell>
@@ -40,10 +40,10 @@ export const VersionProgressRow = ({ stats }: VersionProgressRowProps) => (
     <TableCell>
       <RateMeter value={stats.layoutOk} />
     </TableCell>
-    <TableCell className="text-right font-mono text-sm text-ink-700">
+    <TableCell className="text-ink-700 text-right font-mono text-sm">
       {formatImageQualityNumber(stats.clipOverall, 1)}
     </TableCell>
-    <TableCell className="pr-5 text-right font-mono text-sm text-ink-700 sm:pr-6">
+    <TableCell className="text-ink-700 pr-5 text-right font-mono text-sm sm:pr-6">
       {formatImageQualityNumber(stats.musiq, 1)}
     </TableCell>
   </TableRow>

@@ -141,7 +141,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
   };
 
   return (
-    <div className="relative h-dvh min-h-0 overflow-hidden bg-ink-50 text-ink-900 dark:bg-background">
+    <div className="bg-ink-50 text-ink-900 dark:bg-background relative h-dvh min-h-0 overflow-hidden">
       <div className="flex h-full min-h-0">
         <AdminSidebar
           fullName={fullName}
@@ -152,7 +152,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
         />
-        <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden dark:lg:bg-panel dark:lg:my-2 dark:lg:mr-2 dark:lg:h-[calc(100dvh-1rem)] dark:lg:rounded-xl dark:lg:border">
+        <div className="dark:lg:bg-panel flex h-dvh min-w-0 flex-1 flex-col overflow-hidden dark:lg:my-2 dark:lg:mr-2 dark:lg:h-[calc(100dvh-1rem)] dark:lg:rounded-xl dark:lg:border">
           <div className="relative min-h-0 flex-1 overflow-y-auto">
             <AdminTopbar
               fullName={fullName}
@@ -163,19 +163,19 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
               <div className="flex flex-col justify-between gap-4 max-md:gap-3 md:flex-row md:items-end">
                 {/* These two tabs open with a heading of their own. */}
                 <div className={cn((activeTab === "documents" || activeTab === "search") && "max-md:hidden")}>
-                  <p className="text-[10px] font-bold tracking-[0.16em] text-ink-400 uppercase">
+                  <p className="text-ink-400 text-[10px] font-bold tracking-[0.16em] uppercase">
                     Knowledge base
                   </p>
-                  <h1 className="font-display mt-1 text-2xl font-bold tracking-tight text-ink-900 sm:text-[28px]">
+                  <h1 className="font-display text-ink-900 mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
                     {activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
                   </h1>
-                  <p className="mt-1 max-w-2xl text-xs leading-5 text-ink-500">
+                  <p className="text-ink-500 mt-1 max-w-2xl text-xs leading-5">
                     {activeTab === "research"
                       ? "Manage the shared public Etsy dataset used by seller-facing Market Radar."
                       : "Ingest documents, review versions, and control which knowledge is active for retrieval."}
                   </p>
                 </div>
-                <div className="flex flex-wrap rounded-lg border border-ink-200 bg-card p-1 shadow-sm max-md:grid max-md:grid-cols-4 max-md:gap-1">
+                <div className="border-ink-200 bg-card flex flex-wrap rounded-lg border p-1 shadow-sm max-md:grid max-md:grid-cols-4 max-md:gap-1">
                   {RAG_TABS.map((tab) => (
                     <Button
                       key={tab.value}
@@ -205,11 +205,11 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                       : "hidden"
                   }
                 >
-                  <section className="rounded-xl border border-ink-200 bg-card p-5 shadow-sm max-md:p-4 sm:p-6">
-                    <div className="flex items-center justify-between gap-3 border-b border-ink-100 pb-4">
+                  <section className="border-ink-200 bg-card rounded-xl border p-5 shadow-sm max-md:p-4 sm:p-6">
+                    <div className="border-ink-100 flex items-center justify-between gap-3 border-b pb-4">
                       <div>
-                        <h2 className="text-sm font-bold text-ink-900">Document content</h2>
-                        <p className="mt-1 text-xs text-ink-400">
+                        <h2 className="text-ink-900 text-sm font-bold">Document content</h2>
+                        <p className="text-ink-400 mt-1 text-xs">
                           Plain text is sent to the RAG ingestion pipeline.
                         </p>
                       </div>
@@ -246,11 +246,11 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                         }
                       }}
                       className={cn(
-                        "mt-5 flex min-h-28 w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 text-center transition-all hover:border-ink-400 hover:bg-ink-50",
+                        "hover:border-ink-400 hover:bg-ink-50 mt-5 flex min-h-28 w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 text-center transition-all",
                         isDraggingFile &&
                           "border-primary bg-primary/5 ring-primary/20 scale-[1.01] cursor-copy ring-2",
                         fileName
-                          ? "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-500/10"
+                          ? "border-emerald-200 bg-emerald-50/40 dark:border-emerald-500/30 dark:bg-emerald-500/10"
                           : "border-ink-300 bg-ink-50/60"
                       )}
                       onDragOver={(event) => {
@@ -272,29 +272,29 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                           <span className="text-primary mt-2 text-xs font-semibold">
                             Release to upload
                           </span>
-                          <span className="mt-1 text-[11px] text-ink-400">
+                          <span className="text-ink-400 mt-1 text-[11px]">
                             Your document will be loaded here
                           </span>
                         </>
                       ) : fileName ? (
                         <>
                           <CheckCircle2 className="size-6 text-emerald-500" />
-                          <span className="mt-2 max-w-full truncate text-xs font-semibold text-ink-700">
+                          <span className="text-ink-700 mt-2 max-w-full truncate text-xs font-semibold">
                             {fileName}
                           </span>
-                          <span className="mt-1 text-[11px] text-ink-400 max-md:hidden">Click to replace</span>
-                          <span className="mt-1 text-[11px] text-ink-400 md:hidden">Tap to replace</span>
+                          <span className="text-ink-400 mt-1 text-[11px] max-md:hidden">Click to replace</span>
+                          <span className="text-ink-400 mt-1 text-[11px] md:hidden">Tap to replace</span>
                         </>
                       ) : (
                         <>
-                          <FileText className="size-6 text-ink-400" />
-                          <span className="mt-2 text-xs font-semibold text-ink-600 max-md:hidden">
+                          <FileText className="text-ink-400 size-6" />
+                          <span className="text-ink-600 mt-2 text-xs font-semibold max-md:hidden">
                             Drop a document here or browse
                           </span>
-                          <span className="mt-2 text-xs font-semibold text-ink-600 md:hidden">
+                          <span className="text-ink-600 mt-2 text-xs font-semibold md:hidden">
                             Tap to choose a file
                           </span>
-                          <span className="mt-1 text-[11px] text-ink-400">
+                          <span className="text-ink-400 mt-1 text-[11px]">
                             TXT, MD, CSV, JSON, or HTML
                           </span>
                         </>
@@ -315,7 +315,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                     </div>
 
                     <label
-                      className="mt-5 block text-xs font-semibold text-ink-700"
+                      className="text-ink-700 mt-5 block text-xs font-semibold"
                       htmlFor="rag-content"
                     >
                       Content <span className="text-rose-500">*</span>
@@ -327,14 +327,14 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                       placeholder="Paste or review the document content…"
                       className="mt-2 min-h-[300px] resize-y text-sm leading-6 max-md:min-h-40 max-md:text-base"
                     />
-                    <p className="mt-2 text-right text-[11px] text-ink-400">
+                    <p className="text-ink-400 mt-2 text-right text-[11px]">
                       {content.length.toLocaleString()} characters
                     </p>
                   </section>
 
-                  <aside className="rounded-xl border border-ink-200 bg-card p-5 shadow-sm max-md:p-4 sm:p-6">
-                    <h2 className="text-sm font-bold text-ink-900">Document metadata</h2>
-                    <p className="mt-1 text-xs leading-5 text-ink-400">
+                  <aside className="border-ink-200 bg-card rounded-xl border p-5 shadow-sm max-md:p-4 sm:p-6">
+                    <h2 className="text-ink-900 text-sm font-bold">Document metadata</h2>
+                    <p className="text-ink-400 mt-1 text-xs leading-5">
                       These fields help retrieval target the right knowledge.
                     </p>
                     <div className="mt-5 space-y-4">
@@ -372,10 +372,10 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                         type="button"
                         aria-expanded={isMoreOpen}
                         onClick={() => setIsMoreOpen((open) => !open)}
-                        className="flex min-h-10 w-full items-center justify-between text-xs font-semibold text-ink-700 md:hidden"
+                        className="text-ink-700 flex min-h-10 w-full items-center justify-between text-xs font-semibold md:hidden"
                       >
                         More details
-                        <ChevronDown className={cn("size-4 text-ink-400 transition-transform", isMoreOpen && "rotate-180")} aria-hidden="true" />
+                        <ChevronDown className={cn("text-ink-400 size-4 transition-transform", isMoreOpen && "rotate-180")} aria-hidden="true" />
                       </button>
                       <div className={cn("space-y-4", !isMoreOpen && "max-md:hidden")}>
                       <Field label="Source id">
@@ -384,7 +384,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                           onChange={(event) => setSourceId(event.target.value)}
                           placeholder={isPhone ? "faq-about-apcs" : "faq-about-apcs (same id replaces the older version)"}
                         />
-                        <span className="mt-1 block text-[11px] font-normal text-ink-400 md:hidden">The same id replaces the older version.</span>
+                        <span className="text-ink-400 mt-1 block text-[11px] font-normal md:hidden">The same id replaces the older version.</span>
                       </Field>
                       <Field label="Source type">
                         <Input
@@ -419,7 +419,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                       </div>
                       </div>
                     </div>
-                    <div className="mt-6 border-t border-ink-100 pt-5">
+                    <div className="border-ink-100 mt-6 border-t pt-5">
                       <Button
                         type="button"
                         className="w-full"
@@ -436,7 +436,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                           </>
                         )}
                       </Button>
-                      <p className="mt-3 text-center text-[11px] leading-4 text-ink-400">
+                      <p className="text-ink-400 mt-3 text-center text-[11px] leading-4">
                         {!title.trim() || !content.trim()
                           ? `Add ${!title.trim() && !content.trim() ? "a title and content" : !title.trim() ? "a title" : "content"} to ingest the document.`
                           : "The document will be chunked and embedded for semantic search."}
@@ -469,7 +469,7 @@ const Field = ({
   required?: boolean;
   children: React.ReactNode;
 }) => (
-  <label className="block text-xs font-semibold text-ink-700">
+  <label className="text-ink-700 block text-xs font-semibold">
     {label}
     {required && <span className="text-rose-500"> *</span>}
     <span className="mt-2 block">{children}</span>
@@ -479,17 +479,17 @@ const Field = ({
 const RagUsageGuide = () => {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <section className="mt-6 rounded-xl border border-ink-200 bg-card p-4 shadow-sm max-md:mt-3 sm:p-5">
+    <section className="border-ink-200 bg-card mt-6 rounded-xl border p-4 shadow-sm max-md:mt-3 sm:p-5">
       <div className="flex items-start gap-3 max-md:flex-wrap max-md:gap-y-1">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-ink-100 text-ink-600">
+        <div className="bg-ink-100 text-ink-600 flex size-8 shrink-0 items-center justify-center rounded-lg">
           <Info className="size-4" />
         </div>
         {/* On a phone the text keeps the row beside the icon and the button drops below it. */}
         <div className="max-md:basis-[calc(100%-2.75rem)]">
-          <h2 className="text-sm font-bold text-ink-900">
+          <h2 className="text-ink-900 text-sm font-bold">
             Quick guide: how to use the RAG knowledge base
           </h2>
-          <p className="mt-1 text-xs leading-5 text-ink-500">
+          <p className="text-ink-500 mt-1 text-xs leading-5">
             Add trusted information here so the assistant can find and use it later.
           </p>
         </div>
@@ -529,13 +529,13 @@ const RagUsageGuide = () => {
               text="Open Documents & versions to check status and manage which version is active."
             />
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-ink-100 pt-3 text-[11px] leading-5 text-ink-500">
-            <span className="font-semibold text-ink-800">Etsy tip:</span>
+          <div className="border-ink-100 text-ink-500 mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t pt-3 text-[11px] leading-5">
+            <span className="text-ink-800 font-semibold">Etsy tip:</span>
             <span>
               Run now automatically selects the top 3 listings and queues them for RAG. Enable a schedule
               for recurring research.
             </span>
-            <ArrowRight className="size-3.5 text-ink-400" />
+            <ArrowRight className="text-ink-400 size-3.5" />
             <span>Use only information you are allowed to store and retrieve.</span>
           </div>
         </>
@@ -545,14 +545,14 @@ const RagUsageGuide = () => {
 };
 
 const GuideStep = ({ number, title, text }: { number: string; title: string; text: string }) => (
-  <div className="rounded-lg border border-ink-100 bg-ink-50/60 p-3">
+  <div className="border-ink-100 bg-ink-50/60 rounded-lg border p-3">
     <div className="flex items-center gap-2">
-      <span className="flex size-6 items-center justify-center rounded-full bg-ink-100 text-[11px] font-bold text-ink-700">
+      <span className="bg-ink-100 text-ink-700 flex size-6 items-center justify-center rounded-full text-[11px] font-bold">
         {number}
       </span>
-      <p className="text-xs font-bold text-ink-800">{title}</p>
+      <p className="text-ink-800 text-xs font-bold">{title}</p>
     </div>
-    <p className="mt-2 text-[11px] leading-5 text-ink-500">{text}</p>
+    <p className="text-ink-500 mt-2 text-[11px] leading-5">{text}</p>
   </div>
 );
 

@@ -70,7 +70,7 @@ export const UploadRunDialog = ({ open, onClose, onUploaded }: UploadRunDialogPr
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Upload className="size-5 text-ink-500" />
+            <Upload className="text-ink-500 size-5" />
             Upload scoring results
           </DialogTitle>
           <DialogDescription>

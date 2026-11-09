@@ -18,9 +18,9 @@ export const SelectionToolbar = () => {
     <div
       role="toolbar"
       aria-label={`${selectedCount} nodes selected`}
-      className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border bg-card py-1 pr-1 pl-3 shadow-lg"
+      className="bg-card absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border py-1 pr-1 pl-3 shadow-lg"
     >
-      <span className="text-xs font-semibold whitespace-nowrap text-ink-700">{selectedCount} selected</span>
+      <span className="text-ink-700 text-xs font-semibold whitespace-nowrap">{selectedCount} selected</span>
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Duplicate selected nodes" onClick={duplicateSelectedNodes} disabled={isRunning}>
         <Copy aria-hidden="true" />
       </Button>

@@ -51,7 +51,7 @@ export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
   const firstName = getFirstName(fullName);
 
   return (
-    <section className="group max-sm:border-border max-sm:bg-card dark:bg-card relative flex h-full min-h-52 flex-col justify-between overflow-hidden rounded-2xl border border-ink-300 bg-linear-to-r from-ink-200 via-ink-300 to-ink-300 p-6 text-ink-900 shadow-sm transition-shadow duration-300 hover:shadow-md max-sm:bg-none max-sm:p-5 dark:border-border dark:sm:justify-center dark:bg-[radial-gradient(120%_140%_at_0%_0%,rgba(45,212,191,0.12),transparent_55%)] dark:shadow-none">
+    <section className="group max-sm:border-border max-sm:bg-card dark:bg-card border-ink-300 from-ink-200 via-ink-300 to-ink-300 text-ink-900 dark:border-border relative flex h-full min-h-52 flex-col justify-between overflow-hidden rounded-2xl border bg-linear-to-r p-6 shadow-sm transition-shadow duration-300 hover:shadow-md max-sm:bg-none max-sm:p-5 dark:bg-[radial-gradient(120%_140%_at_0%_0%,rgba(45,212,191,0.12),transparent_55%)] dark:shadow-none dark:sm:justify-center">
       <div
         aria-hidden="true"
         className={`pointer-events-none absolute inset-y-0 right-0 hidden aspect-[1024/682] max-w-[62%] sm:block ${MERCH_FRAME}`}
@@ -76,21 +76,21 @@ export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
       </div>
 
       <div className="relative z-10 max-w-[55%] min-w-0 max-sm:max-w-full dark:sm:max-w-[48%]">
-        <p className="text-xs font-semibold text-ink-900 max-sm:text-[11px] max-sm:tracking-wider max-sm:text-ink-500 max-sm:uppercase dark:text-ink-500">{today()}</p>
+        <p className="text-ink-900 max-sm:text-ink-500 dark:text-ink-500 text-xs font-semibold max-sm:text-[11px] max-sm:tracking-wider max-sm:uppercase">{today()}</p>
         <h1
-          className="mt-1 truncate text-2xl font-bold tracking-tight text-ink-900"
+          className="text-ink-900 mt-1 truncate text-2xl font-bold tracking-tight"
           title={fullName ?? undefined}
         >
           {firstName ? `Welcome back, ${firstName}` : "Welcome back"}
         </h1>
-        <p className="mt-1 text-sm text-ink-700">{describeGreeting(items)}</p>
+        <p className="text-ink-700 mt-1 text-sm">{describeGreeting(items)}</p>
       </div>
 
-      <ul className="bg-muted/40 relative z-10 mt-4 grid grid-cols-5 gap-1.5 rounded-xl p-2 ring-1 ring-ink-200 sm:hidden">
+      <ul className="bg-muted/40 ring-ink-200 relative z-10 mt-4 grid grid-cols-5 gap-1.5 rounded-xl p-2 ring-1 sm:hidden">
         {MERCH_TILES.map(({ label, src }) => (
           <li key={label} className="min-w-0 text-center">
             <Image src={src} alt="" width={56} height={56} className="mx-auto aspect-square w-full max-w-14 rounded-lg object-cover" />
-            <span className="mt-1 block text-[10px] leading-tight font-medium text-ink-700">{label}</span>
+            <span className="text-ink-700 mt-1 block text-[10px] leading-tight font-medium">{label}</span>
           </li>
         ))}
       </ul>
@@ -100,7 +100,7 @@ export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
         {items.length > 0 ? (
           <button type="button" onClick={onOpenActions} className={PRIMARY_ACTION}>
             See what needs you
-            <span className="rounded-full bg-ink-100 px-1.5 text-[11px] font-semibold text-ink-700 tabular-nums dark:bg-black/10 dark:text-primary-foreground">
+            <span className="bg-ink-100 text-ink-700 dark:text-primary-foreground rounded-full px-1.5 text-[11px] font-semibold tabular-nums dark:bg-black/10">
               {items.length}
             </span>
             <ArrowRight className="size-4" aria-hidden="true" />
@@ -113,7 +113,7 @@ export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
         )}
         <Link
           href="/market-opportunities"
-          className="inline-flex items-center gap-1.5 text-ink-900 transition hover:text-black max-sm:min-h-10 max-sm:w-full max-sm:justify-center dark:text-ink-700 dark:hover:text-foreground"
+          className="text-ink-900 dark:text-ink-700 dark:hover:text-foreground inline-flex items-center gap-1.5 transition hover:text-black max-sm:min-h-10 max-sm:w-full max-sm:justify-center"
         >
           <Compass className="size-4" aria-hidden="true" />
           Find a niche in Market Radar

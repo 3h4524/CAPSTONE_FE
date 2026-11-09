@@ -20,7 +20,7 @@ export const VersionProgressCard = ({ stats }: { stats: ImageEvalVersionStats })
 
   return (
     <li className="space-y-2.5 px-4 py-3">
-      <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-ink-900">
+      <p className="text-ink-900 flex flex-wrap items-center gap-2 text-sm font-medium">
         {stats.version.label}
         <span className={cn("rounded px-1.5 py-0.5 text-[11px] font-medium", PHASE_TONES[stats.version.phase])}>
           {IMAGE_EVAL_PHASE_LABELS[stats.version.phase]}
@@ -29,7 +29,7 @@ export const VersionProgressCard = ({ stats }: { stats: ImageEvalVersionStats })
       <div className="space-y-2">
         {rates.map((rate) => (
           <div key={rate.label}>
-            <p className="mb-1 text-[11px] text-ink-500">{rate.label}</p>
+            <p className="text-ink-500 mb-1 text-[11px]">{rate.label}</p>
             <RateMeter value={rate.value} />
           </div>
         ))}
@@ -37,8 +37,8 @@ export const VersionProgressCard = ({ stats }: { stats: ImageEvalVersionStats })
       <dl className="grid grid-cols-3 gap-2">
         {figures.map((figure) => (
           <div key={figure.label}>
-            <dt className="text-[11px] text-ink-500">{figure.label}</dt>
-            <dd className="mt-0.5 font-mono text-sm text-ink-800">{figure.value}</dd>
+            <dt className="text-ink-500 text-[11px]">{figure.label}</dt>
+            <dd className="text-ink-800 mt-0.5 font-mono text-sm">{figure.value}</dd>
           </div>
         ))}
       </dl>

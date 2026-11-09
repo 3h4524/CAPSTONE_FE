@@ -69,7 +69,7 @@ export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
       description="See an earlier run's images and mock-ups, or retry its failed products. Run still generates for the pending products."
     >
       <Select value={openRun?.job.id} onValueChange={openRunById} disabled={isRunning}>
-        <SelectTrigger id="previous-runs" aria-label="Previous runs" className="w-full min-w-0 bg-card">
+        <SelectTrigger id="previous-runs" aria-label="Previous runs" className="bg-card w-full min-w-0">
           {/* Short on purpose: the full details are in the list, and a long value would push the panel wider. */}
           <SelectValue placeholder="Open an earlier run">
             {openRun && (

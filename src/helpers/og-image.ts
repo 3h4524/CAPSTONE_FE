@@ -6,8 +6,8 @@ export const OG_IMAGE_SIZE = { width: 1200, height: 630 } as const;
 const OG_ASSET_DIR = path.join(process.cwd(), "public", "og");
 
 export const getOgBackgroundDataUrl = async () => {
-  const image = await readFile(path.join(OG_ASSET_DIR, "background.jpg"));
-  return `data:image/jpeg;base64,${image.toString("base64")}`;
+  const image = await readFile(path.join(OG_ASSET_DIR, "background.png"));
+  return `data:image/png;base64,${image.toString("base64")}`;
 };
 
 export const getOgFonts = async () => {

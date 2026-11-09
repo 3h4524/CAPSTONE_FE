@@ -7,6 +7,5 @@ export const SITE_CONFIG = {
   baseUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   locale: "en",
   ogLocale: "en_US",
-  themeColor: "#6366f1",
-  logoBackground: "#4338ca",
+  themeColor: "#7C3AED",
 } as const;

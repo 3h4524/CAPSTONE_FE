@@ -2,16 +2,6 @@ import { useId } from "react";
 
 import type { IconProps } from "@/types/commons";
 
-interface LogoProps extends IconProps {
-  bgColor?: string;
-  /**
-   * `next/og`'s renderer (Satori) doesn't support SVG `<text>` nodes — set
-   * this to `false` when rendering the logo inside an `ImageResponse`
-   * (see `src/components/seo/og-image-card.tsx`).
-   */
-  withCodeAccents?: boolean;
-}
-
 /**
  * The drawing itself, for `next/og` images: their renderer cannot run hooks, and an image holds a single
  * logo, so the fixed gradient ids are safe there. Pages use `Logo`.
@@ -19,79 +9,74 @@ interface LogoProps extends IconProps {
 export const StaticLogo = ({
   width = "40px",
   height = "40px",
-  bgColor = "var(--logo-background)",
-  withCodeAccents = true,
-  gradientPrefix = "logo",
+  gradientPrefix = "logo-podivo",
   ...otherProps
-}: LogoProps & { gradientPrefix?: string }) => (
+}: IconProps & { gradientPrefix?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 64 64"
+    viewBox="0 0 512 512"
     fill="none"
     width={width}
     height={height}
     {...otherProps}
   >
     <defs>
-      <linearGradient id={`${gradientPrefix}-layer1`} x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#6366f1" />
-        <stop offset="100%" stopColor="#8b5cf6" />
+      <linearGradient id={`${gradientPrefix}-gradient`} x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#8B5CF6" />
+        <stop offset="50%" stopColor="#7C3AED" />
+        <stop offset="100%" stopColor="#4F46E5" />
       </linearGradient>
-      <linearGradient id={`${gradientPrefix}-layer2`} x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#a855f7" />
-        <stop offset="100%" stopColor="#c084fc" />
-      </linearGradient>
-      <linearGradient id={`${gradientPrefix}-layer3`} x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#d946ef" />
-        <stop offset="100%" stopColor="#f0abfc" />
-      </linearGradient>
-      <linearGradient id={`${gradientPrefix}-flame`} x1="50%" y1="100%" x2="50%" y2="0%">
-        <stop offset="0%" stopColor="#f97316" />
-        <stop offset="100%" stopColor="#fbbf24" />
+      <linearGradient id={`${gradientPrefix}-glow`} x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#C4B5FD" stopOpacity="0.6" />
+        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
       </linearGradient>
     </defs>
 
-    {/* Background rounded square */}
-    <rect x="0" y="0" width="64" height="64" rx="12" fill={bgColor} />
+    <rect x="32" y="32" width="448" height="448" rx="112" ry="112" fill={`url(#${gradientPrefix}-gradient)`} />
+    <rect
+      x="34"
+      y="34"
+      width="444"
+      height="444"
+      rx="110"
+      ry="110"
+      fill="none"
+      stroke={`url(#${gradientPrefix}-glow)`}
+      strokeWidth="4"
+    />
 
-    {/* Cake layers (scaled down ~80%, centered) */}
-    <rect x="14" y="44" width="36" height="11" rx="2.5" fill={`url(#${gradientPrefix}-layer1)`} />
-    <rect x="17" y="34" width="30" height="11" rx="2.5" fill={`url(#${gradientPrefix}-layer2)`} />
-    <rect x="20" y="26" width="24" height="9" rx="2" fill={`url(#${gradientPrefix}-layer3)`} />
+    <rect x="156" y="128" width="40" height="216" rx="16" fill="#FFFFFF" />
 
-    {/* Candle */}
-    <rect x="29.5" y="18" width="5" height="8" rx="1" fill="#fef3c7" />
+    <path
+      d="M 180 128 L 280 128 C 340 128, 380 162, 380 216 C 380 270, 340 304, 280 304 L 180 304 Z"
+      fill="none"
+      stroke="#FFFFFF"
+      strokeWidth="40"
+      strokeLinejoin="round"
+    />
 
-    {/* Flame */}
-    <ellipse cx="32" cy="15.5" rx="2.5" ry="3.5" fill={`url(#${gradientPrefix}-flame)`} />
+    <path
+      d="M 276 182 C 276 202, 286 216, 306 216 C 286 216, 276 230, 276 250 C 276 230, 266 216, 246 216 C 266 216, 276 202, 276 182 Z"
+      fill="#FFFFFF"
+    />
 
-    {/* Code brackets */}
-    {withCodeAccents && (
-      <>
-        <text
-          x="19"
-          y="52"
-          fontFamily="monospace"
-          fontSize="8"
-          fontWeight="bold"
-          fill="#e0e7ff"
-          opacity="0.5"
-        >
-          {"</>"}
-        </text>
-        <text
-          x="37"
-          y="52"
-          fontFamily="monospace"
-          fontSize="8"
-          fontWeight="bold"
-          fill="#e0e7ff"
-          opacity="0.5"
-        >
-          {"{ }"}
-        </text>
-      </>
-    )}
+    <path
+      d="M 226 348 L 276 376 L 366 324"
+      fill="none"
+      stroke="#FFFFFF"
+      strokeWidth="32"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M 226 394 L 276 422 L 366 370"
+      fill="none"
+      stroke="#C4B5FD"
+      strokeWidth="26"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      opacity="0.9"
+    />
   </svg>
 );
 
@@ -99,7 +84,7 @@ export const StaticLogo = ({
  * Each logo on a page needs gradient ids of its own. With shared ids every logo paints with the first one's
  * gradients, and when that first logo sits in a hidden sidebar those gradients draw nothing.
  */
-export const Logo = (props: LogoProps) => {
+export const Logo = (props: IconProps) => {
   const id = useId().replace(/[^\w-]/g, "");
   return <StaticLogo {...props} gradientPrefix={`logo-${id}`} />;
 };

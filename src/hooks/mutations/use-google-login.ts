@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 
 import { googleLoginRequest } from "@/api/auth";
-import { getSafeReturnUrl } from "@/helpers/auth-return-url";
+import { getReturnUrlParam, resolveSignedInLanding } from "@/helpers/auth-return-url";
 import { showToast } from "@/helpers/toast";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useAppQueryClient } from "@/hooks/use-query-client";
@@ -32,7 +32,7 @@ export const useGoogleLogin = (onTwoFactorRequired?: GoogleTwoFactorHandler) => 
       setAuthUser(result.user);
       showToast("success", `Welcome, ${result.user.fullName}`);
       queryClient.clear();
-      router.push(getSafeReturnUrl());
+      router.push(resolveSignedInLanding(result.user, getReturnUrlParam()));
     },
   });
 };

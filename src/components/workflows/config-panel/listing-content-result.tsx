@@ -79,6 +79,8 @@ export const ListingContentResultPanel = () => {
       return;
     }
     mutation.mutate({ productId, seoFeedback: seoMutation.data ?? undefined });
+    // The score belongs to the version being replaced; its feedback goes into the new one.
+    seoMutation.reset();
   };
 
   const { mutate: act, isPending: isRetrying } = useWorkflowRunAction();
@@ -190,17 +192,20 @@ export const ListingContentResultPanel = () => {
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  {[
-                    ["Title", seo.titleScore],
-                    ["Tags", seo.tagsScore],
-                    ["Description", seo.descriptionScore],
-                    ["Keywords", seo.keywordOptimizationScore],
-                    ["Tag relevance", seo.tagRelevanceScore],
-                    ["Keyword density", seo.keywordDensity],
-                  ].map(([label, value]) => (
+                  {(
+                    [
+                      ["Title", seo.titleScore, "/100"],
+                      ["Tags", seo.tagsScore, "/100"],
+                      ["Description", seo.descriptionScore, "/100"],
+                      ["Keywords", seo.keywordOptimizationScore, "/100"],
+                      ["Tag relevance", seo.tagRelevanceScore, "/100"],
+                      // A share of the description's words, not a score.
+                      ["Keyword density", seo.keywordDensity, "%"],
+                    ] as const
+                  ).map(([label, value, unit]) => (
                     <div key={label} className="flex justify-between rounded bg-slate-50 px-2 py-1.5">
                       <span className="text-slate-500">{label}</span>
-                      <span className="font-medium">{value}/100</span>
+                      <span className="font-medium">{value}{unit}</span>
                     </div>
                   ))}
                 </div>

@@ -13,8 +13,8 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#ffffff",
     theme_color: SITE_CONFIG.themeColor,
     icons: [
-      { src: "/favicon-192x192.png", sizes: "192x192", type: "image/png" },
-      { src: "/favicon-512x512.png", sizes: "512x512", type: "image/png" },
+      { src: "/branding/favicon-192x192.png", sizes: "192x192", type: "image/png" },
+      { src: "/branding/favicon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
     lang: SITE_CONFIG.locale,
   };

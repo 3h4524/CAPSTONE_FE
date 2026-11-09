@@ -20,7 +20,7 @@ export const OrganizationJsonLd = () => {
         "@id": organizationId,
         name: SITE_CONFIG.name,
         url: websiteUrl,
-        logo: getAbsoluteUrl("/favicon-512x512.png"),
+        logo: getAbsoluteUrl("/branding/favicon-512x512.png"),
         description: SITE_CONFIG.description,
       },
       {

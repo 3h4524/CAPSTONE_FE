@@ -2,12 +2,15 @@
 import { getWorkflowRun, videoWorkflowKeys } from "@/api/video-workflow";
 import { useQuery } from "@/hooks/queries/use-query";
 import { useRunGroupLive } from "@/stores/run-group-live";
+import { useQuery as useBaseQuery } from "@tanstack/react-query";
 
-/**
- * A run in one of these states changes only when the person acts on it (the action's answer updates the
- * cache) or not at all, so it is not polled.
- */
-export const IDLE_RUN_STATUSES = ["completed", "cancelled", "failed", "waiting_for_input", "waiting_for_review"];
+const FINISHED_RUN_STATUSES = ["completed", "cancelled", "failed"];
+const WAITING_RUN_STATUSES = ["waiting_for_input", "waiting_for_review"];
+
+/** While the server works on the run its steps move every few seconds. */
+export const ACTIVE_RUN_POLL_MS = 2_000;
+/** A run waiting for an approval only changes when someone approves, possibly in another tab. */
+export const WAITING_RUN_POLL_MS = 15_000;
 
 export const useWorkflowRun = (id: string | null) => {
   const liveGroupId = useRunGroupLive((state) => state.connectedGroupId);
@@ -16,14 +19,29 @@ export const useWorkflowRun = (id: string | null) => {
     queryFn: () => getWorkflowRun(id!),
     enabled: Boolean(id),
     staleTime: 0,
-    refetchInterval: (query) => {
+    refetchInterval: query => {
       const run = query.state.data;
-      if (run && IDLE_RUN_STATUSES.includes(run.status)) return false;
+      if (run?.status && FINISHED_RUN_STATUSES.includes(run.status)) return false;
       // A run of a batch video run whose changes arrive over the hub needs no polling.
       if (run?.runGroupId && liveGroupId && run.runGroupId.toLowerCase() === liveGroupId.toLowerCase()) return false;
-      return 2_000;
+      return run?.status && WAITING_RUN_STATUSES.includes(run.status) ? WAITING_RUN_POLL_MS : ACTIVE_RUN_POLL_MS;
     },
+    refetchIntervalInBackground: true,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
   });
+};
+
+/**
+ * Whether the server is working on the run, read from the run already being polled: this never fetches it.
+ * Media lists of the run only need polling while it is, since nothing renders while it waits or after it ends.
+ */
+export const useRunIsWorking = (id: string | null) => {
+  const { data } = useBaseQuery({
+    queryKey: videoWorkflowKeys.run(id),
+    queryFn: () => getWorkflowRun(id!),
+    enabled: false,
+  });
+  // Unknown until the run is read; poll meanwhile rather than miss a render.
+  return data === undefined || data.status === "running";
 };

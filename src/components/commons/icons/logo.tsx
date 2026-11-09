@@ -1,89 +1,70 @@
 import type { IconProps } from "@/types/commons";
 
-interface LogoProps extends IconProps {
-  bgColor?: string;
-  /**
-   * `next/og`'s renderer (Satori) doesn't support SVG `<text>` nodes — set
-   * this to `false` when rendering the logo inside an `ImageResponse`
-   * (see `src/components/seo/og-image-card.tsx`).
-   */
-  withCodeAccents?: boolean;
-}
-
-export const Logo = ({
-  width = "40px",
-  height = "40px",
-  bgColor = "var(--logo-background)",
-  withCodeAccents = true,
-  ...otherProps
-}: LogoProps) => (
+export const Logo = ({ width = "40px", height = "40px", ...otherProps }: IconProps) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 64 64"
+    viewBox="0 0 512 512"
     fill="none"
     width={width}
     height={height}
     {...otherProps}
   >
     <defs>
-      <linearGradient id="logo-layer1" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#6366f1" />
-        <stop offset="100%" stopColor="#8b5cf6" />
+      <linearGradient id="logo-podivo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#8B5CF6" />
+        <stop offset="50%" stopColor="#7C3AED" />
+        <stop offset="100%" stopColor="#4F46E5" />
       </linearGradient>
-      <linearGradient id="logo-layer2" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#a855f7" />
-        <stop offset="100%" stopColor="#c084fc" />
-      </linearGradient>
-      <linearGradient id="logo-layer3" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#d946ef" />
-        <stop offset="100%" stopColor="#f0abfc" />
-      </linearGradient>
-      <linearGradient id="logo-flame" x1="50%" y1="100%" x2="50%" y2="0%">
-        <stop offset="0%" stopColor="#f97316" />
-        <stop offset="100%" stopColor="#fbbf24" />
+      <linearGradient id="logo-podivo-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#C4B5FD" stopOpacity="0.6" />
+        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
       </linearGradient>
     </defs>
 
-    {/* Background rounded square */}
-    <rect x="0" y="0" width="64" height="64" rx="12" fill={bgColor} />
+    <rect x="32" y="32" width="448" height="448" rx="112" ry="112" fill="url(#logo-podivo-gradient)" />
+    <rect
+      x="34"
+      y="34"
+      width="444"
+      height="444"
+      rx="110"
+      ry="110"
+      fill="none"
+      stroke="url(#logo-podivo-glow)"
+      strokeWidth="4"
+    />
 
-    {/* Cake layers (scaled down ~80%, centered) */}
-    <rect x="14" y="44" width="36" height="11" rx="2.5" fill="url(#logo-layer1)" />
-    <rect x="17" y="34" width="30" height="11" rx="2.5" fill="url(#logo-layer2)" />
-    <rect x="20" y="26" width="24" height="9" rx="2" fill="url(#logo-layer3)" />
+    <rect x="156" y="128" width="40" height="216" rx="16" fill="#FFFFFF" />
 
-    {/* Candle */}
-    <rect x="29.5" y="18" width="5" height="8" rx="1" fill="#fef3c7" />
+    <path
+      d="M 180 128 L 280 128 C 340 128, 380 162, 380 216 C 380 270, 340 304, 280 304 L 180 304 Z"
+      fill="none"
+      stroke="#FFFFFF"
+      strokeWidth="40"
+      strokeLinejoin="round"
+    />
 
-    {/* Flame */}
-    <ellipse cx="32" cy="15.5" rx="2.5" ry="3.5" fill="url(#logo-flame)" />
+    <path
+      d="M 276 182 C 276 202, 286 216, 306 216 C 286 216, 276 230, 276 250 C 276 230, 266 216, 246 216 C 266 216, 276 202, 276 182 Z"
+      fill="#FFFFFF"
+    />
 
-    {/* Code brackets */}
-    {withCodeAccents && (
-      <>
-        <text
-          x="19"
-          y="52"
-          fontFamily="monospace"
-          fontSize="8"
-          fontWeight="bold"
-          fill="#e0e7ff"
-          opacity="0.5"
-        >
-          {"</>"}
-        </text>
-        <text
-          x="37"
-          y="52"
-          fontFamily="monospace"
-          fontSize="8"
-          fontWeight="bold"
-          fill="#e0e7ff"
-          opacity="0.5"
-        >
-          {"{ }"}
-        </text>
-      </>
-    )}
+    <path
+      d="M 226 348 L 276 376 L 366 324"
+      fill="none"
+      stroke="#FFFFFF"
+      strokeWidth="32"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M 226 394 L 276 422 L 366 370"
+      fill="none"
+      stroke="#C4B5FD"
+      strokeWidth="26"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      opacity="0.9"
+    />
   </svg>
 );

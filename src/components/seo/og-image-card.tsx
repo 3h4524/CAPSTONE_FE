@@ -41,7 +41,7 @@ export const OgImageCard = ({ backgroundSrc, title = SITE_CONFIG.tagline, subtit
       }}
     >
       <div style={{ alignItems: "center", display: "flex" }}>
-        <Logo bgColor={SITE_CONFIG.logoBackground} height={72} width={72} withCodeAccents={false} />
+        <Logo height={72} width={72} />
         <div style={{ display: "flex", fontSize: 52, fontWeight: 700, letterSpacing: -1.5, marginLeft: 20 }}>
           {SITE_CONFIG.name}
         </div>
@@ -50,12 +50,12 @@ export const OgImageCard = ({ backgroundSrc, title = SITE_CONFIG.tagline, subtit
         <div style={{ display: "flex", fontSize: 58, fontWeight: 700, letterSpacing: -2, lineHeight: 1.08 }}>
           {title}
         </div>
-        <div style={{ color: "#c7d2fe", display: "flex", fontSize: 27, fontWeight: 500, lineHeight: 1.4, marginTop: 24 }}>
+        <div style={{ color: "#C4B5FD", display: "flex", fontSize: 27, fontWeight: 500, lineHeight: 1.4, marginTop: 24 }}>
           {subtitle}
         </div>
       </div>
-      <div style={{ alignItems: "center", color: "#e0e7ff", display: "flex", fontSize: 24, fontWeight: 500 }}>
-        <div style={{ background: "#a855f7", borderRadius: 6, display: "flex", height: 12, marginRight: 14, width: 12 }} />
+      <div style={{ alignItems: "center", color: "#DDD6FE", display: "flex", fontSize: 24, fontWeight: 500 }}>
+        <div style={{ background: "#8B5CF6", borderRadius: 6, display: "flex", height: 12, marginRight: 14, width: 12 }} />
         {SITE_HOST}
       </div>
     </div>

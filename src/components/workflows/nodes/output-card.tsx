@@ -1,8 +1,12 @@
 "use client";
 
+import Link from "next/link";
+
 import { NodeFrame } from "@/components/workflows/nodes/node-frame";
 import { NodeReadonlyText } from "@/components/workflows/nodes/node-readonly-text";
+import { publishConnectionIssue } from "@/helpers/shop-connections";
 import { getWorkflowNodeDefinition } from "@/helpers/workflow-config";
+import { useShopConnections } from "@/hooks/queries/use-shop-connections";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type { WorkflowNode, WorkflowNodeConfig } from "@/types/workflow";
 import type { NodeProps } from "@xyflow/react";
@@ -35,6 +39,8 @@ export const OutputCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
   const isPublish = data.type === "publish-etsy" || data.type === "publish-printify";
   const description = getWorkflowNodeDefinition(data.type)?.description;
   const problem = isPublish ? workflowNodeConfigSchemas[data.type].safeParse(data.config).error?.issues[0]?.message : undefined;
+  const connections = useShopConnections({ etsy: data.type === "publish-etsy", printify: data.type === "publish-printify" });
+  const connectionIssue = publishConnectionIssue(data.type, connections);
 
   return (
     <NodeFrame nodeId={id} data={data} selected={selected} widthClassName="w-60">
@@ -45,6 +51,14 @@ export const OutputCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
               <p key={line} className="text-wf-faint truncate px-0.5 text-[11px] leading-4" title={line}>{line}</p>
             ))}
             {problem && <p className="px-0.5 text-[10px] leading-4 text-amber-700">{problem}</p>}
+            {connectionIssue && (
+              <p className="px-0.5 text-[10px] leading-4 text-amber-700">
+                {connectionIssue.message}{" "}
+                <Link href={connectionIssue.href} className="nodrag font-semibold underline underline-offset-2">
+                  {connectionIssue.linkLabel}
+                </Link>
+              </p>
+            )}
           </>
         ) : (
           <NodeReadonlyText value={description} placeholder="Packages the final assets." />

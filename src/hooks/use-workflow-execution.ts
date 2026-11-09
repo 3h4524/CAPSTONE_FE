@@ -8,11 +8,13 @@ import { importGeneratedMockups } from "@/api/generated-mockups";
 import { videoWorkflowKeys } from "@/api/video-workflow";
 import { RUN_GROUP_PARAM } from "@/constants/run-group";
 import { getErrorMessage } from "@/helpers/error-message";
+import { publishConnectionIssue } from "@/helpers/shop-connections";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
 import { hasBatchSteps, hasListingSteps, hasVideoSteps, supportsBatchVideos } from "@/helpers/workflow-run";
 import { useCancelRunGroup, useStartRunGroup } from "@/hooks/mutations/use-run-group-actions";
 import { ACTIVE_RUN_GROUP_STATUSES, useRunGroup } from "@/hooks/queries/use-run-group";
+import { useShopConnections } from "@/hooks/queries/use-shop-connections";
 import { BATCH_JOB_PARAM, NEXT_PART_PARAM, useBatchRun } from "@/hooks/use-batch-run";
 import { useRunGroupSync } from "@/hooks/use-run-group-sync";
 import { useVideoRunSync, useWorkflowRuntime, VIDEO_RUN_PARAM } from "@/hooks/use-workflow-runtime";
@@ -88,6 +90,9 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   const batchJobId = useWorkflowRunStore((state) => state.batchJobId);
   const setRunning = useWorkflowStore((state) => state.setRunning);
   const selectNode = useWorkflowStore((state) => state.selectNode);
+  const publishesToEtsy = useWorkflowStore((state) => state.nodes.some((node) => node.data.type === "publish-etsy"));
+  const publishesToPrintify = useWorkflowStore((state) => state.nodes.some((node) => node.data.type === "publish-printify"));
+  const connections = useShopConnections({ etsy: publishesToEtsy, printify: publishesToPrintify });
   useVideoRunSync(hasBatchRun);
   useRunGroupSync(group?.workflowId === activeWorkflowId ? groupId : null);
 
@@ -184,6 +189,14 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     const { nodes, isDirty } = useWorkflowStore.getState();
     const wantsVideo = hasVideoSteps(nodes);
     const batchVideos = wantsVideo && supportsBatchVideos(nodes);
+    // Publishing comes last, after every paid step and both approvals: a shop that is not connected stops the
+    // run here instead of there. The backend checks the same when the run starts.
+    const unpublishable = nodes.find((node) => publishConnectionIssue(node.data.type, connections));
+    if (unpublishable) {
+      showWorkflowActionToast("error", publishConnectionIssue(unpublishable.data.type, connections)!.message);
+      selectNode(unpublishable.id);
+      return;
+    }
     const listingOnly = hasListingSteps(nodes) && !hasBatchSteps(nodes) && !wantsVideo;
     if (listingOnly) {
       if (isDirty) {

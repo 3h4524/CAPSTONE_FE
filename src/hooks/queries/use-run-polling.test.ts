@@ -8,10 +8,11 @@ import { useWorkflowRun } from "./use-workflow-run";
 
 type Interval = (query: { state: { data: unknown } }) => number | false;
 
-const mocks = vi.hoisted(() => ({ useQuery: vi.fn(), getQueryData: vi.fn() }));
+const mocks = vi.hoisted(() => ({ useQuery: vi.fn(), useBaseQuery: vi.fn() }));
 
 vi.mock("@/hooks/queries/use-query", () => ({ useQuery: mocks.useQuery }));
-vi.mock("@/hooks/use-query-client", () => ({ useAppQueryClient: () => ({ getQueryData: mocks.getQueryData }) }));
+// The cached run that useRunIsWorking reads without fetching it.
+vi.mock("@tanstack/react-query", () => ({ useQuery: mocks.useBaseQuery }));
 vi.mock("@/api/video-workflow", () => ({
   getWorkflowRun: vi.fn(),
   listRunVideos: vi.fn(),
@@ -22,22 +23,29 @@ const optionsOf = (call = 0) => mocks.useQuery.mock.calls[call][0] as { refetchI
 const interval = (data: unknown) => optionsOf().refetchInterval({ state: { data } });
 
 describe("run polling", () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.useBaseQuery.mockReturnValue({ data: undefined });
+  });
 
   describe("useWorkflowRun", () => {
     beforeEach(() => { renderHook(() => useWorkflowRun("run-1")); });
 
-    it("polls a run that is starting or working", () => {
+    it("polls a run that is starting or working every few seconds", () => {
       expect(interval(undefined)).toBe(2_000);
       expect(interval({ status: "running" })).toBe(2_000);
     });
 
-    it.each(["waiting_for_input", "waiting_for_review", "completed", "cancelled", "failed"])("stops polling a run that is %s", status => {
+    it.each(["waiting_for_input", "waiting_for_review"])("polls a run that is %s only slowly", status => {
+      expect(interval({ status })).toBe(15_000);
+    });
+
+    it.each(["completed", "cancelled", "failed"])("stops polling a run that is %s", status => {
       expect(interval({ status })).toBe(false);
     });
 
-    it("does not poll from a hidden tab", () => {
-      expect(optionsOf().refetchIntervalInBackground).toBeUndefined();
+    it("keeps polling from a hidden tab", () => {
+      expect(optionsOf().refetchIntervalInBackground).toBe(true);
     });
   });
 
@@ -57,25 +65,35 @@ describe("run polling", () => {
   });
 
   describe("useRunVideos", () => {
-    beforeEach(() => { renderHook(() => useRunVideos("run-1")); });
+    const withRun = (data: unknown) => {
+      mocks.useBaseQuery.mockReturnValue({ data });
+      renderHook(() => useRunVideos("run-1"));
+    };
 
-    it("does not poll before the run has a video", () => {
+    it("does not poll an empty list once the run is no longer working", () => {
+      withRun({ status: "waiting_for_input" });
       expect(interval([])).toBe(false);
       expect(interval(undefined)).toBe(false);
     });
 
-    it("polls a version that is rendering while its run works", () => {
-      mocks.getQueryData.mockReturnValue({ status: "running" });
+    it("polls while the run is working, also before a video exists", () => {
+      withRun({ status: "running" });
+      expect(interval([])).toBe(2_000);
       expect(interval([{ status: "queued" }])).toBe(2_000);
-      expect(mocks.getQueryData).toHaveBeenCalledWith(["workflow-runs", "run-1"]);
+    });
+
+    it("polls while the run is not read yet", () => {
+      withRun(undefined);
+      expect(interval([{ status: "queued" }])).toBe(2_000);
     });
 
     it("stops once every version has finished", () => {
+      withRun({ status: "running" });
       expect(interval([{ status: "completed" }, { status: "failed" }])).toBe(false);
     });
 
     it("stops when the run was cancelled with a version still queued", () => {
-      mocks.getQueryData.mockReturnValue({ status: "cancelled" });
+      withRun({ status: "cancelled" });
       expect(interval([{ status: "queued" }])).toBe(false);
     });
   });

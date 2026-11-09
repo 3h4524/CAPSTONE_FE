@@ -367,22 +367,6 @@ export const generateVideoConfigSchema = z
             message: "Each scene must remain at least one second after trimming.",
           });
       });
-      if (
-        value.aiScenes.some(
-          (scene) =>
-            scene.mode === "ai" &&
-            ["lifestyle_in_use", "creator_pov_ugc", "everyday_story_moment"].includes(
-              scene.templateCode
-            ) &&
-            !scene.rightsConfirmed
-        )
-      ) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["aiScenes"],
-          message: "Confirm image rights for every scene featuring a person.",
-        });
-      }
       return;
     }
     if (!value.aiShotOptions) {
@@ -404,15 +388,6 @@ export const generateVideoConfigSchema = z
         code: "custom",
         path: ["durationSeconds"],
         message: "Mixed AI and Standard video needs 12–15 seconds.",
-      });
-    if (
-      ["lifestyle_motion", "product_in_use"].includes(value.aiShotOptions.concept) &&
-      !value.aiShotOptions.rightsConfirmed
-    )
-      ctx.addIssue({
-        code: "custom",
-        path: ["aiShotOptions", "rightsConfirmed"],
-        message: "Confirm image rights for the people shown, with a parent's or guardian's consent for anyone under 18.",
       });
   });
 

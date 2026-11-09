@@ -70,7 +70,7 @@ export const StylesPage = () => {
     <div className="flex w-full min-w-0 flex-col gap-4 md:gap-6 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">My Styles</h1>
+          <h1 className="text-ink-900 text-xl font-semibold">My Styles</h1>
           <p className="text-muted-foreground mt-1 text-sm max-md:hidden">Browse system styles and manage styles you created.</p>
           {presets && (
             <p className="text-muted-foreground mt-0.5 text-sm tabular-nums md:hidden">
@@ -110,23 +110,23 @@ export const StylesPage = () => {
       {isLoadingPresets ? (
         <SectionLoading label="Loading art styles" />
       ) : isPresetsError || !presets ? (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white p-8 text-center" role="alert">
-          <ImageIcon className="size-8 text-slate-400" aria-hidden="true" />
+        <div className="border-ink-200 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border p-8 text-center" role="alert">
+          <ImageIcon className="text-ink-400 size-8" aria-hidden="true" />
           <div>
-            <p className="font-semibold text-slate-900">Art styles unavailable</p>
+            <p className="text-ink-900 font-semibold">Art styles unavailable</p>
             <p className="text-muted-foreground mt-1 text-sm">We could not load art styles. Check your connection and try again.</p>
           </div>
           <Button type="button" onClick={() => refetchPresets()}>Try again</Button>
         </div>
       ) : presets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
-          <p className="font-semibold text-slate-900">No art styles yet</p>
+        <div className="border-ink-300 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed p-8 text-center">
+          <p className="text-ink-900 font-semibold">No art styles yet</p>
           <p className="text-muted-foreground text-sm">Create your first style to shape generated images.</p>
           <Button type="button" onClick={openCreate}>New style</Button>
         </div>
       ) : shownPresets.length === 0 ? (
         <div className="bg-card flex flex-col items-center gap-2 rounded-xl border border-dashed p-8 text-center">
-          <p className="font-semibold text-slate-900">No styles match</p>
+          <p className="text-ink-900 font-semibold">No styles match</p>
           <p className="text-muted-foreground text-sm">Try another search or filter.</p>
           <Button type="button" variant="link" size="sm" onClick={() => { setSearch(""); setFilter("all"); setPage(1); }}>
             Clear filters

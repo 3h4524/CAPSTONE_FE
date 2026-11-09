@@ -2,6 +2,10 @@
 @plugin "@tailwindcss/typography";
 @import "tw-animate-css";
 
+/* Tailwind v4 ties `dark:` to the OS setting by default. Bind it to the `.dark` class that
+   helpers/theme.ts sets from the user's saved preference instead. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 
 :root {
   color-scheme: light;
@@ -73,39 +77,112 @@
   --wf-cat-output: var(--primary-blue);
   --wf-cat-output-soft: #dbeafe;
   --wf-cat-output-line: #93c5fd;
+
+  /* Adaptive neutral scale. Light values equal Tailwind slate, so `ink-500` looks exactly like
+     `slate-500` in light mode and flips to the matching dark-mode step. Use these instead of
+     slate/gray/white for anything that sits on the page or a card. */
+  --ink-50: #f8fafc;
+  --ink-100: #f1f5f9;
+  --ink-200: #e2e8f0;
+  --ink-300: #cbd5e1;
+  --ink-400: #94a3b8;
+  --ink-500: #64748b;
+  --ink-600: #475569;
+  --ink-700: #334155;
+  --ink-800: #1e293b;
+  --ink-900: #0f172a;
+  --overlay: rgba(15, 23, 42, 0.5);
+  /* Raised content panel of the app shell (only styled in dark mode). */
+  --panel: #ffffff;
 }
 
 .dark {
   color-scheme: dark;
-  --background: #0f172a;
-  --foreground: #e2e8f0;
-  --card: #111827;
-  --card-foreground: #e2e8f0;
-  --popover: #111827;
-  --popover-foreground: #e2e8f0;
-  --primary: #93c5fd;
-  --primary-foreground: #0f172a;
+  /* Neutral near-black (no blue cast). Depth comes from lightness, not shadows:
+     page #111 < card #171717 < popover/hover #1c1c1c, separated by hairline #262626 borders. */
+  --background: #111111;
+  --foreground: #fafafa;
+  --card: #171717;
+  --card-foreground: #fafafa;
+  --popover: #1c1c1c;
+  --popover-foreground: #fafafa;
+  /* Monochrome primary: white fill with near-black text; links and focus rings stay neutral too. */
+  --primary: #fafafa;
+  --primary-foreground: #111111;
   --secondary: #d6b48c;
-  --secondary-foreground: #0f172a;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #334155;
-  --accent-foreground: #f8fafc;
-  --border: #334155;
-  --input: #475569;
-  --ring: #93c5fd;
-  --wf-surface: #1a1a20;
-  --wf-muted: #23232b;
-  --wf-line: #2d2d37;
-  --wf-ink: #ededf2;
-  --wf-dim: #a2a2ae;
-  --wf-faint: #66666f;
-  --wf-accent: #818cf8;
-  --wf-accent-soft: rgba(129, 140, 248, 0.16);
-  --wf-ok: #34d399;
+  --secondary-foreground: #111111;
+  --muted: #1f1f1f;
+  --muted-foreground: #a1a1a1;
+  --accent: #262626;
+  --accent-foreground: #fafafa;
+  --border: #262626;
+  --input: #2e2e2e;
+  --ring: #a1a1a1;
+  --destructive: #f87171;
+  --destructive-foreground: #111111;
+  /* Status colours on dark: translucent fill + light text, never a solid bright block. */
+  --success: rgba(34, 197, 94, 0.14);
+  --success-foreground: #4ade80;
+  --warning: rgba(251, 191, 36, 0.14);
+  --warning-foreground: #fcd34d;
+  --chart-1: #f08a70;
+  --chart-2: #3dbfb0;
+  --chart-3: #f0d27f;
+  --chart-4: #f7b77f;
+  --chart-5: #f08a70;
+  /* Sidebar melts into the page; the content column is the raised panel (see AppShell / AdminShell). */
+  --sidebar: #111111;
+  --sidebar-foreground: #e5e5e5;
+  --sidebar-primary: #fafafa;
+  --sidebar-primary-foreground: #111111;
+  --sidebar-accent: #222222;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #1f1f1f;
+  --sidebar-ring: #a1a1a1;
+  --logo-background: #2563eb;
+  --hero-gradient: linear-gradient(135deg, rgba(59, 130, 246, 0.07) 0%, rgba(214, 180, 140, 0.05) 100%);
+  --primary-blue: #3b82f6;
+  --success-background: rgba(34, 197, 94, 0.14);
+  --success-text: #4ade80;
+  --ink-50: #1c1c1c;
+  --ink-100: #222222;
+  --ink-200: #2a2a2a;
+  --ink-300: #404040;
+  --ink-400: #737373;
+  --ink-500: #a1a1a1;
+  --ink-600: #b8b8b8;
+  --ink-700: #d4d4d4;
+  --ink-800: #e5e5e5;
+  --ink-900: #fafafa;
+  --overlay: rgba(0, 0, 0, 0.7);
+  --panel: #141414;
+
+  /* Components that still name `slate-*` (revenue cards' dark: pairs, always-dark video/insight
+     panels) get the same neutral greys, so nothing keeps a blue cast in dark mode. */
+  --color-slate-50: #fafafa;
+  --color-slate-100: #f5f5f5;
+  --color-slate-200: #e5e5e5;
+  --color-slate-300: #d4d4d4;
+  --color-slate-400: #a3a3a3;
+  --color-slate-500: #737373;
+  --color-slate-600: #525252;
+  --color-slate-700: #333333;
+  --color-slate-800: #262626;
+  --color-slate-900: #171717;
+  --color-slate-950: #0d0d0d;
+
+  --wf-surface: #171717;
+  --wf-muted: #1f1f1f;
+  --wf-line: #2a2a2a;
+  --wf-ink: #fafafa;
+  --wf-dim: #a1a1a1;
+  --wf-faint: #737373;
+  --wf-accent: #3b82f6;
+  --wf-accent-soft: rgba(59, 130, 246, 0.16);
+  --wf-ok: #4ade80;
   --wf-warn: #fbbf24;
   --wf-fail: #f87171;
-  --wf-halo: rgba(129, 140, 248, 0.24);
+  --wf-halo: rgba(59, 130, 246, 0.24);
   --wf-cat-trigger: #cbd5e1;
   --wf-cat-trigger-soft: rgba(203, 213, 225, 0.1);
   --wf-cat-trigger-line: rgba(203, 213, 225, 0.28);
@@ -157,6 +234,24 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-logo-background: var(--logo-background);
+  --color-overlay: var(--overlay);
+  --color-panel: var(--panel);
+  --color-ink-50: var(--ink-50);
+  --color-ink-100: var(--ink-100);
+  --color-ink-200: var(--ink-200);
+  --color-ink-300: var(--ink-300);
+  --color-ink-400: var(--ink-400);
+  --color-ink-500: var(--ink-500);
+  --color-ink-600: var(--ink-600);
+  --color-ink-700: var(--ink-700);
+  --color-ink-800: var(--ink-800);
+  --color-ink-900: var(--ink-900);
 
   --color-primary-blue: var(--primary-blue);
   --color-success-background: var(--success-background);
@@ -233,6 +328,62 @@
     width: 2.5rem;
     height: 2.5rem;
   }
+}
+
+/* ---- Dark mode for third-party widgets that ship hard-coded light colours ---- */
+
+/* Recharts' default tooltip writes background #fff inline, hence !important. */
+.recharts-default-tooltip {
+  background-color: var(--popover) !important;
+  border-color: var(--border) !important;
+  color: var(--popover-foreground);
+  border-radius: 8px;
+}
+.dark .recharts-rectangle.recharts-tooltip-cursor {
+  fill: var(--ink-100);
+}
+.dark .recharts-curve.recharts-tooltip-cursor {
+  stroke: var(--ink-300);
+}
+.dark .recharts-cartesian-grid line[stroke="#ccc"],
+.dark .recharts-polar-grid [stroke="#ccc"] {
+  stroke: var(--ink-200);
+}
+.dark .recharts-cartesian-axis-tick-value,
+.dark .recharts-legend-item-text {
+  fill: var(--ink-500);
+}
+
+/* React Flow: retune its own variables instead of passing colorMode through React. */
+.dark .react-flow {
+  --xy-background-color-default: var(--background);
+  --xy-background-pattern-dots-color-default: var(--ink-200);
+  --xy-node-background-color-default: var(--card);
+  --xy-node-color-default: var(--foreground);
+  --xy-edge-stroke-default: var(--ink-400);
+  --xy-edge-label-background-color-default: var(--card);
+  --xy-edge-label-color-default: var(--foreground);
+  --xy-connectionline-stroke-default: var(--ink-400);
+  --xy-handle-background-color-default: var(--ink-500);
+  --xy-handle-border-color-default: var(--card);
+  --xy-controls-button-background-color-default: var(--card);
+  --xy-controls-button-background-color-hover-default: var(--ink-100);
+  --xy-controls-button-color-default: var(--ink-700);
+  --xy-controls-button-color-hover-default: var(--ink-900);
+  --xy-controls-button-border-color-default: var(--border);
+  --xy-controls-box-shadow-default: 0 0 2px 1px rgba(0, 0, 0, 0.4);
+  --xy-minimap-background-color-default: var(--card);
+  --xy-minimap-mask-background-color-default: rgba(2, 6, 16, 0.55);
+  --xy-minimap-node-background-color-default: var(--ink-200);
+  --xy-attribution-background-color-default: rgba(23, 23, 23, 0.6);
+  --xy-selection-background-color-default: rgba(59, 130, 246, 0.08);
+  --xy-selection-border-default: 1px dotted rgba(59, 130, 246, 0.6);
+}
+
+/* Native form widgets (date pickers, number spinners, autofill) follow the theme. */
+.dark input:-webkit-autofill {
+  -webkit-text-fill-color: var(--foreground);
+  -webkit-box-shadow: 0 0 0 1000px var(--card) inset;
 }
 
 /* Custom scrollbar to match the technical aesthetic */

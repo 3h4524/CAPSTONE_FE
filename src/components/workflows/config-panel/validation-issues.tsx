@@ -23,7 +23,7 @@ export const ValidationIssues = () => {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b px-4 py-3">
-        <h2 className="text-sm font-semibold text-slate-900">Workflow checks</h2>
+        <h2 className="text-ink-900 text-sm font-semibold">Workflow checks</h2>
         <p className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-xs">
           <MousePointerClick className="size-3.5" aria-hidden="true" />
           Select a node to configure it.
@@ -32,7 +32,7 @@ export const ValidationIssues = () => {
       <ScrollArea className="min-h-0 flex-1">
         <div className="p-4">
           {issues.length === 0 ? (
-            <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">
+            <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300" role="status">
               <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
               Every step is connected and configured. Press Run to start the batch.
             </div>
@@ -45,13 +45,13 @@ export const ValidationIssues = () => {
                       type="button"
                       variant="none"
                       onClick={() => issue.nodeId && focusNode(issue.nodeId)}
-                      className="h-auto w-full items-start justify-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-left text-sm font-normal whitespace-normal text-amber-900 hover:bg-amber-100"
+                      className="h-auto w-full items-start justify-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-left text-sm font-normal whitespace-normal text-amber-900 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/15"
                     >
                       <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                       {issue.message}
                     </Button>
                   ) : (
-                    <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                    <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
                       <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                       {issue.message}
                     </p>

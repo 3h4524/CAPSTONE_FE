@@ -115,7 +115,7 @@ function EdgeArrow({ side, visible, onClick }: { side: "left" | "right"; visible
       className={cn(
         "pointer-events-none absolute inset-y-0 flex w-16 items-center transition-opacity duration-200",
         side === "left" ? "left-0 justify-start bg-linear-to-r" : "right-0 justify-end bg-linear-to-l",
-        "from-white via-white/80 to-transparent",
+        "from-card via-card/80 to-transparent",
         visible ? "opacity-100" : "opacity-0"
       )}
     >
@@ -125,7 +125,7 @@ function EdgeArrow({ side, visible, onClick }: { side: "left" | "right"; visible
         tabIndex={visible ? 0 : -1}
         onClick={onClick}
         className={cn(
-          "flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-md transition hover:scale-105 hover:text-slate-900",
+          "border-ink-200 bg-card text-ink-600 hover:text-ink-900 flex size-9 items-center justify-center rounded-full border shadow-md transition hover:scale-105",
           visible && "pointer-events-auto"
         )}
       >

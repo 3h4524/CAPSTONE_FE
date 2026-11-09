@@ -35,21 +35,21 @@ export const TestReportFileFailures = ({ files }: TestReportFileFailuresProps) =
 
   if (rows.length === 0) {
     return (
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h3 className="text-xs font-bold tracking-wide text-slate-800 uppercase">
+      <section className="border-ink-200 bg-card rounded-xl border p-5">
+        <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
           Which files are red
         </h3>
-        <p className="mt-2 text-[11px] text-slate-400">No file has a failed test.</p>
+        <p className="text-ink-400 mt-2 text-[11px]">No file has a failed test.</p>
       </section>
     );
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5">
-      <h3 className="text-xs font-bold tracking-wide text-slate-800 uppercase">
+    <section className="border-ink-200 bg-card rounded-xl border p-5">
+      <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
         Which files are red
       </h3>
-      <p className="mt-0.5 mb-3 text-[10px] text-slate-400">
+      <p className="text-ink-400 mt-0.5 mb-3 text-[10px]">
         How many tests each file lost. The pale part is the known gaps.
       </p>
 
@@ -65,7 +65,7 @@ export const TestReportFileFailures = ({ files }: TestReportFileFailuresProps) =
               type="category"
               dataKey="name"
               width={150}
-              tick={{ fontSize: 10, fill: "#64748b" }}
+              tick={{ fontSize: 10, fill: "var(--ink-500)" }}
               axisLine={false}
               tickLine={false}
             />
@@ -75,7 +75,7 @@ export const TestReportFileFailures = ({ files }: TestReportFileFailuresProps) =
               }
               contentStyle={{
                 borderRadius: 8,
-                border: "1px solid #e2e8f0",
+                border: "1px solid var(--ink-200)",
                 fontSize: 11,
               }}
             />

@@ -78,7 +78,7 @@ export function PlanCarousel({ items }: { items: { key: string; node: ReactNode 
         {scrollerNode}
         <ArrowButton side="right" disabled={last >= items.length} onClick={() => go(1)} />
       </div>
-      <p className="mt-2 text-center text-xs text-slate-500 tabular-nums">
+      <p className="text-ink-500 mt-2 text-center text-xs tabular-nums">
         Plans {first + 1}–{last} of {items.length}
       </p>
     </div>
@@ -93,7 +93,7 @@ function ArrowButton({ side, disabled, onClick }: { side: "left" | "right"; disa
       aria-label={side === "left" ? "Previous plans" : "Next plans"}
       disabled={disabled}
       onClick={onClick}
-      className="flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-30"
+      className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 flex size-10 shrink-0 items-center justify-center rounded-full border shadow-sm transition disabled:pointer-events-none disabled:opacity-30"
     >
       <Icon className="size-5" />
     </button>

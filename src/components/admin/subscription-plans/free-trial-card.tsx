@@ -35,7 +35,7 @@ export function FreeTrialCard() {
   const [isAllowancesOpen, setIsAllowancesOpen] = useState(false);
 
   if (isLoading || !settings) {
-    return <Card className="h-48 animate-pulse rounded-2xl border border-slate-200/80 bg-white" />;
+    return <Card className="border-ink-200/80 bg-card h-48 animate-pulse rounded-2xl border" />;
   }
 
   const trialPlan = settings.trialPlans.find((plan) => plan.tier === settings.trialPlanTier);
@@ -47,14 +47,14 @@ export function FreeTrialCard() {
   const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
   return (
-    <Card className="gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-sm">
+    <Card className="border-ink-200 bg-card gap-0 overflow-hidden rounded-2xl border p-0 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3 px-6 pt-5 max-md:flex-nowrap max-md:px-4 max-md:pt-4">
         <div className="min-w-0">
-          <h3 className="text-base font-semibold text-slate-900">Free and free trial</h3>
-          <p className="text-xs text-slate-500">Not plans Sellers buy, so they are set here. Changes apply at once.</p>
+          <h3 className="text-ink-900 text-base font-semibold">Free and free trial</h3>
+          <p className="text-ink-500 text-xs">Not plans Sellers buy, so they are set here. Changes apply at once.</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="hidden text-[11px] text-slate-400 sm:inline">{formatEdited(settings)}</span>
+          <span className="text-ink-400 hidden text-[11px] sm:inline">{formatEdited(settings)}</span>
           <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setIsEditing(true)}>
             <Pencil className="size-3.5" /> Edit
           </Button>
@@ -62,7 +62,7 @@ export function FreeTrialCard() {
       </div>
 
       {/* The figures to check at a glance before opening the editor. */}
-      <div className="mx-6 mt-4 grid grid-cols-2 divide-slate-100 rounded-xl bg-slate-50 py-2.5 text-center max-md:mx-4 sm:grid-cols-4 sm:divide-x">
+      <div className="divide-ink-100 bg-ink-50 mx-6 mt-4 grid grid-cols-2 rounded-xl py-2.5 text-center max-md:mx-4 sm:grid-cols-4 sm:divide-x">
         <Figure label="Trials running" value={settings.activeTrials.toLocaleString()} />
         <Figure label="Trial gives" value={trialPlan?.name ?? settings.trialPlanTier} tone={trialPlan ? undefined : "warning"} />
         <Figure label="Trial length" value={`${settings.trialDays} days`} />
@@ -74,7 +74,7 @@ export function FreeTrialCard() {
       </div>
 
       {isPhone && !isAllowancesOpen && !trialPlan && (
-        <p role="alert" className="mx-4 mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <p role="alert" className="mx-4 mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
           This plan is not on sale: new trials cannot start. Choose another plan.
         </p>
       )}
@@ -82,7 +82,7 @@ export function FreeTrialCard() {
         <button
           type="button"
           aria-expanded={isAllowancesOpen}
-          className="mx-4 mt-1 mb-2 flex min-h-11 items-center gap-1 text-xs font-semibold text-slate-600"
+          className="text-ink-600 mx-4 mt-1 mb-2 flex min-h-11 items-center gap-1 text-xs font-semibold"
           onClick={() => setIsAllowancesOpen((open) => !open)}
         >
           <ChevronDown className={cn("size-3.5 transition-transform", isAllowancesOpen && "rotate-180")} aria-hidden="true" />
@@ -124,12 +124,12 @@ function Figure({ label, value, tone }: { label: string; value: string; tone?: "
       <p
         className={cn(
           "truncate text-sm font-bold tabular-nums",
-          tone === "warning" ? "text-amber-700" : tone === "accent" ? "text-violet-700" : "text-slate-900"
+          tone === "warning" ? "text-amber-700 dark:text-amber-300" : tone === "accent" ? "text-violet-700 dark:text-violet-300" : "text-ink-900"
         )}
       >
         {value}
       </p>
-      <p className="text-[10px] text-slate-400">{label}</p>
+      <p className="text-ink-400 text-[10px]">{label}</p>
     </div>
   );
 }
@@ -150,13 +150,13 @@ function Panel({
   hintFor?: (item: AllowanceSetting) => string | null;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 p-4">
-      <div className="flex items-center gap-2 text-slate-900">
+    <div className="border-ink-200 rounded-2xl border p-4">
+      <div className="text-ink-900 flex items-center gap-2">
         <span className="bg-primary/10 text-primary flex size-7 items-center justify-center rounded-lg">{icon}</span>
         <p className="text-sm font-semibold">{title}</p>
       </div>
-      <p className="mt-1 text-[11px] text-slate-400">{subtitle}</p>
-      {warning && <p className="mt-2 rounded-md bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-800">{warning}</p>}
+      <p className="text-ink-400 mt-1 text-[11px]">{subtitle}</p>
+      {warning && <p className="mt-2 rounded-md bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">{warning}</p>}
       <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {items.map((item) => {
           const isChanged = item.limit !== item.default;
@@ -166,18 +166,18 @@ function Panel({
               key={keyOf(item)}
               className={cn(
                 "rounded-xl border px-3 py-2 text-xs",
-                isChanged ? "border-violet-200 bg-violet-50/50" : "border-slate-100 bg-slate-50/60"
+                isChanged ? "border-violet-200 bg-violet-50/50 dark:border-violet-500/30 dark:bg-violet-500/10" : "border-ink-100 bg-ink-50/60"
               )}
             >
-              <span className="block truncate text-slate-500">{item.label}</span>
-              <span className="text-base font-bold text-slate-900 tabular-nums">{item.limit.toLocaleString()}</span>
+              <span className="text-ink-500 block truncate">{item.label}</span>
+              <span className="text-ink-900 text-base font-bold tabular-nums">{item.limit.toLocaleString()}</span>
               {isChanged && (
-                <span className="ml-1 text-[10px] text-violet-700">
+                <span className="ml-1 text-[10px] text-violet-700 dark:text-violet-300">
                   <span aria-hidden="true">{item.limit > item.default ? "▲ " : "▼ "}</span>
                   <span>(default {item.default})</span>
                 </span>
               )}
-              {hint && <span className="block truncate text-[10px] text-slate-400">{hint}</span>}
+              {hint && <span className="text-ink-400 block truncate text-[10px]">{hint}</span>}
             </li>
           );
         })}
@@ -226,7 +226,7 @@ function PlanSettingsDialog({ open, settings, onClose }: { open: boolean; settin
 
   const section = (scope: AllowanceScope, title: string) => (
     <div className="space-y-2">
-      <p className="text-sm font-semibold text-slate-700">{title}</p>
+      <p className="text-ink-700 text-sm font-semibold">{title}</p>
       <div className="grid gap-3 sm:grid-cols-3">
         {parsed
           .filter((item) => item.scope === scope)
@@ -235,7 +235,7 @@ function PlanSettingsDialog({ open, settings, onClose }: { open: boolean; settin
             const isInvalid = invalid.includes(item);
             return (
               <div key={id} className="space-y-1">
-                <label htmlFor={id} className="text-xs font-medium text-slate-600">
+                <label htmlFor={id} className="text-ink-600 text-xs font-medium">
                   {item.label}
                 </label>
                 <Input
@@ -246,9 +246,9 @@ function PlanSettingsDialog({ open, settings, onClose }: { open: boolean; settin
                   value={values[keyOf(item)] ?? ""}
                   aria-invalid={isInvalid}
                   onChange={(event) => setValues((current) => ({ ...current, [keyOf(item)]: event.target.value }))}
-                  className={cn("h-9", item.value < item.limit && "border-amber-300")}
+                  className={cn("h-9", item.value < item.limit && "border-amber-300 dark:border-amber-500/40")}
                 />
-                <p className="text-[10px] text-slate-400">Default {item.default}</p>
+                <p className="text-ink-400 text-[10px]">Default {item.default}</p>
               </div>
             );
           })}
@@ -260,7 +260,7 @@ function PlanSettingsDialog({ open, settings, onClose }: { open: boolean; settin
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="flex max-h-[calc(100dvh-20px)] w-[calc(100%-20px)] max-w-[640px] flex-col gap-0 overflow-hidden rounded-[24px] border-0 bg-white p-0"
+        className="bg-card flex max-h-[calc(100dvh-20px)] w-[calc(100%-20px)] max-w-[640px] flex-col gap-0 overflow-hidden rounded-[24px] border-0 p-0"
       >
         <DialogHeader className="relative px-6 pt-6 pr-16 pb-3 text-left">
           <DialogTitle className="font-display text-xl tracking-[-0.02em]">Free and free trial</DialogTitle>
@@ -269,7 +269,7 @@ function PlanSettingsDialog({ open, settings, onClose }: { open: boolean; settin
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 size-10 rounded-lg text-slate-500 hover:bg-slate-100"
+            className="text-ink-500 hover:bg-ink-100 absolute top-4 right-4 size-10 rounded-lg"
             onClick={onClose}
             aria-label="Close"
           >
@@ -281,7 +281,7 @@ function PlanSettingsDialog({ open, settings, onClose }: { open: boolean; settin
           {section("free", "Free, each month")}
           <div className="grid gap-3 sm:grid-cols-[16rem_10rem]">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-600" id="trial-plan-label">
+              <label className="text-ink-600 text-xs font-medium" id="trial-plan-label">
                 The free trial gives
               </label>
               <Select value={trialPlanTier} onValueChange={setTrialPlanTier}>
@@ -298,7 +298,7 @@ function PlanSettingsDialog({ open, settings, onClose }: { open: boolean; settin
               </Select>
             </div>
             <div className="space-y-1">
-              <label htmlFor="trial-days" className="text-xs font-medium text-slate-600">
+              <label htmlFor="trial-days" className="text-ink-600 text-xs font-medium">
                 Trial length (days)
               </label>
               <Input
@@ -311,19 +311,19 @@ function PlanSettingsDialog({ open, settings, onClose }: { open: boolean; settin
                 onChange={(event) => setTrialDaysText(event.target.value)}
                 className="h-9"
               />
-              <p className="text-[10px] text-slate-400">
+              <p className="text-ink-400 text-[10px]">
                 1–{MAX_TRIAL_DAYS} · default {DEFAULT_TRIAL_DAYS}
               </p>
             </div>
           </div>
-          <p className="-mt-3 text-[11px] text-slate-400">
+          <p className="text-ink-400 -mt-3 text-[11px]">
             Applies to trials started from now on. Trials already running keep their plan and end date, and the trial allowances
             below count over the whole trial.
           </p>
           {section("trial", "Free trial, over its whole length")}
 
           {lowered.length > 0 && (
-            <p className="rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-900">
+            <p className="rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-300">
               Lowering {lowered.map((item) => `${item.scope === "free" ? "Free" : "trial"} ${item.label.toLowerCase()}`).join(", ")} applies at
               once. Nothing already made is taken away, but a Seller past the new number cannot make more until Free resets on the 1st
               or the trial ends.
@@ -332,13 +332,13 @@ function PlanSettingsDialog({ open, settings, onClose }: { open: boolean; settin
           {ruleError && <p className="text-destructive text-xs">{ruleError}</p>}
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-6 py-4 max-md:px-4 max-md:py-3">
+        <div className="border-ink-100 flex items-center justify-between gap-2 border-t px-6 py-4 max-md:px-4 max-md:py-3">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             aria-label="Reset to defaults"
-            className="shrink-0 text-xs text-slate-500 max-md:px-2"
+            className="text-ink-500 shrink-0 text-xs max-md:px-2"
             onClick={() => {
               setValues(Object.fromEntries(settings.allowances.map((item) => [keyOf(item), String(item.default)])));
               setTrialDaysText(String(DEFAULT_TRIAL_DAYS));

@@ -162,7 +162,7 @@ export const PlanComparisonCard = ({
         "@container relative flex h-full flex-col gap-0 rounded-2xl p-6 shadow-sm max-md:p-5",
         isDark
           ? "isolate overflow-hidden border-slate-800 bg-linear-to-b from-slate-800 via-slate-900 to-slate-950 text-white shadow-2xl ring-1 shadow-slate-900/30 ring-white/10 ring-inset"
-          : "border-slate-200 bg-white"
+          : "border-ink-200 bg-card"
       )}
     >
       {isDark && (
@@ -177,18 +177,18 @@ export const PlanComparisonCard = ({
         <span
           key={spot}
           aria-hidden="true"
-          className={cn("absolute size-1.5 rounded-full", spot, isDark ? "bg-white/20" : "bg-slate-200")}
+          className={cn("absolute size-1.5 rounded-full", spot, isDark ? "bg-white/20" : "bg-ink-200")}
         />
       ))}
 
       <div className="flex items-start justify-between gap-3">
-        <h3 className={cn("text-base font-semibold", isDark ? "text-white" : "text-slate-900")}>{plan.name}</h3>
+        <h3 className={cn("text-base font-semibold", isDark ? "text-white" : "text-ink-900")}>{plan.name}</h3>
         <span
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide uppercase",
             isDark
-              ? "border-orange-300/40 bg-orange-400/15 text-orange-200"
-              : "border-slate-200 bg-white text-slate-700"
+              ? "border-orange-300/40 bg-orange-400/15 text-orange-200 dark:border-orange-500/40"
+              : "border-ink-200 bg-card text-ink-700"
           )}
         >
           <span className={cn("size-1.5 rounded-full", isDark ? "bg-orange-300" : badge.dot)} />
@@ -196,16 +196,16 @@ export const PlanComparisonCard = ({
         </span>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-5 @md:mt-7">
         <p className="flex items-baseline gap-1.5">
-          <span className={cn("text-3xl font-bold tracking-tight tabular-nums", isDark ? "text-white" : "text-slate-900")}>
+          <span className={cn("text-3xl font-bold tracking-tight tabular-nums @md:text-4xl", isDark ? "text-white" : "text-ink-900")}>
             {formatVnd(showsAnnual ? plan.annualPriceVnd! : plan.monthlyPriceVnd)}
           </span>
-          <span className={cn("text-sm", isDark ? "text-slate-300" : "text-slate-500")}>
+          <span className={cn("text-sm", isDark ? "text-ink-300" : "text-ink-500")}>
             /{showsAnnual ? "year" : "month"}
           </span>
         </p>
-        <p className={cn("mt-1 min-h-4 text-xs", isDark ? "text-slate-400" : "text-slate-500")}>
+        <p className={cn("mt-1 min-h-4 text-xs", isDark ? "text-ink-400" : "text-ink-500")}>
           {showsAnnual
             ? `≈ ${formatVnd(Math.round(plan.annualPriceVnd! / 12))} a month`
             : cycle === "annual"
@@ -218,11 +218,11 @@ export const PlanComparisonCard = ({
 
       <Button
         className={cn(
-          "mt-5 w-full",
+          "mt-5 w-full @md:mt-7 @md:h-11",
           isDark &&
             !isCurrent &&
-            "bg-white text-slate-900 shadow-[0_0_16px_rgba(255,255,255,0.25)] hover:bg-slate-100",
-          isCurrent && "bg-slate-100 text-slate-700 hover:bg-slate-100 disabled:opacity-100"
+            "bg-card text-ink-900 hover:bg-ink-100 shadow-[0_0_16px_rgba(255,255,255,0.25)]",
+          isCurrent && "bg-ink-100 text-ink-700 hover:bg-ink-100 disabled:opacity-100"
         )}
         variant={isCurrent ? "secondary" : isDark ? "secondary" : "default"}
         disabled={isCurrent || isUnavailable}
@@ -232,22 +232,22 @@ export const PlanComparisonCard = ({
       </Button>
 
       {plan.description && (
-        <p className={cn("mt-5 text-sm", isDark ? "text-slate-300" : "text-slate-500")}>{plan.description}</p>
+        <p className={cn("mt-5 text-sm @md:mt-7 @md:text-[15px]", isDark ? "text-ink-300" : "text-ink-500")}>{plan.description}</p>
       )}
 
       {basePlan && (
-        <p className={cn("mt-5 text-sm font-semibold", isDark ? "text-white" : "text-slate-900")}>
+        <p className={cn("mt-5 text-sm font-semibold @md:mt-7 @md:text-[15px]", isDark ? "text-white" : "text-ink-900")}>
           Everything in {basePlan.name}
           {added.length > 0 ? ", plus:" : "."}
         </p>
       )}
-      <ul className={cn("grid flex-1 content-start gap-x-6 gap-y-2.5 text-sm @md:grid-cols-2", basePlan ? "mt-3" : "mt-5")}>
+      <ul className={cn("grid flex-1 content-start gap-x-6 gap-y-2.5 text-sm @md:gap-y-3.5 @md:text-[15px] @2xl:grid-cols-2", basePlan ? "mt-3 @md:mt-4" : "mt-5 @md:mt-7")}>
         {included.map((line) => (
-          <li key={line.label} className={cn("flex items-start gap-2.5", isDark ? "text-slate-100" : "text-slate-700")}>
+          <li key={line.label} className={cn("flex items-start gap-2.5", isDark ? "text-slate-100" : "text-ink-700")}>
             <span
               className={cn(
                 "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full",
-                isDark ? "bg-orange-500/20 text-orange-300" : "bg-emerald-50 text-emerald-600"
+                isDark ? "bg-orange-500/20 text-orange-300" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
               )}
             >
               <Check className="size-3" strokeWidth={3} />
@@ -256,7 +256,7 @@ export const PlanComparisonCard = ({
           </li>
         ))}
         {more > 0 && (
-          <li className={cn("pl-6.5 text-xs", isDark ? "text-slate-400" : "text-slate-500")}>
+          <li className={cn("pl-6.5 text-xs", isDark ? "text-ink-400" : "text-ink-500")}>
             + {more} more, listed at checkout
           </li>
         )}

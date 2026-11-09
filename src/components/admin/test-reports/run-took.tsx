@@ -41,7 +41,7 @@ export const RunTook = ({ run, className }: RunTookProps) => {
   }, [isRunning, run.startedAtUtc]);
 
   return (
-    <span className={cn(isRunning && "font-mono text-sky-600", className)}>
+    <span className={cn(isRunning && "font-mono text-sky-600 dark:text-sky-400", className)}>
       {isRunning ? formatElapsed(elapsedSeconds) : formatStaticDuration(run.durationMs)}
     </span>
   );

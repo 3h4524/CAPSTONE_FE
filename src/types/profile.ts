@@ -24,3 +24,6 @@ export type UpdateProfilePayload = {
   newsletterSubscribed?: boolean;
   twoFactorEnabled?: boolean;
 };
+
+/** Which account screens are showing: sellers manage a shop, admins only their own sign-in identity. */
+export type AccountVariant = "seller" | "admin";

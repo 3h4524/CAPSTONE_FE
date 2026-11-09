@@ -49,9 +49,10 @@ export const NavItem = ({ item, collapsed }: NavItemProps) => {
       variant="ghost"
       asChild
       className={cn(
-        "w-full",
+        // Dark: neutral nav like the reference — grey labels, white on hover/active, no blue text.
+        "dark:text-ink-700 dark:hover:bg-ink-100 dark:hover:text-foreground w-full",
         collapsed ? "justify-center px-0" : "justify-start",
-        isActive && "bg-muted text-primary font-semibold"
+        isActive && "bg-muted text-primary dark:bg-ink-100 dark:text-foreground font-semibold"
       )}
     >
       <Link href={item.href} aria-current={isActive ? "page" : undefined}>

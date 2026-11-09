@@ -118,11 +118,11 @@ export const ListingContentResultPanel = () => {
       : "Review recommended";
 
   return (
-    <section className="space-y-4 rounded-lg border bg-slate-50/60 p-4" aria-label="Listing content result">
+    <section className="bg-ink-50/60 space-y-4 rounded-lg border p-4" aria-label="Listing content result">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <FileText className="size-4 text-violet-600" />
+            <FileText className="size-4 text-violet-600 dark:text-violet-400" />
             <h3 className="text-sm font-semibold">Listing result</h3>
           </div>
           <p className="text-muted-foreground mt-1 text-xs">
@@ -145,8 +145,8 @@ export const ListingContentResultPanel = () => {
       {!productId && <p className="text-muted-foreground text-xs">Select a product in the Product input node first.</p>}
       {waitingForRunToStart && <p className="text-muted-foreground text-xs">Available once the designs and mock-ups are done: the run writes the listing itself then.</p>}
       {failedInRun && run && (
-        <div className="space-y-2 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
-          <p className="text-xs text-red-800">{listingStep?.errorMessage ?? "Listing content could not be generated."}</p>
+        <div className="space-y-2 rounded-md border border-red-200 bg-red-50 p-3 dark:border-red-500/30 dark:bg-red-500/10" role="alert">
+          <p className="text-xs text-red-800 dark:text-red-300">{listingStep?.errorMessage ?? "Listing content could not be generated."}</p>
           {run.status !== "cancelled" && (
             <Button
               type="button"
@@ -164,10 +164,10 @@ export const ListingContentResultPanel = () => {
       )}
       {result && (
         <div className="space-y-4">
-          <div className="rounded-md border bg-white p-3">
+          <div className="bg-card rounded-md border p-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="size-4 text-emerald-600" />
+                <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
                 <p className="text-sm font-semibold">SEO evaluation</p>
               </div>
               <Button
@@ -186,8 +186,8 @@ export const ListingContentResultPanel = () => {
             {seo && (
               <div className="mt-3 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-600">Overall score</span>
-                  <span className={`text-lg font-bold ${seo.shouldRegenerate ? "text-amber-600" : "text-emerald-600"}`}>
+                  <span className="text-ink-600 text-xs">Overall score</span>
+                  <span className={`text-lg font-bold ${seo.shouldRegenerate ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}`}>
                     {seo.overallScore}/100
                   </span>
                 </div>
@@ -203,17 +203,17 @@ export const ListingContentResultPanel = () => {
                       ["Keyword density", seo.keywordDensity, "%"],
                     ] as const
                   ).map(([label, value, unit]) => (
-                    <div key={label} className="flex justify-between rounded bg-slate-50 px-2 py-1.5">
-                      <span className="text-slate-500">{label}</span>
+                    <div key={label} className="bg-ink-50 flex justify-between rounded px-2 py-1.5">
+                      <span className="text-ink-500">{label}</span>
                       <span className="font-medium">{value}{unit}</span>
                     </div>
                   ))}
                 </div>
-                <p className={`text-xs font-medium ${seo.shouldRegenerate ? "text-amber-700" : "text-emerald-700"}`}>
+                <p className={`text-xs font-medium ${seo.shouldRegenerate ? "text-amber-700 dark:text-amber-300" : "text-emerald-700 dark:text-emerald-300"}`}>
                   {recommendationLabel}
                 </p>
                 {seo.improvementSuggestions.length > 0 && (
-                  <ul className="list-disc space-y-1 pl-4 text-xs text-slate-600">
+                  <ul className="text-ink-600 list-disc space-y-1 pl-4 text-xs">
                     {seo.improvementSuggestions.map((suggestion) => <li key={suggestion}>{suggestion}</li>)}
                   </ul>
                 )}
@@ -221,16 +221,16 @@ export const ListingContentResultPanel = () => {
             )}
           </div>
           <div className="space-y-1">
-            <p className="text-xs font-medium text-slate-600">Title</p>
-            <p className="rounded-md border bg-white p-2 text-sm font-medium">{result.title}</p>
+            <p className="text-ink-600 text-xs font-medium">Title</p>
+            <p className="bg-card rounded-md border p-2 text-sm font-medium">{result.title}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-xs font-medium text-slate-600">Description</p>
-            <Textarea readOnly value={result.description} className="min-h-32 resize-y bg-white text-sm leading-6" />
+            <p className="text-ink-600 text-xs font-medium">Description</p>
+            <Textarea readOnly value={result.description} className="bg-card min-h-32 resize-y text-sm leading-6" />
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-medium text-slate-600">Tags</p>
+              <p className="text-ink-600 text-xs font-medium">Tags</p>
               <span className="text-muted-foreground text-[11px]">{result.tags.length}/13</span>
             </div>
             <div className="flex flex-wrap gap-1.5">

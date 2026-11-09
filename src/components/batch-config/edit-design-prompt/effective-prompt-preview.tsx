@@ -13,16 +13,16 @@ export const EffectivePromptPreview = ({ prompt }: EffectivePromptPreviewProps) 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Effective prompt preview</p>
-        <p className={cn("text-xs font-medium tabular-nums", overLimit ? "text-red-600" : "text-muted-foreground")} aria-live="polite">
+        <p className="text-ink-500 text-xs font-semibold tracking-wide uppercase">Effective prompt preview</p>
+        <p className={cn("text-xs font-medium tabular-nums", overLimit ? "text-red-600 dark:text-red-400" : "text-muted-foreground")} aria-live="polite">
           {prompt.length} / {MAX_EFFECTIVE_PROMPT_LENGTH}
         </p>
       </div>
-      <div className={cn("rounded-xl bg-slate-50 p-4 text-sm whitespace-pre-wrap", overLimit && "ring-1 ring-red-500 ring-inset")}>
+      <div className={cn("bg-ink-50 rounded-xl p-4 text-sm whitespace-pre-wrap", overLimit && "ring-1 ring-red-500 ring-inset")}>
         {prompt.length > 0 ? prompt : "Start typing to see the combined prompt."}
       </div>
       {overLimit && (
-        <p role="alert" className="text-sm text-red-600">The effective prompt must not exceed 1000 characters.</p>
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">The effective prompt must not exceed 1000 characters.</p>
       )}
     </div>
   );

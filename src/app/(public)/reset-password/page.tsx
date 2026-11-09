@@ -26,7 +26,7 @@ const ResetPasswordPage = () => {
           "Manage your designs, product mockups, and production pipeline in one professional workspace.",
       }}
     >
-      <Suspense fallback={<p className="text-sm text-gray-600">Loading...</p>}>
+      <Suspense fallback={<p className="text-ink-600 text-sm">Loading...</p>}>
         <FormResetPassword />
       </Suspense>
     </AuthSplitLayout>

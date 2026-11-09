@@ -44,28 +44,31 @@ export const AppSidebarMobile = ({ open, onOpenChange, side = "left" }: AppSideb
           </SheetTitle>
           <SheetDescription className="sr-only">{t("navigation.mobile")}</SheetDescription>
         </SheetHeader>
-        <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-4" aria-label={t("navigation.mobile")}>
-          {NAV_SECTIONS.map((section) => (
-            <NavSection key={section.label} section={section} collapsed={false} />
-          ))}
-        </nav>
-        <div className="mt-auto flex flex-col gap-1 border-t p-4">
-          <Button type="button" variant="ghost" className="justify-start" asChild>
-            <Link href="/profile">
-              <User />
-              <span>{t("account.profile")}</span>
-            </Link>
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            className="justify-start"
-            onClick={handleLogout}
-            disabled={isPending}
-          >
-            <LogOut />
-            <span>{t("account.logout")}</span>
-          </Button>
+        {/* One scrolling list, so the account links do not take the height of the menu. */}
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
+          <nav className="flex flex-col gap-4" aria-label={t("navigation.mobile")}>
+            {NAV_SECTIONS.map((section) => (
+              <NavSection key={section.label} section={section} collapsed={false} />
+            ))}
+          </nav>
+          <div className="flex flex-col gap-1 border-t pt-4">
+            <Button type="button" variant="ghost" className="justify-start" asChild>
+              <Link href="/profile">
+                <User />
+                <span>{t("account.profile")}</span>
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="justify-start"
+              onClick={handleLogout}
+              disabled={isPending}
+            >
+              <LogOut />
+              <span>{t("account.logout")}</span>
+            </Button>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

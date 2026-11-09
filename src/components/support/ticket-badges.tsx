@@ -5,10 +5,10 @@ import type { TicketPriority, TicketStatus } from "@/types/support";
 import { cn } from "@/utils/cn";
 
 const priorityStyles: Record<TicketPriority, string> = {
-  low: "border-transparent bg-[#f3f6fb] text-[#344862]",
-  normal: "border-transparent bg-[#fff3dd] text-[#9a6208]",
-  high: "border-transparent bg-[#fde8e8] text-[#c32028]",
-  urgent: "border-transparent bg-[#f9d9dc] text-[#a30f1a]",
+  low: "border-transparent bg-ink-100 text-[#344862] dark:text-[#a2b5cd]",
+  normal: "border-transparent bg-ink-100 text-[#9a6208] dark:text-[#edc482]",
+  high: "border-transparent bg-ink-200 text-[#c32028] dark:text-[#eb8489]",
+  urgent: "border-transparent bg-ink-300 text-[#a30f1a] dark:text-[#ed828a]",
 };
 
 export function TicketStatusBadge({ status }: { status: TicketStatus }) {

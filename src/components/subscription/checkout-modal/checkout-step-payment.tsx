@@ -61,7 +61,7 @@ export const CheckoutStepPayment = ({
   if (isError) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
           {getErrorMessage(error, "Could not start the payment. Please try again.")}
         </p>
         <div className="flex justify-end">
@@ -80,7 +80,7 @@ export const CheckoutStepPayment = ({
   if (status && status.status === "failed") {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
           Payment could not be completed. Please check your payment method and try again.
         </p>
         <div className="flex justify-end gap-2">

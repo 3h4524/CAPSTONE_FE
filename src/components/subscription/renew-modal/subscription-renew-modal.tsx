@@ -151,7 +151,7 @@ export const SubscriptionRenewModal = ({
               </p>
             )}
             {isError && (
-              <p className="text-sm text-red-600" role="alert">
+              <p className="text-sm text-red-600 dark:text-red-400" role="alert">
                 {getErrorMessage(error, "Could not start the renewal. Please try again.")}
               </p>
             )}
@@ -171,7 +171,7 @@ export const SubscriptionRenewModal = ({
           <div className="flex flex-col items-center gap-4 py-2 text-center">
             {status?.status === "cancelled" || status?.status === "failed" ? (
               <>
-                <p className="text-sm text-red-600" role="alert">
+                <p className="text-sm text-red-600 dark:text-red-400" role="alert">
                   The payment was not completed. Your plan was not renewed.
                 </p>
                 <Button variant="ghost" onClick={close}>

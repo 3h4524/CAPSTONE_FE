@@ -98,7 +98,7 @@ export const PrintQuadEditor = ({
           src={imageUrl}
           alt="Model photo"
           draggable={false}
-          className="block max-h-105 max-w-full rounded-lg ring-1 ring-slate-200 select-none ring-inset"
+          className="ring-ink-200 block max-h-105 max-w-full rounded-lg ring-1 select-none ring-inset"
         />
         {garmentMaskUrl && (
           <div
@@ -147,7 +147,7 @@ export const PrintQuadEditor = ({
         </svg>
       </div>
       <p
-        className={valid ? "text-muted-foreground text-xs" : "text-xs text-red-600"}
+        className={valid ? "text-muted-foreground text-xs" : "text-xs text-red-600 dark:text-red-400"}
         role={valid ? undefined : "alert"}
       >
         {valid

@@ -53,11 +53,11 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
         <div>
           <h2 className="text-base font-semibold">Production pipeline</h2>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            <span className="font-semibold text-[#5f8a4c]">
+            <span className="font-semibold text-[#5f8a4c] dark:text-[#b0cca3]">
               {countInProgress(stages).toLocaleString()} in progress
             </span>
             {failedProducts > 0 && (
-              <span className="font-semibold text-rose-600">
+              <span className="font-semibold text-rose-600 dark:text-rose-400">
                 {" "}
                 · {failedProducts.toLocaleString()} failed
               </span>
@@ -68,7 +68,7 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
         </div>
         <Link
           href="/batches"
-          className="inline-flex shrink-0 items-center gap-1 text-xs font-medium whitespace-nowrap text-slate-800 hover:text-black hover:underline"
+          className="text-ink-800 inline-flex shrink-0 items-center gap-1 text-xs font-medium whitespace-nowrap hover:text-black hover:underline"
         >
           Open batches
           <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -80,7 +80,7 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
           {/* The line joining the steps, from the first circle's centre to the last's. */}
           <span
             aria-hidden="true"
-            className="absolute top-[17px] right-[calc(100%/16)] left-[calc(100%/16)] hidden h-0.5 rounded-full bg-slate-200 lg:block"
+            className="bg-ink-200 absolute top-[17px] right-[calc(100%/16)] left-[calc(100%/16)] hidden h-0.5 rounded-full lg:block"
           />
           {stages.map((stage, index) => {
             const Icon = STAGE_ICONS[stage.stage];
@@ -95,10 +95,10 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
                 className={cn(
                   "relative flex min-w-0 flex-col items-center max-lg:w-28 max-lg:shrink-0 max-lg:snap-start max-lg:flex-row max-lg:flex-wrap max-lg:gap-x-1.5 max-lg:rounded-xl max-lg:border max-lg:p-2.5",
                   isStuck
-                    ? "max-lg:border-rose-300"
+                    ? "max-lg:border-rose-300 dark:max-lg:border-rose-500/40"
                     : waitsOnSeller
-                      ? "max-lg:border-amber-300"
-                      : "max-lg:border-slate-200/80"
+                      ? "max-lg:border-amber-300 dark:max-lg:border-amber-500/40"
+                      : "max-lg:border-ink-200/80"
                 )}
               >
                 <span
@@ -106,7 +106,7 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
                     "flex size-9 items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums transition-transform duration-300 hover:scale-110 max-lg:size-6 max-lg:text-xs",
                     isBusiest
                       ? "border-[#2fae93] bg-[#2fae93] text-white shadow-md shadow-emerald-900/10"
-                      : "bg-card border-slate-200 text-slate-700"
+                      : "bg-card border-ink-200 text-ink-700"
                   )}
                   title={isBusiest ? "Most of your products are here" : undefined}
                 >
@@ -115,7 +115,7 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
                 <span
                   className={cn(
                     "mt-2 flex max-w-full items-center gap-1 text-xs max-lg:mt-0 max-lg:min-w-0 max-lg:flex-1",
-                    isBusiest ? "font-semibold text-slate-900" : "text-slate-600"
+                    isBusiest ? "text-ink-900 font-semibold" : "text-ink-600"
                   )}
                 >
                   <Icon className="size-3.5 shrink-0 max-lg:hidden" aria-hidden="true" />
@@ -126,10 +126,10 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
                   className={cn(
                     "bg-card mt-3 flex w-full flex-1 flex-col gap-1 rounded-xl border p-2.5 shadow-sm shadow-slate-900/5 transition duration-300 hover:-translate-y-0.5 hover:shadow-md max-lg:mt-2 max-lg:basis-full max-lg:border-0 max-lg:p-0 max-lg:shadow-none",
                     isStuck
-                      ? "border-rose-300"
+                      ? "border-rose-300 dark:border-rose-500/40"
                       : waitsOnSeller
-                        ? "border-amber-300"
-                        : "border-slate-200/80"
+                        ? "border-amber-300 dark:border-amber-500/40"
+                        : "border-ink-200/80"
                   )}
                 >
                   <span
@@ -143,23 +143,23 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
                   <span className="text-muted-foreground text-[11px] tabular-nums">
                     {share.toFixed(1)}% of products
                   </span>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                  <div className="bg-ink-100 h-1.5 overflow-hidden rounded-full">
                     <div
                       className={cn(
                         "h-full rounded-full",
-                        isBusiest ? "bg-[#2fae93]" : "bg-slate-200"
+                        isBusiest ? "bg-[#2fae93]" : "bg-ink-200"
                       )}
                       style={{ width: `${share}%` }}
                     />
                   </div>
                   <div className="mt-0.5 h-5 max-lg:h-auto max-lg:empty:hidden">
                     {isStuck ? (
-                      <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold text-rose-600">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">
                         <Hourglass className="size-3" aria-hidden="true" />
                         {stage.stuckCount} stuck
                       </span>
                     ) : waitsOnSeller ? (
-                      <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                      <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
                         Waits on you
                       </span>
                     ) : null}

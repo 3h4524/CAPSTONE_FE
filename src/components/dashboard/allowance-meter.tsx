@@ -4,9 +4,9 @@ import type { AllowanceItem } from "@/types/allowance";
 import { cn } from "@/utils/cn";
 
 const STATE_CLASSES: Record<AllowanceState, { bar: string; track: string; figure: string }> = {
-  over: { bar: "bg-rose-400", track: "bg-rose-100", figure: "text-rose-600" },
-  near: { bar: "bg-amber-400", track: "bg-amber-100", figure: "text-amber-700" },
-  ok: { bar: "bg-[#2fae93]", track: "bg-slate-100", figure: "text-foreground" },
+  over: { bar: "bg-rose-400", track: "bg-rose-100 dark:bg-rose-500/15", figure: "text-rose-600 dark:text-rose-400" },
+  near: { bar: "bg-amber-400", track: "bg-amber-100 dark:bg-amber-500/15", figure: "text-amber-700 dark:text-amber-300" },
+  ok: { bar: "bg-[#2fae93]", track: "bg-ink-100", figure: "text-foreground" },
 };
 
 type AllowanceMeterProps = {

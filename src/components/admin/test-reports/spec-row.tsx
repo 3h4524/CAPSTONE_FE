@@ -19,39 +19,39 @@ export const TestReportSpecRow = ({ spec }: TestReportSpecRowProps) => {
   const hasError = Boolean(spec.errorMessage || spec.errorStack || spec.errorSnippet);
 
   return (
-    <li className="border-b border-slate-100 last:border-b-0">
+    <li className="border-ink-100 border-b last:border-b-0">
       <div className="flex items-center gap-3 px-4 py-2.5">
         <TestReportStatusBadge status={spec.status} className="shrink-0" />
         <span
           className={cn(
             "min-w-0 flex-1 truncate text-xs",
-            spec.status === "failed" ? "font-medium text-rose-700" : "text-slate-700"
+            spec.status === "failed" ? "font-medium text-rose-700 dark:text-rose-300" : "text-ink-700"
           )}
         >
           {spec.title}
         </span>
         {spec.isKnownIssue && (
-          <span className="shrink-0 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-amber-700 uppercase">
+          <span className="shrink-0 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-amber-700 uppercase dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
             known gap
           </span>
         )}
         {spec.retries > 0 && (
           <span
-            className="flex shrink-0 items-center gap-1 text-[10px] font-medium text-amber-600"
+            className="flex shrink-0 items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400"
             title="The test passed only after a retry"
           >
             <RotateCcw className="size-3" />
             {spec.retries}
           </span>
         )}
-        <span className="w-16 shrink-0 text-right font-mono text-[11px] text-slate-400">
+        <span className="text-ink-400 w-16 shrink-0 text-right font-mono text-[11px]">
           {formatDuration(spec.durationMs)}
         </span>
         {hasError && (
           <button
             type="button"
             onClick={() => setIsOpen((open) => !open)}
-            className="flex size-6 shrink-0 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            className="text-ink-400 hover:bg-ink-100 hover:text-ink-700 flex size-6 shrink-0 items-center justify-center rounded transition-colors"
             aria-label={isOpen ? "Hide the failure" : "Show the failure"}
             aria-expanded={isOpen}
           >
@@ -61,23 +61,23 @@ export const TestReportSpecRow = ({ spec }: TestReportSpecRowProps) => {
       </div>
 
       {isOpen && hasError && (
-        <div className="space-y-3 border-t border-slate-100 bg-slate-50/60 px-4 py-3">
+        <div className="border-ink-100 bg-ink-50/60 space-y-3 border-t px-4 py-3">
           {spec.errorMessage && (
-            <p className="font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-rose-700">
+            <p className="font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-rose-700 dark:text-rose-300">
               {spec.errorMessage}
             </p>
           )}
           {spec.errorSnippet && (
-            <pre className="overflow-x-auto rounded border border-slate-200 bg-white p-3 font-mono text-[11px] leading-relaxed text-slate-700">
+            <pre className="border-ink-200 bg-card text-ink-700 overflow-x-auto rounded border p-3 font-mono text-[11px] leading-relaxed">
               {spec.errorSnippet}
             </pre>
           )}
           {spec.errorStack && (
             <details className="group">
-              <summary className="cursor-pointer text-[10px] font-semibold tracking-wide text-slate-500 uppercase select-none">
+              <summary className="text-ink-500 cursor-pointer text-[10px] font-semibold tracking-wide uppercase select-none">
                 Stack trace
               </summary>
-              <pre className="mt-2 overflow-x-auto rounded border border-slate-200 bg-white p-3 font-mono text-[11px] leading-relaxed text-slate-600">
+              <pre className="border-ink-200 bg-card text-ink-600 mt-2 overflow-x-auto rounded border p-3 font-mono text-[11px] leading-relaxed">
                 {spec.errorStack}
               </pre>
             </details>

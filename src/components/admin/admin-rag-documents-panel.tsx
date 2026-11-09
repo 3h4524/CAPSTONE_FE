@@ -17,6 +17,7 @@ import {
 import type { RagAdminDocument } from "@/api/rag";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -36,6 +37,7 @@ import {
 import { useActivateAdminRagDocument } from "@/hooks/mutations/use-activate-admin-rag-document";
 import { useAdminRagDocument } from "@/hooks/queries/use-admin-rag-document";
 import { useAdminRagDocuments } from "@/hooks/queries/use-admin-rag-documents";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { cn } from "@/utils/cn";
 
 const STATUS_OPTIONS = [
@@ -65,6 +67,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
   });
   const detailQuery = useAdminRagDocument(selectedId);
   const activateMutation = useActivateAdminRagDocument();
+  const isPhone = useIsPhone();
   const filteredDocuments = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     if (!normalizedSearch) return documentsQuery.data ?? [];
@@ -92,22 +95,41 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
     ]);
   };
 
+  const detailPanel = !selectedId ? (
+    <PanelMessage text="Select a document to inspect its version and chunks." />
+  ) : detailQuery.isPending ? (
+    <PanelMessage text="Loading document detail..." />
+  ) : detailQuery.data ? (
+    <DocumentDetail
+      detail={detailQuery.data.document}
+      chunks={detailQuery.data.chunks}
+      onActivate={() =>
+        activateMutation.mutate(detailQuery.data.document.id, {
+          onSuccess: () => void detailQuery.refetch(),
+        })
+      }
+      isActivating={activateMutation.isPending}
+    />
+  ) : (
+    <PanelMessage text="Document detail is unavailable." />
+  );
+
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div className="space-y-5 max-md:space-y-3">
+      <div className="flex flex-col justify-between gap-4 max-md:gap-3 sm:flex-row sm:items-end">
         <div>
-          <p className="text-[10px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+          <p className="text-ink-400 text-[10px] font-bold tracking-[0.16em] uppercase">
             Knowledge base
           </p>
-          <h1 className="font-display mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">
+          <h1 className="font-display text-ink-900 mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
             Documents & versions
           </h1>
-          <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
+          <p className="text-ink-500 mt-1 max-w-2xl text-xs leading-5">
             Track every ingested version, inspect its chunks, and choose which completed version is
             active for retrieval.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 max-md:grid max-md:grid-cols-2">
           <Button
             type="button"
             variant="outline"
@@ -124,25 +146,25 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
         </div>
       </div>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row">
+      <section className="border-ink-200 bg-card rounded-xl border p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-3 max-md:grid max-md:grid-cols-2 max-md:gap-2 md:flex-row">
           <Input
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search title or listing ID"
-            className="sm:max-w-xs"
+            className="max-md:col-span-2 md:max-w-xs"
           />
           <Input
             value={sourceId}
             onChange={(event) => setSourceId(event.target.value)}
             placeholder="Filter by source ID"
-            className="sm:max-w-xs"
+            className="md:max-w-xs"
           />
           <Select
             value={status || "all"}
             onValueChange={(value) => setStatus(value === "all" ? "" : value)}
           >
-            <SelectTrigger className="w-full sm:w-[162px]">
+            <SelectTrigger className="w-full md:w-[162px]">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -153,11 +175,11 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
               ))}
             </SelectContent>
           </Select>
-          <span className="self-center text-xs text-slate-400">
+          <span className="text-ink-400 self-center text-xs">
             {filteredDocuments.length} of {documentsQuery.data?.length ?? 0} documents
           </span>
           <Select value={pageSize} onValueChange={setPageSize}>
-            <SelectTrigger className="w-full sm:ml-auto sm:w-[130px]">
+            <SelectTrigger className="w-full max-md:w-32 max-md:justify-self-end md:ml-auto md:w-[130px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -171,12 +193,20 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_390px]">
-        <section className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="grid grid-cols-1 items-start gap-5 max-md:gap-3 xl:grid-cols-[minmax(0,1fr)_390px]">
+        <section className="border-ink-200 bg-card min-w-0 overflow-hidden rounded-xl border shadow-sm max-md:overflow-visible max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none">
           {documentsQuery.isPending ? (
             <PanelMessage text="Loading RAG documents..." />
           ) : documentsQuery.isError ? (
             <PanelMessage text="Could not load RAG documents." />
+          ) : documentsQuery.data?.length && isPhone ? (
+            <ul className="space-y-2">
+              {visibleDocuments.map((document) => (
+                <li key={document.id}>
+                  <DocumentCard document={document} onSelect={() => setSelectedId(document.id)} />
+                </li>
+              ))}
+            </ul>
           ) : documentsQuery.data?.length ? (
             <Table>
               <TableHeader>
@@ -213,26 +243,17 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
           )}
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm xl:sticky xl:top-4">
-          {!selectedId ? (
-            <PanelMessage text="Select a document to inspect its version and chunks." />
-          ) : detailQuery.isPending ? (
-            <PanelMessage text="Loading document detail..." />
-          ) : detailQuery.data ? (
-            <DocumentDetail
-              detail={detailQuery.data.document}
-              chunks={detailQuery.data.chunks}
-              onActivate={() =>
-                activateMutation.mutate(detailQuery.data.document.id, {
-                  onSuccess: () => void detailQuery.refetch(),
-                })
-              }
-              isActivating={activateMutation.isPending}
-            />
-          ) : (
-            <PanelMessage text="Document detail is unavailable." />
-          )}
-        </section>
+        {/* Below a long list the detail would open out of sight, so a phone shows it over the list. */}
+        {isPhone ? (
+          <Dialog open={Boolean(selectedId)} onOpenChange={(open) => !open && setSelectedId(null)}>
+            <DialogContent className="grid-cols-[minmax(0,1fr)] p-4" aria-describedby={undefined}>
+              <DialogTitle className="sr-only">Document detail</DialogTitle>
+              {detailPanel}
+            </DialogContent>
+          </Dialog>
+        ) : (
+          <section className="border-ink-200 bg-card rounded-xl border p-5 shadow-sm xl:sticky xl:top-4">{detailPanel}</section>
+        )}
       </div>
     </div>
   );
@@ -249,8 +270,8 @@ const DocumentPagination = ({
   onPrevious: () => void;
   onNext: () => void;
 }) => (
-  <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-4 py-3">
-    <p className="text-xs text-slate-500">
+  <div className="border-ink-100 bg-ink-50/50 flex items-center justify-between border-t px-4 py-3 max-md:border-t-0 max-md:bg-transparent max-md:px-0">
+    <p className="text-ink-500 text-xs">
       Page {page} of {totalPages}
     </p>
     <div className="flex items-center gap-2">
@@ -270,6 +291,26 @@ const DocumentPagination = ({
   </div>
 );
 
+/** A document on a phone: everything its table row shows, without the columns. */
+const DocumentCard = ({ document, onSelect }: { document: RagAdminDocument; onSelect: () => void }) => (
+  <button type="button" onClick={onSelect} className="border-ink-200 bg-card w-full rounded-xl border p-3 text-left shadow-xs">
+    <span className="flex items-start justify-between gap-2">
+      <span className="min-w-0">
+        <span className="text-ink-800 block truncate text-sm font-semibold">{document.title}</span>
+        <span className="text-ink-400 mt-0.5 block truncate text-[11px]">{document.sourceId}</span>
+      </span>
+      <StatusBadge status={document.status} />
+    </span>
+    <span className="border-ink-100 text-ink-500 mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px]">
+      <span className="min-w-0 truncate">{document.version || "Unversioned"} · {document.chunkCount} chunks</span>
+      <span className="flex shrink-0 items-center gap-1">
+        {formatDate(document.updatedAt)}
+        <ChevronRight className="text-ink-300 size-3.5" aria-hidden="true" />
+      </span>
+    </span>
+  </button>
+);
+
 const DocumentRow = ({
   document,
   isSelected,
@@ -279,15 +320,15 @@ const DocumentRow = ({
   isSelected: boolean;
   onSelect: () => void;
 }) => (
-  <TableRow className={cn("cursor-pointer", isSelected && "bg-slate-50")} onClick={onSelect}>
+  <TableRow className={cn("cursor-pointer", isSelected && "bg-ink-50")} onClick={onSelect}>
     <TableCell>
       <div className="max-w-[230px]">
-        <p className="truncate text-xs font-semibold text-slate-800">{document.title}</p>
-        <p className="mt-1 truncate text-[11px] text-slate-400">{document.sourceId}</p>
+        <p className="text-ink-800 truncate text-xs font-semibold">{document.title}</p>
+        <p className="text-ink-400 mt-1 truncate text-[11px]">{document.sourceId}</p>
       </div>
     </TableCell>
     <TableCell>
-      <span className="text-xs font-medium text-slate-700">
+      <span className="text-ink-700 text-xs font-medium">
         {document.version || "Unversioned"}
       </span>
     </TableCell>
@@ -295,13 +336,13 @@ const DocumentRow = ({
       <StatusBadge status={document.status} />
     </TableCell>
     <TableCell>
-      <span className="text-xs text-slate-600">{document.chunkCount}</span>
+      <span className="text-ink-600 text-xs">{document.chunkCount}</span>
     </TableCell>
     <TableCell>
-      <span className="text-[11px] text-slate-500">{formatDate(document.updatedAt)}</span>
+      <span className="text-ink-500 text-[11px]">{formatDate(document.updatedAt)}</span>
     </TableCell>
     <TableCell>
-      <ChevronRight className="size-4 text-slate-300" />
+      <ChevronRight className="text-ink-300 size-4" />
     </TableCell>
   </TableRow>
 );
@@ -339,10 +380,10 @@ const DocumentDetail = ({
 
   return (
     <div>
-      <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+      <div className="border-ink-100 flex items-start justify-between gap-3 border-b pb-4 max-md:pr-8">
         <div className="min-w-0">
-          <p className="text-sm leading-5 font-bold text-slate-900">{detail.title}</p>
-          <p className="mt-1 truncate text-[11px] text-slate-400">{detail.sourceId}</p>
+          <p className="text-ink-900 text-sm leading-5 font-bold">{detail.title}</p>
+          <p className="text-ink-400 mt-1 truncate text-[11px]">{detail.sourceId}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {detail.sourceUrl && (
@@ -365,7 +406,7 @@ const DocumentDetail = ({
         <SignalCard
           label="Trend score"
           value={viralScore == null ? "—" : `${viralScore.toFixed(1)}/100`}
-          tone="indigo"
+          tone="slate"
         />
         <SignalCard
           label="Favorites"
@@ -387,7 +428,7 @@ const DocumentDetail = ({
         />
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 border-y border-slate-100 py-4 text-xs">
+      <div className="border-ink-100 mt-4 grid grid-cols-2 gap-3 border-y py-4 text-xs">
         <Meta label="Version" value={detail.version || "Unversioned"} />
         <Meta label="Chunks" value={String(detail.chunkCount)} />
         <Meta label="Type" value={detail.contentType} />
@@ -396,16 +437,16 @@ const DocumentDetail = ({
         <Meta label="Updated" value={formatDate(detail.updatedAt)} />
       </div>
       {detail.ingestionError && (
-        <div className="my-4 rounded-lg bg-rose-50 p-3 text-xs leading-5 text-rose-700">
+        <div className="my-4 rounded-lg bg-rose-50 p-3 text-xs leading-5 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
           {detail.ingestionError}
         </div>
       )}
       {qualityWarnings.length > 0 && (
-        <div className="my-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
-          <div className="flex items-center gap-2 text-xs font-bold text-amber-800">
+        <div className="my-4 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+          <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300">
             <AlertTriangle className="size-3.5" /> Quality checks
           </div>
-          <ul className="mt-2 space-y-1 text-[11px] leading-5 text-amber-700">
+          <ul className="mt-2 space-y-1 text-[11px] leading-5 text-amber-700 dark:text-amber-300">
             {qualityWarnings.map((warning) => (
               <li key={warning}>• {warning}</li>
             ))}
@@ -428,31 +469,31 @@ const DocumentDetail = ({
       <div className="mt-5">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold text-slate-900">Listing content</p>
-            <p className="mt-1 text-[11px] text-slate-400">
+            <p className="text-ink-900 text-xs font-bold">Listing content</p>
+            <p className="text-ink-400 mt-1 text-[11px]">
               Expand a chunk to inspect the stored title, description, tags and signals.
             </p>
           </div>
-          <span className="shrink-0 text-[10px] text-slate-400">{chunks.length} chunks</span>
+          <span className="text-ink-400 shrink-0 text-[10px]">{chunks.length} chunks</span>
         </div>
-        <div className="mt-3 max-h-[430px] space-y-2 overflow-x-hidden overflow-y-auto pr-1">
+        <div className="mt-3 max-h-[430px] space-y-2 overflow-x-hidden overflow-y-auto pr-1 max-md:max-h-none max-md:pr-0">
           {chunks.map((chunk) => (
             <details
               key={chunk.id}
-              className="group rounded-lg border border-slate-200 bg-white shadow-sm"
+              className="group border-ink-200 bg-card rounded-lg border shadow-sm"
             >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-xs font-semibold text-slate-700 [&::-webkit-details-marker]:hidden">
+              <summary className="text-ink-700 flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-xs font-semibold [&::-webkit-details-marker]:hidden">
                 Chunk {chunk.chunkIndex + 1}
-                <span className="ml-auto text-[10px] font-normal text-slate-400">
+                <span className="text-ink-400 ml-auto text-[10px] font-normal">
                   {chunk.tokenCount} tokens
                 </span>
-                <span className="text-slate-300 transition-transform group-open:rotate-90">›</span>
+                <span className="text-ink-300 transition-transform group-open:rotate-90">›</span>
               </summary>
-              <div className="border-t border-slate-100 bg-slate-50/60 px-3 py-3">
+              <div className="border-ink-100 bg-ink-50/60 border-t px-3 py-3">
                 <div className="mb-2 flex justify-end">
                   <CopyButton value={chunk.content} />
                 </div>
-                <p className="min-w-0 text-[11px] leading-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap text-slate-600">
+                <p className="text-ink-600 min-w-0 text-[11px] leading-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
                   {chunk.content}
                 </p>
               </div>
@@ -473,16 +514,16 @@ const SignalCard = ({
   label: string;
   value: string;
   icon?: React.ReactNode;
-  tone: "indigo" | "rose" | "sky" | "slate";
+  tone: "rose" | "sky" | "slate";
 }) => (
-  <div className="min-w-0 rounded-lg border border-slate-100 bg-slate-50/70 px-2.5 py-2">
+  <div className="border-ink-100 bg-ink-50/70 min-w-0 rounded-lg border px-2.5 py-2">
     <div
-      className={`flex items-center gap-1 text-[10px] font-semibold tracking-wide uppercase ${tone === "rose" ? "text-rose-500" : tone === "sky" ? "text-sky-500" : tone === "indigo" ? "text-indigo-500" : "text-slate-400"}`}
+      className={`flex items-center gap-1 text-[10px] font-semibold tracking-wide uppercase ${tone === "rose" ? "text-rose-500" : tone === "sky" ? "text-sky-500" : "text-ink-400"}`}
     >
       {icon}
       {label}
     </div>
-    <p className="mt-1 truncate text-xs font-bold text-slate-800">{value}</p>
+    <p className="text-ink-800 mt-1 truncate text-xs font-bold">{value}</p>
   </div>
 );
 
@@ -511,8 +552,8 @@ const StatusBadge = ({ status }: { status: RagAdminDocument["status"] }) => (
     className={cn(
       "text-[10px]",
       status === "ready" && "bg-emerald-600 hover:bg-emerald-600",
-      (status === "queued" || status === "processing") && "text-amber-700",
-      status === "superseded" && "text-slate-500"
+      (status === "queued" || status === "processing") && "text-amber-700 dark:text-amber-300",
+      status === "superseded" && "text-ink-500"
     )}
   >
     {status}
@@ -520,12 +561,12 @@ const StatusBadge = ({ status }: { status: RagAdminDocument["status"] }) => (
 );
 const Meta = ({ label, value }: { label: string; value: string }) => (
   <div>
-    <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">{label}</p>
-    <p className="mt-1 truncate text-xs font-medium text-slate-700">{value}</p>
+    <p className="text-ink-400 text-[10px] font-semibold tracking-wide uppercase">{label}</p>
+    <p className="text-ink-700 mt-1 truncate text-xs font-medium">{value}</p>
   </div>
 );
 const PanelMessage = ({ text }: { text: string }) => (
-  <div className="flex min-h-40 items-center justify-center px-5 text-center text-xs text-slate-400">
+  <div className="text-ink-400 flex min-h-40 items-center justify-center px-5 text-center text-xs">
     {text}
   </div>
 );

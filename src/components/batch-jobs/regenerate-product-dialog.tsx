@@ -152,7 +152,7 @@ export const RegenerateProductDialog = ({
             </p>
             {customPromptWarnings(values.customPrompt, values.designText, product?.productType).map(
               (warning) => (
-                <p key={warning} className="text-xs text-amber-700">
+                <p key={warning} className="text-xs text-amber-700 dark:text-amber-300">
                   {warning}
                 </p>
               )

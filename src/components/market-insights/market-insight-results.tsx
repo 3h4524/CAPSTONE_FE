@@ -17,9 +17,9 @@ const formatDecimal = (value: number | null) => value === null ? "—" : value.t
 const formatDate = (value: string | null) => value ? new Date(value).toLocaleDateString() : "—";
 
 const confidenceStyle: Record<MarketQueryMetrics["confidence"], string> = {
-  low: "border-amber-200 bg-amber-50 text-amber-700",
-  medium: "border-blue-200 bg-blue-50 text-blue-700",
-  high: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  low: "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  medium: "border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300",
+  high: "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
 };
 
 export function MarketInsightResults({ data }: MarketInsightResultsProps) {
@@ -82,7 +82,7 @@ export function MarketInsightResults({ data }: MarketInsightResultsProps) {
             <div className="flex items-center justify-between border-b pb-3 text-sm"><span className="text-muted-foreground">Average views</span><span className="font-semibold">{formatDecimal(data.averageViews)}</span></div>
             <div className="flex items-center justify-between border-b pb-3 text-sm"><span className="text-muted-foreground">New listings</span><span className="font-semibold">{data.newListingCount.toLocaleString()}</span></div>
             <div className="flex items-center justify-between text-sm"><span className="text-muted-foreground">Observation periods</span><span className="font-semibold">{data.observationPeriodCount.toLocaleString()}</span></div>
-            <p className="rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-800">Favorites and views are public listing signals. They are not Etsy search volume, sales, or revenue.</p>
+            <p className="rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">Favorites and views are public listing signals. They are not Etsy search volume, sales, or revenue.</p>
           </CardContent>
         </Card>
       </div>

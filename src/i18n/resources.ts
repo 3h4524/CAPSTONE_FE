@@ -5,7 +5,7 @@ export const resources = {
         sections: { overview: "Overview", workspace: "Workspace", system: "System" },
         items: {
           dashboard: "Dashboard", shop: "Shop", workflows: "Workflows", batches: "Batches", styles: "My Styles",
-          templates: "Design templates", apiKeys: "API keys", usage: "Usage", marketRadar: "Market Radar",
+          templates: "Design templates", mockups: "Mock-up templates", apiKeys: "API keys", usage: "Usage", marketRadar: "Market Radar",
           support: "Support", settings: "Settings", billing: "Billing",
         },
         primary: "Primary navigation", mobile: "Mobile navigation",
@@ -31,6 +31,9 @@ export const resources = {
         twoFactor: "Two-factor authentication", twoFactorDescription: "Additional sign-in protection.",
         comingSoon: "Coming soon", accountProfile: "Account profile",
         accountProfileDescription: "Update your name, email and shop information.", openProfile: "Open profile", readOnly: "Read-only",
+        adminAccountProfileDescription: "Update your name and sign-in email.",
+        alwaysOn: "Always on", adminTwoFactorDescription: "Every admin sign-in is confirmed with a code sent to your email.",
+        password: "Password", passwordDescription: "Change the password you use to sign in.", changePassword: "Change password",
         languages: { en: "English", vi: "Tiếng Việt" }, themes: { light: "Light", dark: "Dark", system: "System" },
       },
       marketRadar: {
@@ -135,7 +138,7 @@ export const resources = {
         sections: { overview: "Tổng quan", workspace: "Không gian làm việc", system: "Hệ thống" },
         items: {
           dashboard: "Bảng điều khiển", shop: "Cửa hàng", workflows: "Quy trình", batches: "Lô sản phẩm", styles: "Phong cách của tôi",
-          templates: "Mẫu thiết kế", apiKeys: "API keys", usage: "Sử dụng", marketRadar: "Market Radar",
+          templates: "Mẫu thiết kế", mockups: "Mẫu mock-up", apiKeys: "API keys", usage: "Sử dụng", marketRadar: "Market Radar",
           support: "Hỗ trợ", settings: "Cài đặt", billing: "Thanh toán",
         },
         primary: "Điều hướng chính", mobile: "Điều hướng trên điện thoại",
@@ -161,6 +164,9 @@ export const resources = {
         twoFactor: "Xác thực hai yếu tố", twoFactorDescription: "Tăng cường bảo vệ khi đăng nhập.",
         comingSoon: "Sắp ra mắt", accountProfile: "Hồ sơ tài khoản",
         accountProfileDescription: "Cập nhật tên, email và thông tin cửa hàng.", openProfile: "Mở hồ sơ", readOnly: "Chỉ xem",
+        adminAccountProfileDescription: "Cập nhật tên và email đăng nhập.",
+        alwaysOn: "Luôn bật", adminTwoFactorDescription: "Mỗi lần admin đăng nhập đều được xác nhận bằng mã gửi về email.",
+        password: "Mật khẩu", passwordDescription: "Đổi mật khẩu dùng để đăng nhập.", changePassword: "Đổi mật khẩu",
         languages: { en: "English", vi: "Tiếng Việt" }, themes: { light: "Sáng", dark: "Tối", system: "Theo hệ thống" },
       },
       marketRadar: {

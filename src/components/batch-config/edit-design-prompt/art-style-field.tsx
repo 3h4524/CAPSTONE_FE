@@ -51,7 +51,7 @@ export const ArtStyleField = ({ value, presets, creating, disabled = false, erro
         }}
       />
       {matches.length > 0 && (
-        <ul className="overflow-hidden rounded-xl border border-slate-200 bg-white" aria-label="Matching art styles">
+        <ul className="border-ink-200 bg-card overflow-hidden rounded-xl border" aria-label="Matching art styles">
           {matches.map((preset) => (
             <li key={preset.id}>
               <button
@@ -59,7 +59,7 @@ export const ArtStyleField = ({ value, presets, creating, disabled = false, erro
                 disabled={disabled}
                 onClick={() => pick(preset.name)}
                 className={cn(
-                  "flex w-full items-center justify-between px-3.5 py-2 text-left text-sm hover:bg-slate-50",
+                  "hover:bg-ink-50 flex w-full items-center justify-between px-3.5 py-2 text-left text-sm",
                   preset.name === value && "font-semibold"
                 )}
               >
@@ -77,7 +77,7 @@ export const ArtStyleField = ({ value, presets, creating, disabled = false, erro
         </Button>
       )}
       {error && (
-        <p role="alert" className="text-sm text-red-600">{error}</p>
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>
       )}
     </div>
   );

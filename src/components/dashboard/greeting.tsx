@@ -37,13 +37,13 @@ export const Greeting = ({ items, activeBatchCount }: GreetingProps) => {
       </div>
       <div className="flex flex-wrap gap-2 text-xs font-medium">
         {fixNow.length > 0 && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-rose-700">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
             <AlertTriangle className="size-3.5" aria-hidden="true" />
             {fixNow.length} to fix
           </span>
         )}
         {toReview.length > 0 && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-amber-800">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
             <ClipboardCheck className="size-3.5" aria-hidden="true" />
             {toReview.length} to review
           </span>

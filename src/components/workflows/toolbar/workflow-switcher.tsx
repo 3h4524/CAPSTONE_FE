@@ -37,7 +37,7 @@ export const WorkflowSwitcher = ({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button type="button" variant="ghost" size="sm" className="max-w-72 min-w-0 px-2" disabled={disabled}>
-          <span className="truncate text-base font-semibold text-slate-900">{name || "Workflow"}</span>
+          <span className="text-ink-900 truncate text-base font-semibold">{name || "Workflow"}</span>
           <ChevronsUpDown className="text-muted-foreground" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
@@ -61,7 +61,7 @@ export const WorkflowSwitcher = ({
       </DropdownMenuContent>
     </DropdownMenu>
     {isDirty && (
-      <span className="flex items-center gap-1.5 text-xs font-medium text-amber-700" role="status">
+      <span className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-300" role="status">
         <span className="size-2 rounded-full bg-amber-500" aria-hidden="true" />
         Unsaved
       </span>

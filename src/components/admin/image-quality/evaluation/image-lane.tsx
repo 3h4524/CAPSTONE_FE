@@ -1,4 +1,6 @@
 import { ImageCard } from "@/components/admin/image-quality/evaluation/image-card";
+import { HorizontalStrip } from "@/components/commons/data-display/horizontal-strip";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { ImageEvalImage } from "@/types/admin-image-quality";
 import { cn } from "@/utils/cn";
 
@@ -9,37 +11,45 @@ type ImageLaneProps = {
   isAfter?: boolean;
 };
 
-export const ImageLane = ({ title, images, versionLabels, isAfter = false }: ImageLaneProps) => (
+export const ImageLane = ({ title, images, versionLabels, isAfter = false }: ImageLaneProps) => {
+  const isPhone = useIsPhone();
+  const cards = images.map((image) => (
+    <ImageCard
+      key={image.id}
+      image={image}
+      versionLabel={versionLabels.get(image.version) ?? image.version}
+      isAfter={isAfter}
+    />
+  ));
+
+  return (
   <div
     className={cn(
-      "flex min-w-0 flex-col gap-3 rounded-lg p-4",
-      isAfter ? "bg-sky-50/70 ring-1 ring-sky-100" : "bg-slate-50 ring-1 ring-slate-100"
+      "flex min-w-0 flex-col gap-3 rounded-lg p-4 max-md:p-3",
+      isAfter ? "bg-sky-50/70 ring-1 ring-sky-100 dark:bg-sky-500/10 dark:ring-sky-500/30" : "bg-ink-50 ring-ink-100 ring-1"
     )}
   >
     <h4
       className={cn(
         "flex items-baseline gap-2 text-sm font-semibold",
-        isAfter ? "text-sky-900" : "text-slate-700"
+        isAfter ? "text-sky-900 dark:text-sky-300" : "text-ink-700"
       )}
     >
       {title}
-      <span className="text-xs font-normal text-slate-500">
+      <span className="text-ink-500 text-xs font-normal">
         {images.length} {images.length === 1 ? "image" : "images"}
       </span>
     </h4>
     {images.length === 0 ? (
-      <p className="text-[13px] text-slate-500">No image on this side.</p>
+      <p className="text-ink-500 text-[13px]">No image on this side.</p>
+    ) : isPhone ? (
+      // Side by side the images compare at a glance; stacked, one would fill the screen.
+      <HorizontalStrip itemsLabel={`${title.toLowerCase()} images`} itemCount={images.length} className="gap-3">
+        {cards}
+      </HorizontalStrip>
     ) : (
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
-        {images.map((image) => (
-          <ImageCard
-            key={image.id}
-            image={image}
-            versionLabel={versionLabels.get(image.version) ?? image.version}
-            isAfter={isAfter}
-          />
-        ))}
-      </div>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">{cards}</div>
     )}
   </div>
-);
+  );
+};

@@ -13,29 +13,29 @@ type AdminTopbarProps = {
 };
 
 const AdminTopbar = ({ onMenuClick, pageTitle = "Dashboard" }: AdminTopbarProps) => (
-  <header className="sticky top-0 z-20 border-b border-slate-200 bg-[#f8fafc]">
-    <div className="flex h-[52px] items-center justify-between gap-4 border-b border-slate-200 bg-white/80 px-4 max-md:h-16 md:px-7">
+  <header className="border-ink-200 bg-ink-50 sticky top-0 z-20 border-b">
+    <div className="border-ink-200 bg-card/80 flex h-[52px] items-center justify-between gap-4 border-b px-4 max-md:h-16 md:px-7">
       <div className="flex min-w-0 items-center gap-3">
         <Link href="/admin/dashboard" aria-label="Podivo admin, go to the dashboard" className="flex min-w-0 items-center gap-2 md:hidden">
           <span aria-hidden="true" className="flex shrink-0">
             <Logo height={36} width={36} />
           </span>
           <span className="font-display truncate text-base font-bold tracking-tight">Podivo</span>
-          <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-slate-500">ADMIN</span>
+          <span className="bg-ink-100 text-ink-500 rounded-md px-1.5 py-0.5 text-[10px] font-bold tracking-wide">ADMIN</span>
         </Link>
         <button
           type="button"
           onClick={onMenuClick}
-          className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 max-md:hidden lg:hidden"
+          className="text-ink-500 hover:bg-ink-100 rounded-md p-1.5 max-md:hidden lg:hidden"
           aria-label="Open navigation"
         >
           <Menu className="size-4" />
         </button>
 
-        <div className="flex items-center gap-2 text-[12px] font-medium tracking-[0.12em] text-slate-500 uppercase max-md:hidden">
+        <div className="text-ink-500 flex items-center gap-2 text-[12px] font-medium tracking-[0.12em] uppercase max-md:hidden">
           <span>Admin</span>
-          <span className="text-slate-300">/</span>
-          <span className="text-[12px] font-medium tracking-normal text-slate-700 lowercase">
+          <span className="text-ink-300">/</span>
+          <span className="text-ink-700 text-[12px] font-medium tracking-normal lowercase">
             {pageTitle}
           </span>
         </div>

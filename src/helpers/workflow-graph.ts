@@ -8,7 +8,7 @@ import {
   WORKFLOW_NODE_DEFINITIONS,
 } from "@/constants/workflow";
 import { getWorkflowNodeDefinition, normalizeNodeConfig, readString } from "@/helpers/workflow-config";
-import { findMissingMockupTemplates, isRunnableNode } from "@/helpers/workflow-run";
+import { findMissingMockupTemplates, isRunnableNode, supportsBatchVideos } from "@/helpers/workflow-run";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type {
   WorkflowDefinition,
@@ -166,9 +166,10 @@ const validateVideoPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): Wo
   if (issues.length === 0 && edges.length !== nodes.length - 1)
     issues.push({ id: "video-extra-edges", nodeId: null, message: "A video runs its steps in one line. Remove the extra connections." });
 
+  // Standard scenes make a video for every design chosen at Mockup Approval; AI scenes make one product's video.
   const input = nodes.find(node => node.data.type === "product-input");
-  if (input && !readString(input.data.config.productId))
-    issues.push({ id: `video-product-${input.id}`, nodeId: input.id, message: `${input.data.label}: Choose the product for the video.` });
+  if (input && !readString(input.data.config.productId) && !supportsBatchVideos(nodes))
+    issues.push({ id: `video-product-${input.id}`, nodeId: input.id, message: `${input.data.label}: AI scenes make one product's video. Choose the product.` });
   return issues;
 };
 

@@ -377,6 +377,24 @@ describe("validateWorkflow", () => {
     expect(validateWorkflow(pipelineNodes(), pipelineEdges())).toEqual([]);
   });
 
+  it("needs no product for Standard scenes: every design chosen at Mockup Approval gets a video", () => {
+    const nodes = pipelineNodes().map((item) =>
+      item.data.type === "product-input" ? { ...item, data: { ...item.data, config: { batchId: "batch-1", productId: "" } } } : item
+    );
+    expect(validateWorkflow(nodes, pipelineEdges()).filter((issue) => issue.id.startsWith("video-product"))).toEqual([]);
+  });
+
+  it("needs the product when an AI scene makes one product's video", () => {
+    const nodes = pipelineNodes().map((item) =>
+      item.data.type === "product-input"
+        ? { ...item, data: { ...item.data, config: { batchId: "batch-1", productId: "" } } }
+        : item.data.type === "generate-video"
+          ? { ...item, data: { ...item.data, config: { ...item.data.config, mode: "ai_shot", aiScenes: [{ mode: "ai" }] } } }
+          : item
+    );
+    expect(validateWorkflow(nodes, pipelineEdges()).map((issue) => issue.id)).toContain("video-product-input");
+  });
+
   it.each(nodeTypes)("accepts a valid %s config", (type) => {
     const issues = validateWorkflow([typedNode("n1", type, VALID_CONFIGS[type])], []);
 

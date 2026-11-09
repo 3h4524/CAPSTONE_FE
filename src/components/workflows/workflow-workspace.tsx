@@ -12,6 +12,7 @@ import { WorkflowCanvas } from "@/components/workflows/canvas/workflow-canvas";
 import { NodeConfigPanel } from "@/components/workflows/config-panel/node-config-panel";
 import { NodePalette } from "@/components/workflows/palette/node-palette";
 import { ResizableAside } from "@/components/workflows/resizable-aside";
+import { RunGroupBar } from "@/components/workflows/run/run-group-bar";
 import { WorkflowStepList } from "@/components/workflows/steps/workflow-step-list";
 import { WorkflowToolbar } from "@/components/workflows/toolbar/workflow-toolbar";
 import { SITE_CONFIG } from "@/constants/site";
@@ -19,6 +20,7 @@ import { DEFAULT_WORKFLOW_DEFINITION, DEFAULT_WORKFLOW_NAME } from "@/constants/
 import { isDockedPanelOpen } from "@/helpers/assistant-display-mode";
 import { showToast } from "@/helpers/toast";
 import { applyCompactDefaultLayoutIfStillVertical, resolveActiveWorkflowId } from "@/helpers/workflow-graph";
+import { supportsBatchVideos } from "@/helpers/workflow-run";
 import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
 import { useLatestWorkflowRun } from "@/hooks/queries/use-latest-workflow-run";
 import { useWorkflow } from "@/hooks/queries/use-workflow";
@@ -108,6 +110,16 @@ export const WorkflowWorkspace = () => {
     if (!changedFromAnotherProduct) return;
 
     const params = new URLSearchParams(window.location.search);
+    // With Standard scenes the product only previews the scenes: the run, its designs and its videos are the
+    // batch's, so they stay. What was chosen among the previous product's mock-ups goes.
+    if (supportsBatchVideos(useWorkflowStore.getState().nodes)) {
+      useWorkflowStore.setState((state) => ({
+        nodes: state.nodes.map((node) => node.data.type === "apply-mockup"
+          ? { ...node, data: { ...node.data, config: { ...node.data.config, mockupIds: [], artworkGroupKey: "" } } }
+          : node),
+      }));
+      return;
+    }
     // A product the open job made designs for keeps that job on the canvas: only what was chosen for the
     // video belongs to the product before.
     if (useWorkflowRunStore.getState().job?.products.some((product) => product.productId === productId)) {
@@ -264,6 +276,7 @@ export const WorkflowWorkspace = () => {
             ) : (
               <>
                 <WorkflowCanvas />
+                <RunGroupBar />
                 {isPhone && (
                   <Button type="button" variant="outline" size="sm" className="absolute top-3 left-3 z-10 bg-white" onClick={() => setShowsDiagram(false)}>
                     <ListOrdered aria-hidden="true" />

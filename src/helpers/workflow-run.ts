@@ -54,6 +54,22 @@ export const hasVideoSteps = (nodes: WorkflowNode[]) => nodes.some((node) => nod
 
 const findByType = (nodes: WorkflowNode[], type: WorkflowNodeType) => nodes.filter((node) => node.data.type === type);
 
+/**
+ * Whether the video settings can make one video for each design of a batch: Standard scenes only, since an AI scene
+ * is billed per clip and needs its own consent. Otherwise the video is made for the one product in Product input.
+ * The server checks the same.
+ */
+export const supportsBatchVideos = (nodes: WorkflowNode[]) => {
+  const [video] = findByType(nodes, "generate-video");
+  if (!video) return false;
+  const config = video.data.config;
+  const scenes = Array.isArray(config.aiScenes) ? (config.aiScenes as { mode?: unknown }[]) : [];
+  const mode = scenes.length > 0
+    ? scenes.every((scene) => scene?.mode === "standard") ? "standard" : "ai_shot"
+    : readString(config.mode) || "standard";
+  return mode === "standard" && readString(config.template) !== "product_on_model_pack";
+};
+
 const reachableFrom = (startId: string, edges: WorkflowEdge[]) => {
   const visited = new Set<string>();
   const stack = [startId];

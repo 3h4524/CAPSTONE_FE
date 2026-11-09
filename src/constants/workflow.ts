@@ -154,9 +154,9 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
       {
         kind: "product-select",
         name: "productId",
-        label: "Product for the video",
+        label: "Preview product",
         description:
-          "Designs and mock-ups are made for the whole batch. The video is made for this one product.",
+          "Optional. With Standard scenes every design you approve at Mockup Approval gets a video, and you set the scenes up on this product's mock-ups. AI scenes make this product's video only.",
       },
     ],
   },

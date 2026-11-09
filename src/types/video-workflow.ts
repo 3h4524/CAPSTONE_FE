@@ -258,6 +258,9 @@ export interface MockupAsset {
   regions: MockupRegions;
   previewUrl: string;
   warnings: string[];
+  /** The mock-up template it was composited from; null for an uploaded or AI-made image. */
+  mockupTemplateId?: string | null;
+  designImageId?: string | null;
 }
 export interface AiStudioFrameRequest {
   sourceMockupId: string;
@@ -494,6 +497,77 @@ export interface WorkflowRun {
   createdAt: string;
   errorMessage: string | null;
   nodes: WorkflowNodeRun[];
+  /** Set on the runs of a batch video run, one per design. */
+  runGroupId?: string | null;
+  artworkGroupKey?: string | null;
+}
+export interface RunGroupProgress {
+  total: number;
+  queued: number;
+  running: number;
+  waitingForReview: number;
+  completed: number;
+  failed: number;
+  cancelled: number;
+  waitingForInput: number;
+}
+export interface RunGroupScenePreview {
+  sceneIndex: number;
+  mockupId: string | null;
+  previewUrl: string | null;
+  warning: string | null;
+  overridden: boolean;
+}
+/** One design of one product in a batch video run. */
+export interface RunGroupTarget {
+  key: string;
+  productId: string;
+  productName: string;
+  productType: string;
+  artworkGroupKey: string;
+  designLabel: string;
+  previewUrl: string | null;
+  mockupCount: number;
+  approvedCount: number;
+  pendingCount: number;
+  selected: boolean;
+  hasOverride: boolean;
+  scenes: RunGroupScenePreview[];
+  warnings: string[];
+  /** Why the design cannot be rendered with the current scenes; null when it can. */
+  resolveError: string | null;
+  runId: string | null;
+  runStatus: string | null;
+  currentStep: string | null;
+  stage: string | null;
+  progress: number;
+  runError: string | null;
+}
+export type RunGroupStatus = "waiting_for_targets" | "running" | "completed" | "cancelled";
+export interface RunGroup {
+  id: string;
+  workflowId: string;
+  batchId: string;
+  batchJobId: string | null;
+  status: RunGroupStatus;
+  revision: number;
+  workflowRevision: number;
+  createdAt: string;
+  maximumTargets: number;
+  selectedCount: number;
+  progress: RunGroupProgress;
+  targets: RunGroupTarget[];
+}
+export interface RunGroupSummary {
+  id: string;
+  status: RunGroupStatus;
+  createdAt: string;
+  targetCount: number;
+  completedCount: number;
+}
+export interface SceneMockupOverride {
+  sceneIndex: number;
+  mockupId: string;
 }
 export interface VideoRunSummary {
   id: string;

@@ -12,7 +12,7 @@ export type NodePanelSection = {
 export const NODE_PANEL_SECTIONS: Partial<Record<WorkflowNodeType, NodePanelSection[]>> = {
   "product-input": [
     { title: "Input", fields: ["batchId"] },
-    { title: "Video", fields: ["productId"] },
+    { title: "Video preview", fields: ["productId"] },
   ],
   "prompt-synthesis": [
     { title: "Prompt", fields: ["designTemplateId", "stylePresetId", "instructions"] },

@@ -124,6 +124,7 @@ const BASE_SCENE: AiVideoSceneOptions = {
   studioReferenceHashes: [],
 };
 const EMPTY_SCENES: AiVideoSceneOptions[] = [];
+const EMPTY_IDS: string[] = [];
 const workflowModeForScenes = (scenes: AiVideoSceneOptions[]) =>
   scenes.length > 0 && scenes.every((scene) => scene.mode === "standard") ? "standard" : "ai_shot";
 
@@ -425,11 +426,16 @@ export function AiShotOptions({
   } | null>(null);
   const [referenceFilesByScene, setReferenceFilesByScene] = useState<Record<number, File[]>>({});
   const node = useWorkflowStore((state) => state.nodes.find((item) => item.id === nodeId));
-  const productId = useWorkflowStore((state) =>
+  const inputProductId = useWorkflowStore((state) =>
     readString(
       state.nodes.find((item) => item.data.type === "product-input")?.data.config.productId
     )
   );
+  const { run } = useWorkflowRuntime();
+  // A design's own run of a batch video run edits that design's scenes, on its own mock-ups; otherwise the scenes
+  // are set up on the product in Product input.
+  const designRun = run?.runGroupId ? run : null;
+  const productId = designRun?.productId ?? inputProductId;
   const applyMockupNode = useWorkflowStore((state) =>
     state.nodes.find((item) => item.data.type === "apply-mockup")
   );
@@ -448,13 +454,12 @@ export function AiShotOptions({
     mutateAsync: reviewStudioFrameAsync,
     isPending: isReviewingStudioFrame,
   } = useReviewMockupAsset();
-  const { run } = useWorkflowRuntime();
   const { saveWorkflow } = useWorkflowSave();
   const sceneRunId = run?.id ?? null;
   const { data: sceneVideos = [] } = useRunSceneVideos(sceneRunId);
   const { mutateAsync: actOnRun } = useWorkflowRunAction();
-  const chosenMockupIds = readStringArray(applyMockupNode?.data.config.mockupIds);
-  const artworkGroupKey = readString(applyMockupNode?.data.config.artworkGroupKey);
+  const chosenMockupIds = designRun ? EMPTY_IDS : readStringArray(applyMockupNode?.data.config.mockupIds);
+  const artworkGroupKey = designRun?.artworkGroupKey ?? readString(applyMockupNode?.data.config.artworkGroupKey);
   const rawScenes =
     (node?.data.config.aiScenes as AiVideoSceneOptions[] | undefined) ?? EMPTY_SCENES;
   const defaultVideoModel =

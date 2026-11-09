@@ -24,16 +24,19 @@ import { PromptRecipe } from "@/components/workflows/config-panel/prompt-recipe"
 import { EtsyPublishSettings, PrintifyPublishSettings } from "@/components/workflows/config-panel/publish-settings";
 import { MockupPanel } from "@/components/workflows/media/mockup-panel";
 import { ModelPhotoSection } from "@/components/workflows/media/model-photo-section";
+import { RunGroupScenesGrid } from "@/components/workflows/media/run-group-scenes-grid";
 import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
 import { StoryboardPanel } from "@/components/workflows/media/storyboard-panel";
 import { VideoReviewPanel } from "@/components/workflows/media/video-review-panel";
 import { VideoSourcesHeader } from "@/components/workflows/media/video-sources-header";
+import { RunGroupPanel } from "@/components/workflows/run/run-group-panel";
 import { WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
 import { NODE_PANEL_SECTIONS } from "@/constants/workflow-panel";
 import { getVideoOutputFormat } from "@/helpers/video-output-formats";
 import { readString } from "@/helpers/workflow-config";
 import { groupPanelFields } from "@/helpers/workflow-panel";
-import { hasVideoSteps, isVideoRunNode } from "@/helpers/workflow-run";
+import { hasVideoSteps, isVideoRunNode, supportsBatchVideos } from "@/helpers/workflow-run";
+import { useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useNodeOverview } from "@/hooks/use-node-overview";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -59,6 +62,9 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
     )
   );
   const hasVideo = useWorkflowStore((state) => hasVideoSteps(state.nodes));
+  // Standard scenes make one video per design chosen at Mockup Approval; AI scenes, one product's video.
+  const batchVideos = useWorkflowStore((state) => hasVideoSteps(state.nodes) && supportsBatchVideos(state.nodes));
+  const groupId = useRunGroupId();
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const selectNode = useWorkflowStore((state) => state.selectNode);
   const overview = useNodeOverview(node);
@@ -244,7 +250,7 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
             <ModelPhotoSection />
           </PanelSection>
         )}
-        {node.data.type === "apply-mockup" && hasVideo && (
+        {node.data.type === "apply-mockup" && hasVideo && !batchVideos && (
           <PanelSection
             title="Mock-ups for the video"
             description="Choose which of this product's mock-ups the video may use, or upload finished mock-up photos. Leave all unchecked to let the video pick."
@@ -256,16 +262,34 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
         {node.data.type === "approval-gate" && (
           <>
             <ApprovalFlow from="apply-mockup" to="generate-video" automatic={false} />
-            <PanelSection
-              title="Mock-ups for the video"
-              description="Approve the mock-ups to use in the video. The ones made by Apply mock-up are added here when the video part starts."
-            >
-              <RunStatusPanel />
-              <VideoProductSelect />
-              <VideoSourcesHeader />
-              <MockupPanel review />
-            </PanelSection>
+            {groupId ? (
+              <PanelSection title="Designs that get a video">
+                <RunGroupPanel />
+              </PanelSection>
+            ) : batchVideos ? (
+              <PanelSection title="Designs that get a video">
+                <PanelNotice tone="info">
+                  When a run reaches this step, every design of its products is listed here. Approve the mock-ups of the
+                  designs that should get a video, then choose Continue.
+                </PanelNotice>
+              </PanelSection>
+            ) : (
+              <PanelSection
+                title="Mock-ups for the video"
+                description="Approve the mock-ups to use in the video. The ones made by Apply mock-up are added here when the video part starts."
+              >
+                <RunStatusPanel />
+                <VideoProductSelect />
+                <VideoSourcesHeader />
+                <MockupPanel review />
+              </PanelSection>
+            )}
           </>
+        )}
+        {node.data.type === "generate-video" && groupId && (
+          <PanelSection title="Scenes of each design">
+            <RunGroupScenesGrid />
+          </PanelSection>
         )}
         {((isVideoRunNode(node.data.type) && node.data.type !== "approval-gate") ||
           node.data.type === "generate-listing") && (

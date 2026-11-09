@@ -7,10 +7,11 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 
 type UnauthorizedPageProps = {
-  dashboardHref: string;
+  actionHref: string;
+  actionLabelKey: "errors.goToDashboard" | "errors.goToSignIn";
 };
 
-export const UnauthorizedPage = ({ dashboardHref }: UnauthorizedPageProps) => {
+export const UnauthorizedPage = ({ actionHref, actionLabelKey }: UnauthorizedPageProps) => {
   const { t } = useTranslation("common");
 
   return (
@@ -29,7 +30,7 @@ export const UnauthorizedPage = ({ dashboardHref }: UnauthorizedPageProps) => {
           {t("errors.unauthorizedDescription")}
         </p>
         <Button asChild className="mt-7">
-          <Link href={dashboardHref}>{t("errors.goToDashboard")}</Link>
+          <Link href={actionHref}>{t(actionLabelKey)}</Link>
         </Button>
       </section>
     </main>

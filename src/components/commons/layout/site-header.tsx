@@ -17,12 +17,17 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { NAV_LINKS } from "@/data/landing-content";
+import { resolveSignedInLanding } from "@/helpers/auth-return-url";
 import { useNavigation } from "@/hooks/use-navigation";
+import { useAuthStore } from "@/stores/auth";
 import { cn } from "@/utils/cn";
 
 export const SiteHeader = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { handleNavClick, isItemActive } = useNavigation();
+  const isHydrated = useAuthStore((state) => state.isHydrated);
+  const user = useAuthStore((state) => state.user);
+  const dashboardHref = user ? resolveSignedInLanding(user) : "/dashboard";
 
   const handleMobileNavClick = (item: (typeof NAV_LINKS)[number]) => {
     setIsMobileMenuOpen(false);
@@ -59,15 +64,23 @@ export const SiteHeader = () => {
           })}
         </nav>
         <div className="hidden items-center gap-5 md:flex">
-          <Link
-            href="login"
-            className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors focus-visible:underline focus-visible:outline-none"
-          >
-            Login
-          </Link>
-          <Button variant="defaultWithTextWhite" size="sm" asChild>
-            <Link href="/register">Get Started</Link>
-          </Button>
+          {!isHydrated ? null : user ? (
+            <Button variant="defaultWithTextWhite" size="sm" asChild>
+              <Link href={dashboardHref}>Dashboard</Link>
+            </Button>
+          ) : (
+            <>
+              <Link
+                href="login"
+                className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors focus-visible:underline focus-visible:outline-none"
+              >
+                Login
+              </Link>
+              <Button variant="defaultWithTextWhite" size="sm" asChild>
+                <Link href="/register">Get Started</Link>
+              </Button>
+            </>
+          )}
         </div>
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
@@ -99,27 +112,52 @@ export const SiteHeader = () => {
                   </button>
                 );
               })}
-              <SheetClose asChild>
-                <Link
-                  href="login"
-                  className="hover:bg-muted focus-visible:ring-ring rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                >
-                  Login
-                </Link>
-              </SheetClose>
+              {!isHydrated ? null : user ? (
+                <SheetClose asChild>
+                  <Link
+                    href={dashboardHref}
+                    className="hover:bg-muted focus-visible:ring-ring text-primary rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    Dashboard
+                  </Link>
+                </SheetClose>
+              ) : (
+                <SheetClose asChild>
+                  <Link
+                    href="login"
+                    className="hover:bg-muted focus-visible:ring-ring rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    Login
+                  </Link>
+                </SheetClose>
+              )}
             </nav>
             <div className="mt-auto p-4">
-              <SheetClose asChild>
-                <Link
-                  href="register"
-                  className={buttonVariants({
-                    variant: "defaultWithTextWhite",
-                    className: "w-full",
-                  })}
-                >
-                  Get Started
-                </Link>
-              </SheetClose>
+              {!isHydrated ? null : user ? (
+                <SheetClose asChild>
+                  <Link
+                    href={dashboardHref}
+                    className={buttonVariants({
+                      variant: "defaultWithTextWhite",
+                      className: "w-full",
+                    })}
+                  >
+                    Dashboard
+                  </Link>
+                </SheetClose>
+              ) : (
+                <SheetClose asChild>
+                  <Link
+                    href="register"
+                    className={buttonVariants({
+                      variant: "defaultWithTextWhite",
+                      className: "w-full",
+                    })}
+                  >
+                    Get Started
+                  </Link>
+                </SheetClose>
+              )}
             </div>
           </SheetContent>
         </Sheet>

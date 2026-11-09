@@ -2,8 +2,6 @@ import { cookies } from "next/headers";
 
 import type { AuthenticatedUser } from "@/types/auth";
 
-const ADMIN_ROLE = "Admin";
-
 export const getSessionUser = async (): Promise<AuthenticatedUser | null> => {
   try {
     const cookieStore = await cookies();
@@ -20,16 +18,4 @@ export const getSessionUser = async (): Promise<AuthenticatedUser | null> => {
   } catch {
     return null;
   }
-};
-
-export const resolveSignedInLanding = (
-  user: AuthenticatedUser,
-  returnUrl?: string
-): string => {
-  if (returnUrl?.startsWith("/") && !returnUrl.startsWith("//")) {
-    return returnUrl;
-  }
-
-  const isAdmin = user.roles.some((role) => role.toLowerCase() === ADMIN_ROLE.toLowerCase());
-  return isAdmin ? "/admin/dashboard" : "/dashboard";
 };

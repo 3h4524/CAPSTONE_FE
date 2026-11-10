@@ -14,11 +14,11 @@ export const printifyKey = (userId?: string) => ["printify-connection", userId] 
 
 /** What each state means for the seller, and whether the fix is on the API Keys page. */
 const states: Record<PrintifyConnection["status"], { badge: string; tone: string; text: string; fixOnApiKeys: boolean }> = {
-  connected: { badge: "Connected", tone: "bg-emerald-50 text-emerald-800 ring-emerald-200", text: "", fixOnApiKeys: false },
-  not_connected: { badge: "Not connected", tone: "bg-slate-50 text-slate-600 ring-slate-200", text: "Add your Printify API key on the API Keys page to print and ship designs when Etsy orders come in.", fixOnApiKeys: true },
-  key_invalid: { badge: "Key not working", tone: "bg-amber-50 text-amber-800 ring-amber-200", text: "Your Printify key is disabled, expired or was refused by Printify. Check or replace it on the API Keys page.", fixOnApiKeys: true },
-  no_store: { badge: "No store", tone: "bg-amber-50 text-amber-800 ring-amber-200", text: "The key works, but your Printify account has no store. On Printify, add a store linked to your Etsy shop (My stores → Add new store → Etsy).", fixOnApiKeys: false },
-  unavailable: { badge: "Unavailable", tone: "bg-slate-50 text-slate-600 ring-slate-200", text: "Printify is not answering right now. Your key is still saved; check again in a moment.", fixOnApiKeys: false },
+  connected: { badge: "Connected", tone: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 ring-emerald-200 dark:ring-emerald-500/30", text: "", fixOnApiKeys: false },
+  not_connected: { badge: "Not connected", tone: "bg-ink-50 text-ink-600 ring-ink-200", text: "Add your Printify API key on the API Keys page to print and ship designs when Etsy orders come in.", fixOnApiKeys: true },
+  key_invalid: { badge: "Key not working", tone: "bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 ring-amber-200 dark:ring-amber-500/30", text: "Your Printify key is disabled, expired or was refused by Printify. Check or replace it on the API Keys page.", fixOnApiKeys: true },
+  no_store: { badge: "No store", tone: "bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 ring-amber-200 dark:ring-amber-500/30", text: "The key works, but your Printify account has no store. On Printify, add a store linked to your Etsy shop (My stores → Add new store → Etsy).", fixOnApiKeys: false },
+  unavailable: { badge: "Unavailable", tone: "bg-ink-50 text-ink-600 ring-ink-200", text: "Printify is not answering right now. Your key is still saved; check again in a moment.", fixOnApiKeys: false },
 };
 
 /**
@@ -44,34 +44,34 @@ export function PrintifyCard() {
   const connected = connection?.status === "connected";
 
   return (
-    <Card className="gap-0 overflow-hidden border-slate-200 bg-white py-0 shadow-sm">
-      <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <Card className="border-ink-200 bg-card gap-0 overflow-hidden py-0 shadow-sm">
+      <div className="flex flex-col gap-3 px-5 py-4 max-md:p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white"><Printer className="size-5" /></span>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-semibold text-slate-900">Printify</h3>
-              {connectionQuery.isPending && <Loader2 className="size-3.5 animate-spin text-slate-400" />}
+              <h3 className="text-ink-900 font-semibold">Printify</h3>
+              {connectionQuery.isPending && <Loader2 className="text-ink-400 size-3.5 animate-spin" />}
               {state && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${state.tone}`}>{state.badge}</span>}
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-ink-500 text-xs">
               {connected
                 ? `${connection.shopTitle} · publishes to ${connection.salesChannel ?? "no channel"} · ${connection.productsCreated} product(s) sent from Podivo${connection.keyName ? ` · key “${connection.keyName}”` : ""}`
                 : state?.text ?? "Prints and ships your designs when an Etsy order comes in."}
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 gap-2">
-          <Button type="button" size="sm" variant="outline" onClick={() => checkMutation.mutate()} disabled={checkMutation.isPending || connectionQuery.isPending}>
+        <div className="flex shrink-0 gap-2 max-md:grid max-md:grid-cols-2">
+          <Button type="button" size="sm" variant="outline" className="max-md:px-2" onClick={() => checkMutation.mutate()} disabled={checkMutation.isPending || connectionQuery.isPending}>
             <RefreshCw className={checkMutation.isPending ? "size-3.5 animate-spin" : "size-3.5"} />Check connection
           </Button>
-          <Button asChild size="sm" variant={state?.fixOnApiKeys ? "default" : "outline"}>
+          <Button asChild size="sm" variant={state?.fixOnApiKeys ? "default" : "outline"} className="max-md:px-2">
             <Link href="/api-keys"><KeyRound className="size-3.5" />{connection?.status === "not_connected" ? "Add Printify key" : "Manage key"}</Link>
           </Button>
         </div>
       </div>
       {connected && connection.salesChannel !== "etsy" && (
-        <p className="flex items-start gap-2 border-t border-amber-100 bg-amber-50 px-5 py-2.5 text-xs text-amber-900">
+        <p className="flex items-start gap-2 border-t border-amber-100 bg-amber-50 px-5 py-2.5 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
           <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
           This Printify store is not linked to Etsy, so products published from it will not reach your Etsy shop. Link it on Printify (My stores → Add new store → Etsy).
         </p>

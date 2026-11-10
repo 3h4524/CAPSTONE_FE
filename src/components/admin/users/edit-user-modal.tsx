@@ -130,16 +130,16 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className={cn("max-h-[90vh] max-w-[480px] overflow-y-auto rounded-[24px] border border-slate-200/50 bg-slate-50 p-0 shadow-2xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden", USER_DIALOG_ON_PHONE)}>
+      <DialogContent className={cn("border-ink-200/50 bg-ink-50 max-h-[90vh] max-w-[480px] overflow-y-auto rounded-[24px] border p-0 shadow-2xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden", USER_DIALOG_ON_PHONE)}>
         <div className="relative p-8 pb-6 max-md:p-5 max-md:pb-0">
           
           {/* Header & Avatar: Matching View Detail exactly */}
           <div className="flex flex-col items-center text-center">
             <div className="group relative cursor-pointer">
-              <div className="flex size-24 items-center justify-center rounded-full border border-slate-100 bg-white p-1.5 shadow-sm max-md:size-16">
+              <div className="border-ink-100 bg-card flex size-24 items-center justify-center rounded-full border p-1.5 shadow-sm max-md:size-16">
                 <Avatar className="h-full w-full">
                   <AvatarImage src={formData.avatarUrl || ""} alt={formData.fullName} className="rounded-full object-cover" />
-                  <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-slate-900 text-3xl font-bold text-white">
+                  <AvatarFallback className="bg-ink-900 text-card flex h-full w-full items-center justify-center rounded-full text-3xl font-bold">
                     {formData.fullName.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -154,10 +154,10 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
               </div>
             </div>
 
-            <DialogTitle className="mt-5 text-2xl font-bold tracking-tight text-slate-900 max-md:mt-3 max-md:text-xl">
+            <DialogTitle className="text-ink-900 mt-5 text-2xl font-bold tracking-tight max-md:mt-3 max-md:text-xl">
               Edit User Profile
             </DialogTitle>
-            <p className="mt-1 text-sm font-medium text-slate-500">
+            <p className="text-ink-500 mt-1 text-sm font-medium">
               Update information and access settings
             </p>
           </div>
@@ -166,10 +166,10 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
 
             {/* Avatar URL Edit Field */}
             {isEditingAvatar && (
-              <div className="animate-in fade-in slide-in-from-top-2 rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm">
+              <div className="animate-in fade-in slide-in-from-top-2 border-ink-100/60 bg-card rounded-2xl border p-4 shadow-sm">
                 <div className="mb-2 flex items-center gap-2">
-                  <Camera className="size-4 text-slate-400" />
-                  <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Avatar URL</span>
+                  <Camera className="text-ink-400 size-4" />
+                  <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Avatar URL</span>
                 </div>
                 <Input
                   id="avatarUrl"
@@ -177,31 +177,31 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
                   value={formData.avatarUrl || ""}
                   onChange={handleChange}
                   placeholder="https://example.com/avatar.jpg"
-                  className="h-9 border-slate-200 text-sm focus-visible:ring-slate-400"
+                  className="border-ink-200 focus-visible:ring-ink-400 h-9 text-sm"
                 />
               </div>
             )}
 
             {/* General Info Block */}
-            <div className="space-y-4 rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+            <div className="border-ink-100/60 bg-card space-y-4 rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md">
               <div>
                 <div className="mb-2 flex items-center gap-2">
-                  <UserCircle2 className="size-4 text-slate-400" />
-                  <Label htmlFor="fullName" className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Full Name</Label>
+                  <UserCircle2 className="text-ink-400 size-4" />
+                  <Label htmlFor="fullName" className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Full Name</Label>
                 </div>
                 <Input
                   id="fullName"
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleChange}
-                  className="h-10 border-slate-200 text-sm focus-visible:ring-slate-400"
+                  className="border-ink-200 focus-visible:ring-ink-400 h-10 text-sm"
                 />
               </div>
 
               <div>
                 <div className="mb-2 flex items-center gap-2">
-                  <Mail className="size-4 text-slate-400" />
-                  <Label htmlFor="email" className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Email</Label>
+                  <Mail className="text-ink-400 size-4" />
+                  <Label htmlFor="email" className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Email</Label>
                 </div>
                 <Input
                   id="email"
@@ -209,14 +209,14 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="h-10 border-slate-200 text-sm focus-visible:ring-slate-400"
+                  className="border-ink-200 focus-visible:ring-ink-400 h-10 text-sm"
                 />
               </div>
 
               <div>
                 <div className="mb-2 flex items-center gap-2">
-                  <Calendar className="size-4 text-slate-400" />
-                  <Label htmlFor="birthday" className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Birthday</Label>
+                  <Calendar className="text-ink-400 size-4" />
+                  <Label htmlFor="birthday" className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Birthday</Label>
                 </div>
                 <Input
                   id="birthday"
@@ -225,36 +225,36 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
                   max={new Date(Date.now() - 86400000).toISOString().split('T')[0]}
                   value={formData.birthday || ""}
                   onChange={handleChange}
-                  className="h-10 border-slate-200 text-sm focus-visible:ring-slate-400"
+                  className="border-ink-200 focus-visible:ring-ink-400 h-10 text-sm"
                 />
               </div>
 
               <div>
                 <div className="mb-2 flex items-center gap-2">
-                  <Activity className="size-4 text-slate-400" />
-                  <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Status</Label>
+                  <Activity className="text-ink-400 size-4" />
+                  <Label className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Status</Label>
                 </div>
                 <Select
                   value={formData.accountStatus}
                   onValueChange={(val) => setFormData((prev) => ({ ...prev, accountStatus: val }))}
                 >
-                  <SelectTrigger className="h-10 w-full border-slate-200 text-sm focus:ring-slate-400">
+                  <SelectTrigger className="border-ink-200 focus:ring-ink-400 h-10 w-full text-sm">
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active" className="text-sm font-semibold">Active</SelectItem>
                     <SelectItem value="pending_verification" className="text-sm font-semibold">Pending</SelectItem>
-                    <SelectItem value="suspended" className="text-sm font-semibold text-rose-600">Suspended</SelectItem>
+                    <SelectItem value="suspended" className="text-sm font-semibold text-rose-600 dark:text-rose-400">Suspended</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             {/* Role Block */}
-            <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+            <div className="border-ink-100/60 bg-card rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-3 flex items-center gap-2">
-                <ShieldAlert className="size-4 text-slate-400" />
-                <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Role</Label>
+                <ShieldAlert className="text-ink-400 size-4" />
+                <Label className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Role</Label>
               </div>
               <div className="flex gap-2">
                 {ROLES.map((role) => {
@@ -267,8 +267,8 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
                       className={cn(
                         "flex-1 rounded-lg border py-2 text-center text-sm font-semibold transition-all duration-200 ease-out",
                         isSelected
-                          ? "border-slate-900 bg-slate-900 text-white shadow-sm"
-                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                          ? "border-ink-900 bg-ink-900 text-card shadow-sm"
+                          : "border-ink-200 bg-card text-ink-600 hover:bg-ink-50"
                       )}
                     >
                       {role.label}
@@ -280,44 +280,44 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
 
             {/* Seller Info Block */}
             {isSeller && (
-              <div className="flex items-center justify-between rounded-2xl border border-indigo-100/60 bg-indigo-50/30 p-4 shadow-sm transition-shadow hover:shadow-md">
+              <div className="flex items-center justify-between rounded-2xl border border-indigo-100/60 bg-indigo-50/30 p-4 shadow-sm transition-shadow hover:shadow-md dark:border-indigo-500/30 dark:bg-indigo-500/10">
                 <div>
                   <div className="mb-1 flex items-center gap-2">
                     <Zap className="size-4 text-indigo-500" />
                     <span className="text-[10px] font-bold tracking-wider text-indigo-400 uppercase">Current Plan</span>
                   </div>
-                  <span className="mt-1 inline-block rounded-full bg-indigo-100 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-indigo-700 uppercase">{user.plan}</span>
+                  <span className="mt-1 inline-block rounded-full bg-indigo-100 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-indigo-700 uppercase dark:bg-indigo-500/15 dark:text-indigo-300">{user.plan}</span>
                 </div>
-                <div className="h-10 w-px bg-indigo-100"></div>
+                <div className="h-10 w-px bg-indigo-100 dark:bg-indigo-500/15"></div>
                 <div className="text-right">
                   <div className="mb-1 flex items-center justify-end gap-2">
                     <span className="text-[10px] font-bold tracking-wider text-indigo-400 uppercase">Plan Price / Mo</span>
                   </div>
-                  <span className="text-lg font-bold text-indigo-900">{formatVnd(user.monthlyApiCost)}</span>
+                  <span className="text-lg font-bold text-indigo-900 dark:text-indigo-300">{formatVnd(user.monthlyApiCost)}</span>
                 </div>
               </div>
             )}
 
             {/* Password Reset Block */}
-            <div className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+            <div className="border-ink-100/60 bg-card rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-3 flex items-center gap-2">
-                <ShieldCheck className="size-4 text-slate-400" />
-                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Password</span>
+                <ShieldCheck className="text-ink-400 size-4" />
+                <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Password</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="font-mono text-lg leading-none text-slate-400">••••••••</span>
+                <span className="text-ink-400 font-mono text-lg leading-none">••••••••</span>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 rounded-lg border-slate-200 text-xs font-semibold text-slate-600 shadow-sm hover:bg-slate-50 hover:text-slate-900"
+                  className="border-ink-200 text-ink-600 hover:bg-ink-50 hover:text-ink-900 h-8 rounded-lg text-xs font-semibold shadow-sm"
                   onClick={() => resetPasswordMutation.mutate()}
                   disabled={resetPasswordMutation.isPending}
                 >
                   {resetPasswordMutation.isPending ? (
-                    <Loader2 className="mr-2 size-3 animate-spin text-slate-500" />
+                    <Loader2 className="text-ink-500 mr-2 size-3 animate-spin" />
                   ) : (
-                    <Mail className="mr-1.5 size-3 text-slate-500" />
+                    <Mail className="text-ink-500 mr-1.5 size-3" />
                   )}
                   Reset Password
                 </Button>
@@ -332,14 +332,14 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
               type="button" 
               variant="outline" 
               onClick={onClose} 
-              className="h-11 flex-1 rounded-xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900"
+              className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 hover:text-ink-900 h-11 flex-1 rounded-xl font-semibold shadow-sm"
             >
               Cancel
             </Button>
             <Button 
               onClick={handleSave} 
               disabled={updateMutation.isPending}
-              className="h-11 flex-1 rounded-xl bg-slate-900 font-semibold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-[0.98]"
+              className="bg-ink-900 text-card hover:bg-ink-800 h-11 flex-1 rounded-xl font-semibold shadow-sm transition-all active:scale-[0.98]"
             >
               {updateMutation.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
               Save Changes

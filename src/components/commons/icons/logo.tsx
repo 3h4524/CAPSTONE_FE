@@ -1,6 +1,17 @@
+import { useId } from "react";
+
 import type { IconProps } from "@/types/commons";
 
-export const Logo = ({ width = "40px", height = "40px", ...otherProps }: IconProps) => (
+/**
+ * The drawing itself, for `next/og` images: their renderer cannot run hooks, and an image holds a single
+ * logo, so the fixed gradient ids are safe there. Pages use `Logo`.
+ */
+export const StaticLogo = ({
+  width = "40px",
+  height = "40px",
+  gradientPrefix = "logo-podivo",
+  ...otherProps
+}: IconProps & { gradientPrefix?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 512 512"
@@ -10,18 +21,18 @@ export const Logo = ({ width = "40px", height = "40px", ...otherProps }: IconPro
     {...otherProps}
   >
     <defs>
-      <linearGradient id="logo-podivo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <linearGradient id={`${gradientPrefix}-gradient`} x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#8B5CF6" />
         <stop offset="50%" stopColor="#7C3AED" />
         <stop offset="100%" stopColor="#4F46E5" />
       </linearGradient>
-      <linearGradient id="logo-podivo-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <linearGradient id={`${gradientPrefix}-glow`} x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#C4B5FD" stopOpacity="0.6" />
         <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
       </linearGradient>
     </defs>
 
-    <rect x="32" y="32" width="448" height="448" rx="112" ry="112" fill="url(#logo-podivo-gradient)" />
+    <rect x="32" y="32" width="448" height="448" rx="112" ry="112" fill={`url(#${gradientPrefix}-gradient)`} />
     <rect
       x="34"
       y="34"
@@ -30,7 +41,7 @@ export const Logo = ({ width = "40px", height = "40px", ...otherProps }: IconPro
       rx="110"
       ry="110"
       fill="none"
-      stroke="url(#logo-podivo-glow)"
+      stroke={`url(#${gradientPrefix}-glow)`}
       strokeWidth="4"
     />
 
@@ -68,3 +79,12 @@ export const Logo = ({ width = "40px", height = "40px", ...otherProps }: IconPro
     />
   </svg>
 );
+
+/**
+ * Each logo on a page needs gradient ids of its own. With shared ids every logo paints with the first one's
+ * gradients, and when that first logo sits in a hidden sidebar those gradients draw nothing.
+ */
+export const Logo = (props: IconProps) => {
+  const id = useId().replace(/[^\w-]/g, "");
+  return <StaticLogo {...props} gradientPrefix={`logo-${id}`} />;
+};

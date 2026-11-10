@@ -20,7 +20,7 @@ type GarmentColorPickerProps = {
 export const GarmentColorSwatch = ({ hex, className }: { hex: string; className?: string }) => (
   <span
     title={garmentColorName(hex)}
-    className={cn("inline-block size-3.5 shrink-0 rounded-full border border-slate-300", className)}
+    className={cn("border-ink-300 inline-block size-3.5 shrink-0 rounded-full border", className)}
     style={{ backgroundColor: hex }}
   />
 );
@@ -53,7 +53,7 @@ export const GarmentColorPicker = ({ selected, onToggle, disabled = false, max, 
               disabled={disabled || (!active && full)}
               onClick={() => onToggle(hex)}
               className={cn(
-                "flex items-center justify-center rounded-full border border-slate-300 transition disabled:opacity-40",
+                "border-ink-300 flex items-center justify-center rounded-full border transition disabled:opacity-40",
                 compact ? "size-6" : "size-8",
                 active && "ring-primary ring-2 ring-offset-2"
               )}

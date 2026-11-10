@@ -37,7 +37,9 @@ describe("useAdminTwoFactor", () => {
   beforeEach(() => {
     useAuthStore.setState(initialAuthState, true);
     server.use(
-      http.post(VERIFY_2FA_URL, () => HttpResponse.json({ user: buildAuthenticatedUser() }))
+      http.post(VERIFY_2FA_URL, () =>
+        HttpResponse.json({ user: buildAuthenticatedUser({ roles: ["Admin"] }) })
+      )
     );
   });
 

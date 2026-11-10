@@ -8,10 +8,10 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 /** Each tone's arc as a gradient from its light end to its deep end, with a track to match. */
 const TONES = {
-  brand: { from: "#60c5b7", to: "#2fae93", track: "#e6f4f2" },
-  amber: { from: "#fcd34d", to: "#f59e0b", track: "#fef6e0" },
-  rose: { from: "#fda4af", to: "#f43f5e", track: "#ffe9ec" },
-  slate: { from: "#cbd5e1", to: "#94a3b8", track: "#f1f4f8" },
+  brand: { from: "#60c5b7", to: "#2fae93", track: "color-mix(in srgb, #2fae93 16%, transparent)" },
+  amber: { from: "#fcd34d", to: "#f59e0b", track: "color-mix(in srgb, #f59e0b 16%, transparent)" },
+  rose: { from: "#fda4af", to: "#f43f5e", track: "color-mix(in srgb, #f43f5e 14%, transparent)" },
+  slate: { from: "#cbd5e1", to: "#94a3b8", track: "var(--ink-100)" },
 } as const;
 
 export type RingTone = keyof typeof TONES;

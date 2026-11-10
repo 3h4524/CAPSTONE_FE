@@ -17,8 +17,8 @@ type StylePresetCardProps = {
 export const StylePresetCard = ({ value, name, description, previewImageUrl, selected }: StylePresetCardProps) => (
   <label
     className={cn(
-      "flex cursor-pointer items-start gap-3 rounded-xl border bg-white p-3 transition-colors",
-      selected ? "border-primary ring-primary/20 ring-2" : "border-slate-200 hover:border-slate-300"
+      "bg-card flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors",
+      selected ? "border-primary ring-primary/20 ring-2" : "border-ink-200 hover:border-ink-300"
     )}
   >
     <RadioGroupItem value={value} aria-label={name} className="mt-1" />
@@ -31,7 +31,7 @@ export const StylePresetCard = ({ value, name, description, previewImageUrl, sel
       />
     )}
     <span className="min-w-0">
-      <span className="block truncate text-sm font-semibold text-slate-900">{name}</span>
+      <span className="text-ink-900 block truncate text-sm font-semibold">{name}</span>
       <span className="text-muted-foreground mt-0.5 line-clamp-2 block text-xs">{description}</span>
     </span>
   </label>

@@ -31,14 +31,14 @@ export const TestReportOutcomeChart = ({
     { name: "Passed", value: passed, color: "#10b981" },
     { name: "Failed", value: failed, color: "#f43f5e" },
     { name: "Flaky", value: flaky, color: "#f59e0b" },
-    { name: "Skipped", value: skipped, color: "#94a3b8" },
+    { name: "Skipped", value: skipped, color: "var(--ink-400)" },
   ].filter((outcome) => outcome.value > 0);
 
   const total = outcomes.reduce((sum, outcome) => sum + outcome.value, 0);
 
   if (total === 0) {
     return (
-      <div className="flex h-[220px] items-center justify-center text-xs text-slate-400">
+      <div className="text-ink-400 flex h-[220px] items-center justify-center text-xs">
         The run covered no test.
       </div>
     );
@@ -65,15 +65,15 @@ export const TestReportOutcomeChart = ({
             formatter={(value, name) => [`${value} tests`, name]}
             contentStyle={{
               borderRadius: 8,
-              border: "1px solid #e2e8f0",
+              border: "1px solid var(--ink-200)",
               fontSize: 11,
             }}
           />
         </PieChart>
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-display text-2xl font-bold text-slate-900">{total}</span>
-        <span className="text-[10px] tracking-wide text-slate-400 uppercase">tests</span>
+        <span className="font-display text-ink-900 text-2xl font-bold">{total}</span>
+        <span className="text-ink-400 text-[10px] tracking-wide uppercase">tests</span>
       </div>
     </div>
   );

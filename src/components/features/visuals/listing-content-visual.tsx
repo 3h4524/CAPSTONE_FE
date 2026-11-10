@@ -30,7 +30,7 @@ export const ListingContentVisual = () => {
             key={check}
             className="text-muted-foreground flex items-center gap-2 text-sm"
           >
-            <Check className="size-4 shrink-0 text-emerald-600" />
+            <Check className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
             {check}
           </li>
         ))}

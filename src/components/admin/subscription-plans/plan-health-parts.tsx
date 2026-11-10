@@ -5,23 +5,23 @@ import { cn } from "@/utils/cn";
 
 // The same palette as the rest of Plan Insights: teal goes well, amber needs a look, coral goes badly.
 export const STATUS_STYLE: Record<PlanAiStatus, { chip: string; selected: string; ring: string; score: string; stroke: string }> = {
-  healthy: { chip: "bg-[#2a9d8f]/12 text-[#21796e]", selected: "border-[#2a9d8f] bg-[#2a9d8f]/5", ring: "ring-[#2a9d8f]/25", score: "text-[#21796e]", stroke: "#2a9d8f" },
-  watch: { chip: "bg-amber-100 text-amber-800", selected: "border-amber-400 bg-amber-50/60", ring: "ring-amber-300/40", score: "text-amber-700", stroke: "#f59e0b" },
-  at_risk: { chip: "bg-[#e76e50]/12 text-[#c4553a]", selected: "border-[#e76e50] bg-[#e76e50]/5", ring: "ring-[#e76e50]/25", score: "text-[#c4553a]", stroke: "#e76e50" },
-  not_enough_data: { chip: "bg-slate-100 text-slate-600", selected: "border-slate-400 bg-slate-50", ring: "ring-slate-300/40", score: "text-slate-400", stroke: "#cbd5e1" },
+  healthy: { chip: "bg-[#2a9d8f]/12 text-[#21796e] dark:text-[#8fe0d6]", selected: "border-[#2a9d8f] bg-[#2a9d8f]/5", ring: "ring-[#2a9d8f]/25", score: "text-[#21796e] dark:text-[#8fe0d6]", stroke: "#2a9d8f" },
+  watch: { chip: "bg-amber-100 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300", selected: "border-amber-400 bg-amber-50/60 dark:bg-amber-500/10", ring: "ring-amber-300/40 dark:ring-amber-500/40", score: "text-amber-700 dark:text-amber-300", stroke: "#f59e0b" },
+  at_risk: { chip: "bg-[#e76e50]/12 text-[#c4553a] dark:text-[#dea091]", selected: "border-[#e76e50] bg-[#e76e50]/5", ring: "ring-[#e76e50]/25", score: "text-[#c4553a] dark:text-[#dea091]", stroke: "#e76e50" },
+  not_enough_data: { chip: "bg-ink-100 text-ink-600", selected: "border-ink-400 bg-ink-50", ring: "ring-ink-300/40", score: "text-ink-400", stroke: "var(--ink-300)" },
 };
 
 export const KIND_STYLE: Record<PlanAiFeatureKind, string> = {
-  needs_improvement: "bg-[#e76e50]/12 text-[#c4553a]",
-  underused: "bg-amber-100 text-amber-800",
-  keeps_customers: "bg-[#2a9d8f]/12 text-[#21796e]",
+  needs_improvement: "bg-[#e76e50]/12 text-[#c4553a] dark:text-[#dea091]",
+  underused: "bg-amber-100 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300",
+  keeps_customers: "bg-[#2a9d8f]/12 text-[#21796e] dark:text-[#8fe0d6]",
 };
 
 // One pill style for every level on the page: how sure a churn reason is, how urgent an action is.
 const LEVEL_STYLE = {
-  high: "bg-[#e76e50]/12 text-[#c4553a]",
-  medium: "bg-amber-100 text-amber-800",
-  low: "bg-slate-100 text-slate-500",
+  high: "bg-[#e76e50]/12 text-[#c4553a] dark:text-[#dea091]",
+  medium: "bg-amber-100 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300",
+  low: "bg-ink-100 text-ink-500",
 } as const;
 
 const LEVEL_LABEL = { high: "High", medium: "Medium", low: "Low" } as const;
@@ -30,24 +30,24 @@ export const OUTLOOK_ICON = { improving: ArrowUpRight, stable: ArrowRight, decli
 
 /** The outlook as a coloured chip: green when it is getting better, red when worse. */
 export const OUTLOOK_CHIP = {
-  improving: "bg-emerald-50 text-emerald-700",
-  stable: "bg-slate-100 text-slate-600",
-  declining: "bg-rose-50 text-rose-700",
+  improving: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  stable: "bg-ink-100 text-ink-600",
+  declining: "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300",
 } as const;
 
 export function FindingList({ title, tone, items, className }: { title: string; tone: string; items: string[]; className?: string }) {
   return (
     <div className={className}>
-      <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
+      <p className="text-ink-900 mb-3 flex items-center gap-2 text-sm font-semibold">
         <span className={cn("size-2 rounded-full", tone)} />
         {title}
       </p>
       {items.length === 0 ? (
-        <p className="text-sm text-slate-400">None noted.</p>
+        <p className="text-ink-400 text-sm">None noted.</p>
       ) : (
-        <ul className="space-y-1.5 text-sm text-slate-600">
+        <ul className="text-ink-600 space-y-1.5 text-sm">
           {items.map((item) => (
-            <li key={item} className="rounded-xl border border-slate-200 bg-white p-3">
+            <li key={item} className="border-ink-200 bg-card rounded-xl border p-3">
               <Figures text={item} />
             </li>
           ))}
@@ -65,7 +65,7 @@ export function Pill({ level }: { level: keyof typeof LEVEL_STYLE }) {
 
 export function Bar({ value, color }: { value: number; color: string }) {
   return (
-    <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+    <div className="bg-ink-100 h-1.5 overflow-hidden rounded-full">
       <div className={cn("h-full rounded-full", color)} style={{ width: `${Math.min(100, value)}%` }} />
     </div>
   );
@@ -84,8 +84,8 @@ export function Section({
 }) {
   return (
     <div className={className}>
-      <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
-        <Icon className="size-4 text-slate-400" />
+      <h3 className="text-ink-900 mb-3 flex items-center gap-2 text-sm font-semibold">
+        <Icon className="text-ink-400 size-4" />
         {title}
       </h3>
       {children}
@@ -97,7 +97,7 @@ export function Section({
 const FIGURE = /(\d[\d.,]*\d%?|\d%?)/g;
 
 /** A sentence with its figures in bold, so it can be skimmed for the numbers. */
-export function Figures({ text, className = "font-semibold text-slate-900" }: { text: string; className?: string }) {
+export function Figures({ text, className = "font-semibold text-ink-900" }: { text: string; className?: string }) {
   return (
     <>
       {text.split(FIGURE).map((part, index) =>

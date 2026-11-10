@@ -56,7 +56,7 @@ export const ActionInbox = ({ items, isLoading, open, onOpenChange }: ActionInbo
 
         <div className="flex-1 overflow-y-auto p-4">
           {!isLoading && items.length === 0 ? (
-            <div className="flex items-center gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            <div className="flex items-center gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
               <CheckCircle2 className="size-5" aria-hidden="true" />
               You&apos;re all caught up.
             </div>

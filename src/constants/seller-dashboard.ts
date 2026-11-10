@@ -101,10 +101,10 @@ export const ACTION_ITEM_ICONS: Record<ActionItemType, LucideIcon> = {
 
 /** The tinted chip behind an action item's icon; the section heading names the severity. */
 export const SEVERITY_ICON_CLASSES: Record<ActionItemSeverity, string> = {
-  critical: "bg-rose-100 text-rose-700",
-  error: "bg-rose-50 text-rose-600",
-  warning: "bg-amber-50 text-amber-700",
-  info: "bg-sky-50 text-sky-700",
+  critical: "bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300",
+  error: "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400",
+  warning: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  info: "bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300",
 };
 
 /** The stages where products wait on the Seller rather than on a worker. */

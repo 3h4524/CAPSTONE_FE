@@ -27,8 +27,9 @@ const RegisterPage = async ({ searchParams }: RegisterPageProps) => {
       imageSrc="/images/landing/auth.webp"
       imageAlt="Designer reviewing AI-generated product designs next to a laptop and printed t-shirts"
     >
-      <FormRegister />
-      <GuestGuard returnUrl={returnUrl} />
+      <GuestGuard returnUrl={returnUrl}>
+        <FormRegister />
+      </GuestGuard>
     </AuthSplitLayout>
   );
 };

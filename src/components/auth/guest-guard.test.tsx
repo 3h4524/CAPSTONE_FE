@@ -1,56 +1,78 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { GuestGuard } from "@/components/auth/guest-guard";
-import { redirect } from "@/test/__mocks__/next/navigation";
+import { useAuthStore } from "@/stores/auth";
+import { routerReplace } from "@/test/__mocks__/next/navigation";
 import { buildAuthenticatedUser } from "@/test/factories";
-import type { AuthenticatedUser } from "@/types/auth";
+import { render, screen, waitFor } from "@testing-library/react";
 
-const { mockGetSessionUser, mockResolveLanding } = vi.hoisted(() => ({
-  mockGetSessionUser: vi.fn(),
-  mockResolveLanding: vi.fn(
-    (_user: AuthenticatedUser, returnUrl?: string): string => returnUrl ?? "/dashboard"
-  ),
-}));
+const initialAuthState = useAuthStore.getState();
 
-vi.mock("@/api/session", () => ({
-  getSessionUser: mockGetSessionUser,
-  resolveSignedInLanding: mockResolveLanding,
-}));
+const renderGuard = (returnUrl?: string) =>
+  render(
+    <GuestGuard returnUrl={returnUrl}>
+      <div>guest content</div>
+    </GuestGuard>
+  );
 
 describe("GuestGuard", () => {
   beforeEach(() => {
-    mockGetSessionUser.mockResolvedValue(null);
-    mockResolveLanding.mockImplementation(
-      (_user: AuthenticatedUser, returnUrl?: string): string => returnUrl ?? "/dashboard"
+    useAuthStore.setState(initialAuthState, true);
+  });
+
+  it("shows the checking state while hydration is pending", () => {
+    const { queryByText: queryContent } = renderGuard();
+
+    expect(screen.getByRole("status", { name: "Checking sign-in" })).toBeInTheDocument();
+    expect(queryContent("guest content")).not.toBeInTheDocument();
+    expect(routerReplace).not.toHaveBeenCalled();
+  });
+
+  it("renders children for signed-out visitors", () => {
+    useAuthStore.getState().markHydrated();
+
+    const { getByText: getContent } = renderGuard();
+
+    expect(getContent("guest content")).toBeInTheDocument();
+    expect(routerReplace).not.toHaveBeenCalled();
+  });
+
+  it("redirects a signed-in seller to the dashboard", async () => {
+    useAuthStore.getState().setUser(buildAuthenticatedUser({ roles: ["Seller"] }));
+    useAuthStore.getState().markHydrated();
+
+    const { queryByText: queryContent } = renderGuard();
+
+    await waitFor(() => expect(routerReplace).toHaveBeenCalledWith("/dashboard"));
+    expect(queryContent("guest content")).not.toBeInTheDocument();
+  });
+
+  it("redirects a signed-in admin to the admin dashboard", async () => {
+    useAuthStore.getState().setUser(buildAuthenticatedUser({ roles: ["Admin"] }));
+    useAuthStore.getState().markHydrated();
+
+    renderGuard();
+
+    await waitFor(() => expect(routerReplace).toHaveBeenCalledWith("/admin/dashboard"));
+  });
+
+  it("honors a safe return url for signed-in users", async () => {
+    useAuthStore.getState().setUser(buildAuthenticatedUser());
+    useAuthStore.getState().markHydrated();
+
+    renderGuard("/workflows?tab=runs");
+
+    await waitFor(() =>
+      expect(routerReplace).toHaveBeenCalledWith("/workflows?tab=runs")
     );
   });
 
-  it("returns null for anonymous visitors without redirecting", async () => {
-    const guardResult = await GuestGuard({ returnUrl: "/dashboard" });
+  it("ignores an unsafe return url for signed-in users", async () => {
+    useAuthStore.getState().setUser(buildAuthenticatedUser());
+    useAuthStore.getState().markHydrated();
 
-    expect(guardResult).toBeNull();
-    expect(redirect).not.toHaveBeenCalled();
-  });
+    renderGuard("/\\evil.test");
 
-  it("redirects signed-in users to the resolved landing", async () => {
-    const signedInUser = buildAuthenticatedUser();
-    mockGetSessionUser.mockResolvedValue(signedInUser);
-    mockResolveLanding.mockReturnValue("/dashboard");
-
-    await GuestGuard({ returnUrl: "/dashboard" });
-
-    expect(mockResolveLanding).toHaveBeenCalledWith(signedInUser, "/dashboard");
-    expect(redirect).toHaveBeenCalledWith("/dashboard");
-  });
-
-  it("passes an absent return url through to the landing resolver", async () => {
-    const signedInUser = buildAuthenticatedUser();
-    mockGetSessionUser.mockResolvedValue(signedInUser);
-    mockResolveLanding.mockReturnValue("/dashboard");
-
-    await GuestGuard({});
-
-    expect(mockResolveLanding).toHaveBeenCalledWith(signedInUser, undefined);
-    expect(redirect).toHaveBeenCalledWith("/dashboard");
+    await waitFor(() => expect(routerReplace).toHaveBeenCalledWith("/dashboard"));
   });
 });

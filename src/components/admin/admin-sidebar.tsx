@@ -14,6 +14,7 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  Settings,
   User,
   UserRound,
   Users,
@@ -61,6 +62,7 @@ const analyticsNavigation = [
 const systemNavigation = [
   { label: "Support Tickets", href: "/admin/support-tickets", icon: Headphones, tone: "rose" },
   { label: "Test Reports", href: "/admin/test-reports", icon: FlaskConical, tone: "sky" },
+  { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 const AdminSidebar = ({
@@ -83,7 +85,7 @@ const AdminSidebar = ({
     )}
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white transition-all duration-200 max-md:right-0 max-md:left-auto max-md:border-r-0 max-md:border-l lg:sticky lg:top-0 lg:z-auto lg:h-dvh",
+        "border-ink-200 bg-card dark:lg:bg-background fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col overflow-hidden border-r transition-all duration-200 max-md:right-0 max-md:left-auto max-md:border-r-0 max-md:border-l lg:sticky lg:top-0 lg:z-auto lg:h-dvh dark:lg:border-r-0",
         isCollapsed ? "w-20" : "w-56",
         // On a phone it comes from the right, the side of the More tab that opens it.
         isMobileOpen ? "translate-x-0" : "-translate-x-full max-md:translate-x-full lg:translate-x-0"
@@ -91,12 +93,12 @@ const AdminSidebar = ({
     >
       <div
         className={cn(
-          "relative flex h-[72px] items-center border-b border-slate-100 px-3.5",
+          "border-ink-100 relative flex h-[72px] items-center border-b px-3.5",
           isCollapsed ? "justify-center" : "justify-between"
         )}
       >
         {!isCollapsed && (
-          <div className="flex items-center gap-2 text-base font-bold tracking-tight text-slate-900">
+          <div className="text-ink-900 flex items-center gap-2 text-base font-bold tracking-tight">
             <span aria-hidden="true" className="flex shrink-0">
               <Logo height={30} width={30} />
             </span>
@@ -108,7 +110,7 @@ const AdminSidebar = ({
           variant="ghost"
           size="icon"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="size-8 text-slate-500 hover:text-slate-900"
+          className="text-ink-500 hover:text-ink-900 size-8"
           onClick={onToggleCollapse ?? onClose}
         >
           {isCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
@@ -127,25 +129,25 @@ const AdminSidebar = ({
         </SidebarGroup>
       </nav>
 
-      <div className="border-t border-slate-100 p-4">
+      <div className="border-ink-100 border-t p-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
               title={isCollapsed ? "Profile" : undefined}
               className={cn(
-                "group flex w-full items-center rounded-lg py-2 transition-colors hover:bg-slate-50 focus:outline-none",
+                "group hover:bg-ink-50 flex w-full items-center rounded-lg py-2 transition-colors focus:outline-none",
                 isCollapsed ? "justify-center px-0" : "gap-3 px-2 text-left"
               )}
             >
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-bold text-white">
+              <div className="bg-ink-900 text-card flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
                 {getInitials(fullName)}
               </div>
               {!isCollapsed && (
                 <>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-semibold text-slate-800">{fullName}</p>
-                    <p className="truncate text-[10px] text-slate-500">{email}</p>
+                    <p className="text-ink-800 truncate text-xs font-semibold">{fullName}</p>
+                    <p className="text-ink-500 truncate text-[10px]">{email}</p>
                   </div>
                 </>
               )}
@@ -155,13 +157,21 @@ const AdminSidebar = ({
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm leading-none font-medium">{fullName}</p>
-                <p className="text-xs leading-none text-slate-500">{email}</p>
+                <p className="text-ink-500 text-xs leading-none">{email}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 size-4" />
-              <span>Profile</span>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/profile">
+                <User className="mr-2 size-4" />
+                <span>Profile</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/settings">
+                <Settings className="mr-2 size-4" />
+                <span>Settings</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onLogout}>
@@ -207,7 +217,7 @@ const SidebarItems = ({
             className={cn(
               "w-full",
               isCollapsed ? "justify-center px-0" : "justify-start gap-3 px-3",
-              active ? "bg-muted text-primary font-semibold" : "text-muted-foreground font-medium hover:bg-slate-100 hover:text-slate-900"
+              active ? "bg-muted text-primary dark:bg-ink-100 dark:text-foreground font-semibold" : "text-muted-foreground hover:bg-ink-100 hover:text-ink-900 font-medium"
             )}
           >
             <Link

@@ -52,27 +52,27 @@ export const TestReportRunTrend = ({ runs, currentRunId }: TestReportRunTrendPro
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5">
-      <h3 className="text-xs font-bold tracking-wide text-slate-800 uppercase">
+    <section className="border-ink-200 bg-card rounded-xl border p-5">
+      <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
         Pass rate over the runs
       </h3>
-      <p className="mt-0.5 mb-3 text-[10px] text-slate-400">
+      <p className="text-ink-400 mt-0.5 mb-3 text-[10px]">
         Every run kept on this machine, oldest first. The big dot is this run.
       </p>
 
       <div className="h-[180px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={points} margin={{ top: 6, right: 12, bottom: 0, left: -18 }}>
-            <CartesianGrid stroke="#f1f5f9" vertical={false} />
+            <CartesianGrid stroke="var(--ink-100)" vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 9, fill: "#94a3b8" }}
+              tick={{ fontSize: 9, fill: "var(--ink-400)" }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               domain={[0, 100]}
-              tick={{ fontSize: 9, fill: "#94a3b8" }}
+              tick={{ fontSize: 9, fill: "var(--ink-400)" }}
               axisLine={false}
               tickLine={false}
               unit="%"
@@ -83,14 +83,14 @@ export const TestReportRunTrend = ({ runs, currentRunId }: TestReportRunTrendPro
               }
               contentStyle={{
                 borderRadius: 8,
-                border: "1px solid #e2e8f0",
+                border: "1px solid var(--ink-200)",
                 fontSize: 11,
               }}
             />
             <Line
               type="monotone"
               dataKey="passRate"
-              stroke="#0f172a"
+              stroke="var(--ink-900)"
               strokeWidth={2}
               dot={(props) => {
                 const { cx, cy, payload } = props as unknown as {
@@ -104,8 +104,8 @@ export const TestReportRunTrend = ({ runs, currentRunId }: TestReportRunTrendPro
                     cx={cx}
                     cy={cy}
                     r={payload.isCurrent ? 6 : 3}
-                    fill={payload.isCurrent ? "#0f172a" : "#94a3b8"}
-                    stroke="#fff"
+                    fill={payload.isCurrent ? "var(--ink-900)" : "var(--ink-400)"}
+                    stroke="var(--card)"
                     strokeWidth={2}
                   />
                 );

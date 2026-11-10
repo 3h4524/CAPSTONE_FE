@@ -140,7 +140,7 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
               </span>
             </div>
             {isError && (
-              <p className="text-sm text-red-600" role="alert">
+              <p className="text-sm text-red-600 dark:text-red-400" role="alert">
                 {getErrorMessage(error, "Could not start the upgrade. Please try again.")}
               </p>
             )}

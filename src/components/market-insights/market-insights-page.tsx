@@ -118,7 +118,7 @@ export function MarketInsightsPage() {
       <Card className="border-primary/15 bg-hero-gradient">
         <CardContent className="p-4 sm:p-5">
           <form className="flex flex-col gap-3 sm:flex-row" onSubmit={submit}>
-            <div className="relative min-w-0 flex-1"><Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" /><Input aria-label="Etsy keyword" className="h-11 bg-white pl-10" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Search a keyword, e.g. personalized gift" /></div>
+            <div className="relative min-w-0 flex-1"><Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" /><Input aria-label="Etsy keyword" className="bg-card h-11 pl-10" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Search a keyword, e.g. personalized gift" /></div>
             <Button type="submit" size="lg">Analyze keyword</Button>
           </form>
           <p className="text-muted-foreground mt-3 text-xs">Metrics are calculated from stored public Etsy snapshots. Configure background collection below to fetch fresh listings automatically.</p>

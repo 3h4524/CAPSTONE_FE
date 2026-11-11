@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ImageOff, RotateCcw, Trash2, Undo2 } from "lucide-react";
+import { RotateCcw, Trash2, Undo2 } from "lucide-react";
 
 import {
   resetMockupOverride,
@@ -535,10 +535,9 @@ export const MockupImageEditDialog = ({
     const next = listed?.find((item) => item.id === id);
     setMainId(id);
     setActiveKey(MAIN_AREA_KEY);
-    // A side added for the template left behind is gone with it: the front is shown instead. A side the mock-up was
-    // made with stays, so it can be seen that it is removed when saved.
-    if (next && !templateForView(next, activeView) && !sides.some((side) => side.view === activeView))
-      setActiveView("front");
+    // The sides offered are the new template's: on a side it has no photo of, the front is shown instead (a note says
+    // a side the mock-up had is removed when saved).
+    if (next && !templateForView(next, activeView)) setActiveView("front");
     // What the new template can't do is dropped.
     if (!next?.allowRecolor || !next.garmentMaskUrl) {
       setColors([]);
@@ -622,7 +621,10 @@ export const MockupImageEditDialog = ({
         ? (designOptions.find((option) => option.id === item.designImageId)?.imageUrl ?? undefined)
         : undefined;
   const sideLabel = mockupViewLabel(activeView);
-  const showSides = sides.length + addedViews.length > 1;
+  // The sides shown are those of the template chosen, whichever template the mock-up was made on: one the template has
+  // no photo of is left out (a note says it is removed when saved), and one it adds is shown.
+  const shownSides = sides.filter((side) => photoOf(side.view));
+  const showSides = shownSides.length + addedViews.length > 1;
   const showColors = colorCards.length > 1;
   // A Printify template's front print area is Printify's own: it stays put and the design moves inside it.
   const printifyFront = Boolean(main?.printify) && activeView === "front";
@@ -814,18 +816,8 @@ export const MockupImageEditDialog = ({
                       setActiveKey(MAIN_AREA_KEY);
                     }}
                     sides={[
-                      ...sides.map((side) => {
-                        const sidePhoto = photoOf(side.view);
-                        // A side the chosen template has no photo of shows no picture: its old one is of another template.
-                        if (!sidePhoto)
-                          return {
-                            view: side.view,
-                            thumbnail: null,
-                            preview: <ImageOff className="size-4 text-slate-400" aria-hidden="true" />,
-                            title: `${mockupViewLabel(side.view)}: ${main?.name ?? "this template"} has no photo of it`,
-                            removed: removedViews.includes(side.view),
-                            muted: true,
-                          };
+                      ...shownSides.map((side) => {
+                        const sidePhoto = photoOf(side.view)!;
                         // The saved mock-up while it still matches; once the color, background or template
                         // changes, the side's photo with the new settings, so every side shows the change.
                         const next = shownLook(side);

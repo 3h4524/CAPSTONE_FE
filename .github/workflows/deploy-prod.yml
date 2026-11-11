@@ -18,6 +18,8 @@ env:
   WIF_PROVIDER: projects/1035893227434/locations/global/workloadIdentityPools/github/providers/github-actions
   DEPLOYER_SA: apcs-deployer@apcs-prod.iam.gserviceaccount.com
   RELEASE_TAG: ${{ github.ref_name }}
+  TRIVY_VERSION: 0.76.2
+  TRIVY_SHA256: bc0fc726e017b8927a62b2d3531d7a84ee01769daf5c99ed866dced54089fdbf
 
 jobs:
   guard:
@@ -31,7 +33,7 @@ jobs:
           exit 1
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
@@ -43,8 +45,58 @@ jobs:
             exit 1
           fi
 
+  sonar:
+    name: Sonar security gate
+    needs: guard
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Load build settings
+        run: grep -vE '^\s*(#|$)' deploy/fe.build.env >> "$GITHUB_ENV"
+
+      - name: Skip until Sonar is configured
+        if: env.SONAR_PROJECT_KEY == ''
+        run: echo "::warning::SONAR_PROJECT_KEY is empty in deploy/fe.build.env, so the Sonar gate is skipped."
+
+      - name: Authenticate to Google Cloud
+        if: env.SONAR_PROJECT_KEY != ''
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER_SA }}
+
+      - name: Read the Sonar token
+        id: secrets
+        if: env.SONAR_PROJECT_KEY != ''
+        uses: google-github-actions/get-secretmanager-secrets@2b5f97c5a4b9c105e64646762ad4fc3f5128e6f5 # v2
+        with:
+          secrets: token:${{ env.GCP_PROJECT }}/sonar-token
+
+      - name: Analyze
+        if: env.SONAR_PROJECT_KEY != ''
+        uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65 # v8.4.1
+        env:
+          SONAR_TOKEN: ${{ steps.secrets.outputs.token }}
+        with:
+          args: >-
+            -Dsonar.organization=${{ env.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }}
+            -Dsonar.projectVersion=${{ env.RELEASE_TAG }}
+
+      - name: Check security findings in new code
+        if: env.SONAR_PROJECT_KEY != ''
+        env:
+          SONAR_TOKEN: ${{ steps.secrets.outputs.token }}
+        run: ./deploy/sonar-security-gate.sh .scannerwork/report-task.txt
+
   image:
-    name: Quality gates and image
+    name: Quality gates, scan, and image
     needs: guard
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -53,18 +105,18 @@ jobs:
       NEXT_TELEMETRY_DISABLED: 1
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Load build settings
         run: grep -vE '^\s*(#|$)' deploy/fe.build.env >> "$GITHUB_ENV"
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           version: 10.28.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: pnpm
@@ -77,25 +129,25 @@ jobs:
           pnpm test
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
         with:
           workload_identity_provider: ${{ env.WIF_PROVIDER }}
           service_account: ${{ env.DEPLOYER_SA }}
 
       - name: Set up gcloud
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker "${REGISTRY%%/*}" --quiet
 
       - name: Set up Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
+      - name: Build the image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
-          push: true
+          load: true
           build-args: |
             NEXT_PUBLIC_API_BASE_URL=${{ env.NEXT_PUBLIC_API_BASE_URL }}
             NEXT_PUBLIC_SITE_URL=${{ env.NEXT_PUBLIC_SITE_URL }}
@@ -107,27 +159,51 @@ jobs:
           cache-from: type=gha,scope=fe
           cache-to: type=gha,mode=max,scope=fe
 
+      - name: Install Trivy
+        run: |
+          curl -fsSLo /tmp/trivy.tar.gz "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          echo "${TRIVY_SHA256}  /tmp/trivy.tar.gz" | sha256sum -c -
+          sudo tar xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy
+
+      - name: Scan the image for vulnerabilities and secrets
+        run: |
+          failed=0
+          trivy image --quiet --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 \
+            --format table --output /tmp/apcs-fe.txt "$REGISTRY/apcs-fe:$RELEASE_TAG" || failed=1
+          { echo "## Trivy: apcs-fe"; echo '```'; cat /tmp/apcs-fe.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::Trivy found fixable HIGH/CRITICAL vulnerabilities or leaked secrets. Upgrade the package or base image, or add a justified entry with an expiry to .trivyignore."
+            exit 1
+          fi
+
+      - name: Push the image
+        run: docker push --all-tags "$REGISTRY/apcs-fe"
+
   deploy:
     name: Release on the VM
-    needs: [guard, image]
-    if: always() && needs.guard.result == 'success' && (needs.image.result == 'success' || (github.event_name == 'workflow_dispatch' && needs.image.result == 'skipped'))
+    needs: [guard, sonar, image]
+    if: >-
+      always() && needs.guard.result == 'success' && (
+        (needs.sonar.result == 'success' && needs.image.result == 'success') ||
+        (github.event_name == 'workflow_dispatch' && needs.sonar.result == 'skipped' && needs.image.result == 'skipped')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Load build settings
         run: grep -vE '^\s*(#|$)' deploy/fe.build.env >> "$GITHUB_ENV"
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
         with:
           workload_identity_provider: ${{ env.WIF_PROVIDER }}
           service_account: ${{ env.DEPLOYER_SA }}
 
       - name: Set up gcloud
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2
 
       - name: Release the frontend
         run: |

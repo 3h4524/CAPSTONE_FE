@@ -253,11 +253,11 @@ export const MockupViewPhotoEditor = ({
       {/* The photo, as large as the dialog allows, with the sides under it. */}
       <section
         aria-label={`${label} photo`}
-        className="flex min-h-0 flex-col gap-3 bg-slate-50 px-4 py-4 outline-none md:overflow-y-auto"
+        className="bg-ink-50 flex min-h-0 flex-col gap-3 px-4 py-4 outline-none md:overflow-y-auto"
       >
         <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-sm font-semibold text-slate-900">{label}</p>
+            <p className="text-ink-900 text-sm font-semibold">{label}</p>
             {maskPreviewPending && (
               <p className="text-muted-foreground text-xs">
                 Finding the garment in the photo… this takes a few seconds.
@@ -268,7 +268,7 @@ export const MockupViewPhotoEditor = ({
             <div className="flex items-center gap-1.5">
               <label
                 htmlFor={replaceInputId}
-                className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+                className="bg-card text-ink-700 hover:bg-ink-50 inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium shadow-xs aria-disabled:pointer-events-none aria-disabled:opacity-50"
                 aria-disabled={disabled}
               >
                 <ImagePlus className="size-3.5" aria-hidden="true" />
@@ -290,7 +290,7 @@ export const MockupViewPhotoEditor = ({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 gap-1.5 bg-white px-2.5 text-xs text-red-600 hover:text-red-700"
+                  className="bg-card h-8 gap-1.5 px-2.5 text-xs text-red-600 hover:text-red-700"
                   disabled={disabled}
                   onClick={onRemove}
                 >

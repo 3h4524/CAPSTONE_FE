@@ -34,7 +34,7 @@ export const SelectClearButton = ({
       onClear();
     }}
     className={cn(
-      "text-muted-foreground absolute top-1/2 z-10 flex -translate-y-1/2 items-center justify-center rounded-full transition-colors hover:bg-slate-200/70 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none",
+      "text-muted-foreground hover:bg-ink-200/70 hover:text-ink-900 focus-visible:ring-ink-400 absolute top-1/2 z-10 flex -translate-y-1/2 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none",
       size === "sm" ? "right-1.5 size-5" : "right-2 size-6",
       className
     )}

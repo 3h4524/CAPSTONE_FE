@@ -47,7 +47,7 @@ export const MockupSidesStrip = ({
       role="tablist"
       aria-label="Sides of the garment"
       className={cn(
-        "flex items-center rounded-full border bg-white shadow-sm",
+        "bg-card flex items-center rounded-full border shadow-sm",
         size === "sm" ? "gap-1 p-1" : "gap-1.5 p-1.5",
         className
       )}
@@ -69,9 +69,9 @@ export const MockupSidesStrip = ({
               onSelect(side.view);
             }}
             className={cn(
-              "relative flex items-center justify-center overflow-hidden rounded-full bg-slate-50 transition-colors disabled:cursor-not-allowed",
+              "bg-ink-50 relative flex items-center justify-center overflow-hidden rounded-full transition-colors disabled:cursor-not-allowed",
               size === "sm" ? "size-7 border-[1.5px]" : "size-11 border-2",
-              active === side.view ? "border-slate-900" : "border-slate-200 hover:border-slate-400",
+              active === side.view ? "border-slate-900" : "border-ink-200 hover:border-ink-400",
               (side.removed || (!side.thumbnail && !side.preview)) && "border-dashed",
               side.muted && "opacity-40",
               side.removed && "[&_img]:opacity-30 [&_img]:grayscale"
@@ -81,7 +81,7 @@ export const MockupSidesStrip = ({
               <X
                 aria-hidden="true"
                 className={cn(
-                  "absolute z-10 text-slate-600",
+                  "text-ink-600 absolute z-10",
                   size === "sm" ? "size-3.5" : "size-5"
                 )}
                 strokeWidth={2.5}
@@ -111,7 +111,7 @@ export const MockupSidesStrip = ({
               />
             ) : (
               <Plus
-                className={cn("text-slate-400", size === "sm" ? "size-3" : "size-4")}
+                className={cn("text-ink-400", size === "sm" ? "size-3" : "size-4")}
                 aria-hidden="true"
               />
             )}

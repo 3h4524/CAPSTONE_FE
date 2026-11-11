@@ -46,12 +46,12 @@ const DesignOption = ({ label, imageUrl }: { label: string; imageUrl?: string | 
         width={28}
         height={28}
         unoptimized
-        className="size-7 shrink-0 rounded border bg-white object-contain"
+        className="bg-card size-7 shrink-0 rounded border object-contain"
       />
     ) : (
       <span
         aria-hidden="true"
-        className="size-7 shrink-0 rounded border border-dashed bg-slate-50"
+        className="bg-ink-50 size-7 shrink-0 rounded border border-dashed"
       />
     )}
     <span className="truncate">{label}</span>
@@ -122,7 +122,7 @@ export const PrintAreaList = ({
   return (
     <div className="space-y-3 rounded-lg border p-3">
       <div>
-        <p className="text-sm font-medium text-slate-900">Print area</p>
+        <p className="text-ink-900 text-sm font-medium">Print area</p>
         <p className="text-muted-foreground text-xs">
           Drag the box on the photo to place the design. The round handle above it turns it.
         </p>
@@ -142,7 +142,7 @@ export const PrintAreaList = ({
                 "rounded-md border px-2 py-1 text-xs transition-colors",
                 area.key === active.key
                   ? "border-primary bg-primary/10 text-primary font-medium"
-                  : "border-slate-200 text-slate-700 hover:bg-slate-50"
+                  : "border-ink-200 text-ink-700 hover:bg-ink-50"
               )}
             >
               {areaLabel(area, index)}
@@ -213,7 +213,7 @@ export const PrintAreaList = ({
       )}
 
       <details>
-        <summary className="text-muted-foreground cursor-pointer text-xs select-none hover:text-slate-700">
+        <summary className="text-muted-foreground hover:text-ink-700 cursor-pointer text-xs select-none">
           Exact position
         </summary>
         <div className="mt-2 grid grid-cols-4 gap-1.5">

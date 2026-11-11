@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   cardOfMockup,
+  colorGroupOfMockup,
+  groupMockupColors,
   groupMockupSides,
+  slotSide,
   templateForView,
   templateSidesIndex,
 } from "@/helpers/mockup-sides";
@@ -74,9 +77,70 @@ describe("groupMockupSides", () => {
     expect(groupMockupSides([mockup("f", FRONT), moved], index)).toHaveLength(1);
   });
 
+  it("puts a back added to a mock-up moved onto a template with a back on that mock-up's card", () => {
+    // The job makes the plain template; this mock-up was moved to the tee, and the tee's back was added beside it.
+    const front = mockup("f", OTHER, "FFFFFF", {
+      mockupTemplateId: FRONT,
+      garmentColor: "#FFFFFF",
+      backgroundColor: null,
+      printArea: null,
+    });
+    const addedBack = mockup("b", BACK, "FFFFFF");
+
+    const cards = groupMockupSides([front, addedBack, mockup("o", OTHER, "1F2A44")], index);
+
+    expect(cards.map((card) => card.sides.map((side) => `${side.view}:${side.image.id}`))).toEqual([
+      ["front:f", "back:b"],
+      ["front:o"],
+    ]);
+  });
+
+  it("puts a removed slot on the card of the sides that are left", () => {
+    const front = mockup("f", FRONT);
+    const backSlot = mockup("b", BACK).slotKey;
+
+    const card = groupMockupSides([front], index)[0];
+    expect(slotSide("p1", backSlot, index)).toEqual({
+      cardKey: card.key,
+      view: "back",
+      mainId: FRONT,
+    });
+    expect(slotSide("p1", null, index)).toBeNull();
+  });
+
   it("finds a template's photo of a side", () => {
     expect(templateForView(tee, "front")).toBe(tee);
     expect(templateForView(tee, "back")).toBe(back);
     expect(templateForView(tee, "left")).toBeNull();
+  });
+});
+
+describe("groupMockupColors", () => {
+  const index = templateSidesIndex([tee, plain]);
+
+  it("puts every garment color of one design on one template on one card, in the job order", () => {
+    const groups = groupMockupColors(
+      groupMockupSides(
+        [
+          mockup("f1", FRONT, "FFFFFF"),
+          mockup("b1", BACK, "FFFFFF"),
+          mockup("f2", FRONT, "1F2A44"),
+          mockup("o", OTHER, "FFFFFF"),
+        ],
+        index
+      )
+    );
+
+    expect(groups.map((group) => group.colors.map((card) => card.sides.length))).toEqual([
+      [2, 1],
+      [1],
+    ]);
+    expect(colorGroupOfMockup(groups, "f2")).toBe(groups[0]);
+  });
+
+  it("keeps a mock-up without a slot on a card of its own", () => {
+    const loose = { ...mockup("x", FRONT), slotKey: null } as MockupImage;
+
+    expect(groupMockupColors(groupMockupSides([loose, mockup("f", FRONT)], index))).toHaveLength(2);
   });
 });

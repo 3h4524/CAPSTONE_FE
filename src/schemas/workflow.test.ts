@@ -28,6 +28,7 @@ const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
     mockupTemplateIds: ["mkp_1", "mkp_2"],
     templateColors: {},
     templateBackgrounds: {},
+    mockupTarget: "zip",
     mockupIds: [],
     artworkGroupKey: "",
   },

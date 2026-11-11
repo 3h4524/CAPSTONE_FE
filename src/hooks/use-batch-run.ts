@@ -9,6 +9,7 @@ import { applyBatchMockupTemplates, generateAllBatchMockups, getBatchJobMockups,
 import { getErrorMessage } from "@/helpers/error-message";
 import { countProductTypes } from "@/helpers/mockup-template";
 import { showWorkflowActionToast } from "@/helpers/toast";
+import { effectiveMockupTarget } from "@/helpers/workflow-graph";
 import {
   ACTIVE_JOB_STATUSES,
   deriveNodeStatuses,
@@ -91,17 +92,28 @@ export const restoreRunMockups = async (batchJobId: string) => {
 // made after the run started is what the next mock-ups use (the job only knows what was last saved).
 // Returns false, after telling the user why, when nothing was saved.
 export const saveRunMockupSelection = async (batchJobId: string): Promise<boolean> => {
-  const config = useWorkflowStore.getState().nodes.find((node) => node.data.type === "apply-mockup")?.data.config;
-  let selection = extractMockupSelection(config ?? {});
+  const { nodes, edges } = useWorkflowStore.getState();
+  const node = nodes.find((item) => item.data.type === "apply-mockup");
+  let selection = extractMockupSelection(node?.data.config ?? {});
   if (selection.templateIds.length === 0) {
     showWorkflowActionToast("error", "Choose at least one mock-up template in the node's Settings first.");
     return false;
   }
   try {
+    let templates: Awaited<ReturnType<typeof listMockupTemplates>> | undefined;
+    const allTemplates = async () => (templates ??= await listMockupTemplates());
+    // Mock-ups of a Printify product come from one template linked to Printify, so they show what Printify prints.
+    if (node && effectiveMockupTarget(node, nodes, edges) === "printify") {
+      const chosen = (await allTemplates()).filter((template) => selection.templateIds.includes(template.id));
+      if (selection.templateIds.length !== 1 || chosen.length !== 1 || !chosen[0].printify) {
+        showWorkflowActionToast("error", "The mock-ups are for a Printify product: choose exactly one Printify template on Apply mock-up first.");
+        return false;
+      }
+    }
     // The job takes only the templates its own products can use (see narrowMockupSelection).
     const job = useWorkflowRunStore.getState().job;
     if (job?.id === batchJobId) {
-      selection = narrowMockupSelection(selection, await listMockupTemplates(), countProductTypes(job.products));
+      selection = narrowMockupSelection(selection, await allTemplates(), countProductTypes(job.products));
       if (selection.templateIds.length === 0) {
         showWorkflowActionToast("error", "None of the chosen mock-up templates is for this run's products. Choose a template for them in the node's Settings first.");
         return false;
@@ -151,6 +163,15 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
       useWorkflowRunStore.getState().attach(activeWorkflowId, runParam);
     }
   }, [activeWorkflowId, runParam]);
+
+  // A run closed from the URL (such as with Previous runs) takes its results off every step with it. Only a
+  // job that was in the URL counts: a run being started is set here before its id reaches the URL.
+  const previousRunParam = useRef(runParam);
+  useEffect(() => {
+    const closed = previousRunParam.current !== null && runParam === null;
+    previousRunParam.current = runParam;
+    if (closed && useWorkflowRunStore.getState().batchJobId) useWorkflowRunStore.getState().reset();
+  }, [runParam]);
 
   useEffect(() => () => useWorkflowRunStore.getState().reset(), []);
 

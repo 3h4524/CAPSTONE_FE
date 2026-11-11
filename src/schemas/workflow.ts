@@ -164,6 +164,9 @@ export const applyMockupConfigSchema = z.object({
       ),
     ])
   ),
+  // What the mock-ups are for: export only, or a Printify product (one Printify template, checked with the graph).
+  // A workflow saved before the choice existed is "zip".
+  mockupTarget: z.enum(["zip", "printify"]).default("zip"),
   mockupIds: z.array(z.string().uuid()).max(8),
   artworkGroupKey: z.string().max(100),
 });

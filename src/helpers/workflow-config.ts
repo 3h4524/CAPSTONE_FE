@@ -69,7 +69,10 @@ export const getSelectFieldLabel = (type: WorkflowNodeType, name: string, value:
 
 // A field named "standardOptions.transition" edits a value inside the `standardOptions` key.
 const getFieldKeys = (field: WorkflowField): string[] =>
-  (field.kind === "mockup-selection" ? [field.name, field.templateColorsName, field.templateBackgroundsName] : [field.name]).map((name) => name.split(".")[0]);
+  (field.kind === "mockup-selection"
+    ? [field.name, field.templateColorsName, field.templateBackgroundsName, field.targetName]
+    : [field.name]
+  ).map((name) => name.split(".")[0]);
 
 // Keeps only the keys the node still declares (in its fields or its defaults), over its defaults, so a
 // workflow saved before a key existed (or after one was removed) still loads into a config the schema accepts.

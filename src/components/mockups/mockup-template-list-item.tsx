@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { garmentColorName } from "@/helpers/garment-colors";
 import { isAutomaticPlacement, mockupViewLabel, parsePrintLayout, templateView } from "@/helpers/mockup-template";
 import { modelAttributesLabel } from "@/helpers/model-attributes";
+import { photoEdgeColor } from "@/helpers/photo-edge-color";
 import type { MockupTemplate } from "@/types/mockup-templates";
 
 type MockupTemplateListItemProps = {
@@ -32,6 +33,8 @@ export const MockupTemplateListItem = ({
   onDelete,
 }: MockupTemplateListItemProps) => {
   const [viewing, setViewing] = useState<number | null>(null);
+  // The photo's own backdrop color, so the space beside it does not show as a band of another gray.
+  const [backdrop, setBackdrop] = useState<string | null>(null);
   const layout = template.kind === "model" ? null : parsePrintLayout(template.printAreaConfig);
 
   return (
@@ -42,6 +45,7 @@ export const MockupTemplateListItem = ({
         onClick={() => setViewing(0)}
         aria-label={`View ${template.name} larger`}
         className="relative block aspect-[4/3] w-full shrink-0 cursor-zoom-in overflow-hidden bg-slate-100"
+        style={backdrop ? { backgroundColor: backdrop } : undefined}
       >
         <Image
           src={template.baseImageUrl}
@@ -49,6 +53,8 @@ export const MockupTemplateListItem = ({
           width={template.outputWidthPx || 640}
           height={template.outputHeightPx || 480}
           unoptimized
+          crossOrigin="anonymous"
+          onLoad={(event) => setBackdrop(photoEdgeColor(event.currentTarget))}
           className="absolute inset-0 h-full w-full object-contain"
         />
         {template.garmentColor && template.garmentMaskUrl && (
@@ -79,6 +85,11 @@ export const MockupTemplateListItem = ({
             caption: template.name,
             width: template.outputWidthPx,
             height: template.outputHeightPx,
+            backdrop: backdrop ?? undefined,
+            tint:
+              template.garmentColor && template.garmentMaskUrl
+                ? { color: template.garmentColor, maskUrl: template.garmentMaskUrl }
+                : undefined,
           },
         ]}
         index={viewing}

@@ -205,7 +205,8 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { imageProvider: "gemini", variants: 2, aspectRatio: "1:1" },
+    // One design per product; more come from Regenerate on the product. `variants` stays 1 (older workflows saved more).
+    defaultConfig: { imageProvider: "gemini", variants: 1, aspectRatio: "1:1" },
     fields: [
       {
         kind: "select",
@@ -227,7 +228,6 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
           },
         ],
       },
-      { kind: "number", name: "variants", label: "Variants per product", min: 1, max: 4 },
       {
         kind: "select",
         name: "aspectRatio",

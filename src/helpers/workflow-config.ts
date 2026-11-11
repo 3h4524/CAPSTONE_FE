@@ -84,6 +84,8 @@ export const normalizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNode
     if (config[key] === null && typeof normalized[key] === "string") return;
     if (key in config) normalized[key] = config[key];
   });
+  // Design image makes one design per product; a workflow saved when it could make more makes one too.
+  if (type === "design-image") normalized.variants = 1;
   if (type === "generate-video" && normalized.standardOptions && typeof normalized.standardOptions === "object") {
     const options = normalized.standardOptions as Record<string, unknown>;
     if (options.transition === "cut") normalized.standardOptions = { ...options, transition: "none" };

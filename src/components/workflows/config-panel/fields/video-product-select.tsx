@@ -29,6 +29,7 @@ export const VideoProductSelect = () => {
           value={readString(input.data.config.productId)}
           options={toProductOptions(products)}
           placeholder="Choose one product"
+          clearable
           onChange={(productId) => updateNodeConfig(input.id, { ...input.data.config, productId })}
           isLoading={isPending}
           isError={isError}

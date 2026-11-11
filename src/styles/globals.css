@@ -2,6 +2,10 @@
 @plugin "@tailwindcss/typography";
 @import "tw-animate-css";
 
+/* The app switches theme by the `.dark` class on <html> (user preference), not by the operating system's setting.
+   Without this, Tailwind v4's `dark:` follows prefers-color-scheme and paints dark colours onto a light page. */
+@custom-variant dark (&:is(.dark, .dark *));
+
 
 :root {
   color-scheme: light;

@@ -5,9 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { batchKeys, listBatchProducts } from "@/api/batches";
 import { importGeneratedMockups } from "@/api/generated-mockups";
+import { getRunGroup, listRunGroups, runGroupKeys } from "@/api/run-groups";
 import { videoWorkflowKeys } from "@/api/video-workflow";
 import { RUN_GROUP_PARAM } from "@/constants/run-group";
 import { getErrorMessage } from "@/helpers/error-message";
+import { confirmRunCost, takeRunAiBudget } from "@/helpers/run-cost";
 import { publishConnectionIssue } from "@/helpers/shop-connections";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
@@ -57,12 +59,34 @@ const videoProducts = async (queryClient: QueryClient, batchJobId: string | null
   return products.map((product) => product.id);
 };
 
+/**
+ * The batch video run made from a design job, newest first, and the run of its first video to open with it. Null when
+ * the job never got to its videos, or the list cannot be read.
+ */
+export const findJobVideos = async (queryClient: QueryClient, workflowId: string, jobId: string) => {
+  try {
+    const groups = await queryClient.fetchQuery({
+      queryKey: runGroupKeys.list(workflowId),
+      queryFn: () => listRunGroups(workflowId),
+      staleTime: 0,
+    });
+    const group = groups
+      .filter((item) => item.batchJobId === jobId)
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0];
+    if (!group) return null;
+    const detail = await queryClient.fetchQuery({ queryKey: runGroupKeys.detail(group.id), queryFn: () => getRunGroup(group.id) });
+    return { groupId: group.id, runId: detail.targets.find((target) => target.runId)?.runId ?? null };
+  } catch {
+    return null;
+  }
+};
+
 // Starts the video part for the one product chosen in Product input (AI scenes). Its composited mock-ups are stored
 // as video sources first, so they are waiting at Mockup Approval when the run gets there.
 const startSingleVideoRun = async (queryClient: QueryClient, startRun: () => void) => {
   const productId = readString(findNode("product-input")?.data.config.productId);
   if (!productId) {
-    showWorkflowActionToast("error", "AI scenes make one product's video: choose that product in Product input.");
+    showWorkflowActionToast("error", "AI scenes make one product's video: choose it under Product for the video in Mockup Approval.");
     return;
   }
   await importMockups(queryClient, [productId]);
@@ -114,15 +138,52 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     closeVideo.current = video.closeRun;
   });
 
-  // A video run is made for one product, not for a batch job, so opening another job stops following it
-  // (it goes on on the server) and the video steps start clean. A Run closes the old one itself before its
-  // job enters the URL, and a reloaded page keeps both.
+  // Opening another job stops following the video run of the one before (it goes on on the server). An earlier job
+  // opened from Previous runs then gets its own videos back: the batch video run made from it, with its first video's
+  // run open, so the video steps show their status, settings and videos as they were. A Run closes the old video run
+  // itself before its job enters the URL and makes that job's videos later, and a reloaded page keeps both.
   const shownJobId = useRef(openJobId);
+  const reopenJobVideos = useRef<(jobId: string) => Promise<void>>(async () => {});
+  useEffect(() => {
+    reopenJobVideos.current = async (jobId: string) => {
+      const workflowId = useWorkflowStore.getState().workflowId;
+      if (!workflowId) return;
+      const found = await findJobVideos(queryClient, workflowId, jobId);
+      const query = new URLSearchParams(window.location.search);
+      // The person may have opened another job, or started a Run, while this was read.
+      if (query.get(BATCH_JOB_PARAM) !== jobId || query.has(NEXT_PART_PARAM)) return;
+      if (!found) {
+        if (!query.has(RUN_GROUP_PARAM)) return;
+        query.delete(RUN_GROUP_PARAM);
+      } else {
+        query.set(RUN_GROUP_PARAM, found.groupId);
+        if (found.runId) query.set(VIDEO_RUN_PARAM, found.runId);
+        useWorkflowStore.getState().setVideoRunId(found.runId);
+      }
+      router.replace(`/workflows?${query.toString()}`, { scroll: false });
+    };
+  });
   useEffect(() => {
     if (openJobId === shownJobId.current) return;
     shownJobId.current = openJobId;
     if (openJobId) closeVideo.current();
   }, [openJobId]);
+  // Once per job and workflow, as soon as the workflow is on the canvas: also for a page opened on a job (from the
+  // Jobs menu of the Batches page, or reloaded), whose videos are not in the URL yet. A page reloaded with this job's
+  // videos already in the URL keeps them; a job chosen later always replaces the videos of the one before.
+  const firstJobId = useRef(openJobId);
+  const reopenedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!openJobId || !activeWorkflowId || !isEditorReady) return;
+    const key = `${activeWorkflowId}:${openJobId}`;
+    if (reopenedFor.current === key) return;
+    reopenedFor.current = key;
+    const query = new URLSearchParams(window.location.search);
+    // A Run that just started this job makes its own videos once its mock-ups are done.
+    if (query.has(NEXT_PART_PARAM)) return;
+    if (openJobId === firstJobId.current && query.has(RUN_GROUP_PARAM)) return;
+    void reopenJobVideos.current(openJobId);
+  }, [openJobId, activeWorkflowId, isEditorReady]);
 
   // Starts the batch video run of a design job (or of the whole batch) and points the person to Mockup Approval.
   const startVideoGroup = useRef<(jobId: string | null) => Promise<void>>(async () => {});
@@ -132,7 +193,7 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       if (!workflowId) return;
       try {
         await importMockups(queryClient, await videoProducts(queryClient, jobId));
-        const started = await startGroup({ workflowId, revision, key: uuid(), batchJobId: jobId });
+        const started = await startGroup({ workflowId, revision, key: uuid(), batchJobId: jobId, aiBudgetUsd: takeRunAiBudget(workflowId) });
         useWorkflowStore.getState().setVideoRunId(null);
         const query = new URLSearchParams(window.location.search);
         query.set(RUN_GROUP_PARAM, started.id);
@@ -221,11 +282,16 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       }
       const input = findNode("product-input");
       if (!batchVideos && input && !readString(input.data.config.productId)) {
-        showWorkflowActionToast("error", "AI scenes make one product's video: choose that product in Product input.");
-        selectNode(input.id);
+        showWorkflowActionToast("error", "These video settings make one product's video: choose it under Product for the video in Mockup Approval.");
+        selectNode(findNode("approval-gate")?.id ?? input.id);
         return;
       }
     }
+    // What the Run will cost is shown first, item by item, from the saved workflow. Unsaved changes are not in it,
+    // so a canvas with unsaved design settings runs without the estimate (the video part asks to save above).
+    const { workflowId } = useWorkflowStore.getState();
+    if (workflowId && !isDirty && !(await confirmRunCost(workflowId))) return;
+
     // An earlier video run is finished by now (a working one shows Stop), so its steps start clean.
     video.closeRun();
 

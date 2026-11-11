@@ -5,6 +5,7 @@ import {
   confirmRunGroup,
   runGroupKeys,
   startRunGroup,
+  updateRunGroupDesignConfig,
   updateRunGroupOverride,
 } from "@/api/run-groups";
 import { useMutation } from "@/hooks/mutations/use-mutation";
@@ -32,6 +33,11 @@ export const useConfirmRunGroup = () => {
 export const useCancelRunGroup = () => {
   const store = useStoreGroup();
   return useMutation({ mutationFn: cancelRunGroup, onSuccess: store });
+};
+
+export const useUpdateRunGroupDesignConfig = () => {
+  const store = useStoreGroup();
+  return useMutation({ mutationFn: updateRunGroupDesignConfig, onSuccess: store });
 };
 
 export const useUpdateRunGroupOverride = () => {

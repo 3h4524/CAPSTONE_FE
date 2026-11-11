@@ -154,9 +154,8 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
       {
         kind: "product-select",
         name: "productId",
-        label: "Preview product",
-        description:
-          "Optional. With Standard scenes every design you approve at Mockup Approval gets a video, and you set the scenes up on this product's mock-ups. AI scenes make this product's video only.",
+        label: "Product",
+        description: "The product Listing content writes for.",
       },
     ],
   },
@@ -317,6 +316,12 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
             label: "Manual review",
             description: "The video waits until you approve the mock-ups it may use.",
           },
+          {
+            value: "auto",
+            label: "Approve automatically",
+            description:
+              "Every mock-up waiting for review is approved and the video starts. Rejected ones stay out; AI scenes still wait for you to confirm their cost.",
+          },
         ],
       },
     ],
@@ -384,8 +389,28 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "review",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: {},
-    fields: [],
+    defaultConfig: { mode: "manual" },
+    fields: [
+      {
+        kind: "select",
+        name: "mode",
+        label: "Approval mode",
+        display: "cards",
+        options: [
+          {
+            value: "manual",
+            label: "Manual review",
+            description: "The run pauses so you can watch each video and approve or reject it before export.",
+          },
+          {
+            value: "auto",
+            label: "Approve automatically",
+            description:
+              "Every finished video is approved and exported. A video that fails one of Etsy's required checks still waits for you.",
+          },
+        ],
+      },
+    ],
   },
   "generate-listing": {
     type: "generate-listing",

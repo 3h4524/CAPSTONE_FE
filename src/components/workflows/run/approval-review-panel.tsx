@@ -32,10 +32,12 @@ const STATUS_BADGES: Record<ImageApprovalStatus, { className: string; label: str
   pending: { className: "bg-slate-100 text-slate-600", label: "To review" },
 };
 
-const toStatus = (value: string): ImageApprovalStatus => (value === "approved" || value === "rejected" ? value : "pending");
+const toStatus = (value: string): ImageApprovalStatus =>
+  value === "approved" || value === "rejected" ? value : "pending";
 
-// SRS 3.5.12: where the person looks at every generated design and decides which ones continue to the
-// mock-up step. Decisions are saved on the server as they are made; "Continue" then asks for the mock-ups.
+// SRS 3.5.12: where the person looks at every generated design and picks the one of each product that continues to
+// the mock-up step. A product keeps one approved design: approving another rejects the rest of that product's designs.
+// Decisions are saved on the server as they are made; "Continue" then asks for the mock-ups.
 export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
   const queryClient = useAppQueryClient();
   const approval = useSetImageApproval();
@@ -61,7 +63,7 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
         <h3 className="text-sm font-semibold text-slate-900">Approval</h3>
         <PanelNotice tone="info">
           {job.requireApproval === false
-            ? "This run approves every design automatically, so they continue to the mock-ups without a review."
+            ? "This run approves the first design of each product automatically, so it continues to the mock-ups without a review."
             : "This run started before designs could be reviewed, so they continue without approval."}
         </PanelNotice>
       </section>
@@ -72,23 +74,46 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
     return (
       <section className="space-y-3 border-t pt-5" aria-label="Approval">
         <h3 className="text-sm font-semibold text-slate-900">Review designs</h3>
-        <PanelNotice>The designs are still being generated. You can review them as soon as the job finishes.</PanelNotice>
+        <PanelNotice>
+          The designs are still being generated. You can review them as soon as the job finishes.
+        </PanelNotice>
       </section>
     );
   }
 
   const productsWithImages = job.products.filter((product) => product.images.length > 0);
   const gallery = designLightboxImages(productsWithImages);
+  const chosenCount = productsWithImages.filter((product) =>
+    product.images.some((image) => image.approvalStatus === "approved")
+  ).length;
+  // Products with no approved design yet, whose first pending design "Approve first designs" would approve.
+  const unchosenCount = productsWithImages.filter(
+    (product) =>
+      !product.images.some((image) => image.approvalStatus === "approved") &&
+      product.images.some((image) => toStatus(image.approvalStatus) === "pending")
+  ).length;
 
   return (
     <section className="space-y-4" aria-label="Review designs">
       <div className="sticky top-0 z-10 -mx-5 space-y-3 border-y bg-white/95 px-5 py-3 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-slate-900">Review designs</h3>
-          <p className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums" aria-live="polite">
-            <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />{counts.approved} approved</span>
-            <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-rose-500" aria-hidden="true" />{counts.rejected} rejected</span>
-            <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-slate-400" aria-hidden="true" />{counts.pending} to review</span>
+          <p
+            className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums"
+            aria-live="polite"
+          >
+            <span className="flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+              {counts.approved} approved
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-rose-500" aria-hidden="true" />
+              {counts.rejected} rejected
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-slate-400" aria-hidden="true" />
+              {counts.pending} to review
+            </span>
           </p>
         </div>
         <div className="grid grid-cols-1 gap-2 @xs:grid-cols-2">
@@ -97,23 +122,34 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
             variant="outline"
             size="sm"
             className="h-8 px-3 hover:translate-y-0"
-            disabled={counts.pending === 0 || approval.isPending}
+            title="Approve the first design of every product that has none approved yet"
+            disabled={unchosenCount === 0 || approval.isPending}
             onClick={() => decide(null, "approved")}
           >
-            Approve all remaining ({counts.pending})
+            Approve first designs ({unchosenCount})
           </Button>
           {mockupNode && (
             <Button
               type="button"
               size="sm"
               className="h-8 px-3 hover:translate-y-0"
-              disabled={counts.approved === 0 || makingMockups || (selection?.templateIds.length ?? 0) === 0}
+              disabled={
+                counts.approved === 0 || makingMockups || (selection?.templateIds.length ?? 0) === 0
+              }
               onClick={() => void applySelectionAndGenerateMockups(job.id, queryClient)}
             >
-              {makingMockups ? "Making mock-ups…" : mockupState === "idle" ? "Continue to mock-ups" : "Update mock-ups"}
+              {makingMockups
+                ? "Making mock-ups…"
+                : mockupState === "idle"
+                  ? "Continue to mock-ups"
+                  : "Update mock-ups"}
             </Button>
           )}
         </div>
+        <p className="text-muted-foreground text-xs">
+          Approve one design per product ({chosenCount}/{productsWithImages.length} chosen).
+          Approving another design of a product rejects the one approved before.
+        </p>
         <p className="text-muted-foreground text-xs">
           {!mockupNode
             ? "Add an Apply mock-up step to turn approved designs into mock-ups."
@@ -127,26 +163,27 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
         </p>
       </div>
 
-      {productsWithImages.length === 0 && <p className="text-muted-foreground text-xs">No designs were generated.</p>}
+      {productsWithImages.length === 0 && (
+        <p className="text-muted-foreground text-xs">No designs were generated.</p>
+      )}
       {productsWithImages.map((product) => {
-        const allApproved = product.images.every((image) => image.approvalStatus === "approved");
+        const hasChosen = product.images.some((image) => image.approvalStatus === "approved");
         return (
           <div key={product.id} className="space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-2">
                 <h4 className="truncate text-sm font-medium">{product.productName}</h4>
-                {product.productType && <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700">{productTypeLabel(product.productType)}</Badge>}
+                {product.productType && (
+                  <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700">
+                    {productTypeLabel(product.productType)}
+                  </Badge>
+                )}
               </div>
-              <Button
-                type="button"
-                variant="link"
-                size="sm"
-                className="h-auto px-0 text-xs"
-                disabled={allApproved || approval.isPending}
-                onClick={() => decide(product.images.map((image) => image.id), "approved")}
+              <span
+                className={cn("text-xs", hasChosen ? "text-emerald-700" : "text-muted-foreground")}
               >
-                Approve all
-              </Button>
+                {hasChosen ? "1 design chosen" : "Choose 1 design"}
+              </span>
             </div>
             <div className="grid grid-cols-1 gap-2 @sm:grid-cols-2 @2xl:grid-cols-3">
               {product.images.map((image, position) => {
@@ -180,7 +217,12 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
                       />
                     </Button>
                     <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 p-2">
-                      <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap", badge.className)}>
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap",
+                          badge.className
+                        )}
+                      >
                         {badge.label}
                       </span>
                       <div className="flex gap-1.5">
@@ -188,10 +230,21 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
                           type="button"
                           variant={status === "approved" ? "default" : "outline"}
                           size="icon-sm"
-                          aria-label={status === "approved" ? `Take back approval of ${label}` : `Approve ${label}`}
+                          aria-label={
+                            status === "approved"
+                              ? `Take back approval of ${label}`
+                              : `Approve ${label}`
+                          }
+                          title={
+                            status === "approved" || !hasChosen
+                              ? undefined
+                              : "Approve this design instead of the one approved before"
+                          }
                           aria-pressed={status === "approved"}
                           disabled={approval.isPending}
-                          onClick={() => decide([image.id], status === "approved" ? "pending" : "approved")}
+                          onClick={() =>
+                            decide([image.id], status === "approved" ? "pending" : "approved")
+                          }
                         >
                           <Check aria-hidden="true" />
                         </Button>
@@ -199,10 +252,16 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
                           type="button"
                           variant={status === "rejected" ? "destructive" : "outline"}
                           size="icon-sm"
-                          aria-label={status === "rejected" ? `Take back rejection of ${label}` : `Reject ${label}`}
+                          aria-label={
+                            status === "rejected"
+                              ? `Take back rejection of ${label}`
+                              : `Reject ${label}`
+                          }
                           aria-pressed={status === "rejected"}
                           disabled={approval.isPending}
-                          onClick={() => decide([image.id], status === "rejected" ? "pending" : "rejected")}
+                          onClick={() =>
+                            decide([image.id], status === "rejected" ? "pending" : "rejected")
+                          }
                         >
                           <X aria-hidden="true" />
                         </Button>

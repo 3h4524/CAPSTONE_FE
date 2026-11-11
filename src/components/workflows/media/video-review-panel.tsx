@@ -1,6 +1,20 @@
 "use client";
 import { useId, useState } from "react";
-import { Check, Download, Film, History, RotateCcw, X } from "lucide-react";
+import {
+  Check,
+  CheckCircle2,
+  ClipboardCheck,
+  Clock3,
+  Download,
+  Film,
+  Hash,
+  History,
+  RectangleHorizontal,
+  RotateCcw,
+  ShieldCheck,
+  X,
+  XCircle,
+} from "lucide-react";
 
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { Button } from "@/components/ui/button";
@@ -73,10 +87,12 @@ const VideoRunHistory = ({
           : "Choose a previous generated video";
 
   return (
-    <div className="bg-muted/20 border-b px-4 py-3">
-      <div className="flex flex-col gap-2 text-xs font-medium">
-        <span id={labelId} className="flex items-center gap-1.5">
-          <History className="text-muted-foreground size-3.5" aria-hidden="true" />
+    <div className="bg-muted/25 border-b px-4 py-3">
+      <div className="flex flex-col gap-2 text-xs font-medium sm:flex-row sm:items-center sm:gap-3">
+        <span id={labelId} className="flex shrink-0 items-center gap-2">
+          <span className="bg-background grid size-6 shrink-0 place-items-center rounded-full border">
+            <History className="text-muted-foreground size-3.5" aria-hidden="true" />
+          </span>
           Video history
         </span>
         <Select
@@ -84,7 +100,7 @@ const VideoRunHistory = ({
           onValueChange={onChange}
           disabled={disabled || !workflowAvailable || isPending || isError || runs.length === 0}
         >
-          <SelectTrigger className="w-full" aria-labelledby={labelId} aria-describedby={statusId}>
+          <SelectTrigger className="bg-background w-full" aria-labelledby={labelId} aria-describedby={statusId}>
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
@@ -96,37 +112,37 @@ const VideoRunHistory = ({
             ))}
           </SelectContent>
         </Select>
-        <div
-          id={statusId}
-          className="text-muted-foreground flex min-h-4 items-center justify-between gap-3 text-[11px] leading-relaxed font-normal"
-          role={isError ? "alert" : "status"}
-          aria-live="polite"
-        >
-          {!workflowAvailable ? (
-            <span>Video history becomes available after the workflow is created.</span>
-          ) : isPending ? (
-            <span>Checking completed videos for this workflow...</span>
-          ) : isError ? (
-            <>
-              <span>
-                Could not load history. Restart the backend if it is still running an older build.
-              </span>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 px-3 text-xs"
-                onClick={onRetry}
-              >
-                Try again
-              </Button>
-            </>
-          ) : runs.length === 0 ? (
-            <span>No completed video with a stored file was found for this workflow.</span>
-          ) : (
-            <span>Select a previous run to review or download its final video.</span>
-          )}
-        </div>
+      </div>
+      <div
+        id={statusId}
+        className="text-muted-foreground mt-2 flex min-h-4 items-center justify-between gap-3 text-[11px] leading-relaxed font-normal"
+        role={isError ? "alert" : "status"}
+        aria-live="polite"
+      >
+        {!workflowAvailable ? (
+          <span>Video history becomes available after the workflow is created.</span>
+        ) : isPending ? (
+          <span>Checking completed videos for this workflow...</span>
+        ) : isError ? (
+          <>
+            <span>
+              Could not load history. Restart the backend if it is still running an older build.
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 px-3 text-xs"
+              onClick={onRetry}
+            >
+              Try again
+            </Button>
+          </>
+        ) : runs.length === 0 ? (
+          <span>No completed video with a stored file was found for this workflow.</span>
+        ) : (
+          <span>Select a previous run to review or download its final video.</span>
+        )}
       </div>
     </div>
   );

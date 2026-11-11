@@ -1,5 +1,6 @@
 import { WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
 import { DEFAULT_BACKGROUND_KEY, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
+import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type { WorkflowField, WorkflowNodeConfig, WorkflowNodeDefinition, WorkflowNodeType } from "@/types/workflow";
 
 export const readString = (value: unknown): string => (typeof value === "string" ? value : "");
@@ -71,13 +72,20 @@ export const getSelectFieldLabel = (type: WorkflowNodeType, name: string, value:
 const getFieldKeys = (field: WorkflowField): string[] =>
   (field.kind === "mockup-selection" ? [field.name, field.templateColorsName, field.templateBackgroundsName] : [field.name]).map((name) => name.split(".")[0]);
 
-// Keeps only the keys the node still declares (in its fields or its defaults), over its defaults, so a
+// The keys the node's settings schema declares. Some are written by an editor of their own rather than a field (the
+// scene list of Generate Video, its shared AI instructions, its timeline edit), so the fields alone do not name them.
+const getSchemaKeys = (type: WorkflowNodeType): string[] => {
+  const schema = workflowNodeConfigSchemas[type] as unknown as { shape?: Record<string, unknown> };
+  return schema?.shape ? Object.keys(schema.shape) : [];
+};
+
+// Keeps only the keys the node still declares (in its fields, its defaults or its schema), over its defaults, so a
 // workflow saved before a key existed (or after one was removed) still loads into a config the schema accepts.
 // A text value saved as null (an older product change cleared `artworkGroupKey` that way) takes its default.
 export const normalizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNodeConfig): WorkflowNodeConfig => {
   const definition = WORKFLOW_NODE_DEFINITIONS[type];
   const normalized: WorkflowNodeConfig = { ...definition.defaultConfig };
-  new Set([...Object.keys(definition.defaultConfig), ...definition.fields.flatMap(getFieldKeys)]).forEach((key) => {
+  new Set([...Object.keys(definition.defaultConfig), ...definition.fields.flatMap(getFieldKeys), ...getSchemaKeys(type)]).forEach((key) => {
     if (config[key] === null && typeof normalized[key] === "string") return;
     if (key in config) normalized[key] = config[key];
   });

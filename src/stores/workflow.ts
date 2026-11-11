@@ -38,6 +38,27 @@ type NodeClipboard = {
   pastes: number;
 };
 
+/**
+ * One design of a batch video run whose Generate Video settings the canvas shows instead of the workflow's shared
+ * ones. The Generate Video node holds the design's settings while it is chosen, so every field of the panel shows and
+ * edits them; the shared settings wait here, and Save writes them, never the design's.
+ */
+export type DesignScope = {
+  key: string;
+  productId: string;
+  artworkGroupKey: string;
+  label: string;
+  /** The design's run once its video started; its settings then apply when it is re-rendered. */
+  runId: string | null;
+  nodeId: string;
+  /** The workflow's shared Generate Video settings, unsaved changes included: what Save writes and what comes back. */
+  sharedConfig: WorkflowNodeConfig;
+  /** The shared settings as last saved, so the workflow's own unsaved changes still show once the design is left. */
+  sharedSavedConfig: WorkflowNodeConfig;
+  /** The design's settings as last stored for it, so its unsaved changes show. */
+  baseConfig: WorkflowNodeConfig;
+};
+
 export type WorkflowEditorState = {
   workflowId: string | null;
   videoRunId: string | null;
@@ -85,6 +106,16 @@ export type WorkflowEditorState = {
   resetStatuses: () => void;
   resetProductDependentState: () => void;
   setVideoRunId: (runId: string | null) => void;
+  designScope: DesignScope | null;
+  /** Shows one design's settings on the Generate Video node (`config`), keeping the shared ones aside. */
+  enterDesignScope: (
+    design: Omit<DesignScope, "nodeId" | "sharedConfig" | "sharedSavedConfig" | "baseConfig">,
+    config: WorkflowNodeConfig
+  ) => void;
+  /** Puts the shared settings back on the Generate Video node. */
+  leaveDesignScope: () => void;
+  /** The design's settings were stored for it: they are no longer unsaved. */
+  markDesignSaved: (config: WorkflowNodeConfig) => void;
   setRunning: (isRunning: boolean) => void;
   markSaved: (workflow: WorkflowDetail) => void;
   reset: () => void;
@@ -93,6 +124,7 @@ export type WorkflowEditorState = {
 const INITIAL_STATE = {
   workflowId: null,
   videoRunId: null,
+  designScope: null,
   revision: 0,
   name: "",
   description: "",
@@ -151,6 +183,15 @@ const hasNodePositionsChanged = (before: WorkflowNode[], after: WorkflowNode[]) 
     );
   });
 };
+
+const configOf = (nodes: WorkflowNode[], nodeId: string) => nodes.find((node) => node.id === nodeId)?.data.config;
+
+const withNodeConfig = (nodes: WorkflowNode[], nodeId: string, config: WorkflowNodeConfig) =>
+  nodes.map((node) => (node.id === nodeId ? { ...node, data: { ...node.data, config } } : node));
+
+/** The graph Save writes: the shared Generate Video settings, even while a design's settings are shown. */
+export const sharedGraphNodes = (state: Pick<WorkflowEditorState, "nodes" | "designScope">) =>
+  state.designScope ? withNodeConfig(state.nodes, state.designScope.nodeId, state.designScope.sharedConfig) : state.nodes;
 
 const hasMeaningfulGraphChanges = (
   before: Pick<WorkflowEditorState, "nodes" | "edges">,
@@ -463,16 +504,84 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
 
   setVideoRunId: (videoRunId) => set({ videoRunId }),
 
+  enterDesignScope: (design, config) =>
+    set((state) => {
+      const node = state.nodes.find((candidate) => candidate.data.type === "generate-video");
+      if (!node) return state;
+      const current = state.designScope;
+      const sharedConfig = current ? current.sharedConfig : node.data.config;
+      const sharedSavedConfig = current
+        ? current.sharedSavedConfig
+        : (configOf(state.savedGraph.nodes, node.id) ?? node.data.config);
+      const nodes = withNodeConfig(state.nodes, node.id, config);
+      // The saved graph holds the design's stored settings too, so only the design's own changes count as unsaved.
+      const savedGraph = { ...state.savedGraph, nodes: withNodeConfig(state.savedGraph.nodes, node.id, config) };
+      return {
+        nodes,
+        savedGraph,
+        designScope: { ...design, nodeId: node.id, sharedConfig, sharedSavedConfig, baseConfig: config },
+        isDirty: hasMeaningfulGraphChanges(savedGraph, { nodes, edges: state.edges }),
+        // Undo would otherwise step between two designs' settings.
+        past: [],
+        future: [],
+      };
+    }),
+
+  leaveDesignScope: () =>
+    set((state) => {
+      const scope = state.designScope;
+      if (!scope) return state;
+      const nodes = withNodeConfig(state.nodes, scope.nodeId, scope.sharedConfig);
+      const savedGraph = {
+        ...state.savedGraph,
+        nodes: withNodeConfig(state.savedGraph.nodes, scope.nodeId, scope.sharedSavedConfig),
+      };
+      return {
+        nodes,
+        savedGraph,
+        designScope: null,
+        isDirty: hasMeaningfulGraphChanges(savedGraph, { nodes, edges: state.edges }),
+        past: [],
+        future: [],
+      };
+    }),
+
+  markDesignSaved: (config) =>
+    set((state) => {
+      const scope = state.designScope;
+      if (!scope) return state;
+      const savedGraph = { ...state.savedGraph, nodes: withNodeConfig(state.savedGraph.nodes, scope.nodeId, config) };
+      return {
+        savedGraph,
+        designScope: { ...scope, baseConfig: config },
+        isDirty: hasMeaningfulGraphChanges(savedGraph, { nodes: state.nodes, edges: state.edges }),
+      };
+    }),
+
   setRunning: (isRunning) => set({ isRunning }),
 
   markSaved: (workflow) =>
-    set((state) => ({
-      name: workflow.name,
-      description: workflow.description,
-      revision: workflow.revision,
-      savedGraph: { nodes: state.nodes, edges: state.edges },
-      isDirty: false,
-    })),
+    set((state) => {
+      const scope = state.designScope;
+      if (!scope)
+        return {
+          name: workflow.name,
+          description: workflow.description,
+          revision: workflow.revision,
+          savedGraph: { nodes: state.nodes, edges: state.edges },
+          isDirty: false,
+        };
+      // Save wrote the shared settings; the design's unsaved changes are still unsaved.
+      const savedGraph = { nodes: withNodeConfig(state.nodes, scope.nodeId, scope.baseConfig), edges: state.edges };
+      return {
+        name: workflow.name,
+        description: workflow.description,
+        revision: workflow.revision,
+        savedGraph,
+        designScope: { ...scope, sharedSavedConfig: scope.sharedConfig },
+        isDirty: hasMeaningfulGraphChanges(savedGraph, { nodes: state.nodes, edges: state.edges }),
+      };
+    }),
 
   reset: () => {
     dragSnapshot = null;

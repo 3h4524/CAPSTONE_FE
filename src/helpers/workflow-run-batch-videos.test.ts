@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { supportsBatchVideos } from "@/helpers/workflow-run";
+import { showsInputProduct, supportsBatchVideos } from "@/helpers/workflow-run";
 import { buildWorkflowNode } from "@/test/factories";
 import type { WorkflowNodeConfig } from "@/types/workflow";
 
@@ -26,5 +26,22 @@ describe("supportsBatchVideos", () => {
 
   it("is false without a Generate Video step", () => {
     expect(supportsBatchVideos([])).toBe(false);
+  });
+});
+
+describe("showsInputProduct", () => {
+  const listing = buildWorkflowNode({ id: "listing", data: { type: "generate-listing", label: "Listing content", config: {}, status: "idle" } });
+
+  it("offers the product to a listing-only workflow", () => {
+    expect(showsInputProduct([listing])).toBe(true);
+  });
+
+  it("hides it once the workflow makes a video, which picks its product at Mockup Approval", () => {
+    expect(showsInputProduct([listing, video({ mode: "standard" })])).toBe(false);
+    expect(showsInputProduct([video({ mode: "ai_shot" })])).toBe(false);
+  });
+
+  it("hides it when nothing in the workflow uses one product", () => {
+    expect(showsInputProduct([])).toBe(false);
   });
 });

@@ -542,6 +542,10 @@ export interface RunGroupTarget {
   stage: string | null;
   progress: number;
   runError: string | null;
+  /** The design's Generate Video settings: its own before the videos start (null while shared), then its run's. */
+  config: GenerateVideoConfig | null;
+  /** The design has settings of its own instead of the workflow's shared ones. */
+  hasOwnConfig: boolean;
 }
 export type RunGroupStatus = "waiting_for_targets" | "running" | "completed" | "cancelled";
 export interface RunGroup {
@@ -564,6 +568,8 @@ export interface RunGroupSummary {
   createdAt: string;
   targetCount: number;
   completedCount: number;
+  /** The design job whose designs the group made videos of; null for a group of the whole batch. */
+  batchJobId?: string | null;
 }
 export interface SceneMockupOverride {
   sceneIndex: number;
@@ -600,5 +606,29 @@ export interface AiShotQuote {
   newClips: number;
   expiresAtUtc: string;
   model: string;
+  note: string;
+  /** A batch quote's part for each design; absent on a single run's quote. */
+  items?: AiShotQuoteItem[] | null;
+}
+export interface AiShotQuoteItem {
+  label: string;
+  clips: number;
+  seconds: number;
+  estimatedCostUsd: number;
+}
+/** One line of what a Run is expected to cost. */
+export interface RunCostItem {
+  kind: "design_images" | "ai_video" | "model_photos";
+  label: string;
+  detail: string;
+  quantity: number;
+  estimatedCostUsd: number;
+}
+/** What one Run of the saved workflow is expected to cost, before anything is made. */
+export interface RunCostEstimate {
+  items: RunCostItem[];
+  totalUsd: number;
+  /** The AI clip part: confirming the estimate lets an automatic Mockup Approval start the videos within it. */
+  aiVideoBudgetUsd: number;
   note: string;
 }

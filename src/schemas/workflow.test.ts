@@ -47,7 +47,7 @@ const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
     aiStudioMode: "direct",
     aiStudioLayout: "hanging_window",
   },
-  "review-video": {},
+  "review-video": { mode: "manual" },
   "generate-listing": { model: "gpt-4o", tone: "friendly", includeSeoScore: true },
   "export-zip": {},
   "publish-etsy": {
@@ -76,7 +76,7 @@ const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
 };
 
 // These node types declare no field of their own, so an empty config is already valid for them.
-const OPTIONLESS_NODE_TYPES: WorkflowNodeType[] = ["export-zip", "review-video"];
+const OPTIONLESS_NODE_TYPES: WorkflowNodeType[] = ["export-zip"];
 
 const omitKey = <T extends object, K extends keyof T>(source: T, key: K): Omit<T, K> => {
   const { [key]: _omitted, ...rest } = source;
@@ -324,14 +324,14 @@ describe("designApprovalConfigSchema", () => {
 });
 
 describe("approvalGateConfigSchema", () => {
-  it("accepts the manual mode", () => {
-    const result = approvalGateConfigSchema.safeParse({ mode: "manual" });
+  it.each(["manual", "auto"])("accepts the %s mode", (mode) => {
+    const result = approvalGateConfigSchema.safeParse({ mode });
 
     expect(result.success).toBe(true);
-    expect(result.success && result.data.mode).toBe("manual");
+    expect(result.success && result.data.mode).toBe(mode);
   });
 
-  it.each(["review", "", "Manual", "auto", 1])("rejects %j as a mode", (mode) => {
+  it.each(["review", "", "Manual", "AUTO", 1])("rejects %j as a mode", (mode) => {
     const result = approvalGateConfigSchema.safeParse({ mode });
 
     expectIssue(result, "mode");

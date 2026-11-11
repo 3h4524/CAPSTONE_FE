@@ -110,7 +110,7 @@ export const WorkflowWorkspace = () => {
     if (!changedFromAnotherProduct) return;
 
     const params = new URLSearchParams(window.location.search);
-    // With Standard scenes the product only previews the scenes: the run, its designs and its videos are the
+    // With a scene list the product only previews the scenes: the run, its designs and its videos are the
     // batch's, so they stay. What was chosen among the previous product's mock-ups goes.
     if (supportsBatchVideos(useWorkflowStore.getState().nodes)) {
       useWorkflowStore.setState((state) => ({

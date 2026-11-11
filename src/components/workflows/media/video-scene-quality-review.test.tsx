@@ -70,6 +70,23 @@ describe("VideoSceneQualityReview", () => {
     expect(screen.getByText("The output may be cropped.")).toBeInTheDocument();
   });
 
+  it("leaves the audio check out and counts the rest", async () => {
+    getVideoQualitySummary.mockResolvedValue({
+      videoId: video.id, status: "warning", scenes: [], technical: { fullDecode: true },
+      etsyCompliance: { status: "pass_with_warning", checks: [
+        { key: "duration", status: "pass", detail: "5 seconds; policy is 5–15 seconds." },
+        { key: "format", status: "pass", detail: "MP4 is an accepted listing video format." },
+        { key: "aspectRatio", status: "warning", detail: "The output may be cropped." },
+        { key: "audio", status: "info", detail: "No audio track is present." },
+      ] },
+    });
+    renderPanel();
+    expect(await screen.findByText("Aspect ratio")).toBeInTheDocument();
+    expect(screen.queryByText("No audio track is present.")).not.toBeInTheDocument();
+    expect(screen.getByText(/2 passed/)).toBeInTheDocument();
+    expect(screen.getByText("1 to review")).toBeInTheDocument();
+  });
+
   it("explains missing Etsy data and displays scene measurements without pass thresholds", async () => {
     getVideoSceneQuality.mockResolvedValue({ ...quality(), evaluation: {
       status: "completed", evaluatedAtUtc: null, evaluatorVersion: "v1",

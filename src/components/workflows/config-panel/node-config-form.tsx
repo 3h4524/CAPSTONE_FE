@@ -8,6 +8,7 @@ import { Form } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ApprovalFlow } from "@/components/workflows/config-panel/approval-flow";
 import { DesignOutputPreview } from "@/components/workflows/config-panel/design-output-preview";
+import { DesignScopeSelect } from "@/components/workflows/config-panel/design-scope-select";
 import { AiShotOptions } from "@/components/workflows/config-panel/fields/ai-shot-options";
 import { PreviousRunsSelect } from "@/components/workflows/config-panel/fields/previous-runs-select";
 import { VideoProductSelect } from "@/components/workflows/config-panel/fields/video-product-select";
@@ -17,25 +18,25 @@ import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-no
 import { PanelSection } from "@/components/workflows/config-panel/layout/panel-section";
 import { PanelStats } from "@/components/workflows/config-panel/layout/panel-stats";
 import { ListingContentResultPanel } from "@/components/workflows/config-panel/listing-content-result";
+import { MockupApprovalResults } from "@/components/workflows/config-panel/mockup-approval-results";
 import { NodeConfigField } from "@/components/workflows/config-panel/node-config-field";
 import { OwnPromptNotice } from "@/components/workflows/config-panel/own-prompt-notice";
 import { PlanLockNotice } from "@/components/workflows/config-panel/plan-lock-notice";
 import { PromptRecipe } from "@/components/workflows/config-panel/prompt-recipe";
 import { EtsyPublishSettings, PrintifyPublishSettings } from "@/components/workflows/config-panel/publish-settings";
+import { ReviewVideoResults } from "@/components/workflows/config-panel/review-video-results";
 import { MockupPanel } from "@/components/workflows/media/mockup-panel";
 import { ModelPhotoSection } from "@/components/workflows/media/model-photo-section";
-import { RunGroupScenesGrid } from "@/components/workflows/media/run-group-scenes-grid";
 import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
 import { StoryboardPanel } from "@/components/workflows/media/storyboard-panel";
 import { VideoReviewPanel } from "@/components/workflows/media/video-review-panel";
 import { VideoSourcesHeader } from "@/components/workflows/media/video-sources-header";
-import { RunGroupPanel } from "@/components/workflows/run/run-group-panel";
 import { WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
 import { NODE_PANEL_SECTIONS } from "@/constants/workflow-panel";
 import { getVideoOutputFormat } from "@/helpers/video-output-formats";
 import { readString } from "@/helpers/workflow-config";
 import { groupPanelFields } from "@/helpers/workflow-panel";
-import { hasVideoSteps, isVideoRunNode, supportsBatchVideos } from "@/helpers/workflow-run";
+import { hasVideoSteps, isVideoRunNode, showsInputProduct, supportsBatchVideos } from "@/helpers/workflow-run";
 import { useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useNodeOverview } from "@/hooks/use-node-overview";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
@@ -47,12 +48,14 @@ type NodeConfigFormProps = {
   node: WorkflowNode;
   /** Off when the panel already shows the node's header above a Results/Settings switch. */
   showHeader?: boolean;
+  /** Off when the panel shows the step's results in a tab of their own (Mockup Approval with a run open). */
+  showResults?: boolean;
 };
 
 const isAiSceneConfig = (scene: unknown) =>
   typeof scene === "object" && scene !== null && "mode" in scene && scene.mode !== "standard";
 
-export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps) => {
+export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: NodeConfigFormProps) => {
   const definition = WORKFLOW_NODE_DEFINITIONS[node.data.type];
   const isRunning = useWorkflowStore((state) => state.isRunning);
   // Only the video's review unlocks the video settings; a design review leaves them as they are.
@@ -88,10 +91,12 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
   const videoFields = definition.fields.filter(
     (field) => field.name === "outputFormat" || field.name === "standardOptions.transition"
   );
-  const { grouped, rest } = groupPanelFields(
-    definition.fields,
-    NODE_PANEL_SECTIONS[node.data.type]
-  );
+  const showProduct = useWorkflowStore((state) => showsInputProduct(state.nodes));
+  const panelFields =
+    node.data.type === "product-input" && !showProduct
+      ? definition.fields.filter((field) => field.name !== "productId")
+      : definition.fields;
+  const { grouped, rest } = groupPanelFields(panelFields, NODE_PANEL_SECTIONS[node.data.type]);
   const renderField = (field: WorkflowField) => (
     <NodeConfigField key={field.name} field={field} control={control} />
   );
@@ -142,6 +147,12 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
       {/* Radix lays the content out as a table that grows to its widest line; block keeps it inside the panel. */}
       <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:block!">
         <PanelStats stats={overview} />
+        {/* Outside the locked settings: the design whose settings are shown can be changed while a video renders. */}
+        {node.data.type === "generate-video" && groupId && (
+          <div className="px-5 pt-4">
+            <DesignScopeSelect nodeId={node.id} />
+          </div>
+        )}
         <PlanLockNotice
           nodeType={node.data.type}
           config={node.data.config as Record<string, unknown>}
@@ -261,37 +272,22 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
         )}
         {node.data.type === "approval-gate" && (
           <>
-            <ApprovalFlow from="apply-mockup" to="generate-video" automatic={false} />
-            {groupId ? (
-              <PanelSection title="Designs that get a video">
-                <RunGroupPanel />
-              </PanelSection>
-            ) : batchVideos ? (
-              <PanelSection title="Designs that get a video">
-                <PanelNotice tone="info">
-                  When a run reaches this step, every design of its products is listed here. Approve the mock-ups of the
-                  designs that should get a video, then choose Continue.
-                </PanelNotice>
-              </PanelSection>
-            ) : (
-              <PanelSection
-                title="Mock-ups for the video"
-                description="Approve the mock-ups to use in the video. The ones made by Apply mock-up are added here when the video part starts."
-              >
-                <RunStatusPanel />
+            <ApprovalFlow from="apply-mockup" to="generate-video" automatic={node.data.config.mode === "auto"} />
+            {!batchVideos && !groupId && (
+              <PanelSection title="Video product">
                 <VideoProductSelect />
-                <VideoSourcesHeader />
-                <MockupPanel review />
               </PanelSection>
             )}
+            {showResults && <MockupApprovalResults />}
           </>
         )}
-        {node.data.type === "generate-video" && groupId && (
-          <PanelSection title="Scenes of each design">
-            <RunGroupScenesGrid />
-          </PanelSection>
+        {node.data.type === "review-video" && (
+          <>
+            <ApprovalFlow from="generate-video" to="export-zip" automatic={node.data.config.mode === "auto"} />
+            {showResults && <ReviewVideoResults className="px-5 pb-5" />}
+          </>
         )}
-        {((isVideoRunNode(node.data.type) && node.data.type !== "approval-gate") ||
+        {((isVideoRunNode(node.data.type) && node.data.type !== "approval-gate" && node.data.type !== "review-video") ||
           node.data.type === "generate-listing") && (
           <div className="space-y-4 px-5 pb-5">
             {isVideoRunNode(node.data.type) && node.data.type !== "generate-video" && (
@@ -299,9 +295,7 @@ export const NodeConfigForm = ({ node, showHeader = true }: NodeConfigFormProps)
             )}
             {node.data.type === "generate-listing" && <ListingContentResultPanel />}
             {node.data.type === "generate-video" && <StoryboardPanel node={node} />}
-            {(node.data.type === "review-video" || node.data.type === "generate-video") && (
-              <VideoReviewPanel />
-            )}
+            {node.data.type === "generate-video" && <VideoReviewPanel />}
           </div>
         )}
       </ScrollArea>

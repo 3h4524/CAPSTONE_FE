@@ -140,7 +140,11 @@ export const designApprovalConfigSchema = z.object({
 });
 
 export const approvalGateConfigSchema = z.object({
-  mode: z.literal("manual"),
+  mode: z.enum(["manual", "auto"], { error: "Choose how mock-ups are approved." }),
+});
+
+export const reviewVideoConfigSchema = z.object({
+  mode: z.enum(["manual", "auto"], { error: "Choose how videos are approved." }),
 });
 
 export const applyMockupConfigSchema = z.object({
@@ -492,7 +496,7 @@ export const workflowNodeConfigSchemas: Record<
   "apply-mockup": applyMockupConfigSchema,
   "approval-gate": approvalGateConfigSchema,
   "generate-video": generateVideoConfigSchema,
-  "review-video": z.object({}),
+  "review-video": reviewVideoConfigSchema,
   "generate-listing": generateListingConfigSchema,
   "export-zip": exportZipConfigSchema,
   "publish-etsy": publishEtsyConfigSchema,

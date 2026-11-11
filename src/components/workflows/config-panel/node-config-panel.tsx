@@ -4,27 +4,38 @@ import { useState } from "react";
 import { Images, Settings2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { PanelHeader } from "@/components/workflows/config-panel/layout/panel-header";
+import { MockupApprovalResults } from "@/components/workflows/config-panel/mockup-approval-results";
 import { MultiSelectPanel } from "@/components/workflows/config-panel/multi-select-panel";
 import { NodeConfigForm } from "@/components/workflows/config-panel/node-config-form";
+import { ReviewVideoResults } from "@/components/workflows/config-panel/review-video-results";
 import { ValidationIssues } from "@/components/workflows/config-panel/validation-issues";
 import { RunResultsPanel } from "@/components/workflows/run/run-results-panel";
+import { useRunGroupId } from "@/hooks/queries/use-run-group";
+import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { WorkflowNode, WorkflowNodeType } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 
 const RESULT_NODE_TYPES: WorkflowNodeType[] = ["design-image", "design-approval", "apply-mockup"];
+/** Steps of the video part whose results are the open video run's (or batch video run's), not the design job's. */
+const VIDEO_RESULT_NODE_TYPES: WorkflowNodeType[] = ["approval-gate", "review-video"];
 
 type PanelView = "results" | "settings";
 
 // With a run open, the nodes that produce images show what they produced next to their settings.
 const SelectedNodePanel = ({ node }: { node: WorkflowNode }) => {
-  const hasRun = useWorkflowRunStore((state) => state.job !== null);
+  const hasJob = useWorkflowRunStore((state) => state.job !== null);
+  const groupId = useRunGroupId();
+  const { run } = useWorkflowRuntime();
   const selectNode = useWorkflowStore((state) => state.selectNode);
   const [view, setView] = useState<PanelView>("results");
+  const isVideoResult = VIDEO_RESULT_NODE_TYPES.includes(node.data.type);
+  const hasResults = isVideoResult ? Boolean(groupId || run) : hasJob && RESULT_NODE_TYPES.includes(node.data.type);
 
-  if (!hasRun || !RESULT_NODE_TYPES.includes(node.data.type)) return <NodeConfigForm node={node} />;
+  if (!hasResults) return <NodeConfigForm node={node} />;
 
   return (
     <div className="flex h-full flex-col bg-white">
@@ -50,7 +61,15 @@ const SelectedNodePanel = ({ node }: { node: WorkflowNode }) => {
         </div>
       </PanelHeader>
       <div className="min-h-0 flex-1">
-        {view === "results" ? <RunResultsPanel node={node} /> : <NodeConfigForm node={node} showHeader={false} />}
+        {view === "settings" ? (
+          <NodeConfigForm node={node} showHeader={false} showResults={false} />
+        ) : isVideoResult ? (
+          <ScrollArea className="h-full [&>[data-radix-scroll-area-viewport]>div]:block!">
+            {node.data.type === "review-video" ? <ReviewVideoResults className="p-5" /> : <MockupApprovalResults />}
+          </ScrollArea>
+        ) : (
+          <RunResultsPanel node={node} />
+        )}
       </div>
     </div>
   );

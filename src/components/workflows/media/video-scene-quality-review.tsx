@@ -1,7 +1,24 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertCircle, BarChart3, CheckCircle2, ClipboardCheck, Clock3, Film, RefreshCw, XCircle } from "lucide-react";
+import {
+  AlertCircle,
+  BarChart3,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  ClipboardCheck,
+  Clock3,
+  FileVideo,
+  Film,
+  HardDrive,
+  Info,
+  Maximize2,
+  PlayCircle,
+  RectangleHorizontal,
+  RefreshCw,
+  XCircle,
+} from "lucide-react";
 
 import { evaluateVideoScene, getVideoQualitySummary, getVideoSceneQuality, reviseVideoExperience, saveVideoSceneReview, setVideoExperienceStatus, videoWorkflowKeys } from "@/api/video-workflow";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +34,7 @@ import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useQuery } from "@/hooks/queries/use-query";
 import { useAppQueryClient } from "@/hooks/use-query-client";
 import type { CorrectionTarget, PromoVideo, VideoReviewCategory, VideoReviewSeverity } from "@/types/video-workflow";
+import { cn } from "@/utils/cn";
 
 const categories: { value: VideoReviewCategory; label: string }[] = [
   { value: "body", label: "Body" }, { value: "hands", label: "Hands" },
@@ -41,7 +59,13 @@ const technicalText = (value: unknown, suffix = "") => {
 };
 const etsyLabels: Record<string, string> = {
   decode: "Video decoding", duration: "Duration", fileSize: "File size", format: "File format",
-  resolution: "Resolution", aspectRatio: "Aspect ratio", audio: "Audio",
+  resolution: "Resolution", aspectRatio: "Aspect ratio",
+};
+// The promo videos are silent by design, so the audio check says nothing a seller can act on: it is not listed.
+const HIDDEN_ETSY_CHECKS = new Set(["audio"]);
+const etsyIcons: Record<string, typeof Film> = {
+  decode: PlayCircle, duration: Clock3, fileSize: HardDrive, format: FileVideo,
+  resolution: Maximize2, aspectRatio: RectangleHorizontal,
 };
 const sceneMetrics = [
   { key: "subject_consistency", label: "Subject consistency", description: "Stability of the subject between frames." },
@@ -51,13 +75,39 @@ const sceneMetrics = [
   { key: "aesthetic_quality", label: "Aesthetic quality", description: "Overall visual presentation." },
 ];
 
+// Status colours follow the rest of the workflow (approved / pass = emerald, processing = sky, stopped / fail = rose).
+// They are kept for the pill and one small mark: a check that passed stays neutral, so the one that does not stands out.
 type QualityTone = "pass" | "fail" | "warning" | "pending" | "neutral";
 const toneClasses: Record<QualityTone, string> = {
-  pass: "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200",
-  fail: "bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-200",
-  warning: "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
-  pending: "bg-blue-50 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200",
+  pass: "bg-emerald-50 text-emerald-800 ring-emerald-600/20 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-400/20",
+  fail: "bg-rose-50 text-rose-800 ring-rose-600/20 dark:bg-rose-950/40 dark:text-rose-200 dark:ring-rose-400/20",
+  warning: "bg-amber-50 text-amber-900 ring-amber-600/25 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-400/20",
+  pending: "bg-sky-50 text-sky-800 ring-sky-600/20 dark:bg-sky-950/40 dark:text-sky-200 dark:ring-sky-400/20",
+  neutral: "bg-muted text-muted-foreground ring-border",
+};
+/** The round mark in the overall status header: the pill's hue, one step stronger. */
+const toneChipClasses: Record<QualityTone, string> = {
+  pass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
+  fail: "bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300",
+  warning: "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300",
+  pending: "bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300",
   neutral: "bg-muted text-muted-foreground",
+};
+/** A check's row: a faint wash only when it is a warning or a failure; a pass has none. */
+const toneRowClasses: Record<QualityTone, string> = {
+  pass: "",
+  fail: "bg-rose-50/70 dark:bg-rose-950/15",
+  warning: "bg-amber-50/70 dark:bg-amber-950/15",
+  pending: "",
+  neutral: "",
+};
+/** The one status mark at the end of a check's row. */
+const toneIconTextClasses: Record<QualityTone, string> = {
+  pass: "text-emerald-600 dark:text-emerald-400",
+  fail: "text-rose-600 dark:text-rose-400",
+  warning: "text-amber-600 dark:text-amber-400",
+  pending: "text-sky-600 dark:text-sky-400",
+  neutral: "text-muted-foreground",
 };
 const statusTone = (status: string): QualityTone => {
   if (["pass", "passed"].includes(status)) return "pass";
@@ -66,9 +116,13 @@ const statusTone = (status: string): QualityTone => {
   if (["queued", "running"].includes(status)) return "pending";
   return "neutral";
 };
+const toneIcon = (tone: QualityTone) =>
+  tone === "pass" ? CheckCircle2 : tone === "fail" ? XCircle : tone === "warning" ? AlertCircle : Clock3;
+/** The mark of a check's row: a plain tick, a cross or a warning sign; anything else is information. */
+const checkIcon = (tone: QualityTone) => (tone === "pass" ? Check : tone === "fail" ? XCircle : tone === "warning" ? AlertCircle : Info);
 function StatusPill({ label, tone }: { label: string; tone: QualityTone }) {
-  const Icon = tone === "pass" ? CheckCircle2 : tone === "fail" ? XCircle : tone === "warning" ? AlertCircle : Clock3;
-  return <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${toneClasses[tone]}`}><Icon className="size-3.5" aria-hidden="true" />{label}</span>;
+  const Icon = toneIcon(tone);
+  return <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ring-1 ring-inset ${toneClasses[tone]}`}><Icon className="size-3.5" aria-hidden="true" />{label}</span>;
 }
 const sceneStatusLabel = (status: string) => ({ completed: "Scored", failed: "Check failed", running: "Scoring", queued: "Queued", skipped: "Skipped", uncertain: "Incomplete", not_applicable: "Not scored" }[status] ?? "Not scored");
 // Display-only bands on a 0–1 scale. These are not calibrated quality thresholds.
@@ -274,19 +328,77 @@ export const VideoSceneQualityReview = ({ runId, video, showObservationForm = fa
     : hasIncompleteScenes ? { label: "Needs review", tone: "warning", detail: "One or more scene evaluations are missing or could not finish." }
     : etsy?.status === "pass_with_warning" ? { label: "Pass with warnings", tone: "warning", detail: "The video passed required checks. Review the Etsy warnings below." }
     : { label: "Pass", tone: "pass", detail: "The saved technical and Etsy checks passed and scene evaluations are complete." };
+  const etsyChecks = etsy?.checks.filter((check) => !HIDDEN_ETSY_CHECKS.has(check.key)) ?? [];
+  const etsyToReview = etsyChecks.filter((check) => ["warning", "pass_with_warning", "uncertain", "fail", "failed"].includes(check.status)).length;
+  const etsyPassed = etsyChecks.filter((check) => statusTone(check.status) === "pass").length;
+  const OverallIcon = toneIcon(overall.tone);
   const qualitySummary = summary.data ? (
-    <div className="overflow-hidden rounded-xl border">
-      <div className="bg-muted/30 space-y-2 p-4" role="status" aria-atomic="true">
-        <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><Film className="text-muted-foreground size-4" aria-hidden="true" /><h5 className="text-sm font-semibold">Final video quality</h5></div><StatusPill label={overall.label} tone={overall.tone} /></div>
-        <p className="text-muted-foreground text-xs leading-relaxed">{overall.detail}</p>
+    <div className="bg-card overflow-hidden rounded-xl border">
+      {/* The title row never wraps (icon, title, status); the sentence under it lines up with the title at any width. */}
+      <div className="bg-muted/30 space-y-1 border-b px-4 py-3" role="status" aria-atomic="true">
+        <div className="flex items-center gap-3">
+          <span className={`grid size-8 shrink-0 place-items-center rounded-full ${toneChipClasses[overall.tone]}`}>
+            <OverallIcon className="size-4" aria-hidden="true" />
+          </span>
+          <h5 className="min-w-0 flex-1 truncate text-sm font-semibold">Final video quality</h5>
+          <StatusPill label={overall.label} tone={overall.tone} />
+        </div>
+        <p className="text-muted-foreground pl-11 text-xs leading-relaxed">{overall.detail}</p>
       </div>
       <div className="space-y-4 p-4 text-xs">
         <div>
-          <div className="flex items-center justify-between gap-2"><h5 className="text-sm font-semibold">Etsy listing checks</h5><StatusPill label={etsy ? display(etsy.status) : "Not checked"} tone={etsy ? statusTone(etsy.status) : "neutral"} /></div>
-          {etsy ? <ul className="mt-2 divide-y">{etsy.checks.map((check) => <li key={check.key} className="flex items-start justify-between gap-3 py-2.5"><div><span className="font-medium">{etsyLabels[check.key] ?? display(check.key)}</span><p className="text-muted-foreground mt-0.5 leading-relaxed">{check.detail}</p></div><StatusPill label={check.status === "info" ? "Info" : display(check.status)} tone={statusTone(check.status)} /></li>)}</ul> : <p className="text-muted-foreground mt-2 leading-relaxed">No Etsy result was saved for this video. Older videos may not have been checked against these rules.</p>}
+          <div className="flex items-baseline justify-between gap-2">
+            <h5 className="text-sm font-semibold">Etsy listing checks</h5>
+            {etsy ? (
+              <span className="text-muted-foreground tabular-nums">
+                {etsyPassed} passed{etsyToReview > 0 && <> · <span className="font-medium text-amber-700 dark:text-amber-400">{etsyToReview} to review</span></>}
+              </span>
+            ) : (
+              <StatusPill label="Not checked" tone="neutral" />
+            )}
+          </div>
+          {etsy ? (
+            <ul className="mt-3 divide-y overflow-hidden rounded-lg border">
+              {etsyChecks.map((check) => {
+                const tone = statusTone(check.status);
+                const Icon = etsyIcons[check.key] ?? Film;
+                const StatusIcon = checkIcon(tone);
+                return (
+                  <li key={check.key} className={cn("flex items-start gap-3 px-3 py-2.5", toneRowClasses[tone])}>
+                    <Icon className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                    <div className="min-w-0 flex-1 sm:flex sm:gap-4">
+                      <span className="block font-medium sm:w-32 sm:shrink-0">{etsyLabels[check.key] ?? display(check.key)}</span>
+                      <p className="text-muted-foreground mt-0.5 leading-relaxed sm:mt-0">{check.detail}</p>
+                    </div>
+                    <span className="mt-0.5 shrink-0">
+                      <StatusIcon className={cn("size-4", toneIconTextClasses[tone])} aria-hidden="true" />
+                      <span className="sr-only">{check.status === "info" ? "Info" : display(check.status)}</span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="text-muted-foreground mt-2 leading-relaxed">No Etsy result was saved for this video. Older videos may not have been checked against these rules.</p>
+          )}
         </div>
-        <details className="border-t pt-3"><summary className="cursor-pointer text-sm font-semibold">Technical details</summary>
-          {hasTechnical ? <dl className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">{technicalRows.map((row) => <div key={row.label} className="flex justify-between gap-3"><dt className="text-muted-foreground">{row.label}</dt><dd className="text-right font-medium tabular-nums">{row.value}</dd></div>)}</dl> : <p className="text-muted-foreground mt-2">No technical result was saved for this video.</p>}
+        <details className="group border-t pt-3">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+            Technical details
+            <ChevronDown className="text-muted-foreground size-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+          </summary>
+          {hasTechnical ? (
+            <dl className="mt-3 grid grid-cols-1 gap-x-8 gap-y-2.5 sm:grid-cols-2">
+              {technicalRows.map((row) => (
+                <div key={row.label} className="flex justify-between gap-3 border-b border-dashed pb-2">
+                  <dt className="text-muted-foreground">{row.label}</dt>
+                  <dd className="text-right font-medium tabular-nums">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <p className="text-muted-foreground mt-2">No technical result was saved for this video.</p>
+          )}
         </details>
       </div>
     </div>

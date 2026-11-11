@@ -48,6 +48,7 @@ const group = (runId: string): RunGroup => ({
     key: "p:d", productId: "p", productName: "Tee", productType: "tshirt", artworkGroupKey: "d", designLabel: "Design 1",
     previewUrl: null, mockupCount: 2, approvedCount: 2, pendingCount: 0, selected: true, hasOverride: false, scenes: [],
     warnings: [], resolveError: null, runId, runStatus: "running", currentStep: "generate-video", stage: "Planning", progress: 5, runError: null,
+    config: null, hasOwnConfig: false,
   }],
 });
 

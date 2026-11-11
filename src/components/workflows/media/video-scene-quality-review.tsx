@@ -264,7 +264,8 @@ export const VideoSceneQualityReview = ({ runId, video, showObservationForm = fa
     return { scene, status: saved?.status ?? current?.status ?? "not_applicable", metrics: saved?.metrics ?? current?.metrics ?? {} };
   });
   const isChecking = sceneStates.some(({ status }) => status === "running" || status === "queued") || ["running", "queued"].includes(summary.data?.status ?? "");
-  const hasIncompleteScenes = sceneStates.some(({ status }) => status !== "completed");
+  // "skipped" means scene scoring is turned off on the API, so it does not block a pass.
+  const hasIncompleteScenes = sceneStates.some(({ status }) => status !== "completed" && status !== "skipped");
   const failedPolicy = etsy?.status === "fail" || technical.fullDecode === false || summary.data?.status === "fail";
   const missingPolicy = !etsy || typeof technical.fullDecode !== "boolean";
   const overall: { label: string; tone: QualityTone; detail: string } = failedPolicy
@@ -273,7 +274,9 @@ export const VideoSceneQualityReview = ({ runId, video, showObservationForm = fa
     : missingPolicy ? { label: "Needs review", tone: "warning", detail: "Some final video checks were not saved, so an overall pass cannot be confirmed." }
     : hasIncompleteScenes ? { label: "Needs review", tone: "warning", detail: "One or more scene evaluations are missing or could not finish." }
     : etsy?.status === "pass_with_warning" ? { label: "Pass with warnings", tone: "warning", detail: "The video passed required checks. Review the Etsy warnings below." }
-    : { label: "Pass", tone: "pass", detail: "The saved technical and Etsy checks passed and scene evaluations are complete." };
+    : { label: "Pass", tone: "pass", detail: sceneStates.some(({ status }) => status === "skipped")
+      ? "The saved technical and Etsy checks passed. Automatic scene scoring is turned off."
+      : "The saved technical and Etsy checks passed and scene evaluations are complete." };
   const qualitySummary = summary.data ? (
     <div className="overflow-hidden rounded-xl border">
       <div className="bg-muted/30 space-y-2 p-4" role="status" aria-atomic="true">

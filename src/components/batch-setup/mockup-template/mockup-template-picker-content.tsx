@@ -74,12 +74,12 @@ export const MockupTemplatePickerContent = ({
   // One template per product type. A selection saved before this rule keeps the first template of each type.
   const firstOfType = (id: string, index: number, ids: string[]) => ids.findIndex((other) => typeOf(other) === typeOf(id)) === index;
   const [draftIds, setDraftIds] = useState(() => {
-    const kept = initialIds.filter(usable).filter(firstOfType);
+    const kept = initialIds.filter((id) => usable(id)).filter((id, index, ids) => firstOfType(id, index, ids));
     return printifyOnly ? kept.slice(0, 1) : kept;
   });
   const leftOut = offered.filter((template) => initialIds.includes(template.id) && !usable(template.id));
-  const usableIds = initialIds.filter(usable);
-  const extraOfType = templates.filter((template) => usableIds.includes(template.id) && !usableIds.filter(firstOfType).includes(template.id));
+  const usableIds = initialIds.filter((id) => usable(id));
+  const extraOfType = templates.filter((template) => usableIds.includes(template.id) && !usableIds.filter((id, index, ids) => firstOfType(id, index, ids)).includes(template.id));
   // A Printify template is made only in its Printify colors: a color saved before from the fixed suggestions goes over
   // by name (Navy to its Navy), one it has no name for is dropped, and none left starts it in White.
   const [draftColors, setDraftColors] = useState<TemplateColors>(() =>

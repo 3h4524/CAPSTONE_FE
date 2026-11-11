@@ -47,9 +47,9 @@ export function LimitEditDialog({ target, onClose }: { target: LimitTarget | nul
 
   return (
     <Dialog open={target !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[calc(100%-20px)] max-w-[480px] gap-0 rounded-[24px] border-0 bg-white p-0">
+      <DialogContent className="bg-card w-[calc(100%-20px)] max-w-[480px] gap-0 rounded-[24px] border-0 p-0">
         <DialogHeader className="flex-row items-start gap-3 px-6 pt-6 pb-3 text-left">
-          <div className="text-primary flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#f3f6fc]">
+          <div className="text-primary bg-ink-100 flex size-10 shrink-0 items-center justify-center rounded-xl">
             <Gauge className="size-[18px]" aria-hidden="true" />
           </div>
           <div className="space-y-1">
@@ -61,7 +61,7 @@ export function LimitEditDialog({ target, onClose }: { target: LimitTarget | nul
         </DialogHeader>
         <div className="space-y-3 px-6 py-3">
           <div className="space-y-1.5">
-            <label htmlFor="plan-limit-value" className="text-sm font-medium text-slate-700">
+            <label htmlFor="plan-limit-value" className="text-ink-700 text-sm font-medium">
               New limit{target?.unit ? ` (${target.unit})` : ""}
             </label>
             <Input
@@ -77,7 +77,7 @@ export function LimitEditDialog({ target, onClose }: { target: LimitTarget | nul
             />
             {!isValid && <p className="text-destructive text-xs">Enter a whole number from 0 to 10,000, or choose no limit.</p>}
           </div>
-          <label className="flex items-center gap-2 text-sm text-slate-700">
+          <label className="text-ink-700 flex items-center gap-2 text-sm">
             <Checkbox checked={noLimit} onCheckedChange={(checked) => setNoLimit(checked === true)} aria-label="No limit" />
             No limit
           </label>
@@ -85,7 +85,7 @@ export function LimitEditDialog({ target, onClose }: { target: LimitTarget | nul
             <FeatureImpactNote impact={impact.data} isLoading={impact.isLoading} planName={target?.plan.name ?? ""} />
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-slate-100 px-6 py-4">
+        <div className="border-ink-100 flex justify-end gap-2 border-t px-6 py-4">
           <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
             Cancel
           </Button>

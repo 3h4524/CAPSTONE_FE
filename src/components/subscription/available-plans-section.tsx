@@ -36,6 +36,10 @@ const nextCheaper = (plans: AvailablePlan[], plan: AvailablePlan) =>
     .filter((other) => other.monthlyPriceUsd < plan.monthlyPriceUsd)
     .sort((a, b) => b.monthlyPriceUsd - a.monthlyPriceUsd)[0];
 
+// Three cards span the row, lining up with the sections around them.
+const THREE_ACROSS_WIDTH = "w-full sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2*1.25rem)/3)]";
+const CARD_WIDTH = `${THREE_ACROSS_WIDTH} xl:w-[calc((100%-3*1.25rem)/4)]`;
+
 export const AvailablePlansSection = ({
   plans,
   hasActivePaidPlan,
@@ -127,7 +131,7 @@ export const AvailablePlansSection = ({
             onClick={() => scroll("left")}
             aria-label="Previous plan"
             disabled={!canScrollLeft}
-            className="absolute top-1/2 -left-3 z-30 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-lg transition-all duration-200 hover:scale-105 hover:bg-slate-50 active:scale-95 disabled:pointer-events-none disabled:opacity-25 sm:-left-5 sm:size-11"
+            className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 absolute top-1/2 -left-3 z-30 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-25 sm:-left-5 sm:size-11"
           >
             <ChevronLeft className="size-5 stroke-[2.5] sm:size-6" />
           </button>
@@ -136,7 +140,7 @@ export const AvailablePlansSection = ({
             onClick={() => scroll("right")}
             aria-label="Next plan"
             disabled={!canScrollRight}
-            className="absolute top-1/2 -right-3 z-30 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-lg transition-all duration-200 hover:scale-105 hover:bg-slate-50 active:scale-95 disabled:pointer-events-none disabled:opacity-25 sm:-right-5 sm:size-11"
+            className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 absolute top-1/2 -right-3 z-30 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-25 sm:-right-5 sm:size-11"
           >
             <ChevronRight className="size-5 stroke-[2.5] sm:size-6" />
           </button>
@@ -144,7 +148,16 @@ export const AvailablePlansSection = ({
       )}
 
       {/* Plans Container */}
-      {totalCards <= 4 ? (
+      {totalCards < 4 ? (
+        // A card left alone on its line stays centred.
+        <div className="flex flex-wrap justify-center gap-5">
+          {cardItems.map(({ key, node }) => (
+            <div key={key} className={totalCards === 3 ? THREE_ACROSS_WIDTH : CARD_WIDTH}>
+              {node}
+            </div>
+          ))}
+        </div>
+      ) : totalCards === 4 ? (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {cardItems.map(({ key, node }) => (
             <div key={key} className="h-full">
@@ -162,7 +175,7 @@ export const AvailablePlansSection = ({
             <div
               key={key}
               data-plan-card
-              className="w-full shrink-0 snap-start sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2*1.25rem)/3)] xl:w-[calc((100%-3*1.25rem)/4)]"
+              className={`${CARD_WIDTH} shrink-0 snap-start`}
             >
               {node}
             </div>

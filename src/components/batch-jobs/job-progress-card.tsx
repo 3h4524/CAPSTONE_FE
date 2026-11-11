@@ -15,9 +15,9 @@ const formatTime = (value: string | null) => (value ? new Date(value).toLocaleSt
 export const jobStatusText = (status: string) => (status === "image_review_required" ? "Ready for review" : status.replaceAll("_", " "));
 
 const Counter = ({ label, value, compact }: { label: string; value: number; compact: boolean }) => (
-  <div className={compact ? "rounded-md bg-slate-50 px-2.5 py-2" : "rounded-lg border p-3"}>
+  <div className={compact ? "bg-ink-50 rounded-md px-2.5 py-2" : "rounded-lg border p-3"}>
     <p className={cn("text-muted-foreground text-xs", !compact && "uppercase")}>{label}</p>
-    <p className={cn("tabular-nums", compact ? "text-base font-medium text-slate-900" : "mt-1 text-2xl font-semibold")}>{value}</p>
+    <p className={cn("tabular-nums", compact ? "text-ink-900 text-base font-medium" : "mt-1 text-2xl font-semibold")}>{value}</p>
   </div>
 );
 

@@ -182,7 +182,7 @@ const Handles = ({ className }: { className: string }) => (
         key={handle}
         data-handle={handle}
         className={cn(
-          "absolute size-3 rounded-sm border-2 bg-white [@media(pointer:coarse)]:size-7 [@media(pointer:coarse)]:translate-x-0! [@media(pointer:coarse)]:translate-y-0!",
+          "bg-card absolute size-3 rounded-sm border-2 [@media(pointer:coarse)]:size-7 [@media(pointer:coarse)]:translate-x-0! [@media(pointer:coarse)]:translate-y-0!",
           className,
           handle === "nw" && "top-0 left-0 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize",
           handle === "ne" && "top-0 right-0 translate-x-1/2 -translate-y-1/2 cursor-nesw-resize",
@@ -623,7 +623,7 @@ export const PrintAreaEditor = ({
           src={imageUrl}
           alt="Mock-up base photo"
           className={cn(
-            "block max-w-full rounded-lg ring-1 ring-slate-200 select-none ring-inset",
+            "ring-ink-200 block max-w-full rounded-lg ring-1 select-none ring-inset",
             imageClassName
           )}
           draggable={false}
@@ -770,7 +770,7 @@ export const PrintAreaEditor = ({
                   aria-valuemax={180}
                   aria-valuenow={turn}
                   title="Drag to turn. Hold Shift for steps of 15°."
-                  className="border-primary absolute -top-7 left-1/2 size-3.5 -translate-x-1/2 cursor-grab rounded-full border-2 bg-white active:cursor-grabbing"
+                  className="border-primary bg-card absolute -top-7 left-1/2 size-3.5 -translate-x-1/2 cursor-grab rounded-full border-2 active:cursor-grabbing"
                 />
               </>
             )}
@@ -820,7 +820,7 @@ export const PrintAreaEditor = ({
         </p>
       )}
       {isOffGarment && (
-        <p role="status" className="text-xs text-amber-700">
+        <p role="status" className="text-xs text-amber-700 dark:text-amber-300">
           {offGarment > 1 - OFF_GARMENT_TOLERANCE
             ? `The ${printedThing} is entirely off the garment, so nothing of it would be printed. Move it onto the garment.`
             : `Part of the ${printedThing} is off the garment. Mock-ups cut it off at the garment’s edge.`}

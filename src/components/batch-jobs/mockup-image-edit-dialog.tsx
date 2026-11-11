@@ -680,17 +680,17 @@ export const MockupImageEditDialog = ({
             {/* The side's photo, as large as the dialog allows, with the sides under it. */}
             <section
               aria-label={`${sideLabel} photo`}
-              className="flex min-h-0 flex-col gap-3 bg-slate-50 px-4 py-4 md:overflow-y-auto"
+              className="bg-ink-50 flex min-h-0 flex-col gap-3 px-4 py-4 md:overflow-y-auto"
             >
               <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-semibold text-slate-900">{sideLabel}</p>
+                <p className="text-ink-900 text-sm font-semibold">{sideLabel}</p>
                 <div className="flex items-center gap-1.5">
                   {photo && !removed && movedAreas && (
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="h-8 gap-1.5 bg-white px-2.5 text-xs"
+                      className="bg-card h-8 gap-1.5 px-2.5 text-xs"
                       disabled={busy}
                       onClick={() => {
                         touch(activeView);
@@ -708,8 +708,8 @@ export const MockupImageEditDialog = ({
                       size="sm"
                       className={
                         removed
-                          ? "h-8 gap-1.5 bg-white px-2.5 text-xs"
-                          : "h-8 gap-1.5 bg-white px-2.5 text-xs text-red-600 hover:text-red-700"
+                          ? "bg-card h-8 gap-1.5 px-2.5 text-xs"
+                          : "bg-card h-8 gap-1.5 px-2.5 text-xs text-red-600 hover:text-red-700"
                       }
                       disabled={busy || (!removed && keptSides.length <= 1)}
                       onClick={() =>
@@ -927,8 +927,8 @@ export const MockupImageEditDialog = ({
                           onClick={() => setShownColor(hex)}
                           className={
                             sameColor(hex, previewColor)
-                              ? "size-5 rounded-full border border-slate-300 ring-2 ring-slate-900 ring-offset-1"
-                              : "size-5 rounded-full border border-slate-300 hover:border-slate-500"
+                              ? "border-ink-300 size-5 rounded-full border ring-2 ring-slate-900 ring-offset-1"
+                              : "border-ink-300 size-5 rounded-full border hover:border-slate-500"
                           }
                           style={{ backgroundColor: hex }}
                         />
@@ -939,7 +939,7 @@ export const MockupImageEditDialog = ({
               )}
 
               {!recolorable && colorCards.length > 1 && main && (
-                <p className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+                <p className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:bg-amber-500/10 dark:text-amber-300">
                   {main.name} can’t be recolored, so one mock-up in the photo’s own color takes the
                   place of the {colorCards.length} colors.
                 </p>
@@ -992,7 +992,7 @@ export const MockupImageEditDialog = ({
                     </div>
                   )}
                   {colors.length > 1 && previewColor && (
-                    <p className="flex items-center gap-1.5 text-xs text-slate-700">
+                    <p className="text-ink-700 flex items-center gap-1.5 text-xs">
                       <GarmentColorSwatch hex={previewColor} />
                       {garmentColorName(previewColor, main?.printify?.colors)} garment
                     </p>
@@ -1072,7 +1072,7 @@ export const MockupImageEditDialog = ({
               )}
 
               {unrecolorableSides.length > 0 && (
-                <p className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+                <p className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:bg-amber-500/10 dark:text-amber-300">
                   The{" "}
                   {unrecolorableSides
                     .map((side) => mockupViewLabel(side.view).toLowerCase())
@@ -1083,7 +1083,7 @@ export const MockupImageEditDialog = ({
               )}
 
               {missingSides.length > 0 && (
-                <p className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+                <p className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:bg-amber-500/10 dark:text-amber-300">
                   {main?.name} has no{" "}
                   {missingSides
                     .map((side) => mockupViewLabel(side.view).toLowerCase())
@@ -1095,7 +1095,7 @@ export const MockupImageEditDialog = ({
               {duplicate && (
                 <p
                   role="alert"
-                  className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900"
+                  className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:bg-amber-500/10 dark:text-amber-300"
                 >
                   This would look exactly like another mock-up of this design ({duplicateName}).
                   Choose another garment color, or remove this mock-up instead.

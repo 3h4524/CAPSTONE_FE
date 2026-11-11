@@ -195,7 +195,7 @@ export const MockupTemplatePickerContent = ({
               <section key={group.type || "all"} className="flex flex-col gap-2">
                 {group.type && (
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-semibold text-slate-900">{productTypeLabel(group.type)}</h3>
+                    <h3 className="text-ink-900 text-sm font-semibold">{productTypeLabel(group.type)}</h3>
                     <span className="text-muted-foreground text-xs">
                       {group.count} {group.count === 1 ? "product" : "products"}
                     </span>
@@ -253,7 +253,7 @@ export const MockupTemplatePickerContent = ({
                         </div>
                         {selected && template.allowRecolor && (
                           <div className="ml-4 space-y-2 rounded-lg border border-dashed p-3">
-                            <p className="text-xs font-medium text-slate-900">Garment colors for {template.name}</p>
+                            <p className="text-ink-900 text-xs font-medium">Garment colors for {template.name}</p>
                             <GarmentColorPicker
                               compact
                               selected={colors}

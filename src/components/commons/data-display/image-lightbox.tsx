@@ -41,7 +41,7 @@ export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxPro
         {image && (
           <>
             <div
-              className="relative flex min-h-60 items-center justify-center overflow-hidden rounded-md bg-slate-100"
+              className="bg-ink-100 relative flex min-h-60 items-center justify-center overflow-hidden rounded-md"
               style={image.backdrop ? { backgroundColor: image.backdrop } : undefined}
             >
               {/* Sized by the picture, so a tint laid over it covers exactly the photo. */}
@@ -80,7 +80,7 @@ export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxPro
                     aria-label="Previous image"
                     disabled={!hasPrevious}
                     onClick={() => onIndexChange(position - 1)}
-                    className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-white/90 shadow-sm hover:-translate-y-1/2"
+                    className="bg-card/90 absolute top-1/2 left-3 -translate-y-1/2 rounded-full shadow-sm hover:-translate-y-1/2"
                   >
                     <ChevronLeft aria-hidden="true" />
                   </Button>
@@ -91,7 +91,7 @@ export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxPro
                     aria-label="Next image"
                     disabled={!hasNext}
                     onClick={() => onIndexChange(position + 1)}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-white/90 shadow-sm hover:-translate-y-1/2"
+                    className="bg-card/90 absolute top-1/2 right-3 -translate-y-1/2 rounded-full shadow-sm hover:-translate-y-1/2"
                   >
                     <ChevronRight aria-hidden="true" />
                   </Button>

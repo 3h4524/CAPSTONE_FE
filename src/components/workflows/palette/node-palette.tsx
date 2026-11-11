@@ -33,10 +33,10 @@ export const NodePalette = ({ onNodeAdded }: NodePaletteProps) => {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b px-4 py-3">
-        <h2 className="text-sm font-semibold text-slate-900">Nodes</h2>
+        <h2 className="text-ink-900 text-sm font-semibold">Nodes</h2>
         <p className="text-muted-foreground mt-0.5 text-xs">Drag onto the canvas or click to add.</p>
       </div>
-      <ScrollArea className="min-h-0 flex-1 bg-white">
+      <ScrollArea className="bg-card min-h-0 flex-1">
         <div className="px-2 py-2">
           {WORKFLOW_CATEGORIES.map((category, index) => {
             const theme = WORKFLOW_CATEGORY_THEME[category.id];
@@ -45,14 +45,14 @@ export const NodePalette = ({ onNodeAdded }: NodePaletteProps) => {
               <section
                 key={category.id}
                 aria-labelledby={`palette-${category.id}`}
-                className={cn(index > 0 && "mt-3 border-t border-slate-200/80 pt-3")}
+                className={cn(index > 0 && "border-ink-200/80 mt-3 border-t pt-3")}
               >
                 <div className="flex items-center gap-2 px-2 py-1.5">
                   <span className={cn("size-1.5 rounded-full", theme.dot)} aria-hidden="true" />
-                  <h3 id={`palette-${category.id}`} className="text-[10px] font-semibold tracking-[0.14em] text-slate-500 uppercase">
+                  <h3 id={`palette-${category.id}`} className="text-ink-500 text-[10px] font-semibold tracking-[0.14em] uppercase">
                     {category.label}
                   </h3>
-                  <span className="ml-auto text-[10px] font-medium text-slate-400 tabular-nums">{definitions.length}</span>
+                  <span className="text-ink-400 ml-auto text-[10px] font-medium tabular-nums">{definitions.length}</span>
                 </div>
                 <div className="space-y-0.5">
                   {definitions.map((definition) => (

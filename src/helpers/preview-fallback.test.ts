@@ -3,12 +3,12 @@ import { describe, expect, it } from "vitest";
 import { previewFallbackFor } from "@/helpers/preview-fallback";
 
 const PALETTE = [
-  "from-amber-200 via-orange-100 to-rose-200",
-  "from-slate-200 via-slate-100 to-zinc-200",
-  "from-sky-200 via-cyan-100 to-teal-100",
-  "from-violet-200 via-purple-100 to-fuchsia-100",
-  "from-emerald-200 via-green-100 to-lime-100",
-  "from-indigo-200 via-blue-100 to-sky-100",
+  "from-amber-200 via-orange-100 dark:via-orange-500/15 to-rose-200",
+  "from-ink-200 via-ink-100 to-ink-200",
+  "from-sky-200 via-cyan-100 dark:via-cyan-500/15 to-teal-100 dark:to-teal-500/15",
+  "from-violet-200 via-purple-100 dark:via-purple-500/15 to-fuchsia-100 dark:to-fuchsia-500/15",
+  "from-emerald-200 via-green-100 dark:via-green-500/15 to-lime-100 dark:to-lime-500/15",
+  "from-indigo-200 via-blue-100 dark:via-blue-500/15 to-sky-100 dark:to-sky-500/15",
 ];
 
 const charCodeSum = (value: string) =>
@@ -16,14 +16,14 @@ const charCodeSum = (value: string) =>
 
 describe("previewFallbackFor", () => {
   it.each([
-    ["abc", "from-amber-200 via-orange-100 to-rose-200"],
-    ["abcd", "from-emerald-200 via-green-100 to-lime-100"],
-    ["a", "from-slate-200 via-slate-100 to-zinc-200"],
-    ["b", "from-sky-200 via-cyan-100 to-teal-100"],
-    ["c", "from-violet-200 via-purple-100 to-fuchsia-100"],
-    ["d", "from-emerald-200 via-green-100 to-lime-100"],
-    ["e", "from-indigo-200 via-blue-100 to-sky-100"],
-    ["f", "from-amber-200 via-orange-100 to-rose-200"],
+    ["abc", "from-amber-200 via-orange-100 dark:via-orange-500/15 to-rose-200"],
+    ["abcd", "from-emerald-200 via-green-100 dark:via-green-500/15 to-lime-100 dark:to-lime-500/15"],
+    ["a", "from-ink-200 via-ink-100 to-ink-200"],
+    ["b", "from-sky-200 via-cyan-100 dark:via-cyan-500/15 to-teal-100 dark:to-teal-500/15"],
+    ["c", "from-violet-200 via-purple-100 dark:via-purple-500/15 to-fuchsia-100 dark:to-fuchsia-500/15"],
+    ["d", "from-emerald-200 via-green-100 dark:via-green-500/15 to-lime-100 dark:to-lime-500/15"],
+    ["e", "from-indigo-200 via-blue-100 dark:via-blue-500/15 to-sky-100 dark:to-sky-500/15"],
+    ["f", "from-amber-200 via-orange-100 dark:via-orange-500/15 to-rose-200"],
   ])("returns a stable gradient for %s", (id, expected) => {
     expect(previewFallbackFor(id)).toBe(expected);
   });

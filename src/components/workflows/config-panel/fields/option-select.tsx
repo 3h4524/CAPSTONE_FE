@@ -58,7 +58,7 @@ export const OptionSelect = ({
       <PanelNotice
         tone="error"
         action={onRetry && (
-          <Button type="button" variant="link" size="sm" className="h-auto px-0 text-xs text-rose-900 hover:translate-y-0" onClick={onRetry}>Retry</Button>
+          <Button type="button" variant="link" size="sm" className="h-auto px-0 text-xs text-rose-900 hover:translate-y-0 dark:text-rose-300" onClick={onRetry}>Retry</Button>
         )}
       >
         Options could not be loaded.
@@ -79,7 +79,7 @@ export const OptionSelect = ({
   const trigger = (
     <SelectTrigger
       {...(standaloneId ? { id: standaloneId } : {})}
-      className={cn("w-full min-w-0 bg-white", withImages && "pl-1.5 data-[size=default]:h-10", canClear && SELECT_CLEARABLE_TRIGGER)}
+      className={cn("bg-card w-full min-w-0", withImages && "pl-1.5 data-[size=default]:h-10", canClear && SELECT_CLEARABLE_TRIGGER)}
     >
       <SelectValue placeholder={noneLabel ?? placeholder}>
         {rich && selected ? (

@@ -42,15 +42,15 @@ export function StatisticsHeader({
   return (
     <div className="mb-4.5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 max-md:text-xl sm:text-[26px]">
+        <h1 className="text-ink-900 text-2xl font-bold tracking-tight max-md:text-xl sm:text-[26px]">
           System Statistics
         </h1>
-        <p className="mt-1 text-xs text-slate-500 sm:text-[13px]">
+        <p className="text-ink-500 mt-1 text-xs sm:text-[13px]">
           <span className="max-md:hidden">Generation throughput, pipeline conversion and job reliability across all sellers</span>
           {periodStart && periodEnd && (
             <>
               <span className="max-md:hidden">{" · "}</span>
-              <span className="font-medium text-slate-600">
+              <span className="text-ink-600 font-medium">
                 {formatDateLabel(periodStart)} – {formatDateLabel(periodEnd, { month: "short", day: "numeric", year: "numeric" })}
               </span>
             </>
@@ -60,10 +60,10 @@ export function StatisticsHeader({
 
       <div className="flex flex-wrap items-center gap-2.5 max-md:flex-nowrap">
         <Select value={timeRange} onValueChange={onTimeRangeChange}>
-          <SelectTrigger className="h-8.5 min-w-[135px] cursor-pointer rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 focus:ring-1 focus:ring-slate-400 max-md:min-w-0 max-md:flex-1">
+          <SelectTrigger className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 focus:ring-ink-400 h-8.5 min-w-[135px] cursor-pointer rounded-xl px-3.5 text-xs font-medium shadow-2xs focus:ring-1 max-md:min-w-0 max-md:flex-1">
             <SelectValue placeholder="Select period" />
           </SelectTrigger>
-          <SelectContent className="rounded-xl border-slate-200 bg-white shadow-md">
+          <SelectContent className="border-ink-200 bg-card rounded-xl shadow-md">
             {TIME_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value} className="cursor-pointer text-xs font-medium">
                 {opt.label}
@@ -77,12 +77,12 @@ export function StatisticsHeader({
           disabled={isExporting}
           variant="outline"
           size="sm"
-          className="h-8.5 cursor-pointer gap-1.5 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 max-md:flex-1"
+          className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 h-8.5 cursor-pointer gap-1.5 rounded-xl px-3.5 text-xs font-medium shadow-2xs max-md:flex-1"
         >
           {isExporting ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
+            <Loader2 className="text-ink-500 h-3.5 w-3.5 animate-spin" />
           ) : (
-            <Download className="h-3.5 w-3.5 text-slate-600" />
+            <Download className="text-ink-600 h-3.5 w-3.5" />
           )}
           <span>Export CSV</span>
         </Button>

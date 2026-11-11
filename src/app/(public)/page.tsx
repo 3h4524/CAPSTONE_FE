@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { getSessionUser, resolveSignedInLanding } from "@/api/session";
+import { getSessionUser } from "@/api/session";
+import { SignedInRedirect } from "@/components/auth/signed-in-redirect";
 import { BenefitsSection } from "@/components/landing/sections/benefits-section";
 import { ComparisonSection } from "@/components/landing/sections/comparison-section";
 import { CtaSection } from "@/components/landing/sections/cta-section";
@@ -12,6 +13,7 @@ import { WorkflowSection } from "@/components/landing/sections/workflow-section"
 import { FaqJsonLd } from "@/components/seo/faq-json-ld";
 import { SITE_CONFIG } from "@/constants/site";
 import { getPageMetadata } from "@/data/metadata";
+import { resolveSignedInLanding } from "@/helpers/auth-return-url";
 
 export const metadata: Metadata = getPageMetadata({
   title: "Scale Your POD Empire at AI Speed",
@@ -28,6 +30,7 @@ const RootPage = async () => {
 
   return (
     <>
+      <SignedInRedirect />
       <main className="flex flex-col">
         <HeroSection />
         <BenefitsSection />

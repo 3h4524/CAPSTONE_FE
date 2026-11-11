@@ -102,7 +102,7 @@ function WorkflowReadiness({
           <span
             className={cn(
               "rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums",
-              isReady ? "bg-success-background text-success-text" : "bg-amber-50 text-amber-800"
+              isReady ? "bg-success-background text-success-text" : "bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300"
             )}
           >
             {readyCount}/{stages.length} ready
@@ -126,7 +126,7 @@ function WorkflowReadiness({
                   ok
                     ? "bg-success-background text-success-text"
                     : stage.broken
-                      ? "bg-amber-50 text-amber-700"
+                      ? "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
                       : "bg-muted text-muted-foreground"
                 )}
               >
@@ -183,7 +183,7 @@ function ConnectionRow({ connection, now, ...handlers }: ConnectionViewProps) {
     <tr
       className={cn(
         "border-border border-t transition-colors",
-        connection.status === "Connected" ? "hover:bg-muted/30" : "bg-amber-50/40 hover:bg-amber-50/70"
+        connection.status === "Connected" ? "hover:bg-muted/30" : "bg-amber-50/40 hover:bg-amber-50/70 dark:bg-amber-500/10 dark:hover:bg-amber-500/10"
       )}
     >
       <th scope="row" className="py-3.5 pr-3 pl-5 text-left font-normal">
@@ -207,7 +207,7 @@ function ConnectionRow({ connection, now, ...handlers }: ConnectionViewProps) {
 
 function ConnectionCard({ connection, now, ...handlers }: ConnectionViewProps) {
   return (
-    <li className={cn("border-border space-y-3 border-t p-4 text-xs", connection.status !== "Connected" && "bg-amber-50/40")}>
+    <li className={cn("border-border space-y-3 border-t p-4 text-xs", connection.status !== "Connected" && "bg-amber-50/40 dark:bg-amber-500/10")}>
       <ConnectionProvider connection={connection} />
       <ConnectionCredential connection={connection} />
       <div>

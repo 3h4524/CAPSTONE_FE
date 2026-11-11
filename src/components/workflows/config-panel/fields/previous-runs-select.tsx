@@ -18,13 +18,13 @@ const STATUS_DOTS: Record<string, string> = {
   failed: "bg-rose-500",
   queued: "bg-indigo-400",
   running: "bg-indigo-500",
-  paused: "bg-slate-400",
+  paused: "bg-ink-400",
 };
 
 const formatDate = (value: string | null) =>
   value ? new Date(value).toLocaleString([], { dateStyle: "short", timeStyle: "short" }) : "";
 const statusText = (status: string) => status.replaceAll("_", " ");
-const statusDot = (status: string) => STATUS_DOTS[status.toLowerCase()] ?? "bg-slate-300";
+const statusDot = (status: string) => STATUS_DOTS[status.toLowerCase()] ?? "bg-ink-300";
 
 // Where a run was started, when it was not from the workflow that is open. Runs from before this was
 // recorded, or started outside a workflow, have nothing to say.
@@ -83,7 +83,7 @@ export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
         <SelectTrigger
           id="previous-runs"
           aria-label="Previous runs"
-          className={cn("w-full min-w-0 bg-white", canClose && SELECT_CLEARABLE_TRIGGER)}
+          className={cn("bg-card w-full min-w-0", canClose && SELECT_CLEARABLE_TRIGGER)}
         >
           {/* Short on purpose: the full details are in the list, and a long value would push the panel wider. */}
           <SelectValue placeholder="Open an earlier run">

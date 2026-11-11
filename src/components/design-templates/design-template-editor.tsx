@@ -196,10 +196,10 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
         className="w-full min-w-0 p-4 sm:p-6"
         aria-label="Loading template editor"
       >
-        <div className="h-10 w-64 animate-pulse rounded bg-slate-200" />
+        <div className="bg-ink-200 h-10 w-64 animate-pulse rounded" />
         <div className="mt-7 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="h-[680px] animate-pulse rounded-[22px] bg-slate-100" />
-          <div className="h-80 animate-pulse rounded-[22px] bg-slate-100" />
+          <div className="bg-ink-100 h-[680px] animate-pulse rounded-[22px]" />
+          <div className="bg-ink-100 h-80 animate-pulse rounded-[22px]" />
         </div>
       </main>
     );
@@ -208,10 +208,10 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
   if (optionsQuery.isError || (isEditing && templateQuery.isError)) {
     return (
       <main className="flex min-h-[65vh] w-full min-w-0 items-center justify-center p-4 text-center sm:p-6">
-        <div className="max-w-md rounded-[22px] border border-slate-200 bg-white p-8 shadow-[0_18px_50px_rgba(39,55,80,0.08)]">
-          <Layers3 className="mx-auto size-8 text-slate-400" aria-hidden="true" />
+        <div className="border-ink-200 bg-card max-w-md rounded-[22px] border p-8 shadow-[0_18px_50px_rgba(39,55,80,0.08)]">
+          <Layers3 className="text-ink-400 mx-auto size-8" aria-hidden="true" />
           <h1 className="font-display mt-4 text-2xl font-semibold">Editor could not be loaded</h1>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="text-ink-600 mt-2 text-sm">
             The template may no longer exist, or the connection was interrupted.
           </p>
           <Button
@@ -232,25 +232,25 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
     <main className="w-full min-w-0 p-4 max-md:p-0 max-md:pb-20 sm:p-6">
       <button
         type="button"
-        className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-950 focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        className="text-ink-600 hover:text-ink-900 focus-visible:ring-primary/20 inline-flex min-h-10 items-center gap-2 text-sm font-semibold transition-colors focus-visible:ring-3 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         onClick={goBackToLibrary}
         disabled={saving}
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         Back to library
       </button>
-      <header className="mt-4 flex items-start gap-4 border-b border-slate-200 pb-6 max-md:mt-1 max-md:border-b-0 max-md:pb-0 sm:gap-5">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#dce8fb] text-[#273750] max-md:hidden sm:size-13">
+      <header className="border-ink-200 mt-4 flex items-start gap-4 border-b pb-6 max-md:mt-1 max-md:border-b-0 max-md:pb-0 sm:gap-5">
+        <span className="bg-ink-200 text-primary flex size-12 shrink-0 items-center justify-center rounded-xl max-md:hidden sm:size-13">
           <WandSparkles className="size-5 sm:size-[22px]" aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <p className="text-[11px] font-bold tracking-[0.16em] text-slate-500 uppercase">
+          <p className="text-ink-500 text-[11px] font-bold tracking-[0.16em] uppercase">
             {isEditing ? "Personal template" : "New template"}
           </p>
-          <h1 className="font-display mt-1 text-3xl font-semibold tracking-[-0.03em] text-slate-950 max-md:text-xl">
+          <h1 className="font-display text-ink-900 mt-1 text-3xl font-semibold tracking-[-0.03em] max-md:text-xl">
             {isEditing ? "Refine your prompt system" : "Build a reusable creative direction"}
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 max-md:mt-1 max-md:text-xs max-md:leading-5">
+          <p className="text-ink-600 mt-2 max-w-2xl text-sm leading-6 max-md:mt-1 max-md:text-xs max-md:leading-5">
             Keep the structure stable and use placeholders for the product-specific details you will
             supply later.
           </p>
@@ -261,20 +261,20 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
         onSubmit={submit}
         className="mt-7 grid grid-cols-[minmax(0,1fr)] items-start gap-6 max-md:mt-4 max-md:gap-3 lg:grid-cols-[minmax(0,1fr)_320px]"
       >
-        <div className="min-w-0 space-y-6 rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_16px_45px_rgba(39,55,80,0.055)] max-md:space-y-3 max-md:border-0 max-md:bg-transparent max-md:p-0 max-md:shadow-none sm:p-7">
-          <section className="grid grid-cols-[minmax(0,1fr)] gap-5 max-md:gap-4 max-md:rounded-2xl max-md:border max-md:bg-white max-md:p-4 sm:grid-cols-2" aria-labelledby="template-identity-title">
+        <div className="border-ink-200 bg-card min-w-0 space-y-6 rounded-[22px] border p-5 shadow-[0_16px_45px_rgba(39,55,80,0.055)] max-md:space-y-3 max-md:border-0 max-md:bg-transparent max-md:p-0 max-md:shadow-none sm:p-7">
+          <section className="max-md:bg-card grid grid-cols-[minmax(0,1fr)] gap-5 max-md:gap-4 max-md:rounded-2xl max-md:border max-md:p-4 sm:grid-cols-2" aria-labelledby="template-identity-title">
             <h2
               id="template-identity-title"
               className="font-display col-span-full text-xl font-semibold max-md:text-base"
             >
               Template identity
             </h2>
-            <label className="grid gap-2 text-sm font-semibold text-slate-800 sm:col-span-2">
+            <label className="text-ink-800 grid gap-2 text-sm font-semibold sm:col-span-2">
               Name
               <Input
                 {...form.register("name")}
                 placeholder="e.g. Botanical Linework"
-                className="min-h-11 border-slate-300"
+                className="border-ink-300 min-h-11"
               />
               <FieldError message={form.formState.errors.name?.message} />
             </label>
@@ -282,7 +282,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
               control={form.control}
               name="nicheCategory"
               render={({ field, fieldState }) => (
-                <label className="grid gap-2 text-sm font-semibold text-slate-800">
+                <label className="text-ink-800 grid gap-2 text-sm font-semibold">
                   Niche
                   <Select
                     name={field.name}
@@ -293,7 +293,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                       ref={field.ref}
                       onBlur={field.onBlur}
                       aria-invalid={fieldState.invalid}
-                      className="min-h-11 w-full border-slate-300"
+                      className="border-ink-300 min-h-11 w-full"
                     >
                       <SelectValue placeholder="Choose a niche" />
                     </SelectTrigger>
@@ -313,7 +313,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
               control={form.control}
               name="artStyle"
               render={({ field, fieldState }) => (
-                <label className="grid gap-2 text-sm font-semibold text-slate-800">
+                <label className="text-ink-800 grid gap-2 text-sm font-semibold">
                   Art style
                   <Select
                     name={field.name}
@@ -324,7 +324,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                       ref={field.ref}
                       onBlur={field.onBlur}
                       aria-invalid={fieldState.invalid}
-                      className="min-h-11 w-full border-slate-300"
+                      className="border-ink-300 min-h-11 w-full"
                     >
                       <SelectValue placeholder="Choose a style" />
                     </SelectTrigger>
@@ -342,17 +342,17 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
             />
           </section>
 
-          <section className="border-t border-slate-200 pt-6 max-md:rounded-2xl max-md:border max-md:bg-white max-md:p-4" aria-labelledby="prompt-title">
+          <section className="border-ink-200 max-md:bg-card border-t pt-6 max-md:rounded-2xl max-md:border max-md:p-4" aria-labelledby="prompt-title">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 id="prompt-title" className="font-display text-xl font-semibold max-md:text-base">
                   Prompt framework
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="text-ink-500 mt-1 text-sm">
                   Use only supported placeholders inside curly braces.
                 </p>
               </div>
-              <span className="text-xs font-medium text-slate-500 tabular-nums">
+              <span className="text-ink-500 text-xs font-medium tabular-nums">
                 {basePrompt.length} / {optionsQuery.data?.maximumBasePromptLength ?? 1000}
               </span>
             </div>
@@ -364,7 +364,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                   ? "A print-ready {style} illustration of {subject}"
                   : "Example: Create a print-ready {style} illustration of {subject} for the {niche} niche using {keywords}. Isolated artwork, no product mockup."
               }
-              className="mt-4 resize-y border-slate-300 font-mono text-[13px] leading-6 max-md:max-h-52 max-md:min-h-28 max-md:text-base max-md:leading-6"
+              className="border-ink-300 mt-4 resize-y font-mono text-[13px] leading-6 max-md:max-h-52 max-md:min-h-28 max-md:text-base max-md:leading-6"
             />
             <FieldError message={form.formState.errors.basePrompt?.message} />
             <PlaceholderToolbar
@@ -373,18 +373,18 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
               onInsert={(placeholder) => addPlaceholder("basePrompt", placeholder)}
             />
             {missingSubject && (
-              <p className="mt-2 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+              <p className="mt-2 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
                 <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                 Without {`{subject}`}, this template cannot adapt to a new design subject.
               </p>
             )}
-            <label className="mt-5 grid gap-2 text-sm font-semibold text-slate-800">
-              Negative prompt <span className="font-normal text-slate-500">Optional</span>
+            <label className="text-ink-800 mt-5 grid gap-2 text-sm font-semibold">
+              Negative prompt <span className="text-ink-500 font-normal">Optional</span>
               <Textarea
                 {...form.register("negativePrompt")}
                 rows={4}
                 placeholder="Leave empty, or list elements the model should avoid"
-                className="resize-y border-slate-300 text-sm leading-6"
+                className="border-ink-300 resize-y text-sm leading-6"
               />
               <FieldError message={form.formState.errors.negativePrompt?.message} />
             </label>
@@ -395,13 +395,13 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
             />
           </section>
 
-          <section className="border-t border-slate-200 pt-6 max-md:rounded-2xl max-md:border max-md:bg-white max-md:p-4" aria-labelledby="examples-title">
+          <section className="border-ink-200 max-md:bg-card border-t pt-6 max-md:rounded-2xl max-md:border max-md:p-4" aria-labelledby="examples-title">
             <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
               <div>
                 <h2 id="examples-title" className="font-display text-xl font-semibold max-md:text-base">
                   Examples
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="text-ink-500 mt-1 text-sm">
                   Show how a subject becomes a finished creative direction.
                 </p>
               </div>
@@ -417,7 +417,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
               </Button>
             </div>
             {examples.fields.length === 0 ? (
-              <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-[#fafaf8] p-5 text-sm text-slate-500">
+              <div className="border-ink-300 bg-ink-50 text-ink-500 mt-4 rounded-xl border border-dashed p-5 text-sm">
                 Examples are optional, but they make a personal template easier to reuse
                 consistently.
               </div>
@@ -426,29 +426,29 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                 {examples.fields.map((field, index) => (
                   <fieldset
                     key={field.id}
-                    className="relative grid gap-3 rounded-xl border border-slate-200 bg-[#fafaf8] p-4"
+                    className="border-ink-200 bg-ink-50 relative grid gap-3 rounded-xl border p-4"
                   >
-                    <legend className="px-1 text-xs font-bold tracking-[0.1em] text-slate-500 uppercase">
+                    <legend className="text-ink-500 px-1 text-xs font-bold tracking-[0.1em] uppercase">
                       Example {index + 1}
                     </legend>
-                    <label className="grid gap-2 text-xs font-semibold text-slate-700">
+                    <label className="text-ink-700 grid gap-2 text-xs font-semibold">
                       Subject
                       <Input
                         {...form.register(`examples.${index}.subject`)}
                         placeholder="e.g. luna moth with wildflowers"
-                        className="border-slate-300 bg-white"
+                        className="border-ink-300 bg-card"
                       />
                       <FieldError
                         message={form.formState.errors.examples?.[index]?.subject?.message}
                       />
                     </label>
-                    <label className="grid gap-2 text-xs font-semibold text-slate-700">
+                    <label className="text-ink-700 grid gap-2 text-xs font-semibold">
                       Resulting prompt
                       <Textarea
                         {...form.register(`examples.${index}.prompt`)}
                         rows={3}
                         placeholder="Describe the expected composition"
-                        className="border-slate-300 bg-white text-sm leading-5"
+                        className="border-ink-300 bg-card text-sm leading-5"
                       />
                       <FieldError
                         message={form.formState.errors.examples?.[index]?.prompt?.message}
@@ -458,7 +458,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                       type="button"
                       variant="ghost"
                       size="icon-sm"
-                      className="absolute top-2 right-2 text-slate-500 hover:translate-y-0 hover:bg-red-50 hover:text-red-700"
+                      className="text-ink-500 absolute top-2 right-2 hover:translate-y-0 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-500/10 dark:hover:text-red-300"
                       onClick={() => examples.remove(index)}
                       aria-label={`Remove example ${index + 1}`}
                     >
@@ -472,25 +472,25 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
         </div>
 
         <aside className="space-y-4 max-md:space-y-0 lg:sticky lg:top-24">
-          <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-[#f7f7f4] shadow-[0_10px_30px_rgba(39,55,80,0.07)]">
-            <div className={cn("flex items-center justify-between border-b border-slate-200 px-5 py-4", !showsPreview && "max-md:hidden")}>
+          <div className="border-ink-200 bg-ink-100 overflow-hidden rounded-[18px] border shadow-[0_10px_30px_rgba(39,55,80,0.07)]">
+            <div className={cn("border-ink-200 flex items-center justify-between border-b px-5 py-4", !showsPreview && "max-md:hidden")}>
               <div className="flex items-center gap-3">
-                <span className="flex size-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#273750] shadow-sm">
+                <span className="border-ink-200 bg-card text-primary flex size-10 items-center justify-center rounded-xl border shadow-sm">
                   <WandSparkles className="size-[18px]" aria-hidden="true" />
                 </span>
                 <div>
-                  <p className="text-[10px] font-bold tracking-[0.15em] text-slate-500 uppercase">
+                  <p className="text-ink-500 text-[10px] font-bold tracking-[0.15em] uppercase">
                     Live structure
                   </p>
-                  <p className="mt-0.5 text-xs text-slate-500">Personal template preview</p>
+                  <p className="text-ink-500 mt-0.5 text-xs">Personal template preview</p>
                 </div>
               </div>
-              <span className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[9px] font-bold tracking-[0.12em] text-slate-500 uppercase">
+              <span className="border-ink-200 bg-card text-ink-500 rounded-md border px-2 py-1 text-[9px] font-bold tracking-[0.12em] uppercase">
                 Draft
               </span>
             </div>
-            <div className={cn("border-b border-slate-200 bg-[#eef1ed] p-4", !showsPreview && "max-md:hidden")}>
-              <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-white/80 bg-white shadow-[0_10px_26px_rgba(39,55,80,0.08)]">
+            <div className={cn("border-ink-200 bg-ink-100 border-b p-4", !showsPreview && "max-md:hidden")}>
+              <div className="bg-card relative aspect-[4/3] overflow-hidden rounded-xl border border-white/80 shadow-[0_10px_26px_rgba(39,55,80,0.08)]">
                 {previewImageUrl && !previewImageFailed ? (
                   <Image
                     fill
@@ -503,11 +503,11 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                   />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-                    <span className="flex size-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm">
+                    <span className="border-ink-200 bg-card text-ink-500 flex size-11 items-center justify-center rounded-full border shadow-sm">
                       <Sparkles className="size-5" aria-hidden="true" />
                     </span>
-                    <p className="mt-3 text-sm font-semibold text-slate-700">AI preview</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                    <p className="text-ink-700 mt-3 text-sm font-semibold">AI preview</p>
+                    <p className="text-ink-500 mt-1 text-xs leading-5">
                       Your generated artwork preview will appear here.
                     </p>
                   </div>
@@ -523,61 +523,61 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                 <WandSparkles aria-hidden="true" />
                 {previewImageUrl ? "Regenerate Preview" : "Generate Preview"}
                 {!previewGenerationEnabled && (
-                  <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] uppercase">
+                  <span className="bg-ink-200 rounded px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] uppercase">
                     Coming soon
                   </span>
                 )}
               </Button>
               <p
                 id="preview-generation-status"
-                className="mt-2 text-center text-xs leading-5 text-slate-500"
+                className="text-ink-500 mt-2 text-center text-xs leading-5"
               >
                 AI preview generation will be available in a future update.
               </p>
             </div>
             <div className="p-5 max-md:p-4">
-              <h2 className="font-display text-xl font-semibold tracking-[-0.02em] text-slate-950 max-md:text-base">
+              <h2 className="font-display text-ink-900 text-xl font-semibold tracking-[-0.02em] max-md:text-base">
                 {form.watch("name") || "Untitled template"}
               </h2>
-              <p className="mt-2 text-sm leading-5 text-slate-600 max-md:mt-0.5 max-md:text-xs">
+              <p className="text-ink-600 mt-2 text-sm leading-5 max-md:mt-0.5 max-md:text-xs">
                 {nicheCategory || "Choose a niche"}{" "}
-                <span className="px-1 text-slate-300" aria-hidden="true">
+                <span className="text-ink-300 px-1" aria-hidden="true">
                   /
                 </span>{" "}
                 {styleLabel}
               </p>
-              <div className="mt-5 space-y-2.5 border-t border-slate-200 pt-4 text-xs text-slate-600 max-md:hidden">
+              <div className="border-ink-200 text-ink-600 mt-5 space-y-2.5 border-t pt-4 text-xs max-md:hidden">
                 <p className="flex items-center gap-2">
-                  <Check className="size-3.5 text-emerald-600" aria-hidden="true" />
+                  <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                   <span>Personal and editable</span>
                 </p>
                 <p className="flex items-center gap-2">
-                  <Check className="size-3.5 text-emerald-600" aria-hidden="true" />
+                  <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                   <span>Up to five examples</span>
                 </p>
                 <p className="flex items-center gap-2">
-                  <Check className="size-3.5 text-emerald-600" aria-hidden="true" />
+                  <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                   <span>Private to your seller account</span>
                 </p>
               </div>
             </div>
           </div>
           {/* Fixed to the foot of a phone's screen, where the tabs give way to it. */}
-          <div className="space-y-4 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-20 max-md:space-y-1 max-md:border-t max-md:bg-white max-md:px-4 max-md:py-3">
+          <div className="max-md:bg-card space-y-4 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-20 max-md:space-y-1 max-md:border-t max-md:px-4 max-md:py-3">
             <Button type="submit" size="lg" className="min-h-12 w-full" disabled={saving}>
               <Save aria-hidden="true" />
               {saving ? "Saving..." : isEditing ? "Save changes" : "Create template"}
             </Button>
             {form.formState.isDirty && (
-              <p className="text-center text-xs text-amber-700">You have unsaved changes.</p>
+              <p className="text-center text-xs text-amber-700 dark:text-amber-300">You have unsaved changes.</p>
             )}
           </div>
         </aside>
       </form>
       <Dialog open={isExitDialogOpen} onOpenChange={setIsExitDialogOpen}>
-        <DialogContent className="rounded-2xl border-slate-200 sm:max-w-lg">
+        <DialogContent className="border-ink-200 rounded-2xl sm:max-w-lg">
           <DialogHeader>
-            <span className="mb-2 flex size-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+            <span className="mb-2 flex size-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
               <AlertCircle className="size-5" aria-hidden="true" />
             </span>
             <DialogTitle>Save template changes?</DialogTitle>
@@ -601,7 +601,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
 }
 
 function FieldError({ message }: { message?: string }) {
-  return message ? <span className="text-xs font-normal text-red-600">{message}</span> : null;
+  return message ? <span className="text-xs font-normal text-red-600 dark:text-red-400">{message}</span> : null;
 }
 
 function resolveOptionValue(value: string | null, options: ReadonlyArray<{ value: string }>) {
@@ -632,7 +632,7 @@ function PlaceholderToolbar({
 }) {
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2" aria-label={label}>
-      <span className="inline-flex min-h-8 items-center gap-1.5 pr-1 text-xs font-semibold text-slate-500">
+      <span className="text-ink-500 inline-flex min-h-8 items-center gap-1.5 pr-1 text-xs font-semibold">
         <Braces className="size-4" aria-hidden="true" />
         Insert
       </span>
@@ -640,7 +640,7 @@ function PlaceholderToolbar({
         <button
           key={placeholder}
           type="button"
-          className="min-h-8 rounded-md border border-slate-300 bg-white px-2.5 font-mono text-xs text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:ring-3 focus-visible:ring-[#273750]/20 focus-visible:outline-none"
+          className="border-ink-300 bg-card text-ink-700 hover:border-ink-400 hover:bg-ink-50 focus-visible:ring-primary/20 min-h-8 rounded-md border px-2.5 font-mono text-xs transition-colors focus-visible:ring-3 focus-visible:outline-none"
           onClick={() => onInsert(placeholder)}
         >
           {`{${placeholder}}`}

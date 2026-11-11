@@ -27,9 +27,9 @@ import type { BatchJobDetail, ImageApprovalStatus } from "@/types/batch-jobs";
 import { cn } from "@/utils/cn";
 
 const STATUS_BADGES: Record<ImageApprovalStatus, { className: string; label: string }> = {
-  approved: { className: "bg-emerald-100 text-emerald-700", label: "Approved" },
-  rejected: { className: "bg-rose-100 text-rose-700", label: "Rejected" },
-  pending: { className: "bg-slate-100 text-slate-600", label: "To review" },
+  approved: { className: "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300", label: "Approved" },
+  rejected: { className: "bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300", label: "Rejected" },
+  pending: { className: "bg-ink-100 text-ink-600", label: "To review" },
 };
 
 const toStatus = (value: string): ImageApprovalStatus => (value === "approved" || value === "rejected" ? value : "pending");
@@ -58,7 +58,7 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
   if (!manual) {
     return (
       <section className="space-y-3 border-t pt-5" aria-label="Approval">
-        <h3 className="text-sm font-semibold text-slate-900">Approval</h3>
+        <h3 className="text-ink-900 text-sm font-semibold">Approval</h3>
         <PanelNotice tone="info">
           {job.requireApproval === false
             ? "This run approves every design automatically, so they continue to the mock-ups without a review."
@@ -71,7 +71,7 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
   if (!designsReady) {
     return (
       <section className="space-y-3 border-t pt-5" aria-label="Approval">
-        <h3 className="text-sm font-semibold text-slate-900">Review designs</h3>
+        <h3 className="text-ink-900 text-sm font-semibold">Review designs</h3>
         <PanelNotice>The designs are still being generated. You can review them as soon as the job finishes.</PanelNotice>
       </section>
     );
@@ -82,13 +82,13 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
 
   return (
     <section className="space-y-4" aria-label="Review designs">
-      <div className="sticky top-0 z-10 -mx-5 space-y-3 border-y bg-white/95 px-5 py-3 backdrop-blur">
+      <div className="bg-card/95 sticky top-0 z-10 -mx-5 space-y-3 border-y px-5 py-3 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-slate-900">Review designs</h3>
+          <h3 className="text-ink-900 text-sm font-semibold">Review designs</h3>
           <p className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums" aria-live="polite">
             <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />{counts.approved} approved</span>
             <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-rose-500" aria-hidden="true" />{counts.rejected} rejected</span>
-            <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-slate-400" aria-hidden="true" />{counts.pending} to review</span>
+            <span className="flex items-center gap-1.5"><span className="bg-ink-400 size-1.5 rounded-full" aria-hidden="true" />{counts.pending} to review</span>
           </p>
         </div>
         <div className="grid grid-cols-1 gap-2 @xs:grid-cols-2">
@@ -135,7 +135,7 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-2">
                 <h4 className="truncate text-sm font-medium">{product.productName}</h4>
-                {product.productType && <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700">{productTypeLabel(product.productType)}</Badge>}
+                {product.productType && <Badge variant="outline" className="border-ink-200 bg-ink-50 text-ink-700">{productTypeLabel(product.productType)}</Badge>}
               </div>
               <Button
                 type="button"
@@ -158,8 +158,8 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
                     key={image.id}
                     className={cn(
                       "overflow-hidden rounded-lg border",
-                      status === "approved" && "border-emerald-300",
-                      status === "rejected" && "border-rose-300 opacity-70"
+                      status === "approved" && "border-emerald-300 dark:border-emerald-500/40",
+                      status === "rejected" && "border-rose-300 opacity-70 dark:border-rose-500/40"
                     )}
                   >
                     {/* Opens the design large on the page rather than in a new tab. */}

@@ -28,7 +28,7 @@ export const MockupBackgroundChoice = ({ template, colors, shownColor, backgroun
 
   return (
     <div className="ml-4 space-y-2 rounded-lg border border-dashed p-3">
-      <p className="text-xs font-medium text-slate-900">Background for {template.name}</p>
+      <p className="text-ink-900 text-xs font-medium">Background for {template.name}</p>
       {colors.length > 1 && (
         <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Garment color to choose the background for">
           {colors.map((hex) => {
@@ -53,7 +53,7 @@ export const MockupBackgroundChoice = ({ template, colors, shownColor, backgroun
         </div>
       )}
       {colors.length > 1 && shownColor && (
-        <p className="flex items-center gap-1.5 text-xs text-slate-700">
+        <p className="text-ink-700 flex items-center gap-1.5 text-xs">
           <GarmentColorSwatch hex={shownColor} />
           {garmentColorName(shownColor)} garment
         </p>

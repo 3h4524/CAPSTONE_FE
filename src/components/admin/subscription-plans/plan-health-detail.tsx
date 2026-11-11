@@ -70,11 +70,11 @@ export function PlanDetail({
   ];
 
   return (
-    <Card id={`ai-review-${plan.plan}`} role="tabpanel" className="gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-none">
+    <Card id={`ai-review-${plan.plan}`} role="tabpanel" className="border-ink-200 bg-card gap-0 overflow-hidden rounded-2xl border p-0 shadow-none">
       {/* The verdict in a sentence, then the two reasons behind it, each led by what it explains. */}
-      <div className="border-b border-l-4 border-slate-100 border-l-[#2a9d8f] bg-slate-50 px-6 py-5">
-        <p className="text-lg leading-relaxed font-semibold text-slate-900">
-          <Figures text={plan.summary} className="font-bold text-slate-900" />
+      <div className="border-ink-100 bg-ink-50 border-b border-l-4 border-l-[#2a9d8f] px-6 py-5">
+        <p className="text-ink-900 text-lg leading-relaxed font-semibold">
+          <Figures text={plan.summary} className="text-ink-900 font-bold" />
         </p>
         <dl className="mt-3 space-y-2 text-sm">
           <Reason
@@ -87,7 +87,7 @@ export function PlanDetail({
           />
           <Reason
             label={
-              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-0.5 text-slate-700 ring-1 ring-slate-200">
+              <span className="bg-card text-ink-700 ring-ink-200 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 ring-1">
                 <Outlook className="size-3.5" /> {OUTLOOK_LABEL[plan.outlook.direction]}
               </span>
             }
@@ -96,7 +96,7 @@ export function PlanDetail({
         </dl>
       </div>
 
-      <div className="flex gap-6 overflow-x-auto border-b border-slate-100 px-6" aria-label="Plan detail sections">
+      <div className="border-ink-100 flex gap-6 overflow-x-auto border-b px-6" aria-label="Plan detail sections">
         {tabs.map((item) => (
           <button
             key={item.key}
@@ -105,7 +105,7 @@ export function PlanDetail({
             onClick={() => setTab(item.key)}
             className={cn(
               "-mb-px flex shrink-0 items-center gap-1.5 border-b-2 py-3 text-sm font-semibold transition-colors",
-              tab === item.key ? "border-slate-900 text-slate-900" : "border-transparent text-slate-400 hover:text-slate-700"
+              tab === item.key ? "border-ink-900 text-ink-900" : "text-ink-400 hover:text-ink-700 border-transparent"
             )}
           >
             {item.label}
@@ -113,7 +113,7 @@ export function PlanDetail({
               <span
                 className={cn(
                   "rounded-full px-1.5 text-[11px] tabular-nums",
-                  tab === item.key ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500"
+                  tab === item.key ? "bg-ink-900 text-card" : "bg-ink-100 text-ink-500"
                 )}
               >
                 {item.count}
@@ -133,25 +133,25 @@ export function PlanDetail({
                     bridge={bridge}
                     periodStart={snapshot.periodStart}
                     periodEnd={snapshot.periodEnd}
-                    className="rounded-xl border border-slate-200 p-4"
+                    className="border-ink-200 rounded-xl border p-4"
                   />
                 </Section>
               )}
               <Section icon={ListChecks} title="What to do">
                 {plan.actions.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">Nothing to change now.</p>
+                  <p className="border-ink-200 text-ink-500 rounded-xl border border-dashed p-4 text-sm">Nothing to change now.</p>
                 ) : (
-                  <ol className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+                  <ol className="divide-ink-100 border-ink-200 divide-y rounded-xl border">
                     {sortActions(plan.actions).map((action) => (
                       <li key={action.text} className="flex items-start gap-3 px-4 py-3 text-sm">
                         <span className="w-16 shrink-0">
                           <Pill level={action.priority} />
                         </span>
                         <div className="min-w-0">
-                          <span className="block text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+                          <span className="text-ink-400 block text-[11px] font-semibold tracking-wide uppercase">
                             {ACTION_KIND_LABEL[action.kind]}
                           </span>
-                          <span className="font-medium text-slate-800">
+                          <span className="text-ink-800 font-medium">
                             <Figures text={action.text} />
                           </span>
                         </div>
@@ -175,27 +175,27 @@ export function PlanDetail({
             {signal && <LeaveGroups signal={signal} />}
             <Section icon={UserMinus} title="What the AI reads in it">
               {reasons.length === 0 ? (
-                <p className="text-sm text-slate-500">{plan.churnNote ?? "No clear pattern in the figures."}</p>
+                <p className="text-ink-500 text-sm">{plan.churnNote ?? "No clear pattern in the figures."}</p>
               ) : (
                 <ol className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                   {reasons.map((reason) => (
-                    <li key={reason.pattern} className="rounded-xl border border-slate-200 p-4">
+                    <li key={reason.pattern} className="border-ink-200 rounded-xl border p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <p className="text-sm font-semibold text-slate-900">{reason.pattern}</p>
+                        <p className="text-ink-900 text-sm font-semibold">{reason.pattern}</p>
                         <Pill level={reason.confidence} />
                       </div>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="text-ink-600 mt-1 text-sm">
                         <Figures text={reason.evidence} />
                       </p>
                       {reason.hypothesis && (
-                        <div className="mt-3 space-y-1 border-l-2 border-slate-200 pl-3 text-xs text-slate-500">
+                        <div className="border-ink-200 text-ink-500 mt-3 space-y-1 border-l-2 pl-3 text-xs">
                           <p>
-                            <span className="font-semibold text-slate-600">Possible explanation, unconfirmed: </span>
+                            <span className="text-ink-600 font-semibold">Possible explanation, unconfirmed: </span>
                             {reason.hypothesis}
                           </p>
                           {reason.howToConfirm && (
                             <p>
-                              <span className="font-semibold text-slate-600">To confirm: </span>
+                              <span className="text-ink-600 font-semibold">To confirm: </span>
                               {reason.howToConfirm}
                             </p>
                           )}
@@ -221,38 +221,38 @@ export function PlanDetail({
                       key={insight.feature}
                       id={`ai-feature-${plan.plan}-${insight.feature}`}
                       className={cn(
-                        "flex scroll-mt-24 flex-col rounded-xl border border-slate-200 p-4 text-sm",
+                        "border-ink-200 flex scroll-mt-24 flex-col rounded-xl border p-4 text-sm",
                         all.length % 2 === 1 && index === all.length - 1 && "sm:col-span-2"
                       )}
                     >
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="font-semibold text-slate-900">{featureName(snapshot, plan.plan, insight.feature)}</span>
+                        <span className="text-ink-900 font-semibold">{featureName(snapshot, plan.plan, insight.feature)}</span>
                         {insight.kinds.map((kind) => (
                           <span key={kind} className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", KIND_STYLE[kind])}>
                             {FEATURE_KIND_LABEL[kind]}
                           </span>
                         ))}
                       </div>
-                      <p className="mt-1 text-slate-600">
+                      <p className="text-ink-600 mt-1">
                         <Figures text={insight.text} />
                       </p>
-                      <p className="mt-auto pt-2 text-xs text-[#3f5f8a]">→ {insight.suggestion}</p>
+                      <p className="mt-auto pt-2 text-xs text-[#3f5f8a] dark:text-[#9db4d2]">→ {insight.suggestion}</p>
                     </li>
                   ))}
                 </ul>
               </Section>
             )}
-            {!signal && plan.featureInsights.length === 0 && <p className="text-sm text-slate-500">No feature figures for this plan.</p>}
+            {!signal && plan.featureInsights.length === 0 && <p className="text-ink-500 text-sm">No feature figures for this plan.</p>}
           </div>
         )}
       </div>
 
       {verdict && (
-        <div className="flex gap-2 border-t border-slate-100 bg-slate-50/60 px-6 py-3 text-xs text-slate-500">
-          <Scale className="mt-0.5 size-3.5 shrink-0 text-slate-400" />
+        <div className="border-ink-100 bg-ink-50/60 text-ink-500 flex gap-2 border-t px-6 py-3 text-xs">
+          <Scale className="text-ink-400 mt-0.5 size-3.5 shrink-0" />
           <p>
-            <span className="font-semibold text-slate-600">Rule-based check ({verdict.verdictLabel}): </span>
-            <Figures text={verdict.evidence.join(" ")} className="font-semibold text-slate-700" />
+            <span className="text-ink-600 font-semibold">Rule-based check ({verdict.verdictLabel}): </span>
+            <Figures text={verdict.evidence.join(" ")} className="text-ink-700 font-semibold" />
             {verdict.action && <> Next step: {verdict.action}</>}
           </p>
         </div>
@@ -266,7 +266,7 @@ function Reason({ label, text }: { label: React.ReactNode; text: string }) {
   return (
     <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
       <dt className="shrink-0 text-xs font-semibold sm:w-32">{label}</dt>
-      <dd className="leading-relaxed text-slate-700">
+      <dd className="text-ink-700 leading-relaxed">
         <Figures text={text} />
       </dd>
     </div>

@@ -28,11 +28,11 @@ export const TRANSACTION_STATUS_STYLE: Record<TransactionStatus, { label: string
   },
   cancelled: {
     label: "Cancelled",
-    className: "bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700",
+    className: "bg-ink-100 text-ink-600 ring-ink-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700",
   },
   draft: {
     label: "Draft",
-    className: "bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700",
+    className: "bg-ink-100 text-ink-600 ring-ink-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700",
   },
 };
 

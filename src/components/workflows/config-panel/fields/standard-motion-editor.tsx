@@ -1531,9 +1531,9 @@ export function StandardMotionEditor({
                             onPointerMove={movePreview}
                             onPointerUp={finishPreviewDrag}
                             onPointerCancel={finishPreviewDrag}
-                            className={`pointer-events-auto absolute grid size-11 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize place-items-center rounded-full focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none ${corner.includes("right") ? "left-full" : "left-0"} ${corner.includes("bottom") ? "top-full" : "top-0"}`}
+                            className={`focus-visible:ring-card pointer-events-auto absolute grid size-11 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none ${corner.includes("right") ? "left-full" : "left-0"} ${corner.includes("bottom") ? "top-full" : "top-0"}`}
                           >
-                            <span className="bg-primary size-3 rounded-full border-2 border-white shadow-sm" />
+                            <span className="bg-primary border-card size-3 rounded-full border-2 shadow-sm" />
                           </button>
                         )
                       )}
@@ -1549,7 +1549,7 @@ export function StandardMotionEditor({
                         onPointerMove={movePreview}
                         onPointerUp={finishPreviewDrag}
                         onPointerCancel={finishPreviewDrag}
-                        className="border-primary bg-card text-primary pointer-events-auto absolute top-[calc(100%+1rem)] left-1/2 grid size-11 -translate-x-1/2 -translate-y-1/2 cursor-grab place-items-center rounded-full border-2 shadow-md focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none active:cursor-grabbing"
+                        className="border-primary bg-card text-primary focus-visible:ring-card pointer-events-auto absolute top-[calc(100%+1rem)] left-1/2 grid size-11 -translate-x-1/2 -translate-y-1/2 cursor-grab place-items-center rounded-full border-2 shadow-md focus-visible:ring-2 focus-visible:outline-none active:cursor-grabbing"
                       >
                         <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
                           <path

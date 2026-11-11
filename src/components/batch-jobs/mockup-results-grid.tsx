@@ -197,7 +197,7 @@ export const MockupResultsGrid = ({
                     <div
                       role="tablist"
                       aria-label="Garment colors"
-                      className="flex flex-wrap justify-center gap-1.5 border-b bg-slate-50 px-2 py-1.5"
+                      className="bg-ink-50 flex flex-wrap justify-center gap-1.5 border-b px-2 py-1.5"
                     >
                       {group.colors.map((item) => {
                         const hex = cardColor(item);
@@ -214,11 +214,11 @@ export const MockupResultsGrid = ({
                               setShownColors((current) => ({ ...current, [group.key]: item.key }))
                             }
                             className={cn(
-                              "size-5 shrink-0 rounded-full border border-slate-300 transition",
+                              "border-ink-300 size-5 shrink-0 rounded-full border transition",
                               item.key === card.key
                                 ? "ring-2 ring-slate-900 ring-offset-1"
                                 : "hover:border-slate-500",
-                              !hex && "bg-white"
+                              !hex && "bg-card"
                             )}
                             style={hex ? { backgroundColor: hex } : undefined}
                           />
@@ -229,7 +229,7 @@ export const MockupResultsGrid = ({
                   {stripSides.length > 1 && (
                     <MockupSidesStrip
                       size="sm"
-                      className="justify-center rounded-none border-0 border-b bg-slate-50 px-2 py-1.5 shadow-none"
+                      className="bg-ink-50 justify-center rounded-none border-0 border-b px-2 py-1.5 shadow-none"
                       active={shown.view}
                       onSelect={chooseSide}
                       sides={stripSides}
@@ -244,7 +244,7 @@ export const MockupResultsGrid = ({
                   {group.colors.some((item) => item.sides.some((side) => side.image.override)) && (
                     <Badge
                       variant="outline"
-                      className="border-slate-200 bg-slate-50 text-slate-700"
+                      className="border-ink-200 bg-ink-50 text-ink-700"
                     >
                       Edited
                     </Badge>
@@ -277,7 +277,7 @@ export const MockupResultsGrid = ({
           className="space-y-1.5 rounded-lg border border-dashed p-3 text-xs"
           aria-label="Removed mock-ups"
         >
-          <p className="font-medium text-slate-700">Removed for single products</p>
+          <p className="text-ink-700 font-medium">Removed for single products</p>
           <ul className="space-y-1.5">
             {removedRows.map((row) => {
               return (
@@ -294,13 +294,13 @@ export const MockupResultsGrid = ({
                           width={40}
                           height={40}
                           unoptimized
-                          className="size-10 rounded-md border bg-white object-cover"
+                          className="bg-card size-10 rounded-md border object-cover"
                         />
                       ) : (
                         <span
                           key={side.slotKey}
                           aria-hidden="true"
-                          className="size-10 rounded-md border border-dashed bg-slate-50"
+                          className="bg-ink-50 size-10 rounded-md border border-dashed"
                         />
                       );
                     })}

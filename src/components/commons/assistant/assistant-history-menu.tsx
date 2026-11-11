@@ -64,7 +64,7 @@ export const AssistantHistoryMenu = () => {
               type="button"
               variant="none"
               size="sm"
-              className="h-6 px-2 text-xs font-medium text-slate-500 hover:translate-y-0 hover:bg-slate-100 hover:text-red-600 disabled:opacity-40"
+              className="text-ink-500 hover:bg-ink-100 h-6 px-2 text-xs font-medium hover:translate-y-0 hover:text-red-600 disabled:opacity-40 dark:hover:text-red-400"
               disabled={(conversations?.length ?? 0) <= (currentConversationId() ? 1 : 0)}
               onClick={() => {
                 setIsOpen(false);
@@ -89,7 +89,7 @@ export const AssistantHistoryMenu = () => {
                 variant="none"
                 size="icon-sm"
                 aria-label={`Delete chat ${conversation.title}`}
-                className="size-7 text-slate-400 hover:translate-y-0 hover:bg-red-50 hover:text-red-600"
+                className="text-ink-400 size-7 hover:translate-y-0 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                 onClick={() => removeConversation(conversation.id)}
               >
                 <Trash2 className="size-3.5" aria-hidden="true" />

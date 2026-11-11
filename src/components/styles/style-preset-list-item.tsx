@@ -29,13 +29,13 @@ export const StylePresetListItem = ({ preset, busy = false, onEdit, onDelete }: 
         className="aspect-video w-full object-cover max-md:aspect-[21/9]"
       />
     ) : (
-      <span aria-hidden="true" className={cn("block aspect-video w-full bg-gradient-to-br from-slate-200 via-slate-100 to-zinc-200 max-md:aspect-[21/9]")} />
+      <span aria-hidden="true" className={cn("from-ink-200 via-ink-100 to-ink-200 block aspect-video w-full bg-gradient-to-br max-md:aspect-[21/9]")} />
     )}
     {preset.isMine && (
       <div className="absolute top-2 right-2 md:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button type="button" variant="outline" size="icon-sm" className="rounded-full bg-white shadow-sm" disabled={busy} aria-label={`Actions for ${preset.name}`}>
+            <Button type="button" variant="outline" size="icon-sm" className="bg-card rounded-full shadow-sm" disabled={busy} aria-label={`Actions for ${preset.name}`}>
               <MoreHorizontal aria-hidden="true" />
             </Button>
           </DropdownMenuTrigger>
@@ -54,7 +54,7 @@ export const StylePresetListItem = ({ preset, busy = false, onEdit, onDelete }: 
     )}
     <CardContent className="flex flex-col gap-2 p-4">
       <div className="flex items-center gap-2">
-        <p className="min-w-0 flex-1 truncate font-semibold text-slate-900">{preset.name}</p>
+        <p className="text-ink-900 min-w-0 flex-1 truncate font-semibold">{preset.name}</p>
         <Badge variant={preset.isSystemTemplate ? "secondary" : "default"}>
           {preset.isSystemTemplate ? (
             "System"

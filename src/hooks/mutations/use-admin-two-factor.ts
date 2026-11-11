@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 
 import { verifyAdminTwoFactorRequest } from "@/api/auth";
+import { getReturnUrlParam, resolveSignedInLanding } from "@/helpers/auth-return-url";
 import { showToast } from "@/helpers/toast";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useAuthStore } from "@/stores/auth";
@@ -19,7 +20,7 @@ export const useAdminTwoFactor = () => {
 
       useAuthStore.getState().setUser(result.user);
       showToast("success", `Welcome, ${result.user.fullName}`);
-      router.push("/admin/dashboard");
+      router.push(resolveSignedInLanding(result.user, getReturnUrlParam()));
     },
   });
 };

@@ -358,7 +358,7 @@ export const MockupTemplateFormDialog = ({
       {allowRecolor && (
         <div className="space-y-2 rounded-lg border p-3">
           <div>
-            <p className="text-sm font-medium text-slate-900">Garment color</p>
+            <p className="text-ink-900 text-sm font-medium">Garment color</p>
             <p className="text-muted-foreground text-xs">
               Used unless a batch picks its own colors. None keeps the photo’s color.
             </p>

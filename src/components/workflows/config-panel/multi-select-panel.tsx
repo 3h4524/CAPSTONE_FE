@@ -19,12 +19,12 @@ export const MultiSelectPanel = ({ nodes }: MultiSelectPanelProps) => {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b px-4 py-3">
-        <h2 className="text-sm font-semibold text-slate-900">{nodes.length} nodes selected</h2>
+        <h2 className="text-ink-900 text-sm font-semibold">{nodes.length} nodes selected</h2>
         <p className="text-muted-foreground mt-0.5 text-xs">Configure nodes one at a time, or apply a bulk action.</p>
       </div>
       <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto p-4">
         {nodes.map((node) => (
-          <li key={node.id} className="truncate rounded-md bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-700">
+          <li key={node.id} className="bg-ink-100 text-ink-700 truncate rounded-md px-2.5 py-1.5 text-xs font-medium">
             {node.data.label}
           </li>
         ))}

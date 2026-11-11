@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 import type { LoginPayload } from "@/api/auth";
 import { loginRequest } from "@/api/auth";
-import { getSafeReturnUrl } from "@/helpers/auth-return-url";
+import { getReturnUrlParam, resolveSignedInLanding } from "@/helpers/auth-return-url";
 import { showToast } from "@/helpers/toast";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useAppQueryClient } from "@/hooks/use-query-client";
@@ -31,7 +31,7 @@ export const useLogin = () => {
       setAuthUser(result.user);
       showToast("success", `Welcome back, ${result.user.fullName}`);
       queryClient.clear();
-      router.push(getSafeReturnUrl());
+      router.push(resolveSignedInLanding(result.user, getReturnUrlParam()));
     },
   });
 };

@@ -230,12 +230,13 @@ export const BatchWorkspace = () => {
       {batchesQuery.isLoading ? <p className="text-muted-foreground py-12 text-center">Loading batches…</p> : batchesQuery.isError ? <Card><CardContent className="py-12 text-center" role="alert">Could not load batches. Please try again.</CardContent></Card> : batchCount === 0 ? (
         <Card className="border-dashed"><CardContent className="flex flex-col items-center py-16 text-center"><div className="bg-primary/10 mb-4 flex size-12 items-center justify-center rounded-xl"><FileSpreadsheet className="text-primary size-6" /></div><h2 className="text-lg font-semibold">Start with a product batch</h2><p className="text-muted-foreground mt-2 max-w-md text-sm">A batch keeps related product inputs together. You can add products manually or import them from Excel.</p><Button className="mt-5" onClick={openNewBatch}><Plus className="mr-2 size-4" />Create your first batch</Button></CardContent></Card>
       ) : (
-        <div className="grid items-start gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[20rem_minmax(0,1fr)]">
-          <aside className="bg-card flex flex-col overflow-hidden rounded-xl border max-md:hidden">
+        <div className="grid items-start gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-stretch xl:grid-cols-[20rem_minmax(0,1fr)]">
+          {/* Side by side, the zero height keeps the list from growing the row: the detail panel alone sets it, and the list scrolls inside that height. */}
+          <aside className="bg-card flex flex-col overflow-hidden rounded-xl border max-md:hidden lg:h-0 lg:min-h-full">
             <BatchListPanel batches={visibleBatches} batchCount={batchCount} search={batchSearch} onSearchChange={setBatchSearch} selectedId={selectedBatch?.id} onSelect={selectBatch} onEdit={openEditBatch} onDelete={setDeletingBatch} onAdd={openNewBatch} />
           </aside>
 
-          {selectedBatch && <section ref={detailRef} className="md:bg-card min-w-0 md:overflow-hidden md:rounded-xl md:border md:shadow-sm">
+          {selectedBatch && <section ref={detailRef} className="md:bg-card min-w-0 md:overflow-hidden md:rounded-xl md:border md:shadow-sm lg:min-h-96">
             {isPhone && <div className="space-y-4"><BatchPicker batches={batchesQuery.data ?? []} selected={selectedBatch} onSelect={selectBatch} /><BatchSummaryCard batch={selectedBatch} pendingProductCount={pendingProductCount} hasProducts={totalProducts > 0} onEdit={() => openEditBatch(selectedBatch)} onDelete={() => setDeletingBatch(selectedBatch)} onShowHelp={() => setShowHelp(true)} onImport={openImport} onAddProduct={() => openProduct()} onRun={() => router.push(`/workflows?batch=${selectedBatch.id}`)} /></div>}
             {/* The name with every action on one row, then the details on the next. The buttons are small so all
                 of them fit beside the name without squeezing it. */}
@@ -267,10 +268,10 @@ export const BatchWorkspace = () => {
                     const count = status === "all" ? totalProducts : statusCounts[status];
                     // Empty statuses add nothing to filter by, so only the ones holding products are offered.
                     if (status !== "all" && count === 0 && !active) return null;
-                    return <button key={status} type="button" role="tab" aria-selected={active} onClick={() => { setFilter(status); setPage(1); }} className={`focus-visible:ring-ring inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none ${active ? "border-[#cbd5e1] bg-[#e6edf5] font-semibold text-slate-800" : "hover:bg-muted text-muted-foreground"}`}>
+                    return <button key={status} type="button" role="tab" aria-selected={active} onClick={() => { setFilter(status); setPage(1); }} className={`focus-visible:ring-ring inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none ${active ? "border-ink-300 bg-ink-200 text-ink-800 font-semibold" : "hover:bg-muted text-muted-foreground"}`}>
                       {status !== "all" && <span className={`size-2 rounded-full ${statusDot[status]}`} aria-hidden />}
                       {status === "all" ? "All" : statusLabel(status)}
-                      <span className={`rounded-full px-1.5 text-xs tabular-nums ${active ? "bg-white text-slate-700 shadow-xs" : "bg-muted text-foreground"}`}>{count}</span>
+                      <span className={`rounded-full px-1.5 text-xs tabular-nums ${active ? "bg-card text-ink-700 shadow-xs" : "bg-muted text-foreground"}`}>{count}</span>
                     </button>;
                   })}
                 </div>

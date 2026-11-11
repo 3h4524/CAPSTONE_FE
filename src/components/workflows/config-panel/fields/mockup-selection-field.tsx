@@ -101,8 +101,8 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
   return (
     <div className="min-w-0 space-y-2">
       <div className="space-y-1.5">
-        <p className="text-xs font-medium text-slate-700">The mock-ups are for</p>
-        <div className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1" role="radiogroup" aria-label="What the mock-ups are for">
+        <p className="text-ink-700 text-xs font-medium">The mock-ups are for</p>
+        <div className="bg-ink-100 grid grid-cols-2 gap-1 rounded-lg p-1" role="radiogroup" aria-label="What the mock-ups are for">
           {TARGETS.map((option) => (
             <button
               key={option.value}
@@ -113,7 +113,7 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
               onClick={() => setValue(targetName, option.value, { shouldDirty: true, shouldValidate: true })}
               className={cn(
                 "rounded-md px-2 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
-                target === option.value ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                target === option.value ? "bg-card text-ink-900 shadow-sm" : "text-ink-600 hover:text-ink-900"
               )}
             >
               {option.label}
@@ -131,13 +131,13 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
       {isPending && value.length > 0 ? (
         <SectionLoading label="Loading mock-up templates" className="justify-start rounded-lg border px-3 py-3 [&_svg]:size-4 [&>span]:text-xs" />
       ) : selectedTemplates.length > 0 ? (
-        <ul className="divide-y overflow-hidden rounded-lg border bg-white" aria-label="Selected mock-up templates">
+        <ul className="bg-card divide-y overflow-hidden rounded-lg border" aria-label="Selected mock-up templates">
           {selectedTemplates.map((template) => {
             const colors = template.allowRecolor ? (templateColors[template.id] ?? defaultTemplateColors(template)) : [];
             // Chosen for a product type the next run has nothing to make for: kept, but not used.
             const unused = productTypeCounts !== undefined && !(template.productType.toLowerCase() in productTypeCounts);
             return (
-              <li key={template.id} className={cn("flex items-center gap-3 px-2.5 py-2", unused && "bg-slate-50/80")}>
+              <li key={template.id} className={cn("flex items-center gap-3 px-2.5 py-2", unused && "bg-ink-50/80")}>
                 <Image
                   src={template.previewImageUrl ?? template.baseImageUrl}
                   alt=""
@@ -147,7 +147,7 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
                   className={cn("bg-muted size-10 shrink-0 rounded-md object-cover", unused && "opacity-60")}
                 />
                 <div className="min-w-0 flex-1 space-y-1">
-                  <p className="truncate text-sm font-medium text-slate-900">{template.name}</p>
+                  <p className="text-ink-900 truncate text-sm font-medium">{template.name}</p>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-muted-foreground text-xs">{productTypeLabel(template.productType)}</span>
                     {colors.length > 0 && (
@@ -157,7 +157,7 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
                         ))}
                       </span>
                     )}
-                    {unused && <span className="text-xs font-medium text-amber-700">· not used in this run</span>}
+                    {unused && <span className="text-xs font-medium text-amber-700 dark:text-amber-300">· not used in this run</span>}
                   </div>
                 </div>
               </li>

@@ -33,8 +33,8 @@ export function PlanTile({
       aria-selected={selected}
       onClick={onSelect}
       className={cn(
-        "relative flex items-center gap-4 overflow-hidden rounded-2xl border bg-white p-4 pt-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
-        selected ? cn("shadow-md ring-2", style.selected, style.ring) : "border-slate-200 shadow-xs"
+        "bg-card relative flex items-center gap-4 overflow-hidden rounded-2xl border p-4 pt-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        selected ? cn("shadow-md ring-2", style.selected, style.ring) : "border-ink-200 shadow-xs"
       )}
     >
       {/* A stripe in the plan's status colour, so health reads before the tile is read. */}
@@ -42,7 +42,7 @@ export function PlanTile({
       <ScoreRing score={plan.score} stroke={style.stroke} className={style.score} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-base font-bold tracking-tight text-slate-900">{name}</p>
+          <p className="text-ink-900 truncate text-base font-bold tracking-tight">{name}</p>
           <span
             className={cn(
               "flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold",
@@ -55,13 +55,13 @@ export function PlanTile({
         <span className={cn("mt-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold", style.chip)}>
           {STATUS_LABEL[plan.status]}
         </span>
-        <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-slate-400">
+        <div className="text-ink-400 mt-1.5 flex items-center gap-1.5 text-[11px]">
           <span>{previous ? `Last review: ${STATUS_LABEL[previous.status]} · ${previous.score ?? "—"}` : "First review"}</span>
           {showDelta && delta !== null && (
             <span
               className={cn(
                 "rounded-full px-1.5 py-px text-[10px] font-semibold tabular-nums",
-                delta > 0 ? "bg-[#2a9d8f]/12 text-[#21796e]" : "bg-[#e76e50]/12 text-[#c4553a]"
+                delta > 0 ? "bg-[#2a9d8f]/12 text-[#21796e] dark:text-[#8fe0d6]" : "bg-[#e76e50]/12 text-[#c4553a] dark:text-[#dea091]"
               )}
             >
               {delta > 0 ? "▲" : "▼"} {Math.abs(delta)}
@@ -81,7 +81,7 @@ function ScoreRing({ score, stroke, className }: { score: number | null; stroke:
   return (
     <div className="relative size-[72px] shrink-0">
       <svg viewBox="0 0 60 60" className="size-full -rotate-90">
-        <circle cx="30" cy="30" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="6" />
+        <circle cx="30" cy="30" r={radius} fill="none" stroke="var(--ink-100)" strokeWidth="6" />
         <circle
           cx="30"
           cy="30"

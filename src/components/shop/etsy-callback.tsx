@@ -31,7 +31,7 @@ export function EtsyCallback() {
   }, [router, searchParams]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white p-6 text-center text-sm text-slate-600">
+    <main className="bg-card text-ink-600 flex min-h-screen items-center justify-center p-6 text-center text-sm">
       {closeFailed ? (
         <p>Done. You can close this window and return to Podivo.</p>
       ) : (

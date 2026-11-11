@@ -41,7 +41,7 @@ export const DeleteRunDialog = ({ open, run, onClose, onDeleted }: DeleteRunDial
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Trash2 className="size-5 text-rose-600" />
+            <Trash2 className="size-5 text-rose-600 dark:text-rose-400" />
             Delete “{run.name}”?
           </DialogTitle>
           <DialogDescription>

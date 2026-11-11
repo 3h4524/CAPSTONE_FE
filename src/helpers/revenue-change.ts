@@ -37,5 +37,5 @@ export function changeTone(
 export const CHANGE_TONE_CLASS: Record<ChangeTone, string> = {
   good: "text-emerald-600 dark:text-emerald-400",
   bad: "text-rose-600 dark:text-rose-400",
-  neutral: "text-slate-400 dark:text-slate-500",
+  neutral: "text-ink-400 dark:text-slate-500",
 };

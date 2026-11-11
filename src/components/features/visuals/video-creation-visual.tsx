@@ -12,13 +12,13 @@ export const VideoCreationVisual = () => {
           <Badge className="bg-white/15 text-white">0:24</Badge>
         </div>
         <div className="flex items-center justify-center">
-          <span className="flex size-14 items-center justify-center rounded-full bg-white/90 shadow-lg">
+          <span className="bg-card/90 flex size-14 items-center justify-center rounded-full shadow-lg">
             <Play className="text-primary size-6 fill-current" />
           </span>
         </div>
         <div className="flex items-center gap-3">
           <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/25">
-            <span className="block h-full w-2/3 rounded-full bg-white" />
+            <span className="bg-card block h-full w-2/3 rounded-full" />
           </span>
           <span className="text-xs font-medium text-white">0:16 / 0:24</span>
         </div>

@@ -30,18 +30,18 @@ export const AllowancePanel = () => {
     usedUp.length > 0
       ? {
           icon: AlertTriangle,
-          className: "bg-rose-50 text-rose-700",
+          className: "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300",
           text: `No ${joinLabels(usedUp.map((item) => item.label))} left. Runs that need them are paused.`,
         }
       : runningLow.length > 0
         ? {
             icon: Gauge,
-            className: "bg-amber-50 text-amber-800",
+            className: "bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300",
             text: `Running low on ${joinLabels(runningLow.map((item) => item.label))}.`,
           }
         : {
             icon: CheckCircle2,
-            className: "bg-[#effbf7] text-[#1f7f6b]",
+            className: "bg-ink-50 text-[#1f7f6b] dark:text-[#8ce3d1]",
             text: "Plenty left for this cycle.",
           };
 
@@ -57,7 +57,7 @@ export const AllowancePanel = () => {
           </p>
         </div>
         {allowances.scope && (
-          <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700">
+          <span className="border-ink-200 bg-ink-50 text-ink-700 shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold">
             {SCOPE_LABELS[allowances.scope]}
           </span>
         )}
@@ -86,7 +86,7 @@ export const AllowancePanel = () => {
 
       <Link
         href="/subscription"
-        className="mt-auto inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-800 hover:text-black hover:underline"
+        className="text-ink-800 mt-auto inline-flex items-center justify-center gap-1.5 text-xs font-semibold hover:text-black hover:underline"
       >
         {usedUp.length > 0 ? "Upgrade to keep going" : "Compare plans"}
         <ArrowRight className="size-3.5" aria-hidden="true" />

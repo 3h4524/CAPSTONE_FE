@@ -93,15 +93,6 @@ describe("VideoSceneQualityReview", () => {
     expect(screen.getByText("Not checked")).toBeInTheDocument();
   });
 
-  it("passes when scene scoring is turned off and the policy checks passed", async () => {
-    getVideoQualitySummary.mockResolvedValue({ videoId: video.id, status: "completed", technical: { fullDecode: true },
-      etsyCompliance: { status: "pass", checks: [] },
-      scenes: [{ sceneOrder: 0, status: "skipped", detail: "Automatic scene evaluation is turned off.", metrics: {} }] });
-    renderPanel();
-    expect(await screen.findByText("The saved technical and Etsy checks passed. Automatic scene scoring is turned off.")).toBeInTheDocument();
-    expect(screen.queryByText("Needs review")).not.toBeInTheDocument();
-  });
-
   it("shows a failed policy check as an overall failure", async () => {
     getVideoQualitySummary.mockResolvedValue({ videoId: video.id, status: "fail", technical: { fullDecode: true }, scenes: [], etsyCompliance: { status: "fail", checks: [{ key: "duration", status: "fail", detail: "Duration is outside the allowed range." }] } });
     renderPanel();

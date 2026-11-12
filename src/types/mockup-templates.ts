@@ -63,6 +63,16 @@ export interface MockupTemplatePrintify {
   colors: PrintifyGarmentColor[];
 }
 
+/** An admin's link of a system template to the Printify product its photo shows, as the admin templates page edits it. */
+export interface MockupTemplatePrintifyLink {
+  blueprintId: number;
+  blueprintTitle: string;
+  blueprintImageUrl: string | null;
+  printProviderId: number | null;
+  printProviderTitle: string | null;
+  defaultSizes: string[];
+}
+
 export interface BatchMockupSelection {
   batchJobId: string;
   templateIds: string[];

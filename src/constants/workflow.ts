@@ -458,6 +458,8 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
       whenMade: "made_to_order",
       shippingProfileId: null,
       includeVideo: true,
+      madeBy: null,
+      productionPartnerIds: [],
     },
     fields: [],
   },

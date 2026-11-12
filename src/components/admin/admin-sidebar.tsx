@@ -15,6 +15,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  Shirt,
   User,
   UserRound,
   Users,
@@ -51,6 +52,7 @@ const primaryNavigation = [
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Subscriptions", href: "/admin/subscription-plans", icon: CreditCard },
   { label: "Model Photos", href: "/admin/model-photos", icon: UserRound },
+  { label: "Mock-up Templates", href: "/admin/mockup-templates", icon: Shirt },
 ];
 
 const analyticsNavigation = [

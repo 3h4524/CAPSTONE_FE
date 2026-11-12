@@ -481,13 +481,38 @@ export const publishPrintifyConfigSchema = z
     designId: z.string().nullable(),
     publishToEtsy: z.boolean(),
     addMockups: z.boolean(),
+    leadPhoto: z.enum(["printify", "apcs"]).optional(),
+    // "mockup": the product is read from the approved mock-ups when the step runs. Unset, a node with a product keeps it.
+    source: z.enum(["mockup", "manual"]).optional(),
   })
   .superRefine((value, context) => {
+    if (value.source ? value.source === "mockup" : !value.blueprintId) return;
     if (!value.blueprintId) context.addIssue({ code: "custom", path: ["blueprintId"], message: "Choose a product type." });
     else if (!value.printProviderId) context.addIssue({ code: "custom", path: ["printProviderId"], message: "Choose a print provider." });
     else if (value.colors.length === 0 || value.sizes.length === 0)
       context.addIssue({ code: "custom", path: ["colors"], message: "Choose at least one color and one size." });
   });
+
+/**
+ * Push to Printify when Apply mock-up set the Printify product per product type: the node only shows it, so just its
+ * own settings (the profit) are checked here.
+ */
+export const publishPrintifyFollowingMockupSchema = z.object({
+  targetProfit: z
+    .number({ error: "Set the profit per item." })
+    .min(0, "The profit cannot be negative.")
+    .max(500, "Keep the profit per item at $500 or less."),
+  leadPhoto: z.enum(["printify", "apcs"]).optional(),
+});
+
+/** The schema a node's settings are checked with on this canvas: Push to Printify follows Apply mock-up once it is set. */
+export const nodeConfigSchemaIn = (type: WorkflowNodeType, nodes: { data: { type: WorkflowNodeType; config: WorkflowNodeConfig } }[]) =>
+  type === "publish-printify" && nodes.some((node) => node.data.type === "apply-mockup" && hasPrintifyProducts(node.data.config))
+    ? publishPrintifyFollowingMockupSchema
+    : workflowNodeConfigSchemas[type];
+
+const hasPrintifyProducts = (config: WorkflowNodeConfig) =>
+  Boolean(config.printifyProducts && typeof config.printifyProducts === "object" && Object.keys(config.printifyProducts).length > 0);
 
 /** Publish to Etsy: one draft listing; a physical one needs a shipping profile. */
 export const publishEtsyConfigSchema = z
@@ -501,12 +526,18 @@ export const publishEtsyConfigSchema = z
     whenMade: z.string().min(1),
     shippingProfileId: z.number().int().positive().nullable(),
     includeVideo: z.boolean(),
+    madeBy: z.enum(["me", "partner"]).nullable().optional(),
+    productionPartnerIds: z.array(z.number().int().positive()).optional(),
   })
   .superRefine((value, context) => {
     if (!value.price) context.addIssue({ code: "custom", path: ["price"], message: "Set a price." });
     else if (!value.taxonomyId) context.addIssue({ code: "custom", path: ["taxonomyId"], message: "Choose an Etsy category." });
     else if (value.listingType === "physical" && !value.shippingProfileId)
       context.addIssue({ code: "custom", path: ["shippingProfileId"], message: "A physical listing needs a shipping profile." });
+    else if (value.listingType === "physical" && !value.madeBy)
+      context.addIssue({ code: "custom", path: ["madeBy"], message: "Say who makes this item: you or a production partner." });
+    else if (value.listingType === "physical" && value.madeBy === "partner" && !value.productionPartnerIds?.length)
+      context.addIssue({ code: "custom", path: ["productionPartnerIds"], message: "Choose the production partner that makes this item." });
   });
 
 export const workflowNodeConfigSchemas: Record<

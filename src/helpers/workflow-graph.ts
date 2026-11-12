@@ -9,7 +9,7 @@ import {
 } from "@/constants/workflow";
 import { getWorkflowNodeDefinition, normalizeNodeConfig, readString } from "@/helpers/workflow-config";
 import { findMissingMockupTemplates, isRunnableNode } from "@/helpers/workflow-run";
-import { workflowNodeConfigSchemas } from "@/schemas/workflow";
+import { nodeConfigSchemaIn } from "@/schemas/workflow";
 import type {
   WorkflowDefinition,
   WorkflowDetail,
@@ -215,7 +215,7 @@ export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
       issues.push({ id: `unreachable-${node.id}`, nodeId: node.id, message: `${node.data.label} is not connected to the Product input.` });
     }
 
-    const parsed = workflowNodeConfigSchemas[node.data.type].safeParse(node.data.config);
+    const parsed = nodeConfigSchemaIn(node.data.type, nodes).safeParse(node.data.config);
     if (!parsed.success) {
       const [firstIssue] = parsed.error.issues;
       issues.push({ id: `config-${node.id}`, nodeId: node.id, message: `${node.data.label}: ${firstIssue?.message ?? "check its settings."}` });

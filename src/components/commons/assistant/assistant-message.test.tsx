@@ -20,7 +20,7 @@ describe("AssistantMessage", () => {
   it("shows the retry countdown while the model is busy", () => {
     renderWithQuery(<AssistantMessage message={{ ...createAssistantPlaceholder(), retryInSeconds: 8 }} />);
 
-    expect(screen.getByText("The assistant is busy, retrying in 8s…")).toBeInTheDocument();
+    expect(screen.getByText("Podi is busy, retrying in 8s…")).toBeInTheDocument();
   });
 
   it("keeps showing the retry countdown after tools have run", () => {
@@ -32,6 +32,6 @@ describe("AssistantMessage", () => {
 
     renderWithQuery(<AssistantMessage message={message} />);
 
-    expect(screen.getByText("The assistant is busy, retrying in 2s…")).toBeInTheDocument();
+    expect(screen.getByText("Podi is busy, retrying in 2s…")).toBeInTheDocument();
   });
 });

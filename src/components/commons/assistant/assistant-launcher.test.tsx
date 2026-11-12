@@ -7,7 +7,7 @@ import { usePathname } from "@/test/__mocks__/next/navigation";
 import { renderWithQuery } from "@/test/render-with-query";
 import { fireEvent, screen } from "@testing-library/react";
 
-const launcher = () => screen.getByRole("button", { name: "Open assistant" });
+const launcher = () => screen.getByRole("button", { name: "Open Podi" });
 
 const drag = (element: HTMLElement, from: [number, number], to: [number, number]) => {
   fireEvent.pointerDown(element, { clientX: from[0], clientY: from[1], button: 0, pointerId: 1 });

@@ -14,17 +14,19 @@ const STREAM_INTERRUPTED_ERROR = {
   message: "The connection was interrupted. Please try again.",
 };
 
-const streamIntoStore = async ({ input, signal }: { input: SendAssistantMessageInput; signal: AbortSignal }) => {
+type StreamAssistantReplyInput = { input: SendAssistantMessageInput; exchangeId: string; signal: AbortSignal };
+
+const streamIntoStore = async ({ input, exchangeId, signal }: StreamAssistantReplyInput) => {
   const { applyStreamEvent, stopStreaming, failStreaming } = useAssistantStore.getState();
   try {
-    await streamAssistantChat(input, applyStreamEvent, signal);
-    if (useAssistantStore.getState().streamingMessageId !== null) failStreaming(STREAM_INTERRUPTED_ERROR);
+    await streamAssistantChat(input, (event) => applyStreamEvent(exchangeId, event), signal);
+    failStreaming(exchangeId, STREAM_INTERRUPTED_ERROR);
   } catch (error) {
     if (axios.isCancel(error) || signal.aborted) {
-      stopStreaming();
+      stopStreaming(exchangeId);
       return;
     }
-    failStreaming({ code: "request_failed", message: getErrorMessage(error) });
+    failStreaming(exchangeId, { code: "request_failed", message: getErrorMessage(error) });
   }
 };
 

@@ -30,6 +30,7 @@ const seedConversation = () => {
   const user = createUserMessage("Hello");
   const placeholder = createAssistantPlaceholder();
   useAssistantStore.setState({ messages: [user, placeholder], streamingMessageId: placeholder.id });
+  return placeholder.id;
 };
 
 describe("AssistantMessageList", () => {
@@ -46,22 +47,22 @@ describe("AssistantMessageList", () => {
   });
 
   it("follows new text while the user is at the bottom", () => {
-    seedConversation();
+    const exchangeId = seedConversation();
     renderWithQuery(<AssistantMessageList />);
     scrollIntoView.mockClear();
 
-    act(() => useAssistantStore.getState().applyStreamEvent({ type: "delta", data: { text: "Hi" } }));
+    act(() => useAssistantStore.getState().applyStreamEvent(exchangeId, { type: "delta", data: { text: "Hi" } }));
 
     expect(scrollIntoView).toHaveBeenCalled();
   });
 
   it("keeps the scroll position and offers a jump button while the user reads earlier messages", () => {
-    seedConversation();
+    const exchangeId = seedConversation();
     renderWithQuery(<AssistantMessageList />);
     act(() => reportIntersection(false));
     scrollIntoView.mockClear();
 
-    act(() => useAssistantStore.getState().applyStreamEvent({ type: "delta", data: { text: "Hi" } }));
+    act(() => useAssistantStore.getState().applyStreamEvent(exchangeId, { type: "delta", data: { text: "Hi" } }));
 
     expect(scrollIntoView).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Latest" }));

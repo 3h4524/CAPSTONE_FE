@@ -6,9 +6,7 @@ import { useForm } from "react-hook-form";
 
 import { AvatarCard } from "@/components/profile/avatar-card";
 import { PersonalForm } from "@/components/profile/personal-form";
-import { PreferencesForm } from "@/components/profile/preferences-form";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_LANGUAGE, DEFAULT_THEME, DEFAULT_TIMEZONE } from "@/constants/profile";
 import { toFormValues, toProfilePayload } from "@/helpers/profile-form";
 import { getResponseStatus } from "@/helpers/response-status";
 import { useUpdateProfile } from "@/hooks/mutations/use-update-profile";
@@ -20,7 +18,7 @@ import type { AccountVariant } from "@/types/profile";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 type ProfileProps = {
-  /** "admin" drops the shop, newsletter and 2FA controls an admin account does not have. */
+  /** "admin" drops the shop controls an admin account does not have. */
   variant?: AccountVariant;
 };
 
@@ -32,7 +30,6 @@ export const Profile = ({ variant = "seller" }: ProfileProps) => {
 
   const {
     register,
-    control,
     handleSubmit,
     reset,
     watch,
@@ -44,12 +41,6 @@ export const Profile = ({ variant = "seller" }: ProfileProps) => {
       email: "",
       shopName: "",
       shopDescription: "",
-      timezone: DEFAULT_TIMEZONE,
-      language: DEFAULT_LANGUAGE,
-      themePreference: DEFAULT_THEME,
-      notificationEmailEnabled: false,
-      newsletterSubscribed: false,
-      twoFactorEnabled: false,
     },
   });
 
@@ -98,7 +89,7 @@ export const Profile = ({ variant = "seller" }: ProfileProps) => {
             <h1 className="text-base leading-none font-semibold">Profile</h1>
             <p className="text-muted-foreground text-sm">
               {variant === "admin"
-                ? "Manage your administrator name, sign-in email and preferences."
+                ? "Manage your administrator name and sign-in email."
                 : "Manage your personal and workspace details."}
             </p>
           </div>
@@ -122,9 +113,8 @@ export const Profile = ({ variant = "seller" }: ProfileProps) => {
             fullName={fullName || data?.fullName || ""}
             email={email}
           />
-          <div className="grid content-start gap-x-6 gap-y-5 px-6 py-5 xl:grid-cols-2">
+          <div className="grid content-start px-6 py-5">
             <PersonalForm register={register} errors={errors} variant={variant} />
-            <PreferencesForm control={control} errors={errors} variant={variant} />
           </div>
         </div>
       </div>

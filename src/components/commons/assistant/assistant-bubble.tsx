@@ -27,7 +27,7 @@ export const AssistantBubble = () => {
   return (
     <Card
       role="dialog"
-      aria-label="Assistant"
+      aria-label="Podi"
       onKeyDown={(event) => {
         if (event.key === "Escape") setOpen(false);
       }}

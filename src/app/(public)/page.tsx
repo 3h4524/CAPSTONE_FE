@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/api/session";
-import { SignedInRedirect } from "@/components/auth/signed-in-redirect";
 import { BenefitsSection } from "@/components/landing/sections/benefits-section";
 import { ComparisonSection } from "@/components/landing/sections/comparison-section";
 import { CtaSection } from "@/components/landing/sections/cta-section";
@@ -30,7 +29,6 @@ const RootPage = async () => {
 
   return (
     <>
-      <SignedInRedirect />
       <main className="flex flex-col">
         <HeroSection />
         <BenefitsSection />

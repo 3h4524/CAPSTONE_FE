@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type * as AssistantApi from "@/api/assistant";
 import { AssistantMessageError } from "@/components/commons/assistant/assistant-message-error";
-import { createUserMessage } from "@/helpers/assistant-reducer";
+import { createAssistantPlaceholder, createUserMessage } from "@/helpers/assistant-reducer";
 import { useAssistantStore } from "@/stores/assistant";
 import { renderWithQuery } from "@/test/render-with-query";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
@@ -21,27 +21,38 @@ describe("AssistantMessageError", () => {
     streamAssistantChat.mockReturnValue(new Promise(() => undefined));
   });
 
+  const seedFailedExchange = () => {
+    const prompt = createUserMessage("Last question");
+    const failed = { ...createAssistantPlaceholder(), isStreaming: false, error: { code: "x", message: "Model unavailable" } };
+    useAssistantStore.setState({ messages: [createUserMessage("Earlier"), prompt, failed] });
+    return failed;
+  };
+
   it("shows the error message", () => {
-    renderWithQuery(<AssistantMessageError error={{ code: "x", message: "Model unavailable" }} />);
+    const failed = seedFailedExchange();
+    renderWithQuery(<AssistantMessageError messageKey={failed.key} error={{ code: "x", message: "Model unavailable" }} />);
 
     expect(screen.getByText("Model unavailable")).toBeInTheDocument();
   });
 
-  it("resends the last user message on retry", async () => {
-    useAssistantStore.setState({ messages: [createUserMessage("Earlier"), createUserMessage("Last question")] });
-    renderWithQuery(<AssistantMessageError error={{ code: "x", message: "Model unavailable" }} />);
+  it("retries the failed exchange in place", async () => {
+    const failed = seedFailedExchange();
+    renderWithQuery(<AssistantMessageError messageKey={failed.key} error={{ code: "x", message: "Model unavailable" }} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
 
     await waitFor(() => expect(streamAssistantChat).toHaveBeenCalledTimes(1));
     expect((streamAssistantChat.mock.calls[0]?.[0] as { message: string }).message).toBe("Last question");
+    expect(useAssistantStore.getState().messages.filter((message) => message.content === "Last question")).toHaveLength(1);
   });
 
-  it("disables retry while a message is streaming", () => {
-    useAssistantStore.setState({ streamingMessageId: "m-1" });
+  it("offers Retry only on the latest failed reply", () => {
+    const failed = seedFailedExchange();
+    useAssistantStore.setState((state) => ({ messages: [...state.messages, createUserMessage("Next question")] }));
 
-    renderWithQuery(<AssistantMessageError error={{ code: "x", message: "Model unavailable" }} />);
+    renderWithQuery(<AssistantMessageError messageKey={failed.key} error={{ code: "x", message: "Model unavailable" }} />);
 
-    expect(screen.getByRole("button", { name: "Retry" })).toBeDisabled();
+    expect(screen.getByText("Model unavailable")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
   });
 });

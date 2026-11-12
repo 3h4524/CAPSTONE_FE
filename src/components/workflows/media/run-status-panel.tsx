@@ -80,6 +80,7 @@ const PublishStepResult = ({ step }: { step: WorkflowNodeRun }) => {
         <span className="text-ink-800 font-medium">{label}</span>
         <span className={step.status === "succeeded" ? "text-emerald-700 dark:text-emerald-300" : step.status === "failed" ? "text-rose-700 dark:text-rose-300" : "text-ink-500"}>{state}</span>
       </p>
+      {typeof step.output.madeAs === "string" && <p className="text-ink-600">Printify makes: {step.output.madeAs}</p>}
       {step.status === "succeeded" && attached > 0 && <p className="text-ink-500">{attached} Podivo image(s), video or file(s) added to the listing.</p>}
       {warnings.length > 0 && <ul className="list-disc space-y-0.5 pl-4 text-amber-800 dark:text-amber-300">{warnings.map(item => <li key={item}>{item}</li>)}</ul>}
       {url && (

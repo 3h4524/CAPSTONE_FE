@@ -24,6 +24,10 @@ const outcomeMessages: Record<EtsyConnectionOutcome, { text: string; failed: boo
   denied: { text: "You declined the Etsy permission request, so nothing was connected.", failed: true },
   expired: { text: "The connection request expired or was already used. Start again.", failed: true },
   no_shop: { text: "This Etsy account has no shop yet. Open a shop on Etsy, then connect again.", failed: true },
+  shop_taken: {
+    text: "This Etsy shop is already connected to another account here. One shop can be connected to one account only: Etsy may treat a shop run from several accounts as fraud. Disconnect it there first.",
+    failed: true,
+  },
   failed: { text: "Etsy could not complete the connection. Try again in a moment.", failed: true },
 };
 

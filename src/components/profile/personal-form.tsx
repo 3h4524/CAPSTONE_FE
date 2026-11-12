@@ -17,8 +17,8 @@ export const PersonalForm = ({ register, errors, variant = "seller" }: PersonalF
   const isAdmin = variant === "admin";
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-semibold">Personal information</h2>
+    <section className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+      <h2 className="text-sm font-semibold sm:col-span-2">Personal information</h2>
       <FormInputField
         id="fullName"
         label="Full name"

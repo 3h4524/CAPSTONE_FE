@@ -106,14 +106,80 @@ describe("useAssistantChat", () => {
     expect(message).toMatchObject({ content: "Hi", error: null, isStreaming: false });
   });
 
-  it("retryLast resends the last user message", async () => {
-    streamAssistantChat.mockRejectedValueOnce(new Error("fail")).mockResolvedValue(undefined);
+  it("retries in place: resends the failed prompt without adding a second user message", async () => {
+    streamAssistantChat.mockRejectedValueOnce(new Error("fail")).mockImplementation(() => new Promise(() => undefined));
     const { result } = renderQueryHook(() => useAssistantChat());
     await run(() => result.current.send("question"));
+    const failed = useAssistantStore.getState().messages.at(-1);
 
-    await run(() => result.current.retryLast());
+    await run(() => result.current.retry(failed?.key ?? ""));
 
+    const { messages, streamingMessageId } = useAssistantStore.getState();
     expect(streamAssistantChat).toHaveBeenCalledTimes(2);
     expect((streamAssistantChat.mock.calls[1]?.[0] as { message: string }).message).toBe("question");
+    expect(messages.filter((message) => message.role === "user")).toHaveLength(1);
+    expect(messages).toHaveLength(2);
+    expect(messages.some((message) => message.key === failed?.key)).toBe(false);
+    expect(messages.at(-1)).toMatchObject({ isStreaming: true, error: null });
+    expect(streamingMessageId).toBe(messages.at(-1)?.id);
+  });
+
+  it("does not retry a failed reply that is no longer the latest message", async () => {
+    streamAssistantChat.mockRejectedValueOnce(new Error("fail")).mockResolvedValueOnce(undefined);
+    const { result } = renderQueryHook(() => useAssistantChat());
+    await run(() => result.current.send("first"));
+    const failed = useAssistantStore.getState().messages.at(-1);
+    await run(() => result.current.send("second"));
+    streamAssistantChat.mockClear();
+
+    await run(() => result.current.retry(failed?.key ?? ""));
+
+    expect(streamAssistantChat).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["starting a new chat", (chat: ReturnType<typeof useAssistantChat>) => chat.startNewConversation()],
+    ["opening another conversation", (chat: ReturnType<typeof useAssistantChat>) => chat.openConversation("c-other")],
+  ])("stops the active stream and ignores its late events when %s", async (_label, leave) => {
+    let emit: (event: unknown) => void = () => undefined;
+    let finish: () => void = () => undefined;
+    let signal: AbortSignal | null = null;
+    streamAssistantChat.mockImplementationOnce(
+      (_input: unknown, onEvent: (event: unknown) => void, abortSignal: AbortSignal) =>
+        new Promise<void>((resolve) => {
+          emit = onEvent;
+          finish = resolve;
+          signal = abortSignal;
+        })
+    );
+    streamAssistantChat.mockImplementation(() => new Promise(() => undefined));
+    const { result } = renderQueryHook(() => useAssistantChat());
+    await run(() => result.current.send("old question"));
+
+    await run(() => leave(result.current));
+    await run(() => result.current.send("new question"));
+    await run(() => {
+      emit({ type: "conversation", data: { conversationId: "old-conversation", userMessageId: "u-old" } });
+      emit({ type: "delta", data: { text: "old answer" } });
+      finish();
+    });
+
+    const state = useAssistantStore.getState();
+    expect((signal as AbortSignal | null)?.aborted).toBe(true);
+    expect(state.conversationId).toBeNull();
+    expect(state.messages.map((message) => message.content)).toEqual(["new question", ""]);
+    expect(state.messages.at(-1)).toMatchObject({ isStreaming: true, error: null });
+  });
+
+  it("ignores opening the conversation that is already open", async () => {
+    streamAssistantChat.mockImplementation(() => new Promise(() => undefined));
+    useAssistantStore.setState({ conversationId: "c-1", selectedConversationId: "c-1" });
+    const { result } = renderQueryHook(() => useAssistantChat());
+    await run(() => result.current.send("hello"));
+
+    await run(() => result.current.openConversation("c-1"));
+
+    expect(useAssistantStore.getState().messages).toHaveLength(2);
+    expect(result.current.isStreaming).toBe(true);
   });
 });

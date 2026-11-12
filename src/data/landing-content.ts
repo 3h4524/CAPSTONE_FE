@@ -52,7 +52,7 @@ export const NAV_LINKS: NavItem[] = [
 export const HERO_CONTENT = {
   title: "Scale Your POD Empire at AI Speed",
   description: "Turn product ideas into designs, copy, and Etsy-ready listings in minutes with AI.",
-  primaryCta: { label: "Get started for free", href: "login" },
+  primaryCta: { label: "Get started for free", href: "/login" },
   secondaryCta: { label: "See how it works", href: "#workflow" },
 } as const;
 

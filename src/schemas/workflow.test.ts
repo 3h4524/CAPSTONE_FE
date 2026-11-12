@@ -645,8 +645,14 @@ describe("exportZipConfigSchema", () => {
 describe("publishPrintifyConfigSchema", () => {
   const valid = validNodeConfigs["publish-printify"];
 
-  it("asks for a product type first", () => {
-    expectIssue(publishPrintifyConfigSchema.safeParse({ ...valid, blueprintId: null }), "blueprintId", "Choose a product type.");
+  it("asks for a product type first when chosen on the node", () => {
+    expectIssue(publishPrintifyConfigSchema.safeParse({ ...valid, source: "manual", blueprintId: null }), "blueprintId", "Choose a product type.");
+  });
+
+  it("needs no product when it is read from the approved mock-ups", () => {
+    const empty = { ...valid, blueprintId: null, printProviderId: null, colors: [], sizes: [] };
+    expect(publishPrintifyConfigSchema.safeParse(empty).success).toBe(true);
+    expect(publishPrintifyConfigSchema.safeParse({ ...empty, source: "mockup" }).success).toBe(true);
   });
 
   it("asks for at least one color and size", () => {
@@ -668,7 +674,15 @@ describe("publishEtsyConfigSchema", () => {
 
   it("needs a shipping profile only for a physical listing", () => {
     expectIssue(publishEtsyConfigSchema.safeParse({ ...valid, listingType: "physical" }), "shippingProfileId");
-    expect(publishEtsyConfigSchema.safeParse({ ...valid, listingType: "physical", shippingProfileId: 5 }).success).toBe(true);
+    expect(publishEtsyConfigSchema.safeParse({ ...valid, listingType: "physical", shippingProfileId: 5, madeBy: "me" }).success).toBe(true);
+  });
+
+  it("makes a physical listing say who produces it, and name the partner when one does", () => {
+    const physical = { ...valid, listingType: "physical", shippingProfileId: 5 };
+    expectIssue(publishEtsyConfigSchema.safeParse(physical), "madeBy");
+    expectIssue(publishEtsyConfigSchema.safeParse({ ...physical, madeBy: "partner", productionPartnerIds: [] }), "productionPartnerIds");
+    expect(publishEtsyConfigSchema.safeParse({ ...physical, madeBy: "partner", productionPartnerIds: [7] }).success).toBe(true);
+    expect(publishEtsyConfigSchema.safeParse(valid).success).toBe(true);
   });
 });
 describe("workflowMetaSchema", () => {

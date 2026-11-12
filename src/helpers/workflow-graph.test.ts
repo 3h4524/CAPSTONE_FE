@@ -155,7 +155,7 @@ const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
   ],
   [
     "publish-printify",
-    { blueprintId: null, blueprintTitle: null, printProviderId: null, printProviderTitle: null, colors: [], sizes: [], targetProfit: 10, designId: null, publishToEtsy: true, addMockups: true },
+    { source: "manual", blueprintId: null, blueprintTitle: null, printProviderId: null, printProviderTitle: null, colors: [], sizes: [], targetProfit: 10, designId: null, publishToEtsy: true, addMockups: true },
     "Push to Printify: Choose a product type.",
   ],
 ];

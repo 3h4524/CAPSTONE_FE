@@ -25,6 +25,21 @@ export const AssistantClientActionView = ({ messageId, action, state }: Assistan
       />
     );
   }
+  if (action.kind === "continue_run") {
+    const { workflowId, workflowName, label, stage, batchJobId, runGroupId, runId } = action.payload;
+    return (
+      <AssistantWorkflowCommandCard
+        messageId={messageId}
+        actionId={action.id}
+        kind="continue"
+        workflowId={workflowId}
+        workflowName={workflowName}
+        continueLabel={label}
+        runRef={{ stage, batchJobId, runGroupId, runId }}
+        state={state}
+      />
+    );
+  }
   if (action.kind === "arrange_workflow_canvas") {
     return <AssistantArrangeCard messageId={messageId} actionId={action.id} payload={action.payload} state={state} />;
   }

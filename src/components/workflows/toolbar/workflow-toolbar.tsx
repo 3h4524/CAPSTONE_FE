@@ -55,13 +55,14 @@ export const WorkflowToolbar = ({
   const { saveWorkflow, buildSaveInput, isSaving } = useWorkflowSave();
   const { mutate: createWorkflow, isPending: isCreating } = useCreateWorkflow();
   const { mutate: deleteWorkflow, isPending: isDeleting } = useDeleteWorkflow();
-  const { isRunning, start: startRun, cancel: cancelRun, isPending: isRunPending } = useWorkflowExecution(activeWorkflowId, isEditorReady);
+  const { isRunning, start: startRun, cancel: cancelRun, continueRun, isPending: isRunPending } = useWorkflowExecution(activeWorkflowId, isEditorReady);
 
   const isBusy = !isEditorReady || isRunning || isCreating || isSaving || isDeleting || isRunPending;
 
   useWorkflowCommands(activeWorkflowId, isEditorReady, isBusy, {
     save: (options) => saveWorkflow(undefined, options),
     run: () => void startRun(),
+    continueRun: (command) => void continueRun(command),
   });
 
   const validateCurrentWorkflow = () => {

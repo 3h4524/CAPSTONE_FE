@@ -89,4 +89,33 @@ describe("AssistantWorkflowCommandCard", () => {
     expect(screen.getByText("Run requested")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Run workflow" })).not.toBeInTheDocument();
   });
+
+  it("continues the run at the stage Podi saw, with its ids", async () => {
+    openWorkflow(true);
+    renderWithQuery(
+      <AssistantWorkflowCommandCard
+        messageId="m1"
+        actionId="x1"
+        kind="continue"
+        workflowId="wf-1"
+        workflowName="Etsy flow"
+        continueLabel="Continue to mock-ups"
+        runRef={{ stage: "design_approval", batchJobId: "job-1", runGroupId: null, runId: null }}
+        state="idle"
+      />
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Continue to mock-ups" }));
+
+    expect(useWorkflowCommandStore.getState().command).toEqual({
+      id: "x1",
+      workflowId: "wf-1",
+      kind: "continue",
+      stage: "design_approval",
+      batchJobId: "job-1",
+      runGroupId: null,
+      runId: null,
+    });
+    expect(useAssistantRunNudgeStore.getState().watchedWorkflowId).toBe("wf-1");
+  });
 });

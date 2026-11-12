@@ -58,6 +58,16 @@ const runWorkflowPayloadSchema = z.object({
 
 const saveWorkflowPayloadSchema = z.object({ workflowId: z.string(), workflowName: z.string() });
 
+const continueRunPayloadSchema = z.object({
+  workflowId: z.string(),
+  workflowName: z.string(),
+  stage: z.string(),
+  label: z.string(),
+  batchJobId: z.string().nullable(),
+  runGroupId: z.string().nullable(),
+  runId: z.string().nullable(),
+});
+
 const pendingActionStatusSchema = z.enum(["pending", "executing", "executed", "rejected", "expired", "failed"]);
 
 const arrangePayloadSchema = z.object({
@@ -74,6 +84,7 @@ const clientActionSchema = z.discriminatedUnion("kind", [
   z.object({ id: z.string(), kind: z.literal("navigate"), payload: navigatePayloadSchema }),
   z.object({ id: z.string(), kind: z.literal("run_workflow"), payload: runWorkflowPayloadSchema }),
   z.object({ id: z.string(), kind: z.literal("save_workflow"), payload: saveWorkflowPayloadSchema }),
+  z.object({ id: z.string(), kind: z.literal("continue_run"), payload: continueRunPayloadSchema }),
 ]);
 
 export const assistantStreamEventSchema = z.discriminatedUnion("type", [

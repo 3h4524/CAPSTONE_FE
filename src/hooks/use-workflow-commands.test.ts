@@ -11,17 +11,19 @@ vi.mock("@/helpers/toast");
 describe("useWorkflowCommands", () => {
   const save = vi.fn();
   const run = vi.fn();
+  const continueRun = vi.fn();
 
   beforeEach(() => {
     save.mockReset();
     run.mockReset();
+    continueRun.mockReset();
     vi.mocked(showWorkflowActionToast).mockClear();
     useWorkflowCommandStore.setState({ command: null });
     useWorkflowStore.setState({ ...useWorkflowStore.getInitialState(), workflowId: "wf-1", isDirty: false }, true);
   });
 
   const mount = (isEditorReady = true, isBusy = false, workflowId = "wf-1") =>
-    renderHook(() => useWorkflowCommands(workflowId, isEditorReady, isBusy, { save, run }));
+    renderHook(() => useWorkflowCommands(workflowId, isEditorReady, isBusy, { save, run, continueRun }));
 
   it("runs the open workflow once and clears the request", () => {
     mount();
@@ -54,7 +56,7 @@ describe("useWorkflowCommands", () => {
   });
 
   it("ignores a request for another workflow and waits for the editor", () => {
-    const { rerender } = renderHook(({ ready }) => useWorkflowCommands("wf-1", ready, false, { save, run }), { initialProps: { ready: false } });
+    const { rerender } = renderHook(({ ready }) => useWorkflowCommands("wf-1", ready, false, { save, run, continueRun }), { initialProps: { ready: false } });
 
     act(() => useWorkflowCommandStore.getState().request({ id: "c1", workflowId: "wf-1", kind: "run" }));
     expect(run).not.toHaveBeenCalled();
@@ -75,5 +77,15 @@ describe("useWorkflowCommands", () => {
     expect(run).not.toHaveBeenCalled();
     expect(showWorkflowActionToast).toHaveBeenCalledWith("warning", expect.stringContaining("busy"));
     expect(useWorkflowCommandStore.getState().command).toBeNull();
+  });
+
+  it("hands a continue request to the run even while the workflow is busy", () => {
+    mount(true, true);
+    const command = { id: "c1", workflowId: "wf-1", kind: "continue" as const, stage: "mockup_approval", runGroupId: "g1" };
+
+    act(() => useWorkflowCommandStore.getState().request(command));
+
+    expect(continueRun).toHaveBeenCalledWith(command);
+    expect(run).not.toHaveBeenCalled();
   });
 });

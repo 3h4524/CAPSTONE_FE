@@ -51,12 +51,23 @@ export type AssistantRunWorkflowPayload = { workflowId: string; workflowName: st
 
 export type AssistantSaveWorkflowPayload = { workflowId: string; workflowName: string };
 
+export type AssistantContinueRunPayload = {
+  workflowId: string;
+  workflowName: string;
+  stage: string;
+  label: string;
+  batchJobId: string | null;
+  runGroupId: string | null;
+  runId: string | null;
+};
+
 export type AssistantClientAction =
   | { id: string; kind: "edit_workflow_canvas"; payload: AssistantCanvasPatchPayload }
   | { id: string; kind: "arrange_workflow_canvas"; payload: AssistantArrangePayload }
   | { id: string; kind: "navigate"; payload: AssistantNavigatePayload }
   | { id: string; kind: "run_workflow"; payload: AssistantRunWorkflowPayload }
-  | { id: string; kind: "save_workflow"; payload: AssistantSaveWorkflowPayload };
+  | { id: string; kind: "save_workflow"; payload: AssistantSaveWorkflowPayload }
+  | { id: string; kind: "continue_run"; payload: AssistantContinueRunPayload };
 
 export type AssistantClientActionState = "idle" | "applied" | "dismissed";
 

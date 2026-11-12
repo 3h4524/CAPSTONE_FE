@@ -16,7 +16,8 @@ export const assistantKeys = {
   all: ["assistant"] as const,
   conversations: () => [...assistantKeys.all, "conversations"] as const,
   conversation: (id: string | null) => [...assistantKeys.conversations(), id] as const,
-  runProgress: (workflowId: string | null) => [...assistantKeys.all, "run-progress", workflowId] as const,
+  runProgresses: () => [...assistantKeys.all, "run-progress"] as const,
+  runProgress: (workflowId: string | null) => [...assistantKeys.runProgresses(), workflowId] as const,
 };
 
 export const listAssistantConversations = async (signal?: AbortSignal) =>

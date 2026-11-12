@@ -4,11 +4,12 @@ import { useEffect, useRef } from "react";
 
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { useWorkflowStore } from "@/stores/workflow";
-import { useWorkflowCommandStore } from "@/stores/workflow-command";
+import { useWorkflowCommandStore,type WorkflowCommand } from "@/stores/workflow-command";
 
 type WorkflowCommandHandlers = {
   save: (options?: { onSaved?: () => void }) => void;
   run: () => void;
+  continueRun: (command: WorkflowCommand) => void;
 };
 
 export const useWorkflowCommands = (
@@ -30,6 +31,10 @@ export const useWorkflowCommands = (
   useEffect(() => {
     if (!command || !isEditorReady || command.workflowId !== activeWorkflowId) return;
     clear(command.id);
+    if (command.kind === "continue") {
+      latest.current.continueRun(command);
+      return;
+    }
     if (busy.current) {
       showWorkflowActionToast("warning", "The workflow is busy. Try again when the current step finishes.");
       return;

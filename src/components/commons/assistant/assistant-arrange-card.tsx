@@ -7,10 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { arrangeNodes, describeArrangement } from "@/helpers/assistant-canvas-layout";
 import { showToast } from "@/helpers/toast";
-import { useSetAssistantClientActionState } from "@/hooks/mutations/use-set-assistant-client-action-state";
-import { useAssistantStore } from "@/stores/assistant";
+import { useSettleAssistantClientAction } from "@/hooks/use-settle-assistant-client-action";
 import { useWorkflowStore } from "@/stores/workflow";
-import type { AssistantArrangePayload, AssistantClientActionState } from "@/types/assistant";
+import type { AssistantArrangePayload, AssistantClientActionDecision, AssistantClientActionState } from "@/types/assistant";
 
 type AssistantArrangeCardProps = {
   messageId: string;
@@ -28,15 +27,10 @@ export const AssistantArrangeCard = ({ messageId, actionId, payload, state }: As
   const pathname = usePathname();
   const workflowId = useWorkflowStore((store) => store.workflowId);
   const applyGraphPatch = useWorkflowStore((store) => store.applyGraphPatch);
-  const setClientActionState = useAssistantStore((store) => store.setClientActionState);
-  const isStreaming = useAssistantStore((store) => store.streamingMessageId !== null);
-  const { mutate: saveActionState } = useSetAssistantClientActionState();
-  const canApply = pathname === "/workflows" && workflowId === payload.workflowId && !isStreaming;
+  const settleClientAction = useSettleAssistantClientAction();
+  const canApply = pathname === "/workflows" && workflowId === payload.workflowId;
 
-  const settle = (next: "applied" | "dismissed") => {
-    setClientActionState(messageId, actionId, next);
-    saveActionState({ messageId, actionId, state: next });
-  };
+  const settle = (next: AssistantClientActionDecision) => settleClientAction(messageId, actionId, next);
 
   const apply = () => {
     const { nodes, edges } = useWorkflowStore.getState();
@@ -64,7 +58,7 @@ export const AssistantArrangeCard = ({ messageId, actionId, payload, state }: As
                 {canApply ? null : <TooltipContent>Open this workflow to apply</TooltipContent>}
               </Tooltip>
             </TooltipProvider>
-            <AssistantChip label="Dismiss" variant="ghost" disabled={isStreaming} onClick={() => settle("dismissed")} />
+            <AssistantChip label="Dismiss" variant="ghost" onClick={() => settle("dismissed")} />
           </div>
         ) : (
           <p className="text-ink-500 text-xs font-medium">{STATE_TEXT[state]}</p>

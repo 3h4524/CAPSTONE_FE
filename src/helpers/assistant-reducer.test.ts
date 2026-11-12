@@ -11,7 +11,7 @@ import type { AssistantStreamEvent, AssistantUiMessage } from "@/types/assistant
 const buildStreamingState = (): AssistantChatState => {
   const user = createUserMessage("Hello");
   const placeholder = createAssistantPlaceholder();
-  return { conversationId: null, messages: [user, placeholder], pendingActions: {}, streamingMessageId: placeholder.id };
+  return { conversationId: null, messages: [user, placeholder], pendingActions: {}, streamingMessageId: placeholder.id, activeStream: null };
 };
 
 const lastMessage = (state: AssistantChatState): AssistantUiMessage => {

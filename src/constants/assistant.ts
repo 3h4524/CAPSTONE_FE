@@ -2,6 +2,13 @@ export const ASSISTANT_MAX_MESSAGE_LENGTH = 4000;
 export const ASSISTANT_COUNTER_THRESHOLD = 3500;
 export const ASSISTANT_ACTION_COUNTDOWN_TICK_MS = 1000;
 export const ASSISTANT_ACTION_EXPIRED_ERROR_CODE = "assistant.action_expired";
+export const ASSISTANT_STOPPED_ERROR_CODE = "assistant.stopped";
+export const ASSISTANT_INTERRUPTED_ERROR = { code: "assistant.interrupted", message: "This answer was interrupted." };
+export const ASSISTANT_REATTACH_DELAYS_MS = [1000, 2000, 4000];
+export const ASSISTANT_STREAM_INTERRUPTED_ERROR = {
+  code: "stream_interrupted",
+  message: "The connection was interrupted. Please try again.",
+};
 export const ASSISTANT_SCROLL_BOTTOM_TOLERANCE_PX = 80;
 export const ASSISTANT_ROUTE_MAX_LENGTH = 300;
 export const ASSISTANT_CANVAS_MAX_NODES = 40;
@@ -87,6 +94,7 @@ export const ASSISTANT_PANEL_STORAGE_KEY = "apcs.assistant.panel-width";
 export const ASSISTANT_DISPLAY_MODE_STORAGE_KEY = "apcs.assistant.display-mode";
 export const ASSISTANT_DRAFTS_STORAGE_KEY_PREFIX = "apcs.assistant.drafts.";
 export const ASSISTANT_NEW_CHAT_DRAFT_KEY = "new-chat";
+export const ASSISTANT_SELECTED_CONVERSATION_STORAGE_KEY_PREFIX = "apcs.assistant.selected-conversation.";
 export const ASSISTANT_DOCK_ENABLED = false;
 export const ASSISTANT_MASCOT_SRC = "/images/assistant/assistant-mascot.webp";
 export const ASSISTANT_BUBBLE_GAP_PX = 12;

@@ -5,6 +5,10 @@ import type { WorkflowNodeType } from "@/types/workflow";
 
 export type AssistantStreamEvent = z.infer<typeof assistantStreamEventSchema>;
 
+export type AssistantStreamEntry = AssistantStreamEvent & { id?: string };
+
+export type AssistantMessageStatus = "done" | "streaming" | "error" | "stopped" | "interrupted";
+
 export type AssistantRole = "user" | "assistant";
 
 export type AssistantCitation = { documentId: string; title: string; sourceUrl: string | null };
@@ -50,6 +54,8 @@ export type AssistantClientAction =
 
 export type AssistantClientActionState = "idle" | "applied" | "dismissed";
 
+export type AssistantClientActionDecision = Exclude<AssistantClientActionState, "idle">;
+
 export type AssistantPendingActionStatus = "pending" | "executing" | "executed" | "rejected" | "expired" | "failed";
 
 export type AssistantPendingAction = {
@@ -82,8 +88,13 @@ export type AssistantUiMessage = {
   error: AssistantError | null;
   retryInSeconds: number | null;
   isStreaming: boolean;
+  isStopped: boolean;
   createdAt: string;
 };
+
+export type AssistantActiveStream = { assistantMessageId: string | null; lastEventId: string | null; isAttached: boolean };
+
+export type AssistantParkedStream = { lastEventId: string; message: AssistantUiMessage };
 
 export type AssistantCanvasContext = {
   workflowId: string;
@@ -112,7 +123,14 @@ export type SendAssistantMessageInput = { conversationId: string | null; message
 
 export type AssistantConversationSummary = { id: string; title: string; updatedAt: string };
 
-export type AssistantMessageDto = { id: string; role: AssistantRole; content: string; metadata: Record<string, unknown>; createdAt: string };
+export type AssistantMessageDto = {
+  id: string;
+  role: AssistantRole;
+  content: string;
+  metadata: Record<string, unknown>;
+  status?: AssistantMessageStatus;
+  createdAt: string;
+};
 
 export type AssistantConversationDetail = {
   id: string;

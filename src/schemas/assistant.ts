@@ -66,7 +66,10 @@ const clientActionSchema = z.discriminatedUnion("kind", [
 ]);
 
 export const assistantStreamEventSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("conversation"), data: z.object({ conversationId: z.string(), userMessageId: z.string() }) }),
+  z.object({
+    type: z.literal("conversation"),
+    data: z.object({ conversationId: z.string(), userMessageId: z.string(), assistantMessageId: z.string().optional() }),
+  }),
   z.object({ type: z.literal("delta"), data: z.object({ text: z.string() }) }),
   z.object({ type: z.literal("tool_started"), data: z.object({ callId: z.string(), name: z.string() }) }),
   z.object({ type: z.literal("tool_finished"), data: z.object({ callId: z.string(), name: z.string(), ok: z.boolean() }) }),

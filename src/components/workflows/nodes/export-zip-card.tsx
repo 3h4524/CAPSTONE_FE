@@ -28,7 +28,8 @@ const useGroupExport = () => {
   // Asked again as videos finish, since each one's package is made when its run completes.
   const finished = active?.targets.filter((target) => target.runStatus === "completed").length ?? 0;
   const { data: summary } = useQuery({
-    queryKey: ["run-groups", active?.id ?? null, "export", finished],
+    // Not under the group's own key: reading the group again (every change of a run) must not ask this too.
+    queryKey: ["run-group-export", active?.id ?? null, finished],
     queryFn: () => getRunGroupExport(active!.id),
     enabled: Boolean(active),
   });

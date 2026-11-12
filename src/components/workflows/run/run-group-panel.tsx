@@ -213,6 +213,22 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
           will use another one.
         </PanelNotice>
       )}
+      {group.preparing && (
+        <PanelNotice tone="info">
+          <span className="inline-flex items-center gap-2">
+            <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+            Getting the videos ready: approving the mock-ups, making the model photos of scenes with a
+            person and checking the AI cost. The videos start by themselves.
+          </span>
+        </PanelNotice>
+      )}
+      {group.notice && (
+        <PanelNotice tone="warning">
+          {group.status === "waiting_for_targets"
+            ? `Mockup Approval is on Approve automatically, but the videos did not start. ${group.notice}`
+            : group.notice}
+        </PanelNotice>
+      )}
       {tooMany && (
         <PanelNotice tone="error">
           {group.selectedCount} designs are chosen; one run makes at most {group.maximumTargets}{" "}
@@ -266,7 +282,8 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
             isDirty ||
             isConfirming ||
             isQuoting ||
-            isCancelling
+            isCancelling ||
+            group.preparing === true
           }
           onClick={start}
         >

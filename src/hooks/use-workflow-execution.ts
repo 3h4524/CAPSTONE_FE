@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { batchJobKeys, listBatchJobs } from "@/api/batch-jobs";
@@ -148,11 +148,21 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   useRunGroupSync(group?.workflowId === activeWorkflowId ? groupId : null);
 
   // A group waiting at Mockup Approval leaves the settings open: the scenes saved there are the ones it uses.
-  const groupWorking = group?.status === "running";
-  const isRunning = batch.isBusy || video.isRunning || groupWorking || isStartingGroup;
+  // ... as does one still being made ready in the background, before its videos start by themselves.
+  const groupWorking = group?.status === "running" || group?.preparing === true;
+  // From the mock-ups being done to the batch video run being started (their import first): the Run goes on.
+  const [isLaunchingVideo, setIsLaunchingVideo] = useState(false);
+  const isRunning = batch.isBusy || video.isRunning || groupWorking || isStartingGroup || isLaunchingVideo;
   useEffect(() => {
     setRunning(isRunning);
   }, [isRunning, setRunning]);
+
+  // An automatic Mockup Approval approves the mock-ups on the server: their cards read them again when the run moves
+  // on (prepared, started, finished), not on every change, since each read signs their image links anew.
+  const groupPhase = group ? `${group.id}:${group.status}:${group.preparing ? "preparing" : ""}` : null;
+  useEffect(() => {
+    if (groupPhase) void queryClient.invalidateQueries({ queryKey: ["mockup-assets"] });
+  }, [groupPhase, queryClient]);
 
   // The job whose video part was started from here, so it is started once however often the page re-renders.
   const videoStartedFor = useRef<string | null>(null);
@@ -218,6 +228,7 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     startVideoGroup.current = async (jobId: string | null) => {
       const { workflowId, revision } = useWorkflowStore.getState();
       if (!workflowId) return;
+      setIsLaunchingVideo(true);
       try {
         await importMockups(queryClient, await videoProducts(queryClient, jobId));
         const started = await startGroup({ workflowId, revision, key: uuid(), batchJobId: jobId, aiBudgetUsd: takeRunAiBudget(workflowId) });
@@ -227,11 +238,28 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
         query.delete(NEXT_PART_PARAM);
         query.delete(VIDEO_RUN_PARAM);
         router.replace(`/workflows?${query.toString()}`, { scroll: false });
-        const gate = findNode("approval-gate");
-        if (gate) selectNode(gate.id);
-        showWorkflowActionToast("info", "Approve the mock-ups of each design that should get a video, then choose Continue.");
+        if (started.preparing) {
+          showWorkflowActionToast("info", "Getting the videos ready. They start by themselves.");
+        } else if (started.status === "waiting_for_targets") {
+          const gate = findNode("approval-gate");
+          if (gate) selectNode(gate.id);
+          showWorkflowActionToast(
+            started.notice ? "warning" : "info",
+            started.notice
+              ? `The videos did not start by themselves. ${started.notice}`
+              : "Approve the mock-ups of each design that should get a video, then choose Continue."
+          );
+        } else {
+          // Mockup Approval is on Approve automatically: the mock-ups are approved and the videos are on their way.
+          showWorkflowActionToast(
+            started.notice ? "warning" : "success",
+            started.notice ?? "Mock-ups approved automatically. The videos are starting."
+          );
+        }
       } catch (error) {
         showWorkflowActionToast("error", `The videos could not be started. ${getErrorMessage(error)}`);
+      } finally {
+        setIsLaunchingVideo(false);
       }
     };
   });

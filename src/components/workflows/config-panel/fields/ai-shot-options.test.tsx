@@ -3,13 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AiShotOptions } from "@/components/workflows/config-panel/fields/ai-shot-options";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { Entitlements } from "@/types/subscription";
-import type { AiVideoSceneOptions, MockupAsset } from "@/types/video-workflow";
+import type { AiVideoSceneOptions, MockupAsset, VideoPackDefinition } from "@/types/video-workflow";
 import type { WorkflowNode } from "@/types/workflow";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 let entitlements: Entitlements | undefined;
 let assets: MockupAsset[] = [];
+let packs: VideoPackDefinition[] = [];
 
 vi.mock("@/hooks/queries/use-entitlements", () => ({
   useEntitlements: () => ({ data: entitlements }),
@@ -21,7 +22,7 @@ vi.mock("@/hooks/queries/use-ai-character-models", () => ({
   useAiCharacterModels: () => ({ data: [], isPending: false, isError: false, refetch: vi.fn() }),
 }));
 vi.mock("@/hooks/queries/use-video-packs", () => ({
-  useVideoPacks: () => ({ data: [], isPending: false }),
+  useVideoPacks: () => ({ data: packs, isPending: false }),
 }));
 vi.mock("@/hooks/queries/use-mockup-assets", () => ({
   useMockupAssets: () => ({ data: assets, isPending: false }),
@@ -260,5 +261,98 @@ describe("AiShotOptions plan lock", () => {
     expect(screen.getByText("Main mock-up (automatic)")).toBeVisible();
     expect(screen.getByAltText("Motion preview for scene 1")).toHaveAttribute("src", "/black.png");
     expect(screen.getByText(/Not saved yet/)).toBeVisible();
+  });
+});
+
+describe("AiShotOptions video template of Standard scenes", () => {
+  const rotatingShowcase: VideoPackDefinition = {
+    code: "standard_rotate_showcase",
+    version: 1,
+    name: "Rotating Showcase",
+    description: "Four rotating camera moves on your product images, without AI.",
+    previewVideoUrl: null,
+    totalDurationSeconds: 14,
+    requiresCharacter: false,
+    requiresSharedMockup: false,
+    scenes: [
+      { id: "a", mode: "standard", durationSeconds: 4, transitionIn: "cut", transitionDurationFrames: 0, standardMotionPreset: "rotate_zoom_cw" },
+      { id: "b", mode: "standard", durationSeconds: 3, transitionIn: "fade", transitionDurationFrames: 10, standardMotionPreset: "rotate_ccw" },
+      { id: "c", mode: "standard", durationSeconds: 3, transitionIn: "fade", transitionDurationFrames: 10, standardMotionPreset: "rotate_cw" },
+      { id: "d", mode: "standard", durationSeconds: 4, transitionIn: "fade", transitionDurationFrames: 10, standardMotionPreset: "rotate_zoom_ccw" },
+    ],
+  };
+
+  beforeEach(() => {
+    entitlements = undefined;
+    assets = [];
+    previewDesign = null;
+    packs = [rotatingShowcase];
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
+    );
+  });
+
+  it("fills in Standard scenes with their motion and timing, without a start frame or a shared mock-up", async () => {
+    const onChange = vi.fn();
+    useWorkflowStore.setState({
+      nodes: [
+        {
+          id: "video",
+          type: "workflow",
+          position: { x: 0, y: 0 },
+          data: { type: "generate-video", config: { mode: "standard", template: "auto", aiScenes: [] } },
+        } as unknown as WorkflowNode,
+      ],
+    });
+    render(<AiShotOptions nodeId="video" disabled={false} onChange={onChange} />);
+
+    await userEvent.click(screen.getByRole("combobox", { name: "Video template" }));
+    await userEvent.click(screen.getByRole("option", { name: /Rotating Showcase/ }));
+    // The scene the panel starts with is replaced once the seller agrees.
+    await userEvent.click(await screen.findByRole("button", { name: "Replace scenes" }));
+
+    const [scenes, seconds] = onChange.mock.calls.at(-1)!;
+    expect(seconds).toBe(14);
+    expect((scenes as AiVideoSceneOptions[]).map((item) => [item.mode, item.durationSeconds, item.standardMotionPreset, item.transitionIn])).toEqual([
+      ["standard", 4, "rotate_zoom_cw", "cut"],
+      ["standard", 3, "rotate_ccw", "fade"],
+      ["standard", 3, "rotate_cw", "fade"],
+      ["standard", 4, "rotate_zoom_ccw", "fade"],
+    ]);
+    expect(scenes).toSatisfy((list: AiVideoSceneOptions[]) =>
+      list.every((item) => item.startFrameMode === "direct" && item.studioFrameId === null && item.mockupId === null));
+    const config = useWorkflowStore.getState().nodes[0]!.data.config;
+    expect(config).toMatchObject({ mode: "standard", template: "standard_rotate_showcase", templateVersion: 1, durationSeconds: 14 });
+    expect(config).not.toHaveProperty("sharedMockupId");
+  });
+
+  it("names the pack and the length it runs, until a scene is changed", () => {
+    useWorkflowStore.setState({
+      nodes: [
+        {
+          id: "video",
+          type: "workflow",
+          position: { x: 0, y: 0 },
+          data: {
+            type: "generate-video",
+            config: {
+              mode: "standard",
+              template: "standard_rotate_showcase",
+              templateVersion: 1,
+              aiScenes: rotatingShowcase.scenes.map((definition) => ({
+                ...scene("standard"),
+                durationSeconds: definition.durationSeconds,
+                standardMotionPreset: definition.standardMotionPreset,
+                transitionIn: definition.transitionIn,
+              })),
+            },
+          },
+        } as unknown as WorkflowNode,
+      ],
+    });
+    render(<AiShotOptions nodeId="video" disabled={false} onChange={vi.fn()} />);
+
+    expect(screen.getByText("14s pack")).toBeVisible();
   });
 });

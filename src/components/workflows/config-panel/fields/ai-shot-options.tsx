@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   ArrowDown,
@@ -283,6 +283,17 @@ const buildProductOnModelScenes = (
   sharedMockupId: string | null
 ): AiVideoSceneOptions[] =>
   pack.scenes.map((definition): AiVideoSceneOptions => {
+    // A Standard scene has no AI shot to prepare: no start frame or shared mock-up, only its timing and camera motion.
+    // Its image is picked per scene (or per design in a batch run), as for a scene added by hand.
+    if (definition.mode === "standard")
+      return {
+        ...BASE_SCENE,
+        mode: "standard",
+        durationSeconds: definition.durationSeconds,
+        transitionIn: definition.transitionIn ?? "cut",
+        transitionDurationFrames: definition.transitionDurationFrames ?? 0,
+        standardMotionPreset: definition.standardMotionPreset ?? null,
+      };
     const template = catalog.find((item) => item.code === definition.templateCode);
     const subtemplate = template?.subtemplates?.find(
       (item) => item.code === definition.subtemplateCode
@@ -392,9 +403,15 @@ export function AiShotOptions({
   nodeId,
   disabled,
   onChange,
+  beforeTemplate,
+  afterTemplate,
 }: {
   nodeId: string;
   disabled: boolean;
+  /** Fields the panel shows above the video template (the output format). */
+  beforeTemplate?: ReactNode;
+  /** Fields the panel shows right below the video template, above the scenes (the transition). */
+  afterTemplate?: ReactNode;
   onChange: (
     scenes: AiVideoSceneOptions[],
     seconds: number,
@@ -504,6 +521,8 @@ export function AiShotOptions({
   const selectedPackCode = readString(node?.data.config.template);
   const selectedVideoPack = videoPacks.find((pack) => pack.code === selectedPackCode);
   const isProductOnModelPack = selectedPackCode === PRODUCT_ON_MODEL_PACK;
+  // A pack of Standard scenes only: no AI, character or shared mock-up.
+  const isStandardPack = Boolean(selectedVideoPack?.scenes.every((scene) => scene.mode === "standard"));
   const sharedMockupId = readString(node?.data.config.sharedMockupId) || null;
   const currentApproved = allAssets.filter(
     (asset) => asset.approvalStatus === "approved" && asset.approvedRevision === asset.revision
@@ -847,9 +866,12 @@ export function AiShotOptions({
       : null;
     const seconds = next.reduce((sum, scene) => sum + scene.durationSeconds, 0);
     const { aiShotOptions: _old, ...cleanConfig } = node.data.config;
+    const mode = workflowModeForScenes(next);
     useWorkflowStore.getState().updateNodeConfig(nodeId, {
       ...cleanConfig,
-      mode: workflowModeForScenes(next),
+      // The server only knows a pack by name for Standard scenes: one that gained an AI scene is custom scenes now.
+      ...(isStandardPack && mode === "ai_shot" ? { template: "auto", templateVersion: 2 } : {}),
+      mode,
       aiScenes: next,
       aiGlobalInstructions: effectiveSharedInstructions,
       durationSeconds: seconds,
@@ -1099,11 +1121,12 @@ export function AiShotOptions({
   };
   const applyVideoPack = (pack: VideoPackDefinition) => {
     const nextScenes = buildProductOnModelScenes(pack, catalog, sharedMockupId);
+    const standardOnly = nextScenes.every((scene) => scene.mode === "standard");
     writePackConfiguration(nextScenes, {
-      mode: "ai_shot",
+      mode: standardOnly ? "standard" : "ai_shot",
       template: pack.code,
       templateVersion: pack.version,
-      sharedMockupId,
+      ...(standardOnly ? {} : { sharedMockupId }),
     });
     setBatchFrameState({});
     setPendingPack(null);
@@ -1111,7 +1134,7 @@ export function AiShotOptions({
     showToast("success", `${pack.name} added with ${nextScenes.length} scenes.`);
   };
   const requestVideoPack = (pack: VideoPackDefinition) => {
-    if (catalog.length === 0) {
+    if (catalog.length === 0 && pack.scenes.some((scene) => scene.mode !== "standard")) {
       showToast("error", "The AI scene catalog is still loading. Try the video template again in a moment.");
       return;
     }
@@ -1454,8 +1477,9 @@ export function AiShotOptions({
           return (
             !definition ||
             scene.mode !== definition.mode ||
-            scene.templateCode !== definition.templateCode ||
-            scene.subtemplateCode !== definition.subtemplateCode ||
+            (definition.mode !== "standard" &&
+              (scene.templateCode !== definition.templateCode || scene.subtemplateCode !== definition.subtemplateCode)) ||
+            (definition.mode === "standard" && (scene.standardMotionPreset ?? null) !== (definition.standardMotionPreset ?? null)) ||
             scene.durationSeconds !== definition.durationSeconds ||
             scene.transitionIn !== (definition.transitionIn ?? "cut")
           );
@@ -1470,6 +1494,7 @@ export function AiShotOptions({
 
   return (
     <>
+      {beforeTemplate}
       <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label="Video template">
         <div className="flex items-start gap-3">
           <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
@@ -1481,14 +1506,14 @@ export function AiShotOptions({
               Start from a complete sequence, then fine-tune its individual scenes below.
             </p>
           </div>
-          {isProductOnModelPack && (
+          {selectedVideoPack && (
             <span className="bg-primary/10 text-primary shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold">
-              {isPackCustomized ? "Customized" : "16s pack"}
+              {isPackCustomized ? "Customized" : `${selectedVideoPack.totalDurationSeconds}s pack`}
             </span>
           )}
         </div>
         <Select
-          value={isProductOnModelPack ? PRODUCT_ON_MODEL_PACK : "custom"}
+          value={selectedVideoPack ? selectedVideoPack.code : "custom"}
           disabled={disabled || arePacksLoading || isPending}
           onValueChange={(value) => {
             if (value === "custom") {
@@ -1511,12 +1536,18 @@ export function AiShotOptions({
             ))}
           </SelectContent>
         </Select>
-        {isProductOnModelPack && selectedVideoPack && (
+        {selectedVideoPack && (
           <p className="text-muted-foreground text-xs leading-relaxed">
-            {selectedVideoPack.description} {isPackCustomized ? "Scene order, duration, or shot setup differs from the pack default." : "Four prepared AI scenes, each four seconds."}
+            {selectedVideoPack.description}{" "}
+            {isPackCustomized
+              ? "Scene order, duration, or shot setup differs from the pack default."
+              : isStandardPack
+                ? "No AI scenes: each one is a camera move on a product image, so no AI provider is billed."
+                : "Prepared AI scenes with a shared cast and product mock-up."}
           </p>
         )}
       </section>
+      {afterTemplate}
       <Dialog open={pendingPack !== null} onOpenChange={(open) => !open && setPendingPack(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>

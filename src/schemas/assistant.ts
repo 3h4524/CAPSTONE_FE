@@ -139,3 +139,5 @@ export const assistantMessageMetadataSchema = z.object({
   kind: z.enum(["chat", "action_result"]).optional(),
   route: z.string().optional(),
 });
+
+export const assistantActionLinkSchema = z.object({ openPath: z.string(), openLabel: z.string() });

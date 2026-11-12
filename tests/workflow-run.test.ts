@@ -208,7 +208,7 @@ test("steps connect to the next step on the canvas, so no approval is skipped", 
 
 test("a loaded config keeps what the node declares and drops the rest", () => {
   const mockup = normalizeNodeConfig("apply-mockup", { mockupTemplateIds: [id], garmentColors: ["#111111"], artworkGroupKey: "summer" });
-  assert.deepEqual(mockup, { mockupTemplateIds: [id], templateColors: {}, templateBackgrounds: {}, mockupIds: [], artworkGroupKey: "summer" });
+  assert.deepEqual(mockup, { mockupTemplateIds: [id], templateColors: {}, templateBackgrounds: {}, mockupTarget: "zip", mockupIds: [], artworkGroupKey: "summer" });
 
   const video = normalizeNodeConfig("generate-video", { template: "design_detail", standardOptions: { motionPreset: "zoom", crop: "safe", transition: "cut" }, withMusic: true });
   assert.equal(video.template, "design_detail");

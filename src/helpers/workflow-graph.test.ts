@@ -26,6 +26,7 @@ import {
   validateWorkflow,
   withUniqueLabels,
 } from "@/helpers/workflow-graph";
+import { supportsBatchVideos } from "@/helpers/workflow-run";
 import {
   buildWorkflowDetail,
   buildWorkflowEdge,
@@ -70,7 +71,7 @@ const VALID_CONFIGS: Record<WorkflowNodeType, WorkflowNodeConfig> = {
     standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
     fallbackToStandard: true,
   },
-  "review-video": {},
+  "review-video": { mode: "manual" },
   "generate-listing": { model: "gpt-4o", tone: "friendly", includeSeoScore: true },
   "export-zip": {},
   "publish-etsy": { listingType: "download", price: 4.99, quantity: 999, taxonomyId: 2078, taxonomyPath: "Digital", whoMade: "i_did", whenMade: "made_to_order", shippingProfileId: null, includeVideo: true },
@@ -114,7 +115,7 @@ const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
     { mode: "unreviewed" },
     "Design approval: Choose how designs are approved.",
   ],
-  ["approval-gate", { mode: "unreviewed" }, 'Mockup Approval: Invalid input: expected "manual"'],
+  ["approval-gate", { mode: "unreviewed" }, "Mockup Approval: Choose how mock-ups are approved."],
   [
     "apply-mockup",
     {
@@ -379,6 +380,35 @@ describe("validateWorkflow", () => {
     expect(validateWorkflow(pipelineNodes(), pipelineEdges())).toEqual([]);
   });
 
+  it("needs no product for Standard scenes: every design chosen at Mockup Approval gets a video", () => {
+    const nodes = pipelineNodes().map((item) =>
+      item.data.type === "product-input" ? { ...item, data: { ...item.data, config: { batchId: "batch-1", productId: "" } } } : item
+    );
+    expect(validateWorkflow(nodes, pipelineEdges()).filter((issue) => issue.id.startsWith("video-product"))).toEqual([]);
+  });
+
+  it("needs no product for AI scenes either: each chosen design gets its own AI video", () => {
+    const nodes = pipelineNodes().map((item) =>
+      item.data.type === "product-input"
+        ? { ...item, data: { ...item.data, config: { batchId: "batch-1", productId: "" } } }
+        : item.data.type === "generate-video"
+          ? { ...item, data: { ...item.data, config: { ...item.data.config, mode: "ai_shot", aiScenes: [{ mode: "ai" }] } } }
+          : item
+    );
+    expect(validateWorkflow(nodes, pipelineEdges()).filter((issue) => issue.id.startsWith("video-product"))).toEqual([]);
+  });
+
+  it("needs the product when the settings make one product's video", () => {
+    const nodes = pipelineNodes().map((item) =>
+      item.data.type === "product-input"
+        ? { ...item, data: { ...item.data, config: { batchId: "batch-1", productId: "" } } }
+        : item.data.type === "generate-video"
+          ? { ...item, data: { ...item.data, config: { ...item.data.config, mode: "ai_shot", aiScenes: [] } } }
+          : item
+    );
+    expect(validateWorkflow(nodes, pipelineEdges()).map((issue) => issue.id)).toContain("video-product-input");
+  });
+
   it.each(nodeTypes)("accepts a valid %s config", (type) => {
     const issues = validateWorkflow([typedNode("n1", type, VALID_CONFIGS[type])], []);
 
@@ -591,6 +621,20 @@ describe("createWorkflowNode", () => {
 });
 
 describe("toWorkflowNodes", () => {
+  it("keeps a saved AI scene list, so the workflow still makes a video per design after a reload and a save", () => {
+    const aiScenes = [{ mode: "ai", templateCode: "lifestyle_in_use", durationSeconds: 5 }];
+    const nodes = toWorkflowNodes({
+      version: 2,
+      nodes: [{ id: "video", type: "generate-video", label: "Generate Video", position: { x: 0, y: 0 }, config: { mode: "ai_shot", aiScenes } }],
+      edges: [],
+      viewport: { x: 0, y: 0, zoom: 1 },
+    });
+
+    expect(nodes[0]!.data.config.aiScenes).toEqual(aiScenes);
+    expect(supportsBatchVideos(nodes)).toBe(true);
+    expect(toWorkflowDefinition(nodes, [], { x: 0, y: 0, zoom: 1 }).nodes[0]!.config.aiScenes).toEqual(aiScenes);
+  });
+
   const definition: WorkflowDefinition = {
     version: 2,
     nodes: [

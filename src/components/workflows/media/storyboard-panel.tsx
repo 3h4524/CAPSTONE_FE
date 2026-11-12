@@ -9,6 +9,9 @@ import { getErrorMessage } from "@/helpers/error-message";
 import { readString, readStringArray } from "@/helpers/workflow-config";
 import { usePreviewVideoStoryboard } from "@/hooks/mutations/use-preview-video-storyboard";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
+import { usePreviewDesign } from "@/hooks/queries/use-preview-design";
+import { useRunGroupId } from "@/hooks/queries/use-run-group";
+import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { generateVideoConfigSchema } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { GenerateVideoConfig, VideoStoryboard } from "@/types/video-workflow";
@@ -58,7 +61,7 @@ const previewConfig = (config: GenerateVideoConfig): GenerateVideoConfig => ({
 });
 
 export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
-  const productId = useWorkflowStore((state) =>
+  const inputProductId = useWorkflowStore((state) =>
     readString(
       state.nodes.find((candidate) => candidate.data.type === "product-input")?.data.config
         .productId
@@ -67,6 +70,14 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
   const mockup = useWorkflowStore((state) =>
     state.nodes.find((candidate) => candidate.data.type === "apply-mockup")
   );
+  // With one design's run of a batch video run open, the storyboard is that design's.
+  const { run } = useWorkflowRuntime();
+  // Only a run of the batch run open now is a design's run: a run of an earlier (cancelled) group is another
+  // design, maybe made with older mock-ups, and must not take the editor over.
+  const openGroupId = useRunGroupId();
+  const designRun = run?.runGroupId && run.runGroupId === openGroupId ? run : null;
+  const previewDesign = usePreviewDesign();
+  const productId = designRun?.productId ?? previewDesign?.productId ?? inputProductId;
   const { data: assets = [] } = useMockupAssets(productId);
   const { mutate: preview, isPending } = usePreviewVideoStoryboard(true);
   const previewRef = useRef(preview);
@@ -107,8 +118,9 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
         {
           productId,
           config: parsed.data,
-          mockupIds: readStringArray(mockup?.data.config.mockupIds),
-          artworkGroupKey: readString(mockup?.data.config.artworkGroupKey),
+          mockupIds: designRun ? [] : readStringArray(mockup?.data.config.mockupIds),
+          artworkGroupKey: designRun?.artworkGroupKey ?? readString(mockup?.data.config.artworkGroupKey),
+          forDesign: Boolean(designRun),
         },
         {
           onSuccess: (result) => {
@@ -129,6 +141,7 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
       mockup?.data.config.mockupIds,
       node.data.config,
       productId,
+      designRun,
     ]
   );
 

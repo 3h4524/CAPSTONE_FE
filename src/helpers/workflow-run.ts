@@ -52,7 +52,30 @@ export const hasBatchSteps = (nodes: WorkflowNode[]) =>
 /** The workflow makes a video, so a run includes the server's video run. */
 export const hasVideoSteps = (nodes: WorkflowNode[]) => nodes.some((node) => node.data.type === "generate-video");
 
+/**
+ * Product input offers its product only to a workflow that writes listing content without a video. A video
+ * workflow picks its product at Mockup Approval ("Product for the video"), which stores the same value.
+ */
+export const showsInputProduct = (nodes: WorkflowNode[]) => hasListingSteps(nodes) && !hasVideoSteps(nodes);
+
 const findByType = (nodes: WorkflowNode[], type: WorkflowNodeType) => nodes.filter((node) => node.data.type === type);
+
+/**
+ * Whether the video settings can make one video for each design of a batch: Standard scenes only, since an AI scene
+ * is billed per clip and needs its own consent. Otherwise the video is made for the one product in Product input.
+ * The server checks the same.
+ */
+export const supportsBatchVideos = (nodes: WorkflowNode[]) => {
+  const [video] = findByType(nodes, "generate-video");
+  if (!video) return false;
+  const config = video.data.config;
+  if (readString(config.template) === "product_on_model_pack") return false;
+  const scenes = Array.isArray(config.aiScenes) ? (config.aiScenes as { mode?: unknown }[]) : [];
+  // An AI video maps to every design through its scene list; the legacy single-shot settings name one product's image.
+  return (readString(config.mode) || "standard") === "ai_shot"
+    ? scenes.length > 0
+    : scenes.every((scene) => scene?.mode === "standard");
+};
 
 const reachableFrom = (startId: string, edges: WorkflowEdge[]) => {
   const visited = new Set<string>();

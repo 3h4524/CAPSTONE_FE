@@ -7,6 +7,7 @@ import type {
   AssistantClientActionDecision,
   AssistantConversationDetail,
   AssistantConversationSummary,
+  AssistantRunProgress,
   AssistantStreamEntry,
   SendAssistantMessageInput,
 } from "@/types/assistant";
@@ -15,6 +16,7 @@ export const assistantKeys = {
   all: ["assistant"] as const,
   conversations: () => [...assistantKeys.all, "conversations"] as const,
   conversation: (id: string | null) => [...assistantKeys.conversations(), id] as const,
+  runProgress: (workflowId: string | null) => [...assistantKeys.all, "run-progress", workflowId] as const,
 };
 
 export const listAssistantConversations = async (signal?: AbortSignal) =>
@@ -22,6 +24,9 @@ export const listAssistantConversations = async (signal?: AbortSignal) =>
 
 export const getAssistantConversation = async (id: string, signal?: AbortSignal) =>
   (await api.get<AssistantConversationDetail>(`/api/assistant/conversations/${id}`, { signal })).data;
+
+export const getAssistantRunProgress = async (workflowId: string, signal?: AbortSignal) =>
+  (await api.get<AssistantRunProgress>(`/api/assistant/workflows/${workflowId}/run-progress`, { signal })).data;
 
 export type AssistantClientActionStateInput = { messageId: string; actionId: string; state: AssistantClientActionDecision };
 

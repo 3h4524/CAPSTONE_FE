@@ -34,6 +34,10 @@ export const ASSISTANT_TOOL_LABELS: Record<string, AssistantToolLabel> = {
   edit_workflow_canvas: { running: "Preparing the canvas changes", done: "Prepared the canvas changes" },
   arrange_workflow_canvas: { running: "Planning a tidier layout", done: "Planned a tidier layout" },
   navigate: { running: "Preparing a link", done: "Prepared a link" },
+  run_workflow: { running: "Preparing the run", done: "Prepared the run" },
+  save_workflow: { running: "Preparing the save", done: "Prepared the save" },
+  estimate_run_cost: { running: "Estimating the run cost", done: "Estimated the run cost" },
+  get_run_progress: { running: "Checking the run", done: "Checked the run" },
   start_workflow_run: { running: "Preparing the run", done: "Prepared the run" },
   workflow_run_action: { running: "Preparing the action", done: "Prepared the action" },
   offer_choices: { running: "Preparing options", done: "Prepared options" },
@@ -106,3 +110,7 @@ export const ASSISTANT_LAYOUT_GAPS: Record<"compact" | "comfortable" | "wide", {
 };
 
 export const ASSISTANT_LAYOUT_DEFAULT_NODE_HEIGHT_PX = 200;
+
+export const ASSISTANT_RUN_PROGRESS_POLL_MS = 20_000;
+
+export const ASSISTANT_RUN_NUDGE_RECENT_MS = 24 * 60 * 60 * 1000;

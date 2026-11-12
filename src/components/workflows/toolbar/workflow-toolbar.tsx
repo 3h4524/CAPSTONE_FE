@@ -14,6 +14,7 @@ import { showToast, showWorkflowActionToast } from "@/helpers/toast";
 import { getCopyName, validateWorkflow } from "@/helpers/workflow-graph";
 import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
 import { useDeleteWorkflow } from "@/hooks/mutations/use-delete-workflow";
+import { useWorkflowCommands } from "@/hooks/use-workflow-commands";
 import { useWorkflowExecution } from "@/hooks/use-workflow-execution";
 import { useWorkflowSave } from "@/hooks/use-workflow-save";
 import type { WorkflowMetaFormValues } from "@/schemas/workflow";
@@ -57,6 +58,11 @@ export const WorkflowToolbar = ({
   const { isRunning, start: startRun, cancel: cancelRun, isPending: isRunPending } = useWorkflowExecution(activeWorkflowId, isEditorReady);
 
   const isBusy = !isEditorReady || isRunning || isCreating || isSaving || isDeleting || isRunPending;
+
+  useWorkflowCommands(activeWorkflowId, isEditorReady, isBusy, {
+    save: (options) => saveWorkflow(undefined, options),
+    run: () => void startRun(),
+  });
 
   const validateCurrentWorkflow = () => {
     const { nodes, edges } = useWorkflowStore.getState();

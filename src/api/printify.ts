@@ -28,7 +28,11 @@ export type PrintifyCatalog = {
   positions: string[];
   usShippingFirstItem: number | null;
   usShippingAdditionalItem: number | null;
+  /** Each print area (`front`, `back`…) and its size in pixels; absent from servers older than this field. */
+  printAreas?: PrintifyPrintArea[];
 };
+
+export type PrintifyPrintArea = { position: string; width: number; height: number };
 
 export type PrintifyStage = "created" | "publishing" | "published" | "failed";
 
@@ -41,7 +45,8 @@ export type PrintifyDraft = {
   tags: string[];
   warnings: string[];
   designs: ShopDesign[];
-  mockups: { id: string; previewUrl: string; width: number; height: number }[];
+  // aiMade: made or edited with AI; a physical listing needs a photo besides such ones.
+  mockups: { id: string; previewUrl: string; width: number; height: number; aiMade?: boolean }[];
   video: { id: string; durationSeconds: number; thumbnailUrl: string | null } | null;
   defaults: {
     blueprintId: number | null;

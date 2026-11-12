@@ -7,7 +7,7 @@ import { type EtsyConnectionOutcome, startEtsyConnection } from "@/api/shop";
 /** postMessage type the callback page sends to the page that opened the connect popup. */
 export const ETSY_CONNECTION_MESSAGE = "apcs:etsy-connection";
 
-const outcomes: EtsyConnectionOutcome[] = ["connected", "denied", "expired", "no_shop", "failed"];
+const outcomes: EtsyConnectionOutcome[] = ["connected", "denied", "expired", "no_shop", "shop_taken", "failed"];
 
 const isOutcome = (value: unknown): value is EtsyConnectionOutcome =>
   typeof value === "string" && (outcomes as string[]).includes(value);

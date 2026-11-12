@@ -144,7 +144,6 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   const publishesToEtsy = useWorkflowStore((state) => state.nodes.some((node) => node.data.type === "publish-etsy"));
   const publishesToPrintify = useWorkflowStore((state) => state.nodes.some((node) => node.data.type === "publish-printify"));
   const connections = useShopConnections({ etsy: publishesToEtsy, printify: publishesToPrintify });
-  useVideoRunSync(hasBatchRun);
   useRunGroupSync(group?.workflowId === activeWorkflowId ? groupId : null);
 
   // A group waiting at Mockup Approval leaves the settings open: the scenes saved there are the ones it uses.
@@ -153,6 +152,9 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   // From the mock-ups being done to the batch video run being started (their import first): the Run goes on.
   const [isLaunchingVideo, setIsLaunchingVideo] = useState(false);
   const isRunning = batch.isBusy || video.isRunning || groupWorking || isStartingGroup || isLaunchingVideo;
+  // Mockup Approval is the step at work until the videos' runs exist: the mock-ups are imported, approved and the model
+  // photos made, with no node otherwise showing it.
+  useVideoRunSync(hasBatchRun, group?.preparing === true || isLaunchingVideo);
   useEffect(() => {
     setRunning(isRunning);
   }, [isRunning, setRunning]);

@@ -5,16 +5,18 @@ import { OptionSelect } from "@/components/workflows/config-panel/fields/option-
 import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
 import { readString } from "@/helpers/workflow-config";
 import { toProductOptions } from "@/helpers/workflow-panel";
+import { supportsBatchVideos } from "@/helpers/workflow-run";
 import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useWorkflowStore } from "@/stores/workflow";
 
 const FIELD_ID = "video-product";
 
-// The video's product, offered again where the video part starts. It is stored in Product input (the run
-// takes it from there when it starts), so both places show and change the same value.
+// The video's product, chosen where the video part starts. It is stored in Product input's config (the run takes
+// it from there when it starts), but a video workflow shows it only here.
 export const VideoProductSelect = () => {
   const input = useWorkflowStore((state) => state.nodes.find((node) => node.data.type === "product-input"));
   const isRunning = useWorkflowStore((state) => state.isRunning);
+  const batchVideos = useWorkflowStore((state) => supportsBatchVideos(state.nodes));
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const batchId = readString(input?.data.config.batchId);
   const { data: products, isPending, isError, refetch } = useBatchProducts(batchId);
@@ -41,7 +43,11 @@ export const VideoProductSelect = () => {
         <PanelNotice tone="warning">Choose a batch in Product input first.</PanelNotice>
       )}
       <p className="text-muted-foreground text-xs leading-relaxed">
-        {isRunning ? "The run in progress keeps this product." : "Shared with Product input: changing it here changes it there too."}
+        {isRunning
+          ? "The run in progress keeps this product."
+          : batchVideos
+            ? "Optional. Every design you approve here gets a video; you set the scenes up on this product's mock-ups."
+            : "These video settings make this product's video only."}
       </p>
     </div>
   );

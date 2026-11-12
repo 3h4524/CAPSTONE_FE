@@ -8,7 +8,7 @@ import {
   WORKFLOW_NODE_DEFINITIONS,
 } from "@/constants/workflow";
 import { getWorkflowNodeDefinition, normalizeNodeConfig, readString } from "@/helpers/workflow-config";
-import { findMissingMockupTemplates, isRunnableNode } from "@/helpers/workflow-run";
+import { findMissingMockupTemplates, isRunnableNode, supportsBatchVideos } from "@/helpers/workflow-run";
 import { nodeConfigSchemaIn } from "@/schemas/workflow";
 import type {
   WorkflowDefinition,
@@ -179,9 +179,12 @@ const validateVideoPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): Wo
   if (issues.length === 0 && edges.length !== nodes.length - 1)
     issues.push({ id: "video-extra-edges", nodeId: null, message: "A video runs its steps in one line. Remove the extra connections." });
 
+  // A scene list makes a video for every design chosen at Mockup Approval; other settings fit one product only.
   const input = nodes.find(node => node.data.type === "product-input");
-  if (input && !readString(input.data.config.productId))
-    issues.push({ id: `video-product-${input.id}`, nodeId: input.id, message: `${input.data.label}: Choose the product for the video.` });
+  // The product is stored in Product input but chosen at Mockup Approval, so the issue points there.
+  const approval = nodes.find(node => node.data.type === "approval-gate");
+  if (input && !readString(input.data.config.productId) && !supportsBatchVideos(nodes))
+    issues.push({ id: `video-product-${input.id}`, nodeId: approval?.id ?? input.id, message: "These video settings make one product's video. Choose it under Product for the video in Mockup Approval." });
   return issues;
 };
 

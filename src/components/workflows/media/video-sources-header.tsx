@@ -71,7 +71,7 @@ export const VideoSourcesHeader = () => {
             )
           }
         >
-          {`These are the mock-ups of the product chosen for the video in Product input. The open run made its mock-ups for ${otherJobProducts.map((product) => product.productName).join(", ")}${run ? ": choose that product in Product input and Run again to use them." : "."}`}
+          {`These are the mock-ups of the product chosen under Product for the video. The open run made its mock-ups for ${otherJobProducts.map((product) => product.productName).join(", ")}${run ? ": choose that product above and Run again to use them." : "."}`}
         </PanelNotice>
       )}
       <Button type="button" variant="outline" size="sm" className="w-full hover:translate-y-0" disabled={isPending} onClick={() => addGenerated(productId)}>

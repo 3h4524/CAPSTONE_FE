@@ -126,7 +126,9 @@ test("a batch job and a video run each show their own steps", async ({ page }) =
 
   await node(page, "design-approval").click({ position: { x: 4, y: 14 } });
   await expect(page.getByRole("heading", { name: "Review designs" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Approve all remaining (1)" })).toBeEnabled();
+  // The product already has its one approved design, so nothing is left for "Approve first designs".
+  await expect(page.getByRole("button", { name: "Approve first designs (0)" })).toBeDisabled();
+  await expect(page.getByText("1 design chosen")).toBeVisible();
   await page.screenshot({ path: ".next/workflow-ui-results/combined-run.png", fullPage: true });
 });
 

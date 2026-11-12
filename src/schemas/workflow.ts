@@ -140,7 +140,11 @@ export const designApprovalConfigSchema = z.object({
 });
 
 export const approvalGateConfigSchema = z.object({
-  mode: z.literal("manual"),
+  mode: z.enum(["manual", "auto"], { error: "Choose how mock-ups are approved." }),
+});
+
+export const reviewVideoConfigSchema = z.object({
+  mode: z.enum(["manual", "auto"], { error: "Choose how videos are approved." }),
 });
 
 export const applyMockupConfigSchema = z.object({
@@ -308,6 +312,9 @@ export const generateVideoConfigSchema = z
     aiStudioSourceMockupId: z.string().uuid().nullable().optional(),
     aiStudioFrameId: z.string().uuid().nullable().optional(),
     videoEdit: videoEditSchema,
+    // Before a batch run, some products' own Generate Video settings (product id to a whole config), each checked when
+    // it is edited (see `ProductScopeSelect`).
+    productConfigs: z.record(z.string().uuid(), z.record(z.string(), z.unknown())).optional(),
   })
   .superRefine((value, ctx) => {
     if (value.assetSelection === "manual" && value.selectedMockupIds.length === 0)
@@ -329,13 +336,9 @@ export const generateVideoConfigSchema = z
     if (value.aiScenes?.length) {
       if (value.aiScenes.length > 4)
         ctx.addIssue({ code: "custom", path: ["aiScenes"], message: "Use up to four scenes." });
+      // A scene may leave its image open: the run picks each design's own (its matching mock-up, its model photo for a
+      // scene with a person, else its main mock-up), so a scene list is set up once, before any mock-up exists.
       value.aiScenes.forEach((scene, index) => {
-        if (!scene.mockupId)
-          ctx.addIssue({
-            code: "custom",
-            path: ["aiScenes", index, "mockupId"],
-            message: `Choose an approved image for scene ${index + 1}.`,
-          });
         if (scene.mode === "ai" && (scene.durationSeconds < 4 || scene.durationSeconds > 15)) {
           ctx.addIssue({
             code: "custom",
@@ -370,22 +373,6 @@ export const generateVideoConfigSchema = z
             message: "Each scene must remain at least one second after trimming.",
           });
       });
-      if (
-        value.aiScenes.some(
-          (scene) =>
-            scene.mode === "ai" &&
-            ["lifestyle_in_use", "creator_pov_ugc", "everyday_story_moment"].includes(
-              scene.templateCode
-            ) &&
-            !scene.rightsConfirmed
-        )
-      ) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["aiScenes"],
-          message: "Confirm image rights for every scene featuring a person.",
-        });
-      }
       return;
     }
     if (!value.aiShotOptions) {
@@ -407,15 +394,6 @@ export const generateVideoConfigSchema = z
         code: "custom",
         path: ["durationSeconds"],
         message: "Mixed AI and Standard video needs 12–15 seconds.",
-      });
-    if (
-      ["lifestyle_motion", "product_in_use"].includes(value.aiShotOptions.concept) &&
-      !value.aiShotOptions.rightsConfirmed
-    )
-      ctx.addIssue({
-        code: "custom",
-        path: ["aiShotOptions", "rightsConfirmed"],
-        message: "Confirm image rights for the people shown, with a parent's or guardian's consent for anyone under 18.",
       });
   });
 
@@ -551,7 +529,7 @@ export const workflowNodeConfigSchemas: Record<
   "apply-mockup": applyMockupConfigSchema,
   "approval-gate": approvalGateConfigSchema,
   "generate-video": generateVideoConfigSchema,
-  "review-video": z.object({}),
+  "review-video": reviewVideoConfigSchema,
   "generate-listing": generateListingConfigSchema,
   "export-zip": exportZipConfigSchema,
   "publish-etsy": publishEtsyConfigSchema,

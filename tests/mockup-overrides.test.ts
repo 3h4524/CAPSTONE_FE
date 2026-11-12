@@ -44,7 +44,7 @@ test("the background and position are copied and each mock-up keeps its garment 
   const spread = spreadMockupChange(change, mockupsInScope(all, edited, tee, "template"), templatesById);
 
   assert.deepEqual(spread.map((item) => item.slotKey), ["slot-grey-tee", "slot-red-tee"]);
-  assert.deepEqual(spread[0]?.override, { mockupTemplateId: tee, garmentColor: grey, backgroundColor: "#EDE6DA", printArea: change.printArea });
+  assert.deepEqual(spread[0]?.override, { mockupTemplateId: tee, garmentColor: grey, backgroundColor: "#EDE6DA", printArea: change.printArea, areas: null });
   assert.equal(spread[1]?.override.garmentColor, "#B22222");
   assert.equal(spread[1]?.replacedMockupImageId, "red-tee");
 });

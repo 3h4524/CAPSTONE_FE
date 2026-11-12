@@ -48,7 +48,7 @@ const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
     aiStudioMode: "direct",
     aiStudioLayout: "hanging_window",
   },
-  "review-video": {},
+  "review-video": { mode: "manual" },
   "generate-listing": { model: "gpt-4o", tone: "friendly", includeSeoScore: true },
   "export-zip": {},
   "publish-etsy": {
@@ -77,7 +77,7 @@ const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
 };
 
 // These node types declare no field of their own, so an empty config is already valid for them.
-const OPTIONLESS_NODE_TYPES: WorkflowNodeType[] = ["export-zip", "review-video"];
+const OPTIONLESS_NODE_TYPES: WorkflowNodeType[] = ["export-zip"];
 
 const omitKey = <T extends object, K extends keyof T>(source: T, key: K): Omit<T, K> => {
   const { [key]: _omitted, ...rest } = source;
@@ -325,14 +325,14 @@ describe("designApprovalConfigSchema", () => {
 });
 
 describe("approvalGateConfigSchema", () => {
-  it("accepts the manual mode", () => {
-    const result = approvalGateConfigSchema.safeParse({ mode: "manual" });
+  it.each(["manual", "auto"])("accepts the %s mode", (mode) => {
+    const result = approvalGateConfigSchema.safeParse({ mode });
 
     expect(result.success).toBe(true);
-    expect(result.success && result.data.mode).toBe("manual");
+    expect(result.success && result.data.mode).toBe(mode);
   });
 
-  it.each(["review", "", "Manual", "auto", 1])("rejects %j as a mode", (mode) => {
+  it.each(["review", "", "Manual", "AUTO", 1])("rejects %j as a mode", (mode) => {
     const result = approvalGateConfigSchema.safeParse({ mode });
 
     expectIssue(result, "mode");
@@ -539,6 +539,17 @@ describe("generateVideoConfigSchema", () => {
     expect(parsed.success && parsed.data.aiScenes?.[0]?.aiStartFrameCrop).toEqual(crop);
     const invalid = generateVideoConfigSchema.safeParse({ ...config, aiScenes: [{ ...scene, aiStartFrameCrop: { ...crop, x: 0.8 } }] });
     expect(invalid.success).toBe(false);
+  });
+
+  it("accepts an AI scene with no image chosen, since the run picks each design's own", () => {
+    const scene = {
+      mode: "ai", mockupId: null, templateCode: "lifestyle_in_use",
+      durationSeconds: 5, framing: "medium", cameraAngle: "three_quarter", cameraMovement: "push_in",
+      subjectMotion: "none", motionIntensity: "subtle", lighting: "soft_studio", extraInstructions: null,
+      rightsConfirmed: false,
+    };
+
+    expect(generateVideoConfigSchema.safeParse({ ...valid, mode: "ai_shot", durationSeconds: 5, aiScenes: [scene] }).success).toBe(true);
   });
 
   it("requires the ai shot scene settings when the mode is ai_shot", () => {

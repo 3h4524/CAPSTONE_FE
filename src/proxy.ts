@@ -13,7 +13,13 @@ const PUBLIC_PATHS = new Set([
   "/twitter-image",
 ]);
 
-const GUEST_ONLY_PATHS = new Set(["/login", "/register"]);
+const GUEST_ONLY_PATHS = new Set([
+  "/login",
+  "/register",
+  "/features",
+  "/forgot-password",
+  "/reset-password",
+]);
 
 // Optimistic cookie-presence check only; the client guards remain authoritative and still
 // run the silent-refresh flow. A present-but-expired refresh cookie just falls through here.

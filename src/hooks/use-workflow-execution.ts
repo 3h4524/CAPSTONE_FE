@@ -14,7 +14,7 @@ import { confirmRunCost, takeRunAiBudget } from "@/helpers/run-cost";
 import { publishConnectionIssue } from "@/helpers/shop-connections";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
-import { hasBatchSteps, hasListingSteps, hasVideoSteps, supportsBatchVideos } from "@/helpers/workflow-run";
+import { extractMockupSelection, hasBatchSteps, hasListingSteps, hasVideoSteps, supportsBatchVideos } from "@/helpers/workflow-run";
 import { useCancelRunGroup, useStartRunGroup } from "@/hooks/mutations/use-run-group-actions";
 import { ACTIVE_RUN_GROUP_STATUSES, useRunGroup } from "@/hooks/queries/use-run-group";
 import { useShopConnections } from "@/hooks/queries/use-shop-connections";
@@ -357,11 +357,18 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   const continueRun = async ({ stage, batchJobId, runGroupId, runId, workflowId }: WorkflowCommand) => {
     const query = new URLSearchParams(window.location.search);
     if ((stage === "design_approval" || stage === "designs_ready") && batchJobId) {
+      const mockupNode = findNode("apply-mockup");
+      if (!mockupNode || extractMockupSelection(mockupNode.data.config).templateIds.length === 0) {
+        showWorkflowActionToast("warning", "Choose mock-up templates in the Apply mock-up node first.");
+        if (mockupNode) selectNode(mockupNode.id);
+        return;
+      }
       if (query.get(BATCH_JOB_PARAM) !== batchJobId) {
         query.set(BATCH_JOB_PARAM, batchJobId);
         if (hasVideoSteps(useWorkflowStore.getState().nodes)) query.set(NEXT_PART_PARAM, "video");
         router.replace(`/workflows?${query.toString()}`, { scroll: false });
       }
+      if (useWorkflowRunStore.getState().batchJobId !== batchJobId) useWorkflowRunStore.getState().attach(workflowId, batchJobId);
       await applySelectionAndGenerateMockups(batchJobId, queryClient);
       return;
     }

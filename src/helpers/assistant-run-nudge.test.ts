@@ -33,6 +33,7 @@ describe("getAssistantRunNudge", () => {
   it.each([
     ["design_approval", 2, "Designs of 2 products are waiting for your approval"],
     ["designs_ready", null, "Designs are ready for the next step"],
+    ["mockups_ready", null, "Mock-ups are ready for the video part"],
     ["mockup_approval", 5, "Mock-ups are waiting for your approval"],
     ["video_review", 1, "1 video waiting for your review"],
     ["video", 1, "Your run needs your input"],

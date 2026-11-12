@@ -53,11 +53,20 @@ describe("AssistantWorkflowCommandCard", () => {
     expect(screen.getByText("Paid steps show their cost for you to confirm first.")).toBeInTheDocument();
   });
 
-  it("shows the warnings the backend found", () => {
-    openWorkflow(false);
+  it("shows the backend's warnings while the workflow is not open", () => {
+    useWorkflowStore.setState({ workflowId: "other" });
+    usePathname.mockReturnValue("/dashboard");
     render("run", "idle", ["Connect Product input to Design image."]);
 
     expect(screen.getByText("Connect Product input to Design image.")).toBeInTheDocument();
+  });
+
+  it("checks the open canvas again instead of showing the backend's warnings from before the changes", () => {
+    openWorkflow(false);
+    render("run", "idle", ["Add a Listing Content or Generate Video node before running the workflow."]);
+
+    expect(screen.queryByText("Add a Listing Content or Generate Video node before running the workflow.")).not.toBeInTheDocument();
+    expect(screen.getByText("Add a Product input node to start the workflow.")).toBeInTheDocument();
   });
 
   it("is disabled until the workflow is open", () => {

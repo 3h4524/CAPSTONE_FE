@@ -7,6 +7,7 @@ const waitingLabel = (progress: AssistantRunProgress) => {
   const count = progress.waitingCount ?? 0;
   if (progress.stage === "design_approval") return `Designs of ${plural(count, "product")} are waiting for your approval`;
   if (progress.stage === "designs_ready") return "Designs are ready for the next step";
+  if (progress.stage === "mockups_ready") return "Mock-ups are ready for the video part";
   if (progress.stage === "mockup_approval") return "Mock-ups are waiting for your approval";
   if (progress.stage === "video_review") return `${plural(count, "video")} waiting for your review`;
   return "Your run needs your input";

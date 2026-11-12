@@ -56,9 +56,9 @@ export type AssistantContinueRunPayload = {
   workflowName: string;
   stage: string;
   label: string;
-  batchJobId: string | null;
-  runGroupId: string | null;
-  runId: string | null;
+  batchJobId?: string | null;
+  runGroupId?: string | null;
+  runId?: string | null;
 };
 
 export type AssistantClientAction =

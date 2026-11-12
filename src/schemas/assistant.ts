@@ -63,9 +63,9 @@ const continueRunPayloadSchema = z.object({
   workflowName: z.string(),
   stage: z.string(),
   label: z.string(),
-  batchJobId: z.string().nullable(),
-  runGroupId: z.string().nullable(),
-  runId: z.string().nullable(),
+  batchJobId: z.string().nullish(),
+  runGroupId: z.string().nullish(),
+  runId: z.string().nullish(),
 });
 
 const pendingActionStatusSchema = z.enum(["pending", "executing", "executed", "rejected", "expired", "failed"]);

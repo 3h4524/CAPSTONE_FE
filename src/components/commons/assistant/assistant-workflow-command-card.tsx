@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { AssistantChip } from "@/components/commons/assistant/assistant-chip";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { validateWorkflow } from "@/helpers/workflow-graph";
 import { useSettleAssistantClientAction } from "@/hooks/use-settle-assistant-client-action";
 import { useAssistantStore } from "@/stores/assistant";
 import { useAssistantRunNudgeStore } from "@/stores/assistant-run-nudge";
@@ -30,6 +31,8 @@ const STATE_TEXT: Record<WorkflowCommandKind, Record<AssistantClientActionDecisi
   continue: { applied: "Continue requested", dismissed: "Dismissed" },
 };
 
+const MAX_LIVE_WARNINGS = 2;
+
 const TITLE: Record<WorkflowCommandKind, string> = { run: "Run workflow", save: "Save workflow", continue: "Continue run" };
 
 export const AssistantWorkflowCommandCard = ({
@@ -50,7 +53,15 @@ export const AssistantWorkflowCommandCard = ({
   const watchRun = useAssistantRunNudgeStore((store) => store.watch);
   const settleClientAction = useSettleAssistantClientAction();
   const isStreaming = useAssistantStore((store) => store.streamingMessageId !== null);
+  const nodes = useWorkflowStore((store) => store.nodes);
+  const edges = useWorkflowStore((store) => store.edges);
   const isOpen = pathname === "/workflows" && openWorkflowId === workflowId;
+  const shownWarnings =
+    kind === "run" && isOpen
+      ? validateWorkflow(nodes, edges)
+          .slice(0, MAX_LIVE_WARNINGS)
+          .map((issue) => issue.message)
+      : warnings;
   const canAct = isOpen && !isStreaming && (kind !== "save" || isDirty);
   const buttonLabel = kind === "save" ? "Save" : kind === "continue" ? continueLabel : isDirty ? "Save and run" : "Run workflow";
 
@@ -70,7 +81,7 @@ export const AssistantWorkflowCommandCard = ({
         {kind !== "save" ? (
           <p className="bg-ink-50 text-ink-600 rounded-md px-2 py-1 text-xs">Paid steps show their cost for you to confirm first.</p>
         ) : null}
-        {warnings.map((warning) => (
+        {shownWarnings.map((warning) => (
           <p key={warning} className="rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
             {warning}
           </p>

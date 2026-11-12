@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ZodSafeParseResult } from "zod";
 
-import { LANGUAGE_VALUES, THEME_VALUES, TIMEZONES } from "@/constants/profile";
 import { profileSchema } from "@/schemas/profile";
 
 const validProfile = {
@@ -9,12 +8,6 @@ const validProfile = {
   email: "seller@apcs.test",
   shopName: "APCS Studio",
   shopDescription: "Print on demand shop",
-  timezone: "Asia/Ho_Chi_Minh",
-  language: "vi",
-  themePreference: "system",
-  notificationEmailEnabled: true,
-  newsletterSubscribed: false,
-  twoFactorEnabled: true,
 };
 
 const omitKey = <T extends object, K extends keyof T>(source: T, key: K): Omit<T, K> => {
@@ -32,18 +25,7 @@ const expectIssue = (result: ZodSafeParseResult<unknown>, path: string, message?
   if (message !== undefined) expect(matched.map((issue) => issue.message)).toContain(message);
 };
 
-const requiredFields = [
-  "fullName",
-  "email",
-  "shopName",
-  "shopDescription",
-  "timezone",
-  "language",
-  "themePreference",
-  "notificationEmailEnabled",
-  "newsletterSubscribed",
-  "twoFactorEnabled",
-] as const;
+const requiredFields = ["fullName", "email", "shopName", "shopDescription"] as const;
 
 describe("profileSchema", () => {
   it("accepts a fully populated profile and returns every field untouched", () => {
@@ -145,58 +127,6 @@ describe("profileSchema", () => {
     const result = profileSchema.safeParse({ ...validProfile, email: `${"a".repeat(250)}@b.co` });
 
     expectIssue(result, "email", "Email is too long");
-  });
-
-  it.each(TIMEZONES.map((value) => ({ value })))("accepts the timezone $value", ({ value }) => {
-    const result = profileSchema.safeParse({ ...validProfile, timezone: value });
-
-    expect(result.success).toBe(true);
-    expect(result.success && result.data.timezone).toBe(value);
-  });
-
-  it.each(["Mars/Olympus", "", "asia/ho_chi_minh", "Asia/Ho Chi Minh"])(
-    "rejects %j as a timezone",
-    (timezone) => {
-      const result = profileSchema.safeParse({ ...validProfile, timezone });
-
-      expectIssue(result, "timezone", "Timezone is not supported");
-    }
-  );
-
-  it.each(LANGUAGE_VALUES.map((value) => ({ value })))("accepts the language $value", ({ value }) => {
-    const result = profileSchema.safeParse({ ...validProfile, language: value });
-
-    expect(result.success).toBe(true);
-    expect(result.success && result.data.language).toBe(value);
-  });
-
-  it.each(["fr", "", "EN", "english"])("rejects %j as a language", (language) => {
-    const result = profileSchema.safeParse({ ...validProfile, language });
-
-    expectIssue(result, "language", "Language is not supported");
-  });
-
-  it.each(THEME_VALUES.map((value) => ({ value })))("accepts the theme $value", ({ value }) => {
-    const result = profileSchema.safeParse({ ...validProfile, themePreference: value });
-
-    expect(result.success).toBe(true);
-    expect(result.success && result.data.themePreference).toBe(value);
-  });
-
-  it.each(["neon", "", "Dark", "auto"])("rejects %j as a theme preference", (themePreference) => {
-    const result = profileSchema.safeParse({ ...validProfile, themePreference });
-
-    expectIssue(result, "themePreference", "Theme preference is not supported");
-  });
-
-  it.each([
-    "notificationEmailEnabled",
-    "newsletterSubscribed",
-    "twoFactorEnabled",
-  ] as const)("rejects a string for the boolean %s", (field) => {
-    const result = profileSchema.safeParse({ ...validProfile, [field]: "true" });
-
-    expectIssue(result, field);
   });
 
   it.each([

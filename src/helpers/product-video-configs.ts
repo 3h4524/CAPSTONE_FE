@@ -44,7 +44,7 @@ const canonical = (value: unknown): unknown =>
       ? Object.fromEntries(
           Object.keys(value)
             .filter((key) => value[key] !== undefined)
-            .sort()
+            .sort((left, right) => left.localeCompare(right))
             .map((key) => [key, canonical(value[key])])
         )
       : value;

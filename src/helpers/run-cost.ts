@@ -19,7 +19,7 @@ export const takeRunAiBudget = (workflowId: string): number | undefined => {
   try {
     const stored = sessionStorage.getItem(budgetKey(workflowId));
     sessionStorage.removeItem(budgetKey(workflowId));
-    const amount = stored === null ? NaN : Number(stored);
+    const amount = stored === null ? Number.NaN : Number(stored);
     return Number.isFinite(amount) && amount > 0 ? amount : undefined;
   } catch {
     return undefined;

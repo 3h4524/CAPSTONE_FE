@@ -38,7 +38,7 @@ const importAll = async (productId: string) => {
 export const useSyncGeneratedMockups = (groupId: string, productIds: string[]) => {
   const client = useAppQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
-  const key = [...new Set(productIds)].sort().join(",");
+  const key = [...new Set(productIds)].sort((left, right) => left.localeCompare(right)).join(",");
   const synced = useRef<string | null>(null);
 
   useEffect(() => {

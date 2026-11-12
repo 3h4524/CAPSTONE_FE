@@ -9,6 +9,14 @@ import tseslint from "typescript-eslint";
 import js from "@eslint/js";
 import nextPlugin from "@next/eslint-plugin-next";
 
+// Dark mode: light-mode-only neutrals (slate/gray/white) stay light when the theme flips.
+// Use the adaptive tokens instead: ink-50…900, card, background, foreground, muted, border.
+// Classes behind a `dark:` variant, translucent white overlays (bg-white/10) and the dark half of
+// the scale (always-dark islands such as video players) are allowed.
+const HARDCODED_NEUTRAL = String.raw`(^|\s)((?!dark:)[a-z0-9_\-\[\]&@*>.=]+:)*(text-(slate|gray|zinc|neutral|stone)-(300|400|500|600|700|800|900|950)|(bg|border|border-[trblxy]|divide|ring|from|via|to)-(slate|gray|zinc|neutral|stone)-(50|100|200|300|400)|bg-white(?=\s|$|\x2F[5-9]\d))(?![\w-])`;
+const HARDCODED_NEUTRAL_MESSAGE =
+  "Hard-coded light neutral breaks dark mode. Use ink-* / bg-card / text-foreground tokens (see src/styles/globals.css).";
+
 export default tseslint.config(
   {
     ignores: [
@@ -111,6 +119,24 @@ export default tseslint.config(
       "tailwindcss/no-contradicting-classname": "error",
       "tailwindcss/no-custom-classname": "off",
       "tailwindcss/no-unnecessary-arbitrary-value": "warn",
+    },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "**/*.test.{ts,tsx}",
+      // Always-dark surfaces (video players, dark insight panel) intentionally use fixed slate.
+      "src/components/dashboard/growth-insights.tsx",
+      "src/components/workflows/media/storyboard-player.tsx",
+      "src/components/workflows/media/preloaded-video.tsx",
+      "src/components/workflows/media/video-preview-frame.tsx",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        { selector: `Literal[value=/${HARDCODED_NEUTRAL}/]`, message: HARDCODED_NEUTRAL_MESSAGE },
+        { selector: `TemplateElement[value.raw=/${HARDCODED_NEUTRAL}/]`, message: HARDCODED_NEUTRAL_MESSAGE },
+      ],
     },
   },
   // Playwright keeps shared helpers in e2e/support/ and the specs in per-project folders, so a spec

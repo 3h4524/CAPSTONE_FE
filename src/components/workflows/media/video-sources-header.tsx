@@ -62,7 +62,7 @@ export const VideoSourcesHeader = () => {
               <div className="flex flex-wrap gap-2">
                 {otherJobProducts.map((product) =>
                   product.productId ? (
-                    <Button key={product.id} type="button" size="sm" variant="outline" className="h-7 bg-white px-3 text-xs hover:translate-y-0" disabled={isPending} onClick={() => chooseForVideo(product.productId!, product.productName)}>
+                    <Button key={product.id} type="button" size="sm" variant="outline" className="bg-card h-7 px-3 text-xs hover:translate-y-0" disabled={isPending} onClick={() => chooseForVideo(product.productId!, product.productName)}>
                       {`Use ${product.productName} for the video`}
                     </Button>
                   ) : null

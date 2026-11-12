@@ -31,7 +31,7 @@ export const FormResetPassword = () => {
   if (!token) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-red-600 dark:text-red-400">
           This link is missing its reset token. Request a new one to continue.
         </p>
         <Link href="/forgot-password" className="text-primary text-sm font-medium hover:underline">
@@ -75,7 +75,7 @@ export const FormResetPassword = () => {
 
         {isError && (
           <div className="space-y-1">
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm text-red-600 dark:text-red-400" role="alert">
               {getErrorMessage(error, "This link is invalid or expired.")}
             </p>
             <Link href="/forgot-password" className="text-primary text-sm font-medium hover:underline">

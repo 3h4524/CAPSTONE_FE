@@ -53,6 +53,19 @@ const collectReachable = (startIds: string[], adjacency: Map<string, string[]>) 
   return visited;
 };
 
+/** What an Apply mock-up node's mock-ups are for: export only, or a Printify product. */
+export type MockupTarget = "zip" | "printify";
+
+/** Whether a Push to Printify step follows this node, so its mock-ups must show the Printify product. */
+export const hasPrintifyDownstream = (nodeId: string, nodes: WorkflowNode[], edges: WorkflowEdge[]) => {
+  const reachable = collectReachable([nodeId], buildAdjacency(edges, "forward"));
+  return nodes.some((node) => node.id !== nodeId && node.data.type === "publish-printify" && reachable.has(node.id));
+};
+
+/** The node's own choice, except that a Push to Printify step after it always makes it "printify". */
+export const effectiveMockupTarget = (node: WorkflowNode, nodes: WorkflowNode[], edges: WorkflowEdge[]): MockupTarget =>
+  node.data.config.mockupTarget === "printify" || hasPrintifyDownstream(node.id, nodes, edges) ? "printify" : "zip";
+
 export const getConnectionIssue = (
   connection: Connection | WorkflowEdge,
   edges: WorkflowEdge[],
@@ -209,6 +222,13 @@ export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
     if (!parsed.success) {
       const [firstIssue] = parsed.error.issues;
       issues.push({ id: `config-${node.id}`, nodeId: node.id, message: `${node.data.label}: ${firstIssue?.message ?? "check its settings."}` });
+    }
+
+    // A Printify product is made on one blueprint, so its mock-ups come from exactly one Printify template.
+    if (node.data.type === "apply-mockup" && effectiveMockupTarget(node, nodes, edges) === "printify") {
+      const chosen = Array.isArray(node.data.config.mockupTemplateIds) ? node.data.config.mockupTemplateIds.length : 0;
+      if (chosen !== 1)
+        issues.push({ id: `printify-template-${node.id}`, nodeId: node.id, message: `${node.data.label}: choose exactly one Printify template.` });
     }
 
     if (APPROVAL_REQUIRED_TYPES.includes(node.data.type) && !hasApprovalUpstream(node, nodes, edges)) {

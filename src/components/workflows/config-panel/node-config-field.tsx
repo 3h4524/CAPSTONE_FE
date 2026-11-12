@@ -110,7 +110,7 @@ export const NodeConfigField = ({ field, control, videoMode }: NodeConfigFieldPr
               <FormControl>
                 <Textarea
                   rows={3}
-                  className="min-h-20 resize-y bg-white"
+                  className="bg-card min-h-20 resize-y"
                   placeholder={field.placeholder}
                   value={text}
                   onChange={controller.onChange}
@@ -181,6 +181,7 @@ export const NodeConfigField = ({ field, control, videoMode }: NodeConfigFieldPr
               <MockupSelectionField
                 templateColorsName={field.templateColorsName}
                 templateBackgroundsName={field.templateBackgroundsName}
+                targetName={field.targetName}
                 value={readStringArray(controller.value)}
                 onChange={controller.onChange}
               />

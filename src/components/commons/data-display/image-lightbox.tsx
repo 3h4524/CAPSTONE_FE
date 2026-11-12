@@ -40,16 +40,37 @@ export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxPro
         </div>
         {image && (
           <>
-            <div className="relative flex min-h-60 items-center justify-center overflow-hidden rounded-md bg-slate-100">
-              <Image
-                key={image.id}
-                src={image.url}
-                alt={image.alt}
-                width={image.width ?? 1200}
-                height={image.height ?? 1200}
-                unoptimized
-                className="h-auto max-h-[78vh] w-auto max-w-full object-contain"
-              />
+            <div
+              className="bg-ink-100 relative flex min-h-60 items-center justify-center overflow-hidden rounded-md"
+              style={image.backdrop ? { backgroundColor: image.backdrop } : undefined}
+            >
+              {/* Sized by the picture, so a tint laid over it covers exactly the photo. */}
+              <span className="relative inline-flex max-w-full">
+                <Image
+                  key={image.id}
+                  src={image.url}
+                  alt={image.alt}
+                  width={image.width ?? 1200}
+                  height={image.height ?? 1200}
+                  unoptimized
+                  className="h-auto max-h-[78vh] w-auto max-w-full object-contain"
+                />
+                {image.tint && (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 mix-blend-multiply"
+                    style={{
+                      backgroundColor: image.tint.color,
+                      maskImage: `url(${image.tint.maskUrl})`,
+                      WebkitMaskImage: `url(${image.tint.maskUrl})`,
+                      maskSize: "100% 100%",
+                      WebkitMaskSize: "100% 100%",
+                      maskRepeat: "no-repeat",
+                      WebkitMaskRepeat: "no-repeat",
+                    }}
+                  />
+                )}
+              </span>
               {images.length > 1 && (
                 <>
                   <Button
@@ -59,7 +80,7 @@ export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxPro
                     aria-label="Previous image"
                     disabled={!hasPrevious}
                     onClick={() => onIndexChange(position - 1)}
-                    className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-white/90 shadow-sm hover:-translate-y-1/2"
+                    className="bg-card/90 absolute top-1/2 left-3 -translate-y-1/2 rounded-full shadow-sm hover:-translate-y-1/2"
                   >
                     <ChevronLeft aria-hidden="true" />
                   </Button>
@@ -70,7 +91,7 @@ export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxPro
                     aria-label="Next image"
                     disabled={!hasNext}
                     onClick={() => onIndexChange(position + 1)}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-white/90 shadow-sm hover:-translate-y-1/2"
+                    className="bg-card/90 absolute top-1/2 right-3 -translate-y-1/2 rounded-full shadow-sm hover:-translate-y-1/2"
                   >
                     <ChevronRight aria-hidden="true" />
                   </Button>

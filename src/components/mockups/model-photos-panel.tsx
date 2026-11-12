@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Sparkles, UserRound } from "lucide-react";
+import { ChevronDown, Plus, Sparkles, UserRound } from "lucide-react";
 
 import type { ModelPhotoScope } from "@/api/model-photos";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { GenerateModelPhotoDialog } from "@/components/mockups/generate-model-photo-dialog";
+import { MockupCardGrid } from "@/components/mockups/mockup-card-grid";
 import { MockupTemplateListItem } from "@/components/mockups/mockup-template-list-item";
 import {
   filterBySource,
@@ -19,6 +20,7 @@ import { useDeleteModelPhoto } from "@/hooks/mutations/use-model-photo-mutations
 import { useModelPhotos } from "@/hooks/queries/use-model-photos";
 import { usePopupStore } from "@/stores/popup";
 import type { MockupTemplate, ModelPhotoFilter } from "@/types/mockup-templates";
+import { cn } from "@/utils/cn";
 
 /**
  * The model photos one can manage: a seller's own (beside the shared library, which they can only use), or the
@@ -32,6 +34,9 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
   // Whose photos to show; only a seller has both the shared and their own.
   const [source, setSource] = useState<PhotoSource | null>(null);
   const filtered = Object.keys(filter).length > 0 || source !== null;
+  const activeFilterCount = Object.keys(filter).length + (source === null ? 0 : 1);
+  // The chips fill a phone's screen, so they open on request.
+  const [areFiltersOpen, setAreFiltersOpen] = useState(false);
   const {
     data: allPhotos,
     isPending,
@@ -64,30 +69,40 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
     });
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 max-md:gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted-foreground max-w-2xl text-sm">
+        <p className="text-muted-foreground max-w-2xl text-sm max-md:hidden">
           {scope === "admin"
             ? "Photos of people every seller can put their mock-ups on. Use a person facing the camera in a plain white or light garment."
             : "Photos of people your mock-ups are put on, without AI: the garment takes the mock-up’s color and design. The shared photos are listed too."}
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 max-md:grid max-md:w-full max-md:grid-cols-2">
           <Button
             type="button"
             variant="outline"
+            className="max-md:px-2"
             onClick={() => setGenerating(true)}
             disabled={isDeleting}
           >
             <Sparkles aria-hidden="true" />
             Make with AI
           </Button>
-          <Button type="button" onClick={openCreate} disabled={isDeleting}>
+          <Button type="button" className="max-md:px-2" onClick={openCreate} disabled={isDeleting}>
             <Plus aria-hidden="true" />
             New model photo
           </Button>
         </div>
       </div>
-      <div className="flex flex-wrap gap-x-6 gap-y-3">
+      <button
+        type="button"
+        aria-expanded={areFiltersOpen}
+        onClick={() => setAreFiltersOpen((open) => !open)}
+        className="border-ink-200 bg-card text-ink-800 flex min-h-11 items-center justify-between rounded-xl border px-4 text-sm font-semibold md:hidden"
+      >
+        {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : "Filters"}
+        <ChevronDown className={cn("text-ink-400 size-4 transition-transform", areFiltersOpen && "rotate-180")} aria-hidden="true" />
+      </button>
+      <div className={cn("flex flex-wrap gap-x-6 gap-y-3", !areFiltersOpen && "max-md:hidden")}>
         {scope === "seller" && <PhotoSourceFilter value={source} onChange={setSource} />}
         <ModelPhotoFilterBar value={filter} onChange={setFilter} />
       </div>
@@ -95,12 +110,12 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
         <SectionLoading label="Loading model photos" />
       ) : isError || !photos ? (
         <div
-          className="flex flex-col items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white p-8 text-center"
+          className="border-ink-200 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border p-8 text-center"
           role="alert"
         >
-          <UserRound className="size-8 text-slate-400" aria-hidden="true" />
+          <UserRound className="text-ink-400 size-8" aria-hidden="true" />
           <div>
-            <p className="font-semibold text-slate-900">Model photos unavailable</p>
+            <p className="text-ink-900 font-semibold">Model photos unavailable</p>
             <p className="text-muted-foreground mt-1 text-sm">
               We could not load the model photos. Check your connection and try again.
             </p>
@@ -110,8 +125,8 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
           </Button>
         </div>
       ) : photos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
-          <p className="font-semibold text-slate-900">
+        <div className="border-ink-300 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed p-8 text-center">
+          <p className="text-ink-900 font-semibold">
             {filtered ? "No model photos of these people" : "No model photos yet"}
           </p>
           <p className="text-muted-foreground text-sm">
@@ -130,8 +145,12 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {photos.map((photo) => (
+        <MockupCardGrid
+          key={JSON.stringify({ filter, source })}
+          items={photos}
+          pagerLabel="Model photo pages"
+          className={cn(scope === "seller" && "xl:grid-cols-4")}
+          renderItem={(photo) => (
             <MockupTemplateListItem
               key={photo.id}
               template={photo}
@@ -140,8 +159,8 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
               onEdit={openEdit}
               onDelete={askDelete}
             />
-          ))}
-        </div>
+          )}
+        />
       )}
       <ModelPhotoFormDialog
         open={dialogOpen}

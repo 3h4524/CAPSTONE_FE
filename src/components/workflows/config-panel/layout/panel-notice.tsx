@@ -6,11 +6,11 @@ import { cn } from "@/utils/cn";
 type PanelNoticeTone = "neutral" | "info" | "success" | "warning" | "error";
 
 const TONES: Record<PanelNoticeTone, { className: string; Icon: typeof Info }> = {
-  neutral: { className: "bg-slate-100/80 text-slate-700", Icon: Info },
-  info: { className: "bg-sky-50 text-sky-900", Icon: Info },
-  success: { className: "bg-emerald-50 text-emerald-900", Icon: CheckCircle2 },
-  warning: { className: "bg-amber-50 text-amber-900", Icon: AlertTriangle },
-  error: { className: "bg-rose-50 text-rose-900", Icon: XCircle },
+  neutral: { className: "bg-ink-100/80 text-ink-700", Icon: Info },
+  info: { className: "bg-sky-50 dark:bg-sky-500/10 text-sky-900 dark:text-sky-300", Icon: Info },
+  success: { className: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-900 dark:text-emerald-300", Icon: CheckCircle2 },
+  warning: { className: "bg-amber-50 dark:bg-amber-500/10 text-amber-900 dark:text-amber-300", Icon: AlertTriangle },
+  error: { className: "bg-rose-50 dark:bg-rose-500/10 text-rose-900 dark:text-rose-300", Icon: XCircle },
 };
 
 type PanelNoticeProps = {

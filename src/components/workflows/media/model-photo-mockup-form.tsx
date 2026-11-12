@@ -81,7 +81,7 @@ export const ModelPhotoMockupForm = ({
     >
       <AccordionItem value="model-photo">
         <AccordionTrigger className="py-2.5 hover:no-underline">
-          <span className="text-sm font-medium text-slate-900">Put on a model photo (no AI)</span>
+          <span className="text-ink-900 text-sm font-medium">Put on a model photo (no AI)</span>
         </AccordionTrigger>
         <AccordionContent>
           {isAdding && (
@@ -206,7 +206,7 @@ const ModelPhotoMockupFields = ({
           onValueChange={(value) => value && setGarmentMockupId(value)}
           disabled={isPending}
         >
-          <SelectTrigger id="model-photo-source" className="w-full bg-white">
+          <SelectTrigger id="model-photo-source" className="bg-card w-full">
             <SelectValue placeholder="Choose a mockup" />
           </SelectTrigger>
           <SelectContent>
@@ -224,7 +224,7 @@ const ModelPhotoMockupFields = ({
       </div>
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-medium text-slate-900">Model photo</p>
+          <p className="text-ink-900 text-sm font-medium">Model photo</p>
           <Button
             type="button"
             variant="ghost"
@@ -244,7 +244,7 @@ const ModelPhotoMockupFields = ({
         {isLoadingPhotos ? (
           <p className="text-muted-foreground text-xs">Loading model photos…</p>
         ) : isError ? (
-          <p role="alert" className="text-xs text-red-600">
+          <p role="alert" className="text-xs text-red-600 dark:text-red-400">
             Model photos could not be loaded.
           </p>
         ) : usable.length === 0 && (Object.keys(filter).length > 0 || source !== null) ? (
@@ -281,10 +281,10 @@ const ModelPhotoMockupFields = ({
                 disabled={isPending}
                 onClick={() => setModelPhotoId(photo.id)}
                 className={cn(
-                  "relative overflow-hidden rounded-md border bg-slate-50 text-left transition-shadow",
+                  "bg-ink-50 relative overflow-hidden rounded-md border text-left transition-shadow",
                   modelPhotoId === photo.id
                     ? "border-primary ring-primary/25 ring-2"
-                    : "hover:border-slate-400"
+                    : "hover:border-ink-400"
                 )}
               >
                 <Image
@@ -296,12 +296,12 @@ const ModelPhotoMockupFields = ({
                   className="aspect-4/5 w-full object-cover"
                 />
                 <PhotoSourceTag system={photo.isSystemTemplate} className="absolute top-1 left-1" />
-                <span className="block truncate px-1.5 py-1 text-[11px] text-slate-700">
+                <span className="text-ink-700 block truncate px-1.5 py-1 text-[11px]">
                   {modelAttributesLabel(photo.attributes) ?? photo.name} ·{" "}
                   {productTypeLabel(photo.productType)}
                 </span>
                 {modelPhotoId === photo.id && (
-                  <span className="bg-primary absolute top-1 right-1 flex size-5 items-center justify-center rounded-full text-white">
+                  <span className="bg-primary text-primary-foreground absolute top-1 right-1 flex size-5 items-center justify-center rounded-full">
                     <Check className="size-3.5" aria-hidden="true" />
                   </span>
                 )}
@@ -354,13 +354,13 @@ const ModelPhotoPreview = (input: {
 
   return (
     <div className="space-y-1.5">
-      <p className="text-sm font-medium text-slate-900">Preview</p>
+      <p className="text-ink-900 text-sm font-medium">Preview</p>
       {isError ? (
-        <p role="alert" className="text-xs text-red-600">
+        <p role="alert" className="text-xs text-red-600 dark:text-red-400">
           {getErrorMessage(error)}
         </p>
       ) : (
-        <div className="relative flex min-h-40 items-center justify-center overflow-hidden rounded-md border bg-slate-50">
+        <div className="bg-ink-50 relative flex min-h-40 items-center justify-center overflow-hidden rounded-md border">
           {data && (
             // A plain <img>: the CDN renders the composite on the first request.
             // eslint-disable-next-line @next/next/no-img-element
@@ -374,7 +374,7 @@ const ModelPhotoPreview = (input: {
           )}
           {rendering && (
             <div
-              className="absolute inset-0 flex items-center justify-center gap-2 bg-white/70 text-xs text-slate-600"
+              className="bg-card/70 text-ink-600 absolute inset-0 flex items-center justify-center gap-2 text-xs"
               role="status"
             >
               <Spinner className="size-4" />
@@ -384,7 +384,7 @@ const ModelPhotoPreview = (input: {
         </div>
       )}
       {data && failed === data.url && (
-        <p role="alert" className="text-xs text-red-600">
+        <p role="alert" className="text-xs text-red-600 dark:text-red-400">
           The preview could not be rendered. Try again in a moment.
         </p>
       )}

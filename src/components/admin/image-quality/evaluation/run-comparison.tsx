@@ -33,7 +33,7 @@ export const RunComparison = ({ run }: RunComparisonProps) => {
   );
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 max-md:gap-3">
       <VersionPicker
         versions={run.versions}
         presets={presets}

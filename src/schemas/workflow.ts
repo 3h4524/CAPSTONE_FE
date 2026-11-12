@@ -168,6 +168,9 @@ export const applyMockupConfigSchema = z.object({
       ),
     ])
   ),
+  // What the mock-ups are for: export only, or a Printify product (one Printify template, checked with the graph).
+  // A workflow saved before the choice existed is "zip".
+  mockupTarget: z.enum(["zip", "printify"]).default("zip"),
   mockupIds: z.array(z.string().uuid()).max(8),
   artworkGroupKey: z.string().max(100),
 });
@@ -259,7 +262,7 @@ export const generateVideoConfigSchema = z
           lighting: z.string().min(1),
           extraInstructions: AI_ADVANCED_CONTROLS_ENABLED
             ? z.string().trim().max(500, "Keep scene instructions under 500 characters.").nullable()
-            : z.unknown().transform(() => null),
+            : z.unknown().optional().transform(() => null),
           rightsConfirmed: z.boolean(),
           startFrameMode: z.enum(["direct", "studio"]).nullable().optional(),
           studioLayout: z.enum(["hanging_window", "flat_lay", "none"]).nullable().optional(),
@@ -300,7 +303,7 @@ export const generateVideoConfigSchema = z
           .max(500, "Keep shared AI scene direction under 500 characters.")
           .nullable()
           .optional()
-      : z.unknown().transform(() => null),
+      : z.unknown().optional().transform(() => null),
     aiStudioMode: z.enum(["direct", "studio"]).catch("direct").default("direct"),
     aiStudioLayout: z
       .enum(["hanging_window", "flat_lay"])

@@ -100,23 +100,23 @@ export function PlanFeaturePicker({ catalog, plans, picks, onChange }: PlanFeatu
       </div>
 
       <div>
-        <p className="mb-1.5 text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Included · {included.length}</p>
+        <p className="text-ink-500 mb-1.5 text-[11px] font-semibold tracking-wide uppercase">Included · {included.length}</p>
         {included.length === 0 ? (
-          <p className="rounded-xl bg-slate-50 px-4 py-3 text-xs text-slate-500">No features yet. Add the ones this plan sells.</p>
+          <p className="bg-ink-50 text-ink-500 rounded-xl px-4 py-3 text-xs">No features yet. Add the ones this plan sells.</p>
         ) : (
-          <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+          <ul className="divide-ink-100 border-ink-200 divide-y rounded-xl border">
             {included.map((feature) => (
               <li key={feature.code} className="flex items-center gap-3 px-3.5 py-2.5">
-                <Check className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                <Check className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium text-slate-700">{feature.label}</span>
-                  {feature.description && <span className="block text-xs text-slate-500">{feature.description}</span>}
+                  <span className="text-ink-700 block text-sm font-medium">{feature.label}</span>
+                  {feature.description && <span className="text-ink-500 block text-xs">{feature.description}</span>}
                 </span>
                 <button
                   type="button"
                   aria-label={`Remove ${feature.label}`}
                   onClick={() => set(feature.code, { on: false })}
-                  className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                  className="text-ink-400 rounded p-1 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                 >
                   <X className="size-4" />
                 </button>
@@ -128,7 +128,7 @@ export function PlanFeaturePicker({ catalog, plans, picks, onChange }: PlanFeatu
           type="button"
           variant="outline"
           size="sm"
-          className="mt-2 h-8 w-full border-dashed text-xs text-slate-600"
+          className="text-ink-600 mt-2 h-8 w-full border-dashed text-xs"
           disabled={included.length === flags.length}
           onClick={() => setIsChoosing(true)}
         >
@@ -138,16 +138,16 @@ export function PlanFeaturePicker({ catalog, plans, picks, onChange }: PlanFeatu
 
       {limits.length > 0 && (
         <div>
-          <p className="mb-1.5 text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Limits</p>
-          <p className="mb-2 text-xs text-slate-500">Each starts at its catalog default; leave one empty for no limit.</p>
-          <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+          <p className="text-ink-500 mb-1.5 text-[11px] font-semibold tracking-wide uppercase">Limits</p>
+          <p className="text-ink-500 mb-2 text-xs">Each starts at its catalog default; leave one empty for no limit.</p>
+          <ul className="divide-ink-100 border-ink-200 divide-y rounded-xl border">
             {limits.map((feature) => {
               const id = `new-plan-${feature.code}`;
               return (
                 <li key={feature.code} className="flex items-center gap-3 px-3.5 py-2.5">
-                  <label htmlFor={id} className="min-w-0 flex-1 text-sm font-medium text-slate-700">
+                  <label htmlFor={id} className="text-ink-700 min-w-0 flex-1 text-sm font-medium">
                     {feature.label}
-                    {isSafetyCap(feature.code) && <span className="ml-1 text-xs font-normal text-slate-400">· hidden from Sellers</span>}
+                    {isSafetyCap(feature.code) && <span className="text-ink-400 ml-1 text-xs font-normal">· hidden from Sellers</span>}
                   </label>
                   <Input
                     id={id}
@@ -159,7 +159,7 @@ export function PlanFeaturePicker({ catalog, plans, picks, onChange }: PlanFeatu
                     value={picks[feature.code]?.limit ?? ""}
                     onChange={(event) => set(feature.code, { on: true, limit: event.target.value === "" ? null : Number(event.target.value) })}
                   />
-                  <span className="w-16 text-xs text-slate-400">{feature.unit}</span>
+                  <span className="text-ink-400 w-16 text-xs">{feature.unit}</span>
                 </li>
               );
             })}

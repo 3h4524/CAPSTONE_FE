@@ -224,9 +224,9 @@ export const WorkflowWorkspace = () => {
   if (isWorkflowsError || !workflows) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center" role="alert">
-        <Workflow className="size-8 text-slate-400" aria-hidden="true" />
+        <Workflow className="text-ink-400 size-8" aria-hidden="true" />
         <div>
-          <p className="font-semibold text-slate-900">Workflows unavailable</p>
+          <p className="text-ink-900 font-semibold">Workflows unavailable</p>
           <p className="text-muted-foreground mt-1 text-sm">We could not load your workflows. Try again in a moment.</p>
         </div>
         <Button type="button" onClick={() => refetchWorkflows()}>Try again</Button>
@@ -239,9 +239,9 @@ export const WorkflowWorkspace = () => {
       <SectionLoading label="Preparing your first workflow" className="flex-1" />
     ) : (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-        <Workflow className="size-8 text-slate-400" aria-hidden="true" />
+        <Workflow className="text-ink-400 size-8" aria-hidden="true" />
         <div>
-          <p className="font-semibold text-slate-900">No workflows yet</p>
+          <p className="text-ink-900 font-semibold">No workflows yet</p>
           <p className="text-muted-foreground mt-1 text-sm">Start from the standard Etsy POD pipeline and adapt it to your shop.</p>
         </div>
         <Button type="button" onClick={createDefaultWorkflow}>Create workflow</Button>
@@ -269,7 +269,7 @@ export const WorkflowWorkspace = () => {
         <aside className="hidden w-64 shrink-0 border-r lg:block">
           <NodePalette />
         </aside>
-        <div className="relative min-w-0 flex-1 bg-slate-100/70">
+        <div className="bg-ink-100/70 relative min-w-0 flex-1">
           {isEditorReady ? (
             showsStepList ? (
               <WorkflowStepList onShowDiagram={() => setShowsDiagram(true)} />
@@ -278,7 +278,7 @@ export const WorkflowWorkspace = () => {
                 <WorkflowCanvas />
                 <RunGroupBar />
                 {isPhone && (
-                  <Button type="button" variant="outline" size="sm" className="absolute top-3 left-3 z-10 bg-white" onClick={() => setShowsDiagram(false)}>
+                  <Button type="button" variant="outline" size="sm" className="bg-card absolute top-3 left-3 z-10" onClick={() => setShowsDiagram(false)}>
                     <ListOrdered aria-hidden="true" />
                     Step list
                   </Button>
@@ -287,7 +287,7 @@ export const WorkflowWorkspace = () => {
             )
           ) : isWorkflowError ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center" role="alert">
-              <p className="font-semibold text-slate-900">This workflow could not be opened</p>
+              <p className="text-ink-900 font-semibold">This workflow could not be opened</p>
               <Button type="button" variant="outline" size="sm" onClick={() => refetchWorkflow()}>Try again</Button>
             </div>
           ) : (

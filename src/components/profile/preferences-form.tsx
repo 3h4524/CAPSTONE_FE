@@ -16,13 +16,17 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { LANGUAGES, THEMES, TIMEZONES } from "@/constants/profile";
 import type { ProfileFormValues } from "@/schemas/profile";
+import type { AccountVariant } from "@/types/profile";
 
 type PreferencesFormProps = {
   control: Control<ProfileFormValues>;
   errors: FieldErrors<ProfileFormValues>;
+  variant?: AccountVariant;
 };
 
-export const PreferencesForm = ({ control, errors }: PreferencesFormProps) => {
+export const PreferencesForm = ({ control, errors, variant = "seller" }: PreferencesFormProps) => {
+  const isAdmin = variant === "admin";
+
   return (
     <section className="space-y-3">
       <h2 className="text-sm font-semibold">Preferences</h2>
@@ -95,20 +99,23 @@ export const PreferencesForm = ({ control, errors }: PreferencesFormProps) => {
           <FormErrorText id="themePreference-error" message={errors.themePreference?.message} />
         </div>
 
-        <Controller
-          control={control}
-          name="newsletterSubscribed"
-          render={({ field }) => (
-            <div className="flex items-center justify-between gap-4">
-              <Label htmlFor="newsletterSubscribed">Newsletter</Label>
-              <Switch
-                id="newsletterSubscribed"
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </div>
-          )}
-        />
+        {/* Product newsletter is seller marketing; admins do not get it. */}
+        {!isAdmin && (
+          <Controller
+            control={control}
+            name="newsletterSubscribed"
+            render={({ field }) => (
+              <div className="flex items-center justify-between gap-4">
+                <Label htmlFor="newsletterSubscribed">Newsletter</Label>
+                <Switch
+                  id="newsletterSubscribed"
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </div>
+            )}
+          />
+        )}
 
         <Controller
           control={control}
@@ -132,9 +139,10 @@ export const PreferencesForm = ({ control, errors }: PreferencesFormProps) => {
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <Label htmlFor="twoFactorEnabled">Two-factor authentication</Label>
-                <Badge variant="outline">Read-only</Badge>
+                {/* Admin sign-in always asks for an emailed code, whatever the stored flag says. */}
+                <Badge variant="outline">{isAdmin ? "Always on" : "Read-only"}</Badge>
               </div>
-              <Switch id="twoFactorEnabled" checked={field.value} disabled />
+              <Switch id="twoFactorEnabled" checked={isAdmin || field.value} disabled />
             </div>
           )}
         />

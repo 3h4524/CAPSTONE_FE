@@ -12,20 +12,20 @@ type TestReportVerdictProps = {
 
 const VERDICT_STYLES = {
   running: {
-    frame: "border-sky-200 bg-sky-50/60",
-    bubble: "bg-sky-100 text-sky-600",
+    frame: "border-sky-200 dark:border-sky-500/30 bg-sky-50/60 dark:bg-sky-500/10",
+    bubble: "bg-sky-100 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400",
   },
   passed: {
-    frame: "border-emerald-200 bg-emerald-50/60",
-    bubble: "bg-emerald-100 text-emerald-600",
+    frame: "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-500/10",
+    bubble: "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
   },
   failed: {
-    frame: "border-rose-200 bg-rose-50/60",
-    bubble: "bg-rose-100 text-rose-500",
+    frame: "border-rose-200 dark:border-rose-500/30 bg-rose-50/60 dark:bg-rose-500/10",
+    bubble: "bg-rose-100 dark:bg-rose-500/15 text-rose-500",
   },
   error: {
-    frame: "border-amber-200 bg-amber-50/60",
-    bubble: "bg-amber-100 text-amber-600",
+    frame: "border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10",
+    bubble: "bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400",
   },
 } as const;
 
@@ -66,10 +66,10 @@ export const TestReportVerdict = ({ run }: TestReportVerdictProps) => {
           </span>
 
           <div className="min-w-0 flex-1">
-            <h2 className="font-display text-xl font-bold tracking-tight text-slate-900">
+            <h2 className="font-display text-ink-900 text-xl font-bold tracking-tight">
               {title}
             </h2>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="text-ink-500 mt-1 text-xs">
               {run.status === "running" ? (
                 <>
                   The Playwright suite is going on this machine — took{" "}
@@ -99,9 +99,9 @@ export const TestReportVerdict = ({ run }: TestReportVerdictProps) => {
         </div>
 
         {run.status === "failed" && run.knownIssueTests > 0 && (
-          <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/80 px-3.5 py-3">
-            <FlaskConical className="mt-0.5 size-4 shrink-0 text-amber-600" />
-            <p className="text-[11px] leading-relaxed text-amber-800">
+          <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/80 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+            <FlaskConical className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
               <span className="font-bold">{run.knownIssueTests} failures</span> are the tests
               that pin a known gap (<span className="font-mono">BUG B…</span>). They fail while
               the gap is there and go red again once the gap is fixed — the fix is to drop those

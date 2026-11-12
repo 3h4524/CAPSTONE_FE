@@ -16,7 +16,7 @@ export const ImageCard = ({ image, versionLabel, isAfter }: ImageCardProps) => {
   const source = image.thumbnailUrl ?? image.imageUrl;
 
   return (
-    <figure className="m-0 flex min-w-0 flex-col gap-2.5 rounded-lg bg-white p-2.5 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+    <figure className="bg-card m-0 flex min-w-0 flex-col gap-2.5 rounded-lg p-2.5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] max-md:w-40 max-md:shrink-0 max-md:snap-start">
       {source ? (
         <a
           href={image.imageUrl ?? source}
@@ -35,18 +35,18 @@ export const ImageCard = ({ image, versionLabel, isAfter }: ImageCardProps) => {
           />
         </a>
       ) : (
-        <div className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-md bg-slate-100 px-3 text-center text-xs text-slate-500">
+        <div className="bg-ink-100 text-ink-500 flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-md px-3 text-center text-xs">
           <ImageOff className="size-5" />
           Image only on the scoring machine
         </div>
       )}
       <figcaption className="flex min-w-0 flex-col gap-2 text-[13px]">
-        <span className="leading-snug font-semibold text-slate-900">{versionLabel}</span>
+        <span className="text-ink-900 leading-snug font-semibold">{versionLabel}</span>
         <span className="flex flex-wrap gap-1">
           {image.textOk !== null ? (
             <CheckChip label={image.textOk ? "Text correct" : "Text wrong"} isPassed={image.textOk} />
           ) : (
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+            <span className="bg-ink-100 text-ink-600 rounded-full px-2 py-0.5 text-xs">
               No lettering
             </span>
           )}
@@ -57,28 +57,28 @@ export const ImageCard = ({ image, versionLabel, isAfter }: ImageCardProps) => {
             <CheckChip label="Layout" isPassed={image.layoutOk} />
           ) : null}
         </span>
-        {image.note ? <span className="leading-snug text-slate-700">{image.note}</span> : null}
+        {image.note ? <span className="text-ink-700 leading-snug">{image.note}</span> : null}
         {image.ocrText ? (
-          <span className="rounded bg-slate-50 px-1.5 py-1 font-mono text-[11px] break-words text-slate-600">
+          <span className="bg-ink-50 text-ink-600 rounded px-1.5 py-1 font-mono text-[11px] break-words">
             OCR: {image.ocrText}
           </span>
         ) : null}
         <dl className="grid grid-cols-3 gap-1 text-center">
-          <div className="rounded bg-slate-50 py-1">
-            <dt className="text-[10px] text-slate-500 uppercase">CLIP</dt>
-            <dd className="font-mono text-xs text-slate-800">
+          <div className="bg-ink-50 rounded py-1">
+            <dt className="text-ink-500 text-[10px] uppercase">CLIP</dt>
+            <dd className="text-ink-800 font-mono text-xs">
               {formatImageQualityNumber(image.clipOverall, 1)}
             </dd>
           </div>
-          <div className="rounded bg-slate-50 py-1">
-            <dt className="text-[10px] text-slate-500 uppercase">MUSIQ</dt>
-            <dd className="font-mono text-xs text-slate-800">
+          <div className="bg-ink-50 rounded py-1">
+            <dt className="text-ink-500 text-[10px] uppercase">MUSIQ</dt>
+            <dd className="text-ink-800 font-mono text-xs">
               {formatImageQualityNumber(image.musiq, 1)}
             </dd>
           </div>
-          <div className="rounded bg-slate-50 py-1">
-            <dt className="text-[10px] text-slate-500 uppercase">LAION</dt>
-            <dd className="font-mono text-xs text-slate-800">
+          <div className="bg-ink-50 rounded py-1">
+            <dt className="text-ink-500 text-[10px] uppercase">LAION</dt>
+            <dd className="text-ink-800 font-mono text-xs">
               {formatImageQualityNumber(image.laionAes, 2)}
             </dd>
           </div>

@@ -70,7 +70,10 @@ export const getSelectFieldLabel = (type: WorkflowNodeType, name: string, value:
 
 // A field named "standardOptions.transition" edits a value inside the `standardOptions` key.
 const getFieldKeys = (field: WorkflowField): string[] =>
-  (field.kind === "mockup-selection" ? [field.name, field.templateColorsName, field.templateBackgroundsName] : [field.name]).map((name) => name.split(".")[0]);
+  (field.kind === "mockup-selection"
+    ? [field.name, field.templateColorsName, field.templateBackgroundsName, field.targetName]
+    : [field.name]
+  ).map((name) => name.split(".")[0]);
 
 // The keys the node's settings schema declares. Some are written by an editor of their own rather than a field (the
 // scene list of Generate Video, its shared AI instructions, its timeline edit), so the fields alone do not name them.
@@ -89,6 +92,8 @@ export const normalizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNode
     if (config[key] === null && typeof normalized[key] === "string") return;
     if (key in config) normalized[key] = config[key];
   });
+  // Design image makes one design per product; a workflow saved when it could make more makes one too.
+  if (type === "design-image") normalized.variants = 1;
   if (type === "generate-video" && normalized.standardOptions && typeof normalized.standardOptions === "object") {
     const options = normalized.standardOptions as Record<string, unknown>;
     if (options.transition === "cut") normalized.standardOptions = { ...options, transition: "none" };

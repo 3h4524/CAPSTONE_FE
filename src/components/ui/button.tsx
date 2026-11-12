@@ -11,28 +11,28 @@ const buttonVariants = cva(
       variant: {
         none: "",
         default:
-          "bg-[#273750] text-white shadow-[0_4px_12px_rgba(22,28,34,0.2)] hover:bg-[#1f2d43] hover:shadow-[0_8px_20px_rgba(22,28,34,0.3)]",
+          "bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(22,28,34,0.2)] hover:bg-[#1f2d43] dark:hover:bg-primary/85 hover:shadow-[0_8px_20px_rgba(22,28,34,0.3)]",
         defaultWithTextWhite:
-          "bg-[#273750] text-white shadow-[0_4px_12px_rgba(39,55,80,0.25)] hover:bg-[#1f2d43] hover:shadow-[0_8px_20px_rgba(39,55,80,0.35)]",
+          "bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(39,55,80,0.25)] hover:bg-[#1f2d43] dark:hover:bg-primary/85 hover:shadow-[0_8px_20px_rgba(39,55,80,0.35)]",
         primaryBlue:
-          "bg-[#2563eb] text-white shadow-[0_4px_12px_rgba(37,99,235,0.25)] hover:bg-[#1d4ed8] hover:shadow-[0_6px_20px_rgba(37,99,235,0.35)]",
+          "bg-[#2563eb] text-white shadow-[0_4px_12px_rgba(37,99,235,0.25)] hover:bg-[#1d4ed8] hover:shadow-[0_6px_20px_rgba(37,99,235,0.35)] dark:bg-primary dark:text-primary-foreground dark:shadow-none dark:hover:bg-primary/85",
         secondary:
           "bg-secondary text-secondary-foreground shadow-[0_4px_12px_rgba(125,86,45,0.25)] hover:bg-secondary/90 hover:shadow-[0_6px_16px_rgba(125,86,45,0.35)]",
         accent:
           "bg-accent text-white shadow-[0_4px_12px_rgba(71,51,14,0.25)] hover:bg-accent/90 hover:shadow-[0_6px_20px_rgba(71,51,14,0.35)]",
         gradient:
-          "bg-gradient-to-br from-primary via-primary to-secondary text-white shadow-[0_4px_16px_rgba(39,55,80,0.35)] hover:shadow-[0_8px_24px_rgba(39,55,80,0.45)]",
+          "bg-gradient-to-br from-primary via-primary to-secondary text-primary-foreground shadow-[0_4px_16px_rgba(39,55,80,0.35)] hover:shadow-[0_8px_24px_rgba(39,55,80,0.45)]",
         outline:
-          "bg-transparent text-primary border-2 border-border shadow-none hover:border-accent hover:text-accent",
+          "bg-transparent text-primary border-2 border-border shadow-none hover:border-accent dark:hover:border-ink-400 hover:text-accent dark:hover:text-ink-900",
         ghost: "bg-transparent text-primary shadow-none hover:bg-muted",
         soft: "bg-muted text-primary shadow-none hover:bg-muted/80",
         link: "text-primary underline-offset-4 shadow-none hover:underline",
         success:
-          "bg-success text-success-foreground border border-[#86efac] shadow-sm hover:bg-success/80",
+          "bg-success text-success-foreground border border-[#86efac] dark:border-emerald-500/40 shadow-sm hover:bg-success/80",
         warning:
-          "bg-warning text-warning-foreground border border-[#fcd34d] shadow-sm hover:bg-warning/80",
+          "bg-warning text-warning-foreground border border-[#fcd34d] dark:border-amber-500/40 shadow-sm hover:bg-warning/80",
         destructive:
-          "bg-destructive text-white shadow-[0_4px_12px_rgba(220,38,38,0.25)] hover:bg-destructive/90 hover:shadow-[0_6px_16px_rgba(220,38,38,0.35)]",
+          "bg-destructive text-destructive-foreground shadow-[0_4px_12px_rgba(220,38,38,0.25)] hover:bg-destructive/90 hover:shadow-[0_6px_16px_rgba(220,38,38,0.35)]",
       },
 
       size: {

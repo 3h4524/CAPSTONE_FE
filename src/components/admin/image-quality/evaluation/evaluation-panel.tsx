@@ -24,9 +24,9 @@ export const EvaluationPanel = () => {
   const renderContent = () => {
     if (isRunsError) {
       return (
-        <div className="rounded-xl border border-slate-200 bg-white px-5 py-14 text-center">
-          <p className="text-sm font-semibold text-slate-700">The evaluation runs could not be read</p>
-          <p className="mt-1 text-[13px] text-slate-500">The backend that keeps them did not answer.</p>
+        <div className="border-ink-200 bg-card rounded-xl border px-5 py-14 text-center">
+          <p className="text-ink-700 text-sm font-semibold">The evaluation runs could not be read</p>
+          <p className="text-ink-500 mt-1 text-[13px]">The backend that keeps them did not answer.</p>
         </div>
       );
     }
@@ -40,7 +40,7 @@ export const EvaluationPanel = () => {
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 max-md:gap-3">
       <RunToolbar
         runs={runList}
         selectedRun={selectedRun}

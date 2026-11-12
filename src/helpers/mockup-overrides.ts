@@ -96,3 +96,33 @@ export const findDuplicateMockup = (
   }
   return null;
 };
+
+/**
+ * Two mock-ups of one design the save would leave looking exactly alike, with the setup they would share. Every
+ * change counts: one to a mock-up, one that removes it, and one that makes a mock-up that is not there now.
+ */
+export const findDuplicateAfterChanges = (
+  images: MockupImage[],
+  designImageId: string,
+  changes: MockupOverrideChange[],
+  templatesById: ReadonlyMap<string, MockupTemplate>
+): { setup: MockupOverride } | null => {
+  const byImage = new Map(changes.flatMap((change) => (change.replacedMockupImageId ? [[change.replacedMockupImageId, change] as const] : [])));
+  const after = [
+    ...images
+      .filter((image) => image.designImageId === designImageId)
+      .flatMap((image) => {
+        const change = byImage.get(image.id);
+        return change?.override.removed ? [] : [{ setup: change ? change.override : currentMockupSetup(image), changed: Boolean(change) }];
+      }),
+    ...changes
+      .filter((change) => !change.replacedMockupImageId && !change.override.removed)
+      .map((change) => ({ setup: change.override, changed: true })),
+  ];
+  for (const [index, changed] of after.entries()) {
+    if (!changed.changed) continue;
+    const twin = after.find((other, otherIndex) => otherIndex !== index && sameMockupSetup(other.setup, changed.setup, templatesById));
+    if (twin) return { setup: twin.setup };
+  }
+  return null;
+};

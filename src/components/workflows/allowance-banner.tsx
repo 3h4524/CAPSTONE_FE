@@ -19,20 +19,20 @@ export const AllowanceBanner = () => {
   return (
     <div
       aria-label="Plan allowance"
-      className="scrollbar-hide flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-slate-50 px-4 py-2 text-xs text-slate-600 max-md:flex-nowrap max-md:overflow-x-auto max-md:whitespace-nowrap [@media(max-height:500px)]:hidden"
+      className="scrollbar-hide bg-ink-50 text-ink-600 flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-4 py-2 text-xs max-md:flex-nowrap max-md:overflow-x-auto max-md:whitespace-nowrap [@media(max-height:500px)]:hidden"
     >
-      <span className="flex items-center gap-1.5 font-semibold text-slate-800">
+      <span className="text-ink-800 flex items-center gap-1.5 font-semibold">
         <Gauge className="size-3.5" aria-hidden="true" />
         {allowances.scope === "trial" ? "Free trial" : allowances.scope === "plan" ? "Your plan this month" : "Free"}
       </span>
       {items.map((item) => (
-        <span key={item.code} className={cn("tabular-nums", remaining(item) === 0 && "font-semibold text-rose-700")}>
+        <span key={item.code} className={cn("tabular-nums", remaining(item) === 0 && "font-semibold text-rose-700 dark:text-rose-300")}>
           {allowanceLine(item)}
         </span>
       ))}
       {allowances.mockupsPerRun !== null && <span>Up to {allowances.mockupsPerRun} mockups per run</span>}
-      {reset && <span className="text-slate-500">{reset}</span>}
-      <Link href={SUBSCRIPTION_PATH} className="ml-auto font-semibold text-slate-800 underline underline-offset-2">
+      {reset && <span className="text-ink-500">{reset}</span>}
+      <Link href={SUBSCRIPTION_PATH} className="text-ink-800 ml-auto font-semibold underline underline-offset-2">
         View plans
       </Link>
     </div>

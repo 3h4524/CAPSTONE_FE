@@ -261,10 +261,8 @@ describe("summarizeNodeConfig", () => {
   ];
 
   it("resolves select options to their labels", () => {
-    expect(summarizeNodeConfig("design-image", { variants: 3, aspectRatio: "16:9" })).toEqual([
-      "Variants per product: 3",
-      "Aspect ratio: 16:9",
-    ]);
+    // The number of designs is no setting any more (one per product), so it is not summarized.
+    expect(summarizeNodeConfig("design-image", { variants: 3, aspectRatio: "16:9" })).toEqual(["Aspect ratio: 16:9"]);
   });
 
   it("skips a select whose value matches no option", () => {

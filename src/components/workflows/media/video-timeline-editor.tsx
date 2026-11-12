@@ -970,7 +970,7 @@ function SceneTransformOverlay({
           onPointerMove={handleMove}
           onPointerUp={finish}
           onPointerCancel={finish}
-          className={`absolute grid size-11 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize appearance-none place-items-center rounded-full border-0 bg-transparent p-0 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none ${corner.includes("right") ? "left-full" : "left-0"} ${corner.includes("bottom") ? "top-full" : "top-0"}`}
+          className={`focus-visible:ring-card absolute grid size-11 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize appearance-none place-items-center rounded-full border-0 bg-transparent p-0 focus-visible:ring-2 focus-visible:outline-none ${corner.includes("right") ? "left-full" : "left-0"} ${corner.includes("bottom") ? "top-full" : "top-0"}`}
         >
           <span className="bg-primary size-3 rounded-full" />
         </button>
@@ -983,7 +983,7 @@ function SceneTransformOverlay({
         onPointerMove={handleMove}
         onPointerUp={finish}
         onPointerCancel={finish}
-        className="border-primary bg-card text-primary absolute top-[calc(100%+1.5rem)] left-1/2 grid size-7 -translate-x-1/2 -translate-y-1/2 cursor-grab place-items-center rounded-full border-2 shadow-md focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none active:cursor-grabbing"
+        className="border-primary bg-card text-primary focus-visible:ring-card absolute top-[calc(100%+1.5rem)] left-1/2 grid size-7 -translate-x-1/2 -translate-y-1/2 cursor-grab place-items-center rounded-full border-2 shadow-md focus-visible:ring-2 focus-visible:outline-none active:cursor-grabbing"
       >
         <svg viewBox="0 0 24 24" className="size-3.5" aria-hidden="true">
           <path
@@ -2655,7 +2655,7 @@ function TransitionPreview({ effect }: { effect: VideoTransition }) {
       </span>
       {!isCut && flashOpacity > 0 && (
         <span
-          className="absolute inset-0 bg-white"
+          className="bg-card absolute inset-0"
           style={{ opacity: flashOpacity }}
         />
       )}
@@ -3320,7 +3320,7 @@ function Timeline({
                   left: `${(item.startFrame / totalFrames) * 100}%`,
                   width: `${Math.max(2, ((item.endFrame - item.startFrame) / totalFrames) * 100)}%`,
                 }}
-                className={`focus-visible:ring-ring absolute top-1 z-10 h-6 truncate rounded-md px-2 text-left text-[10px] font-semibold focus-visible:ring-2 ${selection?.kind === "overlay" && selection.id === item.id ? "bg-secondary text-secondary-foreground" : "bg-violet-600 text-white"}`}
+                className={`focus-visible:ring-ring absolute top-1 z-10 h-6 truncate rounded-md px-2 text-left text-[10px] font-semibold focus-visible:ring-2 ${selection?.kind === "overlay" && selection.id === item.id ? "bg-secondary text-secondary-foreground" : "text-secondary-foreground bg-violet-600"}`}
               >
                 {item.type === "cta" ? "CTA" : "Headline"}
               </button>

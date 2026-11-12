@@ -6,9 +6,9 @@ const NOTES = [
 ] as const;
 
 export const LiveNotes = () => (
-  <section className="rounded-xl border border-slate-200 bg-slate-50 px-5 py-4 sm:px-6">
-    <h3 className="text-sm font-semibold text-slate-800">How to read these numbers</h3>
-    <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-5 text-[13px] leading-relaxed text-slate-600">
+  <section className="border-ink-200 bg-ink-50 rounded-xl border px-5 py-4 max-md:px-4 sm:px-6">
+    <h3 className="text-ink-800 text-sm font-semibold">How to read these numbers</h3>
+    <ul className="text-ink-600 mt-2 flex list-disc flex-col gap-1.5 pl-5 text-[13px] leading-relaxed">
       {NOTES.map((note) => (
         <li key={note}>{note}</li>
       ))}

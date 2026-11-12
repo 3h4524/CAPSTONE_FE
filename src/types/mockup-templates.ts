@@ -41,6 +41,26 @@ export interface MockupTemplate {
   aiGenerated?: boolean;
   /** Photos of the template's other sides (back, left sleeve, right sleeve), each a template of its own. */
   views?: MockupTemplate[] | null;
+  /**
+   * The Printify product the photo shows; null for a template not linked to Printify. Its print area is Printify's
+   * print area, so a design is placed inside it, never past it.
+   */
+  printify?: MockupTemplatePrintify | null;
+}
+
+/** A Printify garment color: Printify's name and the hex the template photo is recolored with to match it. */
+export interface PrintifyGarmentColor {
+  name: string;
+  hex: string;
+}
+
+export interface MockupTemplatePrintify {
+  blueprintId: number;
+  blueprintTitle: string;
+  printProviderId: number | null;
+  printProviderTitle: string | null;
+  defaultSizes: string[];
+  colors: PrintifyGarmentColor[];
 }
 
 export interface BatchMockupSelection {
@@ -137,6 +157,10 @@ export interface RemovedMockupSlot {
   mockupTemplateId: string;
   templateName: string;
   garmentColor: string | null;
+  /** What the mock-up looks like as it was set up, to show it before it is put back. */
+  mockupImageUrl?: string | null;
+  /** How it was set up apart from the job's settings when it was removed; it comes back with this. */
+  override?: MockupOverride | null;
 }
 
 export interface GenerateAllMockupsResult {

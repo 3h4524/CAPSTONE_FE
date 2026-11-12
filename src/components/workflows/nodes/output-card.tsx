@@ -50,9 +50,9 @@ export const OutputCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
             {publishSummary(data.type, data.config).map((line) => (
               <p key={line} className="text-wf-faint truncate px-0.5 text-[11px] leading-4" title={line}>{line}</p>
             ))}
-            {problem && <p className="px-0.5 text-[10px] leading-4 text-amber-700">{problem}</p>}
+            {problem && <p className="px-0.5 text-[10px] leading-4 text-amber-700 dark:text-amber-300">{problem}</p>}
             {connectionIssue && (
-              <p className="px-0.5 text-[10px] leading-4 text-amber-700">
+              <p className="px-0.5 text-[10px] leading-4 text-amber-700 dark:text-amber-300">
                 {connectionIssue.message}{" "}
                 <Link href={connectionIssue.href} className="nodrag font-semibold underline underline-offset-2">
                   {connectionIssue.linkLabel}

@@ -27,8 +27,9 @@ const LoginPage = async ({ searchParams }: LoginPageProps) => {
       imageSrc="/images/landing/auth.webp"
       imageAlt="Designer reviewing AI-generated product designs next to a laptop and printed t-shirts"
     >
-      <FormLogin />
-      <GuestGuard returnUrl={returnUrl} />
+      <GuestGuard returnUrl={returnUrl}>
+        <FormLogin />
+      </GuestGuard>
     </AuthSplitLayout>
   );
 };

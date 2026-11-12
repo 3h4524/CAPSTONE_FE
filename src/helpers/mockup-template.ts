@@ -210,6 +210,22 @@ export const rotatedBounds = (area: MockupPrintArea & { rotation?: number }): Mo
   };
 };
 
+/**
+ * The area moved, as little as needed, so that turned as it is it lies inside the frame (a Printify template's print
+ * area, which the server holds a design to with a pixel to spare). Null when it is too big to fit even then.
+ */
+export const keepInFrame = (
+  area: MockupPrintArea,
+  rotation: number,
+  frame: MockupPrintArea
+): MockupPrintArea | null => {
+  const box = rotatedBounds({ ...area, rotation });
+  if (box.width > frame.width + 1 || box.height > frame.height + 1) return null;
+  const shiftX = box.x < frame.x ? frame.x - box.x : Math.min(0, frame.x + frame.width - (box.x + box.width));
+  const shiftY = box.y < frame.y ? frame.y - box.y : Math.min(0, frame.y + frame.height - (box.y + box.height));
+  return { x: area.x + shiftX, y: area.y + shiftY, width: area.width, height: area.height };
+};
+
 // Mirrors MockupRules.AreaFits: the area, turned as it is, lies wholly on the photo.
 export const areaFits = (area: MockupPrintArea & { rotation?: number }, photoWidth: number, photoHeight: number) => {
   if (area.width <= 0 || area.height <= 0 || area.x < 0 || area.y < 0) return false;

@@ -17,7 +17,7 @@ import { useWorkflowStore } from "@/stores/workflow";
 import type { WorkflowNode, WorkflowNodeConfig } from "@/types/workflow";
 import { useQuery } from "@tanstack/react-query";
 
-const selectClass = "h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-sm text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none disabled:opacity-60";
+const selectClass = "h-9 w-full rounded-md border border-ink-200 bg-card px-2 text-sm text-ink-900 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none disabled:opacity-60";
 
 const num = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : null);
 const str = (value: unknown) => (typeof value === "string" && value ? value : null);
@@ -231,7 +231,7 @@ export function EtsyPublishSettings({ node, disabled }: { node: WorkflowNode; di
               {!productId ? (
                 <p className="text-muted-foreground text-xs">Choose the product on Product Input to load your shipping profiles.</p>
               ) : draft.data?.shippingProfiles.length === 0 ? (
-                <p className="text-xs text-amber-700">Your Etsy shop has no shipping profile yet.</p>
+                <p className="text-xs text-amber-700 dark:text-amber-300">Your Etsy shop has no shipping profile yet.</p>
               ) : (
                 <select id={`${node.id}-shipping`} className={selectClass} value={num(config.shippingProfileId) ?? ""}
                   onChange={(event) => patch({ shippingProfileId: Number(event.target.value) || null })}>

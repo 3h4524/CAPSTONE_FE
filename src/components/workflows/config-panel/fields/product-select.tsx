@@ -11,5 +11,6 @@ export const ProductSelect = ({ value, onChange }: { value: string; onChange: (v
   const { control } = useFormContext<WorkflowNodeConfig>();
   const batchId = readString(useWatch({ control, name: "batchId" }));
   const { data: products, isPending, isError, refetch } = useBatchProducts(batchId);
-  return <OptionSelect value={value} onChange={onChange} options={toProductOptions(products)} placeholder="Choose one product" isLoading={Boolean(batchId) && isPending} isError={isError} onRetry={() => refetch()} emptyMessage="Choose a batch containing a product first." />;
+  // The product is only needed for a video, so a choice can be taken back.
+  return <OptionSelect value={value} onChange={onChange} options={toProductOptions(products)} placeholder="Choose one product" clearable isLoading={Boolean(batchId) && isPending} isError={isError} onRetry={() => refetch()} emptyMessage="Choose a batch containing a product first." />;
 };

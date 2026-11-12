@@ -133,22 +133,22 @@ export const DESIGN_TILES: DesignTile[] = [
   {
     icon: Shirt,
     label: "Vintage Tee",
-    tileClass: "from-amber-200 via-orange-100 to-stone-100",
+    tileClass: "from-amber-200 via-orange-100 dark:via-orange-500/15 to-ink-100",
   },
   {
     icon: Palette,
     label: "Floral Poster",
-    tileClass: "from-rose-200 via-pink-100 to-stone-100",
+    tileClass: "from-rose-200 via-pink-100 dark:via-pink-500/15 to-ink-100",
   },
   {
     icon: Sticker,
     label: "Die-cut Sticker",
-    tileClass: "from-sky-200 via-cyan-100 to-stone-100",
+    tileClass: "from-sky-200 via-cyan-100 dark:via-cyan-500/15 to-ink-100",
   },
   {
     icon: ShoppingBag,
     label: "Canvas Tote",
-    tileClass: "from-emerald-200 via-lime-100 to-stone-100",
+    tileClass: "from-emerald-200 via-lime-100 dark:via-lime-500/15 to-ink-100",
   },
 ];
 

@@ -5,7 +5,7 @@ import { Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { GARMENT_COLORS, garmentColorName, isGarmentColor } from "@/helpers/garment-colors";
+import { GARMENT_COLORS, garmentColorName, isGarmentColor, type NamedGarmentColor } from "@/helpers/garment-colors";
 import { cn } from "@/utils/cn";
 
 type GarmentColorPickerProps = {
@@ -15,22 +15,44 @@ type GarmentColorPickerProps = {
   max?: number;
   /** Smaller swatches and input, for a picker repeated once per template. */
   compact?: boolean;
+  /** The colors offered: a Printify template's colors; the fixed suggestions when left out. */
+  palette?: readonly NamedGarmentColor[];
+  /** Whether a color outside the palette can be typed in; off for a Printify template, which Printify makes only in its own colors. */
+  allowCustom?: boolean;
 };
 
-export const GarmentColorSwatch = ({ hex, className }: { hex: string; className?: string }) => (
+export const GarmentColorSwatch = ({
+  hex,
+  className,
+  palette,
+}: {
+  hex: string;
+  className?: string;
+  palette?: readonly NamedGarmentColor[];
+}) => (
   <span
-    title={garmentColorName(hex)}
-    className={cn("inline-block size-3.5 shrink-0 rounded-full border border-slate-300", className)}
+    title={garmentColorName(hex, palette)}
+    className={cn("border-ink-300 inline-block size-3.5 shrink-0 rounded-full border", className)}
     style={{ backgroundColor: hex }}
   />
 );
 
-export const GarmentColorPicker = ({ selected, onToggle, disabled = false, max, compact = false }: GarmentColorPickerProps) => {
+export const GarmentColorPicker = ({
+  selected,
+  onToggle,
+  disabled = false,
+  max,
+  compact = false,
+  palette = GARMENT_COLORS,
+  allowCustom = true,
+}: GarmentColorPickerProps) => {
   const [custom, setCustom] = useState("");
   const isSelected = (hex: string) => selected.some((value) => value.toLowerCase() === hex.toLowerCase());
   const full = max !== undefined && selected.length >= max;
   const customHex = custom.startsWith("#") ? custom : `#${custom}`;
-  const customs = selected.filter((hex) => !GARMENT_COLORS.some((color) => color.hex.toLowerCase() === hex.toLowerCase()));
+  // A picked color the palette lacks stays on show, so it can be taken off again.
+  const customs = selected.filter((hex) => !palette.some((color) => color.hex.toLowerCase() === hex.toLowerCase()));
+  const nameOf = (hex: string) => garmentColorName(hex, palette);
 
   const addCustom = () => {
     if (!isGarmentColor(customHex) || isSelected(customHex)) return;
@@ -41,19 +63,19 @@ export const GarmentColorPicker = ({ selected, onToggle, disabled = false, max, 
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
-        {[...GARMENT_COLORS.map((color) => color.hex), ...customs].map((hex) => {
+        {[...palette.map((color) => color.hex), ...customs].map((hex) => {
           const active = isSelected(hex);
           return (
             <button
               key={hex}
               type="button"
               aria-pressed={active}
-              aria-label={garmentColorName(hex)}
-              title={garmentColorName(hex)}
+              aria-label={nameOf(hex)}
+              title={nameOf(hex)}
               disabled={disabled || (!active && full)}
               onClick={() => onToggle(hex)}
               className={cn(
-                "flex items-center justify-center rounded-full border border-slate-300 transition disabled:opacity-40",
+                "border-ink-300 flex items-center justify-center rounded-full border transition disabled:opacity-40",
                 compact ? "size-6" : "size-8",
                 active && "ring-primary ring-2 ring-offset-2"
               )}
@@ -64,33 +86,38 @@ export const GarmentColorPicker = ({ selected, onToggle, disabled = false, max, 
           );
         })}
       </div>
-      <div className="flex gap-2">
-        <Input
-          value={custom}
-          onChange={(event) => setCustom(event.target.value.trim())}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              addCustom();
-            }
-          }}
-          placeholder="#1F2A44"
-          maxLength={7}
-          disabled={disabled || full}
-          aria-label="Custom garment color"
-          className={cn("w-32", compact ? "h-7 text-xs" : "h-8")}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className={compact ? "h-7 text-xs" : undefined}
-          disabled={disabled || full || !isGarmentColor(customHex)}
-          onClick={addCustom}
-        >
-          Add color
-        </Button>
-      </div>
+      {!allowCustom && selected.length > 0 && (
+        <p className="text-muted-foreground text-xs">{selected.map(nameOf).join(", ")}</p>
+      )}
+      {allowCustom && (
+        <div className="flex gap-2">
+          <Input
+            value={custom}
+            onChange={(event) => setCustom(event.target.value.trim())}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                addCustom();
+              }
+            }}
+            placeholder="#1F2A44"
+            maxLength={7}
+            disabled={disabled || full}
+            aria-label="Custom garment color"
+            className={cn("w-32", compact ? "h-7 text-xs" : "h-8")}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className={compact ? "h-7 text-xs" : undefined}
+            disabled={disabled || full || !isGarmentColor(customHex)}
+            onClick={addCustom}
+          >
+            Add color
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

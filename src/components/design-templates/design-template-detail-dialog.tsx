@@ -42,13 +42,13 @@ export function DesignTemplateDetailDialog({
     <Dialog open={Boolean(templateId)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="max-h-[90dvh] gap-0 overflow-y-auto rounded-[22px] border-slate-200 p-0 duration-200 motion-reduce:animate-none motion-reduce:transition-none sm:max-w-5xl lg:overflow-hidden"
+        className="border-ink-200 max-h-[90dvh] gap-0 overflow-y-auto rounded-[22px] p-0 duration-200 motion-reduce:animate-none motion-reduce:transition-none sm:max-w-5xl lg:overflow-hidden"
       >
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="absolute top-4 right-4 z-10 size-10 rounded-lg text-slate-500 hover:translate-y-0 hover:bg-slate-100"
+          className="text-ink-500 hover:bg-ink-100 absolute top-4 right-4 z-10 size-10 rounded-lg hover:translate-y-0"
           onClick={onClose}
           aria-label="Close template details"
         >
@@ -56,12 +56,12 @@ export function DesignTemplateDetailDialog({
         </Button>
         {templateQuery.isPending ? (
           <div
-            className="min-h-80 animate-pulse bg-slate-100"
+            className="bg-ink-100 min-h-80 animate-pulse"
             aria-label="Loading template details"
           />
         ) : templateQuery.isError || !template ? (
           <div className="flex min-h-80 flex-col items-center justify-center p-8 text-center">
-            <Sparkles className="size-8 text-slate-400" aria-hidden="true" />
+            <Sparkles className="text-ink-400 size-8" aria-hidden="true" />
             <DialogTitle className="mt-4">Template could not be loaded</DialogTitle>
             <DialogDescription className="mt-2">
               Refresh the detail view and try again.
@@ -82,8 +82,8 @@ export function DesignTemplateDetailDialog({
           </div>
         ) : (
           <div className="grid lg:max-h-[90dvh] lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.45fr)]">
-            <aside className="border-b border-slate-200 bg-[#eef1ed] p-5 sm:p-6 lg:overflow-y-auto lg:border-r lg:border-b-0">
-              <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-white/80 bg-white shadow-[0_14px_35px_rgba(39,55,80,0.1)] lg:aspect-[4/5]">
+            <aside className="border-ink-200 bg-ink-100 border-b p-5 sm:p-6 lg:overflow-y-auto lg:border-r lg:border-b-0">
+              <div className="bg-card relative aspect-[16/10] overflow-hidden rounded-2xl border border-white/80 shadow-[0_14px_35px_rgba(39,55,80,0.1)] lg:aspect-[4/5]">
                 {template.previewImageUrl && !imageFailed ? (
                   <Image
                     fill
@@ -96,9 +96,9 @@ export function DesignTemplateDetailDialog({
                   />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_30%_20%,#f4ead5,transparent_42%),linear-gradient(145deg,#e8ede8,#d8dfdc)] px-6 text-center">
-                    <Sparkles className="size-8 text-slate-500" aria-hidden="true" />
-                    <p className="mt-3 text-sm font-semibold text-slate-700">Preview unavailable</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                    <Sparkles className="text-ink-500 size-8" aria-hidden="true" />
+                    <p className="text-ink-700 mt-3 text-sm font-semibold">Preview unavailable</p>
+                    <p className="text-ink-500 mt-1 text-xs leading-5">
                       This template does not have a preview image yet.
                     </p>
                   </div>
@@ -106,36 +106,36 @@ export function DesignTemplateDetailDialog({
               </div>
 
               <div className="mt-5">
-                <p className="text-[11px] font-bold tracking-[0.12em] text-slate-500 uppercase">
+                <p className="text-ink-500 text-[11px] font-bold tracking-[0.12em] uppercase">
                   Template overview
                 </p>
-                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-4 border-y border-slate-300/70 py-4 text-sm">
+                <dl className="border-ink-300/70 mt-3 grid grid-cols-2 gap-x-4 gap-y-4 border-y py-4 text-sm">
                   <div>
-                    <dt className="text-xs text-slate-500">Type</dt>
-                    <dd className="mt-1 font-semibold text-slate-900">
+                    <dt className="text-ink-500 text-xs">Type</dt>
+                    <dd className="text-ink-900 mt-1 font-semibold">
                       {template.isSystemTemplate ? "System" : "Personal"}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-slate-500">Uses</dt>
-                    <dd className="mt-1 font-semibold text-slate-900">
+                    <dt className="text-ink-500 text-xs">Uses</dt>
+                    <dd className="text-ink-900 mt-1 font-semibold">
                       {template.usageCount.toLocaleString()}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-slate-500">Niche</dt>
-                    <dd className="mt-1 font-semibold text-slate-900">
+                    <dt className="text-ink-500 text-xs">Niche</dt>
+                    <dd className="text-ink-900 mt-1 font-semibold">
                       {template.nicheCategory ?? "General"}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-slate-500">Art style</dt>
-                    <dd className="mt-1 font-semibold text-slate-900 capitalize">
+                    <dt className="text-ink-500 text-xs">Art style</dt>
+                    <dd className="text-ink-900 mt-1 font-semibold capitalize">
                       {template.artStyle?.replaceAll("_", " ") ?? "Unstyled"}
                     </dd>
                   </div>
                 </dl>
-                <p className="mt-4 flex items-center gap-2 text-xs text-slate-500">
+                <p className="text-ink-500 mt-4 flex items-center gap-2 text-xs">
                   <CalendarDays className="size-4" aria-hidden="true" />
                   Updated{" "}
                   <time dateTime={template.updatedAtUtc}>{formatDate(template.updatedAtUtc)}</time>
@@ -144,9 +144,9 @@ export function DesignTemplateDetailDialog({
             </aside>
 
             <div className="flex min-w-0 flex-col lg:max-h-[90dvh]">
-              <div className="shrink-0 border-b border-slate-200 bg-[#f7f5ef] px-6 py-6 pr-16 sm:px-8 sm:pr-20">
+              <div className="border-ink-200 bg-ink-100 shrink-0 border-b px-6 py-6 pr-16 sm:px-8 sm:pr-20">
                 <DialogHeader>
-                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold tracking-[0.12em] text-slate-600 uppercase">
+                  <div className="text-ink-600 flex flex-wrap items-center gap-2 text-[11px] font-bold tracking-[0.12em] uppercase">
                     <span>
                       {template.isSystemTemplate ? "System template" : "Personal template"}
                     </span>
@@ -165,16 +165,16 @@ export function DesignTemplateDetailDialog({
                 <section aria-labelledby="positive-prompt-title">
                   <p
                     id="positive-prompt-title"
-                    className="text-xs font-bold tracking-[0.12em] text-slate-500 uppercase"
+                    className="text-ink-500 text-xs font-bold tracking-[0.12em] uppercase"
                   >
                     Positive prompt
                   </p>
-                  <p className="mt-3 rounded-xl border border-slate-200 bg-white p-4 text-sm leading-6 [overflow-wrap:anywhere] whitespace-pre-wrap text-slate-700">
+                  <p className="border-ink-200 bg-card text-ink-700 mt-3 rounded-xl border p-4 text-sm leading-6 [overflow-wrap:anywhere] whitespace-pre-wrap">
                     {template.basePrompt}
                   </p>
                   {template.negativePrompt && (
                     <>
-                      <p className="mt-5 text-xs font-bold tracking-[0.12em] text-slate-500 uppercase">
+                      <p className="text-ink-500 mt-5 text-xs font-bold tracking-[0.12em] uppercase">
                         Negative prompt
                       </p>
                       <p className="mt-3 rounded-xl bg-slate-900 p-4 text-sm leading-6 [overflow-wrap:anywhere] whitespace-pre-wrap text-slate-200">
@@ -186,23 +186,23 @@ export function DesignTemplateDetailDialog({
                 <section aria-labelledby="examples-title">
                   <p
                     id="examples-title"
-                    className="text-xs font-bold tracking-[0.12em] text-slate-500 uppercase"
+                    className="text-ink-500 text-xs font-bold tracking-[0.12em] uppercase"
                   >
                     Prompt examples
                   </p>
                   <div className="mt-3 space-y-3">
                     {template.examples.length === 0 ? (
-                      <p className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                      <p className="border-ink-300 text-ink-500 rounded-xl border border-dashed p-4 text-sm">
                         No examples have been added.
                       </p>
                     ) : (
                       template.examples.map((example) => (
                         <div
                           key={`${example.subject}-${example.prompt}`}
-                          className="rounded-xl bg-[#f3f6f4] p-4"
+                          className="bg-ink-100 rounded-xl p-4"
                         >
-                          <p className="text-sm font-semibold text-slate-900">{example.subject}</p>
-                          <p className="mt-1 text-xs leading-5 [overflow-wrap:anywhere] text-slate-600">
+                          <p className="text-ink-900 text-sm font-semibold">{example.subject}</p>
+                          <p className="text-ink-600 mt-1 text-xs leading-5 [overflow-wrap:anywhere]">
                             {example.prompt}
                           </p>
                         </div>
@@ -211,7 +211,7 @@ export function DesignTemplateDetailDialog({
                   </div>
                 </section>
               </div>
-              <DialogFooter className="shrink-0 border-t border-slate-200 px-6 py-4 sm:px-8">
+              <DialogFooter className="border-ink-200 shrink-0 border-t px-6 py-4 sm:px-8">
                 <Button type="button" variant="outline" onClick={onClose}>
                   Close
                 </Button>

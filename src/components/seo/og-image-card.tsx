@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { Logo } from "@/components/commons/icons/logo";
+import { StaticLogo } from "@/components/commons/icons/logo";
 import { SITE_CONFIG } from "@/constants/site";
 import { OG_IMAGE_SIZE } from "@/helpers/og-image";
 
@@ -41,7 +41,7 @@ export const OgImageCard = ({ backgroundSrc, title = SITE_CONFIG.tagline, subtit
       }}
     >
       <div style={{ alignItems: "center", display: "flex" }}>
-        <Logo height={72} width={72} />
+        <StaticLogo height={72} width={72} />
         <div style={{ display: "flex", fontSize: 52, fontWeight: 700, letterSpacing: -1.5, marginLeft: 20 }}>
           {SITE_CONFIG.name}
         </div>

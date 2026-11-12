@@ -108,12 +108,12 @@ export const GenerateModelPhotoDialog = ({
             Check the photo before you use it: if the shirt is not found, make another.
           </p>
           {isPending && (
-            <p role="status" className="text-xs text-slate-600">
+            <p role="status" className="text-ink-600 text-xs">
               Making the photo and finding the shirt on it… this takes up to a minute.
             </p>
           )}
           {failure && !isPending && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
               {failure}
             </p>
           )}

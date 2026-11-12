@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
-import { getSessionUser, resolveSignedInLanding } from "@/api/session";
+import { getSessionUser } from "@/api/session";
 import { UnauthorizedPage } from "@/components/auth/unauthorized-page";
 import { getPageMetadata } from "@/data/metadata";
+import { resolveSignedInLanding } from "@/helpers/auth-return-url";
 
 export const metadata: Metadata = getPageMetadata({
   title: "Access denied",
@@ -14,7 +15,11 @@ export const metadata: Metadata = getPageMetadata({
 const UnauthorizedRoute = async () => {
   const user = await getSessionUser();
 
-  return <UnauthorizedPage dashboardHref={user ? resolveSignedInLanding(user) : "/dashboard"} />;
+  return user ? (
+    <UnauthorizedPage actionHref={resolveSignedInLanding(user)} actionLabelKey="errors.goToDashboard" />
+  ) : (
+    <UnauthorizedPage actionHref="/login" actionLabelKey="errors.goToSignIn" />
+  );
 };
 
 export default UnauthorizedRoute;

@@ -9,16 +9,22 @@ import { PersonalForm } from "@/components/profile/personal-form";
 import { PreferencesForm } from "@/components/profile/preferences-form";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_LANGUAGE, DEFAULT_THEME, DEFAULT_TIMEZONE } from "@/constants/profile";
-import { toFormValues } from "@/helpers/profile-form";
+import { toFormValues, toProfilePayload } from "@/helpers/profile-form";
 import { getResponseStatus } from "@/helpers/response-status";
 import { useUpdateProfile } from "@/hooks/mutations/use-update-profile";
 import { useProfile } from "@/hooks/queries/use-profile";
 import type { ProfileFormValues } from "@/schemas/profile";
 import { profileSchema } from "@/schemas/profile";
 import { useAuthStore } from "@/stores/auth";
+import type { AccountVariant } from "@/types/profile";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-export const Profile = () => {
+type ProfileProps = {
+  /** "admin" drops the shop, newsletter and 2FA controls an admin account does not have. */
+  variant?: AccountVariant;
+};
+
+export const Profile = ({ variant = "seller" }: ProfileProps) => {
   const router = useRouter();
   const { data, isError, error: profileError } = useProfile();
   const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile();
@@ -75,7 +81,7 @@ export const Profile = () => {
   const email = data?.email ?? "";
 
   const onSubmit = (values: ProfileFormValues) => {
-    updateProfile(values);
+    updateProfile(toProfilePayload(values, variant));
   };
 
   const handleDiscard = () => {
@@ -91,7 +97,9 @@ export const Profile = () => {
           <div className="space-y-0.5">
             <h1 className="text-base leading-none font-semibold">Profile</h1>
             <p className="text-muted-foreground text-sm">
-              Manage your personal and workspace details.
+              {variant === "admin"
+                ? "Manage your administrator name, sign-in email and preferences."
+                : "Manage your personal and workspace details."}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -115,8 +123,8 @@ export const Profile = () => {
             email={email}
           />
           <div className="grid content-start gap-x-6 gap-y-5 px-6 py-5 xl:grid-cols-2">
-            <PersonalForm register={register} errors={errors} />
-            <PreferencesForm control={control} errors={errors} />
+            <PersonalForm register={register} errors={errors} variant={variant} />
+            <PreferencesForm control={control} errors={errors} variant={variant} />
           </div>
         </div>
       </div>

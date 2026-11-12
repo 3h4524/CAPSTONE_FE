@@ -4,7 +4,7 @@ import { type PointerEvent, useCallback, useEffect, useRef, useState } from "rea
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { areaFits, normalizeRotation } from "@/helpers/mockup-template";
+import { areaFits, keepInFrame, normalizeRotation } from "@/helpers/mockup-template";
 import type { MockupPrintArea } from "@/types/mockup-templates";
 import { cn } from "@/utils/cn";
 
@@ -56,6 +56,11 @@ type PrintAreaEditorProps = {
   onSelectArea?: (key: string) => void;
   /** Sizes the photo; by default it is at most 420 px tall. */
   imageClassName?: string;
+  /**
+   * A fixed print area (a Printify template's, which is Printify's own): drawn but not movable, and the box being
+   * edited (the design) moves, resizes and turns only inside it, snapping to its center.
+   */
+  frame?: MockupPrintArea;
 };
 
 const clamp = (value: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, value));
@@ -177,7 +182,7 @@ const Handles = ({ className }: { className: string }) => (
         key={handle}
         data-handle={handle}
         className={cn(
-          "absolute size-3 rounded-sm border-2 bg-white [@media(pointer:coarse)]:size-7 [@media(pointer:coarse)]:translate-x-0! [@media(pointer:coarse)]:translate-y-0!",
+          "bg-card absolute size-3 rounded-sm border-2 [@media(pointer:coarse)]:size-7 [@media(pointer:coarse)]:translate-x-0! [@media(pointer:coarse)]:translate-y-0!",
           className,
           handle === "nw" && "top-0 left-0 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize",
           handle === "ne" && "top-0 right-0 translate-x-1/2 -translate-y-1/2 cursor-nesw-resize",
@@ -348,6 +353,7 @@ export const PrintAreaEditor = ({
   otherAreas,
   onSelectArea,
   imageClassName = "max-h-105",
+  frame,
 }: PrintAreaEditorProps) => {
   const turn = normalizeRotation(rotation);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -413,12 +419,17 @@ export const PrintAreaEditor = ({
   // Layout width, not getBoundingClientRect: the dialog's zoom-in animation is a CSS transform, so
   // a rect measured mid-animation is ~95% size and the overlays would render offset until re-render.
   const scale = natural && imgRef.current ? imgRef.current.clientWidth / natural.width || 1 : 1;
-  const guideBounds: Bounds = garmentBounds ?? {
+  // Inside a fixed frame the design snaps to the frame's center, not the garment's.
+  const guideBounds: Bounds = frame ?? garmentBounds ?? {
     x: 0,
     y: 0,
     width: natural?.width ?? 0,
     height: natural?.height ?? 0,
   };
+  // Where the box may go: the frame, else the whole photo.
+  const limits: Bounds = frame ?? { x: 0, y: 0, width: natural?.width ?? 0, height: natural?.height ?? 0 };
+  // A box turned in a frame may need moving to stay in it; one too big for the frame is not taken.
+  const inFrame = (next: Bounds, degrees: number) => (frame ? keepInFrame(next, degrees, frame) : next);
   const centerTarget = {
     centerX: guideBounds.x + guideBounds.width / 2,
     centerY: guideBounds.y + guideBounds.height / 2,
@@ -427,8 +438,9 @@ export const PrintAreaEditor = ({
   // The composite cuts the design to the garment, so what lies off it is shown cut and called out.
   const garmentMask = garmentMaskUrl && loadedMask?.url === garmentMaskUrl ? loadedMask.mask : null;
   const printed = overlayImageUrl && overlaySize ? fitInside(value, overlaySize) : value;
+  // A fixed frame lies on the garment, so a design kept inside it is never off the garment.
   const offGarment =
-    garmentMask && natural && !editingGarment ? shareOffGarment(garmentMask, printed, natural) : 0;
+    garmentMask && natural && !editingGarment && !frame ? shareOffGarment(garmentMask, printed, natural) : 0;
   const isOffGarment = offGarment > OFF_GARMENT_TOLERANCE;
   const printedThing = overlayImageUrl ? "design" : "print area";
 
@@ -458,6 +470,8 @@ export const PrintAreaEditor = ({
       const point = toNatural(event.clientX, event.clientY);
       dragRef.current = { mode: "move", startX: point.x, startY: point.y, origin: activeRect };
     } else {
+      // In a fixed frame the design is moved, never drawn again where the pointer lands.
+      if (frame && !editingGarment) return;
       // A stray tap beside the box must not replace an area that was already placed.
       if (event.pointerType === "touch" && activeRect.width > 1 && activeRect.height > 1) return;
       const anchor = toNatural(event.clientX, event.clientY);
@@ -484,12 +498,18 @@ export const PrintAreaEditor = ({
         const quarter = Math.round(degrees / 90) * 90;
         if (Math.abs(degrees - quarter) < ROTATION_SNAP_DEGREES) degrees = quarter;
       }
-      onRotationChange?.(normalizeRotation(Math.round(degrees)));
+      const turned = normalizeRotation(Math.round(degrees));
+      // In a frame, a turn that would take the design past it moves the design in, or is not taken when it cannot fit.
+      const kept = inFrame(value, turned);
+      if (!kept) return;
+      if (kept.x !== value.x || kept.y !== value.y) onChange(kept);
+      onRotationChange?.(turned);
       return;
     }
 
     if (drag.mode === "resize" && turn !== 0 && !editingGarment) {
-      onChange(resizeTurned(drag.origin, drag.handle, point, turn));
+      const kept = inFrame(resizeTurned(drag.origin, drag.handle, point, turn), turn);
+      if (kept) onChange(kept);
       return;
     }
 
@@ -500,24 +520,27 @@ export const PrintAreaEditor = ({
         y1 = Math.max(drag.anchorY, point.y);
       next = { x: x0, y: y0, width: Math.max(1, x1 - x0), height: Math.max(1, y1 - y0) };
     } else if (drag.mode === "move") {
+      // The garment box moves over the whole photo; the print area within its limits (a fixed frame, else the photo).
+      const area = editingGarment ? { x: 0, y: 0, width: natural.width, height: natural.height } : limits;
       next = {
-        x: clamp(drag.origin.x + point.x - drag.startX, 0, natural.width - drag.origin.width),
-        y: clamp(drag.origin.y + point.y - drag.startY, 0, natural.height - drag.origin.height),
+        x: clamp(drag.origin.x + point.x - drag.startX, area.x, area.x + area.width - drag.origin.width),
+        y: clamp(drag.origin.y + point.y - drag.startY, area.y, area.y + area.height - drag.origin.height),
         width: drag.origin.width,
         height: drag.origin.height,
       };
     } else {
+      const area = editingGarment ? { x: 0, y: 0, width: natural.width, height: natural.height } : limits;
       const o = drag.origin;
       let left = o.x,
         top = o.y,
         right = o.x + o.width,
         bottom = o.y + o.height;
-      if (drag.handle === "nw" || drag.handle === "ne") top = clamp(point.y, 0, bottom - 1);
+      if (drag.handle === "nw" || drag.handle === "ne") top = clamp(point.y, area.y, bottom - 1);
       if (drag.handle === "sw" || drag.handle === "se")
-        bottom = clamp(point.y, top + 1, natural.height);
-      if (drag.handle === "nw" || drag.handle === "sw") left = clamp(point.x, 0, right - 1);
+        bottom = clamp(point.y, top + 1, area.y + area.height);
+      if (drag.handle === "nw" || drag.handle === "sw") left = clamp(point.x, area.x, right - 1);
       if (drag.handle === "ne" || drag.handle === "se")
-        right = clamp(point.x, left + 1, natural.width);
+        right = clamp(point.x, left + 1, area.x + area.width);
       next = { x: left, y: top, width: right - left, height: bottom - top };
     }
 
@@ -526,8 +549,10 @@ export const PrintAreaEditor = ({
       return;
     }
     const snapped = snapToCenter(next, centerTarget, scale);
+    const kept = inFrame(snapped.rect, turn);
+    if (!kept) return;
     setSnap(snapped.snap);
-    onChange(snapped.rect);
+    onChange(kept);
   };
 
   const endDrag = () => {
@@ -539,11 +564,12 @@ export const PrintAreaEditor = ({
     const number = Number(raw);
     if (!natural || raw === "" || !Number.isFinite(number)) return;
     const next = { ...value, [field]: Math.round(number) };
-    next.width = clamp(next.width, 1, natural.width);
-    next.height = clamp(next.height, 1, natural.height);
-    next.x = clamp(next.x, 0, natural.width - next.width);
-    next.y = clamp(next.y, 0, natural.height - next.height);
-    onChange(next);
+    next.width = clamp(next.width, 1, limits.width);
+    next.height = clamp(next.height, 1, limits.height);
+    next.x = clamp(next.x, limits.x, limits.x + limits.width - next.width);
+    next.y = clamp(next.y, limits.y, limits.y + limits.height - next.height);
+    const kept = inFrame(next, turn);
+    if (kept) onChange(kept);
   };
 
   const toggleGarmentEditing = () => {
@@ -597,7 +623,7 @@ export const PrintAreaEditor = ({
           src={imageUrl}
           alt="Mock-up base photo"
           className={cn(
-            "block max-w-full rounded-lg ring-1 ring-slate-200 select-none ring-inset",
+            "ring-ink-200 block max-w-full rounded-lg ring-1 select-none ring-inset",
             imageClassName
           )}
           draggable={false}
@@ -632,6 +658,17 @@ export const PrintAreaEditor = ({
               WebkitMaskSize: "100% 100%",
             }}
           />
+        )}
+        {natural && frame && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute border-2 border-dashed border-emerald-600/80 bg-emerald-500/5"
+            style={boxStyle(frame)}
+          >
+            <span className="absolute -top-5 left-0 rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap text-white">
+              Printify print area
+            </span>
+          </div>
         )}
         {natural &&
           otherAreas?.map((other) => (
@@ -733,13 +770,13 @@ export const PrintAreaEditor = ({
                   aria-valuemax={180}
                   aria-valuenow={turn}
                   title="Drag to turn. Hold Shift for steps of 15°."
-                  className="border-primary absolute -top-7 left-1/2 size-3.5 -translate-x-1/2 cursor-grab rounded-full border-2 bg-white active:cursor-grabbing"
+                  className="border-primary bg-card absolute -top-7 left-1/2 size-3.5 -translate-x-1/2 cursor-grab rounded-full border-2 active:cursor-grabbing"
                 />
               </>
             )}
           </div>
         )}
-        {garmentBounds && (
+        {garmentBounds && !frame && (
           <div
             data-rect={editingGarment ? "" : undefined}
             className={cn(
@@ -783,7 +820,7 @@ export const PrintAreaEditor = ({
         </p>
       )}
       {isOffGarment && (
-        <p role="status" className="text-xs text-amber-700">
+        <p role="status" className="text-xs text-amber-700 dark:text-amber-300">
           {offGarment > 1 - OFF_GARMENT_TOLERANCE
             ? `The ${printedThing} is entirely off the garment, so nothing of it would be printed. Move it onto the garment.`
             : `Part of the ${printedThing} is off the garment. Mock-ups cut it off at the garment’s edge.`}
@@ -809,7 +846,12 @@ export const PrintAreaEditor = ({
           ))}
         </div>
       )}
-      {natural && (
+      {natural && frame && (
+        <p className="text-muted-foreground text-xs">
+          The green dashed box is Printify&apos;s print area. Move, resize or turn the design inside it: it prints where it shows.
+        </p>
+      )}
+      {natural && !frame && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-muted-foreground text-xs">
             {editingGarment

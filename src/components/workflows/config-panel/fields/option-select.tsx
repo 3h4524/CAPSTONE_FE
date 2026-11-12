@@ -1,5 +1,6 @@
 "use client";
 
+import { SELECT_CLEARABLE_TRIGGER, SelectClearButton } from "@/components/commons/forms/select-clear-button";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { Button } from "@/components/ui/button";
 import { FormControl } from "@/components/ui/form";
@@ -19,8 +20,13 @@ type OptionSelectProps = {
   isError?: boolean;
   emptyMessage?: string;
   onRetry?: () => void;
-  /** Adds a choice that clears the value, for fields that may stay empty. */
+  /**
+   * For a field that may stay empty, what it shows while empty (such as "No style"); a × in the field then
+   * takes the choice back.
+   */
   noneLabel?: string;
+  /** For a field that may stay empty but has no name for that: the × shows, and the placeholder while empty. */
+  clearable?: boolean;
   disabled?: boolean;
   /**
    * For a dropdown outside a node's settings form, which edits another node's config: the field then has
@@ -28,9 +34,6 @@ type OptionSelectProps = {
    */
   standaloneId?: string;
 };
-
-// Radix Select rejects an empty item value, so "no choice" travels as this marker.
-const NONE_VALUE = "__none__";
 
 export const OptionSelect = ({
   value,
@@ -42,9 +45,11 @@ export const OptionSelect = ({
   emptyMessage = "No options available yet.",
   onRetry,
   noneLabel,
+  clearable = false,
   disabled = false,
   standaloneId,
 }: OptionSelectProps) => {
+  const canClear = (clearable || Boolean(noneLabel)) && Boolean(value) && !disabled;
   // Shaped like the dropdown it stands in for, so the fields below do not jump when it loads.
   if (isLoading) return <SectionLoading label="Loading options" className="bg-muted/40 h-9 justify-start rounded-md border px-3 py-0 [&_svg]:size-4 [&>span]:text-xs" />;
 
@@ -53,7 +58,7 @@ export const OptionSelect = ({
       <PanelNotice
         tone="error"
         action={onRetry && (
-          <Button type="button" variant="link" size="sm" className="h-auto px-0 text-xs text-rose-900 hover:translate-y-0" onClick={onRetry}>Retry</Button>
+          <Button type="button" variant="link" size="sm" className="h-auto px-0 text-xs text-rose-900 hover:translate-y-0 dark:text-rose-300" onClick={onRetry}>Retry</Button>
         )}
       >
         Options could not be loaded.
@@ -61,7 +66,7 @@ export const OptionSelect = ({
     );
   }
 
-  if (options.length === 0 && !noneLabel) {
+  if (options.length === 0 && !value) {
     return <p className="text-muted-foreground rounded-md border border-dashed px-3 py-2.5 text-xs leading-relaxed">{emptyMessage}</p>;
   }
 
@@ -72,8 +77,11 @@ export const OptionSelect = ({
 
   // Inside a form the id comes from FormControl; an explicit id={undefined} here would wipe it out.
   const trigger = (
-    <SelectTrigger {...(standaloneId ? { id: standaloneId } : {})} className={cn("w-full min-w-0 bg-white", withImages && "pl-1.5 data-[size=default]:h-10")}>
-      <SelectValue placeholder={placeholder}>
+    <SelectTrigger
+      {...(standaloneId ? { id: standaloneId } : {})}
+      className={cn("bg-card w-full min-w-0", withImages && "pl-1.5 data-[size=default]:h-10", canClear && SELECT_CLEARABLE_TRIGGER)}
+    >
+      <SelectValue placeholder={noneLabel ?? placeholder}>
         {rich && selected ? (
           <span className="flex min-w-0 items-center gap-2">
             {withImages && <OptionThumbnail imageUrl={selected.imageUrl} className="size-7" />}
@@ -85,14 +93,13 @@ export const OptionSelect = ({
   );
 
   return (
-    <Select
-      value={value || (noneLabel ? NONE_VALUE : undefined)}
-      onValueChange={(next) => onChange(next === NONE_VALUE ? "" : next)}
-      disabled={disabled}
-    >
-      {standaloneId ? trigger : <FormControl>{trigger}</FormControl>}
+    // An empty value shows the placeholder; Radix answers "" when the value stops matching an item, which is no choice.
+    <Select value={value} onValueChange={(next) => next !== value && onChange(next)} disabled={disabled}>
+      <div className="relative min-w-0">
+        {standaloneId ? trigger : <FormControl>{trigger}</FormControl>}
+        {canClear && <SelectClearButton label={`Clear: ${selected?.label ?? "this choice"}`} onClear={() => onChange("")} />}
+      </div>
       <SelectContent position="popper" className={cn(PANEL_SELECT_CONTENT_CLASS, "w-(--radix-select-trigger-width)")}>
-        {noneLabel && <SelectItem value={NONE_VALUE}>{noneLabel}</SelectItem>}
         {options.map((option) => (
           <SelectItem key={option.value} value={option.value} className={cn(rich && "py-2 *:min-w-0")}>
             {rich ? (

@@ -561,6 +561,10 @@ export interface RunGroup {
   selectedCount: number;
   progress: RunGroupProgress;
   targets: RunGroupTarget[];
+  /** Why a run set to start by itself is waiting (the cost to confirm, a plan limit...), or which designs it left out. */
+  notice?: string | null;
+  /** The run is being made ready in the background (model photos, then the automatic start): nothing to do yet. */
+  preparing?: boolean;
 }
 export interface RunGroupSummary {
   id: string;

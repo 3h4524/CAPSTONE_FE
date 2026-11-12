@@ -118,9 +118,11 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
         {
           productId,
           config: parsed.data,
-          mockupIds: designRun ? [] : readStringArray(mockup?.data.config.mockupIds),
-          artworkGroupKey: designRun?.artworkGroupKey ?? readString(mockup?.data.config.artworkGroupKey),
-          forDesign: Boolean(designRun),
+          // In a batch video run the storyboard is one design's: its scenes take that design's images on the server.
+          mockupIds: designRun || previewDesign ? [] : readStringArray(mockup?.data.config.mockupIds),
+          artworkGroupKey:
+            designRun?.artworkGroupKey ?? previewDesign?.artworkGroupKey ?? readString(mockup?.data.config.artworkGroupKey),
+          forDesign: Boolean(designRun || previewDesign),
         },
         {
           onSuccess: (result) => {
@@ -142,6 +144,7 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
       node.data.config,
       productId,
       designRun,
+      previewDesign,
     ]
   );
 

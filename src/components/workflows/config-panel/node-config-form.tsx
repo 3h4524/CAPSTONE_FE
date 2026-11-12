@@ -89,9 +89,19 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
       ? "ai_shot"
       : "standard"
     : videoMode;
-  const videoFields = definition.fields.filter(
-    (field) => field.name === "outputFormat" || field.name === "standardOptions.transition"
-  );
+  const videoFieldNamed = (name: string) => definition.fields.find((field) => field.name === name);
+  // The output format leads, then the video template, then the transition and the scenes the template starts from.
+  const videoFieldNode = (name: string) => {
+    const field = videoFieldNamed(name);
+    return field ? (
+      <NodeConfigField
+        key={field.name}
+        field={field}
+        control={control}
+        videoMode={String(outputMode ?? "ai_shot")}
+      />
+    ) : null;
+  };
   const showProduct = useWorkflowStore((state) => showsInputProduct(state.nodes));
   const panelFields =
     node.data.type === "product-input" && !showProduct
@@ -186,16 +196,10 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
             >
               {node.data.type === "generate-video" ? (
                 <div className="space-y-6 px-5 py-5">
-                  {videoFields.map((field) => (
-                    <NodeConfigField
-                      key={field.name}
-                      field={field}
-                      control={control}
-                      videoMode={String(outputMode ?? "ai_shot")}
-                    />
-                  ))}
                   <AiShotOptions
                     nodeId={node.id}
+                    beforeTemplate={videoFieldNode("outputFormat")}
+                    afterTemplate={videoFieldNode("standardOptions.transition")}
                     disabled={isRunning && !waitingReview}
                     onChange={(scenes, seconds, sharedInstructions) => {
                       const nextMode =

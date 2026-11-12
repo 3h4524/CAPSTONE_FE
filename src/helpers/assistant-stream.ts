@@ -2,13 +2,14 @@ import type { AxiosError } from "axios";
 
 import { Log } from "@/helpers/log";
 import { assistantStreamEventSchema } from "@/schemas/assistant";
-import type { AssistantStreamEvent } from "@/types/assistant";
+import type { AssistantStreamEntry } from "@/types/assistant";
 
 const RATE_LIMIT_MESSAGE = "You're sending messages too quickly. Try again in a minute.";
 
-const parseBlock = (block: string): AssistantStreamEvent | null => {
+const parseBlock = (block: string): AssistantStreamEntry | null => {
   const lines = block.split("\n").filter((line) => line !== "" && !line.startsWith(":"));
   const type = lines.find((line) => line.startsWith("event:"))?.slice(6).trim();
+  const id = lines.find((line) => line.startsWith("id:"))?.slice(3).trim();
   const data = lines
     .filter((line) => line.startsWith("data:"))
     .map((line) => line.slice(5).replace(/^ /, ""))
@@ -16,7 +17,7 @@ const parseBlock = (block: string): AssistantStreamEvent | null => {
   if (!type || !data) return null;
   try {
     const parsed = assistantStreamEventSchema.safeParse({ type, data: JSON.parse(data) });
-    if (parsed.success) return parsed.data;
+    if (parsed.success) return id ? { ...parsed.data, id } : parsed.data;
     Log.warn({ prefix: "assistant-stream", message: "Dropped unknown stream event", data: type });
     return null;
   } catch {
@@ -26,19 +27,19 @@ const parseBlock = (block: string): AssistantStreamEvent | null => {
 };
 
 const toEvents = (blocks: string[]) =>
-  blocks.map(parseBlock).filter((event): event is AssistantStreamEvent => event !== null);
+  blocks.map(parseBlock).filter((event): event is AssistantStreamEntry => event !== null);
 
 export const createAssistantStreamParser = () => {
   let buffer = "";
 
   return {
-    push: (chunk: string): AssistantStreamEvent[] => {
+    push: (chunk: string): AssistantStreamEntry[] => {
       buffer += chunk.replace(/\r\n/g, "\n");
       const blocks = buffer.split("\n\n");
       buffer = blocks.pop() ?? "";
       return toEvents(blocks);
     },
-    flush: (): AssistantStreamEvent[] => {
+    flush: (): AssistantStreamEntry[] => {
       const remaining = buffer;
       buffer = "";
       return remaining.trim() ? toEvents([remaining]) : [];
@@ -75,4 +76,20 @@ export const readStreamErrorBody = async (error: AxiosError) => {
   }
   const isEmpty = response.data === undefined || response.data === null || response.data === "";
   if (response.status === 429 && isEmpty) response.data = { title: RATE_LIMIT_MESSAGE };
+};
+
+export const readAssistantStream = async (
+  stream: ReadableStream<Uint8Array>,
+  onEvent: (event: AssistantStreamEntry) => void
+) => {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  const parser = createAssistantStreamParser();
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    parser.push(decoder.decode(value, { stream: true })).forEach(onEvent);
+  }
+  parser.push(decoder.decode()).forEach(onEvent);
+  parser.flush().forEach(onEvent);
 };

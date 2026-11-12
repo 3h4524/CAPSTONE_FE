@@ -20,7 +20,7 @@ const MIN_ROWS = 1;
 const MAX_ROWS = 5;
 
 export const AssistantComposer = () => {
-  const { send, stop, isStreaming } = useAssistantChat();
+  const { send, stop, isStreaming, isStopping } = useAssistantChat();
   const draftKey = useAssistantStore(selectAssistantDraftKey);
   const setDraft = useAssistantStore((state) => state.setDraft);
   const form = useForm<AssistantComposerValues>({
@@ -87,7 +87,7 @@ export const AssistantComposer = () => {
             )}
           />
           {isStreaming ? (
-            <Button key="stop" type="button" size="icon" variant="outline" aria-label="Stop" onClick={stop}>
+            <Button key="stop" type="button" size="icon" variant="outline" aria-label="Stop" disabled={isStopping} onClick={stop}>
               <Square aria-hidden="true" />
             </Button>
           ) : (

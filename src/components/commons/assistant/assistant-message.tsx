@@ -59,6 +59,7 @@ export const AssistantMessage = ({ message }: AssistantMessageProps) => {
       {message.choices ? (
         <AssistantChoiceChips messageId={message.id} choices={message.choices} choicesUsed={message.choicesUsed} />
       ) : null}
+      {message.isStopped ? <p className="text-muted-foreground text-xs">Stopped</p> : null}
       {message.error ? <AssistantMessageError messageKey={message.key} error={message.error} /> : null}
     </div>
   );

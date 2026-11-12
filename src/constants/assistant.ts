@@ -1,5 +1,7 @@
 export const ASSISTANT_MAX_MESSAGE_LENGTH = 4000;
 export const ASSISTANT_COUNTER_THRESHOLD = 3500;
+export const ASSISTANT_ACTION_COUNTDOWN_TICK_MS = 1000;
+export const ASSISTANT_ACTION_EXPIRED_ERROR_CODE = "assistant.action_expired";
 export const ASSISTANT_SCROLL_BOTTOM_TOLERANCE_PX = 80;
 export const ASSISTANT_ROUTE_MAX_LENGTH = 300;
 export const ASSISTANT_CANVAS_MAX_NODES = 40;
@@ -32,12 +34,33 @@ export const ASSISTANT_TOOL_LABELS: Record<string, AssistantToolLabel> = {
 
 export const ASSISTANT_FALLBACK_TOOL_LABEL: AssistantToolLabel = { running: "Working on it", done: "Done" };
 
-export const ASSISTANT_STARTER_CHIPS: { match: (pathname: string) => boolean; chips: string[] }[] = [
-  { match: (p) => p.startsWith("/admin"), chips: ["How do I add an FAQ article?", "How does RAG ingestion work?", "What can you help me with?"] },
-  { match: (p) => p === "/workflows", chips: ["Why did my last run fail?", "Explain the selected step", "Add a listing content step", "Run this workflow"] },
-  { match: (p) => p.startsWith("/batches"), chips: ["List my batches", "How do I import products from Excel?"] },
-  { match: (p) => p.startsWith("/usage") || p.startsWith("/subscription"), chips: ["Summarise my usage this month", "What does my plan include?"] },
-  { match: () => true, chips: ["What can you help me with?", "How do I create my first workflow?", "Show my workflows"] },
+export type AssistantStarterChipRequirement = "selectedStep" | "runnableWorkflow";
+
+export type AssistantStarterChip = { label: string; requires?: AssistantStarterChipRequirement };
+
+export const ASSISTANT_STARTER_CHIPS: { match: (pathname: string) => boolean; chips: AssistantStarterChip[] }[] = [
+  {
+    match: (p) => p.startsWith("/admin"),
+    chips: [{ label: "How do I add an FAQ article?" }, { label: "How does RAG ingestion work?" }, { label: "What can you help me with?" }],
+  },
+  {
+    match: (p) => p === "/workflows",
+    chips: [
+      { label: "Why did my last run fail?" },
+      { label: "Explain the selected step", requires: "selectedStep" },
+      { label: "Add a listing content step" },
+      { label: "Run this workflow", requires: "runnableWorkflow" },
+    ],
+  },
+  { match: (p) => p.startsWith("/batches"), chips: [{ label: "List my batches" }, { label: "How do I import products from Excel?" }] },
+  {
+    match: (p) => p.startsWith("/usage") || p.startsWith("/subscription"),
+    chips: [{ label: "Summarise my usage this month" }, { label: "What does my plan include?" }],
+  },
+  {
+    match: () => true,
+    chips: [{ label: "What can you help me with?" }, { label: "How do I create my first workflow?" }, { label: "Show my workflows" }],
+  },
 ];
 
 export const ASSISTANT_NAVIGATION_PATTERNS: RegExp[] = [
@@ -62,6 +85,8 @@ export const ASSISTANT_PANEL_MAX_WIDTH_PX = 760;
 export const ASSISTANT_PANEL_RESERVED_WIDTH_PX = 480;
 export const ASSISTANT_PANEL_STORAGE_KEY = "apcs.assistant.panel-width";
 export const ASSISTANT_DISPLAY_MODE_STORAGE_KEY = "apcs.assistant.display-mode";
+export const ASSISTANT_DRAFTS_STORAGE_KEY_PREFIX = "apcs.assistant.drafts.";
+export const ASSISTANT_NEW_CHAT_DRAFT_KEY = "new-chat";
 export const ASSISTANT_DOCK_ENABLED = false;
 export const ASSISTANT_MASCOT_SRC = "/images/assistant/assistant-mascot.webp";
 export const ASSISTANT_BUBBLE_GAP_PX = 12;

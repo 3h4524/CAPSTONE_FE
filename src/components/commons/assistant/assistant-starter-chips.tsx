@@ -1,15 +1,17 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useShallow } from "zustand/react/shallow";
 
 import { AssistantChip } from "@/components/commons/assistant/assistant-chip";
-import { ASSISTANT_STARTER_CHIPS } from "@/constants/assistant";
+import { getAssistantStarterChips } from "@/helpers/assistant-starter-chips";
 import { useAssistantChat } from "@/hooks/use-assistant-chat";
+import { useWorkflowStore } from "@/stores/workflow";
 
 export const AssistantStarterChips = () => {
   const pathname = usePathname();
   const { send, isStreaming } = useAssistantChat();
-  const chips = ASSISTANT_STARTER_CHIPS.find((group) => group.match(pathname))?.chips ?? [];
+  const chips = useWorkflowStore(useShallow((state) => getAssistantStarterChips(pathname, state)));
 
   return (
     <div className="flex flex-col gap-3">

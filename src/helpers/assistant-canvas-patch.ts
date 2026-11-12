@@ -68,7 +68,10 @@ export const applyCanvasPatch = (
         const afterId = resolve(operation.after);
         if (operation.after && !afterId) return { reason: "The step to add after was not found" };
         const after = state.nodes.find((node) => node.id === afterId);
-        const created = createWorkflowNode(operation.type, nextPosition(state.nodes, after));
+        const defaultNode = createWorkflowNode(operation.type, nextPosition(state.nodes, after));
+        const created = operation.config
+          ? { ...defaultNode, data: { ...defaultNode.data, config: mergeConfig(defaultNode.data.config, operation.config) } }
+          : defaultNode;
         const [node = created] = withUniqueLabels([created], state.nodes);
         if (operation.ref) refMap.set(operation.ref, node.id);
         return { state: { nodes: [...state.nodes, node], edges: state.edges } };

@@ -26,7 +26,7 @@ export const AssistantLauncher = () => {
           <Button
             type="button"
             size="icon"
-            aria-label="Open assistant"
+            aria-label="Open Podi"
             variant="outline"
             className="fixed z-40 cursor-grab touch-none overflow-hidden rounded-full p-0 shadow-lg transition-none active:cursor-grabbing"
             style={{ right: position.right, bottom: position.bottom, width: ASSISTANT_LAUNCHER_SIZE_PX, height: ASSISTANT_LAUNCHER_SIZE_PX }}
@@ -36,7 +36,7 @@ export const AssistantLauncher = () => {
             <Bot className="text-primary size-6" aria-hidden="true" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="left">Drag to move, click to chat</TooltipContent>
+        <TooltipContent side="left">Drag to move, click to chat with Podi</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );

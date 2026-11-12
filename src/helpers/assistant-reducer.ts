@@ -122,3 +122,14 @@ export const reduceAssistantStreamEvent = (state: AssistantChatState, event: Ass
       return finishStreaming(state, streamingId, (message) => ({ ...message, error: event.data, retryInSeconds: null }));
   }
 };
+
+export const isLatestFailedReply = (messages: AssistantUiMessage[], messageKey: string) => {
+  const last = messages.at(-1);
+  return last?.key === messageKey && last.role === "assistant" && last.error !== null && !last.isStreaming;
+};
+
+export const findRetryPrompt = (messages: AssistantUiMessage[], failedMessageKey: string) => {
+  if (!isLatestFailedReply(messages, failedMessageKey)) return null;
+  const prompt = messages.at(-2);
+  return prompt?.role === "user" ? prompt : null;
+};

@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { arrangeNodes, describeArrangement } from "@/helpers/assistant-canvas-layout";
 import { showToast } from "@/helpers/toast";
 import { useSettleAssistantClientAction } from "@/hooks/use-settle-assistant-client-action";
+import { useAssistantStore } from "@/stores/assistant";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { AssistantArrangePayload, AssistantClientActionDecision, AssistantClientActionState } from "@/types/assistant";
 
@@ -28,7 +29,8 @@ export const AssistantArrangeCard = ({ messageId, actionId, payload, state }: As
   const workflowId = useWorkflowStore((store) => store.workflowId);
   const applyGraphPatch = useWorkflowStore((store) => store.applyGraphPatch);
   const settleClientAction = useSettleAssistantClientAction();
-  const canApply = pathname === "/workflows" && workflowId === payload.workflowId;
+  const isStreaming = useAssistantStore((store) => store.streamingMessageId !== null);
+  const canApply = pathname === "/workflows" && workflowId === payload.workflowId && !isStreaming;
 
   const settle = (next: AssistantClientActionDecision) => settleClientAction(messageId, actionId, next);
 
@@ -58,7 +60,7 @@ export const AssistantArrangeCard = ({ messageId, actionId, payload, state }: As
                 {canApply ? null : <TooltipContent>Open this workflow to apply</TooltipContent>}
               </Tooltip>
             </TooltipProvider>
-            <AssistantChip label="Dismiss" variant="ghost" onClick={() => settle("dismissed")} />
+            <AssistantChip label="Dismiss" variant="ghost" disabled={isStreaming} onClick={() => settle("dismissed")} />
           </div>
         ) : (
           <p className="text-ink-500 text-xs font-medium">{STATE_TEXT[state]}</p>

@@ -151,32 +151,14 @@ describe("AssistantCanvasPatchCard", () => {
     expect(screen.getByText("Tone: Friendly → Playful")).toBeInTheDocument();
   });
 
-  it("applies locally and queues the save while its own reply is still streaming", async () => {
+  it("disables the chips while a reply is still streaming", () => {
     openWorkflow();
-    useAssistantStore.setState({
-      streamingMessageId: "m1",
-      activeStream: { assistantMessageId: "server-m1", lastEventId: "3-0", isAttached: true },
-    });
+    useAssistantStore.setState({ streamingMessageId: "streaming" });
+
     renderWithQuery(<AssistantCanvasPatchCard messageId="m1" actionId="x1" payload={payload()} state="idle" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Apply to canvas" }));
-
-    const state = useAssistantStore.getState();
-    expect(state.messages[0]?.clientActionStates).toEqual({ x1: "applied" });
-    expect(state.queuedClientActionStates).toEqual({ "server-m1": { x1: "applied" } });
-    expect(useWorkflowStore.getState().nodes.length).toBeGreaterThan(1);
-    expect(stateRequests).toHaveLength(0);
-  });
-
-  it("saves at once when another reply is streaming", async () => {
-    openWorkflow();
-    useAssistantStore.setState({ streamingMessageId: "other" });
-    renderWithQuery(<AssistantCanvasPatchCard messageId="m1" actionId="x1" payload={payload()} state="idle" />);
-
-    await userEvent.click(screen.getByRole("button", { name: "Dismiss" }));
-
-    await vi.waitFor(() => expect(stateRequests[0]?.body).toEqual({ state: "dismissed" }));
-    expect(useAssistantStore.getState().queuedClientActionStates).toEqual({});
+    expect(screen.getByRole("button", { name: "Apply to canvas" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Dismiss" })).toBeDisabled();
   });
 
   it("asks the canvas to bring the new nodes into view", async () => {

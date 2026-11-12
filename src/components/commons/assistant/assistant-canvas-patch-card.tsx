@@ -9,6 +9,7 @@ import { describeCanvasChange } from "@/helpers/assistant-canvas-changes";
 import { applyCanvasPatch } from "@/helpers/assistant-canvas-patch";
 import { showToast } from "@/helpers/toast";
 import { useSettleAssistantClientAction } from "@/hooks/use-settle-assistant-client-action";
+import { useAssistantStore } from "@/stores/assistant";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { AssistantCanvasPatchPayload, AssistantClientActionDecision, AssistantClientActionState } from "@/types/assistant";
 import type { WorkflowNode } from "@/types/workflow";
@@ -40,7 +41,8 @@ export const AssistantCanvasPatchCard = ({ messageId, actionId, payload, state }
   const workflowId = useWorkflowStore((store) => store.workflowId);
   const applyGraphPatch = useWorkflowStore((store) => store.applyGraphPatch);
   const settleClientAction = useSettleAssistantClientAction();
-  const canApply = pathname === "/workflows" && workflowId === payload.workflowId;
+  const isStreaming = useAssistantStore((store) => store.streamingMessageId !== null);
+  const canApply = pathname === "/workflows" && workflowId === payload.workflowId && !isStreaming;
   const changes = payload.operations.map((operation) => describeCanvasChange(operation, nodes, payload.operations));
 
   const settle = (next: AssistantClientActionDecision) => settleClientAction(messageId, actionId, next);
@@ -91,7 +93,7 @@ export const AssistantCanvasPatchCard = ({ messageId, actionId, payload, state }
               {canApply ? null : <TooltipContent>Open this workflow to apply</TooltipContent>}
             </Tooltip>
           </TooltipProvider>
-          <AssistantChip label="Dismiss" variant="ghost" onClick={() => settle("dismissed")} />
+          <AssistantChip label="Dismiss" variant="ghost" disabled={isStreaming} onClick={() => settle("dismissed")} />
         </div>
       ) : (
         <p className="text-ink-500 text-xs font-medium">{STATE_TEXT[state]}</p>

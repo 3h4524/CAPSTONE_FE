@@ -58,7 +58,9 @@ describe("printify source", () => {
     const publish = { blueprintId: null, blueprintTitle: null, printProviderId: null, printProviderTitle: null, colors: [], sizes: [], targetProfit: 10, designId: null, publishToEtsy: true, addMockups: true };
     const mockup = { data: { type: "apply-mockup" as const, config: { printifyProducts: { tshirt: shirt } } } };
 
-    expect(nodeConfigSchemaIn("publish-printify", []).safeParse(publish).success).toBe(false);
+    // Without a product of its own the node follows the approved mock-ups; chosen by hand, it needs one.
+    expect(nodeConfigSchemaIn("publish-printify", []).safeParse(publish).success).toBe(true);
+    expect(nodeConfigSchemaIn("publish-printify", []).safeParse({ ...publish, source: "manual" }).success).toBe(false);
     expect(nodeConfigSchemaIn("publish-printify", [mockup]).safeParse(publish).success).toBe(true);
     expect(nodeConfigSchemaIn("publish-printify", [mockup]).safeParse({ ...publish, targetProfit: 900 }).success).toBe(false);
   });

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { OptionSelect } from "@/components/workflows/config-panel/fields/option-select";
 import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
 import { runStatusOf } from "@/components/workflows/run/run-group-panel";
+import { readProductConfigs, withoutProductConfigs } from "@/helpers/product-video-configs";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { useUpdateRunGroupDesignConfig } from "@/hooks/mutations/use-run-group-actions";
 import { useRunGroup, useRunGroupId } from "@/hooks/queries/use-run-group";
@@ -51,6 +52,7 @@ export const DesignScopeSelect = ({ nodeId }: { nodeId: string }) => {
   const show = (next: RunGroupTarget, config: WorkflowNodeConfig) =>
     enter(
       {
+        kind: "design",
         key: next.key,
         productId: next.productId,
         artworkGroupKey: next.artworkGroupKey,
@@ -60,9 +62,14 @@ export const DesignScopeSelect = ({ nodeId }: { nodeId: string }) => {
       config
     );
   const sharedConfig = () => useWorkflowStore.getState().designScope?.sharedConfig ?? nodeConfig ?? {};
+  // A design without settings of its own renders with its product's, set before the run, else the shared ones.
+  const fallbackFor = (next: RunGroupTarget) => {
+    const shared = sharedConfig();
+    return readProductConfigs(shared)[next.productId] ?? withoutProductConfigs(shared);
+  };
 
   const open = (next: RunGroupTarget) => {
-    show(next, (next.config as WorkflowNodeConfig | null) ?? sharedConfig());
+    show(next, (next.config as WorkflowNodeConfig | null) ?? fallbackFor(next));
     if (next.runId && next.runId !== runId) selectRun(next.runId);
   };
 
@@ -91,7 +98,7 @@ export const DesignScopeSelect = ({ nodeId }: { nodeId: string }) => {
 
   const useShared = () => {
     if (!scope || !target) return;
-    const shared = sharedConfig();
+    const shared = fallbackFor(target);
     if (!target.hasOwnConfig) {
       show(target, shared);
       return;
@@ -116,7 +123,13 @@ export const DesignScopeSelect = ({ nodeId }: { nodeId: string }) => {
   const options = designs.map((design) => ({
     value: design.key,
     label: design.productName,
-    hint: waiting ? (design.hasOwnConfig ? "Own settings" : "Shared settings") : runStatusOf(design.runStatus).label,
+    hint: waiting
+      ? design.hasOwnConfig
+        ? "Own settings"
+        : readProductConfigs(sharedConfig())[design.productId]
+          ? "Product's settings"
+          : "Shared settings"
+      : runStatusOf(design.runStatus).label,
     imageUrl: design.previewUrl,
   }));
 

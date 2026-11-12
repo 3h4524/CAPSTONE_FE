@@ -320,7 +320,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
             value: "auto",
             label: "Approve automatically",
             description:
-              "Every mock-up waiting for review is approved and the video starts. Rejected ones stay out; AI scenes still wait for you to confirm their cost.",
+              "Every mock-up waiting for review is approved and the video starts. Rejected ones stay out; AI scenes start within the cost you confirmed on Run.",
           },
         ],
       },

@@ -309,6 +309,9 @@ export const generateVideoConfigSchema = z
     aiStudioSourceMockupId: z.string().uuid().nullable().optional(),
     aiStudioFrameId: z.string().uuid().nullable().optional(),
     videoEdit: videoEditSchema,
+    // Before a batch run, some products' own Generate Video settings (product id to a whole config), each checked when
+    // it is edited (see `ProductScopeSelect`).
+    productConfigs: z.record(z.string().uuid(), z.record(z.string(), z.unknown())).optional(),
   })
   .superRefine((value, ctx) => {
     if (value.assetSelection === "manual" && value.selectedMockupIds.length === 0)
@@ -330,13 +333,9 @@ export const generateVideoConfigSchema = z
     if (value.aiScenes?.length) {
       if (value.aiScenes.length > 4)
         ctx.addIssue({ code: "custom", path: ["aiScenes"], message: "Use up to four scenes." });
+      // A scene may leave its image open: the run picks each design's own (its matching mock-up, its model photo for a
+      // scene with a person, else its main mock-up), so a scene list is set up once, before any mock-up exists.
       value.aiScenes.forEach((scene, index) => {
-        if (!scene.mockupId)
-          ctx.addIssue({
-            code: "custom",
-            path: ["aiScenes", index, "mockupId"],
-            message: `Choose an approved image for scene ${index + 1}.`,
-          });
         if (scene.mode === "ai" && (scene.durationSeconds < 4 || scene.durationSeconds > 15)) {
           ctx.addIssue({
             code: "custom",

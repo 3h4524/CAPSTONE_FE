@@ -540,6 +540,17 @@ describe("generateVideoConfigSchema", () => {
     expect(invalid.success).toBe(false);
   });
 
+  it("accepts an AI scene with no image chosen, since the run picks each design's own", () => {
+    const scene = {
+      mode: "ai", mockupId: null, templateCode: "lifestyle_in_use",
+      durationSeconds: 5, framing: "medium", cameraAngle: "three_quarter", cameraMovement: "push_in",
+      subjectMotion: "none", motionIntensity: "subtle", lighting: "soft_studio", extraInstructions: null,
+      rightsConfirmed: false,
+    };
+
+    expect(generateVideoConfigSchema.safeParse({ ...valid, mode: "ai_shot", durationSeconds: 5, aiScenes: [scene] }).success).toBe(true);
+  });
+
   it("requires the ai shot scene settings when the mode is ai_shot", () => {
     const result = generateVideoConfigSchema.safeParse({ ...valid, mode: "ai_shot" });
 

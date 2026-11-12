@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RunGroupPanel } from "@/components/workflows/run/run-group-panel";
 import { useWorkflowStore } from "@/stores/workflow";
 import { buildWorkflowNode } from "@/test/factories";
-import type { GenerateVideoConfig, RunGroup } from "@/types/video-workflow";
+import type { GenerateVideoConfig, MockupAsset, RunGroup } from "@/types/video-workflow";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   group: null as RunGroup | null,
   confirm: vi.fn(),
   confirmCost: vi.fn(),
+  assets: [] as MockupAsset[],
 }));
 
 vi.mock("@/hooks/queries/use-run-group", () => ({
@@ -23,7 +24,7 @@ vi.mock("@/hooks/mutations/use-run-group-actions", () => ({
 }));
 vi.mock("@/hooks/use-workflow-runtime", () => ({ useWorkflowRuntime: () => ({ selectRun: vi.fn() }) }));
 vi.mock("@/hooks/use-sync-generated-mockups", () => ({ useSyncGeneratedMockups: () => false }));
-vi.mock("@/hooks/queries/use-mockup-assets", () => ({ useMockupAssets: () => ({ data: [], isPending: false, dataUpdatedAt: 0 }) }));
+vi.mock("@/hooks/queries/use-mockup-assets", () => ({ useMockupAssets: () => ({ data: mocks.assets, isPending: false, dataUpdatedAt: 0 }) }));
 vi.mock("@/hooks/mutations/use-review-mockup-asset", () => ({ useReviewMockupAsset: () => ({ mutateAsync: vi.fn() }) }));
 vi.mock("@/hooks/use-query-client", () => ({ useAppQueryClient: () => ({ setQueryData: vi.fn(), invalidateQueries: vi.fn() }) }));
 vi.mock("@/hooks/queries/use-ai-video-templates", () => ({
@@ -64,6 +65,7 @@ const showCanvas = (config: GenerateVideoConfig) => {
 describe("RunGroupPanel: starting the videos", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.assets = [];
     mocks.group = group();
     showCanvas(standard);
   });
@@ -134,5 +136,32 @@ describe("RunGroupPanel: starting the videos", () => {
 
     expect(screen.getAllByText(/no approved model photo/).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+  });
+});
+
+const mockup = (id: string, approvalStatus: string) =>
+  ({
+    id, productId: "p", artworkGroupKey: "d", role: "Hero", approvalStatus, previewUrl: `https://cdn.test/${id}.png`,
+    width: 100, height: 100, variantKey: "#FFFFFF", warnings: [], revision: 1,
+  }) as unknown as MockupAsset;
+
+describe("RunGroupPanel: once the videos started", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    showCanvas(standard);
+    const started = group();
+    started.status = "completed";
+    started.targets[0] = { ...started.targets[0], runId: "run-1", runStatus: "completed" };
+    mocks.group = started;
+  });
+
+  it("keeps the design's approved mock-ups in view, without offering to review them again", () => {
+    mocks.assets = [mockup("front", "approved"), mockup("back", "approved"), mockup("left", "rejected")];
+    render(<RunGroupPanel />);
+
+    expect(screen.getByText("2 approved mock-ups")).toBeInTheDocument();
+    expect(screen.getAllByRole("img", { name: /mock-up, approved/ })).toHaveLength(2);
+    expect(screen.queryByRole("img", { name: /rejected/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Approve mock-up" })).not.toBeInTheDocument();
   });
 });

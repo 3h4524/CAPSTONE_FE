@@ -22,6 +22,7 @@ import { MockupApprovalResults } from "@/components/workflows/config-panel/mocku
 import { NodeConfigField } from "@/components/workflows/config-panel/node-config-field";
 import { OwnPromptNotice } from "@/components/workflows/config-panel/own-prompt-notice";
 import { PlanLockNotice } from "@/components/workflows/config-panel/plan-lock-notice";
+import { ProductScopeSelect } from "@/components/workflows/config-panel/product-scope-select";
 import { PromptRecipe } from "@/components/workflows/config-panel/prompt-recipe";
 import { EtsyPublishSettings, PrintifyPublishSettings } from "@/components/workflows/config-panel/publish-settings";
 import { ReviewVideoResults } from "@/components/workflows/config-panel/review-video-results";
@@ -148,9 +149,10 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
       <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:block!">
         <PanelStats stats={overview} />
         {/* Outside the locked settings: the design whose settings are shown can be changed while a video renders. */}
-        {node.data.type === "generate-video" && groupId && (
-          <div className="px-5 pt-4">
-            <DesignScopeSelect nodeId={node.id} />
+        {/* Before a run, the products of the batch; while a batch video run is open, its designs. */}
+        {node.data.type === "generate-video" && (
+          <div className="px-5 pt-4 empty:hidden">
+            {groupId ? <DesignScopeSelect nodeId={node.id} /> : <ProductScopeSelect nodeId={node.id} />}
           </div>
         )}
         <PlanLockNotice

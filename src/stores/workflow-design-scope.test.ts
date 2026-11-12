@@ -8,7 +8,7 @@ const initialState = useWorkflowStore.getState();
 
 const shared: WorkflowNodeConfig = { mode: "standard", durationSeconds: 6, outputFormat: "portrait" };
 const designs: WorkflowNodeConfig = { mode: "standard", durationSeconds: 10, outputFormat: "square" };
-const design = { key: "p1:d1", productId: "p1", artworkGroupKey: "d1", label: "Tee · Design 2", runId: null };
+const design = { kind: "design" as const, key: "p1:d1", productId: "p1", artworkGroupKey: "d1", label: "Tee · Design 2", runId: null };
 
 const video = (config: WorkflowNodeConfig): WorkflowNode =>
   buildWorkflowNode({ id: "video", data: { type: "generate-video", label: "Generate Video", config, status: "idle" } });

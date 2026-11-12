@@ -98,5 +98,15 @@ export const confirmRunGroup = async ({
   aiShotQuoteToken?: string;
 }) => (await api.post<RunGroup>(`/api/run-groups/${groupId}/confirm`, { expectedRevision, aiShotQuoteToken })).data;
 
+/** How many videos of a batch video run have a package ready to download together. */
+export type RunGroupExportSummary = { groupId: string; ready: number; videos: number };
+
+export const getRunGroupExport = async (groupId: string) =>
+  (await api.get<RunGroupExportSummary>(`/api/run-groups/${groupId}/export`)).data;
+
+/** The link of one ZIP holding every ready package of the run. */
+export const downloadRunGroupExport = async (groupId: string) =>
+  (await api.get<string>(`/api/run-groups/${groupId}/export/download`)).data;
+
 export const cancelRunGroup = async ({ groupId, expectedRevision }: { groupId: string; expectedRevision: number }) =>
   (await api.post<RunGroup>(`/api/run-groups/${groupId}/cancel`, { expectedRevision })).data;

@@ -44,6 +44,11 @@ type NodeClipboard = {
  * edits them; the shared settings wait here, and Save writes them, never the design's.
  */
 export type DesignScope = {
+  /**
+   * "design": one design of the open batch video run, its settings stored in the run group. "product": before a run,
+   * one product of the batch, its settings stored in the workflow (`productConfigs` of the shared settings).
+   */
+  kind: "design" | "product";
   key: string;
   productId: string;
   artworkGroupKey: string;
@@ -116,6 +121,8 @@ export type WorkflowEditorState = {
   leaveDesignScope: () => void;
   /** The design's settings were stored for it: they are no longer unsaved. */
   markDesignSaved: (config: WorkflowNodeConfig) => void;
+  /** Replaces the shared settings kept aside while a product's or design's settings are shown (what Save writes). */
+  setScopeSharedConfig: (config: WorkflowNodeConfig) => void;
   setRunning: (isRunning: boolean) => void;
   markSaved: (workflow: WorkflowDetail) => void;
   reset: () => void;
@@ -557,6 +564,9 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
         isDirty: hasMeaningfulGraphChanges(savedGraph, { nodes: state.nodes, edges: state.edges }),
       };
     }),
+
+  setScopeSharedConfig: (config) =>
+    set((state) => (state.designScope ? { designScope: { ...state.designScope, sharedConfig: config } } : state)),
 
   setRunning: (isRunning) => set({ isRunning }),
 

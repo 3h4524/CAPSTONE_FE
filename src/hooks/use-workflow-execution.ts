@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { batchJobKeys, listBatchJobs } from "@/api/batch-jobs";
 import { batchKeys, listBatchProducts } from "@/api/batches";
 import { importGeneratedMockups } from "@/api/generated-mockups";
 import { getRunGroup, listRunGroups, runGroupKeys } from "@/api/run-groups";
@@ -22,6 +23,8 @@ import { useRunGroupSync } from "@/hooks/use-run-group-sync";
 import { useVideoRunSync, useWorkflowRuntime, VIDEO_RUN_PARAM } from "@/hooks/use-workflow-runtime";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
+import type { BatchJobSummary } from "@/types/batch-jobs";
+import type { RunGroupSummary } from "@/types/video-workflow";
 import { uuid } from "@/utils/uuid";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 
@@ -59,20 +62,44 @@ const videoProducts = async (queryClient: QueryClient, batchJobId: string | null
   return products.map((product) => product.id);
 };
 
+const timeOf = (value: string | null | undefined) => (value ? Date.parse(value) : Number.NaN);
+
 /**
- * The batch video run made from a design job, newest first, and the run of its first video to open with it. Null when
- * the job never got to its videos, or the list cannot be read.
+ * The batch video run that made a design job's videos. One started from the job names it; one started after it
+ * without a job (Run again once every product had its design, so no new job was made) belongs to it when it started
+ * after this job and before the batch's next one. A run whose videos started comes before one still at Mockup
+ * Approval (an attempt that stopped there), and the newest before older ones.
  */
-export const findJobVideos = async (queryClient: QueryClient, workflowId: string, jobId: string) => {
+export const pickJobGroup = (groups: RunGroupSummary[], jobId: string, jobs: Pick<BatchJobSummary, "id" | "createdAt">[]) => {
+  const start = timeOf(jobs.find((job) => job.id === jobId)?.createdAt);
+  const next = jobs
+    .map((job) => timeOf(job.createdAt))
+    .filter((at) => at > start)
+    .sort((left, right) => left - right)[0];
+  const inWindow = (at: number) => at >= start && (next === undefined || at < next);
+  const newest = groups
+    .filter((group) => group.batchJobId === jobId || (!group.batchJobId && inWindow(timeOf(group.createdAt))))
+    .sort((left, right) => timeOf(right.createdAt) - timeOf(left.createdAt));
+  return newest.find((group) => group.targetCount > 0) ?? newest[0] ?? null;
+};
+
+/**
+ * The batch video run made from a design job (see `pickJobGroup`) and the run of its first video to open with it.
+ * Null when the job never got to its videos, or the list cannot be read.
+ */
+export const findJobVideos = async (queryClient: QueryClient, workflowId: string, jobId: string, batchId = "") => {
   try {
     const groups = await queryClient.fetchQuery({
       queryKey: runGroupKeys.list(workflowId),
       queryFn: () => listRunGroups(workflowId),
       staleTime: 0,
     });
-    const group = groups
-      .filter((item) => item.batchJobId === jobId)
-      .sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0];
+    const jobs = batchId
+      ? await queryClient
+          .fetchQuery({ queryKey: batchJobKeys.byBatch(batchId), queryFn: () => listBatchJobs(batchId) })
+          .catch(() => [])
+      : [];
+    const group = pickJobGroup(groups, jobId, jobs);
     if (!group) return null;
     const detail = await queryClient.fetchQuery({ queryKey: runGroupKeys.detail(group.id), queryFn: () => getRunGroup(group.id) });
     return { groupId: group.id, runId: detail.targets.find((target) => target.runId)?.runId ?? null };
@@ -148,7 +175,7 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     reopenJobVideos.current = async (jobId: string) => {
       const workflowId = useWorkflowStore.getState().workflowId;
       if (!workflowId) return;
-      const found = await findJobVideos(queryClient, workflowId, jobId);
+      const found = await findJobVideos(queryClient, workflowId, jobId, readString(findNode("product-input")?.data.config.batchId));
       const query = new URLSearchParams(window.location.search);
       // The person may have opened another job, or started a Run, while this was read.
       if (query.get(BATCH_JOB_PARAM) !== jobId || query.has(NEXT_PART_PARAM)) return;

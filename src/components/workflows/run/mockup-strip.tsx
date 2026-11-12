@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode,useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { AlertTriangle, Check, ChevronLeft, ChevronRight, X } from "lucide-react";
 
@@ -17,7 +17,15 @@ const SWATCH_PATTERN = /^#[0-9a-f]{3,8}$/i;
  * A row of cards that scrolls sideways inside its container, never the page. Arrows and edge fades appear only on
  * the side that has more; touch, trackpad, the mouse wheel and the arrow keys (the strip is focusable) all work too.
  */
-export const ScrollStrip = ({ label, itemCount, children }: { label: string; itemCount: number; children: ReactNode }) => {
+export const ScrollStrip = ({
+  label,
+  itemCount,
+  children,
+}: {
+  label: string;
+  itemCount: number;
+  children: ReactNode;
+}) => {
   const stripRef = useRef<HTMLUListElement>(null);
   const [edges, setEdges] = useState({ before: false, after: false });
 
@@ -26,7 +34,9 @@ export const ScrollStrip = ({ label, itemCount, children }: { label: string; ite
     if (!strip) return;
     const before = strip.scrollLeft > 1;
     const after = strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 1;
-    setEdges((current) => (current.before === before && current.after === after ? current : { before, after }));
+    setEdges((current) =>
+      current.before === before && current.after === after ? current : { before, after }
+    );
   }, []);
 
   useEffect(() => {
@@ -57,7 +67,10 @@ export const ScrollStrip = ({ label, itemCount, children }: { label: string; ite
     const strip = stripRef.current;
     if (!strip) return;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    strip.scrollBy({ left: direction * strip.clientWidth * SCROLL_STEP, behavior: reduceMotion ? "auto" : "smooth" });
+    strip.scrollBy({
+      left: direction * strip.clientWidth * SCROLL_STEP,
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
   };
 
   // The arrows sit on the vertical middle of the image (card padding + half the square image), not of the whole card.
@@ -75,7 +88,11 @@ export const ScrollStrip = ({ label, itemCount, children }: { label: string; ite
         !visible && "pointer-events-none opacity-0"
       )}
     >
-      {direction === 1 ? <ChevronRight className="size-4" aria-hidden="true" /> : <ChevronLeft className="size-4" aria-hidden="true" />}
+      {direction === 1 ? (
+        <ChevronRight className="size-4" aria-hidden="true" />
+      ) : (
+        <ChevronLeft className="size-4" aria-hidden="true" />
+      )}
     </button>
   );
 
@@ -84,7 +101,9 @@ export const ScrollStrip = ({ label, itemCount, children }: { label: string; ite
       aria-hidden="true"
       className={cn(
         "pointer-events-none absolute inset-y-0 z-[5] w-10 transition-opacity duration-200 motion-reduce:transition-none",
-        side === "before" ? "from-card left-0 bg-gradient-to-r to-transparent" : "from-card right-0 bg-gradient-to-l to-transparent",
+        side === "before"
+          ? "from-card left-0 bg-gradient-to-r to-transparent"
+          : "from-card right-0 bg-gradient-to-l to-transparent",
         edges[side] ? "opacity-100" : "opacity-0"
       )}
     />
@@ -120,14 +139,25 @@ const STATE: Record<string, { label: string; className: string }> = {
 };
 const PENDING_STATE = { label: "To review", className: "bg-slate-100 text-slate-600" };
 
-/** One mock-up in a design's strip: large enough to judge at a glance, with approve / reject one tap away. */
-export const MockupStripCard = ({ asset }: { asset: MockupAsset }) => {
+/**
+ * One mock-up in a design's strip: large enough to judge at a glance, with approve / reject one tap away. Read only
+ * (`readOnly`) once the videos started: it shows the decision without offering to change it.
+ */
+export const MockupStripCard = ({
+  asset,
+  readOnly = false,
+}: {
+  asset: MockupAsset;
+  readOnly?: boolean;
+}) => {
   const { mutate: review, isPending } = useReviewMockupAsset();
   const approved = asset.approvalStatus === "approved";
   const rejected = asset.approvalStatus === "rejected";
   const state = STATE[asset.approvalStatus] ?? PENDING_STATE;
-  const swatch = asset.variantKey && SWATCH_PATTERN.test(asset.variantKey) ? asset.variantKey : null;
-  const decide = (next: boolean) => review({ id: asset.id, revision: asset.revision, approved: next });
+  const swatch =
+    asset.variantKey && SWATCH_PATTERN.test(asset.variantKey) ? asset.variantKey : null;
+  const decide = (next: boolean) =>
+    review({ id: asset.id, revision: asset.revision, approved: next });
 
   return (
     <li
@@ -154,7 +184,9 @@ export const MockupStripCard = ({ asset }: { asset: MockupAsset }) => {
               aria-hidden="true"
             />
           )}
-          <span className="truncate" title={swatch ? `${asset.role} · ${swatch}` : asset.role}>{asset.role}</span>
+          <span className="truncate" title={swatch ? `${asset.role} · ${swatch}` : asset.role}>
+            {asset.role}
+          </span>
         </p>
         {asset.warnings.length > 0 && (
           <p
@@ -167,37 +199,44 @@ export const MockupStripCard = ({ asset }: { asset: MockupAsset }) => {
         )}
         {/* Pinned to the bottom, so every card in the strip has its buttons on the same line, warning or not. */}
         <div className="mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
-          <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap", state.className)}>
+          <span
+            className={cn(
+              "rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap",
+              state.className
+            )}
+          >
             {state.label}
           </span>
-          <div className="flex gap-1.5">
-            <Button
-              type="button"
-              variant={approved ? "default" : "outline"}
-              size="icon-sm"
-              aria-label="Approve mock-up"
-              aria-pressed={approved}
-              title="Approve"
-              disabled={isPending || approved}
-              onClick={() => decide(true)}
-              className="disabled:opacity-100"
-            >
-              <Check aria-hidden="true" />
-            </Button>
-            <Button
-              type="button"
-              variant={rejected ? "destructive" : "outline"}
-              size="icon-sm"
-              aria-label="Reject mock-up"
-              aria-pressed={rejected}
-              title="Reject"
-              disabled={isPending || rejected}
-              onClick={() => decide(false)}
-              className="disabled:opacity-100"
-            >
-              <X aria-hidden="true" />
-            </Button>
-          </div>
+          {!readOnly && (
+            <div className="flex gap-1.5">
+              <Button
+                type="button"
+                variant={approved ? "default" : "outline"}
+                size="icon-sm"
+                aria-label="Approve mock-up"
+                aria-pressed={approved}
+                title="Approve"
+                disabled={isPending || approved}
+                onClick={() => decide(true)}
+                className="disabled:opacity-100"
+              >
+                <Check aria-hidden="true" />
+              </Button>
+              <Button
+                type="button"
+                variant={rejected ? "destructive" : "outline"}
+                size="icon-sm"
+                aria-label="Reject mock-up"
+                aria-pressed={rejected}
+                title="Reject"
+                disabled={isPending || rejected}
+                onClick={() => decide(false)}
+                className="disabled:opacity-100"
+              >
+                <X aria-hidden="true" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </li>
@@ -206,9 +245,16 @@ export const MockupStripCard = ({ asset }: { asset: MockupAsset }) => {
 
 /** Placeholder cards while a product's mock-ups load, the size of the real ones so nothing jumps. */
 export const MockupStripSkeleton = () => (
-  <div className="flex gap-3 overflow-hidden px-3 pt-1 pb-3" aria-busy="true" aria-label="Loading mock-ups">
+  <div
+    className="flex gap-3 overflow-hidden px-3 pt-1 pb-3"
+    aria-busy="true"
+    aria-label="Loading mock-ups"
+  >
     {[0, 1, 2].map((index) => (
-      <div key={index} className="bg-card w-44 shrink-0 animate-pulse overflow-hidden rounded-lg border motion-reduce:animate-none">
+      <div
+        key={index}
+        className="bg-card w-44 shrink-0 animate-pulse overflow-hidden rounded-lg border motion-reduce:animate-none"
+      >
         <div className="bg-muted aspect-square" />
         <div className="space-y-2 p-2">
           <div className="bg-muted h-3 w-16 rounded" />

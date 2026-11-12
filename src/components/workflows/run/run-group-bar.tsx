@@ -13,12 +13,15 @@ export const RunGroupBar = () => {
   const workflowId = useWorkflowStore((state) => state.workflowId);
   const { data: group } = useRunGroup(groupId);
   const { runId, closeRun } = useWorkflowRuntime();
-  const hasScope = useWorkflowStore((state) => Boolean(state.designScope));
+  const scopeKind = useWorkflowStore((state) => state.designScope?.kind ?? null);
   const following = Boolean(group && group.workflowId === workflowId);
-  // A design's settings are shown only while its run group is open: closing it puts the shared settings back.
+  // A design's settings are shown only while its run group is open: closing it puts the shared settings back. A
+  // product's settings are chosen before a run, so a run group opening puts the shared settings back too.
   useEffect(() => {
-    if (hasScope && !following && (!groupId || group)) useWorkflowStore.getState().leaveDesignScope();
-  }, [hasScope, following, groupId, group]);
+    const leave =
+      scopeKind === "design" ? !following && (!groupId || Boolean(group)) : scopeKind === "product" && following;
+    if (leave) useWorkflowStore.getState().leaveDesignScope();
+  }, [scopeKind, following, groupId, group]);
   // The canvas may still follow a run from before this group opened (restored as the workflow's latest run, or one
   // of an earlier group): its steps and its design are not this group's, so the canvas stops following it.
   const foreignRun = Boolean(group && following && runId && !group.targets.some((target) => target.runId === runId));

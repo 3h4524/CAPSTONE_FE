@@ -30,7 +30,7 @@ vi.mock("@/helpers/toast", () => ({ showWorkflowActionToast: vi.fn() }));
 const initialState = useWorkflowStore.getState();
 const shared: WorkflowNodeConfig = { mode: "standard", durationSeconds: 6 };
 const own: WorkflowNodeConfig = { mode: "standard", durationSeconds: 10 };
-const product = { key: "p1:d1", productId: "p1", artworkGroupKey: "d1", label: "June Rose Tee", runId: null };
+const product = { kind: "design" as const, key: "p1:d1", productId: "p1", artworkGroupKey: "d1", label: "June Rose Tee", runId: null };
 
 const video = (config: WorkflowNodeConfig): WorkflowNode =>
   buildWorkflowNode({ id: "video", data: { type: "generate-video", label: "Generate Video", config, status: "idle" } });
@@ -109,5 +109,47 @@ describe("useWorkflowSave with a product chosen on Generate Video", () => {
 
     expect(mocks.updateWorkflow).not.toHaveBeenCalled();
     expect(useWorkflowStore.getState().isDirty).toBe(true);
+  });
+});
+
+describe("useWorkflowSave with a product of the batch chosen before a run", () => {
+  const before = { kind: "product" as const, key: "product:p1", productId: "p1", artworkGroupKey: "", label: "June Rose Tee", runId: null };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.group = null;
+    mocks.updateWorkflow.mockImplementation((_input, options) => options?.onSuccess?.(buildWorkflowDetail()));
+    useWorkflowStore.setState(initialState, true);
+    const nodes = [video(shared)];
+    useWorkflowStore.setState({ workflowId: "workflow-1", nodes, edges: [], savedGraph: { nodes, edges: [] }, isDirty: false });
+  });
+
+  it("keeps the product's settings in the workflow, beside the shared ones", () => {
+    const store = useWorkflowStore.getState();
+    store.enterDesignScope(before, shared);
+    store.updateNodeConfig("video", { ...shared, durationSeconds: 12 });
+    const { result } = renderHook(() => useWorkflowSave());
+
+    act(() => result.current.saveWorkflow());
+
+    expect(mocks.storeConfig).not.toHaveBeenCalled();
+    expect(savedDefinitionConfig()).toEqual({ ...shared, productConfigs: { p1: { ...shared, durationSeconds: 12 } } });
+    expect(useWorkflowStore.getState().isDirty).toBe(false);
+    expect(useWorkflowStore.getState().designScope?.baseConfig).toMatchObject({ durationSeconds: 12 });
+  });
+
+  it("puts the product back on the shared settings when its settings match them again", () => {
+    const withOwn = { ...shared, productConfigs: { p1: own } };
+    const nodes = [video(withOwn)];
+    useWorkflowStore.setState({ nodes, savedGraph: { nodes, edges: [] } });
+    const store = useWorkflowStore.getState();
+    store.enterDesignScope(before, own);
+    store.updateNodeConfig("video", shared);
+    const { result } = renderHook(() => useWorkflowSave());
+
+    act(() => result.current.saveWorkflow());
+
+    expect(savedDefinitionConfig()).toEqual(shared);
+    expect(useWorkflowStore.getState().isDirty).toBe(false);
   });
 });

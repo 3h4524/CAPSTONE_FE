@@ -26,7 +26,12 @@ import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useSyncGeneratedMockups } from "@/hooks/use-sync-generated-mockups";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowStore } from "@/stores/workflow";
-import type { GenerateVideoConfig, MockupAsset, RunGroup, RunGroupTarget } from "@/types/video-workflow";
+import type {
+  GenerateVideoConfig,
+  MockupAsset,
+  RunGroup,
+  RunGroupTarget,
+} from "@/types/video-workflow";
 import { cn } from "@/utils/cn";
 
 const RUN_STATUS: Record<string, { label: string; className: string }> = {
@@ -265,7 +270,13 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
           }
           onClick={start}
         >
-          {isQuoting ? "Checking cost…" : isConfirming ? "Starting…" : isPaid ? "Continue (AI)" : "Continue"}
+          {isQuoting
+            ? "Checking cost…"
+            : isConfirming
+              ? "Starting…"
+              : isPaid
+                ? "Continue (AI)"
+                : "Continue"}
         </Button>
       </div>
     </div>
@@ -564,34 +575,34 @@ const GroupProgress = ({ group }: { group: RunGroup }) => {
           const status = runStatusOf(target.runStatus);
           const isOpen = Boolean(target.runId) && target.runId === runId;
           return (
-            <li
-              key={target.key}
-              className={cn("flex items-center gap-3 px-3 py-2", isOpen && "bg-primary/5")}
-            >
-              <Thumbnail url={target.previewUrl} label={target.designLabel} />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium">
-                  {target.productName} · {target.designLabel}
+            <li key={target.key} className={cn(isOpen && "bg-primary/5")}>
+              <div className="flex items-center gap-3 px-3 py-2">
+                <Thumbnail url={target.previewUrl} label={target.designLabel} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">
+                    {target.productName} · {target.designLabel}
+                  </span>
+                  <span className="text-muted-foreground block truncate text-xs">
+                    {target.runStatus === "running" && target.stage
+                      ? `${target.stage} · ${target.progress}%`
+                      : (target.runError ?? status.label)}
+                  </span>
                 </span>
-                <span className="text-muted-foreground block truncate text-xs">
-                  {target.runStatus === "running" && target.stage
-                    ? `${target.stage} · ${target.progress}%`
-                    : (target.runError ?? status.label)}
-                </span>
-              </span>
-              <Badge className={cn("shrink-0", status.className)}>{status.label}</Badge>
-              {target.runId && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={isOpen ? "secondary" : "ghost"}
-                  className="gap-1"
-                  onClick={() => selectRun(target.runId!)}
-                >
-                  <ExternalLink className="size-3.5" aria-hidden="true" />
-                  {isOpen ? "Open" : "View"}
-                </Button>
-              )}
+                <Badge className={cn("shrink-0", status.className)}>{status.label}</Badge>
+                {target.runId && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={isOpen ? "secondary" : "ghost"}
+                    className="gap-1"
+                    onClick={() => selectRun(target.runId!)}
+                  >
+                    <ExternalLink className="size-3.5" aria-hidden="true" />
+                    {isOpen ? "Open" : "View"}
+                  </Button>
+                )}
+              </div>
+              <ApprovedMockups target={target} />
             </li>
           );
         })}
@@ -607,6 +618,34 @@ const GroupProgress = ({ group }: { group: RunGroup }) => {
           Stop all videos
         </Button>
       )}
+    </div>
+  );
+};
+
+/**
+ * The mock-ups approved for a design whose video has started, read only: the review at Mockup Approval stays in view
+ * after it. The product's mock-ups are read once for all its designs.
+ */
+const ApprovedMockups = ({ target }: { target: RunGroupTarget }) => {
+  const { data: assets, isPending } = useMockupAssets(target.productId);
+  const approved = designMockups(assets, target).filter(
+    (asset) => asset.approvalStatus === "approved"
+  );
+  if (isPending) return <MockupStripSkeleton />;
+  if (approved.length === 0) return null;
+  return (
+    <div className="space-y-1.5 pb-1">
+      <p className="text-muted-foreground px-3 text-xs">
+        {approved.length} approved mock-up{approved.length === 1 ? "" : "s"}
+      </p>
+      <ScrollStrip
+        label={`Approved mock-ups of ${target.productName} · ${target.designLabel}`}
+        itemCount={approved.length}
+      >
+        {approved.map((asset) => (
+          <MockupStripCard key={asset.id} asset={asset} readOnly />
+        ))}
+      </ScrollStrip>
     </div>
   );
 };

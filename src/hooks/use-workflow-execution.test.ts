@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { findJobVideos } from "@/hooks/use-workflow-execution";
+import { findJobVideos, pickJobGroup } from "@/hooks/use-workflow-execution";
 import type { RunGroup, RunGroupSummary } from "@/types/video-workflow";
 import { QueryClient } from "@tanstack/react-query";
 
@@ -50,5 +50,36 @@ describe("findJobVideos", () => {
     listMock.mockRejectedValue(new Error("offline"));
 
     await expect(findJobVideos(new QueryClient(), "wf", "job-1")).resolves.toBeNull();
+  });
+});
+
+describe("pickJobGroup", () => {
+  const jobs = [
+    { id: "job-2", createdAt: "2026-11-12T08:00:00Z" },
+    { id: "job-1", createdAt: "2026-11-11T08:00:00Z" },
+  ];
+  const started = (id: string, batchJobId: string | null, createdAt: string, targetCount = 2) =>
+    ({ ...summary(id, batchJobId, createdAt), targetCount });
+
+  it("takes the videos started without a job after this job, before the batch's next one", () => {
+    const groups = [
+      started("stopped-at-approval", "job-1", "2026-11-11T09:00:00Z", 0),
+      started("run-again", null, "2026-11-11T10:00:00Z"),
+      started("next-job", null, "2026-11-12T09:00:00Z"),
+      started("before-the-job", null, "2026-11-10T09:00:00Z"),
+    ];
+
+    expect(pickJobGroup(groups, "job-1", jobs)?.id).toBe("run-again");
+    expect(pickJobGroup(groups, "job-2", jobs)?.id).toBe("next-job");
+  });
+
+  it("prefers a run whose videos started over a newer one still at Mockup Approval", () => {
+    const groups = [started("made", "job-1", "2026-11-11T09:00:00Z"), started("waiting", "job-1", "2026-11-11T11:00:00Z", 0)];
+
+    expect(pickJobGroup(groups, "job-1", jobs)?.id).toBe("made");
+  });
+
+  it("only takes a run that names the job when the job's time is not known", () => {
+    expect(pickJobGroup([started("unnamed", null, "2026-11-11T10:00:00Z")], "job-1", [])).toBeNull();
   });
 });

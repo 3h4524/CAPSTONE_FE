@@ -35,17 +35,17 @@ import type {
 import { cn } from "@/utils/cn";
 
 const RUN_STATUS: Record<string, { label: string; className: string }> = {
-  queued: { label: "Queued", className: "bg-slate-100 text-slate-700" },
+  queued: { label: "Queued", className: "bg-ink-100 text-ink-700" },
   running: { label: "Rendering", className: "bg-sky-100 text-sky-800" },
   waiting_for_input: { label: "Needs attention", className: "bg-amber-100 text-amber-900" },
   waiting_for_review: { label: "Ready to review", className: "bg-violet-100 text-violet-800" },
   completed: { label: "Done", className: "bg-emerald-100 text-emerald-800" },
   failed: { label: "Failed", className: "bg-rose-100 text-rose-800" },
-  cancelled: { label: "Cancelled", className: "bg-slate-100 text-slate-500" },
+  cancelled: { label: "Cancelled", className: "bg-ink-100 text-ink-500" },
 };
 
 export const runStatusOf = (status: string | null) =>
-  RUN_STATUS[status ?? ""] ?? { label: status ?? "", className: "bg-slate-100 text-slate-700" };
+  RUN_STATUS[status ?? ""] ?? { label: status ?? "", className: "bg-ink-100 text-ink-700" };
 
 /** The mock-ups of one design: its own artwork group, without the AI keyframes made for a scene. */
 export const designMockups = (
@@ -338,10 +338,10 @@ const ProductSection = ({
       </ul>
       {showsModelPhoto && (
         <details className="border-t">
-          <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50">
+          <summary className="text-ink-700 hover:bg-ink-50 cursor-pointer px-3 py-2 text-xs font-medium">
             Put {targets[0].productName} on a model photo
           </summary>
-          <div className="border-t bg-slate-50/50 p-3">
+          <div className="bg-ink-50/50 border-t p-3">
             <ModelPhotoMockupForm productId={productId} assets={assets ?? []} />
           </div>
         </details>
@@ -562,7 +562,7 @@ const GroupProgress = ({ group }: { group: RunGroup }) => {
           {progress.failed > 0 ? `, ${progress.failed} failed` : ""} of {progress.total}
         </span>
       </p>
-      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
+      <div className="bg-ink-100 h-1.5 overflow-hidden rounded-full" aria-hidden="true">
         <div
           className="bg-primary h-full transition-[width]"
           style={{
@@ -666,11 +666,11 @@ export const Thumbnail = ({
       width={40}
       height={40}
       unoptimized
-      className={cn("size-10 shrink-0 rounded border bg-slate-50 object-contain", className)}
+      className={cn("bg-ink-50 size-10 shrink-0 rounded border object-contain", className)}
     />
   ) : (
     <span
-      className={cn("size-10 shrink-0 rounded border bg-slate-50", className)}
+      className={cn("bg-ink-50 size-10 shrink-0 rounded border", className)}
       aria-hidden="true"
     />
   );

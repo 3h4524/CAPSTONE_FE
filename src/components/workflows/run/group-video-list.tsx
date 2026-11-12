@@ -21,10 +21,10 @@ type Filter = "all" | "review" | "approved";
 // The same palette as the cards of Mockup Approval: a decision still to make is slate, approved emerald, a failure rose;
 // a video being made takes the navy of the product.
 const STATE: Record<GroupVideoState, { label: string; pill: string; bar: string }> = {
-  review: { label: "To review", pill: "bg-slate-100 text-slate-600", bar: "bg-slate-400" },
+  review: { label: "To review", pill: "bg-ink-100 text-ink-600", bar: "bg-ink-400" },
   approved: { label: "Approved", pill: "bg-emerald-100 text-emerald-700", bar: "bg-emerald-500" },
   processing: { label: "Rendering", pill: "bg-primary/10 text-primary", bar: "bg-primary" },
-  queued: { label: "Queued", pill: "bg-slate-100 text-slate-600", bar: "bg-slate-300" },
+  queued: { label: "Queued", pill: "bg-ink-100 text-ink-600", bar: "bg-ink-300" },
   stopped: { label: "Stopped", pill: "bg-rose-100 text-rose-700", bar: "bg-rose-500" },
 };
 /** The order the summary bar draws its parts in: settled work first, as it reads left to right. */

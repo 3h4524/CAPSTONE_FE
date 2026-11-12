@@ -137,7 +137,7 @@ const STATE: Record<string, { label: string; className: string }> = {
   approved: { label: "Approved", className: "bg-emerald-100 text-emerald-700" },
   rejected: { label: "Rejected", className: "bg-rose-100 text-rose-700" },
 };
-const PENDING_STATE = { label: "To review", className: "bg-slate-100 text-slate-600" };
+const PENDING_STATE = { label: "To review", className: "bg-ink-100 text-ink-600" };
 
 /**
  * One mock-up in a design's strip: large enough to judge at a glance, with approve / reject one tap away. Read only
@@ -179,7 +179,7 @@ export const MockupStripCard = ({
         <p className="text-foreground flex items-center gap-1.5 text-xs font-medium">
           {swatch && (
             <span
-              className="size-3 shrink-0 rounded-full border border-slate-300"
+              className="border-ink-300 size-3 shrink-0 rounded-full border"
               style={{ backgroundColor: swatch }}
               aria-hidden="true"
             />

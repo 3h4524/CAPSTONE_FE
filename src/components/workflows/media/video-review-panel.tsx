@@ -1,19 +1,12 @@
 "use client";
 import { useId, useState } from "react";
 import {
-  Check,
-  CheckCircle2,
-  ClipboardCheck,
-  Clock3,
+  Check,
   Download,
-  Film,
-  Hash,
-  History,
-  RectangleHorizontal,
-  RotateCcw,
-  ShieldCheck,
-  X,
-  XCircle,
+  Film,
+  History,
+  RotateCcw,
+  X,
 } from "lucide-react";
 
 import { SectionLoading } from "@/components/commons/loading/section-loading";

@@ -134,7 +134,7 @@ export const DesignScopeSelect = ({ nodeId }: { nodeId: string }) => {
   }));
 
   return (
-    <section className="space-y-2.5 rounded-lg border bg-slate-50/70 p-3" aria-label="Which product's video settings">
+    <section className="bg-ink-50/70 space-y-2.5 rounded-lg border p-3" aria-label="Which product's video settings">
       <Label htmlFor={FIELD_ID}>Video product</Label>
       <OptionSelect
         standaloneId={FIELD_ID}

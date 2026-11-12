@@ -16,6 +16,7 @@ import { defaultTemplateColors, type TemplateColors } from "@/helpers/garment-co
 import type { TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
 import { countProductTypes, productTypeLabel } from "@/helpers/mockup-template";
 import { readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
+import { hasPrintifyDownstream, type MockupTarget } from "@/helpers/workflow-graph";
 import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -28,9 +29,23 @@ type MockupSelectionFieldProps = {
   templateColorsName: string;
   /** Config key of the background chosen per template. */
   templateBackgroundsName: string;
+  /** Config key of what the mock-ups are for: "zip" or "printify". */
+  targetName: string;
   value: string[];
   onChange: (templateIds: string[]) => void;
 };
+
+const TARGETS: { value: MockupTarget; label: string }[] = [
+  { value: "zip", label: "ZIP export only" },
+  { value: "printify", label: "Printify product" },
+];
+
+// A Push to Printify step after Apply mock-up decides what the mock-ups are for, whatever the node says.
+const usePrintifyLocked = () =>
+  useWorkflowStore((state) => {
+    const node = state.nodes.find((item) => item.data.type === "apply-mockup");
+    return node ? hasPrintifyDownstream(node.id, state.nodes, state.edges) : false;
+  });
 
 // The batch the workflow reads from decides which product types the templates must cover.
 const useWorkflowBatchId = () =>
@@ -39,11 +54,15 @@ const useWorkflowBatchId = () =>
     return typeof batchId === "string" ? batchId : "";
   });
 
-export const MockupSelectionField = ({ templateColorsName, templateBackgroundsName, value, onChange }: MockupSelectionFieldProps) => {
+export const MockupSelectionField = ({ templateColorsName, templateBackgroundsName, targetName, value, onChange }: MockupSelectionFieldProps) => {
   const [open, setOpen] = useState(false);
   const { control, setValue } = useFormContext<WorkflowNodeConfig>();
   const templateColors = readTemplateColors(useWatch({ control, name: templateColorsName }));
   const templateBackgrounds = readTemplateBackgrounds(useWatch({ control, name: templateBackgroundsName }));
+  const printifyLocked = usePrintifyLocked();
+  const storedTarget: MockupTarget = useWatch({ control, name: targetName }) === "printify" ? "printify" : "zip";
+  const target: MockupTarget = printifyLocked ? "printify" : storedTarget;
+  const printify = target === "printify";
   const batchId = useWorkflowBatchId();
   const runJob = useWorkflowRunStore((state) => state.job);
   // A generated design of the batch's latest run, shown in each template's print area while choosing.
@@ -51,6 +70,14 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
   const { data: templates, isPending, isError } = useMockupTemplates();
   const { data: products } = useBatchProducts(batchId);
   const selectedTemplates = (templates ?? []).filter((template) => value.includes(template.id));
+  // A Printify product needs exactly one template linked to Printify.
+  const printifyProblem = !printify || isPending || !templates
+    ? null
+    : selectedTemplates.some((template) => !template.printify)
+      ? "A chosen template is not linked to Printify. Change templates and pick a Printify one."
+      : selectedTemplates.length !== 1
+        ? "Choose exactly one Printify template."
+        : null;
 
   // Only the product types the run will make mock-ups for are offered: the pending products if there
   // are any, else the ones in the run being viewed, else everything in the batch.
@@ -73,6 +100,34 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
 
   return (
     <div className="min-w-0 space-y-2">
+      <div className="space-y-1.5">
+        <p className="text-ink-700 text-xs font-medium">The mock-ups are for</p>
+        <div className="bg-ink-100 grid grid-cols-2 gap-1 rounded-lg p-1" role="radiogroup" aria-label="What the mock-ups are for">
+          {TARGETS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={target === option.value}
+              disabled={printifyLocked && option.value !== "printify"}
+              onClick={() => setValue(targetName, option.value, { shouldDirty: true, shouldValidate: true })}
+              className={cn(
+                "rounded-md px-2 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
+                target === option.value ? "bg-card text-ink-900 shadow-sm" : "text-ink-600 hover:text-ink-900"
+              )}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-muted-foreground text-xs">
+          {printifyLocked
+            ? "Push to Printify is connected, so the mock-ups show the Printify product: one Printify template, in its Printify colors."
+            : printify
+              ? "One Printify template, in its Printify colors, so the mock-ups show what Printify prints."
+              : "Any templates and colors; the mock-ups go into the ZIP."}
+        </p>
+      </div>
       {isPending && value.length > 0 ? (
         <SectionLoading label="Loading mock-up templates" className="justify-start rounded-lg border px-3 py-3 [&_svg]:size-4 [&>span]:text-xs" />
       ) : selectedTemplates.length > 0 ? (
@@ -98,7 +153,7 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
                     {colors.length > 0 && (
                       <span className="flex items-center gap-1">
                         {colors.map((hex) => (
-                          <GarmentColorSwatch key={hex} hex={hex} className="size-3" />
+                          <GarmentColorSwatch key={hex} hex={hex} className="size-3" palette={template.printify?.colors} />
                         ))}
                       </span>
                     )}
@@ -110,9 +165,10 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
           })}
         </ul>
       ) : isError ? null : (
-        <PanelEmptyState icon={Shirt} title="No template chosen yet." description="Each approved design is placed on every chosen template of its product type." className="py-5" />
+        <PanelEmptyState icon={Shirt} title="No template chosen yet." description="Each approved design is placed on the template chosen for its product type." className="py-5" />
       )}
       {isError && <PanelNotice tone="error">Mock-up templates could not be loaded.</PanelNotice>}
+      {printifyProblem && <PanelNotice tone="warning">{printifyProblem}</PanelNotice>}
       <Button type="button" variant="outline" size="sm" className="w-full hover:translate-y-0" disabled={isPending || isError} onClick={() => setOpen(true)}>
         {value.length === 0 ? <Plus aria-hidden="true" /> : <Pencil aria-hidden="true" />}
         {value.length === 0 ? "Choose templates" : "Change templates"}
@@ -120,9 +176,11 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-4xl flex-col overflow-hidden">
           <DialogHeader className="text-left">
-            <DialogTitle>Choose mock-up templates</DialogTitle>
+            <DialogTitle>{printify ? "Choose a Printify template" : "Choose mock-up templates"}</DialogTitle>
             <DialogDescription>
-              Tick at least one template for each product type in the batch. Each design is rendered on every selected template of its own type.
+              {printify
+                ? "Tick the Printify product the designs are printed on. Its print area and colors are Printify's own."
+                : "Tick one template for each product type in the batch. Each design is rendered on the template of its own type."}
             </DialogDescription>
           </DialogHeader>
           {templates ? (
@@ -136,6 +194,7 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
               sampleDesignUrl={sampleDesignUrl}
               onApply={apply}
               onClose={() => setOpen(false)}
+              printifyOnly={printify}
             />
           ) : (
             <SectionLoading label="Loading mock-up templates" />

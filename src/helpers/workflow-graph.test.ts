@@ -9,10 +9,12 @@ import {
 import {
   applyCompactDefaultLayoutIfStillVertical,
   createWorkflowNode,
+  effectiveMockupTarget,
   getConnectableNodeIds,
   getConnectionIssue,
   getCopyName,
   getExecutionOrder,
+  hasPrintifyDownstream,
   isConnectionAllowed,
   resolveActiveWorkflowId,
   sortWorkflowSummaries,
@@ -620,7 +622,8 @@ describe("toWorkflowNodes", () => {
         data: {
           type: "design-image",
           label: "Design image",
-          config: { imageProvider: "gemini", variants: 4, aspectRatio: "1:1" },
+          // Design image makes one design per product, whatever an older workflow saved.
+          config: { imageProvider: "gemini", variants: 1, aspectRatio: "1:1" },
           status: "idle",
         },
       },
@@ -811,5 +814,46 @@ describe("applyCompactDefaultLayoutIfStillVertical", () => {
     const workflow = buildWorkflowDetail({ definition: DEFAULT_WORKFLOW_DEFINITION });
 
     expect(applyCompactDefaultLayoutIfStillVertical(workflow)).toBe(workflow);
+  });
+});
+
+describe("Printify mock-ups", () => {
+  const withPrintify = (mockupConfig: WorkflowNodeConfig, connected = true) => {
+    const nodes = pipelineNodes().map((item) =>
+      item.id === "mockup" ? typedNode("mockup", "apply-mockup", mockupConfig) : item
+    );
+    nodes.push(typedNode("printify", "publish-printify", VALID_CONFIGS["publish-printify"]));
+    const edges = connected ? [...pipelineEdges(), edge("export", "printify")] : pipelineEdges();
+    return { nodes, edges, mockup: nodes.find((item) => item.id === "mockup")! };
+  };
+
+  it("are for the ZIP unless the node or a Push to Printify step after it says otherwise", () => {
+    const zip = withPrintify(VALID_CONFIGS["apply-mockup"], false);
+    expect(hasPrintifyDownstream("mockup", zip.nodes, zip.edges)).toBe(false);
+    expect(effectiveMockupTarget(zip.mockup, zip.nodes, zip.edges)).toBe("zip");
+
+    const chosen = withPrintify({ ...VALID_CONFIGS["apply-mockup"], mockupTarget: "printify" }, false);
+    expect(effectiveMockupTarget(chosen.mockup, chosen.nodes, chosen.edges)).toBe("printify");
+  });
+
+  it("follow a connected Push to Printify step, whatever the node stored", () => {
+    const { nodes, edges, mockup } = withPrintify({ ...VALID_CONFIGS["apply-mockup"], mockupTarget: "zip" });
+
+    expect(hasPrintifyDownstream("mockup", nodes, edges)).toBe(true);
+    expect(effectiveMockupTarget(mockup, nodes, edges)).toBe("printify");
+  });
+
+  it("need exactly one template", () => {
+    const one = withPrintify(VALID_CONFIGS["apply-mockup"]);
+    expect(validateWorkflow(one.nodes, one.edges).filter((issue) => issue.id === "printify-template-mockup")).toEqual([]);
+
+    const two = withPrintify({ ...VALID_CONFIGS["apply-mockup"], mockupTemplateIds: ["mockup-1", "mockup-2"] });
+    expect(validateWorkflow(two.nodes, two.edges).filter((issue) => issue.id === "printify-template-mockup")).toEqual([
+      { id: "printify-template-mockup", nodeId: "mockup", message: "Apply mock-up: choose exactly one Printify template." },
+    ]);
+
+    // For the ZIP, several templates are fine.
+    const zip = withPrintify({ ...VALID_CONFIGS["apply-mockup"], mockupTemplateIds: ["mockup-1", "mockup-2"] }, false);
+    expect(validateWorkflow(zip.nodes, zip.edges).filter((issue) => issue.id === "printify-template-mockup")).toEqual([]);
   });
 });

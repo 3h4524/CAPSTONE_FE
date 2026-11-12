@@ -181,6 +181,7 @@ export const NodeConfigField = ({ field, control, videoMode }: NodeConfigFieldPr
               <MockupSelectionField
                 templateColorsName={field.templateColorsName}
                 templateBackgroundsName={field.templateBackgroundsName}
+                targetName={field.targetName}
                 value={readStringArray(controller.value)}
                 onChange={controller.onChange}
               />

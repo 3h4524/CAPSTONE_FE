@@ -1,6 +1,6 @@
 import { BATCH_RUN_NODE_TYPES, RUNNABLE_NODE_TYPES, VIDEO_RUN_NODE_TYPES } from "@/constants/workflow";
 import { backgroundKeys, backgroundsFor, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
-import { readNumber, readString, readStringArray, readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
+import { readString, readStringArray, readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type { MockupState, RunStep } from "@/stores/workflow-run";
 import type { BatchJobDetail, ImageProvider } from "@/types/batch-jobs";
@@ -153,7 +153,8 @@ export const extractRunPlan = (nodes: WorkflowNode[]): RunPlan => {
     designTemplateId: readString(prompt.designTemplateId),
     styleArtPresetId: readString(prompt.stylePresetId) || null,
     instructions: readString(prompt.instructions).trim(),
-    variationCount: readNumber(design.variants) ?? 1,
+    // One design per product: more are made with Regenerate on the product.
+    variationCount: 1,
     aspectRatio: readString(design.aspectRatio) || "1:1",
     imageProvider: readString(design.imageProvider) === "ideogram" ? "ideogram" : "gemini",
     mockup: mockup

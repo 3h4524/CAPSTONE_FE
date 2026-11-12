@@ -1,4 +1,4 @@
-import { parsePrintArea } from "@/helpers/mockup-template";
+import { parsePrintArea, parsePrintLayout, resolveMockupAreas, sameAreas } from "@/helpers/mockup-template";
 import type { MockupImage, MockupOverride, MockupPrintArea, MockupTemplate } from "@/types/mockup-templates";
 
 /** Which of a job's mock-ups a change made to one of them reaches: itself, or every one on the same template. */
@@ -37,13 +37,18 @@ export const spreadMockupChange = (
   targets.flatMap((image) => {
     const current = currentMockupSetup(image);
     const takesBackground = templatesById.get(current.mockupTemplateId)?.allowBackground === true;
+    const sameTemplate = current.mockupTemplateId === edited.mockupTemplateId;
     const next: MockupOverride = {
       ...current,
       backgroundColor: takesBackground ? edited.backgroundColor : current.backgroundColor,
-      printArea: current.mockupTemplateId === edited.mockupTemplateId ? edited.printArea : current.printArea,
+      printArea: sameTemplate ? edited.printArea : current.printArea,
+      // The print areas go with the design position: where each sits, how it is turned and what it prints.
+      areas: sameTemplate ? (edited.areas ?? null) : (current.areas ?? null),
     };
     const changed =
-      (next.backgroundColor ?? "").toLowerCase() !== (current.backgroundColor ?? "").toLowerCase() || !samePrintArea(next.printArea, current.printArea);
+      (next.backgroundColor ?? "").toLowerCase() !== (current.backgroundColor ?? "").toLowerCase() ||
+      !samePrintArea(next.printArea, current.printArea) ||
+      !sameAreas(next.areas, current.areas);
     return changed && image.slotKey ? [{ slotKey: image.slotKey, override: next, replacedMockupImageId: image.id }] : [];
   });
 
@@ -54,11 +59,13 @@ const sameMockupSetup = (left: MockupOverride, right: MockupOverride, templatesB
   const sameColor = (a: string | null, b: string | null) => (a ?? "").toLowerCase() === (b ?? "").toLowerCase();
   const template = templatesById.get(left.mockupTemplateId);
   const ownArea = template ? parsePrintArea(template.printAreaConfig) : null;
-  return (
-    sameColor(left.garmentColor, right.garmentColor) &&
-    sameColor(left.backgroundColor, right.backgroundColor) &&
-    samePrintArea(left.printArea ?? ownArea, right.printArea ?? ownArea)
-  );
+  const layout = template ? parsePrintLayout(template.printAreaConfig) : null;
+  // With several print areas, each one counts: where it is, how it is turned and what it prints.
+  const samePlace =
+    layout !== null && (left.areas || right.areas)
+      ? sameAreas(resolveMockupAreas(layout, left.areas, left.printArea), resolveMockupAreas(layout, right.areas, right.printArea))
+      : samePrintArea(left.printArea ?? ownArea, right.printArea ?? ownArea);
+  return sameColor(left.garmentColor, right.garmentColor) && sameColor(left.backgroundColor, right.backgroundColor) && samePlace;
 };
 
 /**
@@ -86,6 +93,36 @@ export const findDuplicateMockup = (
         sameMockupSetup(other.setup, changed.setup, templatesById)
     );
     if (twin) return { image: twin.image, setup: twin.setup };
+  }
+  return null;
+};
+
+/**
+ * Two mock-ups of one design the save would leave looking exactly alike, with the setup they would share. Every
+ * change counts: one to a mock-up, one that removes it, and one that makes a mock-up that is not there now.
+ */
+export const findDuplicateAfterChanges = (
+  images: MockupImage[],
+  designImageId: string,
+  changes: MockupOverrideChange[],
+  templatesById: ReadonlyMap<string, MockupTemplate>
+): { setup: MockupOverride } | null => {
+  const byImage = new Map(changes.flatMap((change) => (change.replacedMockupImageId ? [[change.replacedMockupImageId, change] as const] : [])));
+  const after = [
+    ...images
+      .filter((image) => image.designImageId === designImageId)
+      .flatMap((image) => {
+        const change = byImage.get(image.id);
+        return change?.override.removed ? [] : [{ setup: change ? change.override : currentMockupSetup(image), changed: Boolean(change) }];
+      }),
+    ...changes
+      .filter((change) => !change.replacedMockupImageId && !change.override.removed)
+      .map((change) => ({ setup: change.override, changed: true })),
+  ];
+  for (const [index, changed] of after.entries()) {
+    if (!changed.changed) continue;
+    const twin = after.find((other, otherIndex) => otherIndex !== index && sameMockupSetup(other.setup, changed.setup, templatesById));
+    if (twin) return { setup: twin.setup };
   }
   return null;
 };

@@ -41,6 +41,7 @@ export function DesignTemplateCard({
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
             src={template.previewImageUrl}
+            unoptimized
             alt={`Preview artwork for ${template.name}`}
             className="transform-gpu object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.012] motion-reduce:transform-none motion-reduce:transition-none"
             onError={() => setImageFailed(true)}

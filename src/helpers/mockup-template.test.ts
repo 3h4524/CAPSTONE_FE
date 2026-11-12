@@ -4,6 +4,7 @@ import {
   isAutomaticPlacement,
   isRectangleQuad,
   isValidQuad,
+  keepInFrame,
   MAX_MOCKUP_SELECTION,
   parsePrintQuad,
   type PrintQuad,
@@ -114,5 +115,32 @@ describe("sortMockupList", () => {
     const templates = [buildMockupTemplate({ id: "only", usageCount: 0 })];
 
     expect(sortMockupList(templates).map((template) => template.id)).toEqual(["only"]);
+  });
+});
+
+describe("keepInFrame", () => {
+  // A Printify print area on the photo.
+  const frame = { x: 500, y: 500, width: 400, height: 400 };
+
+  it("leaves a design that is already inside where it is", () => {
+    expect(keepInFrame({ x: 550, y: 600, width: 200, height: 150 }, 0, frame)).toEqual({ x: 550, y: 600, width: 200, height: 150 });
+  });
+
+  it("moves a design past an edge back inside, keeping its size", () => {
+    expect(keepInFrame({ x: 800, y: 450, width: 200, height: 200 }, 0, frame)).toEqual({ x: 700, y: 500, width: 200, height: 200 });
+  });
+
+  it("moves a turned design in by the corners it turns out", () => {
+    // 200 x 200 turned 45° spans about 283 px each way.
+    const kept = keepInFrame({ x: 500, y: 500, width: 200, height: 200 }, 45, frame);
+    expect(kept).not.toBeNull();
+    expect(kept!.x).toBeGreaterThan(500);
+    expect(kept!.y).toBeGreaterThan(500);
+    expect(kept!.width).toBe(200);
+  });
+
+  it("refuses a design too big for the frame", () => {
+    expect(keepInFrame({ x: 500, y: 500, width: 400, height: 400 }, 30, frame)).toBeNull();
+    expect(keepInFrame({ x: 400, y: 500, width: 500, height: 100 }, 0, frame)).toBeNull();
   });
 });

@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { ImageIcon, Images, Shirt } from "lucide-react";
 
-import { resetMockupOverride } from "@/api/mockup-templates";
+import {
+  resetMockupOverride,
+  saveMockupOverride,
+  saveMockupOverrides,
+} from "@/api/mockup-templates";
 import {
   GeneratedImagesGrid,
   type MockupPreviewTarget,
@@ -26,6 +30,7 @@ import {
 import { ApprovalReviewPanel } from "@/components/workflows/run/approval-review-panel";
 import { showToast } from "@/helpers/toast";
 import { readNumber, readString, readStringArray } from "@/helpers/workflow-config";
+import { effectiveMockupTarget } from "@/helpers/workflow-graph";
 import {
   countApprovals,
   DESIGNS_READY_STATUSES,
@@ -36,7 +41,11 @@ import { applySelectionAndGenerateMockups } from "@/hooks/use-batch-run";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { BatchJobProductResult } from "@/types/batch-jobs";
-import type { GenerateAllMockupsResult, MockupImage } from "@/types/mockup-templates";
+import type {
+  GenerateAllMockupsResult,
+  MockupImage,
+  RemovedMockupSlot,
+} from "@/types/mockup-templates";
 import type { WorkflowNode } from "@/types/workflow";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -74,6 +83,11 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
   const [editing, setEditing] = useState<MockupImage | null>(null);
   // The product whose prompt is being changed before it is generated again.
   const [regenerating, setRegenerating] = useState<BatchJobProductResult | null>(null);
+  // The mock-ups show a Printify product when Apply mock-up says so or a Push to Printify step follows it.
+  const printifyMockups = useWorkflowStore((state) => {
+    const applyNode = state.nodes.find((candidate) => candidate.data.type === "apply-mockup");
+    return applyNode ? effectiveMockupTarget(applyNode, state.nodes, state.edges) === "printify" : false;
+  });
   // Generating again starts from the workflow as it is now, which may differ from what the job was started with.
   const designConfig = useWorkflowStore(
     (state) => state.nodes.find((candidate) => candidate.data.type === "design-image")?.data.config
@@ -82,8 +96,35 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
     (state) =>
       state.nodes.find((candidate) => candidate.data.type === "prompt-synthesis")?.data.config
   );
-  const restore = useMutation<GenerateAllMockupsResult, { jobId: string; slotKey: string }>({
-    mutationFn: ({ jobId, slotKey }) => resetMockupOverride(jobId, slotKey),
+  // Puts back one removed mock-up, or every removed side of one card.
+  // A mock-up removed with its own setup comes back with it, so it looks like the sides kept; one removed from the
+  // job's settings goes back to them.
+  const restore = useMutation<
+    GenerateAllMockupsResult,
+    { jobId: string; slots: RemovedMockupSlot[] }
+  >({
+    mutationFn: async ({ jobId, slots }) => {
+      const own = slots.flatMap((slot) =>
+        slot.override
+          ? [
+              {
+                slotKey: slot.slotKey,
+                replacedMockupImageId: null,
+                override: { ...slot.override, removed: false },
+              },
+            ]
+          : []
+      );
+      let result: GenerateAllMockupsResult | null =
+        own.length > 1
+          ? await saveMockupOverrides(jobId, own)
+          : own.length === 1
+            ? await saveMockupOverride(jobId, own[0])
+            : null;
+      for (const slot of slots.filter((item) => !item.override))
+        result = await resetMockupOverride(jobId, slot.slotKey);
+      return result!;
+    },
     onSuccess: (result) => {
       useWorkflowRunStore.getState().setMockupResult(result);
       showToast("success", "Mock-up restored.");
@@ -120,6 +161,13 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
     : undefined;
   const editingDesignUrl =
     editingProduct?.images.find((image) => image.id === editing?.designImageId)?.imageUrl ?? null;
+  // The product's other designs, which a print area such as a sleeve can print instead of the mock-up's own. Only its
+  // own: the product's listing is written for them.
+  const designOptions = (editingProduct?.images ?? []).map((image, index) => ({
+    id: image.id,
+    label: `Design ${index + 1}`,
+    imageUrl: image.imageUrl,
+  }));
   const showEdited = (result: GenerateAllMockupsResult, changedCount: number) => {
     useWorkflowRunStore.getState().setMockupResult(result);
     setEditing(null);
@@ -197,9 +245,7 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
                 strip
                 onEdit={designsReady ? setEditing : undefined}
                 onRestore={
-                  designsReady
-                    ? (slot) => restore.mutate({ jobId: job.id, slotKey: slot.slotKey })
-                    : undefined
+                  designsReady ? (slots) => restore.mutate({ jobId: job.id, slots }) : undefined
                 }
                 disabled={mockupState === "running" || restore.isPending}
               />
@@ -248,8 +294,11 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
         productName={editingProduct?.productName ?? "Product"}
         productType={editingProduct?.productType ?? ""}
         designImageUrl={editingDesignUrl}
+        designOptions={designOptions}
+        removedSlots={mockupResult?.removed ?? []}
         onOpenChange={(nextOpen) => !nextOpen && setEditing(null)}
         onSaved={showEdited}
+        printifyOnly={printifyMockups}
       />
       <RegenerateProductDialog
         batchJobId={job.id}

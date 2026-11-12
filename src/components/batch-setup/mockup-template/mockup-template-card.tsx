@@ -55,6 +55,7 @@ export const MockupTemplateCard = ({ template, selected, onToggle, onFocusTempla
       <span className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1.5 text-xs">
         <span className="line-clamp-2">{template.productType}</span>
         {template.allowRecolor && <span>· recolorable</span>}
+        {template.views && template.views.length > 0 && <span>· {template.views.length + 1} sides</span>}
         {(selected && colors.length > 0 ? colors : template.garmentColor ? [template.garmentColor] : []).map((hex) => (
           <GarmentColorSwatch key={hex} hex={hex} />
         ))}

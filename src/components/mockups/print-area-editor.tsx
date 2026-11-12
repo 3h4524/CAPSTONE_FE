@@ -4,6 +4,7 @@ import { type PointerEvent, useCallback, useEffect, useRef, useState } from "rea
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { areaFits, keepInFrame, normalizeRotation } from "@/helpers/mockup-template";
 import type { MockupPrintArea } from "@/types/mockup-templates";
 import { cn } from "@/utils/cn";
 
@@ -12,7 +13,18 @@ type Bounds = { x: number; y: number; width: number; height: number };
 type DragState =
   | { mode: "new"; anchorX: number; anchorY: number }
   | { mode: "move"; startX: number; startY: number; origin: Bounds }
-  | { mode: "resize"; handle: Handle; origin: Bounds };
+  | { mode: "resize"; handle: Handle; origin: Bounds }
+  | { mode: "rotate" };
+
+/** Another print area of the same photo, shown beside the one being edited; clicking it selects it. */
+export type OtherPrintArea = {
+  key: string;
+  label: string;
+  area: MockupPrintArea;
+  rotation: number;
+  /** The design printed there, previewed inside it. */
+  overlayImageUrl?: string;
+};
 
 type PrintAreaEditorProps = {
   imageUrl: string;
@@ -32,6 +44,23 @@ type PrintAreaEditorProps = {
    * Needs `garmentMaskUrl`; the finished mock-up is cut with a mask of its own, so the edge may differ slightly.
    */
   background?: string | null;
+  /** Degrees the print area is turned about its center, clockwise. */
+  rotation?: number;
+  /** When given, a handle above the print area turns it. */
+  onRotationChange?: (degrees: number) => void;
+  /** What the print area being edited is called, shown on it when there are others. */
+  label?: string;
+  /** The photo's other print areas, shown dimmed. */
+  otherAreas?: OtherPrintArea[];
+  /** Called with an other area's key when it is clicked, to edit it instead. */
+  onSelectArea?: (key: string) => void;
+  /** Sizes the photo; by default it is at most 420 px tall. */
+  imageClassName?: string;
+  /**
+   * A fixed print area (a Printify template's, which is Printify's own): drawn but not movable, and the box being
+   * edited (the design) moves, resizes and turns only inside it, snapping to its center.
+   */
+  frame?: MockupPrintArea;
 };
 
 const clamp = (value: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, value));
@@ -46,7 +75,11 @@ const PRINT_AREA_FIELDS: { field: keyof Bounds; label: string }[] = [
 // Snap distance in on-screen pixels, independent of image zoom.
 const SNAP_SCREEN_PX = 10;
 
-const snapToCenter = (rect: Bounds, target: { centerX: number; centerY: number }, scale: number) => {
+const snapToCenter = (
+  rect: Bounds,
+  target: { centerX: number; centerY: number },
+  scale: number
+) => {
   const threshold = SNAP_SCREEN_PX / (scale || 1);
   const snapH = Math.abs(rect.x + rect.width / 2 - target.centerX) < threshold;
   const snapV = Math.abs(rect.y + rect.height / 2 - target.centerY) < threshold;
@@ -78,10 +111,16 @@ const detectGarmentBounds = (img: HTMLImageElement): Bounds | null => {
     const { data } = ctx.getImageData(0, 0, w, h);
 
     const band = Math.max(2, Math.round(Math.min(w, h) * 0.03));
-    let sr = 0, sg = 0, sb = 0, sc = 0;
+    let sr = 0,
+      sg = 0,
+      sb = 0,
+      sc = 0;
     const sample = (x: number, y: number) => {
       const i = (y * w + x) * 4;
-      sr += data[i]; sg += data[i + 1]; sb += data[i + 2]; sc++;
+      sr += data[i];
+      sg += data[i + 1];
+      sb += data[i + 2];
+      sc++;
     };
     for (let x = 0; x < w; x += 2) for (const y of [0, band, h - 1 - band, h - 1]) sample(x, y);
     for (let y = 0; y < h; y += 2) for (const x of [0, band, w - 1 - band, w - 1]) sample(x, y);
@@ -93,7 +132,9 @@ const detectGarmentBounds = (img: HTMLImageElement): Bounds | null => {
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         const i = (y * w + x) * 4;
-        const dr = data[i] - bg[0], dg = data[i + 1] - bg[1], db = data[i + 2] - bg[2];
+        const dr = data[i] - bg[0],
+          dg = data[i + 1] - bg[1],
+          db = data[i + 2] - bg[2];
         if (Math.sqrt(dr * dr + dg * dg + db * db) > THRESHOLD) {
           rowCounts[y]++;
           colCounts[x]++;
@@ -104,18 +145,30 @@ const detectGarmentBounds = (img: HTMLImageElement): Bounds | null => {
     // Minimum differing-pixel count for a row/column to count as garment, not edge noise.
     const minRow = Math.max(2, Math.round(w * 0.01));
     const minCol = Math.max(2, Math.round(h * 0.01));
-    let minY = -1, maxY = -1;
-    for (let y = 0; y < h; y++) if (rowCounts[y] >= minRow) { if (minY < 0) minY = y; maxY = y; }
-    let minX = -1, maxX = -1;
-    for (let x = 0; x < w; x++) if (colCounts[x] >= minCol) { if (minX < 0) minX = x; maxX = x; }
+    let minY = -1,
+      maxY = -1;
+    for (let y = 0; y < h; y++)
+      if (rowCounts[y] >= minRow) {
+        if (minY < 0) minY = y;
+        maxY = y;
+      }
+    let minX = -1,
+      maxX = -1;
+    for (let x = 0; x < w; x++)
+      if (colCounts[x] >= minCol) {
+        if (minX < 0) minX = x;
+        maxX = x;
+      }
 
     if (minX < 0 || minY < 0) return null;
     if (((maxX - minX) * (maxY - minY)) / (w * h) < 0.02) return null; // too small to be real
 
     const inv = 1 / downscale;
     return {
-      x: Math.round(minX * inv), y: Math.round(minY * inv),
-      width: Math.round((maxX - minX) * inv), height: Math.round((maxY - minY) * inv),
+      x: Math.round(minX * inv),
+      y: Math.round(minY * inv),
+      width: Math.round((maxX - minX) * inv),
+      height: Math.round((maxY - minY) * inv),
     };
   } catch {
     return null;
@@ -209,7 +262,14 @@ const shareOffGarment = (mask: GarmentMask, box: Bounds, size: Size) => {
   let off = 0;
   for (let y = top; y < bottom; y++) {
     for (let x = left; x < right; x++) {
-      if (x < 0 || y < 0 || x >= mask.width || y >= mask.height || mask.alpha[y * mask.width + x] < 128) off++;
+      if (
+        x < 0 ||
+        y < 0 ||
+        x >= mask.width ||
+        y >= mask.height ||
+        mask.alpha[y * mask.width + x] < 128
+      )
+        off++;
     }
   }
   return off / ((right - left) * (bottom - top));
@@ -220,7 +280,54 @@ const fitInside = (box: Bounds, design: Size): Bounds => {
   const scale = Math.min(box.width / design.width, box.height / design.height);
   const width = design.width * scale;
   const height = design.height * scale;
-  return { x: box.x + (box.width - width) / 2, y: box.y + (box.height - height) / 2, width, height };
+  return {
+    x: box.x + (box.width - width) / 2,
+    y: box.y + (box.height - height) / 2,
+    width,
+    height,
+  };
+};
+
+// The turn that snaps to a quarter turn when within this many degrees of it; Shift turns in steps of 15.
+const ROTATION_SNAP_DEGREES = 4;
+
+const rotatePoint = (x: number, y: number, centerX: number, centerY: number, degrees: number) => {
+  const radians = (degrees * Math.PI) / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  const dx = x - centerX;
+  const dy = y - centerY;
+  return { x: centerX + dx * cos - dy * sin, y: centerY + dx * sin + dy * cos };
+};
+
+// Resizing a turned box: the pointer is taken into the box's own (unturned) frame, the corner opposite the handle stays
+// where it is on the photo, and the box is put back around its new center.
+const resizeTurned = (
+  origin: Bounds,
+  handle: Handle,
+  point: { x: number; y: number },
+  degrees: number
+): Bounds => {
+  const centerX = origin.x + origin.width / 2;
+  const centerY = origin.y + origin.height / 2;
+  const local = rotatePoint(point.x, point.y, centerX, centerY, -degrees);
+  let left = origin.x,
+    top = origin.y,
+    right = origin.x + origin.width,
+    bottom = origin.y + origin.height;
+  if (handle === "nw" || handle === "ne") top = Math.min(local.y, bottom - 1);
+  if (handle === "sw" || handle === "se") bottom = Math.max(local.y, top + 1);
+  if (handle === "nw" || handle === "sw") left = Math.min(local.x, right - 1);
+  if (handle === "ne" || handle === "se") right = Math.max(local.x, left + 1);
+  const center = rotatePoint((left + right) / 2, (top + bottom) / 2, centerX, centerY, degrees);
+  const width = Math.max(1, Math.round(right - left));
+  const height = Math.max(1, Math.round(bottom - top));
+  return {
+    x: Math.round(center.x - width / 2),
+    y: Math.round(center.y - height / 2),
+    width,
+    height,
+  };
 };
 
 // Below this share, being off the garment is only the mask's soft edge.
@@ -230,7 +337,25 @@ const BOX_BORDER_PX = 2;
 
 // Drag-to-draw / move / resize print-area picker, in the photo's own pixels. A second mode lets the
 // user correct the garment box that center-snapping is measured against.
-export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, overlayImageUrl, garmentTint, pixelSize, garmentMaskUrl, background }: PrintAreaEditorProps) => {
+export const PrintAreaEditor = ({
+  imageUrl,
+  value,
+  onChange,
+  disabled = false,
+  overlayImageUrl,
+  garmentTint,
+  pixelSize,
+  garmentMaskUrl,
+  background,
+  rotation = 0,
+  onRotationChange,
+  label,
+  otherAreas,
+  onSelectArea,
+  imageClassName = "max-h-105",
+  frame,
+}: PrintAreaEditorProps) => {
+  const turn = normalizeRotation(rotation);
   const wrapRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -277,27 +402,45 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
     return () => observer.disconnect();
   }, []);
 
-  const toNatural = useCallback((clientX: number, clientY: number) => {
-    const img = imgRef.current;
-    if (!img || !natural) return { x: 0, y: 0 };
-    const rect = img.getBoundingClientRect();
-    const scale = rect.width / natural.width || 1;
-    return {
-      x: clamp(Math.round((clientX - rect.left) / scale), 0, natural.width),
-      y: clamp(Math.round((clientY - rect.top) / scale), 0, natural.height),
-    };
-  }, [natural]);
+  const toNatural = useCallback(
+    (clientX: number, clientY: number) => {
+      const img = imgRef.current;
+      if (!img || !natural) return { x: 0, y: 0 };
+      const rect = img.getBoundingClientRect();
+      const scale = rect.width / natural.width || 1;
+      return {
+        x: clamp(Math.round((clientX - rect.left) / scale), 0, natural.width),
+        y: clamp(Math.round((clientY - rect.top) / scale), 0, natural.height),
+      };
+    },
+    [natural]
+  );
 
   // Layout width, not getBoundingClientRect: the dialog's zoom-in animation is a CSS transform, so
   // a rect measured mid-animation is ~95% size and the overlays would render offset until re-render.
   const scale = natural && imgRef.current ? imgRef.current.clientWidth / natural.width || 1 : 1;
-  const guideBounds: Bounds = garmentBounds ?? { x: 0, y: 0, width: natural?.width ?? 0, height: natural?.height ?? 0 };
-  const centerTarget = { centerX: guideBounds.x + guideBounds.width / 2, centerY: guideBounds.y + guideBounds.height / 2 };
+  // Inside a fixed frame the design snaps to the frame's center, not the garment's.
+  const guideBounds: Bounds = frame ?? garmentBounds ?? {
+    x: 0,
+    y: 0,
+    width: natural?.width ?? 0,
+    height: natural?.height ?? 0,
+  };
+  // Where the box may go: the frame, else the whole photo.
+  const limits: Bounds = frame ?? { x: 0, y: 0, width: natural?.width ?? 0, height: natural?.height ?? 0 };
+  // A box turned in a frame may need moving to stay in it; one too big for the frame is not taken.
+  const inFrame = (next: Bounds, degrees: number) => (frame ? keepInFrame(next, degrees, frame) : next);
+  const centerTarget = {
+    centerX: guideBounds.x + guideBounds.width / 2,
+    centerY: guideBounds.y + guideBounds.height / 2,
+  };
 
   // The composite cuts the design to the garment, so what lies off it is shown cut and called out.
   const garmentMask = garmentMaskUrl && loadedMask?.url === garmentMaskUrl ? loadedMask.mask : null;
   const printed = overlayImageUrl && overlaySize ? fitInside(value, overlaySize) : value;
-  const offGarment = garmentMask && natural && !editingGarment ? shareOffGarment(garmentMask, printed, natural) : 0;
+  // A fixed frame lies on the garment, so a design kept inside it is never off the garment.
+  const offGarment =
+    garmentMask && natural && !editingGarment && !frame ? shareOffGarment(garmentMask, printed, natural) : 0;
   const isOffGarment = offGarment > OFF_GARMENT_TOLERANCE;
   const printedThing = overlayImageUrl ? "design" : "print area";
 
@@ -308,15 +451,27 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (!interactive || !natural) return;
     const target = event.target as HTMLElement;
-    const handle = target.closest<HTMLElement>("[data-handle]")?.dataset.handle as Handle | undefined;
+    const other = target.closest<HTMLElement>("[data-other-area]")?.dataset.otherArea;
+    if (other !== undefined && !editingGarment) {
+      onSelectArea?.(other);
+      event.preventDefault();
+      return;
+    }
+    const handle = target.closest<HTMLElement>("[data-handle]")?.dataset.handle as
+      | Handle
+      | undefined;
     const onRect = target.closest("[data-rect]");
 
-    if (handle) {
+    if (target.closest("[data-rotate]") && !editingGarment) {
+      dragRef.current = { mode: "rotate" };
+    } else if (handle) {
       dragRef.current = { mode: "resize", handle, origin: activeRect };
     } else if (onRect) {
       const point = toNatural(event.clientX, event.clientY);
       dragRef.current = { mode: "move", startX: point.x, startY: point.y, origin: activeRect };
     } else {
+      // In a fixed frame the design is moved, never drawn again where the pointer lands.
+      if (frame && !editingGarment) return;
       // A stray tap beside the box must not replace an area that was already placed.
       if (event.pointerType === "touch" && activeRect.width > 1 && activeRect.height > 1) return;
       const anchor = toNatural(event.clientX, event.clientY);
@@ -333,24 +488,59 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
     const point = toNatural(event.clientX, event.clientY);
     let next: Bounds;
 
+    if (drag.mode === "rotate") {
+      // The handle sits straight above the center, so pointing up is no turn.
+      const centerX = value.x + value.width / 2;
+      const centerY = value.y + value.height / 2;
+      let degrees = (Math.atan2(point.y - centerY, point.x - centerX) * 180) / Math.PI + 90;
+      if (event.shiftKey) degrees = Math.round(degrees / 15) * 15;
+      else {
+        const quarter = Math.round(degrees / 90) * 90;
+        if (Math.abs(degrees - quarter) < ROTATION_SNAP_DEGREES) degrees = quarter;
+      }
+      const turned = normalizeRotation(Math.round(degrees));
+      // In a frame, a turn that would take the design past it moves the design in, or is not taken when it cannot fit.
+      const kept = inFrame(value, turned);
+      if (!kept) return;
+      if (kept.x !== value.x || kept.y !== value.y) onChange(kept);
+      onRotationChange?.(turned);
+      return;
+    }
+
+    if (drag.mode === "resize" && turn !== 0 && !editingGarment) {
+      const kept = inFrame(resizeTurned(drag.origin, drag.handle, point, turn), turn);
+      if (kept) onChange(kept);
+      return;
+    }
+
     if (drag.mode === "new") {
-      const x0 = Math.min(drag.anchorX, point.x), x1 = Math.max(drag.anchorX, point.x);
-      const y0 = Math.min(drag.anchorY, point.y), y1 = Math.max(drag.anchorY, point.y);
+      const x0 = Math.min(drag.anchorX, point.x),
+        x1 = Math.max(drag.anchorX, point.x);
+      const y0 = Math.min(drag.anchorY, point.y),
+        y1 = Math.max(drag.anchorY, point.y);
       next = { x: x0, y: y0, width: Math.max(1, x1 - x0), height: Math.max(1, y1 - y0) };
     } else if (drag.mode === "move") {
+      // The garment box moves over the whole photo; the print area within its limits (a fixed frame, else the photo).
+      const area = editingGarment ? { x: 0, y: 0, width: natural.width, height: natural.height } : limits;
       next = {
-        x: clamp(drag.origin.x + point.x - drag.startX, 0, natural.width - drag.origin.width),
-        y: clamp(drag.origin.y + point.y - drag.startY, 0, natural.height - drag.origin.height),
+        x: clamp(drag.origin.x + point.x - drag.startX, area.x, area.x + area.width - drag.origin.width),
+        y: clamp(drag.origin.y + point.y - drag.startY, area.y, area.y + area.height - drag.origin.height),
         width: drag.origin.width,
         height: drag.origin.height,
       };
     } else {
+      const area = editingGarment ? { x: 0, y: 0, width: natural.width, height: natural.height } : limits;
       const o = drag.origin;
-      let left = o.x, top = o.y, right = o.x + o.width, bottom = o.y + o.height;
-      if (drag.handle === "nw" || drag.handle === "ne") top = clamp(point.y, 0, bottom - 1);
-      if (drag.handle === "sw" || drag.handle === "se") bottom = clamp(point.y, top + 1, natural.height);
-      if (drag.handle === "nw" || drag.handle === "sw") left = clamp(point.x, 0, right - 1);
-      if (drag.handle === "ne" || drag.handle === "se") right = clamp(point.x, left + 1, natural.width);
+      let left = o.x,
+        top = o.y,
+        right = o.x + o.width,
+        bottom = o.y + o.height;
+      if (drag.handle === "nw" || drag.handle === "ne") top = clamp(point.y, area.y, bottom - 1);
+      if (drag.handle === "sw" || drag.handle === "se")
+        bottom = clamp(point.y, top + 1, area.y + area.height);
+      if (drag.handle === "nw" || drag.handle === "sw") left = clamp(point.x, area.x, right - 1);
+      if (drag.handle === "ne" || drag.handle === "se")
+        right = clamp(point.x, left + 1, area.x + area.width);
       next = { x: left, y: top, width: right - left, height: bottom - top };
     }
 
@@ -359,8 +549,10 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
       return;
     }
     const snapped = snapToCenter(next, centerTarget, scale);
+    const kept = inFrame(snapped.rect, turn);
+    if (!kept) return;
     setSnap(snapped.snap);
-    onChange(snapped.rect);
+    onChange(kept);
   };
 
   const endDrag = () => {
@@ -372,11 +564,12 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
     const number = Number(raw);
     if (!natural || raw === "" || !Number.isFinite(number)) return;
     const next = { ...value, [field]: Math.round(number) };
-    next.width = clamp(next.width, 1, natural.width);
-    next.height = clamp(next.height, 1, natural.height);
-    next.x = clamp(next.x, 0, natural.width - next.width);
-    next.y = clamp(next.y, 0, natural.height - next.height);
-    onChange(next);
+    next.width = clamp(next.width, 1, limits.width);
+    next.height = clamp(next.height, 1, limits.height);
+    next.x = clamp(next.x, limits.x, limits.x + limits.width - next.width);
+    next.y = clamp(next.y, limits.y, limits.y + limits.height - next.height);
+    const kept = inFrame(next, turn);
+    if (kept) onChange(kept);
   };
 
   const toggleGarmentEditing = () => {
@@ -386,18 +579,36 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
     setEditingGarment((current) => !current);
   };
 
-  const boxStyle = (b: Bounds) => ({ left: b.x * scale, top: b.y * scale, width: b.width * scale, height: b.height * scale });
+  const boxStyle = (b: Bounds, degrees = 0) => ({
+    left: b.x * scale,
+    top: b.y * scale,
+    width: b.width * scale,
+    height: b.height * scale,
+    ...(degrees ? { transform: `rotate(${degrees}deg)`, transformOrigin: "center" } : {}),
+  });
+  const offPhoto =
+    natural !== null && !areaFits({ ...value, rotation: turn }, natural.width, natural.height);
   // The photo shown only through the garment mask, over the background color. Only what is drawn changes: the garment
   // detection reads the photo's own pixels.
-  const cutOut = background && garmentMaskUrl
-    ? { maskImage: `url(${garmentMaskUrl})`, WebkitMaskImage: `url(${garmentMaskUrl})`, maskSize: "100% 100%", WebkitMaskSize: "100% 100%" }
-    : undefined;
+  const cutOut =
+    background && garmentMaskUrl
+      ? {
+          maskImage: `url(${garmentMaskUrl})`,
+          WebkitMaskImage: `url(${garmentMaskUrl})`,
+          maskSize: "100% 100%",
+          WebkitMaskSize: "100% 100%",
+        }
+      : undefined;
 
   return (
     <div className="space-y-1.5">
       <div
         ref={wrapRef}
-        className={cn("relative inline-block max-w-full rounded-lg leading-none", interactive ? "cursor-crosshair touch-none" : "cursor-default")}
+        // Centered over the hint under it, which can be wider than a narrow photo.
+        className={cn(
+          "relative mx-auto block w-fit max-w-full rounded-lg leading-none",
+          interactive ? "cursor-crosshair touch-none" : "cursor-default"
+        )}
         style={cutOut ? { backgroundColor: background ?? undefined } : undefined}
         data-testid="print-area-photo"
         onPointerDown={handlePointerDown}
@@ -411,7 +622,10 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
           ref={imgRef}
           src={imageUrl}
           alt="Mock-up base photo"
-          className="ring-ink-200 block max-h-105 max-w-full rounded-lg ring-1 select-none ring-inset"
+          className={cn(
+            "ring-ink-200 block max-w-full rounded-lg ring-1 select-none ring-inset",
+            imageClassName
+          )}
           draggable={false}
           style={cutOut}
           crossOrigin="anonymous" // required to read pixels back for garment detection
@@ -445,23 +659,67 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
             }}
           />
         )}
+        {natural && frame && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute border-2 border-dashed border-emerald-600/80 bg-emerald-500/5"
+            style={boxStyle(frame)}
+          >
+            <span className="absolute -top-5 left-0 rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap text-white">
+              Printify print area
+            </span>
+          </div>
+        )}
+        {natural &&
+          otherAreas?.map((other) => (
+            <div
+              key={other.key}
+              data-other-area={other.key}
+              title={`Edit ${other.label}`}
+              className={cn(
+                "absolute border-2 border-dashed border-slate-500/70 bg-slate-500/10",
+                editingGarment
+                  ? "pointer-events-none opacity-40"
+                  : "cursor-pointer hover:border-slate-700"
+              )}
+              style={boxStyle(other.area, normalizeRotation(other.rotation))}
+            >
+              {other.overlayImageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={other.overlayImageUrl}
+                  alt=""
+                  draggable={false}
+                  className="pointer-events-none absolute inset-0 size-full object-contain opacity-80"
+                />
+              )}
+              <span className="pointer-events-none absolute -top-5 left-0 rounded bg-slate-600 px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap text-white">
+                {other.label}
+              </span>
+            </div>
+          ))}
         {natural && (
           <div
             data-rect={editingGarment ? undefined : ""}
             className={cn(
-              "absolute overflow-hidden border-2",
-              isOffGarment ? "border-amber-500" : "border-primary",
+              "absolute border-2",
+              isOffGarment || offPhoto ? "border-amber-500" : "border-primary",
               !overlayImageUrl && (isOffGarment ? "bg-amber-500/15" : "bg-primary/15"),
-              editingGarment ? "pointer-events-none opacity-40" : disabled ? "cursor-default" : "cursor-move"
+              editingGarment
+                ? "pointer-events-none opacity-40"
+                : disabled
+                  ? "cursor-default"
+                  : "cursor-move"
             )}
-            style={boxStyle(value)}
+            style={boxStyle(value, turn)}
           >
             {overlayImageUrl && (
               // Masked with the garment, positioned as the whole photo, so the design shows cut where the composite cuts it.
+              // A turned box turns its mask with it, so it is shown uncut then.
               <div
-                className="pointer-events-none absolute inset-0"
+                className="pointer-events-none absolute inset-0 overflow-hidden"
                 style={
-                  garmentMaskUrl
+                  garmentMaskUrl && turn === 0
                     ? {
                         maskImage: `url(${garmentMaskUrl})`,
                         WebkitMaskImage: `url(${garmentMaskUrl})`,
@@ -482,19 +740,50 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
                   alt=""
                   draggable={false}
                   className="absolute inset-0 size-full object-contain"
-                  onLoad={(event) => setOverlaySize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })}
+                  onLoad={(event) =>
+                    setOverlaySize({
+                      width: event.currentTarget.naturalWidth,
+                      height: event.currentTarget.naturalHeight,
+                    })
+                  }
                 />
               </div>
             )}
-            {!disabled && !editingGarment && <Handles className={isOffGarment ? "border-amber-500" : "border-primary"} />}
+            {label && otherAreas && otherAreas.length > 0 && (
+              <span className="bg-primary pointer-events-none absolute -top-5 left-0 rounded px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap text-white">
+                {label}
+              </span>
+            )}
+            {!disabled && !editingGarment && (
+              <Handles
+                className={isOffGarment || offPhoto ? "border-amber-500" : "border-primary"}
+              />
+            )}
+            {!disabled && !editingGarment && onRotationChange && (
+              <>
+                <div className="bg-primary pointer-events-none absolute -top-5 left-1/2 h-5 w-px -translate-x-1/2" />
+                <div
+                  data-rotate=""
+                  role="slider"
+                  aria-label="Turn the print area"
+                  aria-valuemin={-180}
+                  aria-valuemax={180}
+                  aria-valuenow={turn}
+                  title="Drag to turn. Hold Shift for steps of 15°."
+                  className="border-primary bg-card absolute -top-7 left-1/2 size-3.5 -translate-x-1/2 cursor-grab rounded-full border-2 active:cursor-grabbing"
+                />
+              </>
+            )}
           </div>
         )}
-        {garmentBounds && (
+        {garmentBounds && !frame && (
           <div
             data-rect={editingGarment ? "" : undefined}
             className={cn(
               "absolute border-amber-500",
-              editingGarment ? "cursor-move border-2 bg-amber-500/10" : "pointer-events-none border border-dashed"
+              editingGarment
+                ? "cursor-move border-2 bg-amber-500/10"
+                : "pointer-events-none border border-dashed"
             )}
             style={boxStyle(garmentBounds)}
           >
@@ -507,16 +796,29 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
         {snap.h && (
           <div
             className="pointer-events-none absolute w-px -translate-x-1/2 bg-pink-500"
-            style={{ left: centerTarget.centerX * scale, top: guideBounds.y * scale, height: guideBounds.height * scale }}
+            style={{
+              left: centerTarget.centerX * scale,
+              top: guideBounds.y * scale,
+              height: guideBounds.height * scale,
+            }}
           />
         )}
         {snap.v && (
           <div
             className="pointer-events-none absolute h-px -translate-y-1/2 bg-pink-500"
-            style={{ top: centerTarget.centerY * scale, left: guideBounds.x * scale, width: guideBounds.width * scale }}
+            style={{
+              top: centerTarget.centerY * scale,
+              left: guideBounds.x * scale,
+              width: guideBounds.width * scale,
+            }}
           />
         )}
       </div>
+      {offPhoto && (
+        <p role="status" className="text-xs text-amber-700">
+          The turned print area reaches off the photo. Make it smaller or move it further in.
+        </p>
+      )}
       {isOffGarment && (
         <p role="status" className="text-xs text-amber-700 dark:text-amber-300">
           {offGarment > 1 - OFF_GARMENT_TOLERANCE
@@ -525,7 +827,11 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
         </p>
       )}
       {natural && !disabled && !editingGarment && (
-        <div className="hidden grid-cols-4 gap-2 [@media(pointer:coarse)]:grid" role="group" aria-label="Exact print area, in pixels">
+        <div
+          className="hidden grid-cols-4 gap-2 [@media(pointer:coarse)]:grid"
+          role="group"
+          aria-label="Exact print area, in pixels"
+        >
           {PRINT_AREA_FIELDS.map(({ field, label }) => (
             <label key={field} className="text-muted-foreground min-w-0 space-y-1 text-xs">
               {label}
@@ -540,7 +846,12 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
           ))}
         </div>
       )}
-      {natural && (
+      {natural && frame && (
+        <p className="text-muted-foreground text-xs">
+          The green dashed box is Printify&apos;s print area. Move, resize or turn the design inside it: it prints where it shows.
+        </p>
+      )}
+      {natural && !frame && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-muted-foreground text-xs">
             {editingGarment
@@ -549,7 +860,13 @@ export const PrintAreaEditor = ({ imageUrl, value, onChange, disabled = false, o
                 ? "Snaps to the center of the amber garment box. Wrong? Adjust it."
                 : "Snaps to the photo's center — mark the garment area for better centering."}
           </p>
-          <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={toggleGarmentEditing}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs"
+            onClick={toggleGarmentEditing}
+          >
             {editingGarment ? "Done" : "Adjust garment area"}
           </Button>
         </div>

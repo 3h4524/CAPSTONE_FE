@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { SELECT_CLEARABLE_TRIGGER, SelectClearButton } from "@/components/commons/forms/select-clear-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PanelSection } from "@/components/workflows/config-panel/layout/panel-section";
 import { PANEL_SELECT_CONTENT_CLASS } from "@/constants/workflow-panel";
@@ -62,14 +63,28 @@ export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
     router.replace(`/workflows?${params.toString()}`);
   };
 
+  // Stops looking at the earlier run; the canvas goes back to the workflow without a run open.
+  const closeRun = () => {
+    const params = new URLSearchParams(window.location.search);
+    params.delete(BATCH_JOB_PARAM);
+    params.delete(NEXT_PART_PARAM);
+    router.replace(`/workflows?${params.toString()}`);
+  };
+  const canClose = Boolean(openRun) && !isRunning;
+
   return (
     <PanelSection
       title="Previous runs"
       aside={<span className="text-muted-foreground text-xs tabular-nums">{startedRuns.length}</span>}
       description="See an earlier run's images and mock-ups, or retry its failed products. Run still generates for the pending products."
     >
-      <Select value={openRun?.job.id} onValueChange={openRunById} disabled={isRunning}>
-        <SelectTrigger id="previous-runs" aria-label="Previous runs" className="bg-card w-full min-w-0">
+      <Select value={openRun?.job.id ?? ""} onValueChange={openRunById} disabled={isRunning}>
+        <div className="relative min-w-0">
+        <SelectTrigger
+          id="previous-runs"
+          aria-label="Previous runs"
+          className={cn("bg-card w-full min-w-0", canClose && SELECT_CLEARABLE_TRIGGER)}
+        >
           {/* Short on purpose: the full details are in the list, and a long value would push the panel wider. */}
           <SelectValue placeholder="Open an earlier run">
             {openRun && (
@@ -80,6 +95,8 @@ export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
             )}
           </SelectValue>
         </SelectTrigger>
+        {canClose && <SelectClearButton label="Close this run" onClear={closeRun} />}
+        </div>
         <SelectContent position="popper" className={PANEL_SELECT_CONTENT_CLASS}>
           {startedRuns.map(({ job, number }) => (
             <SelectItem key={job.id} value={job.id}>

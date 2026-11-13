@@ -5,7 +5,7 @@ import { OptionSelect } from "@/components/workflows/config-panel/fields/option-
 import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
 import { readString } from "@/helpers/workflow-config";
 import { toProductOptions } from "@/helpers/workflow-panel";
-import { supportsBatchVideos } from "@/helpers/workflow-run";
+import { publishesWithoutVideo, supportsBatchVideos } from "@/helpers/workflow-run";
 import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useWorkflowStore } from "@/stores/workflow";
 
@@ -17,6 +17,7 @@ export const VideoProductSelect = () => {
   const input = useWorkflowStore((state) => state.nodes.find((node) => node.data.type === "product-input"));
   const isRunning = useWorkflowStore((state) => state.isRunning);
   const batchVideos = useWorkflowStore((state) => supportsBatchVideos(state.nodes));
+  const publishOnly = useWorkflowStore((state) => publishesWithoutVideo(state.nodes));
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const batchId = readString(input?.data.config.batchId);
   const { data: products, isPending, isError, refetch } = useBatchProducts(batchId);
@@ -24,7 +25,7 @@ export const VideoProductSelect = () => {
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={FIELD_ID}>Product for the video</Label>
+      <Label htmlFor={FIELD_ID}>{publishOnly ? "Product to publish" : "Product for the video"}</Label>
       {batchId ? (
         <OptionSelect
           standaloneId={FIELD_ID}
@@ -45,6 +46,8 @@ export const VideoProductSelect = () => {
       <p className="text-muted-foreground text-xs leading-relaxed">
         {isRunning
           ? "The run in progress keeps this product."
+          : publishOnly
+            ? "Its approved mock-ups are what gets published. One run publishes one product."
           : batchVideos
             ? "Optional. Every design you approve here gets a video; you set the scenes up on this product's mock-ups."
             : "These video settings make this product's video only."}

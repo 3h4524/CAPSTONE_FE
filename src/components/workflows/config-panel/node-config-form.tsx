@@ -42,7 +42,7 @@ import { useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useNodeOverview } from "@/hooks/use-node-overview";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
-import type { WorkflowField, WorkflowNode, WorkflowNodeConfig } from "@/types/workflow";
+import type { WorkflowField, WorkflowNode, WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 type NodeConfigFormProps = {
@@ -69,6 +69,16 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
   // Standard scenes make one video per design chosen at Mockup Approval; AI scenes, one product's video.
   const batchVideos = useWorkflowStore((state) => hasVideoSteps(state.nodes) && supportsBatchVideos(state.nodes));
   const groupId = useRunGroupId();
+  // Mockup Approval lets the mock-ups through to the video, or without one straight to the first publish step.
+  const approvalLeadsTo = useWorkflowStore((state): WorkflowNodeType =>
+    hasVideoSteps(state.nodes)
+      ? "generate-video"
+      : state.nodes.some((n) => n.data.type === "publish-printify")
+        ? "publish-printify"
+        : state.nodes.some((n) => n.data.type === "publish-etsy")
+          ? "publish-etsy"
+          : "generate-video"
+  );
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const selectNode = useWorkflowStore((state) => state.selectNode);
   const overview = useNodeOverview(node);
@@ -274,9 +284,9 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
         )}
         {node.data.type === "approval-gate" && (
           <>
-            <ApprovalFlow from="apply-mockup" to="generate-video" automatic={node.data.config.mode === "auto"} />
+            <ApprovalFlow from="apply-mockup" to={approvalLeadsTo} automatic={node.data.config.mode === "auto"} />
             {!batchVideos && !groupId && (
-              <PanelSection title="Video product">
+              <PanelSection title={hasVideo ? "Video product" : "Product"}>
                 <VideoProductSelect />
               </PanelSection>
             )}

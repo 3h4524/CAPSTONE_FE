@@ -48,6 +48,8 @@ export type MarketOpportunityInsights = {
   engagementRate: number | null;
   engagementChangePercent: number | null;
   engagementTrend: "up" | "down" | "flat" | "unknown";
+  /** Favorites the opportunity's listings gain per day, followed across the days they were observed. */
+  favoritesPerDay?: number | null;
   competitionLevel: "low" | "medium" | "high" | "unknown";
   confidenceLabel: "low" | "medium" | "high";
   evidenceQuality: "insufficient" | "early" | "supported";

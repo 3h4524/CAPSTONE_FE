@@ -20,6 +20,7 @@ import { confirmAiShot } from "@/helpers/confirm-ai-shot";
 import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
 import { readString, readStringArray } from "@/helpers/workflow-config";
+import { publishesWithoutVideo } from "@/helpers/workflow-run";
 import { usePreviewVideoStoryboard } from "@/hooks/mutations/use-preview-video-storyboard";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
@@ -33,6 +34,10 @@ export const MockupPanel = ({ review }: { review: boolean }) => {
   const input = useWorkflowStore(state => state.nodes.find(n => n.data.type === "product-input"));
   const mockup = useWorkflowStore(state => state.nodes.find(n => n.data.type === "apply-mockup"));
   const productId = readString(input?.data.config.productId);
+  const publishOnly = useWorkflowStore(state => publishesWithoutVideo(state.nodes));
+  // The first publish step on the canvas, named as the button that continues to it.
+  const publishLabel = useWorkflowStore(state => state.nodes.find(n => n.data.type === "publish-printify")?.data.label
+    ?? state.nodes.find(n => n.data.type === "publish-etsy")?.data.label ?? "publishing");
   const { run, isRunning } = useWorkflowRuntime();
   const { data: assets, isPending, isError, refetch } = useMockupAssets(run?.productId ?? productId);
   const { mutateAsync: action, isPending: isActing } = useWorkflowRunAction();
@@ -86,8 +91,15 @@ export const MockupPanel = ({ review }: { review: boolean }) => {
     } catch (error) { showToast("error", getErrorMessage(error)); }
     finally { setIsConfirming(false); }
   };
+  // Without a video the approved mock-ups go straight to the publish steps: there is no video setting or cost to confirm.
+  const continueToPublishing = async () => {
+    if (!run) return;
+    try { await action({ runId: run.id, expectedRevision: run.revision, action: "resume_mockups" }); }
+    catch (error) { showToast("error", getErrorMessage(error)); }
+  };
   const continueWithMockups = async () => {
     if (!run) return;
+    if (publishOnly) { await continueToPublishing(); return; }
     const videoNode = useWorkflowStore.getState().nodes.find(n => n.data.type === "generate-video");
     const parsed = generateVideoConfigSchema.safeParse(videoNode?.data.config);
     if (!parsed.success) { showToast("warning", parsed.error.issues[0]?.message ?? "Check video settings."); return; }
@@ -109,7 +121,7 @@ export const MockupPanel = ({ review }: { review: boolean }) => {
   usePanelContinueCommand(review && run?.status === "waiting_for_input" && !isActing && !isPreviewing, () => void continueWithMockups());
   if (!productId && !run) {
     return review
-      ? <PanelEmptyState icon={PackageSearch} title="Choose the product for the video above." description="Its mock-ups are listed here for review." />
+      ? <PanelEmptyState icon={PackageSearch} title={publishOnly ? "Choose the product to publish above." : "Choose the product for the video above."} description="Its mock-ups are listed here for review." />
       : <PanelEmptyState icon={PackageSearch} title="Select a product in Product Input first." description="The video is made for one product of the batch." />;
   }
   return <div className="@container space-y-5">
@@ -130,7 +142,7 @@ export const MockupPanel = ({ review }: { review: boolean }) => {
     </div>
     {review && run?.status === "waiting_for_input" && (
       <div className="bg-card/95 sticky bottom-0 -mx-5 border-t px-5 py-3 backdrop-blur">
-        <Button type="button" className="w-full hover:translate-y-0" disabled={isActing || isPreviewing} onClick={() => void continueWithMockups()}>{isPreviewing ? "Preparing prompt preview…" : "Review prompt before creating video"}</Button>
+        <Button type="button" className="w-full hover:translate-y-0" disabled={isActing || isPreviewing} onClick={() => void continueWithMockups()}>{publishOnly ? (isActing ? "Continuing…" : `Continue to ${publishLabel}`) : isPreviewing ? "Preparing prompt preview…" : "Review prompt before creating video"}</Button>
       </div>
     )}
     {promptReview && <AiPromptReviewDialog open prompts={promptReview.prompts} isContinuing={isConfirming || isActing} onOpenChange={open => { if (!open && !isConfirming && !isActing) setPromptReview(null); }} onContinue={() => void resumeWithCostConfirmation(promptReview.config, promptReview.fingerprint)} />}

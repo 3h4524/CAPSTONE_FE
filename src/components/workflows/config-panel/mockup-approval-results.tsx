@@ -6,7 +6,7 @@ import { MockupPanel } from "@/components/workflows/media/mockup-panel";
 import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
 import { VideoSourcesHeader } from "@/components/workflows/media/video-sources-header";
 import { RunGroupPanel } from "@/components/workflows/run/run-group-panel";
-import { hasVideoSteps, supportsBatchVideos } from "@/helpers/workflow-run";
+import { hasVideoSteps, publishesWithoutVideo, supportsBatchVideos } from "@/helpers/workflow-run";
 import { useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useWorkflowStore } from "@/stores/workflow";
 
@@ -17,6 +17,7 @@ import { useWorkflowStore } from "@/stores/workflow";
 export const MockupApprovalResults = () => {
   const groupId = useRunGroupId();
   const batchVideos = useWorkflowStore((state) => hasVideoSteps(state.nodes) && supportsBatchVideos(state.nodes));
+  const publishOnly = useWorkflowStore((state) => publishesWithoutVideo(state.nodes));
 
   if (groupId)
     return (
@@ -35,8 +36,12 @@ export const MockupApprovalResults = () => {
     );
   return (
     <PanelSection
-      title="Mock-ups for the video"
-      description="Approve the mock-ups to use in the video. The ones made by Apply mock-up are added here when the video part starts."
+      title={publishOnly ? "Mock-ups to publish" : "Mock-ups for the video"}
+      description={
+        publishOnly
+          ? "Approve the mock-ups to publish, then choose Continue. The ones made by Apply mock-up are added here when the run reaches this step."
+          : "Approve the mock-ups to use in the video. The ones made by Apply mock-up are added here when the video part starts."
+      }
     >
       <RunStatusPanel />
       <VideoSourcesHeader />

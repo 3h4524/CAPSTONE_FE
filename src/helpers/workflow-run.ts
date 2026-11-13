@@ -1,4 +1,4 @@
-import { BATCH_RUN_NODE_TYPES, RUNNABLE_NODE_TYPES, VIDEO_RUN_NODE_TYPES } from "@/constants/workflow";
+import { BATCH_RUN_NODE_TYPES, PUBLISH_NODE_TYPES, RUNNABLE_NODE_TYPES, VIDEO_RUN_NODE_TYPES } from "@/constants/workflow";
 import { backgroundKeys, backgroundsFor, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
 import { readString, readStringArray, readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
@@ -51,6 +51,16 @@ export const hasBatchSteps = (nodes: WorkflowNode[]) =>
 
 /** The workflow makes a video, so a run includes the server's video run. */
 export const hasVideoSteps = (nodes: WorkflowNode[]) => nodes.some((node) => node.data.type === "generate-video");
+
+/**
+ * The workflow publishes (Push to Printify, Publish to Etsy) without making a video: the server's run waits at
+ * Mockup Approval for one product, then goes straight to the publish steps. The server checks the same.
+ */
+export const publishesWithoutVideo = (nodes: WorkflowNode[]) =>
+  !hasVideoSteps(nodes) && nodes.some((node) => PUBLISH_NODE_TYPES.includes(node.data.type));
+
+/** The workflow has a part the server runs for one product after Mockup Approval: a video, or publishing. */
+export const hasServerPart = (nodes: WorkflowNode[]) => hasVideoSteps(nodes) || publishesWithoutVideo(nodes);
 
 /**
  * Product input offers its product only to a workflow that writes listing content without a video. A video

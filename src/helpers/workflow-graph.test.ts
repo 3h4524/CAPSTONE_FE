@@ -409,6 +409,45 @@ describe("validateWorkflow", () => {
     expect(validateWorkflow(nodes, pipelineEdges()).map((issue) => issue.id)).toContain("video-product-input");
   });
 
+  describe("publishing without a video", () => {
+    const publishNodes = (productId = VIDEO_PRODUCT_ID) => [
+      typedNode("input", "product-input", { batchId: "batch-1", productId }),
+      typedNode("mockup", "apply-mockup", VALID_CONFIGS["apply-mockup"]),
+      typedNode("approval", "approval-gate", VALID_CONFIGS["approval-gate"]),
+      typedNode("printify", "publish-printify", VALID_CONFIGS["publish-printify"]),
+    ];
+    const publishEdges = () => [edge("input", "mockup"), edge("mockup", "approval"), edge("approval", "printify")];
+
+    it("lets Push to Printify follow Mockup Approval directly", () => {
+      expect(validateWorkflow(publishNodes(), publishEdges())).toEqual([]);
+    });
+
+    it("says Export ZIP needs the video", () => {
+      const nodes = [...publishNodes(), typedNode("export", "export-zip", VALID_CONFIGS["export-zip"])];
+      const edges = [edge("input", "mockup"), edge("mockup", "approval"), edge("approval", "export"), edge("export", "printify")];
+
+      expect(validateWorkflow(nodes, edges)).toContainEqual({
+        id: "publish-needs-video-export",
+        nodeId: "export",
+        message: "Export ZIP needs Generate Video. Remove it to publish without a video.",
+      });
+    });
+
+    it("needs Mockup Approval before publishing", () => {
+      const nodes = publishNodes().filter((item) => item.data.type !== "approval-gate");
+
+      expect(validateWorkflow(nodes, [edge("input", "mockup"), edge("mockup", "printify")]).map((issue) => issue.id)).toContain("publish-pipeline");
+    });
+
+    it("needs the one product it publishes, chosen at Mockup Approval", () => {
+      expect(validateWorkflow(publishNodes(""), publishEdges())).toContainEqual({
+        id: "publish-product-input",
+        nodeId: "approval",
+        message: "Publishing without a video is for one product. Choose it under Product in Mockup Approval.",
+      });
+    });
+  });
+
   it.each(nodeTypes)("accepts a valid %s config", (type) => {
     const issues = validateWorkflow([typedNode("n1", type, VALID_CONFIGS[type])], []);
 

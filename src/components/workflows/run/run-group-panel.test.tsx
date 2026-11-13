@@ -137,6 +137,25 @@ describe("RunGroupPanel: starting the videos", () => {
     expect(screen.getAllByText(/no approved model photo/).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
   });
+
+  it("says the model photos are being made, and keeps Continue off until they are", () => {
+    const preparing = group();
+    preparing.preparing = true;
+    mocks.group = preparing;
+    render(<RunGroupPanel />);
+
+    expect(screen.getByText(/Getting the videos ready/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+  });
+
+  it("says why a run set to approve automatically is still waiting", () => {
+    const waiting = group();
+    waiting.notice = "The AI videos now cost $9.60, more than the $5.00 you confirmed when you pressed Run.";
+    mocks.group = waiting;
+    render(<RunGroupPanel />);
+
+    expect(screen.getByText(/did not start\. The AI videos now cost \$9\.60/)).toBeInTheDocument();
+  });
 });
 
 const mockup = (id: string, approvalStatus: string) =>

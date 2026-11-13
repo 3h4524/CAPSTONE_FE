@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { batchJobKeys, listBatchJobs } from "@/api/batch-jobs";
@@ -14,7 +14,15 @@ import { confirmRunCost, takeRunAiBudget } from "@/helpers/run-cost";
 import { publishConnectionIssue } from "@/helpers/shop-connections";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
-import { extractMockupSelection, hasBatchSteps, hasListingSteps, hasVideoSteps, supportsBatchVideos } from "@/helpers/workflow-run";
+import {
+  extractMockupSelection,
+  hasBatchSteps,
+  hasListingSteps,
+  hasServerPart,
+  hasVideoSteps,
+  publishesWithoutVideo,
+  supportsBatchVideos,
+} from "@/helpers/workflow-run";
 import { useCancelRunGroup, useStartRunGroup } from "@/hooks/mutations/use-run-group-actions";
 import { ACTIVE_RUN_GROUP_STATUSES, useRunGroup } from "@/hooks/queries/use-run-group";
 import { useShopConnections } from "@/hooks/queries/use-shop-connections";
@@ -114,7 +122,12 @@ export const findJobVideos = async (queryClient: QueryClient, workflowId: string
 const startSingleVideoRun = async (queryClient: QueryClient, startRun: () => void) => {
   const productId = readString(findNode("product-input")?.data.config.productId);
   if (!productId) {
-    showWorkflowActionToast("error", "AI scenes make one product's video: choose it under Product for the video in Mockup Approval.");
+    showWorkflowActionToast(
+      "error",
+      hasVideoSteps(useWorkflowStore.getState().nodes)
+        ? "AI scenes make one product's video: choose it under Product for the video in Mockup Approval."
+        : "Publishing without a video is for one product: choose it under Product in Mockup Approval."
+    );
     return;
   }
   await importMockups(queryClient, [productId]);
@@ -145,15 +158,27 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   const publishesToEtsy = useWorkflowStore((state) => state.nodes.some((node) => node.data.type === "publish-etsy"));
   const publishesToPrintify = useWorkflowStore((state) => state.nodes.some((node) => node.data.type === "publish-printify"));
   const connections = useShopConnections({ etsy: publishesToEtsy, printify: publishesToPrintify });
-  useVideoRunSync(hasBatchRun);
   useRunGroupSync(group?.workflowId === activeWorkflowId ? groupId : null);
 
   // A group waiting at Mockup Approval leaves the settings open: the scenes saved there are the ones it uses.
-  const groupWorking = group?.status === "running";
-  const isRunning = batch.isBusy || video.isRunning || groupWorking || isStartingGroup;
+  // ... as does one still being made ready in the background, before its videos start by themselves.
+  const groupWorking = group?.status === "running" || group?.preparing === true;
+  // From the mock-ups being done to the batch video run being started (their import first): the Run goes on.
+  const [isLaunchingVideo, setIsLaunchingVideo] = useState(false);
+  const isRunning = batch.isBusy || video.isRunning || groupWorking || isStartingGroup || isLaunchingVideo;
+  // Mockup Approval is the step at work until the videos' runs exist: the mock-ups are imported, approved and the model
+  // photos made, with no node otherwise showing it.
+  useVideoRunSync(hasBatchRun, group?.preparing === true || isLaunchingVideo);
   useEffect(() => {
     setRunning(isRunning);
   }, [isRunning, setRunning]);
+
+  // An automatic Mockup Approval approves the mock-ups on the server: their cards read them again when the run moves
+  // on (prepared, started, finished), not on every change, since each read signs their image links anew.
+  const groupPhase = group ? `${group.id}:${group.status}:${group.preparing ? "preparing" : ""}` : null;
+  useEffect(() => {
+    if (groupPhase) void queryClient.invalidateQueries({ queryKey: ["mockup-assets"] });
+  }, [groupPhase, queryClient]);
 
   // The job whose video part was started from here, so it is started once however often the page re-renders.
   const videoStartedFor = useRef<string | null>(null);
@@ -219,6 +244,7 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     startVideoGroup.current = async (jobId: string | null) => {
       const { workflowId, revision } = useWorkflowStore.getState();
       if (!workflowId) return;
+      setIsLaunchingVideo(true);
       try {
         await importMockups(queryClient, await videoProducts(queryClient, jobId));
         const started = await startGroup({ workflowId, revision, key: uuid(), batchJobId: jobId, aiBudgetUsd: takeRunAiBudget(workflowId) });
@@ -228,11 +254,28 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
         query.delete(NEXT_PART_PARAM);
         query.delete(VIDEO_RUN_PARAM);
         router.replace(`/workflows?${query.toString()}`, { scroll: false });
-        const gate = findNode("approval-gate");
-        if (gate) selectNode(gate.id);
-        showWorkflowActionToast("info", "Approve the mock-ups of each design that should get a video, then choose Continue.");
+        if (started.preparing) {
+          showWorkflowActionToast("info", "Getting the videos ready. They start by themselves.");
+        } else if (started.status === "waiting_for_targets") {
+          const gate = findNode("approval-gate");
+          if (gate) selectNode(gate.id);
+          showWorkflowActionToast(
+            started.notice ? "warning" : "info",
+            started.notice
+              ? `The videos did not start by themselves. ${started.notice}`
+              : "Approve the mock-ups of each design that should get a video, then choose Continue."
+          );
+        } else {
+          // Mockup Approval is on Approve automatically: the mock-ups are approved and the videos are on their way.
+          showWorkflowActionToast(
+            started.notice ? "warning" : "success",
+            started.notice ?? "Mock-ups approved automatically. The videos are starting."
+          );
+        }
       } catch (error) {
         showWorkflowActionToast("error", `The videos could not be started. ${getErrorMessage(error)}`);
+      } finally {
+        setIsLaunchingVideo(false);
       }
     };
   });
@@ -257,7 +300,8 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       router.replace(`/workflows?${query.toString()}`, { scroll: false });
       const input = findNode("product-input");
       if (input) selectNode(input.id);
-      showWorkflowActionToast("warning", `The video was not started: its product is not in this run. Choose ${jobProducts.length === 1 ? jobProducts[0].productName : "one of this run's products"} for the video in Product input, save, then Run again.`);
+      const part = hasVideoSteps(useWorkflowStore.getState().nodes) ? "video" : "publishing";
+      showWorkflowActionToast("warning", `The ${part} was not started: its product is not in this run. Choose ${jobProducts.length === 1 ? jobProducts[0].productName : "one of this run's products"} for the ${part} in Product input, save, then Run again.`);
       return;
     }
     announceWaiting.current = true;
@@ -271,12 +315,20 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     announceWaiting.current = false;
     const gate = findNode("approval-gate");
     if (gate) selectNode(gate.id);
-    showWorkflowActionToast("info", "Approve the mock-ups to use in the video, then continue.");
+    showWorkflowActionToast(
+      "info",
+      hasVideoSteps(useWorkflowStore.getState().nodes)
+        ? "Approve the mock-ups to use in the video, then continue."
+        : "Approve the mock-ups to publish, then choose Continue."
+    );
   }, [videoStatus, selectNode]);
 
   const start = async () => {
     const { nodes, isDirty } = useWorkflowStore.getState();
     const wantsVideo = hasVideoSteps(nodes);
+    // Without a video, publishing is the server's part: one product's run that waits at Mockup Approval.
+    const publishOnly = publishesWithoutVideo(nodes);
+    const wantsServerPart = wantsVideo || publishOnly;
     const batchVideos = wantsVideo && supportsBatchVideos(nodes);
     // Publishing comes last, after every paid step and both approvals: a shop that is not connected stops the
     // run here instead of there. The backend checks the same when the run starts.
@@ -286,7 +338,7 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       selectNode(unpublishable.id);
       return;
     }
-    const listingOnly = hasListingSteps(nodes) && !hasBatchSteps(nodes) && !wantsVideo;
+    const listingOnly = hasListingSteps(nodes) && !hasBatchSteps(nodes) && !wantsServerPart;
     if (listingOnly) {
       if (isDirty) {
         showWorkflowActionToast("warning", "Save your configuration before running.");
@@ -302,15 +354,20 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       video.startRun();
       return;
     }
-    if (wantsVideo) {
-      // The video part is made from the saved workflow.
+    if (wantsServerPart) {
+      // The video or publishing part is made from the saved workflow.
       if (isDirty) {
         showWorkflowActionToast("warning", "Save your configuration before running.");
         return;
       }
       const input = findNode("product-input");
       if (!batchVideos && input && !readString(input.data.config.productId)) {
-        showWorkflowActionToast("error", "These video settings make one product's video: choose it under Product for the video in Mockup Approval.");
+        showWorkflowActionToast(
+          "error",
+          publishOnly
+            ? "Publishing without a video is for one product: choose it under Product in Mockup Approval."
+            : "These video settings make one product's video: choose it under Product for the video in Mockup Approval."
+        );
         selectNode(findNode("approval-gate")?.id ?? input.id);
         return;
       }
@@ -323,9 +380,9 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     // An earlier video run is finished by now (a working one shows Stop), so its steps start clean.
     video.closeRun();
 
-    if (hasBatchSteps(nodes) || !wantsVideo) {
-      // When it starts a job, the note that the video is next goes into the URL with the job.
-      const outcome = await batch.start({ videoFollows: wantsVideo });
+    if (hasBatchSteps(nodes) || !wantsServerPart) {
+      // When it starts a job, the note that the video (or publishing) is next goes into the URL with the job.
+      const outcome = await batch.start({ videoFollows: wantsServerPart });
       if (outcome !== "nothing-pending") return;
     }
     if (batchVideos) {
@@ -365,7 +422,7 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       }
       if (query.get(BATCH_JOB_PARAM) !== batchJobId) {
         query.set(BATCH_JOB_PARAM, batchJobId);
-        if (hasVideoSteps(useWorkflowStore.getState().nodes)) query.set(NEXT_PART_PARAM, "video");
+        if (hasServerPart(useWorkflowStore.getState().nodes)) query.set(NEXT_PART_PARAM, "video");
         router.replace(`/workflows?${query.toString()}`, { scroll: false });
       }
       if (useWorkflowRunStore.getState().batchJobId !== batchJobId) useWorkflowRunStore.getState().attach(workflowId, batchJobId);

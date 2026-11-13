@@ -10,6 +10,7 @@ export interface NavItem {
 
 export type AppNavItem = {
   label: string;
+  titleKey: string;
   href: string;
   icon: LucideIcon;
   disabled?: boolean;
@@ -18,4 +19,16 @@ export type AppNavItem = {
 export type AppNavSection = {
   label: string;
   items: AppNavItem[];
+};
+
+export type AdminNavSection = {
+  label: string;
+  titleKey: string;
+  items: AppNavItem[];
+};
+
+export type RouteTitle = {
+  path: string;
+  titleKey: string;
+  defaultTitle: string;
 };

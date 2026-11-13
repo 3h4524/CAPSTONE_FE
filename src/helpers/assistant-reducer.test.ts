@@ -159,6 +159,19 @@ describe("reduceAssistantStreamEvent", () => {
     expect(state.streamingMessageId).toBeNull();
   });
 
+  it("hides the text already streamed when the answer is blocked", () => {
+    const streamed = reduceAssistantStreamEvent(buildStreamingState(), { type: "delta", data: { text: "Here are my rules" } });
+
+    const state = reduceAssistantStreamEvent(streamed, {
+      type: "error",
+      data: { code: "assistant.blocked", message: "Podi can't help with that request." },
+    });
+
+    expect(lastMessage(state).content).toBe("");
+    expect(lastMessage(state).error?.code).toBe("assistant.blocked");
+    expect(lastMessage(state).isStreaming).toBe(false);
+  });
+
   it("ignores events other than conversation when nothing is streaming", () => {
     const idle: AssistantChatState = { ...buildStreamingState(), streamingMessageId: null };
 

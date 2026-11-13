@@ -40,9 +40,6 @@ import {
   type RagSearchDiagnosticResult,
   type RagSearchDiagnostics,
 } from "@/api/rag";
-import { AdminBottomNav } from "@/components/admin/admin-bottom-nav";
-import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { RagCardAbout } from "@/components/admin/rag-card-about";
 import { RagCorpusHealthPanel } from "@/components/admin/rag-corpus-health-panel";
 import { RagKnownItemBenchmark } from "@/components/admin/rag-known-item-benchmark";
@@ -101,21 +98,13 @@ type EvaluationRun = {
   typeMetrics: RagEvaluationTypeMetrics[];
 };
 
-const RagEvaluationDashboard = ({
-  fullName,
-  onLogout,
-}: {
-  fullName: string;
-  onLogout: () => void;
-}) => {
+const RagEvaluationDashboard = () => {
   const [runs, setRuns] = useState<EvaluationRun[]>([]);
   const [datasetCases, setDatasetCases] = useState<EvaluationCase[]>([]);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [isBenchmarkOpen, setIsBenchmarkOpen] = useState(false);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const isPhone = useIsPhone();
   const [filter, setFilter] = useState<"all" | EvaluationCase["verdict"]>("all");
   const [contentTypeFilter, setContentTypeFilter] = useState<"all" | EvaluationContentType>("all");
@@ -319,23 +308,7 @@ const RagEvaluationDashboard = ({
   };
 
   return (
-    <div className="bg-ink-50 text-ink-900 dark:bg-background h-dvh min-h-0 overflow-hidden">
-      <div className="flex h-full min-h-0">
-        <AdminSidebar
-          fullName={fullName}
-          onLogout={onLogout}
-          isMobileOpen={isMobileSidebarOpen}
-          onClose={() => setIsMobileSidebarOpen(false)}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
-        />
-        <div className="dark:lg:bg-panel min-h-0 min-w-0 flex-1 overflow-hidden max-md:flex max-md:flex-col dark:lg:my-2 dark:lg:mr-2 dark:lg:rounded-xl dark:lg:border">
-          <div className="h-full min-h-0 overflow-y-auto max-md:h-auto max-md:flex-1">
-            <AdminTopbar
-              pageTitle="RAG Evaluation"
-              onMenuClick={() => setIsMobileSidebarOpen(true)}
-            />
-            <main className="mx-auto max-w-[1600px] space-y-5 px-4 py-4 max-md:space-y-3 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]">
+            <div className="space-y-5 max-md:space-y-3">
               <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
                 <div>
                   <p className="text-[10px] font-bold tracking-[0.16em] text-indigo-500 uppercase">
@@ -1031,12 +1004,7 @@ const RagEvaluationDashboard = ({
               )}
               </>
               )}
-            </main>
-          </div>
-          <AdminBottomNav onOpenMore={() => setIsMobileSidebarOpen(true)} />
-        </div>
-      </div>
-    </div>
+            </div>
   );
 };
 

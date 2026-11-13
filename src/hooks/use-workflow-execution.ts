@@ -14,7 +14,7 @@ import { confirmRunCost, takeRunAiBudget } from "@/helpers/run-cost";
 import { publishConnectionIssue } from "@/helpers/shop-connections";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
-import { hasBatchSteps, hasListingSteps, hasVideoSteps, supportsBatchVideos } from "@/helpers/workflow-run";
+import { hasBatchSteps, hasListingSteps, hasVideoSteps, publishesWithoutVideo, supportsBatchVideos } from "@/helpers/workflow-run";
 import { useCancelRunGroup, useStartRunGroup } from "@/hooks/mutations/use-run-group-actions";
 import { ACTIVE_RUN_GROUP_STATUSES, useRunGroup } from "@/hooks/queries/use-run-group";
 import { useShopConnections } from "@/hooks/queries/use-shop-connections";
@@ -113,7 +113,12 @@ export const findJobVideos = async (queryClient: QueryClient, workflowId: string
 const startSingleVideoRun = async (queryClient: QueryClient, startRun: () => void) => {
   const productId = readString(findNode("product-input")?.data.config.productId);
   if (!productId) {
-    showWorkflowActionToast("error", "AI scenes make one product's video: choose it under Product for the video in Mockup Approval.");
+    showWorkflowActionToast(
+      "error",
+      hasVideoSteps(useWorkflowStore.getState().nodes)
+        ? "AI scenes make one product's video: choose it under Product for the video in Mockup Approval."
+        : "Publishing without a video is for one product: choose it under Product in Mockup Approval."
+    );
     return;
   }
   await importMockups(queryClient, [productId]);
@@ -286,7 +291,8 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       router.replace(`/workflows?${query.toString()}`, { scroll: false });
       const input = findNode("product-input");
       if (input) selectNode(input.id);
-      showWorkflowActionToast("warning", `The video was not started: its product is not in this run. Choose ${jobProducts.length === 1 ? jobProducts[0].productName : "one of this run's products"} for the video in Product input, save, then Run again.`);
+      const part = hasVideoSteps(useWorkflowStore.getState().nodes) ? "video" : "publishing";
+      showWorkflowActionToast("warning", `The ${part} was not started: its product is not in this run. Choose ${jobProducts.length === 1 ? jobProducts[0].productName : "one of this run's products"} for the ${part} in Product input, save, then Run again.`);
       return;
     }
     announceWaiting.current = true;
@@ -300,12 +306,20 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     announceWaiting.current = false;
     const gate = findNode("approval-gate");
     if (gate) selectNode(gate.id);
-    showWorkflowActionToast("info", "Approve the mock-ups to use in the video, then continue.");
+    showWorkflowActionToast(
+      "info",
+      hasVideoSteps(useWorkflowStore.getState().nodes)
+        ? "Approve the mock-ups to use in the video, then continue."
+        : "Approve the mock-ups to publish, then choose Continue."
+    );
   }, [videoStatus, selectNode]);
 
   const start = async () => {
     const { nodes, isDirty } = useWorkflowStore.getState();
     const wantsVideo = hasVideoSteps(nodes);
+    // Without a video, publishing is the server's part: one product's run that waits at Mockup Approval.
+    const publishOnly = publishesWithoutVideo(nodes);
+    const wantsServerPart = wantsVideo || publishOnly;
     const batchVideos = wantsVideo && supportsBatchVideos(nodes);
     // Publishing comes last, after every paid step and both approvals: a shop that is not connected stops the
     // run here instead of there. The backend checks the same when the run starts.
@@ -315,7 +329,7 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       selectNode(unpublishable.id);
       return;
     }
-    const listingOnly = hasListingSteps(nodes) && !hasBatchSteps(nodes) && !wantsVideo;
+    const listingOnly = hasListingSteps(nodes) && !hasBatchSteps(nodes) && !wantsServerPart;
     if (listingOnly) {
       if (isDirty) {
         showWorkflowActionToast("warning", "Save your configuration before running.");
@@ -331,15 +345,20 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       video.startRun();
       return;
     }
-    if (wantsVideo) {
-      // The video part is made from the saved workflow.
+    if (wantsServerPart) {
+      // The video or publishing part is made from the saved workflow.
       if (isDirty) {
         showWorkflowActionToast("warning", "Save your configuration before running.");
         return;
       }
       const input = findNode("product-input");
       if (!batchVideos && input && !readString(input.data.config.productId)) {
-        showWorkflowActionToast("error", "These video settings make one product's video: choose it under Product for the video in Mockup Approval.");
+        showWorkflowActionToast(
+          "error",
+          publishOnly
+            ? "Publishing without a video is for one product: choose it under Product in Mockup Approval."
+            : "These video settings make one product's video: choose it under Product for the video in Mockup Approval."
+        );
         selectNode(findNode("approval-gate")?.id ?? input.id);
         return;
       }
@@ -352,9 +371,9 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     // An earlier video run is finished by now (a working one shows Stop), so its steps start clean.
     video.closeRun();
 
-    if (hasBatchSteps(nodes) || !wantsVideo) {
-      // When it starts a job, the note that the video is next goes into the URL with the job.
-      const outcome = await batch.start({ videoFollows: wantsVideo });
+    if (hasBatchSteps(nodes) || !wantsServerPart) {
+      // When it starts a job, the note that the video (or publishing) is next goes into the URL with the job.
+      const outcome = await batch.start({ videoFollows: wantsServerPart });
       if (outcome !== "nothing-pending") return;
     }
     if (batchVideos) {

@@ -5,6 +5,7 @@ import { type CSSProperties, useEffect } from "react";
 import { AssistantComposer } from "@/components/commons/assistant/assistant-composer";
 import { AssistantHeader } from "@/components/commons/assistant/assistant-header";
 import { AssistantMessageList } from "@/components/commons/assistant/assistant-message-list";
+import { AssistantRunNudgeBar } from "@/components/commons/assistant/assistant-run-nudge";
 import { Sheet, SheetContent, SheetDescription } from "@/components/ui/sheet";
 import {
   ASSISTANT_PANEL_DEFAULT_WIDTH_PX,
@@ -56,6 +57,7 @@ export const AssistantPanel = () => {
         <AssistantHeader variant="panel" />
         <SheetDescription className="sr-only">Ask Podi questions or get help with your workflows.</SheetDescription>
         <AssistantMessageList />
+        <AssistantRunNudgeBar />
         <AssistantComposer />
       </SheetContent>
     </Sheet>

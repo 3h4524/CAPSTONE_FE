@@ -22,6 +22,7 @@ import { useCancelRunGroup, useConfirmRunGroup } from "@/hooks/mutations/use-run
 import { useAiVideoTemplates } from "@/hooks/queries/use-ai-video-templates";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { useRunGroup, useRunGroupId } from "@/hooks/queries/use-run-group";
+import { usePanelContinueCommand } from "@/hooks/use-panel-continue-command";
 import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useSyncGeneratedMockups } from "@/hooks/use-sync-generated-mockups";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
@@ -157,6 +158,17 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
     );
   };
 
+  const canStart =
+    group.selectedCount > 0 &&
+    !tooMany &&
+    blocked.length === 0 &&
+    !isDirty &&
+    !isConfirming &&
+    !isQuoting &&
+    !isCancelling &&
+    group.preparing !== true;
+  usePanelContinueCommand(canStart, () => void start());
+
   if (group.targets.length === 0)
     return (
       <PanelNotice tone="warning">
@@ -275,16 +287,7 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
         <Button
           type="button"
           size="sm"
-          disabled={
-            group.selectedCount === 0 ||
-            tooMany ||
-            blocked.length > 0 ||
-            isDirty ||
-            isConfirming ||
-            isQuoting ||
-            isCancelling ||
-            group.preparing === true
-          }
+          disabled={!canStart}
           onClick={start}
         >
           {isQuoting

@@ -24,6 +24,7 @@ import { publishesWithoutVideo } from "@/helpers/workflow-run";
 import { usePreviewVideoStoryboard } from "@/hooks/mutations/use-preview-video-storyboard";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
+import { usePanelContinueCommand } from "@/hooks/use-panel-continue-command";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { generateVideoConfigSchema } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -117,6 +118,7 @@ export const MockupPanel = ({ review }: { review: boolean }) => {
       setPromptReview({ config: parsed.data, fingerprint: board.fingerprint, prompts });
     } catch (error) { showToast("error", getErrorMessage(error)); }
   };
+  usePanelContinueCommand(review && run?.status === "waiting_for_input" && !isActing && !isPreviewing, () => void continueWithMockups());
   if (!productId && !run) {
     return review
       ? <PanelEmptyState icon={PackageSearch} title={publishOnly ? "Choose the product to publish above." : "Choose the product for the video above."} description="Its mock-ups are listed here for review." />

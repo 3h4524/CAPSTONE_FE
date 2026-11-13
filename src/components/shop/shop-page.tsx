@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, Eye, Heart, Loader2, Package, PencilLine, Receipt, RefreshCw, ShieldCheck, ShoppingBag, Star, Store, Unplug } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { disconnectEtsy, type EtsyConnectionOutcome, getMyShop, getShopInsights, type MyShop } from "@/api/shop";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { useEtsyConnect } from "@/components/shop/etsy-connection";
 import { PrintifyCard } from "@/components/shop/printify-card";
 import { ShopInsightsPanel } from "@/components/shop/shop-insights";
@@ -51,6 +53,7 @@ const formatDate = (iso: string | null) =>
 
 export function ShopPage() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation("common");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -100,6 +103,7 @@ export function ShopPage() {
   return (
     // The bottom padding keeps the last line clear of the floating assistant button.
     <div className="flex w-full min-w-0 flex-col gap-5 max-md:gap-3 max-md:pb-14 md:p-6">
+      <PageHeader title={t("navigation.items.shop", { defaultValue: "Shop" })} className="max-md:sr-only" />
       {etsyConnect.waiting && (
         <div className="flex flex-col gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900 sm:flex-row sm:items-center sm:justify-between dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300" role="status">
           <span className="flex items-center gap-2"><Loader2 className="size-4 animate-spin" />Finish signing in to Etsy in the popup window.</span>

@@ -17,7 +17,7 @@ export const HeaderTitle = () => {
         </span>
         <span className="font-display truncate text-base font-bold tracking-tight">Podivo</span>
       </Link>
-      <h1 className="min-w-0 truncate text-base font-semibold max-md:sr-only">{title}</h1>
+      <p className="min-w-0 truncate text-base font-semibold max-md:hidden">{title}</p>
     </>
   );
 };

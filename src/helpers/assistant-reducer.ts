@@ -1,4 +1,4 @@
-import { ASSISTANT_STOPPED_ERROR_CODE } from "@/constants/assistant";
+import { ASSISTANT_BLOCKED_ERROR_CODE, ASSISTANT_STOPPED_ERROR_CODE } from "@/constants/assistant";
 import type {
   AssistantActiveStream,
   AssistantPendingAction,
@@ -143,7 +143,9 @@ export const reduceAssistantStreamEvent = (state: AssistantChatState, event: Ass
     case "error":
       return event.data.code === ASSISTANT_STOPPED_ERROR_CODE
         ? finishStreaming(state, streamingId, (message) => ({ ...message, isStopped: true, retryInSeconds: null }))
-        : finishStreaming(state, streamingId, (message) => ({ ...message, error: event.data, retryInSeconds: null }));
+        : event.data.code === ASSISTANT_BLOCKED_ERROR_CODE
+          ? finishStreaming(state, streamingId, (message) => ({ ...message, content: "", error: event.data, retryInSeconds: null }))
+          : finishStreaming(state, streamingId, (message) => ({ ...message, error: event.data, retryInSeconds: null }));
   }
 };
 

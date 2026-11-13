@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { AdminDashboardContent } from "@/components/admin/admin-dashboard-content";
-import { AdminShell } from "@/components/admin/admin-shell";
 import { PageLoading } from "@/components/commons/layout/page-loading";
 import { useExportAdminDashboardReport } from "@/hooks/mutations/use-export-admin-dashboard-report";
 import { useAdminDashboardMetrics } from "@/hooks/queries/use-admin-dashboard-metrics";
@@ -25,21 +24,19 @@ const AdminDashboardPage = () => {
     return null;
   }
 
+  if (isMetricsLoading) {
+    return <PageLoading label="Loading dashboard" />;
+  }
+
   return (
-    <AdminShell>
-      {isMetricsLoading ? (
-        <PageLoading label="Loading dashboard" />
-      ) : (
-        <AdminDashboardContent
-          fullName={user.fullName}
-          metrics={metrics ?? null}
-          timeRange={timeRange}
-          onTimeRangeChange={setTimeRange}
-          isExporting={isExporting}
-          onExport={handleExport}
-        />
-      )}
-    </AdminShell>
+    <AdminDashboardContent
+      fullName={user.fullName}
+      metrics={metrics ?? null}
+      timeRange={timeRange}
+      onTimeRangeChange={setTimeRange}
+      isExporting={isExporting}
+      onExport={handleExport}
+    />
   );
 };
 

@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { PlayCircle, RefreshCw } from "lucide-react";
 
-import { AdminShell } from "@/components/admin/admin-shell";
 import { TestReportMetricCards } from "@/components/admin/test-reports/metric-cards";
 import { TestReportRunDialog } from "@/components/admin/test-reports/run-dialog";
 import { TestReportRunTable } from "@/components/admin/test-reports/run-table";
@@ -63,7 +62,7 @@ export const TestReportsDashboard = () => {
   const passRate = tested === 0 ? 100 : Math.round((totals.passed / tested) * 100);
 
   return (
-    <AdminShell>
+    <>
       <div className="flex flex-col gap-5">
         <section className="border-ink-200 bg-card rounded-lg border p-5 shadow-[0_2px_8px_rgba(15,23,42,0.02)] sm:p-6">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -165,6 +164,6 @@ export const TestReportsDashboard = () => {
           startRun(undefined, { onSettled: () => setIsRunDialogOpen(false) })
         }
       />
-    </AdminShell>
+    </>
   );
 };

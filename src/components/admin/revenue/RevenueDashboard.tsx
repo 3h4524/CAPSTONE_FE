@@ -4,7 +4,6 @@ import React, { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { getRevenueInvoices } from "@/api/revenue";
-import { AdminShell } from "@/components/admin/admin-shell";
 import { buildRevenueReport, reportFileName, toCsv } from "@/helpers/revenue-report";
 import { toXlsx } from "@/helpers/revenue-report-xlsx";
 import { useAdminSubscriptionPlans } from "@/hooks/queries/use-admin-subscription-plans";
@@ -117,68 +116,66 @@ export function RevenueDashboard() {
   };
 
   return (
-    <AdminShell>
-      <div className="flex h-full flex-col gap-4 p-0">
-        <RevenueFilterBar
-          filter={filter}
-          onFilterChange={handleFilterChange}
-          actions={isPhone ? <RevenueExportMenu compact onExport={handleExport} isExporting={isExporting} /> : undefined}
-        />
+    <div className="flex h-full flex-col gap-4 p-0">
+      <RevenueFilterBar
+        filter={filter}
+        onFilterChange={handleFilterChange}
+        actions={isPhone ? <RevenueExportMenu compact onExport={handleExport} isExporting={isExporting} /> : undefined}
+      />
 
-        <RevenueMetricCards
-          metrics={metricsData}
-          isLoading={isLoadingMetrics}
-        />
+      <RevenueMetricCards
+        metrics={metricsData}
+        isLoading={isLoadingMetrics}
+      />
 
-        {/* From the total down: how MRR moved, then which plans moved it. The revenue trend over
-            time lives on the Admin Dashboard. */}
-        <div className="min-w-0 max-md:order-2">
-          <MrrMovementCard
-            data={insightsData?.mrrMovement}
-            isLoading={isLoadingInsights}
-            startDate={filter.startDate}
-            endDate={filter.endDate}
-            aiReview={aiReview}
-          />
-        </div>
-
-        <div className="min-w-0 max-md:order-2">
-          <RevenueByPlanCard
-            plans={chartsData?.byPlan}
-            isLoading={isLoadingCharts}
-          />
-        </div>
-
-        <RevenueInsightsRow
-          data={insightsData}
+      {/* From the total down: how MRR moved, then which plans moved it. The revenue trend over
+          time lives on the Admin Dashboard. */}
+      <div className="min-w-0 max-md:order-2">
+        <MrrMovementCard
+          data={insightsData?.mrrMovement}
           isLoading={isLoadingInsights}
-          onReviewAlert={handleReviewAlert}
+          startDate={filter.startDate}
+          endDate={filter.endDate}
+          aiReview={aiReview}
         />
+      </div>
 
-        <div id="recent-transactions" className="grid scroll-mt-4 grid-cols-1 gap-4 max-md:order-2 max-md:scroll-mt-20 xl:grid-cols-4">
-          <div className="min-w-0 xl:col-span-3">
-            <RevenueInvoiceTable
-              data={invoicesData}
-              isLoading={isLoadingInvoices}
-              startDate={filter.startDate}
-              endDate={filter.endDate}
-              planOptions={planOptions}
-              tableFilter={tableFilter}
-              onTableFilterChange={handleTableFilterChange}
-              page={tablePage}
-              onPageChange={setTablePage}
-            />
-          </div>
-          <RevenueGrowthCard
-            onExport={handleExport}
-            isExporting={isExporting}
-            transactionCount={invoicesData?.totalCount ?? 0}
+      <div className="min-w-0 max-md:order-2">
+        <RevenueByPlanCard
+          plans={chartsData?.byPlan}
+          isLoading={isLoadingCharts}
+        />
+      </div>
+
+      <RevenueInsightsRow
+        data={insightsData}
+        isLoading={isLoadingInsights}
+        onReviewAlert={handleReviewAlert}
+      />
+
+      <div id="recent-transactions" className="grid scroll-mt-4 grid-cols-1 gap-4 max-md:order-2 max-md:scroll-mt-20 xl:grid-cols-4">
+        <div className="min-w-0 xl:col-span-3">
+          <RevenueInvoiceTable
+            data={invoicesData}
+            isLoading={isLoadingInvoices}
             startDate={filter.startDate}
             endDate={filter.endDate}
+            planOptions={planOptions}
+            tableFilter={tableFilter}
+            onTableFilterChange={handleTableFilterChange}
+            page={tablePage}
+            onPageChange={setTablePage}
           />
         </div>
+        <RevenueGrowthCard
+          onExport={handleExport}
+          isExporting={isExporting}
+          transactionCount={invoicesData?.totalCount ?? 0}
+          startDate={filter.startDate}
+          endDate={filter.endDate}
+        />
       </div>
-    </AdminShell>
+    </div>
   );
 }
 

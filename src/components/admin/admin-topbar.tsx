@@ -19,15 +19,14 @@ import { useAdminShellStore } from "@/stores/admin-shell";
 
 type AdminTopbarProps = {
   onMenuClick: () => void;
-  pageTitle?: string;
 };
 
-const AdminTopbar = ({ onMenuClick, pageTitle }: AdminTopbarProps) => {
+const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
   const { t } = useTranslation("common");
   const { title, path, isNested } = useRouteTitle();
   const titleOverride = useAdminShellStore((state) => state.titleOverride);
-  const crumbTitle = pageTitle ?? titleOverride ?? title;
-  const isRouteLink = isNested && !pageTitle && !titleOverride && path !== null;
+  const crumbTitle = titleOverride ?? title;
+  const isRouteLink = isNested && !titleOverride && path !== null;
 
   return (
     <header className="border-ink-200 bg-ink-50 sticky top-0 z-20 border-b">

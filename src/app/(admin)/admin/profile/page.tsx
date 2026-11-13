@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import { AdminShell } from "@/components/admin/admin-shell";
 import { Profile } from "@/components/profile/profile";
 import { getPageMetadata } from "@/data/metadata";
 
@@ -11,13 +10,11 @@ export const metadata: Metadata = getPageMetadata({
   robots: { index: false, follow: false },
 });
 
+// The seller shell wraps pages in a card; the admin shell does not, so the form brings its own.
 const AdminProfileRoutePage = () => (
-  <AdminShell>
-    {/* The seller shell wraps pages in a card; the admin shell does not, so the form brings its own. */}
-    <div className="bg-card overflow-hidden rounded-2xl border shadow-sm">
-      <Profile variant="admin" />
-    </div>
-  </AdminShell>
+  <div className="bg-card overflow-hidden rounded-2xl border shadow-sm">
+    <Profile variant="admin" />
+  </div>
 );
 
 export default AdminProfileRoutePage;

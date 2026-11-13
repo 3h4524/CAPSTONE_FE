@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { AdminBottomNav } from "@/components/admin/admin-bottom-nav";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
-import { PageLoading } from "@/components/commons/layout/page-loading";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ADMIN_FILLS_PHONE_SCREEN_ROUTES } from "@/constants/navigation";
 import { useLogout } from "@/hooks/mutations/use-logout";
@@ -16,18 +15,13 @@ import { cn } from "@/utils/cn";
 
 type AdminShellProps = {
   children: React.ReactNode;
-  /** On a phone the page fills the space under the header itself, like a chat, instead of scrolling. */
-  fillsPhoneScreen?: boolean;
-  /** On a phone, leaves the tabs out, so a reply box gets their room. */
-  hidesPhoneTabs?: boolean;
 };
 
-export const AdminShell = ({ children, fillsPhoneScreen = false, hidesPhoneTabs = false }: AdminShellProps) => {
+export const AdminShell = ({ children }: AdminShellProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
-  const isHydrated = useAuthStore((state) => state.isHydrated);
-  const hidesPhoneTabsFromStore = useAdminShellStore((state) => state.hidesPhoneTabs);
+  const hidesPhoneTabs = useAdminShellStore((state) => state.hidesPhoneTabs);
   const { mutate: logout } = useLogout();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -39,21 +33,14 @@ export const AdminShell = ({ children, fillsPhoneScreen = false, hidesPhoneTabs 
     scrollContainerRef.current?.scrollTo({ top: 0 });
   }, [pathname]);
 
-  const isAdmin = Boolean(user?.roles.some((role) => role.toLowerCase() === "admin"));
-
-  // Check auth
-  if (!isHydrated) {
-    return <PageLoading label="Loading..." />;
-  }
-
-  if (!user || !isAdmin) {
-    // We let the page's useEffect handle the redirect to /login or /
-    return <PageLoading label="Redirecting..." />;
+  if (!user) {
+    return null;
   }
 
   const handleLogout = () => logout(undefined, { onSettled: () => router.replace("/login") });
-  const isPhoneScreenFilled = fillsPhoneScreen || ADMIN_FILLS_PHONE_SCREEN_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
-  const isPhoneTabsHidden = hidesPhoneTabs || hidesPhoneTabsFromStore;
+  const fillsPhoneScreen = ADMIN_FILLS_PHONE_SCREEN_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
 
   return (
     <TooltipProvider>
@@ -69,13 +56,21 @@ export const AdminShell = ({ children, fillsPhoneScreen = false, hidesPhoneTabs 
             onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
           />
           <div className="dark:lg:bg-panel flex h-dvh min-w-0 flex-1 flex-col overflow-hidden dark:lg:my-2 dark:lg:mr-2 dark:lg:h-[calc(100dvh-1rem)] dark:lg:rounded-xl dark:lg:border">
-            <div ref={scrollContainerRef} className={cn("relative min-h-0 flex-1 overflow-y-auto", isPhoneScreenFilled && "max-md:flex max-md:flex-col max-md:overflow-hidden")}>
+            <div
+              ref={scrollContainerRef}
+              className={cn("relative min-h-0 flex-1 overflow-y-auto", fillsPhoneScreen && "max-md:flex max-md:flex-col max-md:overflow-hidden")}
+            >
               <AdminTopbar onMenuClick={() => setIsMobileSidebarOpen(true)} />
-              <main className={cn("mx-auto max-w-[1600px] px-4 py-4 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]", isPhoneScreenFilled && "max-md:flex max-md:min-h-0 max-md:w-full max-md:flex-1 max-md:flex-col max-md:p-0")}>
+              <main
+                className={cn(
+                  "mx-auto max-w-[1600px] px-4 py-4 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]",
+                  fillsPhoneScreen && "max-md:flex max-md:min-h-0 max-md:w-full max-md:flex-1 max-md:flex-col max-md:p-0"
+                )}
+              >
                 {children}
               </main>
             </div>
-            {!isPhoneTabsHidden && <AdminBottomNav onOpenMore={() => setIsMobileSidebarOpen(true)} />}
+            {!hidesPhoneTabs && <AdminBottomNav onOpenMore={() => setIsMobileSidebarOpen(true)} />}
           </div>
         </div>
       </div>

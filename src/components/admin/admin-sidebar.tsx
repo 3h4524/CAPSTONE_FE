@@ -22,13 +22,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { ADMIN_NAV_SECTIONS } from "@/constants/navigation";
 import { cn } from "@/utils/cn";
 
 type AdminSidebarProps = {
   fullName: string;
-  email?: string;
+  email: string;
   onLogout: () => void;
   isMobileOpen?: boolean;
   onClose?: () => void;
@@ -38,14 +37,14 @@ type AdminSidebarProps = {
 
 const AdminSidebar = ({
   fullName,
-  email = "admin@example.com",
+  email,
   onLogout,
   isMobileOpen = false,
   onClose,
   isCollapsed = false,
   onToggleCollapse,
 }: AdminSidebarProps) => (
-  <TooltipProvider>
+  <>
     {isMobileOpen && (
       <button
         type="button"
@@ -150,7 +149,7 @@ const AdminSidebar = ({
         </DropdownMenu>
       </div>
     </aside>
-  </TooltipProvider>
+  </>
 );
 
 const getInitials = (name: string) =>

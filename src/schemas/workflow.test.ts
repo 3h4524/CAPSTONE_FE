@@ -48,7 +48,7 @@ const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
     aiStudioMode: "direct",
     aiStudioLayout: "hanging_window",
   },
-  "review-video": {},
+  "review-video": { mode: "manual" },
   "generate-listing": { model: "gpt-4o", tone: "friendly", includeSeoScore: true },
   "export-zip": {},
   "publish-etsy": {
@@ -77,7 +77,7 @@ const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
 };
 
 // These node types declare no field of their own, so an empty config is already valid for them.
-const OPTIONLESS_NODE_TYPES: WorkflowNodeType[] = ["export-zip", "review-video"];
+const OPTIONLESS_NODE_TYPES: WorkflowNodeType[] = ["export-zip"];
 
 const omitKey = <T extends object, K extends keyof T>(source: T, key: K): Omit<T, K> => {
   const { [key]: _omitted, ...rest } = source;
@@ -325,14 +325,14 @@ describe("designApprovalConfigSchema", () => {
 });
 
 describe("approvalGateConfigSchema", () => {
-  it("accepts the manual mode", () => {
-    const result = approvalGateConfigSchema.safeParse({ mode: "manual" });
+  it.each(["manual", "auto"])("accepts the %s mode", (mode) => {
+    const result = approvalGateConfigSchema.safeParse({ mode });
 
     expect(result.success).toBe(true);
-    expect(result.success && result.data.mode).toBe("manual");
+    expect(result.success && result.data.mode).toBe(mode);
   });
 
-  it.each(["review", "", "Manual", "auto", 1])("rejects %j as a mode", (mode) => {
+  it.each(["review", "", "Manual", "AUTO", 1])("rejects %j as a mode", (mode) => {
     const result = approvalGateConfigSchema.safeParse({ mode });
 
     expectIssue(result, "mode");
@@ -541,6 +541,17 @@ describe("generateVideoConfigSchema", () => {
     expect(invalid.success).toBe(false);
   });
 
+  it("accepts an AI scene with no image chosen, since the run picks each design's own", () => {
+    const scene = {
+      mode: "ai", mockupId: null, templateCode: "lifestyle_in_use",
+      durationSeconds: 5, framing: "medium", cameraAngle: "three_quarter", cameraMovement: "push_in",
+      subjectMotion: "none", motionIntensity: "subtle", lighting: "soft_studio", extraInstructions: null,
+      rightsConfirmed: false,
+    };
+
+    expect(generateVideoConfigSchema.safeParse({ ...valid, mode: "ai_shot", durationSeconds: 5, aiScenes: [scene] }).success).toBe(true);
+  });
+
   it("requires the ai shot scene settings when the mode is ai_shot", () => {
     const result = generateVideoConfigSchema.safeParse({ ...valid, mode: "ai_shot" });
 
@@ -634,8 +645,14 @@ describe("exportZipConfigSchema", () => {
 describe("publishPrintifyConfigSchema", () => {
   const valid = validNodeConfigs["publish-printify"];
 
-  it("asks for a product type first", () => {
-    expectIssue(publishPrintifyConfigSchema.safeParse({ ...valid, blueprintId: null }), "blueprintId", "Choose a product type.");
+  it("asks for a product type first when chosen on the node", () => {
+    expectIssue(publishPrintifyConfigSchema.safeParse({ ...valid, source: "manual", blueprintId: null }), "blueprintId", "Choose a product type.");
+  });
+
+  it("needs no product when it is read from the approved mock-ups", () => {
+    const empty = { ...valid, blueprintId: null, printProviderId: null, colors: [], sizes: [] };
+    expect(publishPrintifyConfigSchema.safeParse(empty).success).toBe(true);
+    expect(publishPrintifyConfigSchema.safeParse({ ...empty, source: "mockup" }).success).toBe(true);
   });
 
   it("asks for at least one color and size", () => {
@@ -657,7 +674,15 @@ describe("publishEtsyConfigSchema", () => {
 
   it("needs a shipping profile only for a physical listing", () => {
     expectIssue(publishEtsyConfigSchema.safeParse({ ...valid, listingType: "physical" }), "shippingProfileId");
-    expect(publishEtsyConfigSchema.safeParse({ ...valid, listingType: "physical", shippingProfileId: 5 }).success).toBe(true);
+    expect(publishEtsyConfigSchema.safeParse({ ...valid, listingType: "physical", shippingProfileId: 5, madeBy: "me" }).success).toBe(true);
+  });
+
+  it("makes a physical listing say who produces it, and name the partner when one does", () => {
+    const physical = { ...valid, listingType: "physical", shippingProfileId: 5 };
+    expectIssue(publishEtsyConfigSchema.safeParse(physical), "madeBy");
+    expectIssue(publishEtsyConfigSchema.safeParse({ ...physical, madeBy: "partner", productionPartnerIds: [] }), "productionPartnerIds");
+    expect(publishEtsyConfigSchema.safeParse({ ...physical, madeBy: "partner", productionPartnerIds: [7] }).success).toBe(true);
+    expect(publishEtsyConfigSchema.safeParse(valid).success).toBe(true);
   });
 });
 describe("workflowMetaSchema", () => {

@@ -44,7 +44,7 @@ export const AssistantPanel = () => {
       >
         <div
           {...separatorProps}
-          aria-label="Resize the assistant"
+          aria-label="Resize Podi"
           title="Drag to resize, double-click to reset"
           className={cn(
             "group absolute inset-y-0 -left-1.5 z-10 hidden w-3 cursor-col-resize touch-none outline-none sm:block",
@@ -54,7 +54,7 @@ export const AssistantPanel = () => {
           )}
         />
         <AssistantHeader variant="panel" />
-        <SheetDescription className="sr-only">Ask questions or get help with your workflows.</SheetDescription>
+        <SheetDescription className="sr-only">Ask Podi questions or get help with your workflows.</SheetDescription>
         <AssistantMessageList />
         <AssistantComposer />
       </SheetContent>

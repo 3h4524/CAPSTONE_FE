@@ -1,6 +1,13 @@
+import { ASSISTANT_INTERRUPTED_ERROR } from "@/constants/assistant";
 import type { AssistantChatState } from "@/helpers/assistant-reducer";
 import { assistantMessageMetadataSchema } from "@/schemas/assistant";
-import type { AssistantConversationDetail, AssistantMessageDto, AssistantUiMessage } from "@/types/assistant";
+import type { AssistantConversationDetail, AssistantError, AssistantMessageDto, AssistantUiMessage } from "@/types/assistant";
+
+const toMessageError = (dto: AssistantMessageDto, metadataError: AssistantError | undefined): AssistantError | null => {
+  if (dto.status === "interrupted") return ASSISTANT_INTERRUPTED_ERROR;
+  if (dto.status === "stopped") return null;
+  return metadataError ?? null;
+};
 
 export const toAssistantUiMessage = (dto: AssistantMessageDto): AssistantUiMessage => {
   const parsed = assistantMessageMetadataSchema.safeParse(dto.metadata);
@@ -24,9 +31,10 @@ export const toAssistantUiMessage = (dto: AssistantMessageDto): AssistantUiMessa
       name: tool.name,
       status: tool.ok ? "ok" : "failed",
     })),
-    error: metadata.error ?? null,
+    error: toMessageError(dto, metadata.error),
     retryInSeconds: null,
     isStreaming: false,
+    isStopped: dto.status === "stopped",
     createdAt: dto.createdAt,
   };
 };
@@ -35,10 +43,17 @@ export const toAssistantChatState = (detail: AssistantConversationDetail): Assis
   const messages = detail.messages.map(toAssistantUiMessage);
   const lastIndex = messages.length - 1;
   const lastMessage = messages[lastIndex];
+  const isAssistantLast = lastMessage?.role === "assistant";
+  const streamingId = isAssistantLast && detail.messages.at(-1)?.status === "streaming" ? lastMessage.id : null;
   return {
     conversationId: detail.id,
-    messages: lastMessage?.role === "assistant" ? messages.map((message, index) => (index === lastIndex ? { ...message, choicesUsed: false } : message)) : messages,
+    messages: isAssistantLast
+      ? messages.map((message, index) =>
+          index === lastIndex ? { ...message, choicesUsed: false, isStreaming: streamingId !== null } : message
+        )
+      : messages,
     pendingActions: Object.fromEntries(detail.pendingActions.map((action) => [action.id, action])),
-    streamingMessageId: null,
+    streamingMessageId: streamingId,
+    activeStream: streamingId === null ? null : { assistantMessageId: streamingId, lastEventId: null, isAttached: false },
   };
 };

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { batchJobKeys, cancelBatchJob, startBatchJob } from "@/api/batch-jobs";
 import { batchKeys } from "@/api/batches";
 import { applyBatchMockupTemplates, generateAllBatchMockups, getBatchJobMockups, getBatchMockupSelection, listMockupTemplates, mockupTemplateKeys } from "@/api/mockup-templates";
+import { RUN_GROUP_PARAM } from "@/constants/run-group";
 import { getErrorMessage } from "@/helpers/error-message";
 import { countProductTypes } from "@/helpers/mockup-template";
 import { showWorkflowActionToast } from "@/helpers/toast";
@@ -43,6 +44,8 @@ const setRunParam = (router: ReturnType<typeof useRouter>, batchJobId: string | 
   else params.delete(BATCH_JOB_PARAM);
   if (batchJobId && videoFollows) params.set(NEXT_PART_PARAM, "video");
   else params.delete(NEXT_PART_PARAM);
+  // A new run's videos form a new batch video run; the previous one stays on the server.
+  if (batchJobId && videoFollows) params.delete(RUN_GROUP_PARAM);
   const query = params.toString();
   router.replace(query ? `/workflows?${query}` : "/workflows");
 };

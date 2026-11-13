@@ -454,7 +454,7 @@ test("AI Shot accepts one mixed scene and full 8/15-second videos", () => {
     false
   );
 });
-test("human AI templates need explicit image rights and AI Background is removed", () => {
+test("human AI templates need no image-rights confirmation and AI Background is removed", () => {
   const options = {
     coverage: "single_scene",
     concept: "lifestyle_motion",
@@ -467,7 +467,7 @@ test("human AI templates need explicit image rights and AI Background is removed
   assert.equal(
     generateVideoConfigSchema.safeParse({ ...config, mode: "ai_shot", aiShotOptions: options })
       .success,
-    false
+    true
   );
   assert.equal(
     generateVideoConfigSchema.safeParse({

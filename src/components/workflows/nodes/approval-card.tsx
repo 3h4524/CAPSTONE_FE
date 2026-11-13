@@ -6,6 +6,7 @@ import { NodeReadonlyText } from "@/components/workflows/nodes/node-readonly-tex
 import { NodeSegmented } from "@/components/workflows/nodes/node-segmented";
 import { getSelectFieldLabel, getSelectFieldOptions, readString } from "@/helpers/workflow-config";
 import { countApprovals } from "@/helpers/workflow-run";
+import { groupVideoState, useGroupVideos } from "@/hooks/queries/use-group-videos";
 import { useNodeSettingsLocked } from "@/hooks/use-node-settings-locked";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
@@ -21,13 +22,30 @@ const MANUAL_HINTS: Partial<Record<WorkflowNodeType, string>> = {
 
 export const ApprovalCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
   const job = useWorkflowRunStore((state) => state.job);
+  const { videos } = useGroupVideos();
+  // Design approval counts its designs; Review Video counts the videos of the open batch video run, a failed one
+  // standing where a rejected design does. Without a batch video run Review Video has nothing to count.
+  const videoStates = videos.map((item) => groupVideoState(item.target));
   const counts =
-    data.type === "design-approval" && job?.requireApproval === true ? countApprovals(job) : null;
+    data.type === "design-approval" && job?.requireApproval === true
+      ? { ...countApprovals(job), rejectedLabel: "rejected" }
+      : data.type === "review-video" && videoStates.length > 0
+        ? {
+            approved: videoStates.filter((state) => state === "approved").length,
+            rejected: videoStates.filter((state) => state === "stopped").length,
+            pending: videoStates.filter((state) => state !== "approved" && state !== "stopped").length,
+            rejectedLabel: "failed",
+          }
+        : null;
   const mode = readString(data.config.mode);
   const hint =
-    data.type === "design-approval" && mode === "auto"
+    mode === "auto" && data.type === "design-approval"
       ? "Every generated design goes straight to mock-ups."
-      : MANUAL_HINTS[data.type];
+      : mode === "auto" && data.type === "approval-gate"
+        ? "Mock-ups waiting for review are approved and the video starts."
+        : mode === "auto" && data.type === "review-video"
+          ? "Finished videos are approved and exported."
+          : MANUAL_HINTS[data.type];
   const total = counts ? counts.approved + counts.rejected + counts.pending : 0;
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const disabled = useNodeSettingsLocked(data.type);
@@ -39,9 +57,7 @@ export const ApprovalCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =>
   return (
     <NodeFrame nodeId={id} data={data} selected={selected} widthClassName="w-60">
       <div className="space-y-1.5 px-2.5 pb-2.5">
-        {data.type === "review-video" ? (
-          <NodeReadonlyText placeholder="Waiting for the latest cut" />
-        ) : data.type === "design-approval" ? (
+        {data.type === "design-approval" || data.type === "approval-gate" || data.type === "review-video" ? (
           <NodeSegmented
             options={modeOptions}
             value={mode}
@@ -52,6 +68,8 @@ export const ApprovalCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =>
         ) : (
           <NodeField value={getSelectFieldLabel(data.type, "mode", mode)} placeholder="Manual review" />
         )}
+
+        {data.type === "review-video" && !counts && <NodeReadonlyText placeholder="Waiting for the latest cut" />}
 
         {counts && total > 0 && (
           <>
@@ -67,7 +85,7 @@ export const ApprovalCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =>
               </span>
               <span className="flex items-center gap-1">
                 <span className="bg-wf-fail size-1.5 rounded-full" aria-hidden="true" />
-                {counts.rejected} rejected
+                {counts.rejected} {counts.rejectedLabel}
               </span>
               <span className={cn("flex items-center gap-1", counts.pending > 0 && "text-wf-warn")}>
                 <span className="bg-wf-line size-1.5 rounded-full" aria-hidden="true" />

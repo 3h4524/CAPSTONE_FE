@@ -1,39 +1,32 @@
 "use client";
 
-import axios from "axios";
-
 import { assistantKeys, streamAssistantChat } from "@/api/assistant";
-import { getErrorMessage } from "@/helpers/error-message";
+import { pipeAssistantStream } from "@/helpers/assistant-stream-into-store";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useAppQueryClient } from "@/hooks/use-query-client";
-import { useAssistantStore } from "@/stores/assistant";
 import type { SendAssistantMessageInput } from "@/types/assistant";
 
-const STREAM_INTERRUPTED_ERROR = {
-  code: "stream_interrupted",
-  message: "The connection was interrupted. Please try again.",
-};
+type StreamAssistantReplyInput = { input: SendAssistantMessageInput; exchangeId: string; signal: AbortSignal };
 
-const streamIntoStore = async ({ input, signal }: { input: SendAssistantMessageInput; signal: AbortSignal }) => {
-  const { applyStreamEvent, stopStreaming, failStreaming } = useAssistantStore.getState();
-  try {
-    await streamAssistantChat(input, applyStreamEvent, signal);
-    if (useAssistantStore.getState().streamingMessageId !== null) failStreaming(STREAM_INTERRUPTED_ERROR);
-  } catch (error) {
-    if (axios.isCancel(error) || signal.aborted) {
-      stopStreaming();
-      return;
-    }
-    failStreaming({ code: "request_failed", message: getErrorMessage(error) });
-  }
-};
+const streamIntoStore = ({ input, exchangeId, signal }: StreamAssistantReplyInput) =>
+  pipeAssistantStream({
+    exchangeId,
+    signal,
+    open: (onEvent, attemptSignal) => streamAssistantChat(input, onEvent, attemptSignal),
+    isResume: false,
+    replaysFromStart: false,
+  });
 
 export const useSendAssistantMessage = () => {
   const client = useAppQueryClient();
   return useMutation({
     mutationFn: streamIntoStore,
     suppressErrorToast: true,
-    onSuccess: () => {
+    onSuccess: (outcome) => {
+      if (outcome.status === "gone") {
+        void client.invalidateQueries({ queryKey: assistantKeys.conversation(outcome.conversationId) });
+        return;
+      }
       void client.invalidateQueries({ queryKey: assistantKeys.conversations(), exact: true });
     },
   });

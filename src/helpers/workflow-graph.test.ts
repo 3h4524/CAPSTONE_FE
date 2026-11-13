@@ -26,6 +26,7 @@ import {
   validateWorkflow,
   withUniqueLabels,
 } from "@/helpers/workflow-graph";
+import { supportsBatchVideos } from "@/helpers/workflow-run";
 import {
   buildWorkflowDetail,
   buildWorkflowEdge,
@@ -70,7 +71,7 @@ const VALID_CONFIGS: Record<WorkflowNodeType, WorkflowNodeConfig> = {
     standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
     fallbackToStandard: true,
   },
-  "review-video": {},
+  "review-video": { mode: "manual" },
   "generate-listing": { model: "gpt-4o", tone: "friendly", includeSeoScore: true },
   "export-zip": {},
   "publish-etsy": { listingType: "download", price: 4.99, quantity: 999, taxonomyId: 2078, taxonomyPath: "Digital", whoMade: "i_did", whenMade: "made_to_order", shippingProfileId: null, includeVideo: true },
@@ -114,7 +115,7 @@ const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
     { mode: "unreviewed" },
     "Design approval: Choose how designs are approved.",
   ],
-  ["approval-gate", { mode: "unreviewed" }, 'Mockup Approval: Invalid input: expected "manual"'],
+  ["approval-gate", { mode: "unreviewed" }, "Mockup Approval: Choose how mock-ups are approved."],
   [
     "apply-mockup",
     {
@@ -154,7 +155,7 @@ const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
   ],
   [
     "publish-printify",
-    { blueprintId: null, blueprintTitle: null, printProviderId: null, printProviderTitle: null, colors: [], sizes: [], targetProfit: 10, designId: null, publishToEtsy: true, addMockups: true },
+    { source: "manual", blueprintId: null, blueprintTitle: null, printProviderId: null, printProviderTitle: null, colors: [], sizes: [], targetProfit: 10, designId: null, publishToEtsy: true, addMockups: true },
     "Push to Printify: Choose a product type.",
   ],
 ];
@@ -379,6 +380,74 @@ describe("validateWorkflow", () => {
     expect(validateWorkflow(pipelineNodes(), pipelineEdges())).toEqual([]);
   });
 
+  it("needs no product for Standard scenes: every design chosen at Mockup Approval gets a video", () => {
+    const nodes = pipelineNodes().map((item) =>
+      item.data.type === "product-input" ? { ...item, data: { ...item.data, config: { batchId: "batch-1", productId: "" } } } : item
+    );
+    expect(validateWorkflow(nodes, pipelineEdges()).filter((issue) => issue.id.startsWith("video-product"))).toEqual([]);
+  });
+
+  it("needs no product for AI scenes either: each chosen design gets its own AI video", () => {
+    const nodes = pipelineNodes().map((item) =>
+      item.data.type === "product-input"
+        ? { ...item, data: { ...item.data, config: { batchId: "batch-1", productId: "" } } }
+        : item.data.type === "generate-video"
+          ? { ...item, data: { ...item.data, config: { ...item.data.config, mode: "ai_shot", aiScenes: [{ mode: "ai" }] } } }
+          : item
+    );
+    expect(validateWorkflow(nodes, pipelineEdges()).filter((issue) => issue.id.startsWith("video-product"))).toEqual([]);
+  });
+
+  it("needs the product when the settings make one product's video", () => {
+    const nodes = pipelineNodes().map((item) =>
+      item.data.type === "product-input"
+        ? { ...item, data: { ...item.data, config: { batchId: "batch-1", productId: "" } } }
+        : item.data.type === "generate-video"
+          ? { ...item, data: { ...item.data, config: { ...item.data.config, mode: "ai_shot", aiScenes: [] } } }
+          : item
+    );
+    expect(validateWorkflow(nodes, pipelineEdges()).map((issue) => issue.id)).toContain("video-product-input");
+  });
+
+  describe("publishing without a video", () => {
+    const publishNodes = (productId = VIDEO_PRODUCT_ID) => [
+      typedNode("input", "product-input", { batchId: "batch-1", productId }),
+      typedNode("mockup", "apply-mockup", VALID_CONFIGS["apply-mockup"]),
+      typedNode("approval", "approval-gate", VALID_CONFIGS["approval-gate"]),
+      typedNode("printify", "publish-printify", VALID_CONFIGS["publish-printify"]),
+    ];
+    const publishEdges = () => [edge("input", "mockup"), edge("mockup", "approval"), edge("approval", "printify")];
+
+    it("lets Push to Printify follow Mockup Approval directly", () => {
+      expect(validateWorkflow(publishNodes(), publishEdges())).toEqual([]);
+    });
+
+    it("says Export ZIP needs the video", () => {
+      const nodes = [...publishNodes(), typedNode("export", "export-zip", VALID_CONFIGS["export-zip"])];
+      const edges = [edge("input", "mockup"), edge("mockup", "approval"), edge("approval", "export"), edge("export", "printify")];
+
+      expect(validateWorkflow(nodes, edges)).toContainEqual({
+        id: "publish-needs-video-export",
+        nodeId: "export",
+        message: "Export ZIP needs Generate Video. Remove it to publish without a video.",
+      });
+    });
+
+    it("needs Mockup Approval before publishing", () => {
+      const nodes = publishNodes().filter((item) => item.data.type !== "approval-gate");
+
+      expect(validateWorkflow(nodes, [edge("input", "mockup"), edge("mockup", "printify")]).map((issue) => issue.id)).toContain("publish-pipeline");
+    });
+
+    it("needs the one product it publishes, chosen at Mockup Approval", () => {
+      expect(validateWorkflow(publishNodes(""), publishEdges())).toContainEqual({
+        id: "publish-product-input",
+        nodeId: "approval",
+        message: "Publishing without a video is for one product. Choose it under Product in Mockup Approval.",
+      });
+    });
+  });
+
   it.each(nodeTypes)("accepts a valid %s config", (type) => {
     const issues = validateWorkflow([typedNode("n1", type, VALID_CONFIGS[type])], []);
 
@@ -591,6 +660,20 @@ describe("createWorkflowNode", () => {
 });
 
 describe("toWorkflowNodes", () => {
+  it("keeps a saved AI scene list, so the workflow still makes a video per design after a reload and a save", () => {
+    const aiScenes = [{ mode: "ai", templateCode: "lifestyle_in_use", durationSeconds: 5 }];
+    const nodes = toWorkflowNodes({
+      version: 2,
+      nodes: [{ id: "video", type: "generate-video", label: "Generate Video", position: { x: 0, y: 0 }, config: { mode: "ai_shot", aiScenes } }],
+      edges: [],
+      viewport: { x: 0, y: 0, zoom: 1 },
+    });
+
+    expect(nodes[0]!.data.config.aiScenes).toEqual(aiScenes);
+    expect(supportsBatchVideos(nodes)).toBe(true);
+    expect(toWorkflowDefinition(nodes, [], { x: 0, y: 0, zoom: 1 }).nodes[0]!.config.aiScenes).toEqual(aiScenes);
+  });
+
   const definition: WorkflowDefinition = {
     version: 2,
     nodes: [

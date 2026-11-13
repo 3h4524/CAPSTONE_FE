@@ -3,13 +3,12 @@ import {
   DEFAULT_WORKFLOW_NAME,
   DEFAULT_WORKFLOW_POSITIONS,
   DUPLICATE_NODE_OFFSET,
-  PUBLISH_NODE_TYPES,
   RUN_ORDER,
   WORKFLOW_NODE_DEFINITIONS,
 } from "@/constants/workflow";
 import { getWorkflowNodeDefinition, normalizeNodeConfig, readString } from "@/helpers/workflow-config";
-import { findMissingMockupTemplates, isRunnableNode } from "@/helpers/workflow-run";
-import { workflowNodeConfigSchemas } from "@/schemas/workflow";
+import { findMissingMockupTemplates, isRunnableNode, publishesWithoutVideo, supportsBatchVideos } from "@/helpers/workflow-run";
+import { nodeConfigSchemaIn } from "@/schemas/workflow";
 import type {
   WorkflowDefinition,
   WorkflowDetail,
@@ -27,6 +26,8 @@ import type { Connection, Viewport } from "@xyflow/react";
 const APPROVAL_REQUIRED_TYPES: WorkflowNodeType[] = ["generate-video"];
 // The steps a video needs, each exactly once. The design steps may sit before Apply mock-up.
 export const STANDARD_PIPELINE: WorkflowNodeType[] = ["product-input", "apply-mockup", "approval-gate", "generate-video", "review-video", "export-zip"];
+// The steps a run that publishes without a video needs, each exactly once, before the publish steps.
+export const PUBLISH_PIPELINE: WorkflowNodeType[] = ["product-input", "apply-mockup", "approval-gate"];
 // A workflow with one of these is making a video, so it has to be the whole video pipeline.
 const VIDEO_ONLY_TYPES: WorkflowNodeType[] = ["approval-gate", "generate-video", "review-video"];
 
@@ -155,6 +156,45 @@ const hasApprovalUpstream = (node: WorkflowNode, nodes: WorkflowNode[], edges: W
   );
 };
 
+// The steps of a run sit in one line in run order, each connected to the one before, so no approval is skipped.
+// Listing content waits for no approval, so it may also sit between two steps of the line.
+const lineIssues = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
+  const issues: WorkflowIssue[] = [];
+  const line = nodes.filter(node => runOrderOf(node.data.type) >= 0).sort((a, b) => runOrderOf(a.data.type) - runOrderOf(b.data.type));
+  for (let i = 1; i < line.length; i++) {
+    const previous = line[i - 1];
+    const current = line[i];
+    const throughListing = nodes.some(node => node.data.type === "generate-listing" && edges.some(e => e.source === previous.id && e.target === node.id) && edges.some(e => e.source === node.id && e.target === current.id));
+    if (previous.data.type !== current.data.type && edges.filter(e => e.source === previous.id && e.target === current.id).length + (throughListing ? 1 : 0) !== 1)
+      issues.push({ id: `required-edge-${current.id}`, nodeId: current.id, message: `${current.data.label} must follow ${previous.data.label}.` });
+  }
+  return issues;
+};
+
+// What the server checks before it publishes without a video: Product Input → Apply mock-up → Mockup Approval once
+// each, then the publish steps, in one line; Review Video and Export ZIP need the video; and the one product it is for.
+const validatePublishPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
+  const issues: WorkflowIssue[] = [];
+  if (PUBLISH_PIPELINE.some(type => nodes.filter(n => n.data.type === type).length !== 1))
+    issues.push({ id: "publish-pipeline", nodeId: null, message: "Publishing without a video needs exactly one each of Product Input → Apply Mockup → Mockup Approval before Push to Printify or Publish to Etsy." });
+  nodes.filter(node => node.data.type === "review-video" || node.data.type === "export-zip").forEach(node =>
+    issues.push({ id: `publish-needs-video-${node.id}`, nodeId: node.id, message: `${node.data.label} needs Generate Video. Remove it to publish without a video.` })
+  );
+  nodes.filter(node => !isRunnableNode(node.data.type)).forEach(node =>
+    issues.push({ id: `publish-unsupported-${node.id}`, nodeId: node.id, message: `${node.data.label} cannot run yet. Remove it to run the workflow.` })
+  );
+  issues.push(...lineIssues(nodes, edges));
+  if (issues.length === 0 && edges.length !== nodes.length - 1)
+    issues.push({ id: "publish-extra-edges", nodeId: null, message: "A run goes through its steps in one line. Remove the extra connections." });
+
+  // One run publishes one product; it is stored in Product input but chosen at Mockup Approval, so the issue points there.
+  const input = nodes.find(node => node.data.type === "product-input");
+  const approval = nodes.find(node => node.data.type === "approval-gate");
+  if (input && !readString(input.data.config.productId))
+    issues.push({ id: `publish-product-${input.id}`, nodeId: approval?.id ?? input.id, message: "Publishing without a video is for one product. Choose it under Product in Mockup Approval." });
+  return issues;
+};
+
 // What the server checks before it starts the video part, so the problems show while editing: the six video
 // steps once each, in one line in run order with the design steps (if any) before Apply mock-up, nothing that
 // cannot run, and the product the video is for.
@@ -167,29 +207,22 @@ const validateVideoPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): Wo
     issues.push({ id: `video-unsupported-${node.id}`, nodeId: node.id, message: `${node.data.label} cannot run yet. Remove it to run the video.` })
   );
 
-  const line = nodes.filter(node => runOrderOf(node.data.type) >= 0).sort((a, b) => runOrderOf(a.data.type) - runOrderOf(b.data.type));
-  for (let i = 1; i < line.length; i++) {
-    const previous = line[i - 1];
-    const current = line[i];
-    // Listing content waits for no approval, so it may also sit between two steps of the line.
-    const throughListing = nodes.some(node => node.data.type === "generate-listing" && edges.some(e => e.source === previous.id && e.target === node.id) && edges.some(e => e.source === node.id && e.target === current.id));
-    if (previous.data.type !== current.data.type && edges.filter(e => e.source === previous.id && e.target === current.id).length + (throughListing ? 1 : 0) !== 1)
-      issues.push({ id: `required-edge-${current.id}`, nodeId: current.id, message: `${current.data.label} must follow ${previous.data.label}.` });
-  }
+  issues.push(...lineIssues(nodes, edges));
   if (issues.length === 0 && edges.length !== nodes.length - 1)
     issues.push({ id: "video-extra-edges", nodeId: null, message: "A video runs its steps in one line. Remove the extra connections." });
 
+  // A scene list makes a video for every design chosen at Mockup Approval; other settings fit one product only.
   const input = nodes.find(node => node.data.type === "product-input");
-  if (input && !readString(input.data.config.productId))
-    issues.push({ id: `video-product-${input.id}`, nodeId: input.id, message: `${input.data.label}: Choose the product for the video.` });
+  // The product is stored in Product input but chosen at Mockup Approval, so the issue points there.
+  const approval = nodes.find(node => node.data.type === "approval-gate");
+  if (input && !readString(input.data.config.productId) && !supportsBatchVideos(nodes))
+    issues.push({ id: `video-product-${input.id}`, nodeId: approval?.id ?? input.id, message: "These video settings make one product's video. Choose it under Product for the video in Mockup Approval." });
   return issues;
 };
 
 export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
-  const issues: WorkflowIssue[] = [...validateVideoPipeline(nodes, edges)];
-  // Publishing sends the approved package, so it needs the video steps and comes after Export ZIP.
-  if (nodes.some((node) => PUBLISH_NODE_TYPES.includes(node.data.type)) && !nodes.some((node) => node.data.type === "generate-video"))
-    issues.push({ id: "publish-needs-video", nodeId: null, message: "Push to Printify and Publish to Etsy come after Export ZIP: add the video steps first." });
+  // Publishing comes last: after Export ZIP of a video, or right after Mockup Approval without one.
+  const issues: WorkflowIssue[] = publishesWithoutVideo(nodes) ? validatePublishPipeline(nodes, edges) : validateVideoPipeline(nodes, edges);
   const missingTemplates = findMissingMockupTemplates(nodes);
   if (missingTemplates) issues.push(missingTemplates);
   const inputNodes = nodes.filter((node) => node.data.type === "product-input");
@@ -215,7 +248,7 @@ export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
       issues.push({ id: `unreachable-${node.id}`, nodeId: node.id, message: `${node.data.label} is not connected to the Product input.` });
     }
 
-    const parsed = workflowNodeConfigSchemas[node.data.type].safeParse(node.data.config);
+    const parsed = nodeConfigSchemaIn(node.data.type, nodes).safeParse(node.data.config);
     if (!parsed.success) {
       const [firstIssue] = parsed.error.issues;
       issues.push({ id: `config-${node.id}`, nodeId: node.id, message: `${node.data.label}: ${firstIssue?.message ?? "check its settings."}` });

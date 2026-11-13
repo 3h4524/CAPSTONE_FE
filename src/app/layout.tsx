@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 
+import { CostConfirmDialog } from "@/components/commons/popup/cost-confirm-dialog";
 import { GlobalPopup } from "@/components/commons/popup/global-popup";
 import { GlobalToast } from "@/components/commons/toast/global-toast";
 import { OrganizationJsonLd } from "@/components/seo/organization-json-ld";
@@ -51,6 +52,7 @@ export default function RootLayout({
         </I18nProvider>
         <GlobalToast />
         <GlobalPopup />
+        <CostConfirmDialog />
         {process.env.GOOGLE_ANALYTICS_MEASUREMENT_ID && (
           <GoogleAnalytics gaId={process.env.GOOGLE_ANALYTICS_MEASUREMENT_ID} />
         )}

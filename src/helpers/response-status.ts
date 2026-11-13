@@ -1,3 +1,6 @@
+const NOT_FOUND_STATUS = 404;
+const CONFLICT_STATUS = 409;
+
 type ErrorWithStatus = {
   response?: {
     status?: unknown;
@@ -11,3 +14,7 @@ export const getResponseStatus = (error: unknown): number | undefined => {
   }
   return undefined;
 };
+
+export const isNotFoundResponse = (error: unknown) => getResponseStatus(error) === NOT_FOUND_STATUS;
+
+export const isConflictResponse = (error: unknown) => getResponseStatus(error) === CONFLICT_STATUS;

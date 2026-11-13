@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { LANGUAGES, TIMEZONES } from "@/constants/profile";
+import { LANGUAGES, THEME_VALUES, TIMEZONES } from "@/constants/profile";
 import { applyTheme } from "@/helpers/theme";
 import { applyUserPreferences } from "@/helpers/user-preferences";
 import { useUpdateProfile } from "@/hooks/mutations/use-update-profile";
@@ -80,6 +80,10 @@ export const SettingsPage = ({ variant = "seller" }: SettingsPageProps) => {
     value: language.value,
     label: t(`settings.languages.${language.value}`),
   }));
+  const themeOptions = THEME_VALUES.map((value) => ({
+    value,
+    label: t(`settings.themes.${value}`),
+  }));
   const update = <K extends keyof SettingsDraft>(key: K, value: SettingsDraft[K]) => {
     setDraft((current) => current ? { ...current, [key]: value } : current);
   };
@@ -117,7 +121,8 @@ export const SettingsPage = ({ variant = "seller" }: SettingsPageProps) => {
 
       <div className="grid items-start gap-5 max-md:grid-cols-[minmax(0,1fr)] max-md:gap-3 lg:grid-cols-2">
         <SettingsCard icon={<Palette className="size-4" />} title={t("settings.appearance")} description={t("settings.appearanceDescription")}>
-          <div className="max-w-md">
+          <div className="max-w-md space-y-4">
+            <SettingSelect label={t("settings.theme")} value={draft.themePreference} options={themeOptions} onChange={(value) => update("themePreference", value)} />
             <SettingSelect label={t("settings.language")} value={draft.language} options={languageOptions} onChange={(value) => update("language", value)} />
           </div>
           <InfoNote>{t("settings.languageDescription")}</InfoNote>

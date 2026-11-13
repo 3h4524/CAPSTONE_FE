@@ -1,4 +1,6 @@
+import { ASSISTANT_STOPPED_ERROR_CODE } from "@/constants/assistant";
 import type {
+  AssistantActiveStream,
   AssistantPendingAction,
   AssistantStreamEvent,
   AssistantUiMessage,
@@ -10,6 +12,7 @@ export type AssistantChatState = {
   messages: AssistantUiMessage[];
   pendingActions: Record<string, AssistantPendingAction>;
   streamingMessageId: string | null;
+  activeStream: AssistantActiveStream | null;
 };
 
 const createMessage = (role: AssistantUiMessage["role"], content: string, isStreaming: boolean): AssistantUiMessage => {
@@ -29,6 +32,7 @@ const createMessage = (role: AssistantUiMessage["role"], content: string, isStre
     error: null,
     retryInSeconds: null,
     isStreaming,
+    isStopped: false,
     createdAt: new Date().toISOString(),
   };
 };
@@ -36,6 +40,13 @@ const createMessage = (role: AssistantUiMessage["role"], content: string, isStre
 export const createUserMessage = (content: string): AssistantUiMessage => createMessage("user", content, false);
 
 export const createAssistantPlaceholder = (): AssistantUiMessage => createMessage("assistant", "", true);
+
+export const clearAssistantReply = (message: AssistantUiMessage): AssistantUiMessage => ({
+  ...createAssistantPlaceholder(),
+  id: message.id,
+  key: message.key,
+  createdAt: message.createdAt,
+});
 
 const updateMessage = (
   state: AssistantChatState,
@@ -55,11 +66,22 @@ const renameLastUserMessage = (state: AssistantChatState, id: string): Assistant
 const finishStreaming = (state: AssistantChatState, streamingId: string, update: (message: AssistantUiMessage) => AssistantUiMessage) => ({
   ...updateMessage(state, streamingId, (message) => update({ ...message, isStreaming: false })),
   streamingMessageId: null,
+  activeStream: null,
 });
+
+const withAssistantMessageId = (activeStream: AssistantActiveStream | null, assistantMessageId: string | undefined) =>
+  activeStream && assistantMessageId ? { ...activeStream, assistantMessageId } : activeStream;
 
 export const reduceAssistantStreamEvent = (state: AssistantChatState, event: AssistantStreamEvent): AssistantChatState => {
   if (event.type === "conversation") {
-    return renameLastUserMessage({ ...state, conversationId: event.data.conversationId }, event.data.userMessageId);
+    return renameLastUserMessage(
+      {
+        ...state,
+        conversationId: event.data.conversationId,
+        activeStream: withAssistantMessageId(state.activeStream, event.data.assistantMessageId),
+      },
+      event.data.userMessageId
+    );
   }
   const streamingId = state.streamingMessageId;
   if (streamingId === null) return state;
@@ -119,6 +141,19 @@ export const reduceAssistantStreamEvent = (state: AssistantChatState, event: Ass
         retryInSeconds: null,
       }));
     case "error":
-      return finishStreaming(state, streamingId, (message) => ({ ...message, error: event.data, retryInSeconds: null }));
+      return event.data.code === ASSISTANT_STOPPED_ERROR_CODE
+        ? finishStreaming(state, streamingId, (message) => ({ ...message, isStopped: true, retryInSeconds: null }))
+        : finishStreaming(state, streamingId, (message) => ({ ...message, error: event.data, retryInSeconds: null }));
   }
+};
+
+export const isLatestFailedReply = (messages: AssistantUiMessage[], messageKey: string) => {
+  const last = messages.at(-1);
+  return last?.key === messageKey && last.role === "assistant" && last.error !== null && !last.isStreaming;
+};
+
+export const findRetryPrompt = (messages: AssistantUiMessage[], failedMessageKey: string) => {
+  if (!isLatestFailedReply(messages, failedMessageKey)) return null;
+  const prompt = messages.at(-2);
+  return prompt?.role === "user" ? prompt : null;
 };

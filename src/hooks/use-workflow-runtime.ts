@@ -9,6 +9,7 @@ import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action"
 import { useWorkflowRun } from "@/hooks/queries/use-workflow-run";
 import { NEXT_PART_PARAM } from "@/hooks/use-batch-run";
 import { useWorkflowStore } from "@/stores/workflow";
+import type { WorkflowNodeRun } from "@/types/video-workflow";
 import type { WorkflowNodeData } from "@/types/workflow";
 import { uuid } from "@/utils/uuid";
 
@@ -70,10 +71,32 @@ export const useWorkflowRuntime = () => {
   return { run: run?.workflowId === workflowId ? run : undefined, runId, isRunning: Boolean(run && run.workflowId === workflowId && !FINISHED_RUN_STATUSES.includes(run.status)), isPending: isStarting || isActing, isError, refetch, startRun, cancelRun, selectRun, closeRun };
 };
 
+type SyncedStatus = Pick<WorkflowNodeData, "status" | "stage" | "progress">;
+
+/** What the open video run (or the run being made ready) says about one step; null when it says nothing about it. */
+export const videoSyncedStatus = (
+  type: WorkflowNodeData["type"],
+  step: Pick<WorkflowNodeRun, "status" | "stage" | "progress"> | undefined,
+  hasBatchRun: boolean,
+  approvingMockups: boolean
+): SyncedStatus | null => {
+  let next: SyncedStatus | null = null;
+  if (isServerRunNode(type)) next = step ? { status: toCanvasStatus(step.status), stage: step.stage, progress: step.progress } : { status: "idle", stage: null, progress: 0 };
+  // Without a batch job these steps show what the video run recorded, and nothing once it is closed.
+  else if (!hasBatchRun && isBatchRunNode(type)) next = { status: step ? toCanvasStatus(step.status) : "idle", stage: null, progress: 0 };
+  // Until the videos' runs exist nothing else shows that the run is working.
+  if (approvingMockups && type === "approval-gate" && next?.status === "idle") next = { status: "running", stage: "Approving mock-ups", progress: 0 };
+  return next;
+};
+
 // Shows the open video run on the canvas. Mounted once, beside the hook that shows the batch job, so the two
 // never write the same step: the video run owns the video steps, and the steps before them only while no batch
 // job is open (the run records Product Input and Apply Mockup as done, and never touches the design steps).
-export const useVideoRunSync = (hasBatchRun: boolean) => {
+/**
+ * @param approvingMockups The batch video run is being made ready on the server (its mock-ups approved automatically
+ * and the model photos of its scenes with a person made) and has no video run yet: Mockup Approval is the step at work.
+ */
+export const useVideoRunSync = (hasBatchRun: boolean, approvingMockups = false) => {
   const { run } = useWorkflowRuntime();
   // Changes when the canvas gets its nodes, so a run that loaded first is still shown.
   const nodeSignature = useWorkflowStore(state => state.nodes.map(node => `${node.id}:${node.data.type}`).join("|"));
@@ -81,17 +104,13 @@ export const useVideoRunSync = (hasBatchRun: boolean) => {
     useWorkflowStore.setState(state => {
       let changed = false;
       const nodes = state.nodes.map(node => {
-        const type = node.data.type;
         const step = run?.nodes.find(n => n.nodeId === node.id);
-        let next: Pick<WorkflowNodeData, "status" | "stage" | "progress"> | null = null;
-        if (isServerRunNode(type)) next = step ? { status: toCanvasStatus(step.status), stage: step.stage, progress: step.progress } : { status: "idle", stage: null, progress: 0 };
-        // Without a batch job these steps show what the video run recorded, and nothing once it is closed.
-        else if (!hasBatchRun && isBatchRunNode(type)) next = { status: step ? toCanvasStatus(step.status) : "idle", stage: null, progress: 0 };
+        const next = videoSyncedStatus(node.data.type, step, hasBatchRun, approvingMockups);
         if (!next || (next.status === node.data.status && (next.stage ?? null) === (node.data.stage ?? null) && (next.progress ?? 0) === (node.data.progress ?? 0))) return node;
         changed = true;
         return { ...node, data: { ...node.data, ...next } };
       });
       return changed ? { nodes } : state;
     });
-  }, [run, hasBatchRun, nodeSignature]);
+  }, [run, hasBatchRun, approvingMockups, nodeSignature]);
 };

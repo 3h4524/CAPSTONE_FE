@@ -2271,6 +2271,16 @@ function OpportunityInsights({ item, compact = false }: { item: SellerOpportunit
         <InsightMetric className={compact ? "max-md:hidden" : undefined} label={t("marketRadar.freshness", { defaultValue: "Freshness" })} value={formatFreshness(insight.freshnessLabel, t)} detail={freshnessDetail(insight, t)} tone={insight.freshnessLabel === "fresh" ? "up" : insight.freshnessLabel === "stale" ? "down" : undefined} />
       </div>
       {!compact && <>
+      {insight.favoritesPerDay != null && (
+        <p className="text-ink-600 text-xs">
+          {t("marketRadar.demandPace", { defaultValue: "These listings gain {{count}} favorites a day", count: Math.round(insight.favoritesPerDay * 10) / 10 })}
+          {insight.engagementChangePercent != null && (
+            <span className={cn("ml-1 font-medium", insight.engagementTrend === "up" ? "text-emerald-700 dark:text-emerald-300" : insight.engagementTrend === "down" ? "text-amber-700 dark:text-amber-300" : "text-ink-500")}>
+              {t("marketRadar.demandPaceChange", { defaultValue: "({{change}} pace vs. earlier days)", change: `${insight.engagementChangePercent > 0 ? "+" : ""}${Math.round(insight.engagementChangePercent)}%` })}
+            </span>
+          )}
+        </p>
+      )}
       {item.nicheMarket && item.nicheMarket.risingNewListingCount > 0 && (
         <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
           {t("marketRadar.nicheOpenForNewSellers", { defaultValue: "{{count}} listing(s) under 90 days old in this niche already gain favorites quickly." , count: item.nicheMarket.risingNewListingCount })}

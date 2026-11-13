@@ -38,7 +38,7 @@ export const AssistantMessage = ({ message }: AssistantMessageProps) => {
       {isWaiting || isRetrying ? (
         <p className="text-muted-foreground flex items-center gap-2 text-xs">
           <Spinner className="size-3" />
-          {isRetrying ? `The assistant is busy, retrying in ${message.retryInSeconds}s…` : "Thinking…"}
+          {isRetrying ? `Podi is busy, retrying in ${message.retryInSeconds}s…` : "Thinking…"}
         </p>
       ) : null}
       {message.content ? (
@@ -59,7 +59,8 @@ export const AssistantMessage = ({ message }: AssistantMessageProps) => {
       {message.choices ? (
         <AssistantChoiceChips messageId={message.id} choices={message.choices} choicesUsed={message.choicesUsed} />
       ) : null}
-      {message.error ? <AssistantMessageError error={message.error} /> : null}
+      {message.isStopped ? <p className="text-muted-foreground text-xs">Stopped</p> : null}
+      {message.error ? <AssistantMessageError messageKey={message.key} error={message.error} /> : null}
     </div>
   );
 };

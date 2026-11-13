@@ -140,7 +140,11 @@ export const designApprovalConfigSchema = z.object({
 });
 
 export const approvalGateConfigSchema = z.object({
-  mode: z.literal("manual"),
+  mode: z.enum(["manual", "auto"], { error: "Choose how mock-ups are approved." }),
+});
+
+export const reviewVideoConfigSchema = z.object({
+  mode: z.enum(["manual", "auto"], { error: "Choose how videos are approved." }),
 });
 
 export const applyMockupConfigSchema = z.object({
@@ -308,6 +312,9 @@ export const generateVideoConfigSchema = z
     aiStudioSourceMockupId: z.string().uuid().nullable().optional(),
     aiStudioFrameId: z.string().uuid().nullable().optional(),
     videoEdit: videoEditSchema,
+    // Before a batch run, some products' own Generate Video settings (product id to a whole config), each checked when
+    // it is edited (see `ProductScopeSelect`).
+    productConfigs: z.record(z.string().uuid(), z.record(z.string(), z.unknown())).optional(),
   })
   .superRefine((value, ctx) => {
     if (value.assetSelection === "manual" && value.selectedMockupIds.length === 0)
@@ -329,13 +336,9 @@ export const generateVideoConfigSchema = z
     if (value.aiScenes?.length) {
       if (value.aiScenes.length > 4)
         ctx.addIssue({ code: "custom", path: ["aiScenes"], message: "Use up to four scenes." });
+      // A scene may leave its image open: the run picks each design's own (its matching mock-up, its model photo for a
+      // scene with a person, else its main mock-up), so a scene list is set up once, before any mock-up exists.
       value.aiScenes.forEach((scene, index) => {
-        if (!scene.mockupId)
-          ctx.addIssue({
-            code: "custom",
-            path: ["aiScenes", index, "mockupId"],
-            message: `Choose an approved image for scene ${index + 1}.`,
-          });
         if (scene.mode === "ai" && (scene.durationSeconds < 4 || scene.durationSeconds > 15)) {
           ctx.addIssue({
             code: "custom",
@@ -370,22 +373,6 @@ export const generateVideoConfigSchema = z
             message: "Each scene must remain at least one second after trimming.",
           });
       });
-      if (
-        value.aiScenes.some(
-          (scene) =>
-            scene.mode === "ai" &&
-            ["lifestyle_in_use", "creator_pov_ugc", "everyday_story_moment"].includes(
-              scene.templateCode
-            ) &&
-            !scene.rightsConfirmed
-        )
-      ) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["aiScenes"],
-          message: "Confirm image rights for every scene featuring a person.",
-        });
-      }
       return;
     }
     if (!value.aiShotOptions) {
@@ -407,15 +394,6 @@ export const generateVideoConfigSchema = z
         code: "custom",
         path: ["durationSeconds"],
         message: "Mixed AI and Standard video needs 12–15 seconds.",
-      });
-    if (
-      ["lifestyle_motion", "product_in_use"].includes(value.aiShotOptions.concept) &&
-      !value.aiShotOptions.rightsConfirmed
-    )
-      ctx.addIssue({
-        code: "custom",
-        path: ["aiShotOptions", "rightsConfirmed"],
-        message: "Confirm image rights for the people shown, with a parent's or guardian's consent for anyone under 18.",
       });
   });
 
@@ -481,13 +459,38 @@ export const publishPrintifyConfigSchema = z
     designId: z.string().nullable(),
     publishToEtsy: z.boolean(),
     addMockups: z.boolean(),
+    leadPhoto: z.enum(["printify", "apcs"]).optional(),
+    // "mockup": the product is read from the approved mock-ups when the step runs. Unset, a node with a product keeps it.
+    source: z.enum(["mockup", "manual"]).optional(),
   })
   .superRefine((value, context) => {
+    if (value.source ? value.source === "mockup" : !value.blueprintId) return;
     if (!value.blueprintId) context.addIssue({ code: "custom", path: ["blueprintId"], message: "Choose a product type." });
     else if (!value.printProviderId) context.addIssue({ code: "custom", path: ["printProviderId"], message: "Choose a print provider." });
     else if (value.colors.length === 0 || value.sizes.length === 0)
       context.addIssue({ code: "custom", path: ["colors"], message: "Choose at least one color and one size." });
   });
+
+/**
+ * Push to Printify when Apply mock-up set the Printify product per product type: the node only shows it, so just its
+ * own settings (the profit) are checked here.
+ */
+export const publishPrintifyFollowingMockupSchema = z.object({
+  targetProfit: z
+    .number({ error: "Set the profit per item." })
+    .min(0, "The profit cannot be negative.")
+    .max(500, "Keep the profit per item at $500 or less."),
+  leadPhoto: z.enum(["printify", "apcs"]).optional(),
+});
+
+/** The schema a node's settings are checked with on this canvas: Push to Printify follows Apply mock-up once it is set. */
+export const nodeConfigSchemaIn = (type: WorkflowNodeType, nodes: { data: { type: WorkflowNodeType; config: WorkflowNodeConfig } }[]) =>
+  type === "publish-printify" && nodes.some((node) => node.data.type === "apply-mockup" && hasPrintifyProducts(node.data.config))
+    ? publishPrintifyFollowingMockupSchema
+    : workflowNodeConfigSchemas[type];
+
+const hasPrintifyProducts = (config: WorkflowNodeConfig) =>
+  Boolean(config.printifyProducts && typeof config.printifyProducts === "object" && Object.keys(config.printifyProducts).length > 0);
 
 /** Publish to Etsy: one draft listing; a physical one needs a shipping profile. */
 export const publishEtsyConfigSchema = z
@@ -501,12 +504,18 @@ export const publishEtsyConfigSchema = z
     whenMade: z.string().min(1),
     shippingProfileId: z.number().int().positive().nullable(),
     includeVideo: z.boolean(),
+    madeBy: z.enum(["me", "partner"]).nullable().optional(),
+    productionPartnerIds: z.array(z.number().int().positive()).optional(),
   })
   .superRefine((value, context) => {
     if (!value.price) context.addIssue({ code: "custom", path: ["price"], message: "Set a price." });
     else if (!value.taxonomyId) context.addIssue({ code: "custom", path: ["taxonomyId"], message: "Choose an Etsy category." });
     else if (value.listingType === "physical" && !value.shippingProfileId)
       context.addIssue({ code: "custom", path: ["shippingProfileId"], message: "A physical listing needs a shipping profile." });
+    else if (value.listingType === "physical" && !value.madeBy)
+      context.addIssue({ code: "custom", path: ["madeBy"], message: "Say who makes this item: you or a production partner." });
+    else if (value.listingType === "physical" && value.madeBy === "partner" && !value.productionPartnerIds?.length)
+      context.addIssue({ code: "custom", path: ["productionPartnerIds"], message: "Choose the production partner that makes this item." });
   });
 
 export const workflowNodeConfigSchemas: Record<
@@ -520,7 +529,7 @@ export const workflowNodeConfigSchemas: Record<
   "apply-mockup": applyMockupConfigSchema,
   "approval-gate": approvalGateConfigSchema,
   "generate-video": generateVideoConfigSchema,
-  "review-video": z.object({}),
+  "review-video": reviewVideoConfigSchema,
   "generate-listing": generateListingConfigSchema,
   "export-zip": exportZipConfigSchema,
   "publish-etsy": publishEtsyConfigSchema,

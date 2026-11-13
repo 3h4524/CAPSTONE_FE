@@ -490,7 +490,7 @@ const RagUsageGuide = () => {
             Quick guide: how to use the RAG knowledge base
           </h2>
           <p className="text-ink-500 mt-1 text-xs leading-5">
-            Add trusted information here so the assistant can find and use it later.
+            Add trusted information here so Podi can find and use it later.
           </p>
         </div>
         <Button

@@ -29,7 +29,7 @@ export type MyShop = {
 };
 
 /** Outcomes the backend appends as `?etsy=` when Etsy sends the seller back. */
-export type EtsyConnectionOutcome = "connected" | "denied" | "expired" | "no_shop" | "failed";
+export type EtsyConnectionOutcome = "connected" | "denied" | "expired" | "no_shop" | "shop_taken" | "failed";
 
 export const getMyShop = async () => (await api.get<MyShop>("/api/shop")).data;
 
@@ -139,7 +139,8 @@ export type EtsyDraft = {
   description: string;
   tags: string[];
   warnings: string[];
-  mockups: { id: string; previewUrl: string; width: number; height: number }[];
+  // aiMade: made or edited with AI; a physical listing needs a photo besides such ones.
+  mockups: { id: string; previewUrl: string; width: number; height: number; aiMade?: boolean }[];
   video: { id: string; durationSeconds: number; thumbnailUrl: string | null } | null;
   defaults: EtsyListingSettings;
   shippingProfiles: EtsyOption[];

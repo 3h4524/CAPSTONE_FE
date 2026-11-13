@@ -171,14 +171,12 @@ test("the batch job that is open stays on the canvas when Run goes on to the vid
   await expect(node(page, "design-approval")).toContainText("Needs review");
 });
 
-test("Run asks for the video's product before anything starts", async ({ page }) => {
-  const requests = await mockApi(page, { workflow: workflow(buildDefinition({ productId: "" })) });
+test("Mockup Approval of a video workflow lists the run's designs, with no product to choose", async ({ page }) => {
+  await mockApi(page, { workflow: workflow(buildDefinition({ productId: "" })) });
   await page.goto(`/workflows?id=${workflowId}`);
-  await expect(node(page, "video")).toBeVisible();
-  await page.getByRole("button", { name: "Run" }).click();
-  await expect(page.getByText("Choose the product for the video in Product input.")).toBeVisible();
-  await expect(page.getByText("Product for the video", { exact: true })).toBeVisible();
-  expect(requests).toEqual([]);
+  await node(page, "approval").click({ position: { x: 4, y: 14 } });
+  await expect(page.getByText("Designs that get a video")).toBeVisible();
+  await expect(page.getByText("Product for the video", { exact: true })).toHaveCount(0);
 });
 
 test("a reloaded page shows the mock-ups a reviewed job already has", async ({ page }) => {

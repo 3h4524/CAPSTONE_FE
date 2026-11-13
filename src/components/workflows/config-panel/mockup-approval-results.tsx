@@ -6,18 +6,18 @@ import { MockupPanel } from "@/components/workflows/media/mockup-panel";
 import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
 import { VideoSourcesHeader } from "@/components/workflows/media/video-sources-header";
 import { RunGroupPanel } from "@/components/workflows/run/run-group-panel";
-import { hasVideoSteps, publishesWithoutVideo, supportsBatchVideos } from "@/helpers/workflow-run";
+import { hasVideoSteps } from "@/helpers/workflow-run";
 import { useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useWorkflowStore } from "@/stores/workflow";
 
 /**
- * What Mockup Approval has to review: every design of a batch video run with its mock-ups, or the mock-ups of the one
- * product's video. The Results tab of the step while a run is open, and part of its settings otherwise.
+ * What Mockup Approval has to review: every design of a batch video run with its mock-ups (a video workflow always
+ * runs as one, even for a single product), or without a video the mock-ups of the one product to publish. The
+ * Results tab of the step while a run is open, and part of its settings otherwise.
  */
 export const MockupApprovalResults = () => {
   const groupId = useRunGroupId();
-  const batchVideos = useWorkflowStore((state) => hasVideoSteps(state.nodes) && supportsBatchVideos(state.nodes));
-  const publishOnly = useWorkflowStore((state) => publishesWithoutVideo(state.nodes));
+  const hasVideo = useWorkflowStore((state) => hasVideoSteps(state.nodes));
 
   if (groupId)
     return (
@@ -25,7 +25,7 @@ export const MockupApprovalResults = () => {
         <RunGroupPanel />
       </PanelSection>
     );
-  if (batchVideos)
+  if (hasVideo)
     return (
       <PanelSection title="Designs that get a video">
         <PanelNotice tone="info">
@@ -36,12 +36,8 @@ export const MockupApprovalResults = () => {
     );
   return (
     <PanelSection
-      title={publishOnly ? "Mock-ups to publish" : "Mock-ups for the video"}
-      description={
-        publishOnly
-          ? "Approve the mock-ups to publish, then choose Continue. The ones made by Apply mock-up are added here when the run reaches this step."
-          : "Approve the mock-ups to use in the video. The ones made by Apply mock-up are added here when the video part starts."
-      }
+      title="Mock-ups to publish"
+      description="Approve the mock-ups to publish, then choose Continue. The ones made by Apply mock-up are added here when the run reaches this step."
     >
       <RunStatusPanel />
       <VideoSourcesHeader />

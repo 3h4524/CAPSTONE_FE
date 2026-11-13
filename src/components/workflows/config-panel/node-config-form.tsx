@@ -26,18 +26,16 @@ import { ProductScopeSelect } from "@/components/workflows/config-panel/product-
 import { PromptRecipe } from "@/components/workflows/config-panel/prompt-recipe";
 import { EtsyPublishSettings, PrintifyPublishSettings } from "@/components/workflows/config-panel/publish-settings";
 import { ReviewVideoResults } from "@/components/workflows/config-panel/review-video-results";
-import { MockupPanel } from "@/components/workflows/media/mockup-panel";
 import { ModelPhotoSection } from "@/components/workflows/media/model-photo-section";
 import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
 import { StoryboardPanel } from "@/components/workflows/media/storyboard-panel";
 import { VideoReviewPanel } from "@/components/workflows/media/video-review-panel";
-import { VideoSourcesHeader } from "@/components/workflows/media/video-sources-header";
 import { WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
 import { NODE_PANEL_SECTIONS } from "@/constants/workflow-panel";
 import { getVideoOutputFormat } from "@/helpers/video-output-formats";
 import { readString } from "@/helpers/workflow-config";
 import { groupPanelFields } from "@/helpers/workflow-panel";
-import { hasVideoSteps, isVideoRunNode, showsInputProduct, supportsBatchVideos } from "@/helpers/workflow-run";
+import { hasVideoSteps, isVideoRunNode, showsInputProduct } from "@/helpers/workflow-run";
 import { useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useNodeOverview } from "@/hooks/use-node-overview";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
@@ -65,9 +63,8 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
       (n) => n.data.type === "review-video" && n.data.status === "waiting_for_review"
     )
   );
+  // A video workflow makes one video per design chosen at Mockup Approval, whatever its settings.
   const hasVideo = useWorkflowStore((state) => hasVideoSteps(state.nodes));
-  // Standard scenes make one video per design chosen at Mockup Approval; AI scenes, one product's video.
-  const batchVideos = useWorkflowStore((state) => hasVideoSteps(state.nodes) && supportsBatchVideos(state.nodes));
   const groupId = useRunGroupId();
   // Mockup Approval lets the mock-ups through to the video, or without one straight to the first publish step.
   const approvalLeadsTo = useWorkflowStore((state): WorkflowNodeType =>
@@ -277,20 +274,12 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
             <ModelPhotoSection />
           </PanelSection>
         )}
-        {node.data.type === "apply-mockup" && hasVideo && !batchVideos && (
-          <PanelSection
-            title="Mock-ups for the video"
-            description="Choose which of this product's mock-ups the video may use, or upload finished mock-up photos. Leave all unchecked to let the video pick."
-          >
-            <VideoSourcesHeader />
-            <MockupPanel review={false} />
-          </PanelSection>
-        )}
         {node.data.type === "approval-gate" && (
           <>
             <ApprovalFlow from="apply-mockup" to={approvalLeadsTo} automatic={node.data.config.mode === "auto"} />
-            {!batchVideos && !groupId && (
-              <PanelSection title={hasVideo ? "Video product" : "Product"}>
+            {/* A video workflow lists the run's designs instead: only publishing without a video is for one product. */}
+            {!hasVideo && (
+              <PanelSection title="Product">
                 <VideoProductSelect />
               </PanelSection>
             )}

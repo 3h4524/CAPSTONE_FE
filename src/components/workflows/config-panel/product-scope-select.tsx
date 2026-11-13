@@ -13,7 +13,7 @@ import {
   withoutProductConfigs,
 } from "@/helpers/product-video-configs";
 import { readString } from "@/helpers/workflow-config";
-import { supportsBatchVideos } from "@/helpers/workflow-run";
+import { settingsFitEveryDesign } from "@/helpers/workflow-run";
 import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { sharedGraphNodes, useWorkflowStore } from "@/stores/workflow";
 
@@ -29,7 +29,7 @@ export const ProductScopeSelect = ({ nodeId }: { nodeId: string }) => {
   const batchId = useWorkflowStore((state) =>
     readString(state.nodes.find((node) => node.data.type === "product-input")?.data.config.batchId)
   );
-  const batchVideos = useWorkflowStore((state) => supportsBatchVideos(sharedGraphNodes(state)));
+  const batchVideos = useWorkflowStore((state) => settingsFitEveryDesign(sharedGraphNodes(state)));
   const scope = useWorkflowStore((state) => (state.designScope?.kind === "product" ? state.designScope : null));
   const otherScope = useWorkflowStore((state) => state.designScope?.kind === "design");
   const nodeConfig = useWorkflowStore((state) => state.nodes.find((node) => node.id === nodeId)?.data.config);

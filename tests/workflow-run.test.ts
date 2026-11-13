@@ -129,10 +129,10 @@ test("steps no backend runs are skipped once a run exists", () => {
   assert.equal(deriveNodeStatuses(nodes, { step: "idle", job: null, mockupState: "idle" })["listing"], "idle");
 });
 
-test("a video needs its product and its six steps", () => {
+test("a video needs its six steps but no product: it makes one for every approved design", () => {
   const { nodes, edges } = configured();
   byType(nodes, "product-input").data.config = { batchId: id, productId: "" };
-  assert.equal(validateWorkflow(nodes, edges).some((issue) => issue.message.includes("Choose the product for the video")), true);
+  assert.equal(validateWorkflow(nodes, edges).some((issue) => issue.id.startsWith("video-product")), false);
 
   const noReview = without(configured(), "review-video");
   assert.equal(validateWorkflow(noReview.nodes, noReview.edges).some((issue) => issue.id === "mvp-pipeline"), true);

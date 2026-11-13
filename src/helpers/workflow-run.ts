@@ -64,18 +64,25 @@ export const hasServerPart = (nodes: WorkflowNode[]) => hasVideoSteps(nodes) || 
 
 /**
  * Product input offers its product only to a workflow that writes listing content without a video. A video
- * workflow picks its product at Mockup Approval ("Product for the video"), which stores the same value.
+ * workflow makes a video for every design approved at Mockup Approval, so it has no product to pick.
  */
 export const showsInputProduct = (nodes: WorkflowNode[]) => hasListingSteps(nodes) && !hasVideoSteps(nodes);
 
 const findByType = (nodes: WorkflowNode[], type: WorkflowNodeType) => nodes.filter((node) => node.data.type === type);
 
 /**
- * Whether the video settings can make one video for each design of a batch: Standard scenes only, since an AI scene
- * is billed per clip and needs its own consent. Otherwise the video is made for the one product in Product input.
- * The server checks the same.
+ * Every video workflow runs as a batch video run: Mockup Approval lists the designs of the run, one product or many,
+ * and each design whose mock-ups are approved gets a video. Settings that fit one design only (the Product on Model
+ * pack) make the video of the design their shared mock-up belongs to; the server refuses the others when confirmed.
  */
-export const supportsBatchVideos = (nodes: WorkflowNode[]) => {
+export const supportsBatchVideos = (nodes: WorkflowNode[]) => hasVideoSteps(nodes);
+
+/**
+ * Whether the video settings can be applied to every design as they are, so a product or a design may be given
+ * settings of its own: a scene list without the Product on Model pack, which renders one shared mock-up. The server
+ * checks the same (WorkflowGraphValidator.SupportsBatchVideos).
+ */
+export const settingsFitEveryDesign = (nodes: WorkflowNode[]) => {
   const [video] = findByType(nodes, "generate-video");
   if (!video) return false;
   const config = video.data.config;

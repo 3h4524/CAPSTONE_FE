@@ -398,7 +398,7 @@ describe("validateWorkflow", () => {
     expect(validateWorkflow(nodes, pipelineEdges()).filter((issue) => issue.id.startsWith("video-product"))).toEqual([]);
   });
 
-  it("needs the product when the settings make one product's video", () => {
+  it("asks for no product even when the settings fit one design, since every video run lists its designs", () => {
     const nodes = pipelineNodes().map((item) =>
       item.data.type === "product-input"
         ? { ...item, data: { ...item.data, config: { batchId: "batch-1", productId: "" } } }
@@ -406,7 +406,7 @@ describe("validateWorkflow", () => {
           ? { ...item, data: { ...item.data, config: { ...item.data.config, mode: "ai_shot", aiScenes: [] } } }
           : item
     );
-    expect(validateWorkflow(nodes, pipelineEdges()).map((issue) => issue.id)).toContain("video-product-input");
+    expect(validateWorkflow(nodes, pipelineEdges()).filter((issue) => issue.id.startsWith("video-product"))).toEqual([]);
   });
 
   describe("publishing without a video", () => {

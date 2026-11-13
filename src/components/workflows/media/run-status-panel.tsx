@@ -1,9 +1,10 @@
 "use client";
 import { useState } from "react";
-import { CircleAlert, ExternalLink } from "lucide-react";
+import { CircleAlert, ExternalLink, Share2 } from "lucide-react";
 
 import { EtsyPublishDialog } from "@/components/shop/etsy-publish-dialog";
 import { PrintifyPublishDialog } from "@/components/shop/printify-publish-dialog";
+import { SocialShareDialog } from "@/components/shop/social-share-dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { confirmAiShot } from "@/helpers/confirm-ai-shot";
@@ -20,6 +21,7 @@ export const RunStatusPanel = () => {
   const { mutate: action, isPending } = useWorkflowRunAction();
   const [publishing, setPublishing] = useState(false);
   const [printing, setPrinting] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const active = run?.nodes.find(n => n.status === "running");
   const exportStep = run?.nodes.find(n => n.nodeType === "export-zip");
   const aiMode = useWorkflowStore(state => {
@@ -59,11 +61,14 @@ export const RunStatusPanel = () => {
         <Button type="button" variant="outline" onClick={() => setPrinting(true)}>Push to Printify</Button>
         {/* A listing sent straight to Etsy has no print provider: meant for digital downloads. */}
         <Button type="button" variant="outline" onClick={() => setPublishing(true)}>Push to Etsy</Button>
+        {/* Posts for Pinterest and TikTok from the same approved media, to publish by hand. */}
+        <Button type="button" variant="outline" onClick={() => setSharing(true)}><Share2 className="size-3.5" />Share to social</Button>
       </div>
     )}
     {publishSteps.map(step => <PublishStepResult key={step.id} step={step} />)}
     {publishing && <EtsyPublishDialog productId={run.productId} open={publishing} onOpenChange={setPublishing} />}
     {printing && <PrintifyPublishDialog productId={run.productId} open={printing} onOpenChange={setPrinting} />}
+    {sharing && <SocialShareDialog productId={run.productId} open={sharing} onOpenChange={setSharing} />}
   </div>;
 };
 

@@ -14,14 +14,11 @@ import {
 
 import { AdminActivityPanels } from "@/components/admin/admin-activity-panels";
 import { healthChecks } from "@/components/admin/admin-attention-panel";
-import { AdminBottomNav } from "@/components/admin/admin-bottom-nav";
 import { AdminHealthCheckDrawer } from "@/components/admin/admin-health-check-drawer";
 import { AdminHeroCard } from "@/components/admin/admin-hero-card";
 import { AdminMetricCard, Delta } from "@/components/admin/admin-metric-card";
 import { AdminOperationsRow } from "@/components/admin/admin-operations-row";
 import { AdminRevenueTrend } from "@/components/admin/admin-revenue-trend";
-import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -37,9 +34,8 @@ import { useSystemStatisticsOverview } from "@/hooks/queries/use-system-statisti
 import type { AdminDashboardMetricsDto } from "@/types/admin";
 import { formatVnd } from "@/utils/format-currency";
 
-type AdminDashboardShellProps = {
+type AdminDashboardContentProps = {
   fullName: string;
-  onLogout: () => void;
   metrics: AdminDashboardMetricsDto | null;
   timeRange: string;
   onTimeRangeChange: (range: string) => void;
@@ -47,21 +43,14 @@ type AdminDashboardShellProps = {
   onExport: () => void;
 };
 
-const AdminDashboardShell = (props: AdminDashboardShellProps) => (
-  <AdminDashboardContent {...props} />
-);
-
-const AdminDashboardContent = ({
+export const AdminDashboardContent = ({
   fullName,
-  onLogout,
   metrics,
   timeRange,
   onTimeRangeChange,
   isExporting,
   onExport,
-}: AdminDashboardShellProps) => {
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+}: AdminDashboardContentProps) => {
   const [isHealthCheckOpen, setIsHealthCheckOpen] = useState(false);
 
   const paidShare =
@@ -100,20 +89,8 @@ const AdminDashboardContent = ({
   );
 
   return (
-    <div className="bg-ink-50 text-ink-900 dark:bg-background relative h-dvh overflow-hidden">
-      <div className="flex h-dvh">
-        <AdminSidebar
-          fullName={fullName}
-          onLogout={onLogout}
-          isMobileOpen={isMobileSidebarOpen}
-          onClose={() => setIsMobileSidebarOpen(false)}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
-        />
-        <div className="dark:lg:bg-panel flex h-dvh min-w-0 flex-1 flex-col overflow-hidden dark:lg:my-2 dark:lg:mr-2 dark:lg:h-[calc(100dvh-1rem)] dark:lg:rounded-xl dark:lg:border">
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <AdminTopbar onMenuClick={() => setIsMobileSidebarOpen(true)} />
-            <main className="mx-auto max-w-[1600px] px-4 py-4 max-md:flex max-md:flex-col max-md:gap-3.5 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]">
+    <>
+            <div className="max-md:flex max-md:flex-col max-md:gap-3.5">
               {/* Header */}
               <div className="flex flex-col justify-between gap-4 max-md:gap-0 lg:flex-row lg:items-end">
                 {/* A phone opens on the greeting, so the title is left to screen readers. */}
@@ -265,7 +242,7 @@ const AdminDashboardContent = ({
                   <Activity className="size-3" /> Last synced just now
                 </span>
               </footer>
-            </main>
+            </div>
 
             {/* Health Check Drawer (Slide-over panel like Seller's ActionInbox) */}
             <AdminHealthCheckDrawer
@@ -273,12 +250,6 @@ const AdminDashboardContent = ({
               onOpenChange={setIsHealthCheckOpen}
               healthChecks={checks}
             />
-          </div>
-          <AdminBottomNav onOpenMore={() => setIsMobileSidebarOpen(true)} />
-        </div>
-      </div>
-    </div>
+    </>
   );
 };
-
-export { AdminDashboardShell };

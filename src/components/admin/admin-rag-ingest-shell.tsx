@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, ChevronDown, FileText, Info, Loader2, RotateCcw, Upload } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { ingestRagDocument, type RagIngestRequest } from "@/api/rag";
-import { AdminBottomNav } from "@/components/admin/admin-bottom-nav";
 import { AdminMarketResearchPanel } from "@/components/admin/admin-market-research-panel";
 import { AdminRagDocumentsPanel } from "@/components/admin/admin-rag-documents-panel";
-import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { RagSearchPlayground } from "@/components/admin/rag-search-playground";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +20,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { showToast } from "@/helpers/toast";
 import { useMutation } from "@/hooks/mutations/use-mutation";
+import { useAdminShellOptions } from "@/hooks/use-admin-shell-options";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import { cn } from "@/utils/cn";
 
@@ -46,15 +45,12 @@ const RAG_TABS: { value: AdminRagTab; label: string; shortLabel: string }[] = [
 ];
 
 type AdminRagIngestShellProps = {
-  fullName: string;
-  onLogout: () => void;
   initialTab?: AdminRagTab;
 };
 
-const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: AdminRagIngestShellProps) => {
+const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps) => {
+  const { t } = useTranslation("common");
   const inputRef = useRef<HTMLInputElement>(null);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<AdminRagTab>(initialTab);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [fileName, setFileName] = useState("");
@@ -70,18 +66,9 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
   // Only the title and type are required, so a phone keeps the optional fields one tap away.
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
-  useEffect(() => {
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-    const previousBodyOverflow = document.body.style.overflow;
-
-    document.documentElement.style.overflow = "hidden";
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.documentElement.style.overflow = previousHtmlOverflow;
-      document.body.style.overflow = previousBodyOverflow;
-    };
-  }, []);
+  useAdminShellOptions({
+    title: t(activeTab === "research" ? "navigation.admin.items.marketInsights" : "navigation.admin.items.ragKnowledgeBase"),
+  });
 
   const mutation = useMutation({
     mutationFn: ingestRagDocument,
@@ -141,23 +128,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
   };
 
   return (
-    <div className="bg-ink-50 text-ink-900 dark:bg-background relative h-dvh min-h-0 overflow-hidden">
-      <div className="flex h-full min-h-0">
-        <AdminSidebar
-          fullName={fullName}
-          onLogout={onLogout}
-          isMobileOpen={isMobileSidebarOpen}
-          onClose={() => setIsMobileSidebarOpen(false)}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed((value) => !value)}
-        />
-        <div className="dark:lg:bg-panel flex h-dvh min-w-0 flex-1 flex-col overflow-hidden dark:lg:my-2 dark:lg:mr-2 dark:lg:h-[calc(100dvh-1rem)] dark:lg:rounded-xl dark:lg:border">
-          <div className="relative min-h-0 flex-1 overflow-y-auto">
-            <AdminTopbar
-              onMenuClick={() => setIsMobileSidebarOpen(true)}
-              pageTitle={activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
-            />
-            <main className="mx-auto max-w-[1600px] px-4 py-4 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]">
+    <>
               <div className="flex flex-col justify-between gap-4 max-md:gap-3 md:flex-row md:items-end">
                 {/* These two tabs open with a heading of their own. */}
                 <div className={cn((activeTab === "documents" || activeTab === "search") && "max-md:hidden")}>
@@ -449,12 +420,7 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
                   <RagSearchPlayground />
                 </div>
               </>
-            </main>
-          </div>
-          <AdminBottomNav onOpenMore={() => setIsMobileSidebarOpen(true)} />
-        </div>
-      </div>
-    </div>
+    </>
   );
 };
 

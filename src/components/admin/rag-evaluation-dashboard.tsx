@@ -308,703 +308,703 @@ const RagEvaluationDashboard = () => {
   };
 
   return (
-            <div className="space-y-5 max-md:space-y-3">
-              <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-                <div>
-                  <p className="text-[10px] font-bold tracking-[0.16em] text-indigo-500 uppercase">
-                    RAG quality lab
-                  </p>
-                  <h1 className="text-ink-900 mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
-                    RAG Evaluation
-                  </h1>
-                  <p className="text-ink-500 mt-1 max-w-2xl text-xs leading-5">
-                    Inspect retrieval traces and corpus health before RAG reaches seller-facing workflows.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {runs.length > 0 && (
-                    <select
-                    value={selectedRunId ?? ""}
-                    onChange={(event) => {
-                      setSelectedRunId(event.target.value);
-                      setSelectedCaseId(null);
-                    }}
-                    className="border-ink-200 bg-card text-ink-700 h-9 rounded-md border px-3 text-xs font-medium shadow-sm outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
-                  >
-                    {runs.map((run) => (
-                      <option key={run.id} value={run.id}>
-                        {run.label} / {run.createdAt}
-                      </option>
-                    ))}
-                    </select>
-                  )}
-                  {datasetCases.length > 0 && (
-                    <Button type="button" className="max-md:w-full" onClick={runEvaluation} disabled={isRunning} size="sm">
-                    <Play className="size-3.5" /> {isRunning ? "Running..." : "Run evaluation"}
-                    </Button>
-                  )}
-                </div>
-              </header>
+    <div className="space-y-5 max-md:space-y-3">
+      <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+        <div>
+          <p className="text-[10px] font-bold tracking-[0.16em] text-indigo-500 uppercase">
+            RAG quality lab
+          </p>
+          <h1 className="text-ink-900 mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
+            RAG Evaluation
+          </h1>
+          <p className="text-ink-500 mt-1 max-w-2xl text-xs leading-5">
+            Inspect retrieval traces and corpus health before RAG reaches seller-facing workflows.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {runs.length > 0 && (
+            <select
+            value={selectedRunId ?? ""}
+            onChange={(event) => {
+              setSelectedRunId(event.target.value);
+              setSelectedCaseId(null);
+            }}
+            className="border-ink-200 bg-card text-ink-700 h-9 rounded-md border px-3 text-xs font-medium shadow-sm outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
+          >
+            {runs.map((run) => (
+              <option key={run.id} value={run.id}>
+                {run.label} / {run.createdAt}
+              </option>
+            ))}
+            </select>
+          )}
+          {datasetCases.length > 0 && (
+            <Button type="button" className="max-md:w-full" onClick={runEvaluation} disabled={isRunning} size="sm">
+            <Play className="size-3.5" /> {isRunning ? "Running..." : "Run evaluation"}
+            </Button>
+          )}
+        </div>
+      </header>
 
-              <Card className="bg-card border-emerald-100 shadow-sm dark:border-emerald-500/30">
-                <CardHeader className="max-md:px-4">
-                  <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
-                    <div>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-                          <Search className="size-4" />
-                        </span>
-                        Production listing retrieval
-                      </CardTitle>
-                      <RagCardAbout>
-                        Replay the end-user listing flow from a product input. The backend builds the
-                        same production query, then retrieves policy Top 5 and listing references Top 3.
-                      </RagCardAbout>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className="w-fit border-emerald-200 text-[10px] text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-300"
-                      title="Runs retrieval only; no listing is written."
-                    >
-                      Read only
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4 max-md:px-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <Input
-                      value={listingProductId}
-                      onChange={(event) => setListingProductId(event.target.value)}
-                      placeholder="Product ID, e.g. 3f2a…"
-                      aria-label="Product ID"
-                      className="sm:max-w-md"
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={runListingRetrieval}
-                      disabled={isListingTraceRunning}
-                    >
-                      <Search className="size-3.5" />
-                      {isListingTraceRunning ? "Running..." : "Run production flow"}
-                    </Button>
-                    <p className="text-ink-400 text-[11px]">
-                      Paste the ID of a product to replay the retrieval its listing would use.
-                    </p>
-                  </div>
-                  {!listingTrace && !isListingTraceRunning && (
-                    <ol className="border-ink-200 bg-ink-50/60 grid gap-2 rounded-xl border border-dashed p-4 sm:grid-cols-3">
-                      {[
-                        ["Product input", "Name, type, niche, audience, keywords and notes."],
-                        ["Production query", "The same query the listing generator builds."],
-                        ["Retrieved context", "Policy Top 5 and listing references Top 3, with scores."],
-                      ].map(([title, text], index) => (
-                        <li key={title} className="flex gap-2.5">
-                          <span className="bg-card flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-200 dark:text-emerald-300 dark:ring-emerald-500/30">
-                            {index + 1}
-                          </span>
-                          <span>
-                            <span className="text-ink-700 block text-xs font-semibold">{title}</span>
-                            <span className="text-ink-500 block text-[11px] leading-5">{text}</span>
-                          </span>
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                  {listingTrace && (
-                    <div className="space-y-4 rounded-xl border border-emerald-100 bg-emerald-50/30 p-4 max-md:p-2.5 dark:border-emerald-500/30 dark:bg-emerald-500/10">
-                      {/* The coverage block already lists every input field, the product's name and type included. */}
-                      <ProductInputCoverage trace={listingTrace} />
-                      <div>
-                        <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">
-                          Production query
-                        </p>
-                        <p className="bg-card text-ink-600 mt-2 rounded-lg border border-emerald-100 p-3 text-xs leading-5 whitespace-pre-wrap max-md:[overflow-wrap:anywhere] dark:border-emerald-500/30">
-                          {listingTrace.productionQuery}
-                        </p>
-                      </div>
-                      <TraceSections
-                        sections={[
-                          { label: "Policy context · Top 5", diagnostics: listingTrace.policyContext },
-                          { label: "Listing references · Top 3", diagnostics: listingTrace.listingContext },
-                        ]}
-                      />
-                      <p className="text-ink-500 text-[11px]">
-                        Retrieval completed in {Math.round(listingTrace.durationMs)} ms. This trace
-                        mirrors the retrieval stage used before listing generation; it does not write a new listing.
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <RagKnownItemBenchmark />
-
-              <RagCorpusHealthPanel />
-
-              <Card className="bg-card border-indigo-100 shadow-sm dark:border-indigo-500/30">
-                {/* Collapsed, the card is only its header: no divider or empty body below it. */}
-                <CardHeader className={cn("max-md:px-4", isBenchmarkOpen && "border-b border-indigo-100 pb-4 dark:border-indigo-500/30")}>
-                  <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
-                    <div>
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-                          <FlaskConical className="size-4" />
-                        </span>
-                        Advanced offline benchmark
-                      </CardTitle>
-                      <RagCardAbout>
-                        Use labeled evidence cases when you need a measurable Recall@K regression check.
-                        Production listing retrieval above remains the primary RAG inspection flow.
-                      </RagCardAbout>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <Badge variant="outline" className="w-fit text-[10px]">
-                        {datasetCases.length === 0
-                          ? "No labeled cases yet"
-                          : `${datasetCases.length} labeled case${datasetCases.length === 1 ? "" : "s"}`}
-                      </Badge>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsBenchmarkOpen((value) => !value)}
-                        aria-expanded={isBenchmarkOpen}
-                      >
-                        <ChevronDown
-                          className={`size-3.5 transition-transform ${isBenchmarkOpen ? "rotate-180" : ""}`}
-                        />
-                        {isBenchmarkOpen ? "Hide" : "Open"}
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                {isBenchmarkOpen && (
-                <CardContent className="space-y-4 pt-5 max-md:px-4">
-                  <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_150px_150px_minmax(0,1fr)_auto]">
-                    <Input
-                      value={draftCase.question}
-                      onChange={(event) =>
-                        setDraftCase((current) => ({ ...current, question: event.target.value }))
-                      }
-                      placeholder="Golden question"
-                      aria-label="Golden question"
-                    />
-                    <select
-                      value={draftCase.contentType}
-                      onChange={(event) =>
-                        setDraftCase((current) => ({
-                          ...current,
-                          contentType: event.target.value as EvaluationContentType,
-                        }))
-                      }
-                      className="border-ink-200 bg-card text-ink-700 h-9 rounded-md border px-3 text-xs outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
-                      aria-label="Content type"
-                    >
-                      {evaluationContentTypes.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={draftCase.category}
-                      onChange={(event) =>
-                        setDraftCase((current) => ({
-                          ...current,
-                          category: event.target.value as EvaluationCase["category"],
-                        }))
-                      }
-                      className="border-ink-200 bg-card text-ink-700 h-9 rounded-md border px-3 text-xs outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
-                      aria-label="Evaluation category"
-                    >
-                      {(["Retrieval"] as const).map(
-                        (category) => (
-                          <option key={category} value={category}>
-                            {category}
-                          </option>
-                        )
-                      )}
-                    </select>
-                    <Input
-                      value={draftCase.expectedText}
-                      onChange={(event) =>
-                        setDraftCase((current) => ({ ...current, expectedText: event.target.value }))
-                      }
-                      placeholder="Expected evidence text"
-                      aria-label="Expected evidence text"
-                    />
-                    <Button type="button" size="sm" onClick={addEvaluationCase}>
-                      <Plus className="size-3.5" /> Add case
-                    </Button>
-                  </div>
-                  <div className="text-ink-500 flex flex-wrap gap-2 text-[11px]">
-                    <span>Use evidence text copied from the expected chunk.</span>
-                    <span>For image/video, index caption, OCR, transcript or metadata first.</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {datasetCases.map((item) => (
-                      <div
-                        key={item.id}
-                        className="border-ink-200 bg-ink-50 text-ink-600 inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-[11px]"
-                      >
-                        <span className="text-ink-800 font-semibold">{item.id}</span>
-                        <Badge
-                          variant="outline"
-                          className="border-indigo-200 px-1.5 py-0 text-[9px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300"
-                        >
-                          {item.contentType}
-                        </Badge>
-                        <span className="max-w-[220px] min-w-0 truncate">{item.question}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeEvaluationCase(item.id)}
-                          className="text-ink-400 rounded-full p-0.5 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
-                          aria-label={`Remove ${item.id}`}
-                        >
-                          <Trash2 className="size-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-                )}
-              </Card>
-
-              {isBenchmarkOpen && (
-              <>
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-[11px] text-indigo-800 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300">
-                <FlaskConical className="size-3.5" />{" "}
-                <span className="font-semibold">Evaluation preview</span>
-                <span className="text-indigo-600 dark:text-indigo-400">
-                   Run evaluation now sends the golden cases to the live RAG retrieval API. Groundedness
-                   here means retrieved-context coverage; answer generation is not executed by this run.
+      <Card className="bg-card border-emerald-100 shadow-sm dark:border-emerald-500/30">
+        <CardHeader className="max-md:px-4">
+          <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                  <Search className="size-4" />
                 </span>
-              </div>
-
-              {runs.length > 0 ? (
-                <>
-              <section className="grid gap-3 max-md:grid-cols-2 max-md:gap-2 sm:grid-cols-2 xl:grid-cols-5 max-md:[&>:first-child]:col-span-2">
-                <MetricCard
-                  icon={Gauge}
-                  label="Overall quality"
-                  value={`${overall}%`}
-                  detail="average across dimensions"
-                  tone="indigo"
-                />
-                <MetricCard
-                  icon={Search}
-                  label="Recall @5"
-                  value={`${selectedRun.retrieval}%`}
-                  detail="relevant source found"
-                  tone="blue"
-                />
-                <MetricCard
-                  icon={ShieldCheck}
-                   label="Context coverage"
-                  value={`${selectedRun.groundedness}%`}
-                   detail="expected evidence covered"
-                  tone="emerald"
-                />
-                <MetricCard
-                  icon={Target}
-                  label="Citation accuracy"
-                  value={`${selectedRun.citation}%`}
-                  detail="source points to evidence"
-                  tone="violet"
-                />
-                <MetricCard
-                  icon={Clock3}
-                  label="Avg latency"
-                  value={`${selectedRun.latency}s`}
-                  detail={`${selectedRun.cases} test cases`}
-                  tone="amber"
-                />
-              </section>
-
-              <Card className="border-ink-200 bg-card shadow-sm">
-                <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <Target className="size-4 text-indigo-500" />
-                    Accuracy by content type
-                  </CardTitle>
-                  <CardDescription className="mt-1 text-xs">
-                    Compare retrieval accuracy and evidence coverage for each indexed content type.
-                  </CardDescription>
-                </CardHeader>
-                <ul className="divide-ink-100 divide-y md:hidden">
-                  {selectedRun.typeMetrics.map((metric) => (
-                    <li key={metric.contentType} className="space-y-2 p-4">
-                      <p className="flex items-center justify-between gap-2 text-xs">
-                        <span className="text-ink-800 font-semibold capitalize">{metric.contentType}</span>
-                        <span className="text-ink-500 text-[11px]">{metric.caseCount} cases · {Math.round(metric.averageLatencyMs)} ms</span>
-                      </p>
-                      <PhoneScores
-                        scores={[
-                          ["Recall @5", metric.retrievalScore],
-                          ["Context coverage", metric.contextCoverageScore],
-                          ["Citation", metric.citationScore],
-                          ["Abstention", metric.abstentionScore],
-                        ]}
-                      />
-                    </li>
-                  ))}
-                </ul>
-                <div className="overflow-x-auto max-md:hidden">
-                  <table className="w-full min-w-[820px] text-left text-xs">
-                    <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-wide uppercase">
-                      <tr>
-                        <th className="px-5 py-3">Content type</th>
-                        <th className="px-3 py-3">Cases</th>
-                        <th className="px-3 py-3">Recall @5</th>
-                        <th className="px-3 py-3">Context coverage</th>
-                        <th className="px-3 py-3">Citation</th>
-                        <th className="px-3 py-3">Abstention</th>
-                        <th className="px-5 py-3">Latency</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedRun.typeMetrics.map((metric) => (
-                        <tr key={metric.contentType} className="border-ink-100 border-t">
-                          <td className="text-ink-800 px-5 py-3 font-semibold capitalize">
-                            {metric.contentType}
-                          </td>
-                          <td className="text-ink-500 px-3 py-3">{metric.caseCount}</td>
-                          <td className="px-3 py-3"><ScoreBar value={metric.retrievalScore} /></td>
-                          <td className="px-3 py-3"><ScoreBar value={metric.contextCoverageScore} /></td>
-                          <td className="px-3 py-3"><ScoreBar value={metric.citationScore} /></td>
-                          <td className="px-3 py-3"><ScoreBar value={metric.abstentionScore} /></td>
-                          <td className="text-ink-500 px-5 py-3">{Math.round(metric.averageLatencyMs)} ms</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-
-              {/* Above the list the detail would open out of sight, so a phone shows it over the page. */}
-              {selectedCase && isPhone && (
-                <Dialog open onOpenChange={(open) => !open && setSelectedCaseId(null)}>
-                  <DialogContent showCloseButton={false} className="grid-cols-[minmax(0,1fr)] p-0" aria-describedby={undefined}>
-                    <DialogTitle className="sr-only">Case detail</DialogTitle>
-                    <CaseDetail item={selectedCase} onClose={() => setSelectedCaseId(null)} />
-                  </DialogContent>
-                </Dialog>
-              )}
-              {selectedCase && !isPhone && (
-                <Card className="bg-card border-indigo-100 shadow-sm dark:border-indigo-500/30">
-                  <CardHeader className="border-b border-indigo-100 pb-4 dark:border-indigo-500/30">
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <Search className="size-4 text-indigo-500" />
-                      Retrieved chunks for this case
-                    </CardTitle>
-                    <CardDescription className="mt-1 text-xs">
-                      Inspect the actual RAG results returned for the question. No generated answer is involved.
-                    </CardDescription>
-                  </CardHeader>
-                  <CaseDetail item={selectedCase} onClose={() => setSelectedCaseId(null)} />
-                </Card>
-              )}
-
-              <section className="grid gap-5 max-md:grid-cols-[minmax(0,1fr)] max-md:gap-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
-                <Card className="border-ink-200 bg-card shadow-sm">
-                  <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <CardTitle className="flex items-center gap-2 text-sm">
-                          <TrendingUp className="size-4 text-indigo-500" />
-                          Quality trend
-                        </CardTitle>
-                        <CardDescription className="mt-1 text-xs">
-                          Compare the evaluation dimensions across saved runs.
-                        </CardDescription>
-                      </div>
-                      <Badge variant="outline" className="text-[10px]">
-                        {runs.length} runs
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-5 max-md:px-4">
-                    <div className="h-[250px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={trendData}
-                          margin={{ top: 5, right: 8, left: -24, bottom: 0 }}
-                        >
-                          <CartesianGrid stroke="var(--ink-200)" strokeDasharray="3 3" vertical={false} />
-                          <XAxis
-                            dataKey="name"
-                            tick={{ fontSize: 11, fill: "var(--ink-500)" }}
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <YAxis
-                            domain={[50, 100]}
-                            tick={{ fontSize: 11, fill: "var(--ink-500)" }}
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <ChartTooltip
-                            contentStyle={{
-                              borderRadius: 10,
-                              borderColor: "var(--ink-200)",
-                              fontSize: 12,
-                            }}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="retrieval"
-                            name="Recall @5"
-                            stroke="#6366f1"
-                            strokeWidth={2.5}
-                            dot={{ r: 3 }}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="groundedness"
-                             name="Context coverage"
-                            stroke="#10b981"
-                            strokeWidth={2.5}
-                            dot={{ r: 3 }}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="citation"
-                            name="Citation"
-                            stroke="#8b5cf6"
-                            strokeWidth={2.5}
-                            dot={{ r: 3 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="text-ink-500 mt-3 flex flex-wrap gap-4 text-[11px]">
-                      <LegendDot color="bg-indigo-500" label="Recall @5" />
-                       <LegendDot color="bg-emerald-500" label="Context coverage" />
-                      <LegendDot color="bg-violet-500" label="Citation accuracy" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border-ink-200 bg-card shadow-sm">
-                  <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <AlertTriangle className="size-4 text-amber-500" />
-                      Failure patterns
-                    </CardTitle>
-                    <CardDescription className="mt-1 text-xs">
-                      Where the current run needs attention.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-5 max-md:px-4">
-                    <div className="h-[220px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={failureData}
-                          layout="vertical"
-                          margin={{ top: 0, right: 8, left: 28, bottom: 0 }}
-                        >
-                          <CartesianGrid
-                            stroke="var(--ink-200)"
-                            strokeDasharray="3 3"
-                            horizontal={false}
-                          />
-                          <XAxis type="number" allowDecimals={false} hide />
-                          <YAxis
-                            type="category"
-                            dataKey="name"
-                            width={92}
-                            tick={{ fontSize: 10, fill: "var(--ink-500)" }}
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <ChartTooltip
-                            cursor={{ fill: "var(--ink-50)" }}
-                            contentStyle={{
-                              borderRadius: 10,
-                              borderColor: "var(--ink-200)",
-                              fontSize: 12,
-                            }}
-                          />
-                          <Bar dataKey="value" name="Cases" radius={[0, 5, 5, 0]}>
-                            {failureData.map((item) => (
-                              <Cell key={item.name} fill={item.color} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <p className="text-ink-500 mt-2 text-[11px] leading-5">
-                      Most actionable issue: prevent unsupported product claims when the retrieved
-                      source does not contain the attribute.
-                    </p>
-                  </CardContent>
-                </Card>
-              </section>
-
-              <section className="grid gap-5 max-md:gap-3 lg:grid-cols-3">
-                <InsightCard
-                  icon={Search}
-                  tone="indigo"
-                  title="Retrieval is improving"
-                  text={`Recall @5 increased ${Math.round(selectedRun.retrieval - runs[runs.length - 1].retrieval)} points since the first run.`}
-                />
-                <InsightCard
-                  icon={ShieldCheck}
-                  tone="emerald"
-                  title="Groundedness is the next lever"
-                  text={`${100 - selectedRun.groundedness}% of the current quality gap comes from unsupported or incomplete claims.`}
-                />
-                <InsightCard
-                  icon={CircleHelp}
-                  tone="amber"
-                  title="Add more no-answer cases"
-                  text="Abstention accuracy is lower than retrieval. Expand the dataset with questions outside the knowledge base."
-                />
-              </section>
-
-              <Card className="border-ink-200 bg-card overflow-hidden shadow-sm">
-                <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
-                  <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                    <div>
-                      <CardTitle className="flex items-center gap-2 text-sm">
-                        <Database className="text-ink-500 size-4" />
-                        Test cases
-                      </CardTitle>
-                      <CardDescription className="mt-1 text-xs">
-                        Inspect each question, retrieved source and evaluation verdict.
-                      </CardDescription>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-end gap-2 max-md:w-full">
-                      <select
-                        value={contentTypeFilter}
-                        onChange={(event) =>
-                          setContentTypeFilter(event.target.value as "all" | EvaluationContentType)
-                        }
-                        className="border-ink-200 bg-card text-ink-600 h-8 rounded-md border px-2 text-[11px] font-medium outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
-                        aria-label="Filter by content type"
-                      >
-                        <option value="all">All content types</option>
-                        {evaluationContentTypes.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="bg-ink-100 flex gap-1 rounded-lg p-1 max-md:grid max-md:w-full max-md:grid-cols-4">
-                      {(["all", "pass", "review", "fail"] as const).map((value) => (
-                        <button
-                          key={value}
-                          type="button"
-                          onClick={() => setFilter(value)}
-                          className={`rounded-md px-2.5 py-1.5 text-[11px] font-semibold capitalize transition max-md:min-h-9 max-md:px-0.5 max-md:text-[10px] ${filter === value ? "bg-card text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-800"}`}
-                        >
-                          {value === "all"
-                            ? `All (${visibleCases.length})`
-                            : `${value} (${value === "pass" ? passedCases : value === "review" ? reviewCases : failedCases})`}
-                        </button>
-                      ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <ul className="divide-ink-100 divide-y md:hidden">
-                  {visibleCases.map((item) => (
-                    <li key={item.id}>
-                      <button type="button" onClick={() => setSelectedCaseId(item.id)} className="w-full space-y-2 p-4 text-left">
-                        <span className="flex items-start justify-between gap-2">
-                          <span className="min-w-0">
-                            <span className="text-ink-800 line-clamp-2 text-xs font-semibold">{item.question}</span>
-                            <span className="text-ink-400 mt-0.5 block truncate text-[10px]">{item.source}</span>
-                          </span>
-                          <Verdict verdict={item.verdict} />
-                        </span>
-                        <span className="flex flex-wrap gap-1.5">
-                          <Badge variant="outline" className="border-indigo-200 text-[10px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300">{item.contentType}</Badge>
-                          <Badge variant="outline" className="text-[10px]">{item.category}</Badge>
-                        </span>
-                        <PhoneScores
-                          scores={[
-                            ["Retrieval", item.retrieval],
-                            ["Context coverage", item.groundedness],
-                            ["Citation", item.citation],
-                          ]}
-                        />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <div className="overflow-x-auto max-md:hidden">
-                  <table className="w-full min-w-[860px] text-left text-xs">
-                    <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-wide uppercase">
-                      <tr>
-                        <th className="px-5 py-3">Question</th>
-                        <th className="px-3 py-3">Type</th>
-                        <th className="px-3 py-3">Category</th>
-                        <th className="px-3 py-3">Retrieval</th>
-                        <th className="px-3 py-3">Context coverage</th>
-                        <th className="px-3 py-3">Citation</th>
-                        <th className="px-5 py-3 text-right">Verdict</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {visibleCases.map((item) => (
-                        <tr
-                          key={item.id}
-                          onClick={() => setSelectedCaseId(item.id)}
-                          className={`border-ink-100 hover:bg-ink-50 cursor-pointer border-t transition ${selectedCaseId === item.id ? "bg-indigo-50/50 dark:bg-indigo-500/10" : ""}`}
-                        >
-                          <td className="max-w-[360px] px-5 py-3.5">
-                            <p className="text-ink-800 truncate font-semibold">{item.question}</p>
-                            <p className="text-ink-400 mt-1 truncate text-[10px]">
-                              {item.source}
-                            </p>
-                          </td>
-                          <td className="px-3 py-3.5">
-                            <Badge variant="outline" className="border-indigo-200 text-[10px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300">
-                              {item.contentType}
-                            </Badge>
-                          </td>
-                          <td className="px-3 py-3.5">
-                            <Badge variant="outline" className="text-[10px]">
-                              {item.category}
-                            </Badge>
-                          </td>
-                          <td className="px-3 py-3.5">
-                            <ScoreBar value={item.retrieval} />
-                          </td>
-                          <td className="px-3 py-3.5">
-                            <ScoreBar value={item.groundedness} />
-                          </td>
-                          <td className="px-3 py-3.5">
-                            <ScoreBar value={item.citation} />
-                          </td>
-                          <td className="px-5 py-3.5 text-right">
-                            <Verdict verdict={item.verdict} />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-                </>
-              ) : (
-                <Card className="border-ink-200 bg-card shadow-sm">
-                  <CardContent className="flex items-start gap-3 py-5">
-                    <CircleHelp className="mt-0.5 size-4 shrink-0 text-indigo-500" />
-                    <div>
-                      <p className="text-ink-900 text-sm font-semibold">No benchmark result yet</p>
-                      <p className="text-ink-500 mt-1 text-xs leading-5">
-                        The live listing trace and corpus health above are the RAG inspection tools. Add a
-                        labeled evidence case only when you want a measurable Recall@K result; no sample score is shown here.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-              </>
-              )}
+                Production listing retrieval
+              </CardTitle>
+              <RagCardAbout>
+                Replay the end-user listing flow from a product input. The backend builds the
+                same production query, then retrieves policy Top 5 and listing references Top 3.
+              </RagCardAbout>
             </div>
+            <Badge
+              variant="outline"
+              className="w-fit border-emerald-200 text-[10px] text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-300"
+              title="Runs retrieval only; no listing is written."
+            >
+              Read only
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4 max-md:px-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Input
+              value={listingProductId}
+              onChange={(event) => setListingProductId(event.target.value)}
+              placeholder="Product ID, e.g. 3f2a…"
+              aria-label="Product ID"
+              className="sm:max-w-md"
+            />
+            <Button
+              type="button"
+              size="sm"
+              onClick={runListingRetrieval}
+              disabled={isListingTraceRunning}
+            >
+              <Search className="size-3.5" />
+              {isListingTraceRunning ? "Running..." : "Run production flow"}
+            </Button>
+            <p className="text-ink-400 text-[11px]">
+              Paste the ID of a product to replay the retrieval its listing would use.
+            </p>
+          </div>
+          {!listingTrace && !isListingTraceRunning && (
+            <ol className="border-ink-200 bg-ink-50/60 grid gap-2 rounded-xl border border-dashed p-4 sm:grid-cols-3">
+              {[
+                ["Product input", "Name, type, niche, audience, keywords and notes."],
+                ["Production query", "The same query the listing generator builds."],
+                ["Retrieved context", "Policy Top 5 and listing references Top 3, with scores."],
+              ].map(([title, text], index) => (
+                <li key={title} className="flex gap-2.5">
+                  <span className="bg-card flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-200 dark:text-emerald-300 dark:ring-emerald-500/30">
+                    {index + 1}
+                  </span>
+                  <span>
+                    <span className="text-ink-700 block text-xs font-semibold">{title}</span>
+                    <span className="text-ink-500 block text-[11px] leading-5">{text}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+          {listingTrace && (
+            <div className="space-y-4 rounded-xl border border-emerald-100 bg-emerald-50/30 p-4 max-md:p-2.5 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+              {/* The coverage block already lists every input field, the product's name and type included. */}
+              <ProductInputCoverage trace={listingTrace} />
+              <div>
+                <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">
+                  Production query
+                </p>
+                <p className="bg-card text-ink-600 mt-2 rounded-lg border border-emerald-100 p-3 text-xs leading-5 whitespace-pre-wrap max-md:[overflow-wrap:anywhere] dark:border-emerald-500/30">
+                  {listingTrace.productionQuery}
+                </p>
+              </div>
+              <TraceSections
+                sections={[
+                  { label: "Policy context · Top 5", diagnostics: listingTrace.policyContext },
+                  { label: "Listing references · Top 3", diagnostics: listingTrace.listingContext },
+                ]}
+              />
+              <p className="text-ink-500 text-[11px]">
+                Retrieval completed in {Math.round(listingTrace.durationMs)} ms. This trace
+                mirrors the retrieval stage used before listing generation; it does not write a new listing.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <RagKnownItemBenchmark />
+
+      <RagCorpusHealthPanel />
+
+      <Card className="bg-card border-indigo-100 shadow-sm dark:border-indigo-500/30">
+        {/* Collapsed, the card is only its header: no divider or empty body below it. */}
+        <CardHeader className={cn("max-md:px-4", isBenchmarkOpen && "border-b border-indigo-100 pb-4 dark:border-indigo-500/30")}>
+          <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                  <FlaskConical className="size-4" />
+                </span>
+                Advanced offline benchmark
+              </CardTitle>
+              <RagCardAbout>
+                Use labeled evidence cases when you need a measurable Recall@K regression check.
+                Production listing retrieval above remains the primary RAG inspection flow.
+              </RagCardAbout>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Badge variant="outline" className="w-fit text-[10px]">
+                {datasetCases.length === 0
+                  ? "No labeled cases yet"
+                  : `${datasetCases.length} labeled case${datasetCases.length === 1 ? "" : "s"}`}
+              </Badge>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsBenchmarkOpen((value) => !value)}
+                aria-expanded={isBenchmarkOpen}
+              >
+                <ChevronDown
+                  className={`size-3.5 transition-transform ${isBenchmarkOpen ? "rotate-180" : ""}`}
+                />
+                {isBenchmarkOpen ? "Hide" : "Open"}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        {isBenchmarkOpen && (
+        <CardContent className="space-y-4 pt-5 max-md:px-4">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_150px_150px_minmax(0,1fr)_auto]">
+            <Input
+              value={draftCase.question}
+              onChange={(event) =>
+                setDraftCase((current) => ({ ...current, question: event.target.value }))
+              }
+              placeholder="Golden question"
+              aria-label="Golden question"
+            />
+            <select
+              value={draftCase.contentType}
+              onChange={(event) =>
+                setDraftCase((current) => ({
+                  ...current,
+                  contentType: event.target.value as EvaluationContentType,
+                }))
+              }
+              className="border-ink-200 bg-card text-ink-700 h-9 rounded-md border px-3 text-xs outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
+              aria-label="Content type"
+            >
+              {evaluationContentTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+            <select
+              value={draftCase.category}
+              onChange={(event) =>
+                setDraftCase((current) => ({
+                  ...current,
+                  category: event.target.value as EvaluationCase["category"],
+                }))
+              }
+              className="border-ink-200 bg-card text-ink-700 h-9 rounded-md border px-3 text-xs outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
+              aria-label="Evaluation category"
+            >
+              {(["Retrieval"] as const).map(
+                (category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                )
+              )}
+            </select>
+            <Input
+              value={draftCase.expectedText}
+              onChange={(event) =>
+                setDraftCase((current) => ({ ...current, expectedText: event.target.value }))
+              }
+              placeholder="Expected evidence text"
+              aria-label="Expected evidence text"
+            />
+            <Button type="button" size="sm" onClick={addEvaluationCase}>
+              <Plus className="size-3.5" /> Add case
+            </Button>
+          </div>
+          <div className="text-ink-500 flex flex-wrap gap-2 text-[11px]">
+            <span>Use evidence text copied from the expected chunk.</span>
+            <span>For image/video, index caption, OCR, transcript or metadata first.</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {datasetCases.map((item) => (
+              <div
+                key={item.id}
+                className="border-ink-200 bg-ink-50 text-ink-600 inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-[11px]"
+              >
+                <span className="text-ink-800 font-semibold">{item.id}</span>
+                <Badge
+                  variant="outline"
+                  className="border-indigo-200 px-1.5 py-0 text-[9px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300"
+                >
+                  {item.contentType}
+                </Badge>
+                <span className="max-w-[220px] min-w-0 truncate">{item.question}</span>
+                <button
+                  type="button"
+                  onClick={() => removeEvaluationCase(item.id)}
+                  className="text-ink-400 rounded-full p-0.5 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
+                  aria-label={`Remove ${item.id}`}
+                >
+                  <Trash2 className="size-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+        )}
+      </Card>
+
+      {isBenchmarkOpen && (
+      <>
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-[11px] text-indigo-800 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300">
+        <FlaskConical className="size-3.5" />{" "}
+        <span className="font-semibold">Evaluation preview</span>
+        <span className="text-indigo-600 dark:text-indigo-400">
+           Run evaluation now sends the golden cases to the live RAG retrieval API. Groundedness
+           here means retrieved-context coverage; answer generation is not executed by this run.
+        </span>
+      </div>
+
+      {runs.length > 0 ? (
+        <>
+      <section className="grid gap-3 max-md:grid-cols-2 max-md:gap-2 sm:grid-cols-2 xl:grid-cols-5 max-md:[&>:first-child]:col-span-2">
+        <MetricCard
+          icon={Gauge}
+          label="Overall quality"
+          value={`${overall}%`}
+          detail="average across dimensions"
+          tone="indigo"
+        />
+        <MetricCard
+          icon={Search}
+          label="Recall @5"
+          value={`${selectedRun.retrieval}%`}
+          detail="relevant source found"
+          tone="blue"
+        />
+        <MetricCard
+          icon={ShieldCheck}
+           label="Context coverage"
+          value={`${selectedRun.groundedness}%`}
+           detail="expected evidence covered"
+          tone="emerald"
+        />
+        <MetricCard
+          icon={Target}
+          label="Citation accuracy"
+          value={`${selectedRun.citation}%`}
+          detail="source points to evidence"
+          tone="violet"
+        />
+        <MetricCard
+          icon={Clock3}
+          label="Avg latency"
+          value={`${selectedRun.latency}s`}
+          detail={`${selectedRun.cases} test cases`}
+          tone="amber"
+        />
+      </section>
+
+      <Card className="border-ink-200 bg-card shadow-sm">
+        <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Target className="size-4 text-indigo-500" />
+            Accuracy by content type
+          </CardTitle>
+          <CardDescription className="mt-1 text-xs">
+            Compare retrieval accuracy and evidence coverage for each indexed content type.
+          </CardDescription>
+        </CardHeader>
+        <ul className="divide-ink-100 divide-y md:hidden">
+          {selectedRun.typeMetrics.map((metric) => (
+            <li key={metric.contentType} className="space-y-2 p-4">
+              <p className="flex items-center justify-between gap-2 text-xs">
+                <span className="text-ink-800 font-semibold capitalize">{metric.contentType}</span>
+                <span className="text-ink-500 text-[11px]">{metric.caseCount} cases · {Math.round(metric.averageLatencyMs)} ms</span>
+              </p>
+              <PhoneScores
+                scores={[
+                  ["Recall @5", metric.retrievalScore],
+                  ["Context coverage", metric.contextCoverageScore],
+                  ["Citation", metric.citationScore],
+                  ["Abstention", metric.abstentionScore],
+                ]}
+              />
+            </li>
+          ))}
+        </ul>
+        <div className="overflow-x-auto max-md:hidden">
+          <table className="w-full min-w-[820px] text-left text-xs">
+            <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-wide uppercase">
+              <tr>
+                <th className="px-5 py-3">Content type</th>
+                <th className="px-3 py-3">Cases</th>
+                <th className="px-3 py-3">Recall @5</th>
+                <th className="px-3 py-3">Context coverage</th>
+                <th className="px-3 py-3">Citation</th>
+                <th className="px-3 py-3">Abstention</th>
+                <th className="px-5 py-3">Latency</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedRun.typeMetrics.map((metric) => (
+                <tr key={metric.contentType} className="border-ink-100 border-t">
+                  <td className="text-ink-800 px-5 py-3 font-semibold capitalize">
+                    {metric.contentType}
+                  </td>
+                  <td className="text-ink-500 px-3 py-3">{metric.caseCount}</td>
+                  <td className="px-3 py-3"><ScoreBar value={metric.retrievalScore} /></td>
+                  <td className="px-3 py-3"><ScoreBar value={metric.contextCoverageScore} /></td>
+                  <td className="px-3 py-3"><ScoreBar value={metric.citationScore} /></td>
+                  <td className="px-3 py-3"><ScoreBar value={metric.abstentionScore} /></td>
+                  <td className="text-ink-500 px-5 py-3">{Math.round(metric.averageLatencyMs)} ms</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* Above the list the detail would open out of sight, so a phone shows it over the page. */}
+      {selectedCase && isPhone && (
+        <Dialog open onOpenChange={(open) => !open && setSelectedCaseId(null)}>
+          <DialogContent showCloseButton={false} className="grid-cols-[minmax(0,1fr)] p-0" aria-describedby={undefined}>
+            <DialogTitle className="sr-only">Case detail</DialogTitle>
+            <CaseDetail item={selectedCase} onClose={() => setSelectedCaseId(null)} />
+          </DialogContent>
+        </Dialog>
+      )}
+      {selectedCase && !isPhone && (
+        <Card className="bg-card border-indigo-100 shadow-sm dark:border-indigo-500/30">
+          <CardHeader className="border-b border-indigo-100 pb-4 dark:border-indigo-500/30">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Search className="size-4 text-indigo-500" />
+              Retrieved chunks for this case
+            </CardTitle>
+            <CardDescription className="mt-1 text-xs">
+              Inspect the actual RAG results returned for the question. No generated answer is involved.
+            </CardDescription>
+          </CardHeader>
+          <CaseDetail item={selectedCase} onClose={() => setSelectedCaseId(null)} />
+        </Card>
+      )}
+
+      <section className="grid gap-5 max-md:grid-cols-[minmax(0,1fr)] max-md:gap-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
+        <Card className="border-ink-200 bg-card shadow-sm">
+          <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <TrendingUp className="size-4 text-indigo-500" />
+                  Quality trend
+                </CardTitle>
+                <CardDescription className="mt-1 text-xs">
+                  Compare the evaluation dimensions across saved runs.
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="text-[10px]">
+                {runs.length} runs
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-5 max-md:px-4">
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={trendData}
+                  margin={{ top: 5, right: 8, left: -24, bottom: 0 }}
+                >
+                  <CartesianGrid stroke="var(--ink-200)" strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 11, fill: "var(--ink-500)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    domain={[50, 100]}
+                    tick={{ fontSize: 11, fill: "var(--ink-500)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <ChartTooltip
+                    contentStyle={{
+                      borderRadius: 10,
+                      borderColor: "var(--ink-200)",
+                      fontSize: 12,
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="retrieval"
+                    name="Recall @5"
+                    stroke="#6366f1"
+                    strokeWidth={2.5}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="groundedness"
+                     name="Context coverage"
+                    stroke="#10b981"
+                    strokeWidth={2.5}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="citation"
+                    name="Citation"
+                    stroke="#8b5cf6"
+                    strokeWidth={2.5}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="text-ink-500 mt-3 flex flex-wrap gap-4 text-[11px]">
+              <LegendDot color="bg-indigo-500" label="Recall @5" />
+               <LegendDot color="bg-emerald-500" label="Context coverage" />
+              <LegendDot color="bg-violet-500" label="Citation accuracy" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-ink-200 bg-card shadow-sm">
+          <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <AlertTriangle className="size-4 text-amber-500" />
+              Failure patterns
+            </CardTitle>
+            <CardDescription className="mt-1 text-xs">
+              Where the current run needs attention.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-5 max-md:px-4">
+            <div className="h-[220px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={failureData}
+                  layout="vertical"
+                  margin={{ top: 0, right: 8, left: 28, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    stroke="var(--ink-200)"
+                    strokeDasharray="3 3"
+                    horizontal={false}
+                  />
+                  <XAxis type="number" allowDecimals={false} hide />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={92}
+                    tick={{ fontSize: 10, fill: "var(--ink-500)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <ChartTooltip
+                    cursor={{ fill: "var(--ink-50)" }}
+                    contentStyle={{
+                      borderRadius: 10,
+                      borderColor: "var(--ink-200)",
+                      fontSize: 12,
+                    }}
+                  />
+                  <Bar dataKey="value" name="Cases" radius={[0, 5, 5, 0]}>
+                    {failureData.map((item) => (
+                      <Cell key={item.name} fill={item.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="text-ink-500 mt-2 text-[11px] leading-5">
+              Most actionable issue: prevent unsupported product claims when the retrieved
+              source does not contain the attribute.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-5 max-md:gap-3 lg:grid-cols-3">
+        <InsightCard
+          icon={Search}
+          tone="indigo"
+          title="Retrieval is improving"
+          text={`Recall @5 increased ${Math.round(selectedRun.retrieval - runs[runs.length - 1].retrieval)} points since the first run.`}
+        />
+        <InsightCard
+          icon={ShieldCheck}
+          tone="emerald"
+          title="Groundedness is the next lever"
+          text={`${100 - selectedRun.groundedness}% of the current quality gap comes from unsupported or incomplete claims.`}
+        />
+        <InsightCard
+          icon={CircleHelp}
+          tone="amber"
+          title="Add more no-answer cases"
+          text="Abstention accuracy is lower than retrieval. Expand the dataset with questions outside the knowledge base."
+        />
+      </section>
+
+      <Card className="border-ink-200 bg-card overflow-hidden shadow-sm">
+        <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Database className="text-ink-500 size-4" />
+                Test cases
+              </CardTitle>
+              <CardDescription className="mt-1 text-xs">
+                Inspect each question, retrieved source and evaluation verdict.
+              </CardDescription>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2 max-md:w-full">
+              <select
+                value={contentTypeFilter}
+                onChange={(event) =>
+                  setContentTypeFilter(event.target.value as "all" | EvaluationContentType)
+                }
+                className="border-ink-200 bg-card text-ink-600 h-8 rounded-md border px-2 text-[11px] font-medium outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
+                aria-label="Filter by content type"
+              >
+                <option value="all">All content types</option>
+                {evaluationContentTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+              <div className="bg-ink-100 flex gap-1 rounded-lg p-1 max-md:grid max-md:w-full max-md:grid-cols-4">
+              {(["all", "pass", "review", "fail"] as const).map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setFilter(value)}
+                  className={`rounded-md px-2.5 py-1.5 text-[11px] font-semibold capitalize transition max-md:min-h-9 max-md:px-0.5 max-md:text-[10px] ${filter === value ? "bg-card text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-800"}`}
+                >
+                  {value === "all"
+                    ? `All (${visibleCases.length})`
+                    : `${value} (${value === "pass" ? passedCases : value === "review" ? reviewCases : failedCases})`}
+                </button>
+              ))}
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <ul className="divide-ink-100 divide-y md:hidden">
+          {visibleCases.map((item) => (
+            <li key={item.id}>
+              <button type="button" onClick={() => setSelectedCaseId(item.id)} className="w-full space-y-2 p-4 text-left">
+                <span className="flex items-start justify-between gap-2">
+                  <span className="min-w-0">
+                    <span className="text-ink-800 line-clamp-2 text-xs font-semibold">{item.question}</span>
+                    <span className="text-ink-400 mt-0.5 block truncate text-[10px]">{item.source}</span>
+                  </span>
+                  <Verdict verdict={item.verdict} />
+                </span>
+                <span className="flex flex-wrap gap-1.5">
+                  <Badge variant="outline" className="border-indigo-200 text-[10px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300">{item.contentType}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{item.category}</Badge>
+                </span>
+                <PhoneScores
+                  scores={[
+                    ["Retrieval", item.retrieval],
+                    ["Context coverage", item.groundedness],
+                    ["Citation", item.citation],
+                  ]}
+                />
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div className="overflow-x-auto max-md:hidden">
+          <table className="w-full min-w-[860px] text-left text-xs">
+            <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-wide uppercase">
+              <tr>
+                <th className="px-5 py-3">Question</th>
+                <th className="px-3 py-3">Type</th>
+                <th className="px-3 py-3">Category</th>
+                <th className="px-3 py-3">Retrieval</th>
+                <th className="px-3 py-3">Context coverage</th>
+                <th className="px-3 py-3">Citation</th>
+                <th className="px-5 py-3 text-right">Verdict</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleCases.map((item) => (
+                <tr
+                  key={item.id}
+                  onClick={() => setSelectedCaseId(item.id)}
+                  className={`border-ink-100 hover:bg-ink-50 cursor-pointer border-t transition ${selectedCaseId === item.id ? "bg-indigo-50/50 dark:bg-indigo-500/10" : ""}`}
+                >
+                  <td className="max-w-[360px] px-5 py-3.5">
+                    <p className="text-ink-800 truncate font-semibold">{item.question}</p>
+                    <p className="text-ink-400 mt-1 truncate text-[10px]">
+                      {item.source}
+                    </p>
+                  </td>
+                  <td className="px-3 py-3.5">
+                    <Badge variant="outline" className="border-indigo-200 text-[10px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300">
+                      {item.contentType}
+                    </Badge>
+                  </td>
+                  <td className="px-3 py-3.5">
+                    <Badge variant="outline" className="text-[10px]">
+                      {item.category}
+                    </Badge>
+                  </td>
+                  <td className="px-3 py-3.5">
+                    <ScoreBar value={item.retrieval} />
+                  </td>
+                  <td className="px-3 py-3.5">
+                    <ScoreBar value={item.groundedness} />
+                  </td>
+                  <td className="px-3 py-3.5">
+                    <ScoreBar value={item.citation} />
+                  </td>
+                  <td className="px-5 py-3.5 text-right">
+                    <Verdict verdict={item.verdict} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+        </>
+      ) : (
+        <Card className="border-ink-200 bg-card shadow-sm">
+          <CardContent className="flex items-start gap-3 py-5">
+            <CircleHelp className="mt-0.5 size-4 shrink-0 text-indigo-500" />
+            <div>
+              <p className="text-ink-900 text-sm font-semibold">No benchmark result yet</p>
+              <p className="text-ink-500 mt-1 text-xs leading-5">
+                The live listing trace and corpus health above are the RAG inspection tools. Add a
+                labeled evidence case only when you want a measurable Recall@K result; no sample score is shown here.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      </>
+      )}
+    </div>
   );
 };
 

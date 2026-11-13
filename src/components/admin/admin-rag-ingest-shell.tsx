@@ -146,7 +146,6 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
         <AdminSidebar
           fullName={fullName}
           onLogout={onLogout}
-          activeItem={activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
           isMobileOpen={isMobileSidebarOpen}
           onClose={() => setIsMobileSidebarOpen(false)}
           isCollapsed={isSidebarCollapsed}
@@ -155,7 +154,6 @@ const AdminRagIngestShell = ({ fullName, onLogout, initialTab = "ingest" }: Admi
         <div className="dark:lg:bg-panel flex h-dvh min-w-0 flex-1 flex-col overflow-hidden dark:lg:my-2 dark:lg:mr-2 dark:lg:h-[calc(100dvh-1rem)] dark:lg:rounded-xl dark:lg:border">
           <div className="relative min-h-0 flex-1 overflow-y-auto">
             <AdminTopbar
-              fullName={fullName}
               onMenuClick={() => setIsMobileSidebarOpen(true)}
               pageTitle={activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
             />

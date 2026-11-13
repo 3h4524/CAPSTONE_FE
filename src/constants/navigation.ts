@@ -21,15 +21,17 @@ import {
   Workflow,
 } from "lucide-react";
 
-import type { AdminNavSection, AppNavSection, RouteTitle } from "@/types/navigation";
+import type { AppNavSection, RouteTitle } from "@/types/navigation";
 
 export const NAV_SECTIONS: AppNavSection[] = [
   {
     label: "OVERVIEW",
+    titleKey: "navigation.sections.overview",
     items: [{ label: "Dashboard", titleKey: "navigation.items.dashboard", href: "/dashboard", icon: LayoutDashboard }],
   },
   {
     label: "WORKSPACE",
+    titleKey: "navigation.sections.workspace",
     items: [
       { label: "Shop", titleKey: "navigation.items.shop", href: "/shop", icon: Store },
       { label: "Workflows", titleKey: "navigation.items.workflows", href: "/workflows", icon: Workflow },
@@ -44,6 +46,7 @@ export const NAV_SECTIONS: AppNavSection[] = [
   },
   {
     label: "SYSTEM",
+    titleKey: "navigation.sections.system",
     items: [
       { label: "Support", titleKey: "navigation.items.support", href: "/support", icon: LifeBuoy },
       { label: "Settings", titleKey: "navigation.items.settings", href: "/settings", icon: Settings },
@@ -72,7 +75,7 @@ export const ADMIN_MOBILE_TABS = [
 export const isDesignTemplateForm = (pathname: string | null) =>
   /^\/design-templates\/(new|[^/]+\/edit)$/.test(pathname ?? "");
 
-export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
+export const ADMIN_NAV_SECTIONS: AppNavSection[] = [
   {
     label: "Overview",
     titleKey: "navigation.admin.sections.overview",

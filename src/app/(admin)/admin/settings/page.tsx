@@ -12,7 +12,7 @@ export const metadata: Metadata = getPageMetadata({
 });
 
 const AdminSettingsRoutePage = () => (
-  <AdminShell pageTitle="Settings">
+  <AdminShell>
     <SettingsPage variant="admin" />
   </AdminShell>
 );

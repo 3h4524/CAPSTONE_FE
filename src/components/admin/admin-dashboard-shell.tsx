@@ -112,7 +112,7 @@ const AdminDashboardContent = ({
         />
         <div className="dark:lg:bg-panel flex h-dvh min-w-0 flex-1 flex-col overflow-hidden dark:lg:my-2 dark:lg:mr-2 dark:lg:h-[calc(100dvh-1rem)] dark:lg:rounded-xl dark:lg:border">
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <AdminTopbar fullName={fullName} onMenuClick={() => setIsMobileSidebarOpen(true)} />
+            <AdminTopbar onMenuClick={() => setIsMobileSidebarOpen(true)} />
             <main className="mx-auto max-w-[1600px] px-4 py-4 max-md:flex max-md:flex-col max-md:gap-3.5 max-md:pb-16 sm:py-5 md:px-[calc(1.5rem+1cm)] 2xl:max-w-[1720px]">
               {/* Header */}
               <div className="flex flex-col justify-between gap-4 max-md:gap-0 lg:flex-row lg:items-end">

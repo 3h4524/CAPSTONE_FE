@@ -63,7 +63,7 @@ export function SystemStatisticsDashboard() {
   };
 
   return (
-    <AdminShell pageTitle="System Statistics">
+    <AdminShell>
       <div className="flex flex-col pb-8">
         {/* Top Header: Title, Subtitle, Time Filter, Export CSV */}
         <StatisticsHeader

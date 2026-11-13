@@ -63,7 +63,7 @@ export const TestReportsDashboard = () => {
   const passRate = tested === 0 ? 100 : Math.round((totals.passed / tested) * 100);
 
   return (
-    <AdminShell pageTitle="Test Reports">
+    <AdminShell>
       <div className="flex flex-col gap-5">
         <section className="border-ink-200 bg-card rounded-lg border p-5 shadow-[0_2px_8px_rgba(15,23,42,0.02)] sm:p-6">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">

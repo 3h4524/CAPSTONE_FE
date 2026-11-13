@@ -12,7 +12,7 @@ export const metadata: Metadata = getPageMetadata({
 });
 
 const AdminProfileRoutePage = () => (
-  <AdminShell pageTitle="Profile">
+  <AdminShell>
     {/* The seller shell wraps pages in a card; the admin shell does not, so the form brings its own. */}
     <div className="bg-card overflow-hidden rounded-2xl border shadow-sm">
       <Profile variant="admin" />

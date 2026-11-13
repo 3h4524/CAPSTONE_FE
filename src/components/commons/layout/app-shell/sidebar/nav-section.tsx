@@ -13,10 +13,9 @@ type NavSectionProps = {
 
 export const NavSection = ({ section, collapsed }: NavSectionProps) => {
   const { t } = useTranslation("common");
-  const sectionKey = section.label.toLowerCase() as "overview" | "workspace" | "system";
   const translatedSection = {
     ...section,
-    label: t(`navigation.sections.${sectionKey}`),
+    label: t(section.titleKey, { defaultValue: section.label }),
     items: section.items.map((item) => ({
       ...item,
       // A page without a translation yet still shows its name, never the key.

@@ -1,27 +1,17 @@
 "use client";
 
+import { Fragment } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
-  Activity,
-  BarChart3,
-  CreditCard,
-  Database,
-  FlaskConical,
-  Headphones,
-  ImageIcon,
-  LayoutDashboard,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
-  Shirt,
   User,
-  UserRound,
-  Users,
 } from "lucide-react";
 
 import { Logo } from "@/components/commons/icons/logo";
+import { NavSection } from "@/components/commons/layout/app-shell/sidebar/nav-section";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,41 +21,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { ADMIN_NAV_SECTIONS } from "@/constants/navigation";
 import { cn } from "@/utils/cn";
 
 type AdminSidebarProps = {
   fullName: string;
   email?: string;
-  activeItem?: string;
   onLogout: () => void;
   isMobileOpen?: boolean;
   onClose?: () => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 };
-
-const primaryNavigation = [
-  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-  { label: "RAG Knowledge Base", href: "/admin/rag-ingest", icon: Database },
-  { label: "Market Insights", href: "/admin/market-insights", icon: BarChart3 },
-  { label: "RAG Evaluation", href: "/admin/rag-evaluation", icon: FlaskConical },
-  { label: "Users", href: "/admin/users", icon: Users },
-  { label: "Subscriptions", href: "/admin/subscription-plans", icon: CreditCard },
-  { label: "Model Photos", href: "/admin/model-photos", icon: UserRound },
-  { label: "Mock-up Templates", href: "/admin/mockup-templates", icon: Shirt },
-];
-
-const analyticsNavigation = [
-  { label: "Revenue & Reports", href: "/admin/revenue", icon: BarChart3 },
-  { label: "System Statistics", href: "/admin/analytics", icon: Activity },
-  { label: "Image Quality", href: "/admin/image-quality", icon: ImageIcon },
-];
-
-const systemNavigation = [
-  { label: "Support Tickets", href: "/admin/support-tickets", icon: Headphones, tone: "rose" },
-  { label: "Test Reports", href: "/admin/test-reports", icon: FlaskConical, tone: "sky" },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
-];
 
 const AdminSidebar = ({
   fullName,
@@ -76,7 +45,7 @@ const AdminSidebar = ({
   isCollapsed = false,
   onToggleCollapse,
 }: AdminSidebarProps) => (
-  <>
+  <TooltipProvider>
     {isMobileOpen && (
       <button
         type="button"
@@ -119,16 +88,13 @@ const AdminSidebar = ({
         </Button>
       </div>
 
-      <nav className="scrollbar-hide min-h-0 flex-1 space-y-7 overflow-y-auto px-3 py-6">
-        <SidebarGroup label="Overview" isCollapsed={isCollapsed}>
-          <SidebarItems items={primaryNavigation} isCollapsed={isCollapsed} />
-        </SidebarGroup>
-        <SidebarGroup label="Finance & Analytics" isCollapsed={isCollapsed}>
-          <SidebarItems items={analyticsNavigation} isCollapsed={isCollapsed} />
-        </SidebarGroup>
-        <SidebarGroup label="System" isCollapsed={isCollapsed}>
-          <SidebarItems items={systemNavigation} isCollapsed={isCollapsed} />
-        </SidebarGroup>
+      <nav aria-label="Admin navigation" className="scrollbar-hide flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 py-6">
+        {ADMIN_NAV_SECTIONS.map((section, index) => (
+          <Fragment key={section.label}>
+            {index > 0 && <Separator />}
+            <NavSection section={section} collapsed={isCollapsed} />
+          </Fragment>
+        ))}
       </nav>
 
       <div className="border-ink-100 border-t p-4">
@@ -184,57 +150,8 @@ const AdminSidebar = ({
         </DropdownMenu>
       </div>
     </aside>
-  </>
+  </TooltipProvider>
 );
-
-const SidebarGroup = ({ label, isCollapsed, children }: { label: string; isCollapsed?: boolean; children: React.ReactNode }) => (
-  <div className="flex flex-col gap-1">
-    {!isCollapsed && (
-      <p className="text-muted-foreground px-3 pb-1 text-xs font-medium tracking-wider uppercase">
-        {label}
-      </p>
-    )}
-    <div className="flex flex-col gap-1">{children}</div>
-  </div>
-);
-
-const SidebarItems = ({
-  items,
-  isCollapsed,
-}: {
-  items: Array<{ label: string; href: string; icon: typeof Users; count?: string; tone?: string }>;
-  isCollapsed?: boolean;
-}) => {
-  const pathname = usePathname();
-
-  return (
-    <>
-      {items.map(({ label, href, icon: Icon }) => {
-        const active = pathname?.startsWith(href);
-        return (
-          <Button
-            key={label}
-            variant="ghost"
-            asChild
-            className={cn(
-              "w-full",
-              isCollapsed ? "justify-center px-0" : "justify-start gap-3 px-3",
-              active ? "bg-muted text-primary dark:bg-ink-100 dark:text-foreground font-semibold" : "text-muted-foreground hover:bg-ink-100 hover:text-ink-900 font-medium"
-            )}
-          >
-            <Link
-              href={href}
-              title={isCollapsed ? label : undefined}
-            >
-              <Icon className="size-4 shrink-0" strokeWidth={2} />
-              {!isCollapsed && <span className="flex-1 truncate">{label}</span>}
-            </Link>
-          </Button>
-        );
-      })}
-    </>
-  );
-};
 
 const getInitials = (name: string) =>
   name

@@ -40,7 +40,7 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
 
   if (isError) {
     return (
-      <AdminShell pageTitle="Test report">
+      <AdminShell>
         <div className="rounded-lg border border-rose-200 bg-rose-50/50 px-5 py-14 text-center dark:border-rose-500/30 dark:bg-rose-500/10">
           <p className="text-sm font-semibold text-rose-800 dark:text-rose-300">
             This report could not be read
@@ -59,7 +59,7 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
 
   if (isLoading || !data) {
     return (
-      <AdminShell pageTitle="Test report">
+      <AdminShell>
         <div className="space-y-4">
           <div className="bg-ink-100 h-36 animate-pulse rounded-xl" />
           <div className="bg-ink-100 h-64 animate-pulse rounded-xl" />
@@ -69,7 +69,7 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
   }
 
   return (
-    <AdminShell pageTitle="Test report">
+    <AdminShell>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <Button variant="ghost" size="sm" asChild className="text-ink-500 gap-2">

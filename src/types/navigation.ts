@@ -18,11 +18,6 @@ export type AppNavItem = {
 
 export type AppNavSection = {
   label: string;
-  items: AppNavItem[];
-};
-
-export type AdminNavSection = {
-  label: string;
   titleKey: string;
   items: AppNavItem[];
 };

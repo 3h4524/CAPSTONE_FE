@@ -182,7 +182,7 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <AdminShell pageTitle="users">
+    <AdminShell>
       <>
         <div className="flex h-full flex-col gap-6 p-0 max-md:gap-3">
           <div className="flex flex-col gap-4 max-md:flex-row max-md:items-center max-md:justify-between sm:flex-row sm:items-center sm:justify-between">

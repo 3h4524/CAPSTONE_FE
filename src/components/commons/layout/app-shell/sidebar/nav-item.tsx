@@ -50,8 +50,8 @@ export const NavItem = ({ item, collapsed }: NavItemProps) => {
       asChild
       className={cn(
         // Dark: neutral nav like the reference — grey labels, white on hover/active, no blue text.
-        "dark:text-ink-700 dark:hover:bg-ink-100 dark:hover:text-foreground w-full",
-        collapsed ? "justify-center px-0" : "justify-start",
+        "dark:text-ink-700 dark:hover:bg-ink-100 dark:hover:text-foreground h-auto min-h-9 w-full py-1.5 text-left whitespace-normal",
+        collapsed ? "justify-center px-0" : "justify-start px-3",
         isActive && "bg-muted text-primary dark:bg-ink-100 dark:text-foreground font-semibold"
       )}
     >

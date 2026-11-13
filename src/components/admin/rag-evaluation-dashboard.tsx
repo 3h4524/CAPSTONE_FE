@@ -324,7 +324,6 @@ const RagEvaluationDashboard = ({
         <AdminSidebar
           fullName={fullName}
           onLogout={onLogout}
-          activeItem="RAG Evaluation"
           isMobileOpen={isMobileSidebarOpen}
           onClose={() => setIsMobileSidebarOpen(false)}
           isCollapsed={isSidebarCollapsed}
@@ -333,7 +332,6 @@ const RagEvaluationDashboard = ({
         <div className="dark:lg:bg-panel min-h-0 min-w-0 flex-1 overflow-hidden max-md:flex max-md:flex-col dark:lg:my-2 dark:lg:mr-2 dark:lg:rounded-xl dark:lg:border">
           <div className="h-full min-h-0 overflow-y-auto max-md:h-auto max-md:flex-1">
             <AdminTopbar
-              fullName={fullName}
               pageTitle="RAG Evaluation"
               onMenuClick={() => setIsMobileSidebarOpen(true)}
             />

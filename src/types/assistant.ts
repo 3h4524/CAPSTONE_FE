@@ -47,10 +47,27 @@ export type AssistantArrangePayload = {
 
 export type AssistantNavigatePayload = { path: string; label: string };
 
+export type AssistantRunWorkflowPayload = { workflowId: string; workflowName: string; saveFirst: boolean; warnings: string[] };
+
+export type AssistantSaveWorkflowPayload = { workflowId: string; workflowName: string };
+
+export type AssistantContinueRunPayload = {
+  workflowId: string;
+  workflowName: string;
+  stage: string;
+  label: string;
+  batchJobId?: string | null;
+  runGroupId?: string | null;
+  runId?: string | null;
+};
+
 export type AssistantClientAction =
   | { id: string; kind: "edit_workflow_canvas"; payload: AssistantCanvasPatchPayload }
   | { id: string; kind: "arrange_workflow_canvas"; payload: AssistantArrangePayload }
-  | { id: string; kind: "navigate"; payload: AssistantNavigatePayload };
+  | { id: string; kind: "navigate"; payload: AssistantNavigatePayload }
+  | { id: string; kind: "run_workflow"; payload: AssistantRunWorkflowPayload }
+  | { id: string; kind: "save_workflow"; payload: AssistantSaveWorkflowPayload }
+  | { id: string; kind: "continue_run"; payload: AssistantContinueRunPayload };
 
 export type AssistantClientActionState = "idle" | "applied" | "dismissed";
 
@@ -140,3 +157,26 @@ export type AssistantConversationDetail = {
 };
 
 export type AssistantActionResult = { action: AssistantPendingAction; message: AssistantMessageDto };
+
+export type AssistantRunState = "idle" | "working" | "waiting_for_user" | "failed" | "cancelled" | "done";
+
+export type AssistantRunTarget = { design: string; product: string; status: string | null; step: string | null; error: string | null };
+
+export type AssistantRunProgress = {
+  workflowId: string;
+  workflowName: string;
+  stage: string;
+  state: AssistantRunState;
+  nextStep: string;
+  done: number | null;
+  total: number | null;
+  waitingCount: number | null;
+  error: string | null;
+  batchJobId: string | null;
+  runGroupId: string | null;
+  runId: string | null;
+  startedAt: string | null;
+  targets: AssistantRunTarget[] | null;
+};
+
+export type AssistantRunNudge = { key: string; label: string; prompt: string; tone: "action" | "problem" | "done" };

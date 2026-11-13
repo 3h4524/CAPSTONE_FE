@@ -14,14 +14,23 @@ import { confirmRunCost, takeRunAiBudget } from "@/helpers/run-cost";
 import { publishConnectionIssue } from "@/helpers/shop-connections";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
-import { hasBatchSteps, hasListingSteps, hasVideoSteps, publishesWithoutVideo, supportsBatchVideos } from "@/helpers/workflow-run";
+import {
+  extractMockupSelection,
+  hasBatchSteps,
+  hasListingSteps,
+  hasServerPart,
+  hasVideoSteps,
+  publishesWithoutVideo,
+  supportsBatchVideos,
+} from "@/helpers/workflow-run";
 import { useCancelRunGroup, useStartRunGroup } from "@/hooks/mutations/use-run-group-actions";
 import { ACTIVE_RUN_GROUP_STATUSES, useRunGroup } from "@/hooks/queries/use-run-group";
 import { useShopConnections } from "@/hooks/queries/use-shop-connections";
-import { BATCH_JOB_PARAM, NEXT_PART_PARAM, useBatchRun } from "@/hooks/use-batch-run";
+import { applySelectionAndGenerateMockups, BATCH_JOB_PARAM, NEXT_PART_PARAM, useBatchRun } from "@/hooks/use-batch-run";
 import { useRunGroupSync } from "@/hooks/use-run-group-sync";
 import { useVideoRunSync, useWorkflowRuntime, VIDEO_RUN_PARAM } from "@/hooks/use-workflow-runtime";
 import { useWorkflowStore } from "@/stores/workflow";
+import { useWorkflowCommandStore,type WorkflowCommand } from "@/stores/workflow-command";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { BatchJobSummary } from "@/types/batch-jobs";
 import type { RunGroupSummary } from "@/types/video-workflow";
@@ -402,5 +411,36 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     void batch.cancel();
   };
 
-  return { isRunning, isPending: video.isPending || isStartingGroup || isCancellingGroup, start, cancel };
+  const continueRun = async ({ stage, batchJobId, runGroupId, runId, workflowId }: WorkflowCommand) => {
+    const query = new URLSearchParams(window.location.search);
+    if ((stage === "design_approval" || stage === "designs_ready") && batchJobId) {
+      const mockupNode = findNode("apply-mockup");
+      if (!mockupNode || extractMockupSelection(mockupNode.data.config).templateIds.length === 0) {
+        showWorkflowActionToast("warning", "Choose mock-up templates in the Apply mock-up node first.");
+        if (mockupNode) selectNode(mockupNode.id);
+        return;
+      }
+      if (query.get(BATCH_JOB_PARAM) !== batchJobId) {
+        query.set(BATCH_JOB_PARAM, batchJobId);
+        if (hasServerPart(useWorkflowStore.getState().nodes)) query.set(NEXT_PART_PARAM, "video");
+        router.replace(`/workflows?${query.toString()}`, { scroll: false });
+      }
+      if (useWorkflowRunStore.getState().batchJobId !== batchJobId) useWorkflowRunStore.getState().attach(workflowId, batchJobId);
+      await applySelectionAndGenerateMockups(batchJobId, queryClient);
+      return;
+    }
+    if (runGroupId && query.get(RUN_GROUP_PARAM) !== runGroupId) {
+      query.set(RUN_GROUP_PARAM, runGroupId);
+      router.replace(`/workflows?${query.toString()}`, { scroll: false });
+    } else if (runId && !runGroupId && query.get(VIDEO_RUN_PARAM) !== runId) {
+      query.set(VIDEO_RUN_PARAM, runId);
+      useWorkflowStore.getState().setVideoRunId(runId);
+      router.replace(`/workflows?${query.toString()}`, { scroll: false });
+    }
+    const gate = findNode("approval-gate");
+    if (gate) selectNode(gate.id);
+    useWorkflowCommandStore.getState().requestPanelContinue({ id: uuid(), workflowId, requestedAt: Date.now() });
+  };
+
+  return { isRunning, isPending: video.isPending || isStartingGroup || isCancellingGroup, start, cancel, continueRun };
 };

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { PhonePager } from "@/components/commons/data-display/phone-pager";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { DeleteDesignTemplateDialog } from "@/components/design-templates/delete-design-template-dialog";
 import { DesignTemplateCard } from "@/components/design-templates/design-template-card";
 import { DesignTemplateCardSkeleton } from "@/components/design-templates/design-template-card-skeleton";
@@ -192,24 +193,25 @@ export function DesignTemplateLibrary() {
   return (
     <div className="text-foreground w-full min-w-0 md:p-6">
       <main className="w-full min-w-0">
-        <header className="border-ink-200 grid gap-6 border-b pb-7 max-md:flex max-md:items-center max-md:justify-between max-md:gap-3 max-md:border-0 max-md:pb-0 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div>
-            <p className="text-ink-500 text-[11px] font-bold tracking-[0.17em] uppercase max-md:hidden">Creative library</p>
-            <h1 className="font-display text-ink-900 mt-2 max-w-3xl text-3xl font-semibold tracking-[-0.035em] max-md:mt-0 max-md:text-xl max-md:tracking-tight sm:text-4xl">
+        <PageHeader
+          eyebrow="Creative library"
+          title={
+            <>
               <span className="md:hidden">Design templates</span>
               <span className="max-md:hidden">Start with a structure. Make the artwork yours.</span>
-            </h1>
-            <p className="text-ink-600 mt-3 max-w-2xl text-sm leading-6 max-md:hidden sm:text-base">
-              Explore production-ready prompt systems or manage the reusable templates in your private workspace.
-            </p>
-          </div>
-          <Button size="page-action" className="self-start max-md:shrink-0 md:h-11 md:min-h-11 md:px-5 md:text-base lg:self-auto" onClick={() => router.push("/design-templates/new")}>
-            <Plus aria-hidden="true" />
-            <span>
-              New<span className="max-md:hidden"> personal template</span>
-            </span>
-          </Button>
-        </header>
+            </>
+          }
+          description="Explore production-ready prompt systems or manage the reusable templates in your private workspace."
+          className="border-ink-200 border-b pb-7 max-md:border-0 max-md:pb-0"
+          actions={
+            <Button size="page-action" className="max-md:shrink-0 md:h-11 md:min-h-11 md:px-5 md:text-base" onClick={() => router.push("/design-templates/new")}>
+              <Plus aria-hidden="true" />
+              <span>
+                New<span className="max-md:hidden"> personal template</span>
+              </span>
+            </Button>
+          }
+        />
 
         <section className="mt-6 max-md:mt-4" aria-label="Template library controls">
           <div

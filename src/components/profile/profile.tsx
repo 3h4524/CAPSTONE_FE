@@ -103,8 +103,8 @@ export const Profile = ({ variant = "seller" }: ProfileProps) => {
               >
                 Discard
               </Button>
-              <Button type="submit" disabled={!isDirty || isUpdating}>
-                Save changes
+              <Button type="submit" aria-label="Save changes" disabled={!isDirty || isUpdating}>
+                Save<span className="max-md:hidden"> changes</span>
               </Button>
             </>
           }

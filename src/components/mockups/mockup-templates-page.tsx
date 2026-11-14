@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ImageIcon, Plus, UserRound } from "lucide-react";
 
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { MockupCardGrid } from "@/components/mockups/mockup-card-grid";
 import { MockupTemplateFormDialog } from "@/components/mockups/mockup-template-form-dialog";
@@ -43,10 +44,10 @@ export const MockupTemplatesPage = () => {
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-6 max-md:gap-3 md:p-6">
-      <div>
-        <h1 className="text-ink-900 text-xl font-semibold">Mock-up Templates</h1>
-        <p className="text-muted-foreground mt-1 text-sm max-md:hidden">Browse system mock-ups, manage the product photos you uploaded, and the photos of people your mock-ups are put on.</p>
-      </div>
+      <PageHeader
+        title="Mock-up Templates"
+        description="Browse system mock-ups, manage the product photos you uploaded, and the photos of people your mock-ups are put on."
+      />
       <Tabs defaultValue="templates" className="gap-5 max-md:gap-3">
         <TabsList className="w-full sm:w-fit">
           <TabsTrigger value="templates" className="px-4">

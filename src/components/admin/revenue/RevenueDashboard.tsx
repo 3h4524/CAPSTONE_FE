@@ -4,6 +4,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { getRevenueInvoices } from "@/api/revenue";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { buildRevenueReport, reportFileName, toCsv } from "@/helpers/revenue-report";
 import { toXlsx } from "@/helpers/revenue-report-xlsx";
 import { useAdminSubscriptionPlans } from "@/hooks/queries/use-admin-subscription-plans";
@@ -117,11 +118,13 @@ export function RevenueDashboard() {
 
   return (
     <div className="flex h-full flex-col gap-4 p-0">
-      <RevenueFilterBar
-        filter={filter}
-        onFilterChange={handleFilterChange}
+      <PageHeader
+        title="Revenue Intelligence"
+        description="Track revenue, subscriptions, and financial performance with real-time insights."
         actions={isPhone ? <RevenueExportMenu compact onExport={handleExport} isExporting={isExporting} /> : undefined}
       />
+
+      <RevenueFilterBar filter={filter} onFilterChange={handleFilterChange} />
 
       <RevenueMetricCards
         metrics={metricsData}

@@ -15,6 +15,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  ShieldCheck,
   Shirt,
   User,
   UserRound,
@@ -62,6 +63,7 @@ const analyticsNavigation = [
 ];
 
 const systemNavigation = [
+  { label: "Content Safety", href: "/admin/content-safety", icon: ShieldCheck },
   { label: "Support Tickets", href: "/admin/support-tickets", icon: Headphones, tone: "rose" },
   { label: "Test Reports", href: "/admin/test-reports", icon: FlaskConical, tone: "sky" },
   { label: "Settings", href: "/admin/settings", icon: Settings },

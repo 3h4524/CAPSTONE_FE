@@ -1,4 +1,4 @@
-import type { MockupAsset } from "@/types/video-workflow";
+import type { AiVideoSceneOptions, MockupAsset } from "@/types/video-workflow";
 
 const ordinal = (left: string | null | undefined, right: string | null | undefined) => {
   const a = left ?? "";
@@ -51,4 +51,30 @@ export const counterpartMockup = (
     if (sameColor ?? made[0]) return sameColor ?? made[0];
   }
   return chosen.role && chosen.role !== "Hero" ? candidates.find((asset) => asset.role === chosen.role) : undefined;
+};
+
+/**
+ * The image a scene starts from in the full video editor, given only the images of the design being edited. A start
+ * frame saved on another design of a batch run is not among them, so it is translated the way the scene card and the
+ * server's `SceneSourceResolver` do: the same template and color, else this design's main mock-up. Never "the first
+ * image", which may be the model photo an AI scene starts from.
+ */
+export const sceneStartImage = (
+  scene: Pick<AiVideoSceneOptions, "mockupId" | "startFrameMode" | "studioFrameId">,
+  assets: MockupAsset[]
+): MockupAsset | undefined => {
+  const chosenId =
+    scene.startFrameMode === "studio" && scene.studioFrameId ? scene.studioFrameId : scene.mockupId;
+  const own = chosenId ? assets.find((asset) => asset.id === chosenId) : undefined;
+  if (own) return own;
+
+  const designMockups = assets.filter((asset) => !asset.regions?.studioFrame);
+  const approved = designMockups.filter(
+    (asset) => asset.approvalStatus === "approved" && asset.approvedRevision === asset.revision
+  );
+  const candidates = approved.length > 0 ? approved : designMockups;
+  return (
+    (scene.mockupId ? counterpartMockup(scene.mockupId, assets, candidates) : undefined) ??
+    mainMockup(candidates)
+  );
 };

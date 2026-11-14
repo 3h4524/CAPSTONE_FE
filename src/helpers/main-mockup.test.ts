@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { counterpartMockup, mainMockup } from "@/helpers/main-mockup";
+import { counterpartMockup, mainMockup, sceneStartImage } from "@/helpers/main-mockup";
 import type { MockupAsset } from "@/types/video-workflow";
 
 const asset = (id: string, overrides: Partial<MockupAsset> = {}) =>
@@ -53,5 +53,37 @@ describe("counterpartMockup", () => {
 
   it("knows nothing of an image it has not loaded", () => {
     expect(counterpartMockup("missing", [], [asset("a")])).toBeUndefined();
+  });
+});
+
+describe("sceneStartImage", () => {
+  const approved = (id: string, overrides: Partial<MockupAsset> = {}) =>
+    asset(id, { approvalStatus: "approved", revision: 1, approvedRevision: 1, regions: {}, ...overrides } as Partial<MockupAsset>);
+
+  it("keeps a start frame of this design", () => {
+    const hero = approved("hero");
+    expect(sceneStartImage({ mockupId: "hero" }, [approved("other"), hero])?.id).toBe("hero");
+  });
+
+  it("shows this design's main mock-up, not the first image, for a frame chosen on another design", () => {
+    const model = approved("model", { role: "Lifestyle", mockupTemplateId: null });
+    const hero = approved("hero", { variantKey: "#232424" });
+
+    expect(sceneStartImage({ mockupId: "from-other-design" }, [model, hero])?.id).toBe("hero");
+  });
+
+  it("uses the main mock-up for a scene without a start frame, skipping keyframes and unapproved images", () => {
+    const keyframe = approved("frame", { regions: { studioFrame: {} } } as Partial<MockupAsset>);
+    const rejected = asset("rejected", { approvalStatus: "rejected", regions: {} } as Partial<MockupAsset>);
+    const hero = approved("hero", { variantKey: "#FFFFFF" });
+
+    expect(sceneStartImage({ mockupId: null }, [keyframe, rejected, hero])?.id).toBe("hero");
+  });
+
+  it("keeps a studio keyframe chosen for the scene", () => {
+    const keyframe = approved("frame", { regions: { studioFrame: {} } } as Partial<MockupAsset>);
+    expect(
+      sceneStartImage({ startFrameMode: "studio", studioFrameId: "frame", mockupId: "hero" }, [approved("hero"), keyframe])?.id
+    ).toBe("frame");
   });
 });

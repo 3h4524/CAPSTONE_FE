@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Activity,
   Calendar,
@@ -65,6 +65,12 @@ export default function AdminUsersPage() {
     sortBy: "LatestJoined",
     sortDesc: true,
   });
+
+  // Other admin pages link here with ?search=<email> (e.g. Content Safety's sellers); it fills the search once.
+  useEffect(() => {
+    const search = new URLSearchParams(window.location.search).get("search")?.trim();
+    if (search) setRequest((prev) => ({ ...prev, searchTerm: search, pageIndex: 1 }));
+  }, []);
 
   const [selectedUser, setSelectedUser] = useState<AdminUserDto | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);

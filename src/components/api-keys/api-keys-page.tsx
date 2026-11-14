@@ -23,6 +23,7 @@ import {
   ConnectionProvider,
   ConnectionStatus,
 } from "@/components/api-keys/connection-parts";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { PageLoading } from "@/components/commons/layout/page-loading";
 import { Button } from "@/components/ui/button";
 import {
@@ -267,33 +268,31 @@ export function ApiKeysPage() {
 
   return (
     <div className="w-full min-w-0 md:p-6">
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-4 max-md:mb-4 max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:items-center max-md:gap-x-3 max-md:gap-y-1">
-        <div className="max-md:contents">
-          <h1 className="font-display text-3xl font-semibold tracking-tight max-md:text-xl">API keys</h1>
-          <p className="text-muted-foreground mt-1 text-sm max-md:hidden">
-            Connect the services Podivo uses to create and publish your products.
-          </p>
-          <p className="text-muted-foreground mt-2 flex items-center gap-1.5 text-xs max-md:col-span-2 max-md:mt-1">
-            <LockKeyhole className="text-primary size-3.5 shrink-0" />
-            <span className="text-foreground font-medium">Keys stay private.</span>
-            Only masked credentials are shown here.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 max-md:contents">
-          <Button variant="ghost" size="sm" className="max-md:col-span-2 max-md:row-start-3 max-md:-ml-1 max-md:justify-self-start max-md:px-1" onClick={() => setGuideOpen(true)}>
-            <BookOpen className="size-4" />
-            Read setup guide
-          </Button>
-          <span className="max-md:col-start-2 max-md:row-start-1">
-            <Button size="page-action" disabled={!query.data || forbidden || failed} onClick={() => setDialog({})}>
-              <Plus className="size-4" />
-              <span>
-                Add<span className="max-md:hidden"> API key</span>
-              </span>
-            </Button>
-          </span>
-        </div>
-      </header>
+      <div className="mb-6 flex flex-col gap-2 max-md:mb-4">
+        <PageHeader
+          title="API keys"
+          description="Connect the services Podivo uses to create and publish your products."
+          actions={
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setGuideOpen(true)}>
+                <BookOpen className="size-4" />
+                <span className="max-md:sr-only">Read setup guide</span>
+              </Button>
+              <Button size="page-action" disabled={!query.data || forbidden || failed} onClick={() => setDialog({})}>
+                <Plus className="size-4" />
+                <span>
+                  Add<span className="max-md:hidden"> API key</span>
+                </span>
+              </Button>
+            </>
+          }
+        />
+        <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+          <LockKeyhole className="text-primary size-3.5 shrink-0" />
+          <span className="text-foreground font-medium">Keys stay private.</span>
+          Only masked credentials are shown here.
+        </p>
+      </div>
 
       {forbidden ? (
         <div role="alert" className="bg-card rounded-xl border p-8">

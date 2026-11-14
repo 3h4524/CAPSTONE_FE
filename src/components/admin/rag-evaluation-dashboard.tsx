@@ -43,6 +43,7 @@ import {
 import { RagCardAbout } from "@/components/admin/rag-card-about";
 import { RagCorpusHealthPanel } from "@/components/admin/rag-corpus-health-panel";
 import { RagKnownItemBenchmark } from "@/components/admin/rag-known-item-benchmark";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -309,19 +310,12 @@ const RagEvaluationDashboard = () => {
 
   return (
     <div className="space-y-5 max-md:space-y-3">
-      <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-        <div>
-          <p className="text-[10px] font-bold tracking-[0.16em] text-indigo-500 uppercase">
-            RAG quality lab
-          </p>
-          <h1 className="text-ink-900 mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
-            RAG Evaluation
-          </h1>
-          <p className="text-ink-500 mt-1 max-w-2xl text-xs leading-5">
-            Inspect retrieval traces and corpus health before RAG reaches seller-facing workflows.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+      <PageHeader
+        eyebrow="RAG quality lab"
+        title="RAG Evaluation"
+        description="Inspect retrieval traces and corpus health before RAG reaches seller-facing workflows."
+        actions={
+          <>
           {runs.length > 0 && (
             <select
             value={selectedRunId ?? ""}
@@ -343,8 +337,9 @@ const RagEvaluationDashboard = () => {
             <Play className="size-3.5" /> {isRunning ? "Running..." : "Run evaluation"}
             </Button>
           )}
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <Card className="bg-card border-emerald-100 shadow-sm dark:border-emerald-500/30">
         <CardHeader className="max-md:px-4">

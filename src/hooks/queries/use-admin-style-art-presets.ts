@@ -9,5 +9,6 @@ export const useAdminStyleArtPresets = (enabled = true) =>
     queryFn: () => getAdminStyleArtPresets(),
     enabled,
     staleTime: 5 * 60_000,
+    refetchInterval: (query) => (query.state.data?.some((preset) => preset.viStatus === "pending") ? 5_000 : false),
     suppressErrorToast: true,
   });

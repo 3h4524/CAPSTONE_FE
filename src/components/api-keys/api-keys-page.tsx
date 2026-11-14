@@ -289,8 +289,9 @@ export function ApiKeysPage() {
         />
         <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
           <LockKeyhole className="text-primary size-3.5 shrink-0" />
-          <span className="text-foreground font-medium">Keys stay private.</span>
-          Only masked credentials are shown here.
+          <span>
+            <span className="text-foreground font-medium">Keys stay private.</span> Only masked credentials are shown here.
+          </span>
         </p>
       </div>
 

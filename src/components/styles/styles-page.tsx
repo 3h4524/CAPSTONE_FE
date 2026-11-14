@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ImageIcon, Plus, Search } from "lucide-react";
 
 import { PhonePager } from "@/components/commons/data-display/phone-pager";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { StylePresetFormDialog } from "@/components/styles/style-preset-form-dialog";
 import { StylePresetListItem } from "@/components/styles/style-preset-list-item";
@@ -68,22 +69,24 @@ export const StylesPage = () => {
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-4 md:gap-6 md:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-ink-900 text-xl font-semibold">My Styles</h1>
-          <p className="text-muted-foreground mt-1 text-sm max-md:hidden">Browse system styles and manage styles you created.</p>
-          {presets && (
-            <p className="text-muted-foreground mt-0.5 text-sm tabular-nums md:hidden">
-              {presets.length} {presets.length === 1 ? "style" : "styles"}
-            </p>
-          )}
-        </div>
-        <Button type="button" size="page-action" onClick={openCreate} disabled={isDeleting}>
-          <Plus aria-hidden="true" />
-          <span>
-            New<span className="max-md:hidden"> style</span>
-          </span>
-        </Button>
+      <div className="flex flex-col gap-1">
+        <PageHeader
+          title="My Styles"
+          description="Browse system styles and manage styles you created."
+          actions={
+            <Button type="button" size="page-action" onClick={openCreate} disabled={isDeleting}>
+              <Plus aria-hidden="true" />
+              <span>
+                New<span className="max-md:hidden"> style</span>
+              </span>
+            </Button>
+          }
+        />
+        {presets && (
+          <p className="text-muted-foreground text-sm tabular-nums md:hidden">
+            {presets.length} {presets.length === 1 ? "style" : "styles"}
+          </p>
+        )}
       </div>
       {isPhone && presets && presets.length > 0 && (
         <div className="space-y-3">

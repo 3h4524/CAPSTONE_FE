@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 import { TestReportComparison } from "@/components/admin/test-reports/comparison";
 import { TestReportFailureGroups } from "@/components/admin/test-reports/failure-groups";
@@ -11,6 +11,15 @@ import { TestReportFileFailures } from "@/components/admin/test-reports/file-fai
 import { TestReportRunTrend } from "@/components/admin/test-reports/run-trend";
 import { TestReportSlowestSpecs } from "@/components/admin/test-reports/slowest-specs";
 import { TestReportVerdict } from "@/components/admin/test-reports/verdict";
+import { PageHeader } from "@/components/commons/layout/page-header";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { useAdminTestReport } from "@/hooks/queries/use-admin-test-report";
 import { useAdminTestReports } from "@/hooks/queries/use-admin-test-reports";
@@ -37,41 +46,25 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
 
   const isRunning = data?.run.status === "running";
 
-  if (isError) {
-    return (
-      <div className="rounded-lg border border-rose-200 bg-rose-50/50 px-5 py-14 text-center dark:border-rose-500/30 dark:bg-rose-500/10">
-        <p className="text-sm font-semibold text-rose-800 dark:text-rose-300">
-          This report could not be read
-        </p>
-        <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
-          The backend that keeps the reports did not answer.
-        </p>
-        <Button variant="outline" className="mt-4" onClick={() => refetch()}>
-          <RefreshCw className="size-4" />
-          Try again
-        </Button>
-      </div>
-    );
-  }
-
-  if (isLoading || !data) {
-    return (
-      <div className="space-y-4">
-        <div className="bg-ink-100 h-36 animate-pulse rounded-xl" />
-        <div className="bg-ink-100 h-64 animate-pulse rounded-xl" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" asChild className="text-ink-500 gap-2">
-          <Link href="/admin/test-reports">
-            <ArrowLeft className="size-4" />
-            All test reports
-          </Link>
-        </Button>
+  const header = (
+    <PageHeader
+      title={runId}
+      breadcrumb={
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/admin/test-reports">All test reports</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Report</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      }
+      actions={
         <Button
           variant="outline"
           size="sm"
@@ -81,21 +74,55 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
         >
           <RefreshCw className="size-4" />
         </Button>
-      </div>
+      }
+    />
+  );
 
+  if (isError) {
+    return (
+      <div className="flex flex-col gap-4">
+        {header}
+        <div className="rounded-lg border border-rose-200 bg-rose-50/50 px-5 py-14 text-center dark:border-rose-500/30 dark:bg-rose-500/10">
+          <p className="text-sm font-semibold text-rose-800 dark:text-rose-300">
+            This report could not be read
+          </p>
+          <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+            The backend that keeps the reports did not answer.
+          </p>
+          <Button variant="outline" className="mt-4" onClick={() => refetch()}>
+            <RefreshCw className="size-4" />
+            Try again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading || !data) {
+    return (
+      <div className="flex flex-col gap-4">
+        {header}
+        <div className="space-y-4">
+          <div className="bg-ink-100 h-36 animate-pulse rounded-xl" />
+          <div className="bg-ink-100 h-64 animate-pulse rounded-xl" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {header}
       <TestReportVerdict run={data.run} />
       {isRunning ? (
         <p className="text-ink-600 rounded-xl border border-sky-100 bg-sky-50/40 px-5 py-4 text-xs leading-relaxed dark:border-sky-500/30 dark:bg-sky-500/10">
-          This page follows the live state, so the verdict above flips the moment the suite
-          lands — the took on this page counts up while it is still going. The arrow above
-          still forces a pull if you want one.
+          This page follows the live state, so the verdict above flips the moment the suite lands —
+          the took on this page counts up while it is still going. The arrow above still forces a
+          pull if you want one.
         </p>
       ) : (
         <>
-          <TestReportComparison
-            current={data}
-            previous={previousRunId ? previous : undefined}
-          />
+          <TestReportComparison current={data} previous={previousRunId ? previous : undefined} />
 
           <TestReportRunTrend runs={list?.items ?? []} currentRunId={runId} />
 

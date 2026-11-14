@@ -6,6 +6,7 @@ import { PlayCircle, RefreshCw } from "lucide-react";
 import { TestReportMetricCards } from "@/components/admin/test-reports/metric-cards";
 import { TestReportRunDialog } from "@/components/admin/test-reports/run-dialog";
 import { TestReportRunTable } from "@/components/admin/test-reports/run-table";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -33,10 +34,7 @@ const STATUS_FILTERS: ReadonlyArray<{
 export const TestReportsDashboard = () => {
   const [status, setStatus] = useState<"all" | TestReportStatus>("all");
   const [isRunDialogOpen, setIsRunDialogOpen] = useState(false);
-  const filter = useMemo(
-    () => (status === "all" ? {} : { status }),
-    [status]
-  );
+  const filter = useMemo(() => (status === "all" ? {} : { status }), [status]);
 
   const { data, isLoading, isError, refetch } = useAdminTestReports({
     ...filter,
@@ -64,21 +62,15 @@ export const TestReportsDashboard = () => {
   return (
     <>
       <div className="flex flex-col gap-5">
-        <section className="border-ink-200 bg-card rounded-lg border p-5 shadow-[0_2px_8px_rgba(15,23,42,0.02)] sm:p-6">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-            <div>
-              <h2 className="text-ink-900 text-sm font-bold">End-to-end test reports</h2>
-              <p className="text-ink-500 mt-1 max-w-2xl text-[11px] leading-relaxed">
-                Every run of the Playwright suite is kept on the machine that made it. Press
-                “Run tests” to run the suite here; the running row counts up here and flips by
-                itself the moment the suite lands.
-              </p>
-            </div>
+        <PageHeader
+          title="End-to-end test reports"
+          description="Every run of the Playwright suite is kept on the machine that made it. Press “Run tests” to run the suite here; the running row counts up here and flips by itself the moment the suite lands."
+          actions={
             <Button
               type="button"
               onClick={() => setIsRunDialogOpen(true)}
               disabled={isPending}
-              className="gap-2 self-start"
+              className="gap-2"
             >
               {isPending ? (
                 <RefreshCw className="size-4 animate-spin" />
@@ -87,8 +79,8 @@ export const TestReportsDashboard = () => {
               )}
               Run tests
             </Button>
-          </div>
-        </section>
+          }
+        />
 
         <TestReportMetricCards
           totalRuns={data?.totalCount ?? 0}
@@ -101,9 +93,7 @@ export const TestReportsDashboard = () => {
         <section className="border-ink-200 bg-card overflow-hidden rounded-lg border shadow-[0_2px_8px_rgba(15,23,42,0.02)]">
           <div className="border-ink-100 flex flex-col justify-between gap-3 border-b px-5 py-4 sm:flex-row sm:items-center">
             <div>
-              <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
-                Test runs
-              </h3>
+              <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">Test runs</h3>
               <p className="text-ink-400 mt-0.5 text-[10px]">
                 Newest first. Open a run to see every test it covered.
               </p>
@@ -112,9 +102,7 @@ export const TestReportsDashboard = () => {
               <Select
                 value={status}
                 onValueChange={(value) =>
-                  setStatus(
-                    STATUS_FILTERS.find((option) => option.value === value)?.value ?? "all"
-                  )
+                  setStatus(STATUS_FILTERS.find((option) => option.value === value)?.value ?? "all")
                 }
               >
                 <SelectTrigger className="h-8 w-40 text-xs">
@@ -160,9 +148,7 @@ export const TestReportsDashboard = () => {
         open={isRunDialogOpen}
         onOpenChange={setIsRunDialogOpen}
         isPending={isPending}
-        onConfirm={() =>
-          startRun(undefined, { onSettled: () => setIsRunDialogOpen(false) })
-        }
+        onConfirm={() => startRun(undefined, { onSettled: () => setIsRunDialogOpen(false) })}
       />
     </>
   );

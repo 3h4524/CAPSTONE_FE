@@ -77,7 +77,7 @@ export const TicketListPanel = ({
     <div className="border-ink-200 bg-card flex min-h-0 flex-1 flex-col border-r">
       {/* Header & Tabs */}
       <div className="border-ink-200 border-b px-4 pt-4 pb-0">
-        <h2 className="text-ink-900 mb-4 flex items-center gap-2 text-xl font-bold max-md:mb-3">
+        <h2 className="text-ink-900 mb-4 flex items-center gap-2 text-xl font-bold max-md:mb-3 md:hidden">
           <Headphones className="size-5" />
           Support Tickets
         </h2>

@@ -19,6 +19,7 @@ import { AdminHeroCard } from "@/components/admin/admin-hero-card";
 import { AdminMetricCard, Delta } from "@/components/admin/admin-metric-card";
 import { AdminOperationsRow } from "@/components/admin/admin-operations-row";
 import { AdminRevenueTrend } from "@/components/admin/admin-revenue-trend";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -93,18 +94,12 @@ export const AdminDashboardContent = ({
       <div className="max-md:flex max-md:flex-col max-md:gap-3.5">
         {/* Header */}
         <div className="flex flex-col justify-between gap-4 max-md:gap-0 lg:flex-row lg:items-end">
-          {/* A phone opens on the greeting, so the title is left to screen readers. */}
-          <div className="max-md:sr-only">
-            <p className="text-ink-400 text-[10px] font-bold tracking-[0.16em] uppercase">
-              Platform overview
-            </p>
-            <h1 className="font-display text-ink-900 mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
-              Admin Dashboard
-            </h1>
-            <p className="text-ink-400 mt-1 text-xs">
-              Growth, production and what needs your attention, for the period you pick.
-            </p>
-          </div>
+          <PageHeader
+            className="max-md:sr-only"
+            eyebrow="Platform overview"
+            title="Admin Dashboard"
+            description="Growth, production and what needs your attention, for the period you pick."
+          />
           <div className="flex flex-wrap items-center gap-2 max-md:flex-nowrap">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

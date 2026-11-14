@@ -4,7 +4,7 @@ export interface AdminStyleArtPresetVi {
   recommendations: string[];
 }
 
-export type AdminStyleArtPresetViStatus = "ok" | "pending" | "failed" | "manual";
+export type AdminStyleArtPresetViStatus = "ok" | "pending" | "failed";
 
 export interface AdminStyleArtPreset {
   id: string;

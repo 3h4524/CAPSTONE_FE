@@ -17,11 +17,6 @@ export type SaveAdminStyleArtPresetInput = {
   preview: File | null;
   deletePreview?: boolean;
   isActive: boolean;
-  vi: {
-    name: string;
-    description: string;
-    recommendations: string[];
-  } | null;
 };
 
 const toPresetForm = (input: SaveAdminStyleArtPresetInput) => {
@@ -33,11 +28,6 @@ const toPresetForm = (input: SaveAdminStyleArtPresetInput) => {
   form.append("isActive", String(input.isActive));
   if (input.preview) form.append("preview", input.preview);
   if (input.deletePreview) form.append("deletePreview", "true");
-  if (input.vi) {
-    form.append("viName", input.vi.name);
-    form.append("viDescription", input.vi.description);
-    form.append("viRecommendationsJson", JSON.stringify(input.vi.recommendations));
-  }
   return form;
 };
 

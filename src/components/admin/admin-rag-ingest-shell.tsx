@@ -8,6 +8,7 @@ import { ingestRagDocument, type RagIngestRequest } from "@/api/rag";
 import { AdminMarketResearchPanel } from "@/components/admin/admin-market-research-panel";
 import { AdminRagDocumentsPanel } from "@/components/admin/admin-rag-documents-panel";
 import { RagSearchPlayground } from "@/components/admin/rag-search-playground";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -130,20 +131,16 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
   return (
     <>
       <div className="flex flex-col justify-between gap-4 max-md:gap-3 md:flex-row md:items-end">
-        {/* These two tabs open with a heading of their own. */}
-        <div className={cn((activeTab === "documents" || activeTab === "search") && "max-md:hidden")}>
-          <p className="text-ink-400 text-[10px] font-bold tracking-[0.16em] uppercase">
-            Knowledge base
-          </p>
-          <h1 className="font-display text-ink-900 mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
-            {activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
-          </h1>
-          <p className="text-ink-500 mt-1 max-w-2xl text-xs leading-5">
-            {activeTab === "research"
+        <PageHeader
+          className={cn((activeTab === "documents" || activeTab === "search") && "max-md:hidden")}
+          eyebrow="Knowledge base"
+          title={activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
+          description={
+            activeTab === "research"
               ? "Manage the shared public Etsy dataset used by seller-facing Market Radar."
-              : "Ingest documents, review versions, and control which knowledge is active for retrieval."}
-          </p>
-        </div>
+              : "Ingest documents, review versions, and control which knowledge is active for retrieval."
+          }
+        />
         <div className="border-ink-200 bg-card flex flex-wrap rounded-lg border p-1 shadow-sm max-md:grid max-md:grid-cols-4 max-md:gap-1">
           {RAG_TABS.map((tab) => (
             <Button

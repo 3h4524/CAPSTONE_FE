@@ -443,6 +443,11 @@ export const generateListingConfigSchema = z.object({
 
 export const exportZipConfigSchema = z.object({});
 
+/** Push to media: the platforms to prepare posts for; at least one. */
+export const publishSocialConfigSchema = z
+  .object({ pinterest: z.boolean(), tiktok: z.boolean() })
+  .refine((value) => value.pinterest || value.tiktok, { message: "Choose Pinterest, TikTok or both.", path: ["pinterest"] });
+
 /** Push to Printify: the catalog choices, and the profit each sale should leave after Printify's cost and Etsy's fees. */
 export const publishPrintifyConfigSchema = z
   .object({
@@ -534,6 +539,7 @@ export const workflowNodeConfigSchemas: Record<
   "export-zip": exportZipConfigSchema,
   "publish-etsy": publishEtsyConfigSchema,
   "publish-printify": publishPrintifyConfigSchema,
+  "publish-social": publishSocialConfigSchema,
 };
 
 export const workflowMetaSchema = z.object({

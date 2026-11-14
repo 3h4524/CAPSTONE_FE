@@ -76,6 +76,7 @@ const VALID_CONFIGS: Record<WorkflowNodeType, WorkflowNodeConfig> = {
   "export-zip": {},
   "publish-etsy": { listingType: "download", price: 4.99, quantity: 999, taxonomyId: 2078, taxonomyPath: "Digital", whoMade: "i_did", whenMade: "made_to_order", shippingProfileId: null, includeVideo: true },
   "publish-printify": { blueprintId: 145, blueprintTitle: "Tee", printProviderId: 99, printProviderTitle: "Monster Digital", colors: ["White"], sizes: ["M"], targetProfit: 10, designId: null, publishToEtsy: true, addMockups: true },
+  "publish-social": { pinterest: true, tiktok: false },
 };
 
 const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
@@ -158,6 +159,7 @@ const INVALID_CONFIGS: Array<[WorkflowNodeType, WorkflowNodeConfig, string]> = [
     { source: "manual", blueprintId: null, blueprintTitle: null, printProviderId: null, printProviderTitle: null, colors: [], sizes: [], targetProfit: 10, designId: null, publishToEtsy: true, addMockups: true },
     "Push to Printify: Choose a product type.",
   ],
+  ["publish-social", { pinterest: false, tiktok: false }, "Push to media: Choose Pinterest, TikTok or both."],
 ];
 
 const node = (id: string) => buildWorkflowNode({ id });
@@ -317,9 +319,27 @@ describe("getConnectionIssue", () => {
     expect(getConnectionIssue(connection("input", "mockup"), [], pipelineNodes())).toBeNull();
   });
 
-  it("explains that the last pipeline step has no next node", () => {
+  it("lets only another output follow an output", () => {
     expect(getConnectionIssue(connection("export", "input"), [], pipelineNodes())).toBe(
-      "Export ZIP is the last step in the workflow, so it has no next node."
+      "Only another output may follow Export ZIP."
+    );
+  });
+
+  it("puts the outputs after the last step, side by side or one after another", () => {
+    const nodes = [...pipelineNodes(), typedNode("media", "publish-social", VALID_CONFIGS["publish-social"])];
+
+    expect(getConnectionIssue(connection("approval", "media"), [], nodes)).toBe(
+      "Outputs go after the last step: connect Review Video to Push to media."
+    );
+    expect(getConnectionIssue(connection("review", "media"), pipelineEdges(), nodes)).toBeNull();
+    expect(getConnectionIssue(connection("export", "media"), pipelineEdges(), nodes)).toBeNull();
+  });
+
+  it("gives an output one connection in", () => {
+    const nodes = [...pipelineNodes(), typedNode("media", "publish-social", VALID_CONFIGS["publish-social"])];
+
+    expect(getConnectionIssue(connection("export", "media"), [...pipelineEdges(), edge("review", "media")], nodes)).toBe(
+      "Push to media already follows a step."
     );
   });
 });
@@ -422,6 +442,23 @@ describe("validateWorkflow", () => {
       expect(validateWorkflow(publishNodes(), publishEdges())).toEqual([]);
     });
 
+    it("lets the outputs sit side by side after Mockup Approval, in any order", () => {
+      const nodes = [...publishNodes(), typedNode("media", "publish-social", VALID_CONFIGS["publish-social"])];
+
+      expect(validateWorkflow(nodes, [...publishEdges(), edge("approval", "media")])).toEqual([]);
+      expect(validateWorkflow(nodes, [...publishEdges(), edge("printify", "media")])).toEqual([]);
+    });
+
+    it("says an output must follow the last step", () => {
+      const nodes = [...publishNodes(), typedNode("media", "publish-social", VALID_CONFIGS["publish-social"])];
+
+      expect(validateWorkflow(nodes, [...publishEdges(), edge("mockup", "media")])).toContainEqual({
+        id: "output-edge-media",
+        nodeId: "media",
+        message: "Push to media must follow Mockup Approval or another output.",
+      });
+    });
+
     it("says Export ZIP needs the video", () => {
       const nodes = [...publishNodes(), typedNode("export", "export-zip", VALID_CONFIGS["export-zip"])];
       const edges = [edge("input", "mockup"), edge("mockup", "approval"), edge("approval", "export"), edge("export", "printify")];
@@ -429,7 +466,7 @@ describe("validateWorkflow", () => {
       expect(validateWorkflow(nodes, edges)).toContainEqual({
         id: "publish-needs-video-export",
         nodeId: "export",
-        message: "Export ZIP needs Generate Video. Remove it to publish without a video.",
+        message: "Export ZIP packages the approved video: add Generate Video and Review Video, or use another output.",
       });
     });
 
@@ -475,7 +512,7 @@ describe("validateWorkflow", () => {
       {
         id: "missing-output",
         nodeId: null,
-        message: "Add at least one output step such as Export ZIP.",
+        message: "Add an output: Export ZIP, Push to Printify, Publish to Etsy or Push to media.",
       },
     ]);
   });
@@ -487,7 +524,7 @@ describe("validateWorkflow", () => {
       {
         id: "missing-output",
         nodeId: null,
-        message: "Add at least one output step such as Export ZIP.",
+        message: "Add an output: Export ZIP, Push to Printify, Publish to Etsy or Push to media.",
       },
     ]);
   });
@@ -515,7 +552,8 @@ describe("validateWorkflow", () => {
       typedNode("export", "export-zip", VALID_CONFIGS["export-zip"]),
     ];
 
-    expect(validateWorkflow(nodes, [])).toEqual([
+    // Export ZIP without a video is also invalid; this case is about the missing connection.
+    expect(validateWorkflow(nodes, []).filter((issue) => issue.id.startsWith("unreachable-"))).toEqual([
       {
         id: "unreachable-export",
         nodeId: "export",
@@ -530,7 +568,8 @@ describe("validateWorkflow", () => {
       []
     );
 
-    expect(issues.map((issue) => issue.id)).toEqual(["missing-input"]);
+    expect(issues.map((issue) => issue.id)).toContain("missing-input");
+    expect(issues.filter((issue) => issue.id.startsWith("unreachable-"))).toEqual([]);
   });
 
   it("requires an upstream approval gate for generate-video", () => {

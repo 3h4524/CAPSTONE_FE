@@ -3,6 +3,7 @@ import {
   createWorkflowNode,
   getConnectionIssue,
   getExecutionOrder,
+  isOutputNode,
   withUniqueLabels,
 } from "@/helpers/workflow-graph";
 import type { WorkflowEdge, WorkflowNode, WorkflowNodeType } from "@/types/workflow";
@@ -38,14 +39,16 @@ export const getAddableStepTypes = (types: WorkflowNodeType[], nodes: WorkflowNo
   return types.filter((type) => !RUN_ORDER.includes(type) || !present.has(type));
 };
 
-/** Adds a step at its place in the run and connects it to the steps either side. */
+/**
+ * Adds a step at its place in the run and connects it to the steps either side. An output hangs off the last step
+ * beside the other outputs; a step that becomes the last one before the outputs takes them over.
+ */
 export const insertStep = (type: WorkflowNodeType, nodes: WorkflowNode[], edges: WorkflowEdge[]) => {
   const order = RUN_ORDER.indexOf(type);
-  const inRun = orderSteps(nodes, edges).filter((node) => runOrderOf(node) >= 0);
-  // A step outside the run order, such as a listing, hangs off the end of the run.
-  const previous =
-    order >= 0 ? inRun.filter((node) => runOrderOf(node) < order).at(-1) : inRun.filter((node) => node.data.type !== "export-zip").at(-1);
-  const next = order >= 0 ? inRun.find((node) => runOrderOf(node) > order) : inRun.find((node) => node.data.type === "export-zip");
+  // The line before the outputs; a step outside it, such as a listing, hangs off its end.
+  const line = orderSteps(nodes, edges).filter((node) => runOrderOf(node) >= 0 && !isOutputNode(node.data.type));
+  const previous = isOutputNode(type) || order < 0 ? line.at(-1) : line.filter((node) => runOrderOf(node) < order).at(-1);
+  const next = isOutputNode(type) || order < 0 ? undefined : line.find((node) => runOrderOf(node) > order);
 
   const anchor = previous?.position ?? next?.position ?? { x: 0, y: 0 };
   const created = createWorkflowNode(type, { x: anchor.x + NEW_STEP_OFFSET.x, y: anchor.y + NEW_STEP_OFFSET.y });
@@ -56,8 +59,14 @@ export const insertStep = (type: WorkflowNodeType, nodes: WorkflowNode[], edges:
   if (order >= 0 && previous && next) {
     nextEdges = nextEdges.filter((edge) => !(edge.source === previous.id && edge.target === next.id));
   }
+  // A new last step before the outputs: the outputs that followed the old last step now follow it.
+  const movedOutputs = !isOutputNode(type) && order >= 0 && previous && !next
+    ? nextEdges.filter((edge) => edge.source === previous.id && isOutputNode(nodes.find((node) => node.id === edge.target)?.data.type ?? "product-input"))
+    : [];
+  nextEdges = nextEdges.filter((edge) => !movedOutputs.includes(edge));
   if (previous) nextEdges = join(previous.id, step.id, nextEdges, nextNodes);
   if (next) nextEdges = join(step.id, next.id, nextEdges, nextNodes);
+  for (const edge of movedOutputs) nextEdges = join(step.id, edge.target, nextEdges, nextNodes);
 
   return { nodes: nextNodes, edges: nextEdges, step };
 };

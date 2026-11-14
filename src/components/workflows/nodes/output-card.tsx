@@ -17,6 +17,10 @@ const count = (value: unknown) => (Array.isArray(value) ? value.length : 0);
 
 /** One line per setting that matters, so the canvas shows what the step will do without opening it. */
 const publishSummary = (type: string, config: WorkflowNodeConfig, followsMockup = false): string[] => {
+  if (type === "publish-social") {
+    const platforms = [config.pinterest !== false && "Pinterest", config.tiktok !== false && "TikTok"].filter(Boolean).join(" · ");
+    return [platforms || "Choose a platform", "Posts ready to publish by hand"];
+  }
   if (type === "publish-printify" && followsMockup) {
     const profit = typeof config.targetProfit === "number" ? config.targetProfit : 10;
     return [
@@ -46,7 +50,7 @@ const publishSummary = (type: string, config: WorkflowNodeConfig, followsMockup 
 };
 
 export const OutputCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
-  const isPublish = data.type === "publish-etsy" || data.type === "publish-printify";
+  const isPublish = data.type === "publish-etsy" || data.type === "publish-printify" || data.type === "publish-social";
   const description = getWorkflowNodeDefinition(data.type)?.description;
   // Push to Printify shows the Printify product Apply mock-up set from its templates.
   const nodes = useWorkflowStore((state) => state.nodes);

@@ -3,11 +3,12 @@ import {
   DEFAULT_WORKFLOW_NAME,
   DEFAULT_WORKFLOW_POSITIONS,
   DUPLICATE_NODE_OFFSET,
+  OUTPUT_NODE_TYPES,
   RUN_ORDER,
   WORKFLOW_NODE_DEFINITIONS,
 } from "@/constants/workflow";
 import { getWorkflowNodeDefinition, normalizeNodeConfig, readString } from "@/helpers/workflow-config";
-import { findMissingMockupTemplates, isRunnableNode, publishesWithoutVideo, supportsBatchVideos } from "@/helpers/workflow-run";
+import { findMissingMockupTemplates, hasVideoSteps, isRunnableNode, supportsBatchVideos } from "@/helpers/workflow-run";
 import { nodeConfigSchemaIn } from "@/schemas/workflow";
 import type {
   WorkflowDefinition,
@@ -25,13 +26,22 @@ import type { Connection, Viewport } from "@xyflow/react";
 // A listing is written from the product's own details, so only the video waits for an approval.
 const APPROVAL_REQUIRED_TYPES: WorkflowNodeType[] = ["generate-video"];
 // The steps a video needs, each exactly once. The design steps may sit before Apply mock-up.
-export const STANDARD_PIPELINE: WorkflowNodeType[] = ["product-input", "apply-mockup", "approval-gate", "generate-video", "review-video", "export-zip"];
+export const STANDARD_PIPELINE: WorkflowNodeType[] = ["product-input", "apply-mockup", "approval-gate", "generate-video", "review-video"];
 // The steps a run that publishes without a video needs, each exactly once, before the publish steps.
 export const PUBLISH_PIPELINE: WorkflowNodeType[] = ["product-input", "apply-mockup", "approval-gate"];
 // A workflow with one of these is making a video, so it has to be the whole video pipeline.
 const VIDEO_ONLY_TYPES: WorkflowNodeType[] = ["approval-gate", "generate-video", "review-video"];
 
 const runOrderOf = (type: WorkflowNodeType) => RUN_ORDER.indexOf(type);
+
+export const isOutputNode = (type: WorkflowNodeType) => OUTPUT_NODE_TYPES.includes(type);
+
+/** A step's place in the line before the outputs; -1 for an output or a step outside the line (a listing). */
+const coreOrderOf = (type: WorkflowNodeType) => (isOutputNode(type) ? -1 : runOrderOf(type));
+
+/** The last step before the outputs: Review Video, or Mockup Approval without a video. */
+const lastCoreStep = (nodes: WorkflowNode[]) =>
+  nodes.filter((node) => coreOrderOf(node.data.type) >= 0).sort((a, b) => coreOrderOf(a.data.type) - coreOrderOf(b.data.type)).at(-1);
 
 const buildAdjacency = (edges: WorkflowEdge[], direction: "forward" | "backward") => {
   const adjacency = new Map<string, string[]>();
@@ -82,12 +92,20 @@ export const getConnectionIssue = (
     const toNode = nodes.find(n => n.id === target);
     const from = fromNode?.data.type;
     const to = toNode?.data.type;
-    if (from && to && runOrderOf(from) >= 0 && runOrderOf(to) >= 0) {
-      const next = nodes.map(n => runOrderOf(n.data.type)).filter(order => order > runOrderOf(from)).sort((a, b) => a - b)[0];
-      if (runOrderOf(to) !== next) {
-        const fromLabel = fromNode?.data.label ?? WORKFLOW_NODE_DEFINITIONS[from].label;
-        if (next === undefined) return `${fromLabel} is the last step in the workflow, so it has no next node.`;
-        const nextType = nodes.find(n => runOrderOf(n.data.type) === next)?.data.type;
+    const fromLabel = from ? fromNode?.data.label ?? WORKFLOW_NODE_DEFINITIONS[from].label : "";
+    const toLabel = to ? toNode?.data.label ?? WORKFLOW_NODE_DEFINITIONS[to].label : "";
+    // The outputs are peers: each follows the last step or another output, in any order, and takes one connection.
+    if (from && to && isOutputNode(from) && !isOutputNode(to) && to !== "generate-listing")
+      return `Only another output may follow ${fromLabel}.`;
+    if (to && isOutputNode(to) && edges.some((edge) => edge.target === target)) return `${toLabel} already follows a step.`;
+    if (from && to && isOutputNode(to) && coreOrderOf(from) >= 0) {
+      const last = lastCoreStep(nodes);
+      if (last && last.id !== source) return `Outputs go after the last step: connect ${last.data.label} to ${toLabel}.`;
+    } else if (from && to && coreOrderOf(from) >= 0 && coreOrderOf(to) >= 0) {
+      const next = nodes.map(n => coreOrderOf(n.data.type)).filter(order => order > coreOrderOf(from)).sort((a, b) => a - b)[0];
+      if (coreOrderOf(to) !== next) {
+        if (next === undefined) return `${fromLabel} is the last step before the outputs: connect an output after it.`;
+        const nextType = nodes.find(n => coreOrderOf(n.data.type) === next)?.data.type;
         const nextLabel = nextType ? WORKFLOW_NODE_DEFINITIONS[nextType].label : "the next step";
         return `Steps run in order. Connect ${fromLabel} to ${nextLabel} next.`;
       }
@@ -156,11 +174,34 @@ const hasApprovalUpstream = (node: WorkflowNode, nodes: WorkflowNode[], edges: W
   );
 };
 
-// The steps of a run sit in one line in run order, each connected to the one before, so no approval is skipped.
-// Listing content waits for no approval, so it may also sit between two steps of the line.
+// Each output takes one connection, from the last step (through Listing Content too) or from another output, and all
+// of them are reached from the last step: side by side or one after another, in any order.
+const outputIssues = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
+  const last = lastCoreStep(nodes);
+  const outputs = nodes.filter((node) => isOutputNode(node.data.type));
+  if (!last || outputs.length === 0) return [];
+  const listing = nodes.find((node) => node.data.type === "generate-listing");
+  const outputIds = new Set(outputs.map((node) => node.id));
+  const reached = new Set([last.id]);
+  for (let grew = true; grew; ) {
+    grew = false;
+    edges.forEach((edge) => {
+      if (reached.has(edge.source) && (outputIds.has(edge.target) || edge.target === listing?.id) && !reached.has(edge.target)) {
+        reached.add(edge.target);
+        grew = true;
+      }
+    });
+  }
+  return outputs
+    .filter((output) => edges.filter((edge) => edge.target === output.id).length !== 1 || !reached.has(output.id))
+    .map((output) => ({ id: `output-edge-${output.id}`, nodeId: output.id, message: `${output.data.label} must follow ${last.data.label} or another output.` }));
+};
+
+// The steps before the outputs sit in one line in run order, each connected to the one before, so no approval is
+// skipped. Listing content waits for no approval, so it may also sit between two steps of the line.
 const lineIssues = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
-  const issues: WorkflowIssue[] = [];
-  const line = nodes.filter(node => runOrderOf(node.data.type) >= 0).sort((a, b) => runOrderOf(a.data.type) - runOrderOf(b.data.type));
+  const issues: WorkflowIssue[] = [...outputIssues(nodes, edges)];
+  const line = nodes.filter(node => coreOrderOf(node.data.type) >= 0).sort((a, b) => coreOrderOf(a.data.type) - coreOrderOf(b.data.type));
   for (let i = 1; i < line.length; i++) {
     const previous = line[i - 1];
     const current = line[i];
@@ -176,9 +217,12 @@ const lineIssues = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue
 const validatePublishPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
   const issues: WorkflowIssue[] = [];
   if (PUBLISH_PIPELINE.some(type => nodes.filter(n => n.data.type === type).length !== 1))
-    issues.push({ id: "publish-pipeline", nodeId: null, message: "Publishing without a video needs exactly one each of Product Input → Apply Mockup → Mockup Approval before Push to Printify or Publish to Etsy." });
-  nodes.filter(node => node.data.type === "review-video" || node.data.type === "export-zip").forEach(node =>
-    issues.push({ id: `publish-needs-video-${node.id}`, nodeId: node.id, message: `${node.data.label} needs Generate Video. Remove it to publish without a video.` })
+    issues.push({ id: "publish-pipeline", nodeId: null, message: "The outputs need exactly one each of Product Input → Apply Mockup → Mockup Approval before them, so the mock-ups are approved first." });
+  nodes.filter(node => node.data.type === "review-video").forEach(node =>
+    issues.push({ id: `publish-needs-video-${node.id}`, nodeId: node.id, message: `${node.data.label} needs Generate Video. Remove it to run without a video.` })
+  );
+  nodes.filter(node => node.data.type === "export-zip").forEach(node =>
+    issues.push({ id: `publish-needs-video-${node.id}`, nodeId: node.id, message: `${node.data.label} packages the approved video: add Generate Video and Review Video, or use another output.` })
   );
   nodes.filter(node => !isRunnableNode(node.data.type)).forEach(node =>
     issues.push({ id: `publish-unsupported-${node.id}`, nodeId: node.id, message: `${node.data.label} cannot run yet. Remove it to run the workflow.` })
@@ -202,7 +246,7 @@ const validateVideoPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): Wo
   if (!nodes.some(node => VIDEO_ONLY_TYPES.includes(node.data.type))) return [];
   const issues: WorkflowIssue[] = [];
   if (STANDARD_PIPELINE.some(type => nodes.filter(n => n.data.type === type).length !== 1))
-    issues.push({ id: "mvp-pipeline", nodeId: null, message: "A video needs exactly one each of Product Input → Apply Mockup → Mockup Approval → Generate Video → Review Video → Export ZIP." });
+    issues.push({ id: "mvp-pipeline", nodeId: null, message: "A video needs exactly one each of Product Input → Apply Mockup → Mockup Approval → Generate Video → Review Video, then an output." });
   nodes.filter(node => !isRunnableNode(node.data.type)).forEach(node =>
     issues.push({ id: `video-unsupported-${node.id}`, nodeId: node.id, message: `${node.data.label} cannot run yet. Remove it to run the video.` })
   );
@@ -221,8 +265,9 @@ const validateVideoPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): Wo
 };
 
 export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
-  // Publishing comes last: after Export ZIP of a video, or right after Mockup Approval without one.
-  const issues: WorkflowIssue[] = publishesWithoutVideo(nodes) ? validatePublishPipeline(nodes, edges) : validateVideoPipeline(nodes, edges);
+  // The outputs come last: after Review Video, or right after Mockup Approval without a video.
+  const outputsWithoutVideo = !hasVideoSteps(nodes) && nodes.some((node) => isOutputNode(node.data.type));
+  const issues: WorkflowIssue[] = outputsWithoutVideo ? validatePublishPipeline(nodes, edges) : validateVideoPipeline(nodes, edges);
   const missingTemplates = findMissingMockupTemplates(nodes);
   if (missingTemplates) issues.push(missingTemplates);
   const inputNodes = nodes.filter((node) => node.data.type === "product-input");
@@ -234,8 +279,8 @@ export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
     issues.push({ id: `extra-input-${node.id}`, nodeId: node.id, message: "A workflow can only have one Product input." })
   );
 
-  if (!nodes.some((node) => WORKFLOW_NODE_DEFINITIONS[node.data.type].category === "output")) {
-    issues.push({ id: "missing-output", nodeId: null, message: "Add at least one output step such as Export ZIP." });
+  if (!nodes.some((node) => isOutputNode(node.data.type))) {
+    issues.push({ id: "missing-output", nodeId: null, message: "Add an output: Export ZIP, Push to Printify, Publish to Etsy or Push to media." });
   }
 
   const reachable = collectReachable(

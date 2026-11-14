@@ -33,6 +33,7 @@ export const NodeView = (props: NodeProps<WorkflowNode>) => {
       return <ExportZipCard {...props} />;
     case "publish-etsy":
     case "publish-printify":
+    case "publish-social":
       return <OutputCard {...props} />;
     default:
       Log.warn({ prefix: LOG_PREFIX, message: "Unhandled workflow node type.", data: props.data.type });

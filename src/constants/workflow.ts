@@ -5,6 +5,7 @@ import {
   Film,
   ImageIcon,
   Layers3,
+  Share2,
   Shirt,
   ShoppingBag,
   Store,
@@ -61,6 +62,7 @@ export const NODE_CARD_WIDTHS: Record<WorkflowNodeType, number> = {
   "export-zip": 240,
   "publish-etsy": 240,
   "publish-printify": 240,
+  "publish-social": 240,
 };
 
 // The ratios the image-generation API accepts.
@@ -80,8 +82,13 @@ export const BATCH_RUN_NODE_TYPES: WorkflowNodeType[] = [
   "apply-mockup",
 ];
 
-// The publish steps run on the server after the ZIP: Printify publishes to Etsy, then a direct Etsy listing.
-export const PUBLISH_NODE_TYPES: WorkflowNodeType[] = ["publish-printify", "publish-etsy"];
+// The outputs of a run: peers that each take what the run made, in any order and independent of one another. A
+// workflow needs at least one; each follows the last step (Review Video, or Mockup Approval without a video) or another
+// output. The backend checks the same rules.
+export const OUTPUT_NODE_TYPES: WorkflowNodeType[] = ["export-zip", "publish-printify", "publish-etsy", "publish-social"];
+
+// The outputs the server runs in the background: Printify, an Etsy listing, and the social posts.
+export const PUBLISH_NODE_TYPES: WorkflowNodeType[] = ["publish-printify", "publish-etsy", "publish-social"];
 
 export const VIDEO_RUN_NODE_TYPES: WorkflowNodeType[] = [
   "approval-gate",
@@ -107,8 +114,7 @@ export const RUN_ORDER: WorkflowNodeType[] = [
   "approval-gate",
   "generate-video",
   "review-video",
-  "export-zip",
-  ...PUBLISH_NODE_TYPES,
+  ...OUTPUT_NODE_TYPES,
 ];
 
 
@@ -460,7 +466,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     icon: Archive,
     category: "output",
     hasInput: true,
-    // Push to Printify or Publish to Etsy may follow the ZIP.
+    // Another output may follow it: the outputs are peers, in any order.
     hasOutput: true,
     defaultConfig: {},
     fields: [],
@@ -472,7 +478,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     icon: Store,
     category: "output",
     hasInput: true,
-    hasOutput: false,
+    hasOutput: true,
     defaultConfig: {
       listingType: "download",
       price: null,
@@ -509,6 +515,20 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
       addMockups: true,
     },
     fields: [],
+  },
+  "publish-social": {
+    type: "publish-social",
+    label: "Push to media",
+    description: "Prepare Pinterest and TikTok posts from the approved mock-ups, video and listing, ready to post.",
+    icon: Share2,
+    category: "output",
+    hasInput: true,
+    hasOutput: true,
+    defaultConfig: { pinterest: true, tiktok: true },
+    fields: [
+      { kind: "switch", name: "pinterest", label: "Pinterest", description: "A 2:3 pin for each mock-up and a video pin, linked to the Etsy listing." },
+      { kind: "switch", name: "tiktok", label: "TikTok", description: "The 9:16 video and a photo post, with a caption and hashtags." },
+    ],
   },
 };
 

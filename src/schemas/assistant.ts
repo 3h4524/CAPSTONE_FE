@@ -27,6 +27,7 @@ const workflowNodeTypeSchema = z.enum([
   "export-zip",
   "publish-etsy",
   "publish-printify",
+  "publish-social",
 ]);
 
 const canvasOperationSchema = z.object({

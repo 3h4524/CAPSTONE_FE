@@ -74,6 +74,7 @@ const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
     publishToEtsy: true,
     addMockups: true,
   },
+  "publish-social": { pinterest: true, tiktok: true },
 };
 
 // These node types declare no field of their own, so an empty config is already valid for them.

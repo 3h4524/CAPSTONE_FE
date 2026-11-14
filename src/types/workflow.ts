@@ -14,7 +14,8 @@ export type WorkflowNodeType =
   | "generate-listing"
   | "export-zip"
   | "publish-etsy"
-  | "publish-printify";
+  | "publish-printify"
+  | "publish-social";
 
 export type WorkflowNodeCategory = "trigger" | "ai" | "review" | "output";
 

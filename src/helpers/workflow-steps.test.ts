@@ -80,10 +80,33 @@ describe("insertStep", () => {
     expect(isConnected(nextEdges, step.id, idOf(nodes, "prompt-synthesis"))).toBe(true);
   });
 
-  it("hangs a listing off the run, before the export", () => {
+  it("hangs a listing off the last step before the outputs", () => {
     const { nodes: nextNodes, edges: nextEdges, step } = insertStep("generate-listing", nodes, edges);
 
+    expect(isConnected(nextEdges, idOf(nodes, "review-video"), step.id)).toBe(true);
+    expect(isConnected(nextEdges, idOf(nodes, "review-video"), idOf(nodes, "export-zip"))).toBe(true);
+    expect(notConnectedIssues(nextNodes, nextEdges)).toEqual([]);
+  });
+
+  it("adds an output beside the others, after the last step", () => {
+    const { nodes: nextNodes, edges: nextEdges, step } = insertStep("publish-social", nodes, edges);
+
+    expect(isConnected(nextEdges, idOf(nodes, "review-video"), step.id)).toBe(true);
+    expect(isConnected(nextEdges, idOf(nodes, "review-video"), idOf(nodes, "export-zip"))).toBe(true);
+    expect(validateWorkflow(nextNodes, nextEdges).filter((issue) => issue.id.startsWith("output-edge-"))).toEqual([]);
+  });
+
+  it("moves the outputs to a new last step", () => {
+    // Without a video the outputs follow Mockup Approval; adding the video steps moves them after Review Video.
+    const withoutVideo = ["review-video", "generate-video"].reduce(
+      (graph, type) => removeStep(idOf(graph.nodes, type) as string, graph.nodes, graph.edges),
+      { nodes, edges }
+    );
+    const video = insertStep("generate-video", withoutVideo.nodes, withoutVideo.edges);
+    const { nodes: nextNodes, edges: nextEdges, step } = insertStep("review-video", video.nodes, video.edges);
+
     expect(isConnected(nextEdges, step.id, idOf(nodes, "export-zip"))).toBe(true);
+    expect(isConnected(nextEdges, idOf(nodes, "approval-gate"), idOf(nodes, "export-zip"))).toBe(false);
     expect(notConnectedIssues(nextNodes, nextEdges)).toEqual([]);
   });
 });

@@ -205,6 +205,7 @@ const NODE_FEATURES: Partial<Record<string, PlanFeatureCode>> = {
   "generate-listing": "workflow_listing",
   "publish-etsy": "workflow_publish",
   "publish-printify": "workflow_publish",
+  "publish-social": "workflow_publish",
 };
 
 // True when the Seller's plan does not include the step. False while entitlements are loading, so a
@@ -231,7 +232,7 @@ export const planIssues = (
   if (nodeType === "generate-listing" && !hasFeature(entitlements, "workflow_listing")) {
     issues.push({ message: "Listing content is part of Pro. Remove this step to run the workflow on your plan." });
   }
-  if ((nodeType === "publish-etsy" || nodeType === "publish-printify") && !hasFeature(entitlements, "workflow_publish")) {
+  if ((nodeType === "publish-etsy" || nodeType === "publish-printify" || nodeType === "publish-social") && !hasFeature(entitlements, "workflow_publish")) {
     issues.push({ message: "Publishing is part of Pro." });
   }
   if (nodeType === "design-image") {

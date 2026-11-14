@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { AvatarCard } from "@/components/profile/avatar-card";
 import { PersonalForm } from "@/components/profile/personal-form";
 import { Button } from "@/components/ui/button";
@@ -84,29 +85,30 @@ export const Profile = ({ variant = "seller" }: ProfileProps) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-4">
-          <div className="space-y-0.5">
-            <h1 className="text-base leading-none font-semibold">Profile</h1>
-            <p className="text-muted-foreground text-sm">
-              {variant === "admin"
-                ? "Manage your administrator name and sign-in email."
-                : "Manage your personal and workspace details."}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleDiscard}
-              disabled={!isDirty || isUpdating}
-            >
-              Discard
-            </Button>
-            <Button type="submit" disabled={!isDirty || isUpdating}>
-              Save changes
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          className="border-b px-6 py-4 max-md:px-4"
+          title="Profile"
+          description={
+            variant === "admin"
+              ? "Manage your administrator name and sign-in email."
+              : "Manage your personal and workspace details."
+          }
+          actions={
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleDiscard}
+                disabled={!isDirty || isUpdating}
+              >
+                Discard
+              </Button>
+              <Button type="submit" disabled={!isDirty || isUpdating}>
+                Save changes
+              </Button>
+            </>
+          }
+        />
         <div className="grid md:grid-cols-[15rem_1fr]">
           <AvatarCard
             avatarUrl={avatarUrl}

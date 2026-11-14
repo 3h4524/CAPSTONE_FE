@@ -26,6 +26,7 @@ import { AdminUsersTable } from "@/components/admin/users/admin-users-table";
 import { BanUserModal } from "@/components/admin/users/ban-user-modal";
 import { EditUserModal } from "@/components/admin/users/edit-user-modal";
 import { PhonePager } from "@/components/commons/data-display/phone-pager";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -183,17 +184,14 @@ export default function AdminUsersPage() {
   return (
     <>
       <div className="flex h-full flex-col gap-6 p-0 max-md:gap-3">
-        <div className="flex flex-col gap-4 max-md:flex-row max-md:items-center max-md:justify-between sm:flex-row sm:items-center sm:justify-between">
-          <div>
-
-            <h1 className="text-ink-900 text-2xl font-bold tracking-tight">
+        <PageHeader
+          title={
+            <>
               Users<span className="max-md:hidden"> Management</span>
-            </h1>
-            <p className="text-ink-500 mt-1 text-sm max-md:hidden">
-              Search, filter, and manage registered user accounts.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
+            </>
+          }
+          description="Search, filter, and manage registered user accounts."
+          actions={
             <Button
               variant="outline"
               size="page-action"
@@ -204,8 +202,8 @@ export default function AdminUsersPage() {
               <Download className="h-4 w-4" />
               {isExporting ? "Exporting..." : "Export CSV"}
             </Button>
-          </div>
-        </div>
+          }
+        />
 
         <div className="grid grid-cols-1 gap-4 max-md:grid-cols-2 max-md:gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
           <div className="border-ink-200/80 bg-card relative overflow-hidden rounded-xl border p-5 shadow-sm max-md:p-3.5">

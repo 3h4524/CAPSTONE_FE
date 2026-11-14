@@ -88,6 +88,7 @@ export const ADMIN_NAV_SECTIONS: AppNavSection[] = [
       { label: "Subscriptions", titleKey: "navigation.admin.items.subscriptions", href: "/admin/subscription-plans", icon: CreditCard },
       { label: "Model Photos", titleKey: "navigation.admin.items.modelPhotos", href: "/admin/model-photos", icon: UserRound },
       { label: "Mock-up Templates", titleKey: "navigation.admin.items.mockupTemplates", href: "/admin/mockup-templates", icon: Shirt },
+      { label: "System Styles", titleKey: "navigation.admin.items.systemStyles", href: "/admin/style-art-presets", icon: Palette },
     ],
   },
   {

@@ -15,7 +15,7 @@ export const resources = {
           items: {
             dashboard: "Dashboard", ragKnowledgeBase: "RAG Knowledge Base", marketInsights: "Market Insights",
             ragEvaluation: "RAG Evaluation", users: "Users", subscriptions: "Subscriptions", modelPhotos: "Model Photos",
-            mockupTemplates: "Mock-up Templates", revenueReports: "Revenue & Reports", systemStatistics: "System Statistics",
+            mockupTemplates: "Mock-up Templates", systemStyles: "System Styles", revenueReports: "Revenue & Reports", systemStatistics: "System Statistics",
             imageQuality: "Image Quality", supportTickets: "Support Tickets", testReports: "Test Reports",
             settings: "Settings", profile: "Profile",
           },
@@ -162,7 +162,7 @@ export const resources = {
           items: {
             dashboard: "Bảng điều khiển", ragKnowledgeBase: "Kho tri thức RAG", marketInsights: "Thông tin thị trường",
             ragEvaluation: "Đánh giá RAG", users: "Người dùng", subscriptions: "Gói đăng ký", modelPhotos: "Ảnh người mẫu",
-            mockupTemplates: "Mẫu mock-up", revenueReports: "Doanh thu & báo cáo", systemStatistics: "Thống kê hệ thống",
+            mockupTemplates: "Mẫu mock-up", systemStyles: "Phong cách hệ thống", revenueReports: "Doanh thu & báo cáo", systemStatistics: "Thống kê hệ thống",
             imageQuality: "Chất lượng ảnh", supportTickets: "Phiếu hỗ trợ", testReports: "Báo cáo kiểm thử",
             settings: "Cài đặt", profile: "Hồ sơ",
           },

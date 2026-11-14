@@ -18,6 +18,7 @@ import {
   Store,
 } from "lucide-react";
 
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { PageLoading } from "@/components/commons/layout/page-loading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -90,38 +91,35 @@ export function UsagePage() {
 
   return (
     <div className="w-full min-w-0 space-y-4 md:space-y-6 md:p-6">
-      {/* Header */}
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-ink-900 text-2xl font-bold tracking-tight max-md:text-xl sm:text-3xl">Usage</h1>
-          <p className="text-muted-foreground mt-1 text-sm max-md:hidden">
-            Understand this month&apos;s production volume and estimated provider costs.
-          </p>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-ink-200 text-ink-700 hover:bg-ink-50 h-9 gap-1.5 rounded-xl px-3.5 text-xs font-medium shadow-2xs"
-            >
-              {activeRange.label}
-              <ChevronDown className="text-ink-500 size-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40 rounded-xl">
-            {ranges.map((range) => (
-              <DropdownMenuItem
-                key={range.days}
-                onClick={() => setDays(range.days)}
-                className={`text-xs ${days === range.days ? "text-primary font-semibold" : ""}`}
+      <PageHeader
+        title="Usage"
+        description="Understand this month's production volume and estimated provider costs."
+        actions={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-ink-200 text-ink-700 hover:bg-ink-50 h-9 gap-1.5 rounded-xl px-3.5 text-xs font-medium shadow-2xs"
               >
-                {range.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </header>
+                {activeRange.label}
+                <ChevronDown className="text-ink-500 size-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40 rounded-xl">
+              {ranges.map((range) => (
+                <DropdownMenuItem
+                  key={range.days}
+                  onClick={() => setDays(range.days)}
+                  className={`text-xs ${days === range.days ? "text-primary font-semibold" : ""}`}
+                >
+                  {range.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      />
 
       {/* Top 4 KPI Cards */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

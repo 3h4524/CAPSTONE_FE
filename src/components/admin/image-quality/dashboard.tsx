@@ -5,6 +5,7 @@ import { Activity, ChevronDown, FlaskConical } from "lucide-react";
 
 import { EvaluationPanel } from "@/components/admin/image-quality/evaluation/evaluation-panel";
 import { LivePanel } from "@/components/admin/image-quality/live/live-panel";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import { cn } from "@/utils/cn";
@@ -16,10 +17,8 @@ export const ImageQualityDashboard = () => {
 
   return (
     <div className="relative flex flex-col gap-6 max-md:gap-3">
-      <header className="flex flex-col gap-1.5">
-        <h2 className="font-display text-ink-900 text-xl font-bold tracking-tight max-md:text-lg sm:text-2xl">
-          Design images before and after a prompt change
-        </h2>
+      <div className="flex flex-col gap-1.5">
+        <PageHeader title="Design images before and after a prompt change" />
         <p className={cn("text-ink-600 max-w-3xl text-sm leading-relaxed", !isIntroOpen && "max-md:hidden")}>
           <strong className="text-ink-800 font-semibold">Evaluation runs</strong> hold the scores
           the offline scripts gave to images that already exist: text read back by OCR, layout, how
@@ -36,7 +35,7 @@ export const ImageQualityDashboard = () => {
           {isIntroOpen ? "Hide" : "What is this?"}
           <ChevronDown className={cn("size-3 transition-transform", isIntroOpen && "rotate-180")} aria-hidden="true" />
         </button>
-      </header>
+      </div>
 
       <Tabs defaultValue="evaluation" className="gap-5 max-md:gap-3">
         <TabsList className="bg-ink-200/70 h-11 w-full sm:w-fit">

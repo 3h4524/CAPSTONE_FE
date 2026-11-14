@@ -1,5 +1,6 @@
 "use client";
 
+import { videoStatusOf } from "@/hooks/queries/use-group-videos";
 import { useRunGroup, useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { RunGroupTarget } from "@/types/video-workflow";
@@ -13,11 +14,12 @@ const ACTIVE = new Set(["queued", "running"]);
  * being made by its own progress and a queued one not at all. Four videos with one done is 25%, not the 100% of the
  * run that finished. Floored, so 100 only shows once every video is done.
  */
-export const groupVideoProgress = (targets: Pick<RunGroupTarget, "runId" | "runStatus" | "progress">[]) => {
+export const groupVideoProgress = (targets: Pick<RunGroupTarget, "runId" | "runStatus" | "videoStatus" | "progress">[]) => {
   const runs = targets.filter((target) => target.runId);
   if (runs.length === 0) return 0;
   const total = runs.reduce((sum, target) => {
-    const status = target.runStatus ?? "";
+    // The video's own status: Push to Printify, beside it, neither holds the bar back nor fails it.
+    const status = videoStatusOf(target);
     if (SETTLED.has(status)) return sum + 100;
     if (status === "running") return sum + Math.max(0, Math.min(100, target.progress));
     return sum;
@@ -37,6 +39,6 @@ export const useGroupVideoProgress = (): { progress: number; active: boolean } |
   if (runs.length === 0) return null;
   return {
     progress: groupVideoProgress(runs),
-    active: runs.some((target) => ACTIVE.has(target.runStatus ?? "")),
+    active: runs.some((target) => ACTIVE.has(videoStatusOf(target))),
   };
 };

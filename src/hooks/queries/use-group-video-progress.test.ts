@@ -21,6 +21,10 @@ describe("groupVideoProgress", () => {
     expect(groupVideoProgress([run("completed"), run("completed"), run("running", 99.9)])).toBe(99);
   });
 
+  it("counts a video that is done in full even when Push to Printify failed its run", () => {
+    expect(groupVideoProgress([{ ...run("failed"), videoStatus: "completed" }, { ...run("running", 40), videoStatus: "running" }])).toBe(70);
+  });
+
   it("leaves out designs without a run, and is 0 with none", () => {
     expect(groupVideoProgress([{ runId: null, runStatus: null, progress: 0 }, run("completed")])).toBe(100);
     expect(groupVideoProgress([])).toBe(0);

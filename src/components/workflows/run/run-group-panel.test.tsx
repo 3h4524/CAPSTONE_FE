@@ -10,7 +10,7 @@ import userEvent from "@testing-library/user-event";
 const mocks = vi.hoisted(() => ({
   group: null as RunGroup | null,
   confirm: vi.fn(),
-  confirmCost: vi.fn(),
+  resume: vi.fn(),
   assets: [] as MockupAsset[],
 }));
 
@@ -21,6 +21,7 @@ vi.mock("@/hooks/queries/use-run-group", () => ({
 vi.mock("@/hooks/mutations/use-run-group-actions", () => ({
   useConfirmRunGroup: () => ({ mutate: mocks.confirm, isPending: false }),
   useCancelRunGroup: () => ({ mutate: vi.fn(), isPending: false }),
+  useResumeRunGroup: () => ({ mutate: mocks.resume, isPending: false }),
 }));
 vi.mock("@/hooks/use-workflow-runtime", () => ({ useWorkflowRuntime: () => ({ selectRun: vi.fn() }) }));
 vi.mock("@/hooks/use-sync-generated-mockups", () => ({ useSyncGeneratedMockups: () => false }));
@@ -33,10 +34,8 @@ vi.mock("@/hooks/queries/use-ai-video-templates", () => ({
 vi.mock("@/components/workflows/media/model-photo-mockup-form", () => ({
   ModelPhotoMockupForm: ({ productId }: { productId: string }) => <p>model photo form for {productId}</p>,
 }));
-vi.mock("@/helpers/confirm-ai-shot", async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
-  return { ...actual, confirmRunGroupAiShot: mocks.confirmCost };
-});
+const { askMock } = vi.hoisted(() => ({ askMock: vi.fn() }));
+vi.mock("@/stores/cost-confirm", () => ({ askCostConfirm: askMock }));
 
 const standard = { mode: "standard", aiScenes: [{ mode: "standard" }] } as GenerateVideoConfig;
 const ai = { mode: "ai_shot", aiScenes: [{ mode: "ai", templateCode: "cinematic_product_showcase" }] } as GenerateVideoConfig;
@@ -75,46 +74,28 @@ describe("RunGroupPanel: starting the videos", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
 
-    expect(mocks.confirmCost).not.toHaveBeenCalled();
-    expect(mocks.confirm).toHaveBeenCalledWith(
-      { groupId: "group-1", expectedRevision: 4, aiShotQuoteToken: undefined },
-      expect.anything()
-    );
+    expect(askMock).not.toHaveBeenCalled();
+    expect(mocks.confirm).toHaveBeenCalledWith({ groupId: "group-1", expectedRevision: 4 }, expect.anything());
   });
 
-  it("confirms what every design's AI clips cost, then starts them with that token", async () => {
+  it("starts AI videos at once too: their cost was shown when the seller pressed Run", async () => {
     showCanvas(ai);
-    mocks.confirmCost.mockResolvedValue("group-token");
     render(<RunGroupPanel />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Continue (AI)" }));
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
 
-    await waitFor(() => expect(mocks.confirmCost).toHaveBeenCalledWith("group-1", 4));
-    expect(mocks.confirm).toHaveBeenCalledWith(
-      { groupId: "group-1", expectedRevision: 4, aiShotQuoteToken: "group-token" },
-      expect.anything()
-    );
+    expect(askMock).not.toHaveBeenCalled();
+    expect(mocks.confirm).toHaveBeenCalledWith({ groupId: "group-1", expectedRevision: 4 }, expect.anything());
   });
 
-  it("asks for the cost when only one design has AI settings of its own", async () => {
+  it("asks nothing either when only one design has AI settings of its own", async () => {
     mocks.group = group(ai);
-    mocks.confirmCost.mockResolvedValue("group-token");
     render(<RunGroupPanel />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Continue (AI)" }));
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
 
-    await waitFor(() => expect(mocks.confirmCost).toHaveBeenCalled());
-  });
-
-  it("starts nothing when the seller declines the cost", async () => {
-    showCanvas(ai);
-    mocks.confirmCost.mockResolvedValue(null);
-    render(<RunGroupPanel />);
-
-    await userEvent.click(screen.getByRole("button", { name: "Continue (AI)" }));
-
-    await waitFor(() => expect(mocks.confirmCost).toHaveBeenCalled());
-    expect(mocks.confirm).not.toHaveBeenCalled();
+    await waitFor(() => expect(mocks.confirm).toHaveBeenCalled());
+    expect(askMock).not.toHaveBeenCalled();
   });
 
   it("offers to make the product's model photo only when a scene shows a person", () => {
@@ -128,14 +109,14 @@ describe("RunGroupPanel: starting the videos", () => {
     expect(screen.getByText("model photo form for p")).toBeInTheDocument();
   });
 
-  it("names the design that cannot be rendered and why", () => {
+  it("names the design that cannot be rendered and why, and lets Continue make its model photo again", () => {
     const blocked = group();
     blocked.targets[0].resolveError = "Scene 1 shows a person, and this design has no approved model photo.";
     mocks.group = blocked;
     render(<RunGroupPanel />);
 
     expect(screen.getAllByText(/no approved model photo/).length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
 
   it("says the model photos are being made, and keeps Continue off until they are", () => {
@@ -150,11 +131,11 @@ describe("RunGroupPanel: starting the videos", () => {
 
   it("says why a run set to approve automatically is still waiting", () => {
     const waiting = group();
-    waiting.notice = "The AI videos now cost $9.60, more than the $5.00 you confirmed when you pressed Run.";
+    waiting.notice = "DAVIES T-Shirt · Design 1: its model photo could not be made. Ideogram is busy.";
     mocks.group = waiting;
     render(<RunGroupPanel />);
 
-    expect(screen.getByText(/did not start\. The AI videos now cost \$9\.60/)).toBeInTheDocument();
+    expect(screen.getByText(/did not start\. DAVIES T-Shirt · Design 1: its model photo could not be made/)).toBeInTheDocument();
   });
 });
 
@@ -182,5 +163,20 @@ describe("RunGroupPanel: once the videos started", () => {
     expect(screen.getAllByRole("img", { name: /mock-up, approved/ })).toHaveLength(2);
     expect(screen.queryByRole("img", { name: /rejected/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Approve mock-up" })).not.toBeInTheDocument();
+  });
+
+  it("offers to resume a stopped run from where it stopped", async () => {
+    mocks.group = { ...mocks.group!, status: "cancelled", revision: 6 };
+    render(<RunGroupPanel />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Resume" }));
+
+    expect(mocks.resume).toHaveBeenCalledWith({ groupId: "group-1", expectedRevision: 6 }, expect.anything());
+  });
+
+  it("offers no resume while the run goes on", () => {
+    render(<RunGroupPanel />);
+
+    expect(screen.queryByRole("button", { name: "Resume" })).not.toBeInTheDocument();
   });
 });

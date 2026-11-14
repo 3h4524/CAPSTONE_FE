@@ -7,6 +7,12 @@ import { useWorkflowStore } from "@/stores/workflow";
 import type { PromoVideo, RunGroup, RunGroupTarget } from "@/types/video-workflow";
 import { useQueries } from "@tanstack/react-query";
 
+/**
+ * Where a design's video is: its own status, not its run's. Push to Printify runs beside the video and fails on its
+ * own, so a run that failed because of Printify still has a finished video.
+ */
+export const videoStatusOf = (target: Pick<RunGroupTarget, "runStatus" | "videoStatus">) => target.videoStatus ?? target.runStatus ?? "";
+
 /** A run in these states has a rendered video to show. */
 export const WITH_VIDEO = new Set(["waiting_for_review", "completed"]);
 /** A run in these states stopped before its video was finished. */
@@ -30,7 +36,7 @@ export const useGroupVideos = (): { group: RunGroup | null; videos: GroupVideo[]
   const workflowId = useWorkflowStore((state) => state.workflowId);
   const group = data && data.workflowId === workflowId ? data : null;
   const targets = group?.targets.filter((target) => target.runId) ?? [];
-  const made = targets.filter((target) => WITH_VIDEO.has(target.runStatus ?? ""));
+  const made = targets.filter((target) => WITH_VIDEO.has(videoStatusOf(target)));
   const lists = useQueries({
     queries: made.map((target) => ({
       queryKey: videoWorkflowKeys.videos(target.runId),
@@ -50,8 +56,8 @@ export type GroupVideoState = "queued" | "processing" | "review" | "approved" | 
  */
 const AFTER_VIDEO_STEPS: string[] = ["export-zip", ...PUBLISH_NODE_TYPES];
 
-export const groupVideoState = (target: Pick<RunGroupTarget, "runStatus" | "currentStep">): GroupVideoState => {
-  const status = target.runStatus ?? "";
+export const groupVideoState = (target: Pick<RunGroupTarget, "runStatus" | "videoStatus" | "currentStep">): GroupVideoState => {
+  const status = videoStatusOf(target);
   if (status === "completed" || (status === "running" && AFTER_VIDEO_STEPS.includes(target.currentStep ?? ""))) return "approved";
   if (status === "waiting_for_review") return "review";
   if (STOPPED.has(status)) return "stopped";

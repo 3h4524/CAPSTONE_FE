@@ -519,6 +519,13 @@ export interface RunGroupScenePreview {
   overridden: boolean;
 }
 /** One design of one product in a batch video run. */
+/** One step of a design's run in a batch: `pending`, `running`, `succeeded`, `failed`, `cancelled`... */
+export interface RunGroupStep {
+  status: string;
+  stage: string | null;
+  progress: number;
+  error: string | null;
+}
 export interface RunGroupTarget {
   key: string;
   productId: string;
@@ -538,6 +545,14 @@ export interface RunGroupTarget {
   resolveError: string | null;
   runId: string | null;
   runStatus: string | null;
+  /**
+   * Where the design's video is, as a run status, apart from Push to Printify: Printify runs beside the video, so a
+   * Printify that failed leaves the run failed while its video is done. Absent from an older API; read it with
+   * `videoStatusOf`.
+   */
+  videoStatus?: string | null;
+  /** The design's Push to Printify step, apart from the video; null before it has a run or without that step. */
+  printify?: RunGroupStep | null;
   currentStep: string | null;
   stage: string | null;
   progress: number;
@@ -590,6 +605,8 @@ export interface RunAction {
   expectedRevision: number;
   action:
     | "cancel"
+    /** Goes on with a stopped run from where it stopped; a config sent with it replaces the video's settings. */
+    | "resume"
     | "resume_mockups"
     | "approve_video"
     | "reject_video"
@@ -613,6 +630,11 @@ export interface AiShotQuote {
   note: string;
   /** A batch quote's part for each design; absent on a single run's quote. */
   items?: AiShotQuoteItem[] | null;
+  /**
+   * The request makes clips the run's own settings did not (other settings, or a regeneration). The cost of the run's
+   * own clips was shown on Run, so it is shown again only when this is true.
+   */
+  changesWhatIsMade?: boolean;
 }
 export interface AiShotQuoteItem {
   label: string;

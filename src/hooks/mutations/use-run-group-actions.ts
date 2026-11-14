@@ -3,6 +3,7 @@
 import {
   cancelRunGroup,
   confirmRunGroup,
+  resumeRunGroup,
   runGroupKeys,
   startRunGroup,
   updateRunGroupDesignConfig,
@@ -33,6 +34,11 @@ export const useConfirmRunGroup = () => {
 export const useCancelRunGroup = () => {
   const store = useStoreGroup();
   return useMutation({ mutationFn: cancelRunGroup, onSuccess: store });
+};
+
+export const useResumeRunGroup = () => {
+  const store = useStoreGroup();
+  return useMutation({ mutationFn: resumeRunGroup, onSuccess: store });
 };
 
 export const useUpdateRunGroupDesignConfig = () => {

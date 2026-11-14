@@ -9,6 +9,7 @@ import { getErrorMessage } from "@/helpers/error-message";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { getWorkflowNodeDefinition } from "@/helpers/workflow-config";
 import { useMediaDownload } from "@/hooks/mutations/use-media-download";
+import { videoStatusOf } from "@/hooks/queries/use-group-videos";
 import { useRunGroup, useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -26,7 +27,7 @@ const useGroupExport = () => {
   const { data: group } = useRunGroup(groupId);
   const active = group && group.workflowId === workflowId && group.status !== "waiting_for_targets" ? group : null;
   // Asked again as videos finish, since each one's package is made when its run completes.
-  const finished = active?.targets.filter((target) => target.runStatus === "completed").length ?? 0;
+  const finished = active?.targets.filter((target) => videoStatusOf(target) === "completed").length ?? 0;
   const { data: summary } = useQuery({
     // Not under the group's own key: reading the group again (every change of a run) must not ask this too.
     queryKey: ["run-group-export", active?.id ?? null, finished],

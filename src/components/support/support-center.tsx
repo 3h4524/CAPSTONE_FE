@@ -16,6 +16,7 @@ import {
   Store,
 } from "lucide-react";
 
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { CreateTicketDialog } from "@/components/support/create-ticket-dialog";
 import { TicketPriorityBadge, TicketStatusBadge } from "@/components/support/ticket-badges";
@@ -153,12 +154,11 @@ export function SupportCenter() {
 
   return (
     <div className="text-foreground w-full min-w-0 p-4 sm:p-6">
-      <header className="mb-6">
-        <h1 className="font-display text-3xl font-semibold tracking-tight">Support center</h1>
-        <p className="text-ink-600 mt-1 max-w-2xl text-sm">
-          Find setup guidance, contact the support team, and track your requests.
-        </p>
-      </header>
+      <PageHeader
+        className="mb-6"
+        title="Support center"
+        description="Find setup guidance, contact the support team, and track your requests."
+      />
 
       <div>
         <section

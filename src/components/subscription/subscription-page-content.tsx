@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { PageLoading } from "@/components/commons/layout/page-loading";
 import { showToast } from "@/helpers/toast";
 import { useCancelScheduledDowngrade } from "@/hooks/mutations/use-cancel-scheduled-downgrade";
@@ -96,14 +97,14 @@ export const SubscriptionPageContent = () => {
   return (
     // The bottom padding keeps the last line clear of the floating assistant button.
     <div className="w-full min-w-0 space-y-8 max-md:space-y-4 max-md:pb-14 md:p-6">
-      <div>
-        <h1 className="text-2xl font-bold">
-          Billing<span className="max-md:hidden"> &amp; Subscription</span>
-        </h1>
-        <p className="text-muted-foreground text-sm max-md:hidden">
-          Keep track of your plan and what it allows, compare plans, and download your invoices.
-        </p>
-      </div>
+      <PageHeader
+        title={
+          <>
+            Billing<span className="max-md:hidden"> &amp; Subscription</span>
+          </>
+        }
+        description="Keep track of your plan and what it allows, compare plans, and download your invoices."
+      />
 
       {/* On Free there's nothing to show here; a plan or trial keeps it for renewal and scheduled changes. */}
       {data.currentSubscription && (

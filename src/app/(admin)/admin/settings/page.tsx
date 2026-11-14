@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import { AdminShell } from "@/components/admin/admin-shell";
 import { SettingsPage } from "@/components/settings/settings-page";
 import { getPageMetadata } from "@/data/metadata";
 
@@ -12,9 +11,7 @@ export const metadata: Metadata = getPageMetadata({
 });
 
 const AdminSettingsRoutePage = () => (
-  <AdminShell pageTitle="Settings">
-    <SettingsPage variant="admin" />
-  </AdminShell>
+  <SettingsPage variant="admin" />
 );
 
 export default AdminSettingsRoutePage;

@@ -13,14 +13,13 @@ type NavSectionProps = {
 
 export const NavSection = ({ section, collapsed }: NavSectionProps) => {
   const { t } = useTranslation("common");
-  const sectionKey = section.label.toLowerCase() as "overview" | "workspace" | "system";
   const translatedSection = {
     ...section,
-    label: t(`navigation.sections.${sectionKey}`),
+    label: t(section.titleKey, { defaultValue: section.label }),
     items: section.items.map((item) => ({
       ...item,
       // A page without a translation yet still shows its name, never the key.
-      label: t(`navigation.items.${navigationItemKey(item.href)}`, { defaultValue: item.label }),
+      label: t(item.titleKey, { defaultValue: item.label }),
     })),
   };
 
@@ -40,21 +39,4 @@ export const NavSection = ({ section, collapsed }: NavSectionProps) => {
       </ul>
     </div>
   );
-};
-
-const navigationItemKey = (href: string) => {
-  const keys: Record<string, string> = {
-    "/dashboard": "dashboard",
-    "/workflows": "workflows",
-    "/batches": "batches",
-    "/styles": "styles",
-    "/design-templates": "templates",
-    "/api-keys": "apiKeys",
-    "/usage": "usage",
-    "/market-opportunities": "marketRadar",
-    "/support": "support",
-    "/settings": "settings",
-    "/subscription": "billing",
-  };
-  return keys[href] ?? href.replace(/^\//, "");
 };

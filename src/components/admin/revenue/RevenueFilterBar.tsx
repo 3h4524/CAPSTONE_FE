@@ -6,14 +6,11 @@ import { Calendar } from "lucide-react";
 import type { RevenueFilterDto } from "@/types/revenue";
 
 interface RevenueFilterBarProps {
-  /** Shown beside the title. */
-  actions?: React.ReactNode;
   filter: RevenueFilterDto;
   onFilterChange: (newFilter: RevenueFilterDto) => void;
 }
 
-export function RevenueFilterBar({ filter,
-  actions, onFilterChange }: RevenueFilterBarProps) {
+export function RevenueFilterBar({ filter, onFilterChange }: RevenueFilterBarProps) {
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, "0");
@@ -108,22 +105,7 @@ export function RevenueFilterBar({ filter,
   };
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      {/* Title & Subtitle */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-ink-900 text-2xl font-bold tracking-tight max-md:text-xl sm:text-3xl dark:text-slate-100">
-            Revenue Intelligence
-          </h1>
-          <p className="text-ink-500 mt-1 text-sm font-medium max-md:hidden dark:text-slate-400">
-            Track revenue, subscriptions, and financial performance with real-time insights.
-          </p>
-        </div>
-        {actions}
-      </div>
-
-      {/* Right Controls Bar */}
-      <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+    <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
         {/* Date Range Picker Pill */}
         <div className="border-ink-200/90 bg-card flex items-center gap-2 rounded-xl border px-3 py-1.5 shadow-2xs max-md:w-full dark:border-slate-800 dark:bg-slate-900">
           <Calendar className="text-ink-400 h-4 w-4 shrink-0 max-md:hidden dark:text-slate-500" />
@@ -175,7 +157,6 @@ export function RevenueFilterBar({ filter,
             </button>
           ))}
         </div>
-      </div>
     </div>
   );
 }

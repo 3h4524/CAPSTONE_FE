@@ -1,12 +1,13 @@
 "use client";
 
-import React, { Suspense,useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import type { AdminTicketFilters } from "@/api/admin-support";
-import { AdminShell } from "@/components/admin/admin-shell";
 import { TicketDetailPanel } from "@/components/admin/support/ticket-detail-panel";
 import { TicketListPanel } from "@/components/admin/support/ticket-list-panel";
+import { PageHeader } from "@/components/commons/layout/page-header";
+import { useAdminShellOptions } from "@/hooks/use-admin-shell-options";
 import { cn } from "@/utils/cn";
 
 function AdminSupportTicketsContent() {
@@ -16,9 +17,11 @@ function AdminSupportTicketsContent() {
     pageSize: 20,
     status: "open",
   });
-  
+
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  useAdminShellOptions({ hidesPhoneTabs: selectedTicketId !== null });
 
   useEffect(() => {
     const ticketId = searchParams?.get("ticketId");
@@ -38,8 +41,9 @@ function AdminSupportTicketsContent() {
   };
 
   return (
-    <AdminShell pageTitle="support-tickets" fillsPhoneScreen hidesPhoneTabs={selectedTicketId !== null}>
-      <div className="border-ink-200 bg-card flex h-[calc(100dvh-150px)] w-full overflow-hidden rounded-lg border shadow-sm max-md:h-auto max-md:min-h-0 max-md:flex-1 max-md:rounded-none max-md:border-0 max-md:shadow-none">
+    <>
+      <PageHeader title="Support Tickets" className="mb-4 max-md:sr-only" />
+      <div className="border-ink-200 bg-card flex h-[calc(100dvh-200px)] w-full overflow-hidden rounded-lg border shadow-sm max-md:h-auto max-md:min-h-0 max-md:flex-1 max-md:rounded-none max-md:border-0 max-md:shadow-none">
         <div className="divide-ink-200 grid h-full min-h-0 w-full grid-cols-12 divide-x">
           {/* Left Panel: Ticket List. Below md the two panels swap: list first, then the selected ticket. */}
           <div
@@ -74,7 +78,7 @@ function AdminSupportTicketsContent() {
           </div>
         </div>
       </div>
-    </AdminShell>
+    </>
   );
 }
 

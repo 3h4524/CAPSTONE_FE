@@ -13,6 +13,7 @@ import {
   unlinkMockupTemplatePrintify,
 } from "@/api/admin-mockup-templates";
 import { getPrintifyCatalog, getPrintifyConnection, getPrintifyProviders, type PrintifyBlueprint } from "@/api/printify";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { BlueprintPicker, ChipGroup } from "@/components/shop/printify-publish-dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -33,14 +34,10 @@ export function PrintifyTemplateLinks() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1.5">
-        <h2 className="font-display text-ink-900 text-xl font-bold tracking-tight sm:text-2xl">Mock-up templates for Printify</h2>
-        <p className="text-ink-600 max-w-3xl text-sm leading-relaxed">
-          Link each system template to the Printify product its photo shows. When a workflow pushes to Printify, sellers can only choose linked templates,
-          and Printify makes the linked product, so the listing&apos;s mock-ups show the garment that ships. Compare the template with Printify&apos;s photo
-          before linking.
-        </p>
-      </header>
+      <PageHeader
+        title="Mock-up templates for Printify"
+        description="Link each system template to the Printify product its photo shows. When a workflow pushes to Printify, sellers can only choose linked templates, and Printify makes the linked product, so the listing's mock-ups show the garment that ships. Compare the template with Printify's photo before linking."
+      />
       {connection.data && !ready && (
         <div className="flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           Searching Printify&apos;s products uses your own Printify API key. Add one on the API Keys page.

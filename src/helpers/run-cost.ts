@@ -14,6 +14,14 @@ const remember = (workflowId: string, amount: number | null) => {
   }
 };
 
+/**
+ * Puts back a budget taken for a batch video run that could not start, so the next attempt (after the workflow is
+ * fixed, or the page reloaded) still makes the model photos and starts the AI clips the seller confirmed.
+ */
+export const restoreRunAiBudget = (workflowId: string, amount: number | undefined) => {
+  if (amount && amount > 0) remember(workflowId, amount);
+};
+
 /** Takes the AI budget confirmed on Run, once: the batch video run it is handed to is the only one that uses it. */
 export const takeRunAiBudget = (workflowId: string): number | undefined => {
   try {

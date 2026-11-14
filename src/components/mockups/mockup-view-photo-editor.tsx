@@ -3,7 +3,7 @@
 import { type ReactNode, useEffect, useId, useState } from "react";
 import { ImagePlus, Trash2 } from "lucide-react";
 
-import { previewGarmentMask } from "@/api/mockup-templates";
+import { type MockupTemplateScope, previewGarmentMask } from "@/api/mockup-templates";
 import { MockupPhotoDropzone } from "@/components/mockups/mockup-photo-dropzone";
 import { PrintAreaEditor } from "@/components/mockups/print-area-editor";
 import { PrintAreaList } from "@/components/mockups/print-area-list";
@@ -90,6 +90,10 @@ type MockupViewPhotoEditorProps = {
   settingsTop: ReactNode;
   /** Shown at the bottom of the settings column, below the print areas. */
   settingsBottom: ReactNode;
+  /** Whose endpoints analyze the photo: the seller's or the admin's. */
+  scope?: MockupTemplateScope;
+  /** The photo and print areas are fixed (a Printify template's are Printify's): shown, not changed. */
+  photoLocked?: boolean;
 };
 
 // One side of a template, laid out side by side: its photo, large, with the print areas drawn on it and the sides
@@ -107,6 +111,8 @@ export const MockupViewPhotoEditor = ({
   sides,
   settingsTop,
   settingsBottom,
+  scope = "seller",
+  photoLocked = false,
 }: MockupViewPhotoEditorProps) => {
   const replaceInputId = useId();
   const [photoObjectUrl, setPhotoObjectUrl] = useState<string | null>(null);
@@ -159,7 +165,7 @@ export const MockupViewPhotoEditor = ({
           ).blob();
           photo = new File([blob], "base-photo", { type: blob.type });
         }
-        const preview = await previewGarmentMask(photo, controller.signal);
+        const preview = await previewGarmentMask(photo, controller.signal, scope);
         if (!controller.signal.aborted) setMaskPreview(preview);
       } catch {
         // No preview is not an error here: saving still analyzes the photo and reports problems.
@@ -168,7 +174,7 @@ export const MockupViewPhotoEditor = ({
       }
     })();
     return () => controller.abort();
-  }, [needsPreview, file, savedUrl]);
+  }, [needsPreview, file, savedUrl, scope]);
 
   const shownPhoto = photoObjectUrl ?? savedUrl;
   const shownSize = file ? pickedSize : savedUrl ? draft.savedSize : null;
@@ -264,7 +270,7 @@ export const MockupViewPhotoEditor = ({
               </p>
             )}
           </div>
-          {shownPhoto && (
+          {shownPhoto && !photoLocked && (
             <div className="flex items-center gap-1.5">
               <label
                 htmlFor={replaceInputId}
@@ -325,7 +331,7 @@ export const MockupViewPhotoEditor = ({
                   }))
                   .filter((area) => area.key !== active.key)}
                 onSelectArea={setActiveKey}
-                disabled={disabled}
+                disabled={disabled || photoLocked}
                 garmentTint={tint}
                 pixelSize={shownSize ?? undefined}
                 garmentMaskUrl={maskUrl ?? undefined}
@@ -341,12 +347,14 @@ export const MockupViewPhotoEditor = ({
                 }
                 previewUrl={null}
                 error={fileError}
-                disabled={disabled}
+                disabled={disabled || photoLocked}
                 onSelect={pickFile}
                 onRemove={() => undefined}
               />
               <p className="text-muted-foreground text-xs">
-                {draft.view === "front"
+                {photoLocked
+                  ? "The sides of a Printify template are Printify's own photos. Add this one from the template's Printify settings."
+                  : draft.view === "front"
                   ? "A real product photo, garment on a plain background. Images up to 10 MB."
                   : `Add a photo of the ${label.toLowerCase()} to print on it too: every design gets a mock-up of this side.`}
               </p>
@@ -372,7 +380,7 @@ export const MockupViewPhotoEditor = ({
             activeKey={active.key}
             onSelect={setActiveKey}
             onChange={setAreas}
-            disabled={disabled}
+            disabled={disabled || photoLocked}
           />
         ) : (
           <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-xs">

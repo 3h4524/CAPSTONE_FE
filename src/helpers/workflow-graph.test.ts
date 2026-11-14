@@ -409,6 +409,22 @@ describe("validateWorkflow", () => {
     expect(validateWorkflow(nodes, pipelineEdges()).map((issue) => issue.id)).toContain("video-product-input");
   });
 
+  it("lets a video go from Review Video straight to Push to Printify without Export ZIP", () => {
+    const nodes = [
+      ...pipelineNodes().filter((item) => item.data.type !== "export-zip"),
+      typedNode("printify", "publish-printify", VALID_CONFIGS["publish-printify"]),
+    ];
+    const edges = [...pipelineEdges().filter((item) => item.target !== "export"), edge("review", "printify")];
+
+    expect(validateWorkflow(nodes, edges)).toEqual([]);
+  });
+
+  it("accepts Export ZIP once at most", () => {
+    const nodes = [...pipelineNodes(), typedNode("export-2", "export-zip", VALID_CONFIGS["export-zip"])];
+
+    expect(validateWorkflow(nodes, [...pipelineEdges(), edge("export", "export-2")]).map((issue) => issue.id)).toContain("mvp-pipeline");
+  });
+
   describe("publishing without a video", () => {
     const publishNodes = (productId = VIDEO_PRODUCT_ID) => [
       typedNode("input", "product-input", { batchId: "batch-1", productId }),

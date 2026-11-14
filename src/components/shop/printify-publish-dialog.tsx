@@ -421,8 +421,21 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
   );
 }
 
-/** Printify's product types, searched by the words typed (brand and model included, e.g. "gildan 64000"). */
-export function BlueprintPicker({ value, onChange }: { value: Pick<PrintifyBlueprint, "id" | "title"> | null; onChange: (value: Pick<PrintifyBlueprint, "id" | "title">) => void }) {
+/**
+ * Printify's product types, searched by the words typed (brand and model included, e.g. "gildan 64000"). An admin
+ * page passes its own `search` (the server's token) and `queryKey`; a seller's searches with their own key.
+ */
+export function BlueprintPicker({
+  value,
+  onChange,
+  search = searchPrintifyBlueprints,
+  queryKey = "printify-blueprints",
+}: {
+  value: Pick<PrintifyBlueprint, "id" | "title"> | null;
+  onChange: (value: PrintifyBlueprint) => void;
+  search?: (query: string) => Promise<PrintifyBlueprint[]>;
+  queryKey?: string;
+}) {
   const [editing, setEditing] = useState(!value);
   const [query, setQuery] = useState("unisex softstyle");
   const [debounced, setDebounced] = useState(query);
@@ -430,7 +443,7 @@ export function BlueprintPicker({ value, onChange }: { value: Pick<PrintifyBluep
     const timer = window.setTimeout(() => setDebounced(query.trim()), 300);
     return () => window.clearTimeout(timer);
   }, [query]);
-  const results = useQuery({ queryKey: ["printify-blueprints", debounced], queryFn: () => searchPrintifyBlueprints(debounced), enabled: editing, staleTime: 60 * 60_000 });
+  const results = useQuery({ queryKey: [queryKey, debounced], queryFn: () => search(debounced), enabled: editing, staleTime: 60 * 60_000 });
 
   return (
     <div className="space-y-1.5 sm:col-span-2">

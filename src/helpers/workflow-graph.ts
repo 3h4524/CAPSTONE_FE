@@ -25,7 +25,9 @@ import type { Connection, Viewport } from "@xyflow/react";
 // A listing is written from the product's own details, so only the video waits for an approval.
 const APPROVAL_REQUIRED_TYPES: WorkflowNodeType[] = ["generate-video"];
 // The steps a video needs, each exactly once. The design steps may sit before Apply mock-up.
-export const STANDARD_PIPELINE: WorkflowNodeType[] = ["product-input", "apply-mockup", "approval-gate", "generate-video", "review-video", "export-zip"];
+export const STANDARD_PIPELINE: WorkflowNodeType[] = ["product-input", "apply-mockup", "approval-gate", "generate-video", "review-video"];
+// Steps a video may leave out (at most once each): without Export ZIP, Review Video leads to the publish steps.
+export const OPTIONAL_VIDEO_STEPS: WorkflowNodeType[] = ["export-zip"];
 // The steps a run that publishes without a video needs, each exactly once, before the publish steps.
 export const PUBLISH_PIPELINE: WorkflowNodeType[] = ["product-input", "apply-mockup", "approval-gate"];
 // A workflow with one of these is making a video, so it has to be the whole video pipeline.
@@ -201,8 +203,9 @@ const validatePublishPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
 const validateVideoPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
   if (!nodes.some(node => VIDEO_ONLY_TYPES.includes(node.data.type))) return [];
   const issues: WorkflowIssue[] = [];
-  if (STANDARD_PIPELINE.some(type => nodes.filter(n => n.data.type === type).length !== 1))
-    issues.push({ id: "mvp-pipeline", nodeId: null, message: "A video needs exactly one each of Product Input → Apply Mockup → Mockup Approval → Generate Video → Review Video → Export ZIP." });
+  if (STANDARD_PIPELINE.some(type => nodes.filter(n => n.data.type === type).length !== 1) ||
+    OPTIONAL_VIDEO_STEPS.some(type => nodes.filter(n => n.data.type === type).length > 1))
+    issues.push({ id: "mvp-pipeline", nodeId: null, message: "A video needs exactly one each of Product Input → Apply Mockup → Mockup Approval → Generate Video → Review Video. Export ZIP is optional, once at most." });
   nodes.filter(node => !isRunnableNode(node.data.type)).forEach(node =>
     issues.push({ id: `video-unsupported-${node.id}`, nodeId: node.id, message: `${node.data.label} cannot run yet. Remove it to run the video.` })
   );

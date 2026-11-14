@@ -61,6 +61,8 @@ export interface MockupTemplatePrintify {
   printProviderTitle: string | null;
   defaultSizes: string[];
   colors: PrintifyGarmentColor[];
+  /** Printify's photo of the blank product. */
+  blueprintImageUrl?: string | null;
 }
 
 /** An admin's link of a system template to the Printify product its photo shows, as the admin templates page edits it. */

@@ -79,6 +79,10 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
           ? "publish-etsy"
           : "generate-video"
   );
+  // Review Video lets the video through to Export ZIP, or without one straight to the first publish step.
+  const reviewLeadsTo = useWorkflowStore((state): WorkflowNodeType =>
+    (["export-zip", "publish-printify", "publish-etsy"] as const).find((type) => state.nodes.some((n) => n.data.type === type)) ?? "export-zip"
+  );
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const selectNode = useWorkflowStore((state) => state.selectNode);
   const overview = useNodeOverview(node);
@@ -299,7 +303,7 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
         )}
         {node.data.type === "review-video" && (
           <>
-            <ApprovalFlow from="generate-video" to="export-zip" automatic={node.data.config.mode === "auto"} />
+            <ApprovalFlow from="generate-video" to={reviewLeadsTo} automatic={node.data.config.mode === "auto"} />
             {showResults && <ReviewVideoResults className="px-5 pb-5" />}
           </>
         )}

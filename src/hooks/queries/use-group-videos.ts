@@ -1,6 +1,7 @@
 "use client";
 
 import { listRunVideos, videoWorkflowKeys } from "@/api/video-workflow";
+import { PUBLISH_NODE_TYPES } from "@/constants/workflow";
 import { useRunGroup, useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { PromoVideo, RunGroup, RunGroupTarget } from "@/types/video-workflow";
@@ -44,12 +45,14 @@ export const useGroupVideos = (): { group: RunGroup | null; videos: GroupVideo[]
 export type GroupVideoState = "queued" | "processing" | "review" | "approved" | "stopped";
 
 /**
- * Where one design's video is, in the words the review uses. An approved video goes on to Export ZIP, and its run is
- * running again meanwhile: it is still approved, not being made.
+ * Where one design's video is, in the words the review uses. An approved video goes on to Export ZIP or straight to the
+ * publish steps, and its run is running again meanwhile: it is still approved, not being made.
  */
+const AFTER_VIDEO_STEPS: string[] = ["export-zip", ...PUBLISH_NODE_TYPES];
+
 export const groupVideoState = (target: Pick<RunGroupTarget, "runStatus" | "currentStep">): GroupVideoState => {
   const status = target.runStatus ?? "";
-  if (status === "completed" || (status === "running" && target.currentStep === "export-zip")) return "approved";
+  if (status === "completed" || (status === "running" && AFTER_VIDEO_STEPS.includes(target.currentStep ?? ""))) return "approved";
   if (status === "waiting_for_review") return "review";
   if (STOPPED.has(status)) return "stopped";
   return status === "queued" ? "queued" : "processing";

@@ -10,7 +10,7 @@ import { getRunGroup, listRunGroups, runGroupKeys } from "@/api/run-groups";
 import { videoWorkflowKeys } from "@/api/video-workflow";
 import { RUN_GROUP_PARAM } from "@/constants/run-group";
 import { getErrorMessage } from "@/helpers/error-message";
-import { confirmRunCost, takeRunAiBudget } from "@/helpers/run-cost";
+import { confirmRunCost, restoreRunAiBudget, takeRunAiBudget } from "@/helpers/run-cost";
 import { publishConnectionIssue } from "@/helpers/shop-connections";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
@@ -245,9 +245,10 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       const { workflowId, revision } = useWorkflowStore.getState();
       if (!workflowId) return;
       setIsLaunchingVideo(true);
+      const aiBudgetUsd = takeRunAiBudget(workflowId);
       try {
         await importMockups(queryClient, await videoProducts(queryClient, jobId));
-        const started = await startGroup({ workflowId, revision, key: uuid(), batchJobId: jobId, aiBudgetUsd: takeRunAiBudget(workflowId) });
+        const started = await startGroup({ workflowId, revision, key: uuid(), batchJobId: jobId, aiBudgetUsd });
         useWorkflowStore.getState().setVideoRunId(null);
         const query = new URLSearchParams(window.location.search);
         query.set(RUN_GROUP_PARAM, started.id);
@@ -273,6 +274,8 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
           );
         }
       } catch (error) {
+        // Nothing was started, so the confirmed AI budget stays for the next attempt.
+        restoreRunAiBudget(workflowId, aiBudgetUsd);
         showWorkflowActionToast("error", `The videos could not be started. ${getErrorMessage(error)}`);
       } finally {
         setIsLaunchingVideo(false);

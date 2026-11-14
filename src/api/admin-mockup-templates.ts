@@ -27,7 +27,7 @@ export const adminMockupTemplateKeys = {
 };
 
 export const getAdminMockupTemplates = async (): Promise<AdminMockupTemplate[]> =>
-  (await api.get<AdminMockupTemplate[]>("/api/admin/mockup-templates")).data;
+  (await api.get<AdminMockupTemplate[]>("/api/admin/mockup-templates/printify-links")).data;
 
 export const linkMockupTemplatePrintify = async ({ id, input }: { id: string; input: LinkMockupTemplatePrintifyInput }): Promise<AdminMockupTemplate> =>
   (await api.put<AdminMockupTemplate>(`/api/admin/mockup-templates/${id}/printify`, input)).data;

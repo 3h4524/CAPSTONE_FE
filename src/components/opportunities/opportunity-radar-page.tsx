@@ -2,7 +2,7 @@
 
 import { Fragment, type ReactNode, useEffect, useMemo, useState } from "react";
 import type { TFunction } from "i18next";
-import { ArrowRight, BarChart3, Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Clock, Compass, GitCompareArrows, LayoutGrid, List, type LucideIcon, Pencil, Radar, RefreshCw, SlidersHorizontal, Sparkles, Target, TriangleAlert, Trophy, Users, X, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Clock, GitCompareArrows, LayoutGrid, List, type LucideIcon, Pencil, Radar, RefreshCw, SlidersHorizontal, Sparkles, Target, TriangleAlert, Trophy, Users, X, Zap } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -23,6 +23,7 @@ import {
 } from "@/api/market-opportunities";
 import { translateTexts, type TranslationItem } from "@/api/translations";
 import { PhonePager } from "@/components/commons/data-display/phone-pager";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { LevelMeter, PriceInterestScatter, ShareDonut, StrongSellerBar, SupplySparkline } from "@/components/opportunities/market-charts";
 import { buildNicheMap, CompetitorLeaderboard, CompetitorPriceStrip, InfoTip, ListingAgeBars, MiniStats, NicheMapCard, NicheSelect, PriceSweetSpot, ProfileImpactCard, SeasonalWindowCard, TapHint } from "@/components/opportunities/market-insights";
 import { Button } from "@/components/ui/button";
@@ -385,53 +386,51 @@ export function OpportunityRadarPage() {
   return (
     <TooltipProvider delayDuration={150}>
       <div className={cn("flex w-full min-w-0 flex-col gap-5 max-md:gap-3 md:p-6", !showsPhonePager && "max-md:pb-14")}>
-        <section className="relative overflow-hidden rounded-2xl bg-[#17263f] px-5 py-5 text-white shadow-[0_16px_40px_rgba(23,38,63,0.2)] max-md:p-4 sm:px-6">
+        <PageHeader
+          title={t("marketRadar.title")}
+          description={t("marketRadar.subtitle")}
+          actions={
+            <Button type="button" variant="primaryBlue" className={rankingIsStale ? "shrink-0 ring-2 ring-amber-400/70 ring-offset-2" : "shrink-0"} onClick={() => refreshMutation.mutate()} disabled={refreshMutation.isPending}>
+              <RefreshCw className={refreshMutation.isPending ? "size-4 animate-spin" : "size-4"} />
+              {refreshMutation.isPending ? t("marketRadar.refreshing") : t("marketRadar.refresh")}
+            </Button>
+          }
+        />
+
+        <section className="relative overflow-hidden rounded-2xl bg-[#17263f] px-5 py-4 text-white shadow-[0_16px_40px_rgba(23,38,63,0.2)] max-md:p-3 sm:px-6">
           <div className="absolute -top-24 -right-20 size-72 rounded-full bg-blue-400/20 blur-3xl" />
-          <div className="relative flex flex-col gap-5 max-md:gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex min-w-0 items-center gap-4">
-              <span className="hidden size-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-blue-200 sm:flex"><Compass className="size-5" /></span>
-              <div className="min-w-0">
-                 <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{t("marketRadar.title")}</h1>
-                 <p className="text-ink-300 mt-0.5 text-sm max-md:text-xs">{t("marketRadar.subtitle")}</p>
-              </div>
+          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="bg-card/[0.06] grid grid-cols-3 divide-x divide-white/10 rounded-xl border border-white/10">
+              <HeroStat
+                label={t("marketRadar.heroStrongFit", { defaultValue: "Strong fit" })}
+                value={allOpportunities.length ? String(heroStats.strong) : "—"}
+                suffix={allOpportunities.length ? `/${allOpportunities.length}` : undefined}
+                accent={heroStats.strong > 0 ? "text-emerald-300" : undefined}
+                hint={t("marketRadar.heroStrongFitHint", { defaultValue: "Opportunities scoring 75+ for market potential and fit with your profile." })}
+              />
+              <HeroStat
+                label={t("marketRadar.heroRising", { defaultValue: "Rising demand" })}
+                value={allOpportunities.length ? String(heroStats.rising) : "—"}
+                accent={heroStats.rising > 0 ? "text-sky-300" : undefined}
+                hint={t("marketRadar.heroRisingHint", { defaultValue: "Niches whose buyer engagement is trending up across recent observations." })}
+              />
+              <HeroStat
+                label={t("marketRadar.heroToReview", { defaultValue: "To review" })}
+                value={allOpportunities.length ? String(newCount) : "—"}
+                accent={newCount > 0 ? "text-amber-300" : undefined}
+                hint={t("marketRadar.heroToReviewHint", { defaultValue: "New opportunities you have not saved, ignored or acted on yet." })}
+                onClick={newCount > 0 ? () => { setTab("radar"); setActiveState("new"); } : undefined}
+              />
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="bg-card/[0.06] grid grid-cols-3 divide-x divide-white/10 rounded-xl border border-white/10">
-                 <HeroStat
-                   label={t("marketRadar.heroStrongFit", { defaultValue: "Strong fit" })}
-                   value={allOpportunities.length ? String(heroStats.strong) : "—"}
-                   suffix={allOpportunities.length ? `/${allOpportunities.length}` : undefined}
-                   accent={heroStats.strong > 0 ? "text-emerald-300" : undefined}
-                   hint={t("marketRadar.heroStrongFitHint", { defaultValue: "Opportunities scoring 75+ for market potential and fit with your profile." })}
-                 />
-                 <HeroStat
-                   label={t("marketRadar.heroRising", { defaultValue: "Rising demand" })}
-                   value={allOpportunities.length ? String(heroStats.rising) : "—"}
-                   accent={heroStats.rising > 0 ? "text-sky-300" : undefined}
-                   hint={t("marketRadar.heroRisingHint", { defaultValue: "Niches whose buyer engagement is trending up across recent observations." })}
-                 />
-                 <HeroStat
-                   label={t("marketRadar.heroToReview", { defaultValue: "To review" })}
-                   value={allOpportunities.length ? String(newCount) : "—"}
-                   accent={newCount > 0 ? "text-amber-300" : undefined}
-                   hint={t("marketRadar.heroToReviewHint", { defaultValue: "New opportunities you have not saved, ignored or acted on yet." })}
-                   onClick={newCount > 0 ? () => { setTab("radar"); setActiveState("new"); } : undefined}
-                 />
-              </div>
-              <div className="flex flex-col items-stretch gap-1 max-sm:flex-row-reverse max-sm:items-center max-sm:justify-between max-sm:gap-3 sm:items-end">
-                <Button type="button" variant="primaryBlue" className={rankingIsStale ? "shrink-0 ring-2 ring-amber-300/70 ring-offset-2 ring-offset-[#17263f] dark:ring-amber-500/40" : "shrink-0"} onClick={() => refreshMutation.mutate()} disabled={refreshMutation.isPending}>
-                  <RefreshCw className={refreshMutation.isPending ? "size-4 animate-spin" : "size-4"} />
-                   {refreshMutation.isPending ? t("marketRadar.refreshing") : t("marketRadar.refresh")}
-                 </Button>
-                 {rankingIsStale && lastEvaluatedAt ? (
-                   <p className="flex items-center justify-center gap-1.5 text-[11px] font-medium text-amber-300">
-                     <span className="size-1.5 rounded-full bg-amber-300" />
-                     {t("marketRadar.newDataAvailable", { defaultValue: "New market data · ranked {{value}}", value: timeAgo(lastEvaluatedAt, locale) })}
-                   </p>
-                 ) : lastEvaluatedAt && (
-                   <p className="text-ink-400 flex items-center justify-center gap-1 text-[11px]"><Clock className="size-3" />{t("marketRadar.updated", { value: timeAgo(lastEvaluatedAt, locale) })}</p>
-                 )}
-              </div>
+            <div className="flex flex-col gap-1">
+              {rankingIsStale && lastEvaluatedAt ? (
+                <p className="flex items-center justify-center gap-1.5 text-[11px] font-medium text-amber-300">
+                  <span className="size-1.5 rounded-full bg-amber-300" />
+                  {t("marketRadar.newDataAvailable", { defaultValue: "New market data · ranked {{value}}", value: timeAgo(lastEvaluatedAt, locale) })}
+                </p>
+              ) : lastEvaluatedAt && (
+                <p className="text-ink-400 flex items-center justify-center gap-1 text-[11px]"><Clock className="size-3" />{t("marketRadar.updated", { value: timeAgo(lastEvaluatedAt, locale) })}</p>
+              )}
             </div>
           </div>
         </section>

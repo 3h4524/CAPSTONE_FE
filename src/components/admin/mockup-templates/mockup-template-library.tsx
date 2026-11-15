@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Link2, Printer, Settings2 } from "lucide-react";
 
-import { AdminShell } from "@/components/admin/admin-shell";
 import { PrintifyLinkDialog } from "@/components/admin/mockup-templates/printify-link-dialog";
 import { PrintifySettingsDialog } from "@/components/admin/mockup-templates/printify-settings-dialog";
 import { PrintifyTemplateDialog } from "@/components/admin/mockup-templates/printify-template-dialog";
@@ -17,7 +16,7 @@ export const MockupTemplateLibrary = () => {
   const [linking, setLinking] = useState<MockupTemplate | null>(null);
 
   return (
-    <AdminShell>
+    <>
       <div className="flex flex-col gap-6">
         <header className="flex flex-col gap-1.5">
           <h2 className="font-display text-ink-900 text-xl font-bold tracking-tight sm:text-2xl">Mock-up template library</h2>
@@ -53,6 +52,6 @@ export const MockupTemplateLibrary = () => {
       <PrintifyTemplateDialog open={creating} onOpenChange={setCreating} />
       <PrintifySettingsDialog template={settingsOf} onOpenChange={(open) => !open && setSettingsOf(null)} />
       <PrintifyLinkDialog template={linking} onOpenChange={(open) => !open && setLinking(null)} />
-    </AdminShell>
+    </>
   );
 };

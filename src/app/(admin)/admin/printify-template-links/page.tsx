@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import { AdminShell } from "@/components/admin/admin-shell";
 import { PrintifyTemplateLinks } from "@/components/admin/mockup-templates/printify-template-links";
 import { getPageMetadata } from "@/data/metadata";
 
@@ -12,9 +11,5 @@ export const metadata: Metadata = getPageMetadata({
 });
 
 export default function PrintifyTemplateLinksPage() {
-  return (
-    <AdminShell>
-      <PrintifyTemplateLinks />
-    </AdminShell>
-  );
+  return <PrintifyTemplateLinks />;
 }

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const mockupUploadSchema = z.object({ file: z.instanceof(File).refine(f => f.size > 0 && f.size <= 20 * 1024 * 1024, "Image must be at most 20 MB.").refine(f => ["image/jpeg", "image/png", "image/webp"].includes(f.type), "Choose JPEG, PNG or static WebP.") });
 export type MockupUploadFormValues = z.infer<typeof mockupUploadSchema>;
-/** At most this many lifestyle images are made in one go, each one charged to the Seller's Ideogram key. */
+/** At most this many lifestyle images are made in one go, each one an Ideogram image (on the Seller's key, or the platform's when their plan includes it). */
 export const MAX_LIFESTYLE_MOCKUPS = 8;
 const lifestylePhoto = z.instanceof(File, { error: "Choose a photo of a model." }).refine(f => f.size > 0 && f.size <= 8 * 1024 * 1024, "Photo must be at most 8 MB.").refine(f => ["image/jpeg", "image/png", "image/webp"].includes(f.type), "Choose JPEG, PNG or static WebP.");
 /** The people to dress: an uploaded photo, whose rights the Seller confirms, or one of the model photos. */

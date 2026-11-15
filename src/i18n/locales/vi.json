@@ -1099,7 +1099,7 @@
         "title": "Tạo ảnh người mẫu bằng AI",
         "description": "AI tạo ảnh những người bạn chọn mặc áo thun trắng trơn. Ảnh được lưu cùng ảnh người mẫu của bạn, mock-up được đặt lên không cần AI, nên bản in giữ nguyên y hệt thiết kế.",
         "productType": "Loại sản phẩm",
-        "costNote": "Một ảnh (khoảng $0.03) sẽ được tính vào Ideogram key của bạn. Tạo mất tối đa một phút. Hãy kiểm tra ảnh trước khi dùng: nếu áo không được tìm thấy, hãy tạo ảnh khác.",
+        "costNote": "Một ảnh Ideogram (khoảng $0.03), tạo bằng Ideogram key của bạn, hoặc bằng key của hệ thống khi gói của bạn có tính năng này. Tạo mất tối đa một phút. Hãy kiểm tra ảnh trước khi dùng: nếu áo không được tìm thấy, hãy tạo ảnh khác.",
         "pendingNote": "Đang tạo ảnh và tìm áo trên ảnh… mất tối đa một phút.",
         "pending": "Đang tạo ảnh…",
         "makePhoto": "Tạo ảnh"
@@ -1205,7 +1205,7 @@
         "titleNew": "Mẫu mock-up mới",
         "titleEdit": "Sửa {{name}}",
         "description": "Đánh dấu vị trí đặt thiết kế trên từng ảnh. Thêm mặt sau hoặc tay áo để in thêm: mỗi mặt tạo một mock-up riêng.",
-        "descriptionPrintifyLocked": "Ảnh và vùng in được giữ nguyên khi mẫu đang liên kết với Printify. Hãy đo lại một mặt, hoặc hủy liên kết, trong phần cài đặt Printify.",
+        "descriptionPrintifyLocked": "Ảnh và vùng in của Printify giữ nguyên khi mẫu đang liên kết với Printify: hãy đặt thiết kế bên trong vùng đó. Muốn đo lại một mặt hoặc bỏ liên kết, hãy vào phần cài đặt Printify.",
         "nameLabel": "Tên",
         "namePlaceholder": "Áo thun cổ điển",
         "productTypeLabel": "Loại sản phẩm *",
@@ -1224,7 +1224,9 @@
         "analyzing": "Đang phân tích ảnh…",
         "saving": "Đang lưu…",
         "createTemplate": "Tạo mẫu",
-        "lockedNote": "Mẫu mock-up tùy chỉnh nằm trong gói Pro."
+        "lockedNote": "Mẫu mock-up tùy chỉnh nằm trong gói Pro.",
+        "garmentColorPrintifyNote": "Một trong các màu đã đo trên Printify. Dùng trừ khi lô chọn màu riêng. Để trống giữ màu của ảnh.",
+        "garmentColorNoPrintifyColors": "Chưa đo màu Printify nào cho blueprint này. Hãy đo trong phần cài đặt Printify."
       },
       "sidesEditor": {
         "label": "Ảnh {{label}}",

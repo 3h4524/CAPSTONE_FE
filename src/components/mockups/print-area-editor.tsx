@@ -55,6 +55,8 @@ type PrintAreaEditorProps = {
   otherAreas?: OtherPrintArea[];
   /** Called with an other area's key when it is clicked, to edit it instead. */
   onSelectArea?: (key: string) => void;
+  /** The print area is fixed on this photo (a Printify template's): no garment box to center it on. */
+  areaFixed?: boolean;
   /** Sizes the photo; by default it is at most 420 px tall. */
   imageClassName?: string;
   /**
@@ -355,6 +357,7 @@ export const PrintAreaEditor = ({
   onSelectArea,
   imageClassName = "max-h-105",
   frame,
+  areaFixed = false,
 }: PrintAreaEditorProps) => {
   const { t } = useTranslation("common");
   const turn = normalizeRotation(rotation);
@@ -777,7 +780,7 @@ export const PrintAreaEditor = ({
             )}
           </div>
         )}
-        {garmentBounds && !frame && (
+        {garmentBounds && !frame && !areaFixed && (
           <div
             data-rect={editingGarment ? "" : undefined}
             className={cn(
@@ -852,7 +855,7 @@ export const PrintAreaEditor = ({
           {t("mockups.printAreaEditor.frameNote")}
         </p>
       )}
-      {natural && !frame && (
+      {natural && !frame && !areaFixed && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-muted-foreground text-xs">
             {editingGarment

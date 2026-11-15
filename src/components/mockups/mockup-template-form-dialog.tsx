@@ -161,6 +161,8 @@ export const MockupTemplateFormDialog = ({
   const locked = scope === "seller" && entitlements !== undefined && !hasFeature(entitlements, "custom_mockup_templates");
   // A Printify template's photos and print areas are Printify's: only its name, type and colors change here.
   const printifyLocked = Boolean(template?.printify);
+  // A Printify template is made only in its blueprint's Printify colors.
+  const printifyColors = template?.printify?.colors;
   const pending = saving;
 
   // A small picture of each side for the strip under the photo: its new photo, or the saved one.
@@ -358,11 +360,17 @@ export const MockupTemplateFormDialog = ({
           <div>
             <p className="text-ink-900 text-sm font-medium">{t("mockups.templateForm.garmentColorLabel")}</p>
             <p className="text-muted-foreground text-xs">
-              {t("mockups.templateForm.garmentColorUsedNote")}
+              {printifyColors
+                ? printifyColors.length > 0
+                  ? t("mockups.templateForm.garmentColorPrintifyNote")
+                  : t("mockups.templateForm.garmentColorNoPrintifyColors")
+                : t("mockups.templateForm.garmentColorUsedNote")}
             </p>
           </div>
           <GarmentColorPicker
             selected={garmentColor ? [garmentColor] : []}
+            palette={printifyColors}
+            allowCustom={!printifyColors}
             disabled={pending}
             onToggle={(hex) =>
               setGarmentColor((current) =>

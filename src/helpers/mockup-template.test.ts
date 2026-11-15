@@ -6,6 +6,7 @@ import {
   isValidQuad,
   keepInFrame,
   MAX_MOCKUP_SELECTION,
+  parsePrintifyFrame,
   parsePrintQuad,
   type PrintQuad,
   quadBounds,
@@ -115,6 +116,15 @@ describe("sortMockupList", () => {
     const templates = [buildMockupTemplate({ id: "only", usageCount: 0 })];
 
     expect(sortMockupList(templates).map((template) => template.id)).toEqual(["only"]);
+  });
+});
+
+describe("parsePrintifyFrame", () => {
+  it("is the frame stored, or the main area of a Printify template whose design was never moved", () => {
+  const frame = { x: 500, y: 500, width: 400, height: 400 };
+    expect(parsePrintifyFrame(JSON.stringify({ x: 550, y: 520, width: 200, height: 150, printifyFrame: frame }))).toEqual(frame);
+    expect(parsePrintifyFrame(JSON.stringify(frame))).toEqual(frame);
+    expect(parsePrintifyFrame("not json")).toBeNull();
   });
 });
 

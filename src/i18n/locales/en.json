@@ -1109,7 +1109,7 @@
         "title": "Make a model photo with AI",
         "description": "AI makes a photo of the people you choose in a plain white t-shirt. It is kept with your model photos, and mock-ups are put on it without AI, so the print stays exactly as designed.",
         "productType": "Product type",
-        "costNote": "One image (about $0.03) is charged to your Ideogram key. Making it takes up to a minute. Check the photo before you use it: if the shirt is not found, make another.",
+        "costNote": "One Ideogram image (about $0.03), made on your own key, or on the platform's keys when your plan includes them. Making it takes up to a minute. Check the photo before you use it: if the shirt is not found, make another.",
         "pendingNote": "Making the photo and finding the shirt on it… this takes up to a minute.",
         "pending": "Making the photo…",
         "makePhoto": "Make photo"
@@ -1215,7 +1215,7 @@
         "titleNew": "New mock-up template",
         "titleEdit": "Edit {{name}}",
         "description": "Mark where designs go on each photo. Add the back or a sleeve to print there too: each side makes its own mock-up.",
-        "descriptionPrintifyLocked": "The photo and print area stay as they are while the template is linked to Printify. Measure a side again, or unlink it, in Printify settings.",
+        "descriptionPrintifyLocked": "The photos and Printify's print area stay as they are while the template is linked to Printify: place the design inside it. Measure a side again, or unlink it, in Printify settings.",
         "nameLabel": "Name",
         "namePlaceholder": "Classic tee",
         "productTypeLabel": "Product type *",
@@ -1234,7 +1234,9 @@
         "analyzing": "Analyzing photos…",
         "saving": "Saving…",
         "createTemplate": "Create template",
-        "lockedNote": "Custom mock-up templates are part of Pro."
+        "lockedNote": "Custom mock-up templates are part of Pro.",
+        "garmentColorPrintifyNote": "One of the colors measured on Printify. Used unless a batch picks its own colors. None keeps the photo’s color.",
+        "garmentColorNoPrintifyColors": "No Printify colors measured for this blueprint yet. Measure them in Printify settings."
       },
       "sidesEditor": {
         "label": "{{label}} photo",

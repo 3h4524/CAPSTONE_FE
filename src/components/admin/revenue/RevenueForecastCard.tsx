@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertTriangle, BarChart3, ChevronDown } from "lucide-react";
+import { AlertTriangle, BarChart3 } from "lucide-react";
 import {
   Area,
   CartesianGrid,
@@ -14,6 +14,7 @@ import {
 } from "recharts";
 
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { RevenueForecastDto } from "@/types/revenue";
 import { formatCompactVndAmount, formatVnd } from "@/utils/format-currency";
 
@@ -84,18 +85,16 @@ export function RevenueForecastCard({
         </div>
 
         {/* Time Horizon Selector */}
-        <div className="relative">
-          <select
-            value={timeHorizon}
-            onChange={(e) => setTimeHorizon(Number(e.target.value) as TimeHorizon)}
-            className="border-ink-200/90 bg-ink-50/70 text-ink-700 hover:border-ink-300 h-8 cursor-pointer appearance-none rounded-xl border pr-7 pl-3 text-xs font-semibold shadow-2xs transition-all focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-          >
-            <option value={3}>3 months</option>
-            <option value={6}>6 months</option>
-            <option value={12}>12 months</option>
-          </select>
-          <ChevronDown className="text-ink-400 pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2" />
-        </div>
+        <Select value={String(timeHorizon)} onValueChange={(value) => setTimeHorizon(Number(value) as TimeHorizon)}>
+          <SelectTrigger aria-label="Forecast horizon" size="sm" className="rounded-xl text-xs font-semibold">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="end">
+            <SelectItem value="3">3 months</SelectItem>
+            <SelectItem value="6">6 months</SelectItem>
+            <SelectItem value="12">12 months</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {!isLoading && warning && (

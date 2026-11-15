@@ -6,6 +6,24 @@
    helpers/theme.ts sets from the user's saved preference instead. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+@layer utilities {
+  @media (max-width: 767px) {
+    .phone-hit-area {
+      position: relative;
+    }
+
+    .phone-hit-area::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 2.5rem);
+      height: max(100%, 2.5rem);
+      translate: -50% -50%;
+    }
+  }
+}
+
 
 :root {
   color-scheme: light;

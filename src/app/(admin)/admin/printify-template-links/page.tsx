@@ -13,7 +13,7 @@ export const metadata: Metadata = getPageMetadata({
 
 export default function PrintifyTemplateLinksPage() {
   return (
-    <AdminShell pageTitle="Printify Template Links">
+    <AdminShell>
       <PrintifyTemplateLinks />
     </AdminShell>
   );

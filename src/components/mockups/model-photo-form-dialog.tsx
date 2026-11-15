@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { type ModelPhotoScope, previewModelPhoto } from "@/api/model-photos";
 import { FormInputField } from "@/components/commons/forms/form-input-field";
@@ -40,7 +41,6 @@ import {
   parsePrintArea,
   parsePrintQuad,
   type PrintQuad,
-  productTypeLabel,
   quadBounds,
   quadFromArea,
 } from "@/helpers/mockup-template";
@@ -87,6 +87,7 @@ export const ModelPhotoFormDialog = ({
   scope,
   onClose,
 }: ModelPhotoFormDialogProps) => {
+  const { t } = useTranslation("common");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoObjectUrl, setPhotoObjectUrl] = useState<string | null>(null);
   const [photoSize, setPhotoSize] = useState<{ width: number; height: number } | null>(null);
@@ -256,11 +257,11 @@ export const ModelPhotoFormDialog = ({
   const pickFile = (file: File | undefined) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setFileError("Choose an image file.");
+      setFileError(t("mockups.modelPhotoForm.chooseImage"));
       return;
     }
     if (file.size > MAX_PHOTO_BYTES) {
-      setFileError("The photo cannot exceed 10 MB.");
+      setFileError(t("mockups.sidesEditor.fileTooLarge"));
       return;
     }
     setFileError(null);
@@ -289,14 +290,14 @@ export const ModelPhotoFormDialog = ({
 
   const submit = handleSubmit(async (values) => {
     if (creating && !photoFile) {
-      setFileError("Add a photo of a person wearing a plain, light garment.");
+      setFileError(t("mockups.modelPhotoForm.photoTooSmallForCreate"));
       return;
     }
     if (!isCompleteAttributes(attributes)) {
       setAttributesError(
         attributes.people === "group"
-          ? "Choose who the group is: a family, friends or a couple."
-          : "Choose the person's age group and gender."
+          ? t("mockups.modelPhotoForm.incompleteGroup")
+          : t("mockups.modelPhotoForm.incompleteSingle")
       );
       return;
     }
@@ -307,15 +308,15 @@ export const ModelPhotoFormDialog = ({
     ) {
       setSelectionError(
         selection
-          ? "Select more of the garment."
-          : "Click the garment on the photo to select it: it is what takes the mock-up’s color."
+          ? t("mockups.modelPhotoForm.selectionTooSmall")
+          : t("mockups.modelPhotoForm.garmentRequired")
       );
       return;
     }
     // Corners only matter when the design goes in a print area marked by hand, and only when it is not a rectangle.
     const printQuad = !autoPlacement && quad && !isRectangleQuad(quad) ? quad : null;
     if (printQuad && shownSize && !isValidQuad(printQuad, shownSize.width, shownSize.height)) {
-      showToast("warning", "Put the print area's corners back in order before saving.");
+      showToast("warning", t("mockups.modelPhotoForm.placementError"));
       return;
     }
     let garmentSelection: Blob | null = null;
@@ -324,7 +325,7 @@ export const ModelPhotoFormDialog = ({
         setIsEncoding(true);
         garmentSelection = await selectionToPng(selection);
       } catch {
-        showToast("error", "The selection could not be prepared. Try again.");
+        showToast("error", t("mockups.modelPhotoForm.encodingError"));
         return;
       } finally {
         setIsEncoding(false);
@@ -354,10 +355,9 @@ export const ModelPhotoFormDialog = ({
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !pending && onClose()}>
       <DialogContent className="flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-3xl flex-col overflow-hidden">
         <DialogHeader className="text-left">
-          <DialogTitle>{creating ? "New model photo" : `Edit ${photo.name}`}</DialogTitle>
+          <DialogTitle>{creating ? t("mockups.modelPhotoForm.titleNew") : t("mockups.modelPhotoForm.titleEdit", { name: photo?.name ?? "" })}</DialogTitle>
           <DialogDescription>
-            A person wearing a plain white or light garment, facing the camera. Mock-ups are put on
-            it without AI: the garment takes the mock-up’s color and design.
+            {t("mockups.modelPhotoForm.description")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
@@ -366,15 +366,15 @@ export const ModelPhotoFormDialog = ({
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormInputField
                   id="model-photo-name"
-                  label="Name"
+                  label={t("mockups.modelPhotoForm.nameLabel")}
                   type="text"
-                  placeholder="Studio, white tee, front"
+                  placeholder={t("mockups.modelPhotoForm.namePlaceholder")}
                   registration={register("name")}
                   error={errors.name}
                   required
                 />
                 <div className="space-y-2">
-                  <Label htmlFor="model-photo-product-type">Product type *</Label>
+                  <Label htmlFor="model-photo-product-type">{t("mockups.templateForm.productTypeLabel")}</Label>
                   <Select
                     value={watch("productType")}
                     onValueChange={(value) =>
@@ -390,7 +390,7 @@ export const ModelPhotoFormDialog = ({
                     <SelectContent>
                       {productTypes.map((type) => (
                         <SelectItem key={type} value={type}>
-                          {productTypeLabel(type)}
+                          {t(`mockups.productTypes.${type}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -398,14 +398,14 @@ export const ModelPhotoFormDialog = ({
                 </div>
               </div>
               <MockupPhotoDropzone
-                label="Photo of a person"
+                label={t("mockups.modelPhotoForm.photoLabel")}
                 previewUrl={shownPhoto}
                 error={fileError}
                 disabled={pending}
                 onSelect={pickFile}
                 onRemove={() => setPhotoFile(null)}
               />
-              <section className="space-y-2" aria-label="Who is in the photo">
+              <section className="space-y-2" aria-label={t("mockups.modelAttributes.whoInPhoto")}>
                 <ModelAttributesFields
                   value={attributes}
                   disabled={pending}
@@ -422,41 +422,38 @@ export const ModelPhotoFormDialog = ({
                 {attributes.people === "group" && person?.garmentCount != null && (
                   <p role="status" className="text-ink-600 text-xs">
                     {person.garmentCount === 1
-                      ? "Found 1 shirt. People standing close together count as one: leave a gap between them so each one gets the design."
-                      : `Found ${person.garmentCount} shirts: each one gets the design.`}
+                      ? t("mockups.modelPhotoForm.garmentFoundOneShirt")
+                      : t("mockups.modelPhotoForm.garmentFoundShirts", { count: person.garmentCount })}
                   </p>
                 )}
               </section>
               {shownSize && Math.max(shownSize.width, shownSize.height) < MIN_SHARP_PHOTO_SIDE && (
                 <p role="status" className="text-xs text-amber-700 dark:text-amber-300">
-                  This photo is small ({shownSize.width} × {shownSize.height} px): the garment’s
-                  edge and the print will look rough. Use a photo at least {MIN_SHARP_PHOTO_SIDE} px
-                  on its longer side.
+                  {t("mockups.modelPhotoForm.photoTooSmall", { width: shownSize.width, height: shownSize.height, minSide: MIN_SHARP_PHOTO_SIDE })}
                 </p>
               )}
               {shownPhoto && (
                 <section className="space-y-2" aria-labelledby="model-photo-garment">
                   <div>
                     <p id="model-photo-garment" className="text-ink-900 text-sm font-medium">
-                      1. The garment
+                      {t("mockups.modelPhotoForm.garmentTitle")}
                     </p>
                     <p className="text-muted-foreground mt-0.5 text-xs">
-                      Only the garment (blue) takes the mock-up’s color and print; skin and the
-                      background keep theirs.
+                      {t("mockups.modelPhotoForm.garmentDescription")}
                       {personPending &&
-                        " Finding the garment on the photo… this takes a few seconds."}
+                        t("mockups.modelPhotoForm.garmentPendingNote")}
                       {mode === "auto" &&
                         garmentFound &&
-                        " It was found automatically, and is found again at the photo’s full size when you save."}
-                      {mode === "saved" && " This is the garment saved with the photo."}
+                        t("mockups.modelPhotoForm.garmentFoundNote")}
+                      {mode === "saved" && t("mockups.modelPhotoForm.garmentSavedNote")}
                       {mode === "manual" &&
                         !garmentFound &&
                         person &&
-                        " It could not be found automatically: click it on the photo to select it."}
+                        t("mockups.modelPhotoForm.garmentManualNote")}
                       {mode === "manual" &&
                         person &&
                         !person.maskDataUrl &&
-                        " The person could not be found either, so take care not to select the background."}
+                        t("mockups.modelPhotoForm.garmentOtherNote")}
                     </p>
                   </div>
                   {personPending || !person ? null : (
@@ -483,8 +480,8 @@ export const ModelPhotoFormDialog = ({
                           onClick={startFromFoundGarment}
                         >
                           {mode === "saved"
-                            ? "Find the garment again"
-                            : "Use the garment found automatically"}
+                            ? t("mockups.modelPhotoForm.findAgain")
+                            : t("mockups.modelPhotoForm.useFound")}
                         </Button>
                       )}
                       {mode !== "manual" && (
@@ -496,7 +493,7 @@ export const ModelPhotoFormDialog = ({
                           disabled={pending}
                           onClick={() => setGarmentMode("manual")}
                         >
-                          Adjust by hand
+                          {t("mockups.modelPhotoForm.adjustByHand")}
                         </Button>
                       )}
                     </div>
@@ -511,7 +508,7 @@ export const ModelPhotoFormDialog = ({
               {shownPhoto && shownSize && (
                 <section className="space-y-3" aria-labelledby="model-photo-placement">
                   <p id="model-photo-placement" className="text-ink-900 text-sm font-medium">
-                    2. Where the design goes
+                    {t("mockups.modelPhotoForm.placementTitle")}
                   </p>
                   <RadioGroup
                     value={autoPlacement ? "auto" : "manual"}
@@ -522,15 +519,13 @@ export const ModelPhotoFormDialog = ({
                     {[
                       {
                         value: "auto",
-                        label: "As on each mock-up (automatic)",
-                        description:
-                          "The shirt is measured on both photos: the design keeps its size relative to the chest and its distance below the collar, as on the mock-up. Nothing to mark.",
+                        label: t("mockups.modelPhotoForm.placementAutoLabel"),
+                        description: t("mockups.modelPhotoForm.placementAutoDescription"),
                       },
                       {
                         value: "manual",
-                        label: "In a print area I mark",
-                        description:
-                          "Drag its four corners onto the chest: for a pose the automatic placement gets wrong, such as a person turned a little to the side.",
+                        label: t("mockups.modelPhotoForm.placementManualLabel"),
+                        description: t("mockups.modelPhotoForm.placementManualDescription"),
                       },
                     ].map((option) => (
                       <label
@@ -558,8 +553,7 @@ export const ModelPhotoFormDialog = ({
                     (garmentMaskUrl ? (
                       <div className="space-y-2">
                         <p className="text-muted-foreground text-xs">
-                          Cover the same part of the garment as your mock-up templates’ print area
-                          (for a tee, the chest). A design is placed in it as it is on the mock-up.
+                          {t("mockups.modelPhotoForm.coverChestNote")}
                         </p>
                         <div
                           onPointerDown={() => {
@@ -578,14 +572,13 @@ export const ModelPhotoFormDialog = ({
                         </div>
                         {(errors.x || errors.y || errors.width || errors.height) && (
                           <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-                            Draw a print area on the photo.
+                            {t("mockups.modelPhotoForm.drawAreaError")}
                           </p>
                         )}
                       </div>
                     ) : (
                       <p className="text-muted-foreground text-xs">
-                        Select the garment first: the print area then sits on its chest, ready to
-                        adjust.
+                        {t("mockups.modelPhotoForm.selectGarmentFirstNote")}
                       </p>
                     ))}
                 </section>
@@ -594,10 +587,10 @@ export const ModelPhotoFormDialog = ({
           </div>
           <DialogFooter className="gap-2 pt-4">
             <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>
-              Cancel
+              {t("mockups.cancel")}
             </Button>
             <Button type="submit" disabled={pending || personPending}>
-              {pending ? "Preparing the photo…" : creating ? "Create model photo" : "Save changes"}
+              {pending ? t("mockups.modelPhotoForm.saving") : creating ? t("mockups.modelPhotoForm.createPhoto") : t("mockups.saveChanges")}
             </Button>
           </DialogFooter>
         </form>

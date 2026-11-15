@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import Image from "next/image";
 import { ImagePlus, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,22 +18,24 @@ type StylePresetImageDropzoneProps = {
   onRemove: () => void;
 };
 
-export const StylePresetImageDropzone = ({ label = "Preview image", previewUrl, error, disabled = false, onSelect, onRemove }: StylePresetImageDropzoneProps) => {
+export const StylePresetImageDropzone = ({ label, previewUrl, error, disabled = false, onSelect, onRemove }: StylePresetImageDropzoneProps) => {
+  const { t } = useTranslation("common");
   const inputId = useId();
+  const shownLabel = label ?? t("styles.previewImage");
   const [dragging, setDragging] = useState(false);
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={inputId}>{label}</Label>
+      <Label htmlFor={inputId}>{shownLabel}</Label>
       <div className={cn("flex flex-col gap-3", previewUrl && "sm:flex-row sm:items-stretch")}>
         {previewUrl && (
           <div className="relative w-fit sm:w-1/2">
-            <Image src={previewUrl} alt="Style preview" width={320} height={180} unoptimized className="ring-ink-200 aspect-video h-full w-full rounded-lg object-cover ring-1 ring-inset" />
+            <Image src={previewUrl} alt={t("styles.stylePreviewAlt")} width={320} height={180} unoptimized className="ring-ink-200 aspect-video h-full w-full rounded-lg object-cover ring-1 ring-inset" />
             <Button
               type="button"
               variant="secondary"
               size="icon"
-              aria-label="Remove preview image"
+              aria-label={t("styles.removePreviewImage")}
               className="absolute top-1 right-1 size-7"
               disabled={disabled}
               onClick={onRemove}
@@ -62,7 +65,7 @@ export const StylePresetImageDropzone = ({ label = "Preview image", previewUrl, 
         >
           <div className="text-ink-600 flex flex-wrap items-center justify-center gap-2 text-sm">
             <ImagePlus className="size-4" aria-hidden="true" />
-            <span>{previewUrl ? "Drag another image here or browse" : "Drag an image here or browse"}</span>
+            <span>{previewUrl ? t("styles.dropReplace") : t("styles.dropAdd")}</span>
             <input
               id={inputId}
               type="file"
@@ -78,7 +81,7 @@ export const StylePresetImageDropzone = ({ label = "Preview image", previewUrl, 
           </div>
         </label>
       </div>
-      <p className="text-ink-500 text-[11px]">Images up to 5 MB</p>
+      <p className="text-ink-500 text-[11px]">{t("styles.imagesUpTo")}</p>
       {error ? <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p> : null}
     </div>
   );

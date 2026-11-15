@@ -42,7 +42,7 @@ export const ContentSafetyDashboard = () => {
   );
 
   return (
-    <AdminShell pageTitle="Content Safety">
+    <AdminShell>
       <div className="flex flex-col gap-6 max-md:gap-4">
         <header className="flex flex-col gap-1.5">
           <h2 className="font-display text-ink-900 text-xl font-bold tracking-tight max-md:text-lg sm:text-2xl">

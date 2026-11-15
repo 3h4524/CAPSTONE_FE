@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useId, useState } from "react";
 import { ImagePlus, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { type MockupTemplateScope, previewGarmentMask } from "@/api/mockup-templates";
 import { MockupPhotoDropzone } from "@/components/mockups/mockup-photo-dropzone";
@@ -114,6 +115,7 @@ export const MockupViewPhotoEditor = ({
   scope = "seller",
   photoLocked = false,
 }: MockupViewPhotoEditorProps) => {
+  const { t } = useTranslation("common");
   const replaceInputId = useId();
   const [photoObjectUrl, setPhotoObjectUrl] = useState<string | null>(null);
   const [pickedSize, setPickedSize] = useState<Size | null>(null);
@@ -241,11 +243,11 @@ export const MockupViewPhotoEditor = ({
   const pickFile = (picked: File | undefined) => {
     if (!picked) return;
     if (!picked.type.startsWith("image/")) {
-      setFileError("Choose an image file for the photo.");
+      setFileError(t("mockups.sidesEditor.fileNotImage"));
       return;
     }
     if (picked.size > MAX_PHOTO_BYTES) {
-      setFileError("The photo cannot exceed 10 MB.");
+      setFileError(t("mockups.sidesEditor.fileTooLarge"));
       return;
     }
     setFileError(null);
@@ -258,7 +260,7 @@ export const MockupViewPhotoEditor = ({
     <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[minmax(0,1fr)_22rem] md:overflow-hidden">
       {/* The photo, as large as the dialog allows, with the sides under it. */}
       <section
-        aria-label={`${label} photo`}
+        aria-label={t("mockups.sidesEditor.label", { label })}
         className="bg-ink-50 flex min-h-0 flex-col gap-3 px-4 py-4 outline-none md:overflow-y-auto"
       >
         <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
@@ -266,7 +268,7 @@ export const MockupViewPhotoEditor = ({
             <p className="text-ink-900 text-sm font-semibold">{label}</p>
             {maskPreviewPending && (
               <p className="text-muted-foreground text-xs">
-                Finding the garment in the photo… this takes a few seconds.
+                {t("mockups.sidesEditor.findingGarment")}
               </p>
             )}
           </div>
@@ -278,7 +280,7 @@ export const MockupViewPhotoEditor = ({
                 aria-disabled={disabled}
               >
                 <ImagePlus className="size-3.5" aria-hidden="true" />
-                Replace photo
+                {t("mockups.sidesEditor.replacePhoto")}
                 <input
                   id={replaceInputId}
                   type="file"
@@ -301,7 +303,7 @@ export const MockupViewPhotoEditor = ({
                   onClick={onRemove}
                 >
                   <Trash2 className="size-3.5" aria-hidden="true" />
-                  Remove side
+                  {t("mockups.sidesEditor.removeSide")}
                 </Button>
               )}
             </div>
@@ -342,8 +344,8 @@ export const MockupViewPhotoEditor = ({
               <MockupPhotoDropzone
                 label={
                   draft.view === "front"
-                    ? "Photo of the front"
-                    : `Photo of the ${label.toLowerCase()}`
+                    ? t("mockups.sidesEditor.frontDropLabel")
+                    : t("mockups.sidesEditor.sideDropLabel", { label: label.toLowerCase() })
                 }
                 previewUrl={null}
                 error={fileError}
@@ -353,10 +355,10 @@ export const MockupViewPhotoEditor = ({
               />
               <p className="text-muted-foreground text-xs">
                 {photoLocked
-                  ? "The sides of a Printify template are Printify's own photos. Add this one from the template's Printify settings."
+                  ? t("mockups.sidesEditor.printifyLockedDropDescription")
                   : draft.view === "front"
-                  ? "A real product photo, garment on a plain background. Images up to 10 MB."
-                  : `Add a photo of the ${label.toLowerCase()} to print on it too: every design gets a mock-up of this side.`}
+                    ? t("mockups.sidesEditor.frontDropDescription")
+                    : t("mockups.sidesEditor.sideDropDescription", { label: label.toLowerCase() })}
               </p>
             </div>
           )}
@@ -384,13 +386,12 @@ export const MockupViewPhotoEditor = ({
           />
         ) : (
           <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-xs">
-            Print areas for the {label.toLowerCase()} appear once it has a photo.
+            {t("mockups.sidesEditor.sideAreasNote", { label: label.toLowerCase() })}
           </p>
         )}
         {allowRecolor && recolorProblem && (
           <p role="alert" className="text-sm text-red-600">
-            The {label.toLowerCase()} photo can’t be recolored: {recolorProblem} Use a white or
-            light-gray garment on a plain background.
+            {t("mockups.sidesEditor.sideOffPhotoWarning", { label: label.toLowerCase(), reason: recolorProblem })}
           </p>
         )}
         {settingsBottom}

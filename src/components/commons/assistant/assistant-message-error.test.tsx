@@ -55,4 +55,13 @@ describe("AssistantMessageError", () => {
     expect(screen.getByText("Model unavailable")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
   });
+
+  it("does not offer Retry for a blocked answer", () => {
+    const failed = seedFailedExchange();
+
+    renderWithQuery(<AssistantMessageError messageKey={failed.key} error={{ code: "assistant.blocked", message: "Podi can't help with that request." }} />);
+
+    expect(screen.getByText("Podi can't help with that request.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
+  });
 });

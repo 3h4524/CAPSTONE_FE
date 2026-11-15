@@ -23,13 +23,8 @@ test.describe("seller dashboard", () => {
       expect(sessionCalls[0]?.status).toBe(200);
     });
 
-    await test.step("the empty dashboard state is rendered", async () => {
-      await expect(page.getByRole("heading", { name: "Start your first batch" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Create workflow" })).toBeDisabled();
-      await expect(page.getByRole("link", { name: "View docs" })).toHaveAttribute(
-        "href",
-        "/features"
-      );
+    await test.step("the dashboard overview is rendered", async () => {
+      await expect(page.getByText(/Overview of the last/)).toBeVisible();
     });
   });
 
@@ -37,7 +32,7 @@ test.describe("seller dashboard", () => {
     await openPrivateRoute(page, "/dashboard");
 
     await expect(page.getByRole("status", { name: "Checking sign-in" })).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: "Start your first batch" })).toBeVisible();
+    await expect(page.getByText(/Overview of the last/)).toBeVisible();
   });
 
   test("navigates between private routes from the sidebar", async ({ page }) => {
@@ -72,7 +67,7 @@ test.describe("seller dashboard", () => {
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
     await openPrivateRoute(page, "/dashboard");
-    await expect(page.getByRole("heading", { name: "Start your first batch" })).toBeVisible();
+    await expect(page.getByText(/Overview of the last/)).toBeVisible();
     await page.waitForTimeout(1_000);
 
     expect(pageErrors).toEqual([]);

@@ -1,11 +1,13 @@
+"use client";
+
+import { useTranslation } from "react-i18next";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { CurrentSubscription } from "@/types/subscription";
 import { formatVnd } from "@/utils/format-currency";
-
-const formatDate = (isoDate: string) =>
-  new Date(isoDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+import { formatDate } from "@/utils/format-date";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -26,6 +28,7 @@ export const CurrentPlanCard = ({
   isCancellingScheduledDowngrade,
   onRenewClick,
 }: CurrentPlanCardProps) => {
+  const { t, i18n } = useTranslation("common");
   const isTrial = subscription?.isTrial === true && subscription.trialEndsAt !== null;
   const daysLeft = isTrial ? trialDaysLeft(subscription.trialEndsAt!) : 0;
   const isPastDue = subscription?.status === "past_due";
@@ -35,30 +38,30 @@ export const CurrentPlanCard = ({
       <CardContent className="flex flex-col justify-between gap-4 max-md:gap-3 max-md:px-4 sm:flex-row sm:items-center">
         <div className="space-y-1">
           <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-            Current plan
+            {t("subscription.currentPlan")}
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-semibold">
-              {subscription ? subscription.planName : "Free"}
+              {subscription ? subscription.planName : t("subscription.free")}
             </h3>
             {isTrial ? (
               <Badge variant="secondary">
-                Trial · {daysLeft} day{daysLeft === 1 ? "" : "s"} left
+                {t("subscription.trialBadge", { count: daysLeft })}
               </Badge>
             ) : isPastDue ? (
-              <Badge variant="destructive">Payment due</Badge>
+              <Badge variant="destructive">{t("subscription.paymentDue")}</Badge>
             ) : (
               <Badge variant={subscription?.status === "active" ? "default" : "outline"}>
-                {subscription ? subscription.status : "No plan"}
+                {subscription ? t(`subscription.statuses.${subscription.status}`, { defaultValue: subscription.status }) : t("subscription.noPlan")}
               </Badge>
             )}
           </div>
           <p className="text-muted-foreground text-sm max-md:hidden">
             {isTrial
-              ? `You're trying every ${subscription!.planName} feature for free. Choose a plan before ${formatDate(subscription!.trialEndsAt!)} to keep running your workflows.`
+              ? t("subscription.trialDescription", { planName: subscription!.planName, date: formatDate(subscription!.trialEndsAt!, i18n.language) })
               : subscription
                 ? subscription.shortDescription
-                : "You can build and save workflows on Free. Start the free trial or choose a plan to run them."}
+                : t("subscription.freeDescription")}
           </p>
           {isPastDue && subscription!.lastGraceDay && (
             <div
@@ -66,20 +69,21 @@ export const CurrentPlanCard = ({
               className="border-destructive/40 bg-destructive/10 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border px-3 py-2 text-sm"
             >
               <span>
-                Your renewal was due {formatDate(subscription!.renewalDate)}. Renew by{" "}
-                <strong>{formatDate(subscription!.lastGraceDay)}</strong> to keep {subscription!.planName}; after that
-                your account moves to Free.
+                {t("subscription.renewalPastDueBefore", { date: formatDate(subscription!.renewalDate, i18n.language) })}
+                <strong>{formatDate(subscription!.lastGraceDay, i18n.language)}</strong>
+                {t("subscription.renewalPastDueAfter", { planName: subscription!.planName })}
               </span>
               <Button size="sm" onClick={onRenewClick}>
-                Renew now
+                {t("subscription.renewNow")}
               </Button>
             </div>
           )}
           {subscription?.scheduledPlanName && subscription.scheduledPlanEffectiveDate && (
             <div className="border-warning bg-warning/10 flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-sm">
               <span>
-                Moving to <strong>{subscription.scheduledPlanName}</strong> when you renew on{" "}
-                {formatDate(subscription.scheduledPlanEffectiveDate)}.
+                {t("subscription.scheduledMovingBefore")}
+                <strong>{subscription.scheduledPlanName}</strong>
+                {t("subscription.scheduledMovingAfter", { date: formatDate(subscription.scheduledPlanEffectiveDate, i18n.language) })}
               </span>
               <Button
                 variant="link"
@@ -88,33 +92,33 @@ export const CurrentPlanCard = ({
                 onClick={onCancelScheduledDowngrade}
                 disabled={isCancellingScheduledDowngrade}
               >
-                Cancel
+                {t("subscription.cancel")}
               </Button>
             </div>
           )}
         </div>
         <div className="text-right max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:items-center max-md:gap-x-3 max-md:text-left">
           <p className="text-2xl font-bold max-md:text-lg">
-            {isTrial ? "Free trial" : subscription ? formatVnd(subscription.priceVnd) : "0 ₫"}
+            {isTrial ? t("subscription.freeTrialPrice") : subscription ? formatVnd(subscription.priceVnd) : "0 ₫"}
             {!isTrial && (
               <span className="text-muted-foreground text-sm font-normal">
                 {" "}
-                / {subscription?.billingCycle === "annual" ? "year" : "month"}
+                / {subscription?.billingCycle === "annual" ? t("subscription.year") : t("subscription.month")}
               </span>
             )}
           </p>
           <p className="text-muted-foreground text-sm">
             {isTrial
-              ? `Ends ${formatDate(subscription!.trialEndsAt!)}`
+              ? t("subscription.endsOn", { date: formatDate(subscription!.trialEndsAt!, i18n.language) })
               : isPastDue
-                ? `Was due ${formatDate(subscription!.renewalDate)}`
+                ? t("subscription.wasDueOn", { date: formatDate(subscription!.renewalDate, i18n.language) })
                 : subscription
-                  ? `Paid until ${formatDate(subscription.renewalDate)}`
-                  : "No plan yet"}
+                  ? t("subscription.paidUntil", { date: formatDate(subscription.renewalDate, i18n.language) })
+                  : t("subscription.noPlanYet")}
           </p>
           {subscription?.canRenew && !isPastDue && (
             <Button variant="outline" size="sm" className="mt-2 max-md:col-start-2 max-md:row-span-2 max-md:row-start-1 max-md:mt-0" onClick={onRenewClick}>
-              Renew now
+              {t("subscription.renewNow")}
             </Button>
           )}
         </div>

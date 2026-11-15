@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { usdToVnd, vndToUsd } from "@/helpers/plan-price";
 import { useCreateSubscriptionPlan } from "@/hooks/mutations/use-create-subscription-plan";
 import { useUpdateSubscriptionPlan } from "@/hooks/mutations/use-update-subscription-plan";
 import { useAdminFeatures } from "@/hooks/queries/use-admin-features";
@@ -37,17 +38,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 type PlanFormDialogProps = {
   open: boolean;
   plan: AdminSubscriptionPlan | null;
-  // The PayOS rate, to preview what a typed USD price charges; null hides the preview.
+  // The PayOS rate, when a plan exists to read it from; null switches the price inputs to USD.
   usdToVndRate: number | null;
   // The plans a new plan can copy its features from.
   plans: AdminSubscriptionPlan[];
   onClose: () => void;
 };
 
-// Prices are entered in USD and charged in VND at the PayOS rate, as the server rounds them.
 const chargedVnd = (priceUsd: number | undefined, rate: number | null) =>
   rate !== null && typeof priceUsd === "number" && Number.isFinite(priceUsd)
-    ? `≈ ${formatVnd(Math.round(priceUsd * rate))} charged via PayOS`
+    ? `≈ ${formatVnd(usdToVnd(priceUsd, rate))} charged via PayOS`
     : null;
 
 // The old quota columns and the API key, white-label and priority support switches are kept as they
@@ -58,6 +58,8 @@ const EMPTY_VALUES: SubscriptionPlanFormValues = {
   description: "",
   monthlyPriceUsd: 0,
   annualPriceUsd: undefined,
+  monthlyPriceVnd: 0,
+  annualPriceVnd: undefined,
   maxBatchSize: 100,
   maxConcurrentJobs: 1,
   maxProductsPerMonth: 1000,
@@ -80,6 +82,8 @@ const toFormValues = (plan: AdminSubscriptionPlan | null): SubscriptionPlanFormV
         description: plan.description ?? "",
         monthlyPriceUsd: plan.monthlyPriceUsd,
         annualPriceUsd: plan.annualPriceUsd ?? undefined,
+        monthlyPriceVnd: plan.monthlyPriceVnd,
+        annualPriceVnd: plan.annualPriceVnd ?? undefined,
         maxBatchSize: plan.maxBatchSize,
         maxConcurrentJobs: plan.maxConcurrentJobs,
         maxProductsPerMonth: plan.maxProductsPerMonth,
@@ -106,6 +110,7 @@ export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: Pla
   const {
     register,
     control,
+    setValue,
     handleSubmit,
     reset,
     formState: { errors },
@@ -137,7 +142,7 @@ export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: Pla
   const picksValid = picksAreValid(picks);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const submit = handleSubmit(({ tier, features, ...values }) => {
+  const submit = handleSubmit(({ tier, features, monthlyPriceVnd: _monthlyPriceVnd, annualPriceVnd: _annualPriceVnd, ...values }) => {
     const annualPriceUsd = values.annualPriceUsd ?? null;
     const description = values.description?.trim() ? values.description.trim() : null;
 
@@ -203,39 +208,54 @@ export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: Pla
                     {...register("tier")}
                   />
                 </Field>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Monthly price (USD)" htmlFor="plan-monthly-price" error={errors.monthlyPriceUsd?.message}>
-                    <Input
-                      id="plan-monthly-price"
-                      type="number"
-                      step="0.01"
-                      min={0}
-                      placeholder="e.g. 9.99"
-                      aria-invalid={Boolean(errors.monthlyPriceUsd)}
-                      {...register("monthlyPriceUsd", { valueAsNumber: true })}
-                    />
-                    {monthlyCharged && <p className="text-ink-400 mt-1 text-[11px]">{monthlyCharged}</p>}
-                  </Field>
-                  {isEditing && (
-                    <p className="text-ink-400 text-[11px] leading-relaxed sm:col-span-2">
-                      A new price applies to new purchases and renewals; a period already paid keeps its price.
-                    </p>
-                  )}
-                  <Field label="Annual price (USD)" htmlFor="plan-annual-price" error={errors.annualPriceUsd?.message}>
-                    <Input
-                      id="plan-annual-price"
-                      type="number"
-                      step="0.01"
-                      min={0}
-                      placeholder="Optional, e.g. 99.99"
-                      aria-invalid={Boolean(errors.annualPriceUsd)}
-                      {...register("annualPriceUsd", { setValueAs: (v) => (v === "" ? undefined : Number(v)) })}
-                    />
-                    <p className="text-ink-400 mt-1 text-[11px]">
-                      {annualCharged ?? "Leave empty to offer monthly billing only"}
-                    </p>
-                  </Field>
-                </div>
+                {usdToVndRate !== null ? (
+                  <VndPriceSection
+                    rate={usdToVndRate}
+                    register={register}
+                    setValue={setValue}
+                    isEditing={isEditing}
+                    monthlyError={errors.monthlyPriceUsd?.message}
+                    annualError={errors.annualPriceUsd?.message}
+                    monthlyInvalid={Boolean(errors.monthlyPriceUsd)}
+                    annualInvalid={Boolean(errors.annualPriceUsd)}
+                    monthlyCharged={monthlyCharged}
+                    annualCharged={annualCharged}
+                  />
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Monthly price (USD)" htmlFor="plan-monthly-price" error={errors.monthlyPriceUsd?.message}>
+                      <Input
+                        id="plan-monthly-price"
+                        type="number"
+                        step="0.01"
+                        min={0}
+                        placeholder="e.g. 9.99"
+                        aria-invalid={Boolean(errors.monthlyPriceUsd)}
+                        {...register("monthlyPriceUsd", { valueAsNumber: true })}
+                      />
+                      {monthlyCharged && <p className="text-ink-400 mt-1 text-[11px]">{monthlyCharged}</p>}
+                    </Field>
+                    {isEditing && (
+                      <p className="text-ink-400 text-[11px] leading-relaxed sm:col-span-2">
+                        A new price applies to new purchases and renewals; a period already paid keeps its price.
+                      </p>
+                    )}
+                    <Field label="Annual price (USD)" htmlFor="plan-annual-price" error={errors.annualPriceUsd?.message}>
+                      <Input
+                        id="plan-annual-price"
+                        type="number"
+                        step="0.01"
+                        min={0}
+                        placeholder="Optional, e.g. 99.99"
+                        aria-invalid={Boolean(errors.annualPriceUsd)}
+                        {...register("annualPriceUsd", { setValueAs: (v) => (v === "" ? undefined : Number(v)) })}
+                      />
+                      <p className="text-ink-400 mt-1 text-[11px]">
+                        {annualCharged ?? "Leave empty to offer monthly billing only"}
+                      </p>
+                    </Field>
+                  </div>
+                )}
                 <Field label="Description" htmlFor="plan-description" error={errors.description?.message}>
                   <Textarea id="plan-description" className="min-h-20" {...register("description")} />
                 </Field>
@@ -295,6 +315,85 @@ export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: Pla
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function VndPriceSection({
+  rate,
+  register,
+  setValue,
+  isEditing,
+  monthlyError,
+  annualError,
+  monthlyInvalid,
+  annualInvalid,
+  monthlyCharged,
+  annualCharged,
+}: {
+  rate: number;
+  register: ReturnType<typeof useForm<SubscriptionPlanFormValues>>["register"];
+  setValue: ReturnType<typeof useForm<SubscriptionPlanFormValues>>["setValue"];
+  isEditing: boolean;
+  monthlyError?: string;
+  annualError?: string;
+  monthlyInvalid: boolean;
+  annualInvalid: boolean;
+  monthlyCharged: string | null;
+  annualCharged: string | null;
+}) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label="Monthly price (VND)" htmlFor="plan-monthly-price" error={monthlyError}>
+        <Input
+          id="plan-monthly-price"
+          type="number"
+          step="1"
+          min={0}
+          placeholder="e.g. 249750"
+          aria-invalid={monthlyInvalid}
+          {...register("monthlyPriceVnd", {
+            valueAsNumber: true,
+            onChange: (event) => {
+              const value = event.target.value;
+              const vnd = value === "" ? Number.NaN : Number(value);
+              setValue("monthlyPriceUsd", Number.isNaN(vnd) ? Number.NaN : vndToUsd(vnd, rate), {
+                shouldValidate: true,
+                shouldDirty: true,
+              });
+            },
+          })}
+        />
+        {monthlyCharged && <p className="text-ink-400 mt-1 text-[11px]">{monthlyCharged}</p>}
+      </Field>
+      {isEditing && (
+        <p className="text-ink-400 text-[11px] leading-relaxed sm:col-span-2">
+          A new price applies to new purchases and renewals; a period already paid keeps its price.
+        </p>
+      )}
+      <Field label="Annual price (VND)" htmlFor="plan-annual-price" error={annualError}>
+        <Input
+          id="plan-annual-price"
+          type="number"
+          step="1"
+          min={0}
+          placeholder="Optional, e.g. 2497500"
+          aria-invalid={annualInvalid}
+          {...register("annualPriceVnd", {
+            setValueAs: (v) => (v === "" ? undefined : Number(v)),
+            onChange: (event) => {
+              const value = event.target.value;
+              setValue("annualPriceUsd", value === "" ? undefined : vndToUsd(Number(value), rate), {
+                shouldValidate: true,
+                shouldDirty: true,
+              });
+            },
+          })}
+        />
+        <p className="text-ink-400 mt-1 text-[11px]">
+          {annualCharged ?? "Leave empty to offer monthly billing only"}
+        </p>
+      </Field>
+    </div>
   );
 }
 

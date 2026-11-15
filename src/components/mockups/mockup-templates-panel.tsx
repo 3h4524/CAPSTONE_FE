@@ -2,6 +2,7 @@
 
 import { type ReactNode, useState } from "react";
 import { ImageIcon, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { MockupTemplateScope } from "@/api/mockup-templates";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
@@ -25,6 +26,7 @@ type MockupTemplatesPanelProps = {
 
 /** The product-photo templates one can manage, with a form to make and change them. */
 export const MockupTemplatesPanel = ({ scope, actions, cardActions }: MockupTemplatesPanelProps) => {
+  const { t } = useTranslation("common");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<MockupTemplate | null>(null);
   const { data: templates, isPending: isLoadingTemplates, isError: isTemplatesError, refetch: refetchTemplates } = useMockupTemplates(undefined, true, scope);
@@ -44,12 +46,12 @@ export const MockupTemplatesPanel = ({ scope, actions, cardActions }: MockupTemp
 
   const askDelete = (template: MockupTemplate) => {
     openPopup({
-      title: `Delete ${template.name}?`,
+      title: t("mockups.templatesPage.deleteTitle", { name: template.name }),
       description:
         scope === "admin"
-          ? "Sellers can no longer choose it. Mock-ups already made on it stay as they are."
-          : "This removes the mock-up template permanently. System templates cannot be deleted.",
-      positiveLabel: "Delete",
+          ? t("mockups.templatesPage.deleteDescriptionAdmin")
+          : t("mockups.templatesPage.deleteDescription"),
+      positiveLabel: t("mockups.delete"),
       onPositive: () => deleteTemplate(template.id),
     });
   };
@@ -60,34 +62,34 @@ export const MockupTemplatesPanel = ({ scope, actions, cardActions }: MockupTemp
         {actions}
         <Button type="button" className="max-md:w-full" onClick={openCreate} disabled={isDeleting}>
           <Plus aria-hidden="true" />
-          New template
+          {t("mockups.templatesPage.newTemplate")}
         </Button>
       </div>
       {isLoadingTemplates ? (
-        <SectionLoading label="Loading mock-up templates" />
+        <SectionLoading label={t("mockups.templatesPage.loadingTemplates")} />
       ) : isTemplatesError || !templates ? (
         <div className="border-ink-200 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border p-8 text-center" role="alert">
           <ImageIcon className="text-ink-400 size-8" aria-hidden="true" />
           <div>
-            <p className="text-ink-900 font-semibold">Mock-up templates unavailable</p>
-            <p className="text-muted-foreground mt-1 text-sm">We could not load mock-up templates. Check your connection and try again.</p>
+            <p className="text-ink-900 font-semibold">{t("mockups.templatesPage.unavailableTitle")}</p>
+            <p className="text-muted-foreground mt-1 text-sm">{t("mockups.templatesPage.unavailableDescription")}</p>
           </div>
           <Button type="button" onClick={() => refetchTemplates()}>
-            Try again
+            {t("mockups.templatesPage.tryAgain")}
           </Button>
         </div>
       ) : templates.length === 0 ? (
         <div className="border-ink-300 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed p-8 text-center">
-          <p className="text-ink-900 font-semibold">No mock-up templates yet</p>
-          <p className="text-muted-foreground text-sm">Upload a product photo to start compositing designs onto it.</p>
+          <p className="text-ink-900 font-semibold">{t("mockups.templatesPage.noTemplatesTitle")}</p>
+          <p className="text-muted-foreground text-sm">{t("mockups.templatesPage.noTemplatesDescription")}</p>
           <Button type="button" onClick={openCreate}>
-            New template
+            {t("mockups.templatesPage.newTemplate")}
           </Button>
         </div>
       ) : (
         <MockupCardGrid
           items={templates}
-          pagerLabel="Mock-up template pages"
+          pagerLabel={t("mockups.cardGrid.pageLabel")}
           className="xl:grid-cols-4"
           renderItem={(template) => (
             <MockupTemplateListItem

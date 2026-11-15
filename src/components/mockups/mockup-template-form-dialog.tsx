@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import {
   createMockupTemplate,
@@ -56,15 +57,6 @@ import { type MockupTemplateFormValues, mockupTemplateSchema } from "@/schemas/m
 import type { MockupTemplate, MockupView } from "@/types/mockup-templates";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-const productTypeLabels: Record<string, string> = {
-  tshirt: "T-shirt",
-  hoodie: "Hoodie",
-  mug: "Mug",
-  poster: "Poster",
-  tote_bag: "Tote bag",
-  phone_case: "Phone case",
-};
-
 type Drafts = Record<MockupView, ViewDraft>;
 
 const draftsOf = (template: MockupTemplate | null): Drafts => {
@@ -94,6 +86,7 @@ export const MockupTemplateFormDialog = ({
   onClose,
   scope = "seller",
 }: MockupTemplateFormDialogProps) => {
+  const { t } = useTranslation("common");
   const queryClient = useAppQueryClient();
   const [drafts, setDrafts] = useState<Drafts>(() => draftsOf(template));
   const [activeView, setActiveView] = useState<MockupView>("front");
@@ -227,7 +220,7 @@ export const MockupTemplateFormDialog = ({
   const submit = handleSubmit(async (values) => {
     if (creating && !createdFrontId.current && !drafts.front.file) {
       setActiveView("front");
-      setFormError("Add a photo of the front for the new template.");
+      setFormError(t("mockups.templateForm.frontRequiredError"));
       return;
     }
     // Every side's areas must lie on its photo and print something.
@@ -241,14 +234,14 @@ export const MockupTemplateFormDialog = ({
       if (outside >= 0) {
         setActiveView(view);
         setFormError(
-          `${mockupViewLabel(view)}: ${areaLabel(draft.areas[outside], outside)} reaches off the photo. Move it onto the photo or make it smaller.`
+          t("mockups.templateForm.areaOffPhotoError", { view: mockupViewLabel(view), label: areaLabel(draft.areas[outside], outside) })
         );
         return;
       }
       if (draft.areas.every((area) => area.source === "none")) {
         setActiveView(view);
         setFormError(
-          `${mockupViewLabel(view)}: every print area prints nothing. Let at least one print the mock-up's design.`
+          t("mockups.templateForm.areasPrintNothingError", { view: mockupViewLabel(view) })
         );
         return;
       }
@@ -277,7 +270,7 @@ export const MockupTemplateFormDialog = ({
       createdFrontId.current = saved.id;
       await saveSides(saved.id, values);
       await queryClient.invalidateQueries({ queryKey: mockupTemplateKeys.all });
-      showToast("success", `${saved.name} was ${creating ? "created" : "saved"}.`);
+      showToast("success", t(`mockups.templateForm.${creating ? "wasCreated" : "wasSaved"}`, { name: saved.name }));
       onClose();
     } catch (error) {
       await queryClient.invalidateQueries({ queryKey: mockupTemplateKeys.all });
@@ -296,7 +289,7 @@ export const MockupTemplateFormDialog = ({
       sides={TEMPLATE_VIEWS.map((view) => ({
         view,
         thumbnail: hasPhoto(drafts[view]) ? thumbnailOf(view) : null,
-        title: hasPhoto(drafts[view]) ? undefined : `${mockupViewLabel(view)}: add a photo`,
+        title: hasPhoto(drafts[view]) ? undefined : t("mockups.sidesEditor.addSideHint", { label: mockupViewLabel(view) }),
       }))}
     />
   );
@@ -305,15 +298,15 @@ export const MockupTemplateFormDialog = ({
     <div className="space-y-3">
       <FormInputField
         id="mockup-name"
-        label="Name"
+        label={t("mockups.templateForm.nameLabel")}
         type="text"
-        placeholder="Classic tee"
+        placeholder={t("mockups.templateForm.namePlaceholder")}
         registration={register("name")}
         error={errors.name}
         required
       />
       <div className="space-y-2">
-        <Label htmlFor="mockup-product-type">Product type *</Label>
+        <Label htmlFor="mockup-product-type">{t("mockups.templateForm.productTypeLabel")}</Label>
         <Select
           value={watch("productType")}
           onValueChange={(value) =>
@@ -329,7 +322,7 @@ export const MockupTemplateFormDialog = ({
           <SelectContent>
             {productTypes.map((type) => (
               <SelectItem key={type} value={type}>
-                {productTypeLabels[type]}
+                {t(`mockups.productTypes.${type}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -342,7 +335,7 @@ export const MockupTemplateFormDialog = ({
     <div className="space-y-3">
       {(errors.x || errors.y || errors.width || errors.height) && (
         <p role="alert" className="text-sm text-red-600">
-          Draw a print area on the front photo.
+          {t("mockups.templateForm.drawAreaError")}
         </p>
       )}
       <div className="flex items-start gap-3 rounded-lg border p-3">
@@ -354,19 +347,18 @@ export const MockupTemplateFormDialog = ({
           className="mt-0.5"
         />
         <div className="space-y-0.5">
-          <Label htmlFor="mockup-allow-recolor">Allow garment recolor</Label>
+          <Label htmlFor="mockup-allow-recolor">{t("mockups.templateForm.allowRecolor")}</Label>
           <p className="text-muted-foreground text-xs">
-            Any garment color, on every side. Needs a white or light-gray garment on a plain
-            background.
+            {t("mockups.templateForm.allowRecolorDescription")}
           </p>
         </div>
       </div>
       {allowRecolor && (
         <div className="space-y-2 rounded-lg border p-3">
           <div>
-            <p className="text-ink-900 text-sm font-medium">Garment color</p>
+            <p className="text-ink-900 text-sm font-medium">{t("mockups.templateForm.garmentColorLabel")}</p>
             <p className="text-muted-foreground text-xs">
-              Used unless a batch picks its own colors. None keeps the photo’s color.
+              {t("mockups.templateForm.garmentColorUsedNote")}
             </p>
           </div>
           <GarmentColorPicker
@@ -382,7 +374,7 @@ export const MockupTemplateFormDialog = ({
       )}
       {template && !template.realisticPrintReady && !drafts.front.file && (
         <p className="text-muted-foreground text-xs">
-          Saving also prepares realistic printing (fabric folds and shadows) for this photo.
+          {t("mockups.templateForm.realisticPrintNote")}
         </p>
       )}
     </div>
@@ -392,11 +384,9 @@ export const MockupTemplateFormDialog = ({
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !saving && onClose()}>
       <DialogContent className="flex h-[min(88dvh,780px)] w-[calc(100%-2rem)] max-w-5xl flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl">
         <DialogHeader className="border-b px-5 py-3.5 pr-12 text-left">
-          <DialogTitle>{creating ? "New mock-up template" : `Edit ${template.name}`}</DialogTitle>
+          <DialogTitle>{creating ? t("mockups.templateForm.titleNew") : t("mockups.templateForm.titleEdit", { name: template.name })}</DialogTitle>
           <DialogDescription>
-            {printifyLocked
-              ? "The photo and print area stay as they are while the template is linked to Printify. Measure a side again, or unlink it, in Printify settings."
-              : "Mark where designs go on each photo. Add the back or a sleeve to print there too: each side makes its own mock-up."}
+            {printifyLocked ? t("mockups.templateForm.descriptionPrintifyLocked") : t("mockups.templateForm.description")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
@@ -432,14 +422,14 @@ export const MockupTemplateFormDialog = ({
               </p>
             ) : locked ? (
               <p className="text-muted-foreground mr-auto text-xs">
-                Custom mock-up templates are part of Pro.
+                {t("mockups.templateForm.lockedNote")}
               </p>
             ) : null}
             <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>
-              Cancel
+              {t("mockups.cancel")}
             </Button>
             <Button type="submit" disabled={pending || locked}>
-              {pending ? "Analyzing photos…" : creating ? "Create template" : "Save changes"}
+              {pending ? t("mockups.templateForm.analyzing") : creating ? t("mockups.templateForm.createTemplate") : t("mockups.saveChanges")}
             </Button>
           </DialogFooter>
         </form>

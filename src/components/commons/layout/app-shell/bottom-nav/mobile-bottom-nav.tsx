@@ -13,6 +13,7 @@ type MobileBottomNavProps = {
   tabs?: typeof MOBILE_TABS;
   /** The tab to mark as needing attention. */
   alertHref?: string;
+  isMoreOpen?: boolean;
 };
 
 const TAB_CLASS_NAME =
@@ -25,10 +26,10 @@ const ACTIVE_ICON_CLASS_NAME = "bg-muted";
  * The phone's main navigation. It sits in the shell's column rather than floating over the page,
  * so every page keeps its full height above it without reserving any space of its own.
  */
-export const MobileBottomNav = ({ onOpenMore, tabs = MOBILE_TABS, alertHref }: MobileBottomNavProps) => {
+export const MobileBottomNav = ({ onOpenMore, tabs = MOBILE_TABS, alertHref, isMoreOpen = false }: MobileBottomNavProps) => {
   const pathname = usePathname();
-  const isTabActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
-  const isMoreActive = !tabs.some((tab) => isTabActive(tab.href));
+  const isTabActive = (href: string) => !isMoreOpen && (pathname === href || pathname.startsWith(`${href}/`));
+  const isMoreActive = isMoreOpen || !tabs.some((tab) => isTabActive(tab.href));
 
   return (
     <nav aria-label="Main tabs" className="bg-card grid shrink-0 grid-cols-5 border-t md:hidden">
@@ -56,6 +57,7 @@ export const MobileBottomNav = ({ onOpenMore, tabs = MOBILE_TABS, alertHref }: M
       <button
         type="button"
         onClick={onOpenMore}
+        aria-expanded={isMoreOpen}
         className={cn(TAB_CLASS_NAME, isMoreActive && ACTIVE_TAB_CLASS_NAME)}
       >
         <span className={cn(ICON_CLASS_NAME, isMoreActive && ACTIVE_ICON_CLASS_NAME)}>

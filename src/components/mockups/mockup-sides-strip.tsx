@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Plus, X } from "lucide-react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { mockupViewLabel } from "@/helpers/mockup-template";
 import type { MockupView } from "@/types/mockup-templates";
@@ -41,11 +42,12 @@ export const MockupSidesStrip = ({
   disabled = false,
   className,
 }: MockupSidesStripProps) => {
+  const { t } = useTranslation("common");
   const pixels = size === "sm" ? 28 : 44;
   return (
     <div
       role="tablist"
-      aria-label="Sides of the garment"
+      aria-label={t("mockups.sidesEditor.ariaLabel")}
       className={cn(
         "bg-card flex items-center rounded-full border shadow-sm",
         size === "sm" ? "gap-1 p-1" : "gap-1.5 p-1.5",

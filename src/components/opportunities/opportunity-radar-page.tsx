@@ -392,7 +392,7 @@ export function OpportunityRadarPage() {
           actions={
             <Button type="button" variant="primaryBlue" className={rankingIsStale ? "shrink-0 ring-2 ring-amber-400/70 ring-offset-2" : "shrink-0"} onClick={() => refreshMutation.mutate()} disabled={refreshMutation.isPending}>
               <RefreshCw className={refreshMutation.isPending ? "size-4 animate-spin" : "size-4"} />
-              {refreshMutation.isPending ? t("marketRadar.refreshing") : t("marketRadar.refresh")}
+              <span className="max-md:sr-only">{refreshMutation.isPending ? t("marketRadar.refreshing") : t("marketRadar.refresh")}</span>
             </Button>
           }
         />

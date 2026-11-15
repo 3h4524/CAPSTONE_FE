@@ -1432,7 +1432,7 @@ export const resources = {
         justNow: "Vừa xong", minAgo: "{{count}} phút trước", hrAgo: "{{count}} giờ trước", yesterday: "Hôm qua",
         categories: { integration: "Tích hợp", ai_generation: "Tạo bằng AI", batch_processing: "Xử lý theo lô", export_publishing: "Xuất & publish", billing_subscription: "Thanh toán & subscription", account_security: "Tài khoản & bảo mật", other: "Khác" },
         priorities: { low: "Thấp", normal: "Trung bình", high: "Cao", urgent: "Khẩn cấp" },
-        priorityOptions: { low: "Low — câu hỏi chung hoặc vấn đề nhỏ", normal: "Medium — tính năng hoạt động không đúng", high: "High — công việc bị chặn đáng kể", urgent: "Urgent — sự cố, bảo mật hoặc thanh toán bị chặn" },
+        priorityOptions: { low: "Thấp — câu hỏi chung hoặc vấn đề nhỏ", normal: "Trung bình — tính năng hoạt động không đúng", high: "Cao — công việc bị chặn đáng kể", urgent: "Khẩn cấp — sự cố, bảo mật hoặc thanh toán bị chặn" },
         statuses: { open: "Mở", in_progress: "Đang xử lý", waiting_customer: "Chờ bạn", resolved: "Đã xử lý", closed: "Đã đóng" },
         loadingTicket: "Đang tải chi tiết phiếu",
         ticketUnavailableTitle: "Không thể xem phiếu", ticketUnavailableDescription: "Không thể tải phiếu này. Nó có thể không còn tồn tại.",

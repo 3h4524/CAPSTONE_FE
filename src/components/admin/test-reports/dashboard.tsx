@@ -94,7 +94,7 @@ export const TestReportsDashboard = () => {
           <div className="border-ink-100 flex flex-col justify-between gap-3 border-b px-5 py-4 sm:flex-row sm:items-center">
             <div>
               <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">Test runs</h3>
-              <p className="text-ink-400 mt-0.5 text-[10px]">
+              <p className="text-ink-500 mt-0.5 text-[10px]">
                 Newest first. Open a run to see every test it covered.
               </p>
             </div>
@@ -134,7 +134,7 @@ export const TestReportsDashboard = () => {
               <p className="text-ink-700 text-sm font-semibold">
                 The list of runs could not be read
               </p>
-              <p className="text-ink-400 mt-1 text-xs">
+              <p className="text-ink-500 mt-1 text-xs">
                 The backend that keeps the reports did not answer.
               </p>
             </div>

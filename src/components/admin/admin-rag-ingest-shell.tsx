@@ -175,7 +175,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
             <div className="border-ink-100 flex items-center justify-between gap-3 border-b pb-4">
               <div>
                 <h2 className="text-ink-900 text-sm font-bold">Document content</h2>
-                <p className="text-ink-400 mt-1 text-xs">
+                <p className="text-ink-500 mt-1 text-xs">
                   Plain text is sent to the RAG ingestion pipeline.
                 </p>
               </div>
@@ -238,7 +238,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                   <span className="text-primary mt-2 text-xs font-semibold">
                     Release to upload
                   </span>
-                  <span className="text-ink-400 mt-1 text-[11px]">
+                  <span className="text-ink-500 mt-1 text-[11px]">
                     Your document will be loaded here
                   </span>
                 </>
@@ -248,8 +248,8 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                   <span className="text-ink-700 mt-2 max-w-full truncate text-xs font-semibold">
                     {fileName}
                   </span>
-                  <span className="text-ink-400 mt-1 text-[11px] max-md:hidden">Click to replace</span>
-                  <span className="text-ink-400 mt-1 text-[11px] md:hidden">Tap to replace</span>
+                  <span className="text-ink-500 mt-1 text-[11px] max-md:hidden">Click to replace</span>
+                  <span className="text-ink-500 mt-1 text-[11px] md:hidden">Tap to replace</span>
                 </>
               ) : (
                 <>
@@ -260,7 +260,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                   <span className="text-ink-600 mt-2 text-xs font-semibold md:hidden">
                     Tap to choose a file
                   </span>
-                  <span className="text-ink-400 mt-1 text-[11px]">
+                  <span className="text-ink-500 mt-1 text-[11px]">
                     TXT, MD, CSV, JSON, or HTML
                   </span>
                 </>
@@ -293,14 +293,14 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
               placeholder="Paste or review the document content…"
               className="mt-2 min-h-[300px] resize-y text-sm leading-6 max-md:min-h-40 max-md:text-base"
             />
-            <p className="text-ink-400 mt-2 text-right text-[11px]">
+            <p className="text-ink-500 mt-2 text-right text-[11px]">
               {content.length.toLocaleString()} characters
             </p>
           </section>
 
           <aside className="border-ink-200 bg-card rounded-xl border p-5 shadow-sm max-md:p-4 sm:p-6">
             <h2 className="text-ink-900 text-sm font-bold">Document metadata</h2>
-            <p className="text-ink-400 mt-1 text-xs leading-5">
+            <p className="text-ink-500 mt-1 text-xs leading-5">
               These fields help retrieval target the right knowledge.
             </p>
             <div className="mt-5 space-y-4">
@@ -350,7 +350,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                   onChange={(event) => setSourceId(event.target.value)}
                   placeholder={isPhone ? "faq-about-apcs" : "faq-about-apcs (same id replaces the older version)"}
                 />
-                <span className="text-ink-400 mt-1 block text-[11px] font-normal md:hidden">The same id replaces the older version.</span>
+                <span className="text-ink-500 mt-1 block text-[11px] font-normal md:hidden">The same id replaces the older version.</span>
               </Field>
               <Field label="Source type">
                 <Input
@@ -402,7 +402,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                   </>
                 )}
               </Button>
-              <p className="text-ink-400 mt-3 text-center text-[11px] leading-4">
+              <p className="text-ink-500 mt-3 text-center text-[11px] leading-4">
                 {!title.trim() || !content.trim()
                   ? `Add ${!title.trim() && !content.trim() ? "a title and content" : !title.trim() ? "a title" : "content"} to ingest the document.`
                   : "The document will be chunked and embedded for semantic search."}

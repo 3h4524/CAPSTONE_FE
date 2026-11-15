@@ -388,7 +388,7 @@ const RagEvaluationDashboard = () => {
               <Search className="size-3.5" />
               {isListingTraceRunning ? "Running..." : "Run production flow"}
             </Button>
-            <p className="text-ink-400 text-[11px]">
+            <p className="text-ink-500 text-[11px]">
               Paste the ID of a product to replay the retrieval its listing would use.
             </p>
           </div>
@@ -416,7 +416,7 @@ const RagEvaluationDashboard = () => {
               {/* The coverage block already lists every input field, the product's name and type included. */}
               <ProductInputCoverage trace={listingTrace} />
               <div>
-                <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">
+                <p className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">
                   Production query
                 </p>
                 <p className="bg-card text-ink-600 mt-2 rounded-lg border border-emerald-100 p-3 text-xs leading-5 whitespace-pre-wrap max-md:[overflow-wrap:anywhere] dark:border-emerald-500/30">
@@ -646,7 +646,7 @@ const RagEvaluationDashboard = () => {
         </ul>
         <div className="overflow-x-auto max-md:hidden">
           <table className="w-full min-w-[820px] text-left text-xs">
-            <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-wide uppercase">
+            <thead className="bg-ink-50 text-ink-500 text-[10px] tracking-wide uppercase">
               <tr>
                 <th className="px-5 py-3">Content type</th>
                 <th className="px-3 py-3">Cases</th>
@@ -909,7 +909,7 @@ const RagEvaluationDashboard = () => {
                 <span className="flex items-start justify-between gap-2">
                   <span className="min-w-0">
                     <span className="text-ink-800 line-clamp-2 text-xs font-semibold">{item.question}</span>
-                    <span className="text-ink-400 mt-0.5 block truncate text-[10px]">{item.source}</span>
+                    <span className="text-ink-500 mt-0.5 block truncate text-[10px]">{item.source}</span>
                   </span>
                   <Verdict verdict={item.verdict} />
                 </span>
@@ -930,7 +930,7 @@ const RagEvaluationDashboard = () => {
         </ul>
         <div className="overflow-x-auto max-md:hidden">
           <table className="w-full min-w-[860px] text-left text-xs">
-            <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-wide uppercase">
+            <thead className="bg-ink-50 text-ink-500 text-[10px] tracking-wide uppercase">
               <tr>
                 <th className="px-5 py-3">Question</th>
                 <th className="px-3 py-3">Type</th>
@@ -950,7 +950,7 @@ const RagEvaluationDashboard = () => {
                 >
                   <td className="max-w-[360px] px-5 py-3.5">
                     <p className="text-ink-800 truncate font-semibold">{item.question}</p>
-                    <p className="text-ink-400 mt-1 truncate text-[10px]">
+                    <p className="text-ink-500 mt-1 truncate text-[10px]">
                       {item.source}
                     </p>
                   </td>
@@ -1032,7 +1032,7 @@ const MetricCard = ({
           <Icon className="size-4" />
         </div>
         <div className="min-w-0">
-          <p className="text-ink-400 truncate text-[10px] font-bold tracking-[0.12em] uppercase max-md:whitespace-normal">
+          <p className="text-ink-500 truncate text-[10px] font-bold tracking-[0.12em] uppercase max-md:whitespace-normal">
             {label}
           </p>
           <p className="text-ink-900 mt-1 text-xl font-bold">{value}</p>
@@ -1108,7 +1108,7 @@ const CaseDetail = ({ item, onClose }: { item: EvaluationCase; onClose: () => vo
     <div className="bg-card mt-5 rounded-xl border border-indigo-100 p-4 max-md:p-3 dark:border-indigo-500/30">
       <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
         <div>
-          <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">
+          <p className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">
             Retrieved results
           </p>
           <p className="text-ink-500 mt-1 text-xs">
@@ -1174,7 +1174,7 @@ const RetrievedResultCard = ({
     <p className="text-ink-800 mt-2 line-clamp-2 text-xs font-semibold" title={diagnostic.result.title}>
       {diagnostic.result.title}
     </p>
-    <p className="text-ink-400 mt-0.5 truncate text-[10px]" title={`${diagnostic.result.sourceId ?? "n/a"} / ${diagnostic.result.chunkId}`}>
+    <p className="text-ink-500 mt-0.5 truncate text-[10px]" title={`${diagnostic.result.sourceId ?? "n/a"} / ${diagnostic.result.chunkId}`}>
       source {diagnostic.result.sourceId ?? "n/a"} · chunk {diagnostic.result.chunkId}
     </p>
     <p className={`text-ink-600 mt-3 text-xs leading-5 whitespace-pre-wrap max-md:[overflow-wrap:anywhere] ${isLong && !isExpanded ? "line-clamp-4" : ""}`}>
@@ -1299,7 +1299,7 @@ const RetrievalInsight = ({ diagnostics }: { diagnostics: RagSearchDiagnostics }
       </div>
 
       <div>
-        <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">Retrieval funnel</p>
+        <p className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">Retrieval funnel</p>
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
           <FunnelMetric label="Before metadata filter" value={beforeMetadata} />
           <FunnelMetric label="Metadata removed" value={metadataFiltered} tone={metadataFiltered > 0 ? "warning" : "default"} />
@@ -1318,7 +1318,7 @@ const RetrievalInsight = ({ diagnostics }: { diagnostics: RagSearchDiagnostics }
 
       {appliedFilters.length > 0 && (
         <div>
-          <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">Applied filters</p>
+          <p className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">Applied filters</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {appliedFilters.map((filter) => (
               <Badge key={filter} variant="outline" className="max-w-full truncate text-[10px] font-normal">
@@ -1455,7 +1455,7 @@ const ListingTraceResults = ({
 
 const DetailBlock = ({ label, value }: { label: string; value: string }) => (
   <div className="bg-card rounded-lg border border-white/80 p-3">
-    <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">{label}</p>
+    <p className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">{label}</p>
     <p className="text-ink-600 mt-2 text-xs leading-5">{value}</p>
   </div>
 );

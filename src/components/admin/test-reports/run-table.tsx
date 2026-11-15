@@ -48,7 +48,7 @@ export const TestReportRunTable = ({ runs, isLoading }: TestReportRunTableProps)
     return (
       <div className="px-5 py-14 text-center">
         <p className="text-ink-700 text-sm font-semibold">No test run yet</p>
-        <p className="text-ink-400 mt-1 text-xs">
+        <p className="text-ink-500 mt-1 text-xs">
           Press “Run tests” to run the suite on this machine. The report is kept here.
         </p>
       </div>

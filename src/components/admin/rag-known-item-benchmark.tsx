@@ -177,7 +177,7 @@ export const RagKnownItemBenchmark = () => {
           >
             <RotateCcw className="size-3.5" /> <span className="max-md:hidden">Run last case set again</span><span className="md:hidden">Run last set</span>
           </Button>
-          <p className="text-ink-400 text-[11px] max-md:col-span-2 max-md:text-center">A new set takes about a minute; a re-run is faster.</p>
+          <p className="text-ink-500 text-[11px] max-md:col-span-2 max-md:text-center">A new set takes about a minute; a re-run is faster.</p>
         </div>
 
         {result && scores ? (
@@ -200,7 +200,7 @@ export const RagKnownItemBenchmark = () => {
                 hint="Per search, embedding included" />
             </div>
             {!previous && (
-              <p className="text-ink-400 text-[11px]">Run this case set again after a change to see the difference here.</p>
+              <p className="text-ink-500 text-[11px]">Run this case set again after a change to see the difference here.</p>
             )}
 
             <ul className="divide-ink-100 border-ink-100 divide-y rounded-lg border md:hidden">
@@ -216,7 +216,7 @@ export const RagKnownItemBenchmark = () => {
             </ul>
             <div className="border-ink-100 overflow-x-auto rounded-lg border max-md:hidden">
               <table className="w-full min-w-[28rem] text-left text-xs">
-                <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-[0.08em] uppercase">
+                <thead className="bg-ink-50 text-ink-500 text-[10px] tracking-[0.08em] uppercase">
                   <tr>
                     <th className="px-3 py-2 font-semibold">Query type</th>
                     <th className="px-3 py-2 font-semibold">Cases</th>
@@ -241,7 +241,7 @@ export const RagKnownItemBenchmark = () => {
 
             <div>
               <p className="text-ink-500 text-[10px] font-bold tracking-[0.12em] uppercase">Cases</p>
-              <p className="text-ink-400 mt-0.5 text-[11px]">
+              <p className="text-ink-500 mt-0.5 text-[11px]">
                 A miss on a very generic short query is often a near-duplicate listing ranked first, not a wrong result.
               </p>
               {isPhone ? (
@@ -269,7 +269,7 @@ export const RagKnownItemBenchmark = () => {
               ) : (
               <div className="border-ink-100 mt-2 max-h-[28rem] overflow-auto rounded-lg border">
                 <table className="w-full min-w-[40rem] text-left text-xs">
-                  <thead className="bg-ink-50 text-ink-400 sticky top-0 text-[10px] tracking-[0.08em] uppercase">
+                  <thead className="bg-ink-50 text-ink-500 sticky top-0 text-[10px] tracking-[0.08em] uppercase">
                     <tr>
                       <th className="px-3 py-2 font-semibold">Rank</th>
                       <th className="px-3 py-2 font-semibold">Type</th>
@@ -319,7 +319,7 @@ export const RagKnownItemBenchmark = () => {
             </ul>
             <div className="border-ink-100 mt-2 overflow-x-auto rounded-lg border max-md:hidden">
               <table className="w-full min-w-[32rem] text-left text-xs">
-                <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-[0.08em] uppercase">
+                <thead className="bg-ink-50 text-ink-500 text-[10px] tracking-[0.08em] uppercase">
                   <tr>
                     <th className="px-3 py-2 font-semibold">Run at</th>
                     <th className="px-3 py-2 font-semibold">Case set</th>
@@ -362,7 +362,7 @@ const ScoreTile = ({
   hint: string;
 }) => (
   <div className="border-ink-100 bg-ink-50/60 rounded-xl border px-4 py-3 max-md:px-3">
-    <p className="text-ink-400 text-[10px] font-bold tracking-[0.12em] uppercase">{label}</p>
+    <p className="text-ink-500 text-[10px] font-bold tracking-[0.12em] uppercase">{label}</p>
     <div className="mt-1 flex items-baseline gap-2">
       <p className="text-ink-900 text-xl font-bold tabular-nums">{value}</p>
       {delta != null && Math.abs(delta) >= 10 ** -digits && (
@@ -381,7 +381,7 @@ const PhoneFigures = ({ figures }: { figures: [label: string, value: string][] }
   <dl className="grid grid-cols-3 gap-2">
     {figures.map(([label, value]) => (
       <div key={label}>
-        <dt className="text-ink-400 text-[10px] tracking-[0.08em] uppercase">{label}</dt>
+        <dt className="text-ink-500 text-[10px] tracking-[0.08em] uppercase">{label}</dt>
         <dd className="text-ink-800 mt-0.5 tabular-nums">{value}</dd>
       </div>
     ))}
@@ -435,7 +435,7 @@ const PhoneCaseItem = ({
               return (
                 <li key={entry.result.chunkId} className={`rounded-md px-2 py-1 ${isExpected ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300" : "text-ink-700"}`}>
                   <p className="line-clamp-2">
-                    <span className="text-ink-400 text-[11px] tabular-nums">#{index + 1}</span> {entry.result.title}
+                    <span className="text-ink-500 text-[11px] tabular-nums">#{index + 1}</span> {entry.result.title}
                     {isExpected && <span className="text-[11px] font-semibold"> · Expected</span>}
                   </p>
                   <p className="text-ink-500 mt-0.5 text-[11px] tabular-nums">
@@ -493,7 +493,7 @@ const CaseRow = ({
                     key={entry.result.chunkId}
                     className={`flex items-center gap-3 rounded-md px-2 py-1 ${isExpected ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300" : "text-ink-700"}`}
                   >
-                    <span className="text-ink-400 w-6 text-right text-[11px] tabular-nums">#{index + 1}</span>
+                    <span className="text-ink-500 w-6 text-right text-[11px] tabular-nums">#{index + 1}</span>
                     <span className="min-w-0 flex-1 truncate" title={entry.result.title}>
                       {entry.result.title}
                     </span>

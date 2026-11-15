@@ -443,9 +443,14 @@ export const generateListingConfigSchema = z.object({
 
 export const exportZipConfigSchema = z.object({});
 
-/** Push to media: the platforms to prepare posts for; at least one. */
+/** Push to media: the platforms to prepare posts for (at least one), and the Pinterest board the pins are posted to. */
 export const publishSocialConfigSchema = z
-  .object({ pinterest: z.boolean(), tiktok: z.boolean() })
+  .object({
+    pinterest: z.boolean(),
+    tiktok: z.boolean(),
+    boardId: z.string().nullable().optional(),
+    boardName: z.string().nullable().optional(),
+  })
   .refine((value) => value.pinterest || value.tiktok, { message: "Choose Pinterest, TikTok or both.", path: ["pinterest"] });
 
 /** Push to Printify: the catalog choices, and the profit each sale should leave after Printify's cost and Etsy's fees. */

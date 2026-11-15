@@ -26,6 +26,7 @@ import { ProductScopeSelect } from "@/components/workflows/config-panel/product-
 import { PromptRecipe } from "@/components/workflows/config-panel/prompt-recipe";
 import { EtsyPublishSettings, PrintifyPublishSettings } from "@/components/workflows/config-panel/publish-settings";
 import { ReviewVideoResults } from "@/components/workflows/config-panel/review-video-results";
+import { SocialPublishSettings } from "@/components/workflows/config-panel/social-publish-settings";
 import { MockupPanel } from "@/components/workflows/media/mockup-panel";
 import { ModelPhotoSection } from "@/components/workflows/media/model-photo-section";
 import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
@@ -257,6 +258,7 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
         {/* The publish steps read Printify's catalog and the Etsy shop, so they have panels of their own. */}
         {node.data.type === "publish-printify" && <PrintifyPublishSettings node={node} disabled={settingsLocked} />}
         {node.data.type === "publish-etsy" && <EtsyPublishSettings node={node} disabled={settingsLocked} />}
+        {node.data.type === "publish-social" && <SocialPublishSettings node={node} disabled={settingsLocked} />}
         {node.data.type === "product-input" && (
           <PreviousRunsSelect batchId={readString(node.data.config.batchId)} />
         )}

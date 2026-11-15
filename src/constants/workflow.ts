@@ -519,14 +519,14 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
   "publish-social": {
     type: "publish-social",
     label: "Push to media",
-    description: "Prepare Pinterest and TikTok posts from the approved mock-ups, video and listing, ready to post.",
+    description: "Post pins to your Pinterest board and prepare TikTok posts from the approved mock-ups, video and listing.",
     icon: Share2,
     category: "output",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { pinterest: true, tiktok: true },
+    defaultConfig: { pinterest: true, tiktok: true, boardId: null, boardName: null },
     fields: [
-      { kind: "switch", name: "pinterest", label: "Pinterest", description: "A 2:3 pin for each mock-up and a video pin, linked to the Etsy listing." },
+      { kind: "switch", name: "pinterest", label: "Pinterest", description: "A 2:3 pin for each mock-up, posted to your board when one is chosen below, and a video pin, linked to the Etsy listing." },
       { kind: "switch", name: "tiktok", label: "TikTok", description: "The 9:16 video and a photo post, with a caption and hashtags." },
     ],
   },

@@ -84,7 +84,9 @@ const PublishStepResult = ({ step, onOpenPosts }: { step: WorkflowNodeRun; onOpe
   const posts = typeof step.output.socialPosts === "number" ? step.output.socialPosts : 0;
   const warnings = Array.isArray(step.output.warnings) ? step.output.warnings.filter((item): item is string => typeof item === "string") : [];
   const attached = typeof step.output.mediaAttached === "number" ? step.output.mediaAttached : 0;
-  const state = step.status === "succeeded" ? (social ? `${posts} post(s) ready` : url ? "On Etsy" : "Done") : step.status === "running" ? step.stage ?? "Running" : step.status === "failed" ? "Failed" : "Waiting";
+  const pinUrls = Array.isArray(step.output.pinUrls) ? step.output.pinUrls.filter((item): item is string => typeof item === "string" && item.startsWith("https://")) : [];
+  const board = typeof step.output.boardName === "string" ? step.output.boardName : null;
+  const state = step.status === "succeeded" ? (social ? (pinUrls.length > 0 ? `${pinUrls.length} pin(s) on Pinterest` : `${posts} post(s) ready`) : url ? "On Etsy" : "Done") : step.status === "running" ? step.stage ?? "Running" : step.status === "failed" ? "Failed" : "Waiting";
   return (
     <div className="border-ink-200 space-y-1.5 rounded-md border px-3 py-2 text-xs">
       <p className="flex items-center justify-between gap-2">
@@ -94,6 +96,18 @@ const PublishStepResult = ({ step, onOpenPosts }: { step: WorkflowNodeRun; onOpe
       {typeof step.output.madeAs === "string" && <p className="text-ink-600">Printify makes: {step.output.madeAs}</p>}
       {step.status === "succeeded" && attached > 0 && <p className="text-ink-500">{attached} Podivo image(s), video or file(s) added to the listing.</p>}
       {warnings.length > 0 && <ul className="list-disc space-y-0.5 pl-4 text-amber-800 dark:text-amber-300">{warnings.map(item => <li key={item}>{item}</li>)}</ul>}
+      {social && step.status === "succeeded" && pinUrls.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-ink-600">Posted to Pinterest{board ? ` on ${board}` : ""}:</p>
+          <div className="flex flex-wrap gap-1.5">
+            {pinUrls.map((pin, index) => (
+              <a key={pin} href={pin} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:underline">
+                <ExternalLink className="size-3" />Pin {index + 1}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
       {social && step.status === "succeeded" && (
         <Button type="button" size="sm" variant="outline" onClick={onOpenPosts}><Share2 className="size-3.5" />Open the posts</Button>
       )}

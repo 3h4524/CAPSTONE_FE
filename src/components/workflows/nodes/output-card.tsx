@@ -19,7 +19,8 @@ const count = (value: unknown) => (Array.isArray(value) ? value.length : 0);
 const publishSummary = (type: string, config: WorkflowNodeConfig, followsMockup = false): string[] => {
   if (type === "publish-social") {
     const platforms = [config.pinterest !== false && "Pinterest", config.tiktok !== false && "TikTok"].filter(Boolean).join(" · ");
-    return [platforms || "Choose a platform", "Posts ready to publish by hand"];
+    const board = config.pinterest !== false && typeof config.boardName === "string" && config.boardName ? config.boardName : null;
+    return [platforms || "Choose a platform", board ? `Pins posted to ${board}` : "Posts ready to publish by hand"];
   }
   if (type === "publish-printify" && followsMockup) {
     const profit = typeof config.targetProfit === "number" ? config.targetProfit : 10;

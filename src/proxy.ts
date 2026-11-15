@@ -9,6 +9,7 @@ const PUBLIC_PATHS = new Set([
   "/reset-password",
   "/verify-email",
   "/etsy/callback",
+  "/pinterest/callback",
   "/opengraph-image",
   "/twitter-image",
 ]);

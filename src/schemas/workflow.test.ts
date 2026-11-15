@@ -98,11 +98,11 @@ const expectIssue = (result: ZodSafeParseResult<unknown>, path: string, message?
 const nodeEntries = Object.entries(validNodeConfigs) as Array<[WorkflowNodeType, Record<string, unknown>]>;
 
 describe("workflowNodeConfigSchemas", () => {
-  it("maps every one of the twelve workflow node types to a schema", () => {
+  it("maps every one of the thirteen workflow node types to a schema", () => {
     expect(Object.keys(workflowNodeConfigSchemas).sort()).toEqual(
       nodeEntries.map(([nodeType]) => nodeType).sort()
     );
-    expect(Object.keys(workflowNodeConfigSchemas)).toHaveLength(12);
+    expect(Object.keys(workflowNodeConfigSchemas)).toHaveLength(13);
   });
 
   it("gives each publish node type its own schema", () => {

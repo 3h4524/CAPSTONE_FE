@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import axios from "axios";
+import type { TFunction } from "i18next";
 import { Check, KeyRound, Loader2, ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +28,7 @@ import { useSaveApiKey } from "@/hooks/mutations/use-save-api-key";
 import { useApiKeyProviders } from "@/hooks/queries/use-api-key-providers";
 import type { ApiKeyConnection } from "@/types/api-keys";
 
-export function apiKeyError(error: unknown): string {
+export function apiKeyError(error: unknown, t: TFunction): string {
   if (axios.isAxiosError(error)) {
     const problem = error.response?.data;
     if (problem?.errors && typeof problem.errors === "object") {
@@ -37,7 +39,7 @@ export function apiKeyError(error: unknown): string {
     }
     if (typeof problem?.detail === "string") return problem.detail;
   }
-  return "Unable to complete this request. Please try again.";
+  return t("apiKeys.genericError");
 }
 
 export function ConnectionDialog({
@@ -54,6 +56,7 @@ export function ConnectionDialog({
   connections: ApiKeyConnection[];
   onClose: () => void;
 }) {
+  const { t } = useTranslation("common");
   const providers = useApiKeyProviders(!deleting);
   const [provider, setProvider] = useState(
     connection?.provider.toLowerCase() ?? initialProvider ?? ""
@@ -89,10 +92,10 @@ export function ConnectionDialog({
           showToast(
             "success",
             deleting
-              ? "API key deleted."
+              ? t("apiKeys.keyDeleted")
               : connection
-                ? "API key updated."
-                : "MSG52 — API key added and validated successfully."
+                ? t("apiKeys.keyUpdated")
+                : t("apiKeys.msg52")
           );
           onClose();
         },
@@ -114,15 +117,15 @@ export function ConnectionDialog({
             </span>
             <div className="space-y-1 text-left">
               <p className="text-muted-foreground text-[10px] font-semibold tracking-widest uppercase">
-                Secure connection
+                {t("apiKeys.connectionDialogEyebrow")}
               </p>
               <DialogTitle>
-                {deleting ? "Delete API key" : connection ? "Edit API key" : "Add API key"}
+                {deleting ? t("apiKeys.deleteDialogTitle") : connection ? t("apiKeys.editDialogTitle") : t("apiKeys.addDialogTitle")}
               </DialogTitle>
               <DialogDescription>
                 {deleting
-                  ? `Disconnect ${connection?.provider} from your workspace?`
-                  : "Connect a service used by your generation or publishing workflow."}
+                  ? t("apiKeys.deleteDialogDescription", { provider: connection?.provider ?? "" })
+                  : t("apiKeys.addEditDialogDescription")}
               </DialogDescription>
             </div>
           </div>
@@ -136,13 +139,12 @@ export function ConnectionDialog({
         >
           {deleting ? (
             <p className="text-muted-foreground text-sm">
-              The saved credential will be removed. Workflows using this connection will need a new
-              key. This does not revoke the key at the provider.
+              {t("apiKeys.deleteConfirmBody")}
             </p>
           ) : (
             <fieldset disabled={busy} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="key-provider">Provider</Label>
+                <Label htmlFor="key-provider">{t("apiKeys.providerLabel")}</Label>
                 <Select
                   value={provider}
                   onValueChange={(value) => {
@@ -154,7 +156,7 @@ export function ConnectionDialog({
                   disabled={Boolean(connection) || providers.isPending || busy}
                 >
                   <SelectTrigger id="key-provider" className="w-full">
-                    <SelectValue placeholder="Select a provider" />
+                    <SelectValue placeholder={t("apiKeys.providerPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
                     {providers.data?.map((item) => (
@@ -167,49 +169,49 @@ export function ConnectionDialog({
                 </Select>
                 {providers.isError && (
                   <div role="alert" className="text-destructive text-xs">
-                    Unable to load providers.{" "}
+                    {t("apiKeys.providerLoadError")}{" "}
                     <button
                       type="button"
                       className="underline"
                       onClick={() => void providers.refetch()}
                     >
-                      Retry
+                      {t("apiKeys.retry")}
                     </button>
                   </div>
                 )}
                 {duplicate && (
                   <p role="alert" className="text-destructive text-xs">
-                    MSG51 — This provider is already connected. Edit or delete its existing key.
+                    {t("apiKeys.msg51")}
                   </p>
                 )}
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="key-name">API key name (optional)</Label>
+                  <Label htmlFor="key-name">{t("apiKeys.keyNameLabel")}</Label>
                   <Input
                     id="key-name"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
                     maxLength={100}
-                    placeholder="e.g. Main workspace key"
+                    placeholder={t("apiKeys.keyNamePlaceholder")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="key-environment">Environment</Label>
+                  <Label htmlFor="key-environment">{t("apiKeys.environmentLabel")}</Label>
                   <Select value={environment} onValueChange={setEnvironment} disabled={busy}>
                     <SelectTrigger id="key-environment" className="w-full">
-                      <SelectValue placeholder="Select environment" />
+                      <SelectValue placeholder={t("apiKeys.environmentPlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Production">Production — Live</SelectItem>
-                      <SelectItem value="Sandbox">Sandbox — Test</SelectItem>
+                      <SelectItem value="Production">{t("apiKeys.envProduction")}</SelectItem>
+                      <SelectItem value="Sandbox">{t("apiKeys.envSandbox")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="key-value">
-                  {connection ? "Replace API key (optional)" : "API key"}
+                  {connection ? t("apiKeys.replaceKeyLabel") : t("apiKeys.apiKeyLabel")}
                 </Label>
                 <Input
                   id="key-value"
@@ -222,18 +224,18 @@ export function ConnectionDialog({
                   minLength={8}
                   maxLength={8192}
                   placeholder={
-                    connection ? "Leave blank to keep the current key" : "Paste provider key"
+                    connection ? t("apiKeys.replaceKeyHint") : t("apiKeys.apiKeyPlaceholder")
                   }
                   aria-describedby="key-help"
                 />
                 <p id="key-help" className="text-muted-foreground text-xs">
-                  Your key is encrypted. Only the final four characters are displayed after saving.
+                  {t("apiKeys.encryptionNote")}
                 </p>
               </div>
               <div className="bg-muted/50 space-y-3 rounded-lg border p-3 text-xs">
                 <div className="text-primary flex items-center gap-2 font-semibold">
                   <ShieldCheck className="size-4" />
-                  Permissions your key needs
+                  {t("apiKeys.permissionsTitle")}
                 </div>
                 <ul className="text-muted-foreground space-y-2">
                   {selected?.permissions.map((permission) => (
@@ -244,7 +246,7 @@ export function ConnectionDialog({
                   ))}
                 </ul>
                 <p className="text-muted-foreground">
-                  The connection check verifies access; it does not change the key’s permissions.
+                  {t("apiKeys.permissionsNote")}
                 </p>
                 <label className="flex cursor-pointer items-start gap-2 border-t pt-3">
                   <input
@@ -253,19 +255,19 @@ export function ConnectionDialog({
                     onChange={(event) => setConfirmed(event.target.checked)}
                     className="accent-primary mt-0.5"
                   />
-                  I confirm this key is restricted to the permissions Podivo needs.
+                  {t("apiKeys.confirmPermissions")}
                 </label>
               </div>
             </fieldset>
           )}
           {mutation.isError && (
             <p role="alert" className="text-destructive text-sm">
-              {apiKeyError(mutation.error)}
+              {apiKeyError(mutation.error, t)}
             </p>
           )}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" disabled={busy} onClick={onClose}>
-              Cancel
+              {t("apiKeys.cancel")}
             </Button>
             <Button
               type="submit"
@@ -279,13 +281,13 @@ export function ConnectionDialog({
               {busy && <Loader2 className="size-4 animate-spin" />}
               {busy
                 ? deleting
-                  ? "Deleting…"
-                  : "Saving…"
+                  ? t("apiKeys.deletingStatus")
+                  : t("apiKeys.savingStatus")
                 : deleting
-                  ? "Delete API key"
+                  ? t("apiKeys.submitDelete")
                   : connection && !key
-                    ? "Save changes"
-                    : "Validate & save"}
+                    ? t("apiKeys.submitSave")
+                    : t("apiKeys.submitValidate")}
             </Button>
           </div>
         </form>

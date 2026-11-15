@@ -12,6 +12,7 @@ import {
   Plus,
   RefreshCw,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { apiKeyKeys, validateApiKey } from "@/api/api-keys";
 import { apiKeyError, ConnectionDialog } from "@/components/api-keys/connection-dialog";
@@ -73,19 +74,18 @@ function WorkflowReadiness({
     return { ...stage, connected, broken };
   });
   const readyCount = stages.filter((stage) => stage.connected.length > 0).length;
+  const { t } = useTranslation("common");
 
   return (
     <section
-      aria-label="Connection summary"
+      aria-label={t("apiKeys.connectionSummary")}
       className="bg-card mb-4 overflow-hidden rounded-xl border shadow-sm"
     >
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
         <div>
-          <h2 className="text-base font-semibold">Workflow readiness</h2>
+          <h2 className="text-base font-semibold">{t("apiKeys.workflowReadiness")}</h2>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            {isReady
-              ? "Every stage has a working connection. You're ready to create and publish."
-              : "Connect one working service for each stage to start creating products."}
+            {isReady ? t("apiKeys.workflowReady") : t("apiKeys.workflowNotReady")}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -106,7 +106,7 @@ function WorkflowReadiness({
               isReady ? "bg-success-background text-success-text" : "bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300"
             )}
           >
-            {readyCount}/{stages.length} ready
+            {t("apiKeys.stagesReady", { count: readyCount, total: stages.length })}
           </span>
         </div>
       </div>
@@ -132,9 +132,9 @@ function WorkflowReadiness({
                 )}
               >
                 {ok ? (
-                  <Check className="size-3.5" aria-label="Ready" />
+                  <Check className="size-3.5" aria-label={t("apiKeys.readyIconLabel")} />
                 ) : stage.broken ? (
-                  <AlertTriangle className="size-3.5" aria-label="Needs attention" />
+                  <AlertTriangle className="size-3.5" aria-label={t("apiKeys.needsAttentionIconLabel")} />
                 ) : (
                   <span className="text-[10px] font-semibold">{index + 1}</span>
                 )}
@@ -145,8 +145,8 @@ function WorkflowReadiness({
                   {ok
                     ? stage.connected.map((item) => item.provider).join(" · ")
                     : stage.broken
-                      ? `${stage.broken.provider} needs attention`
-                      : "Not connected"}
+                      ? t("apiKeys.providerNeedsAttention", { provider: stage.broken.provider })
+                      : t("apiKeys.notConnected")}
                 </div>
                 {!ok &&
                   (stage.broken && stage.broken.authType !== "OAuth" ? (
@@ -156,7 +156,7 @@ function WorkflowReadiness({
                       className="mt-1 h-auto px-0 text-xs"
                       onClick={() => onFix(stage.broken!)}
                     >
-                      Fix {stage.broken.provider} key
+                      {t("apiKeys.fixKeyButton", { provider: stage.broken.provider })}
                     </Button>
                   ) : (
                     <Button
@@ -165,7 +165,7 @@ function WorkflowReadiness({
                       className="mt-1 h-auto px-0 text-xs"
                       onClick={() => onConnect(stage.provider)}
                     >
-                      Connect {stage.providerName}
+                      {t("apiKeys.connectProvider", { provider: stage.providerName })}
                     </Button>
                   ))}
               </div>
@@ -223,13 +223,14 @@ function ConnectionCard({ connection, now, ...handlers }: ConnectionViewProps) {
 }
 
 export function ApiKeysPage() {
+  const { t } = useTranslation("common");
   const queryClient = useAppQueryClient();
   const isPhone = useIsPhone();
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const validation = useMutation({
     mutationFn: validateApiKey,
-    onSuccess: () => showToast("success", "Connection validated."),
-    onError: (error) => showToast("error", apiKeyError(error)),
+    onSuccess: () => showToast("success", t("apiKeys.connectionValidated")),
+    onError: (error) => showToast("error", apiKeyError(error, t)),
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: apiKeyKeys.all });
     },
@@ -270,18 +271,18 @@ export function ApiKeysPage() {
     <div className="w-full min-w-0 md:p-6">
       <div className="mb-6 flex flex-col gap-2 max-md:mb-4">
         <PageHeader
-          title="API keys"
-          description="Connect the services Podivo uses to create and publish your products."
+          title={t("apiKeys.pageTitle")}
+          description={t("apiKeys.pageDescription")}
           actions={
             <>
               <Button variant="ghost" size="sm" onClick={() => setGuideOpen(true)}>
                 <BookOpen className="size-4" />
-                <span className="max-md:sr-only">Read setup guide</span>
+                <span className="max-md:sr-only">{t("apiKeys.readSetupGuide")}</span>
               </Button>
               <Button size="page-action" disabled={!query.data || forbidden || failed} onClick={() => setDialog({})}>
                 <Plus className="size-4" />
                 <span>
-                  Add<span className="max-md:hidden"> API key</span>
+                  {t("apiKeys.addShort")}<span className="max-md:hidden">{t("apiKeys.addSuffix")}</span>
                 </span>
               </Button>
             </>
@@ -290,27 +291,25 @@ export function ApiKeysPage() {
         <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
           <LockKeyhole className="text-primary size-3.5 shrink-0" />
           <span>
-            <span className="text-foreground font-medium">Keys stay private.</span> Only masked credentials are shown here.
+            <span className="text-foreground font-medium">{t("apiKeys.keysStayPrivate")}</span> {t("apiKeys.keysStayPrivateRest")}
           </span>
         </p>
       </div>
 
       {forbidden ? (
         <div role="alert" className="bg-card rounded-xl border p-8">
-          <h2 className="font-semibold">Seller access required</h2>
+          <h2 className="font-semibold">{t("apiKeys.forbiddenTitle")}</h2>
           <p className="text-muted-foreground mt-2 text-sm">
-            Only active Seller accounts can view API keys.
+            {t("apiKeys.forbiddenDescription")}
           </p>
         </div>
       ) : failed ? (
         <div role="alert" className="bg-card rounded-xl border p-8">
           <h2 className="font-semibold">
-            {status === 401 ? "Please sign in" : "Unable to load API keys"}
+            {status === 401 ? t("apiKeys.signInTitle") : t("apiKeys.unableToLoadTitle")}
           </h2>
           <p className="text-muted-foreground mt-2 text-sm">
-            {status === 401
-              ? "Redirecting to sign in…"
-              : "MSG16 — Unable to load API keys. Please refresh the page to try again."}
+            {status === 401 ? t("apiKeys.signInRedirect") : t("apiKeys.msg16")}
           </p>
           <Button
             variant="outline"
@@ -319,11 +318,11 @@ export function ApiKeysPage() {
             disabled={query.isFetching}
           >
             <RefreshCw className="size-4" />
-            Retry
+            {t("apiKeys.retry")}
           </Button>
         </div>
       ) : loading ? (
-        <PageLoading label="Loading API keys" />
+        <PageLoading label={t("apiKeys.loadingKeys")} />
       ) : data ? (
         <>
           <WorkflowReadiness
@@ -341,7 +340,7 @@ export function ApiKeysPage() {
                 id="connected-services-title"
                 className="flex items-center gap-2 text-base font-semibold"
               >
-                Connected services
+                {t("apiKeys.connectedServices")}
                 <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums">
                   {data.items.length}
                 </span>
@@ -349,7 +348,7 @@ export function ApiKeysPage() {
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label="Refresh API key list"
+                aria-label={t("apiKeys.refreshList")}
                 disabled={query.isFetching}
                 onClick={() => void query.refetch()}
               >
@@ -361,12 +360,12 @@ export function ApiKeysPage() {
                 <div className="bg-primary/10 text-primary mb-3 flex size-11 items-center justify-center rounded-xl">
                   <KeyRound className="size-5" />
                 </div>
-                <h3 className="font-semibold">No API keys yet</h3>
-                <p className="text-muted-foreground mt-1 text-sm md:hidden">Connect a service for each stage above to start creating products.</p>
+                <h3 className="font-semibold">{t("apiKeys.noKeysYet")}</h3>
+                <p className="text-muted-foreground mt-1 text-sm md:hidden">{t("apiKeys.noKeysDescription")}</p>
                 <span className="max-md:hidden">
                   <Button variant="outline" size="sm" className="mt-4" onClick={() => setDialog({})}>
                     <Plus className="size-4" />
-                    Add API key
+                    {t("apiKeys.addApiKey")}
                   </Button>
                 </span>
               </div>
@@ -388,11 +387,11 @@ export function ApiKeysPage() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[760px] text-xs">
                   <caption className="sr-only">
-                    Your service credentials, connection status, and last-used time
+                    {t("apiKeys.tableCaption")}
                   </caption>
                   <thead className="bg-muted/50 text-muted-foreground border-t text-left text-[10px] tracking-wider uppercase">
                     <tr>
-                      {["Provider", "Credential", "Status", "Last used", "Actions"].map((label) => (
+                      {[t("apiKeys.tableProvider"), t("apiKeys.tableCredential"), t("apiKeys.tableStatus"), t("apiKeys.tableLastUsed"), t("apiKeys.tableActions")].map((label) => (
                         <th
                           key={label}
                           scope="col"
@@ -429,22 +428,17 @@ export function ApiKeysPage() {
       <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Prepare your service connections</DialogTitle>
+            <DialogTitle>{t("apiKeys.guideTitle")}</DialogTitle>
             <DialogDescription>
-              Connect the services used at each stage of your workflow.
+              {t("apiKeys.guideDescription")}
             </DialogDescription>
           </DialogHeader>
           <ol className="text-muted-foreground list-decimal space-y-3 pl-5 text-sm">
-            <li>Google Gemini supplies listing content; Gemini or Ideogram supplies design images.</li>
-            <li>MiniMax H3 video generation uses the platform-managed system credential; Sellers do not add a MiniMax key here.</li>
-            <li>Printify publishes products; Etsy publishes marketplace listings.</li>
-            <li>
-              Create a credential in your provider account with only the permissions your workflow
-              needs.
-            </li>
-            <li>
-              After connecting, validate the credential and check that its status is Connected.
-            </li>
+            <li>{t("apiKeys.guideStep1")}</li>
+            <li>{t("apiKeys.guideStep2")}</li>
+            <li>{t("apiKeys.guideStep3")}</li>
+            <li>{t("apiKeys.guideStep4")}</li>
+            <li>{t("apiKeys.guideStep5")}</li>
           </ol>
         </DialogContent>
       </Dialog>

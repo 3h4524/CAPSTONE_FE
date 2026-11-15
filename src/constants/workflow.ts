@@ -211,7 +211,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     hasInput: true,
     hasOutput: true,
     // One design per product; more come from Regenerate on the product. `variants` stays 1 (older workflows saved more).
-    defaultConfig: { imageProvider: "gemini", variants: 1, aspectRatio: "1:1" },
+    defaultConfig: { imageProvider: "ideogram", variants: 1, aspectRatio: "1:1" },
     fields: [
       {
         kind: "select",
@@ -220,16 +220,16 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         display: "cards",
         options: [
           {
-            value: "gemini",
-            label: "Gemini (Nano Banana 2)",
-            description:
-              "About $0.067 per image. Fills in detail from short prompts; the white backdrop is cut out afterwards.",
-          },
-          {
             value: "ideogram",
             label: "Ideogram 4.0",
             description:
               "About $0.03 per 2K image. Draws apparel designs on a transparent background. Needs an Ideogram key with credits.",
+          },
+          {
+            value: "gemini",
+            label: "Gemini (Nano Banana 2)",
+            description:
+              "About $0.067 per image. Fills in detail from short prompts; the white backdrop is cut out afterwards.",
           },
         ],
       },

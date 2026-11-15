@@ -762,7 +762,7 @@ describe("toWorkflowNodes", () => {
           type: "design-image",
           label: "Design image",
           // Design image makes one design per product, whatever an older workflow saved.
-          config: { imageProvider: "gemini", variants: 1, aspectRatio: "1:1" },
+          config: { imageProvider: "ideogram", variants: 1, aspectRatio: "1:1" },
           status: "idle",
         },
       },

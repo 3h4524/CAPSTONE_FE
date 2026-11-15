@@ -267,6 +267,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
               )}
               <input
                 id="rag-file-input"
+                aria-label={t("adminUi.ragDocumentFile")}
                 ref={inputRef}
                 type="file"
                 accept={ACCEPTED_FILES}

@@ -147,7 +147,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
                 navigator.clipboard.writeText(ticket.ticketNumber);
                 toast.success("Copied ticket ID");
               }}
-              className="text-ink-400 hover:text-ink-600 transition-colors"
+              className="phone-hit-area text-ink-400 hover:text-ink-600 transition-colors"
             >
               <Copy className="size-4" />
             </button>

@@ -142,6 +142,7 @@ export const resources = {
         templatesLoadFailed: "Could not load templates",
         printifyConnectionFailed: "Could not check the Printify connection",
         copyTicketId: "Copy ticket ID",
+        ragDocumentFile: "Document file",
         removeAttachment: "Remove {{name}}",
         supportFilters: {
           open: "Filter tickets", title: "Filters", description: "Narrow the ticket list by priority or category.",
@@ -300,6 +301,7 @@ export const resources = {
         templatesLoadFailed: "Không thể tải các mẫu",
         printifyConnectionFailed: "Không thể kiểm tra kết nối Printify",
         copyTicketId: "Sao chép mã phiếu",
+        ragDocumentFile: "Tệp tài liệu",
         removeAttachment: "Xóa {{name}}",
         supportFilters: {
           open: "Lọc phiếu", title: "Bộ lọc", description: "Thu hẹp danh sách phiếu theo mức ưu tiên hoặc danh mục.",

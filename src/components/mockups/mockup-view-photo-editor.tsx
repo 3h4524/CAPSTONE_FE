@@ -10,13 +10,16 @@ import { PrintAreaList } from "@/components/mockups/print-area-list";
 import { Button } from "@/components/ui/button";
 import {
   areaLabel,
+  keepInFrame,
   MAIN_AREA_KEY,
   mockupViewLabel,
+  parsePrintifyFrame,
   parsePrintLayout,
 } from "@/helpers/mockup-template";
 import type {
   GarmentMaskPreview,
   MockupArea,
+  MockupPrintArea,
   MockupTemplate,
   MockupView,
 } from "@/types/mockup-templates";
@@ -39,6 +42,8 @@ export type ViewDraft = {
   areas: MockupArea[];
   /** The photo size the areas' numbers are in; null until a photo has been measured. */
   areasBasis: Size | null;
+  /** For a Printify template, the print area Printify prints on this photo: the design is placed inside it. */
+  printifyFrame: MockupPrintArea | null;
   /** A saved side being taken off. */
   removed: boolean;
 };
@@ -65,6 +70,7 @@ export const viewDraftOf = (view: MockupView, template: MockupTemplate | null): 
   realisticPrintReady: template?.realisticPrintReady ?? false,
   areas: (template && parsePrintLayout(template.printAreaConfig)?.areas) || [defaultMainArea()],
   areasBasis: template ? { width: template.outputWidthPx, height: template.outputHeightPx } : null,
+  printifyFrame: template ? parsePrintifyFrame(template.printAreaConfig) : null,
   removed: false,
 });
 
@@ -231,7 +237,19 @@ export const MockupViewPhotoEditor = ({
     draft.areas.findIndex((area) => area.key === activeKey)
   );
   const active = draft.areas[activeIndex] ?? draft.areas[0];
-  const setAreas = (areas: MockupArea[]) => update((current) => ({ ...current, areas }));
+  // A Printify template's photo keeps Printify's print area: its main area is the design, placed inside it.
+  const frame = photoLocked && active?.key === MAIN_AREA_KEY ? draft.printifyFrame : null;
+  const areaLocked = photoLocked && !frame;
+  const setAreas = (areas: MockupArea[]) => {
+    const printifyFrame = photoLocked ? draft.printifyFrame : null;
+    // Typed numbers are held to Printify's print area too; a size that cannot fit in it is not taken.
+    const kept = areas.map((area) => {
+      if (!printifyFrame || area.key !== MAIN_AREA_KEY) return area;
+      const fitted = keepInFrame(area, area.rotation, printifyFrame);
+      return fitted ? { ...area, ...fitted } : null;
+    });
+    if (kept.every((area): area is MockupArea => area !== null)) update((current) => ({ ...current, areas: kept }));
+  };
   const setActiveArea = (patch: Partial<MockupArea>) =>
     update((current) => ({
       ...current,
@@ -331,7 +349,9 @@ export const MockupViewPhotoEditor = ({
                   }))
                   .filter((area) => area.key !== active.key)}
                 onSelectArea={setActiveKey}
-                disabled={disabled || photoLocked}
+                disabled={disabled || areaLocked}
+                areaFixed={photoLocked}
+                frame={frame ?? undefined}
                 garmentTint={tint}
                 pixelSize={shownSize ?? undefined}
                 garmentMaskUrl={maskUrl ?? undefined}
@@ -380,7 +400,14 @@ export const MockupViewPhotoEditor = ({
             activeKey={active.key}
             onSelect={setActiveKey}
             onChange={setAreas}
-            disabled={disabled || photoLocked}
+            disabled={disabled || areaLocked}
+            note={
+              frame
+                ? "The green dashed box is Printify's print area. Drag or resize the design inside it, as in Printify's editor: every mock-up starts here, and Edit on a mock-up still moves it for that one."
+                : areaLocked
+                  ? "This print area comes from Printify and stays as it is."
+                  : undefined
+            }
           />
         ) : (
           <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-xs">

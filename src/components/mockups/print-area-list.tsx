@@ -34,6 +34,8 @@ type PrintAreaListProps = {
   designs?: AreaDesignOption[];
   /** In "mockup" mode, a picture of the mock-up's own design, shown beside its choice. */
   ownDesignUrl?: string | null;
+  /** Shown in place of how to drag the box, when the area can't be moved here. */
+  note?: string;
 };
 
 // A small picture of a design beside its name in the list.
@@ -111,6 +113,7 @@ export const PrintAreaList = ({
   mode,
   designs = [],
   ownDesignUrl = null,
+  note,
 }: PrintAreaListProps) => {
   const active = areas.find((area) => area.key === activeKey) ?? areas[0];
   if (!active) return null;
@@ -124,7 +127,7 @@ export const PrintAreaList = ({
       <div>
         <p className="text-ink-900 text-sm font-medium">Print area</p>
         <p className="text-muted-foreground text-xs">
-          Drag the box on the photo to place the design. The round handle above it turns it.
+          {note ?? "Drag the box on the photo to place the design. The round handle above it turns it."}
         </p>
       </div>
 

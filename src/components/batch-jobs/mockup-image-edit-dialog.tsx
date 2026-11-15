@@ -68,6 +68,7 @@ import {
   keepInFrame,
   MAIN_AREA_KEY,
   mockupViewLabel,
+  parsePrintifyFrame,
   parsePrintLayout,
   productTypeLabel,
   resolveMockupAreas,
@@ -626,11 +627,11 @@ export const MockupImageEditDialog = ({
   const shownSides = sides.filter((side) => photoOf(side.view));
   const showSides = shownSides.length + addedViews.length > 1;
   const showColors = colorCards.length > 1;
-  // A Printify template's front print area is Printify's own: it stays put and the design moves inside it.
+  // A Printify template's front keeps Printify's print area: it stays put and the design moves inside it, starting
+  // where the template puts it.
   const printifyFront = Boolean(main?.printify) && activeView === "front";
-  const printifyArea = printifyFront
-    ? (areasOf(activeView, false).find((item) => item.key === MAIN_AREA_KEY) ?? null)
-    : null;
+  const frontPhoto = printifyFront ? photoOf(activeView) : null;
+  const printifyArea = frontPhoto ? parsePrintifyFrame(frontPhoto.printAreaConfig) : null;
   const printifyFrame = active?.key === MAIN_AREA_KEY ? printifyArea : null;
   // Typed positions are held to the Printify print area too; one that cannot fit in it is not taken.
   const setAreasInFrame = (next: MockupArea[]) => {
@@ -698,7 +699,7 @@ export const MockupImageEditDialog = ({
                       }}
                     >
                       <RotateCcw className="size-3.5" aria-hidden="true" />
-                      {printifyFront ? "Fill the print area" : "Template’s position"}
+                      Template’s position
                     </Button>
                   )}
                   {showSides && photo && (

@@ -6,6 +6,7 @@ import {
   isJobRunning,
   jobPollInterval,
   printableViews,
+  savedColorsToMeasure,
   searchAdminPrintifyBlueprints,
   startPrintifyTemplateUpdateJob,
 } from "@/api/admin-mockup-printify";
@@ -22,6 +23,13 @@ describe("admin mock-up Printify api", () => {
     expect(printableViews(["front_left_chest"])).toEqual([]);
     expect(printableViews(["front_side_dtf", "back_side_dtf", "neck_outer"])).toEqual(["front", "back"]);
     expect(printableViews(["back_neck", "front_dtg"])).toEqual(["front"]);
+  });
+
+  it("ticks again the colors a blueprint has, as the catalog spells them, never White", () => {
+    const saved = [{ name: "black" }, { name: "Navy" }, { name: "White" }, { name: "Gone Color" }];
+    expect(savedColorsToMeasure(["White", "Black", "Red", "Navy"], saved, 20)).toEqual(["Black", "Navy"]);
+    expect(savedColorsToMeasure(["Black", "Navy"], saved, 1)).toEqual(["Black"]);
+    expect(savedColorsToMeasure(["Black"], [], 20)).toEqual([]);
   });
 
   it("asks for a job's progress until it is done or failed", () => {

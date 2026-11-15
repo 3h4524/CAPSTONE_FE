@@ -11,10 +11,12 @@ import {
   getPrintifyTemplateJob,
   isJobRunning,
   jobPollInterval,
+  listPrintifyColors,
   printableViews,
   type PrintifyCameraCandidate,
   type PrintifySide,
   type PrintifyTemplateJob,
+  savedColorsToMeasure,
   searchAdminPrintifyBlueprints,
   startPrintifyTemplateJob,
   startPrintifyTemplateUpdateJob,
@@ -87,6 +89,13 @@ const PrintifyTemplateFlow = ({ template, onBusy, onClose }: { template: MockupT
     enabled: blueprintId !== null && providerId !== null,
     staleTime: 60 * 60_000,
   });
+  // The colors the blueprint already has, ticked again when a linked template is measured.
+  const savedColors = useQuery({
+    queryKey: adminPrintifyKeys.colors(blueprintId ?? 0),
+    queryFn: () => listPrintifyColors(blueprintId as number),
+    enabled: blueprintId !== null && linked !== null,
+  });
+  const [savedColorsTicked, setSavedColorsTicked] = useState(false);
   const job = useQuery({
     queryKey: adminPrintifyKeys.job(jobId ?? ""),
     queryFn: ({ signal }) => getPrintifyTemplateJob(jobId as string, signal),
@@ -99,7 +108,12 @@ const PrintifyTemplateFlow = ({ template, onBusy, onClose }: { template: MockupT
     const printable = catalog.data ? printableViews(catalog.data.positions) : [];
     return linked ? printable.filter((view) => view !== "front") : printable;
   }, [catalog.data, linked]);
-  const offeredColors = useMemo(() => (catalog.data?.colors ?? []).filter((color) => color.toLowerCase() !== "white"), [catalog.data]);
+  // The blueprint's own colors come first, so the ones ticked for it are in sight.
+  const offeredColors = useMemo(() => {
+    const made = (catalog.data?.colors ?? []).filter((color) => color.toLowerCase() !== "white");
+    const saved = new Set((savedColors.data ?? []).map((row) => row.name.toLowerCase()));
+    return [...made.filter((color) => saved.has(color.toLowerCase())), ...made.filter((color) => !saved.has(color.toLowerCase()))];
+  }, [catalog.data, savedColors.data]);
   const existingViews = new Set<string>(template?.views?.map((side) => templateView(side)) ?? []);
 
   // A new catalog suggests the usual colors.
@@ -111,6 +125,13 @@ const PrintifyTemplateFlow = ({ template, onBusy, onClose }: { template: MockupT
     const printable = printableViews(catalog.data.positions);
     setViews((current) => printable.filter((view) => view === "front" || current.includes(view)));
   }, [catalog.data, linked]);
+
+  // Once both are read, a linked template starts with the colors its blueprint has; the admin unticks what to leave.
+  useEffect(() => {
+    if (!linked || savedColorsTicked || !catalog.data || !savedColors.data) return;
+    setSavedColorsTicked(true);
+    setColors(savedColorsToMeasure(catalog.data.colors, savedColors.data, MAX_COLORS));
+  }, [linked, savedColorsTicked, catalog.data, savedColors.data]);
 
   const start = useMutation({
     mutationFn: () =>
@@ -158,6 +179,7 @@ const PrintifyTemplateFlow = ({ template, onBusy, onClose }: { template: MockupT
               onToggleView={(view) => setViews((current) => toggle(current, view))}
               offeredColors={offeredColors}
               colors={colors}
+              savedColorsTicked={linked !== null && (savedColors.data?.length ?? 0) > 0}
               onToggleColor={(color) => setColors((current) => (current.includes(color) || current.length < MAX_COLORS ? toggle(current, color) : current))}
             />
           ) : !result || isJobRunning(result) ? (
@@ -218,6 +240,8 @@ type SetupStepProps = {
   onToggleView: (view: PrintifySide) => void;
   offeredColors: string[];
   colors: string[];
+  /** The blueprint already has colors, ticked for measuring again. */
+  savedColorsTicked?: boolean;
   onToggleColor: (color: string) => void;
 };
 
@@ -286,6 +310,11 @@ const SetupStep = (props: SetupStepProps) => (
         <div className="space-y-1">
           <ChipGroup label="Colors to measure" options={props.offeredColors} selected={props.colors} onToggle={props.onToggleColor} />
           <p className="text-muted-foreground text-xs">White is always measured: the other colors are measured against it. At most {MAX_COLORS}.</p>
+          {props.savedColorsTicked && (
+            <p className="text-muted-foreground text-xs">
+              The colors this blueprint already has are ticked and listed first. Measuring one again replaces its hex, also one changed by hand: untick it to keep it.
+            </p>
+          )}
         </div>
       </>
     ) : null}

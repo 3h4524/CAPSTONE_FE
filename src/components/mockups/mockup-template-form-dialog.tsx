@@ -168,6 +168,8 @@ export const MockupTemplateFormDialog = ({
   const locked = scope === "seller" && entitlements !== undefined && !hasFeature(entitlements, "custom_mockup_templates");
   // A Printify template's photos and print areas are Printify's: only its name, type and colors change here.
   const printifyLocked = Boolean(template?.printify);
+  // A Printify template is made only in its blueprint's Printify colors.
+  const printifyColors = template?.printify?.colors;
   const pending = saving;
 
   // A small picture of each side for the strip under the photo: its new photo, or the saved one.
@@ -366,11 +368,17 @@ export const MockupTemplateFormDialog = ({
           <div>
             <p className="text-ink-900 text-sm font-medium">Garment color</p>
             <p className="text-muted-foreground text-xs">
-              Used unless a batch picks its own colors. None keeps the photo’s color.
+              {printifyColors
+                ? printifyColors.length > 0
+                  ? "One of the colors measured on Printify. Used unless a batch picks its own colors. None keeps the photo’s color."
+                  : "No Printify colors measured for this blueprint yet. Measure them in Printify settings."
+                : "Used unless a batch picks its own colors. None keeps the photo’s color."}
             </p>
           </div>
           <GarmentColorPicker
             selected={garmentColor ? [garmentColor] : []}
+            palette={printifyColors}
+            allowCustom={!printifyColors}
             disabled={pending}
             onToggle={(hex) =>
               setGarmentColor((current) =>
@@ -395,7 +403,7 @@ export const MockupTemplateFormDialog = ({
           <DialogTitle>{creating ? "New mock-up template" : `Edit ${template.name}`}</DialogTitle>
           <DialogDescription>
             {printifyLocked
-              ? "The photo and print area stay as they are while the template is linked to Printify. Measure a side again, or unlink it, in Printify settings."
+              ? "The photos and Printify's print area stay as they are while the template is linked to Printify: place the design inside it. Measure a side again, or unlink it, in Printify settings."
               : "Mark where designs go on each photo. Add the back or a sleeve to print there too: each side makes its own mock-up."}
           </DialogDescription>
         </DialogHeader>

@@ -133,6 +133,15 @@ const printsSide = (position: string, side: PrintifySide) => {
 export const printableViews = (positions: string[]): PrintifySide[] =>
   (["front", "back", "left", "right"] as const).filter((side) => positions.some((position) => printsSide(position, side)));
 
+/**
+ * The colors a provider makes that the blueprint already has, as the catalog spells them (White is always measured):
+ * ticked again when a linked template is measured, so what it has is measured afresh instead of left out.
+ */
+export const savedColorsToMeasure = (catalogColors: string[], saved: Pick<PrintifyColorRow, "name">[], max: number) => {
+  const names = new Set(saved.map((row) => row.name.toLowerCase()));
+  return catalogColors.filter((color) => color.toLowerCase() !== "white" && names.has(color.toLowerCase())).slice(0, max);
+};
+
 /** Whether a job is still working, so its progress is asked again. */
 export const isJobRunning = (job: Pick<PrintifyTemplateJob, "status"> | undefined) => job?.status === "queued" || job?.status === "running";
 

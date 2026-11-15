@@ -1,11 +1,13 @@
+"use client";
+
+import { useTranslation } from "react-i18next";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { CurrentSubscription } from "@/types/subscription";
 import { formatVnd } from "@/utils/format-currency";
-
-const formatDate = (isoDate: string) =>
-  new Date(isoDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+import { formatDate } from "@/utils/format-date";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -26,6 +28,7 @@ export const CurrentPlanCard = ({
   isCancellingScheduledDowngrade,
   onRenewClick,
 }: CurrentPlanCardProps) => {
+  const { i18n } = useTranslation("common");
   const isTrial = subscription?.isTrial === true && subscription.trialEndsAt !== null;
   const daysLeft = isTrial ? trialDaysLeft(subscription.trialEndsAt!) : 0;
   const isPastDue = subscription?.status === "past_due";
@@ -55,7 +58,7 @@ export const CurrentPlanCard = ({
           </div>
           <p className="text-muted-foreground text-sm max-md:hidden">
             {isTrial
-              ? `You're trying every ${subscription!.planName} feature for free. Choose a plan before ${formatDate(subscription!.trialEndsAt!)} to keep running your workflows.`
+              ? `You're trying every ${subscription!.planName} feature for free. Choose a plan before ${formatDate(subscription!.trialEndsAt!, i18n.language)} to keep running your workflows.`
               : subscription
                 ? subscription.shortDescription
                 : "You can build and save workflows on Free. Start the free trial or choose a plan to run them."}
@@ -66,8 +69,8 @@ export const CurrentPlanCard = ({
               className="border-destructive/40 bg-destructive/10 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border px-3 py-2 text-sm"
             >
               <span>
-                Your renewal was due {formatDate(subscription!.renewalDate)}. Renew by{" "}
-                <strong>{formatDate(subscription!.lastGraceDay)}</strong> to keep {subscription!.planName}; after that
+                Your renewal was due {formatDate(subscription!.renewalDate, i18n.language)}. Renew by{" "}
+                <strong>{formatDate(subscription!.lastGraceDay, i18n.language)}</strong> to keep {subscription!.planName}; after that
                 your account moves to Free.
               </span>
               <Button size="sm" onClick={onRenewClick}>
@@ -79,7 +82,7 @@ export const CurrentPlanCard = ({
             <div className="border-warning bg-warning/10 flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-sm">
               <span>
                 Moving to <strong>{subscription.scheduledPlanName}</strong> when you renew on{" "}
-                {formatDate(subscription.scheduledPlanEffectiveDate)}.
+                {formatDate(subscription.scheduledPlanEffectiveDate, i18n.language)}.
               </span>
               <Button
                 variant="link"
@@ -105,11 +108,11 @@ export const CurrentPlanCard = ({
           </p>
           <p className="text-muted-foreground text-sm">
             {isTrial
-              ? `Ends ${formatDate(subscription!.trialEndsAt!)}`
+              ? `Ends ${formatDate(subscription!.trialEndsAt!, i18n.language)}`
               : isPastDue
-                ? `Was due ${formatDate(subscription!.renewalDate)}`
+                ? `Was due ${formatDate(subscription!.renewalDate, i18n.language)}`
                 : subscription
-                  ? `Paid until ${formatDate(subscription.renewalDate)}`
+                  ? `Paid until ${formatDate(subscription.renewalDate, i18n.language)}`
                   : "No plan yet"}
           </p>
           {subscription?.canRenew && !isPastDue && (

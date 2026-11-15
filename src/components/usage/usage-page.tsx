@@ -17,6 +17,7 @@ import {
   Sparkles,
   Store,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "@/components/commons/layout/page-header";
 import { PageLoading } from "@/components/commons/layout/page-loading";
@@ -32,12 +33,10 @@ import { Progress } from "@/components/ui/progress";
 import { showToast } from "@/helpers/toast";
 import { useUsageOverview } from "@/hooks/queries/use-usage-overview";
 import { useIsPhone } from "@/hooks/use-is-phone";
+import { formatDate } from "@/utils/format-date";
 
 // The backend sends this name when the Seller has no subscription, which leaves them on the free allowance.
 const NO_PLAN_NAME = "No active plan";
-
-const formatResetDate = (value: string) =>
-  new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(value));
 
 const ranges = [
   { label: "Last 30 days", days: 30 },
@@ -49,6 +48,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 
 export function UsagePage() {
   const isPhone = useIsPhone();
+  const { i18n } = useTranslation("common");
   const [days, setDays] = useState(30);
   const { data, isLoading, isError } = useUsageOverview(days);
   const chart = useMemo(() => data?.dailyActivity ?? [], [data]);
@@ -284,8 +284,7 @@ export function UsagePage() {
             <div className="text-ink-600 mt-3 flex items-center gap-2 text-xs">
               <CalendarDays className="text-ink-500 size-4 shrink-0" />
               <span>
-                Period ends <span className="max-md:hidden">{data.allowance.resetDate}</span>
-                <span className="md:hidden">{formatResetDate(data.allowance.resetDate)}</span> · {data.allowance.daysRemaining} days remaining
+                Period ends {formatDate(data.allowance.resetDate, i18n.language)} · {data.allowance.daysRemaining} days remaining
               </span>
             </div>
 

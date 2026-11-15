@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "@/components/commons/layout/page-header";
 import { PageLoading } from "@/components/commons/layout/page-loading";
@@ -12,6 +13,7 @@ import { ENTITLEMENTS_QUERY_KEY } from "@/hooks/queries/use-entitlements";
 import { SUBSCRIPTION_OVERVIEW_QUERY_KEY, useSubscriptionOverview } from "@/hooks/queries/use-subscription-overview";
 import { usePopupStore } from "@/stores/popup";
 import type { AvailablePlan, BillingCycle } from "@/types/subscription";
+import { formatDate } from "@/utils/format-date";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { SubscriptionCheckoutModal } from "./checkout-modal/subscription-checkout-modal";
@@ -23,10 +25,8 @@ import { RecentInvoicesTable } from "./recent-invoices-table";
 import { TrialOfferCard } from "./trial-offer-card";
 import { UsageQuotaCards } from "./usage-quota-cards";
 
-const formatDate = (isoDate: string) =>
-  new Date(isoDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-
 export const SubscriptionPageContent = () => {
+  const { i18n } = useTranslation("common");
   const { data, isLoading, isError } = useSubscriptionOverview();
   const [checkoutPlan, setCheckoutPlan] = useState<AvailablePlan | null>(null);
   const [upgradePlan, setUpgradePlan] = useState<AvailablePlan | null>(null);
@@ -43,7 +43,7 @@ export const SubscriptionPageContent = () => {
   const handleStartTrial = () => {
     startTrial(undefined, {
       onSuccess: (result) => {
-        showToast("success", `Your ${result.planName} trial is on until ${formatDate(result.trialEndsAt)}.`);
+        showToast("success", `Your ${result.planName} trial is on until ${formatDate(result.trialEndsAt, i18n.language)}.`);
         queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_OVERVIEW_QUERY_KEY });
         queryClient.invalidateQueries({ queryKey: ENTITLEMENTS_QUERY_KEY });
       },
@@ -61,7 +61,7 @@ export const SubscriptionPageContent = () => {
           onSuccess: (result) => {
             showToast(
               "success",
-              `Scheduled: moving to ${result.targetPlanName} on ${formatDate(result.effectiveDate)}.`
+              `Scheduled: moving to ${result.targetPlanName} on ${formatDate(result.effectiveDate, i18n.language)}.`
             );
             queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_OVERVIEW_QUERY_KEY });
           },

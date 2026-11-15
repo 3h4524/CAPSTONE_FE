@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Gauge } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { allowanceLine, allowanceResetLine, orderAllowances, remaining } from "@/helpers/allowance";
 import { SUBSCRIPTION_PATH } from "@/helpers/plan-errors";
@@ -11,10 +12,11 @@ import { cn } from "@/utils/cn";
 // A slim line above the canvas for Sellers on Free or the Pro trial: what is left before they run.
 export const AllowanceBanner = () => {
   const { data: allowances } = useAllowances();
+  const { i18n } = useTranslation("common");
   if (!allowances || allowances.scope === null) return null;
 
   const items = orderAllowances(allowances);
-  const reset = allowanceResetLine(allowances);
+  const reset = allowanceResetLine(allowances, i18n.language);
 
   return (
     <div

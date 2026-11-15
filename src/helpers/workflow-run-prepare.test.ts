@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { planBlocksRun } from "@/helpers/workflow-run-prepare";
+import { needsOwnImageKey, planBlocksRun } from "@/helpers/workflow-run-prepare";
 import type { Entitlements } from "@/types/subscription";
 
 const entitlements = (
@@ -41,5 +41,18 @@ describe("planBlocksRun", () => {
   it("needs automatic approval to skip review", () => {
     expect(planBlocksRun(entitlements(10), 1, 1, false)).toContain("Automatic design approval is part of Pro");
     expect(planBlocksRun(entitlements(10), 1, 1, true)).toBeNull();
+  });
+});
+
+describe("needsOwnImageKey", () => {
+  const platformKeys = entitlements(10, [{ code: "system_image_keys", isEnabled: true }]);
+
+  it("lets a plan with the platform's keys make Ideogram images without a key of the Seller's", () => {
+    expect(needsOwnImageKey(platformKeys, "ideogram")).toBe(false);
+  });
+
+  it("still needs the Seller's key for Gemini, or without the feature", () => {
+    expect(needsOwnImageKey(platformKeys, "gemini")).toBe(true);
+    expect(needsOwnImageKey(entitlements(10), "ideogram")).toBe(true);
   });
 });

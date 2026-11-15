@@ -104,7 +104,8 @@ export const GenerateModelPhotoDialog = ({
             </Select>
           </div>
           <p className="text-muted-foreground text-xs leading-relaxed">
-            One image (about $0.03) is charged to your Ideogram key. Making it takes up to a minute.
+            One Ideogram image (about $0.03), made on your own key, or on the platform&apos;s keys
+            when your plan includes them. Making it takes up to a minute.
             Check the photo before you use it: if the shirt is not found, make another.
           </p>
           {isPending && (

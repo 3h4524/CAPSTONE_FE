@@ -50,6 +50,11 @@ export const planBlocksRun = (
   return null;
 };
 
+// Whether the Seller must connect their own key for the image provider. A plan with the platform's keys makes Ideogram
+// images on those; the backend still asks for the Seller's key when the platform has none configured.
+export const needsOwnImageKey = (entitlements: Entitlements, imageProvider: string): boolean =>
+  !(imageProvider === "ideogram" && hasFeature(entitlements, "system_image_keys"));
+
 // Runs every check the backend would make when the job starts, before anything is created, so a
 // run that cannot work fails with a clear message and leaves no stray job behind. Then returns the
 // draft job to configure: an existing one, or a new one from the batch's pending products.
@@ -116,19 +121,22 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
     plan.mockup = usable;
   }
 
-  const keys = await queryClient.fetchQuery({ queryKey: apiKeyKeys.all, queryFn: () => listApiKeys(), ...fresh });
-  // The list names each provider for display ("Google Gemini", "Ideogram"), which contains the name the run uses.
-  if (!keys.items.some((key) => key.provider.toLowerCase().includes(plan.imageProvider) && key.status === "Connected")) {
-    const name = plan.imageProvider === "ideogram" ? "Ideogram" : "Google Gemini";
-    throw new RunBlockedError(`Connect a valid ${name} API key on the API Keys page before running.`);
-  }
-
   // Plans differ by feature, not by monthly quota: the run must fit what the plan includes.
   const entitlements = await queryClient.fetchQuery({
     queryKey: ENTITLEMENTS_QUERY_KEY,
     queryFn: getEntitlementsRequest,
     ...fresh,
   });
+
+  if (needsOwnImageKey(entitlements, plan.imageProvider)) {
+    const keys = await queryClient.fetchQuery({ queryKey: apiKeyKeys.all, queryFn: () => listApiKeys(), ...fresh });
+    // The list names each provider for display ("Google Gemini", "Ideogram"), which contains the name the run uses.
+    if (!keys.items.some((key) => key.provider.toLowerCase().includes(plan.imageProvider) && key.status === "Connected")) {
+      const name = plan.imageProvider === "ideogram" ? "Ideogram" : "Google Gemini";
+      throw new RunBlockedError(`Connect a valid ${name} API key on the API Keys page before running.`);
+    }
+  }
+
   const blocked = planBlocksRun(entitlements, productCount, plan.variationCount, plan.requireApproval);
   if (blocked) throw new RunBlockedError(blocked);
 

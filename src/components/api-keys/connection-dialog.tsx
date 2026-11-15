@@ -162,7 +162,7 @@ export function ConnectionDialog({
                     {providers.data?.map((item) => (
                       <SelectItem key={item.id} value={item.id} disabled={!item.available}>
                         {item.name}
-                        {!item.available ? " — OAuth required" : ""}
+                        {!item.available ? t("apiKeys.oauthRequired") : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -52,7 +52,7 @@ export const CurrentPlanCard = ({
               <Badge variant="destructive">{t("subscription.paymentDue")}</Badge>
             ) : (
               <Badge variant={subscription?.status === "active" ? "default" : "outline"}>
-                {subscription ? subscription.status : t("subscription.noPlan")}
+                {subscription ? t(`subscription.statuses.${subscription.status}`, { defaultValue: subscription.status }) : t("subscription.noPlan")}
               </Badge>
             )}
           </div>

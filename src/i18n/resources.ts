@@ -821,6 +821,7 @@ export const resources = {
         keyNameLabel: "API key name (optional)", keyNamePlaceholder: "e.g. Main workspace key",
         environmentLabel: "Environment", environmentPlaceholder: "Select environment",
         envProduction: "Production — Live", envSandbox: "Sandbox — Test",
+        oauthRequired: " — OAuth required",
         replaceKeyLabel: "Replace API key (optional)", apiKeyLabel: "API key",
         replaceKeyHint: "Leave blank to keep the current key", apiKeyPlaceholder: "Paste provider key",
         encryptionNote: "Your key is encrypted. Only the final four characters are displayed after saving.",
@@ -908,6 +909,7 @@ export const resources = {
         },
       },
       subscription: {
+        statuses: { active: "đang hoạt động", cancelled: "đã hủy", expired: "hết hạn", trialing: "dùng thử", past_due: "quá hạn" },
         loading: "Đang tải gói subscription",
         pageDescription: "Theo dõi gói của bạn và quyền lợi, so sánh các gói, và tải xuống hóa đơn của bạn.",
         free: "Free", freeTrialPrice: "Dùng thử miễn phí", year: "năm", month: "tháng",
@@ -1675,6 +1677,7 @@ export const resources = {
         keyNameLabel: "Tên API key (không bắt buộc)", keyNamePlaceholder: "ví dụ: Key workspace chính",
         environmentLabel: "Môi trường", environmentPlaceholder: "Chọn môi trường",
         envProduction: "Production — Live", envSandbox: "Sandbox — Test",
+        oauthRequired: " — cần OAuth",
         replaceKeyLabel: "Thay API key (không bắt buộc)", apiKeyLabel: "API key",
         replaceKeyHint: "Để trống để giữ key hiện tại", apiKeyPlaceholder: "Dán provider key",
         encryptionNote: "Key của bạn được mã hóa. Chỉ bốn ký tự cuối được hiển thị sau khi lưu.",

@@ -69,6 +69,12 @@ describe("groupVideoState", () => {
   it("keeps an approved video approved while its ZIP is exported", () => {
     expect(groupVideoState(target(0, "running", 30, "export-zip"))).toBe("approved");
   });
+
+  // Push to Printify runs beside the video: a run failed by Printify still has its video made and approved.
+  it("reads the video's own status, not a run failed by Push to Printify", () => {
+    expect(groupVideoState({ ...target(0, "failed"), videoStatus: "completed" })).toBe("approved");
+    expect(groupVideoState({ ...target(0, "running"), videoStatus: "failed" })).toBe("stopped");
+  });
 });
 
 describe("GroupVideoList", () => {

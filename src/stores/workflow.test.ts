@@ -578,6 +578,15 @@ describe("node status tracking", () => {
       "idle",
     ]);
   });
+
+  it("resetStatuses also clears the stage and progress a run left on a node", () => {
+    seedGraph([node("a")], []);
+    useWorkflowStore.getState().setNodeRuntime("a", { status: "running", stage: "Rendering", progress: 55 });
+
+    useWorkflowStore.getState().resetStatuses();
+
+    expect(useWorkflowStore.getState().nodes[0]?.data).toMatchObject({ status: "idle", stage: null, progress: 0 });
+  });
 });
 
 describe("resetProductDependentState", () => {

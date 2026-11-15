@@ -5,9 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { SELECT_CLEARABLE_TRIGGER, SelectClearButton } from "@/components/commons/forms/select-clear-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PanelSection } from "@/components/workflows/config-panel/layout/panel-section";
+import { RUN_GROUP_PARAM } from "@/constants/run-group";
 import { PANEL_SELECT_CONTENT_CLASS } from "@/constants/workflow-panel";
 import { useBatchJobs } from "@/hooks/queries/use-batch-jobs";
 import { BATCH_JOB_PARAM, NEXT_PART_PARAM } from "@/hooks/use-batch-run";
+import { VIDEO_RUN_PARAM } from "@/hooks/use-workflow-runtime";
 import { useWorkflowStore } from "@/stores/workflow";
 import { cn } from "@/utils/cn";
 
@@ -63,11 +65,17 @@ export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
     router.replace(`/workflows?${params.toString()}`);
   };
 
-  // Stops looking at the earlier run; the canvas goes back to the workflow without a run open.
+  // Stops looking at the earlier run; the canvas goes back to the workflow without a run open. Its videos go too:
+  // opening the run added its batch video run and the run of its first video, which would keep their steps shown.
   const closeRun = () => {
     const params = new URLSearchParams(window.location.search);
     params.delete(BATCH_JOB_PARAM);
     params.delete(NEXT_PART_PARAM);
+    params.delete(RUN_GROUP_PARAM);
+    params.delete(VIDEO_RUN_PARAM);
+    const state = useWorkflowStore.getState();
+    state.setVideoRunId(null);
+    state.resetStatuses();
     router.replace(`/workflows?${params.toString()}`);
   };
   const canClose = Boolean(openRun) && !isRunning;

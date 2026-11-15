@@ -44,10 +44,12 @@
           "revenueReports": "Revenue & Reports",
           "systemStatistics": "System Statistics",
           "imageQuality": "Image Quality",
+          "contentSafety": "Content Safety",
           "supportTickets": "Support Tickets",
           "testReports": "Test Reports",
           "settings": "Settings",
-          "profile": "Profile"
+          "profile": "Profile",
+          "printifyTemplateLinks": "Printify Template Links"
         }
       },
       "breadcrumb": "Breadcrumb",
@@ -1070,7 +1072,8 @@
         "noTemplatesTitle": "No mock-up templates yet",
         "noTemplatesDescription": "Upload a product photo to start compositing designs onto it.",
         "deleteTitle": "Delete {{name}}?",
-        "deleteDescription": "This removes the mock-up template permanently. System templates cannot be deleted."
+        "deleteDescription": "This removes the mock-up template permanently. System templates cannot be deleted.",
+        "deleteDescriptionAdmin": "Sellers can no longer choose it. Mock-ups already made on it stay as they are."
       },
       "modelPhotosPanel": {
         "adminIntro": "Photos of people every seller can put their mock-ups on. Use a person facing the camera in a plain white or light garment.",
@@ -1212,6 +1215,7 @@
         "titleNew": "New mock-up template",
         "titleEdit": "Edit {{name}}",
         "description": "Mark where designs go on each photo. Add the back or a sleeve to print there too: each side makes its own mock-up.",
+        "descriptionPrintifyLocked": "The photo and print area stay as they are while the template is linked to Printify. Measure a side again, or unlink it, in Printify settings.",
         "nameLabel": "Name",
         "namePlaceholder": "Classic tee",
         "productTypeLabel": "Product type *",
@@ -1239,6 +1243,7 @@
         "removeSide": "Remove side",
         "frontDropLabel": "Photo of the front",
         "sideDropLabel": "Photo of the {{label}}",
+        "printifyLockedDropDescription": "The sides of a Printify template are Printify's own photos. Add this one from the template's Printify settings.",
         "frontDropDescription": "A real product photo, garment on a plain background. Images up to 10 MB.",
         "sideDropDescription": "Add a photo of the {{label}} to print on it too: every design gets a mock-up of this side.",
         "sideAreasNote": "Print areas for the {{label}} appear once it has a photo.",

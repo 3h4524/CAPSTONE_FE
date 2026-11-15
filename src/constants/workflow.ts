@@ -97,7 +97,9 @@ export const RUNNABLE_NODE_TYPES: WorkflowNodeType[] = [
   "generate-listing",
 ];
 
-// The order the steps of a run must be connected in (the backend checks the same order).
+// The order a run goes through its steps (the backend uses the same order). The steps of the line are connected in
+// this order; Push to Printify branches off Apply mock-up or Mockup Approval instead and runs right after Mockup
+// Approval, since it takes the design and its approved mock-ups, not the video (see PRINTIFY_SOURCES).
 export const RUN_ORDER: WorkflowNodeType[] = [
   "product-input",
   "prompt-synthesis",
@@ -105,11 +107,15 @@ export const RUN_ORDER: WorkflowNodeType[] = [
   "design-approval",
   "apply-mockup",
   "approval-gate",
+  "publish-printify",
   "generate-video",
   "review-video",
   "export-zip",
-  ...PUBLISH_NODE_TYPES,
+  "publish-etsy",
 ];
+
+/** The steps Push to Printify may branch off: it publishes the design and its mock-ups, never the video. */
+export const PRINTIFY_SOURCES: WorkflowNodeType[] = ["apply-mockup", "approval-gate"];
 
 
 export const WORKFLOW_CATEGORIES: WorkflowCategoryDefinition[] = [

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import Image from "next/image";
 import { ImageIcon, Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -25,6 +25,8 @@ type MockupTemplateListItemProps = {
   editable?: boolean;
   onEdit: (template: MockupTemplate) => void;
   onDelete: (template: MockupTemplate) => void;
+  /** More buttons beside Edit and Delete. */
+  extraActions?: ReactNode;
 };
 
 export const MockupTemplateListItem = ({
@@ -33,6 +35,7 @@ export const MockupTemplateListItem = ({
   editable = template.isMine,
   onEdit,
   onDelete,
+  extraActions,
 }: MockupTemplateListItemProps) => {
   const { t } = useTranslation("common");
   const [viewing, setViewing] = useState<number | null>(null);
@@ -118,6 +121,11 @@ export const MockupTemplateListItem = ({
         </div>
         <div className="flex flex-wrap gap-1.5 max-md:[&>*]:max-w-full max-md:[&>*]:whitespace-normal">
           <Badge variant="outline">{template.productType}</Badge>
+          {template.printify && (
+            <Badge variant="secondary" title={[template.printify.blueprintTitle, template.printify.printProviderTitle].filter(Boolean).join(" · ")}>
+              Printify
+            </Badge>
+          )}
           <Badge variant="outline" className="max-md:hidden">
             {template.outputWidthPx} x {template.outputHeightPx}
           </Badge>
@@ -179,6 +187,7 @@ export const MockupTemplateListItem = ({
               <Trash2 aria-hidden="true" />
               <span className="max-md:sr-only">{t("mockups.delete")}</span>
             </Button>
+            {extraActions}
           </div>
         )}
       </CardContent>

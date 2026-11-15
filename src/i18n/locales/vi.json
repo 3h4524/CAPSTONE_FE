@@ -44,10 +44,12 @@
           "revenueReports": "Doanh thu & báo cáo",
           "systemStatistics": "Thống kê hệ thống",
           "imageQuality": "Chất lượng ảnh",
+          "contentSafety": "An toàn nội dung",
           "supportTickets": "Phiếu hỗ trợ",
           "testReports": "Báo cáo kiểm thử",
           "settings": "Cài đặt",
-          "profile": "Hồ sơ"
+          "profile": "Hồ sơ",
+          "printifyTemplateLinks": "Liên kết mẫu Printify"
         }
       },
       "breadcrumb": "Đường dẫn",
@@ -1060,7 +1062,8 @@
         "noTemplatesTitle": "Chưa có mẫu mock-up nào",
         "noTemplatesDescription": "Tải lên ảnh sản phẩm để bắt đầu chèn thiết kế lên đó.",
         "deleteTitle": "Xóa {{name}}?",
-        "deleteDescription": "Thao tác này xóa vĩnh viễn mẫu mock-up. Mẫu hệ thống không thể xóa."
+        "deleteDescription": "Thao tác này xóa vĩnh viễn mẫu mock-up. Mẫu hệ thống không thể xóa.",
+        "deleteDescriptionAdmin": "Seller không thể chọn mẫu này nữa. Các mock-up đã tạo trên mẫu vẫn giữ nguyên."
       },
       "modelPhotosPanel": {
         "adminIntro": "Ảnh người mẫu mà mọi seller có thể đặt mock-up lên. Dùng một người nhìn thẳng vào camera, mặc áo trơn màu trắng hoặc nhạt.",
@@ -1202,6 +1205,7 @@
         "titleNew": "Mẫu mock-up mới",
         "titleEdit": "Sửa {{name}}",
         "description": "Đánh dấu vị trí đặt thiết kế trên từng ảnh. Thêm mặt sau hoặc tay áo để in thêm: mỗi mặt tạo một mock-up riêng.",
+        "descriptionPrintifyLocked": "Ảnh và vùng in được giữ nguyên khi mẫu đang liên kết với Printify. Hãy đo lại một mặt, hoặc hủy liên kết, trong phần cài đặt Printify.",
         "nameLabel": "Tên",
         "namePlaceholder": "Áo thun cổ điển",
         "productTypeLabel": "Loại sản phẩm *",
@@ -1229,6 +1233,7 @@
         "removeSide": "Xóa mặt này",
         "frontDropLabel": "Ảnh mặt trước",
         "sideDropLabel": "Ảnh mặt {{label}}",
+        "printifyLockedDropDescription": "Các mặt của mẫu Printify là ảnh riêng của Printify. Hãy thêm ảnh này từ phần cài đặt Printify của mẫu.",
         "frontDropDescription": "Ảnh sản phẩm thật, garment trên nền trơn. Ảnh tối đa 10 MB.",
         "sideDropDescription": "Thêm ảnh mặt {{label}} để in lên đó: mỗi thiết kế có thêm một mock-up.",
         "sideAreasNote": "Các vùng in của mặt {{label}} xuất hiện khi mặt này có ảnh.",

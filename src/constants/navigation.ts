@@ -13,6 +13,7 @@ import {
   LifeBuoy,
   Palette,
   Settings,
+  ShieldCheck,
   Shirt,
   Store,
   UserRound,
@@ -104,6 +105,7 @@ export const ADMIN_NAV_SECTIONS: AppNavSection[] = [
     label: "System",
     titleKey: "navigation.admin.sections.system",
     items: [
+      { label: "Content Safety", titleKey: "navigation.admin.items.contentSafety", href: "/admin/content-safety", icon: ShieldCheck },
       { label: "Support Tickets", titleKey: "navigation.admin.items.supportTickets", href: "/admin/support-tickets", icon: Headphones },
       { label: "Test Reports", titleKey: "navigation.admin.items.testReports", href: "/admin/test-reports", icon: FlaskConical },
       { label: "Settings", titleKey: "navigation.admin.items.settings", href: "/admin/settings", icon: Settings },
@@ -119,6 +121,7 @@ const EXTRA_ROUTE_TITLES: RouteTitle[] = [
   { path: "/market-insights", titleKey: "navigation.items.marketInsights", defaultTitle: "Market Insights" },
   { path: "/batch-jobs", titleKey: "navigation.items.batches", defaultTitle: "Batches" },
   { path: "/admin/profile", titleKey: "navigation.admin.items.profile", defaultTitle: "Profile" },
+  { path: "/admin/printify-template-links", titleKey: "navigation.admin.items.printifyTemplateLinks", defaultTitle: "Printify Template Links" },
 ];
 
 export const ROUTE_TITLES: RouteTitle[] = [

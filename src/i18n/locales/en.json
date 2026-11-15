@@ -44,6 +44,7 @@
           "revenueReports": "Revenue & Reports",
           "systemStatistics": "System Statistics",
           "imageQuality": "Image Quality",
+          "contentSafety": "Content Safety",
           "supportTickets": "Support Tickets",
           "testReports": "Test Reports",
           "settings": "Settings",
@@ -1072,7 +1073,7 @@
         "noTemplatesDescription": "Upload a product photo to start compositing designs onto it.",
         "deleteTitle": "Delete {{name}}?",
         "deleteDescription": "This removes the mock-up template permanently. System templates cannot be deleted.",
-        "adminDeleteDescription": "Sellers can no longer choose it. Mock-ups already made on it stay as they are."
+        "deleteDescriptionAdmin": "Sellers can no longer choose it. Mock-ups already made on it stay as they are."
       },
       "modelPhotosPanel": {
         "adminIntro": "Photos of people every seller can put their mock-ups on. Use a person facing the camera in a plain white or light garment.",
@@ -1214,6 +1215,7 @@
         "titleNew": "New mock-up template",
         "titleEdit": "Edit {{name}}",
         "description": "Mark where designs go on each photo. Add the back or a sleeve to print there too: each side makes its own mock-up.",
+        "descriptionPrintifyLocked": "The photos and Printify's print area stay as they are while the template is linked to Printify: place the design inside it. Measure a side again, or unlink it, in Printify settings.",
         "nameLabel": "Name",
         "namePlaceholder": "Classic tee",
         "productTypeLabel": "Product type *",
@@ -1234,8 +1236,7 @@
         "createTemplate": "Create template",
         "lockedNote": "Custom mock-up templates are part of Pro.",
         "garmentColorPrintifyNote": "One of the colors measured on Printify. Used unless a batch picks its own colors. None keeps the photo’s color.",
-        "garmentColorNoPrintifyColors": "No Printify colors measured for this blueprint yet. Measure them in Printify settings.",
-        "printifyLockedDescription": "The photos and Printify's print area stay as they are while the template is linked to Printify: place the design inside it. Measure a side again, or unlink it, in Printify settings."
+        "garmentColorNoPrintifyColors": "No Printify colors measured for this blueprint yet. Measure them in Printify settings."
       },
       "sidesEditor": {
         "label": "{{label}} photo",
@@ -1244,6 +1245,7 @@
         "removeSide": "Remove side",
         "frontDropLabel": "Photo of the front",
         "sideDropLabel": "Photo of the {{label}}",
+        "printifyLockedDropDescription": "The sides of a Printify template are Printify's own photos. Add this one from the template's Printify settings.",
         "frontDropDescription": "A real product photo, garment on a plain background. Images up to 10 MB.",
         "sideDropDescription": "Add a photo of the {{label}} to print on it too: every design gets a mock-up of this side.",
         "sideAreasNote": "Print areas for the {{label}} appear once it has a photo.",
@@ -1251,8 +1253,7 @@
         "fileNotImage": "Choose an image file for the photo.",
         "fileTooLarge": "The photo cannot exceed 10 MB.",
         "addSideHint": "{{label}}: add a photo",
-        "ariaLabel": "Sides of the garment",
-        "printifyPhotoLocked": "The sides of a Printify template are Printify's own photos. Add this one from the template's Printify settings."
+        "ariaLabel": "Sides of the garment"
       },
       "generateDialog": {
         "title": "Preview on a mock-up",

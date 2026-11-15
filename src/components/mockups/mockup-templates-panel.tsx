@@ -49,7 +49,7 @@ export const MockupTemplatesPanel = ({ scope, actions, cardActions }: MockupTemp
       title: t("mockups.templatesPage.deleteTitle", { name: template.name }),
       description:
         scope === "admin"
-          ? t("mockups.templatesPage.adminDeleteDescription")
+          ? t("mockups.templatesPage.deleteDescriptionAdmin")
           : t("mockups.templatesPage.deleteDescription"),
       positiveLabel: t("mockups.delete"),
       onPositive: () => deleteTemplate(template.id),

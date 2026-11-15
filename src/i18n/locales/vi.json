@@ -44,6 +44,7 @@
           "revenueReports": "Doanh thu & báo cáo",
           "systemStatistics": "Thống kê hệ thống",
           "imageQuality": "Chất lượng ảnh",
+          "contentSafety": "An toàn nội dung",
           "supportTickets": "Phiếu hỗ trợ",
           "testReports": "Báo cáo kiểm thử",
           "settings": "Cài đặt",
@@ -1062,7 +1063,7 @@
         "noTemplatesDescription": "Tải lên ảnh sản phẩm để bắt đầu chèn thiết kế lên đó.",
         "deleteTitle": "Xóa {{name}}?",
         "deleteDescription": "Thao tác này xóa vĩnh viễn mẫu mock-up. Mẫu hệ thống không thể xóa.",
-        "adminDeleteDescription": "Người bán sẽ không chọn được mẫu này nữa. Các mock-up đã tạo từ mẫu vẫn giữ nguyên."
+        "deleteDescriptionAdmin": "Seller không thể chọn mẫu này nữa. Các mock-up đã tạo trên mẫu vẫn giữ nguyên."
       },
       "modelPhotosPanel": {
         "adminIntro": "Ảnh người mẫu mà mọi seller có thể đặt mock-up lên. Dùng một người nhìn thẳng vào camera, mặc áo trơn màu trắng hoặc nhạt.",
@@ -1204,6 +1205,7 @@
         "titleNew": "Mẫu mock-up mới",
         "titleEdit": "Sửa {{name}}",
         "description": "Đánh dấu vị trí đặt thiết kế trên từng ảnh. Thêm mặt sau hoặc tay áo để in thêm: mỗi mặt tạo một mock-up riêng.",
+        "descriptionPrintifyLocked": "Ảnh và vùng in của Printify giữ nguyên khi mẫu đang liên kết với Printify: hãy đặt thiết kế bên trong vùng đó. Muốn đo lại một mặt hoặc bỏ liên kết, hãy vào phần cài đặt Printify.",
         "nameLabel": "Tên",
         "namePlaceholder": "Áo thun cổ điển",
         "productTypeLabel": "Loại sản phẩm *",
@@ -1224,8 +1226,7 @@
         "createTemplate": "Tạo mẫu",
         "lockedNote": "Mẫu mock-up tùy chỉnh nằm trong gói Pro.",
         "garmentColorPrintifyNote": "Một trong các màu đã đo trên Printify. Dùng trừ khi lô chọn màu riêng. Để trống giữ màu của ảnh.",
-        "garmentColorNoPrintifyColors": "Chưa đo màu Printify nào cho blueprint này. Hãy đo trong phần cài đặt Printify.",
-        "printifyLockedDescription": "Ảnh và vùng in của Printify giữ nguyên khi mẫu đang liên kết với Printify: hãy đặt thiết kế bên trong vùng đó. Muốn đo lại một mặt hoặc bỏ liên kết, hãy vào phần cài đặt Printify."
+        "garmentColorNoPrintifyColors": "Chưa đo màu Printify nào cho blueprint này. Hãy đo trong phần cài đặt Printify."
       },
       "sidesEditor": {
         "label": "Ảnh {{label}}",
@@ -1234,6 +1235,7 @@
         "removeSide": "Xóa mặt này",
         "frontDropLabel": "Ảnh mặt trước",
         "sideDropLabel": "Ảnh mặt {{label}}",
+        "printifyLockedDropDescription": "Các mặt của mẫu Printify là ảnh riêng của Printify. Hãy thêm ảnh này từ phần cài đặt Printify của mẫu.",
         "frontDropDescription": "Ảnh sản phẩm thật, garment trên nền trơn. Ảnh tối đa 10 MB.",
         "sideDropDescription": "Thêm ảnh mặt {{label}} để in lên đó: mỗi thiết kế có thêm một mock-up.",
         "sideAreasNote": "Các vùng in của mặt {{label}} xuất hiện khi mặt này có ảnh.",
@@ -1241,8 +1243,7 @@
         "fileNotImage": "Hãy chọn tệp ảnh cho ảnh này.",
         "fileTooLarge": "Ảnh không được vượt quá 10 MB.",
         "addSideHint": "{{label}}: thêm ảnh",
-        "ariaLabel": "Các mặt của garment",
-        "printifyPhotoLocked": "Các mặt của mẫu Printify là ảnh của chính Printify. Hãy thêm mặt này trong phần cài đặt Printify của mẫu."
+        "ariaLabel": "Các mặt của garment"
       },
       "generateDialog": {
         "title": "Xem trước trên mock-up",

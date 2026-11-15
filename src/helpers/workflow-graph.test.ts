@@ -313,6 +313,36 @@ describe("getConnectionIssue", () => {
     );
   });
 
+  describe("Push to Printify", () => {
+    const withPrintify = () => [...pipelineNodes(), typedNode("printify", "publish-printify", VALID_CONFIGS["publish-printify"])];
+
+    it.each(["mockup", "approval"])("may follow %s", (source) => {
+      expect(getConnectionIssue(connection(source, "printify"), pipelineEdges(), withPrintify())).toBeNull();
+    });
+
+    it.each(["input", "video", "review", "export"])("may not follow %s: it publishes the design and mock-ups, not the video", (source) => {
+      expect(getConnectionIssue(connection(source, "printify"), pipelineEdges(), withPrintify())).toContain("after Apply mock-up or Mockup Approval");
+    });
+
+    it("follows one step only", () => {
+      const edges = [...pipelineEdges(), edge("approval", "printify")];
+
+      expect(getConnectionIssue(connection("mockup", "printify"), edges, withPrintify())).toBe("Push to Printify already follows a step.");
+    });
+
+    it("ends its branch", () => {
+      const nodes = [...withPrintify(), typedNode("etsy", "publish-etsy", VALID_CONFIGS["publish-etsy"])];
+
+      expect(getConnectionIssue(connection("printify", "etsy"), pipelineEdges(), nodes)).toContain("ends its branch");
+    });
+
+    it("is not a step the line has to go through", () => {
+      const nodes = [...withPrintify(), typedNode("etsy", "publish-etsy", VALID_CONFIGS["publish-etsy"])];
+
+      expect(getConnectionIssue(connection("export", "etsy"), pipelineEdges(), nodes)).toBeNull();
+    });
+  });
+
   it("accepts the next pipeline step", () => {
     expect(getConnectionIssue(connection("input", "mockup"), [], pipelineNodes())).toBeNull();
   });
@@ -409,12 +439,26 @@ describe("validateWorkflow", () => {
     expect(validateWorkflow(nodes, pipelineEdges()).map((issue) => issue.id)).toContain("video-product-input");
   });
 
-  it("lets a video go from Review Video straight to Push to Printify without Export ZIP", () => {
+  it.each(["approval", "mockup"])("lets Push to Printify branch off %s while the video goes on", (source) => {
+    const nodes = [...pipelineNodes(), typedNode("printify", "publish-printify", VALID_CONFIGS["publish-printify"])];
+
+    expect(validateWorkflow(nodes, [...pipelineEdges(), edge(source, "printify")])).toEqual([]);
+  });
+
+  // Printify takes the design and its mock-ups, not the video.
+  it.each(["review", "export"])("says Push to Printify cannot follow %s", (source) => {
+    const nodes = [...pipelineNodes(), typedNode("printify", "publish-printify", VALID_CONFIGS["publish-printify"])];
+
+    expect(validateWorkflow(nodes, [...pipelineEdges(), edge(source, "printify")]).map((issue) => issue.id)).toContain("printify-source-printify");
+  });
+
+  it("lets Publish to Etsy follow Review Video without Export ZIP, with Push to Printify off Mockup Approval", () => {
     const nodes = [
       ...pipelineNodes().filter((item) => item.data.type !== "export-zip"),
       typedNode("printify", "publish-printify", VALID_CONFIGS["publish-printify"]),
+      typedNode("etsy", "publish-etsy", VALID_CONFIGS["publish-etsy"]),
     ];
-    const edges = [...pipelineEdges().filter((item) => item.target !== "export"), edge("review", "printify")];
+    const edges = [...pipelineEdges().filter((item) => item.target !== "export"), edge("approval", "printify"), edge("review", "etsy")];
 
     expect(validateWorkflow(nodes, edges)).toEqual([]);
   });
@@ -455,12 +499,8 @@ describe("validateWorkflow", () => {
       expect(validateWorkflow(nodes, [edge("input", "mockup"), edge("mockup", "printify")]).map((issue) => issue.id)).toContain("publish-pipeline");
     });
 
-    it("needs the one product it publishes, chosen at Mockup Approval", () => {
-      expect(validateWorkflow(publishNodes(""), publishEdges())).toContainEqual({
-        id: "publish-product-input",
-        nodeId: "approval",
-        message: "Publishing without a video is for one product. Choose it under Product in Mockup Approval.",
-      });
+    it("needs no product chosen beforehand: each design approved at Mockup Approval is published", () => {
+      expect(validateWorkflow(publishNodes(""), publishEdges())).toEqual([]);
     });
   });
 

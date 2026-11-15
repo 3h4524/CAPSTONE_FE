@@ -10,7 +10,7 @@ import { getRunGroup, listRunGroups, runGroupKeys } from "@/api/run-groups";
 import { videoWorkflowKeys } from "@/api/video-workflow";
 import { RUN_GROUP_PARAM } from "@/constants/run-group";
 import { getErrorMessage } from "@/helpers/error-message";
-import { confirmRunCost, restoreRunAiBudget, takeRunAiBudget } from "@/helpers/run-cost";
+import { confirmRunCost } from "@/helpers/run-cost";
 import { publishConnectionIssue } from "@/helpers/shop-connections";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
@@ -20,8 +20,7 @@ import {
   hasListingSteps,
   hasServerPart,
   hasVideoSteps,
-  publishesWithoutVideo,
-  supportsBatchVideos,
+  runsPerDesign,
 } from "@/helpers/workflow-run";
 import { useCancelRunGroup, useStartRunGroup } from "@/hooks/mutations/use-run-group-actions";
 import { ACTIVE_RUN_GROUP_STATUSES, useRunGroup } from "@/hooks/queries/use-run-group";
@@ -117,17 +116,12 @@ export const findJobVideos = async (queryClient: QueryClient, workflowId: string
   }
 };
 
-// Starts the video part for the one product chosen in Product input (AI scenes). Its composited mock-ups are stored
-// as video sources first, so they are waiting at Mockup Approval when the run gets there.
+// Starts the video part for the one product chosen at Mockup Approval (settings that fit one product only). Its
+// composited mock-ups are stored as video sources first, so they are waiting at Mockup Approval when the run gets there.
 const startSingleVideoRun = async (queryClient: QueryClient, startRun: () => void) => {
   const productId = readString(findNode("product-input")?.data.config.productId);
   if (!productId) {
-    showWorkflowActionToast(
-      "error",
-      hasVideoSteps(useWorkflowStore.getState().nodes)
-        ? "AI scenes make one product's video: choose it under Product for the video in Mockup Approval."
-        : "Publishing without a video is for one product: choose it under Product in Mockup Approval."
-    );
+    showWorkflowActionToast("error", "These video settings make one product's video: choose it under Product for the video in Mockup Approval.");
     return;
   }
   await importMockups(queryClient, [productId]);
@@ -242,13 +236,14 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   const startVideoGroup = useRef<(jobId: string | null) => Promise<void>>(async () => {});
   useEffect(() => {
     startVideoGroup.current = async (jobId: string | null) => {
-      const { workflowId, revision } = useWorkflowStore.getState();
+      const { workflowId, revision, nodes } = useWorkflowStore.getState();
       if (!workflowId) return;
+      const withVideo = hasVideoSteps(nodes);
       setIsLaunchingVideo(true);
-      const aiBudgetUsd = takeRunAiBudget(workflowId);
       try {
         await importMockups(queryClient, await videoProducts(queryClient, jobId));
-        const started = await startGroup({ workflowId, revision, key: uuid(), batchJobId: jobId, aiBudgetUsd });
+        // The cost was shown on Run: the model photos and AI clips are made from here without asking again.
+        const started = await startGroup({ workflowId, revision, key: uuid(), batchJobId: jobId });
         useWorkflowStore.getState().setVideoRunId(null);
         const query = new URLSearchParams(window.location.search);
         query.set(RUN_GROUP_PARAM, started.id);
@@ -256,27 +251,27 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
         query.delete(VIDEO_RUN_PARAM);
         router.replace(`/workflows?${query.toString()}`, { scroll: false });
         if (started.preparing) {
-          showWorkflowActionToast("info", "Getting the videos ready. They start by themselves.");
+          showWorkflowActionToast("info", withVideo ? "Getting the videos ready. They start by themselves." : "Approving the mock-ups. The run goes on by itself.");
         } else if (started.status === "waiting_for_targets") {
           const gate = findNode("approval-gate");
           if (gate) selectNode(gate.id);
           showWorkflowActionToast(
             started.notice ? "warning" : "info",
             started.notice
-              ? `The videos did not start by themselves. ${started.notice}`
-              : "Approve the mock-ups of each design that should get a video, then choose Continue."
+              ? `The run did not go on by itself. ${started.notice}`
+              : withVideo
+                ? "Approve the mock-ups of each design that should get a video, then choose Continue."
+                : "Approve the mock-ups of each design to continue with, then choose Continue."
           );
         } else {
-          // Mockup Approval is on Approve automatically: the mock-ups are approved and the videos are on their way.
+          // Mockup Approval is on Approve automatically: the mock-ups are approved and the run is on its way.
           showWorkflowActionToast(
             started.notice ? "warning" : "success",
-            started.notice ?? "Mock-ups approved automatically. The videos are starting."
+            started.notice ?? (withVideo ? "Mock-ups approved automatically. The videos are starting." : "Mock-ups approved automatically. The run goes on.")
           );
         }
       } catch (error) {
-        // Nothing was started, so the confirmed AI budget stays for the next attempt.
-        restoreRunAiBudget(workflowId, aiBudgetUsd);
-        showWorkflowActionToast("error", `The videos could not be started. ${getErrorMessage(error)}`);
+        showWorkflowActionToast("error", `${withVideo ? "The videos" : "The run"} could not be started. ${getErrorMessage(error)}`);
       } finally {
         setIsLaunchingVideo(false);
       }
@@ -289,22 +284,21 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     if (!videoIsNext || mockupState !== "done" || !batchJobId || video.runId) return;
     if (videoStartedFor.current === batchJobId) return;
     videoStartedFor.current = batchJobId;
-    if (supportsBatchVideos(useWorkflowStore.getState().nodes)) {
+    if (runsPerDesign(useWorkflowStore.getState().nodes)) {
       void startVideoGroup.current(batchJobId);
       return;
     }
-    // AI scenes: the video is made for the product chosen in Product input. When this job made nothing for it,
-    // the video would show none of the mock-ups just made, so it waits for the person to choose one of the job's products.
+    // Video settings for one product: the video is made for the product chosen at Mockup Approval. When this job made
+    // nothing for it, the video would show none of the mock-ups just made, so it waits for one of the job's products.
     const videoProductId = readString(findNode("product-input")?.data.config.productId);
     const jobProducts = useWorkflowRunStore.getState().job?.products ?? [];
     if (videoProductId && jobProducts.length > 0 && !jobProducts.some((product) => product.productId === videoProductId)) {
       const query = new URLSearchParams(window.location.search);
       query.delete(NEXT_PART_PARAM);
       router.replace(`/workflows?${query.toString()}`, { scroll: false });
-      const input = findNode("product-input");
-      if (input) selectNode(input.id);
-      const part = hasVideoSteps(useWorkflowStore.getState().nodes) ? "video" : "publishing";
-      showWorkflowActionToast("warning", `The ${part} was not started: its product is not in this run. Choose ${jobProducts.length === 1 ? jobProducts[0].productName : "one of this run's products"} for the ${part} in Product input, save, then Run again.`);
+      const gate = findNode("approval-gate") ?? findNode("product-input");
+      if (gate) selectNode(gate.id);
+      showWorkflowActionToast("warning", `The video was not started: its product is not in this run. Choose ${jobProducts.length === 1 ? jobProducts[0].productName : "one of this run's products"} under Product for the video in Mockup Approval, save, then Run again.`);
       return;
     }
     announceWaiting.current = true;
@@ -328,11 +322,10 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
 
   const start = async () => {
     const { nodes, isDirty } = useWorkflowStore.getState();
-    const wantsVideo = hasVideoSteps(nodes);
-    // Without a video, publishing is the server's part: one product's run that waits at Mockup Approval.
-    const publishOnly = publishesWithoutVideo(nodes);
-    const wantsServerPart = wantsVideo || publishOnly;
-    const batchVideos = wantsVideo && supportsBatchVideos(nodes);
+    // After Mockup Approval the server goes on for each design approved there (a video, publishing, listing content),
+    // or, with video settings that fit one product only, for the product chosen there.
+    const wantsServerPart = hasServerPart(nodes);
+    const batchVideos = runsPerDesign(nodes);
     // Publishing comes last, after every paid step and both approvals: a shop that is not connected stops the
     // run here instead of there. The backend checks the same when the run starts.
     const unpublishable = nodes.find((node) => publishConnectionIssue(node.data.type, connections));
@@ -365,12 +358,7 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       }
       const input = findNode("product-input");
       if (!batchVideos && input && !readString(input.data.config.productId)) {
-        showWorkflowActionToast(
-          "error",
-          publishOnly
-            ? "Publishing without a video is for one product: choose it under Product in Mockup Approval."
-            : "These video settings make one product's video: choose it under Product for the video in Mockup Approval."
-        );
+        showWorkflowActionToast("error", "These video settings make one product's video: choose it under Product for the video in Mockup Approval.");
         selectNode(findNode("approval-gate")?.id ?? input.id);
         return;
       }

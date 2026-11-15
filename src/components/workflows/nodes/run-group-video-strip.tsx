@@ -5,7 +5,7 @@ import Image from "next/image";
 import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { NodeControl } from "@/components/workflows/nodes/node-control";
-import { STOPPED, useGroupVideos, WITH_VIDEO } from "@/hooks/queries/use-group-videos";
+import { STOPPED, useGroupVideos, videoStatusOf, WITH_VIDEO } from "@/hooks/queries/use-group-videos";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import type { PromoVideo, RunGroupTarget } from "@/types/video-workflow";
 import { cn } from "@/utils/cn";
@@ -48,8 +48,8 @@ export const RunGroupVideoStrip = ({ fallback }: { fallback: ReactNode }) => {
 
   if (targets.length === 0) return <>{fallback}</>;
 
-  const done = targets.filter((target) => target.runStatus === "completed").length;
-  const toReview = targets.filter((target) => target.runStatus === "waiting_for_review").length;
+  const done = targets.filter((target) => videoStatusOf(target) === "completed").length;
+  const toReview = targets.filter((target) => videoStatusOf(target) === "waiting_for_review").length;
 
   return (
     <NodeControl className="space-y-1.5">
@@ -120,7 +120,7 @@ const PageArrow = ({ direction, disabled, onClick }: { direction: "previous" | "
 );
 
 const VideoTile = ({ target, video, active, onOpen }: { target: RunGroupTarget; video?: PromoVideo; active: boolean; onOpen: () => void }) => {
-  const status = target.runStatus ?? "";
+  const status = videoStatusOf(target);
   const aspect = ASPECT[target.config?.outputFormat ?? video?.outputFormat ?? "portrait"] ?? ASPECT.portrait;
   const stopped = STOPPED.has(status);
   const made = WITH_VIDEO.has(status);

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { showWorkflowActionToast } from "@/helpers/toast";
@@ -30,9 +30,17 @@ export const useWorkflowRuntime = () => {
   const { mutate: action, isPending: isActing } = useWorkflowRunAction();
   const workflowId = useWorkflowStore(state => state.workflowId);
   const setVideoRunId = useWorkflowStore(state => state.setVideoRunId);
+  // The URL decides when it changes: a run entering it is followed, and one leaving it is closed. Only a change counts,
+  // since a run closed here leaves the store before it leaves the URL, and would otherwise be put back meanwhile.
+  const previousUrlRunId = useRef<string | null>(null);
   useEffect(() => {
-    if (urlRunId && urlRunId !== storedRunId) setVideoRunId(urlRunId);
-  }, [urlRunId, storedRunId, setVideoRunId]);
+    const previous = previousUrlRunId.current;
+    previousUrlRunId.current = urlRunId;
+    if (urlRunId === previous) return;
+    const stored = useWorkflowStore.getState().videoRunId;
+    if (urlRunId && urlRunId !== stored) setVideoRunId(urlRunId);
+    else if (!urlRunId && previous && stored === previous) setVideoRunId(null);
+  }, [urlRunId, setVideoRunId]);
   const startRun = () => {
     const state = useWorkflowStore.getState();
     if (!state.workflowId) return;

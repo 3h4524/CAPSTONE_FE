@@ -394,7 +394,7 @@ export const MockupTemplateFormDialog = ({
         <DialogHeader className="border-b px-5 py-3.5 pr-12 text-left">
           <DialogTitle>{creating ? t("mockups.templateForm.titleNew") : t("mockups.templateForm.titleEdit", { name: template.name })}</DialogTitle>
           <DialogDescription>
-            {printifyLocked ? t("mockups.templateForm.printifyLockedDescription") : t("mockups.templateForm.description")}
+            {printifyLocked ? t("mockups.templateForm.descriptionPrintifyLocked") : t("mockups.templateForm.description")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">

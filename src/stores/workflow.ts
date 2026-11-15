@@ -493,7 +493,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
 
   resetStatuses: () =>
     set((state) => ({
-      nodes: state.nodes.map((node) => ({ ...node, data: { ...node.data, status: "idle" } })),
+      nodes: state.nodes.map((node) => ({ ...node, data: { ...node.data, status: "idle", stage: null, progress: 0 } })),
     })),
 
   resetProductDependentState: () =>

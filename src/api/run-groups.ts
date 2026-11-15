@@ -1,5 +1,5 @@
 import { api } from "@/api/client";
-import type { AiShotQuote, GenerateVideoConfig, RunCostEstimate, RunGroup, RunGroupSummary, SceneMockupOverride } from "@/types/video-workflow";
+import type { GenerateVideoConfig, RunCostEstimate, RunGroup, RunGroupSummary, SceneMockupOverride } from "@/types/video-workflow";
 
 /** Batch video runs: one video per design confirmed at Mockup Approval. */
 export const runGroupKeys = {
@@ -12,21 +12,17 @@ export const startRunGroup = async ({
   revision,
   key,
   batchJobId,
-  aiBudgetUsd,
 }: {
   workflowId: string;
   revision: number;
   key: string;
   batchJobId?: string | null;
-  /** The AI video cost confirmed on Run: an automatic Mockup Approval starts the videos within it. */
-  aiBudgetUsd?: number | null;
 }) =>
   (
     await api.post<RunGroup>(`/api/workflows/${workflowId}/run-groups`, {
       expectedWorkflowRevision: revision,
       idempotencyKey: key,
       batchJobId: batchJobId ?? null,
-      aiBudgetUsd: aiBudgetUsd ?? null,
     })
   ).data;
 
@@ -84,10 +80,6 @@ export const updateRunGroupDesignConfig = async ({
     })
   ).data;
 
-/** What the AI clips of every design cost together, confirmed once before the videos start. */
-export const quoteRunGroupAi = async ({ groupId, expectedRevision }: { groupId: string; expectedRevision: number }) =>
-  (await api.post<AiShotQuote>(`/api/run-groups/${groupId}/ai-quote`, { expectedRevision })).data;
-
 export const confirmRunGroup = async ({
   groupId,
   expectedRevision,
@@ -110,3 +102,7 @@ export const downloadRunGroupExport = async (groupId: string) =>
 
 export const cancelRunGroup = async ({ groupId, expectedRevision }: { groupId: string; expectedRevision: number }) =>
   (await api.post<RunGroup>(`/api/run-groups/${groupId}/cancel`, { expectedRevision })).data;
+
+/** Goes on with a stopped run from where each design stopped, keeping what was already made. */
+export const resumeRunGroup = async ({ groupId, expectedRevision }: { groupId: string; expectedRevision: number }) =>
+  (await api.post<RunGroup>(`/api/run-groups/${groupId}/resume`, { expectedRevision })).data;

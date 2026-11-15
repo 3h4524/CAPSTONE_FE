@@ -375,10 +375,10 @@ export const MockupViewPhotoEditor = ({
               />
               <p className="text-muted-foreground text-xs">
                 {photoLocked
-                  ? t("mockups.sidesEditor.printifyPhotoLocked")
+                  ? t("mockups.sidesEditor.printifyLockedDropDescription")
                   : draft.view === "front"
-                  ? t("mockups.sidesEditor.frontDropDescription")
-                  : t("mockups.sidesEditor.sideDropDescription", { label: label.toLowerCase() })}
+                    ? t("mockups.sidesEditor.frontDropDescription")
+                    : t("mockups.sidesEditor.sideDropDescription", { label: label.toLowerCase() })}
               </p>
             </div>
           )}

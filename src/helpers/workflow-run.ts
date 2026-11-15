@@ -52,21 +52,32 @@ export const hasBatchSteps = (nodes: WorkflowNode[]) =>
 /** The workflow makes a video, so a run includes the server's video run. */
 export const hasVideoSteps = (nodes: WorkflowNode[]) => nodes.some((node) => node.data.type === "generate-video");
 
+const hasMockupApproval = (nodes: WorkflowNode[]) => nodes.some((node) => node.data.type === "approval-gate");
+
 /**
- * The workflow publishes (Push to Printify, Publish to Etsy) without making a video: the server's run waits at
- * Mockup Approval for one product, then goes straight to the publish steps. The server checks the same.
+ * The workflow publishes (Push to Printify, Publish to Etsy) without making a video: Mockup Approval leads straight
+ * to the publish steps. The server checks the same.
  */
 export const publishesWithoutVideo = (nodes: WorkflowNode[]) =>
   !hasVideoSteps(nodes) && nodes.some((node) => PUBLISH_NODE_TYPES.includes(node.data.type));
 
-/** The workflow has a part the server runs for one product after Mockup Approval: a video, or publishing. */
-export const hasServerPart = (nodes: WorkflowNode[]) => hasVideoSteps(nodes) || publishesWithoutVideo(nodes);
+/**
+ * Without a video, what follows Mockup Approval (publishing, listing content) runs on the server for each design
+ * approved there, as a batch run does for videos.
+ */
+export const continuesWithoutVideo = (nodes: WorkflowNode[]) =>
+  !hasVideoSteps(nodes) && hasMockupApproval(nodes) && (publishesWithoutVideo(nodes) || hasListingSteps(nodes));
+
+/** The workflow has a part the server runs after Mockup Approval: a video, publishing or listing content. */
+export const hasServerPart = (nodes: WorkflowNode[]) => hasVideoSteps(nodes) || continuesWithoutVideo(nodes);
 
 /**
- * Product input offers its product only to a workflow that writes listing content without a video. A video
- * workflow picks its product at Mockup Approval ("Product for the video"), which stores the same value.
+ * Product input offers its product only to a workflow that writes listing content with no Mockup Approval to choose
+ * the designs at. Any other workflow runs for the designs approved there; a video whose settings fit one product
+ * only picks it at Mockup Approval ("Product for the video"), which stores the same value.
  */
-export const showsInputProduct = (nodes: WorkflowNode[]) => hasListingSteps(nodes) && !hasVideoSteps(nodes);
+export const showsInputProduct = (nodes: WorkflowNode[]) =>
+  hasListingSteps(nodes) && !hasVideoSteps(nodes) && !hasMockupApproval(nodes);
 
 const findByType = (nodes: WorkflowNode[], type: WorkflowNodeType) => nodes.filter((node) => node.data.type === type);
 
@@ -86,6 +97,13 @@ export const supportsBatchVideos = (nodes: WorkflowNode[]) => {
     ? scenes.length > 0
     : scenes.every((scene) => scene?.mode === "standard");
 };
+
+/**
+ * Whether a run goes on for each design approved at Mockup Approval (a batch run): with a video whose settings fit
+ * every design, or without a video. Only a video whose settings fit one product runs for the product chosen there.
+ */
+export const runsPerDesign = (nodes: WorkflowNode[]) =>
+  hasVideoSteps(nodes) ? supportsBatchVideos(nodes) : continuesWithoutVideo(nodes);
 
 const reachableFrom = (startId: string, edges: WorkflowEdge[]) => {
   const visited = new Set<string>();

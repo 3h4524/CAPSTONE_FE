@@ -60,6 +60,7 @@ import {
   ScalePercentageInput,
   STANDARD_MOTION_OPTIONS,
 } from "@/components/workflows/config-panel/fields/standard-motion-editor";
+import { sceneStartImage } from "@/helpers/main-mockup";
 import { loadMusicPreview } from "@/helpers/music-preview";
 import type {
   AiSceneVideo,
@@ -77,7 +78,11 @@ import { Player } from "@remotion/player";
 import { useQuery } from "@tanstack/react-query";
 
 const FPS = 30;
-const CANVAS_ZOOM_MIN = 0.6;
+// Low enough to fit the selection frame of an image scaled well past the canvas, so its handles stay reachable.
+const CANVAS_ZOOM_MIN = 0.3;
+// The rotate handle hangs 1.5rem below the selection frame and is 1.75rem across (see SceneTransformOverlay).
+const ROTATE_HANDLE_REACH = 38;
+const CORNER_HANDLE_REACH = 8;
 const CANVAS_ZOOM_MAX = 1.6;
 const CANVAS_ZOOM_STEP = 0.1;
 const FULL_REGION: Region = { x: 0, y: 0, width: 1, height: 1 };
@@ -111,10 +116,6 @@ const sceneSourceFrames = (scene: AiVideoSceneOptions) =>
         : scene.durationSeconds * FPS
     )
   );
-const sceneSourceAssetId = (scene: AiVideoSceneOptions) =>
-  scene.startFrameMode === "studio" && scene.studioFrameId
-    ? scene.studioFrameId
-    : scene.mockupId;
 const sceneTrim = (scene: AiVideoSceneOptions) => {
   const sourceFrames = sceneSourceFrames(scene);
   const minimumFrames = Math.min(FPS, sourceFrames);
@@ -298,6 +299,51 @@ function getStandardFrame(
     contain: containMotion,
   };
 }
+/**
+ * How far the selection frame of a Standard scene reaches from the canvas center, in unzoomed canvas pixels, at the
+ * start and end of the scene: the image box drawn by SceneTransformOverlay, its corner handles and the rotate handle
+ * below it. An image cropped to cover the canvas, or scaled up, reaches well past the canvas edges.
+ */
+function sceneFrameReach(
+  scene: TimelineScene,
+  image: MockupAsset,
+  index: number,
+  config: GenerateVideoConfig,
+  canvasWidth: number,
+  canvasHeight: number
+) {
+  const [ratioWidth, ratioHeight] = aspectForFormat(config.outputFormat);
+  let reachX = 0;
+  let reachY = 0;
+  for (const progress of [0, 1]) {
+    const frame = getStandardFrame(scene, image, index, progress, config, ratioWidth / ratioHeight);
+    const width = frame.contain ? canvasWidth : canvasWidth / frame.crop.width;
+    const height = frame.contain ? canvasHeight : canvasHeight / frame.crop.height;
+    const centerX = frame.contain
+      ? 0
+      : canvasWidth * ((0.5 - frame.crop.x) / frame.crop.width - 0.5);
+    const centerY = frame.contain
+      ? 0
+      : canvasHeight * ((0.5 - frame.crop.y) / frame.crop.height - 0.5);
+    const radians = (frame.rotation * Math.PI) / 180;
+    const cos = Math.cos(radians);
+    const sin = Math.sin(radians);
+    const halfWidth = (frame.scale * width) / 2 + CORNER_HANDLE_REACH;
+    const halfHeight = (frame.scale * height) / 2 + CORNER_HANDLE_REACH;
+    const handleDistance = (frame.scale * height) / 2 + frame.scale * ROTATE_HANDLE_REACH;
+    reachX = Math.max(
+      reachX,
+      Math.abs(centerX) + Math.abs(halfWidth * cos) + Math.abs(halfHeight * sin),
+      Math.abs(centerX - sin * handleDistance)
+    );
+    reachY = Math.max(
+      reachY,
+      Math.abs(centerY) + Math.abs(halfWidth * sin) + Math.abs(halfHeight * cos),
+      Math.abs(centerY + cos * handleDistance)
+    );
+  }
+  return { x: reachX, y: reachY };
+}
 type Selection =
   | { kind: "overlay"; id: string }
   | { kind: "music" }
@@ -414,7 +460,7 @@ function PreviewSceneMedia({
   aspectRatio: number;
   transitionStyle?: PreviewTransitionStyle;
 }) {
-  const image = assets.find((asset) => asset.id === sceneSourceAssetId(scene)) ?? assets[0];
+  const image = sceneStartImage(scene, assets);
   const generatedClip =
     scene.mode !== "standard"
       ? sceneVideos.find(
@@ -1026,6 +1072,7 @@ export function VideoTimelineEditor({
   const [musicLoadAttempt, setMusicLoadAttempt] = useState(0);
   const player = useRef<ComponentRef<typeof Player>>(null);
   const previewCanvasRef = useRef<HTMLElement>(null);
+  const canvasStageRef = useRef<HTMLDivElement>(null);
   const { data: tracks = [] } = useQuery({
     queryKey: videoWorkflowKeys.music(),
     queryFn: listMusicTracks,
@@ -1056,10 +1103,34 @@ export function VideoTimelineEditor({
         })()
       : undefined;
   const previewImage = selectedScene
-    ? assets.find((asset) => asset.id === sceneSourceAssetId(selectedScene.scene))
+    ? sceneStartImage(selectedScene.scene, assets)
     : previewScene
-      ? assets.find((asset) => asset.id === sceneSourceAssetId(previewScene.scene))
+      ? sceneStartImage(previewScene.scene, assets)
       : undefined;
+  // The preview section clips what overflows it, and the selection frame of a Standard scene is the whole image box,
+  // which reaches past the canvas when the image covers it or is scaled up. Selecting such a scene zooms the canvas
+  // out (never in) until the frame, its corners and its rotate handle are all on screen.
+  const select = useCallback(
+    (value: Selection) => {
+      setSelection(value);
+      if (value?.kind !== "scene") return;
+      const scene = scenes[value.sceneIndex];
+      const section = previewCanvasRef.current;
+      const stage = canvasStageRef.current;
+      if (scene?.mode !== "standard" || !section || !stage) return;
+      const image = sceneStartImage(scene, assets);
+      if (!image || stage.offsetWidth === 0 || stage.offsetHeight === 0) return;
+      const reach = sceneFrameReach(scene, image, value.sceneIndex, active, stage.offsetWidth, stage.offsetHeight);
+      const fit = Math.min(
+        (section.clientWidth / 2 - 8) / Math.max(1, reach.x),
+        (section.clientHeight / 2 - 8) / Math.max(1, reach.y)
+      );
+      setCanvasZoom((current) =>
+        fit >= current ? current : Math.max(CANVAS_ZOOM_MIN, Math.floor(fit * 100) / 100)
+      );
+    },
+    [active, assets, scenes]
+  );
   const musicTrackId = edit.music?.trackId;
   const musicMuted = edit.music?.muted ?? false;
   const track = useMemo(
@@ -1085,7 +1156,7 @@ export function VideoTimelineEditor({
       musicDurationInFrames,
       durationInFrames: frameTotal,
       selectedId: overlay?.id ?? null,
-      onSelect: setSelection,
+      onSelect: select,
       config: active,
     }),
     [
@@ -1098,6 +1169,7 @@ export function VideoTimelineEditor({
       overlay?.id,
       scenes,
       sceneVideos,
+      select,
     ]
   );
   const commit = useCallback((recipe: (current: GenerateVideoConfig) => GenerateVideoConfig) =>
@@ -1670,6 +1742,7 @@ export function VideoTimelineEditor({
                         }}
                       />
                       <div
+                        ref={canvasStageRef}
                         className="relative z-10 max-h-full min-h-56 overflow-visible rounded-xl border-0 bg-transparent shadow-none ring-0 outline-none"
                         style={{
                           height: "min(72vh, 100%)",
@@ -1844,7 +1917,7 @@ export function VideoTimelineEditor({
                     playhead={playhead}
                     selection={selection}
                     onSeek={seekTo}
-                    onSelect={setSelection}
+                    onSelect={select}
                     onBeginSceneTrim={beginTimelineSceneTrim}
                     onChangeSceneTrim={changeTimelineSceneTrim}
                     onChangeTransition={assignTransition}
@@ -3067,7 +3140,7 @@ function Timeline({
             <div className="absolute inset-y-1.5 right-1.5 left-1.5 flex">
               {scenes.map((scene, index) => {
                 const duration = Math.max(1, sceneFrames(scene));
-                const asset = assets.find((item) => item.id === sceneSourceAssetId(scene));
+                const asset = sceneStartImage(scene, assets);
                 const generatedClip =
                   scene.mode !== "standard"
                     ? sceneVideos.find(

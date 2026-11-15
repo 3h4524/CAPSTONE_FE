@@ -1,46 +1,13 @@
 import { estimateWorkflowRun } from "@/api/run-groups";
 import { askCostConfirm } from "@/stores/cost-confirm";
 
-// The AI video cost confirmed on Run, kept for this tab until the videos start: the designs and mock-ups are made
-// first, possibly across a reload, and only then does the batch video run start and read it.
-const budgetKey = (workflowId: string) => `apcs:run-ai-budget:${workflowId}`;
-
-const remember = (workflowId: string, amount: number | null) => {
-  try {
-    if (amount && amount > 0) sessionStorage.setItem(budgetKey(workflowId), String(amount));
-    else sessionStorage.removeItem(budgetKey(workflowId));
-  } catch {
-    // Storage blocked: the AI cost is then confirmed at Mockup Approval instead.
-  }
-};
-
-/**
- * Puts back a budget taken for a batch video run that could not start, so the next attempt (after the workflow is
- * fixed, or the page reloaded) still makes the model photos and starts the AI clips the seller confirmed.
- */
-export const restoreRunAiBudget = (workflowId: string, amount: number | undefined) => {
-  if (amount && amount > 0) remember(workflowId, amount);
-};
-
-/** Takes the AI budget confirmed on Run, once: the batch video run it is handed to is the only one that uses it. */
-export const takeRunAiBudget = (workflowId: string): number | undefined => {
-  try {
-    const stored = sessionStorage.getItem(budgetKey(workflowId));
-    sessionStorage.removeItem(budgetKey(workflowId));
-    const amount = stored === null ? Number.NaN : Number(stored);
-    return Number.isFinite(amount) && amount > 0 ? amount : undefined;
-  } catch {
-    return undefined;
-  }
-};
-
 /**
  * Shows what a Run of the saved workflow is expected to cost, item by item, and resolves true when the seller goes
- * ahead. A Run that bills nothing starts without asking. When the estimate cannot be read the Run goes ahead: paid AI
- * clips are then still confirmed at Mockup Approval, with their exact cost.
+ * ahead. Only what the Run still has to make is listed (no design for a product that has one, no model photo for a
+ * design that has one). This is the only confirmation: the run then goes to the end by itself, model photos and AI
+ * clips included. A Run that bills nothing, or whose estimate cannot be read, starts without asking.
  */
 export async function confirmRunCost(workflowId: string): Promise<boolean> {
-  remember(workflowId, null);
   let estimate;
   try {
     estimate = await estimateWorkflowRun(workflowId);
@@ -49,17 +16,12 @@ export async function confirmRunCost(workflowId: string): Promise<boolean> {
   }
   if (estimate.totalUsd <= 0) return true;
 
-  const confirmed = await askCostConfirm({
+  return askCostConfirm({
     title: "Confirm the cost of this run",
-    description:
-      estimate.aiVideoBudgetUsd > 0
-        ? "With Mockup Approval on Approve automatically, the videos start without asking again as long as their exact cost stays within this estimate."
-        : undefined,
+    description: "The run goes to the end by itself: nothing asks to confirm a cost again.",
     lines: estimate.items.map((item) => ({ label: item.label, detail: item.detail, amountUsd: item.estimatedCostUsd })),
     totalUsd: estimate.totalUsd,
     note: estimate.note,
     confirmLabel: "Run",
   });
-  if (confirmed) remember(workflowId, estimate.aiVideoBudgetUsd);
-  return confirmed;
 }

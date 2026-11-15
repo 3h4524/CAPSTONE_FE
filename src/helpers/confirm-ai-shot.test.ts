@@ -1,22 +1,31 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { confirmAiShot, confirmRunGroupAiShot, makesAiClips } from "@/helpers/confirm-ai-shot";
+import { confirmAiShot, makesAiClips } from "@/helpers/confirm-ai-shot";
 import type { CostConfirmRequest } from "@/stores/cost-confirm";
-import type { GenerateVideoConfig } from "@/types/video-workflow";
+import type { AiShotQuote, GenerateVideoConfig } from "@/types/video-workflow";
 
-const { quoteAiShotMock, quoteRunGroupAiMock, askMock } = vi.hoisted(() => ({
+const { quoteAiShotMock, askMock } = vi.hoisted(() => ({
   quoteAiShotMock: vi.fn(),
-  quoteRunGroupAiMock: vi.fn(),
   askMock: vi.fn(),
 }));
 vi.mock("@/api/video-workflow", () => ({ quoteAiShot: quoteAiShotMock }));
-vi.mock("@/api/run-groups", () => ({ quoteRunGroupAi: quoteRunGroupAiMock }));
 vi.mock("@/stores/cost-confirm", () => ({ askCostConfirm: askMock }));
 
 const aiConfig = {
   mode: "ai_shot",
   aiScenes: [{ mode: "ai" }],
 } as GenerateVideoConfig;
+
+const quote = (overrides: Partial<AiShotQuote> = {}): AiShotQuote => ({
+  token: "quote-token",
+  estimatedCostUsd: 0.48,
+  newClips: 1,
+  expiresAtUtc: "2026-10-28T00:00:00Z",
+  model: "MiniMax-H3",
+  note: "Estimate only. The system MiniMax account is billed for successful generations.",
+  changesWhatIsMade: true,
+  ...overrides,
+});
 
 const asked = () => askMock.mock.calls.at(-1)![0] as CostConfirmRequest;
 
@@ -25,53 +34,39 @@ describe("confirmAiShot", () => {
     askMock.mockReset().mockResolvedValue(true);
   });
 
-  it("shows the MiniMax model, provider estimate, and quote note before paid generation", async () => {
-    quoteAiShotMock.mockResolvedValue({
-      token: "quote-token",
-      estimatedCostUsd: 0.48,
-      newClips: 1,
-      expiresAtUtc: "2026-10-28T00:00:00Z",
-      model: "MiniMax-H3",
-      note: "Estimate only. The system MiniMax account is billed for successful generations.",
-    });
+  it("shows the cost of only the clips a change makes, with the model and the quote note", async () => {
+    quoteAiShotMock.mockResolvedValue(quote());
 
     await expect(confirmAiShot("run-1", aiConfig)).resolves.toBe("quote-token");
     expect(asked().description).toContain("Premium (MiniMax-H3)");
+    expect(asked().description).toContain("Only the clips your change needs are made");
     expect(asked().totalUsd).toBe(0.48);
     expect(asked().note).toContain("system MiniMax account");
   });
 
-  it("explains that reusable clips do not need a new paid generation", async () => {
-    quoteAiShotMock.mockResolvedValue({
-      token: "reuse-token",
-      estimatedCostUsd: 0,
-      newClips: 0,
-      expiresAtUtc: "2026-10-28T00:00:00Z",
-      model: "MiniMax-H3",
-      note: "Estimate only.",
-    });
+  it("goes on without asking when the run's own settings are retried or resumed: their cost was shown on Run", async () => {
+    quoteAiShotMock.mockResolvedValue(quote({ token: "same-settings", changesWhatIsMade: false }));
 
-    await expect(confirmAiShot("run-1", aiConfig)).resolves.toBe("reuse-token");
-    expect(asked().description).toContain("No new paid video generation");
-    expect(asked().lines).toEqual([]);
+    await expect(confirmAiShot("run-1", aiConfig)).resolves.toBe("same-settings");
+    expect(askMock).not.toHaveBeenCalled();
   });
 
-  it("returns null when the seller declines the concrete quote", async () => {
+  it("goes on without asking when every clip is already made", async () => {
+    quoteAiShotMock.mockResolvedValue(quote({ token: "reuse-token", estimatedCostUsd: 0, newClips: 0 }));
+
+    await expect(confirmAiShot("run-1", aiConfig)).resolves.toBe("reuse-token");
+    expect(askMock).not.toHaveBeenCalled();
+  });
+
+  it("returns null when the seller declines the cost of a change", async () => {
     askMock.mockResolvedValue(false);
-    quoteAiShotMock.mockResolvedValue({
-      token: "quote-token",
-      estimatedCostUsd: 0.64,
-      newClips: 1,
-      expiresAtUtc: "2026-10-28T00:00:00Z",
-      model: "MiniMax-H3",
-      note: "Estimate only.",
-    });
+    quoteAiShotMock.mockResolvedValue(quote({ estimatedCostUsd: 0.64 }));
 
     await expect(confirmAiShot("run-1", aiConfig)).resolves.toBeNull();
   });
 
-  it("binds a prompt-preview fingerprint to the paid quote", async () => {
-    quoteAiShotMock.mockResolvedValue({ token: "quote-token", estimatedCostUsd: 0, newClips: 0, expiresAtUtc: "", model: "MiniMax-H3", note: "" });
+  it("binds a prompt-preview fingerprint to the quote", async () => {
+    quoteAiShotMock.mockResolvedValue(quote({ estimatedCostUsd: 0, newClips: 0 }));
 
     await confirmAiShot("run-1", aiConfig, false, undefined, "preview-fingerprint");
 
@@ -81,45 +76,6 @@ describe("confirmAiShot", () => {
   it("asks nothing for settings without AI clips", async () => {
     await expect(confirmAiShot("run-1", { mode: "standard" } as GenerateVideoConfig)).resolves.toBe("");
     expect(askMock).not.toHaveBeenCalled();
-  });
-});
-
-describe("confirmRunGroupAiShot", () => {
-  beforeEach(() => {
-    askMock.mockReset().mockResolvedValue(true);
-  });
-
-  it("asks once for what every design's clips cost, one line per design", async () => {
-    quoteRunGroupAiMock.mockResolvedValue({
-      token: "group-token",
-      estimatedCostUsd: 1.92,
-      newClips: 4,
-      expiresAtUtc: "2026-11-10T00:00:00Z",
-      model: "MiniMax-H3-Lite",
-      note: "Estimate only for 2 videos.",
-      items: [
-        { label: "Tee · Design 1", clips: 2, seconds: 12, estimatedCostUsd: 0.96 },
-        { label: "Tee · Design 2", clips: 2, seconds: 12, estimatedCostUsd: 0.96 },
-      ],
-    });
-
-    await expect(confirmRunGroupAiShot("group-1", 3)).resolves.toBe("group-token");
-    expect(quoteRunGroupAiMock).toHaveBeenCalledWith({ groupId: "group-1", expectedRevision: 3 });
-    expect(askMock).toHaveBeenCalledTimes(1);
-    expect(asked().title).toContain("4 AI clips");
-    expect(asked().lines).toEqual([
-      { label: "Tee · Design 1", detail: "2 AI clips · 12 s", amountUsd: 0.96 },
-      { label: "Tee · Design 2", detail: "2 AI clips · 12 s", amountUsd: 0.96 },
-    ]);
-    expect(asked().totalUsd).toBe(1.92);
-    expect(asked().note).toContain("Estimate only for 2 videos");
-  });
-
-  it("returns null when the seller declines, so nothing starts", async () => {
-    askMock.mockResolvedValue(false);
-    quoteRunGroupAiMock.mockResolvedValue({ token: "group-token", estimatedCostUsd: 1, newClips: 2, expiresAtUtc: "", model: "MiniMax-H3", note: "" });
-
-    await expect(confirmRunGroupAiShot("group-1", 3)).resolves.toBeNull();
   });
 });
 

@@ -366,8 +366,8 @@ export function PrintifyPublishSettings({ node, disabled }: { node: WorkflowNode
             onChange={(next) => patch({ publishToEtsy: next })} />
           {publishToEtsy && (
             <>
-              <Toggle id={`${node.id}-media`} label="Add mock-ups and video" disabled={disabled} checked={addMockups}
-                description="Your approved mock-ups and video go on the listing."
+              <Toggle id={`${node.id}-media`} label="Add mock-ups" disabled={disabled} checked={addMockups}
+                description="Your approved mock-ups go on the listing. Printify takes the design and mock-ups, not the video."
                 onChange={(next) => patch({ addMockups: next })} />
               <p className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-300">
                 <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />

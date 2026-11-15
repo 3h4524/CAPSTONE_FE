@@ -1,5 +1,6 @@
 import { HardDrive, ImageIcon, Zap } from "lucide-react";
 import type { ComponentType } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -16,6 +17,7 @@ type UsageQuotaCardsProps = {
 };
 
 export const UsageQuotaCards = ({ quotas }: UsageQuotaCardsProps) => {
+  const { t } = useTranslation("common");
   if (quotas.length === 0) {
     return null;
   }
@@ -37,7 +39,7 @@ export const UsageQuotaCards = ({ quotas }: UsageQuotaCardsProps) => {
                     {quota.limit > 0 && ` / ${quota.limit.toLocaleString()}`} {quota.unit}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    {quota.label} this period{quota.limit > 0 ? "" : " · no monthly limit"}
+                    {t("subscription.quotaThisPeriod", { label: quota.label })}{quota.limit > 0 ? "" : t("subscription.noMonthlyLimit")}
                   </p>
                 </div>
               </div>

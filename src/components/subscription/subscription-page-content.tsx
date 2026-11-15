@@ -26,7 +26,7 @@ import { TrialOfferCard } from "./trial-offer-card";
 import { UsageQuotaCards } from "./usage-quota-cards";
 
 export const SubscriptionPageContent = () => {
-  const { i18n } = useTranslation("common");
+  const { t, i18n } = useTranslation("common");
   const { data, isLoading, isError } = useSubscriptionOverview();
   const [checkoutPlan, setCheckoutPlan] = useState<AvailablePlan | null>(null);
   const [upgradePlan, setUpgradePlan] = useState<AvailablePlan | null>(null);
@@ -43,7 +43,7 @@ export const SubscriptionPageContent = () => {
   const handleStartTrial = () => {
     startTrial(undefined, {
       onSuccess: (result) => {
-        showToast("success", `Your ${result.planName} trial is on until ${formatDate(result.trialEndsAt, i18n.language)}.`);
+        showToast("success", t("subscription.trialOnUntil", { planName: result.planName, date: formatDate(result.trialEndsAt, i18n.language) }));
         queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_OVERVIEW_QUERY_KEY });
         queryClient.invalidateQueries({ queryKey: ENTITLEMENTS_QUERY_KEY });
       },
@@ -52,16 +52,15 @@ export const SubscriptionPageContent = () => {
 
   const handleDowngradeClick = (plan: AvailablePlan) => {
     openPopup({
-      title: `Downgrade to ${plan.name}?`,
-      description:
-        "Your current plan stays active until the end of this billing cycle. Your next renewal is then billed at the new plan.",
-      positiveLabel: "Schedule downgrade",
+      title: t("subscription.downgradeTitle", { name: plan.name }),
+      description: t("subscription.downgradeDescription"),
+      positiveLabel: t("subscription.scheduleDowngrade"),
       onPositive: () => {
         downgrade(plan.planId, {
           onSuccess: (result) => {
             showToast(
               "success",
-              `Scheduled: moving to ${result.targetPlanName} on ${formatDate(result.effectiveDate, i18n.language)}.`
+              t("subscription.scheduledToast", { name: result.targetPlanName, date: formatDate(result.effectiveDate, i18n.language) })
             );
             queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_OVERVIEW_QUERY_KEY });
           },
@@ -72,13 +71,13 @@ export const SubscriptionPageContent = () => {
 
   const handleCancelScheduledDowngrade = () => {
     openPopup({
-      title: "Cancel scheduled downgrade?",
-      description: "You'll stay on your current plan at renewal instead.",
-      positiveLabel: "Cancel downgrade",
+      title: t("subscription.cancelDowngradeTitle"),
+      description: t("subscription.cancelDowngradeDescription"),
+      positiveLabel: t("subscription.cancelDowngradeLabel"),
       onPositive: () => {
         cancelScheduledDowngrade(undefined, {
           onSuccess: () => {
-            showToast("success", "Scheduled downgrade cancelled.");
+            showToast("success", t("subscription.downgradeCancelledToast"));
             queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_OVERVIEW_QUERY_KEY });
           },
         });
@@ -87,7 +86,7 @@ export const SubscriptionPageContent = () => {
   };
 
   if (isLoading) {
-    return <PageLoading label="Loading subscription" />;
+    return <PageLoading label={t("subscription.loading")} />;
   }
 
   if (isError || !data) {
@@ -103,7 +102,7 @@ export const SubscriptionPageContent = () => {
             Billing<span className="max-md:hidden"> &amp; Subscription</span>
           </>
         }
-        description="Keep track of your plan and what it allows, compare plans, and download your invoices."
+        description={t("subscription.pageDescription")}
       />
 
       {/* On Free there's nothing to show here; a plan or trial keeps it for renewal and scheduled changes. */}
@@ -125,7 +124,7 @@ export const SubscriptionPageContent = () => {
         onBuyClick={setCheckoutPlan}
         onUpgradeClick={setUpgradePlan}
         onDowngradeClick={handleDowngradeClick}
-        trialLabel={`${data.trialPlanName ?? "Pro"} trial`}
+        trialLabel={t("subscription.trialTitle", { planName: data.trialPlanName ?? "Pro" })}
         trialOffer={
           data.trialEligible && (
             <TrialOfferCard

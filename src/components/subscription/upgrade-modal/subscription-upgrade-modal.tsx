@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { useTranslation } from "react-i18next";
 
 import { cancelCheckoutRequest } from "@/api/subscription";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ type SubscriptionUpgradeModalProps = {
 export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeModalProps) => {
   const [step, setStep] = useState<UpgradeStep>("confirm");
   const [result, setResult] = useState<UpgradeResult | null>(null);
+  const { t } = useTranslation("common");
   const { mutate: upgrade, isPending, isError, error, reset: resetUpgrade } = useUpgrade();
   const { data: status } = useCheckoutStatus(step === "paying" ? (result?.invoiceId ?? null) : null);
   const queryClient = useQueryClient();
@@ -56,10 +58,10 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
       return;
     }
     hasResolvedRef.current = true;
-    showToast("success", `${status.planName} is now active.`);
+    showToast("success", t("subscription.nowActiveToast", { name: status.planName }));
     queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_OVERVIEW_QUERY_KEY });
     setStep("done");
-  }, [status, queryClient]);
+  }, [status, queryClient, t]);
 
   // Refreshes Recent Invoices / Current Plan so the cancelled invoice doesn't keep showing
   // "pending" until the next manual page reload.
@@ -95,7 +97,7 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
         if (upgradeResult.paymentRequired) {
           setStep("paying");
         } else {
-          showToast("success", `Upgraded to ${plan.name}. No additional payment was required.`);
+          showToast("success", t("subscription.upgradedNoPaymentToast", { name: plan.name }));
           setStep("done");
         }
       },
@@ -104,7 +106,7 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
 
   const handleCancelPayment = () => {
     cancelOutstandingCheckout();
-    showToast("info", "Payment cancelled.");
+    showToast("info", t("subscription.paymentCancelled"));
     onClose();
     resetState();
   };
@@ -118,39 +120,38 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-            Upgrade Subscription
+            {t("subscription.upgradeEyebrow")}
           </p>
           <DialogTitle>
-            {step === "paying" ? "Scan to pay the difference" : `Upgrade to ${plan.name}`}
+            {step === "paying" ? t("subscription.scanToPayDifference") : t("subscription.upgradeTo", { name: plan.name })}
           </DialogTitle>
           <DialogDescription>
-            {step === "confirm" &&
-              "You'll be charged a prorated amount for the remainder of your current billing cycle."}
-            {step === "paying" && "Your new capacity activates once payment is confirmed."}
-            {step === "done" && "Your workspace has been updated."}
+            {step === "confirm" && t("subscription.upgradeDescription")}
+            {step === "paying" && t("subscription.upgradePayingDescription")}
+            {step === "done" && t("subscription.upgradeWorkspaceUpdated")}
           </DialogDescription>
         </DialogHeader>
 
         {step === "confirm" && (
           <div className="space-y-4">
             <div className="bg-muted flex items-center justify-between rounded-lg p-4 text-sm">
-              <span className="text-muted-foreground">New plan</span>
+              <span className="text-muted-foreground">{t("subscription.upgradeNewPlan")}</span>
               <span className="font-semibold">
-                {plan.name} — {formatVnd(plan.monthlyPriceVnd)} / month
+                {plan.name} — {formatVnd(plan.monthlyPriceVnd)}{t("subscription.perMonthText")}
               </span>
             </div>
             {isError && (
               <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-                {getErrorMessage(error, "Could not start the upgrade. Please try again.")}
+                {getErrorMessage(error, t("subscription.upgradeError"))}
               </p>
             )}
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => handleClose(false)} disabled={isPending}>
-                Not now
+                {t("subscription.notNow")}
               </Button>
               <Button onClick={handleConfirm} disabled={isPending}>
                 {isPending && <Spinner className="size-4" />}
-                Confirm upgrade
+                {t("subscription.confirmUpgrade")}
               </Button>
             </div>
           </div>
@@ -160,11 +161,11 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
           <div className="flex flex-col items-center gap-4 py-2 text-center">
             <div className="bg-muted grid w-full grid-cols-2 divide-x rounded-lg text-sm">
               <div className="space-y-0.5 px-4 py-3">
-                <p className="text-muted-foreground text-xs">Prorated credit</p>
+                <p className="text-muted-foreground text-xs">{t("subscription.proratedCredit")}</p>
                 <p className="font-semibold">{formatVnd(result.proratedCreditVnd)}</p>
               </div>
               <div className="space-y-0.5 px-4 py-3">
-                <p className="text-muted-foreground text-xs">Due today</p>
+                <p className="text-muted-foreground text-xs">{t("subscription.dueToday")}</p>
                 <p className="font-semibold">{formatVnd(result.dueTodayVnd)}</p>
               </div>
             </div>
@@ -176,10 +177,10 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
             {result.amountVnd !== null && <p className="text-lg font-semibold">{formatVnd(result.amountVnd)}</p>}
             <div className="text-muted-foreground flex items-center gap-2 text-sm">
               <Spinner className="size-4" />
-              Waiting for payment...
+              {t("subscription.waitingForPayment")}
             </div>
             <Button variant="destructive" onClick={handleCancelPayment}>
-              Cancel payment
+              {t("subscription.cancelPayment")}
             </Button>
           </div>
         )}
@@ -188,13 +189,12 @@ export const SubscriptionUpgradeModal = ({ plan, onClose }: SubscriptionUpgradeM
           <div className="flex flex-col items-center gap-4 py-6 text-center">
             <CheckCircle2 className="text-primary size-12" />
             <div>
-              <p className="text-lg font-semibold">Workspace updated</p>
+              <p className="text-lg font-semibold">{t("subscription.workspaceUpdated")}</p>
               <p className="text-muted-foreground text-sm">
-                {plan.name} is now active.
-                {result && ` Renews ${formatDate(result.firstRenewalDate)}.`}
+                {plan.name} {t("subscription.nowActive")}{result ? t("subscription.renewsOn", { date: formatDate(result.firstRenewalDate) }) : null}
               </p>
             </div>
-            <Button onClick={onClose}>Done</Button>
+            <Button onClick={onClose}>{t("subscription.done")}</Button>
           </div>
         )}
       </DialogContent>

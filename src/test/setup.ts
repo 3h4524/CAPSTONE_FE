@@ -4,6 +4,7 @@ import { server } from "@/test/mocks/server";
 import { cleanup } from "@testing-library/react";
 
 import "@testing-library/jest-dom/vitest";
+import "@/i18n/client";
 
 class TestResizeObserver implements ResizeObserver {
   observe(): void {

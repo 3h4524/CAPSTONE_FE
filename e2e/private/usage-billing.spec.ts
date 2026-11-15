@@ -31,7 +31,7 @@ test.describe("usage and billing", () => {
     });
 
     await test.step("the allowance and cost detail are rendered", async () => {
-      await expect(page.getByText("Credit allowance")).toBeVisible();
+      await expect(page.getByText("AI requests this period")).toBeVisible();
       await expect(page.getByText("Generation volume")).toBeVisible();
       await expect(page.getByText("By provider")).toBeVisible();
       await expect(page.getByRole("button", { name: "Export CSV" })).toBeVisible();
@@ -49,7 +49,8 @@ test.describe("usage and billing", () => {
       .toBe(1);
 
     await test.step("choosing 90 days issues one more overview request", async () => {
-      await page.getByRole("button", { name: "90 days" }).click();
+      await page.getByRole("button", { name: "Last 30 days" }).click();
+      await page.getByRole("menuitem", { name: "Last 90 days" }).click();
 
       await expect
         .poll(() => findCalls(calls, "GET", "/api/usage").length, { timeout: 10_000 })
@@ -74,9 +75,8 @@ test.describe("usage and billing", () => {
         .toBe(200);
     });
 
-    await test.step("the current plan and catalog sections are rendered", async () => {
-      await expect(page.getByText("Current plan", { exact: true })).toBeVisible();
-      await expect(page.getByText("Choose the right capacity")).toBeVisible();
+    await test.step("the billing history section is rendered", async () => {
+      await expect(page.getByRole("heading", { name: "Billing History" })).toBeVisible();
     });
   });
 });

@@ -2,7 +2,7 @@
 
 import { Fragment, type ReactNode, useEffect, useMemo, useState } from "react";
 import type { TFunction } from "i18next";
-import { ArrowRight, BarChart3, Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Clock, Compass, GitCompareArrows, LayoutGrid, List, type LucideIcon, Pencil, Radar, RefreshCw, SlidersHorizontal, Sparkles, Target, TriangleAlert, Trophy, Users, X, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Clock, GitCompareArrows, LayoutGrid, List, type LucideIcon, Pencil, Radar, RefreshCw, SlidersHorizontal, Sparkles, Target, TriangleAlert, Trophy, Users, X, Zap } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -23,6 +23,7 @@ import {
 } from "@/api/market-opportunities";
 import { translateTexts, type TranslationItem } from "@/api/translations";
 import { PhonePager } from "@/components/commons/data-display/phone-pager";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { LevelMeter, PriceInterestScatter, ShareDonut, StrongSellerBar, SupplySparkline } from "@/components/opportunities/market-charts";
 import { buildNicheMap, CompetitorLeaderboard, CompetitorPriceStrip, InfoTip, ListingAgeBars, MiniStats, NicheMapCard, NicheSelect, PriceSweetSpot, ProfileImpactCard, SeasonalWindowCard, TapHint } from "@/components/opportunities/market-insights";
 import { Button } from "@/components/ui/button";
@@ -66,8 +67,8 @@ const apparelProfilePreset: SellerResearchProfileInput = {
   minimumPrice: 20,
   maximumPrice: 80,
 };
-const stateLabel: Record<SellerOpportunity["state"], string> = {
-  new: "New", saved: "Saved", ignored: "Ignored", acted: "Acted", dismissed: "Dismissed",
+const stateLabelKey: Record<SellerOpportunity["state"], "marketRadar.new" | "marketRadar.saved" | "marketRadar.ignored" | "marketRadar.acted" | "marketRadar.dismissed"> = {
+  new: "marketRadar.new", saved: "marketRadar.saved", ignored: "marketRadar.ignored", acted: "marketRadar.acted", dismissed: "marketRadar.dismissed",
 };
 const stateStyle: Record<SellerOpportunity["state"], string> = {
   new: "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 ring-blue-100 dark:ring-blue-500/30",
@@ -77,11 +78,11 @@ const stateStyle: Record<SellerOpportunity["state"], string> = {
   dismissed: "bg-ink-100 text-ink-500 ring-ink-200",
 };
 const stateFilters = [
-  { value: "all", label: "All" },
-  { value: "new", label: "New" },
-  { value: "saved", label: "Saved" },
-  { value: "ignored", label: "Ignored" },
-  { value: "acted", label: "Acted" },
+  { value: "all", labelKey: "marketRadar.all" },
+  { value: "new", labelKey: "marketRadar.new" },
+  { value: "saved", labelKey: "marketRadar.saved" },
+  { value: "ignored", labelKey: "marketRadar.ignored" },
+  { value: "acted", labelKey: "marketRadar.acted" },
 ];
 const opportunitiesPerPage = 5;
 // Two columns are as many as a phone can compare side by side.
@@ -385,53 +386,51 @@ export function OpportunityRadarPage() {
   return (
     <TooltipProvider delayDuration={150}>
       <div className={cn("flex w-full min-w-0 flex-col gap-5 max-md:gap-3 md:p-6", !showsPhonePager && "max-md:pb-14")}>
-        <section className="relative overflow-hidden rounded-2xl bg-[#17263f] px-5 py-5 text-white shadow-[0_16px_40px_rgba(23,38,63,0.2)] max-md:p-4 sm:px-6">
+        <PageHeader
+          title={t("marketRadar.title")}
+          description={t("marketRadar.subtitle")}
+          actions={
+            <Button type="button" variant="primaryBlue" className={rankingIsStale ? "shrink-0 ring-2 ring-amber-400/70 ring-offset-2" : "shrink-0"} onClick={() => refreshMutation.mutate()} disabled={refreshMutation.isPending}>
+              <RefreshCw className={refreshMutation.isPending ? "size-4 animate-spin" : "size-4"} />
+              <span className="max-md:sr-only">{refreshMutation.isPending ? t("marketRadar.refreshing") : t("marketRadar.refresh")}</span>
+            </Button>
+          }
+        />
+
+        <section className="relative overflow-hidden rounded-2xl bg-[#17263f] px-5 py-4 text-white shadow-[0_16px_40px_rgba(23,38,63,0.2)] max-md:p-3 sm:px-6">
           <div className="absolute -top-24 -right-20 size-72 rounded-full bg-blue-400/20 blur-3xl" />
-          <div className="relative flex flex-col gap-5 max-md:gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex min-w-0 items-center gap-4">
-              <span className="hidden size-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-blue-200 sm:flex"><Compass className="size-5" /></span>
-              <div className="min-w-0">
-                 <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{t("marketRadar.title")}</h1>
-                 <p className="text-ink-300 mt-0.5 text-sm max-md:text-xs">{t("marketRadar.subtitle")}</p>
-              </div>
+          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="bg-card/[0.06] grid grid-cols-3 divide-x divide-white/10 rounded-xl border border-white/10">
+              <HeroStat
+                label={t("marketRadar.heroStrongFit", { defaultValue: "Strong fit" })}
+                value={allOpportunities.length ? String(heroStats.strong) : "—"}
+                suffix={allOpportunities.length ? `/${allOpportunities.length}` : undefined}
+                accent={heroStats.strong > 0 ? "text-emerald-300" : undefined}
+                hint={t("marketRadar.heroStrongFitHint", { defaultValue: "Opportunities scoring 75+ for market potential and fit with your profile." })}
+              />
+              <HeroStat
+                label={t("marketRadar.heroRising", { defaultValue: "Rising demand" })}
+                value={allOpportunities.length ? String(heroStats.rising) : "—"}
+                accent={heroStats.rising > 0 ? "text-sky-300" : undefined}
+                hint={t("marketRadar.heroRisingHint", { defaultValue: "Niches whose buyer engagement is trending up across recent observations." })}
+              />
+              <HeroStat
+                label={t("marketRadar.heroToReview", { defaultValue: "To review" })}
+                value={allOpportunities.length ? String(newCount) : "—"}
+                accent={newCount > 0 ? "text-amber-300" : undefined}
+                hint={t("marketRadar.heroToReviewHint", { defaultValue: "New opportunities you have not saved, ignored or acted on yet." })}
+                onClick={newCount > 0 ? () => { setTab("radar"); setActiveState("new"); } : undefined}
+              />
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="bg-card/[0.06] grid grid-cols-3 divide-x divide-white/10 rounded-xl border border-white/10">
-                 <HeroStat
-                   label={t("marketRadar.heroStrongFit", { defaultValue: "Strong fit" })}
-                   value={allOpportunities.length ? String(heroStats.strong) : "—"}
-                   suffix={allOpportunities.length ? `/${allOpportunities.length}` : undefined}
-                   accent={heroStats.strong > 0 ? "text-emerald-300" : undefined}
-                   hint={t("marketRadar.heroStrongFitHint", { defaultValue: "Opportunities scoring 75+ for market potential and fit with your profile." })}
-                 />
-                 <HeroStat
-                   label={t("marketRadar.heroRising", { defaultValue: "Rising demand" })}
-                   value={allOpportunities.length ? String(heroStats.rising) : "—"}
-                   accent={heroStats.rising > 0 ? "text-sky-300" : undefined}
-                   hint={t("marketRadar.heroRisingHint", { defaultValue: "Niches whose buyer engagement is trending up across recent observations." })}
-                 />
-                 <HeroStat
-                   label={t("marketRadar.heroToReview", { defaultValue: "To review" })}
-                   value={allOpportunities.length ? String(newCount) : "—"}
-                   accent={newCount > 0 ? "text-amber-300" : undefined}
-                   hint={t("marketRadar.heroToReviewHint", { defaultValue: "New opportunities you have not saved, ignored or acted on yet." })}
-                   onClick={newCount > 0 ? () => { setTab("radar"); setActiveState("new"); } : undefined}
-                 />
-              </div>
-              <div className="flex flex-col items-stretch gap-1 max-sm:flex-row-reverse max-sm:items-center max-sm:justify-between max-sm:gap-3 sm:items-end">
-                <Button type="button" variant="primaryBlue" className={rankingIsStale ? "shrink-0 ring-2 ring-amber-300/70 ring-offset-2 ring-offset-[#17263f] dark:ring-amber-500/40" : "shrink-0"} onClick={() => refreshMutation.mutate()} disabled={refreshMutation.isPending}>
-                  <RefreshCw className={refreshMutation.isPending ? "size-4 animate-spin" : "size-4"} />
-                   {refreshMutation.isPending ? t("marketRadar.refreshing") : t("marketRadar.refresh")}
-                 </Button>
-                 {rankingIsStale && lastEvaluatedAt ? (
-                   <p className="flex items-center justify-center gap-1.5 text-[11px] font-medium text-amber-300">
-                     <span className="size-1.5 rounded-full bg-amber-300" />
-                     {t("marketRadar.newDataAvailable", { defaultValue: "New market data · ranked {{value}}", value: timeAgo(lastEvaluatedAt, locale) })}
-                   </p>
-                 ) : lastEvaluatedAt && (
-                   <p className="text-ink-400 flex items-center justify-center gap-1 text-[11px]"><Clock className="size-3" />{t("marketRadar.updated", { value: timeAgo(lastEvaluatedAt, locale) })}</p>
-                 )}
-              </div>
+            <div className="flex flex-col gap-1">
+              {rankingIsStale && lastEvaluatedAt ? (
+                <p className="flex items-center justify-center gap-1.5 text-[11px] font-medium text-amber-300">
+                  <span className="size-1.5 rounded-full bg-amber-300" />
+                  {t("marketRadar.newDataAvailable", { defaultValue: "New market data · ranked {{value}}", value: timeAgo(lastEvaluatedAt, locale) })}
+                </p>
+              ) : lastEvaluatedAt && (
+                <p className="text-ink-400 flex items-center justify-center gap-1 text-[11px]"><Clock className="size-3" />{t("marketRadar.updated", { value: timeAgo(lastEvaluatedAt, locale) })}</p>
+              )}
             </div>
           </div>
         </section>
@@ -561,7 +560,7 @@ export function OpportunityRadarPage() {
                 className="border-ink-200 bg-card text-ink-800 h-11 w-full rounded-xl border px-3 text-base md:hidden"
               >
                 {stateFilters.map((filter) => (
-                  <option key={filter.value} value={filter.value}>{t(`marketRadar.${filter.value}`, { defaultValue: filter.label })} ({stateCounts[filter.value] ?? 0})</option>
+                  <option key={filter.value} value={filter.value}>{t(filter.labelKey)} ({stateCounts[filter.value] ?? 0})</option>
                 ))}
               </select>
               <div className="border-ink-200 bg-card flex min-w-0 flex-1 overflow-x-auto rounded-xl border p-1 max-md:hidden lg:flex-none">
@@ -573,7 +572,7 @@ export function OpportunityRadarPage() {
                     onClick={() => setActiveState(filter.value)}
                     className={"flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors lg:flex-none " + (activeState === filter.value ? "bg-[#17263f] text-white shadow-sm" : "text-ink-500 hover:bg-ink-50 hover:text-ink-800")}
                   >
-                    {t(`marketRadar.${filter.value}`, { defaultValue: filter.label })}
+                    {t(filter.labelKey)}
                     <span className={"rounded-full px-1.5 text-[11px] tabular-nums " + (activeState === filter.value ? "bg-white/15" : "bg-ink-100 text-ink-500")}>{stateCounts[filter.value] ?? 0}</span>
                   </button>
                 ))}
@@ -747,8 +746,8 @@ function LegacyMarketSignalSection({
         </div>
       ) : insights.length === 0 ? (
         <div className="border-ink-300 bg-card text-ink-500 rounded-xl border border-dashed p-8 text-center text-sm">
-          <p>{t("marketRadar.noMatchingSignals", { defaultValue: "No collected market signals match this seller profile yet." })}</p>
-          <p className="text-ink-400 mt-2 text-xs">{t("marketRadar.noMatchingSignalsHint", { defaultValue: "These signals come from public Etsy snapshots collected by the admin Market Insights job." })}</p>
+          <p>{t("marketRadar.noMatchingSignalsAlt", { defaultValue: "No collected market signals match this seller profile yet." })}</p>
+          <p className="text-ink-400 mt-2 text-xs">{t("marketRadar.noMatchingSignalsHintNote", { defaultValue: "These signals come from public Etsy snapshots collected by the admin Market Insights job." })}</p>
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
@@ -851,9 +850,9 @@ function NicheInsightSection({
       {!hasProfile ? (
         <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50/60 p-6 text-sm text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">{t("marketRadar.marketSignalsSetup", { defaultValue: "Save your seller profile above to match public Etsy market signals to your niche." })}</div>
       ) : loading ? (
-        <div className="border-ink-200 bg-card text-ink-500 rounded-xl border p-8 text-center text-sm" role="status">{t("marketRadar.marketSignalsLoading", { defaultValue: "Calculating your niche conclusion from public Etsy data..." })}</div>
+        <div className="border-ink-200 bg-card text-ink-500 rounded-xl border p-8 text-center text-sm" role="status">{t("marketRadar.marketSignalsLoadingNiche", { defaultValue: "Calculating your niche conclusion from public Etsy data..." })}</div>
       ) : error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">{t("marketRadar.marketSignalsError", { defaultValue: "The niche conclusion could not be loaded. Try refreshing the radar." })}</div>
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">{t("marketRadar.marketSignalsErrorNiche", { defaultValue: "The niche conclusion could not be loaded. Try refreshing the radar." })}</div>
       ) : insights.length === 0 ? (
         <div className="border-ink-300 bg-card text-ink-500 rounded-xl border border-dashed p-8 text-center text-sm">
           <p>{t("marketRadar.noMatchingSignals", { defaultValue: "No market group matches this seller profile yet." })}</p>
@@ -1120,7 +1119,7 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
                       <th className="px-3 py-2 font-semibold">{t("marketRadar.keyword", { defaultValue: "Keyword" })}</th>
                       <th className="px-3 py-2 font-semibold">{t("marketRadar.tileMarket", { defaultValue: "Market size" })}</th>
                       <th className="px-3 py-2 font-semibold">{t("marketRadar.tileStrongSellers", { defaultValue: "Strong competitors" })}</th>
-                      <th className="px-3 py-2 font-semibold">{t("marketRadar.tileRising", { defaultValue: "New listings rising" })}</th>
+                      <th className="px-3 py-2 font-semibold">{t("marketRadar.tileRisingColumn", { defaultValue: "New listings rising" })}</th>
                       <th className="px-3 py-2 font-semibold">{t("marketRadar.keywordScore", { defaultValue: "Score" })}</th>
                     </tr>
                   </thead>
@@ -1165,7 +1164,7 @@ function KeywordCards({ keywords }: { keywords: SellerNicheMarketInsight["keywor
               <dd className="text-ink-700 mt-1 tabular-nums">{keyword.signals.sellerCount > 0 ? `${keyword.signals.strongSellerCount} / ${keyword.signals.sellerCount}` : "—"}</dd>
             </div>
             <div>
-              <dt className={termClassName}>{t("marketRadar.tileRising", { defaultValue: "New listings rising" })}</dt>
+              <dt className={termClassName}>{t("marketRadar.tileRisingColumn", { defaultValue: "New listings rising" })}</dt>
               <dd className={cn("mt-1 font-semibold tabular-nums", keyword.signals.risingNewListingCount > 0 ? "text-emerald-700 dark:text-emerald-300" : "text-ink-400")}>{keyword.signals.risingNewListingCount}</dd>
             </div>
             <div className="col-span-2">
@@ -1413,10 +1412,10 @@ function CompetitorSection({
   const locale = i18n.resolvedLanguage?.toLowerCase().startsWith("vi") ? "vi" : "en";
 
   if (!hasProfile) {
-    return <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50/60 p-6 text-sm text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">{t("marketRadar.marketSignalsSetup", { defaultValue: "Save your seller profile to match public Etsy market signals to your niche." })}</div>;
+    return <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50/60 p-6 text-sm text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">{t("marketRadar.marketSignalsSetupAlt", { defaultValue: "Save your seller profile to match public Etsy market signals to your niche." })}</div>;
   }
   if (loading) {
-    return <div className="border-ink-200 bg-card text-ink-500 rounded-xl border p-8 text-center text-sm" role="status">{t("marketRadar.marketSignalsLoading", { defaultValue: "Calculating your niche from public Etsy data..." })}</div>;
+    return <div className="border-ink-200 bg-card text-ink-500 rounded-xl border p-8 text-center text-sm" role="status">{t("marketRadar.marketSignalsLoadingShort", { defaultValue: "Calculating your niche from public Etsy data..." })}</div>;
   }
   if (error || !source) {
     return <div className="border-ink-300 bg-card text-ink-500 rounded-xl border border-dashed p-8 text-center text-sm">{t("marketRadar.noMatchingSignals", { defaultValue: "No market group matches this seller profile yet." })}</div>;
@@ -1624,7 +1623,7 @@ function NicheMarketMetrics({ item }: { item: SellerOpportunity }) {
           : market?.activeListingCount != null ? `${market.activeListingCount.toLocaleString()} active listings` : unavailable}
       />
       <LevelMetric
-        label={t("marketRadar.demandProxy", { defaultValue: "Demand" })}
+        label={t("marketRadar.demandShort", { defaultValue: "Demand" })}
         level={market ? market.demandProxy : null}
         unavailable={unavailable}
         detail={market?.medianFavoritesPer30Days != null ? `${market.medianFavoritesPer30Days} favorites / 30 days` : unavailable}
@@ -2158,7 +2157,7 @@ function OpportunityMeta({ item, featured = false }: { item: SellerOpportunity; 
       <span className="rounded-md bg-[#17263f] px-1.5 py-0.5 text-[11px] font-semibold text-white tabular-nums">#{item.rank ?? "—"}</span>
       {featured && <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 px-2 py-0.5 text-[11px] font-semibold text-white"><Trophy className="size-3" />{t("marketRadar.topPick")}</span>}
       <span className="text-ink-400 text-[11px] font-semibold tracking-[0.12em] uppercase">{item.platform}</span>
-      <span className={"rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 " + stateStyle[item.state]}>{stateLabel[item.state]}</span>
+      <span className={"rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 " + stateStyle[item.state]}>{t(stateLabelKey[item.state])}</span>
     </div>
   );
 }
@@ -2220,7 +2219,7 @@ function OpportunityCard({ item, featured, ...actions }: CardActions & { item: S
             <details className="group border-ink-100 bg-ink-50/60 rounded-xl border px-3 py-2">
               <summary className="text-ink-600 cursor-pointer list-none text-xs font-semibold marker:hidden [&::-webkit-details-marker]:hidden">
                 <span className="group-open:hidden">{t("marketRadar.viewDetails", { defaultValue: "View supporting details" })}</span>
-                <span className="hidden group-open:inline">{t("marketRadar.collapse", { defaultValue: "Collapse details" })}</span>
+                <span className="hidden group-open:inline">{t("marketRadar.collapseDetails", { defaultValue: "Collapse details" })}</span>
               </summary>
               <div className="border-ink-200 mt-3 space-y-3 border-t pt-3">
                 <ListingOverview summary={item.summary} />

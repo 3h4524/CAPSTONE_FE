@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { GarmentColorPicker } from "@/components/mockups/garment-color-picker";
@@ -12,9 +13,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { areaLabel, MAIN_AREA_KEY, parsePrintLayout, productTypeLabel, withViewTemplates } from "@/helpers/mockup-template";
+import { areaLabel, MAIN_AREA_KEY, parsePrintLayout, withViewTemplates } from "@/helpers/mockup-template";
 import { useGenerateMockupImage } from "@/hooks/mutations/use-generate-mockup-image";
 import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
+import { productTypes } from "@/schemas/batches";
 import type { MockupArea, MockupImage } from "@/types/mockup-templates";
 
 type MockupGenerateDialogProps = {
@@ -27,6 +29,9 @@ type MockupGenerateDialogProps = {
 };
 
 export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, productName, productType, onOpenChange }: MockupGenerateDialogProps) => {
+  const { t } = useTranslation("common");
+  const localizedProductType = (value: string) =>
+    (productTypes as readonly string[]).includes(value) ? t(`mockups.productTypes.${value}`) : value;
   // Only templates for this product's own type: any other pick is rejected by the backend.
   const { data: listed, isPending: isLoadingTemplates } = useMockupTemplates(productType || undefined, open);
   // Each template with the photos of its other sides (back, sleeves).
@@ -85,40 +90,40 @@ export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, prod
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && close()}>
       <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-lg flex-col overflow-hidden">
         <DialogHeader className="text-left">
-          <DialogTitle>Preview on a mock-up</DialogTitle>
+          <DialogTitle>{t("mockups.generateDialog.title")}</DialogTitle>
           <DialogDescription>
-            Composite this design for “{productName}”{productType ? ` (${productTypeLabel(productType)})` : ""} onto a product photo.
+            {t("mockups.generateDialog.description", { productName, typeSuffix: productType ? t("mockups.generateDialog.typeSuffix", { productType: localizedProductType(productType) }) : "" })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-1 py-1">
         {isLoadingTemplates ? (
-          <SectionLoading label="Loading mock-up templates" />
+          <SectionLoading label={t("mockups.generateDialog.loadingTemplates")} />
         ) : !templates || templates.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No {productType ? productTypeLabel(productType) : ""} mock-up templates yet. Upload one from the Mock-up Templates page first.
+            {t("mockups.generateDialog.noTemplatesNote", { productType: productType ? localizedProductType(productType) : "" })}
           </p>
         ) : result ? (
           <div className="space-y-3">
             <Image
               src={result.mockupImageUrl}
-              alt="Design composited on the mock-up"
+              alt={t("mockups.generateDialog.compositedAlt")}
               width={result.mockupWidthPx}
               height={result.mockupHeightPx}
               unoptimized
               className="bg-muted w-full rounded-lg border object-cover"
             />
             <a href={result.mockupImageUrl} target="_blank" rel="noreferrer" className="text-primary text-sm underline underline-offset-4">
-              Open full size
+              {t("mockups.generateDialog.openFullSize")}
             </a>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="mockup-generate-template">Template</Label>
+              <Label htmlFor="mockup-generate-template">{t("mockups.generateDialog.templateAria")}</Label>
               <Select value={templateId} onValueChange={setTemplateId}>
                 <SelectTrigger id="mockup-generate-template" className="w-full">
-                  <SelectValue placeholder="Choose a mock-up template" />
+                  <SelectValue placeholder={t("mockups.generateDialog.templatePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {templates.map((template) => (
@@ -130,8 +135,8 @@ export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, prod
 
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <p className="text-sm font-medium">Customize position</p>
-                <p className="text-muted-foreground text-xs">Off uses the template’s own print areas.</p>
+                <p className="text-sm font-medium">{t("mockups.generateDialog.customizePosition")}</p>
+                <p className="text-muted-foreground text-xs">{t("mockups.generateDialog.customizePositionNote")}</p>
               </div>
               <Switch checked={advanced} onCheckedChange={setAdvanced} disabled={!selectedTemplate} />
             </div>
@@ -139,8 +144,8 @@ export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, prod
             {selectedTemplate?.allowRecolor && selectedTemplate.garmentMaskUrl && (
               <div className="space-y-2 rounded-lg border p-3">
                 <div>
-                  <p className="text-sm font-medium">Garment color</p>
-                  <p className="text-muted-foreground text-xs">None keeps the photo’s own color.</p>
+                  <p className="text-sm font-medium">{t("mockups.generateDialog.garmentColorSection")}</p>
+                  <p className="text-muted-foreground text-xs">{t("mockups.generateDialog.garmentColorNote")}</p>
                 </div>
                 <GarmentColorPicker
                   selected={garmentColor ? [garmentColor] : []}
@@ -183,7 +188,7 @@ export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, prod
                   />
                 )}
                 {selectedTemplate.realisticPrintReady && (
-                  <p className="text-muted-foreground text-xs">The result also follows the fabric’s folds and shadows.</p>
+                  <p className="text-muted-foreground text-xs">{t("mockups.generateDialog.realisticPrintNote")}</p>
                 )}
               </div>
             )}
@@ -192,10 +197,10 @@ export const MockupGenerateDialog = ({ open, designImageId, designImageUrl, prod
         </div>
 
         <DialogFooter className="gap-2 pt-4">
-          <Button type="button" variant="ghost" onClick={close}>{result ? "Close" : "Cancel"}</Button>
+          <Button type="button" variant="ghost" onClick={close}>{result ? t("mockups.generateDialog.close") : t("mockups.cancel")}</Button>
           {!result && (
             <Button type="button" disabled={!templateId || isGenerating || (advanced && printsNothing)} onClick={submit}>
-              {isGenerating ? "Generating…" : "Generate"}
+              {isGenerating ? t("mockups.generateDialog.generating") : t("mockups.generateDialog.generate")}
             </Button>
           )}
         </DialogFooter>

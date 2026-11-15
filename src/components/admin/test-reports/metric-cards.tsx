@@ -69,7 +69,7 @@ export const TestReportMetricCards = ({
           className="border-ink-200 bg-card rounded-lg border p-4 shadow-[0_2px_8px_rgba(15,23,42,0.02)] sm:p-5"
         >
           <div className="flex items-start justify-between gap-3">
-            <p className="text-ink-400 text-[9px] font-bold tracking-[0.13em] uppercase">
+            <p className="text-ink-500 text-[9px] font-bold tracking-[0.13em] uppercase">
               {label}
             </p>
             <span className={cn("flex size-6 items-center justify-center rounded", tone)}>
@@ -83,7 +83,7 @@ export const TestReportMetricCards = ({
               {value}
             </p>
           )}
-          <p className="text-ink-400 mt-2 text-[10px]">{note}</p>
+          <p className="text-ink-500 mt-2 text-[10px]">{note}</p>
         </article>
       ))}
     </div>

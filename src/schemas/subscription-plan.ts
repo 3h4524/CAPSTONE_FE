@@ -17,6 +17,9 @@ export const subscriptionPlanFormSchema = z.object({
   description: z.string().trim().max(2000).optional(),
   monthlyPriceUsd: z.number({ message: "Enter a monthly price." }).min(0, "Monthly price must be 0 or greater."),
   annualPriceUsd: z.number().min(0, "Annual price must be 0 or greater.").optional(),
+  // Only set when the Admin prices in VND; kept out of the USD branch, where they stay undefined.
+  monthlyPriceVnd: z.number().min(0, "Monthly price must be 0 or greater.").optional(),
+  annualPriceVnd: z.number().min(0, "Annual price must be 0 or greater.").optional(),
   maxBatchSize: nonNegativeOrUnlimited("Max batch size"),
   maxConcurrentJobs: nonNegativeOrUnlimited("Concurrent jobs"),
   maxProductsPerMonth: nonNegativeOrUnlimited("Products / month"),

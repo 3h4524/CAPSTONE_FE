@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, Plus, Sparkles, UserRound } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { ModelPhotoScope } from "@/api/model-photos";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
@@ -27,6 +28,7 @@ import { cn } from "@/utils/cn";
  * shared library for an admin.
  */
 export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
+  const { t } = useTranslation("common");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<MockupTemplate | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -61,10 +63,9 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
 
   const askDelete = (photo: MockupTemplate) =>
     openPopup({
-      title: `Delete ${photo.name}?`,
-      description:
-        "It is no longer offered for new images. Images already made on it stay as they are.",
-      positiveLabel: "Delete",
+      title: t("mockups.modelPhotosPanel.deleteTitle", { name: photo.name }),
+      description: t("mockups.modelPhotosPanel.deleteDescription"),
+      positiveLabel: t("mockups.delete"),
       onPositive: () => deletePhoto(photo.id),
     });
 
@@ -73,8 +74,8 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-muted-foreground max-w-2xl text-sm max-md:hidden">
           {scope === "admin"
-            ? "Photos of people every seller can put their mock-ups on. Use a person facing the camera in a plain white or light garment."
-            : "Photos of people your mock-ups are put on, without AI: the garment takes the mock-up’s color and design. The shared photos are listed too."}
+            ? t("mockups.modelPhotosPanel.adminIntro")
+            : t("mockups.modelPhotosPanel.sellerIntro")}
         </p>
         <div className="flex flex-wrap gap-2 max-md:grid max-md:w-full max-md:grid-cols-2">
           <Button
@@ -85,11 +86,11 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
             disabled={isDeleting}
           >
             <Sparkles aria-hidden="true" />
-            Make with AI
+            {t("mockups.modelPhotosPanel.makeWithAi")}
           </Button>
           <Button type="button" className="max-md:px-2" onClick={openCreate} disabled={isDeleting}>
             <Plus aria-hidden="true" />
-            New model photo
+            {t("mockups.modelPhotosPanel.newModelPhoto")}
           </Button>
         </div>
       </div>
@@ -99,7 +100,7 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
         onClick={() => setAreFiltersOpen((open) => !open)}
         className="border-ink-200 bg-card text-ink-800 flex min-h-11 items-center justify-between rounded-xl border px-4 text-sm font-semibold md:hidden"
       >
-        {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : "Filters"}
+        {activeFilterCount > 0 ? t("mockups.modelPhotosPanel.filtersCount", { count: activeFilterCount }) : t("mockups.modelPhotosPanel.filtersButton")}
         <ChevronDown className={cn("text-ink-400 size-4 transition-transform", areFiltersOpen && "rotate-180")} aria-hidden="true" />
       </button>
       <div className={cn("flex flex-wrap gap-x-6 gap-y-3", !areFiltersOpen && "max-md:hidden")}>
@@ -107,7 +108,7 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
         <ModelPhotoFilterBar value={filter} onChange={setFilter} />
       </div>
       {isPending ? (
-        <SectionLoading label="Loading model photos" />
+        <SectionLoading label={t("mockups.modelPhotosPanel.loadingPhotos")} />
       ) : isError || !photos ? (
         <div
           className="border-ink-200 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border p-8 text-center"
@@ -115,32 +116,32 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
         >
           <UserRound className="text-ink-400 size-8" aria-hidden="true" />
           <div>
-            <p className="text-ink-900 font-semibold">Model photos unavailable</p>
+            <p className="text-ink-900 font-semibold">{t("mockups.modelPhotosPanel.unavailableTitle")}</p>
             <p className="text-muted-foreground mt-1 text-sm">
-              We could not load the model photos. Check your connection and try again.
+              {t("mockups.modelPhotosPanel.unavailableDescription")}
             </p>
           </div>
           <Button type="button" onClick={() => refetch()}>
-            Try again
+            {t("mockups.modelPhotosPanel.tryAgain")}
           </Button>
         </div>
       ) : photos.length === 0 ? (
         <div className="border-ink-300 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed p-8 text-center">
           <p className="text-ink-900 font-semibold">
-            {filtered ? "No model photos of these people" : "No model photos yet"}
+            {filtered ? t("mockups.modelPhotosPanel.noFilteredTitle") : t("mockups.modelPhotosPanel.noPhotosTitle")}
           </p>
           <p className="text-muted-foreground text-sm">
             {filtered
-              ? "Make one with AI, or add a photo of your own."
-              : "Add a photo of a person in a plain white tee to put your mock-ups on it, or make one with AI."}
+              ? t("mockups.modelPhotosPanel.noFilteredDescription")
+              : t("mockups.modelPhotosPanel.noPhotosDescription")}
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             <Button type="button" variant="outline" onClick={() => setGenerating(true)}>
               <Sparkles aria-hidden="true" />
-              Make with AI
+              {t("mockups.modelPhotosPanel.makeWithAi")}
             </Button>
             <Button type="button" onClick={openCreate}>
-              New model photo
+              {t("mockups.modelPhotosPanel.newModelPhoto")}
             </Button>
           </div>
         </div>
@@ -148,7 +149,7 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
         <MockupCardGrid
           key={JSON.stringify({ filter, source })}
           items={photos}
-          pagerLabel="Model photo pages"
+          pagerLabel={t("mockups.cardGrid.modelPhotosLabel")}
           className={cn(scope === "seller" && "xl:grid-cols-4")}
           renderItem={(photo) => (
             <MockupTemplateListItem

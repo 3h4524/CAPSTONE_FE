@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Star } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/utils/cn";
 
@@ -20,6 +21,7 @@ type PhonePlanCarouselProps = {
 
 /** The plans on a phone: one card at a time with the next one peeking in, and a tab naming each plan. */
 export const PhonePlanCarousel = ({ items, initialKey }: PhonePlanCarouselProps) => {
+  const { t } = useTranslation("common");
   const scrollerRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(() => Math.max(0, items.findIndex((item) => item.key === initialKey)));
@@ -58,7 +60,7 @@ export const PhonePlanCarousel = ({ items, initialKey }: PhonePlanCarouselProps)
       <div
         ref={tabsRef}
         role="group"
-        aria-label="Choose a plan"
+        aria-label={t("subscription.choosePlanAria")}
         className="bg-muted relative flex gap-1 overflow-x-auto rounded-full p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((item, index) => (

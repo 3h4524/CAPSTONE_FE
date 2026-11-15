@@ -2,6 +2,7 @@
 
 import { type ReactNode,useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { useIsPhone } from "@/hooks/use-is-phone";
 import type { AvailablePlan, BillingCycle } from "@/types/subscription";
@@ -48,9 +49,11 @@ export const AvailablePlansSection = ({
   onUpgradeClick,
   onDowngradeClick,
   trialOffer,
-  trialLabel = "Trial",
+  trialLabel,
 }: AvailablePlansSectionProps) => {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
+  const trialLabelText = trialLabel ?? t("subscription.trialDefaultLabel");
   const currentPlanPrice = plans.find((plan) => plan.isCurrentPlan)?.monthlyPriceUsd ?? null;
   const emphasis = emphasisOf(plans, hasActivePaidPlan);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -58,7 +61,7 @@ export const AvailablePlansSection = ({
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   const cardItems = [
-    ...(trialOffer ? [{ key: "trial-offer", label: trialLabel, node: trialOffer }] : []),
+    ...(trialOffer ? [{ key: "trial-offer", label: trialLabelText, node: trialOffer }] : []),
     ...plans.map((plan) => ({
       key: plan.planId,
       label: plan.name,
@@ -115,21 +118,21 @@ export const AvailablePlansSection = ({
   if (isPhone) {
     const opening = plans.find((plan) => emphasis.get(plan.planId) === "current") ?? plans.find((plan) => plan.isRecommended);
     return (
-      <section aria-label="Available plans">
+      <section aria-label={t("subscription.availablePlansAria")}>
         <PhonePlanCarousel key={totalCards} items={cardItems} initialKey={opening?.planId} />
       </section>
     );
   }
 
   return (
-    <section aria-label="Available plans" className="relative">
+    <section aria-label={t("subscription.availablePlansAria")} className="relative">
       {/* Side Arrow Navigation Buttons (located at the two ends: left of the 1st card, right of the last card) */}
       {totalCards > 4 && (
         <>
           <button
             type="button"
             onClick={() => scroll("left")}
-            aria-label="Previous plan"
+            aria-label={t("subscription.previousPlanAria")}
             disabled={!canScrollLeft}
             className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 absolute top-1/2 -left-3 z-30 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-25 sm:-left-5 sm:size-11"
           >
@@ -138,7 +141,7 @@ export const AvailablePlansSection = ({
           <button
             type="button"
             onClick={() => scroll("right")}
-            aria-label="Next plan"
+            aria-label={t("subscription.nextPlanAria")}
             disabled={!canScrollRight}
             className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 absolute top-1/2 -right-3 z-30 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-25 sm:-right-5 sm:size-11"
           >

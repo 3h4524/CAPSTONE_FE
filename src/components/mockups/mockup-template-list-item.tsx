@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { ImageIcon, Pencil, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { ImageLightbox } from "@/components/commons/data-display/image-lightbox";
 import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
@@ -33,6 +34,7 @@ export const MockupTemplateListItem = ({
   onEdit,
   onDelete,
 }: MockupTemplateListItemProps) => {
+  const { t } = useTranslation("common");
   const [viewing, setViewing] = useState<number | null>(null);
   // The photo's own backdrop color, so the space beside it does not show as a band of another gray.
   const [backdrop, setBackdrop] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export const MockupTemplateListItem = ({
         type="button"
         onClick={() => setViewing(0)}
         disabled={isImageBroken}
-        aria-label={`View ${template.name} larger`}
+        aria-label={t("mockups.templateCard.viewLabel", { templateName: template.name })}
         className="bg-ink-100 relative block aspect-[4/3] w-full shrink-0 cursor-zoom-in overflow-hidden disabled:cursor-default"
         style={backdrop && !isImageBroken ? { backgroundColor: backdrop } : undefined}
       >
@@ -119,31 +121,31 @@ export const MockupTemplateListItem = ({
           <Badge variant="outline" className="max-md:hidden">
             {template.outputWidthPx} x {template.outputHeightPx}
           </Badge>
-          <Badge variant="outline" className={cn(template.usageCount === 0 && "max-md:hidden")}>Used {template.usageCount}x</Badge>
-          {template.realisticPrintReady && <Badge variant="secondary">Realistic print</Badge>}
+          <Badge variant="outline" className={cn(template.usageCount === 0 && "max-md:hidden")}>{t("mockups.templateCard.usedCount", { count: template.usageCount })}</Badge>
+          {template.realisticPrintReady && <Badge variant="secondary">{t("mockups.templateCard.realisticPrint")}</Badge>}
           {template.allowRecolor && template.kind !== "model" && (
-            <Badge variant="secondary">Recolorable</Badge>
+            <Badge variant="secondary">{t("mockups.templateCard.recolorable")}</Badge>
           )}
           {template.kind === "model" && modelAttributesLabel(template.attributes) && (
             <Badge variant="secondary">{modelAttributesLabel(template.attributes)}</Badge>
           )}
-          {template.aiGenerated && <Badge variant="outline">Made with AI</Badge>}
+          {template.aiGenerated && <Badge variant="outline">{t("mockups.templateCard.madeWithAi")}</Badge>}
           {template.kind !== "model" && layout && layout.view !== "front" && (
             <Badge variant="secondary">{mockupViewLabel(layout.view)}</Badge>
           )}
           {template.views && template.views.length > 0 && (
             <Badge variant="secondary">
-              Front + {template.views.map((side) => mockupViewLabel(templateView(side)).toLowerCase()).join(", ")}
+              {t("mockups.templateCard.frontAnd", { sides: template.views.map((side) => mockupViewLabel(templateView(side)).toLowerCase()).join(", ") })}
             </Badge>
           )}
           {template.kind !== "model" && layout && layout.areas.length > 1 && (
-            <Badge variant="outline">{layout.areas.length} print areas</Badge>
+            <Badge variant="outline">{t("mockups.templateCard.printAreasCount", { count: layout.areas.length })}</Badge>
           )}
           {template.kind === "model" && (
             <Badge variant="secondary">
               {isAutomaticPlacement(template.printAreaConfig)
-                ? "Automatic placement"
-                : "Own print area"}
+                ? t("mockups.templateCard.automaticPlacement")
+                : t("mockups.templateCard.ownPrintArea")}
             </Badge>
           )}
           {template.garmentColor && (
@@ -164,7 +166,7 @@ export const MockupTemplateListItem = ({
               onClick={() => onEdit(template)}
             >
               <Pencil aria-hidden="true" />
-              <span className="max-md:sr-only">Edit</span>
+              <span className="max-md:sr-only">{t("mockups.edit")}</span>
             </Button>
             <Button
               type="button"
@@ -175,7 +177,7 @@ export const MockupTemplateListItem = ({
               onClick={() => onDelete(template)}
             >
               <Trash2 aria-hidden="true" />
-              <span className="max-md:sr-only">Delete</span>
+              <span className="max-md:sr-only">{t("mockups.delete")}</span>
             </Button>
           </div>
         )}

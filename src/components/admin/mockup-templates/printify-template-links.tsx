@@ -33,7 +33,7 @@ const NO_PROVIDER = "none";
 export function PrintifyTemplateLinks() {
   const { t } = useTranslation("common");
   const templates = useQuery({ queryKey: adminMockupTemplateKeys.all, queryFn: getAdminMockupTemplates });
-  const connection = useQuery({ queryKey: ["printify-connection-admin"], queryFn: () => getPrintifyConnection(), staleTime: 60_000 });
+  const connection = useQuery({ queryKey: ["printify-connection-admin"], queryFn: () => getPrintifyConnection(), staleTime: 60_000, retry: false });
   const ready = connection.data?.status === "connected";
 
   return (
@@ -46,6 +46,13 @@ export function PrintifyTemplateLinks() {
         <Alert>
           <TriangleAlert />
           <AlertDescription>Searching Printify&apos;s products uses your own Printify API key. Add one on the API Keys page.</AlertDescription>
+        </Alert>
+      )}
+      {connection.isError && (
+        <Alert variant="destructive">
+          <AlertCircle />
+          <AlertTitle>{t("adminUi.printifyConnectionFailed")}</AlertTitle>
+          <AlertDescription>{getErrorMessage(connection.error)}</AlertDescription>
         </Alert>
       )}
       {templates.isPending && (

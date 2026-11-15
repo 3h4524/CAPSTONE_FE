@@ -140,6 +140,7 @@ export const resources = {
       fileDropzone: { prompt: "Drag a file here or browse", replace: "Click to replace" },
       adminUi: {
         templatesLoadFailed: "Could not load templates",
+        printifyConnectionFailed: "Could not check the Printify connection",
         copyTicketId: "Copy ticket ID",
         removeAttachment: "Remove {{name}}",
         supportFilters: {
@@ -297,6 +298,7 @@ export const resources = {
       fileDropzone: { prompt: "Kéo thả tệp vào đây hoặc chọn tệp", replace: "Nhấn để thay tệp" },
       adminUi: {
         templatesLoadFailed: "Không thể tải các mẫu",
+        printifyConnectionFailed: "Không thể kiểm tra kết nối Printify",
         copyTicketId: "Sao chép mã phiếu",
         removeAttachment: "Xóa {{name}}",
         supportFilters: {

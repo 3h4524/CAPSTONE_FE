@@ -50,6 +50,15 @@ export const planBlocksRun = (
   return null;
 };
 
+// Why a batch with nothing pending must not be run, or null when it may: a product whose design failed is not
+// pending, yet it has no design. Running would otherwise go on to the video as if every design were made.
+export const failedProductsBlockRun = (products: Pick<Product, "status">[]): string | null => {
+  if (products.some((product) => product.status === "pending")) return null;
+  const failed = products.filter((product) => product.status === "failed").length;
+  if (failed === 0) return null;
+  return `${failed} ${failed === 1 ? "product" : "products"} of this batch failed in an earlier run, so ${failed === 1 ? "it has" : "they have"} no design yet. Open that run under Previous runs in Product input, then choose Retry failed products in Design image.`;
+};
+
 // Whether the Seller must connect their own key for the image provider. A plan with the platform's keys makes Ideogram
 // images on those; the backend still asks for the Seller's key when the platform has none configured.
 export const needsOwnImageKey = (entitlements: Entitlements, imageProvider: string): boolean =>
@@ -77,6 +86,8 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
     queryFn: () => listBatchProducts(plan.batchId),
     ...fresh,
   });
+  const failed = failedProductsBlockRun(products);
+  if (failed) throw new RunBlockedError(failed);
   const pending = products.filter((product) => product.status === "pending");
   if (pending.length === 0) {
     throw new NothingPendingError(

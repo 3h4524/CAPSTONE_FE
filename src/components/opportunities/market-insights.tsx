@@ -114,7 +114,7 @@ export function NicheMapCard({
           })} />
         </p>
         <p className="text-ink-500 mt-0.5 text-xs">
-          {t("marketRadar.nicheMapSubtitle", { defaultValue: "{{count}} niches. Click one to open it below.", count: map.points.length })}
+          {t("marketRadar.nicheMapSubtitleShort", { defaultValue: "{{count}} niches. Click one to open it below.", count: map.points.length })}
         </p>
       </div>
       <div className="px-3 pt-2">
@@ -689,7 +689,7 @@ export function PriceSweetSpot({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-ink-900 flex items-center gap-2 text-sm font-semibold">
           <Tag className="size-4 text-blue-600 dark:text-blue-400" />
-          {t("marketRadar.sweetSpotTitle", { defaultValue: "Price" })}
+          {t("marketRadar.sweetSpotShort", { defaultValue: "Price" })}
           <InfoTip text={t("marketRadar.sweetSpotMethod", { defaultValue: "Prices are Etsy list prices before sales and coupons; many shops discount all the time, so buyers often pay less. Each band holds a quarter of the top listings; \"active\" means 1+ favorite a month. Click a band to see its listings." })} />
         </p>
         {p25 != null && p75 != null && (

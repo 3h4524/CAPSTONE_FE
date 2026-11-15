@@ -22,7 +22,7 @@ import type { ModerationRangeDays } from "@/types/admin-moderation";
 import { cn } from "@/utils/cn";
 
 const RangePicker = ({ value, onChange }: { value: ModerationRangeDays; onChange: (days: ModerationRangeDays) => void }) => (
-  <div role="radiogroup" aria-label="Period" className="bg-ink-100 dark:bg-ink-800/60 inline-flex rounded-lg p-1">
+  <div role="radiogroup" aria-label="Period" className="bg-ink-100 inline-flex rounded-lg p-1">
     {RANGE_OPTIONS.map((days) => (
       <button
         key={days}
@@ -33,8 +33,8 @@ const RangePicker = ({ value, onChange }: { value: ModerationRangeDays; onChange
         className={cn(
           "min-h-9 rounded-md px-3 text-sm font-medium transition-colors",
           value === days
-            ? "bg-card text-ink-900 dark:text-ink-50 shadow-sm"
-            : "text-ink-600 hover:text-ink-900 dark:hover:text-ink-100"
+            ? "bg-card text-ink-900 shadow-sm dark:ring-1 dark:ring-white/15"
+            : "text-ink-600 hover:text-ink-900"
         )}
       >
         {days} days
@@ -44,7 +44,7 @@ const RangePicker = ({ value, onChange }: { value: ModerationRangeDays; onChange
 );
 
 export const OverviewPanel = ({ onOpenLog }: { onOpenLog: () => void }) => {
-  const [days, setDays] = useState<ModerationRangeDays>(30);
+  const [days, setDays] = useState<ModerationRangeDays>(7);
   const overview = useModerationOverview(days);
   const offenders = useModerationOffenders(days);
   const data = overview.data;

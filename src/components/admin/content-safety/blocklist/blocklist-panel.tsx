@@ -1,7 +1,7 @@
 "use client";
 
 import { useDeferredValue, useState } from "react";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2 } from "lucide-react";
 
 import { AllowlistDialog,type AllowlistDialogTarget } from "@/components/admin/content-safety/blocklist/allowlist-dialog";
 import { DIALOG_CLASS, DialogHead } from "@/components/admin/content-safety/blocklist/form-parts";
@@ -10,6 +10,7 @@ import {
   CATEGORY_LABELS,
   CATEGORY_ORDER,
   formatDateTime,
+  formatNumber,
   PanelMessage,
   Section,
   StorageMissingBanner,
@@ -40,6 +41,7 @@ import type {
 import { cn } from "@/utils/cn";
 
 const ALL = "all";
+const PAGE_SIZE = 20;
 const headClass = "text-ink-500 text-xs font-semibold tracking-wider uppercase";
 
 const SeverityBadge = ({ severity }: { severity: ModerationTermSeverity }) => (
@@ -173,7 +175,14 @@ export const BlocklistPanel = () => {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim());
   const [filter, setFilter] = useState<ModerationTermFilter>({});
+  const [page, setPage] = useState(1);
   const terms = useModerationTerms({ ...filter, search: deferredSearch || undefined });
+  const termList = terms.data ?? [];
+  const pageCount = Math.max(1, Math.ceil(termList.length / PAGE_SIZE));
+  // A delete or a filter can leave fewer pages than the one being shown.
+  const currentPage = Math.min(page, pageCount);
+  const firstIndex = (currentPage - 1) * PAGE_SIZE;
+  const visibleTerms = termList.slice(firstIndex, firstIndex + PAGE_SIZE);
   const allowlist = useModerationAllowlist();
   const toggleTerm = useToggleModerationTerm();
   const toggleAllowlist = useSaveModerationAllowlist();
@@ -238,7 +247,18 @@ export const BlocklistPanel = () => {
         }
       >
         <div className="flex flex-col gap-4">
-          <TermFilters search={search} onSearch={setSearch} filter={filter} onFilter={setFilter} />
+          <TermFilters
+            search={search}
+            onSearch={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+            filter={filter}
+            onFilter={(next) => {
+              setFilter(next);
+              setPage(1);
+            }}
+          />
           {terms.isError ? (
             <PanelMessage tone="error" title="The blocklist could not be loaded." />
           ) : !terms.data ? (
@@ -250,7 +270,7 @@ export const BlocklistPanel = () => {
             />
           ) : isPhone ? (
             <ul className="space-y-2">
-              {terms.data.map((term) => (
+              {visibleTerms.map((term) => (
                 <li key={term.id} className="border-ink-200 rounded-lg border p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
@@ -292,7 +312,7 @@ export const BlocklistPanel = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {terms.data.map((term) => (
+                  {visibleTerms.map((term) => (
                     <TableRow key={term.id} className={cn(!term.isActive && "opacity-60")}>
                       <TableCell>
                         <p className="text-ink-900 dark:text-ink-50 font-semibold">{term.term}</p>
@@ -322,6 +342,40 @@ export const BlocklistPanel = () => {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+
+          {terms.data && terms.data.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-ink-500 text-sm" aria-live="polite">
+                {formatNumber(firstIndex + 1)}–{formatNumber(firstIndex + visibleTerms.length)} of {formatNumber(termList.length)}{" "}
+                terms
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage(Math.max(1, currentPage - 1))}
+                >
+                  <ChevronLeft aria-hidden="true" />
+                  Previous
+                </Button>
+                <span className="text-ink-600 text-sm tabular-nums">
+                  Page {currentPage} of {pageCount}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage >= pageCount}
+                  onClick={() => setPage(currentPage + 1)}
+                >
+                  Next
+                  <ChevronRight aria-hidden="true" />
+                </Button>
+              </div>
             </div>
           )}
         </div>

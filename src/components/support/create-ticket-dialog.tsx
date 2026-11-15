@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Headset, Send, X } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { TicketDropzone } from "@/components/support/ticket-dropzone";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ type CreateTicketDialogProps = {
 };
 
 export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreated }: CreateTicketDialogProps) {
+  const { t } = useTranslation("common");
   const [files, setFiles] = useState<File[]>([]);
   const mutation = useCreateSupportTicket(onCreated);
   const {
@@ -84,13 +86,13 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
             <Headset className="size-[18px]" aria-hidden="true" />
           </div>
           <div className="space-y-1">
-            <p className="text-ink-500 text-[10px] font-bold tracking-[0.16em]">NEW REQUEST</p>
-            <DialogTitle className="font-display text-xl tracking-[-0.02em]">Contact support</DialogTitle>
+            <p className="text-ink-500 text-[10px] font-bold tracking-[0.16em]">{t("support.newRequest")}</p>
+            <DialogTitle className="font-display text-xl tracking-[-0.02em]">{t("support.contactSupport")}</DialogTitle>
             <DialogDescription className="leading-5">
-              Include the batch, provider, or error message if one is involved.
+              {t("support.contactSupportDescription")}
             </DialogDescription>
           </div>
-          <Button type="button" variant="ghost" size="icon" className="text-ink-500 hover:bg-ink-100 absolute top-4 right-4 size-10 rounded-lg hover:translate-y-0" onClick={onClose} aria-label="Close new ticket">
+          <Button type="button" variant="ghost" size="icon" className="text-ink-500 hover:bg-ink-100 absolute top-4 right-4 size-10 rounded-lg hover:translate-y-0" onClick={onClose} aria-label={t("support.closeNewTicket")}>
             <X aria-hidden="true" />
           </Button>
         </DialogHeader>
@@ -98,10 +100,10 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
         <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
           <ScrollArea className="min-h-0 flex-1">
             <div className="space-y-4 px-5 py-3 sm:px-6">
-              <Field label="Subject" htmlFor="support-subject" error={errors.subject?.message}>
+              <Field label={t("support.subject")} htmlFor="support-subject" error={errors.subject?.message}>
                 <Input
                   id="support-subject"
-                  placeholder="Short summary of the issue"
+                  placeholder={t("support.subjectPlaceholder")}
                   autoFocus
                   className="border-ink-300 bg-card focus-visible:border-primary focus-visible:ring-primary/15 min-h-12 rounded-xl px-3.5"
                   aria-invalid={Boolean(errors.subject)}
@@ -110,7 +112,7 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
               </Field>
 
               <div className="grid gap-4 sm:grid-cols-[0.85fr_1.15fr]">
-                <Field label="Category" htmlFor="support-category" error={errors.category?.message}>
+                <Field label={t("support.category")} htmlFor="support-category" error={errors.category?.message}>
                   <Controller
                     name="category"
                     control={control}
@@ -130,7 +132,7 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
                               value={category.value}
                               className="text-ink-700 focus:bg-ink-100 focus:text-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground rounded-lg px-3 py-2.5 text-sm"
                             >
-                              {category.label}
+                              {t(`support.categories.${category.value}`)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -138,7 +140,7 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
                     )}
                   />
                 </Field>
-                <Field label="Priority" htmlFor="support-priority" error={errors.priority?.message}>
+                <Field label={t("support.priority")} htmlFor="support-priority" error={errors.priority?.message}>
                   <Controller
                     name="priority"
                     control={control}
@@ -158,7 +160,7 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
                               value={priority.value}
                               className="text-ink-700 focus:bg-ink-100 focus:text-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground rounded-lg px-3 py-2.5 text-sm"
                             >
-                              {priority.label}
+                              {t(`support.priorityOptions.${priority.value}`)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -168,10 +170,10 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
                 </Field>
               </div>
 
-              <Field label="Description" htmlFor="support-description" error={errors.description?.message}>
+              <Field label={t("support.description")} htmlFor="support-description" error={errors.description?.message}>
                 <Textarea
                   id="support-description"
-                  placeholder="Describe what you expected and what you saw..."
+                  placeholder={t("support.descriptionPlaceholder")}
                   className="border-ink-300 bg-card focus-visible:border-primary focus-visible:ring-primary/15 min-h-32 resize-y rounded-xl px-3.5 py-3"
                   aria-invalid={Boolean(errors.description)}
                   {...register("description")}
@@ -180,7 +182,7 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
 
               <div className="space-y-2">
                 <p className="text-ink-700 text-sm font-semibold">
-                  Attachments <span className="text-ink-500 font-normal">(optional)</span>
+                  {t("support.attachments")} <span className="text-ink-500 font-normal">{t("support.optional")}</span>
                 </p>
                 <TicketDropzone files={files} onChange={setFiles} disabled={mutation.isPending} />
               </div>
@@ -189,11 +191,11 @@ export function CreateTicketDialog({ open, initialSubject = "", onClose, onCreat
 
           <div className="bg-card flex shrink-0 justify-end gap-2 px-5 pt-4 pb-6 sm:px-6">
             <Button type="button" variant="outline" className="border-ink-300 hover:border-ink-400 hover:text-primary min-h-11 px-5 hover:translate-y-0" onClick={onClose} disabled={mutation.isPending}>
-              Cancel
+              {t("support.cancel")}
             </Button>
             <Button type="submit" className="min-h-11 px-5 shadow-[0_8px_18px_rgba(39,55,80,0.2)] hover:-translate-y-0.5" disabled={mutation.isPending}>
               {mutation.isPending ? <Spinner aria-hidden="true" /> : <Send aria-hidden="true" />}
-              Submit ticket
+              {t("support.submitTicket")}
             </Button>
           </div>
         </form>

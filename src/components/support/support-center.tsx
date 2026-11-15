@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import type { TFunction } from "i18next";
 import {
   ArrowUpRight,
   ChevronLeft,
@@ -15,6 +16,7 @@ import {
   RefreshCw,
   Store,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "@/components/commons/layout/page-header";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
@@ -32,7 +34,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CATEGORY_LABELS } from "@/constants/support";
 import { useSupportTickets } from "@/hooks/queries/use-support-tickets";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import { useAuthStore } from "@/stores/auth";
@@ -43,68 +44,22 @@ const PAGE_SIZE = 8;
 
 type HelpTopic = {
   id: string;
-  /** Shown beside the topic in the phone's list. */
   icon: LucideIcon;
-  title: string;
-  description: string;
-  steps: readonly string[];
-  note: string;
-  ticketSubject: string;
+  keys: string;
 };
 
 const HELP_TOPICS: readonly HelpTopic[] = [
-  {
-    id: "connect-etsy",
-    icon: Store,
-    title: "Connect an Etsy shop",
-    description:
-      "Connect your Etsy shop so Podivo can prepare and publish listings from your workspace.",
-    steps: [
-      "Open API keys from the Workspace menu and select Add API key.",
-      "Choose Etsy and start the connection flow.",
-      "Sign in to the correct Etsy account and approve the requested permissions.",
-      "Return to Podivo and confirm that the connection status is Connected.",
-    ],
-    note: "Use the Etsy account that owns the shop you want Podivo to publish to.",
-    ticketSubject: "Help connecting an Etsy shop",
-  },
-  {
-    id: "fix-api-key",
-    icon: KeyRound,
-    title: "Fix an API key",
-    description:
-      "A key usually needs attention when it expired, was revoked, or no longer has the permissions Podivo requires.",
-    steps: [
-      "Open API keys and find the provider that needs attention.",
-      "Confirm the key is still active in the provider account and has the required permissions.",
-      "Select Edit, paste the replacement key, and save your changes.",
-      "Run the connection check again and confirm the status is Connected.",
-    ],
-    note: "For security, Podivo only displays the masked credential. Never include a full API key in a support ticket.",
-    ticketSubject: "API key connection needs attention",
-  },
-  {
-    id: "understand-credits",
-    icon: Gauge,
-    title: "Understand credits",
-    description:
-      "Your plan includes an allowance used by generation and publishing activity in the workspace.",
-    steps: [
-      "Open Usage to review images, videos, listings, and estimated provider costs.",
-      "Use the date-range selector to compare activity across different periods.",
-      "Check Credit allowance to see the amount used, the plan limit, and the reset date.",
-      "Open Billing if you need to review or change the subscription attached to the workspace.",
-    ],
-    note: "Usage data can take a short time to appear after a workflow finishes.",
-    ticketSubject: "Question about credits or usage",
-  },
+  { id: "connect-etsy", icon: Store, keys: "connectEtsy" },
+  { id: "fix-api-key", icon: KeyRound, keys: "fixApiKey" },
+  { id: "understand-credits", icon: Gauge, keys: "credits" },
 ] as const;
 
-const TICKET_VIEW_LABELS = { all: "All", open: "Open", in_progress: "In Progress", resolved: "Resolved", closed: "Closed" };
-type TicketView = keyof typeof TICKET_VIEW_LABELS;
-const TICKET_VIEWS = Object.keys(TICKET_VIEW_LABELS) as TicketView[];
+type TicketView = "all" | "open" | "in_progress" | "resolved" | "closed";
+const TICKET_VIEW_LABELS: Record<TicketView, string> = { all: "support.views.all", open: "support.views.open", in_progress: "support.views.in_progress", resolved: "support.views.resolved", closed: "support.views.closed" };
+const TICKET_VIEWS: TicketView[] = ["all", "open", "in_progress", "resolved", "closed"];
 
 export function SupportCenter() {
+  const { t } = useTranslation("common");
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = useAuthStore((state) => state.user);
@@ -156,8 +111,8 @@ export function SupportCenter() {
     <div className="text-foreground w-full min-w-0 p-4 sm:p-6">
       <PageHeader
         className="mb-6"
-        title="Support center"
-        description="Find setup guidance, contact the support team, and track your requests."
+        title={t("support.pageTitle")}
+        description={t("support.pageDescription")}
       />
 
       <div>
@@ -171,15 +126,15 @@ export function SupportCenter() {
             </span>
             <div>
               <h2 id="support-help-heading" className="font-display text-xl font-semibold tracking-tight max-md:text-lg">
-                How can we help?
+                {t("support.helpHeading")}
               </h2>
               <p className="text-ink-600 mt-1 max-w-xl text-sm leading-5 max-md:mt-0 max-md:text-xs">
-                Choose a quick guide for the questions sellers ask most often.
+                {t("support.helpDescription")}
               </p>
             </div>
           </div>
 
-          <div className="max-md:border-ink-200 mt-5 flex flex-wrap gap-2 max-md:mt-4 max-md:flex-col max-md:flex-nowrap max-md:gap-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl max-md:border max-sm:pl-0 sm:pl-[60px]" aria-label="Popular help topics">
+          <div className="max-md:border-ink-200 mt-5 flex flex-wrap gap-2 max-md:mt-4 max-md:flex-col max-md:flex-nowrap max-md:gap-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl max-md:border max-sm:pl-0 sm:pl-[60px]" aria-label={t("support.popularHelpTopics")}>
             {HELP_TOPICS.map((topic) => (
               <button
                 key={topic.id}
@@ -192,8 +147,8 @@ export function SupportCenter() {
                   <topic.icon className="size-4" />
                 </span>
                 <span className="max-md:min-w-0 max-md:flex-1">
-                  <span className="max-md:text-ink-900 max-md:block max-md:font-semibold">{topic.title}</span>
-                  <span className="text-ink-500 text-xs font-normal max-md:block max-md:truncate md:hidden">{topic.description}</span>
+                  <span className="max-md:text-ink-900 max-md:block max-md:font-semibold">{t(`support.helpTopics.${topic.keys}.title`)}</span>
+                  <span className="text-ink-500 text-xs font-normal max-md:block max-md:truncate md:hidden">{t(`support.helpTopics.${topic.keys}.description`)}</span>
                 </span>
                 <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 max-md:hidden" aria-hidden="true" />
                 <ChevronRight className="text-ink-400 size-4 shrink-0 md:hidden" aria-hidden="true" />
@@ -205,27 +160,27 @@ export function SupportCenter() {
         <section className="border-ink-200 bg-card mt-4 overflow-hidden rounded-xl border shadow-sm" aria-labelledby="support-tickets-heading">
           <div className="flex flex-col gap-4 px-5 py-4 max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:items-center max-md:gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-ink-500 text-[10px] font-bold tracking-[0.16em]">YOUR REQUESTS</p>
+              <p className="text-ink-500 text-[10px] font-bold tracking-[0.16em]">{t("support.yourRequests")}</p>
               <h2 id="support-tickets-heading" className="font-display mt-1 text-xl font-semibold tracking-tight max-md:text-lg">
-                Support tickets
+                {t("support.supportTickets")}
               </h2>
             </div>
             <div className="flex flex-col gap-3 max-md:contents sm:flex-row sm:items-center">
               {isPhone ? (
                 <Select value={view} onValueChange={(next) => selectView(next as TicketView)}>
-                  <SelectTrigger aria-label="Filter tickets" className="bg-card w-full max-md:col-span-2 max-md:row-start-2">
+                  <SelectTrigger aria-label={t("support.filterTickets")} className="bg-card w-full max-md:col-span-2 max-md:row-start-2">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent position="popper" className="bg-card w-(--radix-select-trigger-width)">
                     {TICKET_VIEWS.map((item) => (
                       <SelectItem key={item} value={item}>
-                        {TICKET_VIEW_LABELS[item]}
+                        {t(TICKET_VIEW_LABELS[item])}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               ) : (
-              <div className="border-border bg-background flex max-w-full flex-wrap self-start rounded-2xl border p-0.5 sm:inline-flex sm:flex-nowrap sm:rounded-full" role="group" aria-label="Filter tickets">
+              <div className="border-border bg-background flex max-w-full flex-wrap self-start rounded-2xl border p-0.5 sm:inline-flex sm:flex-nowrap sm:rounded-full" role="group" aria-label={t("support.filterTickets")}>
                 {TICKET_VIEWS.map((item) => (
                   <button
                     key={item}
@@ -239,26 +194,26 @@ export function SupportCenter() {
                     )}
                     onClick={() => selectView(item)}
                   >
-                    {TICKET_VIEW_LABELS[item]}
+                    {t(TICKET_VIEW_LABELS[item])}
                   </button>
                 ))}
               </div>
               )}
-              <Button size="page-action" className="min-h-10 self-start px-4 max-md:col-start-2 max-md:row-start-1 sm:self-auto" aria-label="New ticket" onClick={() => openComposer()}>
-                <Plus aria-hidden="true" /><span>New<span className="max-md:hidden"> ticket</span></span>
+              <Button size="page-action" className="min-h-10 self-start px-4 max-md:col-start-2 max-md:row-start-1 sm:self-auto" aria-label={t("support.newTicket")} onClick={() => openComposer()}>
+                <Plus aria-hidden="true" /><span>{t("support.newShort")}<span className="max-md:hidden">{t("support.ticketSuffix")}</span></span>
               </Button>
             </div>
           </div>
 
           {ticketsQuery.isPending ? (
-            <SectionLoading label="Loading tickets" />
+            <SectionLoading label={t("support.loadingTickets")} />
           ) : ticketsQuery.isError ? (
             <div className="border-ink-200 flex min-h-72 flex-col items-center justify-center border-t p-8 text-center">
               <LifeBuoy className="text-ink-400 size-8" aria-hidden="true" />
-              <h3 className="mt-4 font-semibold">Tickets could not be loaded</h3>
-              <p className="text-ink-500 mt-1 text-sm">Try refreshing this list.</p>
+              <h3 className="mt-4 font-semibold">{t("support.ticketsLoadFailedTitle")}</h3>
+              <p className="text-ink-500 mt-1 text-sm">{t("support.ticketsLoadFailedDescription")}</p>
               <Button variant="outline" className="border-ink-300 mt-4 min-h-10 px-4 hover:translate-y-0" onClick={() => ticketsQuery.refetch()}>
-                <RefreshCw aria-hidden="true" />Refresh
+                <RefreshCw aria-hidden="true" />{t("support.refresh")}
               </Button>
             </div>
           ) : ticketsQuery.data.items.length === 0 ? (
@@ -266,12 +221,12 @@ export function SupportCenter() {
               <span className="bg-ink-100 flex size-12 items-center justify-center rounded-xl">
                 <Inbox className="text-ink-500 size-5" aria-hidden="true" />
               </span>
-              <h3 className="font-display mt-4 text-xl font-semibold">No tickets here</h3>
+              <h3 className="font-display mt-4 text-xl font-semibold">{t("support.noTicketsTitle")}</h3>
               <p className="text-ink-500 mt-1 max-w-sm text-sm">
-                {view === "all" ? "New conversations will appear in this list." : `You do not have any ${view} tickets.`}
+                {view === "all" ? t("support.noTicketsEmpty") : t("support.noTicketsViewOther", { view })}
               </p>
               <Button className="mt-5 min-h-10 px-4 hover:translate-y-0" onClick={() => openComposer()}>
-                <Plus aria-hidden="true" />New ticket
+                <Plus aria-hidden="true" />{t("support.newTicket")}
               </Button>
             </div>
           ) : (
@@ -280,16 +235,16 @@ export function SupportCenter() {
               <TicketCards tickets={ticketsQuery.data.items} onOpen={openTicket} selectedTicketId={ticketId} localReadState={localReadState} setLocalReadState={setLocalReadState} />
               <div className="border-ink-200 flex min-h-14 items-center justify-between gap-3 border-t px-5 py-2 sm:px-7">
                 <p className="text-ink-500 text-xs">
-                  Showing {ticketsQuery.data.items.length} of {ticketsQuery.data.totalCount} ticket{ticketsQuery.data.totalCount === 1 ? "" : "s"}
+                  {t("support.showingCount", { count: ticketsQuery.data.totalCount, shown: ticketsQuery.data.items.length, total: ticketsQuery.data.totalCount })}
                 </p>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" className="size-9 rounded-lg hover:translate-y-0" disabled={pageNumber <= 1} onClick={() => setPageNumber((page) => page - 1)} aria-label="Previous page">
+                  <Button variant="ghost" size="icon" className="size-9 rounded-lg hover:translate-y-0" disabled={pageNumber <= 1} onClick={() => setPageNumber((page) => page - 1)} aria-label={t("support.previousPage")}>
                     <ChevronLeft aria-hidden="true" />
                   </Button>
                   <span className="text-ink-600 min-w-14 text-center text-xs font-medium tabular-nums">
                     {pageNumber} / {Math.max(1, ticketsQuery.data.totalPages)}
                   </span>
-                  <Button variant="ghost" size="icon" className="size-9 rounded-lg hover:translate-y-0" disabled={pageNumber >= ticketsQuery.data.totalPages} onClick={() => setPageNumber((page) => page + 1)} aria-label="Next page">
+                  <Button variant="ghost" size="icon" className="size-9 rounded-lg hover:translate-y-0" disabled={pageNumber >= ticketsQuery.data.totalPages} onClick={() => setPageNumber((page) => page + 1)} aria-label={t("support.nextPage")}>
                     <ChevronRight aria-hidden="true" />
                   </Button>
                 </div>
@@ -309,44 +264,44 @@ export function SupportCenter() {
           <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
             <DialogHeader>
               <p className="text-ink-500 text-[10px] font-semibold tracking-[0.16em] uppercase">
-                Quick guide
+                {t("support.quickGuide")}
               </p>
               <DialogTitle className="font-display text-xl tracking-tight">
-                {selectedHelpTopic.title}
+                {t(`support.helpTopics.${selectedHelpTopic.keys}.title`)}
               </DialogTitle>
               <DialogDescription className="leading-5">
-                {selectedHelpTopic.description}
+                {t(`support.helpTopics.${selectedHelpTopic.keys}.description`)}
               </DialogDescription>
             </DialogHeader>
 
-            <ol className="space-y-3" aria-label={`Steps for ${selectedHelpTopic.title}`}>
-              {selectedHelpTopic.steps.map((step, index) => (
-                <li key={step} className="text-ink-700 flex gap-3 text-sm leading-5">
+            <ol className="space-y-3" aria-label={t("support.stepsFor", { title: t(`support.helpTopics.${selectedHelpTopic.keys}.title`) })}>
+              {[1, 2, 3, 4].map((index) => (
+                <li key={index} className="text-ink-700 flex gap-3 text-sm leading-5">
                   <span className="bg-ink-100 text-primary flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-semibold">
-                    {index + 1}
+                    {index}
                   </span>
-                  <span className="pt-0.5">{step}</span>
+                  <span className="pt-0.5">{t(`support.helpTopics.${selectedHelpTopic.keys}.step${index}`)}</span>
                 </li>
               ))}
             </ol>
 
             <div className="border-ink-200 bg-ink-50 text-ink-600 rounded-lg border px-4 py-3 text-xs leading-5">
-              <span className="text-ink-800 font-semibold">Good to know:</span>{" "}
-              {selectedHelpTopic.note}
+              <span className="text-ink-800 font-semibold">{t("support.goodToKnow")}:</span>{" "}
+              {t(`support.helpTopics.${selectedHelpTopic.keys}.note`)}
             </div>
 
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline">Close</Button>
+                <Button variant="outline">{t("support.close")}</Button>
               </DialogClose>
               <Button
                 onClick={() => {
-                  const subject = selectedHelpTopic.ticketSubject;
+                  const subject = t(`support.helpTopics.${selectedHelpTopic.keys}.ticketSubject`);
                   setSelectedHelpTopic(null);
                   openComposer(subject);
                 }}
               >
-                <Plus aria-hidden="true" />Create support ticket
+                <Plus aria-hidden="true" />{t("support.createSupportTicket")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -365,16 +320,18 @@ export function SupportCenter() {
 }
 
 function TicketTable({ tickets, onOpen, selectedTicketId, localReadState, setLocalReadState }: { tickets: SupportTicketSummary[]; onOpen: (id: string) => void; selectedTicketId: string | null; localReadState: Record<string, string>; setLocalReadState: React.Dispatch<React.SetStateAction<Record<string, string>>> }) {
+  const { t, i18n } = useTranslation("common");
+
   return (
     <div className="border-ink-200 hidden overflow-x-auto border-t md:block">
       <table className="w-full min-w-[760px] border-collapse text-left text-sm">
         <thead className="bg-ink-50 text-ink-600 text-[11px] font-semibold tracking-[0.02em]">
           <tr>
-            <th scope="col" className="w-[39%] px-7 py-3 font-semibold">Ticket</th>
-            <th scope="col" className="px-4 py-3 font-semibold">Category</th>
-            <th scope="col" className="px-4 py-3 font-semibold">Priority</th>
-            <th scope="col" className="px-4 py-3 font-semibold">Status</th>
-            <th scope="col" className="px-4 py-3 font-semibold">Updated</th>
+            <th scope="col" className="w-[39%] px-7 py-3 font-semibold">{t("support.tableTicket")}</th>
+            <th scope="col" className="px-4 py-3 font-semibold">{t("support.tableCategory")}</th>
+            <th scope="col" className="px-4 py-3 font-semibold">{t("support.tablePriority")}</th>
+            <th scope="col" className="px-4 py-3 font-semibold">{t("support.tableStatus")}</th>
+            <th scope="col" className="px-4 py-3 font-semibold">{t("support.tableUpdated")}</th>
           </tr>
         </thead>
         <tbody>
@@ -387,7 +344,7 @@ function TicketTable({ tickets, onOpen, selectedTicketId, localReadState, setLoc
               key={ticket.id}
               role="button"
               tabIndex={0}
-              aria-label={`Open ${ticket.subject}`}
+              aria-label={t("support.openTicket", { subject: ticket.subject })}
               className="group border-ink-200 hover:bg-ink-100 focus-visible:bg-ink-100 focus-visible:[&>td]:ring-primary/20 cursor-pointer border-t transition-colors first:border-t-0 focus-visible:outline-none focus-visible:[&>td]:ring-3 focus-visible:[&>td]:ring-inset"
               onClick={() => {
                 if (typeof window !== "undefined") {
@@ -411,17 +368,17 @@ function TicketTable({ tickets, onOpen, selectedTicketId, localReadState, setLoc
                 <div className="flex items-center gap-2">
                   <span className={cn("group-hover:text-primary block max-w-[430px] truncate", hasUnread ? "text-ink-900 font-bold" : "text-ink-900 font-semibold")}>{ticket.subject}</span>
                   {hasUnread && (
-                    <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] leading-none font-bold text-rose-600 uppercase shadow-sm dark:bg-rose-500/15 dark:text-rose-400">New</span>
+                    <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] leading-none font-bold text-rose-600 uppercase shadow-sm dark:bg-rose-500/15 dark:text-rose-400">{t("support.unreadNew")}</span>
                   )}
                 </div>
                 <span className="text-ink-500 mt-1 block text-[11px]">
                   #{ticket.ticketNumber} {ticket.lastMessageSnippet && <span className={cn("ml-1", hasUnread ? "text-ink-800 font-semibold" : "")}>• {ticket.lastMessageSnippet}</span>}
                 </span>
               </td>
-              <td className="text-ink-600 px-4 py-3.5">{CATEGORY_LABELS[ticket.category]}</td>
+              <td className="text-ink-600 px-4 py-3.5">{t(`support.categories.${ticket.category}`)}</td>
               <td className="px-4 py-3.5"><TicketPriorityBadge priority={ticket.priority} /></td>
               <td className="px-4 py-3.5"><TicketStatusBadge status={ticket.status} /></td>
-              <td className="text-ink-600 px-4 py-3.5 text-xs"><time dateTime={ticket.updatedAtUtc}>{formatRelativeDate(ticket.updatedAtUtc)}</time></td>
+              <td className="text-ink-600 px-4 py-3.5 text-xs"><time dateTime={ticket.updatedAtUtc}>{formatRelativeDate(ticket.updatedAtUtc, t, i18n.language)}</time></td>
             </tr>
             );
           })}
@@ -432,6 +389,8 @@ function TicketTable({ tickets, onOpen, selectedTicketId, localReadState, setLoc
 }
 
 function TicketCards({ tickets, onOpen, selectedTicketId, localReadState, setLocalReadState }: { tickets: SupportTicketSummary[]; onOpen: (id: string) => void; selectedTicketId: string | null; localReadState: Record<string, string>; setLocalReadState: React.Dispatch<React.SetStateAction<Record<string, string>>> }) {
+  const { t, i18n } = useTranslation("common");
+
   return (
     <ul className="divide-ink-200 border-ink-200 divide-y border-t md:hidden">
       {tickets.map((ticket) => {
@@ -452,11 +411,11 @@ function TicketCards({ tickets, onOpen, selectedTicketId, localReadState, setLoc
                 <div className="flex items-center gap-2">
                   <span className={cn("block truncate", hasUnread ? "text-ink-900 font-bold" : "text-ink-900 font-semibold")}>{ticket.subject}</span>
                   {hasUnread && (
-                    <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] leading-none font-bold text-rose-600 uppercase shadow-sm dark:bg-rose-500/15 dark:text-rose-400">New</span>
+                    <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] leading-none font-bold text-rose-600 uppercase shadow-sm dark:bg-rose-500/15 dark:text-rose-400">{t("support.unreadNew")}</span>
                   )}
                 </div>
                 <span className="text-ink-500 mt-1 block text-[11px]">
-                  {ticket.ticketNumber} · {CATEGORY_LABELS[ticket.category]}
+                  {ticket.ticketNumber} · {t(`support.categories.${ticket.category}`)}
                   {ticket.lastMessageSnippet && <span className={cn("mt-0.5 block truncate", hasUnread ? "text-ink-800 font-semibold" : "text-ink-400")}>{ticket.lastMessageSnippet}</span>}
                 </span>
               </span>
@@ -465,7 +424,7 @@ function TicketCards({ tickets, onOpen, selectedTicketId, localReadState, setLoc
             <span className="mt-3 flex flex-wrap items-center gap-2">
               <TicketPriorityBadge priority={ticket.priority} />
               <TicketStatusBadge status={ticket.status} />
-              <time className="text-ink-500 ml-auto text-xs" dateTime={ticket.updatedAtUtc}>{formatRelativeDate(ticket.updatedAtUtc)}</time>
+              <time className="text-ink-500 ml-auto text-xs" dateTime={ticket.updatedAtUtc}>{formatRelativeDate(ticket.updatedAtUtc, t, i18n.language)}</time>
             </span>
           </button>
         </li>
@@ -475,12 +434,12 @@ function TicketCards({ tickets, onOpen, selectedTicketId, localReadState, setLoc
   );
 }
 
-function formatRelativeDate(value: string) {
+function formatRelativeDate(value: string, t: TFunction, locale: string) {
   const date = new Date(value);
   const differenceMinutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60_000));
-  if (differenceMinutes < 1) return "Just now";
-  if (differenceMinutes < 60) return `${differenceMinutes} min ago`;
-  if (differenceMinutes < 1_440) return `${Math.floor(differenceMinutes / 60)} hr ago`;
-  if (differenceMinutes < 2_880) return "Yesterday";
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
+  if (differenceMinutes < 1) return t("support.justNow");
+  if (differenceMinutes < 60) return t("support.minAgo", { count: differenceMinutes });
+  if (differenceMinutes < 1_440) return t("support.hrAgo", { count: Math.floor(differenceMinutes / 60) });
+  if (differenceMinutes < 2_880) return t("support.yesterday");
+  return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(date);
 }

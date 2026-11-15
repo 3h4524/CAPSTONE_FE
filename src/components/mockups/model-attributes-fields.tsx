@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import {
   AGE_GROUP_OPTIONS,
   cleanAttributes,
@@ -74,10 +76,12 @@ export const ModelAttributesFields = ({
   value: ModelAttributes;
   onChange: (value: ModelAttributes) => void;
   disabled?: boolean;
-}) => (
+}) => {
+  const { t } = useTranslation("common");
+  return (
   <div className="space-y-3">
     <ChoiceChips
-      label="Who is in the photo"
+      label={t("mockups.modelAttributes.whoInPhoto")}
       options={PEOPLE_OPTIONS}
       value={value.people}
       disabled={disabled}
@@ -86,14 +90,14 @@ export const ModelAttributesFields = ({
     {value.people === "single" ? (
       <div className="flex flex-wrap gap-x-6 gap-y-3">
         <ChoiceChips
-          label="Age group"
+          label={t("mockups.modelAttributes.ageGroup")}
           options={AGE_GROUP_OPTIONS}
           value={value.ageGroup}
           disabled={disabled}
           onChange={(ageGroup) => onChange({ ...value, ageGroup })}
         />
         <ChoiceChips
-          label="Gender"
+          label={t("mockups.modelAttributes.gender")}
           options={GENDER_OPTIONS}
           value={value.gender}
           disabled={disabled}
@@ -102,7 +106,7 @@ export const ModelAttributesFields = ({
       </div>
     ) : (
       <ChoiceChips
-        label="Group"
+        label={t("mockups.modelAttributes.group")}
         options={GROUP_TYPE_OPTIONS}
         value={value.groupType}
         disabled={disabled}
@@ -110,7 +114,8 @@ export const ModelAttributesFields = ({
       />
     )}
   </div>
-);
+  );
+};
 
 /**
  * Narrows a list of model photos to the people wanted. With one person chosen, age group and gender narrow it
@@ -126,13 +131,15 @@ export const ModelPhotoFilterBar = ({
   onChange: (value: ModelPhotoFilter) => void;
   disabled?: boolean;
   className?: string;
-}) => (
+}) => {
+  const { t } = useTranslation("common");
+  return (
   <div className={cn("flex flex-wrap gap-x-6 gap-y-3", className)}>
     <ChoiceChips
-      label="People"
+      label={t("mockups.modelAttributes.people")}
       options={PEOPLE_OPTIONS}
       value={value.people}
-      anyLabel="All"
+      anyLabel={t("mockups.modelAttributes.all")}
       disabled={disabled}
       // Changing between one and several people drops the narrower choices of the other.
       onChange={(people) => onChange(people ? { people } : {})}
@@ -140,18 +147,18 @@ export const ModelPhotoFilterBar = ({
     {value.people === "single" && (
       <>
         <ChoiceChips
-          label="Age group"
+          label={t("mockups.modelAttributes.ageGroup")}
           options={AGE_GROUP_OPTIONS}
           value={value.ageGroup}
-          anyLabel="Any"
+          anyLabel={t("mockups.modelAttributes.any")}
           disabled={disabled}
           onChange={(ageGroup) => onChange({ ...value, ageGroup })}
         />
         <ChoiceChips
-          label="Gender"
+          label={t("mockups.modelAttributes.gender")}
           options={GENDER_OPTIONS}
           value={value.gender}
-          anyLabel="Any"
+          anyLabel={t("mockups.modelAttributes.any")}
           disabled={disabled}
           onChange={(gender) => onChange({ ...value, gender })}
         />
@@ -159,22 +166,23 @@ export const ModelPhotoFilterBar = ({
     )}
     {value.people === "group" && (
       <ChoiceChips
-        label="Group"
+        label={t("mockups.modelAttributes.group")}
         options={GROUP_TYPE_OPTIONS}
         value={value.groupType}
-        anyLabel="Any"
+        anyLabel={t("mockups.modelAttributes.any")}
         disabled={disabled}
         onChange={(groupType) => onChange({ ...value, groupType })}
       />
     )}
   </div>
-);
+  );
+};
 
 export type PhotoSource = "system" | "mine";
 
-const SOURCE_OPTIONS: Option<PhotoSource>[] = [
-  { value: "system", label: "System" },
-  { value: "mine", label: "Mine" },
+const SOURCE_OPTIONS: { value: PhotoSource; key: "system" | "mine" }[] = [
+  { value: "system", key: "system" },
+  { value: "mine", key: "mine" },
 ];
 
 /** The photos from one source: the shared library's (system) or the person's own; null keeps all. */
@@ -195,19 +203,24 @@ export const PhotoSourceFilter = ({
   value: PhotoSource | null;
   onChange: (value: PhotoSource | null) => void;
   disabled?: boolean;
-}) => (
-  <ChoiceChips
-    label="Source"
-    options={SOURCE_OPTIONS}
-    value={value}
-    anyLabel="All"
-    disabled={disabled}
-    onChange={onChange}
-  />
-);
+}) => {
+  const { t } = useTranslation("common");
+  return (
+    <ChoiceChips
+      label={t("mockups.modelAttributes.source")}
+      options={SOURCE_OPTIONS.map((option) => ({ value: option.value, label: t(`mockups.modelAttributes.${option.key}`) }))}
+      value={value}
+      anyLabel={t("mockups.modelAttributes.all")}
+      disabled={disabled}
+      onChange={onChange}
+    />
+  );
+};
 
 /** Says whose a photo is, in the app's own color: filled for the shared library, outlined for one's own. */
-export const PhotoSourceTag = ({ system, className }: { system: boolean; className?: string }) => (
+export const PhotoSourceTag = ({ system, className }: { system: boolean; className?: string }) => {
+  const { t } = useTranslation("common");
+  return (
   <span
     className={cn(
       "inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-semibold",
@@ -215,6 +228,7 @@ export const PhotoSourceTag = ({ system, className }: { system: boolean; classNa
       className
     )}
   >
-    {system ? "System" : "Mine"}
+    {system ? t("mockups.modelAttributes.system") : t("mockups.modelAttributes.mine")}
   </span>
-);
+  );
+};

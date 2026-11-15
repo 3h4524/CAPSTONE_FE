@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ImageIcon, Plus, UserRound } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "@/components/commons/layout/page-header";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
@@ -17,6 +18,7 @@ import { usePopupStore } from "@/stores/popup";
 import type { MockupTemplate } from "@/types/mockup-templates";
 
 export const MockupTemplatesPage = () => {
+  const { t } = useTranslation("common");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<MockupTemplate | null>(null);
   const { data: templates, isPending: isLoadingTemplates, isError: isTemplatesError, refetch: refetchTemplates } = useMockupTemplates();
@@ -35,9 +37,9 @@ export const MockupTemplatesPage = () => {
 
   const askDelete = (template: MockupTemplate) => {
     openPopup({
-      title: `Delete ${template.name}?`,
-      description: "This removes the mock-up template permanently. System templates cannot be deleted.",
-      positiveLabel: "Delete",
+      title: t("mockups.templatesPage.deleteTitle", { name: template.name }),
+      description: t("mockups.templatesPage.deleteDescription"),
+      positiveLabel: t("mockups.delete"),
       onPositive: () => deleteTemplate(template.id),
     });
   };
@@ -45,48 +47,48 @@ export const MockupTemplatesPage = () => {
   return (
     <div className="flex w-full min-w-0 flex-col gap-6 max-md:gap-3 md:p-6">
       <PageHeader
-        title="Mock-up Templates"
-        description="Browse system mock-ups, manage the product photos you uploaded, and the photos of people your mock-ups are put on."
+        title={t("mockups.templatesPage.title")}
+        description={t("mockups.templatesPage.description")}
       />
       <Tabs defaultValue="templates" className="gap-5 max-md:gap-3">
         <TabsList className="w-full sm:w-fit">
           <TabsTrigger value="templates" className="px-4">
             <ImageIcon aria-hidden="true" />
-            Product photos
+            {t("mockups.templatesPage.productPhotosTab")}
           </TabsTrigger>
           <TabsTrigger value="models" className="px-4">
             <UserRound aria-hidden="true" />
-            Model photos
+            {t("mockups.templatesPage.modelPhotosTab")}
           </TabsTrigger>
         </TabsList>
         <TabsContent value="templates" className="flex flex-col gap-4 max-md:gap-3">
           <div className="flex justify-end">
             <Button type="button" className="max-md:w-full" onClick={openCreate} disabled={isDeleting}>
               <Plus aria-hidden="true" />
-              New template
+              {t("mockups.templatesPage.newTemplate")}
             </Button>
           </div>
           {isLoadingTemplates ? (
-            <SectionLoading label="Loading mock-up templates" />
+            <SectionLoading label={t("mockups.templatesPage.loadingTemplates")} />
           ) : isTemplatesError || !templates ? (
             <div className="border-ink-200 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border p-8 text-center" role="alert">
               <ImageIcon className="text-ink-400 size-8" aria-hidden="true" />
               <div>
-                <p className="text-ink-900 font-semibold">Mock-up templates unavailable</p>
-                <p className="text-muted-foreground mt-1 text-sm">We could not load mock-up templates. Check your connection and try again.</p>
+                <p className="text-ink-900 font-semibold">{t("mockups.templatesPage.unavailableTitle")}</p>
+                <p className="text-muted-foreground mt-1 text-sm">{t("mockups.templatesPage.unavailableDescription")}</p>
               </div>
-              <Button type="button" onClick={() => refetchTemplates()}>Try again</Button>
+              <Button type="button" onClick={() => refetchTemplates()}>{t("mockups.templatesPage.tryAgain")}</Button>
             </div>
           ) : templates.length === 0 ? (
             <div className="border-ink-300 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed p-8 text-center">
-              <p className="text-ink-900 font-semibold">No mock-up templates yet</p>
-              <p className="text-muted-foreground text-sm">Upload a product photo to start compositing designs onto it.</p>
-              <Button type="button" onClick={openCreate}>New template</Button>
+              <p className="text-ink-900 font-semibold">{t("mockups.templatesPage.noTemplatesTitle")}</p>
+              <p className="text-muted-foreground text-sm">{t("mockups.templatesPage.noTemplatesDescription")}</p>
+              <Button type="button" onClick={openCreate}>{t("mockups.templatesPage.newTemplate")}</Button>
             </div>
           ) : (
             <MockupCardGrid
               items={templates}
-              pagerLabel="Mock-up template pages"
+              pagerLabel={t("mockups.cardGrid.pageLabel")}
               className="xl:grid-cols-4"
               renderItem={(template) => (
                 <MockupTemplateListItem key={template.id} template={template} busy={isDeleting} onEdit={openEdit} onDelete={askDelete} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { type PointerEvent, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 import { isValidQuad, type PrintQuad, type QuadPoint } from "@/helpers/mockup-template";
 
@@ -17,7 +18,7 @@ type PrintQuadEditorProps = {
 
 type Drag = { corner: number } | { corner: "all"; from: QuadPoint; start: PrintQuad };
 
-const CORNER_LABELS = ["top-left", "top-right", "bottom-right", "bottom-left"];
+const CORNER_KEYS = ["topLeft", "topRight", "bottomRight", "bottomLeft"];
 
 /**
  * Marks a print area by its four corners on a photo of a person: drag a corner to follow a chest that is turned a
@@ -31,6 +32,7 @@ export const PrintQuadEditor = ({
   disabled = false,
   garmentMaskUrl,
 }: PrintQuadEditorProps) => {
+  const { t } = useTranslation("common");
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<Drag | null>(null);
   const { width, height } = pixelSize;
@@ -96,7 +98,7 @@ export const PrintQuadEditor = ({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageUrl}
-          alt="Model photo"
+          alt={t("mockups.printQuad.alt")}
           draggable={false}
           className="ring-ink-200 block max-h-105 max-w-full rounded-lg ring-1 select-none ring-inset"
         />
@@ -120,7 +122,7 @@ export const PrintQuadEditor = ({
           onPointerMove={move}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
-          aria-label="Print area corners"
+          aria-label={t("mockups.printQuad.aria")}
         >
           <polygon
             points={polygon}
@@ -132,7 +134,7 @@ export const PrintQuadEditor = ({
           />
           {value.map((corner, index) => (
             <circle
-              key={CORNER_LABELS[index]}
+              key={CORNER_KEYS[index]}
               cx={corner.x}
               cy={corner.y}
               r={handle}
@@ -140,7 +142,7 @@ export const PrintQuadEditor = ({
               strokeWidth={2}
               vectorEffect="non-scaling-stroke"
               style={{ cursor: disabled ? "default" : "grab" }}
-              aria-label={`${CORNER_LABELS[index]} corner`}
+              aria-label={t(`mockups.printQuad.${CORNER_KEYS[index]}`)}
               onPointerDown={(event) => startDrag(event, index)}
             />
           ))}
@@ -151,8 +153,8 @@ export const PrintQuadEditor = ({
         role={valid ? undefined : "alert"}
       >
         {valid
-          ? "Drag a corner to follow the chest, or drag inside to move the area. The design is warped onto it."
-          : "The corners cross or go round the wrong way. Keep them in order: top-left, top-right, bottom-right, bottom-left."}
+          ? t("mockups.printQuad.instructionsValid")
+          : t("mockups.printQuad.instructionsInvalid")}
       </p>
     </div>
   );

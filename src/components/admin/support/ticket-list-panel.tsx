@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Filter, Headphones, Search } from "lucide-react";
+import { Headphones, Search } from "lucide-react";
 
 import type { AdminTicketFilters } from "@/api/admin-support";
+import { TicketFilterSheet } from "@/components/admin/support/ticket-filter-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
@@ -98,9 +99,7 @@ export const TicketListPanel = ({
               className="border-ink-200 bg-ink-50 focus-visible:ring-ink-300 h-9 pl-9 text-[13px] shadow-none focus-visible:ring-1 max-md:text-base"
             />
           </div>
-          <Button variant="outline" size="icon" className="text-ink-500 size-9 shrink-0 shadow-none max-md:hidden">
-            <Filter className="size-4" />
-          </Button>
+          <TicketFilterSheet filters={filters} onFiltersChange={onFiltersChange} />
         </div>
 
         {/* Tabs (Underline style) */}

@@ -137,6 +137,16 @@ export const resources = {
         freshnessDetail: "{{days}} days old", realEvidence: "real", syntheticEvidence: "synthetic", evidenceMix: "Evidence: {{real}} real · {{synthetic}} synthetic · {{freshness}} data", viewSignals: "View market signals", viewNicheDetails: "View niche details", viewTopDetails: "View top opportunity details", viewAiAnalysis: "View AI analysis", scoreComposition: "Score composition",
         updateError: "Could not update this opportunity", analyzeError: "Could not analyze this opportunity",
       },
+      fileDropzone: { prompt: "Drag a file here or browse", replace: "Click to replace" },
+      adminUi: {
+        templatesLoadFailed: "Could not load templates",
+        copyTicketId: "Copy ticket ID",
+        removeAttachment: "Remove {{name}}",
+        supportFilters: {
+          open: "Filter tickets", title: "Filters", description: "Narrow the ticket list by priority or category.",
+          priority: "Priority", category: "Category", anyPriority: "Any priority", anyCategory: "Any category", clear: "Clear filters",
+        },
+      },
       errors: {
         loadOpportunities: "Could not load opportunities. Check the API connection and try again.",
         unauthorizedTitle: "You don't have access to this page",
@@ -283,6 +293,16 @@ export const resources = {
         freshness: "Độ mới dữ liệu", fresh: "Mới", aging: "Đang cũ dần", stale: "Cũ", unknown: "Chưa rõ", adjustedMarket: "market sau điều chỉnh",
         freshnessDetail: "{{days}} ngày tuổi", realEvidence: "thật", syntheticEvidence: "mẫu", evidenceMix: "Evidence: {{real}} thật · {{synthetic}} mẫu · dữ liệu {{freshness}}", viewSignals: "Xem tín hiệu thị trường", viewNicheDetails: "Xem chi tiết niche", viewTopDetails: "Xem chi tiết cơ hội hàng đầu", viewAiAnalysis: "Xem phân tích AI", scoreComposition: "Cấu thành điểm số",
         updateError: "Không thể cập nhật cơ hội này", analyzeError: "Không thể phân tích cơ hội này",
+      },
+      fileDropzone: { prompt: "Kéo thả tệp vào đây hoặc chọn tệp", replace: "Nhấn để thay tệp" },
+      adminUi: {
+        templatesLoadFailed: "Không thể tải các mẫu",
+        copyTicketId: "Sao chép mã phiếu",
+        removeAttachment: "Xóa {{name}}",
+        supportFilters: {
+          open: "Lọc phiếu", title: "Bộ lọc", description: "Thu hẹp danh sách phiếu theo mức ưu tiên hoặc danh mục.",
+          priority: "Mức ưu tiên", category: "Danh mục", anyPriority: "Mọi mức ưu tiên", anyCategory: "Mọi danh mục", clear: "Xóa bộ lọc",
+        },
       },
       errors: {
         loadOpportunities: "Không thể tải cơ hội. Hãy kiểm tra kết nối API và thử lại.",

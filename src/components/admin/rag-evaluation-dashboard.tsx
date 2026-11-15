@@ -50,6 +50,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showToast } from "@/helpers/toast";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import { cn } from "@/utils/cn";
@@ -317,20 +318,24 @@ const RagEvaluationDashboard = () => {
         actions={
           <>
           {runs.length > 0 && (
-            <select
-            value={selectedRunId ?? ""}
-            onChange={(event) => {
-              setSelectedRunId(event.target.value);
-              setSelectedCaseId(null);
-            }}
-            className="border-ink-200 bg-card text-ink-700 h-9 rounded-md border px-3 text-xs font-medium shadow-sm outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
-          >
-            {runs.map((run) => (
-              <option key={run.id} value={run.id}>
-                {run.label} / {run.createdAt}
-              </option>
-            ))}
-            </select>
+            <Select
+              value={selectedRunId ?? undefined}
+              onValueChange={(value) => {
+                setSelectedRunId(value);
+                setSelectedCaseId(null);
+              }}
+            >
+              <SelectTrigger aria-label="Evaluation run" className="bg-card h-9 text-xs font-medium max-md:h-11 max-md:w-full max-md:text-base">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="end">
+                {runs.map((run) => (
+                  <SelectItem key={run.id} value={run.id}>
+                    {run.label} / {run.createdAt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
           {datasetCases.length > 0 && (
             <Button type="button" className="max-md:w-full" onClick={runEvaluation} disabled={isRunning} size="sm">
@@ -485,42 +490,36 @@ const RagEvaluationDashboard = () => {
               placeholder="Golden question"
               aria-label="Golden question"
             />
-            <select
+            <Select
               value={draftCase.contentType}
-              onChange={(event) =>
-                setDraftCase((current) => ({
-                  ...current,
-                  contentType: event.target.value as EvaluationContentType,
-                }))
+              onValueChange={(value) =>
+                setDraftCase((current) => ({ ...current, contentType: value as EvaluationContentType }))
               }
-              className="border-ink-200 bg-card text-ink-700 h-9 rounded-md border px-3 text-xs outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
-              aria-label="Content type"
             >
-              {evaluationContentTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-            <select
+              <SelectTrigger aria-label="Content type" className="bg-card w-full text-xs max-md:h-11 max-md:text-base">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {evaluationContentTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
               value={draftCase.category}
-              onChange={(event) =>
-                setDraftCase((current) => ({
-                  ...current,
-                  category: event.target.value as EvaluationCase["category"],
-                }))
+              onValueChange={(value) =>
+                setDraftCase((current) => ({ ...current, category: value as EvaluationCase["category"] }))
               }
-              className="border-ink-200 bg-card text-ink-700 h-9 rounded-md border px-3 text-xs outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
-              aria-label="Evaluation category"
             >
-              {(["Retrieval"] as const).map(
-                (category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                )
-              )}
-            </select>
+              <SelectTrigger aria-label="Evaluation category" className="bg-card w-full text-xs max-md:h-11 max-md:text-base">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Retrieval">Retrieval</SelectItem>
+              </SelectContent>
+            </Select>
             <Input
               value={draftCase.expectedText}
               onChange={(event) =>
@@ -870,21 +869,22 @@ const RagEvaluationDashboard = () => {
               </CardDescription>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2 max-md:w-full">
-              <select
+              <Select
                 value={contentTypeFilter}
-                onChange={(event) =>
-                  setContentTypeFilter(event.target.value as "all" | EvaluationContentType)
-                }
-                className="border-ink-200 bg-card text-ink-600 h-8 rounded-md border px-2 text-[11px] font-medium outline-none focus:border-indigo-400 max-md:h-11 max-md:w-full max-md:text-base"
-                aria-label="Filter by content type"
+                onValueChange={(value) => setContentTypeFilter(value as "all" | EvaluationContentType)}
               >
-                <option value="all">All content types</option>
-                {evaluationContentTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger aria-label="Filter by content type" size="sm" className="bg-card text-[11px] font-medium max-md:h-11 max-md:w-full max-md:text-base">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent align="end">
+                  <SelectItem value="all">All content types</SelectItem>
+                  {evaluationContentTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <div className="bg-ink-100 flex gap-1 rounded-lg p-1 max-md:grid max-md:w-full max-md:grid-cols-4">
               {(["all", "pass", "review", "fail"] as const).map((value) => (
                 <button

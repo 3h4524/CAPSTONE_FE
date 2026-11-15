@@ -12,6 +12,7 @@ import { RagCardAbout } from "@/components/admin/rag-card-about";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showToast } from "@/helpers/toast";
 import { useIsPhone } from "@/hooks/use-is-phone";
 
@@ -150,17 +151,18 @@ export const RagKnownItemBenchmark = () => {
         <div className="flex flex-wrap items-center gap-2 max-md:grid max-md:grid-cols-2">
           <label className="text-ink-600 flex items-center gap-2 text-xs max-md:col-span-2 max-md:justify-between">
             Listings
-            <select
-              value={sampleSize}
-              onChange={(event) => setSampleSize(Number(event.target.value))}
-              className="border-ink-200 bg-card text-ink-700 h-9 rounded-md border px-2 text-xs font-medium shadow-sm outline-none focus:border-indigo-400 max-md:h-11 max-md:text-base"
-            >
-              {SAMPLE_SIZES.map((size) => (
-                <option key={size} value={size}>
-                  {size} ({size * 2} cases)
-                </option>
-              ))}
-            </select>
+            <Select value={String(sampleSize)} onValueChange={(value) => setSampleSize(Number(value))}>
+              <SelectTrigger aria-label="Listings" className="bg-card text-xs font-medium max-md:h-11 max-md:text-base">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="end">
+                {SAMPLE_SIZES.map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size} ({size * 2} cases)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </label>
           <Button type="button" size="sm" className="max-md:min-h-10 max-md:px-2" onClick={() => run()} disabled={isRunning}>
             <Play className="size-3.5" /> {isRunning ? "Running..." : "New case set"}

@@ -10,10 +10,6 @@ permissions:
   contents: read
   id-token: write
 
-concurrency:
-  group: deploy-prod
-  cancel-in-progress: false
-
 env:
   WIF_PROVIDER: projects/1035893227434/locations/global/workloadIdentityPools/github/providers/github-actions
   DEPLOYER_SA: apcs-deployer@apcs-prod.iam.gserviceaccount.com
@@ -208,6 +204,9 @@ jobs:
       )
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    concurrency:
+      group: deploy-prod
+      cancel-in-progress: false
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

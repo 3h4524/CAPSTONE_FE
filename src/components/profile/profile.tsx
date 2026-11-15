@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "@/components/commons/layout/page-header";
 import { AvatarCard } from "@/components/profile/avatar-card";
@@ -24,6 +25,7 @@ type ProfileProps = {
 };
 
 export const Profile = ({ variant = "seller" }: ProfileProps) => {
+  const { t } = useTranslation("common");
   const router = useRouter();
   const { data, isError, error: profileError } = useProfile();
   const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile();
@@ -64,7 +66,7 @@ export const Profile = ({ variant = "seller" }: ProfileProps) => {
     if (getResponseStatus(profileError) !== 401) {
       throw profileError instanceof Error
         ? profileError
-        : new Error("Could not load your profile.", { cause: profileError });
+        : new Error(t("profile.loadError"), { cause: profileError });
     }
     return null;
   }
@@ -87,12 +89,8 @@ export const Profile = ({ variant = "seller" }: ProfileProps) => {
       <div>
         <PageHeader
           className="border-b px-6 py-4 max-md:px-4"
-          title="Profile"
-          description={
-            variant === "admin"
-              ? "Manage your administrator name and sign-in email."
-              : "Manage your personal and workspace details."
-          }
+          title={t("profile.title")}
+          description={variant === "admin" ? t("profile.descriptionAdmin") : t("profile.descriptionSeller")}
           actions={
             <>
               <Button
@@ -101,10 +99,10 @@ export const Profile = ({ variant = "seller" }: ProfileProps) => {
                 onClick={handleDiscard}
                 disabled={!isDirty || isUpdating}
               >
-                Discard
+                {t("profile.discard")}
               </Button>
-              <Button type="submit" aria-label="Save changes" disabled={!isDirty || isUpdating}>
-                Save<span className="max-md:hidden"> changes</span>
+              <Button type="submit" aria-label={t("profile.saveChanges")} disabled={!isDirty || isUpdating}>
+                {t("profile.save")}<span className="max-md:hidden">{t("profile.saveChangesSuffix")}</span>
               </Button>
             </>
           }

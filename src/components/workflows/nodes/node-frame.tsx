@@ -8,6 +8,8 @@ import { WORKFLOW_CATEGORY_THEME } from "@/constants/workflow-category-theme";
 import { NODE_STATUS_PILLS } from "@/constants/workflow-status";
 import { getWorkflowNodeDefinition } from "@/helpers/workflow-config";
 import { isRunnableNode } from "@/helpers/workflow-run";
+import { useGroupPrintify } from "@/hooks/queries/use-group-printify";
+import { useGroupVideoProgress } from "@/hooks/queries/use-group-video-progress";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowConnectionStore } from "@/stores/workflow-connection";
 import type { WorkflowNodeData } from "@/types/workflow";
@@ -39,6 +41,8 @@ type NodeFrameProps = {
 
 export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: NodeFrameProps) => {
   const workflowIsRunning = useWorkflowStore((state) => state.isRunning);
+  const groupProgress = useGroupVideoProgress();
+  const printifyProgress = useGroupPrintify();
   const connectionState = useConnection((connection) => {
     if (!connection.inProgress) return "idle";
     if (connection.fromNode.id === nodeId) return "source";
@@ -54,13 +58,18 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
   const definition = getWorkflowNodeDefinition(data.type);
   if (!definition) return null;
   const theme = WORKFLOW_CATEGORY_THEME[definition.category];
-  const pill = data.status === "idle" ? null : NODE_STATUS_PILLS[data.status];
-  const isRunning = data.status === "running";
+  // While a batch video run makes its videos, Generate Video reports the batch: one video's run is only a share.
+  const batch = data.type === "generate-video" ? groupProgress : null;
+  // Push to Printify runs beside the videos of a batch: it shows its own steps, never the render.
+  const printifyBatch = data.type === "publish-printify" ? printifyProgress : null;
+  const status = batch?.active ? "running" : printifyBatch?.status ?? data.status;
+  const pill = status === "idle" ? null : NODE_STATUS_PILLS[status];
+  const isRunning = status === "running";
   const runnable = isRunnableNode(data.type);
   const connectionTargetValid = connectionState === "valid-target" || hoveredConnectionValid === true;
   const connectionTargetInvalid = connectionState === "invalid-target" || hoveredConnectionValid === false;
   const isConnectionTarget = connectionTargetValid || connectionTargetInvalid;
-  const progress = Math.max(0, Math.min(100, data.progress ?? 0));
+  const progress = Math.max(0, Math.min(100, batch ? batch.progress : printifyBatch ? 0 : (data.progress ?? 0)));
   const statusLabel = isRunning && progress > 0 ? `${pill?.label ?? "Running"} ${Math.round(progress)}%` : pill?.label;
 
   const frame = cn(

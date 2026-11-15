@@ -14,7 +14,7 @@ describe("AssistantBubble", () => {
   it("shows the chat in a floating bubble when bubble mode is on", () => {
     renderWithQuery(<AssistantBubble />);
 
-    expect(screen.getByRole("dialog", { name: "Assistant" })).toHaveClass("w-[380px]");
+    expect(screen.getByRole("dialog", { name: "Podi" })).toHaveClass("w-[380px]");
     expect(screen.getByRole("textbox")).toBeInTheDocument();
   });
 
@@ -23,7 +23,7 @@ describe("AssistantBubble", () => {
 
     renderWithQuery(<AssistantBubble />);
 
-    expect(screen.getByRole("dialog", { name: "Assistant" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Podi" })).toBeInTheDocument();
   });
 
   it("renders nothing when closed", () => {
@@ -31,17 +31,17 @@ describe("AssistantBubble", () => {
 
     renderWithQuery(<AssistantBubble />);
 
-    expect(screen.queryByRole("dialog", { name: "Assistant" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Podi" })).not.toBeInTheDocument();
   });
 
   it("expands and shrinks", () => {
     renderWithQuery(<AssistantBubble />);
 
     fireEvent.click(screen.getByRole("button", { name: "Expand" }));
-    expect(screen.getByRole("dialog", { name: "Assistant" })).toHaveClass("w-[720px]");
+    expect(screen.getByRole("dialog", { name: "Podi" })).toHaveClass("w-[720px]");
 
     fireEvent.click(screen.getByRole("button", { name: "Make smaller" }));
-    expect(screen.getByRole("dialog", { name: "Assistant" })).toHaveClass("w-[380px]");
+    expect(screen.getByRole("dialog", { name: "Podi" })).toHaveClass("w-[380px]");
   });
 
   it("is the default display and offers no docking", () => {
@@ -54,13 +54,13 @@ describe("AssistantBubble", () => {
 
   it("closes from its own close button and with Escape", () => {
     const { unmount } = renderWithQuery(<AssistantBubble />);
-    fireEvent.click(screen.getByRole("button", { name: "Close assistant" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close Podi" }));
     expect(useAssistantStore.getState().isOpen).toBe(false);
     unmount();
 
     useAssistantStore.setState({ isOpen: true });
     renderWithQuery(<AssistantBubble />);
-    fireEvent.keyDown(screen.getByRole("dialog", { name: "Assistant" }), { key: "Escape" });
+    fireEvent.keyDown(screen.getByRole("dialog", { name: "Podi" }), { key: "Escape" });
     expect(useAssistantStore.getState().isOpen).toBe(false);
   });
 });

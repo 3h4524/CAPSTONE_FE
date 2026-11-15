@@ -13,8 +13,45 @@ export const MAX_GARMENT_COLORS = 5;
 
 export const isGarmentColor = (value: string) => /^#[0-9A-Fa-f]{6}$/.test(value);
 
-export const garmentColorName = (hex: string) =>
-  GARMENT_COLORS.find((color) => color.hex.toLowerCase() === hex.toLowerCase())?.name ?? hex.toUpperCase();
+/** A named garment color: the fixed suggestions, or a Printify blueprint's colors. */
+export type NamedGarmentColor = { readonly name: string; readonly hex: string };
+
+/** A color's name in the palette shown (a Printify template's colors, else the fixed suggestions), else its hex. */
+export const garmentColorName = (hex: string, palette: readonly NamedGarmentColor[] = GARMENT_COLORS) =>
+  palette.find((color) => color.hex.toLowerCase() === hex.toLowerCase())?.name ?? hex.toUpperCase();
+
+/**
+ * The garment colors carried over to another template, matched by name: a blueprint names the same shade with its own
+ * hex (Mauve is #C97B7C on one Printify blueprint and #CE7C7C on another), so a color keeps its name and takes the new
+ * palette's hex. A color the new palette has no name for is dropped. Each pair is the old hex and the new one.
+ */
+export const carryColors = (
+  colors: string[],
+  from: readonly NamedGarmentColor[] | undefined,
+  to: readonly NamedGarmentColor[]
+): { from: string; to: string }[] => {
+  const pairs: { from: string; to: string }[] = [];
+  for (const hex of colors) {
+    const name = garmentColorName(hex, from ?? GARMENT_COLORS).toLowerCase();
+    const match = to.find((color) => color.name.toLowerCase() === name || color.hex.toLowerCase() === hex.toLowerCase());
+    if (match && !pairs.some((pair) => pair.to.toLowerCase() === match.hex.toLowerCase())) pairs.push({ from: hex, to: match.hex });
+  }
+  return pairs;
+};
+
+/**
+ * The color a Printify template starts with when ticked: its own garment color when Printify makes it, else White,
+ * else the first Printify color. None when the template has no Printify colors.
+ */
+export const printifyStartColors = (template: {
+  garmentColor?: string | null;
+  printify?: { colors: readonly NamedGarmentColor[] } | null;
+}): string[] => {
+  const colors = template.printify?.colors ?? [];
+  const own = template.garmentColor && colors.find((color) => color.hex.toLowerCase() === template.garmentColor!.toLowerCase());
+  const start = own || colors.find((color) => color.name.toLowerCase() === "white") || colors[0];
+  return start ? [start.hex] : [];
+};
 
 /** Garment colors chosen per template, keyed by template id. */
 export type TemplateColors = Record<string, string[]>;

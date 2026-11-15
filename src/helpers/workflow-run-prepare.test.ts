@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { planBlocksRun } from "@/helpers/workflow-run-prepare";
+import { failedProductsBlockRun, needsOwnImageKey, planBlocksRun } from "@/helpers/workflow-run-prepare";
 import type { Entitlements } from "@/types/subscription";
 
 const entitlements = (
@@ -41,5 +41,35 @@ describe("planBlocksRun", () => {
   it("needs automatic approval to skip review", () => {
     expect(planBlocksRun(entitlements(10), 1, 1, false)).toContain("Automatic design approval is part of Pro");
     expect(planBlocksRun(entitlements(10), 1, 1, true)).toBeNull();
+  });
+});
+
+describe("failedProductsBlockRun", () => {
+  const products = (...statuses: string[]) => statuses.map((status) => ({ status }));
+
+  it("stops a run whose products all failed or were made, instead of going on to the video", () => {
+    expect(failedProductsBlockRun(products("failed", "failed", "approved"))).toBe(
+      "2 products of this batch failed in an earlier run, so they have no design yet. Open that run under Previous runs in Product input, then choose Retry failed products in Design image."
+    );
+    expect(failedProductsBlockRun(products("failed"))).toContain("1 product of this batch failed in an earlier run, so it has no design yet.");
+  });
+
+  it("lets the run make the pending products, and leaves a batch with nothing failed alone", () => {
+    expect(failedProductsBlockRun(products("pending", "failed"))).toBeNull();
+    expect(failedProductsBlockRun(products("approved", "image_review_required"))).toBeNull();
+    expect(failedProductsBlockRun([])).toBeNull();
+  });
+});
+
+describe("needsOwnImageKey", () => {
+  const platformKeys = entitlements(10, [{ code: "system_image_keys", isEnabled: true }]);
+
+  it("lets a plan with the platform's keys make Ideogram images without a key of the Seller's", () => {
+    expect(needsOwnImageKey(platformKeys, "ideogram")).toBe(false);
+  });
+
+  it("still needs the Seller's key for Gemini, or without the feature", () => {
+    expect(needsOwnImageKey(platformKeys, "gemini")).toBe(true);
+    expect(needsOwnImageKey(entitlements(10), "ideogram")).toBe(true);
   });
 });

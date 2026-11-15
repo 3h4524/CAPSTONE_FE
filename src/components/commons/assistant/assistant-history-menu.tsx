@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useDeleteAssistantConversation } from "@/hooks/mutations/use-delete-assistant-conversation";
 import { useDeleteAssistantConversations } from "@/hooks/mutations/use-delete-assistant-conversations";
 import { useAssistantConversations } from "@/hooks/queries/use-assistant-conversations";
+import { useAssistantChat } from "@/hooks/use-assistant-chat";
 import { useAssistantStore } from "@/stores/assistant";
 
 const SKELETON_ROWS = [0, 1, 2];
@@ -23,8 +24,8 @@ const SKELETON_ROWS = [0, 1, 2];
 export const AssistantHistoryMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirmingDeleteAll, setIsConfirmingDeleteAll] = useState(false);
-  const selectConversation = useAssistantStore((state) => state.selectConversation);
-  const startNewConversation = useAssistantStore((state) => state.startNewConversation);
+  const setDraft = useAssistantStore((state) => state.setDraft);
+  const { openConversation, startNewConversation } = useAssistantChat();
   const { data: conversations, isLoading: isLoadingConversations } = useAssistantConversations(isOpen);
   const { mutate: deleteConversation } = useDeleteAssistantConversation();
   const { mutate: deleteConversations } = useDeleteAssistantConversations();
@@ -38,9 +39,10 @@ export const AssistantHistoryMenu = () => {
     const remaining = (conversations ?? []).filter((conversation) => conversation.id !== id);
     if (currentConversationId() === id) {
       const [newest] = remaining;
-      if (newest) selectConversation(newest.id);
+      if (newest) openConversation(newest.id);
       else startNewConversation();
     }
+    setDraft(id, "");
     deleteConversation(id);
   };
 
@@ -81,7 +83,7 @@ export const AssistantHistoryMenu = () => {
           {conversations?.length === 0 ? <p className="text-muted-foreground px-2 py-1.5 text-sm">No chats yet</p> : null}
           {conversations?.map((conversation) => (
             <div key={conversation.id} className="flex items-center gap-1">
-              <DropdownMenuItem className="min-w-0 flex-1" onSelect={() => selectConversation(conversation.id)}>
+              <DropdownMenuItem className="min-w-0 flex-1" onSelect={() => openConversation(conversation.id)}>
                 <span className="truncate">{conversation.title}</span>
               </DropdownMenuItem>
               <Button

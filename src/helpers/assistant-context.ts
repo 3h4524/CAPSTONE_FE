@@ -60,3 +60,12 @@ export const buildAssistantContext = (input: {
     canvas: buildCanvas(workflow.workflowId, workflow),
   };
 };
+
+export const getAssistantSelectedStepLabels = (
+  pathname: string,
+  workflow: Pick<WorkflowEditorState, "workflowId" | "nodes" | "selectedNodeIds">
+): string[] => {
+  if (pathname !== "/workflows" || workflow.workflowId === null) return [];
+  const selectedIds = new Set(workflow.selectedNodeIds);
+  return workflow.nodes.filter((node) => selectedIds.has(node.id)).map((node) => node.data.label);
+};

@@ -5,6 +5,7 @@ import { type CSSProperties, useEffect } from "react";
 import { AssistantComposer } from "@/components/commons/assistant/assistant-composer";
 import { AssistantHeader } from "@/components/commons/assistant/assistant-header";
 import { AssistantMessageList } from "@/components/commons/assistant/assistant-message-list";
+import { AssistantRunNudgeBar } from "@/components/commons/assistant/assistant-run-nudge";
 import { Sheet, SheetContent, SheetDescription } from "@/components/ui/sheet";
 import {
   ASSISTANT_PANEL_DEFAULT_WIDTH_PX,
@@ -44,7 +45,7 @@ export const AssistantPanel = () => {
       >
         <div
           {...separatorProps}
-          aria-label="Resize the assistant"
+          aria-label="Resize Podi"
           title="Drag to resize, double-click to reset"
           className={cn(
             "group absolute inset-y-0 -left-1.5 z-10 hidden w-3 cursor-col-resize touch-none outline-none sm:block",
@@ -54,8 +55,9 @@ export const AssistantPanel = () => {
           )}
         />
         <AssistantHeader variant="panel" />
-        <SheetDescription className="sr-only">Ask questions or get help with your workflows.</SheetDescription>
+        <SheetDescription className="sr-only">Ask Podi questions or get help with your workflows.</SheetDescription>
         <AssistantMessageList />
+        <AssistantRunNudgeBar />
         <AssistantComposer />
       </SheetContent>
     </Sheet>

@@ -15,4 +15,8 @@ export interface LightboxImage {
   caption: string;
   width?: number;
   height?: number;
+  /** Fills the space beside the picture, so it reads as the photo's own backdrop. */
+  backdrop?: string;
+  /** A garment color laid over the photo through the garment mask, as the gallery thumbnail shows it. */
+  tint?: { color: string; maskUrl: string };
 }

@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import Image from "next/image";
 import { ImagePlus, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,22 +18,24 @@ type MockupPhotoDropzoneProps = {
   onRemove: () => void;
 };
 
-export const MockupPhotoDropzone = ({ label = "Base mock-up photo", previewUrl, error, disabled = false, onSelect, onRemove }: MockupPhotoDropzoneProps) => {
+export const MockupPhotoDropzone = ({ label, previewUrl, error, disabled = false, onSelect, onRemove }: MockupPhotoDropzoneProps) => {
+  const { t } = useTranslation("common");
   const inputId = useId();
+  const shownLabel = label ?? t("mockups.photoDropzone.label");
   const [dragging, setDragging] = useState(false);
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={inputId}>{label}</Label>
+      <Label htmlFor={inputId}>{shownLabel}</Label>
       <div className={cn("flex flex-col gap-3", previewUrl && "sm:flex-row sm:items-stretch")}>
         {previewUrl && (
           <div className="relative w-fit sm:w-1/2">
-            <Image src={previewUrl} alt="Mock-up base photo" width={320} height={180} unoptimized className="ring-ink-200 aspect-video h-full w-full rounded-lg object-cover ring-1 ring-inset" />
+            <Image src={previewUrl} alt={t("mockups.photoDropzone.alt")} width={320} height={180} unoptimized className="ring-ink-200 aspect-video h-full w-full rounded-lg object-cover ring-1 ring-inset" />
             <Button
               type="button"
               variant="secondary"
               size="icon"
-              aria-label="Remove base photo"
+              aria-label={t("mockups.photoDropzone.removePhoto")}
               className="absolute top-1 right-1 size-7"
               disabled={disabled}
               onClick={onRemove}
@@ -62,7 +65,7 @@ export const MockupPhotoDropzone = ({ label = "Base mock-up photo", previewUrl, 
         >
           <div className="text-ink-600 flex flex-wrap items-center justify-center gap-2 text-sm">
             <ImagePlus className="size-4" aria-hidden="true" />
-            <span>{previewUrl ? "Drag another photo here or browse" : "Drag a photo here or browse"}</span>
+            <span>{previewUrl ? t("mockups.photoDropzone.dragAnother") : t("mockups.photoDropzone.dragPhoto")}</span>
             <input
               id={inputId}
               type="file"
@@ -78,7 +81,7 @@ export const MockupPhotoDropzone = ({ label = "Base mock-up photo", previewUrl, 
           </div>
         </label>
       </div>
-      <p className="text-ink-500 text-[11px]">Images up to 10 MB</p>
+      <p className="text-ink-500 text-[11px]">{t("mockups.photoDropzone.imagesUpTo")}</p>
       {error ? <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p> : null}
     </div>
   );

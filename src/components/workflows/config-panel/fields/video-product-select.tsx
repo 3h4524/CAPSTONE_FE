@@ -10,8 +10,8 @@ import { useWorkflowStore } from "@/stores/workflow";
 
 const FIELD_ID = "video-product";
 
-// The video's product, offered again where the video part starts. It is stored in Product input (the run
-// takes it from there when it starts), so both places show and change the same value.
+// The product of a video whose settings fit one product only, chosen where the video part starts. It is stored in
+// Product input's config (the run takes it from there when it starts), but shown only here.
 export const VideoProductSelect = () => {
   const input = useWorkflowStore((state) => state.nodes.find((node) => node.data.type === "product-input"));
   const isRunning = useWorkflowStore((state) => state.isRunning);
@@ -29,6 +29,7 @@ export const VideoProductSelect = () => {
           value={readString(input.data.config.productId)}
           options={toProductOptions(products)}
           placeholder="Choose one product"
+          clearable
           onChange={(productId) => updateNodeConfig(input.id, { ...input.data.config, productId })}
           isLoading={isPending}
           isError={isError}
@@ -40,7 +41,7 @@ export const VideoProductSelect = () => {
         <PanelNotice tone="warning">Choose a batch in Product input first.</PanelNotice>
       )}
       <p className="text-muted-foreground text-xs leading-relaxed">
-        {isRunning ? "The run in progress keeps this product." : "Shared with Product input: changing it here changes it there too."}
+        {isRunning ? "The run in progress keeps this product." : "These video settings make this product's video only."}
       </p>
     </div>
   );

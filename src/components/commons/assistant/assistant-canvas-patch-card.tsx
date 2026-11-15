@@ -8,10 +8,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { describeCanvasChange } from "@/helpers/assistant-canvas-changes";
 import { applyCanvasPatch } from "@/helpers/assistant-canvas-patch";
 import { showToast } from "@/helpers/toast";
-import { useSetAssistantClientActionState } from "@/hooks/mutations/use-set-assistant-client-action-state";
+import { useSettleAssistantClientAction } from "@/hooks/use-settle-assistant-client-action";
 import { useAssistantStore } from "@/stores/assistant";
 import { useWorkflowStore } from "@/stores/workflow";
-import type { AssistantCanvasPatchPayload, AssistantClientActionState } from "@/types/assistant";
+import type { AssistantCanvasPatchPayload, AssistantClientActionDecision, AssistantClientActionState } from "@/types/assistant";
 import type { WorkflowNode } from "@/types/workflow";
 
 type AssistantCanvasPatchCardProps = {
@@ -40,16 +40,12 @@ export const AssistantCanvasPatchCard = ({ messageId, actionId, payload, state }
   const nodes = useWorkflowStore((store) => store.nodes);
   const workflowId = useWorkflowStore((store) => store.workflowId);
   const applyGraphPatch = useWorkflowStore((store) => store.applyGraphPatch);
-  const setClientActionState = useAssistantStore((store) => store.setClientActionState);
+  const settleClientAction = useSettleAssistantClientAction();
   const isStreaming = useAssistantStore((store) => store.streamingMessageId !== null);
-  const { mutate: saveActionState } = useSetAssistantClientActionState();
   const canApply = pathname === "/workflows" && workflowId === payload.workflowId && !isStreaming;
   const changes = payload.operations.map((operation) => describeCanvasChange(operation, nodes, payload.operations));
 
-  const settle = (next: "applied" | "dismissed") => {
-    setClientActionState(messageId, actionId, next);
-    saveActionState({ messageId, actionId, state: next });
-  };
+  const settle = (next: AssistantClientActionDecision) => settleClientAction(messageId, actionId, next);
 
   const apply = () => {
     const { nodes: currentNodes, edges: currentEdges } = useWorkflowStore.getState();

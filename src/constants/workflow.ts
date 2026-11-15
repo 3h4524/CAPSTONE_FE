@@ -97,7 +97,9 @@ export const RUNNABLE_NODE_TYPES: WorkflowNodeType[] = [
   "generate-listing",
 ];
 
-// The order the steps of a run must be connected in (the backend checks the same order).
+// The order a run goes through its steps (the backend uses the same order). The steps of the line are connected in
+// this order; Push to Printify branches off Apply mock-up or Mockup Approval instead and runs right after Mockup
+// Approval, since it takes the design and its approved mock-ups, not the video (see PRINTIFY_SOURCES).
 export const RUN_ORDER: WorkflowNodeType[] = [
   "product-input",
   "prompt-synthesis",
@@ -105,11 +107,15 @@ export const RUN_ORDER: WorkflowNodeType[] = [
   "design-approval",
   "apply-mockup",
   "approval-gate",
+  "publish-printify",
   "generate-video",
   "review-video",
   "export-zip",
-  ...PUBLISH_NODE_TYPES,
+  "publish-etsy",
 ];
+
+/** The steps Push to Printify may branch off: it publishes the design and its mock-ups, never the video. */
+export const PRINTIFY_SOURCES: WorkflowNodeType[] = ["apply-mockup", "approval-gate"];
 
 
 export const WORKFLOW_CATEGORIES: WorkflowCategoryDefinition[] = [
@@ -154,9 +160,8 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
       {
         kind: "product-select",
         name: "productId",
-        label: "Product for the video",
-        description:
-          "Designs and mock-ups are made for the whole batch. The video is made for this one product.",
+        label: "Product",
+        description: "The product Listing content writes for.",
       },
     ],
   },
@@ -205,7 +210,8 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { imageProvider: "gemini", variants: 2, aspectRatio: "1:1" },
+    // One design per product; more come from Regenerate on the product. `variants` stays 1 (older workflows saved more).
+    defaultConfig: { imageProvider: "gemini", variants: 1, aspectRatio: "1:1" },
     fields: [
       {
         kind: "select",
@@ -227,7 +233,6 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
           },
         ],
       },
-      { kind: "number", name: "variants", label: "Variants per product", min: 1, max: 4 },
       {
         kind: "select",
         name: "aspectRatio",
@@ -279,10 +284,13 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     // (Workflows saved with the old shared `garmentColors` list lose it when they load.)
     // `templateBackgrounds` holds the background color of the templates that do not keep their photo's own.
     // `mockupIds` and `artworkGroupKey` are the video's choice among the finished mock-ups, made at Mockup Approval.
+    // `mockupTarget` says what the mock-ups are for: "zip" (export only) or "printify" (one Printify template, in
+    // its Printify colors). A Push to Printify step after this node makes it "printify" whatever is stored.
     defaultConfig: {
       mockupTemplateIds: [],
       templateColors: {},
       templateBackgrounds: {},
+      mockupTarget: "zip",
       mockupIds: [],
       artworkGroupKey: "",
     },
@@ -292,6 +300,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         name: "mockupTemplateIds",
         templateColorsName: "templateColors",
         templateBackgroundsName: "templateBackgrounds",
+        targetName: "mockupTarget",
         label: "Mock-up templates",
       },
     ],
@@ -316,6 +325,12 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
             value: "manual",
             label: "Manual review",
             description: "The video waits until you approve the mock-ups it may use.",
+          },
+          {
+            value: "auto",
+            label: "Approve automatically",
+            description:
+              "Every mock-up waiting for review is approved and the video starts. Rejected ones stay out; AI scenes start within the cost you confirmed on Run.",
           },
         ],
       },
@@ -384,8 +399,28 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "review",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: {},
-    fields: [],
+    defaultConfig: { mode: "manual" },
+    fields: [
+      {
+        kind: "select",
+        name: "mode",
+        label: "Approval mode",
+        display: "cards",
+        options: [
+          {
+            value: "manual",
+            label: "Manual review",
+            description: "The run pauses so you can watch each video and approve or reject it before export.",
+          },
+          {
+            value: "auto",
+            label: "Approve automatically",
+            description:
+              "Every finished video is approved and exported. A video that fails one of Etsy's required checks still waits for you.",
+          },
+        ],
+      },
+    ],
   },
   "generate-listing": {
     type: "generate-listing",
@@ -454,6 +489,8 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
       whenMade: "made_to_order",
       shippingProfileId: null,
       includeVideo: true,
+      madeBy: null,
+      productionPartnerIds: [],
     },
     fields: [],
   },

@@ -2,8 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type * as AssistantApi from "@/api/assistant";
 import { AssistantComposer } from "@/components/commons/assistant/assistant-composer";
-import { ASSISTANT_MAX_MESSAGE_LENGTH } from "@/constants/assistant";
+import { ASSISTANT_MAX_MESSAGE_LENGTH, ASSISTANT_NEW_CHAT_DRAFT_KEY } from "@/constants/assistant";
 import { useAssistantStore } from "@/stores/assistant";
+import { useWorkflowStore } from "@/stores/workflow";
+import { usePathname } from "@/test/__mocks__/next/navigation";
+import { buildWorkflowNode } from "@/test/factories";
 import { renderWithQuery } from "@/test/render-with-query";
 import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -15,11 +18,13 @@ vi.mock("@/api/assistant", async (importOriginal) => ({
   streamAssistantChat: (...args: unknown[]) => streamAssistantChat(...args),
 }));
 
-const input = () => screen.getByPlaceholderText("Ask the assistant");
+const input = () => screen.getByPlaceholderText("Ask Podi");
 
 describe("AssistantComposer", () => {
   beforeEach(() => {
     useAssistantStore.setState(useAssistantStore.getInitialState(), true);
+    useWorkflowStore.setState(useWorkflowStore.getInitialState(), true);
+    usePathname.mockReturnValue("/");
     streamAssistantChat.mockReset();
     streamAssistantChat.mockResolvedValue(undefined);
   });
@@ -151,5 +156,59 @@ describe("AssistantComposer", () => {
     const counter = await screen.findByText(`${ASSISTANT_MAX_MESSAGE_LENGTH + 5}/${ASSISTANT_MAX_MESSAGE_LENGTH}`);
 
     expect(counter).toHaveClass("absolute", "text-destructive");
+  });
+
+  it("keeps a half-typed message when the composer is closed and opened again", async () => {
+    const { unmount } = renderWithQuery(<AssistantComposer />);
+    await userEvent.type(input(), "half typed");
+
+    unmount();
+    renderWithQuery(<AssistantComposer />);
+
+    expect(input()).toHaveValue("half typed");
+    expect(useAssistantStore.getState().drafts[ASSISTANT_NEW_CHAT_DRAFT_KEY]).toBe("half typed");
+  });
+
+  it("restores the draft of the conversation that is switched to", async () => {
+    useAssistantStore.setState({ drafts: { "c-2": "draft for c-2" } });
+    renderWithQuery(<AssistantComposer />);
+    await userEvent.type(input(), "new chat draft");
+
+    act(() => useAssistantStore.getState().selectConversation("c-2"));
+    expect(input()).toHaveValue("draft for c-2");
+
+    act(() => useAssistantStore.getState().startNewConversation());
+    expect(input()).toHaveValue("new chat draft");
+  });
+
+  it("clears the draft of the conversation on send", async () => {
+    renderWithQuery(<AssistantComposer />);
+
+    await userEvent.type(input(), "hello{Enter}");
+
+    await waitFor(() => expect(streamAssistantChat).toHaveBeenCalledTimes(1));
+    expect(useAssistantStore.getState().drafts).toEqual({});
+  });
+
+  it("names the selected step that is sent as context on the workflow screen", () => {
+    usePathname.mockReturnValue("/workflows");
+    useWorkflowStore.setState({
+      workflowId: "wf-1",
+      nodes: [buildWorkflowNode({ id: "design", data: { type: "design-image", label: "Design image 1", config: {}, status: "idle" } })],
+      selectedNodeIds: ["design"],
+    });
+
+    renderWithQuery(<AssistantComposer />);
+
+    expect(screen.getByText("Selected: Design image 1")).toBeInTheDocument();
+  });
+
+  it("shows no context label without a selected step", () => {
+    usePathname.mockReturnValue("/workflows");
+    useWorkflowStore.setState({ workflowId: "wf-1", nodes: [buildWorkflowNode({ id: "design" })], selectedNodeIds: [] });
+
+    renderWithQuery(<AssistantComposer />);
+
+    expect(screen.queryByText(/^Selected:/)).not.toBeInTheDocument();
   });
 });

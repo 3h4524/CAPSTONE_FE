@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   ArrowDown,
@@ -56,6 +56,7 @@ import { VideoTimelineEditor } from "@/components/workflows/media/video-timeline
 import { type AiCharacter, getAiCharacter } from "@/constants/ai-characters";
 import { confirmAiShot } from "@/helpers/confirm-ai-shot";
 import { getErrorMessage } from "@/helpers/error-message";
+import { counterpartMockup, mainMockup, personMockup } from "@/helpers/main-mockup";
 import { hasFeature } from "@/helpers/plan-features";
 import { showToast } from "@/helpers/toast";
 import { getVideoOutputFormat } from "@/helpers/video-output-formats";
@@ -66,6 +67,8 @@ import { useAiCharacterModels } from "@/hooks/queries/use-ai-character-models";
 import { useAiVideoTemplates } from "@/hooks/queries/use-ai-video-templates";
 import { useEntitlements } from "@/hooks/queries/use-entitlements";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
+import { usePreviewDesign } from "@/hooks/queries/use-preview-design";
+import { useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useRunSceneVideos } from "@/hooks/queries/use-run-scene-videos";
 import { useVideoPacks } from "@/hooks/queries/use-video-packs";
 import { useAppQueryClient } from "@/hooks/use-query-client";
@@ -124,6 +127,7 @@ const BASE_SCENE: AiVideoSceneOptions = {
   studioReferenceHashes: [],
 };
 const EMPTY_SCENES: AiVideoSceneOptions[] = [];
+const EMPTY_IDS: string[] = [];
 const workflowModeForScenes = (scenes: AiVideoSceneOptions[]) =>
   scenes.length > 0 && scenes.every((scene) => scene.mode === "standard") ? "standard" : "ai_shot";
 
@@ -279,6 +283,17 @@ const buildProductOnModelScenes = (
   sharedMockupId: string | null
 ): AiVideoSceneOptions[] =>
   pack.scenes.map((definition): AiVideoSceneOptions => {
+    // A Standard scene has no AI shot to prepare: no start frame or shared mock-up, only its timing and camera motion.
+    // Its image is picked per scene (or per design in a batch run), as for a scene added by hand.
+    if (definition.mode === "standard")
+      return {
+        ...BASE_SCENE,
+        mode: "standard",
+        durationSeconds: definition.durationSeconds,
+        transitionIn: definition.transitionIn ?? "cut",
+        transitionDurationFrames: definition.transitionDurationFrames ?? 0,
+        standardMotionPreset: definition.standardMotionPreset ?? null,
+      };
     const template = catalog.find((item) => item.code === definition.templateCode);
     const subtemplate = template?.subtemplates?.find(
       (item) => item.code === definition.subtemplateCode
@@ -388,9 +403,15 @@ export function AiShotOptions({
   nodeId,
   disabled,
   onChange,
+  beforeTemplate,
+  afterTemplate,
 }: {
   nodeId: string;
   disabled: boolean;
+  /** Fields the panel shows above the video template (the output format). */
+  beforeTemplate?: ReactNode;
+  /** Fields the panel shows right below the video template, above the scenes (the transition). */
+  afterTemplate?: ReactNode;
   onChange: (
     scenes: AiVideoSceneOptions[],
     seconds: number,
@@ -425,11 +446,21 @@ export function AiShotOptions({
   } | null>(null);
   const [referenceFilesByScene, setReferenceFilesByScene] = useState<Record<number, File[]>>({});
   const node = useWorkflowStore((state) => state.nodes.find((item) => item.id === nodeId));
-  const productId = useWorkflowStore((state) =>
+  const inputProductId = useWorkflowStore((state) =>
     readString(
       state.nodes.find((item) => item.data.type === "product-input")?.data.config.productId
     )
   );
+  const { run } = useWorkflowRuntime();
+  // A design's own run of a batch video run edits that design's scenes, on its own mock-ups; otherwise the scenes
+  // are set up on the product in Product input.
+  // Only a run of the batch run open now is a design's run: a run of an earlier (cancelled) group is another
+  // design, maybe made with older mock-ups, and must not take the editor over.
+  const openGroupId = useRunGroupId();
+  const designRun = run?.runGroupId && run.runGroupId === openGroupId ? run : null;
+  // A batch video run has no product in Product input: its scenes are set up on one of the run's designs.
+  const previewDesign = usePreviewDesign();
+  const productId = designRun?.productId ?? previewDesign?.productId ?? inputProductId;
   const applyMockupNode = useWorkflowStore((state) =>
     state.nodes.find((item) => item.data.type === "apply-mockup")
   );
@@ -448,13 +479,22 @@ export function AiShotOptions({
     mutateAsync: reviewStudioFrameAsync,
     isPending: isReviewingStudioFrame,
   } = useReviewMockupAsset();
-  const { run } = useWorkflowRuntime();
   const { saveWorkflow } = useWorkflowSave();
   const sceneRunId = run?.id ?? null;
   const { data: sceneVideos = [] } = useRunSceneVideos(sceneRunId);
   const { mutateAsync: actOnRun } = useWorkflowRunAction();
-  const chosenMockupIds = readStringArray(applyMockupNode?.data.config.mockupIds);
-  const artworkGroupKey = readString(applyMockupNode?.data.config.artworkGroupKey);
+  const chosenMockupIds = designRun ? EMPTY_IDS : readStringArray(applyMockupNode?.data.config.mockupIds);
+  const artworkGroupKey =
+    designRun?.artworkGroupKey ??
+    previewDesign?.artworkGroupKey ??
+    readString(applyMockupNode?.data.config.artworkGroupKey);
+  // The scenes as saved: Mockup Approval and the videos read those, so the editor says when it shows something else.
+  const savedScenes = useWorkflowStore(
+    (state) =>
+      state.savedGraph.nodes.find((item) => item.id === nodeId)?.data.config.aiScenes as
+        | AiVideoSceneOptions[]
+        | undefined
+  );
   const rawScenes =
     (node?.data.config.aiScenes as AiVideoSceneOptions[] | undefined) ?? EMPTY_SCENES;
   const defaultVideoModel =
@@ -481,6 +521,8 @@ export function AiShotOptions({
   const selectedPackCode = readString(node?.data.config.template);
   const selectedVideoPack = videoPacks.find((pack) => pack.code === selectedPackCode);
   const isProductOnModelPack = selectedPackCode === PRODUCT_ON_MODEL_PACK;
+  // A pack of Standard scenes only: no AI, character or shared mock-up.
+  const isStandardPack = Boolean(selectedVideoPack?.scenes.every((scene) => scene.mode === "standard"));
   const sharedMockupId = readString(node?.data.config.sharedMockupId) || null;
   const currentApproved = allAssets.filter(
     (asset) => asset.approvalStatus === "approved" && asset.approvedRevision === asset.revision
@@ -698,8 +740,11 @@ export function AiShotOptions({
   }, [node, nodeId, scenes.length, catalog, onChange, sharedInstructions]);
 
   useEffect(() => {
-    if (!node || rawScenes.length === 0 || areAssetsLoading || !productId) return;
-    const normalizedScenes: AiVideoSceneOptions[] = rawScenes.map((scene) => {
+    // Waits for the AI template catalog too: an auto-picked start image depends on whether the scene's template
+    // needs a person, and `catalog` is `[]` while that loads, which would otherwise auto-pick the main mock-up and
+    // then never revisit it once a mock-up is set.
+    if (!node || rawScenes.length === 0 || areAssetsLoading || !productId || isPending) return;
+    let normalizedScenes: AiVideoSceneOptions[] = rawScenes.map((scene) => {
       const mode: AiVideoSceneOptions["mode"] = scene.mode === "standard" ? "standard" : "ai";
       const template =
         mode === "ai" ? catalog.find((item) => item.code === scene.templateCode) : undefined;
@@ -743,6 +788,29 @@ export function AiShotOptions({
         : { ...withRecoveredReferences, mode };
     });
     const normalizedMode = workflowModeForScenes(normalizedScenes);
+    // Once any scene is AI, the whole config is "ai_shot" and the planner needs every scene's start image up
+    // front, standard-motion scenes included: there is no per-scene fallback like Standard's main-mock-up default.
+    // Fill the missing ones with the same rule the start-frame field already shows as "automatic".
+    if (normalizedMode === "ai_shot") {
+      normalizedScenes = normalizedScenes.map((scene) => {
+        const sceneTemplate =
+          scene.mode === "ai" ? catalog.find((item) => item.code === scene.templateCode) : undefined;
+        if (sceneTemplate?.requiresLifestyle) {
+          // A person scene only ever uses the design's model photo: the server overrides anything else the same
+          // way when it renders (SceneSourceResolver), so keep this in sync instead of showing a stale choice -
+          // including a mock-up that was picked before a model photo existed, or before this template was chosen.
+          const current = scene.mockupId
+            ? originalApproved.find((asset) => asset.id === scene.mockupId)
+            : undefined;
+          if (current?.role === "Lifestyle") return scene;
+          const person = personMockup(originalApproved);
+          return person ? { ...scene, mockupId: person.id } : { ...scene, mockupId: null };
+        }
+        if (scene.mockupId) return scene;
+        const auto = mainMockup(originalApproved);
+        return auto ? { ...scene, mockupId: auto.id } : scene;
+      });
+    }
     const needsNormalization =
       node.data.config.mode !== normalizedMode ||
       rawScenes.some(
@@ -785,6 +853,7 @@ export function AiShotOptions({
     allAssets,
     areAssetsLoading,
     productId,
+    isPending,
   ]);
 
   if (!node) return null;
@@ -797,9 +866,12 @@ export function AiShotOptions({
       : null;
     const seconds = next.reduce((sum, scene) => sum + scene.durationSeconds, 0);
     const { aiShotOptions: _old, ...cleanConfig } = node.data.config;
+    const mode = workflowModeForScenes(next);
     useWorkflowStore.getState().updateNodeConfig(nodeId, {
       ...cleanConfig,
-      mode: workflowModeForScenes(next),
+      // The server only knows a pack by name for Standard scenes: one that gained an AI scene is custom scenes now.
+      ...(isStandardPack && mode === "ai_shot" ? { template: "auto", templateVersion: 2 } : {}),
+      mode,
       aiScenes: next,
       aiGlobalInstructions: effectiveSharedInstructions,
       durationSeconds: seconds,
@@ -1049,11 +1121,12 @@ export function AiShotOptions({
   };
   const applyVideoPack = (pack: VideoPackDefinition) => {
     const nextScenes = buildProductOnModelScenes(pack, catalog, sharedMockupId);
+    const standardOnly = nextScenes.every((scene) => scene.mode === "standard");
     writePackConfiguration(nextScenes, {
-      mode: "ai_shot",
+      mode: standardOnly ? "standard" : "ai_shot",
       template: pack.code,
       templateVersion: pack.version,
-      sharedMockupId,
+      ...(standardOnly ? {} : { sharedMockupId }),
     });
     setBatchFrameState({});
     setPendingPack(null);
@@ -1061,7 +1134,7 @@ export function AiShotOptions({
     showToast("success", `${pack.name} added with ${nextScenes.length} scenes.`);
   };
   const requestVideoPack = (pack: VideoPackDefinition) => {
-    if (catalog.length === 0) {
+    if (catalog.length === 0 && pack.scenes.some((scene) => scene.mode !== "standard")) {
       showToast("error", "The AI scene catalog is still loading. Try the video template again in a moment.");
       return;
     }
@@ -1404,8 +1477,9 @@ export function AiShotOptions({
           return (
             !definition ||
             scene.mode !== definition.mode ||
-            scene.templateCode !== definition.templateCode ||
-            scene.subtemplateCode !== definition.subtemplateCode ||
+            (definition.mode !== "standard" &&
+              (scene.templateCode !== definition.templateCode || scene.subtemplateCode !== definition.subtemplateCode)) ||
+            (definition.mode === "standard" && (scene.standardMotionPreset ?? null) !== (definition.standardMotionPreset ?? null)) ||
             scene.durationSeconds !== definition.durationSeconds ||
             scene.transitionIn !== (definition.transitionIn ?? "cut")
           );
@@ -1420,6 +1494,7 @@ export function AiShotOptions({
 
   return (
     <>
+      {beforeTemplate}
       <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label="Video template">
         <div className="flex items-start gap-3">
           <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
@@ -1431,14 +1506,14 @@ export function AiShotOptions({
               Start from a complete sequence, then fine-tune its individual scenes below.
             </p>
           </div>
-          {isProductOnModelPack && (
+          {selectedVideoPack && (
             <span className="bg-primary/10 text-primary shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold">
-              {isPackCustomized ? "Customized" : "16s pack"}
+              {isPackCustomized ? "Customized" : `${selectedVideoPack.totalDurationSeconds}s pack`}
             </span>
           )}
         </div>
         <Select
-          value={isProductOnModelPack ? PRODUCT_ON_MODEL_PACK : "custom"}
+          value={selectedVideoPack ? selectedVideoPack.code : "custom"}
           disabled={disabled || arePacksLoading || isPending}
           onValueChange={(value) => {
             if (value === "custom") {
@@ -1461,12 +1536,18 @@ export function AiShotOptions({
             ))}
           </SelectContent>
         </Select>
-        {isProductOnModelPack && selectedVideoPack && (
+        {selectedVideoPack && (
           <p className="text-muted-foreground text-xs leading-relaxed">
-            {selectedVideoPack.description} {isPackCustomized ? "Scene order, duration, or shot setup differs from the pack default." : "Four prepared AI scenes, each four seconds."}
+            {selectedVideoPack.description}{" "}
+            {isPackCustomized
+              ? "Scene order, duration, or shot setup differs from the pack default."
+              : isStandardPack
+                ? "No AI scenes: each one is a camera move on a product image, so no AI provider is billed."
+                : "Prepared AI scenes with a shared cast and product mock-up."}
           </p>
         )}
       </section>
+      {afterTemplate}
       <Dialog open={pendingPack !== null} onOpenChange={(open) => !open && setPendingPack(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -1956,7 +2037,47 @@ export function AiShotOptions({
               keyframeToUse.approvedRevision === keyframeToUse.revision &&
               (keyframeToUse.id !== sceneFrame?.id || frameIsCurrentAndApproved)
           );
-          const selectedStartFrame = selectedSourceFrame ?? selectedSource;
+          // A scene with no start frame chosen starts from its design's main mock-up (Standard), or from its model
+          // photo when the AI template shows a person (Product On Model, Creator POV, Everyday Story): show that
+          // image instead of an empty slot, so the editor says what the video will use.
+          const automaticSource = scene.mockupId
+            ? undefined
+            : scene.mode === "standard"
+              ? mainMockup(originalApproved)
+              : template?.requiresLifestyle
+                ? personMockup(originalApproved)
+                : undefined;
+          const automaticSourceIsPerson = Boolean(automaticSource) && scene.mode !== "standard";
+          // A start frame saved from another design of a batch run is not among this design's images: show the one
+          // this design gets for it (the server's pick for the saved workflow, else the same template and color).
+          // The server resolved this design's image from the saved scene; while this scene is as saved, that is
+          // exactly the image Mockup Approval marks and the video uses, so it is the one shown.
+          const savedScene = savedScenes?.[index];
+          const sceneIsSaved = Boolean(
+            savedScene && savedScene.mode === scene.mode && (savedScene.mockupId ?? null) === (scene.mockupId ?? null)
+          );
+          const serverPick = sceneIsSaved
+            ? previewDesign?.scenes.find((preview) => preview.sceneIndex === index)?.mockupId
+            : undefined;
+          const serverSource = serverPick ? originalApproved.find((asset) => asset.id === serverPick) : undefined;
+          const matchedSource =
+            !selectedSource && scene.mockupId && scene.mode === "standard"
+              ? (serverSource ??
+                counterpartMockup(scene.mockupId, allAssets, originalApproved) ??
+                mainMockup(originalApproved))
+              : undefined;
+          const shownSource = selectedSource ?? matchedSource ?? (automaticSource && (serverSource ?? automaticSource));
+          const unsavedForRun = Boolean(previewDesign && scene.mode === "standard" && !sceneIsSaved);
+          const selectedStartFrame = selectedSourceFrame ?? shownSource;
+          // The part of the start frame the video shows. A Standard scene that keeps the whole image (contain)
+          // has no crop; AI starts from the crop the seller set, else the format's own cut of the image.
+          const thumbnailCrop = !selectedStartFrame
+            ? null
+            : scene.mode === "ai"
+              ? (scene.aiStartFrameCrop ?? getStandardBaseCrop(selectedStartFrame, outputAspect))
+              : scene.standardMotionPreset === "contain_gentle"
+                ? null
+                : (scene.standardBaseCrop ?? getStandardBaseCrop(selectedStartFrame, outputAspect));
           const editableAiFrame = scene.mode === "ai"
             ? scene.startFrameMode === "studio"
               ? sceneFrame?.approvalStatus === "approved" && sceneFrame.approvedRevision === sceneFrame.revision
@@ -2414,56 +2535,81 @@ export function AiShotOptions({
                   className="hover:bg-muted/40 focus-visible:ring-ring group flex min-h-24 w-full cursor-pointer items-center gap-3 rounded-lg p-2.5 text-left transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {selectedStartFrame ? (
-                    <span className="bg-muted relative flex h-[72px] w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border">
-                      {scene.mode === "ai" && scene.aiStartFrameCrop ? (
-                        <span
-                          aria-hidden="true"
-                          className="relative block h-full overflow-hidden"
-                          style={{ aspectRatio: outputFormat === "landscape" ? "16 / 9" : "9 / 16" }}
-                        >
-                          <Image
-                            src={selectedStartFrame.previewUrl}
-                            alt=""
-                            width={selectedStartFrame.width}
-                            height={selectedStartFrame.height}
-                            sizes="56px"
-                            unoptimized
-                            className="pointer-events-none absolute max-w-none select-none"
-                            style={{
-                              width: `${100 / scene.aiStartFrameCrop.width}%`,
-                              height: `${100 / scene.aiStartFrameCrop.height}%`,
-                              left: `${(-100 * scene.aiStartFrameCrop.x) / scene.aiStartFrameCrop.width}%`,
-                              top: `${(-100 * scene.aiStartFrameCrop.y) / scene.aiStartFrameCrop.height}%`,
-                            }}
-                          />
-                        </span>
+                    // The thumbnail has the shape of the output format and shows the part of the image the video
+                    // starts from: the AI crop the seller set, else the frame the format cuts out of the image.
+                    <span
+                      className="bg-muted relative block h-[72px] shrink-0 overflow-hidden rounded-md border"
+                      style={{ aspectRatio: outputAspect.replace(":", " / ") }}
+                    >
+                      {thumbnailCrop ? (
+                        <Image
+                          src={selectedStartFrame.previewUrl}
+                          alt=""
+                          width={selectedStartFrame.width}
+                          height={selectedStartFrame.height}
+                          sizes="128px"
+                          unoptimized
+                          className="pointer-events-none absolute max-w-none select-none"
+                          style={{
+                            width: `${100 / thumbnailCrop.width}%`,
+                            height: `${100 / thumbnailCrop.height}%`,
+                            left: `${(-100 * thumbnailCrop.x) / thumbnailCrop.width}%`,
+                            top: `${(-100 * thumbnailCrop.y) / thumbnailCrop.height}%`,
+                          }}
+                        />
                       ) : (
                         <Image
                           src={selectedStartFrame.previewUrl}
                           alt=""
                           fill
-                          sizes="56px"
+                          sizes="128px"
                           unoptimized
                           className="object-contain"
                         />
                       )}
                     </span>
                   ) : (
-                    <span className="bg-muted text-muted-foreground flex h-[72px] w-14 shrink-0 items-center justify-center rounded-md border border-dashed">
+                    <span
+                      className="bg-muted text-muted-foreground flex h-[72px] shrink-0 items-center justify-center rounded-md border border-dashed"
+                      style={{ aspectRatio: outputAspect.replace(":", " / ") }}
+                    >
                       <Plus aria-hidden="true" className="size-5" />
                     </span>
                   )}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">
-                      {selectedStartFrame ? "Selected image" : "Choose a start frame"}
+                      {automaticSource && !selectedSource
+                        ? automaticSourceIsPerson
+                          ? "Model photo (automatic)"
+                          : "Main mock-up (automatic)"
+                        : selectedStartFrame
+                          ? "Selected image"
+                          : "Choose a start frame"}
                     </span>
                     <span className="text-muted-foreground mt-1 block truncate text-xs">
                       {selectedSourceFrame
                         ? `Approved keyframe · revision ${selectedSourceFrame.revision}`
-                        : selectedSource
-                          ? `${selectedSource.role} · ${selectedSource.width} × ${selectedSource.height}${selectedSource.variantKey ? ` · ${selectedSource.variantKey}` : ""}`
+                        : shownSource
+                          ? `${shownSource.role} · ${shownSource.width} × ${shownSource.height}${shownSource.variantKey ? ` · ${shownSource.variantKey}` : ""}`
                           : "Browse approved images or create a new keyframe"}
                     </span>
+                    {automaticSource && !selectedSource && !selectedSourceFrame && (
+                      <span className="text-muted-foreground mt-0.5 block text-[11px] leading-snug">
+                        {automaticSourceIsPerson
+                          ? "Each design uses its own approved model photo. Choose an image to start from another one."
+                          : "Each design uses its own main mock-up. Choose an image to start from another one."}
+                      </span>
+                    )}
+                    {matchedSource && !selectedSourceFrame && (
+                      <span className="text-muted-foreground mt-0.5 block text-[11px] leading-snug">
+                        Chosen on another design; each design uses its own image of the same template and color.
+                      </span>
+                    )}
+                    {unsavedForRun && (
+                      <span className="mt-0.5 block text-[11px] leading-snug font-medium text-amber-700">
+                        Not saved yet: Mockup Approval and the videos still use the saved start frame.
+                      </span>
+                    )}
                     {scene.mode === "ai" && scene.aiStartFrameCrop && (
                       <span className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-700">
                         <Check aria-hidden="true" className="size-3 shrink-0" /> Crop applied
@@ -2979,7 +3125,7 @@ export function AiShotOptions({
               )}
               {scene.mode === "standard" &&
                 (() => {
-                  const editorSource = selectedSourceFrame ?? selectedSource;
+                  const editorSource = selectedStartFrame;
                   const baseCrop =
                     scene.standardBaseCrop ?? getStandardBaseCrop(editorSource, outputAspect);
                   const setStandardMotion = (

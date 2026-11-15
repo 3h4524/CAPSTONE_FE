@@ -1,5 +1,15 @@
 export const ASSISTANT_MAX_MESSAGE_LENGTH = 4000;
 export const ASSISTANT_COUNTER_THRESHOLD = 3500;
+export const ASSISTANT_ACTION_COUNTDOWN_TICK_MS = 1000;
+export const ASSISTANT_ACTION_EXPIRED_ERROR_CODE = "assistant.action_expired";
+export const ASSISTANT_STOPPED_ERROR_CODE = "assistant.stopped";
+export const ASSISTANT_BLOCKED_ERROR_CODE = "assistant.blocked";
+export const ASSISTANT_INTERRUPTED_ERROR = { code: "assistant.interrupted", message: "This answer was interrupted." };
+export const ASSISTANT_REATTACH_DELAYS_MS = [1000, 2000, 4000];
+export const ASSISTANT_STREAM_INTERRUPTED_ERROR = {
+  code: "stream_interrupted",
+  message: "The connection was interrupted. Please try again.",
+};
 export const ASSISTANT_SCROLL_BOTTOM_TOLERANCE_PX = 80;
 export const ASSISTANT_ROUTE_MAX_LENGTH = 300;
 export const ASSISTANT_CANVAS_MAX_NODES = 40;
@@ -25,6 +35,16 @@ export const ASSISTANT_TOOL_LABELS: Record<string, AssistantToolLabel> = {
   edit_workflow_canvas: { running: "Preparing the canvas changes", done: "Prepared the canvas changes" },
   arrange_workflow_canvas: { running: "Planning a tidier layout", done: "Planned a tidier layout" },
   navigate: { running: "Preparing a link", done: "Prepared a link" },
+  run_workflow: { running: "Preparing the run", done: "Prepared the run" },
+  save_workflow: { running: "Preparing the save", done: "Prepared the save" },
+  estimate_run_cost: { running: "Estimating the run cost", done: "Estimated the run cost" },
+  get_run_progress: { running: "Checking the run", done: "Checked the run" },
+  continue_run: { running: "Preparing the next step", done: "Prepared the next step" },
+  review_designs: { running: "Preparing the design review", done: "Prepared the design review" },
+  review_mockups: { running: "Preparing the mock-up review", done: "Prepared the mock-up review" },
+  create_workflow: { running: "Preparing the new workflow", done: "Prepared the new workflow" },
+  create_batch: { running: "Preparing the new batch", done: "Prepared the new batch" },
+  add_batch_products: { running: "Preparing the products", done: "Prepared the products" },
   start_workflow_run: { running: "Preparing the run", done: "Prepared the run" },
   workflow_run_action: { running: "Preparing the action", done: "Prepared the action" },
   offer_choices: { running: "Preparing options", done: "Prepared options" },
@@ -32,12 +52,33 @@ export const ASSISTANT_TOOL_LABELS: Record<string, AssistantToolLabel> = {
 
 export const ASSISTANT_FALLBACK_TOOL_LABEL: AssistantToolLabel = { running: "Working on it", done: "Done" };
 
-export const ASSISTANT_STARTER_CHIPS: { match: (pathname: string) => boolean; chips: string[] }[] = [
-  { match: (p) => p.startsWith("/admin"), chips: ["How do I add an FAQ article?", "How does RAG ingestion work?", "What can you help me with?"] },
-  { match: (p) => p === "/workflows", chips: ["Why did my last run fail?", "Explain the selected step", "Add a listing content step", "Run this workflow"] },
-  { match: (p) => p.startsWith("/batches"), chips: ["List my batches", "How do I import products from Excel?"] },
-  { match: (p) => p.startsWith("/usage") || p.startsWith("/subscription"), chips: ["Summarise my usage this month", "What does my plan include?"] },
-  { match: () => true, chips: ["What can you help me with?", "How do I create my first workflow?", "Show my workflows"] },
+export type AssistantStarterChipRequirement = "selectedStep" | "runnableWorkflow";
+
+export type AssistantStarterChip = { label: string; requires?: AssistantStarterChipRequirement };
+
+export const ASSISTANT_STARTER_CHIPS: { match: (pathname: string) => boolean; chips: AssistantStarterChip[] }[] = [
+  {
+    match: (p) => p.startsWith("/admin"),
+    chips: [{ label: "How do I add an FAQ article?" }, { label: "How does RAG ingestion work?" }, { label: "What can you help me with?" }],
+  },
+  {
+    match: (p) => p === "/workflows",
+    chips: [
+      { label: "Why did my last run fail?" },
+      { label: "Explain the selected step", requires: "selectedStep" },
+      { label: "Add a listing content step" },
+      { label: "Run this workflow", requires: "runnableWorkflow" },
+    ],
+  },
+  { match: (p) => p.startsWith("/batches"), chips: [{ label: "List my batches" }, { label: "How do I import products from Excel?" }] },
+  {
+    match: (p) => p.startsWith("/usage") || p.startsWith("/subscription"),
+    chips: [{ label: "Summarise my usage this month" }, { label: "What does my plan include?" }],
+  },
+  {
+    match: () => true,
+    chips: [{ label: "What can you help me with?" }, { label: "How do I create my first workflow?" }, { label: "Show my workflows" }],
+  },
 ];
 
 export const ASSISTANT_NAVIGATION_PATTERNS: RegExp[] = [
@@ -62,6 +103,9 @@ export const ASSISTANT_PANEL_MAX_WIDTH_PX = 760;
 export const ASSISTANT_PANEL_RESERVED_WIDTH_PX = 480;
 export const ASSISTANT_PANEL_STORAGE_KEY = "apcs.assistant.panel-width";
 export const ASSISTANT_DISPLAY_MODE_STORAGE_KEY = "apcs.assistant.display-mode";
+export const ASSISTANT_DRAFTS_STORAGE_KEY_PREFIX = "apcs.assistant.drafts.";
+export const ASSISTANT_NEW_CHAT_DRAFT_KEY = "new-chat";
+export const ASSISTANT_SELECTED_CONVERSATION_STORAGE_KEY_PREFIX = "apcs.assistant.selected-conversation.";
 export const ASSISTANT_DOCK_ENABLED = false;
 export const ASSISTANT_MASCOT_SRC = "/images/assistant/assistant-mascot.webp";
 export const ASSISTANT_BUBBLE_GAP_PX = 12;
@@ -73,3 +117,9 @@ export const ASSISTANT_LAYOUT_GAPS: Record<"compact" | "comfortable" | "wide", {
 };
 
 export const ASSISTANT_LAYOUT_DEFAULT_NODE_HEIGHT_PX = 200;
+
+export const ASSISTANT_RUN_PROGRESS_POLL_MS = 20_000;
+
+export const ASSISTANT_RUN_NUDGE_RECENT_MS = 24 * 60 * 60 * 1000;
+
+export const ASSISTANT_PANEL_CONTINUE_TTL_MS = 30_000;

@@ -1,6 +1,7 @@
+import { useTranslation } from "react-i18next";
+
 import { StatusBadge } from "@/components/commons/data-display/status-badge";
 import { Badge } from "@/components/ui/badge";
-import { PRIORITY_LABELS, STATUS_LABELS } from "@/constants/support";
 import type { TicketPriority, TicketStatus } from "@/types/support";
 import { cn } from "@/utils/cn";
 
@@ -12,15 +13,19 @@ const priorityStyles: Record<TicketPriority, string> = {
 };
 
 export function TicketStatusBadge({ status }: { status: TicketStatus }) {
+  const { t } = useTranslation("common");
+
   return (
-    <StatusBadge status={status} className={cn("min-h-6 rounded-md px-2 text-[11px] font-semibold shadow-none")}>{STATUS_LABELS[status]}</StatusBadge>
+    <StatusBadge status={status} className={cn("min-h-6 rounded-md px-2 text-[11px] font-semibold shadow-none")}>{t(`support.statuses.${status}`)}</StatusBadge>
   );
 }
 
 export function TicketPriorityBadge({ priority }: { priority: TicketPriority }) {
+  const { t } = useTranslation("common");
+
   return (
     <Badge variant="outline" className={cn("min-h-6 rounded-md px-2 text-[11px] font-semibold shadow-none", priorityStyles[priority])}>
-      {PRIORITY_LABELS[priority]}
+      {t(`support.priorities.${priority}`)}
     </Badge>
   );
 }

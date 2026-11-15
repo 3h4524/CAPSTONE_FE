@@ -49,6 +49,6 @@ test("a paid plan has no allowances to check", () => {
 test("lines read as the banner shows them", () => {
   assert.equal(formatAllowanceDate("2026-12-01"), "1 Dec 2026");
   assert.equal(allowanceLine({ code: "full_runs", label: "full runs", used: 1, limit: 2 }), "1 of 2 full runs left");
-  assert.equal(allowanceResetLine(free()), "Resets 1 Dec 2026");
-  assert.equal(allowanceResetLine({ ...free(), scope: "trial", resetsOn: "2026-11-14" }), "Trial ends 14 Nov 2026");
+  assert.equal(allowanceResetLine(free(), "en"), "Resets Dec 1, 2026");
+  assert.equal(allowanceResetLine({ ...free(), scope: "trial", resetsOn: "2026-11-14" }, "en"), "Trial ends Nov 14, 2026");
 });

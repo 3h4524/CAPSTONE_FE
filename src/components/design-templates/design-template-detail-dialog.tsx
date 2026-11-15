@@ -89,6 +89,7 @@ export function DesignTemplateDetailDialog({
                     fill
                     sizes="(max-width: 1023px) calc(100vw - 5rem), 34vw"
                     src={template.previewImageUrl}
+                    unoptimized
                     alt={`Preview artwork for ${template.name}`}
                     className="object-contain"
                     onError={() => setImageFailed(true)}

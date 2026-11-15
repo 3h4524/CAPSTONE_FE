@@ -131,6 +131,11 @@ function PublishForm({ draft, productId, onDone }: { draft: EtsyDraft; productId
 
       <section className="space-y-2">
         <Label>Images <span className="text-ink-500 font-normal">({mockupIds.length} selected, shown on Etsy in the order picked)</span></Label>
+        {draft.mockups.some((mockup) => mockup.aiMade) && (
+          <p className="text-ink-500 text-xs">
+            Photos marked AI were made with AI. A physical listing also needs one that is not, such as a mock-up on a garment template; lead with it.
+          </p>
+        )}
         {draft.mockups.length === 0 ? (
           <p className="text-ink-500 text-sm">No approved mock-ups. Approve mock-ups in the workflow first.</p>
         ) : (
@@ -144,6 +149,7 @@ function PublishForm({ draft, productId, onDone }: { draft: EtsyDraft; productId
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={mockup.previewUrl} alt="" className="size-full object-cover" />
                   {order >= 0 && <span className="absolute top-1 left-1 flex size-5 items-center justify-center rounded-full bg-blue-600 text-[11px] font-semibold text-white">{order + 1}</span>}
+                  {mockup.aiMade && <span className="absolute right-1 bottom-1 rounded bg-slate-900/75 px-1 text-[10px] font-semibold text-white" title="Made with AI">AI</span>}
                 </button>
               );
             })}

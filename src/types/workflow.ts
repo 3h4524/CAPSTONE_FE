@@ -116,7 +116,7 @@ export type WorkflowField =
       name: string;
       label: string;
       source: WorkflowOptionSource;
-      /** The value may stay empty; `noneLabel` is the choice that clears it. */
+      /** The value may stay empty: `noneLabel` is what the field shows then, and a × in it takes a choice back. */
       optional?: boolean;
       noneLabel?: string;
       description?: string;
@@ -124,7 +124,15 @@ export type WorkflowField =
   | { kind: "product-select"; name: string; label: string; description?: string }
   | { kind: "video-formats"; name: string; label: string }
   | { kind: "text"; name: string; label: string }
-  | { kind: "mockup-selection"; name: string; templateColorsName: string; templateBackgroundsName: string; label: string }
+  | {
+      kind: "mockup-selection";
+      name: string;
+      templateColorsName: string;
+      templateBackgroundsName: string;
+      /** Config key of what the mock-ups are for: "zip" (export only) or "printify" (a Printify product). */
+      targetName: string;
+      label: string;
+    }
   | { kind: "number"; name: string; label: string; min: number; max: number; unit?: string }
   | { kind: "switch"; name: string; label: string; description: string }
   | { kind: "textarea"; name: string; label: string; placeholder: string; description?: string; maxLength?: number };

@@ -6,6 +6,7 @@ import { AssistantHistoryMenu } from "@/components/commons/assistant/assistant-h
 import { Button } from "@/components/ui/button";
 import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { type AssistantDisplayMode, saveDisplayMode } from "@/helpers/assistant-display-mode";
+import { useAssistantChat } from "@/hooks/use-assistant-chat";
 import { useAssistantStore } from "@/stores/assistant";
 
 type AssistantHeaderProps = {
@@ -13,7 +14,7 @@ type AssistantHeaderProps = {
 };
 
 export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
-  const startNewConversation = useAssistantStore((state) => state.startNewConversation);
+  const { startNewConversation } = useAssistantChat();
   const setDisplayMode = useAssistantStore((state) => state.setDisplayMode);
   const setOpen = useAssistantStore((state) => state.setOpen);
   const isBubbleExpanded = useAssistantStore((state) => state.isBubbleExpanded);
@@ -68,7 +69,7 @@ export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
           >
             {isBubbleExpanded ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
           </Button>
-          <Button type="button" variant="ghost" size="icon" aria-label="Close assistant" title="Close" onClick={() => setOpen(false)}>
+          <Button type="button" variant="ghost" size="icon" aria-label="Close Podi" title="Close" onClick={() => setOpen(false)}>
             <X aria-hidden="true" />
           </Button>
         </>
@@ -81,7 +82,7 @@ export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
       <div className="flex items-center justify-between gap-2 border-b py-2 pr-2 pl-4">
         <div className="flex items-center gap-2">
           {avatar}
-          <h2 className="text-foreground font-semibold">Assistant</h2>
+          <h2 className="text-foreground font-semibold">Podi</h2>
         </div>
         {actions}
       </div>
@@ -92,7 +93,7 @@ export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
     <SheetHeader className="flex-row items-center justify-between gap-2 border-b py-3 pr-12 pl-4">
       <div className="flex items-center gap-2">
         {avatar}
-        <SheetTitle>Assistant</SheetTitle>
+        <SheetTitle>Podi</SheetTitle>
       </div>
       {actions}
     </SheetHeader>

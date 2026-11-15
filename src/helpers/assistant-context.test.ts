@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ASSISTANT_CANVAS_MAX_NODES, ASSISTANT_ROUTE_MAX_LENGTH } from "@/constants/assistant";
-import { buildAssistantContext } from "@/helpers/assistant-context";
+import { buildAssistantContext, getAssistantSelectedStepLabels } from "@/helpers/assistant-context";
 import { buildWorkflowEdge, buildWorkflowNode } from "@/test/factories";
 import type { WorkflowNode } from "@/types/workflow";
 
@@ -93,5 +93,17 @@ describe("buildAssistantContext", () => {
     const context = buildAssistantContext({ pathname: "/workflows", search: "", workflow: workflow({ workflowId: null }) });
 
     expect(context.canvas).toBeNull();
+  });
+});
+
+describe("getAssistantSelectedStepLabels", () => {
+  it("names the selected steps on the workflow screen", () => {
+    expect(getAssistantSelectedStepLabels("/workflows", workflow())).toEqual(["Product input"]);
+  });
+
+  it("returns nothing off the workflow screen, without an open workflow or without a selection", () => {
+    expect(getAssistantSelectedStepLabels("/dashboard", workflow())).toEqual([]);
+    expect(getAssistantSelectedStepLabels("/workflows", workflow({ workflowId: null }))).toEqual([]);
+    expect(getAssistantSelectedStepLabels("/workflows", workflow({ selectedNodeIds: [] }))).toEqual([]);
   });
 });

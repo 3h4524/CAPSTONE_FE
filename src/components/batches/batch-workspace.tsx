@@ -17,6 +17,7 @@ import { BatchSummaryCard } from "@/components/batches/batch-summary-card";
 import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { StatusBadge } from "@/components/commons/data-display/status-badge";
 import { TruncatedTooltip } from "@/components/commons/data-display/truncated-tooltip";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -204,17 +205,17 @@ export const BatchWorkspace = () => {
 
   return (
     <div className="w-full min-w-0 space-y-4 md:space-y-5 md:p-6">
-      <header className="flex flex-col justify-between gap-4 max-md:flex-row max-md:items-center sm:flex-row sm:items-start">
-        <div className="min-w-0">
-          <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase max-md:hidden">Product management</p>
-          <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight max-md:mt-0 max-md:text-xl">Product batches</h1>
-          <p className="text-muted-foreground mt-1.5 max-w-2xl text-sm max-md:hidden">Prepare and track product inputs before sending them into the creation workflow.</p>
-        </div>
-        <div className="flex flex-wrap gap-2 sm:shrink-0">
-          <Button variant="ghost" className="text-muted-foreground max-md:hidden" aria-expanded={showHelp} onClick={() => setShowHelp((open) => !open)}><CircleHelp className="mr-2 size-4" />How it works<ChevronDown className={`ml-1 size-4 transition-transform ${showHelp ? "rotate-180" : ""}`} /></Button>
-          <Button size="page-action" onClick={openNewBatch}><Plus className="mr-2 size-4 max-md:mr-0" /><span>New<span className="max-md:hidden"> batch</span></span></Button>
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="Product management"
+        title="Product batches"
+        description="Prepare and track product inputs before sending them into the creation workflow."
+        actions={
+          <>
+            <Button variant="ghost" className="text-muted-foreground max-md:hidden" aria-expanded={showHelp} onClick={() => setShowHelp((open) => !open)}><CircleHelp className="mr-2 size-4" />How it works<ChevronDown className={`ml-1 size-4 transition-transform ${showHelp ? "rotate-180" : ""}`} /></Button>
+            <Button size="page-action" onClick={openNewBatch}><Plus className="mr-2 size-4 max-md:mr-0" /><span>New<span className="max-md:hidden"> batch</span></span></Button>
+          </>
+        }
+      />
 
       {showHelp && <section className="bg-muted/40 relative rounded-xl border" aria-label="How product batches work">
         <Button variant="ghost" size="icon" className="text-muted-foreground absolute top-2 right-2 size-7" aria-label="Hide how it works" onClick={() => setShowHelp(false)}><X className="size-4" /></Button>

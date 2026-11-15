@@ -5,8 +5,10 @@ import Image from "next/image";
 import { DesignImageFields } from "@/components/workflows/nodes/design-image-fields";
 import { NodeFrame } from "@/components/workflows/nodes/node-frame";
 import { NodeMockupField } from "@/components/workflows/nodes/node-mockup-field";
+import { RunGroupVideoStrip } from "@/components/workflows/nodes/run-group-video-strip";
 import { VideoFields } from "@/components/workflows/nodes/video-fields";
 import { VideoNodePreview } from "@/components/workflows/nodes/video-node-preview";
+import { useGroupVideoProgress } from "@/hooks/queries/use-group-video-progress";
 import { useNodeSettingsLocked } from "@/hooks/use-node-settings-locked";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { WorkflowNode } from "@/types/workflow";
@@ -25,7 +27,10 @@ export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
         ? (mockupResult?.images.map((image) => image.mockupImageUrl) ?? [])
         : [];
   const shown = images.slice(0, MAX_THUMBNAILS);
-  const progress = Math.max(0, Math.min(100, data.progress ?? 0));
+  // A batch video run fills the bar with all of its videos, not the one run the canvas follows.
+  const groupProgress = useGroupVideoProgress();
+  const batch = data.type === "generate-video" && groupProgress?.active ? groupProgress : null;
+  const progress = Math.max(0, Math.min(100, batch ? batch.progress : (data.progress ?? 0)));
 
   return (
     <NodeFrame nodeId={id} data={data} selected={selected} widthClassName="w-72">
@@ -54,7 +59,8 @@ export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
           </div>
         )}
 
-        {data.type === "generate-video" && <VideoNodePreview />}
+        {/* A batch video run shows every design's video; otherwise the one run's preview. */}
+        {data.type === "generate-video" && <RunGroupVideoStrip fallback={<VideoNodePreview />} />}
       </div>
     </NodeFrame>
   );

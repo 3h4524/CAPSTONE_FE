@@ -251,5 +251,7 @@ export const previewVideoStoryboard = async ({
   config: GenerateVideoConfig;
   mockupIds: string[];
   artworkGroupKey: string;
+  /** Preview for one design of a batch video run: the scenes are first moved onto that design's mock-ups. */
+  forDesign?: boolean;
 }) =>
   (await api.post<VideoStoryboard>(`/api/products/${productId}/video-storyboard`, request)).data;

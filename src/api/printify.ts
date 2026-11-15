@@ -28,7 +28,11 @@ export type PrintifyCatalog = {
   positions: string[];
   usShippingFirstItem: number | null;
   usShippingAdditionalItem: number | null;
+  /** Each print area (`front`, `back`…) and its size in pixels; absent from servers older than this field. */
+  printAreas?: PrintifyPrintArea[];
 };
+
+export type PrintifyPrintArea = { position: string; width: number; height: number };
 
 export type PrintifyStage = "created" | "publishing" | "published" | "failed";
 
@@ -41,8 +45,8 @@ export type PrintifyDraft = {
   tags: string[];
   warnings: string[];
   designs: ShopDesign[];
-  mockups: { id: string; previewUrl: string; width: number; height: number }[];
-  video: { id: string; durationSeconds: number; thumbnailUrl: string | null } | null;
+  // aiMade: made or edited with AI; a physical listing needs a photo besides such ones.
+  mockups: { id: string; previewUrl: string; width: number; height: number; aiMade?: boolean }[];
   defaults: {
     blueprintId: number | null;
     blueprintTitle: string | null;
@@ -111,6 +115,6 @@ export const createPrintifyProduct = async (productId: string, request: CreatePr
 export const publishPrintifyProduct = async (productId: string, printifyProductId: string, prices: { variantId: number; price: number }[]) =>
   (await api.post<PrintifyProduct>(`${base}/drafts/${productId}/products/${printifyProductId}/publish`, { prices })).data;
 
-/** Reads publishing progress; once the Etsy listing exists, adds these APCS media to it (once). */
-export const syncPrintifyProduct = async (productId: string, printifyProductId: string, media: { mockupIds: string[]; includeVideo: boolean }) =>
+/** Reads publishing progress; once the Etsy listing exists, adds these APCS mock-ups to it (once). Printify takes no video. */
+export const syncPrintifyProduct = async (productId: string, printifyProductId: string, media: { mockupIds: string[] }) =>
   (await api.post<PrintifyProduct>(`${base}/drafts/${productId}/products/${printifyProductId}/sync`, media, { timeout: 5 * 60_000 })).data;

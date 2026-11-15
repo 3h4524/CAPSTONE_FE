@@ -104,7 +104,7 @@ export const FEATURE_DETAILS: FeatureDetail[] = [
 export const FEATURES_CTA_CONTENT = {
   title: "Ready to launch your first batch?",
   description: "Upload one product idea and watch the workflow generate, score, and publish it.",
-  primaryCta: { label: "Get started for free", href: "//register" },
+  primaryCta: { label: "Get started for free", href: "/register" },
   secondaryCta: { label: "Back to home", href: "/" },
 } as const;
 

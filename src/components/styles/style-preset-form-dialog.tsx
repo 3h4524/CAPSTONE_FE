@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { FormInputField } from "@/components/commons/forms/form-input-field";
 import { FormTextareaField } from "@/components/commons/forms/form-textarea-field";
@@ -25,6 +26,7 @@ type StylePresetFormDialogProps = {
 };
 
 export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetFormDialogProps) => {
+  const { t } = useTranslation("common");
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null);
   const [previewRemoved, setPreviewRemoved] = useState(false);
@@ -71,11 +73,11 @@ export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetForm
   const pickFile = (file: File | undefined) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setFileError("Choose an image file for the preview.");
+      setFileError(t("styles.fileNotImage"));
       return;
     }
     if (file.size > MAX_PREVIEW_BYTES) {
-      setFileError("The preview image cannot exceed 5 MB.");
+      setFileError(t("styles.fileTooLarge"));
       return;
     }
     setFileError(null);
@@ -85,7 +87,7 @@ export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetForm
 
   const submit = handleSubmit((values) => {
     if (creating && !previewFile) {
-      setFileError("Add a preview image for the new style.");
+      setFileError(t("styles.previewRequired"));
       return;
     }
     const input = {
@@ -104,16 +106,16 @@ export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetForm
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-2xl flex-col overflow-hidden">
         <DialogHeader className="text-left">
-          <DialogTitle>{creating ? "New art style" : `Edit ${preset.name}`}</DialogTitle>
-          <DialogDescription>Describe the style and how it shapes generated images.</DialogDescription>
+          <DialogTitle>{creating ? t("styles.dialogTitleCreate") : t("styles.dialogTitleEdit", { name: preset.name })}</DialogTitle>
+          <DialogDescription>{t("styles.dialogDescription")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
           <ScrollArea className="min-h-0 flex-1">
             <div className="space-y-4 px-1 py-1">
-              <FormInputField id="style-name" label="Name" type="text" placeholder="Neon Glow" registration={register("name")} error={errors.name} required />
-              <FormTextareaField id="style-description" label="Description" placeholder="When this style shines and what it suits." registration={register("description")} error={errors.description} required rows={3} />
-              <FormTextareaField id="style-modifiers" label="Prompt keywords" placeholder="Keywords appended to the image prompt." registration={register("styleModifiers")} error={errors.styleModifiers} required rows={2} />
-              <FormTextareaField id="style-recommendations" label="Recommendations" placeholder="One use case per line." registration={register("recommendationsText")} error={errors.recommendationsText} rows={3} />
+              <FormInputField id="style-name" label={t("styles.name")} type="text" placeholder={t("styles.namePlaceholder")} registration={register("name")} error={errors.name} required />
+              <FormTextareaField id="style-description" label={t("styles.description")} placeholder={t("styles.descriptionPlaceholder")} registration={register("description")} error={errors.description} required rows={3} />
+              <FormTextareaField id="style-modifiers" label={t("styles.promptKeywords")} placeholder={t("styles.promptKeywordsPlaceholder")} registration={register("styleModifiers")} error={errors.styleModifiers} required rows={2} />
+              <FormTextareaField id="style-recommendations" label={t("styles.recommendations")} placeholder={t("styles.recommendationsPlaceholder")} registration={register("recommendationsText")} error={errors.recommendationsText} rows={3} />
               <StylePresetImageDropzone
                 previewUrl={shownPreview}
                 error={fileError}
@@ -127,8 +129,8 @@ export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetForm
             </div>
           </ScrollArea>
           <DialogFooter className="gap-2 pt-4">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>Cancel</Button>
-            <Button type="submit" disabled={pending}>{creating ? "Create style" : "Save changes"}</Button>
+            <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>{t("styles.cancel")}</Button>
+            <Button type="submit" disabled={pending}>{creating ? t("styles.createStyle") : t("styles.saveChanges")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

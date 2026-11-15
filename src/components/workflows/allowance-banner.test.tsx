@@ -58,7 +58,7 @@ describe("AllowanceBanner", () => {
     expect(banner).toHaveTextContent("0 of 2 full runs left");
     expect(banner).toHaveTextContent("4 of 5 listings left");
     expect(banner).toHaveTextContent("Up to 3 mockups per run");
-    expect(banner).toHaveTextContent("Resets 1 Dec 2026");
+    expect(banner).toHaveTextContent("Resets Dec 1, 2026");
   });
 
   it("shows nothing on a paid plan", () => {

@@ -27,7 +27,7 @@ describe("AssistantPanel", () => {
 
   it("can be resized from the keyboard and the new width is published", async () => {
     renderWithQuery(<AssistantPanel />);
-    const handle = await screen.findByRole("separator", { name: "Resize the assistant" });
+    const handle = await screen.findByRole("separator", { name: "Resize Podi" });
 
     fireEvent.keyDown(handle, { key: "ArrowLeft", shiftKey: true });
 
@@ -48,7 +48,7 @@ describe("AssistantPanel", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Switch to bubble" }));
 
     expect(useAssistantStore.getState().displayMode).toBe("bubble");
-    await waitFor(() => expect(screen.queryByRole("separator", { name: "Resize the assistant" })).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole("separator", { name: "Resize Podi" })).not.toBeInTheDocument());
   });
 
   it("does not render when closed", () => {
@@ -56,6 +56,6 @@ describe("AssistantPanel", () => {
 
     renderWithQuery(<AssistantPanel />);
 
-    expect(screen.queryByRole("separator", { name: "Resize the assistant" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("separator", { name: "Resize Podi" })).not.toBeInTheDocument();
   });
 });

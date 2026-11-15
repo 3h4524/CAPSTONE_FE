@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -230,32 +231,23 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
   return (
     // The bottom padding keeps the last section clear of the fixed save button.
     <main className="w-full min-w-0 p-4 max-md:p-0 max-md:pb-20 sm:p-6">
-      <button
-        type="button"
-        className="text-ink-600 hover:text-ink-900 focus-visible:ring-primary/20 inline-flex min-h-10 items-center gap-2 text-sm font-semibold transition-colors focus-visible:ring-3 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        onClick={goBackToLibrary}
-        disabled={saving}
-      >
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        Back to library
-      </button>
-      <header className="border-ink-200 mt-4 flex items-start gap-4 border-b pb-6 max-md:mt-1 max-md:border-b-0 max-md:pb-0 sm:gap-5">
-        <span className="bg-ink-200 text-primary flex size-12 shrink-0 items-center justify-center rounded-xl max-md:hidden sm:size-13">
-          <WandSparkles className="size-5 sm:size-[22px]" aria-hidden="true" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-ink-500 text-[11px] font-bold tracking-[0.16em] uppercase">
-            {isEditing ? "Personal template" : "New template"}
-          </p>
-          <h1 className="font-display text-ink-900 mt-1 text-3xl font-semibold tracking-[-0.03em] max-md:text-xl">
-            {isEditing ? "Refine your prompt system" : "Build a reusable creative direction"}
-          </h1>
-          <p className="text-ink-600 mt-2 max-w-2xl text-sm leading-6 max-md:mt-1 max-md:text-xs max-md:leading-5">
-            Keep the structure stable and use placeholders for the product-specific details you will
-            supply later.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        eyebrow={isEditing ? "Personal template" : "New template"}
+        title={isEditing ? "Refine your prompt system" : "Build a reusable creative direction"}
+        description="Keep the structure stable and use placeholders for the product-specific details you will supply later."
+        className="border-ink-200 border-b pb-6 max-md:border-b-0 max-md:pb-0"
+        breadcrumb={
+          <button
+            type="button"
+            className="text-ink-600 hover:text-ink-900 focus-visible:ring-primary/20 inline-flex min-h-10 items-center gap-2 self-start text-sm font-semibold transition-colors focus-visible:ring-3 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={goBackToLibrary}
+            disabled={saving}
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Back to library
+          </button>
+        }
+      />
 
       <form
         onSubmit={submit}
@@ -496,6 +488,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                     fill
                     sizes="(max-width: 1023px) calc(100vw - 4rem), 288px"
                     src={previewImageUrl}
+                    unoptimized
                     alt={`Preview artwork for ${form.watch("name") || "untitled template"}`}
                     className="object-contain"
                     onError={() => setPreviewImageFailed(true)}

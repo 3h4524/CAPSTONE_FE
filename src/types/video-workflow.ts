@@ -258,6 +258,9 @@ export interface MockupAsset {
   regions: MockupRegions;
   previewUrl: string;
   warnings: string[];
+  /** The mock-up template it was composited from; null for an uploaded or AI-made image. */
+  mockupTemplateId?: string | null;
+  designImageId?: string | null;
 }
 export interface AiStudioFrameRequest {
   sourceMockupId: string;
@@ -494,6 +497,102 @@ export interface WorkflowRun {
   createdAt: string;
   errorMessage: string | null;
   nodes: WorkflowNodeRun[];
+  /** Set on the runs of a batch video run, one per design. */
+  runGroupId?: string | null;
+  artworkGroupKey?: string | null;
+}
+export interface RunGroupProgress {
+  total: number;
+  queued: number;
+  running: number;
+  waitingForReview: number;
+  completed: number;
+  failed: number;
+  cancelled: number;
+  waitingForInput: number;
+}
+export interface RunGroupScenePreview {
+  sceneIndex: number;
+  mockupId: string | null;
+  previewUrl: string | null;
+  warning: string | null;
+  overridden: boolean;
+}
+/** One design of one product in a batch video run. */
+/** One step of a design's run in a batch: `pending`, `running`, `succeeded`, `failed`, `cancelled`... */
+export interface RunGroupStep {
+  status: string;
+  stage: string | null;
+  progress: number;
+  error: string | null;
+}
+export interface RunGroupTarget {
+  key: string;
+  productId: string;
+  productName: string;
+  productType: string;
+  artworkGroupKey: string;
+  designLabel: string;
+  previewUrl: string | null;
+  mockupCount: number;
+  approvedCount: number;
+  pendingCount: number;
+  selected: boolean;
+  hasOverride: boolean;
+  scenes: RunGroupScenePreview[];
+  warnings: string[];
+  /** Why the design cannot be rendered with the current scenes; null when it can. */
+  resolveError: string | null;
+  runId: string | null;
+  runStatus: string | null;
+  /**
+   * Where the design's video is, as a run status, apart from Push to Printify: Printify runs beside the video, so a
+   * Printify that failed leaves the run failed while its video is done. Absent from an older API; read it with
+   * `videoStatusOf`.
+   */
+  videoStatus?: string | null;
+  /** The design's Push to Printify step, apart from the video; null before it has a run or without that step. */
+  printify?: RunGroupStep | null;
+  currentStep: string | null;
+  stage: string | null;
+  progress: number;
+  runError: string | null;
+  /** The design's Generate Video settings: its own before the videos start (null while shared), then its run's. */
+  config: GenerateVideoConfig | null;
+  /** The design has settings of its own instead of the workflow's shared ones. */
+  hasOwnConfig: boolean;
+}
+export type RunGroupStatus = "waiting_for_targets" | "running" | "completed" | "cancelled";
+export interface RunGroup {
+  id: string;
+  workflowId: string;
+  batchId: string;
+  batchJobId: string | null;
+  status: RunGroupStatus;
+  revision: number;
+  workflowRevision: number;
+  createdAt: string;
+  maximumTargets: number;
+  selectedCount: number;
+  progress: RunGroupProgress;
+  targets: RunGroupTarget[];
+  /** Why a run set to start by itself is waiting (the cost to confirm, a plan limit...), or which designs it left out. */
+  notice?: string | null;
+  /** The run is being made ready in the background (model photos, then the automatic start): nothing to do yet. */
+  preparing?: boolean;
+}
+export interface RunGroupSummary {
+  id: string;
+  status: RunGroupStatus;
+  createdAt: string;
+  targetCount: number;
+  completedCount: number;
+  /** The design job whose designs the group made videos of; null for a group of the whole batch. */
+  batchJobId?: string | null;
+}
+export interface SceneMockupOverride {
+  sceneIndex: number;
+  mockupId: string;
 }
 export interface VideoRunSummary {
   id: string;
@@ -506,6 +605,8 @@ export interface RunAction {
   expectedRevision: number;
   action:
     | "cancel"
+    /** Goes on with a stopped run from where it stopped; a config sent with it replaces the video's settings. */
+    | "resume"
     | "resume_mockups"
     | "approve_video"
     | "reject_video"
@@ -526,5 +627,34 @@ export interface AiShotQuote {
   newClips: number;
   expiresAtUtc: string;
   model: string;
+  note: string;
+  /** A batch quote's part for each design; absent on a single run's quote. */
+  items?: AiShotQuoteItem[] | null;
+  /**
+   * The request makes clips the run's own settings did not (other settings, or a regeneration). The cost of the run's
+   * own clips was shown on Run, so it is shown again only when this is true.
+   */
+  changesWhatIsMade?: boolean;
+}
+export interface AiShotQuoteItem {
+  label: string;
+  clips: number;
+  seconds: number;
+  estimatedCostUsd: number;
+}
+/** One line of what a Run is expected to cost. */
+export interface RunCostItem {
+  kind: "design_images" | "ai_video" | "model_photos";
+  label: string;
+  detail: string;
+  quantity: number;
+  estimatedCostUsd: number;
+}
+/** What one Run of the saved workflow is expected to cost, before anything is made. */
+export interface RunCostEstimate {
+  items: RunCostItem[];
+  totalUsd: number;
+  /** The AI clip part: confirming the estimate lets an automatic Mockup Approval start the videos within it. */
+  aiVideoBudgetUsd: number;
   note: string;
 }

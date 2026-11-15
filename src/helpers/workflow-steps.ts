@@ -1,4 +1,4 @@
-import { RUN_ORDER } from "@/constants/workflow";
+import { PRINTIFY_SOURCES, RUN_ORDER } from "@/constants/workflow";
 import {
   createWorkflowNode,
   getConnectionIssue,
@@ -40,8 +40,17 @@ export const getAddableStepTypes = (types: WorkflowNodeType[], nodes: WorkflowNo
 
 /** Adds a step at its place in the run and connects it to the steps either side. */
 export const insertStep = (type: WorkflowNodeType, nodes: WorkflowNode[], edges: WorkflowEdge[]) => {
-  const order = RUN_ORDER.indexOf(type);
   const inRun = orderSteps(nodes, edges).filter((node) => runOrderOf(node) >= 0);
+  // Push to Printify branches off Mockup Approval (or Apply mock-up without one), beside the rest of the run.
+  if (type === "publish-printify") {
+    const source = [...PRINTIFY_SOURCES].reverse().map((sourceType) => inRun.find((node) => node.data.type === sourceType)).find(Boolean);
+    const anchor = source?.position ?? { x: 0, y: 0 };
+    const created = createWorkflowNode(type, { x: anchor.x + 320, y: anchor.y + NEW_STEP_OFFSET.y });
+    const [step = created] = withUniqueLabels([created], nodes);
+    const nextNodes = [...nodes, step];
+    return { nodes: nextNodes, edges: source ? join(source.id, step.id, edges, nextNodes) : edges, step };
+  }
+  const order = RUN_ORDER.indexOf(type);
   // A step outside the run order, such as a listing, hangs off the end of the run.
   const previous =
     order >= 0 ? inRun.filter((node) => runOrderOf(node) < order).at(-1) : inRun.filter((node) => node.data.type !== "export-zip").at(-1);

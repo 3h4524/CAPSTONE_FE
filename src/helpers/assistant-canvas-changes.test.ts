@@ -17,11 +17,9 @@ describe("describeCanvasChange", () => {
     expect(change.details).toEqual(["Language model: GPT-4o → Gemini", "Tone: Friendly → Playful"]);
   });
 
-  it("formats numbers and switches", () => {
-    const design = node("d", "design-image", "Design", { variants: 2 });
+  it("formats switches", () => {
     const listing = node("l", "generate-listing", "Listing", { includeSeoScore: true });
 
-    expect(describeCanvasChange({ op: "update_config", nodeId: "d", config: { variants: 4 } }, [design]).details).toEqual(["Variants per product: 2 → 4"]);
     expect(describeCanvasChange({ op: "update_config", nodeId: "l", config: { includeSeoScore: false } }, [listing]).details).toEqual(["SEO score: On → Off"]);
   });
 

@@ -5,9 +5,9 @@ import { ASSISTANT_LAUNCHER_STORAGE_KEY } from "@/constants/assistant";
 import { useAssistantStore } from "@/stores/assistant";
 import { usePathname } from "@/test/__mocks__/next/navigation";
 import { renderWithQuery } from "@/test/render-with-query";
-import { fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 
-const launcher = () => screen.getByRole("button", { name: "Open assistant" });
+const launcher = () => screen.getByRole("button", { name: "Open Podi" });
 
 const drag = (element: HTMLElement, from: [number, number], to: [number, number]) => {
   fireEvent.pointerDown(element, { clientX: from[0], clientY: from[1], button: 0, pointerId: 1 });
@@ -97,4 +97,16 @@ describe("AssistantLauncher", () => {
 
     expect(launcher()).toHaveStyle({ right: "16px", bottom: "16px" });
   });
+
+  it("shows a busy indicator while a reply streams and hides it when idle", () => {
+    useAssistantStore.setState({ streamingMessageId: "a-1" });
+    renderWithQuery(<AssistantLauncher />);
+
+    expect(launcher()).toHaveAccessibleDescription("Podi is replying");
+
+    act(() => useAssistantStore.setState({ streamingMessageId: null }));
+
+    expect(screen.queryByText("Podi is replying")).not.toBeInTheDocument();
+  });
 });
+

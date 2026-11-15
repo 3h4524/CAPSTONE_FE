@@ -13,6 +13,7 @@ import {
   readTemplateBackgrounds,
   readTemplateColors,
 } from "@/helpers/workflow-config";
+import { hasPrintifyDownstream } from "@/helpers/workflow-graph";
 import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -33,6 +34,9 @@ export const NodeMockupField = ({ nodeId, data, disabled = false }: NodeMockupFi
     const input = state.nodes.find((node) => node.data.type === "product-input");
     return readString(input?.data.config.batchId);
   });
+  // The mock-ups show a Printify product when the node says so or a Push to Printify step follows it.
+  const printifyLocked = useWorkflowStore((state) => hasPrintifyDownstream(nodeId, state.nodes, state.edges));
+  const printify = printifyLocked || data.config.mockupTarget === "printify";
   const runJob = useWorkflowRunStore((state) => state.job);
   const { data: templates, isPending, isError } = useMockupTemplates(undefined, open);
   const { data: products } = useBatchProducts(batchId);
@@ -99,9 +103,11 @@ export const NodeMockupField = ({ nodeId, data, disabled = false }: NodeMockupFi
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-4xl flex-col overflow-hidden p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>Choose mock-up templates</DialogTitle>
+            <DialogTitle>{printify ? "Choose a Printify template" : "Choose mock-up templates"}</DialogTitle>
             <DialogDescription>
-              Pick the templates and garment colors this step uses. Changes apply to this node only.
+              {printify
+                ? "Pick the Printify product and its Printify colors this step uses. Changes apply to this node only."
+                : "Pick the templates and garment colors this step uses. Changes apply to this node only."}
             </DialogDescription>
           </DialogHeader>
           {isPending ? (
@@ -127,6 +133,7 @@ export const NodeMockupField = ({ nodeId, data, disabled = false }: NodeMockupFi
                 setOpen(false);
               }}
               onClose={() => setOpen(false)}
+              printifyOnly={printify}
             />
           ) : (
             <p className="text-muted-foreground text-sm">No mock-up templates are available yet.</p>

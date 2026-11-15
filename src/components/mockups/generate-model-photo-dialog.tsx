@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { ModelPhotoScope } from "@/api/model-photos";
 import { ModelAttributesFields } from "@/components/mockups/model-attributes-fields";
@@ -23,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getErrorMessage } from "@/helpers/error-message";
-import { productTypeLabel } from "@/helpers/mockup-template";
 import { cleanAttributes, isCompleteAttributes } from "@/helpers/model-attributes";
 import { useGenerateModelPhoto } from "@/hooks/mutations/use-model-photo-mutations";
 import { productTypes } from "@/schemas/batches";
@@ -59,6 +59,7 @@ export const GenerateModelPhotoDialog = ({
   onClose,
   onGenerated,
 }: GenerateModelPhotoDialogProps) => {
+  const { t } = useTranslation("common");
   const [attributes, setAttributes] = useState<ModelAttributes>(() => startFrom(initial));
   const [type, setType] = useState(productType);
   const { mutate: generate, isPending } = useGenerateModelPhoto(scope);
@@ -75,17 +76,15 @@ export const GenerateModelPhotoDialog = ({
     <Dialog open={open} onOpenChange={(next) => !next && close()}>
       <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Make a model photo with AI</DialogTitle>
+          <DialogTitle>{t("mockups.generateModelPhoto.title")}</DialogTitle>
           <DialogDescription>
-            AI makes a photo of the people you choose in a plain white t-shirt. It is kept with your
-            model photos, and mock-ups are put on it without AI, so the print stays exactly as
-            designed.
+            {t("mockups.generateModelPhoto.description")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <ModelAttributesFields value={attributes} onChange={setAttributes} disabled={isPending} />
           <div className="space-y-1.5">
-            <Label htmlFor="generate-model-product-type">Product type</Label>
+            <Label htmlFor="generate-model-product-type">{t("mockups.generateModelPhoto.productType")}</Label>
             <Select
               value={type}
               onValueChange={(value) => value && setType(value)}
@@ -97,19 +96,18 @@ export const GenerateModelPhotoDialog = ({
               <SelectContent>
                 {productTypes.map((option) => (
                   <SelectItem key={option} value={option}>
-                    {productTypeLabel(option)}
+                    {t(`mockups.productTypes.${option}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <p className="text-muted-foreground text-xs leading-relaxed">
-            One image (about $0.03) is charged to your Ideogram key. Making it takes up to a minute.
-            Check the photo before you use it: if the shirt is not found, make another.
+            {t("mockups.generateModelPhoto.costNote")}
           </p>
           {isPending && (
             <p role="status" className="text-ink-600 text-xs">
-              Making the photo and finding the shirt on it… this takes up to a minute.
+              {t("mockups.generateModelPhoto.pendingNote")}
             </p>
           )}
           {failure && !isPending && (
@@ -120,7 +118,7 @@ export const GenerateModelPhotoDialog = ({
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={close} disabled={isPending}>
-            Cancel
+            {t("mockups.cancel")}
           </Button>
           <Button
             type="button"
@@ -140,7 +138,7 @@ export const GenerateModelPhotoDialog = ({
             }}
           >
             <Sparkles aria-hidden="true" />
-            {isPending ? "Making the photo…" : "Make photo"}
+            {isPending ? t("mockups.generateModelPhoto.pending") : t("mockups.generateModelPhoto.makePhoto")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { ASSISTANT_INTERRUPTED_ERROR } from "@/constants/assistant";
 import { toAssistantChatState, toAssistantUiMessage } from "@/helpers/assistant-messages";
 import type { AssistantMessageDto } from "@/types/assistant";
 
@@ -91,3 +92,51 @@ describe("toAssistantChatState", () => {
     expect(message.clientActionStates).toEqual({ a1: "applied", a2: "idle" });
   });
 });
+
+describe("message status", () => {
+  it("shows an interrupted reply as an error the user can retry", () => {
+    const message = toAssistantUiMessage(dto({ content: "Partial", status: "interrupted" }));
+
+    expect(message).toMatchObject({ content: "Partial", error: ASSISTANT_INTERRUPTED_ERROR, isStopped: false, isStreaming: false });
+  });
+
+  it("keeps the partial text of a stopped reply without an error", () => {
+    const message = toAssistantUiMessage(
+      dto({ content: "Partial", status: "stopped", metadata: { error: { code: "assistant.stopped", message: "Stopped." } } })
+    );
+
+    expect(message).toMatchObject({ content: "Partial", error: null, isStopped: true });
+  });
+
+  it("keeps the saved error of a failed reply", () => {
+    const message = toAssistantUiMessage(dto({ status: "error", metadata: { error: { code: "x", message: "Broke" } } }));
+
+    expect(message.error).toEqual({ code: "x", message: "Broke" });
+  });
+
+  it("marks the last assistant reply as streaming and waiting to be attached", () => {
+    const state = toAssistantChatState({
+      id: "c-1",
+      title: "Chat",
+      pendingActions: [],
+      messages: [dto({ id: "u-1", role: "user", content: "Q" }), dto({ id: "a-1", content: "Par", status: "streaming" })],
+    });
+
+    expect(state.streamingMessageId).toBe("a-1");
+    expect(state.activeStream).toEqual({ assistantMessageId: "a-1", lastEventId: null, isAttached: false });
+    expect(state.messages.at(-1)).toMatchObject({ content: "Par", isStreaming: true });
+  });
+
+  it("does not stream when the last reply is done", () => {
+    const state = toAssistantChatState({
+      id: "c-1",
+      title: "Chat",
+      pendingActions: [],
+      messages: [dto({ id: "u-1", role: "user", content: "Q" }), dto({ id: "a-1", status: "done" })],
+    });
+
+    expect(state.streamingMessageId).toBeNull();
+    expect(state.activeStream).toBeNull();
+  });
+});
+

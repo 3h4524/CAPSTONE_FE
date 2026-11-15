@@ -1,6 +1,6 @@
-import { BATCH_RUN_NODE_TYPES, RUNNABLE_NODE_TYPES, VIDEO_RUN_NODE_TYPES } from "@/constants/workflow";
+import { BATCH_RUN_NODE_TYPES, PUBLISH_NODE_TYPES, RUNNABLE_NODE_TYPES, VIDEO_RUN_NODE_TYPES } from "@/constants/workflow";
 import { backgroundKeys, backgroundsFor, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
-import { readNumber, readString, readStringArray, readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
+import { readString, readStringArray, readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type { MockupState, RunStep } from "@/stores/workflow-run";
 import type { BatchJobDetail, ImageProvider } from "@/types/batch-jobs";
@@ -52,7 +52,58 @@ export const hasBatchSteps = (nodes: WorkflowNode[]) =>
 /** The workflow makes a video, so a run includes the server's video run. */
 export const hasVideoSteps = (nodes: WorkflowNode[]) => nodes.some((node) => node.data.type === "generate-video");
 
+const hasMockupApproval = (nodes: WorkflowNode[]) => nodes.some((node) => node.data.type === "approval-gate");
+
+/**
+ * The workflow publishes (Push to Printify, Publish to Etsy) without making a video: Mockup Approval leads straight
+ * to the publish steps. The server checks the same.
+ */
+export const publishesWithoutVideo = (nodes: WorkflowNode[]) =>
+  !hasVideoSteps(nodes) && nodes.some((node) => PUBLISH_NODE_TYPES.includes(node.data.type));
+
+/**
+ * Without a video, what follows Mockup Approval (publishing, listing content) runs on the server for each design
+ * approved there, as a batch run does for videos.
+ */
+export const continuesWithoutVideo = (nodes: WorkflowNode[]) =>
+  !hasVideoSteps(nodes) && hasMockupApproval(nodes) && (publishesWithoutVideo(nodes) || hasListingSteps(nodes));
+
+/** The workflow has a part the server runs after Mockup Approval: a video, publishing or listing content. */
+export const hasServerPart = (nodes: WorkflowNode[]) => hasVideoSteps(nodes) || continuesWithoutVideo(nodes);
+
+/**
+ * Product input offers its product only to a workflow that writes listing content with no Mockup Approval to choose
+ * the designs at. Any other workflow runs for the designs approved there; a video whose settings fit one product
+ * only picks it at Mockup Approval ("Product for the video"), which stores the same value.
+ */
+export const showsInputProduct = (nodes: WorkflowNode[]) =>
+  hasListingSteps(nodes) && !hasVideoSteps(nodes) && !hasMockupApproval(nodes);
+
 const findByType = (nodes: WorkflowNode[], type: WorkflowNodeType) => nodes.filter((node) => node.data.type === type);
+
+/**
+ * Whether the video settings can make one video for each design of a batch: Standard scenes only, since an AI scene
+ * is billed per clip and needs its own consent. Otherwise the video is made for the one product in Product input.
+ * The server checks the same.
+ */
+export const supportsBatchVideos = (nodes: WorkflowNode[]) => {
+  const [video] = findByType(nodes, "generate-video");
+  if (!video) return false;
+  const config = video.data.config;
+  if (readString(config.template) === "product_on_model_pack") return false;
+  const scenes = Array.isArray(config.aiScenes) ? (config.aiScenes as { mode?: unknown }[]) : [];
+  // An AI video maps to every design through its scene list; the legacy single-shot settings name one product's image.
+  return (readString(config.mode) || "standard") === "ai_shot"
+    ? scenes.length > 0
+    : scenes.every((scene) => scene?.mode === "standard");
+};
+
+/**
+ * Whether a run goes on for each design approved at Mockup Approval (a batch run): with a video whose settings fit
+ * every design, or without a video. Only a video whose settings fit one product runs for the product chosen there.
+ */
+export const runsPerDesign = (nodes: WorkflowNode[]) =>
+  hasVideoSteps(nodes) ? supportsBatchVideos(nodes) : continuesWithoutVideo(nodes);
 
 const reachableFrom = (startId: string, edges: WorkflowEdge[]) => {
   const visited = new Set<string>();
@@ -153,7 +204,8 @@ export const extractRunPlan = (nodes: WorkflowNode[]): RunPlan => {
     designTemplateId: readString(prompt.designTemplateId),
     styleArtPresetId: readString(prompt.stylePresetId) || null,
     instructions: readString(prompt.instructions).trim(),
-    variationCount: readNumber(design.variants) ?? 1,
+    // One design per product: more are made with Regenerate on the product.
+    variationCount: 1,
     aspectRatio: readString(design.aspectRatio) || "1:1",
     imageProvider: readString(design.imageProvider) === "ideogram" ? "ideogram" : "gemini",
     mockup: mockup

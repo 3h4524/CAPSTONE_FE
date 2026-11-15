@@ -1,6 +1,7 @@
 "use client";
 import { getWorkflowRun, videoWorkflowKeys } from "@/api/video-workflow";
 import { useQuery } from "@/hooks/queries/use-query";
+import { useRunGroupLive } from "@/stores/run-group-live";
 import { useQuery as useBaseQuery } from "@tanstack/react-query";
 
 const FINISHED_RUN_STATUSES = ["completed", "cancelled", "failed"];
@@ -11,20 +12,25 @@ export const ACTIVE_RUN_POLL_MS = 2_000;
 /** A run waiting for an approval only changes when someone approves, possibly in another tab. */
 export const WAITING_RUN_POLL_MS = 15_000;
 
-export const useWorkflowRun = (id: string | null) => useQuery({
-  queryKey: videoWorkflowKeys.run(id),
-  queryFn: () => getWorkflowRun(id!),
-  enabled: Boolean(id),
-  staleTime: 0,
-  refetchInterval: query => {
-    const status = query.state.data?.status;
-    if (status && FINISHED_RUN_STATUSES.includes(status)) return false;
-    return status && WAITING_RUN_STATUSES.includes(status) ? WAITING_RUN_POLL_MS : ACTIVE_RUN_POLL_MS;
-  },
-  refetchIntervalInBackground: true,
-  refetchOnWindowFocus: "always",
-  refetchOnReconnect: "always",
-});
+export const useWorkflowRun = (id: string | null) => {
+  const liveGroupId = useRunGroupLive((state) => state.connectedGroupId);
+  return useQuery({
+    queryKey: videoWorkflowKeys.run(id),
+    queryFn: () => getWorkflowRun(id!),
+    enabled: Boolean(id),
+    staleTime: 0,
+    refetchInterval: query => {
+      const run = query.state.data;
+      if (run?.status && FINISHED_RUN_STATUSES.includes(run.status)) return false;
+      // A run of a batch video run whose changes arrive over the hub needs no polling.
+      if (run?.runGroupId && liveGroupId && run.runGroupId.toLowerCase() === liveGroupId.toLowerCase()) return false;
+      return run?.status && WAITING_RUN_STATUSES.includes(run.status) ? WAITING_RUN_POLL_MS : ACTIVE_RUN_POLL_MS;
+    },
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
+  });
+};
 
 /**
  * Whether the server is working on the run, read from the run already being polled: this never fetches it.

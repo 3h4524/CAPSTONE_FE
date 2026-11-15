@@ -11,7 +11,7 @@ import type { AssistantStreamEvent, AssistantUiMessage } from "@/types/assistant
 const buildStreamingState = (): AssistantChatState => {
   const user = createUserMessage("Hello");
   const placeholder = createAssistantPlaceholder();
-  return { conversationId: null, messages: [user, placeholder], pendingActions: {}, streamingMessageId: placeholder.id };
+  return { conversationId: null, messages: [user, placeholder], pendingActions: {}, streamingMessageId: placeholder.id, activeStream: null };
 };
 
 const lastMessage = (state: AssistantChatState): AssistantUiMessage => {
@@ -157,6 +157,19 @@ describe("reduceAssistantStreamEvent", () => {
     expect(lastMessage(state).error).toEqual({ code: "assistant.model_failed", message: "Model unavailable" });
     expect(lastMessage(state).isStreaming).toBe(false);
     expect(state.streamingMessageId).toBeNull();
+  });
+
+  it("hides the text already streamed when the answer is blocked", () => {
+    const streamed = reduceAssistantStreamEvent(buildStreamingState(), { type: "delta", data: { text: "Here are my rules" } });
+
+    const state = reduceAssistantStreamEvent(streamed, {
+      type: "error",
+      data: { code: "assistant.blocked", message: "Podi can't help with that request." },
+    });
+
+    expect(lastMessage(state).content).toBe("");
+    expect(lastMessage(state).error?.code).toBe("assistant.blocked");
+    expect(lastMessage(state).isStreaming).toBe(false);
   });
 
   it("ignores events other than conversation when nothing is streaming", () => {

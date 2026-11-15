@@ -1,58 +1,102 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
-import { previewGarmentMask } from "@/api/mockup-templates";
+import {
+  createMockupTemplate,
+  mockupTemplateKeys,
+  type MockupTemplateScope,
+  type SaveMockupTemplateInput,
+  setMockupTemplateView,
+  updateMockupTemplate,
+} from "@/api/mockup-templates";
 import { FormInputField } from "@/components/commons/forms/form-input-field";
 import { GarmentColorPicker } from "@/components/mockups/garment-color-picker";
-import { MockupPhotoDropzone } from "@/components/mockups/mockup-photo-dropzone";
-import { PrintAreaEditor } from "@/components/mockups/print-area-editor";
+import { MockupSidesStrip } from "@/components/mockups/mockup-sides-strip";
+import {
+  hasPhoto,
+  MockupViewPhotoEditor,
+  type ViewDraft,
+  viewDraftOf,
+} from "@/components/mockups/mockup-view-photo-editor";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { parsePrintArea } from "@/helpers/mockup-template";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { getErrorMessage } from "@/helpers/error-message";
+import {
+  areaFits,
+  areaLabel,
+  MAIN_AREA_KEY,
+  mockupViewLabel,
+  TEMPLATE_VIEWS,
+  templateView,
+} from "@/helpers/mockup-template";
 import { hasFeature } from "@/helpers/plan-features";
-import { useCreateMockupTemplate } from "@/hooks/mutations/use-create-mockup-template";
-import { useUpdateMockupTemplate } from "@/hooks/mutations/use-update-mockup-template";
+import { showToast } from "@/helpers/toast";
 import { useEntitlements } from "@/hooks/queries/use-entitlements";
+import { useAppQueryClient } from "@/hooks/use-query-client";
 import { productTypes } from "@/schemas/batches";
 import { type MockupTemplateFormValues, mockupTemplateSchema } from "@/schemas/mockup-template";
-import type { GarmentMaskPreview, MockupPrintArea, MockupTemplate } from "@/types/mockup-templates";
+import type { MockupTemplate, MockupView } from "@/types/mockup-templates";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+type Drafts = Record<MockupView, ViewDraft>;
 
-const productTypeLabels: Record<string, string> = {
-  tshirt: "T-shirt",
-  hoodie: "Hoodie",
-  mug: "Mug",
-  poster: "Poster",
-  tote_bag: "Tote bag",
-  phone_case: "Phone case",
+const draftsOf = (template: MockupTemplate | null): Drafts => {
+  const sideOf = (view: MockupView) =>
+    template?.views?.find((side) => templateView(side) === view) ?? null;
+  return Object.fromEntries(
+    TEMPLATE_VIEWS.map((view) => [
+      view,
+      viewDraftOf(view, view === "front" ? template : sideOf(view)),
+    ])
+  ) as Drafts;
 };
 
 type MockupTemplateFormDialogProps = {
   open: boolean;
   template: MockupTemplate | null;
   onClose: () => void;
+  /** A seller's own templates, or (admin) the shared ones, which no plan limits. */
+  scope?: MockupTemplateScope;
 };
 
-export const MockupTemplateFormDialog = ({ open, template, onClose }: MockupTemplateFormDialogProps) => {
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoObjectUrl, setPhotoObjectUrl] = useState<string | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
+// A template is a photo of the front of a garment and, optionally, photos of its back and sleeves. Each side has its own
+// print areas; a run makes a mock-up of every side. Each other side is saved as a template of its own, kept with this one.
+export const MockupTemplateFormDialog = ({
+  open,
+  template,
+  onClose,
+  scope = "seller",
+}: MockupTemplateFormDialogProps) => {
+  const { t } = useTranslation("common");
+  const queryClient = useAppQueryClient();
+  const [drafts, setDrafts] = useState<Drafts>(() => draftsOf(template));
+  const [activeView, setActiveView] = useState<MockupView>("front");
   const [allowRecolor, setAllowRecolor] = useState(false);
   const [garmentColor, setGarmentColor] = useState<string | null>(null);
-  const [photoSize, setPhotoSize] = useState<{ width: number; height: number } | null>(null);
-  // The photo size the print area's numbers are currently expressed in.
-  const areaBasis = useRef<{ width: number; height: number } | null>(null);
-  const [maskPreview, setMaskPreview] = useState<GarmentMaskPreview | null>(null);
-  const [maskPreviewPending, setMaskPreviewPending] = useState(false);
-  const { mutate: createTemplate, isPending: isCreating } = useCreateMockupTemplate();
-  const { mutate: updateTemplate, isPending: isUpdating } = useUpdateMockupTemplate();
+  const [formError, setFormError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [frontSize, setFrontSize] = useState<{ width: number; height: number } | null>(null);
+  // A template created by a save that then failed on one of its sides: saving again changes it rather than making another.
+  const createdFrontId = useRef<string | null>(null);
 
   const {
     register,
@@ -60,7 +104,6 @@ export const MockupTemplateFormDialog = ({ open, template, onClose }: MockupTemp
     reset,
     watch,
     setValue,
-    getValues,
     formState: { errors },
   } = useForm<MockupTemplateFormValues>({
     resolver: zodResolver(mockupTemplateSchema),
@@ -68,241 +111,334 @@ export const MockupTemplateFormDialog = ({ open, template, onClose }: MockupTemp
   });
 
   useEffect(() => {
-    const area = template ? parsePrintArea(template.printAreaConfig) : null;
+    const next = draftsOf(template);
+    const main = next.front.areas[0];
     reset({
       name: template?.name ?? "",
       productType: (template?.productType as MockupTemplateFormValues["productType"]) ?? "tshirt",
-      x: area?.x ?? 0,
-      y: area?.y ?? 0,
-      width: area?.width ?? 100,
-      height: area?.height ?? 100,
+      x: main.x,
+      y: main.y,
+      width: main.width,
+      height: main.height,
     });
-    setPhotoFile(null);
-    areaBasis.current = template ? { width: template.outputWidthPx, height: template.outputHeightPx } : null;
+    setDrafts(next);
+    setActiveView("front");
     setAllowRecolor(template?.allowRecolor ?? false);
     setGarmentColor(template?.garmentColor ?? null);
-    setFileError(null);
+    setFormError(null);
+    createdFrontId.current = null;
   }, [open, template, reset]);
 
+  // The form checks the front's main print area; it follows the front's areas.
+  const frontMain =
+    drafts.front.areas.find((area) => area.key === MAIN_AREA_KEY) ?? drafts.front.areas[0];
   useEffect(() => {
-    setPhotoSize(null);
-    if (!photoFile) {
-      setPhotoObjectUrl(null);
-      return;
-    }
-    const objectUrl = URL.createObjectURL(photoFile);
-    setPhotoObjectUrl(objectUrl);
-    let cancelled = false;
-    void createImageBitmap(photoFile)
-      .then((bitmap) => {
-        if (!cancelled) setPhotoSize({ width: bitmap.width, height: bitmap.height });
-        bitmap.close();
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-      URL.revokeObjectURL(objectUrl);
-    };
-  }, [photoFile]);
+    setValue("x", frontMain.x, { shouldValidate: true });
+    setValue("y", frontMain.y, { shouldValidate: true });
+    setValue("width", frontMain.width, { shouldValidate: true });
+    setValue("height", frontMain.height, { shouldValidate: true });
+  }, [frontMain.x, frontMain.y, frontMain.width, frontMain.height, setValue]);
+
+  // One stable updater per side, so the editor's effects do not run again on every render.
+  const updaters = useMemo(
+    () =>
+      Object.fromEntries(
+        TEMPLATE_VIEWS.map((view) => [
+          view,
+          (change: (draft: ViewDraft) => ViewDraft) => {
+            setFormError(null);
+            setDrafts((current) => ({ ...current, [view]: change(current[view]) }));
+          },
+        ])
+      ) as Record<MockupView, (change: (draft: ViewDraft) => ViewDraft) => void>,
+    []
+  );
+  const updaterFor = (view: MockupView) => updaters[view];
 
   const creating = template === null;
-  const pending = isCreating || isUpdating;
-  const { data: entitlements } = useEntitlements();
+  const { data: entitlements } = useEntitlements(scope === "seller");
   // Making and editing the Seller's own templates is a Pro feature; the backend refuses it on other plans.
-  const locked = entitlements !== undefined && !hasFeature(entitlements, "custom_mockup_templates");
-  // A photo without a saved garment mask (newly picked, or not analyzed yet) is analyzed on the
-  // server right away: the mask gives the garment box to center the print area in, and lets the
-  // recolor be previewed before saving. This is a quick pass; saving runs the full one.
-  const savedMaskUrl = !photoFile ? (template?.garmentMaskUrl ?? null) : null;
-  const savedPhotoUrl = template?.baseImageUrl ?? null;
-  const needsPreview = open && !locked && (photoFile !== null || savedPhotoUrl !== null) && !savedMaskUrl;
+  const locked = scope === "seller" && entitlements !== undefined && !hasFeature(entitlements, "custom_mockup_templates");
+  // A Printify template's photos and print areas are Printify's: only its name, type and colors change here.
+  const printifyLocked = Boolean(template?.printify);
+  // A Printify template is made only in its blueprint's Printify colors.
+  const printifyColors = template?.printify?.colors;
+  const pending = saving;
 
+  // A small picture of each side for the strip under the photo: its new photo, or the saved one.
+  const pickedFiles = TEMPLATE_VIEWS.map((view) =>
+    drafts[view].removed ? null : drafts[view].file
+  );
+  const [pickedUrls, setPickedUrls] = useState<(string | null)[]>([]);
+  const pickedKey = pickedFiles
+    .map((file) => (file ? `${file.name}:${file.size}:${file.lastModified}` : ""))
+    .join("|");
   useEffect(() => {
-    setMaskPreview(null);
-    if (!needsPreview) {
-      setMaskPreviewPending(false);
-      return;
-    }
-    const controller = new AbortController();
-    setMaskPreviewPending(true);
-    void (async () => {
-      try {
-        let photo = photoFile;
-        if (!photo) {
-          const blob = await (await fetch(savedPhotoUrl as string, { signal: controller.signal })).blob();
-          photo = new File([blob], "base-photo", { type: blob.type });
-        }
-        const preview = await previewGarmentMask(photo, controller.signal);
-        if (!controller.signal.aborted) setMaskPreview(preview);
-      } catch {
-        // No preview is not an error here: saving still analyzes the photo and reports problems.
-      } finally {
-        if (!controller.signal.aborted) setMaskPreviewPending(false);
+    const urls = pickedFiles.map((file) => (file ? URL.createObjectURL(file) : null));
+    setPickedUrls(urls);
+    return () => urls.forEach((url) => url && URL.revokeObjectURL(url));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the files change exactly when their key does
+  }, [pickedKey]);
+  const thumbnailOf = (view: MockupView) => {
+    const draft = drafts[view];
+    return draft.removed
+      ? null
+      : (pickedUrls[TEMPLATE_VIEWS.indexOf(view)] ?? (draft.file ? null : draft.savedUrl));
+  };
+
+  const saveSides = async (frontId: string, values: MockupTemplateFormValues) => {
+    for (const view of TEMPLATE_VIEWS.filter((item) => item !== "front")) {
+      const draft = drafts[view];
+      if (draft.removed && draft.templateId) {
+        await setMockupTemplateView(frontId, view, null, scope);
+        updaterFor(view)(() => viewDraftOf(view, null));
+        continue;
       }
-    })();
-    return () => controller.abort();
-  }, [needsPreview, photoFile, savedPhotoUrl]);
-
-  const shownPhoto = photoObjectUrl ?? savedPhotoUrl;
-  const shownPhotoSize = photoFile ? photoSize : template ? { width: template.outputWidthPx, height: template.outputHeightPx } : null;
-  const shownWidth = shownPhotoSize?.width ?? 0;
-  const shownHeight = shownPhotoSize?.height ?? 0;
-
-  // A photo of another size keeps the print area on the same part of the picture; the first photo
-  // of a new template gets a centered box to start from.
-  useEffect(() => {
-    if (!shownWidth || !shownHeight) return;
-    const basis = areaBasis.current;
-    areaBasis.current = { width: shownWidth, height: shownHeight };
-    if (basis && basis.width === shownWidth && basis.height === shownHeight) return;
-
-    let next: MockupPrintArea;
-    if (basis) {
-      const kx = shownWidth / basis.width;
-      const ky = shownHeight / basis.height;
-      const current = getValues();
-      const width = Math.max(1, Math.min(shownWidth, Math.round(current.width * kx)));
-      const height = Math.max(1, Math.min(shownHeight, Math.round(current.height * ky)));
-      next = {
-        x: Math.max(0, Math.min(shownWidth - width, Math.round(current.x * kx))),
-        y: Math.max(0, Math.min(shownHeight - height, Math.round(current.y * ky))),
-        width,
-        height,
+      if (!hasPhoto(draft)) continue;
+      const main = draft.areas[0];
+      const input: SaveMockupTemplateInput = {
+        name: `${values.name.trim()} - ${mockupViewLabel(view)}`,
+        productType: values.productType,
+        x: main.x,
+        y: main.y,
+        width: main.width,
+        height: main.height,
+        baseImage: draft.file,
+        allowRecolor,
+        garmentColor: allowRecolor ? garmentColor : null,
+        view,
+        areas: draft.areas,
       };
-    } else {
-      const side = Math.round(Math.min(shownWidth, shownHeight) * 0.35);
-      next = { x: Math.round((shownWidth - side) / 2), y: Math.round((shownHeight - side) / 2), width: side, height: side };
+      if (draft.templateId) {
+        await updateMockupTemplate(draft.templateId, input, scope);
+      } else {
+        // Made and linked to the front in one request, so it never shows up as a template of its own.
+        const created = await createMockupTemplate({ ...input, mainTemplateId: frontId }, scope);
+        updaterFor(view)((current) => ({ ...current, templateId: created.id }));
+      }
     }
-    setValue("x", next.x, { shouldValidate: true });
-    setValue("y", next.y, { shouldValidate: true });
-    setValue("width", next.width, { shouldValidate: true });
-    setValue("height", next.height, { shouldValidate: true });
-  }, [shownWidth, shownHeight, getValues, setValue]);
-
-  // A newly picked photo has no saved mask; its preview's mask stands in until it is saved.
-  const maskUrl = maskPreview?.maskDataUrl ?? savedMaskUrl;
-  const recolorProblem = maskPreview && !maskPreview.recolorable ? maskPreview.reason : null;
-  const tint = allowRecolor && garmentColor && maskUrl ? { color: garmentColor, maskUrl } : undefined;
-  const area: MockupPrintArea = { x: watch("x"), y: watch("y"), width: watch("width"), height: watch("height") };
-  const setArea = (next: MockupPrintArea) => {
-    setValue("x", next.x, { shouldValidate: true });
-    setValue("y", next.y, { shouldValidate: true });
-    setValue("width", next.width, { shouldValidate: true });
-    setValue("height", next.height, { shouldValidate: true });
   };
 
-  const pickFile = (file: File | undefined) => {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setFileError("Choose an image file for the base photo.");
+  const submit = handleSubmit(async (values) => {
+    if (creating && !createdFrontId.current && !drafts.front.file) {
+      setActiveView("front");
+      setFormError(t("mockups.templateForm.frontRequiredError"));
       return;
     }
-    if (file.size > MAX_PHOTO_BYTES) {
-      setFileError("The base photo cannot exceed 10 MB.");
-      return;
+    // Every side's areas must lie on its photo and print something.
+    for (const view of TEMPLATE_VIEWS) {
+      const draft = drafts[view];
+      if (!hasPhoto(draft)) continue;
+      const size = view === "front" ? (frontSize ?? draft.areasBasis) : draft.areasBasis;
+      const outside = size
+        ? draft.areas.findIndex((area) => !areaFits(area, size.width, size.height))
+        : -1;
+      if (outside >= 0) {
+        setActiveView(view);
+        setFormError(
+          t("mockups.templateForm.areaOffPhotoError", { view: mockupViewLabel(view), label: areaLabel(draft.areas[outside], outside) })
+        );
+        return;
+      }
+      if (draft.areas.every((area) => area.source === "none")) {
+        setActiveView(view);
+        setFormError(
+          t("mockups.templateForm.areasPrintNothingError", { view: mockupViewLabel(view) })
+        );
+        return;
+      }
     }
-    setFileError(null);
-    setPhotoFile(file);
-  };
 
-  const submit = handleSubmit((values) => {
-    if (creating && !photoFile) {
-      setFileError("Add a base photo for the new template.");
-      return;
+    setSaving(true);
+    try {
+      const front = drafts.front;
+      const input: SaveMockupTemplateInput = {
+        name: values.name,
+        productType: values.productType,
+        x: values.x,
+        y: values.y,
+        width: values.width,
+        height: values.height,
+        baseImage: front.file,
+        allowRecolor,
+        garmentColor: allowRecolor ? garmentColor : null,
+        view: "front",
+        areas: front.areas,
+      };
+      const frontId = template?.id ?? createdFrontId.current;
+      const saved = frontId
+        ? await updateMockupTemplate(frontId, input, scope)
+        : await createMockupTemplate(input, scope);
+      createdFrontId.current = saved.id;
+      await saveSides(saved.id, values);
+      await queryClient.invalidateQueries({ queryKey: mockupTemplateKeys.all });
+      showToast("success", t(`mockups.templateForm.${creating ? "wasCreated" : "wasSaved"}`, { name: saved.name }));
+      onClose();
+    } catch (error) {
+      await queryClient.invalidateQueries({ queryKey: mockupTemplateKeys.all });
+      setFormError(getErrorMessage(error));
+    } finally {
+      setSaving(false);
     }
-    const input = { name: values.name, productType: values.productType, x: values.x, y: values.y, width: values.width, height: values.height, baseImage: photoFile, allowRecolor, garmentColor: allowRecolor ? garmentColor : null };
-    if (creating) createTemplate(input, { onSuccess: onClose });
-    else updateTemplate({ id: template.id, ...input }, { onSuccess: onClose });
   });
 
+  const draft = drafts[activeView];
+
+  const sidesStrip = (
+    <MockupSidesStrip
+      active={activeView}
+      onSelect={setActiveView}
+      sides={TEMPLATE_VIEWS.map((view) => ({
+        view,
+        thumbnail: hasPhoto(drafts[view]) ? thumbnailOf(view) : null,
+        title: hasPhoto(drafts[view]) ? undefined : t("mockups.sidesEditor.addSideHint", { label: mockupViewLabel(view) }),
+      }))}
+    />
+  );
+
+  const settingsTop = (
+    <div className="space-y-3">
+      <FormInputField
+        id="mockup-name"
+        label={t("mockups.templateForm.nameLabel")}
+        type="text"
+        placeholder={t("mockups.templateForm.namePlaceholder")}
+        registration={register("name")}
+        error={errors.name}
+        required
+      />
+      <div className="space-y-2">
+        <Label htmlFor="mockup-product-type">{t("mockups.templateForm.productTypeLabel")}</Label>
+        <Select
+          value={watch("productType")}
+          onValueChange={(value) =>
+            value &&
+            setValue("productType", value as MockupTemplateFormValues["productType"], {
+              shouldValidate: true,
+            })
+          }
+        >
+          <SelectTrigger id="mockup-product-type" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {productTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {t(`mockups.productTypes.${type}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
+  const settingsBottom = (
+    <div className="space-y-3">
+      {(errors.x || errors.y || errors.width || errors.height) && (
+        <p role="alert" className="text-sm text-red-600">
+          {t("mockups.templateForm.drawAreaError")}
+        </p>
+      )}
+      <div className="flex items-start gap-3 rounded-lg border p-3">
+        <Checkbox
+          id="mockup-allow-recolor"
+          checked={allowRecolor}
+          onCheckedChange={(checked) => setAllowRecolor(checked === true)}
+          disabled={pending}
+          className="mt-0.5"
+        />
+        <div className="space-y-0.5">
+          <Label htmlFor="mockup-allow-recolor">{t("mockups.templateForm.allowRecolor")}</Label>
+          <p className="text-muted-foreground text-xs">
+            {t("mockups.templateForm.allowRecolorDescription")}
+          </p>
+        </div>
+      </div>
+      {allowRecolor && (
+        <div className="space-y-2 rounded-lg border p-3">
+          <div>
+            <p className="text-ink-900 text-sm font-medium">{t("mockups.templateForm.garmentColorLabel")}</p>
+            <p className="text-muted-foreground text-xs">
+              {printifyColors
+                ? printifyColors.length > 0
+                  ? t("mockups.templateForm.garmentColorPrintifyNote")
+                  : t("mockups.templateForm.garmentColorNoPrintifyColors")
+                : t("mockups.templateForm.garmentColorUsedNote")}
+            </p>
+          </div>
+          <GarmentColorPicker
+            selected={garmentColor ? [garmentColor] : []}
+            palette={printifyColors}
+            allowCustom={!printifyColors}
+            disabled={pending}
+            onToggle={(hex) =>
+              setGarmentColor((current) =>
+                current?.toLowerCase() === hex.toLowerCase() ? null : hex
+              )
+            }
+          />
+        </div>
+      )}
+      {template && !template.realisticPrintReady && !drafts.front.file && (
+        <p className="text-muted-foreground text-xs">
+          {t("mockups.templateForm.realisticPrintNote")}
+        </p>
+      )}
+    </div>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-2xl flex-col overflow-hidden">
-        <DialogHeader className="text-left">
-          <DialogTitle>{creating ? "New mock-up template" : `Edit ${template.name}`}</DialogTitle>
-          <DialogDescription>Upload a real product photo and mark where the design should be placed.</DialogDescription>
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !saving && onClose()}>
+      <DialogContent className="flex h-[min(88dvh,780px)] w-[calc(100%-2rem)] max-w-5xl flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl">
+        <DialogHeader className="border-b px-5 py-3.5 pr-12 text-left">
+          <DialogTitle>{creating ? t("mockups.templateForm.titleNew") : t("mockups.templateForm.titleEdit", { name: template.name })}</DialogTitle>
+          <DialogDescription>
+            {printifyLocked ? t("mockups.templateForm.descriptionPrintifyLocked") : t("mockups.templateForm.description")}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <div className="space-y-4 px-1 py-1">
-              <FormInputField id="mockup-name" label="Name" type="text" placeholder="Classic tee, front" registration={register("name")} error={errors.name} required />
-              <div className="space-y-2">
-                <Label htmlFor="mockup-product-type">Product type *</Label>
-                <Select value={watch("productType")} onValueChange={(value) => value && setValue("productType", value as MockupTemplateFormValues["productType"], { shouldValidate: true })}>
-                  <SelectTrigger id="mockup-product-type" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {productTypes.map((type) => (
-                      <SelectItem key={type} value={type}>{productTypeLabels[type]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <MockupPhotoDropzone previewUrl={shownPhoto} error={fileError} disabled={pending} onSelect={pickFile} onRemove={() => setPhotoFile(null)} />
-              <div>
-                <p className="text-ink-900 text-sm font-medium">Print area</p>
-                <p className="text-muted-foreground mt-0.5 text-xs">Where the design lands on the photo. Sellers can still override this per image.
-                  {maskPreviewPending && " Finding the garment in the photo… this takes a few seconds."}
-                </p>
-                {shownPhoto ? (
-                  <div className="mt-2">
-                    <PrintAreaEditor
-                      key={`${shownPhoto}:${shownPhotoSize?.width ?? 0}x${shownPhotoSize?.height ?? 0}`}
-                      imageUrl={shownPhoto}
-                      value={area}
-                      onChange={setArea}
-                      disabled={pending}
-                      garmentTint={tint}
-                      pixelSize={shownPhotoSize ?? undefined}
-                      garmentMaskUrl={maskUrl ?? undefined}
-                    />
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground mt-2 text-xs">Add a base photo to mark the print area.</p>
-                )}
-                {(errors.x || errors.y || errors.width || errors.height) && (
-                  <p role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400">Draw a print area on the photo.</p>
-                )}
-              </div>
-              <div className="flex items-start gap-3 rounded-lg border p-3">
-                <Checkbox id="mockup-allow-recolor" checked={allowRecolor} onCheckedChange={(checked) => setAllowRecolor(checked === true)} disabled={pending} className="mt-0.5" />
-                <div className="space-y-0.5">
-                  <Label htmlFor="mockup-allow-recolor">Allow garment recolor</Label>
-                  <p className="text-muted-foreground text-xs">
-                    Lets sellers pick any garment color for this template. Needs a white or light-gray garment on a plain background.
-                  </p>
-                </div>
-              </div>
-              {allowRecolor && (
-                <div className="space-y-2 rounded-lg border p-3">
-                  <div>
-                    <p className="text-ink-900 text-sm font-medium">Garment color</p>
-                    <p className="text-muted-foreground text-xs">
-                      Mock-ups from this template use this color, unless a batch picks its own colors. None keeps the photo’s color.
-                    </p>
-                    {recolorProblem && (
-                      <p role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        This photo can’t be recolored: {recolorProblem} Use a white or light-gray garment on a plain background.
-                      </p>
-                    )}
-                  </div>
-                  <GarmentColorPicker
-                    selected={garmentColor ? [garmentColor] : []}
-                    disabled={pending}
-                    onToggle={(hex) => setGarmentColor((current) => (current?.toLowerCase() === hex.toLowerCase() ? null : hex))}
-                  />
-                </div>
-              )}
-              {template && !template.realisticPrintReady && !photoFile && (
-                <p className="text-muted-foreground text-xs">Saving also prepares realistic printing (fabric folds and shadows) for this photo.</p>
-              )}
-            </div>
-          </div>
-          <DialogFooter className="gap-2 pt-4">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>Cancel</Button>
-            {locked && <p className="text-muted-foreground mr-auto self-center text-xs">Custom mock-up templates are part of Pro.</p>}
-            <Button type="submit" disabled={pending || locked}>{pending ? "Analyzing photo…" : creating ? "Create template" : "Save changes"}</Button>
+          <MockupViewPhotoEditor
+            key={activeView}
+            draft={draft}
+            update={updaterFor(activeView)}
+            analyze={open && !locked}
+            disabled={pending}
+            allowRecolor={allowRecolor}
+            garmentColor={garmentColor}
+            onPhotoSize={activeView === "front" ? setFrontSize : undefined}
+            scope={scope}
+            photoLocked={printifyLocked}
+            onRemove={
+              activeView === "front" || printifyLocked
+                ? undefined
+                : () =>
+                    updaterFor(activeView)((current) => ({
+                      ...viewDraftOf(activeView, null),
+                      templateId: current.templateId,
+                      removed: current.templateId !== null,
+                    }))
+            }
+            sides={sidesStrip}
+            settingsTop={settingsTop}
+            settingsBottom={settingsBottom}
+          />
+          <DialogFooter className="flex-wrap items-center gap-2 border-t px-5 py-3">
+            {formError ? (
+              <p role="alert" className="mr-auto max-w-xl text-sm text-red-600">
+                {formError}
+              </p>
+            ) : locked ? (
+              <p className="text-muted-foreground mr-auto text-xs">
+                {t("mockups.templateForm.lockedNote")}
+              </p>
+            ) : null}
+            <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>
+              {t("mockups.cancel")}
+            </Button>
+            <Button type="submit" disabled={pending || locked}>
+              {pending ? t("mockups.templateForm.analyzing") : creating ? t("mockups.templateForm.createTemplate") : t("mockups.saveChanges")}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

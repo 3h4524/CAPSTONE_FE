@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Calendar, CheckCircle2, Copy, Download, FileText, Folder, Headphones, Maximize2, Minimize2, Paperclip, Send, Star, User, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -36,6 +37,7 @@ const BackToListButton = ({ onClick }: { onClick: () => void }) => (
 );
 
 export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack }: TicketDetailPanelProps) => {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
   // One short line on a phone, so the messages keep the room; a tap shows it all.
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
@@ -139,11 +141,13 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
             <h2 className="text-ink-900 text-xl font-bold wrap-anywhere max-md:w-full max-md:text-base">{ticket.subject}</h2>
             <span className="text-ink-500 text-sm font-medium wrap-anywhere max-md:text-xs">#{ticket.ticketNumber}</span>
             <button 
+              type="button"
+              aria-label={t("adminUi.copyTicketId")}
               onClick={() => {
                 navigator.clipboard.writeText(ticket.ticketNumber);
                 toast.success("Copied ticket ID");
               }}
-              className="text-ink-400 hover:text-ink-600 transition-colors"
+              className="phone-hit-area text-ink-400 hover:text-ink-600 transition-colors"
             >
               <Copy className="size-4" />
             </button>
@@ -350,7 +354,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
                   <div key={index} className="border-ink-200 bg-ink-50 text-ink-600 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium">
                     <FileText className="text-ink-400 size-3.5" />
                     <span className="max-w-[150px] truncate">{file.name}</span>
-                    <button onClick={() => removeAttachment(index)} className="text-ink-400 hover:text-ink-700 ml-1"><X className="size-3" /></button>
+                    <button type="button" aria-label={t("adminUi.removeAttachment", { name: file.name })} onClick={() => removeAttachment(index)} className="text-ink-400 hover:text-ink-700 ml-1"><X className="size-3" /></button>
                   </div>
                 ))}
               </div>

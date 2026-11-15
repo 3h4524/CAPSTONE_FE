@@ -178,6 +178,20 @@ describe("normalizeNodeConfig", () => {
     });
   });
 
+  it("keeps the scene list and the other settings the video editors write, so a reload loses none of them", () => {
+    const scenes = [{ mode: "ai", templateCode: "lifestyle_in_use", durationSeconds: 5 }];
+    const loaded = normalizeNodeConfig("generate-video", {
+      mode: "ai_shot",
+      aiScenes: scenes,
+      aiGlobalInstructions: "Soft light",
+      videoEdit: { music: null },
+    });
+
+    expect(loaded.aiScenes).toEqual(scenes);
+    expect(loaded.aiGlobalInstructions).toBe("Soft light");
+    expect(loaded.videoEdit).toEqual({ music: null });
+  });
+
   it("drops fields that belong to another node type", () => {
     expect(
       normalizeNodeConfig("approval-gate", { mode: "auto", batchId: "batch-1", variants: 3 })
@@ -247,10 +261,8 @@ describe("summarizeNodeConfig", () => {
   ];
 
   it("resolves select options to their labels", () => {
-    expect(summarizeNodeConfig("design-image", { variants: 3, aspectRatio: "16:9" })).toEqual([
-      "Variants per product: 3",
-      "Aspect ratio: 16:9",
-    ]);
+    // The number of designs is no setting any more (one per product), so it is not summarized.
+    expect(summarizeNodeConfig("design-image", { variants: 3, aspectRatio: "16:9" })).toEqual(["Aspect ratio: 16:9"]);
   });
 
   it("skips a select whose value matches no option", () => {

@@ -40,16 +40,37 @@ export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxPro
         </div>
         {image && (
           <>
-            <div className="bg-ink-100 relative flex min-h-60 items-center justify-center overflow-hidden rounded-md">
-              <Image
-                key={image.id}
-                src={image.url}
-                alt={image.alt}
-                width={image.width ?? 1200}
-                height={image.height ?? 1200}
-                unoptimized
-                className="h-auto max-h-[78vh] w-auto max-w-full object-contain"
-              />
+            <div
+              className="bg-ink-100 relative flex min-h-60 items-center justify-center overflow-hidden rounded-md"
+              style={image.backdrop ? { backgroundColor: image.backdrop } : undefined}
+            >
+              {/* Sized by the picture, so a tint laid over it covers exactly the photo. */}
+              <span className="relative inline-flex max-w-full">
+                <Image
+                  key={image.id}
+                  src={image.url}
+                  alt={image.alt}
+                  width={image.width ?? 1200}
+                  height={image.height ?? 1200}
+                  unoptimized
+                  className="h-auto max-h-[78vh] w-auto max-w-full object-contain"
+                />
+                {image.tint && (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 mix-blend-multiply"
+                    style={{
+                      backgroundColor: image.tint.color,
+                      maskImage: `url(${image.tint.maskUrl})`,
+                      WebkitMaskImage: `url(${image.tint.maskUrl})`,
+                      maskSize: "100% 100%",
+                      WebkitMaskSize: "100% 100%",
+                      maskRepeat: "no-repeat",
+                      WebkitMaskRepeat: "no-repeat",
+                    }}
+                  />
+                )}
+              </span>
               {images.length > 1 && (
                 <>
                   <Button

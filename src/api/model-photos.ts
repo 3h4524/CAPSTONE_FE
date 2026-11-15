@@ -47,7 +47,7 @@ export const listLibraryModelPhotos = async (
     })
   ).data;
 
-/** Makes a model photo with AI, charged to the caller's Ideogram key, and keeps it. */
+/** Makes a model photo with AI, on the caller's Ideogram key or the platform's (when their plan includes it), and keeps it. */
 export const generateModelPhoto = async (
   scope: ModelPhotoScope,
   input: { productType: string; attributes: ModelAttributes }

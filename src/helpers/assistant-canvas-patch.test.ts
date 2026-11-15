@@ -26,6 +26,26 @@ describe("applyCanvasPatch", () => {
     expect(result.edges.some((edge) => edge.source === "a" && edge.target === added?.id)).toBe(true);
   });
 
+  it("merges the config sent with add_node into the step's default config", () => {
+    const result = patch([
+      { op: "add_node", ref: "n1", type: "design-image", config: { aspectRatio: "4:5", styleOptions: { mood: "calm" } } },
+    ]);
+
+    expect(result.skipped).toEqual([]);
+    expect(result.nodes.at(-1)?.data.config).toMatchObject({
+      imageProvider: "gemini",
+      variants: 1,
+      aspectRatio: "4:5",
+      styleOptions: { mood: "calm" },
+    });
+  });
+
+  it("keeps the default config when add_node sends none", () => {
+    const result = patch([{ op: "add_node", ref: "n1", type: "design-image" }]);
+
+    expect(result.nodes.at(-1)?.data.config).toMatchObject({ imageProvider: "gemini", variants: 1, aspectRatio: "1:1" });
+  });
+
   it("places a new node to the right of the node it follows", () => {
     const result = patch([{ op: "add_node", ref: "n1", type: "generate-listing", after: "a" }]);
 

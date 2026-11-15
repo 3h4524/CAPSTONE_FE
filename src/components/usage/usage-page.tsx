@@ -39,16 +39,16 @@ import { formatDate } from "@/utils/format-date";
 const NO_PLAN_NAME = "No active plan";
 
 const ranges = [
-  { label: "Last 30 days", days: 30 },
-  { label: "Last 90 days", days: 90 },
-  { label: "Last 12 months", days: 365 },
+  { labelKey: "usage.range30", days: 30 },
+  { labelKey: "usage.range90", days: 90 },
+  { labelKey: "usage.range365", days: 365 },
 ];
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
 export function UsagePage() {
   const isPhone = useIsPhone();
-  const { i18n } = useTranslation("common");
+  const { t, i18n } = useTranslation("common");
   const [days, setDays] = useState(30);
   const { data, isLoading, isError } = useUsageOverview(days);
   const chart = useMemo(() => data?.dailyActivity ?? [], [data]);
@@ -69,17 +69,17 @@ export function UsagePage() {
       anchor.click();
       URL.revokeObjectURL(url);
     } catch {
-      showToast("error", "We couldn't export your usage details. Please try again.");
+      showToast("error", t("usage.exportError"));
     }
   };
 
-  if (isLoading) return <PageLoading label="Loading usage" />;
+  if (isLoading) return <PageLoading label={t("usage.loadingUsage")} />;
   if (isError || !data)
     return (
       <div className="w-full min-w-0 space-y-2 p-4 sm:p-6">
-        <h1 className="text-base font-semibold">Usage is temporarily unavailable</h1>
+        <h1 className="text-base font-semibold">{t("usage.unavailableTitle")}</h1>
         <p className="text-muted-foreground text-sm">
-          We couldn&apos;t load your usage details. Please refresh the page and try again.
+          {t("usage.unavailableDescription")}
         </p>
       </div>
     );
@@ -92,8 +92,8 @@ export function UsagePage() {
   return (
     <div className="w-full min-w-0 space-y-4 md:space-y-6 md:p-6">
       <PageHeader
-        title="Usage"
-        description="Understand this month's production volume and estimated provider costs."
+        title={t("usage.pageTitle")}
+        description={t("usage.pageDescription")}
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -102,7 +102,7 @@ export function UsagePage() {
                 size="sm"
                 className="border-ink-200 text-ink-700 hover:bg-ink-50 h-9 gap-1.5 rounded-xl px-3.5 text-xs font-medium shadow-2xs"
               >
-                {activeRange.label}
+                {t(activeRange.labelKey)}
                 <ChevronDown className="text-ink-500 size-3.5" />
               </Button>
             </DropdownMenuTrigger>
@@ -113,7 +113,7 @@ export function UsagePage() {
                   onClick={() => setDays(range.days)}
                   className={`text-xs ${days === range.days ? "text-primary font-semibold" : ""}`}
                 >
-                  {range.label}
+                  {t(range.labelKey)}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -125,43 +125,46 @@ export function UsagePage() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
           {
-            label: "Design images",
+            labelKey: "usage.designImages",
             value: data.summary.images,
-            note: "generated",
+            noteKey: "usage.noteGenerated",
+            phoneNoteKey: undefined,
             icon: ImageIcon,
           },
           {
-            label: "Videos rendered",
+            labelKey: "usage.videosRendered",
             value: data.summary.videos,
-            note: "requests",
+            noteKey: "usage.noteRequests",
+            phoneNoteKey: undefined,
             icon: PlaySquare,
           },
           {
-            label: "Listings exported",
+            labelKey: "usage.listingsExported",
             value: data.summary.listings,
-            note: "published",
+            noteKey: "usage.notePublished",
+            phoneNoteKey: undefined,
             icon: Store,
           },
           {
-            label: "Estimated API cost",
+            labelKey: "usage.estimatedApiCost",
             value: money.format(data.summary.estimatedCostUsd),
-            note: "heuristic estimate",
-            phoneNote: "estimated",
+            noteKey: "usage.noteHeuristic",
+            phoneNoteKey: "usage.noteEstimated",
             icon: Database,
           },
-        ].map(({ label, value, note, phoneNote, icon: Icon }) => (
+        ].map(({ labelKey, value, noteKey, phoneNoteKey, icon: Icon }) => (
           <Card
-            key={label}
+            key={labelKey}
             className="group border-ink-200/80 hover:border-ink-300 flex-row items-center justify-between gap-3 rounded-2xl px-5 py-3.5 shadow-2xs transition duration-300 hover:-translate-y-0.5 hover:shadow-md max-sm:relative max-sm:items-start max-sm:px-3.5 max-sm:py-3"
           >
             <div className="min-w-0">
-              <p className="text-muted-foreground truncate text-xs font-medium max-sm:pr-7 max-sm:whitespace-normal">{label}</p>
+              <p className="text-muted-foreground truncate text-xs font-medium max-sm:pr-7 max-sm:whitespace-normal">{t(labelKey)}</p>
               <p className="text-ink-900 mt-1 text-2xl leading-tight font-semibold tracking-tight tabular-nums">
                 {value}
               </p>
               <p className="text-muted-foreground mt-0.5 truncate text-[11px]">
-                <span className="md:hidden">{phoneNote ?? note}</span>
-                <span className="max-md:hidden">{note}</span>
+                <span className="md:hidden">{t(phoneNoteKey ?? noteKey)}</span>
+                <span className="max-md:hidden">{t(noteKey)}</span>
               </p>
             </div>
             <span className="bg-ink-100 ring-ink-200 flex size-10 shrink-0 items-center justify-center rounded-xl text-[#4f709c] ring-1 transition-transform duration-300 ring-inset group-hover:scale-110 max-sm:absolute max-sm:top-2.5 max-sm:right-2.5 max-sm:size-8 dark:text-[#a0b4cf]">
@@ -177,9 +180,9 @@ export function UsagePage() {
         <Card className="border-ink-200/80 rounded-2xl shadow-2xs">
           <CardHeader className="pb-3">
             <p className="text-ink-500 text-[10px] font-bold tracking-wider uppercase">
-              DAILY ACTIVITY
+              {t("usage.dailyActivity")}
             </p>
-            <h2 className="text-ink-900 mt-0.5 text-base font-bold">Generation volume</h2>
+            <h2 className="text-ink-900 mt-0.5 text-base font-bold">{t("usage.generationVolume")}</h2>
           </CardHeader>
           <CardContent className="pt-0">
             {totalActivity === 0 ? (
@@ -188,21 +191,21 @@ export function UsagePage() {
                   <div className="flex flex-col items-center justify-center text-center">
                     <BarChart3 className="text-ink-400 size-8 stroke-[1.5]" />
                     <p className="text-ink-900 mt-3 text-sm font-semibold">
-                      No generation activity yet
+                      {t("usage.noActivityTitle")}
                     </p>
                     <p className="text-ink-500 mt-0.5 text-xs">
-                      Start a workflow to see usage here.
+                      {t("usage.noActivityDescription")}
                     </p>
                   </div>
                 </div>
-                <ul className="text-ink-600 mt-2 flex items-center justify-center gap-4 text-xs" aria-label="Chart legend">
+                <ul className="text-ink-600 mt-2 flex items-center justify-center gap-4 text-xs" aria-label={t("usage.chartLegend")}>
                   <li className="flex items-center gap-1.5">
                     <span className="size-2.5 rounded-full bg-[#2563eb]" aria-hidden="true" />
-                    Images
+                    {t("usage.images")}
                   </li>
                   <li className="flex items-center gap-1.5">
                     <span className="bg-ink-400 size-2.5 rounded-full" aria-hidden="true" />
-                    Videos
+                    {t("usage.videos")}
                   </li>
                 </ul>
               </div>
@@ -213,7 +216,7 @@ export function UsagePage() {
                     <div
                       key={item.date}
                       className="flex h-full flex-1 items-end gap-px"
-                      title={`${item.date}: ${item.images} images, ${item.videos} videos`}
+                      title={t("usage.barTitle", { date: item.date, images: item.images, videos: item.videos })}
                     >
                       <div
                         className="w-1/2 bg-[#2563eb]"
@@ -226,14 +229,14 @@ export function UsagePage() {
                     </div>
                   ))}
                 </div>
-                <ul className="text-ink-600 mt-2 flex items-center justify-center gap-4 text-xs" aria-label="Chart legend">
+                <ul className="text-ink-600 mt-2 flex items-center justify-center gap-4 text-xs" aria-label={t("usage.chartLegend")}>
                   <li className="flex items-center gap-1.5">
                     <span className="size-2.5 rounded-full bg-[#2563eb]" aria-hidden="true" />
-                    Images
+                    {t("usage.images")}
                   </li>
                   <li className="flex items-center gap-1.5">
                     <span className="bg-ink-400 size-2.5 rounded-full" aria-hidden="true" />
-                    Videos
+                    {t("usage.videos")}
                   </li>
                 </ul>
               </div>
@@ -251,13 +254,13 @@ export function UsagePage() {
                   className={`size-1.5 rounded-full ${hasPlan ? "bg-emerald-500" : "bg-ink-400"}`}
                   aria-hidden="true"
                 />
-                {hasPlan ? data.allowance.planName : "Free plan"}
+                {hasPlan ? data.allowance.planName : t("usage.freePlan")}
               </span>
               <Link
                 href="/subscription"
                 className="max-md:text-primary inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
               >
-                Manage <ExternalLink className="size-3" />
+                {t("usage.manage")} <ExternalLink className="size-3" />
               </Link>
             </div>
 
@@ -267,7 +270,7 @@ export function UsagePage() {
                 <Sparkles className="size-5" />
               </span>
               <h2 className="text-ink-900 text-base leading-tight font-bold">
-                AI requests this period
+                {t("usage.aiRequests")}
               </h2>
             </div>
 
@@ -276,7 +279,7 @@ export function UsagePage() {
                 {data.allowance.used.toLocaleString()}
               </p>
               <span className="text-ink-600 text-sm font-medium">
-                requests this period
+                {t("usage.requestsThisPeriod")}
                 {data.allowance.limit > 0 && ` / ${data.allowance.limit.toLocaleString()}`}
               </span>
             </div>
@@ -284,7 +287,7 @@ export function UsagePage() {
             <div className="text-ink-600 mt-3 flex items-center gap-2 text-xs">
               <CalendarDays className="text-ink-500 size-4 shrink-0" />
               <span>
-                Period ends {formatDate(data.allowance.resetDate, i18n.language)} · {data.allowance.daysRemaining} days remaining
+                {t("usage.periodEnds", { date: formatDate(data.allowance.resetDate, i18n.language), days: data.allowance.daysRemaining })}
               </span>
             </div>
 
@@ -303,18 +306,18 @@ export function UsagePage() {
                 }`}
               >
                 <Info className="text-ink-500 size-4 shrink-0" />
-                <span>{data.allowance.atRisk ? "At risk" : "On track"} based on current usage pace.</span>
+                <span>{data.allowance.atRisk ? t("usage.paceAtRisk") : t("usage.paceOnTrack")}</span>
               </div>
             ) : (
               <div className="bg-ink-100 text-ink-700 mt-4 flex items-center gap-2.5 rounded-xl p-3 text-xs">
                 <Info className="text-ink-500 size-4 shrink-0" />
                 {hasPlan ? (
-                  <span>No monthly limit. Fair use applies.</span>
+                  <span>{t("usage.unlimitedFairUse")}</span>
                 ) : (
                   <span>
-                    Free allowance applies.{" "}
+                    {t("usage.freeAllowanceApplies")}{" "}
                     <Link href="/subscription" className="text-primary font-semibold underline underline-offset-2">
-                      See plans
+                      {t("usage.seePlans")}
                     </Link>
                   </span>
                 )}
@@ -333,13 +336,13 @@ export function UsagePage() {
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-ink-900 text-base font-bold">By provider</h2>
+                <h2 className="text-ink-900 text-base font-bold">{t("usage.byProvider")}</h2>
                 <span className="bg-ink-100 text-ink-600 rounded-full px-2.5 py-0.5 text-[11px] font-semibold tabular-nums">
-                  {data.costs.length} {data.costs.length === 1 ? "service" : "services"}
+                  {t("usage.serviceCount", { count: data.costs.length })}
                 </span>
               </div>
               <p className="text-ink-500 mt-0.5 text-xs">
-                Track requests and estimated expenditure per connected provider
+                {t("usage.byProviderDescription")}
               </p>
             </div>
           </div>
@@ -350,7 +353,7 @@ export function UsagePage() {
             className="border-ink-200 text-ink-700 hover:bg-ink-50 h-8.5 gap-1.5 rounded-xl text-xs font-medium shadow-2xs disabled:opacity-40"
             onClick={exportCsv}
           >
-            <Download className="size-3.5" /> Export CSV
+            <Download className="size-3.5" /> {t("usage.exportCsv")}
           </Button>
         </div>
         {isPhone && data.costs.length > 0 ? (
@@ -362,7 +365,7 @@ export function UsagePage() {
                   <span className="text-ink-600 text-right">{row.service}</span>
                 </p>
                 <p className="flex justify-between gap-3">
-                  <span className="text-ink-600">Requests: {row.requests.toLocaleString()}</span>
+                  <span className="text-ink-600">{t("usage.requestsWithCount", { count: row.requests.toLocaleString() })}</span>
                   <span className="text-ink-900">{money.format(row.estimatedCostUsd)}</span>
                 </p>
                 <div className="flex items-center gap-2">
@@ -377,7 +380,7 @@ export function UsagePage() {
           <table className="w-full text-left text-sm max-md:hidden">
             <thead className="border-ink-200/80 bg-ink-100 text-ink-700 border-y text-[10px] font-bold tracking-wider uppercase">
               <tr>
-                {["PROVIDER", "SERVICE", "REQUESTS", "ESTIMATED COST", "SHARE"].map(
+                {[t("usage.tableProvider"), t("usage.tableService"), t("usage.tableRequests"), t("usage.tableEstimatedCost"), t("usage.tableShare")].map(
                   (heading) => (
                     <th key={heading} className="px-5 py-3">
                       {heading}
@@ -413,7 +416,7 @@ export function UsagePage() {
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Layers className="text-ink-300 size-8 stroke-[1.5]" />
               <p className="text-ink-600 mt-3 text-xs">
-                There&apos;s no usage activity in this time range yet.
+                {t("usage.noUsageInRange")}
               </p>
             </div>
           )}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,16 +17,20 @@ type MockupBackgroundPickerProps = {
   disabled?: boolean;
 };
 
-export const MockupBackgroundSwatch = ({ hex, className }: { hex: string; className?: string }) => (
-  <span
-    title={`Background: ${mockupBackgroundName(hex)}`}
+export const MockupBackgroundSwatch = ({ hex, className }: { hex: string; className?: string }) => {
+  const { t } = useTranslation("common");
+  return (
+    <span
+      title={t("mockups.mockupBackgrounds.backgroundTitle", { name: mockupBackgroundName(hex) })}
     className={cn("border-ink-300 inline-block size-3.5 shrink-0 rounded-sm border", className)}
     style={{ backgroundColor: hex }}
-  />
-);
+    />
+  );
+};
 
 // One background per template: the photo's own, a suggested color or any '#RRGGBB'.
 export const MockupBackgroundPicker = ({ value, onChange, disabled = false }: MockupBackgroundPickerProps) => {
+  const { t } = useTranslation("common");
   const [custom, setCustom] = useState("");
   const customHex = custom.startsWith("#") ? custom : `#${custom}`;
   const isChosen = (hex: string) => value?.toLowerCase() === hex.toLowerCase();
@@ -49,14 +54,14 @@ export const MockupBackgroundPicker = ({ value, onChange, disabled = false }: Mo
           disabled={disabled}
           onClick={() => onChange(null)}
         >
-          Original
+          {t("mockups.mockupBackgrounds.original")}
         </Button>
         {[...MOCKUP_BACKGROUNDS.map((color) => color.hex), ...ownChoice].map((hex) => (
           <button
             key={hex}
             type="button"
             aria-pressed={isChosen(hex)}
-            aria-label={`${mockupBackgroundName(hex)} background`}
+            aria-label={t("mockups.mockupBackgrounds.backgroundAria", { name: mockupBackgroundName(hex) })}
             title={mockupBackgroundName(hex)}
             disabled={disabled}
             onClick={() => onChange(hex)}
@@ -83,11 +88,11 @@ export const MockupBackgroundPicker = ({ value, onChange, disabled = false }: Mo
           placeholder="#EDE6DA"
           maxLength={7}
           disabled={disabled}
-          aria-label="Custom background color"
+          aria-label={t("mockups.mockupBackgrounds.customAria")}
           className="h-7 w-32 text-xs"
         />
         <Button type="button" variant="outline" size="sm" className="h-7 text-xs" disabled={disabled || !isGarmentColor(customHex)} onClick={applyCustom}>
-          Use color
+          {t("mockups.useColor")}
         </Button>
       </div>
     </div>

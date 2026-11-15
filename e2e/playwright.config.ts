@@ -51,7 +51,14 @@ export default defineConfig({
       // e2e/support/auth's marker file is what tells the specs whether the session is real.
       name: "authenticated",
       testMatch: /private\//,
+      testIgnore: /i18n-locale\.spec\.ts/,
       dependencies: ["setup"],
+      use: { ...devices["Desktop Chrome"], storageState: AUTH_STATE_PATH },
+    },
+    {
+      name: "locale",
+      testMatch: /private\/i18n-locale\.spec\.ts/,
+      dependencies: ["authenticated"],
       use: { ...devices["Desktop Chrome"], storageState: AUTH_STATE_PATH },
     },
   ],

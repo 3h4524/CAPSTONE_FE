@@ -12,9 +12,12 @@ import { RagCardAbout } from "@/components/admin/rag-card-about";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showToast } from "@/helpers/toast";
 
 const contentTypes = ["", "listing", "policy", "image", "video", "keyword"];
+const ALL_CONTENT_TYPES = "all";
 
 // A finding's card, by how much it matters.
 const SEVERITY_STYLE: Record<string, string> = {
@@ -104,27 +107,30 @@ const RagCorpusHealthPanel = () => {
           </div>
           {/* One row of controls; on narrow screens it wraps as a whole instead of leaving a button behind. */}
           <div className="flex shrink-0 flex-wrap items-center gap-2 max-md:grid max-md:grid-cols-2 xl:flex-nowrap">
-            <select
-              value={contentType}
-              onChange={(event) => setContentType(event.target.value)}
-              className="border-ink-200 bg-card text-ink-700 h-8 rounded-md border px-2 text-[11px] outline-none focus:border-indigo-400 max-[400px]:col-span-2 max-md:h-11 max-md:w-full max-md:text-base"
-              aria-label="Corpus content type"
+            <Select
+              value={contentType || ALL_CONTENT_TYPES}
+              onValueChange={(value) => setContentType(value === ALL_CONTENT_TYPES ? "" : value)}
             >
-              {contentTypes.map((value) => (
-                <option key={value || "all"} value={value}>
-                  {value || "All content types"}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger aria-label="Corpus content type" size="sm" className="bg-card text-[11px] max-[400px]:col-span-2 max-md:h-11 max-md:w-full max-md:text-base">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="end">
+                {contentTypes.map((value) => (
+                  <SelectItem key={value || ALL_CONTENT_TYPES} value={value || ALL_CONTENT_TYPES}>
+                    {value || "All content types"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <label className="border-ink-200 bg-card text-ink-600 flex h-8 items-center gap-1 rounded-md border px-2 text-[11px] max-[400px]:col-span-2 max-md:h-11 max-md:justify-between">
               Stale after
-              <input
+              <Input
                 type="number"
                 min={1}
                 max={3650}
                 value={staleDays}
                 onChange={(event) => setStaleDays(Math.max(1, Number(event.target.value) || 1))}
-                className="w-12 bg-transparent text-center font-semibold outline-none max-md:text-base"
+                className="h-6 w-14 rounded-sm border-0 bg-transparent px-1 py-0 text-center font-semibold shadow-none focus-visible:ring-1 max-md:h-9 max-md:text-base"
                 aria-label="Stale document days"
               />
               days
@@ -156,7 +162,7 @@ const RagCorpusHealthPanel = () => {
             <div>
               <div className="flex items-center justify-between gap-2 max-md:flex-wrap">
                 <p className="text-ink-800 text-xs font-bold">Actionable findings</p>
-                <p className="text-ink-400 text-[10px]">
+                <p className="text-ink-500 text-[10px]">
                   Active embedding models: {health.embeddingModels.length > 0 ? health.embeddingModels.join(", ") : "none"}
                 </p>
               </div>
@@ -201,15 +207,15 @@ const RagCorpusHealthPanel = () => {
                       </p>
                       <dl className="grid grid-cols-3 gap-2 text-xs">
                         <div>
-                          <dt className="text-ink-400 text-[10px] tracking-wide uppercase">Chunks</dt>
+                          <dt className="text-ink-500 text-[10px] tracking-wide uppercase">Chunks</dt>
                           <dd className="text-ink-600 mt-0.5">{metric.chunkCount}</dd>
                         </div>
                         <div>
-                          <dt className="text-ink-400 text-[10px] tracking-wide uppercase">Embeddings</dt>
+                          <dt className="text-ink-500 text-[10px] tracking-wide uppercase">Embeddings</dt>
                           <dd className="text-ink-600 mt-0.5">{metric.currentModelEmbeddings}/{metric.chunkCount}</dd>
                         </div>
                         <div>
-                          <dt className="text-ink-400 text-[10px] tracking-wide uppercase">Issues</dt>
+                          <dt className="text-ink-500 text-[10px] tracking-wide uppercase">Issues</dt>
                           <dd className="mt-0.5 font-semibold">
                             <span className={metric.missingEmbeddingChunkCount > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{metric.missingEmbeddingChunkCount} miss</span>
                             <span className="text-ink-400"> / </span>
@@ -225,7 +231,7 @@ const RagCorpusHealthPanel = () => {
 
             <div className="border-ink-200 overflow-x-auto rounded-xl border max-md:hidden">
               <table className="w-full min-w-[720px] text-left text-xs">
-                <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-wide uppercase">
+                <thead className="bg-ink-50 text-ink-500 text-[10px] tracking-wide uppercase">
                   <tr>
                     <th className="px-4 py-3">Content type</th>
                     <th className="px-3 py-3 text-right">Documents</th>
@@ -289,7 +295,7 @@ const HealthMetric = ({
           : "border-ink-200 bg-ink-50/60"
     }`}
   >
-    <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">{label}</p>
+    <p className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">{label}</p>
     <p className={`mt-1 text-xl font-bold tabular-nums ${tone === "error" ? "text-rose-600 dark:text-rose-400" : tone === "warning" ? "text-amber-600 dark:text-amber-400" : tone === "good" ? "text-emerald-600 dark:text-emerald-400" : "text-ink-900"}`}>
       {value}
     </p>

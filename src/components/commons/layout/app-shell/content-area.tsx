@@ -18,12 +18,13 @@ const BARE_ON_PHONE_ROUTES = ["/dashboard", "/batches", "/styles", "/design-temp
 
 export const ContentArea = ({ children }: ContentAreaProps) => {
   const pathname = usePathname();
+  const isWorkflowCanvas = pathname === "/workflows";
   const isBare = BARE_ROUTES.some((route) => pathname === route || pathname?.startsWith(`${route}/`) === true);
 
   const isBareOnPhone = BARE_ON_PHONE_ROUTES.includes(pathname ?? "") || isDesignTemplateForm(pathname);
 
   return (
-    <main className="relative flex-1 overflow-y-auto p-4 lg:p-6">
+    <main className={cn("relative flex-1 overflow-y-auto p-4 lg:p-6", !isWorkflowCanvas && "max-md:pb-16")}>
       {isBare ? (
         <div className="mx-auto flex min-h-full w-full flex-col">{children}</div>
       ) : (

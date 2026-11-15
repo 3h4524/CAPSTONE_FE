@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { ImageIcon, Plus, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { PhonePager } from "@/components/commons/data-display/phone-pager";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { StylePresetFormDialog } from "@/components/styles/style-preset-form-dialog";
 import { StylePresetListItem } from "@/components/styles/style-preset-list-item";
@@ -18,15 +20,16 @@ import type { StylePreset } from "@/types/style-presets";
 const PHONE_PAGE_SIZE = 5;
 
 const STYLE_FILTERS = [
-  { value: "all", label: "All", matches: () => true },
-  { value: "system", label: "System", matches: (preset: StylePreset) => preset.isSystemTemplate },
-  { value: "custom", label: "Custom", matches: (preset: StylePreset) => !preset.isSystemTemplate },
+  { value: "all", labelKey: "styles.filters.all", matches: () => true },
+  { value: "system", labelKey: "styles.filters.system", matches: (preset: StylePreset) => preset.isSystemTemplate },
+  { value: "custom", labelKey: "styles.filters.custom", matches: (preset: StylePreset) => !preset.isSystemTemplate },
 ] as const;
 
 type StyleFilter = (typeof STYLE_FILTERS)[number]["value"];
 
 export const StylesPage = () => {
   const isPhone = useIsPhone();
+  const { t } = useTranslation("common");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<StyleFilter>("all");
   const [page, setPage] = useState(1);
@@ -48,9 +51,9 @@ export const StylesPage = () => {
 
   const askDelete = (preset: StylePreset) => {
     openPopup({
-      title: `Delete ${preset.name}?`,
-      description: "This removes the style permanently. System styles cannot be deleted.",
-      positiveLabel: "Delete",
+      title: t("styles.deleteTitle", { name: preset.name }),
+      description: t("styles.deleteDescription"),
+      positiveLabel: t("styles.delete"),
       onPositive: () => deletePreset(preset.id),
     });
   };
@@ -68,30 +71,32 @@ export const StylesPage = () => {
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-4 md:gap-6 md:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-ink-900 text-xl font-semibold">My Styles</h1>
-          <p className="text-muted-foreground mt-1 text-sm max-md:hidden">Browse system styles and manage styles you created.</p>
-          {presets && (
-            <p className="text-muted-foreground mt-0.5 text-sm tabular-nums md:hidden">
-              {presets.length} {presets.length === 1 ? "style" : "styles"}
-            </p>
-          )}
-        </div>
-        <Button type="button" size="page-action" onClick={openCreate} disabled={isDeleting}>
-          <Plus aria-hidden="true" />
-          <span>
-            New<span className="max-md:hidden"> style</span>
-          </span>
-        </Button>
+      <div className="flex flex-col gap-1">
+        <PageHeader
+          title={t("styles.pageTitle")}
+          description={t("styles.pageDescription")}
+          actions={
+            <Button type="button" size="page-action" onClick={openCreate} disabled={isDeleting}>
+              <Plus aria-hidden="true" />
+              <span>
+                {t("styles.newShort")}<span className="max-md:hidden">{t("styles.styleSuffix")}</span>
+              </span>
+            </Button>
+          }
+        />
+        {presets && (
+          <p className="text-muted-foreground text-sm tabular-nums md:hidden">
+            {t("styles.styleCount", { count: presets.length })}
+          </p>
+        )}
       </div>
       {isPhone && presets && presets.length > 0 && (
         <div className="space-y-3">
           <div className="relative">
             <Search className="text-muted-foreground absolute top-3 left-3 size-4" aria-hidden="true" />
-            <Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search styles" aria-label="Search styles" className="h-10 pl-9" />
+            <Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder={t("styles.searchStyles")} aria-label={t("styles.searchStyles")} className="h-10 pl-9" />
           </div>
-          <div className="flex gap-2" role="group" aria-label="Filter styles">
+          <div className="flex gap-2" role="group" aria-label={t("styles.filterStyles")}>
             {STYLE_FILTERS.map((item) => (
               <button
                 key={item.value}
@@ -100,7 +105,7 @@ export const StylesPage = () => {
                 onClick={() => { setFilter(item.value); setPage(1); }}
                 className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 text-sm font-medium ${filter === item.value ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground"}`}
               >
-                {item.label}
+                {t(item.labelKey)}
                 <span className="text-xs tabular-nums opacity-80">{presets.filter(item.matches).length}</span>
               </button>
             ))}
@@ -108,28 +113,28 @@ export const StylesPage = () => {
         </div>
       )}
       {isLoadingPresets ? (
-        <SectionLoading label="Loading art styles" />
+        <SectionLoading label={t("styles.loadingArtStyles")} />
       ) : isPresetsError || !presets ? (
         <div className="border-ink-200 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border p-8 text-center" role="alert">
           <ImageIcon className="text-ink-400 size-8" aria-hidden="true" />
           <div>
-            <p className="text-ink-900 font-semibold">Art styles unavailable</p>
-            <p className="text-muted-foreground mt-1 text-sm">We could not load art styles. Check your connection and try again.</p>
+            <p className="text-ink-900 font-semibold">{t("styles.loadErrorTitle")}</p>
+            <p className="text-muted-foreground mt-1 text-sm">{t("styles.loadErrorDescription")}</p>
           </div>
-          <Button type="button" onClick={() => refetchPresets()}>Try again</Button>
+          <Button type="button" onClick={() => refetchPresets()}>{t("styles.tryAgain")}</Button>
         </div>
       ) : presets.length === 0 ? (
         <div className="border-ink-300 bg-card flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed p-8 text-center">
-          <p className="text-ink-900 font-semibold">No art styles yet</p>
-          <p className="text-muted-foreground text-sm">Create your first style to shape generated images.</p>
-          <Button type="button" onClick={openCreate}>New style</Button>
+          <p className="text-ink-900 font-semibold">{t("styles.emptyTitle")}</p>
+          <p className="text-muted-foreground text-sm">{t("styles.emptyDescription")}</p>
+          <Button type="button" onClick={openCreate}>{t("styles.newStyle")}</Button>
         </div>
       ) : shownPresets.length === 0 ? (
         <div className="bg-card flex flex-col items-center gap-2 rounded-xl border border-dashed p-8 text-center">
-          <p className="text-ink-900 font-semibold">No styles match</p>
-          <p className="text-muted-foreground text-sm">Try another search or filter.</p>
+          <p className="text-ink-900 font-semibold">{t("styles.noMatchTitle")}</p>
+          <p className="text-muted-foreground text-sm">{t("styles.noMatchDescription")}</p>
           <Button type="button" variant="link" size="sm" onClick={() => { setSearch(""); setFilter("all"); setPage(1); }}>
-            Clear filters
+            {t("styles.clearFilters")}
           </Button>
         </div>
       ) : (
@@ -139,7 +144,7 @@ export const StylesPage = () => {
           ))}
         </div>
       )}
-      {isPhone && <PhonePager page={currentPage} pageCount={pageCount} onPageChange={setPage} label="Style pages" />}
+      {isPhone && <PhonePager page={currentPage} pageCount={pageCount} onPageChange={setPage} label={t("styles.stylePages")} />}
       <StylePresetFormDialog open={dialogOpen} preset={editingPreset} onClose={() => setDialogOpen(false)} />
     </div>
   );

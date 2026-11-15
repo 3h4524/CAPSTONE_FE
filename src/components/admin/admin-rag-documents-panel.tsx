@@ -121,9 +121,9 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
           <p className="text-ink-400 text-[10px] font-bold tracking-[0.16em] uppercase">
             Knowledge base
           </p>
-          <h1 className="font-display text-ink-900 mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
+          <h2 className="font-display text-ink-900 mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
             Documents & versions
-          </h1>
+          </h2>
           <p className="text-ink-500 mt-1 max-w-2xl text-xs leading-5">
             Track every ingested version, inspect its chunks, and choose which completed version is
             active for retrieval.

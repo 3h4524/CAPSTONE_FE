@@ -1,6 +1,8 @@
 "use client";
 
+import type { TFunction } from "i18next";
 import { KeyRound, Pencil, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { relativeTime } from "@/components/api-keys/relative-time";
 import { Button } from "@/components/ui/button";
@@ -10,12 +12,12 @@ import { cn } from "@/utils/cn";
 const UNUSED_AFTER_DAYS = 30;
 const DAY_MS = 86_400_000;
 
-const statusReason = (connection: ApiKeyConnection, now: number) => {
+const statusReason = (connection: ApiKeyConnection, now: number, t: TFunction) => {
   if (connection.status === "Connected") {
-    return `Checked ${relativeTime(connection.lastCheckedAtUtc, now, "never")}`;
+    return t("apiKeys.checked", { time: relativeTime(connection.lastCheckedAtUtc, now, t) });
   }
-  if (connection.status === "Reconnect") return "Key invalid, inactive, or expired";
-  return "Not validated yet";
+  if (connection.status === "Reconnect") return t("apiKeys.statusReconnect");
+  return t("apiKeys.statusNotValidated");
 };
 
 const unusedDays = (connection: ApiKeyConnection, now: number) => {
@@ -33,7 +35,8 @@ export type ConnectionHandlers = {
 
 // The pieces of a connection, shared by the desktop table's row and the phone's card.
 
-export const ConnectionProvider = ({ connection, labelClassName }: { connection: ApiKeyConnection; labelClassName?: string }) => (
+export const ConnectionProvider = ({ connection, labelClassName }: { connection: ApiKeyConnection; labelClassName?: string }) => {
+  return (
   <div className="flex items-center gap-3">
     <span aria-hidden="true" className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold">
       {connection.provider.slice(0, 1)}
@@ -47,7 +50,8 @@ export const ConnectionProvider = ({ connection, labelClassName }: { connection:
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export const ConnectionCredential = ({ connection }: { connection: ApiKeyConnection }) => (
   <div className="flex flex-wrap items-center gap-1.5">
@@ -71,6 +75,7 @@ export const ConnectionCredential = ({ connection }: { connection: ApiKeyConnect
 );
 
 export const ConnectionStatus = ({ connection, now }: { connection: ApiKeyConnection; now: number }) => {
+  const { t } = useTranslation("common");
   const connected = connection.status === "Connected";
   return (
     <>
@@ -83,31 +88,33 @@ export const ConnectionStatus = ({ connection, now }: { connection: ApiKeyConnec
         <span aria-hidden="true" className={cn("size-1.5 rounded-full", connected ? "bg-success-text" : "bg-amber-500")} />
         {connection.status}
       </span>
-      <div className="text-muted-foreground mt-1 text-[11px]">{statusReason(connection, now)}</div>
+      <div className="text-muted-foreground mt-1 text-[11px]">{statusReason(connection, now, t)}</div>
     </>
   );
 };
 
 export const ConnectionLastUsed = ({ connection, now }: { connection: ApiKeyConnection; now: number }) => {
+  const { t } = useTranslation("common");
   const unused = unusedDays(connection, now);
   return (
     <>
-      <time dateTime={connection.lastUsedAtUtc ?? undefined} title={connection.lastUsedAtUtc ?? "Never used"}>
-        {relativeTime(connection.lastUsedAtUtc, now)}
+      <time dateTime={connection.lastUsedAtUtc ?? undefined} title={connection.lastUsedAtUtc ?? t("apiKeys.neverUsed")}>
+        {relativeTime(connection.lastUsedAtUtc, now, t)}
       </time>
-      {unused !== null && <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-300">Unused for {unused} days — delete if no longer needed</div>}
+      {unused !== null && <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-300">{t("apiKeys.unusedNote", { days: unused })}</div>}
     </>
   );
 };
 
 export const ConnectionActions = ({ connection, onEdit, onDelete, onValidate, busy, className }: ConnectionHandlers & { connection: ApiKeyConnection; className?: string }) => {
-  const editLabel = `Edit ${connection.provider} ${connection.label}`;
+  const { t } = useTranslation("common");
+  const editLabel = t("apiKeys.editConnection", { provider: connection.provider, label: connection.label });
   return (
     <div className={cn("flex items-center gap-1", className)}>
       {connection.authType !== "OAuth" && (
         <>
           <Button variant="ghost" size="sm" disabled={busy} onClick={onValidate} className="text-muted-foreground hover:text-foreground h-8 px-2.5 text-xs">
-            Validate
+            {t("apiKeys.validate")}
           </Button>
           {connection.status === "Connected" ? (
             <Button variant="ghost" size="icon-sm" onClick={onEdit} disabled={busy} aria-label={editLabel} className="text-muted-foreground hover:text-foreground">
@@ -115,7 +122,7 @@ export const ConnectionActions = ({ connection, onEdit, onDelete, onValidate, bu
             </Button>
           ) : (
             <Button size="sm" onClick={onEdit} disabled={busy} aria-label={editLabel} className="h-8 px-3 text-xs">
-              Fix key
+              {t("apiKeys.fixKeyAction")}
             </Button>
           )}
         </>
@@ -125,7 +132,7 @@ export const ConnectionActions = ({ connection, onEdit, onDelete, onValidate, bu
         size="icon-sm"
         onClick={onDelete}
         disabled={busy}
-        aria-label={`Delete ${connection.provider} ${connection.label}`}
+        aria-label={t("apiKeys.deleteConnection", { provider: connection.provider, label: connection.label })}
         className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
       >
         <Trash2 className="size-3.5" />

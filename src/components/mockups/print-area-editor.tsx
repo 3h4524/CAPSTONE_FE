@@ -1,6 +1,7 @@
 "use client";
 
 import { type PointerEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,10 +69,10 @@ type PrintAreaEditorProps = {
 const clamp = (value: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, value));
 
 const PRINT_AREA_FIELDS: { field: keyof Bounds; label: string }[] = [
-  { field: "x", label: "Left" },
-  { field: "y", label: "Top" },
-  { field: "width", label: "Width" },
-  { field: "height", label: "Height" },
+  { field: "x", label: "left" },
+  { field: "y", label: "top" },
+  { field: "width", label: "width" },
+  { field: "height", label: "height" },
 ];
 
 // Snap distance in on-screen pixels, independent of image zoom.
@@ -358,6 +359,7 @@ export const PrintAreaEditor = ({
   frame,
   areaFixed = false,
 }: PrintAreaEditorProps) => {
+  const { t } = useTranslation("common");
   const turn = normalizeRotation(rotation);
   const wrapRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -445,7 +447,6 @@ export const PrintAreaEditor = ({
   const offGarment =
     garmentMask && natural && !editingGarment && !frame ? shareOffGarment(garmentMask, printed, natural) : 0;
   const isOffGarment = offGarment > OFF_GARMENT_TOLERANCE;
-  const printedThing = overlayImageUrl ? "design" : "print area";
 
   const interactive = editingGarment || !disabled;
   const activeRect: Bounds = editingGarment ? guideBounds : value;
@@ -624,7 +625,7 @@ export const PrintAreaEditor = ({
         <img
           ref={imgRef}
           src={imageUrl}
-          alt="Mock-up base photo"
+          alt={t("mockups.printAreaEditor.alt")}
           className={cn(
             "ring-ink-200 block max-w-full rounded-lg ring-1 select-none ring-inset",
             imageClassName
@@ -669,7 +670,7 @@ export const PrintAreaEditor = ({
             style={boxStyle(frame)}
           >
             <span className="absolute -top-5 left-0 rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap text-white">
-              Printify print area
+              {t("mockups.printAreaEditor.printifyAreaNote")}
             </span>
           </div>
         )}
@@ -678,7 +679,7 @@ export const PrintAreaEditor = ({
             <div
               key={other.key}
               data-other-area={other.key}
-              title={`Edit ${other.label}`}
+              title={t("mockups.printAreaEditor.editOtherArea", { label: other.label })}
               className={cn(
                 "absolute border-2 border-dashed border-slate-500/70 bg-slate-500/10",
                 editingGarment
@@ -768,11 +769,11 @@ export const PrintAreaEditor = ({
                 <div
                   data-rotate=""
                   role="slider"
-                  aria-label="Turn the print area"
+                  aria-label={t("mockups.printAreaEditor.turnAria")}
                   aria-valuemin={-180}
                   aria-valuemax={180}
                   aria-valuenow={turn}
-                  title="Drag to turn. Hold Shift for steps of 15°."
+                  title={t("mockups.printAreaEditor.turnTitle")}
                   className="border-primary bg-card absolute -top-7 left-1/2 size-3.5 -translate-x-1/2 cursor-grab rounded-full border-2 active:cursor-grabbing"
                 />
               </>
@@ -791,7 +792,7 @@ export const PrintAreaEditor = ({
             style={boxStyle(garmentBounds)}
           >
             <span className="absolute -top-5 left-0 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap text-white">
-              Garment
+              {t("mockups.printAreaEditor.altGarment")}
             </span>
             {editingGarment && <Handles className="border-amber-500" />}
           </div>
@@ -819,25 +820,25 @@ export const PrintAreaEditor = ({
       </div>
       {offPhoto && (
         <p role="status" className="text-xs text-amber-700">
-          The turned print area reaches off the photo. Make it smaller or move it further in.
+          {t("mockups.printAreaEditor.offPhotoNote")}
         </p>
       )}
       {isOffGarment && (
         <p role="status" className="text-xs text-amber-700 dark:text-amber-300">
           {offGarment > 1 - OFF_GARMENT_TOLERANCE
-            ? `The ${printedThing} is entirely off the garment, so nothing of it would be printed. Move it onto the garment.`
-            : `Part of the ${printedThing} is off the garment. Mock-ups cut it off at the garment’s edge.`}
+            ? t(overlayImageUrl ? "mockups.printAreaEditor.selectedAllOffNote" : "mockups.printAreaEditor.offGarmentExclusive")
+            : t(overlayImageUrl ? "mockups.printAreaEditor.selectedPartOffNote" : "mockups.printAreaEditor.offGarmentPartial")}
         </p>
       )}
       {natural && !disabled && !editingGarment && (
         <div
           className="hidden grid-cols-4 gap-2 [@media(pointer:coarse)]:grid"
           role="group"
-          aria-label="Exact print area, in pixels"
+          aria-label={t("mockups.printAreaEditor.exactAria")}
         >
           {PRINT_AREA_FIELDS.map(({ field, label }) => (
             <label key={field} className="text-muted-foreground min-w-0 space-y-1 text-xs">
-              {label}
+              {t(`mockups.printAreaEditor.${label}`)}
               <Input
                 type="number"
                 inputMode="numeric"
@@ -851,17 +852,17 @@ export const PrintAreaEditor = ({
       )}
       {natural && frame && (
         <p className="text-muted-foreground text-xs">
-          The green dashed box is Printify&apos;s print area. Move, resize or turn the design inside it: it prints where it shows.
+          {t("mockups.printAreaEditor.frameNote")}
         </p>
       )}
       {natural && !frame && !areaFixed && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-muted-foreground text-xs">
             {editingGarment
-              ? "Drag the amber box to fit the garment exactly, then click Done."
+              ? t("mockups.printAreaEditor.adjustGarmentNote")
               : garmentBounds
-                ? "Snaps to the center of the amber garment box. Wrong? Adjust it."
-                : "Snaps to the photo's center — mark the garment area for better centering."}
+                ? t("mockups.printAreaEditor.snapCenterNote")
+                : t("mockups.printAreaEditor.snapNoGarmentNote")}
           </p>
           <Button
             type="button"
@@ -870,7 +871,7 @@ export const PrintAreaEditor = ({
             className="h-7 px-2 text-xs"
             onClick={toggleGarmentEditing}
           >
-            {editingGarment ? "Done" : "Adjust garment area"}
+            {editingGarment ? t("mockups.done") : t("mockups.adjustGarmentArea")}
           </Button>
         </div>
       )}

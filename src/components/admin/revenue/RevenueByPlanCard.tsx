@@ -103,7 +103,7 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                   role="tab"
                   aria-selected={view === item.key}
                   onClick={() => setView(item.key)}
-                  className={`cursor-pointer rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+                  className={`phone-hit-area cursor-pointer rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
                     view === item.key
                       ? "bg-card text-ink-900 shadow-xs dark:bg-slate-700 dark:text-slate-100"
                       : "text-ink-500 hover:text-ink-800 dark:text-slate-400 dark:hover:text-slate-200"

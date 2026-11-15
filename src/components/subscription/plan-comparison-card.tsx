@@ -1,4 +1,6 @@
+import type { TFunction } from "i18next";
 import { Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,21 +23,21 @@ type PlanLine = { key: string; label: string; included: boolean };
 // What a plan includes, as the Seller compares plans. Safety caps stay off the card: they only
 // stop abuse and are not part of what a plan sells.
 // features carries the catalog labels and order (catalogFeatures); PLAN_FEATURES until it loads.
-export const planLines = (plan: AvailablePlan, features: PlanFeatureDefinition[] = PLAN_FEATURES): PlanLine[] => {
+export const planLines = (plan: AvailablePlan, features: PlanFeatureDefinition[] = PLAN_FEATURES, t?: TFunction): PlanLine[] => {
   const lines: PlanLine[] = [
     {
       label:
         plan.quotas.maxBatchSize < 0
-          ? "Any number of products per run"
-          : `Up to ${formatPlanLimit(plan.quotas.maxBatchSize)} products per run`,
+          ? (t ? t("subscription.productsRunUnlimited") : "Any number of products per run")
+          : (t ? t("subscription.productsRunLimited", { limit: formatPlanLimit(plan.quotas.maxBatchSize) }) : `Up to ${formatPlanLimit(plan.quotas.maxBatchSize)} products per run`),
       included: true,
       key: "products_per_run",
     },
     {
       label:
         plan.quotas.maxConcurrentJobs < 0
-          ? "Any number of jobs at once"
-          : `${plan.quotas.maxConcurrentJobs} design job${plan.quotas.maxConcurrentJobs === 1 ? "" : "s"} at once`,
+          ? (t ? t("subscription.jobsAtOnceUnlimited") : "Any number of jobs at once")
+          : (t ? t("subscription.jobsAtOnceLimited", { count: plan.quotas.maxConcurrentJobs }) : `${plan.quotas.maxConcurrentJobs} design job${plan.quotas.maxConcurrentJobs === 1 ? "" : "s"} at once`),
       included: true,
       key: "jobs_at_once",
     },
@@ -47,8 +49,8 @@ export const planLines = (plan: AvailablePlan, features: PlanFeatureDefinition[]
       lines.push({
         label:
           limitValue === null
-            ? "Up to 4 design variations per product"
-            : `Up to ${limitValue} design variation${limitValue === 1 ? "" : "s"} per product`,
+            ? (t ? t("subscription.designVariationsFixed") : "Up to 4 design variations per product")
+            : (t ? t("subscription.designVariationsLimited", { limit: limitValue }) : `Up to ${limitValue} design variation${limitValue === 1 ? "" : "s"} per product`),
         included: isEnabled,
         key: feature.code,
       });
@@ -56,7 +58,7 @@ export const planLines = (plan: AvailablePlan, features: PlanFeatureDefinition[]
     }
     if (feature.code === "monthly_listings") {
       // Shown only when the plan caps listings; no limit adds nothing to the list.
-      if (limitValue !== null && isEnabled) lines.push({ key: feature.code, label: `Up to ${limitValue} listings a month`, included: true });
+      if (limitValue !== null && isEnabled) lines.push({ key: feature.code, label: t ? t("subscription.listingsPerMonth", { limit: limitValue }) : `Up to ${limitValue} listings a month`, included: true });
       continue;
     }
     if (feature.kind === "limit") continue;
@@ -89,9 +91,9 @@ type PlanComparisonCardProps = {
   onDowngradeClick: (plan: AvailablePlan) => void;
 };
 
-const BADGE: Record<PlanEmphasis, { label?: string; dot: string }> = {
-  current: { label: "Current", dot: "bg-emerald-500" },
-  recommended: { label: "Recommended", dot: "bg-orange-500" },
+const BADGE_KEYS: Record<PlanEmphasis, { labelKey?: "subscription.badgeCurrent" | "subscription.badgeRecommended"; dot: string }> = {
+  current: { labelKey: "subscription.badgeCurrent", dot: "bg-emerald-500" },
+  recommended: { labelKey: "subscription.badgeRecommended", dot: "bg-orange-500" },
   none: { dot: "bg-sky-500" },
 };
 
@@ -106,6 +108,7 @@ export const PlanComparisonCard = ({
   onUpgradeClick,
   onDowngradeClick,
 }: PlanComparisonCardProps) => {
+  const { t } = useTranslation("common");
   // A trial runs on a plan without paying for it, so that plan is still bought, not "current".
   const isCurrent = plan.isCurrentPlan && hasActivePaidPlan;
   // Tier level is monthly-price ordering, matching the backend's own rule.
@@ -118,14 +121,14 @@ export const PlanComparisonCard = ({
   const isUnavailable = hasActivePaidPlan && !isCurrent && !isHigherTier && !isLowerTier;
 
   const ctaLabel = isCurrent
-    ? "Current plan"
+    ? t("subscription.currentPlan")
     : !hasActivePaidPlan
-      ? `Buy ${plan.name}`
+      ? t("subscription.buyPlan", { name: plan.name })
       : isHigherTier
-        ? "Upgrade plan"
+        ? t("subscription.upgradePlan")
         : isLowerTier
-          ? "Downgrade"
-          : "Unavailable";
+          ? t("subscription.downgradeCta")
+          : t("subscription.unavailable");
 
   const handleClick = () => {
     if (isCurrent || isUnavailable) {
@@ -147,14 +150,14 @@ export const PlanComparisonCard = ({
   // Only what the plan includes, and on a higher plan only what the cheaper one lacks: the rest is
   // said in one line ("Everything in Starter, plus"). The checkout lists everything.
   const baseLines = basePlan
-    ? new Set(planLines(basePlan, features).filter((line) => line.included).map((line) => line.label))
+    ? new Set(planLines(basePlan, features, t).filter((line) => line.included).map((line) => line.label))
     : null;
-  const added = planLines(plan, features).filter((line) => line.included && !baseLines?.has(line.label));
+  const added = planLines(plan, features, t).filter((line) => line.included && !baseLines?.has(line.label));
   const included = added.slice(0, MAX_LINES);
   const more = added.length - included.length;
   const showsAnnual = cycle === "annual" && plan.annualPriceVnd !== null;
   const isDark = emphasis === "recommended";
-  const badge = BADGE[emphasis];
+  const badge = BADGE_KEYS[emphasis];
 
   return (
     <Card
@@ -192,7 +195,7 @@ export const PlanComparisonCard = ({
           )}
         >
           <span className={cn("size-1.5 rounded-full", isDark ? "bg-orange-300" : badge.dot)} />
-          {badge.label ?? plan.tier}
+          {badge.labelKey ? t(badge.labelKey) : plan.tier}
         </span>
       </div>
 
@@ -202,16 +205,16 @@ export const PlanComparisonCard = ({
             {formatVnd(showsAnnual ? plan.annualPriceVnd! : plan.monthlyPriceVnd)}
           </span>
           <span className={cn("text-sm", isDark ? "text-white/80" : "text-ink-500")}>
-            /{showsAnnual ? "year" : "month"}
+            /{showsAnnual ? t("subscription.year") : t("subscription.month")}
           </span>
         </p>
         <p className={cn("mt-1 min-h-4 text-xs", isDark ? "text-white/60" : "text-ink-500")}>
           {showsAnnual
-            ? `≈ ${formatVnd(Math.round(plan.annualPriceVnd! / 12))} a month`
+            ? t("subscription.approxPerMonth", { amount: formatVnd(Math.round(plan.annualPriceVnd! / 12)) })
             : cycle === "annual"
-              ? "Monthly billing only"
+              ? t("subscription.monthlyBillingOnly")
               : plan.annualPriceVnd !== null
-                ? `or ${formatVnd(plan.annualPriceVnd)} a year`
+                ? t("subscription.orAmountAYear", { amount: formatVnd(plan.annualPriceVnd) })
                 : ""}
         </p>
       </div>
@@ -237,8 +240,9 @@ export const PlanComparisonCard = ({
 
       {basePlan && (
         <p className={cn("mt-5 text-sm font-semibold @md:mt-7 @md:text-[15px]", isDark ? "text-white" : "text-ink-900")}>
-          Everything in {basePlan.name}
-          {added.length > 0 ? ", plus:" : "."}
+          {added.length > 0
+            ? t("subscription.everythingInPlus", { name: basePlan.name })
+            : t("subscription.everythingInDot", { name: basePlan.name })}
         </p>
       )}
       <ul className={cn("grid flex-1 content-start gap-x-6 gap-y-2.5 text-sm @md:gap-y-3.5 @md:text-[15px] @2xl:grid-cols-2", basePlan ? "mt-3 @md:mt-4" : "mt-5 @md:mt-7")}>
@@ -257,7 +261,7 @@ export const PlanComparisonCard = ({
         ))}
         {more > 0 && (
           <li className={cn("pl-6.5 text-xs", isDark ? "text-white/60" : "text-ink-500")}>
-            + {more} more, listed at checkout
+            {t("subscription.moreAtCheckout", { count: more })}
           </li>
         )}
       </ul>

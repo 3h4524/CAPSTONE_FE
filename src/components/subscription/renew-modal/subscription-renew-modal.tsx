@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { useTranslation } from "react-i18next";
 
 import { cancelCheckoutRequest } from "@/api/subscription";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,7 @@ export const SubscriptionRenewModal = ({
   const [step, setStep] = useState<RenewStep>("confirm");
   const [checkout, setCheckout] = useState<PendingCheckout | null>(null);
   const [paidStatus, setPaidStatus] = useState<CheckoutStatus | null>(null);
+  const { t } = useTranslation("common");
   const { mutate: renew, isPending, isError, error, reset: resetRenew } = useRenew();
   const { data: status } = useCheckoutStatus(
     step === "paying" ? (checkout?.invoiceId ?? null) : null
@@ -69,12 +71,12 @@ export const SubscriptionRenewModal = ({
       return;
     }
     hasResolvedRef.current = true;
-    showToast("success", `${status.planName} is renewed.`);
+    showToast("success", t("subscription.renewedToast", { name: status.planName }));
     queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_OVERVIEW_QUERY_KEY });
     queryClient.invalidateQueries({ queryKey: ENTITLEMENTS_QUERY_KEY });
     setPaidStatus(status);
     setStep("done");
-  }, [status, queryClient]);
+  }, [status, queryClient, t]);
 
   const cancelOutstandingCheckout = () => {
     if (checkout) {
@@ -110,23 +112,22 @@ export const SubscriptionRenewModal = ({
   const planName = subscription.renewalPlanName ?? subscription.planName;
   const isPastDue = subscription.status === "past_due";
   const isChangingPlan = planName !== subscription.planName;
-  const cycle = subscription.billingCycle === "annual" ? "year" : "month";
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && close()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-            Renew Subscription
+            {t("subscription.renewEyebrow")}
           </p>
-          <DialogTitle>{step === "paying" ? "Scan to pay" : `Renew ${planName}`}</DialogTitle>
+          <DialogTitle>{step === "paying" ? t("subscription.scanToPay") : t("subscription.renewTitle", { name: planName })}</DialogTitle>
           <DialogDescription>
             {step === "confirm" &&
               (isPastDue && subscription.lastGraceDay
-                ? `Your renewal was due ${formatDate(subscription.renewalDate)}. Pay by ${formatDate(subscription.lastGraceDay)} to keep your plan.`
-                : `Pay the next ${cycle} now. It starts on ${formatDate(subscription.renewalDate)}, so you lose no days.`)}
-            {step === "paying" && "Your plan is renewed once the payment is confirmed."}
-            {step === "done" && "Your subscription has been renewed."}
+                ? t("subscription.renewPastDueDescription", { renewalDate: formatDate(subscription.renewalDate), graceDay: formatDate(subscription.lastGraceDay) })
+                : t("subscription.renewUpcomingDescription", { cycle: t(subscription.billingCycle === "annual" ? "subscription.year" : "subscription.month"), date: formatDate(subscription.renewalDate) }))}
+            {step === "paying" && t("subscription.renewPayingDescription")}
+            {step === "done" && t("subscription.renewedDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -134,34 +135,33 @@ export const SubscriptionRenewModal = ({
           <div className="space-y-4">
             <div className="bg-muted space-y-1 rounded-lg p-4 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Plan</span>
+                <span className="text-muted-foreground">{t("subscription.renewPlanLabel")}</span>
                 <span className="font-semibold">{planName}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Amount</span>
+                <span className="text-muted-foreground">{t("subscription.renewAmountLabel")}</span>
                 <span className="font-semibold">
-                  {formatVnd(subscription.renewalPriceVnd ?? subscription.priceVnd)} / {cycle}
+                  {formatVnd(subscription.renewalPriceVnd ?? subscription.priceVnd)} / {t(subscription.billingCycle === "annual" ? "subscription.year" : "subscription.month")}
                 </span>
               </div>
             </div>
             {isChangingPlan && (
               <p className="text-muted-foreground text-xs">
-                Your scheduled move from {subscription.planName} to {planName} takes effect with
-                this payment.
+                {t("subscription.renewScheduledDescription", { current: subscription.planName, target: planName })}
               </p>
             )}
             {isError && (
               <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-                {getErrorMessage(error, "Could not start the renewal. Please try again.")}
+                {getErrorMessage(error, t("subscription.renewError"))}
               </p>
             )}
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={close} disabled={isPending}>
-                Not now
+                {t("subscription.notNow")}
               </Button>
               <Button onClick={handleConfirm} disabled={isPending}>
                 {isPending && <Spinner className="size-4" />}
-                Continue to payment
+                {t("subscription.continueToPayment")}
               </Button>
             </div>
           </div>
@@ -172,10 +172,10 @@ export const SubscriptionRenewModal = ({
             {status?.status === "cancelled" || status?.status === "failed" ? (
               <>
                 <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-                  The payment was not completed. Your plan was not renewed.
+                  {t("subscription.paymentNotCompleted")}
                 </p>
                 <Button variant="ghost" onClick={close}>
-                  Close
+                  {t("subscription.close")}
                 </Button>
               </>
             ) : (
@@ -186,16 +186,16 @@ export const SubscriptionRenewModal = ({
                 <p className="text-lg font-semibold">{formatVnd(checkout.amountVnd)}</p>
                 <div className="text-muted-foreground flex items-center gap-2 text-sm">
                   <Spinner className="size-4" />
-                  Waiting for payment...
+                  {t("subscription.waitingForPayment")}
                 </div>
                 <Button
                   variant="destructive"
                   onClick={() => {
-                    showToast("info", "Payment cancelled.");
+                    showToast("info", t("subscription.paymentCancelled"));
                     close();
                   }}
                 >
-                  Cancel payment
+                  {t("subscription.cancelPayment")}
                 </Button>
               </>
             )}
@@ -206,13 +206,13 @@ export const SubscriptionRenewModal = ({
           <div className="flex flex-col items-center gap-4 py-6 text-center">
             <CheckCircle2 className="text-primary size-12" />
             <div>
-              <p className="text-lg font-semibold">Plan renewed</p>
+              <p className="text-lg font-semibold">{t("subscription.planRenewedTitle")}</p>
               <p className="text-muted-foreground text-sm">
-                {paidStatus?.planName ?? planName} is active
-                {paidStatus?.renewalDate ? ` until ${formatDate(paidStatus.renewalDate)}` : ""}.
+                {paidStatus?.planName ?? planName}{" "}
+                {paidStatus?.renewalDate ? t("subscription.activeUntil", { date: formatDate(paidStatus.renewalDate) }) : t("subscription.activeDot")}
               </p>
             </div>
-            <Button onClick={close}>Done</Button>
+            <Button onClick={close}>{t("subscription.done")}</Button>
           </div>
         )}
       </DialogContent>

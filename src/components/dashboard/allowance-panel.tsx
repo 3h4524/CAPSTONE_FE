@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, CheckCircle2, Gauge } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AllowanceMeter } from "@/components/dashboard/allowance-meter";
 import { Card } from "@/components/ui/card";
@@ -20,6 +21,7 @@ const joinLabels = (labels: string[]) => labels.join(", ");
  */
 export const AllowancePanel = () => {
   const { data: allowances } = useAllowances();
+  const { i18n } = useTranslation("common");
   if (!allowances || allowances.items.length === 0) return null;
 
   const items = orderAllowances(allowances);
@@ -51,7 +53,7 @@ export const AllowancePanel = () => {
         <div className="min-w-0">
           <h2 className="text-sm font-semibold">Plan allowance</h2>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            {allowanceResetLine(allowances) ?? "What your plan includes"}
+            {allowanceResetLine(allowances, i18n.language) ?? "What your plan includes"}
             {allowances.mockupsPerRun !== null &&
               ` · up to ${allowances.mockupsPerRun} mockups per run`}
           </p>

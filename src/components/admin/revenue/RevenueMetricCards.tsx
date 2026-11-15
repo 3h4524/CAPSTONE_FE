@@ -145,7 +145,7 @@ export function RevenueMetricCards({
                       <button
                         type="button"
                         aria-label={`About ${config.title}`}
-                        className="text-ink-400 hover:text-ink-600 inline-flex cursor-pointer transition-colors focus:outline-none"
+                        className="phone-hit-area text-ink-400 hover:text-ink-600 inline-flex cursor-pointer transition-colors focus:outline-none"
                       >
                         <HelpCircle className="size-2.5" />
                       </button>

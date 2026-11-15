@@ -1,9 +1,10 @@
 import { api } from "@/api/client";
+import { getCurrentLocale } from "@/i18n/client";
 import type { StylePreset } from "@/types/style-presets";
 
 export const stylePresetKeys = {
   all: ["style-art-presets"] as const,
-  list: () => [...stylePresetKeys.all, "list"] as const,
+  list: (locale: string = getCurrentLocale()) => [...stylePresetKeys.all, "list", locale] as const,
 };
 
 export const listStyleArtPresets = async (signal?: AbortSignal): Promise<StylePreset[]> =>

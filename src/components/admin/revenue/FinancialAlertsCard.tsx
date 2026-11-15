@@ -127,7 +127,7 @@ export function FinancialAlertsCard({
           <button
             type="button"
             onClick={openAll}
-            className="text-ink-400 hover:text-ink-700 cursor-pointer text-xs font-semibold transition-colors dark:hover:text-slate-200"
+            className="phone-hit-area text-ink-400 hover:text-ink-700 cursor-pointer text-xs font-semibold transition-colors dark:hover:text-slate-200"
           >
             View all ({list.length})
           </button>

@@ -130,7 +130,7 @@ const RagCorpusHealthPanel = () => {
                 max={3650}
                 value={staleDays}
                 onChange={(event) => setStaleDays(Math.max(1, Number(event.target.value) || 1))}
-                className="h-6 w-14 rounded-sm border-0 bg-transparent px-1 py-0 text-center font-semibold shadow-none focus-visible:ring-1 max-md:text-base"
+                className="h-6 w-14 rounded-sm border-0 bg-transparent px-1 py-0 text-center font-semibold shadow-none focus-visible:ring-1 max-md:h-9 max-md:text-base"
                 aria-label="Stale document days"
               />
               days
@@ -162,7 +162,7 @@ const RagCorpusHealthPanel = () => {
             <div>
               <div className="flex items-center justify-between gap-2 max-md:flex-wrap">
                 <p className="text-ink-800 text-xs font-bold">Actionable findings</p>
-                <p className="text-ink-400 text-[10px]">
+                <p className="text-ink-500 text-[10px]">
                   Active embedding models: {health.embeddingModels.length > 0 ? health.embeddingModels.join(", ") : "none"}
                 </p>
               </div>
@@ -207,15 +207,15 @@ const RagCorpusHealthPanel = () => {
                       </p>
                       <dl className="grid grid-cols-3 gap-2 text-xs">
                         <div>
-                          <dt className="text-ink-400 text-[10px] tracking-wide uppercase">Chunks</dt>
+                          <dt className="text-ink-500 text-[10px] tracking-wide uppercase">Chunks</dt>
                           <dd className="text-ink-600 mt-0.5">{metric.chunkCount}</dd>
                         </div>
                         <div>
-                          <dt className="text-ink-400 text-[10px] tracking-wide uppercase">Embeddings</dt>
+                          <dt className="text-ink-500 text-[10px] tracking-wide uppercase">Embeddings</dt>
                           <dd className="text-ink-600 mt-0.5">{metric.currentModelEmbeddings}/{metric.chunkCount}</dd>
                         </div>
                         <div>
-                          <dt className="text-ink-400 text-[10px] tracking-wide uppercase">Issues</dt>
+                          <dt className="text-ink-500 text-[10px] tracking-wide uppercase">Issues</dt>
                           <dd className="mt-0.5 font-semibold">
                             <span className={metric.missingEmbeddingChunkCount > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{metric.missingEmbeddingChunkCount} miss</span>
                             <span className="text-ink-400"> / </span>
@@ -231,7 +231,7 @@ const RagCorpusHealthPanel = () => {
 
             <div className="border-ink-200 overflow-x-auto rounded-xl border max-md:hidden">
               <table className="w-full min-w-[720px] text-left text-xs">
-                <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-wide uppercase">
+                <thead className="bg-ink-50 text-ink-500 text-[10px] tracking-wide uppercase">
                   <tr>
                     <th className="px-4 py-3">Content type</th>
                     <th className="px-3 py-3 text-right">Documents</th>
@@ -295,7 +295,7 @@ const HealthMetric = ({
           : "border-ink-200 bg-ink-50/60"
     }`}
   >
-    <p className="text-ink-400 text-[10px] font-bold tracking-wide uppercase">{label}</p>
+    <p className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">{label}</p>
     <p className={`mt-1 text-xl font-bold tabular-nums ${tone === "error" ? "text-rose-600 dark:text-rose-400" : tone === "warning" ? "text-amber-600 dark:text-amber-400" : tone === "good" ? "text-emerald-600 dark:text-emerald-400" : "text-ink-900"}`}>
       {value}
     </p>

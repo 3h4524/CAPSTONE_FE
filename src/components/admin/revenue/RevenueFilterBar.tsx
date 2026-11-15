@@ -107,7 +107,7 @@ export function RevenueFilterBar({ filter, onFilterChange }: RevenueFilterBarPro
   return (
     <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
         {/* Date Range Picker Pill */}
-        <div className="border-ink-200/90 bg-card flex items-center gap-2 rounded-xl border px-3 py-1.5 shadow-2xs max-md:w-full dark:border-slate-800 dark:bg-slate-900">
+        <div className="border-ink-200/90 bg-card flex items-center gap-2 rounded-xl border px-3 py-1.5 shadow-2xs max-md:w-full max-md:py-0.5 dark:border-slate-800 dark:bg-slate-900">
           <Calendar className="text-ink-400 h-4 w-4 shrink-0 max-md:hidden dark:text-slate-500" />
           <input
             type="date"
@@ -115,7 +115,7 @@ export function RevenueFilterBar({ filter, onFilterChange }: RevenueFilterBarPro
             max={filter.endDate && filter.endDate < todayStr ? filter.endDate : todayStr}
             onChange={(e) => handleChange("startDate", e.target.value)}
             onClick={(e) => e.currentTarget.showPicker?.()}
-            className="text-ink-700 cursor-pointer border-none bg-transparent p-0 text-xs font-semibold outline-none focus:ring-0 max-md:min-w-0 max-md:flex-1 max-md:text-base dark:text-slate-200 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden"
+            className="text-ink-700 cursor-pointer border-none bg-transparent p-0 text-xs font-semibold outline-none focus:ring-0 max-md:h-9 max-md:min-w-0 max-md:flex-1 max-md:text-base dark:text-slate-200 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden"
           />
           <span className="text-ink-300 text-xs dark:text-slate-600">–</span>
           <input
@@ -125,7 +125,7 @@ export function RevenueFilterBar({ filter, onFilterChange }: RevenueFilterBarPro
             max={todayStr}
             onChange={(e) => handleChange("endDate", e.target.value)}
             onClick={(e) => e.currentTarget.showPicker?.()}
-            className="text-ink-700 cursor-pointer border-none bg-transparent p-0 text-xs font-semibold outline-none focus:ring-0 max-md:min-w-0 max-md:flex-1 max-md:text-base dark:text-slate-200 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden"
+            className="text-ink-700 cursor-pointer border-none bg-transparent p-0 text-xs font-semibold outline-none focus:ring-0 max-md:h-9 max-md:min-w-0 max-md:flex-1 max-md:text-base dark:text-slate-200 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden"
           />
         </div>
 

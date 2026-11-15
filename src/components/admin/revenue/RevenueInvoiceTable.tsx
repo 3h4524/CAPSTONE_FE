@@ -91,7 +91,7 @@ export function RevenueInvoiceTable({
           <h3 className="text-ink-900 text-sm font-bold whitespace-nowrap dark:text-slate-100">Recent Transactions</h3>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 max-md:grid max-md:grid-cols-2">
+        <div className="flex flex-wrap items-center gap-2 max-md:grid max-md:w-full max-md:grid-cols-2">
           <div className="relative w-full max-md:col-span-2 sm:w-72">
             <Search className="text-ink-400 pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
             <input

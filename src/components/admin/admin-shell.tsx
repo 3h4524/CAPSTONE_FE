@@ -70,7 +70,7 @@ export const AdminShell = ({ children }: AdminShellProps) => {
                 {children}
               </main>
             </div>
-            {!hidesPhoneTabs && <AdminBottomNav onOpenMore={() => setIsMobileSidebarOpen(true)} />}
+            {!hidesPhoneTabs && <AdminBottomNav onOpenMore={() => setIsMobileSidebarOpen(true)} isMoreOpen={isMobileSidebarOpen} />}
           </div>
         </div>
       </div>

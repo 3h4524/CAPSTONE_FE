@@ -8,10 +8,11 @@ import { useIsPhone } from "@/hooks/use-is-phone";
 type AdminBottomNavProps = {
   /** Opens the sidebar, which holds the pages without a tab of their own. */
   onOpenMore: () => void;
+  isMoreOpen: boolean;
 };
 
 /** The Admin's tabs on a phone, marking Support while tickets wait for a reply. */
-export const AdminBottomNav = ({ onOpenMore }: AdminBottomNavProps) => {
+export const AdminBottomNav = ({ onOpenMore, isMoreOpen }: AdminBottomNavProps) => {
   const isPhone = useIsPhone();
   const { data: metrics } = useAdminDashboardMetrics("year", isPhone);
 
@@ -20,6 +21,7 @@ export const AdminBottomNav = ({ onOpenMore }: AdminBottomNavProps) => {
       tabs={ADMIN_MOBILE_TABS}
       alertHref={metrics?.pendingTickets ? "/admin/support-tickets" : undefined}
       onOpenMore={onOpenMore}
+      isMoreOpen={isMoreOpen}
     />
   );
 };

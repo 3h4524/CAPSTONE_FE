@@ -15,17 +15,19 @@ import { ResizableAside } from "@/components/workflows/resizable-aside";
 import { RunGroupBar } from "@/components/workflows/run/run-group-bar";
 import { WorkflowStepList } from "@/components/workflows/steps/workflow-step-list";
 import { WorkflowToolbar } from "@/components/workflows/toolbar/workflow-toolbar";
+import { RUN_GROUP_PARAM } from "@/constants/run-group";
 import { SITE_CONFIG } from "@/constants/site";
 import { DEFAULT_WORKFLOW_DEFINITION, DEFAULT_WORKFLOW_NAME } from "@/constants/workflow";
 import { isDockedPanelOpen } from "@/helpers/assistant-display-mode";
 import { showToast } from "@/helpers/toast";
 import { applyCompactDefaultLayoutIfStillVertical, resolveActiveWorkflowId } from "@/helpers/workflow-graph";
-import { supportsBatchVideos } from "@/helpers/workflow-run";
+import { runsPerDesign } from "@/helpers/workflow-run";
 import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
-import { useLatestWorkflowRun } from "@/hooks/queries/use-latest-workflow-run";
 import { useWorkflow } from "@/hooks/queries/use-workflow";
 import { useWorkflows } from "@/hooks/queries/use-workflows";
+import { BATCH_JOB_PARAM } from "@/hooks/use-batch-run";
 import { useIsPhone } from "@/hooks/use-is-phone";
+import { VIDEO_RUN_PARAM } from "@/hooks/use-workflow-runtime";
 import { useAssistantStore } from "@/stores/assistant";
 import { usePopupStore } from "@/stores/popup";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -42,7 +44,6 @@ export const WorkflowWorkspace = () => {
   const [showsDiagram, setShowsDiagram] = useState(false);
   const showsStepList = isPhone && !showsDiagram;
   const hasAutoCreatedRef = useRef(false);
-  const restoredRunForWorkflow = useRef<string | null>(null);
   const openPopup = usePopupStore((state) => state.openPopup);
   const loadedWorkflowId = useWorkflowStore((state) => state.workflowId);
   const workflowName = useWorkflowStore((state) => state.name);
@@ -78,7 +79,6 @@ export const WorkflowWorkspace = () => {
     isError: isWorkflowError,
     refetch: refetchWorkflow,
   } = useWorkflow(activeWorkflowId);
-  const { data: latestRun } = useLatestWorkflowRun(activeWorkflowId);
 
   const createDefaultWorkflow = () =>
     createWorkflow(
@@ -96,12 +96,17 @@ export const WorkflowWorkspace = () => {
     if (workflow && workflow.id !== loadedWorkflowId) loadWorkflow(applyCompactDefaultLayoutIfStillVertical(workflow));
   }, [workflow, loadedWorkflowId, loadWorkflow]);
 
+  // A workflow opened without a run in the URL shows none: its steps start without a status and Generate Video
+  // without a preview, even when the same workflow was open with a run before. A run is opened from Previous runs;
+  // a reloaded page keeps the one in its URL.
   useEffect(() => {
-    if (!workflow || workflow.id !== loadedWorkflowId || latestRun === undefined || restoredRunForWorkflow.current === workflow.id) return;
-    restoredRunForWorkflow.current = workflow.id;
+    if (searchParams.has(VIDEO_RUN_PARAM) || searchParams.has(BATCH_JOB_PARAM) || searchParams.has(RUN_GROUP_PARAM)) return;
     const state = useWorkflowStore.getState();
-    if (!searchParams.get("run") && !state.videoRunId && latestRun?.workflowId === workflow.id) state.setVideoRunId(latestRun.id);
-  }, [workflow, loadedWorkflowId, latestRun, searchParams]);
+    state.setVideoRunId(null);
+    state.resetStatuses();
+    // Only on opening the page: a run started here enters the URL a moment after it starts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (previousProductId.current === productId) return;
@@ -112,7 +117,7 @@ export const WorkflowWorkspace = () => {
     const params = new URLSearchParams(window.location.search);
     // With a scene list the product only previews the scenes: the run, its designs and its videos are the
     // batch's, so they stay. What was chosen among the previous product's mock-ups goes.
-    if (supportsBatchVideos(useWorkflowStore.getState().nodes)) {
+    if (runsPerDesign(useWorkflowStore.getState().nodes)) {
       useWorkflowStore.setState((state) => ({
         nodes: state.nodes.map((node) => node.data.type === "apply-mockup"
           ? { ...node, data: { ...node.data, config: { ...node.data.config, mockupIds: [], artworkGroupKey: "" } } }

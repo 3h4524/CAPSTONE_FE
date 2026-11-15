@@ -1,6 +1,7 @@
 import { ASSISTANT_ACTION_EXPIRED_ERROR_CODE } from "@/constants/assistant";
 import { getResponseStatus } from "@/helpers/response-status";
-import type { AssistantPendingActionStatus } from "@/types/assistant";
+import { assistantActionLinkSchema } from "@/schemas/assistant";
+import type { AssistantNavigatePayload, AssistantPendingAction, AssistantPendingActionStatus } from "@/types/assistant";
 
 const CONFLICT_STATUS = 409;
 const MS_PER_SECOND = 1000;
@@ -21,4 +22,10 @@ export const formatActionTimeLeft = (remainingMs: number) => {
   const minutes = Math.floor(totalSeconds / SECONDS_PER_MINUTE);
   const seconds = totalSeconds % SECONDS_PER_MINUTE;
   return `${minutes}:${String(seconds).padStart(2, "0")} left`;
+};
+
+export const getPendingActionLink = (action: AssistantPendingAction): AssistantNavigatePayload | null => {
+  if (action.status !== "executed") return null;
+  const parsed = assistantActionLinkSchema.safeParse(action.result);
+  return parsed.success ? { path: parsed.data.openPath, label: parsed.data.openLabel } : null;
 };

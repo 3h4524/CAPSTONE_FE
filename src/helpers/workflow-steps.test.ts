@@ -86,6 +86,18 @@ describe("insertStep", () => {
     expect(isConnected(nextEdges, step.id, idOf(nodes, "export-zip"))).toBe(true);
     expect(notConnectedIssues(nextNodes, nextEdges)).toEqual([]);
   });
+
+  it("branches Push to Printify off Mockup Approval and leaves the video line as it was", () => {
+    const { nodes: nextNodes, edges: nextEdges, step } = insertStep("publish-printify", nodes, edges);
+
+    expect(isConnected(nextEdges, idOf(nodes, "approval-gate"), step.id)).toBe(true);
+    expect(nextEdges.some((edge) => edge.source === step.id)).toBe(false);
+    expect(isConnected(nextEdges, idOf(nodes, "approval-gate"), idOf(nodes, "generate-video"))).toBe(true);
+    expect(validateWorkflow(nextNodes, nextEdges).filter((issue) => /^printify-(source|end)-/.test(issue.id))).toEqual([]);
+    expect(typesOf(orderSteps(nextNodes, nextEdges)).indexOf("publish-printify")).toBe(
+      typesOf(orderSteps(nextNodes, nextEdges)).indexOf("approval-gate") + 1
+    );
+  });
 });
 
 describe("getAddableStepTypes", () => {

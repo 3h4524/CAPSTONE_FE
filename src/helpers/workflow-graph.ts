@@ -3,6 +3,7 @@ import {
   DEFAULT_WORKFLOW_NAME,
   DEFAULT_WORKFLOW_POSITIONS,
   DUPLICATE_NODE_OFFSET,
+  PRINTIFY_SOURCES,
   RUN_ORDER,
   WORKFLOW_NODE_DEFINITIONS,
 } from "@/constants/workflow";
@@ -25,13 +26,22 @@ import type { Connection, Viewport } from "@xyflow/react";
 // A listing is written from the product's own details, so only the video waits for an approval.
 const APPROVAL_REQUIRED_TYPES: WorkflowNodeType[] = ["generate-video"];
 // The steps a video needs, each exactly once. The design steps may sit before Apply mock-up.
-export const STANDARD_PIPELINE: WorkflowNodeType[] = ["product-input", "apply-mockup", "approval-gate", "generate-video", "review-video", "export-zip"];
+export const STANDARD_PIPELINE: WorkflowNodeType[] = ["product-input", "apply-mockup", "approval-gate", "generate-video", "review-video"];
+// Steps a video may leave out (at most once each): without Export ZIP, Review Video leads to the publish steps.
+export const OPTIONAL_VIDEO_STEPS: WorkflowNodeType[] = ["export-zip"];
 // The steps a run that publishes without a video needs, each exactly once, before the publish steps.
 export const PUBLISH_PIPELINE: WorkflowNodeType[] = ["product-input", "apply-mockup", "approval-gate"];
 // A workflow with one of these is making a video, so it has to be the whole video pipeline.
 const VIDEO_ONLY_TYPES: WorkflowNodeType[] = ["approval-gate", "generate-video", "review-video"];
 
-const runOrderOf = (type: WorkflowNodeType) => RUN_ORDER.indexOf(type);
+const PRINTIFY: WorkflowNodeType = "publish-printify";
+
+// A step's place in the line of the run. Push to Printify is not on the line: it branches off Apply mock-up or Mockup
+// Approval, as the backend checks.
+const runOrderOf = (type: WorkflowNodeType) => (type === PRINTIFY ? -1 : RUN_ORDER.indexOf(type));
+
+const PRINTIFY_SOURCE_MESSAGE = "Connect Push to Printify after Apply mock-up or Mockup Approval: it publishes the design and its mock-ups, not the video.";
+const PRINTIFY_END_MESSAGE = "Push to Printify ends its branch: connect the next steps to the step before it.";
 
 const buildAdjacency = (edges: WorkflowEdge[], direction: "forward" | "backward") => {
   const adjacency = new Map<string, string[]>();
@@ -82,6 +92,13 @@ export const getConnectionIssue = (
     const toNode = nodes.find(n => n.id === target);
     const from = fromNode?.data.type;
     const to = toNode?.data.type;
+    // Push to Printify takes the design and its approved mock-ups, not the video: it branches off one of the mock-up
+    // steps and nothing follows it.
+    if (from === PRINTIFY) return PRINTIFY_END_MESSAGE;
+    if (to === PRINTIFY) {
+      if (!from || !PRINTIFY_SOURCES.includes(from)) return PRINTIFY_SOURCE_MESSAGE;
+      if (edges.some((edge) => edge.target === target)) return "Push to Printify already follows a step.";
+    }
     if (from && to && runOrderOf(from) >= 0 && runOrderOf(to) >= 0) {
       const next = nodes.map(n => runOrderOf(n.data.type)).filter(order => order > runOrderOf(from)).sort((a, b) => a - b)[0];
       if (runOrderOf(to) !== next) {
@@ -156,8 +173,20 @@ const hasApprovalUpstream = (node: WorkflowNode, nodes: WorkflowNode[], edges: W
   );
 };
 
+// Push to Printify hangs off Apply mock-up or Mockup Approval, once, with nothing after it (the backend checks the same).
+const printifyIssues = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] =>
+  nodes.filter(node => node.data.type === PRINTIFY).flatMap(node => {
+    const into = edges.filter(e => e.target === node.id).map(e => nodes.find(n => n.id === e.source)?.data.type);
+    const issues: WorkflowIssue[] = [];
+    if (into.length !== 1 || !into[0] || !PRINTIFY_SOURCES.includes(into[0]))
+      issues.push({ id: `printify-source-${node.id}`, nodeId: node.id, message: PRINTIFY_SOURCE_MESSAGE });
+    if (edges.some(e => e.source === node.id))
+      issues.push({ id: `printify-end-${node.id}`, nodeId: node.id, message: PRINTIFY_END_MESSAGE });
+    return issues;
+  });
+
 // The steps of a run sit in one line in run order, each connected to the one before, so no approval is skipped.
-// Listing content waits for no approval, so it may also sit between two steps of the line.
+// Listing content waits for no approval, so it may also sit between two steps of the line; Push to Printify branches off it.
 const lineIssues = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
   const issues: WorkflowIssue[] = [];
   const line = nodes.filter(node => runOrderOf(node.data.type) >= 0).sort((a, b) => runOrderOf(a.data.type) - runOrderOf(b.data.type));
@@ -172,7 +201,8 @@ const lineIssues = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue
 };
 
 // What the server checks before it publishes without a video: Product Input → Apply mock-up → Mockup Approval once
-// each, then the publish steps, in one line; Review Video and Export ZIP need the video; and the one product it is for.
+// each, then the publish steps, in one line; Review Video and Export ZIP need the video. Each design approved at
+// Mockup Approval is published, so no product is chosen beforehand.
 const validatePublishPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
   const issues: WorkflowIssue[] = [];
   if (PUBLISH_PIPELINE.some(type => nodes.filter(n => n.data.type === type).length !== 1))
@@ -186,12 +216,6 @@ const validatePublishPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
   issues.push(...lineIssues(nodes, edges));
   if (issues.length === 0 && edges.length !== nodes.length - 1)
     issues.push({ id: "publish-extra-edges", nodeId: null, message: "A run goes through its steps in one line. Remove the extra connections." });
-
-  // One run publishes one product; it is stored in Product input but chosen at Mockup Approval, so the issue points there.
-  const input = nodes.find(node => node.data.type === "product-input");
-  const approval = nodes.find(node => node.data.type === "approval-gate");
-  if (input && !readString(input.data.config.productId))
-    issues.push({ id: `publish-product-${input.id}`, nodeId: approval?.id ?? input.id, message: "Publishing without a video is for one product. Choose it under Product in Mockup Approval." });
   return issues;
 };
 
@@ -201,8 +225,9 @@ const validatePublishPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
 const validateVideoPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
   if (!nodes.some(node => VIDEO_ONLY_TYPES.includes(node.data.type))) return [];
   const issues: WorkflowIssue[] = [];
-  if (STANDARD_PIPELINE.some(type => nodes.filter(n => n.data.type === type).length !== 1))
-    issues.push({ id: "mvp-pipeline", nodeId: null, message: "A video needs exactly one each of Product Input → Apply Mockup → Mockup Approval → Generate Video → Review Video → Export ZIP." });
+  if (STANDARD_PIPELINE.some(type => nodes.filter(n => n.data.type === type).length !== 1) ||
+    OPTIONAL_VIDEO_STEPS.some(type => nodes.filter(n => n.data.type === type).length > 1))
+    issues.push({ id: "mvp-pipeline", nodeId: null, message: "A video needs exactly one each of Product Input → Apply Mockup → Mockup Approval → Generate Video → Review Video. Export ZIP is optional, once at most." });
   nodes.filter(node => !isRunnableNode(node.data.type)).forEach(node =>
     issues.push({ id: `video-unsupported-${node.id}`, nodeId: node.id, message: `${node.data.label} cannot run yet. Remove it to run the video.` })
   );
@@ -223,6 +248,7 @@ const validateVideoPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): Wo
 export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
   // Publishing comes last: after Export ZIP of a video, or right after Mockup Approval without one.
   const issues: WorkflowIssue[] = publishesWithoutVideo(nodes) ? validatePublishPipeline(nodes, edges) : validateVideoPipeline(nodes, edges);
+  issues.push(...printifyIssues(nodes, edges));
   const missingTemplates = findMissingMockupTemplates(nodes);
   if (missingTemplates) issues.push(missingTemplates);
   const inputNodes = nodes.filter((node) => node.data.type === "product-input");

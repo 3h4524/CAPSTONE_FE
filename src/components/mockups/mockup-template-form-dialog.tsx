@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import {
   createMockupTemplate,
   mockupTemplateKeys,
+  type MockupTemplateScope,
   type SaveMockupTemplateInput,
   setMockupTemplateView,
   updateMockupTemplate,
@@ -81,6 +82,8 @@ type MockupTemplateFormDialogProps = {
   open: boolean;
   template: MockupTemplate | null;
   onClose: () => void;
+  /** A seller's own templates, or (admin) the shared ones, which no plan limits. */
+  scope?: MockupTemplateScope;
 };
 
 // A template is a photo of the front of a garment and, optionally, photos of its back and sleeves. Each side has its own
@@ -89,6 +92,7 @@ export const MockupTemplateFormDialog = ({
   open,
   template,
   onClose,
+  scope = "seller",
 }: MockupTemplateFormDialogProps) => {
   const queryClient = useAppQueryClient();
   const [drafts, setDrafts] = useState<Drafts>(() => draftsOf(template));
@@ -159,9 +163,11 @@ export const MockupTemplateFormDialog = ({
   const updaterFor = (view: MockupView) => updaters[view];
 
   const creating = template === null;
-  const { data: entitlements } = useEntitlements();
+  const { data: entitlements } = useEntitlements(scope === "seller");
   // Making and editing the Seller's own templates is a Pro feature; the backend refuses it on other plans.
-  const locked = entitlements !== undefined && !hasFeature(entitlements, "custom_mockup_templates");
+  const locked = scope === "seller" && entitlements !== undefined && !hasFeature(entitlements, "custom_mockup_templates");
+  // A Printify template's photos and print areas are Printify's: only its name, type and colors change here.
+  const printifyLocked = Boolean(template?.printify);
   const pending = saving;
 
   // A small picture of each side for the strip under the photo: its new photo, or the saved one.
@@ -189,7 +195,7 @@ export const MockupTemplateFormDialog = ({
     for (const view of TEMPLATE_VIEWS.filter((item) => item !== "front")) {
       const draft = drafts[view];
       if (draft.removed && draft.templateId) {
-        await setMockupTemplateView(frontId, view, null);
+        await setMockupTemplateView(frontId, view, null, scope);
         updaterFor(view)(() => viewDraftOf(view, null));
         continue;
       }
@@ -209,10 +215,10 @@ export const MockupTemplateFormDialog = ({
         areas: draft.areas,
       };
       if (draft.templateId) {
-        await updateMockupTemplate(draft.templateId, input);
+        await updateMockupTemplate(draft.templateId, input, scope);
       } else {
         // Made and linked to the front in one request, so it never shows up as a template of its own.
-        const created = await createMockupTemplate({ ...input, mainTemplateId: frontId });
+        const created = await createMockupTemplate({ ...input, mainTemplateId: frontId }, scope);
         updaterFor(view)((current) => ({ ...current, templateId: created.id }));
       }
     }
@@ -266,8 +272,8 @@ export const MockupTemplateFormDialog = ({
       };
       const frontId = template?.id ?? createdFrontId.current;
       const saved = frontId
-        ? await updateMockupTemplate(frontId, input)
-        : await createMockupTemplate(input);
+        ? await updateMockupTemplate(frontId, input, scope)
+        : await createMockupTemplate(input, scope);
       createdFrontId.current = saved.id;
       await saveSides(saved.id, values);
       await queryClient.invalidateQueries({ queryKey: mockupTemplateKeys.all });
@@ -388,8 +394,9 @@ export const MockupTemplateFormDialog = ({
         <DialogHeader className="border-b px-5 py-3.5 pr-12 text-left">
           <DialogTitle>{creating ? "New mock-up template" : `Edit ${template.name}`}</DialogTitle>
           <DialogDescription>
-            Mark where designs go on each photo. Add the back or a sleeve to print there too: each
-            side makes its own mock-up.
+            {printifyLocked
+              ? "The photo and print area stay as they are while the template is linked to Printify. Measure a side again, or unlink it, in Printify settings."
+              : "Mark where designs go on each photo. Add the back or a sleeve to print there too: each side makes its own mock-up."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
@@ -402,8 +409,10 @@ export const MockupTemplateFormDialog = ({
             allowRecolor={allowRecolor}
             garmentColor={garmentColor}
             onPhotoSize={activeView === "front" ? setFrontSize : undefined}
+            scope={scope}
+            photoLocked={printifyLocked}
             onRemove={
-              activeView === "front"
+              activeView === "front" || printifyLocked
                 ? undefined
                 : () =>
                     updaterFor(activeView)((current) => ({

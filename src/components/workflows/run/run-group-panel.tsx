@@ -14,14 +14,15 @@ import {
   MockupStripSkeleton,
   ScrollStrip,
 } from "@/components/workflows/run/mockup-strip";
-import { confirmRunGroupAiShot, makesAiClips } from "@/helpers/confirm-ai-shot";
 import { getErrorMessage } from "@/helpers/error-message";
-import { showToast, showWorkflowActionToast } from "@/helpers/toast";
+import { showWorkflowActionToast } from "@/helpers/toast";
+import { hasVideoSteps } from "@/helpers/workflow-run";
 import { useReviewMockupAsset } from "@/hooks/mutations/use-review-mockup-asset";
-import { useCancelRunGroup, useConfirmRunGroup } from "@/hooks/mutations/use-run-group-actions";
+import { useCancelRunGroup, useConfirmRunGroup, useResumeRunGroup } from "@/hooks/mutations/use-run-group-actions";
 import { useAiVideoTemplates } from "@/hooks/queries/use-ai-video-templates";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { useRunGroup, useRunGroupId } from "@/hooks/queries/use-run-group";
+import { usePanelContinueCommand } from "@/hooks/use-panel-continue-command";
 import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useSyncGeneratedMockups } from "@/hooks/use-sync-generated-mockups";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
@@ -47,6 +48,11 @@ const RUN_STATUS: Record<string, { label: string; className: string }> = {
 export const runStatusOf = (status: string | null) =>
   RUN_STATUS[status ?? ""] ?? { label: status ?? "", className: "bg-ink-100 text-ink-700" };
 
+/** Whether the workflow makes a video: the run-group panel words what follows Mockup Approval after it. */
+const useWithVideo = () => useWorkflowStore((state) => hasVideoSteps(state.nodes));
+
+const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
+
 /** The mock-ups of one design: its own artwork group, without the AI keyframes made for a scene. */
 export const designMockups = (
   assets: MockupAsset[] | undefined,
@@ -66,9 +72,9 @@ const byProduct = (targets: RunGroupTarget[]) => {
   return [...groups.values()];
 };
 
-// Mockup Approval of a batch video run: the run's products, each with the mock-ups of its approved design (Design
-// approval keeps one per product). A product whose mock-ups are approved gets a video; Continue starts them. Once
-// started, it shows how each video is doing.
+// Mockup Approval of a batch run: the run's products, each with the mock-ups of its approved design (Design approval
+// keeps one per product). A product whose mock-ups are approved goes on (gets its video, or is published and gets its
+// listing without one); Continue starts them. Once started, it shows how each run is doing.
 export const RunGroupPanel = () => {
   const groupId = useRunGroupId();
   const { data: group, isPending, isError, refetch } = useRunGroup(groupId);
@@ -99,7 +105,7 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
   const { mutate: confirm, isPending: isConfirming } = useConfirmRunGroup();
   const { mutate: cancel, isPending: isCancelling } = useCancelRunGroup();
   const { selectRun } = useWorkflowRuntime();
-  const [isQuoting, setIsQuoting] = useState(false);
+  const withVideo = useWithVideo();
   const sharedVideoConfig = useWorkflowStore(
     (state) => state.nodes.find((node) => node.data.type === "generate-video")?.data.config
   );
@@ -115,39 +121,23 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
   const isSyncing = useSyncGeneratedMockups(group.id, [
     ...new Set(group.targets.map((target) => target.productId)),
   ]);
-  // A design follows the saved scene list unless it has settings of its own; either may make paid AI clips.
+  // A design follows the saved scene list unless it has settings of its own.
   const shared = sharedVideoConfig as GenerateVideoConfig | undefined;
-  const isPaid = group.targets.some(
-    (target) => target.selected && makesAiClips(target.config ?? shared)
-  );
   const { data: aiTemplates } = useAiVideoTemplates();
   const showsModelPhoto = showsPerson(
     [shared, ...group.targets.map((target) => target.config ?? undefined)],
     new Set((aiTemplates ?? []).filter((item) => item.requiresLifestyle).map((item) => item.code))
   );
 
-  const start = async () => {
-    let token: string | undefined;
-    if (isPaid) {
-      setIsQuoting(true);
-      try {
-        const confirmed = await confirmRunGroupAiShot(group.id, group.revision);
-        if (confirmed === null) return;
-        token = confirmed;
-      } catch (error) {
-        showToast("error", getErrorMessage(error));
-        return;
-      } finally {
-        setIsQuoting(false);
-      }
-    }
+  // The cost, AI clips included, was shown when the seller pressed Run: Continue starts at once.
+  const start = () => {
     confirm(
-      { groupId: group.id, expectedRevision: group.revision, aiShotQuoteToken: token },
+      { groupId: group.id, expectedRevision: group.revision },
       {
         onSuccess: (started) => {
           showWorkflowActionToast(
             "success",
-            `${started.progress.total} video${started.progress.total === 1 ? "" : "s"} started.`
+            `${plural(started.progress.total, withVideo ? "video" : "run")} started.`
           );
           // The canvas follows the first design's run; the bar above it switches to the others.
           const first = started.targets.find((target) => target.runId)?.runId;
@@ -157,20 +147,30 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
     );
   };
 
+  // A design held up by a missing model photo does not lock Continue: Continue makes that photo again first.
+  const canStart =
+    group.selectedCount > 0 &&
+    !tooMany &&
+    !isDirty &&
+    !isConfirming &&
+    !isCancelling &&
+    group.preparing !== true;
+  usePanelContinueCommand(canStart, start);
+
   if (group.targets.length === 0)
     return (
       <PanelNotice tone="warning">
-        No product of this run has mock-ups for a video yet. Add mock-ups with Apply mock-up, or
-        upload finished photos to a product.
+        No product of this run has mock-ups{withVideo ? " for a video" : ""} yet. Add mock-ups with
+        Apply mock-up, or upload finished photos to a product.
       </PanelNotice>
     );
 
   return (
     <div className="space-y-3">
       <p className="text-muted-foreground text-xs leading-relaxed">
-        Approve the mock-ups of each product that should get a video. Every chosen product uses the
-        scenes of Generate Video; a product without a matching image uses its main mock-up. A scene
-        that shows a person uses the product&apos;s approved model photo.
+        {withVideo
+          ? "Approve the mock-ups of each product that should get a video. Every chosen product uses the scenes of Generate Video; a product without a matching image uses its main mock-up. A scene that shows a person uses the product's approved model photo."
+          : "Approve the mock-ups of each product to continue with. Every chosen product goes on to the next steps with its approved mock-ups; skip a product to leave it out."}
       </p>
       {isSyncing && (
         <p className="text-muted-foreground flex items-center gap-1.5 text-xs" role="status">
@@ -217,22 +217,24 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
         <PanelNotice tone="info">
           <span className="inline-flex items-center gap-2">
             <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-            Getting the videos ready: approving the mock-ups, making the model photos of scenes with a
-            person and checking the AI cost. The videos start by themselves.
+            {withVideo
+              ? "Getting the videos ready: approving the mock-ups and making the model photos of scenes with a person. The videos start by themselves."
+              : "Approving the mock-ups. The run goes on by itself."}
           </span>
         </PanelNotice>
       )}
       {group.notice && (
         <PanelNotice tone="warning">
           {group.status === "waiting_for_targets"
-            ? `Mockup Approval is on Approve automatically, but the videos did not start. ${group.notice}`
+            ? `Mockup Approval is on Approve automatically, but the ${withVideo ? "videos" : "run"} did not start. ${group.notice}`
             : group.notice}
         </PanelNotice>
       )}
       {tooMany && (
         <PanelNotice tone="error">
-          {group.selectedCount} designs are chosen; one run makes at most {group.maximumTargets}{" "}
-          videos. Reject the mock-ups of the designs to leave out.
+          {group.selectedCount} designs are chosen; one run{" "}
+          {withVideo ? `makes at most ${group.maximumTargets} videos` : `continues with at most ${group.maximumTargets}`}.
+          Reject the mock-ups of the designs to leave out.
         </PanelNotice>
       )}
       {blocked.length > 0 && (
@@ -246,22 +248,20 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
           </ul>
         </PanelNotice>
       )}
-      {isPaid && blocked.length === 0 && (
-        <PanelNotice tone="info">
-          These videos have AI scenes. Continue shows what the clips of every chosen product cost
-          together, and nothing is generated until you accept it.
-        </PanelNotice>
-      )}
       {isDirty && (
         <PanelNotice tone="warning">
           {designScope
             ? `Save first: the videos use saved settings, and Save keeps the changes for ${designScope.label} only.`
-            : "Save the workflow first: the videos use the saved scenes."}
+            : withVideo
+              ? "Save the workflow first: the videos use the saved scenes."
+              : "Save the workflow first: the run uses the saved settings."}
         </PanelNotice>
       )}
       <div className="flex flex-wrap items-center gap-2 border-t pt-3">
         <p className="mr-auto text-sm font-medium">
-          {group.selectedCount} video{group.selectedCount === 1 ? "" : "s"} will be made
+          {withVideo
+            ? `${plural(group.selectedCount, "video")} will be made`
+            : `${plural(group.selectedCount, "product")} will continue`}
         </p>
         <Button
           type="button"
@@ -275,25 +275,10 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
         <Button
           type="button"
           size="sm"
-          disabled={
-            group.selectedCount === 0 ||
-            tooMany ||
-            blocked.length > 0 ||
-            isDirty ||
-            isConfirming ||
-            isQuoting ||
-            isCancelling ||
-            group.preparing === true
-          }
+          disabled={!canStart}
           onClick={start}
         >
-          {isQuoting
-            ? "Checking cost…"
-            : isConfirming
-              ? "Starting…"
-              : isPaid
-                ? "Continue (AI)"
-                : "Continue"}
+          {isConfirming ? "Starting…" : "Continue"}
         </Button>
       </div>
     </div>
@@ -316,6 +301,7 @@ const ProductSection = ({
   const productId = targets[0].productId;
   const { data: assets, isPending, dataUpdatedAt } = useMockupAssets(productId);
   const videos = targets.filter((target) => target.selected).length;
+  const withVideo = useWithVideo();
 
   // A review changes which designs get a video: read the group again, once for the product rather than per design.
   const firstUpdate = useRef(dataUpdatedAt);
@@ -337,8 +323,8 @@ const ProductSection = ({
             {targets[0].productName}
           </h3>
           <span className="text-muted-foreground shrink-0 text-xs">
-            {targets.length} design{targets.length === 1 ? "" : "s"} · {videos} video
-            {videos === 1 ? "" : "s"}
+            {plural(targets.length, "design")} ·{" "}
+            {withVideo ? plural(videos, "video") : `${videos} chosen`}
           </span>
         </header>
       )}
@@ -350,6 +336,7 @@ const ProductSection = ({
             mockups={designMockups(assets, target)}
             isLoading={isPending}
             asProduct={single}
+            withVideo={withVideo}
           />
         ))}
       </ul>
@@ -405,11 +392,14 @@ const DesignRow = ({
   mockups: unordered,
   isLoading,
   asProduct = false,
+  withVideo = true,
 }: {
   target: RunGroupTarget;
   mockups: MockupAsset[];
   isLoading: boolean;
   asProduct?: boolean;
+  /** Off for a workflow without a video: an approved design goes on to the next steps instead. */
+  withVideo?: boolean;
 }) => {
   const { mutateAsync: review } = useReviewMockupAsset();
   const [isReviewing, setIsReviewing] = useState(false);
@@ -459,7 +449,7 @@ const DesignRow = ({
               />
             </div>
           )}
-          {target.selected && (
+          {target.selected && withVideo && (
             <p className="text-secondary mt-1.5 flex items-center gap-1 text-xs font-medium">
               <Film className="size-3 shrink-0" aria-hidden="true" />
               {target.scenes.length === 0
@@ -495,7 +485,7 @@ const DesignRow = ({
             )}
             aria-hidden="true"
           />
-          {target.selected ? "Video" : "No video"}
+          {withVideo ? (target.selected ? "Video" : "No video") : target.selected ? "Included" : "Skipped"}
         </Badge>
       </div>
 
@@ -531,7 +521,7 @@ const DesignRow = ({
           size="sm"
           variant="ghost"
           className="text-muted-foreground h-8 gap-1.5 px-2.5 text-xs hover:translate-y-0"
-          title={`Reject every mock-up of this ${asProduct ? "product" : "design"} so it gets no video`}
+          title={`Reject every mock-up of this ${asProduct ? "product" : "design"} so it ${withVideo ? "gets no video" : "is left out"}`}
           disabled={isReviewing || isLoading || mockups.length === 0}
           onClick={() => reviewAll(false)}
         >
@@ -563,6 +553,8 @@ const DesignRow = ({
 const GroupProgress = ({ group }: { group: RunGroup }) => {
   const { selectRun, runId } = useWorkflowRuntime();
   const { mutate: cancel, isPending: isCancelling } = useCancelRunGroup();
+  const { mutate: resume, isPending: isResuming } = useResumeRunGroup();
+  const withVideo = useWithVideo();
   const { progress } = group;
   const finished = progress.completed + progress.failed + progress.cancelled;
   return (
@@ -571,8 +563,12 @@ const GroupProgress = ({ group }: { group: RunGroup }) => {
         {group.status === "cancelled"
           ? "Stopped"
           : group.status === "completed"
-            ? "All videos finished"
-            : "Making the videos"}{" "}
+            ? withVideo
+              ? "All videos finished"
+              : "All runs finished"
+            : withVideo
+              ? "Making the videos"
+              : "Running"}{" "}
         ·{" "}
         <span className="text-muted-foreground font-normal">
           {progress.completed} done, {progress.waitingForReview} to review
@@ -589,7 +585,8 @@ const GroupProgress = ({ group }: { group: RunGroup }) => {
       </div>
       <ul className="divide-y rounded-lg border">
         {group.targets.map((target) => {
-          const status = runStatusOf(target.runStatus);
+          const found = runStatusOf(target.runStatus);
+          const status = !withVideo && target.runStatus === "running" ? { ...found, label: "Running" } : found;
           const isOpen = Boolean(target.runId) && target.runId === runId;
           return (
             <li key={target.key} className={cn(isOpen && "bg-primary/5")}>
@@ -632,8 +629,28 @@ const GroupProgress = ({ group }: { group: RunGroup }) => {
           disabled={isCancelling}
           onClick={() => cancel({ groupId: group.id, expectedRevision: group.revision })}
         >
-          Stop all videos
+          {withVideo ? "Stop all videos" : "Stop all runs"}
         </Button>
+      )}
+      {group.status === "cancelled" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-muted-foreground mr-auto text-xs">
+            Resume goes on from where each design stopped and keeps what was already made.
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            disabled={isResuming}
+            onClick={() =>
+              resume(
+                { groupId: group.id, expectedRevision: group.revision },
+                { onSuccess: () => showWorkflowActionToast("success", "The run goes on from where it stopped.") }
+              )
+            }
+          >
+            {isResuming ? "Resuming…" : "Resume"}
+          </Button>
+        </div>
       )}
     </div>
   );

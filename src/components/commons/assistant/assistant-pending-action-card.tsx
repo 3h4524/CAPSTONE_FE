@@ -1,11 +1,12 @@
 "use client";
 
 import { AssistantChip } from "@/components/commons/assistant/assistant-chip";
+import { AssistantNavigateChip } from "@/components/commons/assistant/assistant-navigate-chip";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { toAssistantUiMessage } from "@/helpers/assistant-messages";
-import { formatActionTimeLeft, getConflictedActionStatus } from "@/helpers/assistant-pending-action";
+import { formatActionTimeLeft, getConflictedActionStatus, getPendingActionLink } from "@/helpers/assistant-pending-action";
 import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
 import { useConfirmAssistantAction } from "@/hooks/mutations/use-confirm-assistant-action";
@@ -37,6 +38,7 @@ export const AssistantPendingActionCard = ({ action }: AssistantPendingActionCar
   const { mutate: rejectAction, isPending: isRejecting } = useRejectAssistantAction();
   const { remainingMs, isExpired } = useAssistantActionCountdown(action.expiresAt, action.status === "pending");
   const status = action.status === "pending" && isExpired ? "expired" : action.status;
+  const link = getPendingActionLink(action);
   const isBusy = isConfirming || isRejecting;
 
   const applyResult = (result: AssistantActionResult) => {
@@ -83,6 +85,7 @@ export const AssistantPendingActionCard = ({ action }: AssistantPendingActionCar
         ) : null}
         {status === "executing" ? <Spinner className="size-4" /> : null}
         {status === "failed" && action.errorMessage ? <p className="text-destructive text-xs">{action.errorMessage}</p> : null}
+        {link ? <AssistantNavigateChip payload={link} /> : null}
       </CardContent>
     </Card>
   );

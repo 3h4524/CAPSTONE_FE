@@ -11,7 +11,7 @@ import { ScrollStrip } from "@/components/workflows/run/mockup-strip";
 import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
-import { type GroupVideo, type GroupVideoState, groupVideoState, useGroupVideos } from "@/hooks/queries/use-group-videos";
+import { type GroupVideo, type GroupVideoState, groupVideoState, useGroupVideos, videoStatusOf } from "@/hooks/queries/use-group-videos";
 import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { cn } from "@/utils/cn";
@@ -33,7 +33,7 @@ const BAR_ORDER: GroupVideoState[] = ["approved", "review", "processing", "queue
 const stateLabel = (item: GroupVideo, state: GroupVideoState) =>
   state === "processing"
     ? `Rendering ${Math.round(item.target.progress)}%`
-    : state === "stopped" && item.target.runStatus === "failed"
+    : state === "stopped" && videoStatusOf(item.target) === "failed"
       ? "Failed"
       : STATE[state].label;
 

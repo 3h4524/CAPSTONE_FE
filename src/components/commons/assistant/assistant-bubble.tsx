@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { AssistantComposer } from "@/components/commons/assistant/assistant-composer";
 import { AssistantHeader } from "@/components/commons/assistant/assistant-header";
 import { AssistantMessageList } from "@/components/commons/assistant/assistant-message-list";
+import { AssistantRunNudgeBar } from "@/components/commons/assistant/assistant-run-nudge";
 import { Card } from "@/components/ui/card";
 import { ASSISTANT_BUBBLE_GAP_PX, ASSISTANT_LAUNCHER_MARGIN_PX, ASSISTANT_LAUNCHER_SIZE_PX } from "@/constants/assistant";
 import { isBubbleOpen } from "@/helpers/assistant-display-mode";
@@ -44,6 +45,7 @@ export const AssistantBubble = () => {
     >
       <AssistantHeader variant="bubble" />
       <AssistantMessageList />
+      <AssistantRunNudgeBar />
       <AssistantComposer />
     </Card>
   );

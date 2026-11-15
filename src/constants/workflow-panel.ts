@@ -11,7 +11,8 @@ export type NodePanelSection = {
 // fields in one plain list.
 export const NODE_PANEL_SECTIONS: Partial<Record<WorkflowNodeType, NodePanelSection[]>> = {
   "product-input": [
-    // The product is shown only without video steps (see showsInputProduct); a video picks it at Mockup Approval.
+    // The product is shown only to a listing-only workflow (see showsInputProduct); any other runs for the designs
+    // approved at Mockup Approval, or a one-product video picks it there.
     { title: "Input", fields: ["batchId", "productId"] },
   ],
   "prompt-synthesis": [

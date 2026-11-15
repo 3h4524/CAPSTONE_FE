@@ -19,6 +19,25 @@ describe("createAssistantStreamParser", () => {
     ]);
   });
 
+  it("parses a continue action whose backend left out the run ids it did not have", () => {
+    const parser = createAssistantStreamParser();
+    const payload = { workflowId: "w", workflowName: "Flow", stage: "design_approval", label: "Continue to mock-ups", batchJobId: "j" };
+
+    const [event] = parser.push(`event: client_action\ndata: ${JSON.stringify({ id: "a", kind: "continue_run", payload })}\n\n`);
+
+    expect(event).toEqual({ type: "client_action", data: { id: "a", kind: "continue_run", payload } });
+  });
+
+  it("parses run and save workflow actions", () => {
+    const parser = createAssistantStreamParser();
+    const run = { id: "r", kind: "run_workflow", payload: { workflowId: "w", workflowName: "Flow", saveFirst: true, warnings: [] } };
+    const save = { id: "s", kind: "save_workflow", payload: { workflowId: "w", workflowName: "Flow" } };
+
+    const events = parser.push(`event: client_action\ndata: ${JSON.stringify(run)}\n\nevent: client_action\ndata: ${JSON.stringify(save)}\n\n`);
+
+    expect(events.map((event) => event.type)).toEqual(["client_action", "client_action"]);
+  });
+
   it("joins an event split across two chunks", () => {
     const parser = createAssistantStreamParser();
 

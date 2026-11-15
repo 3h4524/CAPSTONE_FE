@@ -169,7 +169,7 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
     onSuccess: onCreated,
   });
   const resumeMutation = useMutation({
-    mutationFn: () => syncPrintifyProduct(productId, resumable!.printifyProductId!, { mockupIds: [], includeVideo: false }),
+    mutationFn: () => syncPrintifyProduct(productId, resumable!.printifyProductId!, { mockupIds: [] }),
     onSuccess: onCreated,
   });
 
@@ -338,23 +338,23 @@ function PriceStep({ draft, product, onPublished }: { draft: PrintifyDraft; prod
 
 function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; product: PrintifyProduct; onChange: (product: PrintifyProduct) => void }) {
   const [mockupIds, setMockupIds] = useState<string[]>(draft.mockups.slice(0, 5).map((mockup) => mockup.id));
-  const [includeVideo, setIncludeVideo] = useState(Boolean(draft.video));
   const [attachRequested, setAttachRequested] = useState(false);
   const published = product.state === "published";
 
   // While Printify publishes in the background, ask again every few seconds.
   const syncMutation = useMutation({
-    mutationFn: (media: { mockupIds: string[]; includeVideo: boolean }) => syncPrintifyProduct(product.productId, product.printifyProductId, media),
+    mutationFn: (media: { mockupIds: string[] }) => syncPrintifyProduct(product.productId, product.printifyProductId, media),
     onSuccess: onChange,
   });
   useEffect(() => {
     if (product.state !== "publishing") return;
-    const timer = window.setTimeout(() => syncMutation.mutate({ mockupIds: [], includeVideo: false }), POLL_MS);
+    const timer = window.setTimeout(() => syncMutation.mutate({ mockupIds: [] }), POLL_MS);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product]);
 
-  const attach = () => { setAttachRequested(true); syncMutation.mutate({ mockupIds, includeVideo }); };
+  // Printify takes the design and its mock-ups only: no video goes with the product.
+  const attach = () => { setAttachRequested(true); syncMutation.mutate({ mockupIds }); };
   const toggle = (id: string) => setMockupIds((current) => current.includes(id) ? current.filter((item) => item !== id) : current.length >= MAX_ATTACHED ? current : [...current, id]);
 
   if (!published)
@@ -379,10 +379,10 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
       <Warnings items={product.warnings} />
 
       {product.mediaAttached > 0 || (attachRequested && !syncMutation.isPending) ? (
-        <p className="text-ink-700 text-sm">{product.mediaAttached} Podivo image(s)/video added to the listing, in front of Printify&apos;s mock-ups.</p>
+        <p className="text-ink-700 text-sm">{product.mediaAttached} Podivo image(s) added to the listing, in front of Printify&apos;s mock-ups.</p>
       ) : !draft.etsyConnected ? (
-        <p className="text-ink-600 text-sm">Connect Etsy on the Shop page to add your Podivo mock-ups and video to this listing.</p>
-      ) : (draft.mockups.length > 0 || draft.video) && (
+        <p className="text-ink-600 text-sm">Connect Etsy on the Shop page to add your Podivo mock-ups to this listing.</p>
+      ) : draft.mockups.length > 0 && (
         <section className="space-y-2">
           <Label>Add your Podivo mock-ups to the listing <span className="text-ink-500 font-normal">({mockupIds.length} selected, shown first)</span></Label>
           <div className="grid grid-cols-5 gap-2 sm:grid-cols-8">
@@ -398,12 +398,7 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
               );
             })}
           </div>
-          {draft.video && (
-            <label className="text-ink-700 flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={includeVideo} onChange={(event) => setIncludeVideo(event.target.checked)} />Add the approved video ({draft.video.durationSeconds}s)
-            </label>
-          )}
-          <Button type="button" size="sm" variant="outline" onClick={attach} disabled={syncMutation.isPending || (mockupIds.length === 0 && !includeVideo)}>
+          <Button type="button" size="sm" variant="outline" onClick={attach} disabled={syncMutation.isPending || mockupIds.length === 0}>
             {syncMutation.isPending && <Loader2 className="size-3.5 animate-spin" />}{syncMutation.isPending ? "Adding to Etsy…" : "Add to Etsy listing"}
           </Button>
         </section>
@@ -421,8 +416,21 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
   );
 }
 
-/** Printify's product types, searched by the words typed (brand and model included, e.g. "gildan 64000"). */
-export function BlueprintPicker({ value, onChange }: { value: Pick<PrintifyBlueprint, "id" | "title"> | null; onChange: (value: Pick<PrintifyBlueprint, "id" | "title">) => void }) {
+/**
+ * Printify's product types, searched by the words typed (brand and model included, e.g. "gildan 64000"). An admin
+ * page passes its own `search` (the server's token) and `queryKey`; a seller's searches with their own key.
+ */
+export function BlueprintPicker({
+  value,
+  onChange,
+  search = searchPrintifyBlueprints,
+  queryKey = "printify-blueprints",
+}: {
+  value: Pick<PrintifyBlueprint, "id" | "title"> | null;
+  onChange: (value: PrintifyBlueprint) => void;
+  search?: (query: string) => Promise<PrintifyBlueprint[]>;
+  queryKey?: string;
+}) {
   const [editing, setEditing] = useState(!value);
   const [query, setQuery] = useState("unisex softstyle");
   const [debounced, setDebounced] = useState(query);
@@ -430,7 +438,7 @@ export function BlueprintPicker({ value, onChange }: { value: Pick<PrintifyBluep
     const timer = window.setTimeout(() => setDebounced(query.trim()), 300);
     return () => window.clearTimeout(timer);
   }, [query]);
-  const results = useQuery({ queryKey: ["printify-blueprints", debounced], queryFn: () => searchPrintifyBlueprints(debounced), enabled: editing, staleTime: 60 * 60_000 });
+  const results = useQuery({ queryKey: [queryKey, debounced], queryFn: () => search(debounced), enabled: editing, staleTime: 60 * 60_000 });
 
   return (
     <div className="space-y-1.5 sm:col-span-2">

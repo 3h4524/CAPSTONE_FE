@@ -49,6 +49,25 @@ const canvasPatchPayloadSchema = z.object({
 
 const navigatePayloadSchema = z.object({ path: z.string(), label: z.string() });
 
+const runWorkflowPayloadSchema = z.object({
+  workflowId: z.string(),
+  workflowName: z.string(),
+  saveFirst: z.boolean(),
+  warnings: z.array(z.string()),
+});
+
+const saveWorkflowPayloadSchema = z.object({ workflowId: z.string(), workflowName: z.string() });
+
+const continueRunPayloadSchema = z.object({
+  workflowId: z.string(),
+  workflowName: z.string(),
+  stage: z.string(),
+  label: z.string(),
+  batchJobId: z.string().nullish(),
+  runGroupId: z.string().nullish(),
+  runId: z.string().nullish(),
+});
+
 const pendingActionStatusSchema = z.enum(["pending", "executing", "executed", "rejected", "expired", "failed"]);
 
 const arrangePayloadSchema = z.object({
@@ -63,6 +82,9 @@ const clientActionSchema = z.discriminatedUnion("kind", [
   z.object({ id: z.string(), kind: z.literal("edit_workflow_canvas"), payload: canvasPatchPayloadSchema }),
   z.object({ id: z.string(), kind: z.literal("arrange_workflow_canvas"), payload: arrangePayloadSchema }),
   z.object({ id: z.string(), kind: z.literal("navigate"), payload: navigatePayloadSchema }),
+  z.object({ id: z.string(), kind: z.literal("run_workflow"), payload: runWorkflowPayloadSchema }),
+  z.object({ id: z.string(), kind: z.literal("save_workflow"), payload: saveWorkflowPayloadSchema }),
+  z.object({ id: z.string(), kind: z.literal("continue_run"), payload: continueRunPayloadSchema }),
 ]);
 
 export const assistantStreamEventSchema = z.discriminatedUnion("type", [
@@ -117,3 +139,5 @@ export const assistantMessageMetadataSchema = z.object({
   kind: z.enum(["chat", "action_result"]).optional(),
   route: z.string().optional(),
 });
+
+export const assistantActionLinkSchema = z.object({ openPath: z.string(), openLabel: z.string() });

@@ -31,7 +31,7 @@ test.describe("usage and billing", () => {
     });
 
     await test.step("the allowance and cost detail are rendered", async () => {
-      await expect(page.getByText("Credit allowance")).toBeVisible();
+      await expect(page.getByText("AI requests this period")).toBeVisible();
       await expect(page.getByText("Generation volume")).toBeVisible();
       await expect(page.getByText("By provider")).toBeVisible();
       await expect(page.getByRole("button", { name: "Export CSV" })).toBeVisible();

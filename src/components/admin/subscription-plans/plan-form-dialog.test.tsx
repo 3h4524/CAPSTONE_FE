@@ -49,6 +49,9 @@ const pro = {
   description: null,
   monthlyPriceUsd: 29.99,
   annualPriceUsd: null,
+  monthlyPriceVnd: 749750,
+  annualPriceVnd: null,
+  usdToVndRate: 25000,
   maxBatchSize: 200,
   maxConcurrentJobs: 5,
   maxProductsPerMonth: 0,
@@ -70,7 +73,7 @@ const pro = {
 const fillBasics = () => {
   fireEvent.change(screen.getByLabelText("Plan name"), { target: { value: "Creator" } });
   fireEvent.change(screen.getByLabelText("Tier slug"), { target: { value: "creator" } });
-  fireEvent.change(screen.getByLabelText("Monthly price (USD)"), { target: { value: "19.99" } });
+  fireEvent.change(screen.getByLabelText("Monthly price (VND)"), { target: { value: "249750" } });
 };
 
 describe("PlanFormDialog", () => {
@@ -105,6 +108,7 @@ describe("PlanFormDialog", () => {
       name: "Creator",
       tier: "creator",
       isActive: false,
+      monthlyPriceUsd: 9.99,
       features: [
         { code: "design_images", isEnabled: true, limitValue: null },
         { code: "design_variations", isEnabled: true, limitValue: 2 },
@@ -112,6 +116,8 @@ describe("PlanFormDialog", () => {
         { code: "ai_video", isEnabled: true, limitValue: null },
       ],
     });
+    expect(create.mock.calls[0][0]).not.toHaveProperty("monthlyPriceVnd");
+    expect(create.mock.calls[0][0]).not.toHaveProperty("annualPriceVnd");
   });
 
   it("copies another plan's features, limits included", () => {
@@ -122,6 +128,15 @@ describe("PlanFormDialog", () => {
       { code: "design_variations", isEnabled: true, limitValue: 4 },
       { code: "ai_video", isEnabled: true, limitValue: null },
     ]);
+  });
+
+  it("keeps the USD inputs when no PayOS rate is available", () => {
+    render(<PlanFormDialog open plan={null} usdToVndRate={null} plans={[pro]} onClose={vi.fn()} />);
+
+    expect(screen.getByLabelText("Monthly price (USD)")).toBeInTheDocument();
+    expect(screen.getByLabelText("Annual price (USD)")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Monthly price (VND)")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Annual price (VND)")).not.toBeInTheDocument();
   });
 
   it("edits a plan without touching its features", async () => {

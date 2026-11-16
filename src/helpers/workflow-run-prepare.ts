@@ -12,6 +12,7 @@ import { featureLimit, hasFeature } from "@/helpers/plan-features";
 import { ACTIVE_JOB_STATUSES, narrowMockupSelection, type RunPlan } from "@/helpers/workflow-run";
 import { ALLOWANCES_QUERY_KEY } from "@/hooks/queries/use-allowances";
 import { ENTITLEMENTS_QUERY_KEY } from "@/hooks/queries/use-entitlements";
+import { getCurrentLocale } from "@/i18n/client";
 import type { Product } from "@/types/batches";
 import type { Entitlements } from "@/types/subscription";
 import type { QueryClient } from "@tanstack/react-query";
@@ -134,7 +135,7 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
 
   // Plans differ by feature, not by monthly quota: the run must fit what the plan includes.
   const entitlements = await queryClient.fetchQuery({
-    queryKey: ENTITLEMENTS_QUERY_KEY,
+    queryKey: [...ENTITLEMENTS_QUERY_KEY, getCurrentLocale()],
     queryFn: getEntitlementsRequest,
     ...fresh,
   });

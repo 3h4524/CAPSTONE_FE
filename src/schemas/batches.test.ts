@@ -116,11 +116,10 @@ describe("batchSchema", () => {
     }
   );
 
-  it("accepts an empty defaultProductType so a batch can start unassigned", () => {
+  it("rejects an empty defaultProductType: it sets the batch's product line", () => {
     const result = batchSchema.safeParse({ ...validBatch, defaultProductType: "" });
 
-    expect(result.success).toBe(true);
-    expect(result.success && result.data.defaultProductType).toBe("");
+    expectIssue(result, "defaultProductType", "Choose what the batch makes.");
   });
 
   it("rejects a defaultProductType outside the enum", () => {

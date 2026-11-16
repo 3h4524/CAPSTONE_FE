@@ -9,13 +9,14 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ChoiceButtons } from "@/components/workflows/config-panel/fields/choice-buttons";
 import { ChoiceCards } from "@/components/workflows/config-panel/fields/choice-cards";
+import { DesignRatioChoices } from "@/components/workflows/config-panel/fields/design-ratio-choices";
 import { MockupSelectionField } from "@/components/workflows/config-panel/fields/mockup-selection-field";
 import { OptionSelect } from "@/components/workflows/config-panel/fields/option-select";
 import { ProductSelect } from "@/components/workflows/config-panel/fields/product-select";
 import { SourceSelect } from "@/components/workflows/config-panel/fields/source-select";
 import { VideoOutputFormatCards } from "@/components/workflows/config-panel/fields/video-output-format-cards";
 import { getVideoOutputFormat } from "@/helpers/video-output-formats";
-import { parseAspectRatio, readBoolean, readNumber, readString, readStringArray } from "@/helpers/workflow-config";
+import { readBoolean, readNumber, readString, readStringArray } from "@/helpers/workflow-config";
 import type { WorkflowField, WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 
@@ -183,14 +184,7 @@ export const NodeConfigField = ({ nodeType, field: sourceField, control, videoMo
                     <ChoiceCards name={field.name} options={field.options} value={readString(controller.value)} aria-label={field.label} onChange={controller.onChange} />
                   </FormControl>
                 ) : field.display === "ratios" ? (
-                  <FormControl>
-                    <ChoiceButtons
-                      choices={field.options.map((option) => ({ ...option, ratio: parseAspectRatio(option.value) }))}
-                      value={readString(controller.value)}
-                      label={field.label}
-                      onChange={controller.onChange}
-                    />
-                  </FormControl>
+                  <DesignRatioChoices options={field.options} value={readString(controller.value)} label={field.label} onChange={controller.onChange} />
                 ) : (
                   <OptionSelect
                     value={readString(controller.value)}

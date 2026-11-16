@@ -1905,7 +1905,10 @@
         "batchHasNoProducts": "Lô này chưa có sản phẩm nào.",
         "chooseBatchFirst": "Hãy chọn một lô ở bước Đầu vào sản phẩm trước.",
         "runKeepsProduct": "Lượt chạy đang diễn ra giữ nguyên sản phẩm này.",
-        "videoForThisProduct": "Các cài đặt video này chỉ tạo video cho sản phẩm này."
+        "videoForThisProduct": "Các cài đặt video này chỉ tạo video cho sản phẩm này.",
+        "batchWithoutLine": "Lô này chưa có dòng sản phẩm. Hãy chọn ở trang Lô sản phẩm trước khi chạy.",
+        "designRatioWhy": "Lô {{line}}: {{why}}",
+        "designRatioMismatch": "{{ratio}} không hợp với lô {{line}} này. Hãy chọn {{ratios}}."
       },
       "form": {
         "settingsLocked": "Cài đặt bị khóa khi lượt chạy đang diễn ra.",
@@ -2361,7 +2364,7 @@
         "editTitle": "Sửa lô sản phẩm",
         "createTitle": "Tạo lô sản phẩm",
         "editDescription": "Cập nhật tên lô và các giá trị mặc định dùng cho sản phẩm mới.",
-        "createDescription": "Đặt các giá trị mặc định chung để thêm sản phẩm nhanh hơn.",
+        "createDescription": "Chọn lô này làm loại hàng gì và đặt các giá trị mặc định chung để thêm sản phẩm nhanh hơn.",
         "nameLabel": "Tên lô *",
         "namePlaceholder": "VD: Bộ sưu tập dã ngoại mùa hè",
         "defaultNicheLabel": "Niche mặc định",
@@ -2372,7 +2375,11 @@
         "descriptionLabel": "Mô tả",
         "descriptionPlaceholder": "Lô này dùng cho việc gì?",
         "creating": "Đang tạo…",
-        "createBatch": "Tạo lô"
+        "createBatch": "Tạo lô",
+        "productLineLabel": "Dòng sản phẩm *",
+        "productLinePlaceholder": "Chọn lô này làm loại hàng gì",
+        "productLineHint": "Mọi sản phẩm trong lô thuộc dòng này, nên thiết kế, mock-up, video và sản phẩm Printify được làm theo cùng một cách. Sản phẩm khác hãy cho vào một lô riêng.",
+        "defaultProductTypeHint": "Điền sẵn cho sản phẩm mới; mỗi sản phẩm có thể là bất kỳ loại {{line}} nào."
       },
       "product": {
         "editTitle": "Sửa sản phẩm",
@@ -2402,7 +2409,9 @@
         "editAria": "Sửa {{name}}",
         "deleteAria": "Xóa {{name}}",
         "resetAria": "Đặt {{name}} về chờ xử lý",
-        "reset": "Đặt lại"
+        "reset": "Đặt lại",
+        "lineFixedHint": "Do lô quy định: lô {{line}} này chỉ làm sản phẩm {{type}}.",
+        "lineTypesHint": "Lô {{line}} này chỉ làm sản phẩm {{types}}."
       },
       "close": "Đóng",
       "import": {
@@ -2430,7 +2439,11 @@
         "imported_one": "Đã nhập {{count}} sản phẩm",
         "imported_other": "Đã nhập {{count}} sản phẩm",
         "importing": "Đang nhập…",
-        "importValid": "Nhập các dòng hợp lệ"
+        "importValid": "Nhập các dòng hợp lệ",
+        "fileHintLine": "Lô {{line}} này chỉ nhận {{types}}.",
+        "rowsReadyOf_other": "{{valid}}/{{count}} dòng sẵn sàng",
+        "notImported_other": "{{count}} dòng chưa được nhập. Sửa trong file rồi nhập lại; các dòng đã nhập sẽ bị từ chối vì trùng.",
+        "otherLineIssue": "Lô {{line}} này chỉ nhận {{types}}: đổi loại sản phẩm, hoặc nhập dòng này vào một lô của dòng sản phẩm đó."
       },
       "statuses": {
         "all": "Tất cả",
@@ -2547,7 +2560,23 @@
         "removeProductDescription": "Thao tác này xóa sản phẩm khỏi lô. Chỉ sản phẩm đang chờ xử lý mới có thể xóa.",
         "remove": "Xóa",
         "setBackToPending": "Đặt về chờ xử lý",
-        "runInWorkflowLabel": "Chạy trong workflow"
+        "runInWorkflowLabel": "Chạy trong workflow",
+        "lineLabel": "Dòng: ",
+        "lineTitle": "Sản phẩm của lô này: {{types}}"
+      },
+      "productLines": {
+        "apparel": "Quần áo",
+        "bags": "Túi tote",
+        "drinkware": "Ly",
+        "wall_art": "Tranh treo tường",
+        "phone_cases": "Ốp điện thoại"
+      },
+      "productLineRatioWhy": {
+        "apparel": "Hình in trước ngực cao hơn rộng một chút.",
+        "bags": "Vùng in của túi tote gần như vuông.",
+        "drinkware": "Hình in quấn quanh ly; 1:1 vừa một mặt.",
+        "wall_art": "Poster in theo khổ dọc 3:4, ngang 4:3 hoặc vuông.",
+        "phone_cases": "Ốp điện thoại cao và hẹp."
       }
     },
     "designTemplates": {

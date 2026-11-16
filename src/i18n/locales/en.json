@@ -309,7 +309,33 @@
         "system": "System"
       }
     },
+    "proPaywall": {
+      "price": "{{name}} from ${{price}} a month.",
+      "tryFree": "Try {{name}} free for {{days}} days",
+      "upgrade": "Upgrade to {{name}}",
+      "buy": "Get {{name}}",
+      "seePlans": "See plans",
+      "allPlans": "Compare all plans"
+    },
     "marketRadar": {
+      "lock": {
+        "opportunitiesTitle": "See every opportunity with Pro",
+        "opportunitiesDescription": "Your plan shows the three best ranked opportunities. Pro opens the whole radar.",
+        "moreOpportunities_one": "{{count}} more opportunity with Pro",
+        "moreOpportunities_other": "{{count}} more opportunities with Pro",
+        "nicheTitle": "Niche keywords and charts are part of Pro",
+        "nicheDescription": "See the keywords buyers use, how price meets interest, and the risks to watch in this niche.",
+        "competitorsTitle": "Competitors are part of Pro",
+        "competitorsDescription": "See the shops leading this niche, their listings and their prices.",
+        "analysisTitle": "AI analysis is part of Pro",
+        "analysisDescription": "Get the decision to make now, the risks and a three-step plan for an opportunity.",
+        "refreshTitle": "Rank again any time with Pro",
+        "refreshDescription": "Your plan ranks the radar once a day. Pro ranks it again whenever you change your profile.",
+        "benefitOpportunities": "Every opportunity on your radar",
+        "benefitKeywords": "Niche keywords, charts, action plan and risks",
+        "benefitCompetitors": "The shops and listings leading each niche",
+        "benefitAnalysis": "AI analysis of an opportunity"
+      },
       "title": "Market Opportunity Radar",
       "subtitle": "Market signals ranked against your shop goals and price range.",
       "opportunities": "Opportunities",

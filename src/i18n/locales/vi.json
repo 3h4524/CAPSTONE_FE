@@ -313,7 +313,33 @@
         "system": "Theo hệ thống"
       }
     },
+    "proPaywall": {
+      "price": "{{name}} chỉ từ ${{price}} mỗi tháng.",
+      "tryFree": "Dùng thử {{name}} miễn phí {{days}} ngày",
+      "upgrade": "Nâng lên {{name}}",
+      "buy": "Mua {{name}}",
+      "seePlans": "Xem các gói",
+      "allPlans": "So sánh tất cả các gói"
+    },
     "marketRadar": {
+      "lock": {
+        "opportunitiesTitle": "Xem mọi cơ hội với gói Pro",
+        "opportunitiesDescription": "Gói hiện tại hiển thị 3 cơ hội xếp hạng cao nhất. Gói Pro mở toàn bộ radar.",
+        "moreOpportunities_one": "Thêm {{count}} cơ hội với gói Pro",
+        "moreOpportunities_other": "Thêm {{count}} cơ hội với gói Pro",
+        "nicheTitle": "Từ khoá và biểu đồ của niche thuộc gói Pro",
+        "nicheDescription": "Xem từ khoá người mua tìm, tương quan giữa giá và lượt quan tâm, và các rủi ro cần lưu ý trong niche này.",
+        "competitorsTitle": "Đối thủ thuộc gói Pro",
+        "competitorsDescription": "Xem các shop dẫn đầu niche này, listing và mức giá của họ.",
+        "analysisTitle": "Phân tích AI thuộc gói Pro",
+        "analysisDescription": "Nhận quyết định nên làm ngay, các rủi ro và kế hoạch 3 bước cho một cơ hội.",
+        "refreshTitle": "Xếp hạng lại bất cứ lúc nào với gói Pro",
+        "refreshDescription": "Gói hiện tại xếp hạng radar mỗi ngày một lần. Gói Pro xếp hạng lại ngay khi bạn đổi hồ sơ.",
+        "benefitOpportunities": "Mọi cơ hội trên radar của bạn",
+        "benefitKeywords": "Từ khoá, biểu đồ, kế hoạch hành động và rủi ro của niche",
+        "benefitCompetitors": "Các shop và listing dẫn đầu từng niche",
+        "benefitAnalysis": "Phân tích AI cho từng cơ hội"
+      },
       "title": "Radar cơ hội thị trường",
       "subtitle": "Tín hiệu thị trường được xếp hạng theo mục tiêu và khoảng giá cửa hàng.",
       "opportunities": "Cơ hội",

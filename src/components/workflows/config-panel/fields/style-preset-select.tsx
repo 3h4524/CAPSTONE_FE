@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { OptionSelect } from "@/components/workflows/config-panel/fields/option-select";
 import { SourcePreview } from "@/components/workflows/config-panel/fields/source-preview";
 import { useStylePresets } from "@/hooks/queries/use-style-presets";
@@ -14,6 +16,7 @@ type StylePresetSelectProps = {
 };
 
 export const StylePresetSelect = ({ value, placeholder, noneLabel, onChange, id }: StylePresetSelectProps) => {
+  const { t } = useTranslation("common");
   const { data: presets, isPending, isError, refetch } = useStylePresets();
   const options = (presets ?? []).map((preset) => ({
     value: preset.id,
@@ -35,7 +38,7 @@ export const StylePresetSelect = ({ value, placeholder, noneLabel, onChange, id 
         isLoading={isPending}
         isError={isError}
         onRetry={() => refetch()}
-        emptyMessage="No art styles are available yet."
+        emptyMessage={t("workflowConfig.fields.noArtStyles")}
       />
       {chosen && (
         <SourcePreview

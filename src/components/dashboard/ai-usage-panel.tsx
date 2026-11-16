@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Card } from "@/components/ui/card";
 import { describeAiFeature, formatUsd } from "@/helpers/seller-dashboard";
@@ -30,13 +31,14 @@ const colorOf = (feature: string) => FEATURE_COLORS[feature] ?? FALLBACK_COLOR;
 
 /** The spend as a donut, one slice per feature, the total written in its middle. */
 const SpendDonut = ({ usage, total }: { usage: AiFeatureCost[]; total: number }) => {
+  const { t } = useTranslation("common");
   const gap = usage.length > 1 ? SLICE_GAP : 0;
   let offset = 0;
 
   return (
     <div
       role="img"
-      aria-label={`AI spend ${formatUsd(total)}, by feature`}
+      aria-label={t("dashboard.aiUsage.spendAria", { total: formatUsd(total) })}
       className="relative size-36 shrink-0"
     >
       <svg viewBox="0 0 100 100" className="size-full -rotate-90" aria-hidden="true">
@@ -72,7 +74,7 @@ const SpendDonut = ({ usage, total }: { usage: AiFeatureCost[]; total: number })
         <span className="text-xl leading-none font-semibold tracking-tight tabular-nums">
           {formatUsd(total)}
         </span>
-        <span className="text-muted-foreground mt-1 text-[11px]">spent</span>
+        <span className="text-muted-foreground mt-1 text-[11px]">{t("dashboard.aiUsage.spent")}</span>
       </div>
     </div>
   );
@@ -83,41 +85,43 @@ const SpendDonut = ({ usage, total }: { usage: AiFeatureCost[]; total: number })
  * each feature with its cost and share, matching the vertical layout structure in the sample image.
  */
 export const AiUsagePanel = ({ usage }: { usage: AiFeatureCost[] }) => {
+  const { t, i18n } = useTranslation("common");
+  const formatCount = (value: number) => new Intl.NumberFormat(i18n.language).format(value);
   const total = usage.reduce((sum, feature) => sum + feature.costUsd, 0);
   const calls = usage.reduce((sum, feature) => sum + feature.calls, 0);
   const failed = usage.reduce((sum, feature) => sum + feature.failed, 0);
   const failedPercent = calls > 0 ? (failed / calls) * 100 : 0;
   const isFailing = failedPercent >= FAILURE_WARNING_PERCENT;
   const stats = [
-    { label: "Calls", value: calls.toLocaleString(), hint: "AI requests made" },
+    { label: t("dashboard.aiUsage.calls"), value: formatCount(calls), hint: t("dashboard.aiUsage.hintRequests") },
     {
-      label: "Failed",
-      value: `${failed.toLocaleString()} · ${failedPercent.toFixed(0)}%`,
-      hint: isFailing ? "Higher than usual" : "Of all calls",
+      label: t("dashboard.aiUsage.failed"),
+      value: `${formatCount(failed)} · ${failedPercent.toFixed(0)}%`,
+      hint: isFailing ? t("dashboard.aiUsage.hintHigher") : t("dashboard.aiUsage.hintOfAll"),
       alert: isFailing,
     },
-    { label: "Avg per call", value: formatUsd(calls > 0 ? total / calls : 0), hint: "Spend ÷ calls" },
+    { label: t("dashboard.aiUsage.avgPerCall"), value: formatUsd(calls > 0 ? total / calls : 0), hint: t("dashboard.aiUsage.hintSpendDiv") },
   ];
 
   return (
     <Card className="h-full gap-5 rounded-2xl p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold">AI usage</h2>
-          <p className="text-muted-foreground mt-0.5 text-xs">Spend by feature in this period</p>
+          <h2 className="text-base font-semibold">{t("dashboard.aiUsage.title")}</h2>
+          <p className="text-muted-foreground mt-0.5 text-xs">{t("dashboard.aiUsage.description")}</p>
         </div>
         <Link
           href="/usage"
           className="inline-flex items-center gap-1 text-xs font-medium text-[#c2410c] hover:underline dark:text-[#eda182]"
         >
-          Details
+          {t("dashboard.aiUsage.details")}
           <ArrowRight className="size-3.5" aria-hidden="true" />
         </Link>
       </div>
 
       {calls === 0 ? (
         <p className="text-muted-foreground bg-ink-100 flex flex-1 items-center justify-center rounded-xl p-6 text-xs">
-          No AI calls in this period. Run a batch to see costs here.
+          {t("dashboard.aiUsage.empty")}
         </p>
       ) : (
         <>
@@ -167,7 +171,7 @@ export const AiUsagePanel = ({ usage }: { usage: AiFeatureCost[] }) => {
                   {describeAiFeature(feature.feature)}
                 </span>
                 <span className="text-muted-foreground tabular-nums">
-                  {feature.calls.toLocaleString()} calls
+                  {t("dashboard.aiUsage.callsCount", { count: feature.calls, formatted: formatCount(feature.calls) })}
                 </span>
                 <span className="w-14 text-right font-semibold tabular-nums">
                   {formatUsd(feature.costUsd)}

@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { remaining } from "@/helpers/allowance";
 import type { AllowanceState } from "@/helpers/seller-dashboard";
 import type { AllowanceItem } from "@/types/allowance";
@@ -19,6 +21,7 @@ type AllowanceMeterProps = {
  * empty one means used up, with "left / limit" beside the name.
  */
 export const AllowanceMeter = ({ item, state }: AllowanceMeterProps) => {
+  const { t } = useTranslation("common");
   const left = remaining(item);
   const leftPercent = item.limit > 0 ? (left / item.limit) * 100 : 0;
 
@@ -33,7 +36,7 @@ export const AllowanceMeter = ({ item, state }: AllowanceMeterProps) => {
       </div>
       <div
         role="meter"
-        aria-label={`${item.label}: ${left} of ${item.limit} left`}
+        aria-label={t("dashboard.allowance.leftAria", { label: item.label, left, limit: item.limit })}
         aria-valuemin={0}
         aria-valuemax={item.limit}
         aria-valuenow={left}

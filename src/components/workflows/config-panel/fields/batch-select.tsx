@@ -1,6 +1,7 @@
 "use client";
 
 import { ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { OptionSelect } from "@/components/workflows/config-panel/fields/option-select";
@@ -15,12 +16,13 @@ type BatchSelectProps = {
 };
 
 export const BatchSelect = ({ value, placeholder, onChange }: BatchSelectProps) => {
+  const { t } = useTranslation("common");
   const { data: batches, isPending, isError, refetch } = useBatches();
   const { data: products } = useBatchProducts(value);
   const options = (batches ?? []).map((batch) => ({
     value: batch.id,
     label: batch.name,
-    hint: `${batch.productCount} ${batch.productCount === 1 ? "product" : "products"}${batch.defaultNiche ? ` · ${batch.defaultNiche}` : ""}`,
+    hint: `${t("workflowConfig.fields.productCount", { count: batch.productCount })}${batch.defaultNiche ? ` · ${batch.defaultNiche}` : ""}`,
   }));
   // A run only generates for pending products, so a batch without any is pointed out before the user runs.
   const pendingCount = products?.filter((product) => product.status === "pending").length;
@@ -35,16 +37,16 @@ export const BatchSelect = ({ value, placeholder, onChange }: BatchSelectProps) 
         isLoading={isPending}
         isError={isError}
         onRetry={() => refetch()}
-        emptyMessage="No batches yet. Create one on the Batches page, then choose it here."
+        emptyMessage={t("workflowConfig.fields.noBatches")}
       />
       {/* The count itself is in the strip at the top of the panel; only an empty batch needs saying here. */}
       {value && pendingCount === 0 && (
-        <PanelNotice tone="warning">This batch has no pending products. Add some on the Batches page before running.</PanelNotice>
+        <PanelNotice tone="warning">{t("workflowConfig.fields.noPendingProducts")}</PanelNotice>
       )}
       {/* A new tab keeps this workflow's unsaved edits; the batch list refreshes when this tab is focused again. */}
       <Button asChild type="button" variant="link" size="sm" className="h-auto gap-1 px-0 text-xs font-medium hover:translate-y-0">
         <a href="/batches" target="_blank" rel="noreferrer">
-          Create or manage batches
+          {t("workflowConfig.fields.manageBatches")}
           <ExternalLink className="size-3" aria-hidden="true" />
         </a>
       </Button>

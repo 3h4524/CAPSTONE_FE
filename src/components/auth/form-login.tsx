@@ -4,6 +4,7 @@ import { type FormEvent,useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { AuthSocialDivider } from "@/components/auth/auth-social-divider";
 import { FormInputField } from "@/components/commons/forms/form-input-field";
@@ -16,6 +17,7 @@ import { type LoginFormValues, loginSchema } from "@/schemas/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 export const FormLogin = () => {
+  const { t } = useTranslation("common");
   const { mutate: login, isPending, isError, error } = useLogin();
   const { mutate: verifyTwoFactor, isPending: isVerifying } = useAdminTwoFactor();
   const { mutate: resendTwoFactor, isPending: isResending } = useResendAdminTwoFactor();
@@ -93,23 +95,23 @@ export const FormLogin = () => {
 
   const loginErrorMessage = axios.isAxiosError(error)
     ? error.response?.status === 401 || error.response?.status === 404
-      ? "Email or password is incorrect."
-      : getErrorMessage(error, "Unable to sign in. Please try again.")
-    : getErrorMessage(error, "Unable to sign in. Please try again.");
+      ? t("auth.login.invalidCredentials")
+      : getErrorMessage(error, t("auth.login.failed"))
+    : getErrorMessage(error, t("auth.login.failed"));
 
   if (challenge) {
     return (
       <div className="space-y-6">
         <div className="space-y-2">
-          <h2 className="text-lg font-semibold">Verify your administrator account</h2>
+          <h2 className="text-lg font-semibold">{t("auth.twoFactor.title")}</h2>
           <p className="text-muted-foreground text-sm">
-            Enter the 6-digit code sent to your email address.
+            {t("auth.twoFactor.description")}
           </p>
         </div>
 
         <form onSubmit={onVerifyOtp} className="space-y-4">
           <label htmlFor="admin-otp" className="text-sm font-medium">
-            Email verification code
+            {t("auth.twoFactor.codeLabel")}
           </label>
           <input
             id="admin-otp"
@@ -128,15 +130,17 @@ export const FormLogin = () => {
             className="w-full"
             disabled={isVerifying || otpCode.length !== 6 || secondsRemaining === 0}
           >
-            {isVerifying ? "Verifying..." : "Verify and continue"}
+            {isVerifying ? t("auth.twoFactor.verifying") : t("auth.twoFactor.submit")}
           </Button>
         </form>
 
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">
             {secondsRemaining > 0
-              ? `Code expires in ${Math.floor(secondsRemaining / 60)}:${String(secondsRemaining % 60).padStart(2, "0")}`
-              : "Code expired"}
+              ? t("auth.twoFactor.expiresIn", {
+                  time: `${Math.floor(secondsRemaining / 60)}:${String(secondsRemaining % 60).padStart(2, "0")}`,
+                })
+              : t("auth.twoFactor.expired")}
           </span>
           <button
             type="button"
@@ -144,7 +148,7 @@ export const FormLogin = () => {
             onClick={onResendOtp}
             disabled={isResending}
           >
-            {isResending ? "Sending..." : "Send a new code"}
+            {isResending ? t("auth.sending") : t("auth.twoFactor.resend")}
           </button>
         </div>
       </div>
@@ -155,7 +159,7 @@ export const FormLogin = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <FormInputField
           id="email"
-          label="Email"
+          label={t("auth.email")}
           type="email"
           placeholder="you@example.com"
           registration={register("email")}
@@ -166,7 +170,7 @@ export const FormLogin = () => {
 
         <FormInputField
           id="password"
-          label="Password"
+          label={t("auth.password")}
           type="password"
           placeholder="••••••••"
           registration={register("password")}
@@ -182,7 +186,7 @@ export const FormLogin = () => {
         ) : null}
 
         <Button type="submit" className="w-full" disabled={isSubmitting || isPending}>
-          Sign in
+          {t("auth.login.submit")}
         </Button>
       </form>
 
@@ -195,9 +199,9 @@ export const FormLogin = () => {
       />
 
       <p className="text-muted-foreground text-center text-sm">
-        Don&apos;t have an account?{" "}
+        {t("auth.login.noAccount")}{" "}
         <Link href="/register" className="text-primary font-medium hover:underline">
-          Sign up
+          {t("auth.login.signUp")}
         </Link>
       </p>
     </div>

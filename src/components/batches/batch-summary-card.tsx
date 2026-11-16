@@ -1,7 +1,9 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
+import { vi as viLocale } from "date-fns/locale";
 import { CircleHelp, Clock, MoreHorizontal, Package, Pencil, Plus, Tag, Trash2, Upload, Workflow } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { BatchJobHistoryMenu } from "@/components/batches/batch-job-history-menu";
 import { StatusBadge } from "@/components/commons/data-display/status-badge";
@@ -21,6 +23,11 @@ type BatchSummaryCardProps = {
   onRun: () => void;
 };
 
+const humanizeStatus = (status: string) => {
+  const text = status.replaceAll("_", " ");
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
+
 /** The chosen batch on the phone: what it is, how to reach another batch, and the next step. */
 export const BatchSummaryCard = ({
   batch,
@@ -32,34 +39,36 @@ export const BatchSummaryCard = ({
   onImport,
   onAddProduct,
   onRun,
-}: BatchSummaryCardProps) => (
+}: BatchSummaryCardProps) => {
+  const { t, i18n } = useTranslation("common");
+  return (
   <div className="bg-card space-y-3 rounded-2xl border p-4 shadow-sm">
     <div className="flex items-center gap-2">
-      <StatusBadge status={batch.status} className="shrink-0 capitalize">
-        {batch.status}
+      <StatusBadge status={batch.status} className="shrink-0">
+        {t(`batches.statuses.${batch.status.toLowerCase()}`, { defaultValue: humanizeStatus(batch.status) })}
       </StatusBadge>
       <span className="text-muted-foreground flex min-w-0 flex-1 items-center gap-1 text-xs">
         <Clock className="size-3 shrink-0" aria-hidden="true" />
-        <span className="truncate">{formatDistanceToNow(new Date(batch.createdAt), { addSuffix: true })}</span>
+        <span className="truncate">{formatDistanceToNow(new Date(batch.createdAt), { addSuffix: true, locale: i18n.language === "vi" ? viLocale : undefined })}</span>
       </span>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="text-muted-foreground -my-1 size-8" aria-label={`Actions for ${batch.name}`}>
+          <Button variant="ghost" size="icon" className="text-muted-foreground -my-1 size-8" aria-label={t("batches.actionsFor", { name: batch.name })}>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onSelect={onEdit}>
             <Pencil />
-            Edit batch
+            {t("batches.editBatch")}
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={onShowHelp}>
             <CircleHelp />
-            How it works
+            {t("batches.summary.howItWorks")}
           </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onSelect={onDelete}>
             <Trash2 />
-            Delete batch
+            {t("batches.deleteBatch")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -72,7 +81,7 @@ export const BatchSummaryCard = ({
     <div className="flex flex-wrap gap-2 text-xs">
       <span className="bg-muted/60 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5">
         <Package className="text-muted-foreground size-3.5" aria-hidden="true" />
-        <span className="font-semibold tabular-nums">{batch.productCount}</span> {batch.productCount === 1 ? "product" : "products"}
+        <span className="font-semibold tabular-nums">{batch.productCount}</span> {t("batches.productCount", { count: batch.productCount })}
       </span>
       {batch.defaultNiche && (
         <span className="bg-muted/60 inline-flex max-w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5">
@@ -85,7 +94,7 @@ export const BatchSummaryCard = ({
     {pendingProductCount > 0 && (
       <Button className="w-full" onClick={onRun}>
         <Workflow className="size-4" aria-hidden="true" />
-        Run in workflow ({pendingProductCount} {pendingProductCount === 1 ? "product" : "products"})
+        {t("batches.summary.runInWorkflow", { count: pendingProductCount })}
       </Button>
     )}
 
@@ -94,11 +103,11 @@ export const BatchSummaryCard = ({
       <div className="grid grid-cols-2 gap-2">
         <Button variant="outline" className="px-2" onClick={onImport}>
           <Upload className="size-4" aria-hidden="true" />
-          Import Excel
+          {t("batches.importExcel")}
         </Button>
         <Button variant="outline" className="px-2" onClick={onAddProduct}>
           <Plus className="size-4" aria-hidden="true" />
-          Add product
+          {t("batches.addProduct")}
         </Button>
       </div>
     )}
@@ -107,4 +116,5 @@ export const BatchSummaryCard = ({
       <BatchJobHistoryMenu batchId={batch.id} />
     </div>
   </div>
-);
+  );
+};

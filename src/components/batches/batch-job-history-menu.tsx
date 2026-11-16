@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { ChevronDown, History } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,8 +18,10 @@ import { BATCH_JOB_PARAM } from "@/hooks/use-batch-run";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { BatchJobSummary } from "@/types/batch-jobs";
 
-const formatDate = (value: string | null) => (value ? new Date(value).toLocaleString() : "—");
-const statusText = (status: string) => status.replaceAll("_", " ");
+const humanizeStatus = (status: string) => {
+  const text = status.replaceAll("_", " ");
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
 
 // Each run creates a separate job with only the then-pending products, so a batch's results are spread
 // across all of its jobs: they are all listed, and each opens on the workflow canvas, in the workflow it
@@ -26,7 +29,10 @@ const statusText = (status: string) => status.replaceAll("_", " ");
 // numbered all the same, so the numbers agree with "Previous runs" on the canvas.
 export const BatchJobHistoryMenu = ({ batchId, size }: { batchId: string; size?: "sm" | "default" }) => {
   const router = useRouter();
+  const { t, i18n } = useTranslation("common");
   const { data: jobs } = useBatchJobs(batchId);
+  const formatDate = (value: string | null) => (value ? new Date(value).toLocaleString(i18n.language) : "—");
+  const statusText = (status: string) => t(`batches.statuses.${status.toLowerCase()}`, { defaultValue: humanizeStatus(status) });
 
   const startedJobs = (jobs ?? [])
     .map((job, index) => ({ job, number: jobs ? jobs.length - index : 0 }))
@@ -46,20 +52,20 @@ export const BatchJobHistoryMenu = ({ batchId, size }: { batchId: string; size?:
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size={size}>
           <History className="mr-2 size-4" />
-          Jobs ({startedJobs.length})
+          {t("batches.history.jobs", { count: startedJobs.length })}
           <ChevronDown className="ml-2 size-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel>Jobs in this batch</DropdownMenuLabel>
+        <DropdownMenuLabel>{t("batches.history.title")}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {startedJobs.map(({ job, number }) => (
           <DropdownMenuItem key={job.id} onSelect={() => openOnCanvas(job)} className="flex flex-col items-start gap-0.5">
             <span className="text-sm font-medium">
-              Job #{number} · <span className="capitalize">{statusText(job.status)}</span>
+              {t("batches.history.jobLabel", { number })} · {statusText(job.status)}
             </span>
             <span className="text-muted-foreground text-xs">
-              {job.totalProducts} {job.totalProducts === 1 ? "product" : "products"} · {formatDate(job.createdAt)}
+              {t("batches.history.products", { count: job.totalProducts })} · {formatDate(job.createdAt)}
             </span>
           </DropdownMenuItem>
         ))}

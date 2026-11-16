@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { PanelSection } from "@/components/workflows/config-panel/layout/panel-section";
 import { parseAspectRatio, readString } from "@/helpers/workflow-config";
 import { ratioTileSize } from "@/helpers/workflow-panel";
@@ -12,6 +14,7 @@ const TILE_SIDE = 56;
 // The design one product gets, drawn at the chosen ratio, and how many images the whole run makes. A product gets
 // one design; more are made with Regenerate on the product.
 export const DesignOutputPreview = ({ config }: { config: WorkflowNodeConfig }) => {
+  const { t } = useTranslation("common");
   const batchId = useWorkflowStore((state) => readString(state.nodes.find((node) => node.data.type === "product-input")?.data.config.batchId));
   const { data: products } = useBatchProducts(batchId);
   const ratio = readString(config.aspectRatio) || "1:1";
@@ -19,7 +22,7 @@ export const DesignOutputPreview = ({ config }: { config: WorkflowNodeConfig }) 
   const pending = products?.filter((product) => product.status === "pending").length;
 
   return (
-    <PanelSection title="Preview">
+    <PanelSection title={t("workflowConfig.designPreview.title")}>
       <div className="bg-ink-50/60 flex min-h-22 flex-wrap items-center justify-center gap-2 rounded-md border px-3 py-4" aria-hidden="true">
         <span
           className="text-muted-foreground border-ink-300 bg-card flex items-center justify-center rounded-sm border text-xs tabular-nums"
@@ -29,9 +32,9 @@ export const DesignOutputPreview = ({ config }: { config: WorkflowNodeConfig }) 
         </span>
       </div>
       <p className="text-muted-foreground text-xs leading-relaxed">
-        1 design per product at {ratio}
-        {pending !== undefined && `, about ${pending} image${pending === 1 ? "" : "s"} for ${pending} pending product${pending === 1 ? "" : "s"}`}.
-        {" "}To get more designs for a product, use Regenerate on it after the run.
+        {t("workflowConfig.designPreview.perProduct", { ratio })}
+        {pending !== undefined && t("workflowConfig.designPreview.pending", { count: pending })}.
+        {" "}{t("workflowConfig.designPreview.regenerateHint")}
       </p>
     </PanelSection>
   );

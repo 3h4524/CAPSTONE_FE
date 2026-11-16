@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 import { Spinner } from "@/components/ui/spinner";
 import { useAuthStore } from "@/stores/auth";
@@ -22,6 +23,7 @@ export const AuthGuard = ({
   requireSeller = false,
   requireAdmin = false,
 }: AuthGuardProps) => {
+  const { t } = useTranslation("common");
   const router = useRouter();
   const pathname = usePathname();
   const isHydrated = useAuthStore((state) => state.isHydrated);
@@ -46,7 +48,7 @@ export const AuthGuard = ({
 
   if (!isHydrated) {
     return (
-      <div className="flex min-h-dvh items-center justify-center" role="status" aria-label="Checking sign-in">
+      <div className="flex min-h-dvh items-center justify-center" role="status" aria-label={t("auth.checkingSignIn")}>
         <Spinner className="size-8" />
       </div>
     );

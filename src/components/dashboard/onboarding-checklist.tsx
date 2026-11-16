@@ -1,17 +1,20 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ONBOARDING_STEPS } from "@/constants/seller-dashboard";
 
 /** The first steps for a Seller who has made nothing yet. */
-export const OnboardingChecklist = () => (
+export const OnboardingChecklist = () => {
+  const { t } = useTranslation("common");
+  return (
   <Card>
     <CardHeader>
-      <CardTitle>Start your first batch</CardTitle>
+      <CardTitle>{t("dashboard.onboarding.title")}</CardTitle>
       <CardDescription>
-        Four steps from a CSV to a listing ready for Etsy. Your dashboard fills in as you go.
+        {t("dashboard.onboarding.description")}
       </CardDescription>
     </CardHeader>
     <CardContent>
@@ -27,7 +30,7 @@ export const OnboardingChecklist = () => (
             </div>
             <Button variant={index === 0 ? "default" : "ghost"} size="sm" asChild>
               <Link href={step.href}>
-                {index === 0 ? "Start" : "Open"}
+                {index === 0 ? t("dashboard.onboarding.start") : t("dashboard.onboarding.open")}
                 <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
             </Button>
@@ -36,4 +39,5 @@ export const OnboardingChecklist = () => (
       </ol>
     </CardContent>
   </Card>
-);
+  );
+};

@@ -1903,7 +1903,13 @@
         "productDescriptionPlaceholder": "Mô tả ý tưởng sản phẩm hoặc yêu cầu thiết kế",
         "productDescriptionHint": "Thêm ý tưởng hoặc yêu cầu thiết kế mà quy trình tạo sẽ dùng.",
         "sourceNotesLabel": "Ghi chú nguồn",
-        "sourceNotesPlaceholder": "Ghi chú tham khảo hoặc sản xuất"
+        "sourceNotesPlaceholder": "Ghi chú tham khảo hoặc sản xuất",
+        "nicheTag": "Niche",
+        "ownImagePrompt": "Prompt hình ảnh riêng",
+        "editAria": "Sửa {{name}}",
+        "deleteAria": "Xóa {{name}}",
+        "resetAria": "Đặt {{name}} về chờ xử lý",
+        "reset": "Đặt lại"
       },
       "close": "Đóng",
       "import": {
@@ -1932,6 +1938,123 @@
         "imported_other": "Đã nhập {{count}} sản phẩm",
         "importing": "Đang nhập…",
         "importValid": "Nhập các dòng hợp lệ"
+      },
+      "statuses": {
+        "all": "Tất cả",
+        "pending": "Chờ xử lý",
+        "queued": "Trong hàng đợi",
+        "processing": "Đang xử lý",
+        "review": "Chờ duyệt",
+        "completed": "Hoàn thành",
+        "failed": "Thất bại",
+        "draft": "Bản nháp",
+        "running": "Đang chạy",
+        "paused": "Tạm dừng",
+        "partially_completed": "Hoàn thành một phần",
+        "image_review_required": "Chờ duyệt",
+        "approved": "Hoàn thành",
+        "exported": "Hoàn thành",
+        "published": "Hoàn thành"
+      },
+      "productTypes": {
+        "tshirt": "T-shirt",
+        "hoodie": "Hoodie",
+        "mug": "Ly",
+        "poster": "Poster",
+        "tote_bag": "Túi tote",
+        "phone_case": "Ốp điện thoại"
+      },
+      "history": {
+        "jobs": "Job ({{count}})",
+        "title": "Job trong lô này",
+        "jobLabel": "Job #{{number}}",
+        "products_one": "{{count}} sản phẩm",
+        "products_other": "{{count}} sản phẩm"
+      },
+      "productCount_one": "sản phẩm",
+      "productCount_other": "sản phẩm",
+      "actionsFor": "Thao tác cho {{name}}",
+      "editBatch": "Sửa lô",
+      "deleteBatch": "Xóa lô",
+      "list": {
+        "title": "Lô của bạn",
+        "search": "Tìm lô",
+        "noMatch": "Không có lô nào khớp “{{search}}”.",
+        "defaultNiche": "Niche mặc định",
+        "addAnother": "Thêm lô khác"
+      },
+      "picker": {
+        "choose_one": "Chọn lô · {{count}} lô",
+        "choose_other": "Chọn lô · {{count}} lô"
+      },
+      "importExcel": "Nhập Excel",
+      "summary": {
+        "howItWorks": "Cách hoạt động",
+        "runInWorkflow_one": "Chạy trong workflow ({{count}} sản phẩm)",
+        "runInWorkflow_other": "Chạy trong workflow ({{count}} sản phẩm)"
+      },
+      "deleting": "Đang xóa…",
+      "deleteBatchTitle": "Xóa “{{name}}”?",
+      "deleteBatchDescription": "Lô này sẽ bị xóa khỏi danh sách lô của bạn. Các sản phẩm đã lưu và lịch sử job đã hoàn thành vẫn được giữ lại. Lô có job trong hàng đợi đang hoạt động không thể xóa.",
+      "table": {
+        "product": "Sản phẩm",
+        "niche": "Niche",
+        "keywords": "Từ khóa",
+        "status": "Trạng thái",
+        "actions": "Thao tác"
+      },
+      "workspace": {
+        "eyebrow": "Quản lý sản phẩm",
+        "title": "Lô sản phẩm",
+        "description": "Chuẩn bị và theo dõi thông tin sản phẩm trước khi đưa chúng vào quy trình tạo.",
+        "newBatch": "Lô mới",
+        "helpAria": "Cách các lô sản phẩm hoạt động",
+        "hideHelp": "Ẩn hướng dẫn",
+        "step1Title": "Thêm thông tin sản phẩm",
+        "step1Body": "Nhập tên, loại, niche và từ khóa. Sản phẩm nhập từ Excel hoặc thêm thủ công đều ở trạng thái chờ xử lý.",
+        "step2Title": "Duyệt lô",
+        "step2Body": "Kiểm tra từng sản phẩm trước khi duyệt. Niche mô tả thị trường mục tiêu, như người mê leo núi.",
+        "step3Title": "Chạy trong workflow",
+        "step3Body": "Mở lô trong workflow, chọn mẫu thiết kế, phong cách và mock-up, rồi nhấn Run. Sản phẩm bị khóa khi job của chúng đang trong hàng đợi.",
+        "loading": "Đang tải lô…",
+        "loadError": "Không thể tải lô. Hãy thử lại.",
+        "emptyTitle": "Bắt đầu với một lô sản phẩm",
+        "emptyDescription": "Một lô gom các thông tin sản phẩm liên quan lại với nhau. Bạn có thể thêm sản phẩm thủ công hoặc nhập từ Excel.",
+        "createFirst": "Tạo lô đầu tiên",
+        "runInWorkflow": "Chạy trong workflow ({{count}})",
+        "typeLabel": "Loại: ",
+        "created": "Tạo {{when}}",
+        "filterStatusAria": "Lọc sản phẩm theo trạng thái",
+        "searchPlaceholder": "Tìm sản phẩm, niche hoặc từ khóa",
+        "searchAria": "Tìm sản phẩm",
+        "resetFailed": "Đặt lại các mục thất bại ({{count}})",
+        "resetFailedTitle_one": "Đặt {{count}} sản phẩm thất bại về chờ xử lý?",
+        "resetFailedTitle_other": "Đặt {{count}} sản phẩm thất bại về chờ xử lý?",
+        "resetOneTitle": "Đặt “{{name}}” về chờ xử lý?",
+        "resetDescription": "Lần chạy tiếp theo sẽ tạo thiết kế mới cho sản phẩm này. Các thiết kế đã tạo trước đó vẫn được giữ lại.",
+        "resetToPending": "Đặt về chờ xử lý",
+        "loadingProducts": "Đang tải sản phẩm…",
+        "loadProductsError": "Không thể tải sản phẩm của lô này.",
+        "emptyBatchTitle": "Lô này chưa có sản phẩm",
+        "emptyBatchDescription": "Thêm sản phẩm đầu tiên để bắt đầu. Bạn luôn có thể thêm sau.",
+        "addManuallyHint": "Điền một biểu mẫu ngắn, từng sản phẩm một.",
+        "importHint": "Thêm tới 500 sản phẩm cùng lúc từ tệp .xlsx.",
+        "noSpreadsheet": "Chưa có bảng tính?",
+        "downloadTemplate": "Tải mẫu về",
+        "noMatchTitle": "Không có sản phẩm khớp bộ lọc",
+        "noMatchHint": "Thử trạng thái hoặc từ khóa khác.",
+        "clearFilters": "Xóa bộ lọc",
+        "productsAria": "Sản phẩm",
+        "showingProducts": "Đang hiển thị {{from}}–{{to}} trong {{total}} sản phẩm",
+        "productPages": "Trang sản phẩm",
+        "prevPage": "Trang trước",
+        "nextPage": "Trang sau",
+        "pageNumber": "Trang {{number}}",
+        "removeProductTitle": "Xóa “{{name}}”?",
+        "removeProductDescription": "Thao tác này xóa sản phẩm khỏi lô. Chỉ sản phẩm đang chờ xử lý mới có thể xóa.",
+        "remove": "Xóa",
+        "setBackToPending": "Đặt về chờ xử lý",
+        "runInWorkflowLabel": "Chạy trong workflow"
       }
     },
     "designTemplates": {
@@ -2594,6 +2717,183 @@
         "otherProductsRunning": "Đây là mock-up của sản phẩm được chọn ở mục Sản phẩm cho video. Lượt chạy đang mở đã tạo mock-up cho {{names}}: hãy chọn sản phẩm đó ở trên và Run lại để dùng chúng.",
         "adding": "Đang thêm mock-up…",
         "addThisProduct": "Thêm mock-up của sản phẩm này"
+      }
+    },
+    "dashboard": {
+      "allowance": {
+        "leftAria": "{{label}}: còn {{left}} trên {{limit}}"
+      },
+      "batchGauge": {
+        "title": "Lô đang chạy",
+        "noneRunning": "Hiện chưa có gì đang chạy",
+        "progressAria": "Tiến độ {{name}}",
+        "complete": "hoàn thành",
+        "done": "Xong",
+        "failedCount": "{{count}} thất bại",
+        "endsAround": "Dự kiến xong lúc",
+        "openBatch": "Mở lô",
+        "more": "+{{count}} nữa",
+        "batchProgress": "Tiến độ lô",
+        "startBatch": "Bắt đầu một lô"
+      },
+      "inbox": {
+        "title": "Cần sự chú ý của bạn",
+        "checking": "Đang kiểm tra những việc đang chờ bạn…",
+        "none": "Không có việc nào chờ bạn",
+        "toFix": "{{count}} cần sửa",
+        "toReview": "{{count}} cần duyệt",
+        "caughtUp": "Bạn đã xử lý hết mọi việc.",
+        "fixNow": "Sửa ngay",
+        "toReviewTitle": "Chờ duyệt"
+      },
+      "aiUsage": {
+        "spendAria": "Chi phí AI {{total}}, theo tính năng",
+        "spent": "đã chi",
+        "calls": "Lượt gọi",
+        "failed": "Thất bại",
+        "hintRequests": "Các yêu cầu AI đã gửi",
+        "hintOfAll": "Trên tổng số lượt gọi",
+        "hintHigher": "Cao hơn bình thường",
+        "avgPerCall": "Trung bình mỗi lượt",
+        "hintSpendDiv": "Chi phí ÷ lượt gọi",
+        "title": "Sử dụng AI",
+        "description": "Chi phí theo tính năng trong kỳ này",
+        "details": "Chi tiết",
+        "empty": "Chưa có lượt gọi AI nào trong kỳ này. Chạy một lô để xem chi phí tại đây.",
+        "callsCount": "{{formatted}} lượt"
+      },
+      "hero": {
+        "welcome": "Chào mừng trở lại",
+        "welcomeNamed": "Chào mừng trở lại, {{name}}",
+        "tilePlate": "Đĩa",
+        "tileSatchel": "Túi xách",
+        "tileFloralTee": "Áo hoa",
+        "tileCap": "Mũ",
+        "tileCeramicMug": "Ly gốm",
+        "seeWhat": "Xem những việc cần bạn",
+        "startBatch": "Bắt đầu một lô mới",
+        "findNiche": "Tìm niche trong Market Radar"
+      },
+      "greeting": {
+        "batchJobs_one": "{{count}} lô đang chạy",
+        "batchJobs_other": "{{count}} lô đang chạy"
+      },
+      "exportButton": {
+        "export": "Xuất",
+        "exportError": "Không thể xuất bảng điều khiển. Hãy thử lại."
+      },
+      "growth": {
+        "loadingAria": "Đang tải thông tin tăng trưởng",
+        "loadErrorTitle": "Growth Insights không tải được",
+        "loadErrorHint": "Hãy tải lại trang hoặc mở Market Radar để xem dữ liệu thị trường của người bán.",
+        "eyebrow": "Thông tin người bán trên Etsy",
+        "title": "Growth Insights",
+        "description": "Tín hiệu mô phỏng thị trường từ các listing công khai trên Etsy, khớp với hồ sơ người bán của bạn.",
+        "advisorBadge": "AI Advisor",
+        "metricOpportunities": "Cơ hội thị trường",
+        "metricOpportunitiesDetail": "tín hiệu xếp hạng",
+        "metricFit": "Điểm phù hợp trung bình",
+        "metricFitDetail": "phù hợp người bán + thị trường",
+        "metricEngagement": "Proxy tương tác",
+        "metricEngagementDetail": "yêu thích + lượt xem",
+        "metricEvidence": "Mức độ bằng chứng",
+        "metricEvidenceDetail": "{{count}} tín hiệu được hỗ trợ",
+        "disclaimer": "Doanh thu, đơn hàng, tỷ lệ chuyển đổi và lợi nhuận không được suy ra từ dữ liệu thị trường công khai.",
+        "feedTitle": "AI Opportunity Feed",
+        "feedDescription": "Các cơ hội hành động được rút ra từ ảnh chụp thị trường hiện tại.",
+        "insightsCount": "{{count}} insight",
+        "feedEmpty": "Lưu hồ sơ người bán và xây dựng Market Radar để tạo tín hiệu cơ hội.",
+        "openRadar": "Mở Market Radar",
+        "feed": {
+          "growth": {
+            "title": "Listing có tiềm năng tăng trưởng",
+            "description": "{{niche}} đang là một trong các tín hiệu phù hợp nhất với seller profile, với fit score {{score}}/100 và {{count}} listing quan sát được."
+          },
+          "growthTag": "High priority",
+          "keyword": {
+            "title": "Cơ hội từ khóa",
+            "description": "Có thể thử mở rộng từ khóa quanh “{{niche}}”, dựa trên market score {{score}}/100 và tín hiệu engagement công khai."
+          },
+          "keywordTag": "SEO opportunity",
+          "differentiate": {
+            "title": "Cơ hội khác biệt hóa",
+            "description": "{{niche}} có {{count}} listing quan sát được; nên kiểm tra pricing, hình ảnh và góc niche trước khi triển khai."
+          },
+          "differentiateTag": "Market proxy"
+        }
+      },
+      "kpi": {
+        "vsPrevious": "so với {{period}} trước",
+        "noPrevious": "Chưa có dữ liệu trước {{period}}",
+        "productsCreated": "Sản phẩm đã tạo",
+        "pipelineSuccess": "Tỷ lệ thành công của quy trình",
+        "pipelineSuccessShort": "Thành công",
+        "listingsPublished": "Listing đã đăng",
+        "publishFirst": "Đăng listing đầu tiên lên Etsy",
+        "aiCostPerProduct": "Chi phí AI mỗi sản phẩm",
+        "aiCostPerProductShort": "Chi phí AI / SP",
+        "periodDays": "{{count}} ngày"
+      },
+      "onboarding": {
+        "title": "Bắt đầu lô đầu tiên",
+        "description": "Bốn bước từ CSV tới một listing sẵn sàng cho Etsy. Bảng điều khiển của bạn sẽ đầy dần theo tiến độ.",
+        "start": "Bắt đầu",
+        "open": "Mở"
+      },
+      "opportunities": {
+        "title": "Nên làm gì tiếp theo",
+        "description": "Những niche hàng đầu từ Market Radar dành cho bạn",
+        "seeAll": "Xem tất cả",
+        "loading": "Đang tải niche…",
+        "empty": "Xếp hạng các niche đang thịnh hành trên Etsy theo cửa hàng của bạn để xem nên bắt đầu với niche nào.",
+        "ranking": "Đang xếp hạng niche…",
+        "find": "Tìm niche cho tôi",
+        "fitAria": "Điểm phù hợp trên 100",
+        "fit": "fit"
+      },
+      "periods": {
+        "label": "Khoảng thời gian",
+        "lastDays": "{{count}} ngày qua"
+      },
+      "pipeline": {
+        "title": "Quy trình sản xuất",
+        "inProgress": "{{count}} đang chạy",
+        "failed": "{{count}} thất bại",
+        "total": "tổng cộng {{count}} sản phẩm",
+        "openBatches": "Mở lô",
+        "mostHere": "Hầu hết sản phẩm của bạn đang ở đây",
+        "ofProducts": "{{share}}% sản phẩm",
+        "stuck": "{{count}} kẹt",
+        "waitsOnYou": "Chờ bạn",
+        "legendBusiest": "Nơi có nhiều sản phẩm nhất",
+        "legendStuck": "Kẹt: lâu hơn bình thường rất nhiều",
+        "legendWaits": "Chờ bạn duyệt",
+        "stages": {
+          "queued": "Trong hàng đợi",
+          "designing": "Đang thiết kế",
+          "design_review": "Duyệt thiết kế",
+          "mockup": "Mock-up",
+          "video": "Video",
+          "listing": "Listing",
+          "ready": "Sẵn sàng",
+          "published": "Đã đăng"
+        }
+      },
+      "chart": {
+        "added": "Thêm mới",
+        "finished": "Hoàn thành",
+        "failed": "Thất bại",
+        "aiCost": "Chi phí AI",
+        "title": "Tổng quan sản xuất",
+        "addedCount": "{{count}} thêm mới",
+        "finishedCount": "{{count}} hoàn thành trong kỳ này",
+        "ariaLabel": "Sản phẩm thêm mỗi ngày, tổng {{total}}"
+      },
+      "page": {
+        "loading": "Đang tải bảng điều khiển",
+        "unavailableTitle": "Bảng điều khiển tạm thời không khả dụng",
+        "unavailableHint": "Hãy tải lại trang và thử lại.",
+        "overview": "Tổng quan {{days}} ngày qua"
       }
     }
   }

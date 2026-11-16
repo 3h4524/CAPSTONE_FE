@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { FormInputField } from "@/components/commons/forms/form-input-field";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ type FormResendVerificationProps = {
 };
 
 export const FormResendVerification = ({ defaultEmail = "" }: FormResendVerificationProps) => {
+  const { t } = useTranslation("common");
   const { mutate: resendVerificationEmail, isPending } = useResendVerificationEmail();
 
   const {
@@ -32,7 +34,7 @@ export const FormResendVerification = ({ defaultEmail = "" }: FormResendVerifica
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <FormInputField
         id="resend-email"
-        label="Email"
+        label={t("auth.email")}
         type="email"
         placeholder="you@example.com"
         registration={register("email")}
@@ -47,7 +49,7 @@ export const FormResendVerification = ({ defaultEmail = "" }: FormResendVerifica
         className="w-full"
         disabled={isSubmitting || isPending}
       >
-        {isPending ? "Sending..." : "Resend verification email"}
+        {isPending ? t("auth.sending") : t("auth.verifyEmail.resend")}
       </Button>
     </form>
   );

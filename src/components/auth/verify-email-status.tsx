@@ -2,12 +2,14 @@
 
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 import { FormResendVerification } from "@/components/auth/form-resend-verification";
 import { getErrorMessage } from "@/helpers/error-message";
 import { useVerifyEmail } from "@/hooks/mutations/use-verify-email";
 
 export const VerifyEmailStatus = () => {
+  const { t } = useTranslation("common");
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const { mutate: verifyEmail, isPending, isSuccess, isError, error } = useVerifyEmail();
@@ -23,7 +25,7 @@ export const VerifyEmailStatus = () => {
     return (
       <div className="space-y-4">
         <p className="text-ink-600 text-sm">
-          This link is missing its verification token. Enter your email to get a new one.
+          {t("auth.verifyEmail.missingToken")}
         </p>
         <FormResendVerification />
       </div>
@@ -31,18 +33,18 @@ export const VerifyEmailStatus = () => {
   }
 
   if (isPending) {
-    return <p className="text-ink-600 text-sm">Verifying your email...</p>;
+    return <p className="text-ink-600 text-sm">{t("auth.verifyEmail.verifying")}</p>;
   }
 
   if (isSuccess) {
-    return <p className="text-sm text-green-700 dark:text-green-300">Your email is verified. You can sign in now.</p>;
+    return <p className="text-sm text-green-700 dark:text-green-300">{t("auth.verifyEmail.success")}</p>;
   }
 
   if (isError) {
     return (
       <div className="space-y-4">
         <p className="text-sm text-red-600 dark:text-red-400">
-          {getErrorMessage(error, "This verification link is invalid or expired.")}
+          {getErrorMessage(error, t("auth.verifyEmail.invalidLink"))}
         </p>
         <FormResendVerification />
       </div>

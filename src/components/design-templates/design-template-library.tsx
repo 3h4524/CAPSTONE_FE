@@ -13,6 +13,7 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { PageHeader } from "@/components/commons/layout/page-header";
@@ -48,28 +49,50 @@ const PHONE_PAGE_SIZE = 5;
 const ALL_FILTER = "all";
 const LIBRARY_TABS: Array<{
   value: DesignTemplateScope;
-  label: string;
-  description: string;
+  labelKey: string;
+  descriptionKey: string;
   icon: typeof Layers3;
 }> = [
   {
     value: "system",
-    label: "System templates",
-    description: "Curated foundations ready to clone",
+    labelKey: "designTemplates.systemTemplates",
+    descriptionKey: "designTemplates.systemTemplatesDescription",
     icon: Layers3,
   },
   {
     value: "personal",
-    label: "My templates",
-    description: "Your editable creative workspace",
+    labelKey: "designTemplates.myTemplates",
+    descriptionKey: "designTemplates.myTemplatesDescription",
     icon: FolderOpen,
   },
 ];
+const NICHE_KEYS: Record<string, string> = {
+  "Nature & Botanical": "natureBotanical",
+  Outdoors: "outdoors",
+  "Food & Drink": "foodDrink",
+  Vehicles: "vehicles",
+  "Quotes & Motivation": "quotesMotivation",
+  "Humor & Lifestyle": "humorLifestyle",
+  "Gifts & Occasions": "giftsOccasions",
+  "Pets & Animals": "petsAnimals",
+  "Sports & Fitness": "sportsFitness",
+  "Travel & Places": "travelPlaces",
+};
+const ART_STYLE_KEYS: Record<string, string> = {
+  vintage: "vintage",
+  minimalist: "minimalist",
+  watercolor: "watercolor",
+  bold_typography: "boldTypography",
+  dark_academia: "darkAcademia",
+  funny_quote: "funnyQuote",
+  floral: "floral",
+};
 
 export function DesignTemplateLibrary() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useTranslation("common");
   const user = useAuthStore((state) => state.user);
   const isPhone = useIsPhone();
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
@@ -98,6 +121,14 @@ export function DesignTemplateLibrary() {
   const detailId = searchParams.get("template");
   const retrying = optionsQuery.isFetching || templatesQuery.isFetching;
   const isSystemTab = scope === "system";
+  const nicheOptionLabel = (value: string, fallback: string) => {
+    const key = NICHE_KEYS[value];
+    return key ? t(`designTemplates.niches.${key}`, { defaultValue: fallback }) : fallback;
+  };
+  const artStyleOptionLabel = (value: string, fallback: string) => {
+    const key = ART_STYLE_KEYS[value];
+    return key ? t(`designTemplates.artStyles.${key}`, { defaultValue: fallback }) : fallback;
+  };
 
   useEffect(() => {
     // Runs on load too, where it would send a link to page 2, or a quick tap on Next, back to page 1.
@@ -158,7 +189,7 @@ export function DesignTemplateLibrary() {
   const cloneTemplate = (id: string) => {
     cloneMutation.mutate(id, {
       onSuccess: (template) => {
-        showToast("success", "Template cloned. Customize your copy.");
+        showToast("success", t("designTemplates.clonedToast"));
         router.push(`/design-templates/${template.id}/edit?cloned=1`);
       },
     });
@@ -168,7 +199,7 @@ export function DesignTemplateLibrary() {
     deleteMutation.mutate(id, {
       onSuccess: () => {
         setDeletingTemplate(null);
-        showToast("success", "Template deleted.");
+        showToast("success", t("designTemplates.deletedToast"));
       },
     });
   };
@@ -194,30 +225,31 @@ export function DesignTemplateLibrary() {
     <div className="text-foreground w-full min-w-0 md:p-6">
       <main className="w-full min-w-0">
         <PageHeader
-          eyebrow="Creative library"
+          eyebrow={t("designTemplates.eyebrow")}
           title={
             <>
-              <span className="md:hidden">Design templates</span>
-              <span className="max-md:hidden">Start with a structure. Make the artwork yours.</span>
+              <span className="md:hidden">{t("designTemplates.titleShort")}</span>
+              <span className="max-md:hidden">{t("designTemplates.title")}</span>
             </>
           }
-          description="Explore production-ready prompt systems or manage the reusable templates in your private workspace."
+          description={t("designTemplates.description")}
           className="border-ink-200 border-b pb-7 max-md:border-0 max-md:pb-0"
           actions={
             <Button size="page-action" className="max-md:shrink-0 md:h-11 md:min-h-11 md:px-5 md:text-base" onClick={() => router.push("/design-templates/new")}>
               <Plus aria-hidden="true" />
               <span>
-                New<span className="max-md:hidden"> personal template</span>
+                <span className="max-md:hidden">{t("designTemplates.newPersonalTemplate")}</span>
+                <span className="md:hidden">{t("designTemplates.newShort")}</span>
               </span>
             </Button>
           }
         />
 
-        <section className="mt-6 max-md:mt-4" aria-label="Template library controls">
+        <section className="mt-6 max-md:mt-4" aria-label={t("designTemplates.controlsLabel")}>
           <div
             className="border-ink-200 bg-ink-100/80 grid grid-cols-2 gap-1.5 rounded-[20px] border p-1.5 lg:max-w-3xl"
             role="tablist"
-            aria-label="Template library"
+            aria-label={t("designTemplates.libraryLabel")}
           >
             {LIBRARY_TABS.map((tab) => {
               const Icon = tab.icon;
@@ -264,14 +296,15 @@ export function DesignTemplateLibrary() {
                     <span className="block text-sm font-semibold sm:text-base">
                       {tab.value === "system" ? (
                         <>
-                          System<span className="max-md:hidden"> templates</span>
+                          <span className="max-md:hidden">{t("designTemplates.systemTemplates")}</span>
+                          <span className="md:hidden">{t("designTemplates.systemShort")}</span>
                         </>
                       ) : (
-                        tab.label
+                        t(tab.labelKey)
                       )}
                     </span>
                     <span className={cn("mt-0.5 block text-xs max-md:hidden", selected ? "text-primary-foreground/70" : "text-ink-500")}>
-                      {tab.description}
+                      {t(tab.descriptionKey)}
                     </span>
                   </span>
                 </button>
@@ -282,12 +315,12 @@ export function DesignTemplateLibrary() {
           <div className="mt-5 flex flex-col gap-3 max-md:mt-3 xl:flex-row xl:items-center xl:justify-between">
             <div className="max-md:hidden">
               <p className="text-ink-900 text-sm font-semibold">
-                {isSystemTab ? "Explore the system collection" : "Manage your personal collection"}
+                {isSystemTab ? t("designTemplates.exploreSystemTitle") : t("designTemplates.managePersonalTitle")}
               </p>
               <p className="text-ink-500 mt-1 text-xs">
                 {isSystemTab
-                  ? "View curated prompt structures and clone the ones that fit your next product."
-                  : "Edit, review, or remove templates owned by your account."}
+                  ? t("designTemplates.exploreSystemDescription")
+                  : t("designTemplates.managePersonalDescription")}
               </p>
             </div>
             <div className="grid gap-2 max-sm:grid-cols-2 sm:grid-cols-[minmax(220px,1fr)_190px_190px] xl:w-[720px]">
@@ -297,30 +330,30 @@ export function DesignTemplateLibrary() {
                   type="search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder={isSystemTab ? "Search system templates" : "Search my templates"}
-                  aria-label={isSystemTab ? "Search system templates" : "Search personal templates"}
+                  placeholder={isSystemTab ? t("designTemplates.searchSystemTemplates") : t("designTemplates.searchMyTemplates")}
+                  aria-label={isSystemTab ? t("designTemplates.searchSystemTemplates") : t("designTemplates.searchPersonalTemplates")}
                   className="border-ink-300 bg-card min-h-10 pl-10"
                 />
               </div>
               <Select value={niche} onValueChange={selectNiche}>
                 <SelectTrigger className="border-ink-300 bg-card min-h-10 w-full min-w-0">
-                  <SelectValue placeholder="All niches" />
+                  <SelectValue placeholder={t("designTemplates.allNiches")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL_FILTER}>All niches</SelectItem>
+                  <SelectItem value={ALL_FILTER}>{t("designTemplates.allNiches")}</SelectItem>
                   {optionsQuery.data?.niches.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    <SelectItem key={option.value} value={option.value}>{nicheOptionLabel(option.value, option.label)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Select value={artStyle} onValueChange={selectArtStyle}>
                 <SelectTrigger className="border-ink-300 bg-card min-h-10 w-full min-w-0">
-                  <SelectValue placeholder="All styles" />
+                  <SelectValue placeholder={t("designTemplates.allStyles")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL_FILTER}>All styles</SelectItem>
+                  <SelectItem value={ALL_FILTER}>{t("designTemplates.allStyles")}</SelectItem>
                   {optionsQuery.data?.artStyles.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    <SelectItem key={option.value} value={option.value}>{artStyleOptionLabel(option.value, option.label)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -334,14 +367,14 @@ export function DesignTemplateLibrary() {
           aria-labelledby={`${scope}-templates-tab`}
         >
           {templatesQuery.isPending || optionsQuery.isPending ? (
-            <section className="mt-7 grid gap-5 max-md:mt-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading templates">
+            <section className="mt-7 grid gap-5 max-md:mt-4 sm:grid-cols-2 xl:grid-cols-3" aria-label={t("designTemplates.loadingTemplates")}>
               {Array.from({ length: 6 }, (_, index) => <DesignTemplateCardSkeleton key={index} />)}
             </section>
           ) : templatesQuery.isError || optionsQuery.isError ? (
             <section className="border-ink-200 bg-card mt-7 flex min-h-80 flex-col items-center justify-center rounded-[22px] border p-8 text-center">
               <Layers3 className="text-ink-400 size-9" aria-hidden="true" />
-              <h2 className="font-display mt-4 text-xl font-semibold">The library could not be loaded</h2>
-              <p className="text-ink-500 mt-2 text-sm">Check your connection and try again.</p>
+              <h2 className="font-display mt-4 text-xl font-semibold">{t("designTemplates.libraryErrorTitle")}</h2>
+              <p className="text-ink-500 mt-2 text-sm">{t("designTemplates.libraryErrorDescription")}</p>
               <Button
                 variant="outline"
                 className="mt-5 min-w-36"
@@ -350,7 +383,7 @@ export function DesignTemplateLibrary() {
                 onClick={() => void retryLibrary()}
               >
                 <RefreshCw className={cn("size-4", retrying && "animate-spin")} aria-hidden="true" />
-                <span aria-live="polite">{retrying ? "Retrying..." : "Retry"}</span>
+                <span aria-live="polite">{retrying ? t("designTemplates.retrying") : t("designTemplates.retry")}</span>
               </Button>
             </section>
           ) : !data || data.items.length === 0 ? (
@@ -366,27 +399,27 @@ export function DesignTemplateLibrary() {
               </span>
               <h2 className="font-display mt-4 text-xl font-semibold">
                 {hasFilters
-                  ? "No templates match these filters"
+                  ? t("designTemplates.noMatchTitle")
                   : isSystemTab
-                    ? "No system templates are available"
-                    : "Create your first personal template"}
+                    ? t("designTemplates.noSystemTitle")
+                    : t("designTemplates.noPersonalTitle")}
               </h2>
               <p className="text-ink-500 mt-2 max-w-md text-sm leading-6">
                 {hasFilters
-                  ? "Broaden the search or reset the filters to see more prompt systems."
+                  ? t("designTemplates.noMatchDescription")
                   : isSystemTab
-                    ? "The curated collection is currently empty. Refresh the catalog or try again shortly."
-                    : "Build a reusable prompt structure you can edit for your own product catalog."}
+                    ? t("designTemplates.noSystemDescription")
+                    : t("designTemplates.noPersonalDescription")}
               </p>
               {hasFilters ? (
-                <Button variant="outline" className="mt-5" onClick={clearFilters}><X aria-hidden="true" />Clear filters</Button>
+                <Button variant="outline" className="mt-5" onClick={clearFilters}><X aria-hidden="true" />{t("designTemplates.clearFilters")}</Button>
               ) : isSystemTab ? (
                 <Button variant="outline" className="mt-5" disabled={templatesQuery.isFetching} onClick={() => void templatesQuery.refetch()}>
                   <RefreshCw className={cn("size-4", templatesQuery.isFetching && "animate-spin")} aria-hidden="true" />
-                  Refresh catalog
+                  {t("designTemplates.refreshCatalog")}
                 </Button>
               ) : (
-                <Button className="mt-5" onClick={() => router.push("/design-templates/new")}><Plus aria-hidden="true" />Create template</Button>
+                <Button className="mt-5" onClick={() => router.push("/design-templates/new")}><Plus aria-hidden="true" />{t("designTemplates.createTemplate")}</Button>
               )}
             </section>
           ) : (
@@ -394,15 +427,17 @@ export function DesignTemplateLibrary() {
               <div className="mt-7 flex items-center justify-between gap-4 max-md:mt-4">
                 <p className="text-ink-600 text-sm">
                   <span className="text-ink-900 font-semibold">{data.totalCount}</span>{" "}
-                  {isSystemTab ? "system" : "personal"} template{data.totalCount === 1 ? "" : "s"}
+                  {t(isSystemTab ? "designTemplates.systemTemplateCount" : "designTemplates.personalTemplateCount", {
+                    count: data.totalCount,
+                  })}
                 </p>
                 {hasFilters && (
                   <Button variant="ghost" size="sm" className="hover:translate-y-0" onClick={clearFilters}>
-                    <X aria-hidden="true" />Clear filters
+                    <X aria-hidden="true" />{t("designTemplates.clearFilters")}
                   </Button>
                 )}
               </div>
-              <section className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3" aria-label={isSystemTab ? "System templates" : "Personal templates"}>
+              <section className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3" aria-label={isSystemTab ? t("designTemplates.systemTemplates") : t("designTemplates.personalTemplates")}>
                 {data.items.map((template) => (
                   <DesignTemplateCard
                     key={template.id}
@@ -417,17 +452,17 @@ export function DesignTemplateLibrary() {
               </section>
               {isPhone ? (
                 <div className="mt-4">
-                  <PhonePager page={data.pageNumber} pageCount={data.totalPages} onPageChange={goToPage} label="Template pages" />
+                  <PhonePager page={data.pageNumber} pageCount={data.totalPages} onPageChange={goToPage} label={t("designTemplates.templatePages")} />
                 </div>
               ) : (
-              <nav className="border-ink-200 mt-8 flex items-center justify-between border-t pt-5" aria-label="Template pages">
-                <p className="text-ink-500 text-xs">Page {data.pageNumber} of {Math.max(1, data.totalPages)}</p>
+              <nav className="border-ink-200 mt-8 flex items-center justify-between border-t pt-5" aria-label={t("designTemplates.templatePages")}>
+                <p className="text-ink-500 text-xs">{t("designTemplates.pageOf", { page: data.pageNumber, total: Math.max(1, data.totalPages) })}</p>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" disabled={pageNumber <= 1} onClick={() => goToPage(pageNumber - 1)}>
-                    <ChevronLeft aria-hidden="true" />Previous
+                    <ChevronLeft aria-hidden="true" />{t("designTemplates.previous")}
                   </Button>
                   <Button variant="outline" size="sm" disabled={pageNumber >= data.totalPages} onClick={() => goToPage(pageNumber + 1)}>
-                    Next<ChevronRight aria-hidden="true" />
+                    {t("designTemplates.next")}<ChevronRight aria-hidden="true" />
                   </Button>
                 </div>
               </nav>

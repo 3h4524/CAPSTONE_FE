@@ -1913,7 +1913,13 @@
         "productDescriptionPlaceholder": "Describe the product idea or design brief",
         "productDescriptionHint": "Add the design idea or brief you want the generation workflow to use.",
         "sourceNotesLabel": "Source notes",
-        "sourceNotesPlaceholder": "Reference or production notes"
+        "sourceNotesPlaceholder": "Reference or production notes",
+        "nicheTag": "Niche",
+        "ownImagePrompt": "Own image prompt",
+        "editAria": "Edit {{name}}",
+        "deleteAria": "Delete {{name}}",
+        "resetAria": "Reset {{name}} to pending",
+        "reset": "Reset"
       },
       "close": "Close",
       "import": {
@@ -1942,6 +1948,123 @@
         "imported_other": "Imported {{count}} products",
         "importing": "Importing…",
         "importValid": "Import valid rows"
+      },
+      "statuses": {
+        "all": "All",
+        "pending": "Pending",
+        "queued": "Queued",
+        "processing": "Processing",
+        "review": "Review",
+        "completed": "Completed",
+        "failed": "Failed",
+        "draft": "Draft",
+        "running": "Running",
+        "paused": "Paused",
+        "partially_completed": "Partially completed",
+        "image_review_required": "Image review required",
+        "approved": "Completed",
+        "exported": "Completed",
+        "published": "Completed"
+      },
+      "productTypes": {
+        "tshirt": "T-shirt",
+        "hoodie": "Hoodie",
+        "mug": "Mug",
+        "poster": "Poster",
+        "tote_bag": "Tote bag",
+        "phone_case": "Phone case"
+      },
+      "history": {
+        "jobs": "Jobs ({{count}})",
+        "title": "Jobs in this batch",
+        "jobLabel": "Job #{{number}}",
+        "products_one": "{{count}} product",
+        "products_other": "{{count}} products"
+      },
+      "productCount_one": "product",
+      "productCount_other": "products",
+      "actionsFor": "Actions for {{name}}",
+      "editBatch": "Edit batch",
+      "deleteBatch": "Delete batch",
+      "list": {
+        "title": "Your batches",
+        "search": "Find a batch",
+        "noMatch": "No batches match “{{search}}”.",
+        "defaultNiche": "Default niche",
+        "addAnother": "Add another batch"
+      },
+      "picker": {
+        "choose_one": "Choose a batch · {{count}} batch",
+        "choose_other": "Choose a batch · {{count}} batches"
+      },
+      "importExcel": "Import Excel",
+      "summary": {
+        "howItWorks": "How it works",
+        "runInWorkflow_one": "Run in workflow ({{count}} product)",
+        "runInWorkflow_other": "Run in workflow ({{count}} products)"
+      },
+      "deleting": "Deleting…",
+      "deleteBatchTitle": "Delete “{{name}}”?",
+      "deleteBatchDescription": "This batch will be removed from your batch list. Its saved products and completed job history remain stored. A batch with an active queue job cannot be deleted.",
+      "table": {
+        "product": "Product",
+        "niche": "Niche",
+        "keywords": "Keywords",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "workspace": {
+        "eyebrow": "Product management",
+        "title": "Product batches",
+        "description": "Prepare and track product inputs before sending them into the creation workflow.",
+        "newBatch": "New batch",
+        "helpAria": "How product batches work",
+        "hideHelp": "Hide how it works",
+        "step1Title": "Add product inputs",
+        "step1Body": "Enter a product name, type, niche and keywords. Imported or manually added products stay pending.",
+        "step2Title": "Review the batch",
+        "step2Body": "Check each product before approving. A niche describes its target market, such as hiking enthusiasts.",
+        "step3Title": "Run in a workflow",
+        "step3Body": "Open the batch in a workflow, choose the design template, style and mock-ups, then press Run. Products lock while their job is queued.",
+        "loading": "Loading batches…",
+        "loadError": "Could not load batches. Please try again.",
+        "emptyTitle": "Start with a product batch",
+        "emptyDescription": "A batch keeps related product inputs together. You can add products manually or import them from Excel.",
+        "createFirst": "Create your first batch",
+        "runInWorkflow": "Run in workflow ({{count}})",
+        "typeLabel": "Type: ",
+        "created": "Created {{when}}",
+        "filterStatusAria": "Filter products by status",
+        "searchPlaceholder": "Search products, niche or keywords",
+        "searchAria": "Search products",
+        "resetFailed": "Reset failed ({{count}})",
+        "resetFailedTitle_one": "Set {{count}} failed product back to pending?",
+        "resetFailedTitle_other": "Set {{count}} failed products back to pending?",
+        "resetOneTitle": "Set “{{name}}” back to pending?",
+        "resetDescription": "The next run generates new designs for it. Designs made earlier are kept.",
+        "resetToPending": "Reset to pending",
+        "loadingProducts": "Loading products…",
+        "loadProductsError": "Could not load products for this batch.",
+        "emptyBatchTitle": "This batch is empty",
+        "emptyBatchDescription": "Add your first product to get started. You can always add more later.",
+        "addManuallyHint": "Fill in a short form, one product at a time.",
+        "importHint": "Add up to 500 products at once from an .xlsx file.",
+        "noSpreadsheet": "No spreadsheet yet?",
+        "downloadTemplate": "Download the template",
+        "noMatchTitle": "No products match these filters",
+        "noMatchHint": "Try another status or search term.",
+        "clearFilters": "Clear filters",
+        "productsAria": "Products",
+        "showingProducts": "Showing {{from}}–{{to}} of {{total}} products",
+        "productPages": "Product pages",
+        "prevPage": "Previous page",
+        "nextPage": "Next page",
+        "pageNumber": "Page {{number}}",
+        "removeProductTitle": "Remove “{{name}}”?",
+        "removeProductDescription": "This removes the product from the batch. Only pending products can be removed.",
+        "remove": "Remove",
+        "setBackToPending": "Set back to pending",
+        "runInWorkflowLabel": "Run in workflow"
       }
     },
     "designTemplates": {
@@ -2604,6 +2727,183 @@
         "otherProductsRunning": "These are the mock-ups of the product chosen under Product for the video. The open run made its mock-ups for {{names}}: choose that product above and Run again to use them.",
         "adding": "Adding mock-ups…",
         "addThisProduct": "Add this product's mock-ups"
+      }
+    },
+    "dashboard": {
+      "allowance": {
+        "leftAria": "{{label}}: {{left}} of {{limit}} left"
+      },
+      "batchGauge": {
+        "title": "Batch in progress",
+        "noneRunning": "Nothing is running right now",
+        "progressAria": "{{name}} progress",
+        "complete": "complete",
+        "done": "Done",
+        "failedCount": "{{count}} failed",
+        "endsAround": "Ends around",
+        "openBatch": "Open batch",
+        "more": "+{{count}} more",
+        "batchProgress": "Batch progress",
+        "startBatch": "Start a batch"
+      },
+      "inbox": {
+        "title": "Needs your attention",
+        "checking": "Checking what waits on you…",
+        "none": "Nothing waits on you",
+        "toFix": "{{count}} to fix",
+        "toReview": "{{count}} to review",
+        "caughtUp": "You're all caught up.",
+        "fixNow": "Fix now",
+        "toReviewTitle": "To review"
+      },
+      "aiUsage": {
+        "spendAria": "AI spend {{total}}, by feature",
+        "spent": "spent",
+        "calls": "Calls",
+        "failed": "Failed",
+        "hintRequests": "AI requests made",
+        "hintOfAll": "Of all calls",
+        "hintHigher": "Higher than usual",
+        "avgPerCall": "Avg per call",
+        "hintSpendDiv": "Spend ÷ calls",
+        "title": "AI usage",
+        "description": "Spend by feature in this period",
+        "details": "Details",
+        "empty": "No AI calls in this period. Run a batch to see costs here.",
+        "callsCount": "{{formatted}} calls"
+      },
+      "hero": {
+        "welcome": "Welcome back",
+        "welcomeNamed": "Welcome back, {{name}}",
+        "tilePlate": "Plate",
+        "tileSatchel": "Satchel",
+        "tileFloralTee": "Floral Tee",
+        "tileCap": "Cap",
+        "tileCeramicMug": "Ceramic Mug",
+        "seeWhat": "See what needs you",
+        "startBatch": "Start a new batch",
+        "findNiche": "Find a niche in Market Radar"
+      },
+      "greeting": {
+        "batchJobs_one": "{{count}} batch job in progress",
+        "batchJobs_other": "{{count}} batch jobs in progress"
+      },
+      "exportButton": {
+        "export": "Export",
+        "exportError": "We couldn't export your dashboard. Please try again."
+      },
+      "growth": {
+        "loadingAria": "Loading growth insights",
+        "loadErrorTitle": "Growth Insights could not load",
+        "loadErrorHint": "Refresh the page or open Market Radar to check the seller market data.",
+        "eyebrow": "Etsy seller intelligence",
+        "title": "Growth Insights",
+        "description": "Market-proxy signals from public Etsy listings, matched to your seller profile.",
+        "advisorBadge": "AI Advisor",
+        "metricOpportunities": "Market opportunities",
+        "metricOpportunitiesDetail": "ranked signals",
+        "metricFit": "Average fit score",
+        "metricFitDetail": "seller + market fit",
+        "metricEngagement": "Engagement proxy",
+        "metricEngagementDetail": "favorites + views",
+        "metricEvidence": "Evidence coverage",
+        "metricEvidenceDetail": "{{count}} supported signals",
+        "disclaimer": "Revenue, orders, conversion and profit are not inferred from public marketplace data.",
+        "feedTitle": "AI Opportunity Feed",
+        "feedDescription": "Actionable opportunities derived from the current market snapshot.",
+        "insightsCount": "{{count}} insights",
+        "feedEmpty": "Save your seller profile and build Market Radar to generate opportunity signals.",
+        "openRadar": "Open Market Radar",
+        "feed": {
+          "growth": {
+            "title": "Listing with growth potential",
+            "description": "{{niche}} is one of the best-fit signals for your seller profile, with a fit score of {{score}}/100 and {{count}} observable listings."
+          },
+          "growthTag": "High priority",
+          "keyword": {
+            "title": "Keyword opportunity",
+            "description": "Keywords could be expanded around “{{niche}}”, based on a market score of {{score}}/100 and public engagement signals."
+          },
+          "keywordTag": "SEO opportunity",
+          "differentiate": {
+            "title": "Differentiation opportunity",
+            "description": "{{niche}} has {{count}} observable listings; review pricing, images and the niche angle before launching."
+          },
+          "differentiateTag": "Market proxy"
+        }
+      },
+      "kpi": {
+        "vsPrevious": "vs previous {{period}}",
+        "noPrevious": "No data before the {{period}}",
+        "productsCreated": "Products created",
+        "pipelineSuccess": "Pipeline success rate",
+        "pipelineSuccessShort": "Pipeline success",
+        "listingsPublished": "Listings published",
+        "publishFirst": "Publish your first listing to Etsy",
+        "aiCostPerProduct": "AI cost per product",
+        "aiCostPerProductShort": "AI cost / product",
+        "periodDays": "{{count}} days"
+      },
+      "onboarding": {
+        "title": "Start your first batch",
+        "description": "Four steps from a CSV to a listing ready for Etsy. Your dashboard fills in as you go.",
+        "start": "Start",
+        "open": "Open"
+      },
+      "opportunities": {
+        "title": "What to make next",
+        "description": "Top niches from Market Radar for you",
+        "seeAll": "See all",
+        "loading": "Loading niches…",
+        "empty": "Rank the trending Etsy niches against your shop to see which ones to start with.",
+        "ranking": "Ranking niches…",
+        "find": "Find niches for me",
+        "fitAria": "Fit score out of 100",
+        "fit": "fit"
+      },
+      "periods": {
+        "label": "Period",
+        "lastDays": "Last {{count}} days"
+      },
+      "pipeline": {
+        "title": "Production pipeline",
+        "inProgress": "{{count}} in progress",
+        "failed": "{{count}} failed",
+        "total": "{{count}} products in all",
+        "openBatches": "Open batches",
+        "mostHere": "Most of your products are here",
+        "ofProducts": "{{share}}% of products",
+        "stuck": "{{count}} stuck",
+        "waitsOnYou": "Waits on you",
+        "legendBusiest": "Where most products are",
+        "legendStuck": "Stuck: taking far longer than usual",
+        "legendWaits": "Waits on your review",
+        "stages": {
+          "queued": "Queued",
+          "designing": "Designing",
+          "design_review": "Design review",
+          "mockup": "Mockups",
+          "video": "Video",
+          "listing": "Listing",
+          "ready": "Ready",
+          "published": "Published"
+        }
+      },
+      "chart": {
+        "added": "Added",
+        "finished": "Finished",
+        "failed": "Failed",
+        "aiCost": "AI cost",
+        "title": "Production overview",
+        "addedCount": "{{count}} added",
+        "finishedCount": "{{count}} finished in this period",
+        "ariaLabel": "Products added per day, {{total}} in all"
+      },
+      "page": {
+        "loading": "Loading dashboard",
+        "unavailableTitle": "Your dashboard is temporarily unavailable",
+        "unavailableHint": "Please refresh the page and try again.",
+        "overview": "Overview of the last {{days}} days"
       }
     }
   }

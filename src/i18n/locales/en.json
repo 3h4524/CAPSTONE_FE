@@ -3407,6 +3407,14 @@
         "notInPlan": "Not included in your plan",
         "title": "Nodes",
         "description": "Drag onto the canvas or click to add."
+      },
+      "canvasPatch": {
+        "unknownStepType": "Unknown step type",
+        "afterStepNotFound": "The step to add after was not found",
+        "stepNotFound": "Step not found",
+        "stepsNotConnected": "Those steps are not connected",
+        "noSettingsToUpdate": "No settings to update",
+        "renamingOff": "Renaming steps is turned off"
       }
     },
     "workflowMedia": {
@@ -4413,7 +4421,13 @@
         "uploadedWithVideo": "{{count}} image(s) and the video uploaded",
         "filesAttached": "{{count}} design file(s) attached for buyers to download",
         "reviewOnEtsy": "Review it on Etsy and publish when you are ready. Etsy charges its listing fee when you publish.",
-        "openOnEtsy": "Open draft on Etsy"
+        "openOnEtsy": "Open draft on Etsy",
+        "historyStatuses": {
+          "pending": "pending",
+          "retrying": "retrying",
+          "success": "success",
+          "failed": "failed"
+        }
       },
       "insights": {
         "issues": {
@@ -4584,7 +4598,13 @@
         "openListing": "Open the Etsy listing",
         "productType": "Product type",
         "blueprintPlaceholder": "e.g. gildan 64000, bella canvas 3001, mug 11oz",
-        "nothingMatches": "Nothing matches."
+        "nothingMatches": "Nothing matches.",
+        "states": {
+          "created": "created",
+          "publishing": "publishing",
+          "published": "published",
+          "failed": "failed"
+        }
       },
       "page": {
         "waitingPopup": "Finish signing in to Etsy in the popup window.",
@@ -5421,6 +5441,11 @@
         "panelDescription": "Ask Podi questions or get help with your workflows.",
         "whatNow": "What now?",
         "starterIntro": "Ask me anything, or try one of these."
+      }
+    },
+    "workflowRun": {
+      "validation": {
+        "chooseMockupTemplate": "{{label}}: Choose at least one mock-up template."
       }
     }
   }

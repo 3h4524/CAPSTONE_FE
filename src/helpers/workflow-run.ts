@@ -1,6 +1,7 @@
 import { BATCH_RUN_NODE_TYPES, PUBLISH_NODE_TYPES, RUNNABLE_NODE_TYPES, VIDEO_RUN_NODE_TYPES } from "@/constants/workflow";
 import { backgroundKeys, backgroundsFor, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
 import { readString, readStringArray, readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
+import { i18n } from "@/i18n/client";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type { MockupState, RunStep } from "@/stores/workflow-run";
 import type { BatchJobDetail, ImageProvider } from "@/types/batch-jobs";
@@ -190,7 +191,7 @@ export const validateRunnable = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
 export const findMissingMockupTemplates = (nodes: WorkflowNode[]): WorkflowIssue | null => {
   const [mockup] = findByType(nodes, "apply-mockup");
   if (!mockup || !hasBatchSteps(nodes) || readStringArray(mockup.data.config.mockupTemplateIds).length > 0) return null;
-  return { id: `run-templates-${mockup.id}`, nodeId: mockup.id, message: `${mockup.data.label}: Choose at least one mock-up template.` };
+  return { id: `run-templates-${mockup.id}`, nodeId: mockup.id, message: i18n.t("workflowRun.validation.chooseMockupTemplate", { label: mockup.data.label }) };
 };
 
 // Reads the settings of an already validated graph.

@@ -3,6 +3,7 @@
 import { NodeField } from "@/components/workflows/nodes/node-field";
 import { NodeSegmented } from "@/components/workflows/nodes/node-segmented";
 import { getSelectFieldLabel, getSelectFieldOptions, readString } from "@/helpers/workflow-config";
+import { ratioOptionsFor, useWorkflowProductLine } from "@/hooks/use-workflow-product-line";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { WorkflowNode } from "@/types/workflow";
 
@@ -18,7 +19,8 @@ export const DesignImageFields = ({ nodeId, data, disabled = false }: DesignImag
   const ratio = readString(data.config.aspectRatio);
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const modelOptions = getSelectFieldOptions(data.type, "imageProvider");
-  const ratioOptions = getSelectFieldOptions(data.type, "aspectRatio");
+  // Only the ratios that suit the print area of the batch's product line.
+  const ratioOptions = ratioOptionsFor(getSelectFieldOptions(data.type, "aspectRatio"), useWorkflowProductLine());
 
   return (
     <>

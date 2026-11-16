@@ -1,5 +1,6 @@
+import { productLineLabels, productLineTypes, productTypeLabels } from "@/constants/batches";
 import { productSchema } from "@/schemas/batches";
-import type { BatchProductImportRow, ProductType, SaveProductInput } from "@/types/batches";
+import type { BatchProductImportRow, ProductLine, ProductType, SaveProductInput } from "@/types/batches";
 
 export type ImportRow = BatchProductImportRow & { issues: string[] };
 
@@ -27,8 +28,11 @@ const productTypeAliases: Record<string, ProductType> = {
   phonecase: "phone_case",
 };
 
-/** Turns a worksheet into product rows, each with what is wrong with it, or says why it cannot be read. */
-export const parseProductSheet = (sheetRows: unknown[][]): { rows: ImportRow[] } | { error: string } => {
+/**
+ * Turns a worksheet into product rows, each with what is wrong with it, or says why it cannot be read. A row of a type
+ * outside the batch's product line is pointed out: the batch makes that line only.
+ */
+export const parseProductSheet = (sheetRows: unknown[][], productLine: ProductLine | null = null): { rows: ImportRow[] } | { error: string } => {
   const headers = (sheetRows[0] ?? []).map(normalizeImportHeader);
   const requiredHeaders = ["name", "producttype", "niche", "keywords"];
   if (requiredHeaders.some((header) => !headers.includes(header))) {
@@ -49,6 +53,9 @@ export const parseProductSheet = (sheetRows: unknown[][]): { rows: ImportRow[] }
     const input: SaveProductInput = { name, productType, niche, keywords, productDescription: productDescription || undefined, sourceNotes: sourceNotes || undefined, designText: designText || undefined, customPrompt: customPrompt || undefined };
     const parsed = productSchema.safeParse({ name, productType, niche, keywords: keywordsText, productDescription, sourceNotes, designText, customPrompt });
     const issues = parsed.success ? [] : parsed.error.issues.map((issue) => issue.message);
+    if (parsed.success && productLine && !productLineTypes[productLine].includes(productType)) {
+      issues.push(`This is a ${productLineLabels[productLine].toLowerCase()} batch: use ${productLineTypes[productLine].map((type) => productTypeLabels[type]).join(" or ")}, or import this row into a batch of its own line.`);
+    }
     return { row: index + 2, product: input, issues: [...new Set(issues)] };
   }).filter((row) => row.product.name || row.product.productType || row.product.niche || row.product.keywords.length || row.product.productDescription || row.product.sourceNotes || row.product.designText || row.product.customPrompt);
   if (sheetRows.length - 1 > MAX_IMPORT_ROWS) return { error: "A file can contain up to 500 product rows per import." };

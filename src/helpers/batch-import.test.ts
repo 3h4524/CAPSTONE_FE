@@ -24,6 +24,13 @@ describe("parseProductSheet", () => {
     expect(row?.product.productType).toBe("tote_bag");
   });
 
+  it("points out a row outside the batch's product line", () => {
+    const [hoodie, mug] = rowsOf(parseProductSheet([HEADERS, ["Surf hoodie", "Hoodie", "Surfers", "surf"], ["Surf mug", "Mug", "Surfers", "surf"]], "apparel"));
+
+    expect(hoodie?.issues).toEqual([]);
+    expect(mug?.issues).toEqual([expect.stringContaining("apparel batch")]);
+  });
+
   it("keeps an invalid row and says what is wrong", () => {
     const [row] = rowsOf(parseProductSheet([HEADERS, ["", "T-shirt", "Surfers", "surf"]]));
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, CheckCircle2, MousePointerClick } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,6 +10,7 @@ import { useWorkflowStore } from "@/stores/workflow";
 import { useReactFlow } from "@xyflow/react";
 
 export const ValidationIssues = () => {
+  const { t } = useTranslation("common");
   const { fitView } = useReactFlow();
   const nodes = useWorkflowStore((state) => state.nodes);
   const edges = useWorkflowStore((state) => state.edges);
@@ -23,10 +25,10 @@ export const ValidationIssues = () => {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b px-4 py-3">
-        <h2 className="text-ink-900 text-sm font-semibold">Workflow checks</h2>
+        <h2 className="text-ink-900 text-sm font-semibold">{t("workflowConfig.validation.title")}</h2>
         <p className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-xs">
           <MousePointerClick className="size-3.5" aria-hidden="true" />
-          Select a node to configure it.
+          {t("workflowConfig.validation.selectNode")}
         </p>
       </div>
       <ScrollArea className="min-h-0 flex-1">
@@ -34,10 +36,10 @@ export const ValidationIssues = () => {
           {issues.length === 0 ? (
             <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300" role="status">
               <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-              Every step is connected and configured. Press Run to start the batch.
+              {t("workflowConfig.validation.allGood")}
             </div>
           ) : (
-            <ul className="space-y-2" aria-label="Workflow issues">
+            <ul className="space-y-2" aria-label={t("workflowConfig.validation.issues")}>
               {issues.map((issue) => (
                 <li key={issue.id}>
                   {issue.nodeId ? (

@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
 import type { WorkflowNodeType } from "@/types/workflow";
@@ -12,7 +13,9 @@ type ApprovalFlowProps = {
 
 // One line under the review settings: the step before, what happens here, and the step it lets through.
 export const ApprovalFlow = ({ from, to, automatic }: ApprovalFlowProps) => {
-  const steps = [WORKFLOW_NODE_DEFINITIONS[from].label, automatic ? "Approved automatically" : "You review", WORKFLOW_NODE_DEFINITIONS[to].label];
+  const { t } = useTranslation("common");
+  const stepLabel = (type: WorkflowNodeType) => t(`workflowEditor.nodeTypes.${type}.label`, { defaultValue: WORKFLOW_NODE_DEFINITIONS[type].label });
+  const steps = [stepLabel(from), automatic ? t("workflowConfig.approvalFlow.automatic") : t("workflowConfig.approvalFlow.youReview"), stepLabel(to)];
 
   return (
     <p className="text-muted-foreground -mt-1 flex flex-wrap items-center gap-x-1 gap-y-0.5 px-5 pb-5 text-xs">

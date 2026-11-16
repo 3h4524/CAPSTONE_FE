@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy, Trash2, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -11,6 +12,7 @@ type MultiSelectPanelProps = {
 };
 
 export const MultiSelectPanel = ({ nodes }: MultiSelectPanelProps) => {
+  const { t } = useTranslation("common");
   const isRunning = useWorkflowStore((state) => state.isRunning);
   const duplicateSelectedNodes = useWorkflowStore((state) => state.duplicateSelectedNodes);
   const removeSelectedNodes = useWorkflowStore((state) => state.removeSelectedNodes);
@@ -19,8 +21,8 @@ export const MultiSelectPanel = ({ nodes }: MultiSelectPanelProps) => {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b px-4 py-3">
-        <h2 className="text-ink-900 text-sm font-semibold">{nodes.length} nodes selected</h2>
-        <p className="text-muted-foreground mt-0.5 text-xs">Configure nodes one at a time, or apply a bulk action.</p>
+        <h2 className="text-ink-900 text-sm font-semibold">{t("workflowConfig.multiSelect.selected", { count: nodes.length })}</h2>
+        <p className="text-muted-foreground mt-0.5 text-xs">{t("workflowConfig.multiSelect.description")}</p>
       </div>
       <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto p-4">
         {nodes.map((node) => (
@@ -32,7 +34,7 @@ export const MultiSelectPanel = ({ nodes }: MultiSelectPanelProps) => {
       <div className="space-y-2 border-t p-4">
         <Button type="button" variant="outline" size="sm" className="w-full" onClick={duplicateSelectedNodes} disabled={isRunning}>
           <Copy aria-hidden="true" />
-          Duplicate nodes
+          {t("workflowConfig.multiSelect.duplicate")}
         </Button>
         <Button
           type="button"
@@ -43,11 +45,11 @@ export const MultiSelectPanel = ({ nodes }: MultiSelectPanelProps) => {
           disabled={isRunning}
         >
           <Trash2 aria-hidden="true" />
-          Delete nodes
+          {t("workflowConfig.multiSelect.delete")}
         </Button>
         <Button type="button" variant="ghost" size="sm" className="w-full" onClick={clearSelection}>
           <X aria-hidden="true" />
-          Clear selection
+          {t("workflowConfig.multiSelect.clear")}
         </Button>
       </div>
     </div>

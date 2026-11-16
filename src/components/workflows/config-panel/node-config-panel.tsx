@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Images, Settings2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -27,6 +28,7 @@ type PanelView = "results" | "settings";
 
 // With a run open, the nodes that produce images show what they produced next to their settings.
 const SelectedNodePanel = ({ node }: { node: WorkflowNode }) => {
+  const { t } = useTranslation("common");
   const hasJob = useWorkflowRunStore((state) => state.job !== null);
   const groupId = useRunGroupId();
   const { run } = useWorkflowRuntime();
@@ -40,7 +42,7 @@ const SelectedNodePanel = ({ node }: { node: WorkflowNode }) => {
   return (
     <div className="bg-card flex h-full flex-col">
       <PanelHeader node={node} onClose={() => selectNode(null)}>
-        <div className="bg-muted/70 grid grid-cols-2 gap-1 rounded-lg p-1" role="group" aria-label="Node panel view">
+        <div className="bg-muted/70 grid grid-cols-2 gap-1 rounded-lg p-1" role="group" aria-label={t("workflowConfig.panel.viewSwitch")}>
           {(["results", "settings"] as const).map((item) => (
             <Button
               key={item}
@@ -55,7 +57,7 @@ const SelectedNodePanel = ({ node }: { node: WorkflowNode }) => {
               )}
             >
               {item === "results" ? <Images aria-hidden="true" /> : <Settings2 aria-hidden="true" />}
-              {item === "results" ? "Results" : "Settings"}
+              {item === "results" ? t("workflowConfig.panel.results") : t("workflowConfig.panel.settings")}
             </Button>
           ))}
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Pencil } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -10,15 +11,18 @@ type EditDesignPromptTriggerProps = {
   onOpen: () => void;
 };
 
-export const EditDesignPromptTrigger = ({ canEdit, onOpen }: EditDesignPromptTriggerProps) => (
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <span className="inline-flex">
-        <Button type="button" variant="ghost" size="icon" disabled={!canEdit} onClick={onOpen} aria-label="Edit design prompt">
-          <Pencil aria-hidden="true" />
-        </Button>
-      </span>
-    </TooltipTrigger>
-    {!canEdit && <TooltipContent>Only rows waiting for processing can be edited</TooltipContent>}
-  </Tooltip>
-);
+export const EditDesignPromptTrigger = ({ canEdit, onOpen }: EditDesignPromptTriggerProps) => {
+  const { t } = useTranslation("common");
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex">
+          <Button type="button" variant="ghost" size="icon" disabled={!canEdit} onClick={onOpen} aria-label={t("batchConfig.title")}>
+            <Pencil aria-hidden="true" />
+          </Button>
+        </span>
+      </TooltipTrigger>
+      {!canEdit && <TooltipContent>{t("batchConfig.onlyPending")}</TooltipContent>}
+    </Tooltip>
+  );
+};

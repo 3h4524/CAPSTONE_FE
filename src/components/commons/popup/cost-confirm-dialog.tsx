@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCostConfirmStore } from "@/stores/cost-confirm";
@@ -8,6 +10,7 @@ const usd = (amount: number) => `US$${amount.toFixed(2)}`;
 
 /** Asks the seller to confirm what something paid costs, line by line, with the total last. */
 export function CostConfirmDialog() {
+  const { t } = useTranslation("common");
   const request = useCostConfirmStore((state) => state.request);
   const answer = useCostConfirmStore((state) => state.answer);
 
@@ -32,13 +35,13 @@ export function CostConfirmDialog() {
                       {line.detail && <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">{line.detail}</p>}
                     </div>
                     <span className="shrink-0 text-sm tabular-nums">
-                      {line.amountUsd > 0 ? usd(line.amountUsd) : <span className="text-muted-foreground">Free</span>}
+                      {line.amountUsd > 0 ? usd(line.amountUsd) : <span className="text-muted-foreground">{t("commons.cost.free")}</span>}
                     </span>
                   </li>
                 ))}
               </ul>
               <div className="bg-muted/40 flex items-baseline justify-between gap-4 border-t px-3 py-2.5">
-                <span className="text-sm font-semibold">Estimated total</span>
+                <span className="text-sm font-semibold">{t("commons.cost.total")}</span>
                 <span className="text-base font-semibold tabular-nums">{usd(request.totalUsd)}</span>
               </div>
             </div>
@@ -48,9 +51,9 @@ export function CostConfirmDialog() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => answer(false)}>
-              Cancel
+              {t("commons.popup.cancel")}
             </Button>
-            <Button onClick={() => answer(true)}>{request.confirmLabel ?? "Confirm"}</Button>
+            <Button onClick={() => answer(true)}>{request.confirmLabel ?? t("commons.popup.confirm")}</Button>
           </DialogFooter>
         </DialogContent>
       )}

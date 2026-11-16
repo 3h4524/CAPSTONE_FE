@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,7 @@ type MobileMenuButtonProps = {
 };
 
 export const MobileMenuButton = ({ onClick }: MobileMenuButtonProps) => {
+  const { t } = useTranslation("common");
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -22,13 +24,13 @@ export const MobileMenuButton = ({ onClick }: MobileMenuButtonProps) => {
           variant="ghost"
           size="icon"
           onClick={onClick}
-          aria-label="Open menu"
+          aria-label={t("commons.siteHeader.openMenu")}
           className="max-md:hidden lg:hidden"
         >
           <Menu />
         </Button>
       </TooltipTrigger>
-      <TooltipContent>Open menu</TooltipContent>
+      <TooltipContent>{t("commons.siteHeader.openMenu")}</TooltipContent>
     </Tooltip>
   );
 };

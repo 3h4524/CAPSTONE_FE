@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Container } from "@/components/commons/layout/container";
 import {
@@ -16,6 +17,7 @@ import { cn } from "@/utils/cn";
 const PHONE_FAQS = 3;
 
 export const FaqSection = () => {
+  const { t } = useTranslation("common");
   const [showsAll, setShowsAll] = useState(false);
 
   if (FAQS.length === 0) return null;
@@ -25,10 +27,10 @@ export const FaqSection = () => {
       <Container className="max-w-3xl">
         <div className="mx-auto mb-6 max-w-2xl text-center md:mb-10">
           <h2 className="font-display text-3xl font-bold tracking-tight text-balance md:text-4xl">
-            {FAQ_CONTENT.title}
+            {t("landing.faq.title", { defaultValue: FAQ_CONTENT.title })}
           </h2>
           <p className="text-muted-foreground mt-4">
-            {FAQ_CONTENT.description}
+            {t("landing.faq.description", { defaultValue: FAQ_CONTENT.description })}
           </p>
         </div>
         <Accordion type="single" collapsible>
@@ -39,10 +41,10 @@ export const FaqSection = () => {
               className={cn("bg-card mb-3 rounded-lg border px-5 max-md:mb-2 max-md:px-4", !showsAll && index >= PHONE_FAQS && "max-md:hidden")}
             >
               <AccordionTrigger className="text-left font-medium hover:no-underline">
-                {faq.question}
+                {t(`landing.faq.items.${index}.question`, { defaultValue: faq.question })}
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
-                {faq.answer}
+                {t(`landing.faq.items.${index}.answer`, { defaultValue: faq.answer })}
               </AccordionContent>
             </AccordionItem>
           ))}
@@ -53,7 +55,7 @@ export const FaqSection = () => {
             className="mx-auto flex min-h-11 items-center text-sm font-semibold md:hidden"
             onClick={() => setShowsAll((value) => !value)}
           >
-            {showsAll ? "Show fewer" : `Show all ${FAQS.length} questions`}
+            {showsAll ? t("landing.faq.showFewer") : t("landing.faq.showAll", { count: FAQS.length })}
           </button>
         )}
       </Container>

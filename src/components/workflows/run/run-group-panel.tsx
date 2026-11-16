@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { AlertTriangle, Check, ExternalLink, Film, Loader2, Pencil, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { runGroupKeys } from "@/api/run-groups";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +19,11 @@ import { getErrorMessage } from "@/helpers/error-message";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { hasVideoSteps } from "@/helpers/workflow-run";
 import { useReviewMockupAsset } from "@/hooks/mutations/use-review-mockup-asset";
-import { useCancelRunGroup, useConfirmRunGroup, useResumeRunGroup } from "@/hooks/mutations/use-run-group-actions";
+import {
+  useCancelRunGroup,
+  useConfirmRunGroup,
+  useResumeRunGroup,
+} from "@/hooks/mutations/use-run-group-actions";
 import { useAiVideoTemplates } from "@/hooks/queries/use-ai-video-templates";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { useRunGroup, useRunGroupId } from "@/hooks/queries/use-run-group";
@@ -26,6 +31,7 @@ import { usePanelContinueCommand } from "@/hooks/use-panel-continue-command";
 import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useSyncGeneratedMockups } from "@/hooks/use-sync-generated-mockups";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
+import { i18n } from "@/i18n/client";
 import { useWorkflowStore } from "@/stores/workflow";
 import type {
   GenerateVideoConfig,
@@ -35,23 +41,24 @@ import type {
 } from "@/types/video-workflow";
 import { cn } from "@/utils/cn";
 
-const RUN_STATUS: Record<string, { label: string; className: string }> = {
-  queued: { label: "Queued", className: "bg-ink-100 text-ink-700" },
-  running: { label: "Rendering", className: "bg-sky-100 text-sky-800" },
-  waiting_for_input: { label: "Needs attention", className: "bg-amber-100 text-amber-900" },
-  waiting_for_review: { label: "Ready to review", className: "bg-violet-100 text-violet-800" },
-  completed: { label: "Done", className: "bg-emerald-100 text-emerald-800" },
-  failed: { label: "Failed", className: "bg-rose-100 text-rose-800" },
-  cancelled: { label: "Cancelled", className: "bg-ink-100 text-ink-500" },
+const RUN_STATUS: Record<string, string> = {
+  queued: "bg-ink-100 text-ink-700",
+  running: "bg-sky-100 text-sky-800",
+  waiting_for_input: "bg-amber-100 text-amber-900",
+  waiting_for_review: "bg-violet-100 text-violet-800",
+  completed: "bg-emerald-100 text-emerald-800",
+  failed: "bg-rose-100 text-rose-800",
+  cancelled: "bg-ink-100 text-ink-500",
 };
 
-export const runStatusOf = (status: string | null) =>
-  RUN_STATUS[status ?? ""] ?? { label: status ?? "", className: "bg-ink-100 text-ink-700" };
+export const runStatusOf = (status: string | null) => {
+  const className = RUN_STATUS[status ?? ""];
+  if (!className) return { label: status ?? "", className: "bg-ink-100 text-ink-700" };
+  return { label: i18n.t(`workflowEditor.runGroup.runStatuses.${status}`), className };
+};
 
 /** Whether the workflow makes a video: the run-group panel words what follows Mockup Approval after it. */
 const useWithVideo = () => useWorkflowStore((state) => hasVideoSteps(state.nodes));
-
-const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
 /** The mock-ups of one design: its own artwork group, without the AI keyframes made for a scene. */
 export const designMockups = (
@@ -76,22 +83,25 @@ const byProduct = (targets: RunGroupTarget[]) => {
 // keeps one per product). A product whose mock-ups are approved goes on (gets its video, or is published and gets its
 // listing without one); Continue starts them. Once started, it shows how each run is doing.
 export const RunGroupPanel = () => {
+  const { t } = useTranslation("common");
   const groupId = useRunGroupId();
   const { data: group, isPending, isError, refetch } = useRunGroup(groupId);
   if (!groupId) return null;
   if (isPending)
-    return <p className="text-muted-foreground text-xs">Loading the designs of this run…</p>;
+    return (
+      <p className="text-muted-foreground text-xs">{t("workflowEditor.runGroup.loadingDesigns")}</p>
+    );
   if (isError || !group)
     return (
       <PanelNotice
         tone="error"
         action={
           <button type="button" className="underline" onClick={() => refetch()}>
-            Try again
+            {t("workflowEditor.workspace.tryAgain")}
           </button>
         }
       >
-        The designs of this run could not be loaded.
+        {t("workflowEditor.runGroup.loadError")}
       </PanelNotice>
     );
   return group.status === "waiting_for_targets" ? (
@@ -102,6 +112,7 @@ export const RunGroupPanel = () => {
 };
 
 const ChooseDesigns = ({ group }: { group: RunGroup }) => {
+  const { t } = useTranslation("common");
   const { mutate: confirm, isPending: isConfirming } = useConfirmRunGroup();
   const { mutate: cancel, isPending: isCancelling } = useCancelRunGroup();
   const { selectRun } = useWorkflowRuntime();
@@ -137,7 +148,9 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
         onSuccess: (started) => {
           showWorkflowActionToast(
             "success",
-            `${plural(started.progress.total, withVideo ? "video" : "run")} started.`
+            withVideo
+              ? t("workflowEditor.runGroup.videosStarted", { count: started.progress.total })
+              : t("workflowEditor.runGroup.runsStarted", { count: started.progress.total })
           );
           // The canvas follows the first design's run; the bar above it switches to the others.
           const first = started.targets.find((target) => target.runId)?.runId;
@@ -160,17 +173,16 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
   if (group.targets.length === 0)
     return (
       <PanelNotice tone="warning">
-        No product of this run has mock-ups{withVideo ? " for a video" : ""} yet. Add mock-ups with
-        Apply mock-up, or upload finished photos to a product.
+        {withVideo
+          ? t("workflowEditor.runGroup.noMockupsVideo")
+          : t("workflowEditor.runGroup.noMockups")}
       </PanelNotice>
     );
 
   return (
     <div className="space-y-3">
       <p className="text-muted-foreground text-xs leading-relaxed">
-        {withVideo
-          ? "Approve the mock-ups of each product that should get a video. Every chosen product uses the scenes of Generate Video; a product without a matching image uses its main mock-up. A scene that shows a person uses the product's approved model photo."
-          : "Approve the mock-ups of each product to continue with. Every chosen product goes on to the next steps with its approved mock-ups; skip a product to leave it out."}
+        {withVideo ? t("workflowEditor.runGroup.introVideo") : t("workflowEditor.runGroup.intro")}
       </p>
       {isSyncing && (
         <p className="text-muted-foreground flex items-center gap-1.5 text-xs" role="status">
@@ -178,7 +190,7 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
             className="size-3.5 animate-spin motion-reduce:animate-none"
             aria-hidden="true"
           />
-          Adding the mock-ups made since this run started…
+          {t("workflowEditor.runGroup.syncing")}
         </p>
       )}
       <div className="space-y-3">
@@ -205,12 +217,11 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
                 if (video) selectNode(video.id);
               }}
             >
-              Open Generate Video
+              {t("workflowEditor.runGroup.openGenerateVideo")}
             </button>
           }
         >
-          {warningCount} scene{warningCount === 1 ? "" : "s"} could not use the image you chose and
-          will use another one.
+          {t("workflowEditor.runGroup.sceneWarnings", { count: warningCount })}
         </PanelNotice>
       )}
       {group.preparing && (
@@ -218,23 +229,29 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
           <span className="inline-flex items-center gap-2">
             <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
             {withVideo
-              ? "Getting the videos ready: approving the mock-ups and making the model photos of scenes with a person. The videos start by themselves."
-              : "Approving the mock-ups. The run goes on by itself."}
+              ? t("workflowEditor.runGroup.preparingVideo")
+              : t("workflowEditor.runGroup.preparing")}
           </span>
         </PanelNotice>
       )}
       {group.notice && (
         <PanelNotice tone="warning">
           {group.status === "waiting_for_targets"
-            ? `Mockup Approval is on Approve automatically, but the ${withVideo ? "videos" : "run"} did not start. ${group.notice}`
+            ? `${withVideo ? t("workflowEditor.runGroup.autoNotStartedVideo") : t("workflowEditor.runGroup.autoNotStarted")} ${group.notice}`
             : group.notice}
         </PanelNotice>
       )}
       {tooMany && (
         <PanelNotice tone="error">
-          {group.selectedCount} designs are chosen; one run{" "}
-          {withVideo ? `makes at most ${group.maximumTargets} videos` : `continues with at most ${group.maximumTargets}`}.
-          Reject the mock-ups of the designs to leave out.
+          {withVideo
+            ? t("workflowEditor.runGroup.tooManyVideo", {
+                selected: group.selectedCount,
+                maximum: group.maximumTargets,
+              })
+            : t("workflowEditor.runGroup.tooMany", {
+                selected: group.selectedCount,
+                maximum: group.maximumTargets,
+              })}
         </PanelNotice>
       )}
       {blocked.length > 0 && (
@@ -251,17 +268,17 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
       {isDirty && (
         <PanelNotice tone="warning">
           {designScope
-            ? `Save first: the videos use saved settings, and Save keeps the changes for ${designScope.label} only.`
+            ? t("workflowEditor.runGroup.saveFirstScope", { label: designScope.label })
             : withVideo
-              ? "Save the workflow first: the videos use the saved scenes."
-              : "Save the workflow first: the run uses the saved settings."}
+              ? t("workflowEditor.runGroup.saveFirstVideo")
+              : t("workflowEditor.runGroup.saveFirst")}
         </PanelNotice>
       )}
       <div className="flex flex-wrap items-center gap-2 border-t pt-3">
         <p className="mr-auto text-sm font-medium">
           {withVideo
-            ? `${plural(group.selectedCount, "video")} will be made`
-            : `${plural(group.selectedCount, "product")} will continue`}
+            ? t("workflowEditor.runGroup.videosWillBeMade", { count: group.selectedCount })
+            : t("workflowEditor.runGroup.productsWillContinue", { count: group.selectedCount })}
         </p>
         <Button
           type="button"
@@ -270,15 +287,12 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
           disabled={isCancelling || isConfirming}
           onClick={() => cancel({ groupId: group.id, expectedRevision: group.revision })}
         >
-          Cancel
+          {t("workflowEditor.runGroup.cancel")}
         </Button>
-        <Button
-          type="button"
-          size="sm"
-          disabled={!canStart}
-          onClick={start}
-        >
-          {isConfirming ? "Starting…" : "Continue"}
+        <Button type="button" size="sm" disabled={!canStart} onClick={start}>
+          {isConfirming
+            ? t("workflowEditor.runGroup.starting")
+            : t("workflowEditor.runGroup.continue")}
         </Button>
       </div>
     </div>
@@ -297,6 +311,7 @@ const ProductSection = ({
   targets: RunGroupTarget[];
   showsModelPhoto?: boolean;
 }) => {
+  const { t } = useTranslation("common");
   const client = useAppQueryClient();
   const productId = targets[0].productId;
   const { data: assets, isPending, dataUpdatedAt } = useMockupAssets(productId);
@@ -323,8 +338,10 @@ const ProductSection = ({
             {targets[0].productName}
           </h3>
           <span className="text-muted-foreground shrink-0 text-xs">
-            {plural(targets.length, "design")} ·{" "}
-            {withVideo ? plural(videos, "video") : `${videos} chosen`}
+            {t("workflowEditor.runGroup.designCount", { count: targets.length })} ·{" "}
+            {withVideo
+              ? t("workflowEditor.runGroup.videoCount", { count: videos })
+              : t("workflowEditor.runGroup.chosenCount", { count: videos })}
           </span>
         </header>
       )}
@@ -343,7 +360,7 @@ const ProductSection = ({
       {showsModelPhoto && (
         <details className="border-t">
           <summary className="text-ink-700 hover:bg-ink-50 cursor-pointer px-3 py-2 text-xs font-medium">
-            Put {targets[0].productName} on a model photo
+            {t("workflowEditor.runGroup.putOnModelPhoto", { name: targets[0].productName })}
           </summary>
           <div className="bg-ink-50/50 border-t p-3">
             <ModelPhotoMockupForm productId={productId} assets={assets ?? []} />
@@ -401,6 +418,7 @@ const DesignRow = ({
   /** Off for a workflow without a video: an approved design goes on to the next steps instead. */
   withVideo?: boolean;
 }) => {
+  const { t } = useTranslation("common");
   const { mutateAsync: review } = useReviewMockupAsset();
   const [isReviewing, setIsReviewing] = useState(false);
   const usedScenes = scenesByMockup(target);
@@ -431,14 +449,19 @@ const DesignRow = ({
           </p>
           <p className="text-muted-foreground text-xs">
             {asProduct ? `${target.designLabel} · ` : ""}
-            {target.approvedCount}/{target.mockupCount} mock-ups approved
-            {target.pendingCount > 0 ? ` · ${target.pendingCount} to review` : ""}
+            {t("workflowEditor.runGroup.mockupsApprovedOf", {
+              approved: target.approvedCount,
+              total: target.mockupCount,
+            })}
+            {target.pendingCount > 0
+              ? ` · ${t("workflowEditor.runGroup.toReviewCount", { count: target.pendingCount })}`
+              : ""}
           </p>
           {target.mockupCount > 0 && (
             <div
               className="bg-muted mt-1.5 h-1 max-w-48 overflow-hidden rounded-full"
               role="progressbar"
-              aria-label="Mock-ups approved"
+              aria-label={t("workflowEditor.runGroup.mockupsApproved")}
               aria-valuemin={0}
               aria-valuemax={target.mockupCount}
               aria-valuenow={target.approvedCount}
@@ -453,21 +476,21 @@ const DesignRow = ({
             <p className="text-secondary mt-1.5 flex items-center gap-1 text-xs font-medium">
               <Film className="size-3 shrink-0" aria-hidden="true" />
               {target.scenes.length === 0
-                ? "The video picks from the approved mock-ups"
-                : `The video starts from ${usedCount} image${usedCount === 1 ? "" : "s"}`}
+                ? t("workflowEditor.runGroup.videoPicks")
+                : t("workflowEditor.runGroup.videoStartsFrom", { count: usedCount })}
             </p>
           )}
         </div>
         {target.hasOverride && (
           <Badge variant="outline" className="gap-1">
             <Pencil className="size-3" aria-hidden="true" />
-            Own scenes
+            {t("workflowEditor.runGroup.ownScenes")}
           </Badge>
         )}
         {target.selected && target.warnings.length > 0 && (
           <AlertTriangle
             className="size-4 shrink-0 text-amber-600"
-            aria-label={`${target.warnings.length} warnings`}
+            aria-label={t("workflowEditor.runGroup.warnings", { count: target.warnings.length })}
           />
         )}
         <Badge
@@ -485,7 +508,13 @@ const DesignRow = ({
             )}
             aria-hidden="true"
           />
-          {withVideo ? (target.selected ? "Video" : "No video") : target.selected ? "Included" : "Skipped"}
+          {withVideo
+            ? target.selected
+              ? t("workflowEditor.runGroup.video")
+              : t("workflowEditor.runGroup.noVideo")
+            : target.selected
+              ? t("workflowEditor.runGroup.included")
+              : t("workflowEditor.runGroup.skipped")}
         </Badge>
       </div>
 
@@ -514,19 +543,29 @@ const DesignRow = ({
           onClick={() => reviewAll(true)}
         >
           <Check className="size-3.5" aria-hidden="true" />
-          Approve all
+          {t("workflowEditor.runGroup.approveAll")}
         </Button>
         <Button
           type="button"
           size="sm"
           variant="ghost"
           className="text-muted-foreground h-8 gap-1.5 px-2.5 text-xs hover:translate-y-0"
-          title={`Reject every mock-up of this ${asProduct ? "product" : "design"} so it ${withVideo ? "gets no video" : "is left out"}`}
+          title={t(
+            asProduct
+              ? withVideo
+                ? "workflowEditor.runGroup.rejectProductVideo"
+                : "workflowEditor.runGroup.rejectProduct"
+              : withVideo
+                ? "workflowEditor.runGroup.rejectDesignVideo"
+                : "workflowEditor.runGroup.rejectDesign"
+          )}
           disabled={isReviewing || isLoading || mockups.length === 0}
           onClick={() => reviewAll(false)}
         >
           <X className="size-3.5" aria-hidden="true" />
-          {asProduct ? "Skip product" : "Skip design"}
+          {asProduct
+            ? t("workflowEditor.runGroup.skipProduct")
+            : t("workflowEditor.runGroup.skipDesign")}
         </Button>
       </div>
 
@@ -534,11 +573,15 @@ const DesignRow = ({
         <MockupStripSkeleton />
       ) : mockups.length === 0 ? (
         <p className="text-muted-foreground px-3 text-xs">
-          This {asProduct ? "product" : "design"} has no mock-ups yet.
+          {asProduct
+            ? t("workflowEditor.runGroup.productNoMockups")
+            : t("workflowEditor.runGroup.designNoMockups")}
         </p>
       ) : (
         <ScrollStrip
-          label={`Mock-ups of ${asProduct ? target.productName : target.designLabel}`}
+          label={t("workflowEditor.runGroup.mockupsOf", {
+            name: asProduct ? target.productName : target.designLabel,
+          })}
           itemCount={mockups.length}
         >
           {mockups.map((asset) => (
@@ -551,6 +594,7 @@ const DesignRow = ({
 };
 
 const GroupProgress = ({ group }: { group: RunGroup }) => {
+  const { t } = useTranslation("common");
   const { selectRun, runId } = useWorkflowRuntime();
   const { mutate: cancel, isPending: isCancelling } = useCancelRunGroup();
   const { mutate: resume, isPending: isResuming } = useResumeRunGroup();
@@ -561,18 +605,28 @@ const GroupProgress = ({ group }: { group: RunGroup }) => {
     <div className="space-y-3">
       <p className="text-sm font-medium">
         {group.status === "cancelled"
-          ? "Stopped"
+          ? t("workflowEditor.runGroup.stopped")
           : group.status === "completed"
             ? withVideo
-              ? "All videos finished"
-              : "All runs finished"
+              ? t("workflowEditor.runGroup.allVideosFinished")
+              : t("workflowEditor.runGroup.allRunsFinished")
             : withVideo
-              ? "Making the videos"
-              : "Running"}{" "}
+              ? t("workflowEditor.runGroup.makingVideos")
+              : t("workflowEditor.runGroup.running")}{" "}
         ·{" "}
         <span className="text-muted-foreground font-normal">
-          {progress.completed} done, {progress.waitingForReview} to review
-          {progress.failed > 0 ? `, ${progress.failed} failed` : ""} of {progress.total}
+          {progress.failed > 0
+            ? t("workflowEditor.runGroup.progressWithFailed", {
+                completed: progress.completed,
+                waiting: progress.waitingForReview,
+                failed: progress.failed,
+                total: progress.total,
+              })
+            : t("workflowEditor.runGroup.progress", {
+                completed: progress.completed,
+                waiting: progress.waitingForReview,
+                total: progress.total,
+              })}
         </span>
       </p>
       <div className="bg-ink-100 h-1.5 overflow-hidden rounded-full" aria-hidden="true">
@@ -586,7 +640,10 @@ const GroupProgress = ({ group }: { group: RunGroup }) => {
       <ul className="divide-y rounded-lg border">
         {group.targets.map((target) => {
           const found = runStatusOf(target.runStatus);
-          const status = !withVideo && target.runStatus === "running" ? { ...found, label: "Running" } : found;
+          const status =
+            !withVideo && target.runStatus === "running"
+              ? { ...found, label: t("workflowEditor.runGroup.running") }
+              : found;
           const isOpen = Boolean(target.runId) && target.runId === runId;
           return (
             <li key={target.key} className={cn(isOpen && "bg-primary/5")}>
@@ -612,7 +669,7 @@ const GroupProgress = ({ group }: { group: RunGroup }) => {
                     onClick={() => selectRun(target.runId!)}
                   >
                     <ExternalLink className="size-3.5" aria-hidden="true" />
-                    {isOpen ? "Open" : "View"}
+                    {isOpen ? t("workflowEditor.runGroup.open") : t("workflowEditor.runGroup.view")}
                   </Button>
                 )}
               </div>
@@ -629,13 +686,15 @@ const GroupProgress = ({ group }: { group: RunGroup }) => {
           disabled={isCancelling}
           onClick={() => cancel({ groupId: group.id, expectedRevision: group.revision })}
         >
-          {withVideo ? "Stop all videos" : "Stop all runs"}
+          {withVideo
+            ? t("workflowEditor.runGroup.stopAllVideos")
+            : t("workflowEditor.runGroup.stopAllRuns")}
         </Button>
       )}
       {group.status === "cancelled" && (
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-muted-foreground mr-auto text-xs">
-            Resume goes on from where each design stopped and keeps what was already made.
+            {t("workflowEditor.runGroup.resumeHint")}
           </p>
           <Button
             type="button"
@@ -644,11 +703,16 @@ const GroupProgress = ({ group }: { group: RunGroup }) => {
             onClick={() =>
               resume(
                 { groupId: group.id, expectedRevision: group.revision },
-                { onSuccess: () => showWorkflowActionToast("success", "The run goes on from where it stopped.") }
+                {
+                  onSuccess: () =>
+                    showWorkflowActionToast("success", t("workflowEditor.runGroup.resumed")),
+                }
               )
             }
           >
-            {isResuming ? "Resuming…" : "Resume"}
+            {isResuming
+              ? t("workflowEditor.runGroup.resuming")
+              : t("workflowEditor.runGroup.resume")}
           </Button>
         </div>
       )}
@@ -661,6 +725,7 @@ const GroupProgress = ({ group }: { group: RunGroup }) => {
  * after it. The product's mock-ups are read once for all its designs.
  */
 const ApprovedMockups = ({ target }: { target: RunGroupTarget }) => {
+  const { t } = useTranslation("common");
   const { data: assets, isPending } = useMockupAssets(target.productId);
   const approved = designMockups(assets, target).filter(
     (asset) => asset.approvalStatus === "approved"
@@ -670,10 +735,13 @@ const ApprovedMockups = ({ target }: { target: RunGroupTarget }) => {
   return (
     <div className="space-y-1.5 pb-1">
       <p className="text-muted-foreground px-3 text-xs">
-        {approved.length} approved mock-up{approved.length === 1 ? "" : "s"}
+        {t("workflowEditor.runGroup.approvedMockupCount", { count: approved.length })}
       </p>
       <ScrollStrip
-        label={`Approved mock-ups of ${target.productName} · ${target.designLabel}`}
+        label={t("workflowEditor.runGroup.approvedMockupsOf", {
+          product: target.productName,
+          design: target.designLabel,
+        })}
         itemCount={approved.length}
       >
         {approved.map((asset) => (

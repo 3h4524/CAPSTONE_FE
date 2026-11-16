@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Pencil } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { MockupBackgroundChoice } from "@/components/batch-setup/mockup-template/mockup-background-choice";
 import { MockupTemplateCard } from "@/components/batch-setup/mockup-template/mockup-template-card";
@@ -60,6 +61,7 @@ export const MockupTemplatePickerContent = ({
   onClose,
   printifyOnly = false,
 }: MockupTemplatePickerContentProps) => {
+  const { t } = useTranslation("common");
   // Templates a selection can hold; for a Printify product only the ones linked to Printify.
   const offered = printifyOnly ? templates.filter((template) => template.printify) : templates;
   const notPrintify = printifyOnly ? templates.filter((template) => initialIds.includes(template.id) && !template.printify) : [];
@@ -189,7 +191,7 @@ export const MockupTemplatePickerContent = ({
   return (
     <>
       <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <div className="min-h-0 overflow-y-auto pr-1" role="group" aria-label="Mock-up templates">
+        <div className="min-h-0 overflow-y-auto pr-1" role="group" aria-label={t("batchSetup.mockup.templates")}>
           <div className="flex flex-col gap-4">
             {groups.map((group) => (
               <section key={group.type || "all"} className="flex flex-col gap-2">
@@ -197,20 +199,20 @@ export const MockupTemplatePickerContent = ({
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-ink-900 text-sm font-semibold">{productTypeLabel(group.type)}</h3>
                     <span className="text-muted-foreground text-xs">
-                      {group.count} {group.count === 1 ? "product" : "products"}
+                      {t("batchSetup.mockup.productCount", { count: group.count })}
                     </span>
                     {group.items.some((template) => draftIds.includes(template.id)) ? (
-                      <Badge variant="secondary">Covered</Badge>
+                      <Badge variant="secondary">{t("batchSetup.mockup.covered")}</Badge>
                     ) : (
-                      <Badge variant="outline">No template selected</Badge>
+                      <Badge variant="outline">{t("batchSetup.mockup.noneSelected")}</Badge>
                     )}
                   </div>
                 )}
                 {group.items.length === 0 ? (
                   <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-xs">
                     {printifyOnly
-                      ? `No Printify ${productTypeLabel(group.type)} template yet. Only a template linked to a Printify product can be pushed to Printify.`
-                      : `No ${productTypeLabel(group.type)} template yet. Add one on the Mock-up Templates page.`}
+                      ? t("batchSetup.mockup.noPrintifyTemplate", { type: productTypeLabel(group.type) })
+                      : t("batchSetup.mockup.noTemplate", { type: productTypeLabel(group.type) })}
                   </p>
                 ) : (
                   group.items.map((template) => {
@@ -242,8 +244,8 @@ export const MockupTemplatePickerContent = ({
                               type="button"
                               variant="ghost"
                               size="icon-sm"
-                              aria-label={`Edit ${template.name}`}
-                              title="Edit this template"
+                              aria-label={t("batchSetup.mockup.editName", { name: template.name })}
+                              title={t("batchSetup.mockup.editTemplate")}
                               disabled={pending}
                               onClick={() => setEditing({ template, open: true })}
                             >
@@ -253,7 +255,7 @@ export const MockupTemplatePickerContent = ({
                         </div>
                         {selected && template.allowRecolor && (
                           <div className="ml-4 space-y-2 rounded-lg border border-dashed p-3">
-                            <p className="text-ink-900 text-xs font-medium">Garment colors for {template.name}</p>
+                            <p className="text-ink-900 text-xs font-medium">{t("batchSetup.mockup.colorsFor", { name: template.name })}</p>
                             <GarmentColorPicker
                               compact
                               selected={colors}
@@ -265,8 +267,8 @@ export const MockupTemplatePickerContent = ({
                             />
                             <p className="text-muted-foreground text-xs">
                               {colors.length === 0
-                                ? "None picked: made in the template's own color."
-                                : `${colors.length} mock-up${colors.length === 1 ? "" : "s"} per product, one in each color.`}
+                                ? t("batchSetup.mockup.noColors")
+                                : t("batchSetup.mockup.perProduct", { count: colors.length })}
                             </p>
                             {ownColor && !(colors.length === 1 && colors[0].toLowerCase() === ownColor.toLowerCase()) && (
                               <Button
@@ -277,7 +279,7 @@ export const MockupTemplatePickerContent = ({
                                 disabled={pending}
                                 onClick={() => setDraftColors((previous) => ({ ...previous, [template.id]: [ownColor] }))}
                               >
-                                Use the template&apos;s own color ({garmentColorName(ownColor)})
+                                {t("batchSetup.mockup.useOwnColor", { name: garmentColorName(ownColor) })}
                               </Button>
                             )}
                           </div>
@@ -319,38 +321,38 @@ export const MockupTemplatePickerContent = ({
       <p className="text-muted-foreground text-xs" aria-live="polite">
         {printifyOnly
           ? draftIds.length === 1
-            ? "1 Printify template selected: the Printify product is made on its blueprint."
-            : "Choose one Printify template: the Printify product is made on its blueprint."
-          : `${draftIds.length} of ${MAX_MOCKUP_SELECTION} selected`}
+            ? t("batchSetup.mockup.printifySelected")
+            : t("batchSetup.mockup.choosePrintify")
+          : t("batchSetup.mockup.selectedOf", { count: draftIds.length, max: MAX_MOCKUP_SELECTION })}
         {printifyOnly
           ? ""
           : tooMany
-          ? " — remove some to apply."
+          ? ` — ${t("batchSetup.mockup.removeSome")}`
           : draftIds.length === 0
-            ? " — select at least one template."
+            ? ` — ${t("batchSetup.mockup.selectOne")}`
             : uncovered.length > 0
-              ? ` — no mock-up will be made for: ${uncovered.map((group) => productTypeLabel(group.type)).join(", ")}.`
+              ? ` — ${t("batchSetup.mockup.uncovered", { types: uncovered.map((group) => productTypeLabel(group.type)).join(", ") })}`
               : ""}
       </p>
       {extraOfType.length > 0 && (
         <p className="text-muted-foreground text-xs">
-          Only one template per product type is used now. Unticked: {extraOfType.map((template) => template.name).join(", ")}.
+          {t("batchSetup.mockup.onePerType", { names: extraOfType.map((template) => template.name).join(", ") })}
         </p>
       )}
       {notPrintify.length > 0 && (
         <p className="text-muted-foreground text-xs">
-          Removed from the selection, as it is not linked to Printify: {notPrintify.map((template) => template.name).join(", ")}.
+          {t("batchSetup.mockup.removedNotPrintify", { names: notPrintify.map((template) => template.name).join(", ") })}
         </p>
       )}
       {leftOut.length > 0 && (
         <p className="text-muted-foreground text-xs">
-          Removed from the selection, as this run has no product of that type: {leftOut.map((template) => template.name).join(", ")}.
+          {t("batchSetup.mockup.removedNoProduct", { names: leftOut.map((template) => template.name).join(", ") })}
         </p>
       )}
       <DialogFooter className="gap-2">
-        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button type="button" variant="ghost" onClick={onClose}>{t("batchSetup.cancel")}</Button>
         <Button type="button" disabled={pending || draftIds.length === 0 || tooMany || (printifyOnly && draftIds.length !== 1)} onClick={apply}>
-          Apply mock-ups
+          {t("batchSetup.mockup.apply")}
         </Button>
       </DialogFooter>
       <MockupTemplateFormDialog

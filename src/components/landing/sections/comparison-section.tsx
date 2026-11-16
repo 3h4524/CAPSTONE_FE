@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, Clock, Zap } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Container } from "@/components/commons/layout/container";
 import {
@@ -12,6 +13,7 @@ import {
 import { cn } from "@/utils/cn";
 
 export const ComparisonSection = () => {
+  const { t } = useTranslation("common");
   // A phone leads with the two totals; the time per task opens on request.
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const detailClass = cn("mt-6 flex flex-col max-md:mt-3", !isDetailOpen && "max-md:hidden");
@@ -22,10 +24,10 @@ export const ComparisonSection = () => {
       <Container className="max-w-4xl">
         <div className="mx-auto mb-6 max-w-2xl text-center md:mb-10">
           <h2 className="font-display text-3xl font-bold tracking-tight text-balance md:text-4xl">
-            {COMPARISON_CONTENT.title}
+            {t("landing.comparison.title", { defaultValue: COMPARISON_CONTENT.title })}
           </h2>
           <p className="text-muted-foreground mt-4">
-            {COMPARISON_CONTENT.description}
+            {t("landing.comparison.description", { defaultValue: COMPARISON_CONTENT.description })}
           </p>
         </div>
         <div className={cn("bg-card grid overflow-hidden rounded-lg border shadow-sm md:grid-cols-2", !isDetailOpen && "max-md:grid-cols-2")}>
@@ -36,29 +38,29 @@ export const ComparisonSection = () => {
                 strokeWidth={2}
                 aria-hidden="true"
               />
-              {COMPARISON_CONTENT.manualTitle}
+              {t("landing.comparison.manualTitle", { defaultValue: COMPARISON_CONTENT.manualTitle })}
             </h3>
             <ul className={detailClass}>
-              {MANUAL_ROWS.map((row) => (
+              {MANUAL_ROWS.map((row, index) => (
                 <li
                   key={row.label}
                   className="border-border/60 flex items-center justify-between gap-4 border-b py-3 text-sm last:border-b-0"
                 >
-                  <span className="text-muted-foreground">{row.label}</span>
+                  <span className="text-muted-foreground">{t(`landing.comparison.manualRows.${index}.label`, { defaultValue: row.label })}</span>
                   <span className="font-semibold whitespace-nowrap">
-                    {row.value}
+                    {t(`landing.comparison.manualRows.${index}.value`, { defaultValue: row.value })}
                   </span>
                 </li>
               ))}
             </ul>
             <div className={cn("border-border/60 border-t", totalClass)}>
               <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-                Total time invested
+                {t("landing.comparison.totalTime")}
               </p>
               <p className="mt-1 font-mono text-5xl font-bold tracking-tight max-md:text-3xl">
                 {COMPARISON_CONTENT.manualTotal.value}
                 <span className="text-muted-foreground ml-2 font-sans text-lg font-medium max-md:ml-1 max-md:text-sm">
-                  {COMPARISON_CONTENT.manualTotal.unit}
+                  {t("landing.comparison.unit", { defaultValue: COMPARISON_CONTENT.manualTotal.unit })}
                 </span>
               </p>
             </div>
@@ -66,29 +68,29 @@ export const ComparisonSection = () => {
           <div className="bg-primary text-primary-foreground p-6 max-md:p-4 md:p-8">
             <h3 className="flex items-center gap-2 text-lg font-semibold max-md:text-sm">
               <Zap className="size-5" strokeWidth={2} aria-hidden="true" />
-              {COMPARISON_CONTENT.apcsTitle}
+              {t("landing.comparison.apcsTitle", { defaultValue: COMPARISON_CONTENT.apcsTitle })}
             </h3>
             <ul className={detailClass}>
-              {APCS_ROWS.map((row) => (
+              {APCS_ROWS.map((row, index) => (
                 <li
                   key={row.label}
                   className="border-primary-foreground/15 flex items-center justify-between gap-4 border-b py-3 text-sm last:border-b-0"
                 >
-                  <span className="text-primary-foreground/70">{row.label}</span>
+                  <span className="text-primary-foreground/70">{t(`landing.comparison.apcsRows.${index}.label`, { defaultValue: row.label })}</span>
                   <span className="font-semibold whitespace-nowrap">
-                    {row.value}
+                    {t(`landing.comparison.apcsRows.${index}.value`, { defaultValue: row.value })}
                   </span>
                 </li>
               ))}
             </ul>
             <div className={cn("border-primary-foreground/15 border-t", totalClass)}>
               <p className="text-primary-foreground/60 text-xs font-medium tracking-wider uppercase">
-                Total time invested
+                {t("landing.comparison.totalTime")}
               </p>
               <p className="text-primary-foreground mt-1 font-mono text-5xl font-bold tracking-tight max-md:text-3xl">
                 {COMPARISON_CONTENT.apcsTotal.value}
                 <span className="text-primary-foreground/70 ml-2 font-sans text-lg font-medium max-md:ml-1 max-md:text-sm">
-                  {COMPARISON_CONTENT.apcsTotal.unit}
+                  {t("landing.comparison.unit", { defaultValue: COMPARISON_CONTENT.apcsTotal.unit })}
                 </span>
               </p>
             </div>
@@ -100,11 +102,11 @@ export const ComparisonSection = () => {
           className="mx-auto mt-2 flex min-h-11 items-center gap-1 text-sm font-semibold md:hidden"
           onClick={() => setIsDetailOpen((open) => !open)}
         >
-          {isDetailOpen ? "Hide details" : "See details"}
+          {isDetailOpen ? t("landing.comparison.hideDetails") : t("landing.comparison.seeDetails")}
           <ChevronDown className={cn("size-4 transition-transform", isDetailOpen && "rotate-180")} aria-hidden="true" />
         </button>
         <p className="text-muted-foreground mt-6 text-center text-xs max-md:mt-2">
-          {COMPARISON_CONTENT.footnote}
+          {t("landing.comparison.footnote", { defaultValue: COMPARISON_CONTENT.footnote })}
         </p>
       </Container>
     </section>

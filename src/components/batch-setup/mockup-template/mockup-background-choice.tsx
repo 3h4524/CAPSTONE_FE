@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
 import { MockupBackgroundPicker, MockupBackgroundSwatch } from "@/components/mockups/mockup-background-picker";
 import { garmentColorName } from "@/helpers/garment-colors";
@@ -24,13 +26,14 @@ type MockupBackgroundChoiceProps = {
 // a background of its own: switching the color (here or in the preview) switches which one is being chosen,
 // so a template in many colors does not grow one picker per color.
 export const MockupBackgroundChoice = ({ template, colors, shownColor, backgrounds, disabled = false, onShowColor, onChange }: MockupBackgroundChoiceProps) => {
+  const { t } = useTranslation("common");
   const shownKey = backgroundKeys(shownColor ? [shownColor] : [])[0];
 
   return (
     <div className="ml-4 space-y-2 rounded-lg border border-dashed p-3">
-      <p className="text-ink-900 text-xs font-medium">Background for {template.name}</p>
+      <p className="text-ink-900 text-xs font-medium">{t("batchSetup.mockup.backgroundFor", { name: template.name })}</p>
       {colors.length > 1 && (
-        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Garment color to choose the background for">
+        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("batchSetup.mockup.backgroundColorGroup")}>
           {colors.map((hex) => {
             const shown = hex.toLowerCase() === shownColor?.toLowerCase();
             const background = resolveBackground(backgrounds, backgroundKeys([hex])[0]);
@@ -38,7 +41,7 @@ export const MockupBackgroundChoice = ({ template, colors, shownColor, backgroun
               <button
                 key={hex}
                 type="button"
-                aria-label={`Background for the ${garmentColorName(hex)} garment`}
+                aria-label={t("batchSetup.mockup.backgroundForGarment", { name: garmentColorName(hex) })}
                 aria-pressed={shown}
                 disabled={disabled}
                 onClick={() => onShowColor(hex)}
@@ -55,14 +58,14 @@ export const MockupBackgroundChoice = ({ template, colors, shownColor, backgroun
       {colors.length > 1 && shownColor && (
         <p className="text-ink-700 flex items-center gap-1.5 text-xs">
           <GarmentColorSwatch hex={shownColor} />
-          {garmentColorName(shownColor)} garment
+          {t("batchSetup.mockup.garment", { name: garmentColorName(shownColor) })}
         </p>
       )}
       {/* Keyed by the garment color, so a color typed for one is not left in the field for the next. */}
       <MockupBackgroundPicker key={shownKey} value={resolveBackground(backgrounds, shownKey)} disabled={disabled} onChange={(hex) => onChange(shownKey, hex)} />
       <p className="text-muted-foreground text-xs">
-        Original keeps the photo&apos;s own background; a color lifts the garment off the photo and puts it on that color.
-        {colors.length > 1 && " Each garment color has its own: switch the color above or in the preview to set the others."}
+        {t("batchSetup.mockup.backgroundHint")}
+        {colors.length > 1 && ` ${t("batchSetup.mockup.backgroundPerColor")}`}
       </p>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Logo } from "@/components/commons/icons/logo";
 import { AccountMenu } from "@/components/commons/layout/app-shell/account/account-menu";
@@ -13,6 +14,7 @@ import { CollapseToggle } from "./collapse-toggle";
 import { NavSection } from "./nav-section";
 
 export const AppSidebar = () => {
+  const { t } = useTranslation("common");
   const isCollapsed = useSidebarStore((state) => state.isCollapsed);
 
   return (
@@ -35,7 +37,7 @@ export const AppSidebar = () => {
         </span>
         <CollapseToggle />
       </div>
-      <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-3" aria-label="Primary navigation">
+      <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-3" aria-label={t("navigation.primary")}>
         {NAV_SECTIONS.map((section, index) => (
           <Fragment key={section.label}>
             {index > 0 && <Separator />}

@@ -1,10 +1,17 @@
+"use client";
+
+import { useTranslation } from "react-i18next";
+
 import { Spinner } from "@/components/ui/spinner";
 
 type PageLoadingProps = {
   label?: string;
 };
 
-export const PageLoading = ({ label = "Loading page" }: PageLoadingProps) => (
+export const PageLoading = ({ label: labelProp }: PageLoadingProps) => {
+  const { t } = useTranslation("common");
+  const label = labelProp ?? t("commons.loading.page");
+  return (
   <div
     role="status"
     aria-label={label}
@@ -18,4 +25,5 @@ export const PageLoading = ({ label = "Loading page" }: PageLoadingProps) => (
       <span className="text-muted-foreground text-sm">{label}…</span>
     </div>
   </div>
-);
+  );
+};

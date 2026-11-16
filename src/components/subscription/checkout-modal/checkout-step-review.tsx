@@ -1,4 +1,5 @@
 import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { planLines } from "@/components/subscription/plan-comparison-card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ export const CheckoutStepReview = ({
   onContinue,
   onCancel,
 }: CheckoutStepReviewProps) => {
+  const { t } = useTranslation("common");
   const today = new Date();
   const { data: catalog } = useFeatureCatalog();
   // BR191: a plan with no annual price must never offer the Annual option.
@@ -60,18 +62,18 @@ export const CheckoutStepReview = ({
               <Sparkles className="size-4" />
             </div>
             <div>
-              <p className="text-muted-foreground text-xs">Selected plan</p>
+              <p className="text-muted-foreground text-xs">{t("subscription.selectedPlan")}</p>
               <p className="text-lg font-semibold">{plan.name}</p>
             </div>
           </div>
           <p className="text-xl font-bold whitespace-nowrap">
             {formatVnd(plan.monthlyPriceVnd)}
-            <span className="text-muted-foreground text-sm font-normal"> / month</span>
+            <span className="text-muted-foreground text-sm font-normal">{t("subscription.perMonthText")}</span>
           </p>
         </div>
         {plan.description && <p className="text-muted-foreground mt-2 text-sm">{plan.description}</p>}
         <div className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-          {planLines(plan, catalogFeatures(catalog))
+          {planLines(plan, catalogFeatures(catalog), t)
             .filter((line) => line.included)
             .map((line) => (
               <span key={line.label} className="flex items-center gap-2">
@@ -89,39 +91,39 @@ export const CheckoutStepReview = ({
           className="grid-flow-col justify-start gap-6"
         >
           <label className="flex items-center gap-2 text-sm">
-            <RadioGroupItem value="monthly" /> Monthly
+            <RadioGroupItem value="monthly" /> {t("subscription.monthlyLabel")}
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <RadioGroupItem value="annual" /> Annual
+            <RadioGroupItem value="annual" /> {t("subscription.annualLabel")}
           </label>
         </RadioGroup>
       )}
 
       <div className="bg-muted grid grid-cols-3 divide-x rounded-lg text-sm">
         <div className="space-y-0.5 px-4 py-3">
-          <p className="text-muted-foreground text-xs">Due today</p>
+          <p className="text-muted-foreground text-xs">{t("subscription.dueToday")}</p>
           <p className="font-semibold">{formatVnd(dueToday)}</p>
         </div>
         <div className="space-y-0.5 px-4 py-3">
-          <p className="text-muted-foreground text-xs">First renewal</p>
+          <p className="text-muted-foreground text-xs">{t("subscription.firstRenewal")}</p>
           <p className="font-semibold">{formatDate(firstRenewal)}</p>
         </div>
         <div className="space-y-0.5 px-4 py-3">
-          <p className="text-muted-foreground text-xs">Monthly rate</p>
+          <p className="text-muted-foreground text-xs">{t("subscription.monthlyRate")}</p>
           <p className="font-semibold">{formatVnd(monthlyRate)}</p>
         </div>
       </div>
 
       <p className="text-muted-foreground text-xs">
-        You&apos;ll scan a PayOS QR code to complete payment on the next step.
+        {t("subscription.scanPayosNote")}
       </p>
 
       <div className="flex justify-end gap-2">
         <Button variant="ghost" onClick={onCancel}>
-          Not now
+          {t("subscription.notNow")}
         </Button>
         <Button onClick={onContinue}>
-          Continue to payment <ArrowRight className="size-4" />
+          {t("subscription.continueToPayment")} <ArrowRight className="size-4" />
         </Button>
       </div>
     </div>

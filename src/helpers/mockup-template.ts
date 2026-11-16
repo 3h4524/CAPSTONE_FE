@@ -36,6 +36,23 @@ export const parsePrintArea = (json: string): MockupPrintArea | null => {
   }
 };
 
+/**
+ * Mirrors MockupRules.PrintifyFrameOf: the print area Printify prints on a Printify template's photo. Its main print
+ * area is where the design goes inside it; one never moved has no frame stored, and its main area is Printify's.
+ */
+export const parsePrintifyFrame = (json: string): MockupPrintArea | null => {
+  try {
+    const frame = (JSON.parse(json) as { printifyFrame?: unknown }).printifyFrame;
+    if (frame && typeof frame === "object") {
+      const stored = parsePrintArea(JSON.stringify(frame));
+      if (stored && stored.width > 0 && stored.height > 0) return stored;
+    }
+  } catch {
+    return null;
+  }
+  return parsePrintArea(json);
+};
+
 /** A corner of a print area, in the photo's pixels. */
 export type QuadPoint = { x: number; y: number };
 

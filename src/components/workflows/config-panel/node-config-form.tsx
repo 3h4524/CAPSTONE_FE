@@ -29,7 +29,7 @@ import { ReviewVideoResults } from "@/components/workflows/config-panel/review-v
 import { SocialPublishSettings } from "@/components/workflows/config-panel/social-publish-settings";
 import { MockupPanel } from "@/components/workflows/media/mockup-panel";
 import { ModelPhotoSection } from "@/components/workflows/media/model-photo-section";
-import { RunStatusPanel } from "@/components/workflows/media/run-status-panel";
+import { PrintifyRunStatus, RunStatusPanel } from "@/components/workflows/media/run-status-panel";
 import { StoryboardPanel } from "@/components/workflows/media/storyboard-panel";
 import { VideoReviewPanel } from "@/components/workflows/media/video-review-panel";
 import { VideoSourcesHeader } from "@/components/workflows/media/video-sources-header";
@@ -38,7 +38,7 @@ import { NODE_PANEL_SECTIONS } from "@/constants/workflow-panel";
 import { getVideoOutputFormat } from "@/helpers/video-output-formats";
 import { readString } from "@/helpers/workflow-config";
 import { groupPanelFields } from "@/helpers/workflow-panel";
-import { hasVideoSteps, isVideoRunNode, showsInputProduct, supportsBatchVideos } from "@/helpers/workflow-run";
+import { hasVideoSteps, isVideoRunNode, runsPerDesign, showsInputProduct } from "@/helpers/workflow-run";
 import { useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useNodeOverview } from "@/hooks/use-node-overview";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
@@ -67,8 +67,8 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
     )
   );
   const hasVideo = useWorkflowStore((state) => hasVideoSteps(state.nodes));
-  // Standard scenes make one video per design chosen at Mockup Approval; AI scenes, one product's video.
-  const batchVideos = useWorkflowStore((state) => hasVideoSteps(state.nodes) && supportsBatchVideos(state.nodes));
+  // A run goes on for each design chosen at Mockup Approval; only video settings that fit one product make its video.
+  const batchVideos = useWorkflowStore((state) => runsPerDesign(state.nodes));
   const groupId = useRunGroupId();
   // Mockup Approval lets the mock-ups through to the video, or without one straight to the first publish step.
   const approvalLeadsTo = useWorkflowStore((state): WorkflowNodeType =>
@@ -79,6 +79,11 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
         : state.nodes.some((n) => n.data.type === "publish-etsy")
           ? "publish-etsy"
           : "generate-video"
+  );
+  // Review Video lets the video through to Export ZIP, or without one straight to Publish to Etsy. Push to Printify
+  // does not wait for the video: it goes right after Mockup Approval.
+  const reviewLeadsTo = useWorkflowStore((state): WorkflowNodeType =>
+    (["export-zip", "publish-etsy"] as const).find((type) => state.nodes.some((n) => n.data.type === type)) ?? "export-zip"
   );
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const selectNode = useWorkflowStore((state) => state.selectNode);
@@ -291,8 +296,8 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
         {node.data.type === "approval-gate" && (
           <>
             <ApprovalFlow from="apply-mockup" to={approvalLeadsTo} automatic={node.data.config.mode === "auto"} />
-            {!batchVideos && !groupId && (
-              <PanelSection title={hasVideo ? "Video product" : "Product"}>
+            {hasVideo && !batchVideos && !groupId && (
+              <PanelSection title="Video product">
                 <VideoProductSelect />
               </PanelSection>
             )}
@@ -301,14 +306,14 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
         )}
         {node.data.type === "review-video" && (
           <>
-            <ApprovalFlow from="generate-video" to="export-zip" automatic={node.data.config.mode === "auto"} />
+            <ApprovalFlow from="generate-video" to={reviewLeadsTo} automatic={node.data.config.mode === "auto"} />
             {showResults && <ReviewVideoResults className="px-5 pb-5" />}
           </>
         )}
         {((isVideoRunNode(node.data.type) && node.data.type !== "approval-gate" && node.data.type !== "review-video") ||
           node.data.type === "generate-listing") && (
           <div className="space-y-4 px-5 pb-5">
-            {isVideoRunNode(node.data.type) && node.data.type !== "generate-video" && (
+            {node.data.type === "publish-printify" ? <PrintifyRunStatus /> : isVideoRunNode(node.data.type) && node.data.type !== "generate-video" && (
               <RunStatusPanel />
             )}
             {node.data.type === "generate-listing" && <ListingContentResultPanel />}

@@ -2,6 +2,7 @@
 
 import { type PointerEvent, useEffect, useRef, useState } from "react";
 import { Brush, Eraser, RotateCcw, ScanSearch, Trash2, Wand2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -118,6 +119,7 @@ export const GarmentSelectionEditor = ({
   readOnly = false,
   onChange,
 }: GarmentSelectionEditorProps) => {
+  const { t } = useTranslation("common");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // The stroke being painted keeps its own mask: several pointer moves can arrive before React renders.
   const strokeRef = useRef<{ last: { x: number; y: number }; mask: SelectionMask } | null>(null);
@@ -292,16 +294,16 @@ export const GarmentSelectionEditor = ({
   if (loadError) {
     return (
       <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-        The photo could not be read for selecting the garment. Choose the photo again.
+        {t("mockups.garmentSelection.loadError")}
       </p>
     );
   }
 
   const coverage = mask ? selectionCoverage(mask) : 0;
   const tools: { value: Tool; label: string; icon: typeof Wand2 }[] = [
-    { value: "wand", label: "Select color", icon: Wand2 },
-    { value: "add", label: "Brush", icon: Brush },
-    { value: "erase", label: "Erase", icon: Eraser },
+    { value: "wand", label: t("mockups.garmentSelection.selectColor"), icon: Wand2 },
+    { value: "add", label: t("mockups.garmentSelection.brush"), icon: Brush },
+    { value: "erase", label: t("mockups.garmentSelection.erase"), icon: Eraser },
   ];
 
   return (
@@ -311,7 +313,7 @@ export const GarmentSelectionEditor = ({
           <div
             className="flex flex-wrap items-center gap-1.5"
             role="toolbar"
-            aria-label="Garment selection tools"
+            aria-label={t("mockups.garmentSelection.toolsAria")}
           >
             {tools.map(({ value, label, icon: Icon }) => (
               <Button
@@ -338,7 +340,7 @@ export const GarmentSelectionEditor = ({
               onClick={undo}
             >
               <RotateCcw aria-hidden="true" />
-              Undo
+              {t("mockups.undo")}
             </Button>
             <Button
               type="button"
@@ -349,7 +351,7 @@ export const GarmentSelectionEditor = ({
               onClick={clear}
             >
               <Trash2 aria-hidden="true" />
-              Clear
+              {t("mockups.clear")}
             </Button>
             {suggestion && (
               <Button
@@ -361,13 +363,13 @@ export const GarmentSelectionEditor = ({
                 onClick={applySuggestion}
               >
                 <ScanSearch aria-hidden="true" />
-                Find garment
+                {t("mockups.findGarment")}
               </Button>
             )}
           </div>
           <label className="text-ink-700 flex items-center gap-3 text-xs">
             <span className="w-28 shrink-0">
-              {tool === "wand" ? "Color tolerance" : "Brush size"}
+              {tool === "wand" ? t("mockups.garmentSelection.toleranceLabel") : t("mockups.garmentSelection.brushSizeLabel")}
             </span>
             {tool === "wand" ? (
               <input
@@ -398,14 +400,14 @@ export const GarmentSelectionEditor = ({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={photoUrl}
-          alt="Model photo"
+          alt={t("mockups.garmentSelection.alt")}
           crossOrigin="anonymous"
           draggable={false}
           className="ring-ink-200 block max-h-105 max-w-full rounded-lg ring-1 select-none ring-inset"
         />
         <canvas
           ref={canvasRef}
-          aria-label="Garment selection"
+          aria-label={t("mockups.garmentSelection.ariaCanvas")}
           className={cn(
             "absolute inset-0 size-full touch-none rounded-lg",
             disabled || readOnly || !photo
@@ -423,7 +425,7 @@ export const GarmentSelectionEditor = ({
           <div
             className="bg-card/60 absolute inset-0 flex items-center justify-center rounded-lg"
             role="status"
-            aria-label="Preparing the photo"
+            aria-label={t("mockups.garmentSelection.preparingPhoto")}
           >
             <Spinner className="size-6" />
           </div>
@@ -432,10 +434,10 @@ export const GarmentSelectionEditor = ({
       {!readOnly && (
         <p className="text-muted-foreground text-xs">
           {autoSelected
-            ? "The garment was found automatically. Check that only it is blue (no skin, hair, or other clothes); fix it with the brush if needed."
+            ? t("mockups.garmentSelection.autoNote")
             : coverage > 0
-              ? `Selected: ${(coverage * 100).toFixed(1)}% of the photo. Only the garment should be blue: no skin, hair, or other clothes.`
-              : "Click the garment to select it. Add what the click missed with the brush; erase anything that is not the garment."}
+              ? t("mockups.garmentSelection.selectionNote", { percent: (coverage * 100).toFixed(1) })
+              : t("mockups.garmentSelection.clickNote")}
         </p>
       )}
     </div>

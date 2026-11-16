@@ -1,4 +1,5 @@
 import type { AllowanceCode, AllowanceItem, Allowances } from "@/types/allowance";
+import { formatDate } from "@/utils/format-date";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -20,9 +21,9 @@ export const orderAllowances = (allowances: Allowances) =>
 const find = (allowances: Allowances, code: AllowanceCode) => allowances.items.find((item) => item.code === code);
 
 /** When the allowances start again, in the words the page shows. */
-export const allowanceResetLine = (allowances: Allowances): string | null => {
+export const allowanceResetLine = (allowances: Allowances, locale: string): string | null => {
   if (!allowances.resetsOn) return null;
-  const date = formatAllowanceDate(allowances.resetsOn);
+  const date = formatDate(allowances.resetsOn, locale);
   return allowances.scope === "trial" ? `Trial ends ${date}` : `Resets ${date}`;
 };
 

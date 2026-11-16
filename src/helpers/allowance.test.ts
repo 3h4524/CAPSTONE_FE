@@ -38,10 +38,21 @@ describe("allowance dates and lines", () => {
     expect(ordered.map((x) => x.code)).toEqual(["design_runs", "videos"]);
   });
 
-  it("says a trial ends and a month resets", () => {
-    expect(allowanceResetLine(allowances({ scope: "trial" }))).toBe("Trial ends 1 Dec 2026");
-    expect(allowanceResetLine(allowances())).toBe("Resets 1 Dec 2026");
-    expect(allowanceResetLine(allowances({ resetsOn: null }))).toBeNull();
+  it("says a trial ends and a month resets in English", () => {
+    expect(allowanceResetLine(allowances({ scope: "trial" }), "en")).toBe("Trial ends Dec 1, 2026");
+    expect(allowanceResetLine(allowances(), "en")).toBe("Resets Dec 1, 2026");
+    expect(allowanceResetLine(allowances({ resetsOn: null }), "en")).toBeNull();
+  });
+
+  it("says the same lines in Vietnamese", () => {
+    const trial = allowanceResetLine(allowances({ scope: "trial" }), "vi");
+    const plan = allowanceResetLine(allowances(), "vi");
+
+    expect(trial).toContain("Trial ends ");
+    expect(trial).toContain("2026");
+    expect(plan).toContain("Resets ");
+    expect(plan).toContain("2026");
+    expect(allowanceResetLine(allowances({ resetsOn: null }), "vi")).toBeNull();
   });
 });
 

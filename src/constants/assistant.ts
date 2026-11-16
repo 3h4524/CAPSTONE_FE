@@ -3,6 +3,7 @@ export const ASSISTANT_COUNTER_THRESHOLD = 3500;
 export const ASSISTANT_ACTION_COUNTDOWN_TICK_MS = 1000;
 export const ASSISTANT_ACTION_EXPIRED_ERROR_CODE = "assistant.action_expired";
 export const ASSISTANT_STOPPED_ERROR_CODE = "assistant.stopped";
+export const ASSISTANT_BLOCKED_ERROR_CODE = "assistant.blocked";
 export const ASSISTANT_INTERRUPTED_ERROR = { code: "assistant.interrupted", message: "This answer was interrupted." };
 export const ASSISTANT_REATTACH_DELAYS_MS = [1000, 2000, 4000];
 export const ASSISTANT_STREAM_INTERRUPTED_ERROR = {

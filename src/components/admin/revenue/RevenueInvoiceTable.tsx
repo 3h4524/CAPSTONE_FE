@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Eye, Receipt, Search } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Eye, Receipt, Search } from "lucide-react";
 
 import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getPlanColor } from "@/helpers/revenue-by-plan";
 import {
   formatRangeDate,
@@ -48,8 +49,8 @@ interface RevenueInvoiceTableProps {
   onPageChange: (page: number) => void;
 }
 
-const SELECT_CLASS =
-  "h-9 cursor-pointer appearance-none rounded-lg border border-ink-200 bg-card pr-8 pl-3 text-xs font-medium text-ink-700 transition-colors hover:border-ink-300 focus:border-blue-400 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 max-md:w-full max-md:text-base max-md:font-normal";
+const ALL_FILTER = "all";
+const FILTER_TRIGGER_CLASS = "h-9 rounded-lg text-xs font-medium max-md:w-full max-md:min-w-0 max-md:text-base max-md:font-normal";
 
 export function RevenueInvoiceTable({
   data,
@@ -90,7 +91,7 @@ export function RevenueInvoiceTable({
           <h3 className="text-ink-900 text-sm font-bold whitespace-nowrap dark:text-slate-100">Recent Transactions</h3>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 max-md:grid max-md:grid-cols-2">
+        <div className="flex flex-wrap items-center gap-2 max-md:grid max-md:w-full max-md:grid-cols-2">
           <div className="relative w-full max-md:col-span-2 sm:w-72">
             <Search className="text-ink-400 pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
             <input
@@ -103,39 +104,39 @@ export function RevenueInvoiceTable({
             />
           </div>
 
-          <div className="relative max-md:min-w-0">
-            <select
-              aria-label="Filter by plan"
-              value={tableFilter.plan}
-              onChange={(e) => onTableFilterChange({ ...tableFilter, plan: e.target.value })}
-              className={SELECT_CLASS}
-            >
-              <option value="">All Plans</option>
+          <Select
+            value={tableFilter.plan || ALL_FILTER}
+            onValueChange={(value) => onTableFilterChange({ ...tableFilter, plan: value === ALL_FILTER ? "" : value })}
+          >
+            <SelectTrigger aria-label="Filter by plan" className={FILTER_TRIGGER_CLASS}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_FILTER}>All Plans</SelectItem>
               {planOptions.map((p) => (
-                <option key={p} value={p}>
+                <SelectItem key={p} value={p}>
                   {p}
-                </option>
+                </SelectItem>
               ))}
-            </select>
-            <ChevronDown className="text-ink-400 pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2" />
-          </div>
+            </SelectContent>
+          </Select>
 
-          <div className="relative max-md:min-w-0">
-            <select
-              aria-label="Filter by status"
-              value={tableFilter.status}
-              onChange={(e) => onTableFilterChange({ ...tableFilter, status: e.target.value as TransactionStatus | "" })}
-              className={SELECT_CLASS}
-            >
-              <option value="">All Status</option>
+          <Select
+            value={tableFilter.status || ALL_FILTER}
+            onValueChange={(value) => onTableFilterChange({ ...tableFilter, status: value === ALL_FILTER ? "" : (value as TransactionStatus) })}
+          >
+            <SelectTrigger aria-label="Filter by status" className={FILTER_TRIGGER_CLASS}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_FILTER}>All Status</SelectItem>
               {TRANSACTION_STATUSES.map((s) => (
-                <option key={s} value={s}>
+                <SelectItem key={s} value={s}>
                   {TRANSACTION_STATUS_STYLE[s].label}
-                </option>
+                </SelectItem>
               ))}
-            </select>
-            <ChevronDown className="text-ink-400 pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2" />
-          </div>
+            </SelectContent>
+          </Select>
 
           <div
             title="Change the period with the date filter at the top of the page"

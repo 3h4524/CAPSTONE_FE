@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bell, Check, Clock3, KeyRound, Palette, ShieldCheck, UserRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -104,20 +105,17 @@ export const SettingsPage = ({ variant = "seller" }: SettingsPageProps) => {
   return (
     // The admin shell already pads its page area, so the admin variant adds none of its own.
     <div className={cn("mx-auto flex w-full max-w-6xl flex-col gap-6 max-md:gap-3", !isAdmin && "md:p-6 lg:p-8", hasChanges ? "max-md:pb-20" : "max-md:pb-14")}>
-      <section className="border-ink-200 from-card via-card relative overflow-hidden rounded-2xl border bg-gradient-to-br to-blue-50/70 px-5 py-5 shadow-sm max-md:p-4 sm:px-7 sm:py-6 dark:to-blue-500/10">
-        <div className="pointer-events-none absolute -top-20 -right-16 size-56 rounded-full bg-blue-100/70 blur-3xl dark:bg-blue-500/15" />
-        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <p className="flex items-center gap-2 text-[11px] font-bold tracking-[0.16em] text-blue-600 uppercase max-md:hidden dark:text-blue-400"><span className="size-1.5 rounded-full bg-blue-600" />{t("settings.eyebrow")}</p>
-            <h1 className="text-ink-900 mt-2 text-3xl font-semibold tracking-tight max-md:mt-0 max-md:text-2xl">{t("settings.title")}</h1>
-            <p className="text-ink-500 mt-2 max-w-2xl text-sm leading-6 max-md:hidden">{t("settings.description")}</p>
-          </div>
-          <div className="border-ink-200 bg-card/85 flex shrink-0 items-center gap-2 rounded-xl border p-1 shadow-sm backdrop-blur max-md:hidden">
+      <PageHeader
+        eyebrow={t("settings.eyebrow")}
+        title={t("settings.title")}
+        description={t("settings.description")}
+        actions={
+          <div className="flex items-center gap-2 max-md:hidden">
             <Button type="button" variant="ghost" className="text-ink-500 hover:bg-ink-50 hover:text-ink-900" onClick={discard} disabled={isSaving}>{t("settings.discard")}</Button>
             <Button type="button" className="min-w-32 shadow-sm" onClick={save} disabled={isSaving}>{isSaving ? t("settings.saving") : <><Check className="size-4" />{t("settings.save")}</>}</Button>
           </div>
-        </div>
-      </section>
+        }
+      />
 
       <div className="grid items-start gap-5 max-md:grid-cols-[minmax(0,1fr)] max-md:gap-3 lg:grid-cols-2">
         <SettingsCard icon={<Palette className="size-4" />} title={t("settings.appearance")} description={t("settings.appearanceDescription")}>

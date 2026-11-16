@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { RotateCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,8 @@ type PrintAreaListProps = {
   designs?: AreaDesignOption[];
   /** In "mockup" mode, a picture of the mock-up's own design, shown beside its choice. */
   ownDesignUrl?: string | null;
+  /** Shown in place of how to drag the box, when the area can't be moved here. */
+  note?: string;
 };
 
 // A small picture of a design beside its name in the list.
@@ -111,7 +114,9 @@ export const PrintAreaList = ({
   mode,
   designs = [],
   ownDesignUrl = null,
+  note,
 }: PrintAreaListProps) => {
+  const { t } = useTranslation("common");
   const active = areas.find((area) => area.key === activeKey) ?? areas[0];
   if (!active) return null;
   const update = (patch: Partial<MockupArea>) =>
@@ -122,15 +127,15 @@ export const PrintAreaList = ({
   return (
     <div className="space-y-3 rounded-lg border p-3">
       <div>
-        <p className="text-ink-900 text-sm font-medium">Print area</p>
+        <p className="text-ink-900 text-sm font-medium">{t("mockups.printAreaList.heading")}</p>
         <p className="text-muted-foreground text-xs">
-          Drag the box on the photo to place the design. The round handle above it turns it.
+          {note ?? t("mockups.printAreaList.description")}
         </p>
       </div>
 
       {/* Templates made before each photo had one area may still have several. */}
       {areas.length > 1 && (
-        <div role="tablist" aria-label="Print areas" className="flex flex-wrap gap-1.5">
+        <div role="tablist" aria-label={t("mockups.printAreaList.printAreasAria")} className="flex flex-wrap gap-1.5">
           {areas.map((area, index) => (
             <button
               key={area.key}
@@ -154,7 +159,7 @@ export const PrintAreaList = ({
       <div className="flex items-end gap-2">
         <div className="w-24">
           <NumberField
-            label="Angle (°)"
+            label={t("mockups.printAreaList.angleLabel")}
             value={active.rotation}
             min={-180}
             max={180}
@@ -172,14 +177,14 @@ export const PrintAreaList = ({
             onClick={() => update({ rotation: 0 })}
           >
             <RotateCw className="size-3" aria-hidden="true" />
-            Straighten
+            {t("mockups.straighten")}
           </Button>
         )}
       </div>
 
       {showSource && (
         <label className="flex flex-col gap-0.5">
-          <span className="text-muted-foreground text-[11px]">Prints</span>
+          <span className="text-muted-foreground text-[11px]">{t("mockups.printAreaList.printsLabel")}</span>
           <Select
             value={sourceValue(active)}
             disabled={disabled}
@@ -190,12 +195,12 @@ export const PrintAreaList = ({
               else update({ source: value as MockupArea["source"], designImageId: null });
             }}
           >
-            <SelectTrigger className="h-10 w-full text-xs" aria-label="What this area prints">
+            <SelectTrigger className="h-10 w-full text-xs" aria-label={t("mockups.printAreaList.ariaWhatItPrints")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="same" className="text-xs">
-                <DesignOption label="The mock-up’s design" imageUrl={ownDesignUrl} />
+                <DesignOption label={t("mockups.printAreaList.sameDesign")} imageUrl={ownDesignUrl} />
               </SelectItem>
               {designs.map((design) => (
                 <SelectItem key={design.id} value={`design:${design.id}`} className="text-xs">
@@ -204,7 +209,7 @@ export const PrintAreaList = ({
               ))}
               {areas.length > 1 && (
                 <SelectItem value="none" className="text-xs">
-                  Nothing
+                  {t("mockups.printAreaList.nothing")}
                 </SelectItem>
               )}
             </SelectContent>
@@ -214,7 +219,7 @@ export const PrintAreaList = ({
 
       <details>
         <summary className="text-muted-foreground hover:text-ink-700 cursor-pointer text-xs select-none">
-          Exact position
+          {t("mockups.printAreaList.exactPosition")}
         </summary>
         <div className="mt-2 grid grid-cols-4 gap-1.5">
           <NumberField
@@ -232,14 +237,14 @@ export const PrintAreaList = ({
             onChange={(y) => update({ y: Math.max(0, Math.round(y)) })}
           />
           <NumberField
-            label="Width"
+            label={t("mockups.printAreaEditor.width")}
             value={active.width}
             min={1}
             disabled={disabled}
             onChange={(width) => update({ width: Math.max(1, Math.round(width)) })}
           />
           <NumberField
-            label="Height"
+            label={t("mockups.printAreaEditor.height")}
             value={active.height}
             min={1}
             disabled={disabled}

@@ -82,12 +82,8 @@ export const BATCH_RUN_NODE_TYPES: WorkflowNodeType[] = [
   "apply-mockup",
 ];
 
-// The outputs of a run: peers that each take what the run made, in any order and independent of one another. A
-// workflow needs at least one; each follows the last step (Review Video, or Mockup Approval without a video) or another
-// output. The backend checks the same rules.
-export const OUTPUT_NODE_TYPES: WorkflowNodeType[] = ["export-zip", "publish-printify", "publish-etsy", "publish-social"];
-
-// The outputs the server runs in the background: Printify, an Etsy listing, and the social posts.
+// The publish steps run on the server after the ZIP: Printify publishes to Etsy, then a direct Etsy listing, then the
+// social posts (Push to media), whose pins link to that listing.
 export const PUBLISH_NODE_TYPES: WorkflowNodeType[] = ["publish-printify", "publish-etsy", "publish-social"];
 
 export const VIDEO_RUN_NODE_TYPES: WorkflowNodeType[] = [
@@ -104,7 +100,9 @@ export const RUNNABLE_NODE_TYPES: WorkflowNodeType[] = [
   "generate-listing",
 ];
 
-// The order the steps of a run must be connected in (the backend checks the same order).
+// The order a run goes through its steps (the backend uses the same order). The steps of the line are connected in
+// this order; Push to Printify branches off Apply mock-up or Mockup Approval instead and runs right after Mockup
+// Approval, since it takes the design and its approved mock-ups, not the video (see PRINTIFY_SOURCES).
 export const RUN_ORDER: WorkflowNodeType[] = [
   "product-input",
   "prompt-synthesis",
@@ -112,10 +110,17 @@ export const RUN_ORDER: WorkflowNodeType[] = [
   "design-approval",
   "apply-mockup",
   "approval-gate",
+  "publish-printify",
   "generate-video",
   "review-video",
-  ...OUTPUT_NODE_TYPES,
+  "export-zip",
+  "publish-etsy",
+  // Push to media is the very last step: after Publish to Etsy, so its pins link to the listing just made.
+  "publish-social",
 ];
+
+/** The steps Push to Printify may branch off: it publishes the design and its mock-ups, never the video. */
+export const PRINTIFY_SOURCES: WorkflowNodeType[] = ["apply-mockup", "approval-gate"];
 
 
 export const WORKFLOW_CATEGORIES: WorkflowCategoryDefinition[] = [
@@ -211,7 +216,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     hasInput: true,
     hasOutput: true,
     // One design per product; more come from Regenerate on the product. `variants` stays 1 (older workflows saved more).
-    defaultConfig: { imageProvider: "gemini", variants: 1, aspectRatio: "1:1" },
+    defaultConfig: { imageProvider: "ideogram", variants: 1, aspectRatio: "1:1" },
     fields: [
       {
         kind: "select",
@@ -220,16 +225,16 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         display: "cards",
         options: [
           {
-            value: "gemini",
-            label: "Gemini (Nano Banana 2)",
-            description:
-              "About $0.067 per image. Fills in detail from short prompts; the white backdrop is cut out afterwards.",
-          },
-          {
             value: "ideogram",
             label: "Ideogram 4.0",
             description:
               "About $0.03 per 2K image. Draws apparel designs on a transparent background. Needs an Ideogram key with credits.",
+          },
+          {
+            value: "gemini",
+            label: "Gemini (Nano Banana 2)",
+            description:
+              "About $0.067 per image. Fills in detail from short prompts; the white backdrop is cut out afterwards.",
           },
         ],
       },
@@ -466,7 +471,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     icon: Archive,
     category: "output",
     hasInput: true,
-    // Another output may follow it: the outputs are peers, in any order.
+    // Push to Printify, Publish to Etsy or Push to media may follow the ZIP.
     hasOutput: true,
     defaultConfig: {},
     fields: [],
@@ -478,6 +483,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     icon: Store,
     category: "output",
     hasInput: true,
+    // Only Push to media may follow it.
     hasOutput: true,
     defaultConfig: {
       listingType: "download",

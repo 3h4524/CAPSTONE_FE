@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { cancelCheckoutRequest } from "@/api/subscription";
 import {
@@ -37,6 +38,7 @@ type SubscriptionCheckoutModalProps = {
 // every visit (BR105: Back must not discard what Review/Payment already produced) — only the
 // explicit "Cancel payment" button, or fully closing the modal, actually cancels it.
 export const SubscriptionCheckoutModal = ({ plan, initialCycle = "monthly", onClose }: SubscriptionCheckoutModalProps) => {
+  const { t } = useTranslation("common");
   const [step, setStep] = useState<CheckoutStep>("review");
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
 
@@ -93,7 +95,7 @@ export const SubscriptionCheckoutModal = ({ plan, initialCycle = "monthly", onCl
 
   const handleCancelPayment = () => {
     cancelOutstandingCheckout();
-    showToast("info", "Payment cancelled.");
+    showToast("info", t("subscription.paymentCancelled"));
     onClose();
     resetState();
   };
@@ -107,13 +109,13 @@ export const SubscriptionCheckoutModal = ({ plan, initialCycle = "monthly", onCl
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-            Subscription Checkout
+            {t("subscription.checkoutEyebrow")}
           </p>
           <DialogTitle>
-            {step === "payment" ? "Scan to pay" : `Subscribe to ${plan.name}`}
+            {step === "payment" ? t("subscription.scanToPay") : t("subscription.subscribeTo", { name: plan.name })}
           </DialogTitle>
           <DialogDescription>
-            Your new capacity will be available immediately upon confirmation.
+            {t("subscription.checkoutDescription")}
           </DialogDescription>
           <CheckoutStepIndicator currentStep={step} />
         </DialogHeader>

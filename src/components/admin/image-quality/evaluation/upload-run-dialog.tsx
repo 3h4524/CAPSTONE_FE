@@ -3,6 +3,7 @@
 import { Upload } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 
+import { FileDropzone } from "@/components/commons/forms/file-dropzone";
 import { FormErrorText } from "@/components/commons/forms/form-error-text";
 import { Button } from "@/components/ui/button";
 import {
@@ -106,14 +107,13 @@ export const UploadRunDialog = ({ open, onClose, onUploaded }: UploadRunDialogPr
             name="file"
             render={({ field }) => (
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="image-eval-file">Export file (.json, up to 10 MB)</Label>
-                <Input
-                  id="image-eval-file"
-                  type="file"
+                <FileDropzone
+                  label="Export file (.json, up to 10 MB)"
                   accept=".json,application/json"
-                  aria-invalid={Boolean(errors.file)}
+                  fileName={field.value?.name}
+                  invalid={Boolean(errors.file)}
                   onBlur={field.onBlur}
-                  onChange={(event) => field.onChange(event.target.files?.[0])}
+                  onSelect={field.onChange}
                 />
                 <FormErrorText id="image-eval-file-error" message={errors.file?.message} />
               </div>

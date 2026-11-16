@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ export const GarmentColorPicker = ({
   palette = GARMENT_COLORS,
   allowCustom = true,
 }: GarmentColorPickerProps) => {
+  const { t } = useTranslation("common");
   const [custom, setCustom] = useState("");
   const isSelected = (hex: string) => selected.some((value) => value.toLowerCase() === hex.toLowerCase());
   const full = max !== undefined && selected.length >= max;
@@ -103,7 +105,7 @@ export const GarmentColorPicker = ({
             placeholder="#1F2A44"
             maxLength={7}
             disabled={disabled || full}
-            aria-label="Custom garment color"
+            aria-label={t("mockups.garmentColorPicker.customAria")}
             className={cn("w-32", compact ? "h-7 text-xs" : "h-8")}
           />
           <Button
@@ -114,7 +116,7 @@ export const GarmentColorPicker = ({
             disabled={disabled || full || !isGarmentColor(customHex)}
             onClick={addCustom}
           >
-            Add color
+            {t("mockups.addColor")}
           </Button>
         </div>
       )}

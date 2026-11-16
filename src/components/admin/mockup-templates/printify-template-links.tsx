@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { KeyRound, Link2, Loader2, Unlink } from "lucide-react";
+import { AlertCircle, Link2, Loader2, TriangleAlert, Unlink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import {
@@ -13,42 +13,61 @@ import {
   unlinkMockupTemplatePrintify,
 } from "@/api/admin-mockup-templates";
 import { getPrintifyCatalog, getPrintifyConnection, getPrintifyProviders, type PrintifyBlueprint } from "@/api/printify";
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { BlueprintPicker, ChipGroup } from "@/components/shop/printify-publish-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/helpers/error-message";
 import { productTypeLabel } from "@/helpers/mockup-template";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-const selectClass = "h-9 w-full rounded-md border border-ink-200 bg-card px-2 text-sm text-ink-900 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none disabled:opacity-60";
+const NO_PROVIDER = "none";
 
 /**
  * Admin: link each system mock-up template to the Printify product its photo shows. A workflow that pushes to Printify
  * offers only linked templates and makes the linked product, so a listing shows the garment that ships.
  */
 export function PrintifyTemplateLinks() {
+  const { t } = useTranslation("common");
   const templates = useQuery({ queryKey: adminMockupTemplateKeys.all, queryFn: getAdminMockupTemplates });
-  const connection = useQuery({ queryKey: ["printify-connection-admin"], queryFn: () => getPrintifyConnection(), staleTime: 60_000 });
+  const connection = useQuery({ queryKey: ["printify-connection-admin"], queryFn: () => getPrintifyConnection(), staleTime: 60_000, retry: false });
   const ready = connection.data?.status === "connected";
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1.5">
-        <h2 className="font-display text-ink-900 text-xl font-bold tracking-tight sm:text-2xl">Mock-up templates for Printify</h2>
-        <p className="text-ink-600 max-w-3xl text-sm leading-relaxed">
-          Link each system template to the Printify product its photo shows. When a workflow pushes to Printify, sellers can only choose linked templates,
-          and Printify makes the linked product, so the listing&apos;s mock-ups show the garment that ships. Compare the template with Printify&apos;s photo
-          before linking.
-        </p>
-      </header>
+      <PageHeader
+        title="Mock-up templates for Printify"
+        description="Link each system template to the Printify product its photo shows. When a workflow pushes to Printify, sellers can only choose linked templates, and Printify makes the linked product, so the listing's mock-ups show the garment that ships. Compare the template with Printify's photo before linking."
+      />
       {connection.data && !ready && (
-        <div className="flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-          Searching Printify&apos;s products uses your own Printify API key. Add one on the API Keys page.
-          <Button asChild size="sm" variant="outline"><Link href="/api-keys"><KeyRound className="size-3.5" />Open API Keys</Link></Button>
+        <Alert>
+          <TriangleAlert />
+          <AlertDescription>Searching Printify&apos;s products uses your own Printify API key. Add one on the API Keys page.</AlertDescription>
+        </Alert>
+      )}
+      {connection.isError && (
+        <Alert variant="destructive">
+          <AlertCircle />
+          <AlertTitle>{t("adminUi.printifyConnectionFailed")}</AlertTitle>
+          <AlertDescription>{getErrorMessage(connection.error)}</AlertDescription>
+        </Alert>
+      )}
+      {templates.isPending && (
+        <div className="grid gap-4 lg:grid-cols-2" aria-busy="true">
+          <Skeleton className="h-80 rounded-lg" />
+          <Skeleton className="h-80 rounded-lg" />
         </div>
       )}
-      {templates.isPending && <p className="text-ink-500 flex items-center gap-2 text-sm"><Loader2 className="size-4 animate-spin" />Loading templates…</p>}
-      {templates.isError && <p className="text-sm text-rose-700">{getErrorMessage(templates.error)}</p>}
+      {templates.isError && (
+        <Alert variant="destructive">
+          <AlertCircle />
+          <AlertTitle>{t("adminUi.templatesLoadFailed")}</AlertTitle>
+          <AlertDescription>{getErrorMessage(templates.error)}</AlertDescription>
+        </Alert>
+      )}
       <ul className="grid gap-4 lg:grid-cols-2">
         {templates.data?.map((template) => <TemplateLinkCard key={template.id} template={template} canSearch={ready} />)}
       </ul>
@@ -150,11 +169,19 @@ function TemplateLinkCard({ template, canSearch }: { template: AdminMockupTempla
           />
           <div className="space-y-1.5">
             <Label htmlFor={`${template.id}-provider`}>Default print provider</Label>
-            <select id={`${template.id}-provider`} className={selectClass} value={providerId ?? ""} disabled={!providers.data?.length}
-              onChange={(event) => { setProviderId(event.target.value ? Number(event.target.value) : null); setSizes([]); }}>
-              <option value="">{providers.isFetching ? "Loading providers…" : "None (the seller chooses)"}</option>
-              {providers.data?.map((item) => <option key={item.id} value={item.id}>{item.title}{item.country ? ` — ${item.country}` : ""}</option>)}
-            </select>
+            <Select
+              value={providerId ? String(providerId) : NO_PROVIDER}
+              disabled={!providers.data?.length}
+              onValueChange={(value) => { setProviderId(value === NO_PROVIDER ? null : Number(value)); setSizes([]); }}
+            >
+              <SelectTrigger id={`${template.id}-provider`} className="w-full">
+                <SelectValue placeholder={providers.isFetching ? "Loading providers…" : "None (the seller chooses)"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_PROVIDER}>{providers.isFetching ? "Loading providers…" : "None (the seller chooses)"}</SelectItem>
+                {providers.data?.map((item) => <SelectItem key={item.id} value={String(item.id)}>{item.title}{item.country ? ` — ${item.country}` : ""}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           {catalog.data && (
             <ChipGroup label="Default sizes" options={catalog.data.sizes} selected={sizes}

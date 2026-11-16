@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { useTranslation } from "react-i18next";
 
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ export const CheckoutStepPayment = ({
   onCancelPayment,
   onSuccess,
 }: CheckoutStepPaymentProps) => {
+  const { t } = useTranslation("common");
   const queryClient = useQueryClient();
   const invoiceId = pendingCheckout?.invoiceId ?? null;
   const { data: status } = useCheckoutStatus(invoiceId);
@@ -52,21 +54,21 @@ export const CheckoutStepPayment = ({
 
     showToast(
       "success",
-      "Your subscription has been activated. The new plan limits take effect immediately."
+      t("subscription.paymentActivatedToast")
     );
     queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_OVERVIEW_QUERY_KEY });
     onSuccess(status);
-  }, [status, onSuccess, queryClient]);
+  }, [status, onSuccess, queryClient, t]);
 
   if (isError) {
     return (
       <div className="space-y-4">
         <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-          {getErrorMessage(error, "Could not start the payment. Please try again.")}
+          {getErrorMessage(error, t("subscription.paymentError"))}
         </p>
         <div className="flex justify-end">
           <Button variant="ghost" onClick={onBack}>
-            Back
+            {t("subscription.back")}
           </Button>
         </div>
       </div>
@@ -74,18 +76,18 @@ export const CheckoutStepPayment = ({
   }
 
   if (isCreatingCheckout || !pendingCheckout) {
-    return <SectionLoading label="Preparing payment" className="py-12" />;
+    return <SectionLoading label={t("subscription.preparingPayment")} className="py-12" />;
   }
 
   if (status && status.status === "failed") {
     return (
       <div className="space-y-4">
         <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-          Payment could not be completed. Please check your payment method and try again.
+          {t("subscription.paymentFailed")}
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onBack}>
-            Back
+            {t("subscription.back")}
           </Button>
         </div>
       </div>
@@ -94,21 +96,21 @@ export const CheckoutStepPayment = ({
 
   return (
     <div className="flex flex-col items-center gap-4 py-2 text-center">
-      <p className="text-sm font-medium">Scan with your banking app</p>
+      <p className="text-sm font-medium">{t("subscription.scanWithBankingApp")}</p>
       <div className="rounded-lg border p-4">
         <QRCodeSVG value={pendingCheckout.qrCode} size={220} />
       </div>
       <p className="text-lg font-semibold">{formatVnd(pendingCheckout.amountVnd)}</p>
       <div className="text-muted-foreground flex items-center gap-2 text-sm">
         <Spinner className="size-4" />
-        Waiting for payment...
+        {t("subscription.waitingForPayment")}
       </div>
       <div className="flex gap-2">
         <Button variant="ghost" onClick={onBack}>
-          Back
+          {t("subscription.back")}
         </Button>
         <Button variant="destructive" onClick={onCancelPayment}>
-          Cancel payment
+          {t("subscription.cancelPayment")}
         </Button>
       </div>
     </div>

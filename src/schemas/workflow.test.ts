@@ -448,6 +448,14 @@ describe("generateVideoConfigSchema", () => {
     expect(result.success && result.data).toEqual(valid);
   });
 
+  // A design's own settings come from the backend, which keeps an empty pick as null.
+  it("reads mock-up picks the backend left as null as none", () => {
+    const result = generateVideoConfigSchema.safeParse({ ...valid, selectedMockupIds: null, sceneOrder: null });
+
+    expect(result.success).toBe(true);
+    expect(result.success && [result.data.selectedMockupIds, result.data.sceneOrder]).toEqual([[], []]);
+  });
+
   it.each(["auto", "product_showcase", "design_detail", "variant_showcase"] as const)(
     "accepts the video template %s",
     (template) => {

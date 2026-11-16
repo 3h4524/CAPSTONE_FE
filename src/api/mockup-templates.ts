@@ -11,14 +11,24 @@ import type {
   MockupView,
 } from "@/types/mockup-templates";
 
+/** Who manages the templates: a seller their own, an admin the shared ones every seller can use. */
+export type MockupTemplateScope = "seller" | "admin";
+
+const basePath = (scope: MockupTemplateScope) => (scope === "admin" ? "/api/admin/mockup-templates" : "/api/mockup-templates");
+
 export const mockupTemplateKeys = {
   all: ["mockup-templates"] as const,
   list: (productType?: string) => [...mockupTemplateKeys.all, productType ?? "all"] as const,
+  library: () => [...mockupTemplateKeys.all, "library"] as const,
   selection: (batchJobId: string) => [...mockupTemplateKeys.all, "selection", batchJobId] as const,
 };
 
 export const listMockupTemplates = async (productType?: string, signal?: AbortSignal): Promise<MockupTemplate[]> =>
   (await api.get<MockupTemplate[]>("/api/mockup-templates", { params: productType ? { productType } : undefined, signal })).data;
+
+/** The shared templates, as an admin manages them. */
+export const listSystemMockupTemplates = async (signal?: AbortSignal): Promise<MockupTemplate[]> =>
+  (await api.get<MockupTemplate[]>("/api/admin/mockup-templates", { signal })).data;
 
 export const getBatchMockupSelection = async (batchJobId: string, signal?: AbortSignal): Promise<BatchMockupSelection> =>
   (await api.get<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { signal })).data;
@@ -73,18 +83,22 @@ const toTemplateForm = (input: SaveMockupTemplateInput) => {
   return form;
 };
 
-export const createMockupTemplate = async (input: SaveMockupTemplateInput): Promise<MockupTemplate> =>
-  (await api.post<MockupTemplate>("/api/mockup-templates", toTemplateForm(input))).data;
+export const createMockupTemplate = async (input: SaveMockupTemplateInput, scope: MockupTemplateScope = "seller"): Promise<MockupTemplate> =>
+  (await api.post<MockupTemplate>(basePath(scope), toTemplateForm(input))).data;
 
-export const updateMockupTemplate = async (id: string, input: SaveMockupTemplateInput): Promise<MockupTemplate> =>
-  (await api.put<MockupTemplate>(`/api/mockup-templates/${id}`, toTemplateForm(input))).data;
+export const updateMockupTemplate = async (id: string, input: SaveMockupTemplateInput, scope: MockupTemplateScope = "seller"): Promise<MockupTemplate> =>
+  (await api.put<MockupTemplate>(`${basePath(scope)}/${id}`, toTemplateForm(input))).data;
 
-// Gives a template the photo of another side, a template of the Seller's own; null takes the side off (and removes it).
-export const setMockupTemplateView = async (id: string, view: MockupView, templateId: string | null): Promise<MockupTemplate> =>
-  (await api.put<MockupTemplate>(`/api/mockup-templates/${id}/views/${view}`, { templateId })).data;
+// Gives a template the photo of another side, a template of the same owner; null takes the side off (and removes it).
+export const setMockupTemplateView = async (
+  id: string,
+  view: MockupView,
+  templateId: string | null,
+  scope: MockupTemplateScope = "seller"
+): Promise<MockupTemplate> => (await api.put<MockupTemplate>(`${basePath(scope)}/${id}/views/${view}`, { templateId })).data;
 
-export const deleteMockupTemplate = async (id: string) => {
-  await api.delete(`/api/mockup-templates/${id}`);
+export const deleteMockupTemplate = async (id: string, scope: MockupTemplateScope = "seller") => {
+  await api.delete(`${basePath(scope)}/${id}`);
 };
 
 export type GenerateMockupImageInput = {
@@ -132,8 +146,8 @@ export const resetMockupOverride = async (batchJobId: string, slotKey: string, r
   ).data;
 
 // Analyzes a base photo that is not saved yet, so its recolor can be previewed straight away.
-export const previewGarmentMask = async (baseImage: File, signal?: AbortSignal): Promise<GarmentMaskPreview> => {
+export const previewGarmentMask = async (baseImage: File, signal?: AbortSignal, scope: MockupTemplateScope = "seller"): Promise<GarmentMaskPreview> => {
   const form = new FormData();
   form.append("baseImage", baseImage);
-  return (await api.post<GarmentMaskPreview>("/api/mockup-templates/garment-mask-preview", form, { signal })).data;
+  return (await api.post<GarmentMaskPreview>(`${basePath(scope)}/garment-mask-preview`, form, { signal })).data;
 };

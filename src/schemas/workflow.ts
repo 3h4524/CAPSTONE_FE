@@ -187,17 +187,24 @@ export const generateVideoConfigSchema = z
     outputFormat: z.enum(["square", "portrait", "landscape"]).catch("portrait").default("portrait"),
     durationSeconds: wholeNumber("video duration", MIN_VIDEO_DURATION_SECONDS, MAX_VIDEO_DURATION_SECONDS),
     assetSelection: z.enum(["automatic", "manual"]),
-    selectedMockupIds: z
-      .array(z.string().uuid())
-      .max(8)
-      .refine((ids) => new Set(ids).size === ids.length, "Select each mockup once."),
-    sceneOrder: z
-      .array(z.string().uuid())
-      .max(4)
-      .refine(
-        (ids) => new Set(ids).size === ids.length,
-        "Use each mockup once in the scene order."
-      ),
+    // The backend keeps these as null when no mock-up is picked (a design's own settings, a run's): that is none.
+    selectedMockupIds: z.preprocess(
+      (ids) => ids ?? [],
+      z
+        .array(z.string().uuid())
+        .max(8)
+        .refine((ids) => new Set(ids).size === ids.length, "Select each mockup once.")
+    ),
+    sceneOrder: z.preprocess(
+      (ids) => ids ?? [],
+      z
+        .array(z.string().uuid())
+        .max(4)
+        .refine(
+          (ids) => new Set(ids).size === ids.length,
+          "Use each mockup once in the scene order."
+        )
+    ),
     standardScenes: z
       .array(
         z.object({

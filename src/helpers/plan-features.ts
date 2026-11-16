@@ -5,6 +5,8 @@ export type PlanFeatureCode =
   | "design_images"
   | "design_variations"
   | "auto_approval"
+  | "system_image_keys"
+  | "daily_design_image_cap"
   | "template_mockups"
   | "custom_mockup_templates"
   | "lifestyle_mockup"
@@ -51,6 +53,22 @@ export const PLAN_FEATURES: PlanFeatureDefinition[] = [
     kind: "flag",
     group: "Design images",
     description: "Approve generated designs automatically instead of reviewing each one.",
+  },
+  {
+    code: "system_image_keys",
+    label: "Ideogram images on the platform's keys",
+    kind: "flag",
+    group: "Design images",
+    description:
+      "Make Ideogram design images, lifestyle mockups and model photos with the platform's own keys, so the Seller needs no Ideogram key of their own.",
+  },
+  {
+    code: "daily_design_image_cap",
+    label: "Daily AI image safety cap",
+    kind: "limit",
+    group: "Safety caps",
+    description:
+      "Most AI images (designs, lifestyle mockups, model photos) made with the platform's keys per day. Leave empty for no cap.",
   },
   {
     code: "template_mockups",

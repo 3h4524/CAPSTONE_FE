@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 
-import { PrintifyTemplateLinks } from "@/components/admin/mockup-templates/printify-template-links";
+import { MockupTemplateLibrary } from "@/components/admin/mockup-templates/mockup-template-library";
 import { getPageMetadata } from "@/data/metadata";
 
 export const metadata: Metadata = getPageMetadata({
   title: "Mock-up Templates",
-  description: "Link system mock-up templates to the Printify product their photo shows.",
+  description: "Manage the shared mock-up templates every seller can use, including templates of Printify products.",
   pathname: "/admin/mockup-templates",
   robots: { index: false, follow: false },
 });
 
-export default function MockupTemplatesPage() {
-  return <PrintifyTemplateLinks />;
+export default function MockupTemplatesAdminPage() {
+  return <MockupTemplateLibrary />;
 }

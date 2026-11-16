@@ -80,34 +80,23 @@ describe("insertStep", () => {
     expect(isConnected(nextEdges, step.id, idOf(nodes, "prompt-synthesis"))).toBe(true);
   });
 
-  it("hangs a listing off the last step before the outputs", () => {
+  it("hangs a listing off the run, before the export", () => {
     const { nodes: nextNodes, edges: nextEdges, step } = insertStep("generate-listing", nodes, edges);
 
-    expect(isConnected(nextEdges, idOf(nodes, "review-video"), step.id)).toBe(true);
-    expect(isConnected(nextEdges, idOf(nodes, "review-video"), idOf(nodes, "export-zip"))).toBe(true);
-    expect(notConnectedIssues(nextNodes, nextEdges)).toEqual([]);
-  });
-
-  it("adds an output beside the others, after the last step", () => {
-    const { nodes: nextNodes, edges: nextEdges, step } = insertStep("publish-social", nodes, edges);
-
-    expect(isConnected(nextEdges, idOf(nodes, "review-video"), step.id)).toBe(true);
-    expect(isConnected(nextEdges, idOf(nodes, "review-video"), idOf(nodes, "export-zip"))).toBe(true);
-    expect(validateWorkflow(nextNodes, nextEdges).filter((issue) => issue.id.startsWith("output-edge-"))).toEqual([]);
-  });
-
-  it("moves the outputs to a new last step", () => {
-    // Without a video the outputs follow Mockup Approval; adding the video steps moves them after Review Video.
-    const withoutVideo = ["review-video", "generate-video"].reduce(
-      (graph, type) => removeStep(idOf(graph.nodes, type) as string, graph.nodes, graph.edges),
-      { nodes, edges }
-    );
-    const video = insertStep("generate-video", withoutVideo.nodes, withoutVideo.edges);
-    const { nodes: nextNodes, edges: nextEdges, step } = insertStep("review-video", video.nodes, video.edges);
-
     expect(isConnected(nextEdges, step.id, idOf(nodes, "export-zip"))).toBe(true);
-    expect(isConnected(nextEdges, idOf(nodes, "approval-gate"), idOf(nodes, "export-zip"))).toBe(false);
     expect(notConnectedIssues(nextNodes, nextEdges)).toEqual([]);
+  });
+
+  it("branches Push to Printify off Mockup Approval and leaves the video line as it was", () => {
+    const { nodes: nextNodes, edges: nextEdges, step } = insertStep("publish-printify", nodes, edges);
+
+    expect(isConnected(nextEdges, idOf(nodes, "approval-gate"), step.id)).toBe(true);
+    expect(nextEdges.some((edge) => edge.source === step.id)).toBe(false);
+    expect(isConnected(nextEdges, idOf(nodes, "approval-gate"), idOf(nodes, "generate-video"))).toBe(true);
+    expect(validateWorkflow(nextNodes, nextEdges).filter((issue) => /^printify-(source|end)-/.test(issue.id))).toEqual([]);
+    expect(typesOf(orderSteps(nextNodes, nextEdges)).indexOf("publish-printify")).toBe(
+      typesOf(orderSteps(nextNodes, nextEdges)).indexOf("approval-gate") + 1
+    );
   });
 });
 

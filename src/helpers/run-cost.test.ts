@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { confirmRunCost, takeRunAiBudget } from "@/helpers/run-cost";
+import { confirmRunCost } from "@/helpers/run-cost";
 import type { CostConfirmRequest } from "@/stores/cost-confirm";
 import type { RunCostEstimate } from "@/types/video-workflow";
 
@@ -27,7 +27,7 @@ describe("confirmRunCost", () => {
     estimateMock.mockReset().mockResolvedValue(estimate());
   });
 
-  it("shows every item of the estimate with its cost and keeps the confirmed AI budget for the videos", async () => {
+  it("shows every item of the estimate with its cost", async () => {
     await expect(confirmRunCost("wf")).resolves.toBe(true);
 
     const request = askMock.mock.calls[0]![0] as CostConfirmRequest;
@@ -37,16 +37,18 @@ describe("confirmRunCost", () => {
       ["Model photos", 0],
     ]);
     expect(request.totalUsd).toBe(2.19);
-    expect(takeRunAiBudget("wf")).toBe(1.92);
-    // Taken once: a later group of another Run does not inherit it.
-    expect(takeRunAiBudget("wf")).toBeUndefined();
   });
 
-  it("starts nothing and keeps no budget when the seller cancels", async () => {
+  it("keeps nothing in the browser: the run goes on without a stored budget", async () => {
+    await confirmRunCost("wf");
+
+    expect(sessionStorage.length).toBe(0);
+  });
+
+  it("starts nothing when the seller cancels", async () => {
     askMock.mockResolvedValue(false);
 
     await expect(confirmRunCost("wf")).resolves.toBe(false);
-    expect(takeRunAiBudget("wf")).toBeUndefined();
   });
 
   it("asks nothing for a run that bills nothing", async () => {
@@ -56,11 +58,10 @@ describe("confirmRunCost", () => {
     expect(askMock).not.toHaveBeenCalled();
   });
 
-  it("goes ahead without a budget when the estimate cannot be read", async () => {
+  it("goes ahead when the estimate cannot be read", async () => {
     estimateMock.mockRejectedValue(new Error("offline"));
 
     await expect(confirmRunCost("wf")).resolves.toBe(true);
     expect(askMock).not.toHaveBeenCalled();
-    expect(takeRunAiBudget("wf")).toBeUndefined();
   });
 });

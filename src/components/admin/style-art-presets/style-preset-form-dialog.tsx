@@ -1,0 +1,156 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+
+import { FormInputField } from "@/components/commons/forms/form-input-field";
+import { FormTextareaField } from "@/components/commons/forms/form-textarea-field";
+import { StylePresetImageDropzone } from "@/components/styles/style-preset-image-dropzone";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { fromRecommendationLines, toRecommendationLines } from "@/helpers/style-preset";
+import { useCreateAdminStyleArtPreset } from "@/hooks/mutations/use-create-admin-style-art-preset";
+import { useUpdateAdminStyleArtPreset } from "@/hooks/mutations/use-update-admin-style-art-preset";
+import { type AdminStyleArtPresetFormValues,adminStyleArtPresetSchema } from "@/schemas/admin-style-art-preset";
+import type { AdminStyleArtPreset } from "@/types/admin-style-art-presets";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const MAX_PREVIEW_BYTES = 5 * 1024 * 1024;
+
+type StylePresetFormDialogProps = {
+  open: boolean;
+  preset: AdminStyleArtPreset | null;
+  onClose: () => void;
+};
+
+export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetFormDialogProps) => {
+  const creating = preset === null;
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null);
+  const [previewRemoved, setPreviewRemoved] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [isActive, setIsActive] = useState(true);
+  const { mutate: createPreset, isPending: isCreating } = useCreateAdminStyleArtPreset();
+  const { mutate: updatePreset, isPending: isUpdating } = useUpdateAdminStyleArtPreset();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isDirty },
+  } = useForm<AdminStyleArtPresetFormValues>({
+    resolver: zodResolver(adminStyleArtPresetSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      styleModifiers: "",
+      recommendationsText: "",
+    },
+  });
+
+  useEffect(() => {
+    reset({
+      name: preset?.name ?? "",
+      description: preset?.description ?? "",
+      styleModifiers: preset?.styleModifiers ?? "",
+      recommendationsText: preset ? toRecommendationLines(preset.recommendations) : "",
+    });
+    setPreviewFile(null);
+    setPreviewRemoved(false);
+    setFileError(null);
+    setIsActive(preset?.isActive ?? true);
+  }, [open, preset, reset]);
+
+  useEffect(() => {
+    if (!previewFile) {
+      setPreviewObjectUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(previewFile);
+    setPreviewObjectUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [previewFile]);
+
+  const pending = isCreating || isUpdating;
+  const shownPreview = previewObjectUrl ?? (previewRemoved ? null : preset?.previewImageUrl ?? null);
+  const isActiveDirty = !creating && isActive !== preset?.isActive;
+  const canRetryTranslation = !creating && preset?.viStatus === "failed";
+
+  const pickFile = (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setFileError("Choose an image file for the preview.");
+      return;
+    }
+    if (file.size > MAX_PREVIEW_BYTES) {
+      setFileError("The preview image cannot exceed 5 MB.");
+      return;
+    }
+    setFileError(null);
+    setPreviewRemoved(false);
+    setPreviewFile(file);
+  };
+
+  const submit = handleSubmit((formValues) => {
+    const input = {
+      name: formValues.name,
+      description: formValues.description,
+      styleModifiers: formValues.styleModifiers,
+      recommendations: fromRecommendationLines(formValues.recommendationsText),
+      preview: previewFile,
+      deletePreview: previewRemoved,
+      isActive: creating ? true : isActive,
+    };
+    if (creating) createPreset(input, { onSuccess: onClose });
+    else updatePreset({ id: preset.id, ...input }, { onSuccess: onClose });
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <DialogContent className="flex max-h-[88dvh] w-[calc(100%-2rem)] max-w-2xl flex-col overflow-hidden">
+        <DialogHeader className="text-left">
+          <DialogTitle>{creating ? "New system style" : `Edit ${preset.name}`}</DialogTitle>
+          <DialogDescription>System styles ship to every seller. Write them in English; the Vietnamese translation is generated in the background after you save, and sellers see English until it is ready.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+          <ScrollArea className="min-h-0 flex-1">
+            <div className="space-y-4 px-1 py-1">
+              <FormInputField id="preset-name" label="Name" type="text" placeholder="Neon Glow" registration={register("name")} error={errors.name} required />
+              <FormTextareaField id="preset-description" label="Description" placeholder="When this style shines and what it suits." registration={register("description")} error={errors.description} rows={4} required />
+              <FormTextareaField id="preset-recommendations" label="Recommendations" placeholder="One use case per line." registration={register("recommendationsText")} error={errors.recommendationsText} rows={3} />
+
+              <FormTextareaField id="preset-style-modifiers" label="Prompt keywords — shared, never translated" placeholder="target FLAT, studio lighting, neon glow" registration={register("styleModifiers")} error={errors.styleModifiers} rows={2} />
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  <StylePresetImageDropzone
+                    previewUrl={shownPreview}
+                    error={fileError}
+                    disabled={pending}
+                    onSelect={pickFile}
+                    onRemove={() => {
+                      setPreviewFile(null);
+                      setPreviewRemoved(true);
+                    }}
+                  />
+                </div>
+                {!creating && (
+                  <label className="border-ink-200 flex items-center gap-3 rounded-md border px-3 py-2">
+                    <span className="text-ink-800 text-sm font-medium">Active</span>
+                    <Switch checked={isActive} onCheckedChange={setIsActive} disabled={pending} aria-label="Toggle active state" />
+                  </label>
+                )}
+              </div>
+            </div>
+          </ScrollArea>
+          <DialogFooter className="gap-2 pt-4">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>Cancel</Button>
+            <Button type="submit" disabled={(!isDirty && !isActiveDirty && !canRetryTranslation) || pending}>{creating ? "Create style" : "Save changes"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};

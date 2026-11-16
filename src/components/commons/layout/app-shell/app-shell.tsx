@@ -51,7 +51,7 @@ export const AppShell = ({ children }: AppShellProps) => {
 
           <AppHeader onMobileMenu={() => openMobileMenu("left")} />
           <ContentArea>{children}</ContentArea>
-          {!isDesignTemplateForm(pathname) && <MobileBottomNav onOpenMore={() => openMobileMenu("right")} />}
+          {!isDesignTemplateForm(pathname) && <MobileBottomNav onOpenMore={() => openMobileMenu("right")} isMoreOpen={mobileOpen && mobileSide === "right"} />}
         </div>
       </div>
       <AppSidebarMobile open={mobileOpen} onOpenChange={setMobileOpen} side={mobileSide} />

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
+import { PageHeader } from "@/components/commons/layout/page-header";
 import { PageLoading } from "@/components/commons/layout/page-loading";
 import { showToast } from "@/helpers/toast";
 import { useCancelScheduledDowngrade } from "@/hooks/mutations/use-cancel-scheduled-downgrade";
@@ -11,6 +13,7 @@ import { ENTITLEMENTS_QUERY_KEY } from "@/hooks/queries/use-entitlements";
 import { SUBSCRIPTION_OVERVIEW_QUERY_KEY, useSubscriptionOverview } from "@/hooks/queries/use-subscription-overview";
 import { usePopupStore } from "@/stores/popup";
 import type { AvailablePlan, BillingCycle } from "@/types/subscription";
+import { formatDate } from "@/utils/format-date";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { SubscriptionCheckoutModal } from "./checkout-modal/subscription-checkout-modal";
@@ -22,10 +25,8 @@ import { RecentInvoicesTable } from "./recent-invoices-table";
 import { TrialOfferCard } from "./trial-offer-card";
 import { UsageQuotaCards } from "./usage-quota-cards";
 
-const formatDate = (isoDate: string) =>
-  new Date(isoDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-
 export const SubscriptionPageContent = () => {
+  const { t, i18n } = useTranslation("common");
   const { data, isLoading, isError } = useSubscriptionOverview();
   const [checkoutPlan, setCheckoutPlan] = useState<AvailablePlan | null>(null);
   const [upgradePlan, setUpgradePlan] = useState<AvailablePlan | null>(null);
@@ -42,7 +43,7 @@ export const SubscriptionPageContent = () => {
   const handleStartTrial = () => {
     startTrial(undefined, {
       onSuccess: (result) => {
-        showToast("success", `Your ${result.planName} trial is on until ${formatDate(result.trialEndsAt)}.`);
+        showToast("success", t("subscription.trialOnUntil", { planName: result.planName, date: formatDate(result.trialEndsAt, i18n.language) }));
         queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_OVERVIEW_QUERY_KEY });
         queryClient.invalidateQueries({ queryKey: ENTITLEMENTS_QUERY_KEY });
       },
@@ -51,16 +52,15 @@ export const SubscriptionPageContent = () => {
 
   const handleDowngradeClick = (plan: AvailablePlan) => {
     openPopup({
-      title: `Downgrade to ${plan.name}?`,
-      description:
-        "Your current plan stays active until the end of this billing cycle. Your next renewal is then billed at the new plan.",
-      positiveLabel: "Schedule downgrade",
+      title: t("subscription.downgradeTitle", { name: plan.name }),
+      description: t("subscription.downgradeDescription"),
+      positiveLabel: t("subscription.scheduleDowngrade"),
       onPositive: () => {
         downgrade(plan.planId, {
           onSuccess: (result) => {
             showToast(
               "success",
-              `Scheduled: moving to ${result.targetPlanName} on ${formatDate(result.effectiveDate)}.`
+              t("subscription.scheduledToast", { name: result.targetPlanName, date: formatDate(result.effectiveDate, i18n.language) })
             );
             queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_OVERVIEW_QUERY_KEY });
           },
@@ -71,13 +71,13 @@ export const SubscriptionPageContent = () => {
 
   const handleCancelScheduledDowngrade = () => {
     openPopup({
-      title: "Cancel scheduled downgrade?",
-      description: "You'll stay on your current plan at renewal instead.",
-      positiveLabel: "Cancel downgrade",
+      title: t("subscription.cancelDowngradeTitle"),
+      description: t("subscription.cancelDowngradeDescription"),
+      positiveLabel: t("subscription.cancelDowngradeLabel"),
       onPositive: () => {
         cancelScheduledDowngrade(undefined, {
           onSuccess: () => {
-            showToast("success", "Scheduled downgrade cancelled.");
+            showToast("success", t("subscription.downgradeCancelledToast"));
             queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_OVERVIEW_QUERY_KEY });
           },
         });
@@ -86,7 +86,7 @@ export const SubscriptionPageContent = () => {
   };
 
   if (isLoading) {
-    return <PageLoading label="Loading subscription" />;
+    return <PageLoading label={t("subscription.loading")} />;
   }
 
   if (isError || !data) {
@@ -96,14 +96,14 @@ export const SubscriptionPageContent = () => {
   return (
     // The bottom padding keeps the last line clear of the floating assistant button.
     <div className="w-full min-w-0 space-y-8 max-md:space-y-4 max-md:pb-14 md:p-6">
-      <div>
-        <h1 className="text-2xl font-bold">
-          Billing<span className="max-md:hidden"> &amp; Subscription</span>
-        </h1>
-        <p className="text-muted-foreground text-sm max-md:hidden">
-          Keep track of your plan and what it allows, compare plans, and download your invoices.
-        </p>
-      </div>
+      <PageHeader
+        title={
+          <>
+            Billing<span className="max-md:hidden"> &amp; Subscription</span>
+          </>
+        }
+        description={t("subscription.pageDescription")}
+      />
 
       {/* On Free there's nothing to show here; a plan or trial keeps it for renewal and scheduled changes. */}
       {data.currentSubscription && (
@@ -124,7 +124,7 @@ export const SubscriptionPageContent = () => {
         onBuyClick={setCheckoutPlan}
         onUpgradeClick={setUpgradePlan}
         onDowngradeClick={handleDowngradeClick}
-        trialLabel={`${data.trialPlanName ?? "Pro"} trial`}
+        trialLabel={t("subscription.trialTitle", { planName: data.trialPlanName ?? "Pro" })}
         trialOffer={
           data.trialEligible && (
             <TrialOfferCard

@@ -2,21 +2,25 @@
 
 import { type ReactNode, useEffect, useId, useState } from "react";
 import { ImagePlus, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-import { previewGarmentMask } from "@/api/mockup-templates";
+import { type MockupTemplateScope, previewGarmentMask } from "@/api/mockup-templates";
 import { MockupPhotoDropzone } from "@/components/mockups/mockup-photo-dropzone";
 import { PrintAreaEditor } from "@/components/mockups/print-area-editor";
 import { PrintAreaList } from "@/components/mockups/print-area-list";
 import { Button } from "@/components/ui/button";
 import {
   areaLabel,
+  keepInFrame,
   MAIN_AREA_KEY,
   mockupViewLabel,
+  parsePrintifyFrame,
   parsePrintLayout,
 } from "@/helpers/mockup-template";
 import type {
   GarmentMaskPreview,
   MockupArea,
+  MockupPrintArea,
   MockupTemplate,
   MockupView,
 } from "@/types/mockup-templates";
@@ -39,6 +43,8 @@ export type ViewDraft = {
   areas: MockupArea[];
   /** The photo size the areas' numbers are in; null until a photo has been measured. */
   areasBasis: Size | null;
+  /** For a Printify template, the print area Printify prints on this photo: the design is placed inside it. */
+  printifyFrame: MockupPrintArea | null;
   /** A saved side being taken off. */
   removed: boolean;
 };
@@ -65,6 +71,7 @@ export const viewDraftOf = (view: MockupView, template: MockupTemplate | null): 
   realisticPrintReady: template?.realisticPrintReady ?? false,
   areas: (template && parsePrintLayout(template.printAreaConfig)?.areas) || [defaultMainArea()],
   areasBasis: template ? { width: template.outputWidthPx, height: template.outputHeightPx } : null,
+  printifyFrame: template ? parsePrintifyFrame(template.printAreaConfig) : null,
   removed: false,
 });
 
@@ -90,6 +97,10 @@ type MockupViewPhotoEditorProps = {
   settingsTop: ReactNode;
   /** Shown at the bottom of the settings column, below the print areas. */
   settingsBottom: ReactNode;
+  /** Whose endpoints analyze the photo: the seller's or the admin's. */
+  scope?: MockupTemplateScope;
+  /** The photo and print areas are fixed (a Printify template's are Printify's): shown, not changed. */
+  photoLocked?: boolean;
 };
 
 // One side of a template, laid out side by side: its photo, large, with the print areas drawn on it and the sides
@@ -107,7 +118,10 @@ export const MockupViewPhotoEditor = ({
   sides,
   settingsTop,
   settingsBottom,
+  scope = "seller",
+  photoLocked = false,
 }: MockupViewPhotoEditorProps) => {
+  const { t } = useTranslation("common");
   const replaceInputId = useId();
   const [photoObjectUrl, setPhotoObjectUrl] = useState<string | null>(null);
   const [pickedSize, setPickedSize] = useState<Size | null>(null);
@@ -159,7 +173,7 @@ export const MockupViewPhotoEditor = ({
           ).blob();
           photo = new File([blob], "base-photo", { type: blob.type });
         }
-        const preview = await previewGarmentMask(photo, controller.signal);
+        const preview = await previewGarmentMask(photo, controller.signal, scope);
         if (!controller.signal.aborted) setMaskPreview(preview);
       } catch {
         // No preview is not an error here: saving still analyzes the photo and reports problems.
@@ -168,7 +182,7 @@ export const MockupViewPhotoEditor = ({
       }
     })();
     return () => controller.abort();
-  }, [needsPreview, file, savedUrl]);
+  }, [needsPreview, file, savedUrl, scope]);
 
   const shownPhoto = photoObjectUrl ?? savedUrl;
   const shownSize = file ? pickedSize : savedUrl ? draft.savedSize : null;
@@ -225,7 +239,19 @@ export const MockupViewPhotoEditor = ({
     draft.areas.findIndex((area) => area.key === activeKey)
   );
   const active = draft.areas[activeIndex] ?? draft.areas[0];
-  const setAreas = (areas: MockupArea[]) => update((current) => ({ ...current, areas }));
+  // A Printify template's photo keeps Printify's print area: its main area is the design, placed inside it.
+  const frame = photoLocked && active?.key === MAIN_AREA_KEY ? draft.printifyFrame : null;
+  const areaLocked = photoLocked && !frame;
+  const setAreas = (areas: MockupArea[]) => {
+    const printifyFrame = photoLocked ? draft.printifyFrame : null;
+    // Typed numbers are held to Printify's print area too; a size that cannot fit in it is not taken.
+    const kept = areas.map((area) => {
+      if (!printifyFrame || area.key !== MAIN_AREA_KEY) return area;
+      const fitted = keepInFrame(area, area.rotation, printifyFrame);
+      return fitted ? { ...area, ...fitted } : null;
+    });
+    if (kept.every((area): area is MockupArea => area !== null)) update((current) => ({ ...current, areas: kept }));
+  };
   const setActiveArea = (patch: Partial<MockupArea>) =>
     update((current) => ({
       ...current,
@@ -235,11 +261,11 @@ export const MockupViewPhotoEditor = ({
   const pickFile = (picked: File | undefined) => {
     if (!picked) return;
     if (!picked.type.startsWith("image/")) {
-      setFileError("Choose an image file for the photo.");
+      setFileError(t("mockups.sidesEditor.fileNotImage"));
       return;
     }
     if (picked.size > MAX_PHOTO_BYTES) {
-      setFileError("The photo cannot exceed 10 MB.");
+      setFileError(t("mockups.sidesEditor.fileTooLarge"));
       return;
     }
     setFileError(null);
@@ -252,7 +278,7 @@ export const MockupViewPhotoEditor = ({
     <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[minmax(0,1fr)_22rem] md:overflow-hidden">
       {/* The photo, as large as the dialog allows, with the sides under it. */}
       <section
-        aria-label={`${label} photo`}
+        aria-label={t("mockups.sidesEditor.label", { label })}
         className="bg-ink-50 flex min-h-0 flex-col gap-3 px-4 py-4 outline-none md:overflow-y-auto"
       >
         <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
@@ -260,11 +286,11 @@ export const MockupViewPhotoEditor = ({
             <p className="text-ink-900 text-sm font-semibold">{label}</p>
             {maskPreviewPending && (
               <p className="text-muted-foreground text-xs">
-                Finding the garment in the photo… this takes a few seconds.
+                {t("mockups.sidesEditor.findingGarment")}
               </p>
             )}
           </div>
-          {shownPhoto && (
+          {shownPhoto && !photoLocked && (
             <div className="flex items-center gap-1.5">
               <label
                 htmlFor={replaceInputId}
@@ -272,7 +298,7 @@ export const MockupViewPhotoEditor = ({
                 aria-disabled={disabled}
               >
                 <ImagePlus className="size-3.5" aria-hidden="true" />
-                Replace photo
+                {t("mockups.sidesEditor.replacePhoto")}
                 <input
                   id={replaceInputId}
                   type="file"
@@ -295,7 +321,7 @@ export const MockupViewPhotoEditor = ({
                   onClick={onRemove}
                 >
                   <Trash2 className="size-3.5" aria-hidden="true" />
-                  Remove side
+                  {t("mockups.sidesEditor.removeSide")}
                 </Button>
               )}
             </div>
@@ -325,7 +351,9 @@ export const MockupViewPhotoEditor = ({
                   }))
                   .filter((area) => area.key !== active.key)}
                 onSelectArea={setActiveKey}
-                disabled={disabled}
+                disabled={disabled || areaLocked}
+                areaFixed={photoLocked}
+                frame={frame ?? undefined}
                 garmentTint={tint}
                 pixelSize={shownSize ?? undefined}
                 garmentMaskUrl={maskUrl ?? undefined}
@@ -336,19 +364,21 @@ export const MockupViewPhotoEditor = ({
               <MockupPhotoDropzone
                 label={
                   draft.view === "front"
-                    ? "Photo of the front"
-                    : `Photo of the ${label.toLowerCase()}`
+                    ? t("mockups.sidesEditor.frontDropLabel")
+                    : t("mockups.sidesEditor.sideDropLabel", { label: label.toLowerCase() })
                 }
                 previewUrl={null}
                 error={fileError}
-                disabled={disabled}
+                disabled={disabled || photoLocked}
                 onSelect={pickFile}
                 onRemove={() => undefined}
               />
               <p className="text-muted-foreground text-xs">
-                {draft.view === "front"
-                  ? "A real product photo, garment on a plain background. Images up to 10 MB."
-                  : `Add a photo of the ${label.toLowerCase()} to print on it too: every design gets a mock-up of this side.`}
+                {photoLocked
+                  ? t("mockups.sidesEditor.printifyLockedDropDescription")
+                  : draft.view === "front"
+                    ? t("mockups.sidesEditor.frontDropDescription")
+                    : t("mockups.sidesEditor.sideDropDescription", { label: label.toLowerCase() })}
               </p>
             </div>
           )}
@@ -372,17 +402,23 @@ export const MockupViewPhotoEditor = ({
             activeKey={active.key}
             onSelect={setActiveKey}
             onChange={setAreas}
-            disabled={disabled}
+            disabled={disabled || areaLocked}
+            note={
+              frame
+                ? "The green dashed box is Printify's print area. Drag or resize the design inside it, as in Printify's editor: every mock-up starts here, and Edit on a mock-up still moves it for that one."
+                : areaLocked
+                  ? "This print area comes from Printify and stays as it is."
+                  : undefined
+            }
           />
         ) : (
           <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-xs">
-            Print areas for the {label.toLowerCase()} appear once it has a photo.
+            {t("mockups.sidesEditor.sideAreasNote", { label: label.toLowerCase() })}
           </p>
         )}
         {allowRecolor && recolorProblem && (
           <p role="alert" className="text-sm text-red-600">
-            The {label.toLowerCase()} photo can’t be recolored: {recolorProblem} Use a white or
-            light-gray garment on a plain background.
+            {t("mockups.sidesEditor.sideOffPhotoWarning", { label: label.toLowerCase(), reason: recolorProblem })}
           </p>
         )}
         {settingsBottom}

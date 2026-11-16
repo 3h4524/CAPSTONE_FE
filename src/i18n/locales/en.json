@@ -1401,6 +1401,1210 @@
       "unauthorizedDescription": "Your account is signed in, but it does not have the required role.",
       "goToDashboard": "Go to dashboard",
       "goToSignIn": "Go to sign in"
+    },
+    "auth": {
+      "checkingSignIn": "Checking sign-in",
+      "or": "or",
+      "signInWithGoogle": "Sign in with Google",
+      "signUpWithGoogle": "Sign up with Google",
+      "loading": "Loading...",
+      "email": "Email",
+      "password": "Password",
+      "passwordHint": "At least 8 characters, with uppercase, lowercase, and a digit.",
+      "sending": "Sending...",
+      "updating": "Updating...",
+      "backToLogin": "← Back to Login",
+      "backToLoginLower": "← Back to login",
+      "requestNewLink": "Request a new link",
+      "imageAlt": "Designer reviewing AI-generated product designs next to a laptop and printed t-shirts",
+      "imageCaptionTitle": "Your creative studio, anywhere.",
+      "imageCaptionDescription": "Manage your designs, product mockups, and production pipeline in one professional workspace.",
+      "login": {
+        "title": "Welcome back.",
+        "description": "Log in to keep building your creative journey.",
+        "submit": "Sign in",
+        "noAccount": "Don't have an account?",
+        "signUp": "Sign up",
+        "invalidCredentials": "Email or password is incorrect.",
+        "failed": "Unable to sign in. Please try again."
+      },
+      "twoFactor": {
+        "title": "Verify your administrator account",
+        "description": "Enter the 6-digit code sent to your email address.",
+        "codeLabel": "Email verification code",
+        "verifying": "Verifying...",
+        "submit": "Verify and continue",
+        "expiresIn": "Code expires in {{time}}",
+        "expired": "Code expired",
+        "resend": "Send a new code"
+      },
+      "register": {
+        "title": "Start your POD empire.",
+        "description": "Join us to start your creative journey.",
+        "fullName": "Full name",
+        "fullNamePlaceholder": "Jane Doe",
+        "confirmPassword": "Confirm password",
+        "creating": "Creating account...",
+        "submit": "Create account",
+        "hasAccount": "Already have an account?",
+        "logIn": "Log in",
+        "verificationSent": "We sent a verification link to <email>{{email}}</email>. Open it to activate your account."
+      },
+      "forgotPassword": {
+        "title": "Forgot Password?",
+        "description": "Don't worry, enter your email and we'll send you instructions to reset your password.",
+        "submit": "Send Request",
+        "sent": "If an account exists for <email>{{email}}</email>, we sent a link to reset your password. Open it to continue."
+      },
+      "resetPassword": {
+        "title": "Reset Password",
+        "description": "Please enter your new password below.",
+        "missingToken": "This link is missing its reset token. Request a new one to continue.",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm Password",
+        "invalidLink": "This link is invalid or expired.",
+        "submit": "Update Password"
+      },
+      "changePassword": {
+        "title": "Change password",
+        "description": "Enter your current password and choose a new one.",
+        "signInRequired": "You need to sign in to change your password.",
+        "goToLogin": "Go to login",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmNewPassword": "Confirm New Password",
+        "failed": "Could not change your password.",
+        "submit": "Change Password"
+      },
+      "verifyEmail": {
+        "title": "Verify your email",
+        "missingToken": "This link is missing its verification token. Enter your email to get a new one.",
+        "verifying": "Verifying your email...",
+        "success": "Your email is verified. You can sign in now.",
+        "invalidLink": "This verification link is invalid or expired.",
+        "resend": "Resend verification email"
+      },
+      "validation": {
+        "emailInvalid": "Please enter a valid email address",
+        "passwordRequired": "Password is required",
+        "passwordMin": "Password must be at least 8 characters",
+        "passwordMax": "Password must be at most 128 characters",
+        "passwordUppercase": "Password must contain at least one uppercase letter",
+        "passwordLowercase": "Password must contain at least one lowercase letter",
+        "passwordDigit": "Password must contain at least one digit",
+        "fullNameTooLong": "Full name is too long",
+        "confirmPasswordRequired": "Please confirm your password",
+        "passwordsMismatch": "Passwords do not match",
+        "currentPasswordRequired": "Please enter your current password",
+        "confirmNewPasswordRequired": "Please confirm your new password"
+      }
+    },
+    "workflowConfig": {
+      "motion": {
+        "presets": {
+          "defaultManual": "Default · manual",
+          "pushIn": "Push in",
+          "pullBack": "Pull back",
+          "panLeft": "Pan left",
+          "panRight": "Pan right",
+          "moveUp": "Move up",
+          "moveDown": "Move down",
+          "diagonalUpLeft": "Diagonal up-left",
+          "diagonalUpRight": "Diagonal up-right",
+          "diagonalDownLeft": "Diagonal down-left",
+          "diagonalDownRight": "Diagonal down-right",
+          "rotateClockwise": "Rotate clockwise",
+          "rotateCounterclockwise": "Rotate counterclockwise",
+          "rotateClockwisePushIn": "Rotate clockwise + push in",
+          "rotateCounterclockwisePushIn": "Rotate counterclockwise + push in",
+          "static": "Static",
+          "gentleFullFrame": "Gentle full-frame motion"
+        },
+        "increase": "Increase {{label}}",
+        "decrease": "Decrease {{label}}",
+        "degreesValue": "{{value}} degrees",
+        "previewAriaReducedMotion": "Scene {{scene}} camera motion preview. Reduced motion is enabled.",
+        "previewAria": "Scene {{scene}} camera motion preview. Hover, focus, or press Enter to play.",
+        "previewAlt": "Motion preview for scene {{scene}}",
+        "sampleAlt": "Sample lifestyle product image demonstrating camera movement",
+        "frames": {
+          "start": "First frame",
+          "end": "Last frame"
+        },
+        "framesLower": {
+          "start": "first frame",
+          "end": "last frame"
+        },
+        "editing": "Editing",
+        "editingFrame": {
+          "start": "Editing first frame",
+          "end": "Editing last frame"
+        },
+        "scale": "Scale",
+        "rotation": "Rotation",
+        "xPosition": "X position",
+        "yPosition": "Y position",
+        "positionAnchor": "Position anchor",
+        "anchors": {
+          "center": "Center",
+          "left": "Left",
+          "right": "Right",
+          "top": "Top",
+          "bottom": "Bottom"
+        },
+        "endpointAria": {
+          "scale": "Scene {{scene}} {{frame}} scale",
+          "scalePercentage": "Scene {{scene}} {{frame}} scale percentage",
+          "rotationDegrees": "Scene {{scene}} {{frame}} rotation in degrees",
+          "rotationDial": "Scene {{scene}} {{frame}} rotation dial",
+          "xPosition": "Scene {{scene}} {{frame}} X position",
+          "yPosition": "Scene {{scene}} {{frame}} Y position",
+          "anchor": "Scene {{scene}} {{frame}} anchor"
+        },
+        "editMotion": "Edit motion",
+        "editMotionAria": "Edit motion for scene {{scene}}",
+        "dialogTitle": "Scene {{scene}} · Standard motion editor",
+        "dialogDescription": "Preview and edit the camera path before rendering.",
+        "closeEditorAria": "Close motion editor",
+        "close": "Close",
+        "previewCanvasAria": "Motion preview canvas",
+        "setupReadyTitle": "Motion setup is ready",
+        "setupReadyDescription": "Choose an approved start frame in the scene to preview this camera path on the product.",
+        "corners": {
+          "topLeft": "top left",
+          "topRight": "top right",
+          "bottomLeft": "bottom left",
+          "bottomRight": "bottom right"
+        },
+        "resizeFrameAria": "Resize {{frame}} from {{corner}}",
+        "dragToResize": "Drag to resize",
+        "rotateFrameAria": "Rotate {{frame}}",
+        "dragToRotate": "Drag to rotate",
+        "zoomControlsAria": "Preview zoom controls",
+        "zoomOutAria": "Zoom out preview",
+        "zoomOut": "Zoom out",
+        "zoomInAria": "Zoom in preview",
+        "zoomIn": "Zoom in",
+        "transformControlsAria": "Transform controls",
+        "transform": "Transform",
+        "cameraMovement": "Camera movement",
+        "editorCameraMovementAria": "Scene {{scene}} editor camera movement",
+        "unsafeCropWarning": "Move or zoom out until the product and artwork remain visible in both keyframes.",
+        "timelineAria": "Scene timeline",
+        "pausePreview": "Pause motion preview",
+        "playPreview": "Play motion preview",
+        "startFromDefault": "Start from default",
+        "timelinePlayheadAria": "Scene {{scene}} timeline playhead",
+        "goToFirstFrame": "Go to first frame",
+        "goToLastFrame": "Go to last frame",
+        "rerenderHint": "Save changes, then rerender to update the generated video.",
+        "renderHint": "These settings will be used when this scene is rendered.",
+        "cancel": "Cancel",
+        "applyMotion": "Apply motion"
+      },
+      "aiShot": {
+        "settings": {
+          "framing": "Framing",
+          "cameraAngle": "Camera angle",
+          "cameraMovement": "Camera movement",
+          "subjectMotion": "Subject motion",
+          "motionIntensity": "Motion intensity",
+          "lighting": "Lighting / mood"
+        },
+        "values": {
+          "wide": "Wide",
+          "medium": "Medium",
+          "medium_close": "Medium close-up",
+          "close_up": "Close-up",
+          "macro": "Macro",
+          "eye_level": "Eye level",
+          "three_quarter": "Three-quarter",
+          "source_view": "Source image angle",
+          "low_angle": "Low angle",
+          "top_down": "Top-down",
+          "locked": "Locked camera",
+          "push_in": "Slow push-in",
+          "pull_back": "Slow pull-back",
+          "orbit_left": "Orbit left",
+          "orbit_right": "Orbit right",
+          "pan_left": "Pan left",
+          "pan_right": "Pan right",
+          "gentle_tracking": "Gentle tracking",
+          "subtle_handheld": "Subtle handheld",
+          "none": "No subject motion",
+          "minimal": "Minimal / restrained",
+          "natural": "Natural movement",
+          "subtle": "Subtle",
+          "balanced": "Balanced",
+          "soft_studio": "Soft studio",
+          "bright_clean": "Bright and clean",
+          "cool_modern": "Cool modern",
+          "moody_cinematic": "Moody cinematic",
+          "warm_natural": "Warm natural",
+          "golden_hour": "Golden hour",
+          "source_image": "Source image lighting"
+        },
+        "characterImageError": "Could not load {{name}}'s reference image.",
+        "referenceImageAlt": "Reference image {{index}}: {{name}}",
+        "removeReferenceImage": "Remove reference image {{index}}",
+        "checkSceneSettings": "Check AI scene settings.",
+        "compilePromptFailed": "Could not compile the prompt for Scene {{scene}}.",
+        "sceneRegenerating": "Scene {{scene}} is being regenerated.",
+        "sceneGenerating": "Scene {{scene}} is being generated.",
+        "sharedModelCatalogError": "Could not load the shared model catalog. Retry before creating a keyframe.",
+        "noSharedModel": "No active shared model is available.",
+        "matchingApprovedKeyframe": "Matching approved keyframe selected. No new image was generated.",
+        "matchingKeyframeFound": "Matching keyframe found. Review and approve it before using it in video.",
+        "confirmKeyframeCost": "Generate one custom prompt keyframe with Gemini Image? Estimated image cost: ${{estimate}} USD. This is charged separately from AI video generation.",
+        "keyframeCreated": "Keyframe created. Review and approve it before generating video; estimated image cost: ${{cost}} USD.",
+        "packAdded": "{{name}} added with {{sceneCount}} scenes.",
+        "catalogLoading": "The AI scene catalog is still loading. Try the video template again in a moment.",
+        "sharedMockupUpdated": "Shared mockup updated. Existing start frames were cleared.",
+        "chooseSharedMockupFirst": "Choose an approved shared mockup before preparing start frames.",
+        "chooseSharedModelFirst": "Choose a shared model before preparing start frames.",
+        "sceneUnavailable": "Scene {{scene}} is unavailable.",
+        "quoteFailures": "{{failed}} start-frame quote(s) failed. Retry only those scenes after reviewing the error.",
+        "framesNeedAttention": "Some start frames need attention. Retry only the failed scenes.",
+        "framesReady": "Start frames are ready for review.",
+        "framesPartlyApproved": "{{approved}} frame(s) approved. Retry the {{failed}} failed review(s).",
+        "framesAllApproved": "All start frames were approved and are ready for video generation.",
+        "invalidReferenceFile": "Choose JPEG, PNG or WebP references totaling 20 MB or less, up to 2 images. The selected model is added automatically.",
+        "sceneMoved": "Scene moved to position {{position}} of {{total}}.",
+        "keyframeSelectedPending": "Keyframe selected for this scene. Approve it before generating video.",
+        "keyframeSelected": "Keyframe selected for this scene.",
+        "sceneSelectedForMove": "Scene {{scene}} selected. Select another scene to move it.",
+        "sceneMoveCancelled": "Scene move cancelled.",
+        "videoTemplate": "Video template",
+        "videoTemplateDescription": "Start from a complete sequence, then fine-tune its individual scenes below.",
+        "customized": "Customized",
+        "packDuration": "{{seconds}}s pack",
+        "loadingVideoTemplates": "Loading video templates...",
+        "customScenes": "Custom scenes",
+        "packCustomizedNote": "Scene order, duration, or shot setup differs from the pack default.",
+        "standardPackNote": "No AI scenes: each one is a camera move on a product image, so no AI provider is billed.",
+        "aiPackNote": "Prepared AI scenes with a shared cast and product mock-up.",
+        "replaceSetupTitle": "Replace the current scene setup?",
+        "replaceSetupDescription": "Applying {{name}} replaces the current scenes and removes their selected start frames. Your output format, shared model, shared mockup and caption stay unchanged.",
+        "thisVideoPack": "this video pack",
+        "keepCurrentSetup": "Keep current setup",
+        "replaceScenes": "Replace scenes",
+        "sharedMockup": "Shared mockup",
+        "chooseSharedMockupHint": "Choose one approved product image for all four scenes",
+        "change": "Change",
+        "choose": "Choose",
+        "chooseMockup": "Choose mockup",
+        "sharedMockupNote": "Only current approved images from this product's artwork group are available. Changing it clears every generated start frame.",
+        "chooseSharedMockupTitle": "Choose the shared mockup",
+        "chooseSharedMockupDescription": "This approved product image is used to create the start frame for every Product on Model scene.",
+        "noApprovedMockups": "No approved mockups available",
+        "noApprovedMockupsDescription": "Approve a mockup at its current revision in this product's artwork group first.",
+        "mockupAlt": "{{role}} mockup",
+        "startFramePreparation": "Start frame preparation",
+        "startFramePreparationDescription": "Prepare and review all four scene frames in one pass. A new image is never charged without one total confirmation.",
+        "readyCount": "{{ready}}/4 ready",
+        "packFrameStatus": {
+          "approved": "Approved",
+          "generating": "Generating",
+          "failed": "Failed",
+          "review": "Review",
+          "missing": "Missing"
+        },
+        "startFrameForSceneAlt": "Start frame for scene {{scene}}",
+        "sceneLabel": "Scene {{scene}}",
+        "generateAllStartFrames": "Generate all start frames",
+        "retryFailed": "Retry failed",
+        "approveAll": "Approve all",
+        "readyForVideo": "Ready for video",
+        "confirmGenerationTitle": "Confirm start-frame generation",
+        "confirmGenerationDescription": "One confirmation covers all four scenes. Reused frames are not charged.",
+        "quoteNew": "New",
+        "quoteReuse": "Reuse",
+        "quoteEstimated": "Estimated",
+        "cancel": "Cancel",
+        "generateFrames": "Generate frames",
+        "sceneSetup": "Scene setup",
+        "reviewPromptTitle": "Review prompt for Scene {{scene}}",
+        "reviewPromptDescription": "This is the compiled prompt that will be sent when you generate this scene.",
+        "compilingPrompt": "Compiling the prompt…",
+        "model": "Model",
+        "duration": "Duration",
+        "back": "Back",
+        "starting": "Starting…",
+        "regenerateThisScene": "Regenerate this scene",
+        "generateThisScene": "Generate this scene",
+        "scenes": "Scenes",
+        "scenesDescription": "Set each scene separately. Drag the grip, or select a grip then a destination scene to reorder.",
+        "totalDurationAria": "Total video duration: {{total}} of {{max}} seconds",
+        "totalDuration": "Total duration {{total}}s / {{max}}s",
+        "totalVideoDuration": "Total video duration",
+        "durationValueText": "{{total}} of {{max}} seconds",
+        "sceneCount_one": "{{count}} scene",
+        "sceneCount_other": "{{count}} scenes",
+        "sharedDirection": "Shared direction for AI scenes",
+        "optionalUpTo500": "(optional, up to 500 characters)",
+        "sharedDirectionCounter": "{{length}}/500 | appended before product-preservation guardrails",
+        "loadingAiTemplates": "Loading AI scene templates... ",
+        "catalogError": "Could not load the AI template catalog. Your scene settings are preserved.",
+        "retry": "Retry",
+        "keyframeStatus": {
+          "generating": "Generating",
+          "pendingApproval": "Pending approval",
+          "ready": "Ready",
+          "needsUpdate": "Needs update",
+          "rejected": "Rejected"
+        },
+        "sceneSrPrefix": "Scene ",
+        "aiVideo": "AI video",
+        "standard": "Standard",
+        "generationModeAria": "Scene {{scene}} generation mode",
+        "notInPlan": "Not included in your plan",
+        "aiVideoNotInPlan": "AI video is not included in your plan. Switch this scene to Standard.",
+        "decreaseDurationAria": "Decrease scene {{scene}} duration",
+        "sceneDurationAria": "Scene {{scene}} duration",
+        "increaseDurationAria": "Increase scene {{scene}} duration",
+        "dragSceneAria": "Drag scene {{scene}}; use arrow keys to reorder",
+        "reorderTitle": "Reorder with arrow keys when focused",
+        "copySceneAria": "Copy scene {{scene}}",
+        "copyScene": "Copy scene",
+        "removeSceneAria": "Remove scene {{scene}}",
+        "aiVideoModel": "AI video model",
+        "choosePerScene": "Choose per scene",
+        "aiVideoModelAria": "Scene {{scene}} AI video model",
+        "default": "Default",
+        "aiTemplate": "AI template",
+        "aiTemplateAria": "Scene {{scene}} AI template",
+        "shotTemplate": "Shot template",
+        "shotTemplateAria": "Scene {{scene}} shot template",
+        "startFrameAria": "Scene {{scene}} start frame",
+        "startFrame": "Start frame",
+        "startFrameDescription": "Choose the image this scene starts from, or create a custom keyframe.",
+        "changeStartFrameAria": "Change start frame for scene {{scene}}",
+        "chooseStartFrameAria": "Choose start frame for scene {{scene}}",
+        "modelPhotoAutomatic": "Model photo (automatic)",
+        "mainMockupAutomatic": "Main mock-up (automatic)",
+        "selectedImage": "Selected image",
+        "chooseAStartFrame": "Choose a start frame",
+        "approvedKeyframeRevision": "Approved keyframe · revision {{revision}}",
+        "browseApproved": "Browse approved images or create a new keyframe",
+        "automaticModelPhotoNote": "Each design uses its own approved model photo. Choose an image to start from another one.",
+        "automaticMainMockupNote": "Each design uses its own main mock-up. Choose an image to start from another one.",
+        "matchedSourceNote": "Chosen on another design; each design uses its own image of the same template and color.",
+        "notSavedYet": "Not saved yet: Mockup Approval and the videos still use the saved start frame.",
+        "cropApplied": "Crop applied",
+        "editStartFrame": "Edit start frame",
+        "edit": "Edit",
+        "chooseStartFrame": "Choose start frame",
+        "chooseStartFrameDescription": "Select an approved image for scene {{scene}}, or create a custom keyframe.",
+        "startFrameOptions": "Start frame options",
+        "approvedFrames": "Approved frames",
+        "createNewKeyframe": "Create new keyframe",
+        "approvedFramesDescription": "Select a frame to use immediately. The selected item is saved when you click it.",
+        "useSourceAria": "Use {{source}} {{variant}} for scene {{scene}}",
+        "approvedKeyframeLower": "approved keyframe",
+        "approvedKeyframe": "Approved keyframe",
+        "noApprovedFrames": "No approved frames yet",
+        "noApprovedFramesDescription": "Approve a product image first, or create a custom keyframe from an approved source.",
+        "lifestyleNote": "The approved people and setting stay in the image.",
+        "approvedProductImage": "Approved product image",
+        "required": "(required)",
+        "mockupSourceAria": "Scene {{scene}} mockup source for new keyframe",
+        "selectAnImage": "Select an image",
+        "customKeyframePrompt": "Custom keyframe prompt",
+        "optional": "(optional)",
+        "keyframePromptPlaceholder": "Describe how the product should appear and how the reference images should guide the scene.",
+        "referenceImages": "Reference images",
+        "referenceImagesHint": "({{selected}}/2, optional; model is included automatically)",
+        "addReferenceImageAria": "Add reference image {{index}} of 2",
+        "addImage": "Add image",
+        "keyframeResultAria": "Scene {{scene}} keyframe result",
+        "keyframePreview": "Keyframe preview",
+        "generatingKeyframePreview": "Generating keyframe preview",
+        "generatingKeyframe": "Generating keyframe...",
+        "viewKeyframeAria": "View keyframe for scene {{scene}}",
+        "viewKeyframe": "View keyframe",
+        "keyframePreviewAlt": "Scene {{scene}} studio keyframe preview",
+        "creatingKeyframe": "Creating your keyframe",
+        "creatingKeyframeDescription": "This may take a moment. The preview will appear here when it is ready.",
+        "generatedKeyframe": "Generated keyframe",
+        "keyframePendingNote": "Review and approve this image before generating video.",
+        "keyframeApprovedNote": "Approved and ready to use for this scene.",
+        "keyframeOutdatedNote": "The source or direction has changed. Generate another matching keyframe.",
+        "keyframeRejectedNote": "This keyframe was rejected. Generate another to continue.",
+        "approve": "Approve",
+        "reject": "Reject",
+        "useKeyframe": "Use keyframe for this scene",
+        "createKeyframe": "Create keyframe",
+        "generateAnother": "Generate another",
+        "approveBeforeVideo": "Approve the generated image before creating the video.",
+        "keyframeReadyNote": "This approved keyframe is ready for the current scene.",
+        "keyframeReuseNote": "Matching approved keyframes are reused without a new image generation call.",
+        "detailNote": "This image can be used directly. Create an approved close-up keyframe for the clearest detail. Review generated keyframes because fine print may be reinterpreted.",
+        "standardMotionAria": "Scene {{scene}} Standard camera motion",
+        "sceneVideo": "Scene video",
+        "sceneVideoDescription": "Preview this scene with the selected camera movement.",
+        "standardMovementAria": "Scene {{scene}} Standard camera movement",
+        "noSourceLifestyle": "Choose an approved product image. You may attach optional approved reference images and describe their use in the keyframe direction.",
+        "noSourceDetail": "Choose any approved mockup or keyframe. A close-up keyframe gives the clearest detail.",
+        "noSourceDefault": "Approve at least one product image before generating this scene.",
+        "noSourceFilterNote": "Also check that the image is included in Apply Mockup's allowed images and selected artwork group.",
+        "advancedSettings": "Advanced camera, motion and lighting",
+        "settingAria": "Scene {{scene}} {{setting}}",
+        "customDirection": "Custom direction",
+        "viewPromptBlocks": "View compiled prompt building blocks | v{{version}}",
+        "templatePrompt": "Template prompt",
+        "sharedPreservationRules": "Shared product-preservation rules",
+        "confirmRightsTitle": "Confirm image rights",
+        "confirmRightsDescription": "This scene uses a person-focused template. Confirm that you have permission to use people shown in the selected product and reference images before creating its keyframe or video.",
+        "haveRights": "I have the rights",
+        "addScene": "Add scene",
+        "estimatedFootage": "Estimated AI footage ${{cost}} USD at 768P",
+        "fullVideoEditing": "Full video editing",
+        "fullVideo": "Full video",
+        "aboutEstimates": "About estimates and keyframes",
+        "aboutEstimatesBody": "The AI estimate assumes each AI clip is new; the final quote accounts for reusable clips before rendering. Standard scenes use smooth camera movement between the selected framing points. Keyframes combine the shared model, an approved product source and up to two optional visual references. Review AI clips and every generated keyframe for product fidelity.",
+        "closeImagePreview": "Close image preview",
+        "imagePreview": "Image preview",
+        "selectedStartFrameForScene": "Selected start frame image for scene {{scene}}",
+        "selectedStartFramePreview": "Selected start frame image preview",
+        "startFrameImageAlt": "Start frame image for scene {{scene}}"
+      }
+    },
+    "batches": {
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "saveChanges": "Save changes",
+      "addProduct": "Add product",
+      "form": {
+        "editTitle": "Edit product batch",
+        "createTitle": "Create product batch",
+        "editDescription": "Update the batch name and defaults used for new products.",
+        "createDescription": "Set shared defaults to speed up adding products.",
+        "nameLabel": "Batch name *",
+        "namePlaceholder": "e.g. Summer outdoor collection",
+        "defaultNicheLabel": "Default niche",
+        "defaultNichePlaceholder": "e.g. hiking and camping",
+        "defaultNicheHint": "Used to prefill new products; each product can override it.",
+        "defaultProductTypeLabel": "Default product type",
+        "noDefault": "No default",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "What is this batch for?",
+        "creating": "Creating…",
+        "createBatch": "Create batch"
+      },
+      "product": {
+        "editTitle": "Edit product",
+        "description": "These are the product inputs currently stored for the creation queue.",
+        "nameLabel": "Product name *",
+        "typeLabel": "Product type *",
+        "nicheLabel": "Niche *",
+        "nichePlaceholder": "e.g. hiking enthusiasts",
+        "nicheHint": "The specific audience or interest this product is for.",
+        "keywordsLabel": "Keywords *",
+        "keywordsHint": "(comma separated, up to 13)",
+        "keywordsPlaceholder": "minimalist, nature, gift",
+        "optional": "(optional)",
+        "designTextLabel": "Design text",
+        "designTextPlaceholder": "e.g. GO HIGHER",
+        "designTextHint": "The exact words printed on the design. With a lettering template, leaving it empty prints the product name; with an image prompt, it prints no words.",
+        "imagePromptLabel": "Image prompt",
+        "imagePromptPlaceholder": "e.g. A detailed vintage badge with a leaping trout, crossed fishing rods and a calm lake at sunrise",
+        "imagePromptHint": "Replaces the design template and the art style set in the workflow for this product. Describe the image and its style; put any words to print in Design text.",
+        "productDescriptionLabel": "Product description",
+        "productDescriptionPlaceholder": "Describe the product idea or design brief",
+        "productDescriptionHint": "Add the design idea or brief you want the generation workflow to use.",
+        "sourceNotesLabel": "Source notes",
+        "sourceNotesPlaceholder": "Reference or production notes"
+      },
+      "close": "Close",
+      "import": {
+        "missingColumns": "The Products worksheet must include Product name, Product type, Niche and Keywords columns.",
+        "tooManyRows": "A file can contain up to 500 product rows per import.",
+        "noRows": "No product rows found. Use the Products worksheet and keep the provided column headers.",
+        "chooseXlsx": "Choose an Excel .xlsx file.",
+        "tooLarge": "The workbook must be smaller than 5 MB.",
+        "noWorksheet": "The workbook has no product worksheet.",
+        "readError": "Could not read this workbook. Please download a fresh template and try again.",
+        "title": "Import products from Excel",
+        "description": "Upload a completed template. Valid rows are saved as pending products; importing does not start AI generation. Review the products and approve the batch when you are ready to queue them.",
+        "sampleTitle": "Start with the sample template",
+        "sampleHint": "Includes a quick guide, an example and a product type dropdown.",
+        "downloadTemplate": "Download template",
+        "fileLabel": "Excel file (.xlsx)",
+        "fileHint": "Up to 500 products and 5 MB. Required: product name, product type, niche and keywords. Niche is the target market or interest; separate 1–13 keywords with commas. Description and source notes are optional.",
+        "rowsReady_one": "{{count}} rows ready",
+        "rowsReady_other": "{{count}} rows ready",
+        "needAttention_one": "{{count}} need attention",
+        "needAttention_other": "{{count}} need attention",
+        "skipHint": "Rows with errors will be skipped; valid rows can still be imported.",
+        "rowIssue": "Row {{row}} · {{name}}: {{issue}}",
+        "unnamed": "(unnamed)",
+        "imported_one": "Imported {{count}} products",
+        "imported_other": "Imported {{count}} products",
+        "importing": "Importing…",
+        "importValid": "Import valid rows"
+      }
+    },
+    "designTemplates": {
+      "eyebrow": "Creative library",
+      "titleShort": "Design templates",
+      "title": "Start with a structure. Make the artwork yours.",
+      "description": "Explore production-ready prompt systems or manage the reusable templates in your private workspace.",
+      "newShort": "New",
+      "newPersonalTemplate": "New personal template",
+      "controlsLabel": "Template library controls",
+      "libraryLabel": "Template library",
+      "systemShort": "System",
+      "systemTemplates": "System templates",
+      "systemTemplatesDescription": "Curated foundations ready to clone",
+      "myTemplates": "My templates",
+      "myTemplatesDescription": "Your editable creative workspace",
+      "personalTemplates": "Personal templates",
+      "exploreSystemTitle": "Explore the system collection",
+      "exploreSystemDescription": "View curated prompt structures and clone the ones that fit your next product.",
+      "managePersonalTitle": "Manage your personal collection",
+      "managePersonalDescription": "Edit, review, or remove templates owned by your account.",
+      "searchSystemTemplates": "Search system templates",
+      "searchMyTemplates": "Search my templates",
+      "searchPersonalTemplates": "Search personal templates",
+      "allNiches": "All niches",
+      "allStyles": "All styles",
+      "loadingTemplates": "Loading templates",
+      "libraryErrorTitle": "The library could not be loaded",
+      "libraryErrorDescription": "Check your connection and try again.",
+      "retry": "Retry",
+      "retrying": "Retrying...",
+      "noMatchTitle": "No templates match these filters",
+      "noMatchDescription": "Broaden the search or reset the filters to see more prompt systems.",
+      "noSystemTitle": "No system templates are available",
+      "noSystemDescription": "The curated collection is currently empty. Refresh the catalog or try again shortly.",
+      "noPersonalTitle": "Create your first personal template",
+      "noPersonalDescription": "Build a reusable prompt structure you can edit for your own product catalog.",
+      "clearFilters": "Clear filters",
+      "refreshCatalog": "Refresh catalog",
+      "createTemplate": "Create template",
+      "systemTemplateCount_one": "system template",
+      "systemTemplateCount_other": "system templates",
+      "personalTemplateCount_one": "personal template",
+      "personalTemplateCount_other": "personal templates",
+      "templatePages": "Template pages",
+      "pageOf": "Page {{page}} of {{total}}",
+      "previous": "Previous",
+      "next": "Next",
+      "clonedToast": "Template cloned. Customize your copy.",
+      "deletedToast": "Template deleted.",
+      "viewTemplate": "View {{name}}",
+      "previewAlt": "Preview artwork for {{name}}",
+      "system": "System",
+      "personal": "Personal",
+      "general": "General",
+      "unstyled": "Unstyled",
+      "personalFallbackDescription": "A personal prompt framework ready for your next collection.",
+      "usesCount": "{{uses}} uses",
+      "view": "View",
+      "cloning": "Cloning...",
+      "cloneCustomize": "Clone & customize",
+      "edit": "Edit",
+      "deleteTemplateNamed": "Delete {{name}}",
+      "closeDetails": "Close template details",
+      "loadingDetails": "Loading template details",
+      "detailErrorTitle": "Template could not be loaded",
+      "detailErrorDescription": "Refresh the detail view and try again.",
+      "previewUnavailable": "Preview unavailable",
+      "previewUnavailableDescription": "This template does not have a preview image yet.",
+      "overview": "Template overview",
+      "type": "Type",
+      "uses": "Uses",
+      "niche": "Niche",
+      "artStyle": "Art style",
+      "updated": "Updated",
+      "systemTemplate": "System template",
+      "personalTemplate": "Personal template",
+      "detailFallbackDescription": "A reusable prompt framework for your catalog.",
+      "positivePrompt": "Positive prompt",
+      "negativePrompt": "Negative prompt",
+      "promptExamples": "Prompt examples",
+      "promptLanguageNote": "Prompts are sent to the AI in English.",
+      "noExamples": "No examples have been added.",
+      "close": "Close",
+      "editTemplate": "Edit template",
+      "closeDeleteDialog": "Close delete template dialog",
+      "deleteTitle": "Delete personal template?",
+      "deleteDescription": "{{name}} will disappear from your library. Historical jobs keep their prompt snapshot.",
+      "keepTemplate": "Keep template",
+      "deleting": "Deleting...",
+      "deleteTemplate": "Delete template",
+      "readOnlyToast": "System templates are read-only. Clone one to customize it.",
+      "savedToast": "Template changes saved.",
+      "createdToast": "Personal template created.",
+      "loadingEditor": "Loading template editor",
+      "editorErrorTitle": "Editor could not be loaded",
+      "editorErrorDescription": "The template may no longer exist, or the connection was interrupted.",
+      "returnToLibrary": "Return to library",
+      "newTemplate": "New template",
+      "editorTitleEdit": "Refine your prompt system",
+      "editorTitleNew": "Build a reusable creative direction",
+      "editorDescription": "Keep the structure stable and use placeholders for the product-specific details you will supply later.",
+      "backToLibrary": "Back to library",
+      "identityTitle": "Template identity",
+      "name": "Name",
+      "namePlaceholder": "e.g. Botanical Linework",
+      "chooseNiche": "Choose a niche",
+      "chooseStyle": "Choose a style",
+      "promptFramework": "Prompt framework",
+      "promptFrameworkDescription": "Use only supported placeholders inside curly braces.",
+      "basePromptPlaceholderShort": "A print-ready {style} illustration of {subject}",
+      "basePromptPlaceholder": "Example: Create a print-ready {style} illustration of {subject} for the {niche} niche using {keywords}. Isolated artwork, no product mockup.",
+      "insertIntoPositive": "Insert into positive prompt",
+      "insertIntoNegative": "Insert into negative prompt",
+      "insert": "Insert",
+      "missingSubject": "Without {subject}, this template cannot adapt to a new design subject.",
+      "optional": "Optional",
+      "negativePromptPlaceholder": "Leave empty, or list elements the model should avoid",
+      "examples": "Examples",
+      "examplesDescription": "Show how a subject becomes a finished creative direction.",
+      "addExample": "Add example",
+      "examplesEmpty": "Examples are optional, but they make a personal template easier to reuse consistently.",
+      "exampleNumber": "Example {{number}}",
+      "subject": "Subject",
+      "subjectPlaceholder": "e.g. luna moth with wildflowers",
+      "resultingPrompt": "Resulting prompt",
+      "resultingPromptPlaceholder": "Describe the expected composition",
+      "removeExample": "Remove example {{number}}",
+      "liveStructure": "Live structure",
+      "personalTemplatePreview": "Personal template preview",
+      "draft": "Draft",
+      "untitledTemplateLower": "untitled template",
+      "untitledTemplate": "Untitled template",
+      "aiPreview": "AI preview",
+      "aiPreviewDescription": "Your generated artwork preview will appear here.",
+      "regeneratePreview": "Regenerate Preview",
+      "generatePreview": "Generate Preview",
+      "comingSoon": "Coming soon",
+      "previewComingSoon": "AI preview generation will be available in a future update.",
+      "personalEditable": "Personal and editable",
+      "upToFiveExamples": "Up to five examples",
+      "privateToAccount": "Private to your seller account",
+      "saving": "Saving...",
+      "saveChanges": "Save changes",
+      "unsavedChanges": "You have unsaved changes.",
+      "exitTitle": "Save template changes?",
+      "exitDescription": "You have unsaved changes. Save them before returning to your template library?",
+      "discardChanges": "Discard changes",
+      "validation": {
+        "nameRequired": "Name is required.",
+        "nameTooLong": "Name must be 255 characters or fewer.",
+        "nicheRequired": "Choose a niche.",
+        "artStyleRequired": "Choose an art style.",
+        "basePromptRequired": "Base prompt is required.",
+        "basePromptTooLong": "Base prompt must be 1,000 characters or fewer.",
+        "unsupportedPlaceholder": "The prompt contains an unsupported placeholder.",
+        "negativePromptTooLong": "Negative prompt must be 1,000 characters or fewer.",
+        "subjectRequired": "Subject is required.",
+        "examplePromptRequired": "Example prompt is required.",
+        "tooManyExamples": "You can add up to five examples."
+      },
+      "niches": {
+        "natureBotanical": "Nature & Botanical",
+        "outdoors": "Outdoors",
+        "foodDrink": "Food & Drink",
+        "vehicles": "Vehicles",
+        "quotesMotivation": "Quotes & Motivation",
+        "humorLifestyle": "Humor & Lifestyle",
+        "giftsOccasions": "Gifts & Occasions",
+        "petsAnimals": "Pets & Animals",
+        "sportsFitness": "Sports & Fitness",
+        "travelPlaces": "Travel & Places"
+      },
+      "artStyles": {
+        "vintage": "Vintage",
+        "minimalist": "Minimalist",
+        "watercolor": "Watercolor",
+        "boldTypography": "Bold typography",
+        "darkAcademia": "Dark academia",
+        "funnyQuote": "Funny quote",
+        "floral": "Floral"
+      }
+    },
+    "workflowEditor": {
+      "allowance": {
+        "label": "Plan allowance",
+        "freeTrial": "Free trial",
+        "planThisMonth": "Your plan this month",
+        "free": "Free",
+        "mockupsPerRun_one": "Up to {{count}} mockups per run",
+        "mockupsPerRun_other": "Up to {{count}} mockups per run",
+        "viewPlans": "View plans"
+      },
+      "resizeAside": {
+        "label": "Resize {{label}}",
+        "title": "Drag to resize, double-click to reset"
+      },
+      "workspace": {
+        "readyToCustomize": "{{name}} is ready to customize.",
+        "documentTitle": "Workflows",
+        "discardTitle": "Discard unsaved changes?",
+        "discardDescription": "Your latest edits to this workflow have not been saved yet.",
+        "discardChanges": "Discard changes",
+        "keepEditing": "Keep editing",
+        "loadingWorkflows": "Loading workflows",
+        "unavailableTitle": "Workflows unavailable",
+        "unavailableDescription": "We could not load your workflows. Try again in a moment.",
+        "tryAgain": "Try again",
+        "preparingFirst": "Preparing your first workflow",
+        "emptyTitle": "No workflows yet",
+        "emptyDescription": "Start from the standard Etsy POD pipeline and adapt it to your shop.",
+        "createWorkflow": "Create workflow",
+        "stepList": "Step list",
+        "openError": "This workflow could not be opened",
+        "loadingWorkflow": "Loading workflow",
+        "nodePanel": "the node panel"
+      },
+      "nodeTypes": {
+        "product-input": {
+          "label": "Product input",
+          "description": "Start the workflow with the pending products of a batch."
+        },
+        "prompt-synthesis": {
+          "label": "Prompt synthesis",
+          "description": "Combine a design template and art style into a design prompt."
+        },
+        "design-image": {
+          "label": "Design image",
+          "description": "Generate design variations for every product."
+        },
+        "design-approval": {
+          "label": "Design approval",
+          "description": "Only approved designs get mock-ups."
+        },
+        "apply-mockup": {
+          "label": "Apply mock-up",
+          "description": "Place approved designs onto product mock-up templates."
+        },
+        "approval-gate": {
+          "label": "Mockup Approval",
+          "description": "Review each mockup at its current revision before rendering."
+        },
+        "generate-video": {
+          "label": "Generate Video",
+          "description": "Build a video from scenes configured individually for AI or Standard motion."
+        },
+        "review-video": {
+          "label": "Review Video",
+          "description": "Approve the exact video version before export."
+        },
+        "generate-listing": {
+          "label": "Listing content",
+          "description": "Write the SEO title, 13 tags and description for each product."
+        },
+        "export-zip": {
+          "label": "Export ZIP",
+          "description": "Package the final assets into a ready-to-upload ZIP file."
+        },
+        "publish-etsy": {
+          "label": "Publish to Etsy",
+          "description": "Create an Etsy draft listing. A digital download delivers the approved designs."
+        },
+        "publish-printify": {
+          "label": "Push to Printify",
+          "description": "Create the product on Printify, which publishes it to Etsy and prints each order."
+        }
+      },
+      "categories": {
+        "trigger": "Trigger",
+        "ai": "AI generation",
+        "review": "Review",
+        "output": "Output"
+      },
+      "nodeStatuses": {
+        "running": "Running",
+        "success": "Done",
+        "failed": "Failed",
+        "skipped": "Skipped",
+        "waiting_for_input": "Needs input",
+        "waiting_for_review": "Needs review",
+        "cancelled": "Cancelled"
+      },
+      "panelSections": {
+        "product-input": {
+          "0": {
+            "title": "Input"
+          }
+        },
+        "prompt-synthesis": {
+          "0": {
+            "title": "Prompt"
+          }
+        },
+        "design-image": {
+          "0": {
+            "title": "Output"
+          }
+        },
+        "design-approval": {
+          "0": {
+            "title": "Review"
+          }
+        },
+        "apply-mockup": {
+          "0": {
+            "title": "Templates",
+            "description": "Each approved design is placed on every chosen template of its product type."
+          }
+        },
+        "approval-gate": {
+          "0": {
+            "title": "Review"
+          }
+        },
+        "review-video": {
+          "0": {
+            "title": "Review"
+          }
+        }
+      },
+      "fields": {
+        "product-input": {
+          "batchId": {
+            "label": "Batch"
+          },
+          "productId": {
+            "label": "Product",
+            "description": "The product Listing content writes for."
+          }
+        },
+        "prompt-synthesis": {
+          "designTemplateId": {
+            "label": "Design template",
+            "description": "Not used for products with their own image prompt."
+          },
+          "stylePresetId": {
+            "label": "Art style",
+            "noneLabel": "No style",
+            "description": "Not used for products with their own image prompt: the prompt sets the style."
+          },
+          "instructions": {
+            "label": "Extra instructions",
+            "placeholder": "Anything the prompt should always include or avoid.",
+            "description": "Added to every design prompt this step writes."
+          }
+        },
+        "design-image": {
+          "imageProvider": {
+            "label": "Image model",
+            "options": {
+              "ideogram": {
+                "description": "About $0.03 per 2K image. Draws apparel designs on a transparent background. Needs an Ideogram key with credits."
+              },
+              "gemini": {
+                "description": "About $0.067 per image. Fills in detail from short prompts; the white backdrop is cut out afterwards."
+              }
+            }
+          },
+          "aspectRatio": {
+            "label": "Aspect ratio"
+          }
+        },
+        "design-approval": {
+          "mode": {
+            "label": "Approval mode",
+            "options": {
+              "manual": {
+                "label": "Manual review",
+                "description": "The run pauses so you can approve or reject each design."
+              },
+              "auto": {
+                "label": "Approve automatically",
+                "description": "Every generated design goes straight to the mock-ups."
+              }
+            }
+          }
+        },
+        "apply-mockup": {
+          "mockupTemplateIds": {
+            "label": "Mock-up templates"
+          }
+        },
+        "approval-gate": {
+          "mode": {
+            "label": "Approval mode",
+            "options": {
+              "manual": {
+                "label": "Manual review",
+                "description": "The video waits until you approve the mock-ups it may use."
+              },
+              "auto": {
+                "label": "Approve automatically",
+                "description": "Every mock-up waiting for review is approved and the video starts. Rejected ones stay out; AI scenes start within the cost you confirmed on Run."
+              }
+            }
+          }
+        },
+        "generate-video": {
+          "outputFormat": {
+            "label": "Output format"
+          },
+          "textOverlay": {
+            "label": "Text overlay",
+            "placeholder": "Optional short caption (120 characters)"
+          },
+          "standardOptions_transition": {
+            "label": "Transition",
+            "options": {
+              "none": {
+                "label": "None"
+              },
+              "fade": {
+                "label": "Fade"
+              },
+              "swipe": {
+                "label": "Swipe"
+              },
+              "zoom": {
+                "label": "Zoom"
+              },
+              "flash": {
+                "label": "Flash"
+              },
+              "whip_pan": {
+                "label": "Whip pan"
+              },
+              "blur": {
+                "label": "Blur"
+              }
+            }
+          }
+        },
+        "review-video": {
+          "mode": {
+            "label": "Approval mode",
+            "options": {
+              "manual": {
+                "label": "Manual review",
+                "description": "The run pauses so you can watch each video and approve or reject it before export."
+              },
+              "auto": {
+                "label": "Approve automatically",
+                "description": "Every finished video is approved and exported. A video that fails one of Etsy's required checks still waits for you."
+              }
+            }
+          }
+        },
+        "generate-listing": {
+          "model": {
+            "label": "Language model"
+          },
+          "tone": {
+            "label": "Tone",
+            "options": {
+              "friendly": {
+                "label": "Friendly"
+              },
+              "professional": {
+                "label": "Professional"
+              },
+              "playful": {
+                "label": "Playful"
+              }
+            }
+          },
+          "includeSeoScore": {
+            "label": "SEO score",
+            "description": "Score each listing from 0 to 100 with improvement tips."
+          }
+        }
+      }
+    },
+    "workflowMedia": {
+      "storyboardPlayer": {
+        "sourceUnavailable": "A storyboard source is no longer available. Refresh the preview.",
+        "preparingSoundtrack": "Preparing soundtrack…",
+        "soundtrackFailed": "The selected soundtrack could not be loaded. Refresh the storyboard preview to retry."
+      },
+      "runStatus": {
+        "checkVideoSettings": "Check video settings.",
+        "reloadRun": "Reload run",
+        "runLabel": "Run: {{status}}",
+        "statuses": {
+          "queued": "queued",
+          "running": "running",
+          "succeeded": "succeeded",
+          "completed": "completed",
+          "failed": "failed",
+          "cancelled": "cancelled",
+          "waiting_for_review": "waiting for review",
+          "waiting_for_input": "waiting for input",
+          "waiting_for_targets": "waiting for targets",
+          "pending": "pending"
+        },
+        "snapshotRevision": "Snapshot revision {{workflowRevision}} · run r{{revision}}",
+        "renderProgress": "Render progress",
+        "printifyProgress": "Printify progress",
+        "resume": "Resume",
+        "resumeHint": "Goes on from where it stopped and keeps what was already made.",
+        "retryPushToPrintify": "Retry Push to Printify",
+        "videoKept": "The video is kept as it is.",
+        "videoGoesOn": "The video goes on meanwhile.",
+        "retryCheckpoint": "Retry checkpoint",
+        "regenerateAiClips": "Regenerate AI clips",
+        "pushToPrintify": "Push to Printify",
+        "pushToEtsy": "Push to Etsy",
+        "publishToEtsy": "Publish to Etsy",
+        "stepLabels": {
+          "succeeded": "Done",
+          "failed": "Failed",
+          "running": "Pushing",
+          "cancelled": "Stopped"
+        },
+        "waiting": "Waiting",
+        "running": "Running",
+        "onEtsy": "On Etsy",
+        "batchOnPrintify": "{{done}} of {{total}} on Printify",
+        "batchPushing": "{{working}} pushing",
+        "batchFailed": "{{failed}} failed",
+        "printifyMakes": "Printify makes: {{madeAs}}",
+        "mediaAttached": "{{attached}} Podivo image(s), video or file(s) added to the listing.",
+        "openEtsyDraft": "Open the Etsy draft",
+        "openEtsyListing": "Open the Etsy listing"
+      },
+      "preloadedVideo": {
+        "preparingPlayback": "Preparing smooth playback",
+        "loadingVideo": "Loading video…",
+        "percentLoaded": "{{progress}}% loaded"
+      },
+      "sceneCard": {
+        "sourceFrameAlt": "Source frame for scene {{scene}}",
+        "aiVideo": "AI video",
+        "standard": "Standard",
+        "sceneTitle": "Scene {{scene}}",
+        "seconds": "{{seconds}} seconds",
+        "roleRevision": "{{role}} · source revision {{revision}}",
+        "generationSettings": "Scene generation settings",
+        "cameraSettings": "Scene camera settings",
+        "camera": "Camera · {{value}}",
+        "transition": "Transition · {{value}}",
+        "viewPrompt": "View exact prompt sent to the video model"
+      },
+      "mockupCard": {
+        "alt": "{{role}} product mockup",
+        "statusRevision": "{{status}} · r{{revision}}",
+        "templateTitle": "The mock-up template it was made from: a scene using it uses each design's own mock-up from this template.",
+        "variant": "Variant: {{variant}}",
+        "useInRun": "Use in this run",
+        "approveMockup": "Approve mockup",
+        "approve": "Approve",
+        "reject": "Reject"
+      },
+      "mockupUpload": {
+        "label": "Upload mockup",
+        "description": "JPEG, PNG or static WebP · 20 MB per image. Choose at most 8 for a run.",
+        "upload": "Upload"
+      },
+      "modelPhotoSection": {
+        "emptyTitle": "Select a product in Product Input first.",
+        "emptyDescription": "Its mock-ups can then be put on a model photo."
+      },
+      "assetRoles": {
+        "Hero": "Hero",
+        "Lifestyle": "Lifestyle",
+        "Detail": "Detail",
+        "Back": "Back",
+        "Front": "Front",
+        "Context": "Context"
+      },
+      "approvalStatuses": {
+        "pending": "pending",
+        "approved": "approved",
+        "rejected": "rejected"
+      },
+      "transitions": {
+        "none": "none",
+        "fade": "fade",
+        "swipe": "swipe",
+        "zoom": "zoom",
+        "flash": "flash",
+        "whip_pan": "whip_pan",
+        "blur": "blur",
+        "cut": "cut"
+      },
+      "motions": {
+        "gentle": "gentle",
+        "contain_gentle": "contain gentle",
+        "static": "static",
+        "pan": "pan",
+        "zoom": "zoom",
+        "zoom_out": "zoom out",
+        "pan_left": "pan left",
+        "pan_up": "pan up",
+        "pan_down": "pan down",
+        "diagonal_up_right": "diagonal up right",
+        "diagonal_up_left": "diagonal up left",
+        "diagonal_down_right": "diagonal down right",
+        "diagonal_down_left": "diagonal down left",
+        "rotate_cw": "rotate cw",
+        "rotate_ccw": "rotate ccw",
+        "rotate_zoom_cw": "rotate zoom cw",
+        "rotate_zoom_ccw": "rotate zoom ccw",
+        "custom": "custom"
+      },
+      "mockupPanel": {
+        "maxMockups": "Choose at most eight mockups.",
+        "promptPreviewUnavailable": "The AI prompt preview is not available. Check the selected scenes.",
+        "reviewEmptyTitle": "Choose the product for the video above.",
+        "reviewEmptyDescription": "Its mock-ups are listed here for review.",
+        "emptyDescription": "The video is made for one product of the batch.",
+        "artworkGroup": "Artwork group",
+        "toReview": "Mock-ups to review",
+        "available": "Available mock-ups",
+        "selectedCount": "{{selected}}/{{max}} selected",
+        "automaticHint": "Automatic: up to 8 approved mockups from one artwork group.",
+        "loading": "Loading mockups",
+        "reload": "Reload mockups",
+        "loadError": "Mock-ups could not be loaded.",
+        "emptyList": "No mockups yet. Upload images in Apply Mockup.",
+        "preparingPreview": "Preparing prompt preview…",
+        "reviewPrompt": "Review prompt before creating video"
+      },
+      "promptReview": {
+        "copied": "Scene {{scene}} prompt copied. You can test it on a free website.",
+        "copyFailed": "The prompt could not be copied. Select the text and copy it manually.",
+        "title": "Review AI prompt before paid generation",
+        "description": "This is a safe preview. No prompt has been sent to an AI video model. Copy a final prompt to test it for free, then continue only when ready.",
+        "templateControls": "Template controls",
+        "promptRules": "Prompt rules P{{version}}",
+        "copyFinalPrompt": "Copy final prompt",
+        "exactPrompt": "Exact prompt sent to the model after confirmation",
+        "finalPromptLabel": "Final prompt for scene {{scene}}",
+        "included": "Included",
+        "notSent": "Not sent",
+        "closeAndTest": "Close and test prompts",
+        "continuePaid": "Continue to paid confirmation"
+      },
+      "videoAssets": {
+        "assets": "Assets",
+        "automatic": "Choose approved assets automatically",
+        "manual": "Choose approved assets myself",
+        "hint": "Build 2–4 scenes from approved mockups. You can reuse one image for two camera moves; leave order automatic to follow the template.",
+        "useThisOrder": "Use this order",
+        "autoOrder": "Auto order",
+        "sceneRow": "Scene {{scene}} · {{source}}",
+        "moveUp": "Move scene {{scene}} up",
+        "moveDown": "Move scene {{scene}} down",
+        "apply": "Apply scene changes"
+      },
+      "videoSources": {
+        "addFailed_one": "{{count}} mock-up could not be added. Try again in a moment.",
+        "addFailed_other": "{{count}} mock-ups could not be added. Try again in a moment.",
+        "added_one": "Added {{count}} mock-up for the video.",
+        "added_other": "Added {{count}} mock-ups for the video.",
+        "noMockups": "This product has no mock-ups yet. Make them with Apply mock-up, or upload finished photos.",
+        "alreadyListed": "This product's mock-ups are already in the list.",
+        "productSwitched": "The video is now for {{name}}. Save, then Run to start it.",
+        "useProduct": "Use {{name}} for the video",
+        "otherProducts": "These are the mock-ups of the product chosen under Product for the video. The open run made its mock-ups for {{names}}.",
+        "otherProductsRunning": "These are the mock-ups of the product chosen under Product for the video. The open run made its mock-ups for {{names}}: choose that product above and Run again to use them.",
+        "adding": "Adding mock-ups…",
+        "addThisProduct": "Add this product's mock-ups"
+      }
     }
   }
 }

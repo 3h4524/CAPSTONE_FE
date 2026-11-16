@@ -3,6 +3,7 @@
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ListOrdered, Workflow } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { PageLoading } from "@/components/commons/layout/page-loading";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
@@ -37,6 +38,7 @@ const DEFAULT_WORKFLOW_DESCRIPTION =
   "A batch → designs → design approval → mock-ups → mock-up approval → Standard video → video review → ZIP.";
 
 export const WorkflowWorkspace = () => {
+  const { t } = useTranslation("common");
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedId = searchParams.get("id");
@@ -83,7 +85,7 @@ export const WorkflowWorkspace = () => {
   const createDefaultWorkflow = () =>
     createWorkflow(
       { name: DEFAULT_WORKFLOW_NAME, description: DEFAULT_WORKFLOW_DESCRIPTION, definition: DEFAULT_WORKFLOW_DEFINITION },
-      { onSuccess: (created) => showToast("success", `${created.name} is ready to customize.`) }
+      { onSuccess: (created) => showToast("success", t("workflowEditor.workspace.readyToCustomize", { name: created.name })) }
     );
 
   useEffect(() => {
@@ -174,14 +176,14 @@ export const WorkflowWorkspace = () => {
   const titleName = activeWorkflowId ? workflowName : "";
 
   useEffect(() => {
-    const desiredTitle = titleName ? `${titleName} | ${SITE_CONFIG.name}` : `Workflows | ${SITE_CONFIG.name}`;
+    const desiredTitle = titleName ? `${titleName} | ${SITE_CONFIG.name}` : `${t("workflowEditor.workspace.documentTitle")} | ${SITE_CONFIG.name}`;
     document.title = desiredTitle;
     const observer = new MutationObserver(() => {
       if (document.title !== desiredTitle) document.title = desiredTitle;
     });
     observer.observe(document.head, { childList: true, characterData: true, subtree: true });
     return () => observer.disconnect();
-  }, [titleName]);
+  }, [titleName, t]);
 
   useEffect(() => () => resetEditor(), [resetEditor]);
 
@@ -216,40 +218,40 @@ export const WorkflowWorkspace = () => {
       return;
     }
     openPopup({
-      title: "Discard unsaved changes?",
-      description: "Your latest edits to this workflow have not been saved yet.",
-      positiveLabel: "Discard changes",
-      negativeLabel: "Keep editing",
+      title: t("workflowEditor.workspace.discardTitle"),
+      description: t("workflowEditor.workspace.discardDescription"),
+      positiveLabel: t("workflowEditor.workspace.discardChanges"),
+      negativeLabel: t("workflowEditor.workspace.keepEditing"),
       onPositive: action,
     });
   };
 
-  if (isLoadingWorkflows) return <PageLoading label="Loading workflows" />;
+  if (isLoadingWorkflows) return <PageLoading label={t("workflowEditor.workspace.loadingWorkflows")} />;
 
   if (isWorkflowsError || !workflows) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center" role="alert">
         <Workflow className="text-ink-400 size-8" aria-hidden="true" />
         <div>
-          <p className="text-ink-900 font-semibold">Workflows unavailable</p>
-          <p className="text-muted-foreground mt-1 text-sm">We could not load your workflows. Try again in a moment.</p>
+          <p className="text-ink-900 font-semibold">{t("workflowEditor.workspace.unavailableTitle")}</p>
+          <p className="text-muted-foreground mt-1 text-sm">{t("workflowEditor.workspace.unavailableDescription")}</p>
         </div>
-        <Button type="button" onClick={() => refetchWorkflows()}>Try again</Button>
+        <Button type="button" onClick={() => refetchWorkflows()}>{t("workflowEditor.workspace.tryAgain")}</Button>
       </div>
     );
   }
 
   if (workflows.length === 0) {
     return isCreatingWorkflow ? (
-      <SectionLoading label="Preparing your first workflow" className="flex-1" />
+      <SectionLoading label={t("workflowEditor.workspace.preparingFirst")} className="flex-1" />
     ) : (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
         <Workflow className="text-ink-400 size-8" aria-hidden="true" />
         <div>
-          <p className="text-ink-900 font-semibold">No workflows yet</p>
-          <p className="text-muted-foreground mt-1 text-sm">Start from the standard Etsy POD pipeline and adapt it to your shop.</p>
+          <p className="text-ink-900 font-semibold">{t("workflowEditor.workspace.emptyTitle")}</p>
+          <p className="text-muted-foreground mt-1 text-sm">{t("workflowEditor.workspace.emptyDescription")}</p>
         </div>
-        <Button type="button" onClick={createDefaultWorkflow}>Create workflow</Button>
+        <Button type="button" onClick={createDefaultWorkflow}>{t("workflowEditor.workspace.createWorkflow")}</Button>
       </div>
     );
   }
@@ -285,23 +287,23 @@ export const WorkflowWorkspace = () => {
                 {isPhone && (
                   <Button type="button" variant="outline" size="sm" className="bg-card absolute top-3 left-3 z-10" onClick={() => setShowsDiagram(false)}>
                     <ListOrdered aria-hidden="true" />
-                    Step list
+                    {t("workflowEditor.workspace.stepList")}
                   </Button>
                 )}
               </>
             )
           ) : isWorkflowError ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center" role="alert">
-              <p className="text-ink-900 font-semibold">This workflow could not be opened</p>
-              <Button type="button" variant="outline" size="sm" onClick={() => refetchWorkflow()}>Try again</Button>
+              <p className="text-ink-900 font-semibold">{t("workflowEditor.workspace.openError")}</p>
+              <Button type="button" variant="outline" size="sm" onClick={() => refetchWorkflow()}>{t("workflowEditor.workspace.tryAgain")}</Button>
             </div>
           ) : (
-            <SectionLoading label="Loading workflow" className="h-full" />
+            <SectionLoading label={t("workflowEditor.workspace.loadingWorkflow")} className="h-full" />
           )}
         </div>
         {showNodePanel ? (
           <ResizableAside
-            label="the node panel"
+            label={t("workflowEditor.workspace.nodePanel")}
             storageKey="apcs.workflows.panel-width"
             defaultWidth={320}
             minWidth={288}

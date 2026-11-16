@@ -1391,6 +1391,1210 @@
       "unauthorizedDescription": "Tài khoản của bạn đã đăng nhập nhưng chưa có role phù hợp.",
       "goToDashboard": "Về bảng điều khiển",
       "goToSignIn": "Đăng nhập"
+    },
+    "auth": {
+      "checkingSignIn": "Đang kiểm tra đăng nhập",
+      "or": "hoặc",
+      "signInWithGoogle": "Đăng nhập bằng Google",
+      "signUpWithGoogle": "Đăng ký bằng Google",
+      "loading": "Đang tải...",
+      "email": "Email",
+      "password": "Mật khẩu",
+      "passwordHint": "Tối thiểu 8 ký tự, gồm chữ hoa, chữ thường và chữ số.",
+      "sending": "Đang gửi...",
+      "updating": "Đang cập nhật...",
+      "backToLogin": "← Quay lại đăng nhập",
+      "backToLoginLower": "← Quay lại đăng nhập",
+      "requestNewLink": "Yêu cầu liên kết mới",
+      "imageAlt": "Nhà thiết kế xem lại các thiết kế sản phẩm do AI tạo bên cạnh laptop và áo thun đã in",
+      "imageCaptionTitle": "Studio sáng tạo của bạn, ở bất cứ đâu.",
+      "imageCaptionDescription": "Quản lý thiết kế, mock-up sản phẩm và quy trình sản xuất trong một workspace chuyên nghiệp.",
+      "login": {
+        "title": "Chào mừng trở lại.",
+        "description": "Đăng nhập để tiếp tục hành trình sáng tạo của bạn.",
+        "submit": "Đăng nhập",
+        "noAccount": "Chưa có tài khoản?",
+        "signUp": "Đăng ký",
+        "invalidCredentials": "Email hoặc mật khẩu không đúng.",
+        "failed": "Không thể đăng nhập. Vui lòng thử lại."
+      },
+      "twoFactor": {
+        "title": "Xác minh tài khoản quản trị viên",
+        "description": "Nhập mã 6 chữ số đã gửi đến email của bạn.",
+        "codeLabel": "Mã xác minh email",
+        "verifying": "Đang xác minh...",
+        "submit": "Xác minh và tiếp tục",
+        "expiresIn": "Mã hết hạn sau {{time}}",
+        "expired": "Mã đã hết hạn",
+        "resend": "Gửi mã mới"
+      },
+      "register": {
+        "title": "Xây dựng đế chế POD của bạn.",
+        "description": "Tham gia để bắt đầu hành trình sáng tạo của bạn.",
+        "fullName": "Họ và tên",
+        "fullNamePlaceholder": "Nguyễn Văn A",
+        "confirmPassword": "Xác nhận mật khẩu",
+        "creating": "Đang tạo tài khoản...",
+        "submit": "Tạo tài khoản",
+        "hasAccount": "Đã có tài khoản?",
+        "logIn": "Đăng nhập",
+        "verificationSent": "Chúng tôi đã gửi liên kết xác minh đến <email>{{email}}</email>. Mở liên kết để kích hoạt tài khoản."
+      },
+      "forgotPassword": {
+        "title": "Quên mật khẩu?",
+        "description": "Đừng lo, nhập email và chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu cho bạn.",
+        "submit": "Gửi yêu cầu",
+        "sent": "Nếu có tài khoản dùng <email>{{email}}</email>, chúng tôi đã gửi liên kết đặt lại mật khẩu. Mở liên kết để tiếp tục."
+      },
+      "resetPassword": {
+        "title": "Đặt lại mật khẩu",
+        "description": "Nhập mật khẩu mới bên dưới.",
+        "missingToken": "Liên kết này thiếu mã đặt lại. Hãy yêu cầu liên kết mới để tiếp tục.",
+        "newPassword": "Mật khẩu mới",
+        "confirmPassword": "Xác nhận mật khẩu",
+        "invalidLink": "Liên kết không hợp lệ hoặc đã hết hạn.",
+        "submit": "Cập nhật mật khẩu"
+      },
+      "changePassword": {
+        "title": "Đổi mật khẩu",
+        "description": "Nhập mật khẩu hiện tại và chọn mật khẩu mới.",
+        "signInRequired": "Bạn cần đăng nhập để đổi mật khẩu.",
+        "goToLogin": "Đến trang đăng nhập",
+        "currentPassword": "Mật khẩu hiện tại",
+        "newPassword": "Mật khẩu mới",
+        "confirmNewPassword": "Xác nhận mật khẩu mới",
+        "failed": "Không thể đổi mật khẩu.",
+        "submit": "Đổi mật khẩu"
+      },
+      "verifyEmail": {
+        "title": "Xác minh email",
+        "missingToken": "Liên kết này thiếu mã xác minh. Nhập email để nhận liên kết mới.",
+        "verifying": "Đang xác minh email...",
+        "success": "Email đã được xác minh. Bạn có thể đăng nhập ngay.",
+        "invalidLink": "Liên kết xác minh không hợp lệ hoặc đã hết hạn.",
+        "resend": "Gửi lại email xác minh"
+      },
+      "validation": {
+        "emailInvalid": "Vui lòng nhập địa chỉ email hợp lệ",
+        "passwordRequired": "Vui lòng nhập mật khẩu",
+        "passwordMin": "Mật khẩu phải có ít nhất 8 ký tự",
+        "passwordMax": "Mật khẩu tối đa 128 ký tự",
+        "passwordUppercase": "Mật khẩu phải có ít nhất một chữ hoa",
+        "passwordLowercase": "Mật khẩu phải có ít nhất một chữ thường",
+        "passwordDigit": "Mật khẩu phải có ít nhất một chữ số",
+        "fullNameTooLong": "Họ và tên quá dài",
+        "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+        "passwordsMismatch": "Mật khẩu không khớp",
+        "currentPasswordRequired": "Vui lòng nhập mật khẩu hiện tại",
+        "confirmNewPasswordRequired": "Vui lòng xác nhận mật khẩu mới"
+      }
+    },
+    "workflowConfig": {
+      "motion": {
+        "presets": {
+          "defaultManual": "Mặc định · thủ công",
+          "pushIn": "Đẩy vào",
+          "pullBack": "Kéo ra",
+          "panLeft": "Lia sang trái",
+          "panRight": "Lia sang phải",
+          "moveUp": "Di chuyển lên",
+          "moveDown": "Di chuyển xuống",
+          "diagonalUpLeft": "Chéo lên trái",
+          "diagonalUpRight": "Chéo lên phải",
+          "diagonalDownLeft": "Chéo xuống trái",
+          "diagonalDownRight": "Chéo xuống phải",
+          "rotateClockwise": "Xoay theo chiều kim đồng hồ",
+          "rotateCounterclockwise": "Xoay ngược chiều kim đồng hồ",
+          "rotateClockwisePushIn": "Xoay theo chiều kim đồng hồ + đẩy vào",
+          "rotateCounterclockwisePushIn": "Xoay ngược chiều kim đồng hồ + đẩy vào",
+          "static": "Tĩnh",
+          "gentleFullFrame": "Chuyển động nhẹ toàn khung"
+        },
+        "increase": "Tăng {{label}}",
+        "decrease": "Giảm {{label}}",
+        "degreesValue": "{{value}} độ",
+        "previewAriaReducedMotion": "Xem trước chuyển động máy quay cảnh {{scene}}. Đang bật giảm chuyển động.",
+        "previewAria": "Xem trước chuyển động máy quay cảnh {{scene}}. Di chuột, focus hoặc nhấn Enter để phát.",
+        "previewAlt": "Xem trước chuyển động cảnh {{scene}}",
+        "sampleAlt": "Ảnh sản phẩm mẫu minh họa chuyển động máy quay",
+        "frames": {
+          "start": "Khung đầu",
+          "end": "Khung cuối"
+        },
+        "framesLower": {
+          "start": "khung đầu",
+          "end": "khung cuối"
+        },
+        "editing": "Đang sửa",
+        "editingFrame": {
+          "start": "Đang sửa khung đầu",
+          "end": "Đang sửa khung cuối"
+        },
+        "scale": "Tỉ lệ",
+        "rotation": "Xoay",
+        "xPosition": "Vị trí X",
+        "yPosition": "Vị trí Y",
+        "positionAnchor": "Điểm neo vị trí",
+        "anchors": {
+          "center": "Giữa",
+          "left": "Trái",
+          "right": "Phải",
+          "top": "Trên",
+          "bottom": "Dưới"
+        },
+        "endpointAria": {
+          "scale": "Tỉ lệ {{frame}} cảnh {{scene}}",
+          "scalePercentage": "Phần trăm tỉ lệ {{frame}} cảnh {{scene}}",
+          "rotationDegrees": "Góc xoay {{frame}} cảnh {{scene}} (độ)",
+          "rotationDial": "Núm xoay {{frame}} cảnh {{scene}}",
+          "xPosition": "Vị trí X {{frame}} cảnh {{scene}}",
+          "yPosition": "Vị trí Y {{frame}} cảnh {{scene}}",
+          "anchor": "Điểm neo {{frame}} cảnh {{scene}}"
+        },
+        "editMotion": "Sửa chuyển động",
+        "editMotionAria": "Sửa chuyển động cảnh {{scene}}",
+        "dialogTitle": "Cảnh {{scene}} · Trình chỉnh chuyển động chuẩn",
+        "dialogDescription": "Xem trước và chỉnh đường đi của máy quay trước khi render.",
+        "closeEditorAria": "Đóng trình chỉnh chuyển động",
+        "close": "Đóng",
+        "previewCanvasAria": "Khung xem trước chuyển động",
+        "setupReadyTitle": "Thiết lập chuyển động đã sẵn sàng",
+        "setupReadyDescription": "Chọn khung bắt đầu đã duyệt trong cảnh để xem trước đường đi máy quay này trên sản phẩm.",
+        "corners": {
+          "topLeft": "góc trên bên trái",
+          "topRight": "góc trên bên phải",
+          "bottomLeft": "góc dưới bên trái",
+          "bottomRight": "góc dưới bên phải"
+        },
+        "resizeFrameAria": "Đổi kích thước {{frame}} từ {{corner}}",
+        "dragToResize": "Kéo để đổi kích thước",
+        "rotateFrameAria": "Xoay {{frame}}",
+        "dragToRotate": "Kéo để xoay",
+        "zoomControlsAria": "Điều khiển thu phóng xem trước",
+        "zoomOutAria": "Thu nhỏ xem trước",
+        "zoomOut": "Thu nhỏ",
+        "zoomInAria": "Phóng to xem trước",
+        "zoomIn": "Phóng to",
+        "transformControlsAria": "Điều khiển biến đổi",
+        "transform": "Biến đổi",
+        "cameraMovement": "Chuyển động máy quay",
+        "editorCameraMovementAria": "Chuyển động máy quay trong trình chỉnh cảnh {{scene}}",
+        "unsafeCropWarning": "Di chuyển hoặc thu nhỏ đến khi sản phẩm và hình in vẫn hiển thị ở cả hai khung hình chính.",
+        "timelineAria": "Dòng thời gian cảnh",
+        "pausePreview": "Tạm dừng xem trước chuyển động",
+        "playPreview": "Phát xem trước chuyển động",
+        "startFromDefault": "Bắt đầu từ mặc định",
+        "timelinePlayheadAria": "Đầu phát dòng thời gian cảnh {{scene}}",
+        "goToFirstFrame": "Đến khung đầu",
+        "goToLastFrame": "Đến khung cuối",
+        "rerenderHint": "Lưu thay đổi, sau đó render lại để cập nhật video đã tạo.",
+        "renderHint": "Các thiết lập này sẽ được dùng khi render cảnh này.",
+        "cancel": "Hủy",
+        "applyMotion": "Áp dụng chuyển động"
+      },
+      "aiShot": {
+        "settings": {
+          "framing": "Khung hình",
+          "cameraAngle": "Góc máy",
+          "cameraMovement": "Chuyển động máy quay",
+          "subjectMotion": "Chuyển động chủ thể",
+          "motionIntensity": "Cường độ chuyển động",
+          "lighting": "Ánh sáng / không khí"
+        },
+        "values": {
+          "wide": "Toàn cảnh",
+          "medium": "Trung cảnh",
+          "medium_close": "Cận trung",
+          "close_up": "Cận cảnh",
+          "macro": "Macro",
+          "eye_level": "Ngang tầm mắt",
+          "three_quarter": "Góc ba phần tư",
+          "source_view": "Góc của ảnh gốc",
+          "low_angle": "Góc thấp",
+          "top_down": "Từ trên xuống",
+          "locked": "Máy quay cố định",
+          "push_in": "Tiến chậm vào",
+          "pull_back": "Lùi chậm ra",
+          "orbit_left": "Xoay vòng sang trái",
+          "orbit_right": "Xoay vòng sang phải",
+          "pan_left": "Lia sang trái",
+          "pan_right": "Lia sang phải",
+          "gentle_tracking": "Bám theo nhẹ nhàng",
+          "subtle_handheld": "Cầm tay nhẹ",
+          "none": "Chủ thể không chuyển động",
+          "minimal": "Tối thiểu / tiết chế",
+          "natural": "Chuyển động tự nhiên",
+          "subtle": "Nhẹ",
+          "balanced": "Cân bằng",
+          "soft_studio": "Studio dịu",
+          "bright_clean": "Sáng và sạch",
+          "cool_modern": "Hiện đại tông lạnh",
+          "moody_cinematic": "Điện ảnh trầm",
+          "warm_natural": "Tự nhiên tông ấm",
+          "golden_hour": "Giờ vàng",
+          "source_image": "Ánh sáng của ảnh gốc"
+        },
+        "characterImageError": "Không thể tải ảnh tham chiếu của {{name}}.",
+        "referenceImageAlt": "Ảnh tham chiếu {{index}}: {{name}}",
+        "removeReferenceImage": "Xóa ảnh tham chiếu {{index}}",
+        "checkSceneSettings": "Hãy kiểm tra cài đặt cảnh AI.",
+        "compilePromptFailed": "Không thể tạo prompt cho Cảnh {{scene}}.",
+        "sceneRegenerating": "Đang tạo lại Cảnh {{scene}}.",
+        "sceneGenerating": "Đang tạo Cảnh {{scene}}.",
+        "sharedModelCatalogError": "Không thể tải danh mục người mẫu dùng chung. Hãy thử lại trước khi tạo khung hình chính.",
+        "noSharedModel": "Không có người mẫu dùng chung nào đang hoạt động.",
+        "matchingApprovedKeyframe": "Đã chọn khung hình chính phù hợp đã duyệt. Không tạo ảnh mới.",
+        "matchingKeyframeFound": "Đã tìm thấy khung hình chính phù hợp. Hãy xem và duyệt trước khi dùng trong video.",
+        "confirmKeyframeCost": "Tạo một khung hình chính theo prompt tùy chỉnh bằng Gemini Image? Chi phí ảnh ước tính: ${{estimate}} USD. Khoản này tính riêng với chi phí tạo video AI.",
+        "keyframeCreated": "Đã tạo khung hình chính. Hãy xem và duyệt trước khi tạo video; chi phí ảnh ước tính: ${{cost}} USD.",
+        "packAdded": "Đã thêm {{name}} với {{sceneCount}} cảnh.",
+        "catalogLoading": "Danh mục cảnh AI vẫn đang tải. Hãy thử lại mẫu video sau giây lát.",
+        "sharedMockupUpdated": "Đã cập nhật mock-up dùng chung. Các khung hình mở đầu hiện có đã bị xóa.",
+        "chooseSharedMockupFirst": "Hãy chọn một mock-up dùng chung đã duyệt trước khi chuẩn bị khung hình mở đầu.",
+        "chooseSharedModelFirst": "Hãy chọn người mẫu dùng chung trước khi chuẩn bị khung hình mở đầu.",
+        "sceneUnavailable": "Cảnh {{scene}} không khả dụng.",
+        "quoteFailures": "{{failed}} báo giá khung hình mở đầu bị lỗi. Hãy xem lỗi rồi chỉ thử lại các cảnh đó.",
+        "framesNeedAttention": "Một số khung hình mở đầu cần xử lý. Chỉ thử lại các cảnh bị lỗi.",
+        "framesReady": "Các khung hình mở đầu đã sẵn sàng để duyệt.",
+        "framesPartlyApproved": "Đã duyệt {{approved}} khung hình. Hãy thử lại {{failed}} lượt duyệt bị lỗi.",
+        "framesAllApproved": "Tất cả khung hình mở đầu đã được duyệt và sẵn sàng để tạo video.",
+        "invalidReferenceFile": "Chọn tối đa 2 ảnh tham chiếu JPEG, PNG hoặc WebP, tổng dung lượng không quá 20 MB. Người mẫu đã chọn được thêm tự động.",
+        "sceneMoved": "Đã chuyển cảnh đến vị trí {{position}}/{{total}}.",
+        "keyframeSelectedPending": "Đã chọn khung hình chính cho cảnh này. Hãy duyệt trước khi tạo video.",
+        "keyframeSelected": "Đã chọn khung hình chính cho cảnh này.",
+        "sceneSelectedForMove": "Đã chọn Cảnh {{scene}}. Chọn một cảnh khác để di chuyển đến đó.",
+        "sceneMoveCancelled": "Đã hủy di chuyển cảnh.",
+        "videoTemplate": "Mẫu video",
+        "videoTemplateDescription": "Bắt đầu từ một chuỗi cảnh hoàn chỉnh, rồi tinh chỉnh từng cảnh bên dưới.",
+        "customized": "Đã tùy chỉnh",
+        "packDuration": "Gói {{seconds}}s",
+        "loadingVideoTemplates": "Đang tải mẫu video...",
+        "customScenes": "Cảnh tùy chỉnh",
+        "packCustomizedNote": "Thứ tự cảnh, thời lượng hoặc thiết lập cảnh quay khác với mặc định của gói.",
+        "standardPackNote": "Không có cảnh AI: mỗi cảnh là một chuyển động máy quay trên ảnh sản phẩm, nên không phát sinh phí nhà cung cấp AI.",
+        "aiPackNote": "Các cảnh AI dựng sẵn với người mẫu và mock-up sản phẩm dùng chung.",
+        "replaceSetupTitle": "Thay thế thiết lập cảnh hiện tại?",
+        "replaceSetupDescription": "Áp dụng {{name}} sẽ thay thế các cảnh hiện tại và xóa khung hình mở đầu đã chọn của chúng. Định dạng xuất, người mẫu dùng chung, mock-up dùng chung và chú thích vẫn giữ nguyên.",
+        "thisVideoPack": "gói video này",
+        "keepCurrentSetup": "Giữ thiết lập hiện tại",
+        "replaceScenes": "Thay thế cảnh",
+        "sharedMockup": "Mock-up dùng chung",
+        "chooseSharedMockupHint": "Chọn một ảnh sản phẩm đã duyệt cho cả bốn cảnh",
+        "change": "Đổi",
+        "choose": "Chọn",
+        "chooseMockup": "Chọn mock-up",
+        "sharedMockupNote": "Chỉ có các ảnh đã duyệt hiện tại thuộc nhóm artwork của sản phẩm này. Đổi ảnh sẽ xóa mọi khung hình mở đầu đã tạo.",
+        "chooseSharedMockupTitle": "Chọn mock-up dùng chung",
+        "chooseSharedMockupDescription": "Ảnh sản phẩm đã duyệt này được dùng để tạo khung hình mở đầu cho mọi cảnh Product on Model.",
+        "noApprovedMockups": "Chưa có mock-up nào đã duyệt",
+        "noApprovedMockupsDescription": "Hãy duyệt trước một mock-up ở phiên bản hiện tại trong nhóm artwork của sản phẩm này.",
+        "mockupAlt": "Mock-up {{role}}",
+        "startFramePreparation": "Chuẩn bị khung hình mở đầu",
+        "startFramePreparationDescription": "Chuẩn bị và duyệt khung hình của cả bốn cảnh trong một lượt. Ảnh mới chỉ bị tính phí sau một lần xác nhận tổng.",
+        "readyCount": "{{ready}}/4 sẵn sàng",
+        "packFrameStatus": {
+          "approved": "Đã duyệt",
+          "generating": "Đang tạo",
+          "failed": "Lỗi",
+          "review": "Cần duyệt",
+          "missing": "Chưa có"
+        },
+        "startFrameForSceneAlt": "Khung hình mở đầu của cảnh {{scene}}",
+        "sceneLabel": "Cảnh {{scene}}",
+        "generateAllStartFrames": "Tạo tất cả khung hình mở đầu",
+        "retryFailed": "Thử lại mục lỗi",
+        "approveAll": "Duyệt tất cả",
+        "readyForVideo": "Sẵn sàng tạo video",
+        "confirmGenerationTitle": "Xác nhận tạo khung hình mở đầu",
+        "confirmGenerationDescription": "Một lần xác nhận áp dụng cho cả bốn cảnh. Khung hình dùng lại không bị tính phí.",
+        "quoteNew": "Mới",
+        "quoteReuse": "Dùng lại",
+        "quoteEstimated": "Ước tính",
+        "cancel": "Hủy",
+        "generateFrames": "Tạo khung hình",
+        "sceneSetup": "Thiết lập cảnh",
+        "reviewPromptTitle": "Xem prompt của Cảnh {{scene}}",
+        "reviewPromptDescription": "Đây là prompt hoàn chỉnh sẽ được gửi đi khi tạo cảnh này.",
+        "compilingPrompt": "Đang tạo prompt…",
+        "model": "Mô hình",
+        "duration": "Thời lượng",
+        "back": "Quay lại",
+        "starting": "Đang bắt đầu…",
+        "regenerateThisScene": "Tạo lại cảnh này",
+        "generateThisScene": "Tạo cảnh này",
+        "scenes": "Các cảnh",
+        "scenesDescription": "Thiết lập riêng từng cảnh. Kéo tay nắm, hoặc chọn tay nắm rồi chọn cảnh đích để sắp xếp lại.",
+        "totalDurationAria": "Tổng thời lượng video: {{total}}/{{max}} giây",
+        "totalDuration": "Tổng thời lượng {{total}}s / {{max}}s",
+        "totalVideoDuration": "Tổng thời lượng video",
+        "durationValueText": "{{total}}/{{max}} giây",
+        "sceneCount_one": "{{count}} cảnh",
+        "sceneCount_other": "{{count}} cảnh",
+        "sharedDirection": "Chỉ dẫn chung cho các cảnh AI",
+        "optionalUpTo500": "(không bắt buộc, tối đa 500 ký tự)",
+        "sharedDirectionCounter": "{{length}}/500 | được thêm trước các quy tắc giữ nguyên sản phẩm",
+        "loadingAiTemplates": "Đang tải mẫu cảnh AI... ",
+        "catalogError": "Không thể tải danh mục mẫu AI. Cài đặt cảnh của bạn vẫn được giữ nguyên.",
+        "retry": "Thử lại",
+        "keyframeStatus": {
+          "generating": "Đang tạo",
+          "pendingApproval": "Chờ duyệt",
+          "ready": "Sẵn sàng",
+          "needsUpdate": "Cần cập nhật",
+          "rejected": "Đã từ chối"
+        },
+        "sceneSrPrefix": "Cảnh ",
+        "aiVideo": "Video AI",
+        "standard": "Tiêu chuẩn",
+        "generationModeAria": "Chế độ tạo của cảnh {{scene}}",
+        "notInPlan": "Không có trong gói của bạn",
+        "aiVideoNotInPlan": "Gói của bạn không có video AI. Hãy chuyển cảnh này sang Tiêu chuẩn.",
+        "decreaseDurationAria": "Giảm thời lượng cảnh {{scene}}",
+        "sceneDurationAria": "Thời lượng cảnh {{scene}}",
+        "increaseDurationAria": "Tăng thời lượng cảnh {{scene}}",
+        "dragSceneAria": "Kéo cảnh {{scene}}; dùng phím mũi tên để sắp xếp lại",
+        "reorderTitle": "Sắp xếp lại bằng phím mũi tên khi đang chọn",
+        "copySceneAria": "Sao chép cảnh {{scene}}",
+        "copyScene": "Sao chép cảnh",
+        "removeSceneAria": "Xóa cảnh {{scene}}",
+        "aiVideoModel": "Mô hình video AI",
+        "choosePerScene": "Chọn theo từng cảnh",
+        "aiVideoModelAria": "Mô hình video AI của cảnh {{scene}}",
+        "default": "Mặc định",
+        "aiTemplate": "Mẫu AI",
+        "aiTemplateAria": "Mẫu AI của cảnh {{scene}}",
+        "shotTemplate": "Mẫu cảnh quay",
+        "shotTemplateAria": "Mẫu cảnh quay của cảnh {{scene}}",
+        "startFrameAria": "Khung hình mở đầu của cảnh {{scene}}",
+        "startFrame": "Khung hình mở đầu",
+        "startFrameDescription": "Chọn ảnh mở đầu cho cảnh này, hoặc tạo khung hình chính tùy chỉnh.",
+        "changeStartFrameAria": "Đổi khung hình mở đầu của cảnh {{scene}}",
+        "chooseStartFrameAria": "Chọn khung hình mở đầu cho cảnh {{scene}}",
+        "modelPhotoAutomatic": "Ảnh người mẫu (tự động)",
+        "mainMockupAutomatic": "Mock-up chính (tự động)",
+        "selectedImage": "Ảnh đã chọn",
+        "chooseAStartFrame": "Chọn khung hình mở đầu",
+        "approvedKeyframeRevision": "Khung hình chính đã duyệt · phiên bản {{revision}}",
+        "browseApproved": "Duyệt ảnh đã duyệt hoặc tạo khung hình chính mới",
+        "automaticModelPhotoNote": "Mỗi thiết kế dùng ảnh người mẫu đã duyệt của riêng nó. Chọn ảnh để bắt đầu từ ảnh khác.",
+        "automaticMainMockupNote": "Mỗi thiết kế dùng mock-up chính của riêng nó. Chọn ảnh để bắt đầu từ ảnh khác.",
+        "matchedSourceNote": "Được chọn trên thiết kế khác; mỗi thiết kế dùng ảnh riêng có cùng mẫu và màu.",
+        "notSavedYet": "Chưa lưu: bước Duyệt mock-up và các video vẫn dùng khung hình mở đầu đã lưu.",
+        "cropApplied": "Đã áp dụng cắt ảnh",
+        "editStartFrame": "Sửa khung hình mở đầu",
+        "edit": "Sửa",
+        "chooseStartFrame": "Chọn khung hình mở đầu",
+        "chooseStartFrameDescription": "Chọn một ảnh đã duyệt cho cảnh {{scene}}, hoặc tạo khung hình chính tùy chỉnh.",
+        "startFrameOptions": "Tùy chọn khung hình mở đầu",
+        "approvedFrames": "Khung hình đã duyệt",
+        "createNewKeyframe": "Tạo khung hình chính mới",
+        "approvedFramesDescription": "Chọn một khung hình để dùng ngay. Mục được chọn sẽ được lưu khi bạn nhấn vào.",
+        "useSourceAria": "Dùng {{source}} {{variant}} cho cảnh {{scene}}",
+        "approvedKeyframeLower": "khung hình chính đã duyệt",
+        "approvedKeyframe": "Khung hình chính đã duyệt",
+        "noApprovedFrames": "Chưa có khung hình nào đã duyệt",
+        "noApprovedFramesDescription": "Hãy duyệt một ảnh sản phẩm trước, hoặc tạo khung hình chính tùy chỉnh từ một ảnh gốc đã duyệt.",
+        "lifestyleNote": "Người và bối cảnh đã duyệt được giữ nguyên trong ảnh.",
+        "approvedProductImage": "Ảnh sản phẩm đã duyệt",
+        "required": "(bắt buộc)",
+        "mockupSourceAria": "Mock-up gốc của cảnh {{scene}} cho khung hình chính mới",
+        "selectAnImage": "Chọn một ảnh",
+        "customKeyframePrompt": "Prompt khung hình chính tùy chỉnh",
+        "optional": "(không bắt buộc)",
+        "keyframePromptPlaceholder": "Mô tả sản phẩm nên xuất hiện thế nào và ảnh tham chiếu định hướng cảnh ra sao.",
+        "referenceImages": "Ảnh tham chiếu",
+        "referenceImagesHint": "({{selected}}/2, không bắt buộc; người mẫu được thêm tự động)",
+        "addReferenceImageAria": "Thêm ảnh tham chiếu {{index}}/2",
+        "addImage": "Thêm ảnh",
+        "keyframeResultAria": "Kết quả khung hình chính của cảnh {{scene}}",
+        "keyframePreview": "Xem trước khung hình chính",
+        "generatingKeyframePreview": "Đang tạo bản xem trước khung hình chính",
+        "generatingKeyframe": "Đang tạo khung hình chính...",
+        "viewKeyframeAria": "Xem khung hình chính của cảnh {{scene}}",
+        "viewKeyframe": "Xem khung hình chính",
+        "keyframePreviewAlt": "Bản xem trước khung hình chính studio của cảnh {{scene}}",
+        "creatingKeyframe": "Đang tạo khung hình chính",
+        "creatingKeyframeDescription": "Việc này có thể mất một lúc. Bản xem trước sẽ hiện ở đây khi sẵn sàng.",
+        "generatedKeyframe": "Khung hình chính đã tạo",
+        "keyframePendingNote": "Hãy xem và duyệt ảnh này trước khi tạo video.",
+        "keyframeApprovedNote": "Đã duyệt và sẵn sàng dùng cho cảnh này.",
+        "keyframeOutdatedNote": "Ảnh gốc hoặc chỉ dẫn đã thay đổi. Hãy tạo khung hình chính phù hợp khác.",
+        "keyframeRejectedNote": "Khung hình chính này đã bị từ chối. Hãy tạo khung hình khác để tiếp tục.",
+        "approve": "Duyệt",
+        "reject": "Từ chối",
+        "useKeyframe": "Dùng khung hình chính cho cảnh này",
+        "createKeyframe": "Tạo khung hình chính",
+        "generateAnother": "Tạo khung hình khác",
+        "approveBeforeVideo": "Hãy duyệt ảnh đã tạo trước khi tạo video.",
+        "keyframeReadyNote": "Khung hình chính đã duyệt này sẵn sàng cho cảnh hiện tại.",
+        "keyframeReuseNote": "Khung hình chính đã duyệt phù hợp sẽ được dùng lại mà không cần tạo ảnh mới.",
+        "detailNote": "Có thể dùng trực tiếp ảnh này. Hãy tạo một khung hình chính cận cảnh đã duyệt để có chi tiết rõ nhất. Kiểm tra lại khung hình chính đã tạo vì chữ nhỏ có thể bị diễn giải lại.",
+        "standardMotionAria": "Chuyển động máy quay Tiêu chuẩn của cảnh {{scene}}",
+        "sceneVideo": "Video của cảnh",
+        "sceneVideoDescription": "Xem trước cảnh này với chuyển động máy quay đã chọn.",
+        "standardMovementAria": "Chuyển động máy quay Tiêu chuẩn của cảnh {{scene}}",
+        "noSourceLifestyle": "Hãy chọn một ảnh sản phẩm đã duyệt. Bạn có thể đính kèm ảnh tham chiếu đã duyệt (không bắt buộc) và mô tả cách dùng chúng trong chỉ dẫn khung hình chính.",
+        "noSourceDetail": "Hãy chọn một mock-up hoặc khung hình chính đã duyệt bất kỳ. Khung hình chính cận cảnh cho chi tiết rõ nhất.",
+        "noSourceDefault": "Hãy duyệt ít nhất một ảnh sản phẩm trước khi tạo cảnh này.",
+        "noSourceFilterNote": "Hãy kiểm tra thêm ảnh có nằm trong danh sách ảnh được phép và nhóm artwork đã chọn của bước Áp mock-up không.",
+        "advancedSettings": "Máy quay, chuyển động và ánh sáng nâng cao",
+        "settingAria": "{{setting}} của cảnh {{scene}}",
+        "customDirection": "Chỉ dẫn tùy chỉnh",
+        "viewPromptBlocks": "Xem các thành phần của prompt hoàn chỉnh | v{{version}}",
+        "templatePrompt": "Prompt của mẫu",
+        "sharedPreservationRules": "Quy tắc chung giữ nguyên sản phẩm",
+        "confirmRightsTitle": "Xác nhận quyền sử dụng ảnh",
+        "confirmRightsDescription": "Cảnh này dùng mẫu tập trung vào con người. Hãy xác nhận bạn được phép sử dụng hình ảnh những người xuất hiện trong ảnh sản phẩm và ảnh tham chiếu đã chọn trước khi tạo khung hình chính hoặc video.",
+        "haveRights": "Tôi có quyền sử dụng",
+        "addScene": "Thêm cảnh",
+        "estimatedFootage": "Ước tính cảnh quay AI ${{cost}} USD ở 768P",
+        "fullVideoEditing": "Chỉnh sửa toàn bộ video",
+        "fullVideo": "Toàn bộ video",
+        "aboutEstimates": "Về chi phí ước tính và khung hình chính",
+        "aboutEstimatesBody": "Ước tính AI giả định mỗi clip AI đều mới; báo giá cuối cùng sẽ tính đến các clip dùng lại được trước khi render. Cảnh Tiêu chuẩn dùng chuyển động máy quay mượt giữa các điểm khung hình đã chọn. Khung hình chính kết hợp người mẫu dùng chung, một ảnh sản phẩm gốc đã duyệt và tối đa hai ảnh tham chiếu (không bắt buộc). Hãy kiểm tra các clip AI và mọi khung hình chính đã tạo để đảm bảo đúng sản phẩm.",
+        "closeImagePreview": "Đóng xem trước ảnh",
+        "imagePreview": "Xem trước ảnh",
+        "selectedStartFrameForScene": "Ảnh khung hình mở đầu đã chọn của cảnh {{scene}}",
+        "selectedStartFramePreview": "Xem trước ảnh khung hình mở đầu đã chọn",
+        "startFrameImageAlt": "Ảnh khung hình mở đầu của cảnh {{scene}}"
+      }
+    },
+    "batches": {
+      "cancel": "Hủy",
+      "saving": "Đang lưu…",
+      "saveChanges": "Lưu thay đổi",
+      "addProduct": "Thêm sản phẩm",
+      "form": {
+        "editTitle": "Sửa lô sản phẩm",
+        "createTitle": "Tạo lô sản phẩm",
+        "editDescription": "Cập nhật tên lô và các giá trị mặc định dùng cho sản phẩm mới.",
+        "createDescription": "Đặt các giá trị mặc định chung để thêm sản phẩm nhanh hơn.",
+        "nameLabel": "Tên lô *",
+        "namePlaceholder": "VD: Bộ sưu tập dã ngoại mùa hè",
+        "defaultNicheLabel": "Niche mặc định",
+        "defaultNichePlaceholder": "VD: leo núi và cắm trại",
+        "defaultNicheHint": "Dùng để điền sẵn cho sản phẩm mới; mỗi sản phẩm có thể đổi lại.",
+        "defaultProductTypeLabel": "Loại sản phẩm mặc định",
+        "noDefault": "Không mặc định",
+        "descriptionLabel": "Mô tả",
+        "descriptionPlaceholder": "Lô này dùng cho việc gì?",
+        "creating": "Đang tạo…",
+        "createBatch": "Tạo lô"
+      },
+      "product": {
+        "editTitle": "Sửa sản phẩm",
+        "description": "Đây là thông tin sản phẩm đang được lưu cho hàng đợi tạo.",
+        "nameLabel": "Tên sản phẩm *",
+        "typeLabel": "Loại sản phẩm *",
+        "nicheLabel": "Niche *",
+        "nichePlaceholder": "VD: người mê leo núi",
+        "nicheHint": "Nhóm khách hàng hoặc sở thích cụ thể mà sản phẩm hướng đến.",
+        "keywordsLabel": "Từ khóa *",
+        "keywordsHint": "(cách nhau bằng dấu phẩy, tối đa 13)",
+        "keywordsPlaceholder": "minimalist, nature, gift",
+        "optional": "(không bắt buộc)",
+        "designTextLabel": "Chữ trên thiết kế",
+        "designTextPlaceholder": "VD: GO HIGHER",
+        "designTextHint": "Chính xác các chữ được in trên thiết kế. Với mẫu chữ, để trống sẽ in tên sản phẩm; với prompt hình ảnh, sẽ không in chữ nào.",
+        "imagePromptLabel": "Prompt hình ảnh",
+        "imagePromptPlaceholder": "VD: A detailed vintage badge with a leaping trout, crossed fishing rods and a calm lake at sunrise",
+        "imagePromptHint": "Thay thế mẫu thiết kế và phong cách nghệ thuật đặt trong quy trình cho sản phẩm này. Mô tả hình ảnh và phong cách; chữ cần in hãy nhập ở Chữ trên thiết kế.",
+        "productDescriptionLabel": "Mô tả sản phẩm",
+        "productDescriptionPlaceholder": "Mô tả ý tưởng sản phẩm hoặc yêu cầu thiết kế",
+        "productDescriptionHint": "Thêm ý tưởng hoặc yêu cầu thiết kế mà quy trình tạo sẽ dùng.",
+        "sourceNotesLabel": "Ghi chú nguồn",
+        "sourceNotesPlaceholder": "Ghi chú tham khảo hoặc sản xuất"
+      },
+      "close": "Đóng",
+      "import": {
+        "missingColumns": "Trang tính Products phải có các cột Product name, Product type, Niche và Keywords.",
+        "tooManyRows": "Mỗi lần nhập, tệp chỉ được chứa tối đa 500 dòng sản phẩm.",
+        "noRows": "Không tìm thấy dòng sản phẩm nào. Hãy dùng trang tính Products và giữ nguyên tiêu đề cột có sẵn.",
+        "chooseXlsx": "Chọn tệp Excel .xlsx.",
+        "tooLarge": "Tệp Excel phải nhỏ hơn 5 MB.",
+        "noWorksheet": "Tệp Excel không có trang tính sản phẩm.",
+        "readError": "Không đọc được tệp Excel này. Hãy tải mẫu mới và thử lại.",
+        "title": "Nhập sản phẩm từ Excel",
+        "description": "Tải lên mẫu đã điền. Các dòng hợp lệ được lưu thành sản phẩm đang chờ; việc nhập không bắt đầu tạo bằng AI. Hãy xem lại sản phẩm và duyệt lô khi sẵn sàng đưa vào hàng đợi.",
+        "sampleTitle": "Bắt đầu với mẫu có sẵn",
+        "sampleHint": "Gồm hướng dẫn nhanh, một ví dụ và danh sách chọn loại sản phẩm.",
+        "downloadTemplate": "Tải mẫu",
+        "fileLabel": "Tệp Excel (.xlsx)",
+        "fileHint": "Tối đa 500 sản phẩm và 5 MB. Bắt buộc: tên sản phẩm, loại sản phẩm, niche và từ khóa. Niche là thị trường hoặc sở thích mục tiêu; nhập 1–13 từ khóa, cách nhau bằng dấu phẩy. Mô tả và ghi chú nguồn không bắt buộc.",
+        "rowsReady_one": "{{count}} dòng sẵn sàng",
+        "rowsReady_other": "{{count}} dòng sẵn sàng",
+        "needAttention_one": "{{count}} dòng cần xem lại",
+        "needAttention_other": "{{count}} dòng cần xem lại",
+        "skipHint": "Các dòng lỗi sẽ bị bỏ qua; các dòng hợp lệ vẫn được nhập.",
+        "rowIssue": "Dòng {{row}} · {{name}}: {{issue}}",
+        "unnamed": "(chưa đặt tên)",
+        "imported_one": "Đã nhập {{count}} sản phẩm",
+        "imported_other": "Đã nhập {{count}} sản phẩm",
+        "importing": "Đang nhập…",
+        "importValid": "Nhập các dòng hợp lệ"
+      }
+    },
+    "designTemplates": {
+      "eyebrow": "Thư viện sáng tạo",
+      "titleShort": "Mẫu thiết kế",
+      "title": "Bắt đầu từ một khung sẵn. Biến tác phẩm thành của bạn.",
+      "description": "Khám phá các hệ prompt sẵn sàng sản xuất hoặc quản lý các mẫu tái sử dụng trong không gian riêng của bạn.",
+      "newShort": "Mới",
+      "newPersonalTemplate": "Mẫu cá nhân mới",
+      "controlsLabel": "Điều khiển thư viện mẫu",
+      "libraryLabel": "Thư viện mẫu",
+      "systemShort": "Hệ thống",
+      "systemTemplates": "Mẫu hệ thống",
+      "systemTemplatesDescription": "Nền tảng chọn lọc, sẵn sàng sao chép",
+      "myTemplates": "Mẫu của tôi",
+      "myTemplatesDescription": "Không gian sáng tạo bạn có thể chỉnh sửa",
+      "personalTemplates": "Mẫu cá nhân",
+      "exploreSystemTitle": "Khám phá bộ sưu tập hệ thống",
+      "exploreSystemDescription": "Xem các cấu trúc prompt chọn lọc và sao chép mẫu phù hợp với sản phẩm tiếp theo.",
+      "managePersonalTitle": "Quản lý bộ sưu tập cá nhân",
+      "managePersonalDescription": "Sửa, xem lại hoặc xóa các mẫu thuộc tài khoản của bạn.",
+      "searchSystemTemplates": "Tìm mẫu hệ thống",
+      "searchMyTemplates": "Tìm mẫu của tôi",
+      "searchPersonalTemplates": "Tìm mẫu cá nhân",
+      "allNiches": "Tất cả niche",
+      "allStyles": "Tất cả phong cách",
+      "loadingTemplates": "Đang tải mẫu",
+      "libraryErrorTitle": "Không thể tải thư viện",
+      "libraryErrorDescription": "Hãy kiểm tra kết nối và thử lại.",
+      "retry": "Thử lại",
+      "retrying": "Đang thử lại...",
+      "noMatchTitle": "Không có mẫu phù hợp với bộ lọc",
+      "noMatchDescription": "Mở rộng tìm kiếm hoặc đặt lại bộ lọc để xem thêm hệ prompt.",
+      "noSystemTitle": "Chưa có mẫu hệ thống nào",
+      "noSystemDescription": "Bộ sưu tập chọn lọc hiện đang trống. Làm mới danh mục hoặc thử lại sau ít phút.",
+      "noPersonalTitle": "Tạo mẫu cá nhân đầu tiên",
+      "noPersonalDescription": "Xây dựng cấu trúc prompt tái sử dụng, có thể chỉnh sửa cho danh mục sản phẩm của bạn.",
+      "clearFilters": "Xóa bộ lọc",
+      "refreshCatalog": "Làm mới danh mục",
+      "createTemplate": "Tạo mẫu",
+      "systemTemplateCount_one": "mẫu hệ thống",
+      "systemTemplateCount_other": "mẫu hệ thống",
+      "personalTemplateCount_one": "mẫu cá nhân",
+      "personalTemplateCount_other": "mẫu cá nhân",
+      "templatePages": "Trang mẫu",
+      "pageOf": "Trang {{page}}/{{total}}",
+      "previous": "Trước",
+      "next": "Sau",
+      "clonedToast": "Đã sao chép mẫu. Hãy tùy chỉnh bản sao của bạn.",
+      "deletedToast": "Đã xóa mẫu.",
+      "viewTemplate": "Xem {{name}}",
+      "previewAlt": "Ảnh xem trước cho {{name}}",
+      "system": "Hệ thống",
+      "personal": "Cá nhân",
+      "general": "Chung",
+      "unstyled": "Chưa có phong cách",
+      "personalFallbackDescription": "Khung prompt cá nhân sẵn sàng cho bộ sưu tập tiếp theo.",
+      "usesCount": "{{uses}} lượt dùng",
+      "view": "Xem",
+      "cloning": "Đang sao chép...",
+      "cloneCustomize": "Sao chép & tùy chỉnh",
+      "edit": "Sửa",
+      "deleteTemplateNamed": "Xóa {{name}}",
+      "closeDetails": "Đóng chi tiết mẫu",
+      "loadingDetails": "Đang tải chi tiết mẫu",
+      "detailErrorTitle": "Không thể tải mẫu",
+      "detailErrorDescription": "Làm mới phần chi tiết và thử lại.",
+      "previewUnavailable": "Chưa có ảnh xem trước",
+      "previewUnavailableDescription": "Mẫu này chưa có ảnh xem trước.",
+      "overview": "Tổng quan mẫu",
+      "type": "Loại",
+      "uses": "Lượt dùng",
+      "niche": "Niche",
+      "artStyle": "Phong cách nghệ thuật",
+      "updated": "Cập nhật",
+      "systemTemplate": "Mẫu hệ thống",
+      "personalTemplate": "Mẫu cá nhân",
+      "detailFallbackDescription": "Khung prompt tái sử dụng cho danh mục của bạn.",
+      "positivePrompt": "Prompt tích cực",
+      "negativePrompt": "Prompt loại trừ",
+      "promptExamples": "Ví dụ prompt",
+      "promptLanguageNote": "Prompt được gửi cho AI bằng tiếng Anh.",
+      "noExamples": "Chưa có ví dụ nào.",
+      "close": "Đóng",
+      "editTemplate": "Sửa mẫu",
+      "closeDeleteDialog": "Đóng hộp thoại xóa mẫu",
+      "deleteTitle": "Xóa mẫu cá nhân?",
+      "deleteDescription": "{{name}} sẽ biến mất khỏi thư viện của bạn. Các job trước đây vẫn giữ bản lưu prompt.",
+      "keepTemplate": "Giữ mẫu",
+      "deleting": "Đang xóa...",
+      "deleteTemplate": "Xóa mẫu",
+      "readOnlyToast": "Mẫu hệ thống chỉ có thể xem. Hãy sao chép để tùy chỉnh.",
+      "savedToast": "Đã lưu thay đổi của mẫu.",
+      "createdToast": "Đã tạo mẫu cá nhân.",
+      "loadingEditor": "Đang tải trình chỉnh sửa mẫu",
+      "editorErrorTitle": "Không thể tải trình chỉnh sửa",
+      "editorErrorDescription": "Mẫu có thể không còn tồn tại, hoặc kết nối đã bị gián đoạn.",
+      "returnToLibrary": "Quay lại thư viện",
+      "newTemplate": "Mẫu mới",
+      "editorTitleEdit": "Tinh chỉnh hệ prompt của bạn",
+      "editorTitleNew": "Xây dựng định hướng sáng tạo tái sử dụng",
+      "editorDescription": "Giữ cấu trúc ổn định và dùng placeholder cho các chi tiết riêng của sản phẩm mà bạn sẽ điền sau.",
+      "backToLibrary": "Quay lại thư viện",
+      "identityTitle": "Thông tin mẫu",
+      "name": "Tên",
+      "namePlaceholder": "VD: Botanical Linework",
+      "chooseNiche": "Chọn niche",
+      "chooseStyle": "Chọn phong cách",
+      "promptFramework": "Khung prompt",
+      "promptFrameworkDescription": "Chỉ dùng các placeholder được hỗ trợ trong dấu ngoặc nhọn.",
+      "basePromptPlaceholderShort": "A print-ready {style} illustration of {subject}",
+      "basePromptPlaceholder": "Ví dụ: Create a print-ready {style} illustration of {subject} for the {niche} niche using {keywords}. Isolated artwork, no product mockup.",
+      "insertIntoPositive": "Chèn vào prompt tích cực",
+      "insertIntoNegative": "Chèn vào prompt loại trừ",
+      "insert": "Chèn",
+      "missingSubject": "Thiếu {subject}, mẫu này không thể thích ứng với chủ đề thiết kế mới.",
+      "optional": "Không bắt buộc",
+      "negativePromptPlaceholder": "Để trống, hoặc liệt kê các yếu tố mà mô hình nên tránh",
+      "examples": "Ví dụ",
+      "examplesDescription": "Cho thấy một chủ đề trở thành định hướng sáng tạo hoàn chỉnh như thế nào.",
+      "addExample": "Thêm ví dụ",
+      "examplesEmpty": "Ví dụ là không bắt buộc, nhưng giúp mẫu cá nhân dễ tái sử dụng nhất quán hơn.",
+      "exampleNumber": "Ví dụ {{number}}",
+      "subject": "Chủ đề",
+      "subjectPlaceholder": "VD: luna moth with wildflowers",
+      "resultingPrompt": "Prompt kết quả",
+      "resultingPromptPlaceholder": "Mô tả bố cục mong muốn",
+      "removeExample": "Xóa ví dụ {{number}}",
+      "liveStructure": "Cấu trúc trực tiếp",
+      "personalTemplatePreview": "Xem trước mẫu cá nhân",
+      "draft": "Bản nháp",
+      "untitledTemplateLower": "mẫu chưa đặt tên",
+      "untitledTemplate": "Mẫu chưa đặt tên",
+      "aiPreview": "Xem trước bằng AI",
+      "aiPreviewDescription": "Ảnh xem trước được tạo sẽ hiển thị ở đây.",
+      "regeneratePreview": "Tạo lại ảnh xem trước",
+      "generatePreview": "Tạo ảnh xem trước",
+      "comingSoon": "Sắp ra mắt",
+      "previewComingSoon": "Tính năng tạo ảnh xem trước bằng AI sẽ có trong bản cập nhật tới.",
+      "personalEditable": "Cá nhân và có thể chỉnh sửa",
+      "upToFiveExamples": "Tối đa năm ví dụ",
+      "privateToAccount": "Riêng tư với tài khoản người bán của bạn",
+      "saving": "Đang lưu...",
+      "saveChanges": "Lưu thay đổi",
+      "unsavedChanges": "Bạn có thay đổi chưa lưu.",
+      "exitTitle": "Lưu thay đổi của mẫu?",
+      "exitDescription": "Bạn có thay đổi chưa lưu. Lưu lại trước khi quay về thư viện mẫu?",
+      "discardChanges": "Bỏ thay đổi",
+      "validation": {
+        "nameRequired": "Tên là bắt buộc.",
+        "nameTooLong": "Tên không được vượt quá 255 ký tự.",
+        "nicheRequired": "Hãy chọn niche.",
+        "artStyleRequired": "Hãy chọn phong cách nghệ thuật.",
+        "basePromptRequired": "Prompt chính là bắt buộc.",
+        "basePromptTooLong": "Prompt chính không được vượt quá 1.000 ký tự.",
+        "unsupportedPlaceholder": "Prompt chứa placeholder không được hỗ trợ.",
+        "negativePromptTooLong": "Prompt loại trừ không được vượt quá 1.000 ký tự.",
+        "subjectRequired": "Chủ đề là bắt buộc.",
+        "examplePromptRequired": "Prompt ví dụ là bắt buộc.",
+        "tooManyExamples": "Bạn chỉ có thể thêm tối đa năm ví dụ."
+      },
+      "niches": {
+        "natureBotanical": "Thiên nhiên & thực vật",
+        "outdoors": "Ngoài trời",
+        "foodDrink": "Đồ ăn & thức uống",
+        "vehicles": "Xe cộ",
+        "quotesMotivation": "Trích dẫn & động lực",
+        "humorLifestyle": "Hài hước & phong cách sống",
+        "giftsOccasions": "Quà tặng & dịp lễ",
+        "petsAnimals": "Thú cưng & động vật",
+        "sportsFitness": "Thể thao & thể hình",
+        "travelPlaces": "Du lịch & địa danh"
+      },
+      "artStyles": {
+        "vintage": "Cổ điển",
+        "minimalist": "Tối giản",
+        "watercolor": "Màu nước",
+        "boldTypography": "Chữ in đậm",
+        "darkAcademia": "Dark academia",
+        "funnyQuote": "Câu nói hài hước",
+        "floral": "Hoa lá"
+      }
+    },
+    "workflowEditor": {
+      "allowance": {
+        "label": "Hạn mức gói",
+        "freeTrial": "Dùng thử miễn phí",
+        "planThisMonth": "Gói của bạn tháng này",
+        "free": "Miễn phí",
+        "mockupsPerRun_one": "Tối đa {{count}} mock-up mỗi lượt chạy",
+        "mockupsPerRun_other": "Tối đa {{count}} mock-up mỗi lượt chạy",
+        "viewPlans": "Xem các gói"
+      },
+      "resizeAside": {
+        "label": "Đổi kích thước {{label}}",
+        "title": "Kéo để đổi kích thước, nhấp đúp để đặt lại"
+      },
+      "workspace": {
+        "readyToCustomize": "{{name}} đã sẵn sàng để tùy chỉnh.",
+        "documentTitle": "Quy trình",
+        "discardTitle": "Bỏ các thay đổi chưa lưu?",
+        "discardDescription": "Các chỉnh sửa gần nhất của quy trình này chưa được lưu.",
+        "discardChanges": "Bỏ thay đổi",
+        "keepEditing": "Tiếp tục chỉnh sửa",
+        "loadingWorkflows": "Đang tải quy trình",
+        "unavailableTitle": "Không thể tải quy trình",
+        "unavailableDescription": "Không thể tải các quy trình của bạn. Hãy thử lại sau ít phút.",
+        "tryAgain": "Thử lại",
+        "preparingFirst": "Đang chuẩn bị quy trình đầu tiên",
+        "emptyTitle": "Chưa có quy trình nào",
+        "emptyDescription": "Bắt đầu từ quy trình POD Etsy chuẩn và điều chỉnh cho cửa hàng của bạn.",
+        "createWorkflow": "Tạo quy trình",
+        "stepList": "Danh sách bước",
+        "openError": "Không thể mở quy trình này",
+        "loadingWorkflow": "Đang tải quy trình",
+        "nodePanel": "bảng node"
+      },
+      "nodeTypes": {
+        "product-input": {
+          "label": "Đầu vào sản phẩm",
+          "description": "Bắt đầu quy trình với các sản phẩm đang chờ của một lô."
+        },
+        "prompt-synthesis": {
+          "label": "Tổng hợp prompt",
+          "description": "Kết hợp mẫu thiết kế và phong cách thành prompt thiết kế."
+        },
+        "design-image": {
+          "label": "Ảnh thiết kế",
+          "description": "Tạo các biến thể thiết kế cho từng sản phẩm."
+        },
+        "design-approval": {
+          "label": "Duyệt thiết kế",
+          "description": "Chỉ thiết kế đã duyệt mới được tạo mock-up."
+        },
+        "apply-mockup": {
+          "label": "Áp mock-up",
+          "description": "Đặt thiết kế đã duyệt lên các mẫu mock-up sản phẩm."
+        },
+        "approval-gate": {
+          "label": "Duyệt mock-up",
+          "description": "Xem lại từng mock-up ở phiên bản hiện tại trước khi dựng video."
+        },
+        "generate-video": {
+          "label": "Tạo video",
+          "description": "Dựng video từ các cảnh được cấu hình riêng cho chuyển động AI hoặc Chuẩn."
+        },
+        "review-video": {
+          "label": "Duyệt video",
+          "description": "Duyệt đúng phiên bản video trước khi xuất."
+        },
+        "generate-listing": {
+          "label": "Nội dung listing",
+          "description": "Viết tiêu đề SEO, 13 thẻ và mô tả cho từng sản phẩm."
+        },
+        "export-zip": {
+          "label": "Xuất ZIP",
+          "description": "Đóng gói tài nguyên cuối cùng thành tệp ZIP sẵn sàng tải lên."
+        },
+        "publish-etsy": {
+          "label": "Đăng lên Etsy",
+          "description": "Tạo listing nháp trên Etsy. Bản tải xuống kỹ thuật số sẽ giao các thiết kế đã duyệt."
+        },
+        "publish-printify": {
+          "label": "Đẩy lên Printify",
+          "description": "Tạo sản phẩm trên Printify; Printify sẽ đăng lên Etsy và in từng đơn hàng."
+        }
+      },
+      "categories": {
+        "trigger": "Kích hoạt",
+        "ai": "Tạo bằng AI",
+        "review": "Duyệt",
+        "output": "Đầu ra"
+      },
+      "nodeStatuses": {
+        "running": "Đang chạy",
+        "success": "Xong",
+        "failed": "Thất bại",
+        "skipped": "Đã bỏ qua",
+        "waiting_for_input": "Cần nhập liệu",
+        "waiting_for_review": "Cần duyệt",
+        "cancelled": "Đã hủy"
+      },
+      "panelSections": {
+        "product-input": {
+          "0": {
+            "title": "Đầu vào"
+          }
+        },
+        "prompt-synthesis": {
+          "0": {
+            "title": "Prompt"
+          }
+        },
+        "design-image": {
+          "0": {
+            "title": "Đầu ra"
+          }
+        },
+        "design-approval": {
+          "0": {
+            "title": "Duyệt"
+          }
+        },
+        "apply-mockup": {
+          "0": {
+            "title": "Mẫu",
+            "description": "Mỗi thiết kế đã duyệt được đặt lên mọi mẫu đã chọn cùng loại sản phẩm."
+          }
+        },
+        "approval-gate": {
+          "0": {
+            "title": "Duyệt"
+          }
+        },
+        "review-video": {
+          "0": {
+            "title": "Duyệt"
+          }
+        }
+      },
+      "fields": {
+        "product-input": {
+          "batchId": {
+            "label": "Lô sản phẩm"
+          },
+          "productId": {
+            "label": "Sản phẩm",
+            "description": "Sản phẩm mà bước Nội dung listing sẽ viết cho."
+          }
+        },
+        "prompt-synthesis": {
+          "designTemplateId": {
+            "label": "Mẫu thiết kế",
+            "description": "Không dùng cho sản phẩm đã có prompt ảnh riêng."
+          },
+          "stylePresetId": {
+            "label": "Phong cách",
+            "noneLabel": "Không có phong cách",
+            "description": "Không dùng cho sản phẩm đã có prompt ảnh riêng: prompt sẽ quyết định phong cách."
+          },
+          "instructions": {
+            "label": "Hướng dẫn thêm",
+            "placeholder": "Những gì prompt luôn cần có hoặc cần tránh.",
+            "description": "Được thêm vào mọi prompt thiết kế mà bước này viết."
+          }
+        },
+        "design-image": {
+          "imageProvider": {
+            "label": "Mô hình ảnh",
+            "options": {
+              "ideogram": {
+                "description": "Khoảng $0.03 mỗi ảnh 2K. Vẽ thiết kế áo trên nền trong suốt. Cần key Ideogram còn credit."
+              },
+              "gemini": {
+                "description": "Khoảng $0.067 mỗi ảnh. Tự bổ sung chi tiết từ prompt ngắn; nền trắng được tách ra sau đó."
+              }
+            }
+          },
+          "aspectRatio": {
+            "label": "Tỷ lệ khung hình"
+          }
+        },
+        "design-approval": {
+          "mode": {
+            "label": "Chế độ duyệt",
+            "options": {
+              "manual": {
+                "label": "Duyệt thủ công",
+                "description": "Lượt chạy tạm dừng để bạn duyệt hoặc từ chối từng thiết kế."
+              },
+              "auto": {
+                "label": "Tự động duyệt",
+                "description": "Mọi thiết kế được tạo sẽ đi thẳng tới bước mock-up."
+              }
+            }
+          }
+        },
+        "apply-mockup": {
+          "mockupTemplateIds": {
+            "label": "Mẫu mock-up"
+          }
+        },
+        "approval-gate": {
+          "mode": {
+            "label": "Chế độ duyệt",
+            "options": {
+              "manual": {
+                "label": "Duyệt thủ công",
+                "description": "Video sẽ chờ tới khi bạn duyệt các mock-up được phép dùng."
+              },
+              "auto": {
+                "label": "Tự động duyệt",
+                "description": "Mọi mock-up đang chờ duyệt sẽ được duyệt và video bắt đầu. Mock-up bị từ chối được loại ra; các cảnh AI chạy trong mức chi phí bạn đã xác nhận khi Chạy."
+              }
+            }
+          }
+        },
+        "generate-video": {
+          "outputFormat": {
+            "label": "Định dạng đầu ra"
+          },
+          "textOverlay": {
+            "label": "Chữ phủ",
+            "placeholder": "Chú thích ngắn, không bắt buộc (120 ký tự)"
+          },
+          "standardOptions_transition": {
+            "label": "Chuyển cảnh",
+            "options": {
+              "none": {
+                "label": "Không"
+              },
+              "fade": {
+                "label": "Mờ dần"
+              },
+              "swipe": {
+                "label": "Vuốt"
+              },
+              "zoom": {
+                "label": "Thu phóng"
+              },
+              "flash": {
+                "label": "Chớp sáng"
+              },
+              "whip_pan": {
+                "label": "Lia nhanh"
+              },
+              "blur": {
+                "label": "Làm mờ"
+              }
+            }
+          }
+        },
+        "review-video": {
+          "mode": {
+            "label": "Chế độ duyệt",
+            "options": {
+              "manual": {
+                "label": "Duyệt thủ công",
+                "description": "Lượt chạy tạm dừng để bạn xem từng video và duyệt hoặc từ chối trước khi xuất."
+              },
+              "auto": {
+                "label": "Tự động duyệt",
+                "description": "Mọi video hoàn tất sẽ được duyệt và xuất. Video không đạt một trong các kiểm tra bắt buộc của Etsy vẫn chờ bạn duyệt."
+              }
+            }
+          }
+        },
+        "generate-listing": {
+          "model": {
+            "label": "Mô hình ngôn ngữ"
+          },
+          "tone": {
+            "label": "Giọng văn",
+            "options": {
+              "friendly": {
+                "label": "Thân thiện"
+              },
+              "professional": {
+                "label": "Chuyên nghiệp"
+              },
+              "playful": {
+                "label": "Vui tươi"
+              }
+            }
+          },
+          "includeSeoScore": {
+            "label": "Điểm SEO",
+            "description": "Chấm điểm từng listing từ 0 đến 100 kèm gợi ý cải thiện."
+          }
+        }
+      }
+    },
+    "workflowMedia": {
+      "storyboardPlayer": {
+        "sourceUnavailable": "Một nguồn của storyboard không còn khả dụng. Hãy làm mới bản xem trước.",
+        "preparingSoundtrack": "Đang chuẩn bị nhạc nền…",
+        "soundtrackFailed": "Không thể tải nhạc nền đã chọn. Hãy làm mới bản xem trước storyboard để thử lại."
+      },
+      "runStatus": {
+        "checkVideoSettings": "Kiểm tra cài đặt video.",
+        "reloadRun": "Tải lại lượt chạy",
+        "runLabel": "Lượt chạy: {{status}}",
+        "statuses": {
+          "queued": "đang chờ",
+          "running": "đang chạy",
+          "succeeded": "thành công",
+          "completed": "hoàn tất",
+          "failed": "thất bại",
+          "cancelled": "đã dừng",
+          "waiting_for_review": "chờ duyệt",
+          "waiting_for_input": "chờ nhập liệu",
+          "waiting_for_targets": "chờ đích đăng",
+          "pending": "đang chờ"
+        },
+        "snapshotRevision": "Bản chụp phiên bản {{workflowRevision}} · lượt chạy r{{revision}}",
+        "renderProgress": "Tiến độ render",
+        "printifyProgress": "Tiến độ Printify",
+        "resume": "Tiếp tục",
+        "resumeHint": "Chạy tiếp từ chỗ đã dừng và giữ lại những gì đã tạo.",
+        "retryPushToPrintify": "Thử lại đẩy lên Printify",
+        "videoKept": "Video được giữ nguyên.",
+        "videoGoesOn": "Video vẫn tiếp tục trong lúc này.",
+        "retryCheckpoint": "Thử lại từ điểm dừng",
+        "regenerateAiClips": "Tạo lại clip AI",
+        "pushToPrintify": "Đẩy lên Printify",
+        "pushToEtsy": "Đẩy lên Etsy",
+        "publishToEtsy": "Đăng lên Etsy",
+        "stepLabels": {
+          "succeeded": "Xong",
+          "failed": "Thất bại",
+          "running": "Đang đẩy",
+          "cancelled": "Đã dừng"
+        },
+        "waiting": "Đang chờ",
+        "running": "Đang chạy",
+        "onEtsy": "Đã lên Etsy",
+        "batchOnPrintify": "{{done}}/{{total}} đã lên Printify",
+        "batchPushing": "{{working}} đang đẩy",
+        "batchFailed": "{{failed}} thất bại",
+        "printifyMakes": "Printify sản xuất: {{madeAs}}",
+        "mediaAttached": "Đã thêm {{attached}} ảnh, video hoặc tệp Podivo vào listing.",
+        "openEtsyDraft": "Mở bản nháp Etsy",
+        "openEtsyListing": "Mở listing Etsy"
+      },
+      "preloadedVideo": {
+        "preparingPlayback": "Đang chuẩn bị phát mượt",
+        "loadingVideo": "Đang tải video…",
+        "percentLoaded": "Đã tải {{progress}}%"
+      },
+      "sceneCard": {
+        "sourceFrameAlt": "Khung nguồn cho cảnh {{scene}}",
+        "aiVideo": "Video AI",
+        "standard": "Tiêu chuẩn",
+        "sceneTitle": "Cảnh {{scene}}",
+        "seconds": "{{seconds}} giây",
+        "roleRevision": "{{role}} · phiên bản nguồn {{revision}}",
+        "generationSettings": "Cài đặt tạo cảnh",
+        "cameraSettings": "Cài đặt camera của cảnh",
+        "camera": "Camera · {{value}}",
+        "transition": "Chuyển cảnh · {{value}}",
+        "viewPrompt": "Xem prompt chính xác đã gửi tới mô hình video"
+      },
+      "mockupCard": {
+        "alt": "Mock-up sản phẩm {{role}}",
+        "statusRevision": "{{status}} · r{{revision}}",
+        "templateTitle": "Mẫu mock-up đã dùng để tạo ảnh này: cảnh dùng nó sẽ lấy mock-up riêng của từng thiết kế từ mẫu này.",
+        "variant": "Biến thể: {{variant}}",
+        "useInRun": "Dùng trong lượt chạy này",
+        "approveMockup": "Duyệt mock-up",
+        "approve": "Duyệt",
+        "reject": "Từ chối"
+      },
+      "mockupUpload": {
+        "label": "Tải lên mock-up",
+        "description": "JPEG, PNG hoặc WebP tĩnh · 20 MB mỗi ảnh. Chọn tối đa 8 ảnh cho một lượt chạy.",
+        "upload": "Tải lên"
+      },
+      "modelPhotoSection": {
+        "emptyTitle": "Hãy chọn sản phẩm ở Product Input trước.",
+        "emptyDescription": "Sau đó có thể đặt các mock-up của sản phẩm lên ảnh người mẫu."
+      },
+      "assetRoles": {
+        "Hero": "Ảnh chính",
+        "Lifestyle": "Đời sống",
+        "Detail": "Chi tiết",
+        "Back": "Mặt sau",
+        "Front": "Mặt trước",
+        "Context": "Bối cảnh"
+      },
+      "approvalStatuses": {
+        "pending": "chờ duyệt",
+        "approved": "đã duyệt",
+        "rejected": "bị từ chối"
+      },
+      "transitions": {
+        "none": "không",
+        "fade": "mờ dần",
+        "swipe": "trượt",
+        "zoom": "phóng to",
+        "flash": "lóe sáng",
+        "whip_pan": "lia nhanh",
+        "blur": "nhòe",
+        "cut": "cắt"
+      },
+      "motions": {
+        "gentle": "nhẹ nhàng",
+        "contain_gentle": "vừa khung nhẹ nhàng",
+        "static": "đứng yên",
+        "pan": "lia",
+        "zoom": "phóng to",
+        "zoom_out": "thu nhỏ",
+        "pan_left": "lia trái",
+        "pan_up": "lia lên",
+        "pan_down": "lia xuống",
+        "diagonal_up_right": "chéo lên phải",
+        "diagonal_up_left": "chéo lên trái",
+        "diagonal_down_right": "chéo xuống phải",
+        "diagonal_down_left": "chéo xuống trái",
+        "rotate_cw": "xoay theo chiều kim đồng hồ",
+        "rotate_ccw": "xoay ngược chiều kim đồng hồ",
+        "rotate_zoom_cw": "xoay và phóng to theo chiều kim đồng hồ",
+        "rotate_zoom_ccw": "xoay và phóng to ngược chiều kim đồng hồ",
+        "custom": "tùy chỉnh"
+      },
+      "mockupPanel": {
+        "maxMockups": "Chọn tối đa tám mock-up.",
+        "promptPreviewUnavailable": "Không có bản xem trước prompt AI. Hãy kiểm tra các cảnh đã chọn.",
+        "reviewEmptyTitle": "Chọn sản phẩm cho video ở phía trên.",
+        "reviewEmptyDescription": "Các mock-up của sản phẩm sẽ hiện ở đây để duyệt.",
+        "emptyDescription": "Video được tạo cho một sản phẩm trong lô.",
+        "artworkGroup": "Nhóm thiết kế",
+        "toReview": "Mock-up cần duyệt",
+        "available": "Mock-up có sẵn",
+        "selectedCount": "Đã chọn {{selected}}/{{max}}",
+        "automaticHint": "Tự động: tối đa 8 mock-up đã duyệt từ một nhóm thiết kế.",
+        "loading": "Đang tải mock-up",
+        "reload": "Tải lại mock-up",
+        "loadError": "Không thể tải mock-up.",
+        "emptyList": "Chưa có mock-up nào. Hãy tải ảnh lên ở Apply Mockup.",
+        "preparingPreview": "Đang chuẩn bị bản xem trước prompt…",
+        "reviewPrompt": "Xem lại prompt trước khi tạo video"
+      },
+      "promptReview": {
+        "copied": "Đã sao chép prompt cảnh {{scene}}. Bạn có thể thử nó trên một trang web miễn phí.",
+        "copyFailed": "Không thể sao chép prompt. Hãy chọn văn bản và sao chép thủ công.",
+        "title": "Xem lại prompt AI trước khi tạo có tính phí",
+        "description": "Đây là bản xem trước an toàn. Chưa có prompt nào được gửi tới mô hình video AI. Sao chép prompt cuối để thử miễn phí, rồi chỉ tiếp tục khi đã sẵn sàng.",
+        "templateControls": "Điều khiển theo mẫu",
+        "promptRules": "Quy tắc prompt P{{version}}",
+        "copyFinalPrompt": "Sao chép prompt cuối",
+        "exactPrompt": "Prompt chính xác gửi tới mô hình sau khi xác nhận",
+        "finalPromptLabel": "Prompt cuối cho cảnh {{scene}}",
+        "included": "Đã gồm",
+        "notSent": "Không gửi",
+        "closeAndTest": "Đóng và thử prompt",
+        "continuePaid": "Tiếp tục đến bước xác nhận thanh toán"
+      },
+      "videoAssets": {
+        "assets": "Tài nguyên",
+        "automatic": "Tự động chọn tài nguyên đã duyệt",
+        "manual": "Tự chọn tài nguyên đã duyệt",
+        "hint": "Dựng 2–4 cảnh từ các mock-up đã duyệt. Có thể dùng lại một ảnh cho hai chuyển động camera; để thứ tự tự động để theo mẫu.",
+        "useThisOrder": "Dùng thứ tự này",
+        "autoOrder": "Thứ tự tự động",
+        "sceneRow": "Cảnh {{scene}} · {{source}}",
+        "moveUp": "Đưa cảnh {{scene}} lên",
+        "moveDown": "Đưa cảnh {{scene}} xuống",
+        "apply": "Áp dụng thay đổi cảnh"
+      },
+      "videoSources": {
+        "addFailed_one": "Không thể thêm {{count}} mock-up. Hãy thử lại sau giây lát.",
+        "addFailed_other": "Không thể thêm {{count}} mock-up. Hãy thử lại sau giây lát.",
+        "added_one": "Đã thêm {{count}} mock-up cho video.",
+        "added_other": "Đã thêm {{count}} mock-up cho video.",
+        "noMockups": "Sản phẩm này chưa có mock-up. Hãy tạo bằng Apply mock-up, hoặc tải lên ảnh hoàn chỉnh.",
+        "alreadyListed": "Mock-up của sản phẩm này đã có trong danh sách.",
+        "productSwitched": "Video giờ dành cho {{name}}. Hãy lưu, rồi bấm Run để bắt đầu.",
+        "useProduct": "Dùng {{name}} cho video",
+        "otherProducts": "Đây là mock-up của sản phẩm được chọn ở mục Sản phẩm cho video. Lượt chạy đang mở đã tạo mock-up cho {{names}}.",
+        "otherProductsRunning": "Đây là mock-up của sản phẩm được chọn ở mục Sản phẩm cho video. Lượt chạy đang mở đã tạo mock-up cho {{names}}: hãy chọn sản phẩm đó ở trên và Run lại để dùng chúng.",
+        "adding": "Đang thêm mock-up…",
+        "addThisProduct": "Thêm mock-up của sản phẩm này"
+      }
     }
   }
 }

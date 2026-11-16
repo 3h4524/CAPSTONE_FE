@@ -49,7 +49,8 @@
           "testReports": "Báo cáo kiểm thử",
           "settings": "Cài đặt",
           "profile": "Hồ sơ",
-          "printifyTemplateLinks": "Liên kết mẫu Printify"
+          "printifyTemplateLinks": "Liên kết mẫu Printify",
+          "systemApiKeys": "API key hệ thống"
         }
       },
       "breadcrumb": "Đường dẫn",

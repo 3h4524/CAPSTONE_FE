@@ -49,7 +49,8 @@
           "testReports": "Test Reports",
           "settings": "Settings",
           "profile": "Profile",
-          "printifyTemplateLinks": "Printify Template Links"
+          "printifyTemplateLinks": "Printify Template Links",
+          "systemApiKeys": "Platform API Keys"
         }
       },
       "breadcrumb": "Breadcrumb",

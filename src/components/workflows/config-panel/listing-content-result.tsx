@@ -1,16 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { FileText, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 
 import { evaluateListingSeo, generateListingContent, getListingContent } from "@/api/listing-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { OptionSelect } from "@/components/workflows/config-panel/fields/option-select";
 import { hasFeature } from "@/helpers/plan-features";
 import { showToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
+import { toProductOptions } from "@/helpers/workflow-panel";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
+import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useEntitlements } from "@/hooks/queries/use-entitlements";
 import { useQuery } from "@/hooks/queries/use-query";
 import { useAppQueryClient } from "@/hooks/use-query-client";
@@ -19,7 +24,15 @@ import { useWorkflowStore } from "@/stores/workflow";
 import type { ListingContentResult, ListingSeoFeedback, ListingSeoScoreResult } from "@/types/listing-content";
 
 export const ListingContentResultPanel = () => {
-  const productId = useWorkflowStore((state) => readString(state.nodes.find((node) => node.data.type === "product-input")?.data.config.productId));
+  const inputProductId = useWorkflowStore((state) => readString(state.nodes.find((node) => node.data.type === "product-input")?.data.config.productId));
+  const batchId = useWorkflowStore((state) => readString(state.nodes.find((node) => node.data.type === "product-input")?.data.config.batchId));
+  // Each product of the batch has a listing of its own, written from its own details: the seller picks whose to see.
+  const { data: products, isPending: productsPending, isError: productsFailed, refetch: refetchProducts } = useBatchProducts(batchId);
+  const [chosenProductId, setChosenProductId] = useState("");
+  // The product picked here while it is still in the batch; else the one Product input names; else the batch's first.
+  const productId = chosenProductId && products?.some((product) => product.id === chosenProductId)
+    ? chosenProductId
+    : inputProductId || products?.[0]?.id || "";
   const listingNodeId = useWorkflowStore(
     (state) => state.nodes.find((node) => node.data.type === "generate-listing")?.id
   );
@@ -83,14 +96,21 @@ export const ListingContentResultPanel = () => {
     seoMutation.reset();
   };
 
+  const chooseProduct = (next: string) => {
+    setChosenProductId(next);
+    // A score belongs to the listing it was taken of.
+    seoMutation.reset();
+  };
+
   const { mutate: act, isPending: isRetrying } = useWorkflowRunAction();
   const listingStep = run?.nodes.find((node) => node.nodeType === "generate-listing");
   const workflowOutput = listingStep?.output as Partial<ListingContentResult> | undefined;
   // The listing failing does not stop the video, so it is written again from here while the run goes on.
-  const failedInRun = listingStep?.status === "failed" && !mutation.data;
+  const failedInRun = listingStep?.status === "failed" && !mutation.data && run?.productId === productId;
   const fromRun = workflowOutput?.title && (!productId || run?.productId === productId) ? workflowOutput as ListingContentResult : undefined;
   const stored = saved && fromRun ? (saved.versionNumber >= fromRun.versionNumber ? saved : fromRun) : saved ?? fromRun;
-  const result = mutation.data ?? stored;
+  // A listing just written for another product is not this one's.
+  const result = (mutation.variables?.productId === productId ? mutation.data : undefined) ?? stored;
   // While the designs and mock-ups are being made, the run that follows is about to write the listing itself,
   // and two listings written at once for a product would clash. Once that run exists its listing is done, so
   // regenerating here is safe again and does not affect the video.
@@ -126,7 +146,9 @@ export const ListingContentResultPanel = () => {
             <h3 className="text-sm font-semibold">Listing result</h3>
           </div>
           <p className="text-muted-foreground mt-1 text-xs">
-            Generate content for the product selected in Product input.
+            {(products?.length ?? 0) > 1
+              ? "Each product of the batch has its own listing. Choose one to see or regenerate it."
+              : "Generate content for the product selected in Product input."}
           </p>
         </div>
         <Button
@@ -142,7 +164,26 @@ export const ListingContentResultPanel = () => {
         </Button>
       </div>
 
+      {(products?.length ?? 0) > 1 && (
+        <div className="space-y-1.5">
+          <Label htmlFor="listing-content-product">Product</Label>
+          <OptionSelect
+            standaloneId="listing-content-product"
+            value={productId}
+            onChange={chooseProduct}
+            options={toProductOptions(products)}
+            placeholder="Choose a product"
+            isLoading={Boolean(batchId) && productsPending}
+            isError={productsFailed}
+            onRetry={() => void refetchProducts()}
+            disabled={mutation.isPending}
+          />
+        </div>
+      )}
       {!productId && <p className="text-muted-foreground text-xs">Select a product in the Product input node first.</p>}
+      {productId && !result && !mutation.isPending && !failedInRun && !waitingForRunToStart && (
+        <p className="text-muted-foreground text-xs">This product has no listing yet.</p>
+      )}
       {waitingForRunToStart && <p className="text-muted-foreground text-xs">Available once the designs and mock-ups are done: the run writes the listing itself then.</p>}
       {failedInRun && run && (
         <div className="space-y-2 rounded-md border border-red-200 bg-red-50 p-3 dark:border-red-500/30 dark:bg-red-500/10" role="alert">

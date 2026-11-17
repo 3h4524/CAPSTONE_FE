@@ -685,7 +685,7 @@ export const MockupImageEditDialog = ({
             {/* The side's photo, as large as the dialog allows, with the sides under it. */}
             <section
               aria-label={t("batchJobs.editMockup.sidePhoto", { side: sideLabel })}
-              className="bg-ink-50 flex min-h-0 flex-col gap-3 px-4 py-4 md:overflow-y-auto"
+              className="bg-ink-50 flex flex-col gap-3 px-4 py-4 md:min-h-0 md:overflow-y-auto"
             >
               <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
                 <p className="text-ink-900 text-sm font-semibold">{sideLabel}</p>

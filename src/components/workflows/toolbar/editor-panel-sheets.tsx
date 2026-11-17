@@ -13,6 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { PanelHeaderCloseContext } from "@/components/workflows/config-panel/layout/panel-header";
 import { NodeConfigPanel } from "@/components/workflows/config-panel/node-config-panel";
 import { NodePalette } from "@/components/workflows/palette/node-palette";
 
@@ -62,7 +63,10 @@ export const EditorPanelSheets = () => {
               {t("workflowEditor.toolbar.nodeSettingsDescription")}
             </SheetDescription>
           </SheetHeader>
-          <NodeConfigPanel />
+          {/* The sheet's own close button is the one shown: it also closes the checks shown with no node selected. */}
+          <PanelHeaderCloseContext.Provider value={false}>
+            <NodeConfigPanel />
+          </PanelHeaderCloseContext.Provider>
         </SheetContent>
       </Sheet>
     </div>

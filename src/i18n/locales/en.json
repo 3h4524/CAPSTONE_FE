@@ -49,7 +49,8 @@
           "testReports": "Test Reports",
           "settings": "Settings",
           "profile": "Profile",
-          "printifyTemplateLinks": "Printify Template Links"
+          "printifyTemplateLinks": "Printify Template Links",
+          "systemApiKeys": "Platform API Keys"
         }
       },
       "breadcrumb": "Breadcrumb",
@@ -1914,7 +1915,10 @@
         "batchHasNoProducts": "This batch has no products yet.",
         "chooseBatchFirst": "Choose a batch in Product input first.",
         "runKeepsProduct": "The run in progress keeps this product.",
-        "videoForThisProduct": "These video settings make this product's video only."
+        "videoForThisProduct": "These video settings make this product's video only.",
+        "batchWithoutLine": "This batch has no product line yet. Choose one on the Batches page before running it.",
+        "designRatioWhy": "{{line}} batch: {{why}}",
+        "designRatioMismatch": "{{ratio}} does not suit this {{line}} batch. Choose {{ratios}}."
       },
       "form": {
         "settingsLocked": "Settings are locked while the run is in progress.",
@@ -2370,7 +2374,7 @@
         "editTitle": "Edit product batch",
         "createTitle": "Create product batch",
         "editDescription": "Update the batch name and defaults used for new products.",
-        "createDescription": "Set shared defaults to speed up adding products.",
+        "createDescription": "Choose what the batch makes and set shared defaults to speed up adding products.",
         "nameLabel": "Batch name *",
         "namePlaceholder": "e.g. Summer outdoor collection",
         "defaultNicheLabel": "Default niche",
@@ -2381,7 +2385,11 @@
         "descriptionLabel": "Description",
         "descriptionPlaceholder": "What is this batch for?",
         "creating": "Creating…",
-        "createBatch": "Create batch"
+        "createBatch": "Create batch",
+        "productLineLabel": "Product line *",
+        "productLinePlaceholder": "Choose what the batch makes",
+        "productLineHint": "Every product in the batch is of this line, so its designs, mock-ups, videos and Printify products are made the same way. Put other products in a batch of their own.",
+        "defaultProductTypeHint": "Prefills new products; each can be any {{line}} type."
       },
       "product": {
         "editTitle": "Edit product",
@@ -2411,7 +2419,9 @@
         "editAria": "Edit {{name}}",
         "deleteAria": "Delete {{name}}",
         "resetAria": "Reset {{name}} to pending",
-        "reset": "Reset"
+        "reset": "Reset",
+        "lineFixedHint": "Set by the batch: this {{line}} batch makes {{type}} products only.",
+        "lineTypesHint": "This {{line}} batch makes {{types}} products only."
       },
       "close": "Close",
       "import": {
@@ -2439,7 +2449,13 @@
         "imported_one": "Imported {{count}} products",
         "imported_other": "Imported {{count}} products",
         "importing": "Importing…",
-        "importValid": "Import valid rows"
+        "importValid": "Import valid rows",
+        "fileHintLine": "This {{line}} batch takes {{types}} only.",
+        "rowsReadyOf_one": "{{valid}} of {{count}} row ready",
+        "rowsReadyOf_other": "{{valid}} of {{count}} rows ready",
+        "notImported_one": "{{count}} row was not imported. Fix it in the file and import it again; rows already imported are refused as duplicates.",
+        "notImported_other": "{{count}} rows were not imported. Fix them in the file and import it again; rows already imported are refused as duplicates.",
+        "otherLineIssue": "This {{line}} batch takes {{types}} only: change the type, or import this row into a batch of its own line."
       },
       "statuses": {
         "all": "All",
@@ -2556,7 +2572,23 @@
         "removeProductDescription": "This removes the product from the batch. Only pending products can be removed.",
         "remove": "Remove",
         "setBackToPending": "Set back to pending",
-        "runInWorkflowLabel": "Run in workflow"
+        "runInWorkflowLabel": "Run in workflow",
+        "lineLabel": "Line: ",
+        "lineTitle": "Products of this batch: {{types}}"
+      },
+      "productLines": {
+        "apparel": "Apparel",
+        "bags": "Tote bags",
+        "drinkware": "Mugs",
+        "wall_art": "Wall art",
+        "phone_cases": "Phone cases"
+      },
+      "productLineRatioWhy": {
+        "apparel": "A chest print is a little taller than wide.",
+        "bags": "A tote's print area is about square.",
+        "drinkware": "A mug print wraps around the mug; 1:1 fits one side.",
+        "wall_art": "Posters print at 3:4 portrait, 4:3 landscape or square.",
+        "phone_cases": "A phone case is tall and narrow."
       }
     },
     "designTemplates": {

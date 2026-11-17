@@ -9,10 +9,13 @@ import { toast } from "sonner";
 import {
   analyzeSellerOpportunity,
   getLatestSellerOpportunityAnalysis,
+  getMarketRadarAccess,
   getSellerResearchProfile,
   listSellerMarketInsights,
   listSellerOpportunities,
   type OpportunityAnalysis,
+  planErrorCode,
+  problemDetail,
   refreshSellerOpportunities,
   saveSellerResearchProfile,
   type SellerMarketInsight,
@@ -26,6 +29,8 @@ import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { PageHeader } from "@/components/commons/layout/page-header";
 import { LevelMeter, PriceInterestScatter, ShareDonut, StrongSellerBar, SupplySparkline } from "@/components/opportunities/market-charts";
 import { buildNicheMap, CompetitorLeaderboard, CompetitorPriceStrip, InfoTip, ListingAgeBars, MiniStats, NicheMapCard, NicheSelect, PriceSweetSpot, ProfileImpactCard, SeasonalWindowCard, TapHint } from "@/components/opportunities/market-insights";
+import { ProLocked, ProPlaceholderChart, ProPlaceholderRows } from "@/components/subscription/pro-paywall/pro-locked";
+import { ProPaywallDialog, type ProPaywallTopic } from "@/components/subscription/pro-paywall/pro-paywall-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -146,6 +151,48 @@ export function OpportunityRadarPage() {
   // The unfiltered list feeds the tab counts and the hero; on the All tab it is the same query.
   const allQuery = useQuery({ queryKey: [...opportunityKey, userId, "all"], queryFn: () => listSellerOpportunities(), enabled: canLoadSellerData });
   const hasProfile = Boolean(profileQuery.data?.profileVersion);
+  // What the plan opens: without the whole radar the server sends its three best opportunities and no competitors,
+  // keywords, charts or plans, and the page draws locks where those would be.
+  const accessQuery = useQuery({ queryKey: ["market-radar-access", userId], queryFn: getMarketRadarAccess, enabled: canLoadSellerData });
+  const locked = accessQuery.data ? !accessQuery.data.full : false;
+  const hiddenOpportunities = accessQuery.data && !accessQuery.data.full
+    ? Math.max(0, accessQuery.data.totalOpportunities - (accessQuery.data.visibleOpportunities ?? 0))
+    : 0;
+  const [paywall, setPaywall] = useState<ProPaywallTopic | null>(null);
+  const paywallTopics = {
+    opportunities: {
+      title: t("marketRadar.lock.opportunitiesTitle", { defaultValue: "See every opportunity with Pro" }),
+      description: t("marketRadar.lock.opportunitiesDescription", { defaultValue: "Your plan shows the three best ranked opportunities. Pro opens the whole radar." }),
+    },
+    keywords: {
+      title: t("marketRadar.lock.nicheTitle", { defaultValue: "Niche keywords and charts are part of Pro" }),
+      description: t("marketRadar.lock.nicheDescription", { defaultValue: "See the keywords buyers use, how price meets interest, and the risks to watch in this niche." }),
+    },
+    competitors: {
+      title: t("marketRadar.lock.competitorsTitle", { defaultValue: "Competitors are part of Pro" }),
+      description: t("marketRadar.lock.competitorsDescription", { defaultValue: "See the shops leading this niche, their listings and their prices." }),
+    },
+    analysis: {
+      title: t("marketRadar.lock.analysisTitle", { defaultValue: "AI analysis is part of Pro" }),
+      description: t("marketRadar.lock.analysisDescription", { defaultValue: "Get the decision to make now, the risks and a three-step plan for an opportunity." }),
+    },
+    refresh: {
+      title: t("marketRadar.lock.refreshTitle", { defaultValue: "Rank again any time with Pro" }),
+      description: t("marketRadar.lock.refreshDescription", { defaultValue: "Your plan ranks the radar once a day. Pro ranks it again whenever you change your profile." }),
+    },
+  } satisfies Record<string, ProPaywallTopic>;
+  const paywallBenefits = [
+    t("marketRadar.lock.benefitOpportunities", { defaultValue: "Every opportunity on your radar" }),
+    t("marketRadar.lock.benefitKeywords", { defaultValue: "Niche keywords, charts, action plan and risks" }),
+    t("marketRadar.lock.benefitCompetitors", { defaultValue: "The shops and listings leading each niche" }),
+    t("marketRadar.lock.benefitAnalysis", { defaultValue: "AI analysis of an opportunity" }),
+  ];
+  // After a trial or a purchase the radar is read again, now whole.
+  const readRadarAgain = () => {
+    void queryClient.invalidateQueries({ queryKey: ["market-radar-access"] });
+    void queryClient.invalidateQueries({ queryKey: opportunityKey });
+    void queryClient.invalidateQueries({ queryKey: ["seller-market-insights"] });
+  };
   const marketInsightsQuery = useQuery({
     queryKey: marketInsightKey(userId),
     queryFn: () => listSellerMarketInsights(),
@@ -191,7 +238,12 @@ export function OpportunityRadarPage() {
          toast.info(t("marketRadar.noData", { state: t("marketRadar.all").toLowerCase() }));
       }
     },
-     onError: () => toast.error(t("marketRadar.buildRadar")),
+    onError: (error) => {
+      // Without Pro the radar is ranked at most once a day: a second refresh offers Pro instead of failing.
+      if (planErrorCode(error) === "Plan.FeatureLocked") setPaywall(paywallTopics.refresh);
+      else toast.error(t("marketRadar.buildRadar"));
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["market-radar-access"] }),
   });
   // A suggested keyword is saved to the profile and the radar re-ranked at once, so its effect shows
   // without a trip through the form and the refresh button.
@@ -231,8 +283,17 @@ export function OpportunityRadarPage() {
       setAnalysis((current) => ({ ...current, [result.sellerOpportunityId]: result }));
       queryClient.setQueryData(analysisQueryKey(result.sellerOpportunityId), result);
     },
-     onError: () => toast.error(t("marketRadar.analyzeError", { defaultValue: "Could not analyze this opportunity" })),
+    onError: (error) => {
+      const code = planErrorCode(error);
+      if (code === "Plan.FeatureLocked") setPaywall(paywallTopics.analysis);
+      // Today's cap: the server says when it resets.
+      else if (code === "Plan.DailyCapReached") toast.error(problemDetail(error) ?? t("marketRadar.analyzeError", { defaultValue: "Could not analyze this opportunity" }));
+      else toast.error(t("marketRadar.analyzeError", { defaultValue: "Could not analyze this opportunity" }));
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["market-radar-access"] }),
   });
+  // Without Pro the analysis is offered rather than asked for: the server would refuse it.
+  const analyze = (id: string) => (locked ? setPaywall(paywallTopics.analysis) : analysisMutation.mutate(id));
   const opportunities = useMemo(() => opportunitiesQuery.data ?? [], [opportunitiesQuery.data]);
   const allOpportunities = useMemo(() => allQuery.data ?? [], [allQuery.data]);
   const translationItems = useMemo<TranslationItem[]>(() => {
@@ -303,7 +364,8 @@ export function OpportunityRadarPage() {
     queries: pagedOpportunities.map((item) => ({
       queryKey: analysisQueryKey(item.id),
       queryFn: () => getLatestSellerOpportunityAnalysis(item.id),
-      enabled: canLoadSellerData && tab === "radar",
+      // Analyses are Pro: without it there is none to read.
+      enabled: canLoadSellerData && tab === "radar" && accessQuery.isSuccess && !locked,
       staleTime: 5 * 60_000,
     })),
   });
@@ -365,7 +427,7 @@ export function OpportunityRadarPage() {
     busy: stateMutation.isPending,
     analysis: analysis[item.id] ?? persistedAnalysis[item.id],
     analyzing: analysisMutation.isPending && analysisMutation.variables === item.id,
-    onAnalyze: () => analysisMutation.mutate(item.id),
+    onAnalyze: () => analyze(item.id),
     onState: (state) => stateMutation.mutate({ id: item.id, state }),
     isCompared: compareIds.includes(item.id),
     onCompare: () => {
@@ -514,10 +576,37 @@ export function OpportunityRadarPage() {
             onSelect={setSelectedNiche}
             minimumPrice={savedPriceRange.minimumPrice}
             maximumPrice={savedPriceRange.maximumPrice}
+            locked={locked}
+            onUnlock={() => setPaywall(paywallTopics.keywords)}
           />
         )}
 
-        {tab === "competitors" && canLoadSellerData && !profileQuery.isPending && (
+        {tab === "competitors" && canLoadSellerData && !profileQuery.isPending && locked && hasProfile && (
+          <ProLocked
+            label={paywallTopics.competitors.title}
+            hint={paywallTopics.competitors.description}
+            actionLabel={t("marketRadar.lock.unlock", { defaultValue: "Unlock Pro Analytics" })}
+            features={[
+              {
+                title: t("marketRadar.lock.featureShopsTitle", { defaultValue: "Leading shops" }),
+                description: t("marketRadar.lock.featureShopsDescription", { defaultValue: "Who holds the top of this niche" }),
+              },
+              {
+                title: t("marketRadar.lock.featureListingsTitle", { defaultValue: "Their listings" }),
+                description: t("marketRadar.lock.featureListingsDescription", { defaultValue: "What sells and how fast it gains favorites" }),
+              },
+              {
+                title: t("marketRadar.lock.featurePricesTitle", { defaultValue: "Price positions" }),
+                description: t("marketRadar.lock.featurePricesDescription", { defaultValue: "Where each shop prices against you" }),
+              },
+            ]}
+            onUnlock={() => setPaywall(paywallTopics.competitors)}
+          >
+            <div className="space-y-4"><ProPlaceholderRows rows={5} /><ProPlaceholderChart /></div>
+          </ProLocked>
+        )}
+
+        {tab === "competitors" && canLoadSellerData && !profileQuery.isPending && !(locked && hasProfile) && (
           <CompetitorSection
             hasProfile={hasProfile}
             loading={hasProfile && marketInsightsQuery.isPending}
@@ -537,7 +626,7 @@ export function OpportunityRadarPage() {
             newCount={newCount}
             savedCount={savedCount}
             actedCount={actedCount}
-            onAnalyze={() => analysisMutation.mutate(topOpportunity.id)}
+            onAnalyze={() => analyze(topOpportunity.id)}
             onState={(state) => stateMutation.mutate({ id: topOpportunity.id, state })}
             analyzing={analysisMutation.isPending && analysisMutation.variables === topOpportunity.id}
           />
@@ -625,10 +714,35 @@ export function OpportunityRadarPage() {
               onPageChange={setOpportunityPage}
             />
           ))}
+          {hiddenOpportunities > 0 && activeState === "all" && (
+            <ProLocked
+              label={t("marketRadar.lock.moreOpportunities", { defaultValue: "{{count}} more opportunities with Pro", count: hiddenOpportunities })}
+              hint={paywallTopics.opportunities.description}
+              actionLabel={t("marketRadar.lock.unlock", { defaultValue: "Unlock Pro Analytics" })}
+              features={[
+                {
+                  title: t("marketRadar.lock.featureRadarTitle", { defaultValue: "The whole radar" }),
+                  description: t("marketRadar.lock.featureRadarDescription", { defaultValue: "Every opportunity ranked for your shop" }),
+                },
+                {
+                  title: t("marketRadar.lock.featureAnalysisTitle", { defaultValue: "AI analysis" }),
+                  description: t("marketRadar.lock.featureAnalysisDescription", { defaultValue: "The decision, the risks and a 3-step plan" }),
+                },
+                {
+                  title: t("marketRadar.lock.featureRankTitle", { defaultValue: "Rank any time" }),
+                  description: t("marketRadar.lock.featureRankDescription", { defaultValue: "Re-rank whenever your profile changes" }),
+                },
+              ]}
+              onUnlock={() => setPaywall(paywallTopics.opportunities)}
+            >
+              <ProPlaceholderRows rows={Math.min(4, hiddenOpportunities)} />
+            </ProLocked>
+          )}
         </section>
           </>
         )}
       </div>
+      <ProPaywallDialog topic={paywall} benefits={paywallBenefits} featureCode="market_radar_full" onClose={() => setPaywall(null)} onUnlocked={readRadarAgain} />
     </TooltipProvider>
   );
 }
@@ -833,6 +947,8 @@ function NicheInsightSection({
   onSelect,
   minimumPrice,
   maximumPrice,
+  locked = false,
+  onUnlock,
 }: {
   hasProfile: boolean;
   loading: boolean;
@@ -842,6 +958,9 @@ function NicheInsightSection({
   onSelect: (niche: string) => void;
   minimumPrice: number | null;
   maximumPrice: number | null;
+  /** Without Pro the niche's chart, keywords and risks are not sent: a lock stands in their place. */
+  locked?: boolean;
+  onUnlock?: () => void;
 }) {
   const { t } = useTranslation("common");
 
@@ -861,7 +980,7 @@ function NicheInsightSection({
       ) : (
         <>
           <NichePicker insights={insights} selected={selected?.niche ?? null} onSelect={onSelect} />
-          {selected && <NicheConclusionCard key={selected.niche} insight={selected} minimumPrice={minimumPrice} maximumPrice={maximumPrice} />}
+          {selected && <NicheConclusionCard key={selected.niche} insight={selected} minimumPrice={minimumPrice} maximumPrice={maximumPrice} locked={locked} onUnlock={onUnlock} />}
         </>
       )}
     </section>
@@ -895,7 +1014,7 @@ function NichePicker({ insights, selected, onSelect }: { insights: SellerNicheMa
   );
 }
 
-function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { insight: SellerNicheMarketInsight; minimumPrice: number | null; maximumPrice: number | null }) {
+function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice, locked = false, onUnlock }: { insight: SellerNicheMarketInsight; minimumPrice: number | null; maximumPrice: number | null; locked?: boolean; onUnlock?: () => void }) {
   const { t, i18n } = useTranslation("common");
   const locale = i18n.resolvedLanguage?.toLowerCase().startsWith("vi") ? "vi" : "en";
   const insight = useLocalizedNiche(source, locale);
@@ -1057,6 +1176,31 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
           : t("marketRadar.showFigureDetails", { defaultValue: "Show figure details" })}
       </button>
 
+      {locked ? (
+        <ProLocked
+          className="mx-4 mb-4"
+          label={t("marketRadar.lock.nicheTitle", { defaultValue: "Niche keywords and charts are part of Pro" })}
+          hint={t("marketRadar.lock.nicheDescription", { defaultValue: "See the keywords buyers use, how price meets interest, and the risks to watch in this niche." })}
+          actionLabel={t("marketRadar.lock.unlock", { defaultValue: "Unlock Pro Analytics" })}
+          features={[
+            {
+              title: t("marketRadar.lock.featureKeywordsTitle", { defaultValue: "High-intent keywords" }),
+              description: t("marketRadar.lock.featureKeywordsDescription", { defaultValue: "Real search queries buyers type" }),
+            },
+            {
+              title: t("marketRadar.lock.featurePriceTitle", { defaultValue: "Price vs demand" }),
+              description: t("marketRadar.lock.featurePriceDescription", { defaultValue: "The price sweet spot, on a chart" }),
+            },
+            {
+              title: t("marketRadar.lock.featureRiskTitle", { defaultValue: "Risks & saturation" }),
+              description: t("marketRadar.lock.featureRiskDescription", { defaultValue: "What to watch before entering" }),
+            },
+          ]}
+          onUnlock={() => onUnlock?.()}
+        >
+          <div className="space-y-3"><ProPlaceholderChart /><ProPlaceholderRows rows={3} /></div>
+        </ProLocked>
+      ) : (
       <PriceSweetSpot
         points={signals.points}
         currency={signals.priceCurrency}
@@ -1100,13 +1244,15 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice }: { 
         </>
         ) : undefined}
       />
+      )}
 
       {showWhy && (
         <div className="border-ink-100 space-y-5 border-t px-5 py-5">
           <p className="text-ink-600 text-sm leading-6">{insight.conclusion}</p>
           <div className="grid gap-4 lg:grid-cols-2">
             <ReasonPanel tone="good" title={t("marketRadar.whyTitle", { defaultValue: "What the data shows" })} items={insight.highlights} empty={unavailable} />
-            <ReasonPanel tone="warn" title={t("marketRadar.watchOutTitle", { defaultValue: "Watch out" })} items={insight.risks} empty={unavailable} />
+            {/* Without Pro the risks are not sent: the lock above stands for them rather than "not enough data". */}
+            {!locked && <ReasonPanel tone="warn" title={t("marketRadar.watchOutTitle", { defaultValue: "Watch out" })} items={insight.risks} empty={unavailable} />}
           </div>
           {insight.keywords.length > 0 && (
             <div>

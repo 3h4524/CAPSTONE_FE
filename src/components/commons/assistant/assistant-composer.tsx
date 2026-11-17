@@ -3,6 +3,7 @@
 import { type ChangeEvent, type KeyboardEvent, useEffect } from "react";
 import { ArrowUp, Square } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { AssistantContextLabel } from "@/components/commons/assistant/assistant-context-label";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ const MIN_ROWS = 1;
 const MAX_ROWS = 5;
 
 export const AssistantComposer = () => {
+  const { t } = useTranslation("common");
   const { send, stop, isStreaming, isStopping } = useAssistantChat();
   const draftKey = useAssistantStore(selectAssistantDraftKey);
   const setDraft = useAssistantStore((state) => state.setDraft);
@@ -64,7 +66,7 @@ export const AssistantComposer = () => {
                   <Textarea
                     {...field}
                     rows={rows}
-                    placeholder="Ask Podi"
+                    placeholder={t("commons.assistant.askPodi")}
                     className="max-h-40 min-h-0 resize-none"
                     onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
                       field.onChange(event);
@@ -87,11 +89,11 @@ export const AssistantComposer = () => {
             )}
           />
           {isStreaming ? (
-            <Button key="stop" type="button" size="icon" variant="outline" aria-label="Stop" disabled={isStopping} onClick={stop}>
+            <Button key="stop" type="button" size="icon" variant="outline" aria-label={t("commons.assistant.stop")} disabled={isStopping} onClick={stop}>
               <Square aria-hidden="true" />
             </Button>
           ) : (
-            <Button key="send" type="submit" size="icon" aria-label="Send" disabled={!canSend}>
+            <Button key="send" type="submit" size="icon" aria-label={t("commons.assistant.send")} disabled={!canSend}>
               <ArrowUp aria-hidden="true" />
             </Button>
           )}

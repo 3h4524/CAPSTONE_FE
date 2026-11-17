@@ -2,6 +2,7 @@
 
 import { LoaderCircle, Plus } from "lucide-react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { NodeName } from "@/components/workflows/nodes/node-name";
 import { WORKFLOW_CATEGORY_THEME } from "@/constants/workflow-category-theme";
@@ -40,6 +41,7 @@ type NodeFrameProps = {
 };
 
 export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: NodeFrameProps) => {
+  const { t } = useTranslation("common");
   const workflowIsRunning = useWorkflowStore((state) => state.isRunning);
   const groupProgress = useGroupVideoProgress();
   const printifyProgress = useGroupPrintify();
@@ -62,15 +64,26 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
   const batch = data.type === "generate-video" ? groupProgress : null;
   // Push to Printify runs beside the videos of a batch: it shows its own steps, never the render.
   const printifyBatch = data.type === "publish-printify" ? printifyProgress : null;
-  const status = batch?.active ? "running" : printifyBatch?.status ?? data.status;
+  const status = batch?.active ? "running" : (printifyBatch?.status ?? data.status);
   const pill = status === "idle" ? null : NODE_STATUS_PILLS[status];
   const isRunning = status === "running";
   const runnable = isRunnableNode(data.type);
-  const connectionTargetValid = connectionState === "valid-target" || hoveredConnectionValid === true;
-  const connectionTargetInvalid = connectionState === "invalid-target" || hoveredConnectionValid === false;
+  const connectionTargetValid =
+    connectionState === "valid-target" || hoveredConnectionValid === true;
+  const connectionTargetInvalid =
+    connectionState === "invalid-target" || hoveredConnectionValid === false;
   const isConnectionTarget = connectionTargetValid || connectionTargetInvalid;
-  const progress = Math.max(0, Math.min(100, batch ? batch.progress : printifyBatch ? 0 : (data.progress ?? 0)));
-  const statusLabel = isRunning && progress > 0 ? `${pill?.label ?? "Running"} ${Math.round(progress)}%` : pill?.label;
+  const progress = Math.max(
+    0,
+    Math.min(100, batch ? batch.progress : printifyBatch ? 0 : (data.progress ?? 0))
+  );
+  const pillLabel = pill
+    ? t(`workflowEditor.nodeStatuses.${status}`, { defaultValue: pill.label })
+    : undefined;
+  const statusLabel =
+    isRunning && progress > 0
+      ? `${pillLabel ?? t("workflowEditor.nodeStatuses.running")} ${Math.round(progress)}%`
+      : pillLabel;
 
   const frame = cn(
     "bg-wf-surface relative w-full rounded-xl border shadow-[0_1px_2px_rgba(15,23,42,0.05),0_18px_36px_-28px_rgba(15,23,42,0.35)]",
@@ -91,9 +104,13 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
           type="target"
           position={Position.Top}
           isConnectable={!workflowIsRunning}
-          title={`Connect another node to ${data.label}`}
-          aria-label={`Connect another node to ${data.label}`}
-          className={cn(HANDLE_CLASS_NAME, "top-0!", "before:size-6! [@media(pointer:coarse)]:before:size-11!")}
+          title={t("workflowEditor.nodeFrame.connectTo", { label: data.label })}
+          aria-label={t("workflowEditor.nodeFrame.connectTo", { label: data.label })}
+          className={cn(
+            HANDLE_CLASS_NAME,
+            "top-0!",
+            "before:size-6! [@media(pointer:coarse)]:before:size-11!"
+          )}
         >
           <span className={HANDLE_DOT_CLASS_NAME} />
           <span
@@ -114,16 +131,23 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
           <NodeName label={data.label} Icon={definition.icon} iconClassName={theme.icon} />
           {!runnable && data.status === "idle" ? (
             <span className="border-ink-200 bg-card/80 text-ink-500 shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] leading-none font-semibold tracking-wide uppercase">
-              Planned
+              {t("workflowEditor.nodeFrame.planned")}
             </span>
           ) : pill ? (
             <span
-              className={cn("flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] leading-none font-semibold tracking-wide uppercase", pill.className)}
+              className={cn(
+                "flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] leading-none font-semibold tracking-wide uppercase",
+                pill.className
+              )}
               role="status"
               aria-live="polite"
             >
               {isRunning && (
-                <LoaderCircle className="size-2.5 motion-safe:animate-spin" strokeWidth={2.5} aria-hidden="true" />
+                <LoaderCircle
+                  className="size-2.5 motion-safe:animate-spin"
+                  strokeWidth={2.5}
+                  aria-hidden="true"
+                />
               )}
               {statusLabel}
             </span>
@@ -138,8 +162,8 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
           type="source"
           position={Position.Bottom}
           isConnectable={!workflowIsRunning}
-          title={`Connect ${data.label} to another node`}
-          aria-label={`Connect ${data.label} to another node`}
+          title={t("workflowEditor.nodeFrame.connectFrom", { label: data.label })}
+          aria-label={t("workflowEditor.nodeFrame.connectFrom", { label: data.label })}
           className={HANDLE_CLASS_NAME}
         >
           <span className={HANDLE_DOT_CLASS_NAME} />
@@ -149,7 +173,8 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
               "translate-y-6",
               !workflowIsRunning && HANDLE_ACTION_REVEAL_CLASS_NAME,
               selected && !workflowIsRunning && "pointer-events-auto scale-100 opacity-100",
-              connectionState === "source" && "bg-wf-accent text-wf-surface pointer-events-auto scale-100 opacity-100",
+              connectionState === "source" &&
+                "bg-wf-accent text-wf-surface pointer-events-auto scale-100 opacity-100",
               acceptsConnectionFrom === "target" && HANDLE_ACTION_ACCEPTING_CLASS_NAME
             )}
             aria-hidden="true"

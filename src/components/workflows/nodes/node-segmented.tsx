@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { NodeControl } from "@/components/workflows/nodes/node-control";
 import type { WorkflowOption } from "@/types/workflow";
 import { cn } from "@/utils/cn";
@@ -15,14 +17,21 @@ type NodeSegmentedProps = {
 const segmentClassName =
   "min-w-0 flex-1 truncate px-1 py-1.5 text-center text-[10px] leading-none transition-colors disabled:cursor-not-allowed disabled:opacity-50";
 
-export const NodeSegmented = ({ options, value, ariaLabel, onChange, disabled = false }: NodeSegmentedProps) => {
+export const NodeSegmented = ({
+  options,
+  value,
+  ariaLabel,
+  onChange,
+  disabled = false,
+}: NodeSegmentedProps) => {
+  const { t } = useTranslation("common");
   const selected = options.find((option) => option.value === value);
 
   if (!onChange) {
     return (
       <div
         className="border-wf-line flex overflow-hidden rounded-md border"
-        aria-label={`${ariaLabel}: ${selected?.label ?? "not set"}`}
+        aria-label={`${ariaLabel}: ${selected?.label ?? t("workflowEditor.nodeSegmented.notSet")}`}
       >
         {options.map((option) => (
           <span

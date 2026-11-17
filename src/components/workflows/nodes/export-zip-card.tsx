@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, Download, LoaderCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { downloadRunGroupExport, getRunGroupExport } from "@/api/run-groups";
 import { Button } from "@/components/ui/button";
@@ -25,9 +26,14 @@ const useGroupExport = () => {
   const groupId = useRunGroupId();
   const workflowId = useWorkflowStore((state) => state.workflowId);
   const { data: group } = useRunGroup(groupId);
-  const active = group && group.workflowId === workflowId && group.status !== "waiting_for_targets" ? group : null;
+  const active =
+    group && group.workflowId === workflowId && group.status !== "waiting_for_targets"
+      ? group
+      : null;
   // Asked again as videos finish, since each one's package is made when its run completes.
-  const finished = active?.targets.filter((target) => videoStatusOf(target) === "completed").length ?? 0;
+  const { t } = useTranslation("common");
+  const finished =
+    active?.targets.filter((target) => videoStatusOf(target) === "completed").length ?? 0;
   const { data: summary } = useQuery({
     // Not under the group's own key: reading the group again (every change of a run) must not ask this too.
     queryKey: ["run-group-export", active?.id ?? null, finished],
@@ -37,12 +43,17 @@ const useGroupExport = () => {
   const { mutate: download, isPending } = useMutation({
     mutationFn: () => downloadRunGroupExport(active!.id),
     onSuccess: (url) => window.location.assign(url),
-    onError: (error) => showWorkflowActionToast("error", `The ZIP could not be downloaded. ${getErrorMessage(error)}`),
+    onError: (error) =>
+      showWorkflowActionToast(
+        "error",
+        `${t("workflowEditor.exportZip.downloadFailed")} ${getErrorMessage(error)}`
+      ),
   });
   return active ? { summary, download, isPending } : null;
 };
 
 export const ExportZipCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
+  const { t } = useTranslation("common");
   const { run } = useWorkflowRuntime();
   const { mutate: download, isPending: isDownloading } = useMediaDownload();
   const groupExport = useGroupExport();
@@ -50,7 +61,10 @@ export const ExportZipCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =
     (step) => step.nodeId === id && step.nodeType === "export-zip"
   );
   const exportId = exportStep?.output.exportId;
-  const description = getWorkflowNodeDefinition(data.type)?.description;
+  const definitionDescription = getWorkflowNodeDefinition(data.type)?.description;
+  const description =
+    definitionDescription &&
+    t(`workflowEditor.nodeTypes.${data.type}.description`, { defaultValue: definitionDescription });
 
   // A batch video run downloads every video's package together; a single video run, its own.
   const summary = groupExport?.summary;
@@ -59,23 +73,24 @@ export const ExportZipCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =
     : exportStep?.status === "succeeded" && typeof exportId === "string" && exportId.length > 0;
   const isPending = groupExport ? groupExport.isPending : isDownloading;
   const caption = !groupExport
-    ? "Approved assets are packaged."
+    ? t("workflowEditor.exportZip.assetsPackaged")
     : summary && summary.ready < summary.videos
-      ? `${summary.ready} of ${summary.videos} videos are packaged.`
-      : `All ${summary?.ready ?? 0} videos are packaged, a folder per product.`;
+      ? t("workflowEditor.exportZip.somePackaged", { ready: summary.ready, total: summary.videos })
+      : t("workflowEditor.exportZip.allPackaged", { count: summary?.ready ?? 0 });
   const startDownload = () => {
     if (groupExport) {
       groupExport.download();
       return;
     }
-    if (typeof exportId === "string") download({ id: exportId, zip: true }, { onSuccess: (url) => window.location.assign(url) });
+    if (typeof exportId === "string")
+      download({ id: exportId, zip: true }, { onSuccess: (url) => window.location.assign(url) });
   };
 
   return (
     <NodeFrame nodeId={id} data={data} selected={selected} widthClassName="w-60">
       <div className="space-y-2 px-2.5 pb-2.5">
         <p className="text-wf-dim px-0.5 text-[11px] leading-4">
-          {description || "Packages the final assets."}
+          {description || t("workflowEditor.exportZip.packagesFinal")}
         </p>
         {isReady && (
           <div className="border-wf-line space-y-2 border-t pt-2">
@@ -86,7 +101,9 @@ export const ExportZipCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =
                 strokeWidth={2}
               />
               <div className="min-w-0">
-                <p className="text-wf-strong text-xs leading-4 font-semibold">ZIP ready</p>
+                <p className="text-wf-strong text-xs leading-4 font-semibold">
+                  {t("workflowEditor.exportZip.zipReady")}
+                </p>
                 <p className="text-wf-faint text-[10px] leading-4">{caption}</p>
               </div>
             </div>
@@ -102,7 +119,9 @@ export const ExportZipCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =
               ) : (
                 <Download aria-hidden="true" className="size-3.5" />
               )}
-              {isPending ? "Preparing download" : "Download ZIP"}
+              {isPending
+                ? t("workflowEditor.exportZip.preparing")
+                : t("workflowEditor.exportZip.download")}
             </Button>
           </div>
         )}

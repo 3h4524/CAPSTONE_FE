@@ -3,6 +3,7 @@ import { MAX_VIDEO_MOCKUPS, type NodePanelSection } from "@/constants/workflow-p
 import { productTypeLabel } from "@/helpers/mockup-template";
 import { readNumber, readString, readStringArray, readTemplateColors } from "@/helpers/workflow-config";
 import { countApprovals } from "@/helpers/workflow-run";
+import { i18n } from "@/i18n/client";
 import type { BatchJobDetail } from "@/types/batch-jobs";
 import type { Product } from "@/types/batches";
 import type { MockupTemplate } from "@/types/mockup-templates";
@@ -14,7 +15,7 @@ export const toProductOptions = (products: Product[] | undefined): WorkflowOptio
   (products ?? []).map((product) => ({
     value: product.id,
     label: product.name,
-    hint: `${productTypeLabel(product.productType)} · ${product.status.replaceAll("_", " ")}`,
+    hint: `${i18n.t(`batches.productTypes.${product.productType.toLowerCase()}`, { defaultValue: productTypeLabel(product.productType) })} · ${i18n.t(`workflowConfig.overview.productStatuses.${product.status}`, { defaultValue: product.status.replaceAll("_", " ") })}`,
   }));
 
 export type PanelStatTone = "default" | "warning" | "muted";
@@ -73,34 +74,34 @@ export const buildNodeOverview = (input: NodeOverviewInput): PanelStat[] => {
     case "product-input": {
       if (!readString(config.batchId)) return [];
       return [
-        { label: "Products", value: countText(products?.length) },
-        { label: "Pending", value: countText(pending), tone: pending === 0 ? "warning" : "default" },
-        { label: "Runs", value: countText(input.startedRunCount) },
+        { label: i18n.t("workflowConfig.overview.products"), value: countText(products?.length) },
+        { label: i18n.t("workflowConfig.overview.pending"), value: countText(pending), tone: pending === 0 ? "warning" : "default" },
+        { label: i18n.t("workflowConfig.overview.runs"), value: countText(input.startedRunCount) },
       ];
     }
     case "prompt-synthesis": {
       const instructions = readString(config.instructions).trim();
       return [
         // The names are in the previews below, so the strip only says what is in place.
-        { label: "Template", value: readString(config.designTemplateId) ? "Set" : "Not set", tone: readString(config.designTemplateId) ? "default" : "warning" },
-        { label: "Style", value: readString(config.stylePresetId) ? "Set" : "None", tone: readString(config.stylePresetId) ? "default" : "muted" },
-        { label: "Direction", value: instructions ? `${instructions.length} chars` : "None", tone: instructions ? "default" : "muted" },
+        { label: i18n.t("workflowConfig.overview.template"), value: readString(config.designTemplateId) ? i18n.t("workflowConfig.overview.set") : i18n.t("workflowConfig.overview.notSet"), tone: readString(config.designTemplateId) ? "default" : "warning" },
+        { label: i18n.t("workflowConfig.overview.style"), value: readString(config.stylePresetId) ? i18n.t("workflowConfig.overview.set") : i18n.t("workflowConfig.overview.none"), tone: readString(config.stylePresetId) ? "default" : "muted" },
+        { label: i18n.t("workflowConfig.overview.direction"), value: instructions ? i18n.t("workflowConfig.overview.chars", { count: instructions.length }) : i18n.t("workflowConfig.overview.none"), tone: instructions ? "default" : "muted" },
       ];
     }
     case "design-image": {
       const variants = readNumber(config.variants);
       return [
-        { label: "Variants", value: countText(variants) },
-        { label: "Ratio", value: readString(config.aspectRatio) || DASH },
-        { label: "Images", value: variants !== undefined && pending !== undefined ? `~${variants * pending}` : DASH, tone: pending === 0 ? "warning" : "default" },
+        { label: i18n.t("workflowConfig.overview.variants"), value: countText(variants) },
+        { label: i18n.t("workflowConfig.overview.ratio"), value: readString(config.aspectRatio) || DASH },
+        { label: i18n.t("workflowConfig.overview.images"), value: variants !== undefined && pending !== undefined ? `~${variants * pending}` : DASH, tone: pending === 0 ? "warning" : "default" },
       ];
     }
     case "design-approval": {
       const counts = job ? countApprovals(job) : undefined;
       return [
-        { label: "Mode", value: config.mode === "auto" ? "Automatic" : "Manual" },
-        { label: "Approved", value: countText(counts?.approved) },
-        { label: "To review", value: countText(counts?.pending), tone: counts && counts.pending > 0 ? "warning" : "default" },
+        { label: i18n.t("workflowConfig.overview.mode"), value: config.mode === "auto" ? i18n.t("workflowConfig.overview.automatic") : i18n.t("workflowConfig.overview.manual") },
+        { label: i18n.t("workflowConfig.overview.approved"), value: countText(counts?.approved) },
+        { label: i18n.t("workflowConfig.overview.toReview"), value: countText(counts?.pending), tone: counts && counts.pending > 0 ? "warning" : "default" },
       ];
     }
     case "apply-mockup": {
@@ -112,9 +113,9 @@ export const buildNodeOverview = (input: NodeOverviewInput): PanelStat[] => {
         ? new Set(input.templates.filter((template) => templateIds.includes(template.id)).map((template) => template.productType.toLowerCase())).size
         : undefined;
       return [
-        { label: "Templates", value: String(templateIds.length), tone: templateIds.length === 0 ? "warning" : "default" },
-        { label: "Colors", value: colors > 0 ? String(colors) : "Own", tone: colors > 0 ? "default" : "muted" },
-        { label: "Types", value: countText(productTypes) },
+        { label: i18n.t("workflowConfig.overview.templates"), value: String(templateIds.length), tone: templateIds.length === 0 ? "warning" : "default" },
+        { label: i18n.t("workflowConfig.overview.colors"), value: colors > 0 ? String(colors) : i18n.t("workflowConfig.overview.own"), tone: colors > 0 ? "default" : "muted" },
+        { label: i18n.t("workflowConfig.overview.types"), value: countText(productTypes) },
       ];
     }
     case "approval-gate": {
@@ -122,9 +123,9 @@ export const buildNodeOverview = (input: NodeOverviewInput): PanelStat[] => {
       const approved = assets?.filter((asset) => asset.approvalStatus === "approved" && asset.approvedRevision === asset.revision).length;
       const selected = readStringArray(input.mockupConfig?.mockupIds).length;
       return [
-        { label: "Mock-ups", value: countText(assets?.length) },
-        { label: "Approved", value: countText(approved) },
-        { label: "For video", value: selected ? `${selected}/${MAX_VIDEO_MOCKUPS}` : "Auto", tone: selected ? "default" : "muted" },
+        { label: i18n.t("workflowConfig.overview.mockups"), value: countText(assets?.length) },
+        { label: i18n.t("workflowConfig.overview.approved"), value: countText(approved) },
+        { label: i18n.t("workflowConfig.overview.forVideo"), value: selected ? `${selected}/${MAX_VIDEO_MOCKUPS}` : i18n.t("workflowConfig.overview.auto"), tone: selected ? "default" : "muted" },
       ];
     }
     default:

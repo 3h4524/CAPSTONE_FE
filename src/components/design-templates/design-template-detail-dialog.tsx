@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { CalendarDays, Copy, Pencil, RefreshCw, Sparkles, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +24,29 @@ type DesignTemplateDetailDialogProps = {
   onEdit: (id: string) => void;
 };
 
+const NICHE_KEYS: Record<string, string> = {
+  "Nature & Botanical": "natureBotanical",
+  Outdoors: "outdoors",
+  "Food & Drink": "foodDrink",
+  Vehicles: "vehicles",
+  "Quotes & Motivation": "quotesMotivation",
+  "Humor & Lifestyle": "humorLifestyle",
+  "Gifts & Occasions": "giftsOccasions",
+  "Pets & Animals": "petsAnimals",
+  "Sports & Fitness": "sportsFitness",
+  "Travel & Places": "travelPlaces",
+};
+
+const ART_STYLE_KEYS: Record<string, string> = {
+  vintage: "vintage",
+  minimalist: "minimalist",
+  watercolor: "watercolor",
+  bold_typography: "boldTypography",
+  dark_academia: "darkAcademia",
+  funny_quote: "funnyQuote",
+  floral: "floral",
+};
+
 export function DesignTemplateDetailDialog({
   templateId,
   cloning,
@@ -30,9 +54,24 @@ export function DesignTemplateDetailDialog({
   onClone,
   onEdit,
 }: DesignTemplateDetailDialogProps) {
+  const { t, i18n } = useTranslation("common");
   const [imageFailed, setImageFailed] = useState(false);
   const templateQuery = useDesignTemplate(templateId, Boolean(templateId));
   const template = templateQuery.data;
+  const nicheKey = template?.nicheCategory ? NICHE_KEYS[template.nicheCategory] : undefined;
+  const nicheLabel = template?.nicheCategory
+    ? nicheKey
+      ? t(`designTemplates.niches.${nicheKey}`, { defaultValue: template.nicheCategory })
+      : template.nicheCategory
+    : t("designTemplates.general");
+  const artStyleKey = template?.artStyle ? ART_STYLE_KEYS[template.artStyle] : undefined;
+  const artStyleLabel = template?.artStyle
+    ? artStyleKey
+      ? t(`designTemplates.artStyles.${artStyleKey}`, {
+          defaultValue: template.artStyle.replaceAll("_", " "),
+        })
+      : template.artStyle.replaceAll("_", " ")
+    : t("designTemplates.unstyled");
 
   useEffect(() => {
     setImageFailed(false);
@@ -50,21 +89,21 @@ export function DesignTemplateDetailDialog({
           size="icon"
           className="text-ink-500 hover:bg-ink-100 absolute top-4 right-4 z-10 size-10 rounded-lg hover:translate-y-0"
           onClick={onClose}
-          aria-label="Close template details"
+          aria-label={t("designTemplates.closeDetails")}
         >
           <X aria-hidden="true" />
         </Button>
         {templateQuery.isPending ? (
           <div
             className="bg-ink-100 min-h-80 animate-pulse"
-            aria-label="Loading template details"
+            aria-label={t("designTemplates.loadingDetails")}
           />
         ) : templateQuery.isError || !template ? (
           <div className="flex min-h-80 flex-col items-center justify-center p-8 text-center">
             <Sparkles className="text-ink-400 size-8" aria-hidden="true" />
-            <DialogTitle className="mt-4">Template could not be loaded</DialogTitle>
+            <DialogTitle className="mt-4">{t("designTemplates.detailErrorTitle")}</DialogTitle>
             <DialogDescription className="mt-2">
-              Refresh the detail view and try again.
+              {t("designTemplates.detailErrorDescription")}
             </DialogDescription>
             <Button
               variant="outline"
@@ -77,7 +116,7 @@ export function DesignTemplateDetailDialog({
                 className={templateQuery.isFetching ? "size-4 animate-spin" : "size-4"}
                 aria-hidden="true"
               />
-              <span aria-live="polite">{templateQuery.isFetching ? "Retrying..." : "Retry"}</span>
+              <span aria-live="polite">{templateQuery.isFetching ? t("designTemplates.retrying") : t("designTemplates.retry")}</span>
             </Button>
           </div>
         ) : (
@@ -90,16 +129,16 @@ export function DesignTemplateDetailDialog({
                     sizes="(max-width: 1023px) calc(100vw - 5rem), 34vw"
                     src={template.previewImageUrl}
                     unoptimized
-                    alt={`Preview artwork for ${template.name}`}
+                    alt={t("designTemplates.previewAlt", { name: template.name })}
                     className="object-contain"
                     onError={() => setImageFailed(true)}
                   />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_30%_20%,#f4ead5,transparent_42%),linear-gradient(145deg,#e8ede8,#d8dfdc)] px-6 text-center">
                     <Sparkles className="text-ink-500 size-8" aria-hidden="true" />
-                    <p className="text-ink-700 mt-3 text-sm font-semibold">Preview unavailable</p>
+                    <p className="text-ink-700 mt-3 text-sm font-semibold">{t("designTemplates.previewUnavailable")}</p>
                     <p className="text-ink-500 mt-1 text-xs leading-5">
-                      This template does not have a preview image yet.
+                      {t("designTemplates.previewUnavailableDescription")}
                     </p>
                   </div>
                 )}
@@ -107,38 +146,38 @@ export function DesignTemplateDetailDialog({
 
               <div className="mt-5">
                 <p className="text-ink-500 text-[11px] font-bold tracking-[0.12em] uppercase">
-                  Template overview
+                  {t("designTemplates.overview")}
                 </p>
                 <dl className="border-ink-300/70 mt-3 grid grid-cols-2 gap-x-4 gap-y-4 border-y py-4 text-sm">
                   <div>
-                    <dt className="text-ink-500 text-xs">Type</dt>
+                    <dt className="text-ink-500 text-xs">{t("designTemplates.type")}</dt>
                     <dd className="text-ink-900 mt-1 font-semibold">
-                      {template.isSystemTemplate ? "System" : "Personal"}
+                      {template.isSystemTemplate ? t("designTemplates.system") : t("designTemplates.personal")}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-ink-500 text-xs">Uses</dt>
+                    <dt className="text-ink-500 text-xs">{t("designTemplates.uses")}</dt>
                     <dd className="text-ink-900 mt-1 font-semibold">
-                      {template.usageCount.toLocaleString()}
+                      {template.usageCount.toLocaleString(i18n.language)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-ink-500 text-xs">Niche</dt>
+                    <dt className="text-ink-500 text-xs">{t("designTemplates.niche")}</dt>
                     <dd className="text-ink-900 mt-1 font-semibold">
-                      {template.nicheCategory ?? "General"}
+                      {nicheLabel}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-ink-500 text-xs">Art style</dt>
+                    <dt className="text-ink-500 text-xs">{t("designTemplates.artStyle")}</dt>
                     <dd className="text-ink-900 mt-1 font-semibold capitalize">
-                      {template.artStyle?.replaceAll("_", " ") ?? "Unstyled"}
+                      {artStyleLabel}
                     </dd>
                   </div>
                 </dl>
                 <p className="text-ink-500 mt-4 flex items-center gap-2 text-xs">
                   <CalendarDays className="size-4" aria-hidden="true" />
-                  Updated{" "}
-                  <time dateTime={template.updatedAtUtc}>{formatDate(template.updatedAtUtc)}</time>
+                  {t("designTemplates.updated")}{" "}
+                  <time dateTime={template.updatedAtUtc}>{formatDate(template.updatedAtUtc, i18n.language)}</time>
                 </p>
               </div>
             </aside>
@@ -148,16 +187,16 @@ export function DesignTemplateDetailDialog({
                 <DialogHeader>
                   <div className="text-ink-600 flex flex-wrap items-center gap-2 text-[11px] font-bold tracking-[0.12em] uppercase">
                     <span>
-                      {template.isSystemTemplate ? "System template" : "Personal template"}
+                      {template.isSystemTemplate ? t("designTemplates.systemTemplate") : t("designTemplates.personalTemplate")}
                     </span>
                     <span aria-hidden="true">/</span>
-                    <span>{template.artStyle?.replaceAll("_", " ") ?? "Unstyled"}</span>
+                    <span>{artStyleLabel}</span>
                   </div>
                   <DialogTitle className="font-display text-2xl tracking-tight sm:text-3xl">
                     {template.name}
                   </DialogTitle>
                   <DialogDescription className="max-w-2xl leading-6">
-                    {template.styleDescription ?? "A reusable prompt framework for your catalog."}
+                    {template.styleDescription ?? t("designTemplates.detailFallbackDescription")}
                   </DialogDescription>
                 </DialogHeader>
               </div>
@@ -167,7 +206,10 @@ export function DesignTemplateDetailDialog({
                     id="positive-prompt-title"
                     className="text-ink-500 text-xs font-bold tracking-[0.12em] uppercase"
                   >
-                    Positive prompt
+                    {t("designTemplates.positivePrompt")}
+                  </p>
+                  <p className="text-ink-500 mt-1 text-[11px] leading-4">
+                    {t("designTemplates.promptLanguageNote")}
                   </p>
                   <p className="border-ink-200 bg-card text-ink-700 mt-3 rounded-xl border p-4 text-sm leading-6 [overflow-wrap:anywhere] whitespace-pre-wrap">
                     {template.basePrompt}
@@ -175,7 +217,7 @@ export function DesignTemplateDetailDialog({
                   {template.negativePrompt && (
                     <>
                       <p className="text-ink-500 mt-5 text-xs font-bold tracking-[0.12em] uppercase">
-                        Negative prompt
+                        {t("designTemplates.negativePrompt")}
                       </p>
                       <p className="mt-3 rounded-xl bg-slate-900 p-4 text-sm leading-6 [overflow-wrap:anywhere] whitespace-pre-wrap text-slate-200">
                         {template.negativePrompt}
@@ -188,12 +230,12 @@ export function DesignTemplateDetailDialog({
                     id="examples-title"
                     className="text-ink-500 text-xs font-bold tracking-[0.12em] uppercase"
                   >
-                    Prompt examples
+                    {t("designTemplates.promptExamples")}
                   </p>
                   <div className="mt-3 space-y-3">
                     {template.examples.length === 0 ? (
                       <p className="border-ink-300 text-ink-500 rounded-xl border border-dashed p-4 text-sm">
-                        No examples have been added.
+                        {t("designTemplates.noExamples")}
                       </p>
                     ) : (
                       template.examples.map((example) => (
@@ -213,18 +255,18 @@ export function DesignTemplateDetailDialog({
               </div>
               <DialogFooter className="border-ink-200 shrink-0 border-t px-6 py-4 sm:px-8">
                 <Button type="button" variant="outline" onClick={onClose}>
-                  Close
+                  {t("designTemplates.close")}
                 </Button>
                 {template.canEdit && (
                   <Button type="button" onClick={() => onEdit(template.id)}>
                     <Pencil aria-hidden="true" />
-                    Edit template
+                    {t("designTemplates.editTemplate")}
                   </Button>
                 )}
                 {template.canClone && (
                   <Button type="button" disabled={cloning} onClick={() => onClone(template.id)}>
                     <Copy aria-hidden="true" />
-                    {cloning ? "Cloning..." : "Clone & customize"}
+                    {cloning ? t("designTemplates.cloning") : t("designTemplates.cloneCustomize")}
                   </Button>
                 )}
               </DialogFooter>
@@ -236,8 +278,8 @@ export function DesignTemplateDetailDialog({
   );
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(
+function formatDate(value: string, locale: string) {
+  return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric", year: "numeric" }).format(
     new Date(value)
   );
 }

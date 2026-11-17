@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +27,7 @@ export function DeleteDesignTemplateDialog({
   onClose,
   onConfirm,
 }: DeleteDesignTemplateDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={Boolean(template)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent showCloseButton={false} className="border-ink-200 rounded-2xl sm:max-w-md">
@@ -36,7 +38,7 @@ export function DeleteDesignTemplateDialog({
           className="text-ink-500 hover:bg-ink-100 absolute top-3 right-3 size-11 rounded-lg hover:translate-y-0"
           onClick={onClose}
           disabled={deleting}
-          aria-label="Close delete template dialog"
+          aria-label={t("designTemplates.closeDeleteDialog")}
         >
           <X aria-hidden="true" />
         </Button>
@@ -44,14 +46,14 @@ export function DeleteDesignTemplateDialog({
           <span className="mb-2 flex size-11 items-center justify-center rounded-xl bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300">
             <AlertTriangle className="size-5" aria-hidden="true" />
           </span>
-          <DialogTitle>Delete personal template?</DialogTitle>
+          <DialogTitle>{t("designTemplates.deleteTitle")}</DialogTitle>
           <DialogDescription className="leading-6">
-            {template?.name} will disappear from your library. Historical jobs keep their prompt snapshot.
+            {t("designTemplates.deleteDescription", { name: template?.name ?? "" })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose} disabled={deleting}>
-            Keep template
+            {t("designTemplates.keepTemplate")}
           </Button>
           <Button
             type="button"
@@ -59,7 +61,7 @@ export function DeleteDesignTemplateDialog({
             disabled={!template || deleting}
             onClick={() => template && onConfirm(template.id)}
           >
-            {deleting ? "Deleting..." : "Delete template"}
+            {deleting ? t("designTemplates.deleting") : t("designTemplates.deleteTemplate")}
           </Button>
         </DialogFooter>
       </DialogContent>

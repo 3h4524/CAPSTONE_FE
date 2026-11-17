@@ -31,6 +31,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { AbsoluteFill, Audio, Img, Sequence, useCurrentFrame, Video } from "remotion";
 
 import { listMusicTracks, videoWorkflowKeys } from "@/api/video-workflow";
@@ -460,6 +461,7 @@ function PreviewSceneMedia({
   aspectRatio: number;
   transitionStyle?: PreviewTransitionStyle;
 }) {
+  const { t } = useTranslation("common");
   const image = sceneStartImage(scene, assets);
   const generatedClip =
     scene.mode !== "standard"
@@ -532,7 +534,7 @@ function PreviewSceneMedia({
           )
         ) : (
           <AbsoluteFill style={{ display: "grid", placeItems: "center", color: "#94a3b8" }}>
-            Choose a source image
+            {t("workflowMedia.timeline.chooseSourceImage")}
           </AbsoluteFill>
         )}
         {generatedClip?.previewUrl && (
@@ -593,6 +595,7 @@ function Preview({
   onSelect: (value: Selection) => void;
   config: GenerateVideoConfig;
 }) {
+  const { t } = useTranslation("common");
   const frame = useCurrentFrame();
   const activeScene = sceneAtFrame(scenes, frame);
   const activeTransition = transitionAtFrame(scenes, frame);
@@ -717,7 +720,7 @@ function Preview({
       })}
       {!current && (
         <AbsoluteFill style={{ display: "grid", placeItems: "center", color: "#94a3b8" }}>
-          Choose a source image
+          {t("workflowMedia.timeline.chooseSourceImage")}
         </AbsoluteFill>
       )}
       {edit.overlays
@@ -791,6 +794,7 @@ function SceneTransformOverlay({
   onBegin: () => void;
   onChange: (changes: Partial<TimelineScene>) => void;
 }) {
+  const { t } = useTranslation("common");
   const gesture = useRef<SceneTransformGesture | null>(null);
   const selectionFrame = useRef<HTMLDivElement>(null);
   const [ratioWidth, ratioHeight] = aspectForFormat(config.outputFormat);
@@ -982,7 +986,7 @@ function SceneTransformOverlay({
       ref={selectionFrame}
       role="button"
       tabIndex={0}
-      aria-label={`Edit scene ${sceneIndex + 1} image. Drag to reposition, drag a corner to scale, or use arrow keys to move.`}
+      aria-label={t("workflowMedia.timeline.editSceneImage", { scene: sceneIndex + 1 })}
       onKeyDown={nudge}
       onPointerDown={startMove}
       onPointerMove={handleMove}
@@ -1006,12 +1010,17 @@ function SceneTransformOverlay({
             }
       }
     >
-      {(["top-left", "top-right", "bottom-left", "bottom-right"] as const).map((corner) => (
+      {([
+        ["top-left", "topLeft"],
+        ["top-right", "topRight"],
+        ["bottom-left", "bottomLeft"],
+        ["bottom-right", "bottomRight"],
+      ] as const).map(([corner, cornerKey]) => (
         <button
           key={corner}
           type="button"
-          aria-label={`Resize scene ${sceneIndex + 1} image from ${corner.replace("-", " ")}`}
-          title="Drag to scale image"
+          aria-label={t("workflowMedia.timeline.resizeSceneImage", { scene: sceneIndex + 1, corner: t(`workflowConfig.motion.corners.${cornerKey}`) })}
+          title={t("workflowMedia.timeline.dragToScale")}
           onPointerDown={startScale}
           onPointerMove={handleMove}
           onPointerUp={finish}
@@ -1023,8 +1032,8 @@ function SceneTransformOverlay({
       ))}
       <button
         type="button"
-        aria-label={`Rotate scene ${sceneIndex + 1} image`}
-        title="Drag to rotate image"
+        aria-label={t("workflowMedia.timeline.rotateSceneImage", { scene: sceneIndex + 1 })}
+        title={t("workflowMedia.timeline.dragToRotate")}
         onPointerDown={startRotation}
         onPointerMove={handleMove}
         onPointerUp={finish}
@@ -1060,6 +1069,7 @@ export function VideoTimelineEditor({
   sceneVideos = [],
   onSave,
 }: Props) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<GenerateVideoConfig | null>(null);
   const [past, setPast] = useState<GenerateVideoConfig[]>([]);
@@ -1286,7 +1296,7 @@ export function VideoTimelineEditor({
       Math.min(CANVAS_ZOOM_MAX, Math.max(CANVAS_ZOOM_MIN, Number((current + amount).toFixed(2))))
     );
   const cancel = () => {
-    if (past.length && !window.confirm("Discard unsaved full-video edits?")) return;
+    if (past.length && !window.confirm(t("workflowMedia.timeline.discardConfirm"))) return;
     setOpen(false);
   };
   const undo = useCallback(() =>
@@ -1606,9 +1616,9 @@ export function VideoTimelineEditor({
           <Clapperboard aria-hidden="true" className="size-4" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold">Edit full video</span>
+          <span className="block text-sm font-semibold">{t("workflowMedia.timeline.editFullVideo")}</span>
           <span className="text-muted-foreground mt-0.5 block text-xs leading-relaxed font-normal">
-            Adjust timeline, text and music
+            {t("workflowMedia.timeline.editFullVideoHint")}
           </span>
         </span>
         <ChevronRight aria-hidden="true" className="text-muted-foreground group-hover:text-primary size-4 shrink-0 transition-colors" />
@@ -1626,9 +1636,9 @@ export function VideoTimelineEditor({
                     <Clapperboard className="size-4" />
                   </span>
                   <div>
-                    <DialogTitle className="text-foreground text-lg">Full video editor</DialogTitle>
+                    <DialogTitle className="text-foreground text-lg">{t("workflowMedia.timeline.editorTitle")}</DialogTitle>
                     <DialogDescription className="mt-1 text-sm">
-                      {seconds(frameTotal)} · {scenes.length} scenes · 30 fps
+                      {seconds(frameTotal)} · {t("workflowMedia.timeline.sceneCount", { count: scenes.length })} · 30 fps
                     </DialogDescription>
                   </div>
                 </div>
@@ -1639,7 +1649,7 @@ export function VideoTimelineEditor({
                     variant="ghost"
                     disabled={!past.length}
                     onClick={undo}
-                    aria-label="Undo"
+                    aria-label={t("workflowMedia.timeline.undo")}
                   >
                     <Undo2 />
                   </Button>
@@ -1649,7 +1659,7 @@ export function VideoTimelineEditor({
                     variant="ghost"
                     disabled={!future.length}
                     onClick={redo}
-                    aria-label="Redo"
+                    aria-label={t("workflowMedia.timeline.redo")}
                   >
                     <Redo2 />
                   </Button>
@@ -1658,12 +1668,12 @@ export function VideoTimelineEditor({
                     size="icon-sm"
                     variant="ghost"
                     onClick={cancel}
-                    aria-label="Close editor"
+                    aria-label={t("workflowMedia.timeline.closeEditor")}
                   >
                     <X />
                   </Button>
                   <Button type="button" size="sm" className="ml-2" onClick={save}>
-                    Save changes
+                    {t("workflowMedia.timeline.saveChanges")}
                   </Button>
                 </div>
               </DialogHeader>
@@ -1671,34 +1681,34 @@ export function VideoTimelineEditor({
                 <div className="grid min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-y-auto max-lg:grid-cols-1 lg:overflow-hidden xl:grid-cols-[minmax(32rem,1.15fr)_minmax(22rem,0.85fr)_minmax(26rem,28rem)] xl:grid-rows-1">
                   <aside
                     className="border-border bg-card border-b p-2 lg:flex lg:items-start lg:gap-2 xl:grid xl:min-h-0 xl:grid-rows-[auto_minmax(0,1fr)] xl:overflow-hidden xl:border-r xl:border-b-0"
-                    aria-label="Video editing tools"
+                    aria-label={t("workflowMedia.timeline.editingTools")}
                   >
                     <div className="grid flex-1 grid-cols-2 gap-1 sm:grid-cols-4 xl:grid-cols-4 xl:gap-1.5">
                         {tool(
                           <Type className="size-4" />,
-                          "Headline",
-                          "Title across scenes",
+                          t("workflowMedia.timeline.tools.headline"),
+                          t("workflowMedia.timeline.tools.headlineHint"),
                           () => addOverlay("headline"),
                           overlay?.type === "headline"
                         )}
                         {tool(
                           <Zap className="size-4" />,
-                          "CTA",
-                          "Button-style label",
+                          t("workflowMedia.timeline.tools.cta"),
+                          t("workflowMedia.timeline.tools.ctaHint"),
                           () => addOverlay("cta"),
                           overlay?.type === "cta"
                         )}
                         {tool(
                           <Music2 className="size-4" />,
-                          "Music",
-                          track?.name ?? "Choose a soundtrack",
+                          t("workflowMedia.timeline.tools.music"),
+                          track?.name ?? t("workflowMedia.timeline.tools.musicHint"),
                           () => setSelection({ kind: "music" }),
                           selection?.kind === "music"
                         )}
                         {tool(
                           <SlidersHorizontal className="size-4" />,
-                          "Transition",
-                          "Select a boundary",
+                          t("workflowMedia.timeline.tools.transition"),
+                          t("workflowMedia.timeline.tools.transitionHint"),
                           () =>
                             setSelection({
                               kind: "transition",
@@ -1731,7 +1741,7 @@ export function VideoTimelineEditor({
                     <section
                       ref={previewCanvasRef}
                       className="bg-muted/55 relative flex min-h-[25rem] min-w-0 items-center justify-center overflow-hidden p-6 max-sm:min-h-[16rem] max-sm:p-3 sm:p-8 lg:min-h-0 lg:p-8"
-                      aria-label="Video preview canvas"
+                      aria-label={t("workflowMedia.timeline.previewCanvas")}
                     >
                       <div
                         className="pointer-events-none absolute inset-0 opacity-70"
@@ -1789,7 +1799,7 @@ export function VideoTimelineEditor({
                       <div
                         className="border-border bg-background/95 absolute right-4 bottom-4 z-20 flex items-center overflow-hidden rounded-lg border shadow-md backdrop-blur-sm"
                         role="group"
-                        aria-label="Preview zoom controls"
+                        aria-label={t("workflowConfig.motion.zoomControlsAria")}
                       >
                         <Button
                           type="button"
@@ -1798,8 +1808,8 @@ export function VideoTimelineEditor({
                           className="text-foreground hover:bg-muted hover:translate-y-0"
                           disabled={canvasZoom <= CANVAS_ZOOM_MIN}
                           onClick={() => adjustCanvasZoom(-CANVAS_ZOOM_STEP)}
-                          aria-label="Zoom out preview"
-                          title="Zoom out"
+                          aria-label={t("workflowConfig.motion.zoomOutAria")}
+                          title={t("workflowConfig.motion.zoomOut")}
                         >
                           <Minus className="size-4" />
                         </Button>
@@ -1813,8 +1823,8 @@ export function VideoTimelineEditor({
                           className="text-foreground hover:bg-muted hover:translate-y-0"
                           disabled={canvasZoom >= CANVAS_ZOOM_MAX}
                           onClick={() => adjustCanvasZoom(CANVAS_ZOOM_STEP)}
-                          aria-label="Zoom in preview"
-                          title="Zoom in"
+                          aria-label={t("workflowConfig.motion.zoomInAria")}
+                          title={t("workflowConfig.motion.zoomIn")}
                         >
                           <Plus className="size-4" />
                         </Button>
@@ -1883,12 +1893,12 @@ export function VideoTimelineEditor({
                         disabled={musicIsPreparing || musicLoadFailed}
                         aria-label={
                           musicIsPreparing
-                            ? "Preparing selected music"
+                            ? t("workflowMedia.timeline.preparingMusic")
                             : musicLoadFailed
-                              ? "Selected music could not be prepared"
+                              ? t("workflowMedia.timeline.musicFailed")
                               : playing
-                                ? "Pause preview"
-                                : "Play preview"
+                                ? t("workflowMedia.timeline.pausePreview")
+                                : t("workflowMedia.timeline.playPreview")
                         }
                       >
                         {musicIsPreparing ? <Loader2 className="animate-spin" /> : playing ? <Pause /> : <Play />}
@@ -1899,12 +1909,12 @@ export function VideoTimelineEditor({
                       {musicPreparation.status === "loading" && (
                         <span className="text-muted-foreground hidden items-center gap-1.5 text-[11px] sm:flex" role="status">
                           <Loader2 className="size-3 animate-spin" aria-hidden="true" />
-                          Preparing {musicPreparation.trackName}…
+                          {t("workflowMedia.timeline.preparingTrack", { name: musicPreparation.trackName })}
                         </span>
                       )}
                     </div>
                     <span className="text-muted-foreground hidden text-[11px] sm:inline">
-                      Drag a scene edge to trim · click a boundary to edit its transition
+                      {t("workflowMedia.timeline.timelineHint")}
                     </span>
                   </div>
                   <Timeline
@@ -1933,39 +1943,42 @@ export function VideoTimelineEditor({
 }
 
 function EmptyInspector() {
+  const { t } = useTranslation("common");
   return (
     <div className="flex h-full min-h-48 flex-col justify-center text-center">
       <span className="bg-primary/10 text-primary mx-auto grid size-10 place-items-center rounded-lg">
         <SlidersHorizontal className="size-5" />
       </span>
-      <h2 className="text-foreground mt-3 text-base font-semibold">Select an element</h2>
+      <h2 className="text-foreground mt-3 text-base font-semibold">{t("workflowMedia.timeline.selectElement")}</h2>
       <p className="text-muted-foreground mt-1.5 text-sm leading-6">
-        Choose text, music, or a transition to edit its settings.
+        {t("workflowMedia.timeline.selectElementHint")}
       </p>
     </div>
   );
 }
 
 function OptionPickerEmpty() {
+  const { t } = useTranslation("common");
   return (
     <div className="flex min-h-48 flex-col justify-center px-3 text-center">
-      <h2 className="text-foreground text-base font-semibold">Choose an option</h2>
+      <h2 className="text-foreground text-base font-semibold">{t("workflowMedia.timeline.chooseOption")}</h2>
       <p className="text-muted-foreground mt-1.5 text-sm leading-6">
-        Select Music or Transition above to choose what you want to add.
+        {t("workflowMedia.timeline.chooseOptionHint")}
       </p>
     </div>
   );
 }
 
 function AiCropInspector({ scene, sceneNumber, onChange }: { scene: TimelineScene; sceneNumber: number; onChange: (changes: Partial<TimelineScene>) => void }) {
+  const { t } = useTranslation("common");
   const position = scene.aiCropPosition ?? { x: 0.5, y: 0.5 };
   return (
     <div className="space-y-5">
-      <Title icon={<SlidersHorizontal />} name="Frame position" description={`Scene ${sceneNumber}`} />
-      <p className="text-muted-foreground text-sm">Adjust the visible part of the AI video. The preview matches the final render.</p>
-      <Range label="Horizontal position" value={Math.round(position.x * 100)} min={0} max={100} step={1} display={`${Math.round(position.x * 100)}%`} onChange={(value) => onChange({ aiCropPosition: { ...position, x: value / 100 } })} />
-      <Range label="Vertical position" value={Math.round(position.y * 100)} min={0} max={100} step={1} display={`${Math.round(position.y * 100)}%`} onChange={(value) => onChange({ aiCropPosition: { ...position, y: value / 100 } })} />
-      <Button type="button" variant="outline" onClick={() => onChange({ aiCropPosition: { x: 0.5, y: 0.5 } })}>Center frame</Button>
+      <Title icon={<SlidersHorizontal />} name={t("workflowMedia.timeline.framePosition")} description={t("workflowMedia.timeline.sceneLabel", { scene: sceneNumber })} />
+      <p className="text-muted-foreground text-sm">{t("workflowMedia.timeline.framePositionHint")}</p>
+      <Range label={t("workflowConfig.cropDialog.horizontalPosition")} value={Math.round(position.x * 100)} min={0} max={100} step={1} display={`${Math.round(position.x * 100)}%`} onChange={(value) => onChange({ aiCropPosition: { ...position, x: value / 100 } })} />
+      <Range label={t("workflowConfig.cropDialog.verticalPosition")} value={Math.round(position.y * 100)} min={0} max={100} step={1} display={`${Math.round(position.y * 100)}%`} onChange={(value) => onChange({ aiCropPosition: { ...position, y: value / 100 } })} />
+      <Button type="button" variant="outline" onClick={() => onChange({ aiCropPosition: { x: 0.5, y: 0.5 } })}>{t("workflowMedia.timeline.centerFrame")}</Button>
     </div>
   );
 }
@@ -1989,6 +2002,7 @@ function SceneInspector({
   onReset: () => void;
   onChange: (changes: Partial<TimelineScene>) => void;
 }) {
+  const { t } = useTranslation("common");
   const [ratioWidth, ratioHeight] = aspectForFormat(config.outputFormat);
   const aspectRatio = ratioWidth / ratioHeight;
   const baseCrop =
@@ -2011,21 +2025,21 @@ function SceneInspector({
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
-        <Title icon={<SlidersHorizontal />} name="Transform" description={`Scene ${sceneNumber}`} />
+        <Title icon={<SlidersHorizontal />} name={t("workflowConfig.motion.transform")} description={t("workflowMedia.timeline.sceneLabel", { scene: sceneNumber })} />
         <Button
           type="button"
           variant="ghost"
           size="icon"
           className="text-muted-foreground hover:text-foreground size-9 shrink-0"
           onClick={onReset}
-          aria-label="Reset image transform"
-          title="Reset image transform"
+          aria-label={t("workflowMedia.timeline.resetTransform")}
+          title={t("workflowMedia.timeline.resetTransform")}
         >
           <RotateCcw className="size-4" />
         </Button>
       </div>
       <label className="text-muted-foreground block space-y-2 text-sm font-medium">
-        <span>Camera movement</span>
+        <span>{t("workflowConfig.motion.cameraMovement")}</span>
         <Select
           value={motion}
           onValueChange={(value) =>
@@ -2049,9 +2063,9 @@ function SceneInspector({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {STANDARD_MOTION_OPTIONS.map(([value, label]) => (
+            {STANDARD_MOTION_OPTIONS.map(([value, label, labelKey]) => (
               <SelectItem key={value} value={value}>
-                {label}
+                {t(labelKey, { defaultValue: label })}
               </SelectItem>
             ))}
           </SelectContent>
@@ -2071,6 +2085,7 @@ function SceneInspector({
                 crop: "standardEndCrop",
               } as const);
         const endpointFrame = frame === "start" ? startFrame : endFrame;
+        const frameName = t(`workflowMedia.timeline.frameNames.${frame}`);
         const frameCrop = scene[fields.crop] ?? endpointFrame.crop;
         const scale = scene[fields.scale] ?? endpointFrame.scale;
         const rotation = scene[fields.rotation] ?? endpointFrame.rotation;
@@ -2104,10 +2119,10 @@ function SceneInspector({
           >
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-foreground flex items-center text-sm font-semibold">
-                {frame === "start" ? "First frame" : "Last frame"}
+                {t(`workflowConfig.motion.frames.${frame}`)}
                 {endpoint === frame && (
                   <span className="bg-primary/10 text-primary ml-2 rounded-full px-2 py-0.5 text-[10px]">
-                    Editing
+                    {t("workflowConfig.motion.editing")}
                   </span>
                 )}
               </h3>
@@ -2116,28 +2131,28 @@ function SceneInspector({
               </span>
             </div>
             <label className="text-muted-foreground grid grid-cols-[3.5rem_minmax(0,1fr)_4rem] items-center gap-2 text-xs">
-              <span>Scale</span>
+              <span>{t("workflowConfig.motion.scale")}</span>
               <input
                 type="range"
                 min="0.01"
                 max="5"
                 step="0.01"
                 value={scale}
-                aria-label={`${frame} frame scale`}
+                aria-label={t("workflowMedia.timeline.frameScaleAria", { frame: frameName })}
                 onChange={(event) => changeFrame({ [fields.scale]: Number(event.target.value) })}
                 className="accent-primary h-8 min-w-0 cursor-pointer"
               />
               <ScalePercentageInput
                 percentage={scale * 100}
                 disabled={false}
-                ariaLabel={`${frame} frame scale percentage`}
+                ariaLabel={t("workflowMedia.timeline.frameScalePercentageAria", { frame: frameName })}
                 onChange={(percentage) =>
                   changeFrame({ [fields.scale]: Math.min(5, Math.max(0.01, percentage / 100)) })
                 }
               />
             </label>
             <div className="text-muted-foreground grid grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-2 text-xs">
-              <span>Rotation</span>
+              <span>{t("workflowConfig.motion.rotation")}</span>
               <div className="flex items-center gap-1.5">
                 <div className="relative w-28">
                   <input
@@ -2146,7 +2161,7 @@ function SceneInspector({
                     max={9999}
                     step="0.5"
                     value={rotation}
-                    aria-label={`${frame} frame rotation in degrees`}
+                    aria-label={t("workflowMedia.timeline.frameRotationAria", { frame: frameName })}
                     onChange={(event) =>
                       changeFrame({ [fields.rotation]: Number(event.target.value) })
                     }
@@ -2162,7 +2177,7 @@ function SceneInspector({
                   max={9999}
                   step={1}
                   disabled={false}
-                  ariaLabel={`${frame} frame rotation in degrees`}
+                  ariaLabel={t("workflowMedia.timeline.frameRotationAria", { frame: frameName })}
                   onChange={(value) => changeFrame({ [fields.rotation]: value })}
                 />
                 <RotationDial
@@ -2171,7 +2186,7 @@ function SceneInspector({
                   max={9999}
                   step={0.5}
                   disabled={false}
-                  ariaLabel={`${frame} frame rotation dial`}
+                  ariaLabel={t("workflowMedia.timeline.frameRotationDialAria", { frame: frameName })}
                   onChange={(value) => changeFrame({ [fields.rotation]: value })}
                 />
               </div>
@@ -2182,20 +2197,20 @@ function SceneInspector({
                   key={axis}
                   className="text-muted-foreground block space-y-1.5 text-xs font-medium"
                 >
-                  <span>{axis.toUpperCase()} position</span>
+                  <span>{axis === "x" ? t("workflowConfig.motion.xPosition") : t("workflowConfig.motion.yPosition")}</span>
                   <NumberInputWithSteppers
                     value={position[axis]}
                     min={-100}
                     max={200}
                     disabled={false}
-                    ariaLabel={`${frame} frame ${axis.toUpperCase()} position`}
+                    ariaLabel={t("workflowMedia.timeline.framePositionAria", { frame: frameName, axis: axis.toUpperCase() })}
                     onChange={(value) => setPosition(axis, value)}
                   />
                 </label>
               ))}
             </div>
             <label className="text-muted-foreground block space-y-1.5 text-[11px] font-medium">
-              <span>Position anchor</span>
+              <span>{t("workflowConfig.motion.positionAnchor")}</span>
               <Select
                 value={cropAnchor(baseCrop, frameCrop, scale)}
                 onValueChange={(anchor) => {
@@ -2213,7 +2228,7 @@ function SceneInspector({
                 <SelectContent>
                   {(["center", "left", "right", "top", "bottom"] as const).map((anchor) => (
                     <SelectItem key={anchor} value={anchor}>
-                      {anchor[0]!.toUpperCase() + anchor.slice(1)}
+                      {t(`workflowConfig.motion.anchors.${anchor}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -2317,15 +2332,16 @@ function OverlayInspector({
   onChange: (changes: Partial<VideoOverlay>) => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-5">
       <Title
         icon={<Type />}
-        name={overlay.type === "cta" ? "Call to action" : "Headline"}
-        description="Visible across any scene range."
+        name={overlay.type === "cta" ? t("workflowMedia.timeline.overlay.callToAction") : t("workflowMedia.timeline.tools.headline")}
+        description={t("workflowMedia.timeline.overlay.description")}
       />
       <label className="block space-y-2 text-sm font-medium">
-        Text
+        {t("workflowMedia.timeline.overlay.text")}
         <textarea
           value={overlay.text}
           maxLength={overlay.type === "cta" ? 40 : 120}
@@ -2335,36 +2351,36 @@ function OverlayInspector({
       </label>
       <div className="grid grid-cols-2 gap-3">
         <NumberField
-          label="X position"
+          label={t("workflowConfig.motion.xPosition")}
           value={overlay.x}
           step={0.01}
           onChange={(value) => onChange({ x: value })}
         />
         <NumberField
-          label="Y position"
+          label={t("workflowConfig.motion.yPosition")}
           value={overlay.y}
           step={0.01}
           onChange={(value) => onChange({ y: value })}
         />
       </div>
       <label className="block space-y-2 text-sm font-medium">
-        Style
+        {t("workflowMedia.timeline.overlay.style")}
         <select
           value={overlay.preset}
           onChange={(event) => onChange({ preset: event.target.value as VideoOverlay["preset"] })}
           className="border-input bg-background h-10 w-full rounded-lg border px-3 text-sm font-normal"
         >
-          <option value="clean">Clean</option>
-          <option value="bold">Bold</option>
-          <option value="minimal">Minimal</option>
-          <option value="solid">Solid CTA</option>
-          <option value="pill">Pill CTA</option>
-          <option value="outline">Outline CTA</option>
+          <option value="clean">{t("workflowMedia.timeline.overlay.presets.clean")}</option>
+          <option value="bold">{t("workflowMedia.timeline.overlay.presets.bold")}</option>
+          <option value="minimal">{t("workflowMedia.timeline.overlay.presets.minimal")}</option>
+          <option value="solid">{t("workflowMedia.timeline.overlay.presets.solid")}</option>
+          <option value="pill">{t("workflowMedia.timeline.overlay.presets.pill")}</option>
+          <option value="outline">{t("workflowMedia.timeline.overlay.presets.outline")}</option>
         </select>
       </label>
       <Button type="button" variant="destructive" size="sm" onClick={onDelete}>
         <Trash2 />
-        Delete
+        {t("workflowMedia.timeline.overlay.delete")}
       </Button>
     </div>
   );
@@ -2382,6 +2398,7 @@ function MusicPicker({
   onChange: (recipe: (value: VideoEditConfig) => VideoEditConfig) => void;
   onRetry: () => void;
 }) {
+  const { t } = useTranslation("common");
   const music = edit.music;
   const selectTrack = (trackId: string | null) =>
     onChange((value) => ({
@@ -2402,7 +2419,7 @@ function MusicPicker({
   return (
     <div className="space-y-3">
       <label className="hidden">
-        Track
+        {t("workflowMedia.timeline.music.track")}
         <select
           value={music?.trackId ?? ""}
           onChange={(event) =>
@@ -2424,7 +2441,7 @@ function MusicPicker({
           }
           className="border-input bg-background h-10 w-full rounded-lg border px-3 text-sm font-normal"
         >
-          <option value="">No music</option>
+          <option value="">{t("workflowMedia.timeline.music.noMusic")}</option>
           {tracks.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name} — {item.artistName}
@@ -2444,19 +2461,19 @@ function MusicPicker({
           ) : null}
           <span className="min-w-0 flex-1">
             {preparation.status === "loading"
-              ? `Preparing ${preparation.trackName} for synchronized playback…`
+              ? t("workflowMedia.timeline.music.preparingSync", { name: preparation.trackName })
               : preparation.status === "ready"
-                ? `${preparation.trackName} is ready to play.`
-                : `${preparation.trackName} could not be loaded.`}
+                ? t("workflowMedia.timeline.music.ready", { name: preparation.trackName })
+                : t("workflowMedia.timeline.music.loadFailed", { name: preparation.trackName })}
           </span>
           {preparation.status === "error" && (
             <Button type="button" size="sm" variant="outline" className="h-7 shrink-0" onClick={onRetry}>
-              Retry
+              {t("workflowMedia.timeline.music.retry")}
             </Button>
           )}
         </div>
       )}
-      <div className="grid gap-2" role="list" aria-label="Music library">
+      <div className="grid gap-2" role="list" aria-label={t("workflowMedia.timeline.music.library")}>
         <button
           type="button"
           onClick={() => selectTrack(null)}
@@ -2466,7 +2483,7 @@ function MusicPicker({
           <span className="bg-muted text-muted-foreground grid size-7 shrink-0 place-items-center rounded-md">
             <Music2 className="size-3.5" />
           </span>
-          <span className="min-w-0 flex-1 font-medium">No music</span>
+          <span className="min-w-0 flex-1 font-medium">{t("workflowMedia.timeline.music.noMusic")}</span>
           {!music && <Check className="text-primary size-4 shrink-0" aria-hidden="true" />}
         </button>
         {tracks.map((item) => {
@@ -2490,7 +2507,7 @@ function MusicPicker({
                 </span>
               </span>
               {selected && preparation.status === "loading" ? (
-                <Loader2 className="text-primary size-4 shrink-0 animate-spin" aria-label="Preparing selected music" />
+                <Loader2 className="text-primary size-4 shrink-0 animate-spin" aria-label={t("workflowMedia.timeline.preparingMusic")} />
               ) : selected ? (
                 <Check className="text-primary size-4 shrink-0" aria-hidden="true" />
               ) : null}
@@ -2499,7 +2516,7 @@ function MusicPicker({
         })}
         {!tracks.length && (
           <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm leading-6">
-            No licensed tracks are available yet.
+            {t("workflowMedia.timeline.music.noTracks")}
           </p>
         )}
       </div>
@@ -2518,28 +2535,29 @@ function MusicInspector({
   onChange: (recipe: (value: VideoEditConfig) => VideoEditConfig) => void;
   onRetry: () => void;
 }) {
+  const { t } = useTranslation("common");
   const music = edit.music;
   return (
     <div className="space-y-5">
-      <Title icon={<Music2 />} name="Music settings" description="Adjust the selected soundtrack." />
+      <Title icon={<Music2 />} name={t("workflowMedia.timeline.music.settings")} description={t("workflowMedia.timeline.music.settingsDescription")} />
       {music ? (
         <>
           {preparation.status === "loading" && (
             <p className="text-muted-foreground border-primary/20 bg-primary/5 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="status">
               <Loader2 className="text-primary size-3.5 animate-spin" aria-hidden="true" />
-              Preparing {preparation.trackName}. Playback will unlock when it is ready.
+              {t("workflowMedia.timeline.music.preparingUnlock", { name: preparation.trackName })}
             </p>
           )}
           {preparation.status === "error" && (
             <div className="border-destructive/40 bg-destructive/5 text-destructive flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs" role="alert">
-              <span>{preparation.trackName} could not be prepared.</span>
+              <span>{t("workflowMedia.timeline.music.prepareFailed", { name: preparation.trackName })}</span>
               <Button type="button" size="sm" variant="outline" className="h-7 shrink-0" onClick={onRetry}>
-                Retry
+                {t("workflowMedia.timeline.music.retry")}
               </Button>
             </div>
           )}
           <Range
-            label="Volume"
+            label={t("workflowMedia.timeline.music.volume")}
             value={music.volume}
             min={0}
             max={1}
@@ -2551,7 +2569,7 @@ function MusicInspector({
           />
           <div className="grid grid-cols-2 gap-3">
             <NumberField
-              label="Start (sec)"
+              label={t("workflowMedia.timeline.music.start")}
               value={music.startFrame / FPS}
               min={0}
               step={0.1}
@@ -2563,7 +2581,7 @@ function MusicInspector({
               }
             />
             <NumberField
-              label="Source offset"
+              label={t("workflowMedia.timeline.music.sourceOffset")}
               value={music.sourceOffsetFrames / FPS}
               min={0}
               step={0.1}
@@ -2576,7 +2594,7 @@ function MusicInspector({
             />
           </div>
           <label className="flex items-center justify-between rounded-lg border p-3 text-sm font-medium">
-            <span>Loop soundtrack</span>
+            <span>{t("workflowMedia.timeline.music.loop")}</span>
             <input
               type="checkbox"
               checked={music.loop}
@@ -2591,7 +2609,7 @@ function MusicInspector({
         </>
       ) : (
         <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm leading-6">
-          Choose a licensed track from the library.
+          {t("workflowMedia.timeline.music.chooseTrack")}
         </p>
       )}
     </div>
@@ -2746,12 +2764,14 @@ function TransitionPicker({
   sceneNumber: number;
   onChange: (changes: Partial<TimelineScene>) => void;
 }) {
+  const { t } = useTranslation("common");
   const effect = scene.transitionIn ?? "none";
   return (
     <div>
-      <div className="grid grid-cols-3 gap-2" role="group" aria-label={`Transition effects for Scene ${sceneNumber}`}>
+      <div className="grid grid-cols-3 gap-2" role="group" aria-label={t("workflowMedia.timeline.transitionEffects", { scene: sceneNumber })}>
           {TRANSITIONS.map((item) => {
             const selected = effect === item.value;
+            const label = t(`workflowMedia.timeline.transitionNames.${item.value}`, { defaultValue: item.label });
             return (
               <button
                 key={item.value}
@@ -2764,7 +2784,7 @@ function TransitionPicker({
                   event.dataTransfer.setData(TRANSITION_DRAG_TYPE, item.value);
                   event.dataTransfer.setData("text/plain", item.value);
                 }}
-                title={`${item.label} — click to apply or drag to the Scenes timeline`}
+                title={t("workflowMedia.timeline.transitionTileTitle", { label })}
                 className={`group focus-visible:ring-primary relative aspect-[4/5] min-w-0 cursor-grab overflow-hidden rounded-xl border text-left shadow-sm transition-[border-color,box-shadow] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:cursor-grabbing ${
                   selected
                     ? "border-primary ring-primary/30 ring-2"
@@ -2773,7 +2793,7 @@ function TransitionPicker({
               >
                 <TransitionPreview effect={item.value} />
                 <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent px-2 pt-8 pb-2 text-white">
-                  <span className="block truncate text-xs font-semibold">{item.label}</span>
+                  <span className="block truncate text-xs font-semibold">{label}</span>
                 </span>
                 {selected && (
                   <span className="bg-primary text-primary-foreground pointer-events-none absolute top-2 right-2 grid size-6 place-items-center rounded-full shadow-sm">
@@ -2801,17 +2821,18 @@ function TransitionInspector({
   onChange: (changes: Partial<TimelineScene>) => void;
 }) {
   const effect = scene.transitionIn ?? "none";
+  const { t } = useTranslation("common");
   const frames = effect === "none" || effect === "cut" ? 0 : (scene.transitionDurationFrames ?? 12);
   return (
     <div className="space-y-5">
       <Title
         icon={<Zap />}
-        name="Transition settings"
-        description={`Scene ${sceneNumber} boundary.`}
+        name={t("workflowMedia.timeline.transitionSettings")}
+        description={t("workflowMedia.timeline.sceneBoundary", { scene: sceneNumber })}
       />
       {effect !== "none" && effect !== "cut" ? (
         <Range
-          label="Duration"
+          label={t("workflowMedia.timeline.duration")}
           value={frames}
           min={1}
           max={30}
@@ -2821,7 +2842,7 @@ function TransitionInspector({
         />
       ) : (
         <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm leading-6">
-          No transition is applied. Choose an effect to control its duration.
+          {t("workflowMedia.timeline.noTransition")}
         </p>
       )}
     </div>
@@ -2856,6 +2877,7 @@ function Timeline({
   onChangeSceneTrim: (sceneIndex: number, changes: Partial<TimelineScene>) => void;
   onChangeTransition: (sceneIndex: number, transition: VideoTransition) => void;
 }) {
+  const { t } = useTranslation("common");
   const trimGesture = useRef<{
     pointerId: number;
     sceneIndex: number;
@@ -3104,15 +3126,15 @@ function Timeline({
     <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-2">
       <div className="grid grid-rows-[1.5rem_3.5rem_2rem_2rem] gap-2">
         <span aria-hidden="true" />
-        <span className="text-muted-foreground flex items-center text-xs font-medium">Scenes</span>
-        <span className="text-muted-foreground flex items-center text-xs font-medium">Text</span>
-        <span className="text-muted-foreground flex items-center text-xs font-medium">Music</span>
+        <span className="text-muted-foreground flex items-center text-xs font-medium">{t("workflowMedia.timeline.tracks.scenes")}</span>
+        <span className="text-muted-foreground flex items-center text-xs font-medium">{t("workflowMedia.timeline.tracks.text")}</span>
+        <span className="text-muted-foreground flex items-center text-xs font-medium">{t("workflowMedia.timeline.tracks.music")}</span>
       </div>
       <div className="relative min-w-0">
         <div className="space-y-2">
           <div
             className="border-border relative h-6 overflow-hidden border-b"
-            aria-label="Video time ruler"
+            aria-label={t("workflowMedia.timeline.ruler")}
           >
             {rulerTicks.map((tick, index) => (
               <span
@@ -3184,9 +3206,9 @@ function Timeline({
                         selectScene(index);
                       }}
                       className="focus-visible:ring-ring absolute inset-0 z-10 size-full cursor-pointer focus-visible:ring-2 focus-visible:ring-inset"
-                      aria-label={`Edit Scene ${index + 1} transform`}
+                      aria-label={t("workflowMedia.timeline.editSceneTransform", { scene: index + 1 })}
                     >
-                      <span className="sr-only">Select Scene {index + 1}</span>
+                      <span className="sr-only">{t("workflowMedia.timeline.selectScene", { scene: index + 1 })}</span>
                     </button>
                     {generatedClip?.previewUrl ? (
                       <TimelineAiVideoFilmstrip
@@ -3222,11 +3244,11 @@ function Timeline({
                       />
                     )}
                     <span className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-black/55 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                      Scene {index + 1}
+                      {t("workflowMedia.timeline.sceneLabel", { scene: index + 1 })}
                     </span>
                     {generatedClip && (
                       <span className="bg-primary text-primary-foreground pointer-events-none absolute top-1 right-1 z-20 rounded px-1.5 py-0.5 text-[9px] leading-none font-semibold uppercase shadow-sm">
-                        Video
+                        {t("workflowMedia.timeline.videoBadge")}
                       </span>
                     )}
                     <button
@@ -3247,9 +3269,9 @@ function Timeline({
                         pending?.edge === "start" ? { left: `${startPreviewPercent}%` } : undefined
                       }
                       className={`focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute inset-y-0 left-0 ${isSelected ? "z-40" : "z-20"} flex w-6 cursor-ew-resize touch-none items-center justify-start rounded-l-sm bg-transparent pl-1.5 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset`}
-                      aria-label={`Trim start of Scene ${index + 1}. Current duration ${seconds(duration)}. Use arrow keys to adjust by one frame.`}
+                      aria-label={t("workflowMedia.timeline.trimStartAria", { scene: index + 1, duration: seconds(duration) })}
                       aria-keyshortcuts="ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight"
-                      title={`Drag to trim the start of Scene ${index + 1}. Arrow keys adjust one frame; Shift + arrow adjusts one second.`}
+                      title={t("workflowMedia.timeline.trimStartTitle", { scene: index + 1 })}
                     >
                       <span
                         aria-hidden="true"
@@ -3274,9 +3296,9 @@ function Timeline({
                         pending?.edge === "end" ? { right: `${endPreviewPercent}%` } : undefined
                       }
                       className={`focus-visible:ring-ring hover:bg-primary/15 active:bg-primary/20 absolute inset-y-0 right-0 ${isSelected ? "z-40" : "z-20"} flex w-6 cursor-ew-resize touch-none items-center justify-end rounded-r-sm bg-transparent pr-1.5 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset`}
-                      aria-label={`Trim end of Scene ${index + 1}. Current duration ${seconds(duration)}. Use arrow keys to adjust by one frame.`}
+                      aria-label={t("workflowMedia.timeline.trimEndAria", { scene: index + 1, duration: seconds(duration) })}
                       aria-keyshortcuts="ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight"
-                      title={`Drag to trim the end of Scene ${index + 1}. Arrow keys adjust one frame; Shift + arrow adjusts one second.`}
+                      title={t("workflowMedia.timeline.trimEndTitle", { scene: index + 1 })}
                     >
                       <span
                         aria-hidden="true"
@@ -3295,8 +3317,11 @@ function Timeline({
                 const selectedBoundary =
                   selection?.kind === "transition" && selection.sceneIndex === sceneIndex;
                 const isDragTarget = dragOverBoundary === sceneIndex;
-                const label =
-                  TRANSITIONS.find((item) => item.value === effect)?.label ?? "Transition";
+                const fallbackLabel = TRANSITIONS.find((item) => item.value === effect)?.label;
+                const label = fallbackLabel
+                  ? t(`workflowMedia.timeline.transitionNames.${effect}`, { defaultValue: fallbackLabel })
+                  : t("workflowMedia.timeline.tools.transition");
+                const between = { label, from: sceneIndex, to: sceneIndex + 1 };
                 return (
                   <button
                     key={`boundary-${sceneIndex}`}
@@ -3335,14 +3360,14 @@ function Timeline({
                       if (!TRANSITIONS.some((item) => item.value === value)) return;
                       onChangeTransition(sceneIndex, value);
                     }}
-                    aria-label={`${selectedBoundary ? "Selected. " : ""}${hasTransition ? `Edit ${label}` : "Add transition"} between Scene ${sceneIndex} and Scene ${sceneIndex + 1}${hasTransition ? ". Press Delete or Backspace to remove it." : ""}`}
+                    aria-label={`${selectedBoundary ? t("workflowMedia.timeline.boundary.selectedPrefix") : ""}${hasTransition ? t("workflowMedia.timeline.boundary.editBetween", between) : t("workflowMedia.timeline.boundary.addBetween", between)}`}
                     aria-keyshortcuts={hasTransition ? "Delete Backspace" : undefined}
                     aria-pressed={selectedBoundary}
                     aria-hidden={!hasTransition}
                     tabIndex={hasTransition ? 0 : -1}
                     title={
                       hasTransition
-                        ? `${label} between Scene ${sceneIndex} and Scene ${sceneIndex + 1}${selectedBoundary ? " — press Delete to remove" : ""}`
+                        ? `${t("workflowMedia.timeline.boundary.title", between)}${selectedBoundary ? t("workflowMedia.timeline.boundary.deleteHint") : ""}`
                         : undefined
                     }
                     style={{
@@ -3377,7 +3402,7 @@ function Timeline({
               max={maxFrame}
               step={1}
               value={currentFrame}
-              aria-label="Full video timeline playhead"
+              aria-label={t("workflowMedia.timeline.playheadRange")}
               aria-valuetext={timecode(currentFrame)}
               onChange={(event) => onSeek(Number(event.currentTarget.value))}
               className="sr-only"
@@ -3395,24 +3420,24 @@ function Timeline({
                 }}
                 className={`focus-visible:ring-ring absolute top-1 z-10 h-6 truncate rounded-md px-2 text-left text-[10px] font-semibold focus-visible:ring-2 ${selection?.kind === "overlay" && selection.id === item.id ? "bg-secondary text-secondary-foreground" : "text-secondary-foreground bg-violet-600"}`}
               >
-                {item.type === "cta" ? "CTA" : "Headline"}
+                {item.type === "cta" ? t("workflowMedia.timeline.tools.cta") : t("workflowMedia.timeline.tools.headline")}
               </button>
             ))}
           </div>
           <button
             type="button"
             onClick={() => onSelect({ kind: "music" })}
-            aria-label={edit.music ? `Edit music: ${musicTrackName ?? "selected music"}` : "Choose music"}
+            aria-label={edit.music ? t("workflowMedia.timeline.editMusic", { name: musicTrackName ?? t("workflowMedia.timeline.selectedMusicLower") }) : t("workflowMedia.timeline.chooseMusic")}
             className={`focus-visible:ring-ring relative z-10 h-8 w-full rounded-lg border px-3 text-left text-[11px] focus-visible:ring-2 ${selection?.kind === "music" ? "border-primary bg-primary/10 text-primary" : "bg-background text-muted-foreground hover:bg-muted"}`}
           >
             {edit.music ? (
               <span className="flex min-w-0 items-center gap-1.5">
                 <Volume2 className="size-3 shrink-0" />
-                <span className="truncate">{musicTrackName ?? "Selected music"}</span>
+                <span className="truncate">{musicTrackName ?? t("workflowMedia.timeline.selectedMusic")}</span>
                 <span className="text-primary/70 shrink-0">{Math.round(edit.music.volume * 100)}%</span>
               </span>
             ) : (
-              "No music selected"
+              t("workflowMedia.timeline.noMusicSelected")
             )}
           </button>
         </div>
@@ -3434,8 +3459,8 @@ function Timeline({
               )
             );
           }}
-          aria-label={`Playhead at ${timecode(currentFrame)}. Drag to seek; arrow keys move one frame.`}
-          title="Drag the playhead to seek. Arrow keys move one frame; Shift + arrow moves one second."
+          aria-label={t("workflowMedia.timeline.playheadAria", { time: timecode(currentFrame) })}
+          title={t("workflowMedia.timeline.playheadTitle")}
         >
           <span aria-hidden="true" className="bg-primary/90 pointer-events-none absolute top-0 bottom-0 w-0.5 shadow-[0_0_0_1px_hsl(var(--background))]" />
           <span aria-hidden="true" className="bg-primary pointer-events-none absolute -top-1 left-1/2 size-2 -translate-x-1/2 rotate-45 rounded-[1px]" />

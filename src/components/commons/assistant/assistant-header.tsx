@@ -1,6 +1,7 @@
 "use client";
 
 import { Bot, Maximize2, MessageCircle, Minimize2, Plus, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AssistantHistoryMenu } from "@/components/commons/assistant/assistant-history-menu";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ type AssistantHeaderProps = {
 };
 
 export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
+  const { t } = useTranslation("common");
   const { startNewConversation } = useAssistantChat();
   const setDisplayMode = useAssistantStore((state) => state.setDisplayMode);
   const setOpen = useAssistantStore((state) => state.setOpen);
@@ -35,13 +37,13 @@ export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
   const actions = (
     <div className="flex items-center gap-1">
       {isBubble ? (
-        <Button type="button" variant="ghost" size="icon" aria-label="New chat" title="New chat" onClick={startNewConversation}>
+        <Button type="button" variant="ghost" size="icon" aria-label={t("commons.assistant.newChat")} title={t("commons.assistant.newChat")} onClick={startNewConversation}>
           <Plus aria-hidden="true" />
         </Button>
       ) : (
         <Button type="button" variant="ghost" size="sm" onClick={startNewConversation}>
           <Plus aria-hidden="true" />
-          New chat
+          {t("commons.assistant.newChat")}
         </Button>
       )}
       <AssistantHistoryMenu />
@@ -50,8 +52,8 @@ export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
           type="button"
           variant="ghost"
           size="icon"
-          aria-label="Switch to bubble"
-          title="Switch to bubble"
+          aria-label={t("commons.assistant.switchToBubble")}
+          title={t("commons.assistant.switchToBubble")}
           onClick={switchToBubble}
         >
           <MessageCircle aria-hidden="true" />
@@ -63,13 +65,13 @@ export const AssistantHeader = ({ variant }: AssistantHeaderProps) => {
             type="button"
             variant="ghost"
             size="icon"
-            aria-label={isBubbleExpanded ? "Make smaller" : "Expand"}
-            title={isBubbleExpanded ? "Make smaller" : "Expand"}
+            aria-label={isBubbleExpanded ? t("commons.assistant.makeSmaller") : t("commons.assistant.expand")}
+            title={isBubbleExpanded ? t("commons.assistant.makeSmaller") : t("commons.assistant.expand")}
             onClick={toggleBubbleExpanded}
           >
             {isBubbleExpanded ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
           </Button>
-          <Button type="button" variant="ghost" size="icon" aria-label="Close Podi" title="Close" onClick={() => setOpen(false)}>
+          <Button type="button" variant="ghost" size="icon" aria-label={t("commons.assistant.closePodi")} title={t("commons.assistant.close")} onClick={() => setOpen(false)}>
             <X aria-hidden="true" />
           </Button>
         </>

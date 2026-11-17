@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Check, CheckCircle2, ExternalLink, KeyRound, Loader2, Printer, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   createPrintifyProduct, getPrintifyCatalog, getPrintifyDraft, getPrintifyProviders, type PrintifyBlueprint, type PrintifyDraft,
@@ -25,12 +26,7 @@ const PREFERRED_COLORS = ["White", "Black"];
 const PREFERRED_SIZES = ["S", "M", "L", "XL", "2XL"];
 
 /** Why a push cannot start yet, and where the seller fixes it. */
-const notReady = {
-  not_connected: "Add your Printify API key on the API Keys page first.",
-  key_invalid: "Your Printify API key is disabled, expired or was refused. Check or replace it on the API Keys page.",
-  no_store: "Your Printify account has no store. On Printify, add a store linked to your Etsy shop, then try again.",
-  unavailable: "Printify is not answering right now. Try again in a moment.",
-};
+const NOT_READY_STATUSES = ["not_connected", "key_invalid", "no_store", "unavailable"];
 
 const selectClass = "h-9 w-full rounded-md border border-ink-200 bg-card px-2 text-sm text-ink-900 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none";
 const money = (value: number) => `$${value.toFixed(2)}`;
@@ -46,6 +42,7 @@ const estimate = (price: number, cost: number, shipping: number) => {
  * cost, then let Printify publish it to Etsy (where it fulfils orders) and add the APCS mock-ups to that listing.
  */
 export function PrintifyPublishDialog({ productId, open, onOpenChange }: { productId: string; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { t } = useTranslation("common");
   const draftQuery = useQuery({ queryKey: ["printify-draft", productId], queryFn: () => getPrintifyDraft(productId), enabled: open, staleTime: 0 });
   const [product, setProduct] = useState<PrintifyProduct | null>(null);
   const draft = draftQuery.data;
@@ -54,19 +51,19 @@ export function PrintifyPublishDialog({ productId, open, onOpenChange }: { produ
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><Printer className="size-5 text-emerald-600 dark:text-emerald-400" />Push to Printify</DialogTitle>
-          <DialogDescription>Printify prints and ships each order. It publishes this product to your Etsy shop, linked so orders reach it automatically.</DialogDescription>
+          <DialogTitle className="flex items-center gap-2"><Printer className="size-5 text-emerald-600 dark:text-emerald-400" />{t("shop.printifyPublish.title")}</DialogTitle>
+          <DialogDescription>{t("shop.printifyPublish.description")}</DialogDescription>
         </DialogHeader>
         <Steps current={!product ? 1 : product.state === "created" ? 2 : 3} />
         {draftQuery.isPending ? (
-          <p className="text-ink-500 flex items-center gap-2 py-10 text-sm"><Loader2 className="size-4 animate-spin" />Preparing…</p>
+          <p className="text-ink-500 flex items-center gap-2 py-10 text-sm"><Loader2 className="size-4 animate-spin" />{t("shop.printifyPublish.preparing")}</p>
         ) : draftQuery.isError || !draft ? (
-          <p className="py-6 text-sm text-rose-700 dark:text-rose-300">{getErrorMessage(draftQuery.error) || "The product could not be loaded."}</p>
+          <p className="py-6 text-sm text-rose-700 dark:text-rose-300">{getErrorMessage(draftQuery.error) || t("shop.etsyPublish.loadError")}</p>
         ) : draft.connection.status !== "connected" ? (
           <div className="text-ink-700 space-y-3 py-4 text-sm">
-            <p>{notReady[draft.connection.status as keyof typeof notReady] ?? notReady.not_connected}</p>
+            <p>{t(`shop.printifyPublish.notReady.${NOT_READY_STATUSES.includes(draft.connection.status) ? draft.connection.status : "not_connected"}`)}</p>
             {draft.connection.status !== "unavailable" && draft.connection.status !== "no_store" && (
-              <Button asChild size="sm"><Link href="/api-keys"><KeyRound className="size-4" />Open API Keys</Link></Button>
+              <Button asChild size="sm"><Link href="/api-keys"><KeyRound className="size-4" />{t("shop.printifyPublish.openApiKeys")}</Link></Button>
             )}
           </div>
         ) : !product ? (
@@ -82,7 +79,8 @@ export function PrintifyPublishDialog({ productId, open, onOpenChange }: { produ
 }
 
 function Steps({ current }: { current: number }) {
-  const steps = ["Create on Printify", "Set prices", "Publish to Etsy"];
+  const { t } = useTranslation("common");
+  const steps = [t("shop.printifyPublish.steps.create"), t("shop.printifyPublish.steps.prices"), t("shop.printifyPublish.steps.publish")];
   return (
     <ol className="flex items-center gap-2 text-xs">
       {steps.map((label, index) => (
@@ -99,10 +97,11 @@ function Steps({ current }: { current: number }) {
 }
 
 function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; productId: string; onCreated: (product: PrintifyProduct) => void }) {
+  const { t, i18n } = useTranslation("common");
   const defaults = draft.defaults;
   const [designId, setDesignId] = useState(draft.designs[0]?.id ?? null);
   const [blueprint, setBlueprint] = useState<Pick<PrintifyBlueprint, "id" | "title"> | null>(
-    defaults.blueprintId ? { id: defaults.blueprintId, title: defaults.blueprintTitle ?? `Product ${defaults.blueprintId}` } : null);
+    defaults.blueprintId ? { id: defaults.blueprintId, title: defaults.blueprintTitle ?? t("shop.printifyPublish.productNumber", { id: defaults.blueprintId }) } : null);
   const [providerId, setProviderId] = useState<number | null>(defaults.printProviderId);
   const [colors, setColors] = useState<string[]>(defaults.colors);
   const [sizes, setSizes] = useState<string[]>(defaults.sizes);
@@ -150,15 +149,15 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
   const priceValue = Number(price);
   const provider = providersQuery.data?.find((item) => item.id === providerId);
   const problems = [
-    !designId && "Approve a design first.",
-    !blueprint && "Choose a product type.",
-    !providerId && "Choose a print provider.",
-    variantIds.length === 0 && "Choose at least one color and size.",
-    variantIds.length > MAX_VARIANTS && `Etsy allows ${MAX_VARIANTS} variants; you chose ${variantIds.length}.`,
-    !title.trim() && "Add a title.",
-    !description.trim() && "Add a description.",
-    tags.length > MAX_TAGS && `Etsy allows ${MAX_TAGS} tags.`,
-    !(priceValue >= 1) && "Set a starting price.",
+    !designId && t("shop.printifyPublish.problems.design"),
+    !blueprint && t("shop.printifyPublish.problems.productType"),
+    !providerId && t("shop.printifyPublish.problems.provider"),
+    variantIds.length === 0 && t("shop.printifyPublish.problems.variants"),
+    variantIds.length > MAX_VARIANTS && t("shop.printifyPublish.problems.tooManyVariants", { max: MAX_VARIANTS, count: variantIds.length }),
+    !title.trim() && t("shop.etsyPublish.problems.title"),
+    !description.trim() && t("shop.etsyPublish.problems.description"),
+    tags.length > MAX_TAGS && t("shop.printifyPublish.problems.tooManyTags", { max: MAX_TAGS }),
+    !(priceValue >= 1) && t("shop.printifyPublish.problems.price"),
   ].filter(Boolean) as string[];
 
   const createMutation = useMutation({
@@ -180,17 +179,17 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
       <Warnings items={draft.warnings} />
       {resumable && (
         <div className="border-ink-200 bg-ink-50 text-ink-600 flex flex-col gap-2 rounded-md border px-3 py-2 text-xs sm:flex-row sm:items-center sm:justify-between">
-          <span>Last sent {new Date(resumable.attemptedAtUtc).toLocaleString()} · {resumable.state}
-            {resumable.etsyUrl && <> · <a className="underline" href={resumable.etsyUrl} target="_blank" rel="noreferrer">Etsy listing</a></>}</span>
+          <span>{t("shop.printifyPublish.lastSent", { date: new Date(resumable.attemptedAtUtc).toLocaleString(i18n.language) })} · {t(`shop.printifyPublish.states.${resumable.state}`, { defaultValue: resumable.state })}
+            {resumable.etsyUrl && <> · <a className="underline" href={resumable.etsyUrl} target="_blank" rel="noreferrer">{t("shop.printifyPublish.etsyListing")}</a></>}</span>
           <Button type="button" size="sm" variant="outline" onClick={() => resumeMutation.mutate()} disabled={resumeMutation.isPending}>
-            {resumeMutation.isPending && <Loader2 className="size-3.5 animate-spin" />}Continue with that product
+            {resumeMutation.isPending && <Loader2 className="size-3.5 animate-spin" />}{t("shop.printifyPublish.continueWith")}
           </Button>
         </div>
       )}
 
       <section className="space-y-2">
-        <Label>Design to print</Label>
-        {draft.designs.length === 0 ? <p className="text-ink-500 text-sm">No approved design.</p> : (
+        <Label>{t("shop.printifyPublish.designToPrint")}</Label>
+        {draft.designs.length === 0 ? <p className="text-ink-500 text-sm">{t("shop.printifyPublish.noDesign")}</p> : (
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
             {draft.designs.map((design) => (
               <button key={design.id} type="button" onClick={() => setDesignId(design.id)} aria-pressed={designId === design.id}
@@ -207,27 +206,27 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
       <section className="grid gap-3 sm:grid-cols-2">
         <BlueprintPicker value={blueprint} onChange={(next) => { setBlueprint(next); setProviderId(null); }} />
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="printify-provider">Print provider</Label>
-          {providersQuery.isFetching ? <p className="text-ink-500 text-xs">Loading providers…</p> : (
+          <Label htmlFor="printify-provider">{t("shop.printifyPublish.provider")}</Label>
+          {providersQuery.isFetching ? <p className="text-ink-500 text-xs">{t("shop.printifyPublish.loadingProviders")}</p> : (
             <select id="printify-provider" className={selectClass} value={providerId ?? ""} disabled={!providersQuery.data?.length}
               onChange={(event) => setProviderId(Number(event.target.value) || null)}>
-              {!providersQuery.data?.length && <option value="">Choose a product type first</option>}
+              {!providersQuery.data?.length && <option value="">{t("shop.printifyPublish.chooseTypeFirst")}</option>}
               {providersQuery.data?.map((item) => (
                 <option key={item.id} value={item.id}>{item.title}{item.country ? ` — ${item.country}` : ""}</option>
               ))}
             </select>
           )}
-          <p className="text-ink-500 text-xs">Providers in the United States are listed first: they reach US buyers fastest.</p>
+          <p className="text-ink-500 text-xs">{t("shop.printifyPublish.providersHint")}</p>
         </div>
       </section>
 
       {catalog && (
         <section className="space-y-3">
-          <ChipGroup label="Colors" options={catalog.colors} selected={colors} onToggle={(value) => toggle(colors, value, setColors)} />
-          <ChipGroup label="Sizes" options={catalog.sizes} selected={sizes} onToggle={(value) => toggle(sizes, value, setSizes)} />
+          <ChipGroup label={t("shop.printifyPublish.colors")} options={catalog.colors} selected={colors} onToggle={(value) => toggle(colors, value, setColors)} />
+          <ChipGroup label={t("shop.printifyPublish.sizes")} options={catalog.sizes} selected={sizes} onToggle={(value) => toggle(sizes, value, setSizes)} />
           <p className="text-ink-500 text-xs">
-            {variantIds.length} variant(s)
-            {catalog.usShippingFirstItem != null && ` · US shipping charged to the buyer: ${money(catalog.usShippingFirstItem)} for one item${catalog.usShippingAdditionalItem != null ? `, ${money(catalog.usShippingAdditionalItem)} each extra` : ""}`}
+            {t("shop.printifyPublish.variantCount", { count: variantIds.length })}
+            {catalog.usShippingFirstItem != null && ` · ${t("shop.printifyPublish.usShipping", { amount: money(catalog.usShippingFirstItem) })}${catalog.usShippingAdditionalItem != null ? `, ${t("shop.printifyPublish.eachExtra", { amount: money(catalog.usShippingAdditionalItem) })}` : ""}`}
           </p>
         </section>
       )}
@@ -235,20 +234,20 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
 
       <section className="space-y-3">
         <div className="space-y-1.5">
-          <div className="flex justify-between"><Label htmlFor="printify-title">Title</Label><span className={`text-xs ${title.length > MAX_TITLE ? "text-rose-600 dark:text-rose-400" : "text-ink-400"}`}>{title.length}/{MAX_TITLE}</span></div>
+          <div className="flex justify-between"><Label htmlFor="printify-title">{t("shop.etsyPublish.fields.title")}</Label><span className={`text-xs ${title.length > MAX_TITLE ? "text-rose-600 dark:text-rose-400" : "text-ink-400"}`}>{title.length}/{MAX_TITLE}</span></div>
           <Input id="printify-title" value={title} onChange={(event) => setTitle(event.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="printify-description">Description</Label>
+          <Label htmlFor="printify-description">{t("shop.etsyPublish.fields.description")}</Label>
           <Textarea id="printify-description" rows={5} value={description} onChange={(event) => setDescription(event.target.value)} />
         </div>
         <div className="grid gap-3 sm:grid-cols-[1fr_160px]">
           <div className="space-y-1.5">
-            <div className="flex justify-between"><Label htmlFor="printify-tags">Tags <span className="text-ink-500 font-normal">(comma-separated)</span></Label><span className="text-ink-400 text-xs">{tags.length}/{MAX_TAGS}</span></div>
+            <div className="flex justify-between"><Label htmlFor="printify-tags">{t("shop.etsyPublish.fields.tags")} <span className="text-ink-500 font-normal">({t("shop.etsyPublish.fields.commaSeparated")})</span></Label><span className="text-ink-400 text-xs">{tags.length}/{MAX_TAGS}</span></div>
             <Input id="printify-tags" value={tagText} onChange={(event) => setTagText(event.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="printify-price">Starting price (USD)</Label>
+            <Label htmlFor="printify-price">{t("shop.printifyPublish.startingPrice")}</Label>
             <Input id="printify-price" type="number" min="1" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} />
           </div>
         </div>
@@ -258,9 +257,9 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
         <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{getErrorMessage(createMutation.error ?? resumeMutation.error)}</p>
       )}
       <DialogFooter className="items-center gap-3 sm:justify-between">
-        <p className="text-ink-500 text-xs">{problems[0] ?? "Creates the product on Printify only. You set final prices next, with Printify's costs."}</p>
+        <p className="text-ink-500 text-xs">{problems[0] ?? t("shop.printifyPublish.createHint")}</p>
         <Button type="button" className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => createMutation.mutate()} disabled={problems.length > 0 || createMutation.isPending}>
-          {createMutation.isPending && <Loader2 className="size-4 animate-spin" />}{createMutation.isPending ? "Creating on Printify…" : "Create on Printify"}
+          {createMutation.isPending && <Loader2 className="size-4 animate-spin" />}{createMutation.isPending ? t("shop.printifyPublish.creating") : t("shop.printifyPublish.steps.create")}
         </Button>
       </DialogFooter>
     </div>
@@ -268,6 +267,7 @@ function CreateStep({ draft, productId, onCreated }: { draft: PrintifyDraft; pro
 }
 
 function PriceStep({ draft, product, onPublished }: { draft: PrintifyDraft; product: PrintifyProduct; onPublished: (product: PrintifyProduct) => void }) {
+  const { t } = useTranslation("common");
   const [prices, setPrices] = useState<Record<number, string>>(() => Object.fromEntries(product.variants.map((variant) => [variant.id, variant.price.toFixed(2)])));
   const [bulk, setBulk] = useState("");
   const shipping = product.usShippingFirstItem ?? 0;
@@ -275,8 +275,8 @@ function PriceStep({ draft, product, onPublished }: { draft: PrintifyDraft; prod
     const price = Number(prices[variant.id]);
     return { variant, price, ...estimate(price, variant.cost, shipping) };
   });
-  const problems = rows.filter((row) => !(row.price >= 1)).length > 0 ? ["Every variant needs a price."]
-    : rows.some((row) => row.price < row.variant.cost) ? ["A price is below Printify's cost."] : [];
+  const problems = rows.filter((row) => !(row.price >= 1)).length > 0 ? [t("shop.printifyPublish.problems.everyPrice")]
+    : rows.some((row) => row.price < row.variant.cost) ? [t("shop.printifyPublish.problems.belowCost")] : [];
   const thin = rows.filter((row) => row.profit < 3).length;
 
   const publishMutation = useMutation({
@@ -287,23 +287,23 @@ function PriceStep({ draft, product, onPublished }: { draft: PrintifyDraft; prod
   return (
     <div className="space-y-4">
       <Warnings items={product.warnings} />
-      {product.alreadyCreated && <p className="text-ink-500 text-xs">This design was already sent with the same settings; continuing with that Printify product.</p>}
+      {product.alreadyCreated && <p className="text-ink-500 text-xs">{t("shop.printifyPublish.alreadyCreated")}</p>}
       <div className="flex flex-wrap items-end gap-2">
         <div className="space-y-1">
-          <Label htmlFor="printify-bulk" className="text-xs">Set every price to</Label>
+          <Label htmlFor="printify-bulk" className="text-xs">{t("shop.printifyPublish.setEveryPrice")}</Label>
           <Input id="printify-bulk" className="h-8 w-28" type="number" min="1" step="0.01" placeholder="24.99" value={bulk} onChange={(event) => setBulk(event.target.value)} />
         </div>
         <Button type="button" size="sm" variant="outline" disabled={!(Number(bulk) >= 1)}
-          onClick={() => setPrices(Object.fromEntries(product.variants.map((variant) => [variant.id, Number(bulk).toFixed(2)])))}>Apply</Button>
+          onClick={() => setPrices(Object.fromEntries(product.variants.map((variant) => [variant.id, Number(bulk).toFixed(2)])))}>{t("shop.printifyPublish.apply")}</Button>
         <Button type="button" size="sm" variant="ghost"
           onClick={() => setPrices(Object.fromEntries(product.variants.map((variant) => [variant.id, (Math.ceil(variant.cost + 12) - 0.01).toFixed(2)])))}>
-          Suggest (≈ $10 profit each)
+          {t("shop.printifyPublish.suggest")}
         </Button>
       </div>
       <div className="border-ink-200 overflow-x-auto rounded-md border">
         <table className="w-full text-sm">
           <thead className="bg-ink-50 text-ink-500 text-xs">
-            <tr><th className="px-3 py-2 text-left font-medium">Variant</th><th className="px-3 py-2 text-right font-medium">Printify cost</th><th className="px-3 py-2 text-right font-medium">Your price</th><th className="px-3 py-2 text-right font-medium">Etsy fees*</th><th className="px-3 py-2 text-right font-medium">Profit*</th></tr>
+            <tr><th className="px-3 py-2 text-left font-medium">{t("shop.printifyPublish.table.variant")}</th><th className="px-3 py-2 text-right font-medium">{t("shop.printifyPublish.table.cost")}</th><th className="px-3 py-2 text-right font-medium">{t("shop.printifyPublish.table.price")}</th><th className="px-3 py-2 text-right font-medium">{t("shop.printifyPublish.table.fees")}*</th><th className="px-3 py-2 text-right font-medium">{t("shop.printifyPublish.table.profit")}*</th></tr>
           </thead>
           <tbody className="divide-ink-100 divide-y">
             {rows.map(({ variant, price, fees, profit }) => (
@@ -322,14 +322,14 @@ function PriceStep({ draft, product, onPublished }: { draft: PrintifyDraft; prod
         </table>
       </div>
       <p className="text-ink-500 text-xs">
-        * Estimated with Etsy&apos;s US fees on price plus {money(shipping)} shipping, which the buyer pays and Printify charges you. Currency conversion to your payout account may take about 2.5% more.
-        {thin > 0 && <span className="text-amber-700 dark:text-amber-300"> {thin} variant(s) leave less than $3.</span>}
+        * {t("shop.printifyPublish.estimateNote", { shipping: money(shipping) })}
+        {thin > 0 && <span className="text-amber-700 dark:text-amber-300"> {t("shop.printifyPublish.thinMargin", { count: thin })}</span>}
       </p>
       {publishMutation.isError && <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{getErrorMessage(publishMutation.error)}</p>}
       <DialogFooter className="items-center gap-3 sm:justify-between">
-        <p className="text-ink-500 text-xs">{problems[0] ?? `Printify publishes to ${draft.connection.shopTitle ?? "your store"} on Etsy. Whether it lands as active or draft follows your Printify store's publishing settings.`}</p>
+        <p className="text-ink-500 text-xs">{problems[0] ?? t("shop.printifyPublish.publishHint", { store: draft.connection.shopTitle ?? t("shop.printifyPublish.yourStore") })}</p>
         <Button type="button" className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => publishMutation.mutate()} disabled={problems.length > 0 || publishMutation.isPending}>
-          {publishMutation.isPending && <Loader2 className="size-4 animate-spin" />}{publishMutation.isPending ? "Asking Printify…" : "Publish to Etsy"}
+          {publishMutation.isPending && <Loader2 className="size-4 animate-spin" />}{publishMutation.isPending ? t("shop.printifyPublish.asking") : t("shop.printifyPublish.steps.publish")}
         </Button>
       </DialogFooter>
     </div>
@@ -337,6 +337,7 @@ function PriceStep({ draft, product, onPublished }: { draft: PrintifyDraft; prod
 }
 
 function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; product: PrintifyProduct; onChange: (product: PrintifyProduct) => void }) {
+  const { t } = useTranslation("common");
   const [mockupIds, setMockupIds] = useState<string[]>(draft.mockups.slice(0, 5).map((mockup) => mockup.id));
   const [attachRequested, setAttachRequested] = useState(false);
   const published = product.state === "published";
@@ -361,8 +362,8 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
     return (
       <div className="text-ink-600 space-y-3 py-6 text-center text-sm">
         <Loader2 className="mx-auto size-6 animate-spin text-emerald-600 dark:text-emerald-400" />
-        <p className="text-ink-900 font-medium">Printify is publishing to Etsy…</p>
-        <p>This usually takes under a minute. You can close this window; publishing continues on Printify.</p>
+        <p className="text-ink-900 font-medium">{t("shop.printifyPublish.publishing")}</p>
+        <p>{t("shop.printifyPublish.publishingHint")}</p>
         <Warnings items={product.warnings} />
       </div>
     );
@@ -372,19 +373,19 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
       <div className="flex items-start gap-3 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
         <CheckCircle2 className="mt-0.5 size-5 shrink-0" />
         <div className="space-y-1">
-          <p className="font-medium">On Etsy, linked to Printify.</p>
-          <p className="text-emerald-800 dark:text-emerald-300">New orders go to Printify automatically, which charges your Printify payment method and ships to the buyer.</p>
+          <p className="font-medium">{t("shop.printifyPublish.linked")}</p>
+          <p className="text-emerald-800 dark:text-emerald-300">{t("shop.printifyPublish.linkedHint")}</p>
         </div>
       </div>
       <Warnings items={product.warnings} />
 
       {product.mediaAttached > 0 || (attachRequested && !syncMutation.isPending) ? (
-        <p className="text-ink-700 text-sm">{product.mediaAttached} Podivo image(s) added to the listing, in front of Printify&apos;s mock-ups.</p>
+        <p className="text-ink-700 text-sm">{t("shop.printifyPublish.mediaAttached", { count: product.mediaAttached })}</p>
       ) : !draft.etsyConnected ? (
-        <p className="text-ink-600 text-sm">Connect Etsy on the Shop page to add your Podivo mock-ups to this listing.</p>
+        <p className="text-ink-600 text-sm">{t("shop.printifyPublish.connectEtsy")}</p>
       ) : draft.mockups.length > 0 && (
         <section className="space-y-2">
-          <Label>Add your Podivo mock-ups to the listing <span className="text-ink-500 font-normal">({mockupIds.length} selected, shown first)</span></Label>
+          <Label>{t("shop.printifyPublish.addMockups")} <span className="text-ink-500 font-normal">({t("shop.printifyPublish.selectedFirst", { count: mockupIds.length })})</span></Label>
           <div className="grid grid-cols-5 gap-2 sm:grid-cols-8">
             {draft.mockups.map((mockup) => {
               const order = mockupIds.indexOf(mockup.id);
@@ -399,7 +400,7 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
             })}
           </div>
           <Button type="button" size="sm" variant="outline" onClick={attach} disabled={syncMutation.isPending || mockupIds.length === 0}>
-            {syncMutation.isPending && <Loader2 className="size-3.5 animate-spin" />}{syncMutation.isPending ? "Adding to Etsy…" : "Add to Etsy listing"}
+            {syncMutation.isPending && <Loader2 className="size-3.5 animate-spin" />}{syncMutation.isPending ? t("shop.printifyPublish.adding") : t("shop.printifyPublish.addToListing")}
           </Button>
         </section>
       )}
@@ -408,7 +409,7 @@ function PublishStep({ draft, product, onChange }: { draft: PrintifyDraft; produ
       <DialogFooter>
         {product.etsyUrl && (
           <Button asChild className="bg-[#F1641E] text-white hover:bg-[#d9561a]">
-            <a href={product.etsyUrl} target="_blank" rel="noreferrer"><ExternalLink className="size-4" />Open the Etsy listing</a>
+            <a href={product.etsyUrl} target="_blank" rel="noreferrer"><ExternalLink className="size-4" />{t("shop.printifyPublish.openListing")}</a>
           </Button>
         )}
       </DialogFooter>
@@ -431,6 +432,7 @@ export function BlueprintPicker({
   search?: (query: string) => Promise<PrintifyBlueprint[]>;
   queryKey?: string;
 }) {
+  const { t } = useTranslation("common");
   const [editing, setEditing] = useState(!value);
   const [query, setQuery] = useState("unisex softstyle");
   const [debounced, setDebounced] = useState(query);
@@ -442,23 +444,23 @@ export function BlueprintPicker({
 
   return (
     <div className="space-y-1.5 sm:col-span-2">
-      <Label htmlFor="printify-blueprint">Product type</Label>
+      <Label htmlFor="printify-blueprint">{t("shop.printifyPublish.productType")}</Label>
       {value && !editing ? (
         <div className="border-ink-200 flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm">
           <span className="text-ink-800 truncate">{value.title}</span>
-          <button type="button" className="shrink-0 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-300" onClick={() => setEditing(true)}>Change</button>
+          <button type="button" className="shrink-0 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-300" onClick={() => setEditing(true)}>{t("shop.etsyPublish.change")}</button>
         </div>
       ) : (
         <>
           <div className="relative">
             <Search className="text-ink-400 absolute top-2.5 left-2.5 size-4" />
-            <Input id="printify-blueprint" className="pl-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="e.g. gildan 64000, bella canvas 3001, mug 11oz" />
+            <Input id="printify-blueprint" className="pl-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("shop.printifyPublish.blueprintPlaceholder")} />
           </div>
-          {results.isFetching && <p className="text-ink-500 text-xs">Searching…</p>}
+          {results.isFetching && <p className="text-ink-500 text-xs">{t("shop.etsyPublish.searching")}</p>}
           {results.isError && <p className="text-xs text-rose-700 dark:text-rose-300">{getErrorMessage(results.error)}</p>}
           {results.data && (
             <ul className="border-ink-200 max-h-48 overflow-y-auto rounded-md border text-sm">
-              {results.data.length === 0 && <li className="text-ink-500 px-3 py-2">Nothing matches.</li>}
+              {results.data.length === 0 && <li className="text-ink-500 px-3 py-2">{t("shop.printifyPublish.nothingMatches")}</li>}
               {results.data.map((item) => (
                 <li key={item.id}>
                   <button type="button" className="hover:bg-ink-50 flex w-full items-center gap-2 px-3 py-1.5 text-left" onClick={() => { onChange(item); setEditing(false); }}>

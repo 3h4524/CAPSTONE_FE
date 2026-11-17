@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import type { TFunction } from "i18next";
 import { ImageIcon, Images, Shirt } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   resetMockupOverride,
@@ -56,11 +58,12 @@ const PANEL_GRID = "grid-cols-1 gap-2 @sm:grid-cols-2 @2xl:grid-cols-3";
 // The job's mock-ups to dress a person in, named by product and garment color; a name used twice is numbered.
 const lifestyleGarmentsOfBatch = (
   images: MockupImage[],
-  productNameById: Map<string | null, string>
+  productNameById: Map<string | null, string>,
+  t: TFunction
 ): LifestyleGarment[] => {
   const seen = new Map<string, number>();
   return images.map((image) => {
-    const base = `${productNameById.get(image.productId) ?? "Product"}${image.garmentColor ? ` · ${image.garmentColor}` : ""}`;
+    const base = `${productNameById.get(image.productId) ?? t("workflowEditor.runResults.product")}${image.garmentColor ? ` · ${image.garmentColor}` : ""}`;
     const count = (seen.get(base) ?? 0) + 1;
     seen.set(base, count);
     return {
@@ -74,6 +77,7 @@ const lifestyleGarmentsOfBatch = (
 
 // What the open run produced, shown beside the canvas for the Design image and Apply mock-up nodes.
 export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
+  const { t } = useTranslation("common");
   const queryClient = useQueryClient();
   const job = useWorkflowRunStore((state) => state.job);
   const mockupState = useWorkflowRunStore((state) => state.mockupState);
@@ -86,7 +90,9 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
   // The mock-ups show a Printify product when Apply mock-up says so or a Push to Printify step follows it.
   const printifyMockups = useWorkflowStore((state) => {
     const applyNode = state.nodes.find((candidate) => candidate.data.type === "apply-mockup");
-    return applyNode ? effectiveMockupTarget(applyNode, state.nodes, state.edges) === "printify" : false;
+    return applyNode
+      ? effectiveMockupTarget(applyNode, state.nodes, state.edges) === "printify"
+      : false;
   });
   // Generating again starts from the workflow as it is now, which may differ from what the job was started with.
   const designConfig = useWorkflowStore(
@@ -127,7 +133,7 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
     },
     onSuccess: (result) => {
       useWorkflowRunStore.getState().setMockupResult(result);
-      showToast("success", "Mock-up restored.");
+      showToast("success", t("workflowEditor.runResults.mockupRestored"));
     },
   });
 
@@ -136,8 +142,8 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
       <div className="p-5">
         <PanelEmptyState
           icon={Images}
-          title="Results appear here once the run has started."
-          description="Press Run to generate this batch, or open an earlier run in Product input."
+          title={t("workflowEditor.runResults.emptyTitle")}
+          description={t("workflowEditor.runResults.emptyDescription")}
         />
       </div>
     );
@@ -165,7 +171,7 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
   // own: the product's listing is written for them.
   const designOptions = (editingProduct?.images ?? []).map((image, index) => ({
     id: image.id,
-    label: `Design ${index + 1}`,
+    label: t("workflowEditor.runResults.designNumber", { number: index + 1 }),
     imageUrl: image.imageUrl,
   }));
   const showEdited = (result: GenerateAllMockupsResult, changedCount: number) => {
@@ -174,8 +180,8 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
     showToast(
       "success",
       changedCount > 1
-        ? `${changedCount} mock-ups updated. The job keeps these changes when its mock-ups are made again.`
-        : "Mock-up updated. The job keeps this change when its mock-ups are made again."
+        ? t("workflowEditor.runResults.mockupsUpdated", { count: changedCount })
+        : t("workflowEditor.runResults.mockupUpdated")
     );
   };
 
@@ -186,13 +192,17 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
         {showsApproval ? (
           <ApprovalReviewPanel job={job} />
         ) : showsMockups ? (
-          <section className="space-y-3 border-t pt-5" aria-label="Mock-ups">
+          <section
+            className="space-y-3 border-t pt-5"
+            aria-label={t("workflowEditor.runResults.mockups")}
+          >
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <h3 className="text-ink-900 text-sm font-semibold">Mock-ups</h3>
+                <h3 className="text-ink-900 text-sm font-semibold">
+                  {t("workflowEditor.runResults.mockups")}
+                </h3>
                 <p className="text-muted-foreground mt-0.5 text-xs">
-                  Uses the {chosenTemplateCount} template{chosenTemplateCount === 1 ? "" : "s"}{" "}
-                  chosen in this node&apos;s Settings.
+                  {t("workflowEditor.runResults.usesTemplates", { count: chosenTemplateCount })}
                 </p>
               </div>
               <Button
@@ -208,25 +218,30 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
                 onClick={() => void regenerateMockups()}
               >
                 {mockupState === "running"
-                  ? "Generating…"
+                  ? t("workflowEditor.runResults.generating")
                   : mockupResult
-                    ? "Apply & regenerate"
-                    : "Generate"}
+                    ? t("workflowEditor.runResults.applyRegenerate")
+                    : t("workflowEditor.runResults.generate")}
               </Button>
             </div>
             {mockupState === "failed" && (
-              <PanelNotice tone="error">Mock-ups could not be generated. Try again.</PanelNotice>
+              <PanelNotice tone="error">
+                {t("workflowEditor.runResults.generateFailed")}
+              </PanelNotice>
             )}
             {!designsReady && (
-              <PanelNotice>Mock-ups are made once the design images are ready.</PanelNotice>
+              <PanelNotice>{t("workflowEditor.runResults.waitingForDesigns")}</PanelNotice>
             )}
             {designsReady && needsApproval && approvedCount === 0 && (
               <PanelNotice tone="warning">
-                Approve at least one design in the Approval gate first.
+                {t("workflowEditor.runResults.approveFirst")}
               </PanelNotice>
             )}
             {designsReady && !mockupResult && mockupState === "running" && (
-              <SectionLoading label="Generating mock-ups" className="py-8" />
+              <SectionLoading
+                label={t("workflowEditor.runResults.generatingMockups")}
+                className="py-8"
+              />
             )}
             {designsReady &&
               !mockupResult &&
@@ -234,8 +249,8 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
               !(needsApproval && approvedCount === 0) && (
                 <PanelEmptyState
                   icon={Shirt}
-                  title="No mock-ups yet"
-                  description="Generate them from the approved designs and the chosen templates."
+                  title={t("workflowEditor.runResults.noMockupsTitle")}
+                  description={t("workflowEditor.runResults.noMockupsDescription")}
                 />
               )}
             {mockupResult && (
@@ -252,14 +267,19 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
             )}
             {mockupResult && mockupResult.images.length > 0 && (
               <LifestyleMockupForm
-                garments={lifestyleGarmentsOfBatch(mockupResult.images, productNameById)}
+                garments={lifestyleGarmentsOfBatch(mockupResult.images, productNameById, t)}
                 showResults
               />
             )}
           </section>
         ) : (
-          <section className="space-y-3 border-t pt-5" aria-label="Generated images">
-            <h3 className="text-ink-900 text-sm font-semibold">Generated images</h3>
+          <section
+            className="space-y-3 border-t pt-5"
+            aria-label={t("workflowEditor.runResults.generatedImages")}
+          >
+            <h3 className="text-ink-900 text-sm font-semibold">
+              {t("workflowEditor.runResults.generatedImages")}
+            </h3>
             {job.products.some(shownInResults) ? (
               <GeneratedImagesGrid
                 products={job.products}
@@ -272,8 +292,8 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
             ) : (
               <PanelEmptyState
                 icon={ImageIcon}
-                title="No images yet."
-                description="Designs show up here as each product finishes."
+                title={t("workflowEditor.runResults.noImagesTitle")}
+                description={t("workflowEditor.runResults.noImagesDescription")}
               />
             )}
           </section>
@@ -291,7 +311,7 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
         batchJobId={job.id}
         image={editing}
         images={mockupResult?.images ?? []}
-        productName={editingProduct?.productName ?? "Product"}
+        productName={editingProduct?.productName ?? t("workflowEditor.runResults.product")}
         productType={editingProduct?.productType ?? ""}
         designImageUrl={editingDesignUrl}
         designOptions={designOptions}

@@ -82,6 +82,7 @@ export const buildBatch = (overrides: Partial<Batch> = {}): Batch => ({
   description: "Best sellers for the spring drop.",
   defaultNiche: "botanical",
   defaultProductType: "tshirt",
+  productLine: "apparel",
   status: "active",
   createdAt: "2026-01-10T09:30:00Z",
   productCount: 12,

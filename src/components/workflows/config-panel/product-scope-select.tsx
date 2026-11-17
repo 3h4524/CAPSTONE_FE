@@ -1,6 +1,7 @@
 "use client";
 
 import { RotateCcw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,7 @@ const FIELD_ID = "video-product-scope";
  * them. Its images are matched to each design's mock-ups once they exist, as the shared settings are.
  */
 export const ProductScopeSelect = ({ nodeId }: { nodeId: string }) => {
+  const { t } = useTranslation("common");
   const batchId = useWorkflowStore((state) =>
     readString(state.nodes.find((node) => node.data.type === "product-input")?.data.config.batchId)
   );
@@ -50,7 +52,7 @@ export const ProductScopeSelect = ({ nodeId }: { nodeId: string }) => {
   const choose = (value: string) => {
     const productId = value ? value.replace(/^product:/, "") : "";
     if (productId === (scope?.productId ?? "")) return;
-    if (unsaved && scope && !window.confirm(`Discard the unsaved changes to ${scope.label}?`)) return;
+    if (unsaved && scope && !window.confirm(t("workflowConfig.productScope.discardConfirm", { name: scope.label }))) return;
     if (!productId) {
       leave();
       return;
@@ -66,36 +68,36 @@ export const ProductScopeSelect = ({ nodeId }: { nodeId: string }) => {
   const options = products.map((product) => ({
     value: productScopeKey(product.id),
     label: product.name,
-    hint: own[product.id] ? "Own settings" : "Shared settings",
+    hint: own[product.id] ? t("workflowConfig.productScope.ownSettings") : t("workflowConfig.productScope.sharedSettings"),
   }));
 
   return (
-    <section className="bg-ink-50/70 space-y-2.5 rounded-lg border p-3" aria-label="Which product's video settings">
-      <Label htmlFor={FIELD_ID}>Video product</Label>
+    <section className="bg-ink-50/70 space-y-2.5 rounded-lg border p-3" aria-label={t("workflowConfig.productScope.aria")}>
+      <Label htmlFor={FIELD_ID}>{t("workflowConfig.form.videoProduct")}</Label>
       <OptionSelect
         standaloneId={FIELD_ID}
         value={scope?.key ?? ""}
         options={options}
-        placeholder="All products"
-        noneLabel="All products (shared settings)"
+        placeholder={t("workflowConfig.productScope.allProducts")}
+        noneLabel={t("workflowConfig.productScope.allProductsShared")}
         onChange={choose}
       />
       {!scope ? (
         <p className="text-muted-foreground text-xs leading-relaxed">
           {Object.keys(own).length > 0
-            ? `${Object.keys(own).length} of ${products.length} products have their own settings; the others use these.`
-            : "Every product uses these settings. Choose a product to give its video settings of its own."}
+            ? t("workflowConfig.productScope.ownCount", { own: Object.keys(own).length, total: products.length })
+            : t("workflowConfig.productScope.everyProductShared")}
         </p>
       ) : (
         <>
           <PanelNotice tone={unsaved ? "warning" : "info"}>
             {unsaved
               ? hasOwn && followsShared
-                ? `Save to put ${scope.label} back on the shared settings.`
-                : `Unsaved changes to ${scope.label}. Save keeps them for this product only; the shared settings stay as they are.`
+                ? t("workflowConfig.productScope.saveToShared", { name: scope.label })
+                : t("workflowConfig.productScope.unsaved", { name: scope.label })
               : hasOwn
-                ? `${scope.label} has its own settings. Everything below applies to this product only.`
-                : `${scope.label} follows the shared settings. Change anything below and Save keeps it for this product only.`}
+                ? t("workflowConfig.productScope.hasOwn", { name: scope.label })
+                : t("workflowConfig.productScope.followsShared", { name: scope.label })}
           </PanelNotice>
           {!followsShared && (hasOwn || unsaved) && (
             <Button
@@ -106,7 +108,7 @@ export const ProductScopeSelect = ({ nodeId }: { nodeId: string }) => {
               onClick={() => updateNodeConfig(nodeId, sharedView)}
             >
               <RotateCcw className="size-3.5" aria-hidden="true" />
-              Use shared settings
+              {t("workflowConfig.productScope.useShared")}
             </Button>
           )}
         </>

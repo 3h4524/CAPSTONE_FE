@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { NodeField } from "@/components/workflows/nodes/node-field";
 import { NodeFrame } from "@/components/workflows/nodes/node-frame";
 import { readString } from "@/helpers/workflow-config";
@@ -13,6 +15,7 @@ import type { WorkflowNode } from "@/types/workflow";
 import type { NodeProps } from "@xyflow/react";
 
 export const ProductInputCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
+  const { t } = useTranslation("common");
   const batchId = readString(data.config.batchId);
   const productId = readString(data.config.productId);
   const { data: batches, isPending: batchesLoading } = useBatches();
@@ -27,7 +30,7 @@ export const ProductInputCard = ({ id, data, selected }: NodeProps<WorkflowNode>
   const batchOptions = (batches ?? []).map((item) => ({
     value: item.id,
     label: item.name,
-    hint: `${item.productCount} ${item.productCount === 1 ? "product" : "products"}${item.defaultNiche ? ` · ${item.defaultNiche}` : ""}`,
+    hint: `${t("workflowEditor.productInput.productCount", { count: item.productCount })}${item.defaultNiche ? ` · ${item.defaultNiche}` : ""}`,
   }));
   const productOptions = toProductOptions(products);
 
@@ -44,8 +47,8 @@ export const ProductInputCard = ({ id, data, selected }: NodeProps<WorkflowNode>
           }}
           loading={batchesLoading}
           disabled={disabled}
-          placeholder="Choose batch"
-          ariaLabel="Batch"
+          placeholder={t("workflowEditor.productInput.chooseBatch")}
+          ariaLabel={t("workflowEditor.fields.product-input.batchId.label")}
         />
         {showProduct && (
           <NodeField
@@ -55,13 +58,13 @@ export const ProductInputCard = ({ id, data, selected }: NodeProps<WorkflowNode>
             onChange={(next) => updateNodeConfig(id, { ...data.config, productId: next })}
             loading={Boolean(batchId) && productsLoading}
             disabled={disabled || !batchId}
-            placeholder="Choose product"
-            ariaLabel="Product"
+            placeholder={t("workflowEditor.productInput.chooseProduct")}
+            ariaLabel={t("workflowEditor.fields.product-input.productId.label")}
           />
         )}
         {pending !== undefined && (
           <p className="text-wf-faint px-0.5 text-[10px] leading-none">
-            {pending} pending {pending === 1 ? "product" : "products"}
+            {t("workflowEditor.productInput.pendingProducts", { count: pending })}
           </p>
         )}
       </div>

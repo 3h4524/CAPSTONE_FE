@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { FormInputField } from "@/components/commons/forms/form-input-field";
 import { FormTextareaField } from "@/components/commons/forms/form-textarea-field";
@@ -31,6 +32,7 @@ export const WorkflowMetaDialog = ({
   onClose,
   onSubmit,
 }: WorkflowMetaDialogProps) => {
+  const { t } = useTranslation("common");
   const {
     register,
     handleSubmit,
@@ -46,19 +48,23 @@ export const WorkflowMetaDialog = ({
     <Dialog open onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogContent className="w-[calc(100%-2rem)] max-w-lg">
         <DialogHeader className="text-left">
-          <DialogTitle>{isCreateMode ? "New workflow" : "Rename workflow"}</DialogTitle>
+          <DialogTitle>
+            {isCreateMode
+              ? t("workflowEditor.metaDialog.newTitle")
+              : t("workflowEditor.metaDialog.renameTitle")}
+          </DialogTitle>
           <DialogDescription>
             {isCreateMode
-              ? "Start from a Product input node and build the steps you need."
-              : "Renaming also saves the current canvas."}
+              ? t("workflowEditor.metaDialog.newDescription")
+              : t("workflowEditor.metaDialog.renameDescription")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <FormInputField
             id="workflow-name"
-            label="Name"
+            label={t("workflowEditor.metaDialog.name")}
             type="text"
-            placeholder="Holiday mug launch"
+            placeholder={t("workflowEditor.metaDialog.namePlaceholder")}
             registration={register("name")}
             error={errors.name}
             maxLength={120}
@@ -66,15 +72,21 @@ export const WorkflowMetaDialog = ({
           />
           <FormTextareaField
             id="workflow-description"
-            label="Description"
-            placeholder="What this workflow is for."
+            label={t("workflowEditor.metaDialog.description")}
+            placeholder={t("workflowEditor.metaDialog.descriptionPlaceholder")}
             registration={register("description")}
             error={errors.description}
             rows={3}
           />
           <DialogFooter className="gap-2">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>Cancel</Button>
-            <Button type="submit" disabled={isPending}>{isCreateMode ? "Create workflow" : "Save name"}</Button>
+            <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
+              {t("workflowEditor.runGroup.cancel")}
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isCreateMode
+                ? t("workflowEditor.workspace.createWorkflow")
+                : t("workflowEditor.metaDialog.saveName")}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

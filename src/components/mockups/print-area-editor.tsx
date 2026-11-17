@@ -178,6 +178,8 @@ const detectGarmentBounds = (img: HTMLImageElement): Bounds | null => {
   }
 };
 
+// On a touch screen a handle stays small inside the box's corner, so it does not cover the box, and an invisible
+// margin around it gives a finger room to catch it.
 const Handles = ({ className }: { className: string }) => (
   <>
     {(["nw", "ne", "sw", "se"] as const).map((handle) => (
@@ -185,7 +187,7 @@ const Handles = ({ className }: { className: string }) => (
         key={handle}
         data-handle={handle}
         className={cn(
-          "bg-card absolute size-3 rounded-sm border-2 [@media(pointer:coarse)]:size-7 [@media(pointer:coarse)]:translate-x-0! [@media(pointer:coarse)]:translate-y-0!",
+          "bg-card absolute size-3 rounded-sm border-2 [@media(pointer:coarse)]:size-4 [@media(pointer:coarse)]:translate-x-0! [@media(pointer:coarse)]:translate-y-0! [@media(pointer:coarse)]:before:absolute [@media(pointer:coarse)]:before:-inset-2 [@media(pointer:coarse)]:before:content-['']",
           className,
           handle === "nw" && "top-0 left-0 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize",
           handle === "ne" && "top-0 right-0 translate-x-1/2 -translate-y-1/2 cursor-nesw-resize",

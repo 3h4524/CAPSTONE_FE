@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useResizableWidth } from "@/hooks/use-resizable-width";
 import { cn } from "@/utils/cn";
@@ -18,14 +19,15 @@ type ResizableAsideProps = {
 // A right-hand panel whose left edge can be dragged (or moved with the arrow keys) to resize it.
 // Only shown from the xl breakpoint; smaller screens open the same content in a sheet instead.
 export const ResizableAside = ({ children, storageKey, defaultWidth, minWidth, maxWidth, reservedWidth, label }: ResizableAsideProps) => {
+  const { t } = useTranslation("common");
   const { width, isDragging, separatorProps } = useResizableWidth({ storageKey, defaultWidth, minWidth, maxWidth, reservedWidth });
 
   return (
     <aside style={{ width }} className="relative hidden shrink-0 border-l xl:block">
       <div
         {...separatorProps}
-        aria-label={`Resize ${label}`}
-        title="Drag to resize, double-click to reset"
+        aria-label={t("workflowEditor.resizeAside.label", { label })}
+        title={t("workflowEditor.resizeAside.title")}
         className={cn(
           "group absolute inset-y-0 -left-1.5 z-10 w-3 cursor-col-resize touch-none outline-none",
           "after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 after:-translate-x-1/2 after:rounded-full after:transition-colors",

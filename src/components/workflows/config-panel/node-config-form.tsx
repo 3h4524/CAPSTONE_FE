@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { Form } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -57,6 +58,7 @@ const isAiSceneConfig = (scene: unknown) =>
   typeof scene === "object" && scene !== null && "mode" in scene && scene.mode !== "standard";
 
 export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: NodeConfigFormProps) => {
+  const { t } = useTranslation("common");
   const definition = WORKFLOW_NODE_DEFINITIONS[node.data.type];
   const isRunning = useWorkflowStore((state) => state.isRunning);
   // Only the video's review unlocks the video settings; a design review leaves them as they are.
@@ -111,6 +113,7 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
     return field ? (
       <NodeConfigField
         key={field.name}
+        nodeType={node.data.type}
         field={field}
         control={control}
         videoMode={String(outputMode ?? "ai_shot")}
@@ -124,7 +127,7 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
       : definition.fields;
   const { grouped, rest } = groupPanelFields(panelFields, NODE_PANEL_SECTIONS[node.data.type]);
   const renderField = (field: WorkflowField) => (
-    <NodeConfigField key={field.name} field={field} control={control} />
+    <NodeConfigField key={field.name} nodeType={node.data.type} field={field} control={control} />
   );
 
   // The scene editor writes directly to the workflow store. Reset only when a
@@ -195,7 +198,7 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
             <PanelNotice tone="info">
               <span className="inline-flex items-center gap-1.5 font-medium">
                 <Lock className="size-3" aria-hidden="true" />
-                Settings are locked while the run is in progress.
+                {t("workflowConfig.form.settingsLocked")}
               </span>
             </PanelNotice>
           </div>
@@ -237,11 +240,11 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
                 </div>
               ) : (
                 <>
-                  {grouped.map(({ section, fields }) => (
+                  {grouped.map(({ section, fields }, index) => (
                     <PanelSection
                       key={section.title}
-                      title={section.title}
-                      description={section.description}
+                      title={t(`workflowEditor.panelSections.${node.data.type}.${index}.title`, { defaultValue: section.title })}
+                      description={section.description && t(`workflowEditor.panelSections.${node.data.type}.${index}.description`, { defaultValue: section.description })}
                     >
                       <div className="space-y-6">{fields.map(renderField)}</div>
                     </PanelSection>
@@ -251,7 +254,7 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
                   )}
                   {definition.fields.length === 0 && !isPublishNode && (
                     <p className="text-muted-foreground px-5 py-5 text-xs">
-                      This step has no settings.
+                      {t("workflowConfig.form.noSettings")}
                     </p>
                   )}
                 </>
@@ -276,16 +279,16 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
         )}
         {node.data.type === "apply-mockup" && !hasVideo && (
           <PanelSection
-            title="Model photos"
-            description="Put this product's mock-ups on a photo of a person in a plain, light tee, without AI."
+            title={t("workflowConfig.form.modelPhotos")}
+            description={t("workflowConfig.form.modelPhotosDescription")}
           >
             <ModelPhotoSection />
           </PanelSection>
         )}
         {node.data.type === "apply-mockup" && hasVideo && !batchVideos && (
           <PanelSection
-            title="Mock-ups for the video"
-            description="Choose which of this product's mock-ups the video may use, or upload finished mock-up photos. Leave all unchecked to let the video pick."
+            title={t("workflowConfig.form.videoMockups")}
+            description={t("workflowConfig.form.videoMockupsDescription")}
           >
             <VideoSourcesHeader />
             <MockupPanel review={false} />
@@ -295,7 +298,7 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
           <>
             <ApprovalFlow from="apply-mockup" to={approvalLeadsTo} automatic={node.data.config.mode === "auto"} />
             {hasVideo && !batchVideos && !groupId && (
-              <PanelSection title="Video product">
+              <PanelSection title={t("workflowConfig.form.videoProduct")}>
                 <VideoProductSelect />
               </PanelSection>
             )}

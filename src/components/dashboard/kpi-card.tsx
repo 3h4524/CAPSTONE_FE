@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Card } from "@/components/ui/card";
 import { describeChange } from "@/helpers/seller-dashboard";
@@ -37,6 +38,7 @@ export const KpiCard = ({
   isLowerBetter = false,
   emptyHint,
 }: KpiCardProps) => {
+  const { t } = useTranslation("common");
   const change = describeChange(kpi, isLowerBetter);
 
   return (
@@ -63,7 +65,7 @@ export const KpiCard = ({
           )}
         </div>
         <p className="text-muted-foreground truncate text-[11px] max-sm:whitespace-normal">
-          {change ? `vs previous ${periodLabel}` : (emptyHint ?? `No data before the ${periodLabel}`)}
+          {change ? t("dashboard.kpi.vsPrevious", { period: periodLabel }) : (emptyHint ?? t("dashboard.kpi.noPrevious", { period: periodLabel }))}
         </p>
       </div>
       <span className="bg-ink-100 ring-ink-200 flex size-11 shrink-0 items-center justify-center rounded-xl text-[#4f709c] ring-1 transition-transform duration-300 ring-inset group-hover:scale-110 group-hover:-rotate-6 max-sm:absolute max-sm:top-2.5 max-sm:right-2.5 max-sm:size-8 dark:text-[#a0b4cf]">

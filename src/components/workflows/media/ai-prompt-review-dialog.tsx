@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, ClipboardCopy, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -23,12 +24,13 @@ export function AiPromptReviewDialog({
   onOpenChange: (open: boolean) => void;
   onContinue: () => void;
 }) {
+  const { t } = useTranslation("common");
   const copyPrompt = async (prompt: string, sceneOrder: number) => {
     try {
       await navigator.clipboard.writeText(prompt);
-      showToast("success", `Scene ${sceneOrder + 1} prompt copied. You can test it on a free website.`);
+      showToast("success", t("workflowMedia.promptReview.copied", { scene: sceneOrder + 1 }));
     } catch {
-      showToast("error", "The prompt could not be copied. Select the text and copy it manually.");
+      showToast("error", t("workflowMedia.promptReview.copyFailed"));
     }
   };
 
@@ -36,9 +38,9 @@ export function AiPromptReviewDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-3xl" showCloseButton={!isContinuing}>
         <DialogHeader>
-          <DialogTitle>Review AI prompt before paid generation</DialogTitle>
+          <DialogTitle>{t("workflowMedia.promptReview.title")}</DialogTitle>
           <DialogDescription>
-            This is a safe preview. No prompt has been sent to an AI video model. Copy a final prompt to test it for free, then continue only when ready.
+            {t("workflowMedia.promptReview.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -47,13 +49,13 @@ export function AiPromptReviewDialog({
             <section key={sceneOrder} className="space-y-3 rounded-lg border p-3" aria-labelledby={`ai-prompt-scene-${sceneOrder}`}>
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <h3 id={`ai-prompt-scene-${sceneOrder}`} className="text-sm font-semibold">Scene {sceneOrder + 1}</h3>
+                  <h3 id={`ai-prompt-scene-${sceneOrder}`} className="text-sm font-semibold">{t("workflowMedia.sceneCard.sceneTitle", { scene: sceneOrder + 1 })}</h3>
                   <p className="text-muted-foreground text-xs">
-                    {trace.ruleVersion == null ? "Template controls" : `Prompt rules P${trace.ruleVersion}`} · RAG: {trace.ragStatus}
+                    {trace.ruleVersion == null ? t("workflowMedia.promptReview.templateControls") : t("workflowMedia.promptReview.promptRules", { version: trace.ruleVersion })} · RAG: {trace.ragStatus}
                   </p>
                 </div>
                 <Button type="button" size="sm" variant="outline" className="min-h-10" onClick={() => void copyPrompt(trace.finalPrompt, sceneOrder)}>
-                  <ClipboardCopy aria-hidden="true" /> Copy final prompt
+                  <ClipboardCopy aria-hidden="true" /> {t("workflowMedia.promptReview.copyFinalPrompt")}
                 </Button>
               </div>
 
@@ -64,8 +66,8 @@ export function AiPromptReviewDialog({
               )}
 
               <div>
-                <p className="mb-1 text-xs font-medium">Exact prompt sent to the model after confirmation</p>
-                <pre className="max-h-52 overflow-auto rounded-md bg-slate-950 p-3 text-xs leading-relaxed whitespace-pre-wrap text-slate-100" aria-label={`Final prompt for scene ${sceneOrder + 1}`}>
+                <p className="mb-1 text-xs font-medium">{t("workflowMedia.promptReview.exactPrompt")}</p>
+                <pre className="max-h-52 overflow-auto rounded-md bg-slate-950 p-3 text-xs leading-relaxed whitespace-pre-wrap text-slate-100" aria-label={t("workflowMedia.promptReview.finalPromptLabel", { scene: sceneOrder + 1 })}>
                   {trace.finalPrompt}
                 </pre>
               </div>
@@ -77,7 +79,7 @@ export function AiPromptReviewDialog({
                       <span className="flex min-w-0 items-center gap-2">
                         <span>{part.label}</span>
                         <span className={part.includedInFinalPrompt ? "text-emerald-700 dark:text-emerald-300" : "text-muted-foreground"}>
-                          {part.includedInFinalPrompt ? "Included" : "Not sent"}
+                          {part.includedInFinalPrompt ? t("workflowMedia.promptReview.included") : t("workflowMedia.promptReview.notSent")}
                         </span>
                       </span>
                     </AccordionTrigger>
@@ -92,10 +94,10 @@ export function AiPromptReviewDialog({
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button type="button" variant="outline" disabled={isContinuing} onClick={() => onOpenChange(false)}>Close and test prompts</Button>
+          <Button type="button" variant="outline" disabled={isContinuing} onClick={() => onOpenChange(false)}>{t("workflowMedia.promptReview.closeAndTest")}</Button>
           <Button type="button" disabled={isContinuing} onClick={onContinue}>
             {isContinuing ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Check aria-hidden="true" />}
-            Continue to paid confirmation
+            {t("workflowMedia.promptReview.continuePaid")}
           </Button>
         </DialogFooter>
       </DialogContent>

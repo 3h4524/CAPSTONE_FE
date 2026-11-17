@@ -1,11 +1,14 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { getVideoOutputFormats } from "@/helpers/video-output-formats";
 import { cn } from "@/utils/cn";
 
 export const VideoOutputFormatCards = ({ value, mode, onChange }: { value: string; mode?: string; onChange: (value: string) => void }) => {
+  const { t } = useTranslation("common");
   const formats = getVideoOutputFormats(mode);
-  return <div className="grid grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))] gap-2" role="radiogroup" aria-label="Video output format">
+  return <div className="grid grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))] gap-2" role="radiogroup" aria-label={t("workflowConfig.fields.videoOutputFormat")}>
     {formats.map(format => {
       const selected = value === format.value;
       return <button key={format.value} type="button" role="radio" aria-checked={selected} onClick={() => onChange(format.value)}
@@ -13,7 +16,7 @@ export const VideoOutputFormatCards = ({ value, mode, onChange }: { value: strin
         <span className={cn("bg-primary/10 border-primary/50 block shrink-0 rounded-sm border", format.width > format.height ? "w-9" : "h-9")}
           style={{ aspectRatio: `${format.width} / ${format.height}` }} aria-hidden="true" />
         <span className="min-w-0">
-          <span className="block text-sm font-medium [overflow-wrap:anywhere]">{format.label}</span>
+          <span className="block text-sm font-medium [overflow-wrap:anywhere]">{t(`workflowConfig.fields.videoFormats.${format.value}`, { defaultValue: format.label })}</span>
           <span className="text-muted-foreground block text-[11px] leading-4">{format.aspectRatio}</span>
           <span className="text-muted-foreground block text-[11px] leading-4">{format.dimensions}</span>
         </span>

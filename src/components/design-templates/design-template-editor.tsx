@@ -17,6 +17,7 @@ import {
   WandSparkles,
 } from "lucide-react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "@/components/commons/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ import { useUpdateDesignTemplate } from "@/hooks/mutations/use-update-design-tem
 import { useDesignTemplate } from "@/hooks/queries/use-design-template";
 import { useDesignTemplateOptions } from "@/hooks/queries/use-design-template-options";
 import { useIsPhone } from "@/hooks/use-is-phone";
+import { i18n } from "@/i18n/client";
 import { type DesignTemplateFormValues, designTemplateSchema } from "@/schemas/design-template";
 import { useAuthStore } from "@/stores/auth";
 import { cn } from "@/utils/cn";
@@ -61,9 +63,33 @@ const EMPTY_FORM: DesignTemplateFormValues = {
   examples: [],
 };
 
+const NICHE_KEYS: Record<string, string> = {
+  "Nature & Botanical": "natureBotanical",
+  Outdoors: "outdoors",
+  "Food & Drink": "foodDrink",
+  Vehicles: "vehicles",
+  "Quotes & Motivation": "quotesMotivation",
+  "Humor & Lifestyle": "humorLifestyle",
+  "Gifts & Occasions": "giftsOccasions",
+  "Pets & Animals": "petsAnimals",
+  "Sports & Fitness": "sportsFitness",
+  "Travel & Places": "travelPlaces",
+};
+
+const ART_STYLE_KEYS: Record<string, string> = {
+  vintage: "vintage",
+  minimalist: "minimalist",
+  watercolor: "watercolor",
+  bold_typography: "boldTypography",
+  dark_academia: "darkAcademia",
+  funny_quote: "funnyQuote",
+  floral: "floral",
+};
+
 export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) {
   const router = useRouter();
   const isEditing = Boolean(templateId);
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
   const [previewImageFailed, setPreviewImageFailed] = useState(false);
@@ -95,7 +121,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
     const options = optionsQuery.data;
     if (!template || !options) return;
     if (!template.canEdit) {
-      showToast("warning", "System templates are read-only. Clone one to customize it.");
+      showToast("warning", i18n.t("designTemplates.readOnlyToast"));
       router.replace("/design-templates");
       return;
     }
@@ -122,11 +148,23 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
     return () => window.removeEventListener("beforeunload", preventAccidentalExit);
   }, [form.formState.isDirty]);
 
-  const styleLabel = useMemo(
-    () =>
-      optionsQuery.data?.artStyles.find((item) => item.value === artStyle)?.label ?? "Art style",
-    [artStyle, optionsQuery.data?.artStyles]
-  );
+  const styleLabel = useMemo(() => {
+    const option = optionsQuery.data?.artStyles.find((item) => item.value === artStyle);
+    if (!option) return t("designTemplates.artStyle");
+    const key = ART_STYLE_KEYS[option.value];
+    return key
+      ? t(`designTemplates.artStyles.${key}`, { defaultValue: option.label })
+      : option.label;
+  }, [artStyle, optionsQuery.data?.artStyles, t]);
+
+  const nicheOptionLabel = (value: string, fallback: string) => {
+    const key = NICHE_KEYS[value];
+    return key ? t(`designTemplates.niches.${key}`, { defaultValue: fallback }) : fallback;
+  };
+  const artStyleOptionLabel = (value: string, fallback: string) => {
+    const key = ART_STYLE_KEYS[value];
+    return key ? t(`designTemplates.artStyles.${key}`, { defaultValue: fallback }) : fallback;
+  };
 
   const submit = form.handleSubmit((values) => {
     const input = {
@@ -146,7 +184,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
         {
           onSuccess: () => {
             form.reset(input);
-            showToast("success", "Template changes saved.");
+            showToast("success", t("designTemplates.savedToast"));
             router.replace("/design-templates?scope=personal");
           },
         }
@@ -157,7 +195,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
     createMutation.mutate(input, {
       onSuccess: () => {
         form.reset(input);
-        showToast("success", "Personal template created.");
+        showToast("success", t("designTemplates.createdToast"));
         router.replace("/design-templates?scope=personal");
       },
     });
@@ -195,7 +233,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
     return (
       <main
         className="w-full min-w-0 p-4 sm:p-6"
-        aria-label="Loading template editor"
+        aria-label={t("designTemplates.loadingEditor")}
       >
         <div className="bg-ink-200 h-10 w-64 animate-pulse rounded" />
         <div className="mt-7 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -211,9 +249,9 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
       <main className="flex min-h-[65vh] w-full min-w-0 items-center justify-center p-4 text-center sm:p-6">
         <div className="border-ink-200 bg-card max-w-md rounded-[22px] border p-8 shadow-[0_18px_50px_rgba(39,55,80,0.08)]">
           <Layers3 className="text-ink-400 mx-auto size-8" aria-hidden="true" />
-          <h1 className="font-display mt-4 text-2xl font-semibold">Editor could not be loaded</h1>
+          <h1 className="font-display mt-4 text-2xl font-semibold">{t("designTemplates.editorErrorTitle")}</h1>
           <p className="text-ink-600 mt-2 text-sm">
-            The template may no longer exist, or the connection was interrupted.
+            {t("designTemplates.editorErrorDescription")}
           </p>
           <Button
             variant="outline"
@@ -221,7 +259,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
             onClick={() => router.replace("/design-templates")}
           >
             <RefreshCw aria-hidden="true" />
-            Return to library
+            {t("designTemplates.returnToLibrary")}
           </Button>
         </div>
       </main>
@@ -232,9 +270,9 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
     // The bottom padding keeps the last section clear of the fixed save button.
     <main className="w-full min-w-0 p-4 max-md:p-0 max-md:pb-20 sm:p-6">
       <PageHeader
-        eyebrow={isEditing ? "Personal template" : "New template"}
-        title={isEditing ? "Refine your prompt system" : "Build a reusable creative direction"}
-        description="Keep the structure stable and use placeholders for the product-specific details you will supply later."
+        eyebrow={isEditing ? t("designTemplates.personalTemplate") : t("designTemplates.newTemplate")}
+        title={isEditing ? t("designTemplates.editorTitleEdit") : t("designTemplates.editorTitleNew")}
+        description={t("designTemplates.editorDescription")}
         className="border-ink-200 border-b pb-6 max-md:border-b-0 max-md:pb-0"
         breadcrumb={
           <button
@@ -244,7 +282,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
             disabled={saving}
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-            Back to library
+            {t("designTemplates.backToLibrary")}
           </button>
         }
       />
@@ -259,13 +297,13 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
               id="template-identity-title"
               className="font-display col-span-full text-xl font-semibold max-md:text-base"
             >
-              Template identity
+              {t("designTemplates.identityTitle")}
             </h2>
             <label className="text-ink-800 grid gap-2 text-sm font-semibold sm:col-span-2">
-              Name
+              {t("designTemplates.name")}
               <Input
                 {...form.register("name")}
-                placeholder="e.g. Botanical Linework"
+                placeholder={t("designTemplates.namePlaceholder")}
                 className="border-ink-300 min-h-11"
               />
               <FieldError message={form.formState.errors.name?.message} />
@@ -275,7 +313,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
               name="nicheCategory"
               render={({ field, fieldState }) => (
                 <label className="text-ink-800 grid gap-2 text-sm font-semibold">
-                  Niche
+                  {t("designTemplates.niche")}
                   <Select
                     name={field.name}
                     value={field.value}
@@ -287,12 +325,12 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                       aria-invalid={fieldState.invalid}
                       className="border-ink-300 min-h-11 w-full"
                     >
-                      <SelectValue placeholder="Choose a niche" />
+                      <SelectValue placeholder={t("designTemplates.chooseNiche")} />
                     </SelectTrigger>
                     <SelectContent>
                       {optionsQuery.data?.niches.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                          {option.label}
+                          {nicheOptionLabel(option.value, option.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -306,7 +344,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
               name="artStyle"
               render={({ field, fieldState }) => (
                 <label className="text-ink-800 grid gap-2 text-sm font-semibold">
-                  Art style
+                  {t("designTemplates.artStyle")}
                   <Select
                     name={field.name}
                     value={field.value}
@@ -318,12 +356,12 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                       aria-invalid={fieldState.invalid}
                       className="border-ink-300 min-h-11 w-full"
                     >
-                      <SelectValue placeholder="Choose a style" />
+                      <SelectValue placeholder={t("designTemplates.chooseStyle")} />
                     </SelectTrigger>
                     <SelectContent>
                       {optionsQuery.data?.artStyles.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                          {option.label}
+                          {artStyleOptionLabel(option.value, option.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -338,10 +376,10 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 id="prompt-title" className="font-display text-xl font-semibold max-md:text-base">
-                  Prompt framework
+                  {t("designTemplates.promptFramework")}
                 </h2>
                 <p className="text-ink-500 mt-1 text-sm">
-                  Use only supported placeholders inside curly braces.
+                  {t("designTemplates.promptFrameworkDescription")}
                 </p>
               </div>
               <span className="text-ink-500 text-xs font-medium tabular-nums">
@@ -353,35 +391,35 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
               rows={8}
               placeholder={
                 isPhone
-                  ? "A print-ready {style} illustration of {subject}"
-                  : "Example: Create a print-ready {style} illustration of {subject} for the {niche} niche using {keywords}. Isolated artwork, no product mockup."
+                  ? t("designTemplates.basePromptPlaceholderShort")
+                  : t("designTemplates.basePromptPlaceholder")
               }
               className="border-ink-300 mt-4 resize-y font-mono text-[13px] leading-6 max-md:max-h-52 max-md:min-h-28 max-md:text-base max-md:leading-6"
             />
             <FieldError message={form.formState.errors.basePrompt?.message} />
             <PlaceholderToolbar
-              label="Insert into positive prompt"
+              label={t("designTemplates.insertIntoPositive")}
               placeholders={optionsQuery.data?.placeholders ?? []}
               onInsert={(placeholder) => addPlaceholder("basePrompt", placeholder)}
             />
             {missingSubject && (
               <p className="mt-2 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
                 <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                Without {`{subject}`}, this template cannot adapt to a new design subject.
+                {t("designTemplates.missingSubject")}
               </p>
             )}
             <label className="text-ink-800 mt-5 grid gap-2 text-sm font-semibold">
-              Negative prompt <span className="text-ink-500 font-normal">Optional</span>
+              {t("designTemplates.negativePrompt")} <span className="text-ink-500 font-normal">{t("designTemplates.optional")}</span>
               <Textarea
                 {...form.register("negativePrompt")}
                 rows={4}
-                placeholder="Leave empty, or list elements the model should avoid"
+                placeholder={t("designTemplates.negativePromptPlaceholder")}
                 className="border-ink-300 resize-y text-sm leading-6"
               />
               <FieldError message={form.formState.errors.negativePrompt?.message} />
             </label>
             <PlaceholderToolbar
-              label="Insert into negative prompt"
+              label={t("designTemplates.insertIntoNegative")}
               placeholders={optionsQuery.data?.placeholders ?? []}
               onInsert={(placeholder) => addPlaceholder("negativePrompt", placeholder)}
             />
@@ -391,10 +429,10 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
             <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
               <div>
                 <h2 id="examples-title" className="font-display text-xl font-semibold max-md:text-base">
-                  Examples
+                  {t("designTemplates.examples")}
                 </h2>
                 <p className="text-ink-500 mt-1 text-sm">
-                  Show how a subject becomes a finished creative direction.
+                  {t("designTemplates.examplesDescription")}
                 </p>
               </div>
               <Button
@@ -405,13 +443,12 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                 onClick={() => examples.append({ subject: "", prompt: "" })}
               >
                 <Plus aria-hidden="true" />
-                Add example
+                {t("designTemplates.addExample")}
               </Button>
             </div>
             {examples.fields.length === 0 ? (
               <div className="border-ink-300 bg-ink-50 text-ink-500 mt-4 rounded-xl border border-dashed p-5 text-sm">
-                Examples are optional, but they make a personal template easier to reuse
-                consistently.
+                {t("designTemplates.examplesEmpty")}
               </div>
             ) : (
               <div className="mt-4 space-y-4">
@@ -421,13 +458,13 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                     className="border-ink-200 bg-ink-50 relative grid gap-3 rounded-xl border p-4"
                   >
                     <legend className="text-ink-500 px-1 text-xs font-bold tracking-[0.1em] uppercase">
-                      Example {index + 1}
+                      {t("designTemplates.exampleNumber", { number: index + 1 })}
                     </legend>
                     <label className="text-ink-700 grid gap-2 text-xs font-semibold">
-                      Subject
+                      {t("designTemplates.subject")}
                       <Input
                         {...form.register(`examples.${index}.subject`)}
-                        placeholder="e.g. luna moth with wildflowers"
+                        placeholder={t("designTemplates.subjectPlaceholder")}
                         className="border-ink-300 bg-card"
                       />
                       <FieldError
@@ -435,11 +472,11 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                       />
                     </label>
                     <label className="text-ink-700 grid gap-2 text-xs font-semibold">
-                      Resulting prompt
+                      {t("designTemplates.resultingPrompt")}
                       <Textarea
                         {...form.register(`examples.${index}.prompt`)}
                         rows={3}
-                        placeholder="Describe the expected composition"
+                        placeholder={t("designTemplates.resultingPromptPlaceholder")}
                         className="border-ink-300 bg-card text-sm leading-5"
                       />
                       <FieldError
@@ -452,7 +489,7 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                       size="icon-sm"
                       className="text-ink-500 absolute top-2 right-2 hover:translate-y-0 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-500/10 dark:hover:text-red-300"
                       onClick={() => examples.remove(index)}
-                      aria-label={`Remove example ${index + 1}`}
+                      aria-label={t("designTemplates.removeExample", { number: index + 1 })}
                     >
                       <Trash2 aria-hidden="true" />
                     </Button>
@@ -472,13 +509,13 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                 </span>
                 <div>
                   <p className="text-ink-500 text-[10px] font-bold tracking-[0.15em] uppercase">
-                    Live structure
+                    {t("designTemplates.liveStructure")}
                   </p>
-                  <p className="text-ink-500 mt-0.5 text-xs">Personal template preview</p>
+                  <p className="text-ink-500 mt-0.5 text-xs">{t("designTemplates.personalTemplatePreview")}</p>
                 </div>
               </div>
               <span className="border-ink-200 bg-card text-ink-500 rounded-md border px-2 py-1 text-[9px] font-bold tracking-[0.12em] uppercase">
-                Draft
+                {t("designTemplates.draft")}
               </span>
             </div>
             <div className={cn("border-ink-200 bg-ink-100 border-b p-4", !showsPreview && "max-md:hidden")}>
@@ -489,7 +526,9 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                     sizes="(max-width: 1023px) calc(100vw - 4rem), 288px"
                     src={previewImageUrl}
                     unoptimized
-                    alt={`Preview artwork for ${form.watch("name") || "untitled template"}`}
+                    alt={t("designTemplates.previewAlt", {
+                      name: form.watch("name") || t("designTemplates.untitledTemplateLower"),
+                    })}
                     className="object-contain"
                     onError={() => setPreviewImageFailed(true)}
                   />
@@ -498,9 +537,9 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                     <span className="border-ink-200 bg-card text-ink-500 flex size-11 items-center justify-center rounded-full border shadow-sm">
                       <Sparkles className="size-5" aria-hidden="true" />
                     </span>
-                    <p className="text-ink-700 mt-3 text-sm font-semibold">AI preview</p>
+                    <p className="text-ink-700 mt-3 text-sm font-semibold">{t("designTemplates.aiPreview")}</p>
                     <p className="text-ink-500 mt-1 text-xs leading-5">
-                      Your generated artwork preview will appear here.
+                      {t("designTemplates.aiPreviewDescription")}
                     </p>
                   </div>
                 )}
@@ -513,10 +552,10 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                 aria-describedby="preview-generation-status"
               >
                 <WandSparkles aria-hidden="true" />
-                {previewImageUrl ? "Regenerate Preview" : "Generate Preview"}
+                {previewImageUrl ? t("designTemplates.regeneratePreview") : t("designTemplates.generatePreview")}
                 {!previewGenerationEnabled && (
                   <span className="bg-ink-200 rounded px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] uppercase">
-                    Coming soon
+                    {t("designTemplates.comingSoon")}
                   </span>
                 )}
               </Button>
@@ -524,15 +563,15 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
                 id="preview-generation-status"
                 className="text-ink-500 mt-2 text-center text-xs leading-5"
               >
-                AI preview generation will be available in a future update.
+                {t("designTemplates.previewComingSoon")}
               </p>
             </div>
             <div className="p-5 max-md:p-4">
               <h2 className="font-display text-ink-900 text-xl font-semibold tracking-[-0.02em] max-md:text-base">
-                {form.watch("name") || "Untitled template"}
+                {form.watch("name") || t("designTemplates.untitledTemplate")}
               </h2>
               <p className="text-ink-600 mt-2 text-sm leading-5 max-md:mt-0.5 max-md:text-xs">
-                {nicheCategory || "Choose a niche"}{" "}
+                {nicheCategory ? nicheOptionLabel(nicheCategory, nicheCategory) : t("designTemplates.chooseNiche")}{" "}
                 <span className="text-ink-300 px-1" aria-hidden="true">
                   /
                 </span>{" "}
@@ -541,15 +580,15 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
               <div className="border-ink-200 text-ink-600 mt-5 space-y-2.5 border-t pt-4 text-xs max-md:hidden">
                 <p className="flex items-center gap-2">
                   <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-                  <span>Personal and editable</span>
+                  <span>{t("designTemplates.personalEditable")}</span>
                 </p>
                 <p className="flex items-center gap-2">
                   <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-                  <span>Up to five examples</span>
+                  <span>{t("designTemplates.upToFiveExamples")}</span>
                 </p>
                 <p className="flex items-center gap-2">
                   <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-                  <span>Private to your seller account</span>
+                  <span>{t("designTemplates.privateToAccount")}</span>
                 </p>
               </div>
             </div>
@@ -558,10 +597,10 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
           <div className="max-md:bg-card space-y-4 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-20 max-md:space-y-1 max-md:border-t max-md:px-4 max-md:py-3">
             <Button type="submit" size="lg" className="min-h-12 w-full" disabled={saving}>
               <Save aria-hidden="true" />
-              {saving ? "Saving..." : isEditing ? "Save changes" : "Create template"}
+              {saving ? t("designTemplates.saving") : isEditing ? t("designTemplates.saveChanges") : t("designTemplates.createTemplate")}
             </Button>
             {form.formState.isDirty && (
-              <p className="text-center text-xs text-amber-700 dark:text-amber-300">You have unsaved changes.</p>
+              <p className="text-center text-xs text-amber-700 dark:text-amber-300">{t("designTemplates.unsavedChanges")}</p>
             )}
           </div>
         </aside>
@@ -572,18 +611,18 @@ export function DesignTemplateEditor({ templateId }: DesignTemplateEditorProps) 
             <span className="mb-2 flex size-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
               <AlertCircle className="size-5" aria-hidden="true" />
             </span>
-            <DialogTitle>Save template changes?</DialogTitle>
+            <DialogTitle>{t("designTemplates.exitTitle")}</DialogTitle>
             <DialogDescription className="leading-6">
-              You have unsaved changes. Save them before returning to your template library?
+              {t("designTemplates.exitDescription")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="sm:flex-wrap">
             <Button type="button" variant="outline" onClick={discardChangesAndGoBack}>
-              Discard changes
+              {t("designTemplates.discardChanges")}
             </Button>
             <Button type="button" disabled={saving} onClick={saveChangesAndGoBack}>
               <Save aria-hidden="true" />
-              {saving ? "Saving..." : "Save changes"}
+              {saving ? t("designTemplates.saving") : t("designTemplates.saveChanges")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -622,11 +661,13 @@ function PlaceholderToolbar({
   placeholders: readonly string[];
   onInsert: (placeholder: string) => void;
 }) {
+  const { t } = useTranslation("common");
+
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2" aria-label={label}>
       <span className="text-ink-500 inline-flex min-h-8 items-center gap-1.5 pr-1 text-xs font-semibold">
         <Braces className="size-4" aria-hidden="true" />
-        Insert
+        {t("designTemplates.insert")}
       </span>
       {placeholders.map((placeholder) => (
         <button

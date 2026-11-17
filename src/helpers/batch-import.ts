@@ -1,3 +1,4 @@
+import { i18n } from "@/i18n/client";
 import { productSchema } from "@/schemas/batches";
 import type { BatchProductImportRow, ProductType, SaveProductInput } from "@/types/batches";
 
@@ -32,7 +33,7 @@ export const parseProductSheet = (sheetRows: unknown[][]): { rows: ImportRow[] }
   const headers = (sheetRows[0] ?? []).map(normalizeImportHeader);
   const requiredHeaders = ["name", "producttype", "niche", "keywords"];
   if (requiredHeaders.some((header) => !headers.includes(header))) {
-    return { error: "The Products worksheet must include Product name, Product type, Niche and Keywords columns." };
+    return { error: i18n.t("batches.import.missingColumns") };
   }
   const column = (name: string) => headers.indexOf(normalizeImportHeader(name));
   const rows: ImportRow[] = sheetRows.slice(1).map((record, index) => {
@@ -51,7 +52,7 @@ export const parseProductSheet = (sheetRows: unknown[][]): { rows: ImportRow[] }
     const issues = parsed.success ? [] : parsed.error.issues.map((issue) => issue.message);
     return { row: index + 2, product: input, issues: [...new Set(issues)] };
   }).filter((row) => row.product.name || row.product.productType || row.product.niche || row.product.keywords.length || row.product.productDescription || row.product.sourceNotes || row.product.designText || row.product.customPrompt);
-  if (sheetRows.length - 1 > MAX_IMPORT_ROWS) return { error: "A file can contain up to 500 product rows per import." };
-  if (!rows.length) return { error: "No product rows found. Use the Products worksheet and keep the provided column headers." };
+  if (sheetRows.length - 1 > MAX_IMPORT_ROWS) return { error: i18n.t("batches.import.tooManyRows") };
+  if (!rows.length) return { error: i18n.t("batches.import.noRows") };
   return { rows };
 };

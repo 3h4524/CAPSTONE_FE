@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 import { AssistantChip } from "@/components/commons/assistant/assistant-chip";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,12 +20,10 @@ type AssistantArrangeCardProps = {
   state: AssistantClientActionState;
 };
 
-const STATE_TEXT: Record<Exclude<AssistantClientActionState, "idle">, string> = {
-  applied: "Applied",
-  dismissed: "Dismissed",
-};
+
 
 export const AssistantArrangeCard = ({ messageId, actionId, payload, state }: AssistantArrangeCardProps) => {
+  const { t } = useTranslation("common");
   const pathname = usePathname();
   const workflowId = useWorkflowStore((store) => store.workflowId);
   const applyGraphPatch = useWorkflowStore((store) => store.applyGraphPatch);
@@ -39,31 +38,31 @@ export const AssistantArrangeCard = ({ messageId, actionId, payload, state }: As
     const arranged = arrangeNodes(nodes, edges, payload);
     applyGraphPatch(arranged, edges, arranged.map((node) => node.id));
     settle("applied");
-    showToast("success", "Layout updated. Remember to save.");
+    showToast("success", t("commons.assistant.cards.layoutUpdated"));
   };
 
   return (
     <Card className="gap-0 rounded-xl py-3 shadow-none">
       <CardContent className="flex flex-col gap-2.5 px-3">
-        <p className="text-ink-500 text-xs font-semibold tracking-wide uppercase">Proposed layout</p>
+        <p className="text-ink-500 text-xs font-semibold tracking-wide uppercase">{t("commons.assistant.cards.proposedLayout")}</p>
         <p className="text-ink-800 text-sm">{describeArrangement(payload)}</p>
-        <p className="bg-ink-50 text-ink-600 rounded-md px-2 py-1 text-xs">Only the positions of the nodes change.</p>
+        <p className="bg-ink-50 text-ink-600 rounded-md px-2 py-1 text-xs">{t("commons.assistant.cards.positionsOnly")}</p>
         {state === "idle" ? (
           <div className="flex flex-wrap gap-2 pt-0.5">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
-                    <AssistantChip label="Apply layout" variant="default" disabled={!canApply} onClick={apply} />
+                    <AssistantChip label={t("commons.assistant.cards.applyLayout")} variant="default" disabled={!canApply} onClick={apply} />
                   </span>
                 </TooltipTrigger>
-                {canApply ? null : <TooltipContent>Open this workflow to apply</TooltipContent>}
+                {canApply ? null : <TooltipContent>{t("commons.assistant.cards.openToApply")}</TooltipContent>}
               </Tooltip>
             </TooltipProvider>
-            <AssistantChip label="Dismiss" variant="ghost" disabled={isStreaming} onClick={() => settle("dismissed")} />
+            <AssistantChip label={t("commons.assistant.cards.dismiss")} variant="ghost" disabled={isStreaming} onClick={() => settle("dismissed")} />
           </div>
         ) : (
-          <p className="text-ink-500 text-xs font-medium">{STATE_TEXT[state]}</p>
+          <p className="text-ink-500 text-xs font-medium">{t(`commons.assistant.cards.states.${state}`)}</p>
         )}
       </CardContent>
     </Card>

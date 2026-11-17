@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { AssistantChip } from "@/components/commons/assistant/assistant-chip";
 import { AssistantNavigateChip } from "@/components/commons/assistant/assistant-navigate-chip";
 import { Badge } from "@/components/ui/badge";
@@ -16,20 +18,14 @@ import { useRefreshAssistantPendingActions } from "@/hooks/use-refresh-assistant
 import { useAssistantStore } from "@/stores/assistant";
 import type { AssistantActionResult, AssistantPendingAction } from "@/types/assistant";
 
-const STATUS_TEXT: Record<AssistantPendingAction["status"], string> = {
-  pending: "Needs confirmation",
-  executing: "Running",
-  executed: "Done",
-  rejected: "Cancelled",
-  expired: "Expired. Ask again.",
-  failed: "Failed",
-};
+
 
 type AssistantPendingActionCardProps = {
   action: AssistantPendingAction;
 };
 
 export const AssistantPendingActionCard = ({ action }: AssistantPendingActionCardProps) => {
+  const { t } = useTranslation("common");
   const conversationId = useAssistantStore((state) => state.conversationId ?? state.selectedConversationId);
   const upsertPendingAction = useAssistantStore((state) => state.upsertPendingAction);
   const appendMessage = useAssistantStore((state) => state.appendMessage);
@@ -59,7 +55,7 @@ export const AssistantPendingActionCard = ({ action }: AssistantPendingActionCar
       <CardHeader className="gap-1 px-3">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-sm">{action.title}</CardTitle>
-          <Badge variant={status === "failed" ? "destructive" : "secondary"}>{STATUS_TEXT[status]}</Badge>
+          <Badge variant={status === "failed" ? "destructive" : "secondary"}>{t(`commons.assistant.actionStatuses.${status}`)}</Badge>
         </div>
         <CardDescription className="text-xs">{action.summary}</CardDescription>
       </CardHeader>
@@ -67,13 +63,13 @@ export const AssistantPendingActionCard = ({ action }: AssistantPendingActionCar
         {status === "pending" ? (
           <>
             <AssistantChip
-              label="Confirm"
+              label={t("commons.popup.confirm")}
               variant="default"
               disabled={isBusy}
               onClick={() => confirmAction(action.id, { onSuccess: applyResult, onError: handleError })}
             />
             <AssistantChip
-              label="Cancel"
+              label={t("commons.popup.cancel")}
               variant="ghost"
               disabled={isBusy}
               onClick={() => rejectAction(action.id, { onSuccess: applyResult, onError: handleError })}

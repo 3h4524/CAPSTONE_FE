@@ -1,6 +1,7 @@
 "use client";
 
 import { PackageSearch } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { PanelEmptyState } from "@/components/workflows/config-panel/layout/panel-empty-state";
 import { MockupCard } from "@/components/workflows/media/mockup-card";
@@ -15,6 +16,7 @@ import { useWorkflowStore } from "@/stores/workflow";
  * made. A workflow with a video has the same form in its mock-up list.
  */
 export const ModelPhotoSection = () => {
+  const { t } = useTranslation("common");
   const configuredProductId = useWorkflowStore((state) =>
     readString(
       state.nodes.find((node) => node.data.type === "product-input")?.data.config.productId
@@ -28,8 +30,8 @@ export const ModelPhotoSection = () => {
     return (
       <PanelEmptyState
         icon={PackageSearch}
-        title="Select a product in Product Input first."
-        description="Its mock-ups can then be put on a model photo."
+        title={t("workflowMedia.modelPhotoSection.emptyTitle")}
+        description={t("workflowMedia.modelPhotoSection.emptyDescription")}
       />
     );
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Play, Redo2, Save, ShieldCheck, Square, Undo2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { EditorPanelSheets } from "@/components/workflows/toolbar/editor-panel-sheets";
@@ -55,9 +56,17 @@ export const WorkflowToolbar = ({
   const { saveWorkflow, buildSaveInput, isSaving } = useWorkflowSave();
   const { mutate: createWorkflow, isPending: isCreating } = useCreateWorkflow();
   const { mutate: deleteWorkflow, isPending: isDeleting } = useDeleteWorkflow();
-  const { isRunning, start: startRun, cancel: cancelRun, continueRun, isPending: isRunPending } = useWorkflowExecution(activeWorkflowId, isEditorReady);
+  const {
+    isRunning,
+    start: startRun,
+    cancel: cancelRun,
+    continueRun,
+    isPending: isRunPending,
+  } = useWorkflowExecution(activeWorkflowId, isEditorReady);
 
-  const isBusy = !isEditorReady || isRunning || isCreating || isSaving || isDeleting || isRunPending;
+  const { t } = useTranslation("common");
+  const isBusy =
+    !isEditorReady || isRunning || isCreating || isSaving || isDeleting || isRunPending;
 
   useWorkflowCommands(activeWorkflowId, isEditorReady, isBusy, {
     save: (options) => saveWorkflow(undefined, options),
@@ -69,8 +78,12 @@ export const WorkflowToolbar = ({
     const { nodes, edges } = useWorkflowStore.getState();
     const issueCount = validateWorkflow(nodes, edges).length;
     selectNode(null);
-    if (issueCount === 0) showWorkflowActionToast("success", "The workflow is valid and ready to run.");
-    else showWorkflowActionToast("warning", `Found ${issueCount} issue${issueCount > 1 ? "s" : ""}. Review them in the side panel.`);
+    if (issueCount === 0) showWorkflowActionToast("success", t("workflowEditor.toolbar.valid"));
+    else
+      showWorkflowActionToast(
+        "warning",
+        t("workflowEditor.toolbar.issuesFound", { count: issueCount })
+      );
   };
 
   const submitMeta = (values: WorkflowMetaFormValues) => {
@@ -84,7 +97,7 @@ export const WorkflowToolbar = ({
         onSuccess: (created) => {
           setMetaDialogMode(null);
           onOpenWorkflow(created.id);
-          showToast("success", `${created.name} was created.`);
+          showToast("success", t("workflowEditor.toolbar.created", { name: created.name }));
         },
       }
     );
@@ -92,13 +105,16 @@ export const WorkflowToolbar = ({
 
   const duplicateWorkflow = () => {
     const input = buildSaveInput();
-    const copyName = getCopyName(name, workflows.map((item) => item.name));
+    const copyName = getCopyName(
+      name,
+      workflows.map((item) => item.name)
+    );
     createWorkflow(
       { ...input, name: copyName },
       {
         onSuccess: (created) => {
           onOpenWorkflow(created.id);
-          showToast("success", `${created.name} was created from your current canvas.`);
+          showToast("success", t("workflowEditor.toolbar.duplicated", { name: created.name }));
         },
       }
     );
@@ -107,17 +123,20 @@ export const WorkflowToolbar = ({
   const confirmDelete = () => {
     if (!activeWorkflowId) return;
     openPopup({
-      title: `Delete ${name}?`,
-      description: "This removes the workflow and its canvas permanently.",
-      positiveLabel: "Delete",
+      title: t("workflowEditor.toolbar.deleteTitle", { name }),
+      description: t("workflowEditor.toolbar.deleteDescription"),
+      positiveLabel: t("workflowEditor.toolbar.delete"),
       onPositive: () =>
-        deleteWorkflow({ id: activeWorkflowId, revision: useWorkflowStore.getState().revision }, {
-          onSuccess: () => {
-            const nextWorkflow = workflows.find((item) => item.id !== activeWorkflowId);
-            onOpenWorkflow(nextWorkflow?.id ?? null);
-            showToast("success", `${name} was deleted.`);
-          },
-        }),
+        deleteWorkflow(
+          { id: activeWorkflowId, revision: useWorkflowStore.getState().revision },
+          {
+            onSuccess: () => {
+              const nextWorkflow = workflows.find((item) => item.id !== activeWorkflowId);
+              onOpenWorkflow(nextWorkflow?.id ?? null);
+              showToast("success", t("workflowEditor.toolbar.deleted", { name }));
+            },
+          }
+        ),
     });
   };
 
@@ -135,30 +154,74 @@ export const WorkflowToolbar = ({
         onCreate={() => guardUnsavedChanges(() => setMetaDialogMode("create"))}
       />
       <div className="ml-auto flex items-center gap-2">
-        <Button type="button" variant="ghost" size="icon-sm" aria-label="Undo" title="Undo" onClick={undo} disabled={isBusy || !canUndo}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("workflowEditor.toolbar.undo")}
+          title={t("workflowEditor.toolbar.undo")}
+          onClick={undo}
+          disabled={isBusy || !canUndo}
+        >
           <Undo2 aria-hidden="true" />
         </Button>
-        <Button type="button" variant="ghost" size="icon-sm" aria-label="Redo" title="Redo" onClick={redo} disabled={isBusy || !canRedo}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("workflowEditor.toolbar.redo")}
+          title={t("workflowEditor.toolbar.redo")}
+          onClick={redo}
+          disabled={isBusy || !canRedo}
+        >
           <Redo2 aria-hidden="true" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" className="px-3" onClick={validateCurrentWorkflow} disabled={isBusy}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="px-3"
+          onClick={validateCurrentWorkflow}
+          disabled={isBusy}
+        >
           <ShieldCheck aria-hidden="true" />
-          <span className="hidden sm:inline">Validate</span>
+          <span className="hidden sm:inline">{t("workflowEditor.toolbar.validate")}</span>
         </Button>
         {isRunning ? (
-          <Button type="button" variant="outline" size="sm" className="px-3" onClick={() => void cancelRun()}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="px-3"
+            onClick={() => void cancelRun()}
+          >
             <Square aria-hidden="true" />
-            <span className="hidden sm:inline">Stop</span>
+            <span className="hidden sm:inline">{t("workflowEditor.toolbar.stop")}</span>
           </Button>
         ) : (
-          <Button type="button" variant="outline" size="sm" className="px-3" onClick={() => void startRun()} disabled={isBusy}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="px-3"
+            onClick={() => void startRun()}
+            disabled={isBusy}
+          >
             <Play aria-hidden="true" />
-            <span className="hidden sm:inline">Run</span>
+            <span className="hidden sm:inline">{t("workflowEditor.toolbar.run")}</span>
           </Button>
         )}
-        <Button type="button" size="sm" className="px-4" onClick={() => saveWorkflow()} disabled={!isEditorReady || isCreating || isSaving || isDeleting || isRunPending || !isDirty}>
+        <Button
+          type="button"
+          size="sm"
+          className="px-4"
+          onClick={() => saveWorkflow()}
+          disabled={
+            !isEditorReady || isCreating || isSaving || isDeleting || isRunPending || !isDirty
+          }
+        >
           <Save aria-hidden="true" />
-          <span className="hidden sm:inline">Save</span>
+          <span className="hidden sm:inline">{t("workflowEditor.toolbar.save")}</span>
         </Button>
         <WorkflowActionsMenu
           disabled={isBusy}
@@ -170,7 +233,11 @@ export const WorkflowToolbar = ({
       {metaDialogMode && (
         <WorkflowMetaDialog
           mode={metaDialogMode}
-          defaultValues={metaDialogMode === "rename" ? { name, description } : { name: NEW_WORKFLOW_NAME, description: "" }}
+          defaultValues={
+            metaDialogMode === "rename"
+              ? { name, description }
+              : { name: NEW_WORKFLOW_NAME, description: "" }
+          }
           isPending={isCreating || isSaving}
           onClose={() => setMetaDialogMode(null)}
           onSubmit={submitMeta}

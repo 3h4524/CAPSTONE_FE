@@ -17,6 +17,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,25 +37,42 @@ import {
 } from "@/components/ui/select";
 import type { AiVideoSceneOptions, MockupAsset, Region, SceneMotion } from "@/types/video-workflow";
 
-export const STANDARD_MOTION_OPTIONS: ReadonlyArray<readonly [SceneMotion, string]> = [
-  ["custom", "Default · manual"],
-  ["zoom", "Push in"],
-  ["zoom_out", "Pull back"],
-  ["pan_left", "Pan left"],
-  ["pan", "Pan right"],
-  ["pan_up", "Move up"],
-  ["pan_down", "Move down"],
-  ["diagonal_up_left", "Diagonal up-left"],
-  ["diagonal_up_right", "Diagonal up-right"],
-  ["diagonal_down_left", "Diagonal down-left"],
-  ["diagonal_down_right", "Diagonal down-right"],
-  ["rotate_cw", "Rotate clockwise"],
-  ["rotate_ccw", "Rotate counterclockwise"],
-  ["rotate_zoom_cw", "Rotate clockwise + push in"],
-  ["rotate_zoom_ccw", "Rotate counterclockwise + push in"],
-  ["static", "Static"],
-  ["contain_gentle", "Gentle full-frame motion"],
+export const STANDARD_MOTION_OPTIONS: ReadonlyArray<readonly [SceneMotion, string, string]> = [
+  ["custom", "Default · manual", "workflowConfig.motion.presets.defaultManual"],
+  ["zoom", "Push in", "workflowConfig.motion.presets.pushIn"],
+  ["zoom_out", "Pull back", "workflowConfig.motion.presets.pullBack"],
+  ["pan_left", "Pan left", "workflowConfig.motion.presets.panLeft"],
+  ["pan", "Pan right", "workflowConfig.motion.presets.panRight"],
+  ["pan_up", "Move up", "workflowConfig.motion.presets.moveUp"],
+  ["pan_down", "Move down", "workflowConfig.motion.presets.moveDown"],
+  ["diagonal_up_left", "Diagonal up-left", "workflowConfig.motion.presets.diagonalUpLeft"],
+  ["diagonal_up_right", "Diagonal up-right", "workflowConfig.motion.presets.diagonalUpRight"],
+  ["diagonal_down_left", "Diagonal down-left", "workflowConfig.motion.presets.diagonalDownLeft"],
+  ["diagonal_down_right", "Diagonal down-right", "workflowConfig.motion.presets.diagonalDownRight"],
+  ["rotate_cw", "Rotate clockwise", "workflowConfig.motion.presets.rotateClockwise"],
+  ["rotate_ccw", "Rotate counterclockwise", "workflowConfig.motion.presets.rotateCounterclockwise"],
+  [
+    "rotate_zoom_cw",
+    "Rotate clockwise + push in",
+    "workflowConfig.motion.presets.rotateClockwisePushIn",
+  ],
+  [
+    "rotate_zoom_ccw",
+    "Rotate counterclockwise + push in",
+    "workflowConfig.motion.presets.rotateCounterclockwisePushIn",
+  ],
+  ["static", "Static", "workflowConfig.motion.presets.static"],
+  ["contain_gentle", "Gentle full-frame motion", "workflowConfig.motion.presets.gentleFullFrame"],
 ];
+
+const ANCHOR_OPTIONS = ["center", "left", "right", "top", "bottom"] as const;
+
+const RESIZE_CORNERS = [
+  { corner: "top-left", labelKey: "workflowConfig.motion.corners.topLeft" },
+  { corner: "top-right", labelKey: "workflowConfig.motion.corners.topRight" },
+  { corner: "bottom-left", labelKey: "workflowConfig.motion.corners.bottomLeft" },
+  { corner: "bottom-right", labelKey: "workflowConfig.motion.corners.bottomRight" },
+] as const;
 
 const FULL_FRAME: Region = { x: 0, y: 0, width: 1, height: 1 };
 const ROTATION_LIMIT = 9999;
@@ -122,6 +140,7 @@ export function NumberStepperControls({
   ariaLabel: string;
   onChange: (value: number) => void;
 }) {
+  const { t } = useTranslation("common");
   const valueRef = useRef(value);
   const onChangeRef = useRef(onChange);
   const repeatDelayRef = useRef<number | null>(null);
@@ -197,7 +216,7 @@ export function NumberStepperControls({
       <button
         type="button"
         disabled={disabled || value >= max}
-        aria-label={`Increase ${ariaLabel}`}
+        aria-label={t("workflowConfig.motion.increase", { label: ariaLabel })}
         onPointerDown={(event) => startPress(event, step)}
         onPointerUp={finishPress}
         onPointerCancel={cancelPress}
@@ -210,7 +229,7 @@ export function NumberStepperControls({
       <button
         type="button"
         disabled={disabled || value <= min}
-        aria-label={`Decrease ${ariaLabel}`}
+        aria-label={t("workflowConfig.motion.decrease", { label: ariaLabel })}
         onPointerDown={(event) => startPress(event, -step)}
         onPointerUp={finishPress}
         onPointerCancel={cancelPress}
@@ -337,6 +356,7 @@ export function RotationDial({
   ariaLabel: string;
   onChange: (value: number) => void;
 }) {
+  const { t } = useTranslation("common");
   const drag = useRef<{ pointerId: number; angle: number; value: number } | null>(null);
   const clamp = (nextValue: number) => Math.max(min, Math.min(max, nextValue));
   const angleFromPointer = (event: PointerEvent<HTMLButtonElement>) => {
@@ -409,7 +429,7 @@ export function RotationDial({
       aria-valuemin={min}
       aria-valuemax={max}
       aria-valuenow={value}
-      aria-valuetext={`${value} degrees`}
+      aria-valuetext={t("workflowConfig.motion.degreesValue", { value })}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={finishDragging}
@@ -662,6 +682,7 @@ export function StandardMotionPreview({
   StandardMotionEditorProps,
   "scene" | "sceneNumber" | "baseCrop" | "source" | "aspectRatio"
 >) {
+  const { t } = useTranslation("common");
   const [playhead, setPlayhead] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -743,8 +764,8 @@ export function StandardMotionPreview({
       tabIndex={prefersReducedMotion ? -1 : 0}
       aria-label={
         prefersReducedMotion
-          ? `Scene ${sceneNumber} camera motion preview. Reduced motion is enabled.`
-          : `Scene ${sceneNumber} camera motion preview. Hover, focus, or press Enter to play.`
+          ? t("workflowConfig.motion.previewAriaReducedMotion", { scene: sceneNumber })
+          : t("workflowConfig.motion.previewAria", { scene: sceneNumber })
       }
       onMouseEnter={startPreview}
       onMouseLeave={stopPreview}
@@ -769,8 +790,8 @@ export function StandardMotionPreview({
           src={previewSource.previewUrl}
           alt={
             source
-              ? `Motion preview for scene ${sceneNumber}`
-              : "Sample lifestyle product image demonstrating camera movement"
+              ? t("workflowConfig.motion.previewAlt", { scene: sceneNumber })
+              : t("workflowConfig.motion.sampleAlt")
           }
           fill
           unoptimized
@@ -788,8 +809,8 @@ export function StandardMotionPreview({
           src={previewSource.previewUrl}
           alt={
             source
-              ? `Motion preview for scene ${sceneNumber}`
-              : "Sample lifestyle product image demonstrating camera movement"
+              ? t("workflowConfig.motion.previewAlt", { scene: sceneNumber })
+              : t("workflowConfig.motion.sampleAlt")
           }
           width={previewSource.width}
           height={previewSource.height}
@@ -858,6 +879,7 @@ export function StandardMotionEditor({
   onMotionPresetChange,
   onApply,
 }: StandardMotionEditorProps) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [motion, setMotion] = useState<SceneMotion>(visibleMotion(scene.standardMotionPreset));
   const [startCrop, setStartCrop] = useState<Region>(baseCrop);
@@ -1198,13 +1220,12 @@ export function StandardMotionEditor({
       event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
-  const renderEndpoint = (
-    endpoint: Endpoint,
-    label: string,
-    crop: Region,
-    scale: number,
-    rotation: number
-  ) => {
+  const renderEndpoint = (endpoint: Endpoint, crop: Region, scale: number, rotation: number) => {
+    const endpointAria = (key: string) =>
+      t(`workflowConfig.motion.endpointAria.${key}`, {
+        scene: sceneNumber,
+        frame: t(`workflowConfig.motion.framesLower.${endpoint}`),
+      });
     const zoom = cropZoom(baseCrop, crop);
     const effectiveScale = scale * zoom;
     const position = cropPosition(baseCrop, crop, scale);
@@ -1229,10 +1250,10 @@ export function StandardMotionEditor({
             id={`scene-${sceneNumber}-${endpoint}-frame`}
             className="text-foreground flex items-center gap-2 text-sm font-semibold"
           >
-            {label}
+            {t(`workflowConfig.motion.frames.${endpoint}`)}
             {endpoint === activeEndpoint && (
               <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-semibold">
-                Editing
+                {t("workflowConfig.motion.editing")}
               </span>
             )}
           </h3>
@@ -1241,7 +1262,7 @@ export function StandardMotionEditor({
           </span>
         </div>
         <label className="text-muted-foreground grid grid-cols-[3.5rem_minmax(0,1fr)_4rem] items-center gap-2 text-xs">
-          <span>Scale</span>
+          <span>{t("workflowConfig.motion.scale")}</span>
           <input
             type="range"
             min={SCALE_MIN}
@@ -1249,19 +1270,19 @@ export function StandardMotionEditor({
             step={0.01}
             value={effectiveScale}
             disabled={disabled}
-            aria-label={`Scene ${sceneNumber} ${label.toLowerCase()} scale`}
+            aria-label={endpointAria("scale")}
             onChange={(event) => updateScale(endpoint, Number(event.currentTarget.value) / zoom)}
             className="accent-primary h-8 min-w-0 cursor-pointer disabled:cursor-not-allowed"
           />
           <ScalePercentageInput
             percentage={effectiveScale * 100}
             disabled={disabled}
-            ariaLabel={`Scene ${sceneNumber} ${label.toLowerCase()} scale percentage`}
+            ariaLabel={endpointAria("scalePercentage")}
             onChange={(percentage) => updateScale(endpoint, percentage / 100 / zoom)}
           />
         </label>
         <div className="text-muted-foreground grid grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-2 text-xs">
-          <span>Rotation</span>
+          <span>{t("workflowConfig.motion.rotation")}</span>
           <div className="flex items-center gap-2">
             <div className="relative w-28">
               <input
@@ -1271,7 +1292,7 @@ export function StandardMotionEditor({
                 step={0.5}
                 value={rotation}
                 disabled={disabled}
-                aria-label={`Scene ${sceneNumber} ${label.toLowerCase()} rotation in degrees`}
+                aria-label={endpointAria("rotationDegrees")}
                 onChange={(event) => updateRotation(endpoint, Number(event.currentTarget.value))}
                 className="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/20 h-9 w-full appearance-none rounded-md border py-1 pr-7 pl-2 text-sm tabular-nums outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
@@ -1285,7 +1306,7 @@ export function StandardMotionEditor({
               max={ROTATION_LIMIT}
               step={1}
               disabled={disabled}
-              ariaLabel={`Scene ${sceneNumber} ${label.toLowerCase()} rotation in degrees`}
+              ariaLabel={endpointAria("rotationDegrees")}
               onChange={(value) => updateRotation(endpoint, value)}
             />
             <RotationDial
@@ -1294,37 +1315,37 @@ export function StandardMotionEditor({
               max={ROTATION_LIMIT}
               step={0.5}
               disabled={disabled}
-              ariaLabel={`Scene ${sceneNumber} ${label.toLowerCase()} rotation dial`}
+              ariaLabel={endpointAria("rotationDial")}
               onChange={(value) => updateRotation(endpoint, value)}
             />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="text-muted-foreground space-y-1.5 text-[11px] font-medium">
-            <span className="block">X position</span>
+            <span className="block">{t("workflowConfig.motion.xPosition")}</span>
             <NumberInputWithSteppers
               value={position.x}
               min={-100}
               max={200}
               disabled={disabled}
-              ariaLabel={`Scene ${sceneNumber} ${label.toLowerCase()} X position`}
+              ariaLabel={endpointAria("xPosition")}
               onChange={(value) => setPosition("x", value)}
             />
           </div>
           <div className="text-muted-foreground space-y-1.5 text-[11px] font-medium">
-            <span className="block">Y position</span>
+            <span className="block">{t("workflowConfig.motion.yPosition")}</span>
             <NumberInputWithSteppers
               value={position.y}
               min={-100}
               max={200}
               disabled={disabled}
-              ariaLabel={`Scene ${sceneNumber} ${label.toLowerCase()} Y position`}
+              ariaLabel={endpointAria("yPosition")}
               onChange={(value) => setPosition("y", value)}
             />
           </div>
         </div>
         <label className="text-muted-foreground space-y-1.5 text-[11px] font-medium">
-          <span>Position anchor</span>
+          <span>{t("workflowConfig.motion.positionAnchor")}</span>
           <Select
             disabled={disabled}
             value={cropAnchor(baseCrop, crop, scale)}
@@ -1334,15 +1355,15 @@ export function StandardMotionEditor({
             }}
           >
             <SelectTrigger
-              aria-label={`Scene ${sceneNumber} ${label.toLowerCase()} anchor`}
+              aria-label={endpointAria("anchor")}
               className="border-input bg-background text-foreground"
             >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(["center", "left", "right", "top", "bottom"] as const).map((value) => (
+              {ANCHOR_OPTIONS.map((value) => (
                 <SelectItem key={value} value={value}>
-                  {value[0]!.toUpperCase() + value.slice(1)}
+                  {t(`workflowConfig.motion.anchors.${value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -1376,11 +1397,11 @@ export function StandardMotionEditor({
         size="sm"
         disabled={disabled}
         onClick={openEditor}
-        aria-label={`Edit motion for scene ${sceneNumber}`}
+        aria-label={t("workflowConfig.motion.editMotionAria", { scene: sceneNumber })}
         className="h-10 gap-2 border px-3 text-xs shadow-none hover:translate-y-0"
       >
         <Pencil className="size-3.5" aria-hidden="true" />
-        Edit motion
+        {t("workflowConfig.motion.editMotion")}
       </Button>
 
       <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? openEditor() : cancelEditor())}>
@@ -1398,10 +1419,10 @@ export function StandardMotionEditor({
               </span>
               <div className="min-w-0">
                 <DialogTitle className="text-foreground truncate text-lg">
-                  Scene {sceneNumber} · Standard motion editor
+                  {t("workflowConfig.motion.dialogTitle", { scene: sceneNumber })}
                 </DialogTitle>
                 <DialogDescription className="mt-1 text-sm">
-                  Preview and edit the camera path before rendering.
+                  {t("workflowConfig.motion.dialogDescription")}
                 </DialogDescription>
               </div>
             </div>
@@ -1411,8 +1432,8 @@ export function StandardMotionEditor({
               variant="ghost"
               onClick={cancelEditor}
               className="text-muted-foreground hover:bg-muted hover:text-foreground shrink-0"
-              aria-label="Close motion editor"
-              title="Close"
+              aria-label={t("workflowConfig.motion.closeEditorAria")}
+              title={t("workflowConfig.motion.close")}
             >
               <X aria-hidden="true" />
             </Button>
@@ -1423,7 +1444,7 @@ export function StandardMotionEditor({
               <section
                 ref={previewCanvasRef}
                 className="bg-muted/55 relative flex min-h-[26rem] items-center justify-center p-4 pb-14 max-sm:min-h-[16rem] sm:p-6 sm:pb-16 lg:min-h-0 xl:p-8 xl:pb-18"
-                aria-label="Motion preview canvas"
+                aria-label={t("workflowConfig.motion.previewCanvasAria")}
               >
                 <div
                   className="pointer-events-none absolute inset-0 opacity-80"
@@ -1453,7 +1474,7 @@ export function StandardMotionEditor({
                         <Image
                           ref={previewImageRef}
                           src={source.previewUrl}
-                          alt={`Motion preview for scene ${sceneNumber}`}
+                          alt={t("workflowConfig.motion.previewAlt", { scene: sceneNumber })}
                           fill
                           unoptimized
                           sizes="70vw"
@@ -1470,7 +1491,7 @@ export function StandardMotionEditor({
                         <Image
                           ref={previewImageRef}
                           src={source.previewUrl}
-                          alt={`Motion preview for scene ${sceneNumber}`}
+                          alt={t("workflowConfig.motion.previewAlt", { scene: sceneNumber })}
                           width={source.width}
                           height={source.height}
                           unoptimized
@@ -1495,11 +1516,10 @@ export function StandardMotionEditor({
                         </span>
                         <div>
                           <p className="text-base font-semibold text-white">
-                            Motion setup is ready
+                            {t("workflowConfig.motion.setupReadyTitle")}
                           </p>
                           <p className="mt-1.5 max-w-sm text-sm leading-6 text-white/70">
-                            Choose an approved start frame in the scene to preview this camera path
-                            on the product.
+                            {t("workflowConfig.motion.setupReadyDescription")}
                           </p>
                         </div>
                       </div>
@@ -1520,31 +1540,34 @@ export function StandardMotionEditor({
                         transform: imageBounds.transform,
                       }}
                     >
-                      {(["top-left", "top-right", "bottom-left", "bottom-right"] as const).map(
-                        (corner) => (
-                          <button
-                            key={corner}
-                            type="button"
-                            aria-label={`Resize ${activeEndpoint === "start" ? "first" : "last"} frame from ${corner.replace("-", " ")}`}
-                            title="Drag to resize"
-                            onPointerDown={startPreviewScale}
-                            onPointerMove={movePreview}
-                            onPointerUp={finishPreviewDrag}
-                            onPointerCancel={finishPreviewDrag}
-                            className={`focus-visible:ring-card pointer-events-auto absolute grid size-11 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none ${corner.includes("right") ? "left-full" : "left-0"} ${corner.includes("bottom") ? "top-full" : "top-0"}`}
-                          >
-                            <span className="bg-primary border-card size-3 rounded-full border-2 shadow-sm" />
-                          </button>
-                        )
-                      )}
+                      {RESIZE_CORNERS.map(({ corner, labelKey }) => (
+                        <button
+                          key={corner}
+                          type="button"
+                          aria-label={t("workflowConfig.motion.resizeFrameAria", {
+                            frame: t(`workflowConfig.motion.framesLower.${activeEndpoint}`),
+                            corner: t(labelKey),
+                          })}
+                          title={t("workflowConfig.motion.dragToResize")}
+                          onPointerDown={startPreviewScale}
+                          onPointerMove={movePreview}
+                          onPointerUp={finishPreviewDrag}
+                          onPointerCancel={finishPreviewDrag}
+                          className={`focus-visible:ring-card pointer-events-auto absolute grid size-11 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none ${corner.includes("right") ? "left-full" : "left-0"} ${corner.includes("bottom") ? "top-full" : "top-0"}`}
+                        >
+                          <span className="bg-primary border-card size-3 rounded-full border-2 shadow-sm" />
+                        </button>
+                      ))}
                       <span className="bg-primary text-primary-foreground pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 rounded-full px-2 py-1 text-[10px] font-semibold shadow-sm">
-                        Editing {activeEndpoint === "start" ? "first" : "last"} frame
+                        {t(`workflowConfig.motion.editingFrame.${activeEndpoint}`)}
                       </span>
                       <span className="border-primary pointer-events-none absolute top-full left-1/2 h-4 -translate-x-1/2 border-l-2" />
                       <button
                         type="button"
-                        aria-label={`Rotate ${activeEndpoint === "start" ? "first" : "last"} frame`}
-                        title="Drag to rotate"
+                        aria-label={t("workflowConfig.motion.rotateFrameAria", {
+                          frame: t(`workflowConfig.motion.framesLower.${activeEndpoint}`),
+                        })}
+                        title={t("workflowConfig.motion.dragToRotate")}
                         onPointerDown={startPreviewRotation}
                         onPointerMove={movePreview}
                         onPointerUp={finishPreviewDrag}
@@ -1568,7 +1591,7 @@ export function StandardMotionEditor({
                 <div
                   className="border-border bg-background/95 absolute right-4 bottom-4 z-10 flex items-center overflow-hidden rounded-lg border shadow-md backdrop-blur-sm"
                   role="group"
-                  aria-label="Preview zoom controls"
+                  aria-label={t("workflowConfig.motion.zoomControlsAria")}
                 >
                   <Button
                     type="button"
@@ -1577,8 +1600,8 @@ export function StandardMotionEditor({
                     disabled={canvasZoom <= CANVAS_ZOOM_MIN}
                     onClick={() => adjustCanvasZoom(-CANVAS_ZOOM_STEP)}
                     className="text-foreground hover:bg-muted hover:translate-y-0"
-                    aria-label="Zoom out preview"
-                    title="Zoom out"
+                    aria-label={t("workflowConfig.motion.zoomOutAria")}
+                    title={t("workflowConfig.motion.zoomOut")}
                   >
                     <Minus aria-hidden="true" className="size-4" />
                   </Button>
@@ -1592,8 +1615,8 @@ export function StandardMotionEditor({
                     disabled={canvasZoom >= CANVAS_ZOOM_MAX}
                     onClick={() => adjustCanvasZoom(CANVAS_ZOOM_STEP)}
                     className="text-foreground hover:bg-muted hover:translate-y-0"
-                    aria-label="Zoom in preview"
-                    title="Zoom in"
+                    aria-label={t("workflowConfig.motion.zoomInAria")}
+                    title={t("workflowConfig.motion.zoomIn")}
                   >
                     <Plus aria-hidden="true" className="size-4" />
                   </Button>
@@ -1602,40 +1625,44 @@ export function StandardMotionEditor({
 
               <aside
                 className="border-border bg-card min-h-0 space-y-5 border-t p-5 lg:overflow-y-auto lg:border-t-0 lg:border-l xl:p-6"
-                aria-label="Transform controls"
+                aria-label={t("workflowConfig.motion.transformControlsAria")}
               >
                 <div className="flex items-center gap-2.5">
                   <span className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-lg">
                     <SlidersHorizontal className="size-4" aria-hidden="true" />
                   </span>
-                  <h2 className="text-foreground text-base font-semibold">Transform</h2>
+                  <h2 className="text-foreground text-base font-semibold">
+                    {t("workflowConfig.motion.transform")}
+                  </h2>
                 </div>
                 <label className="text-muted-foreground block space-y-2 text-sm font-medium">
-                  <span>Camera movement</span>
+                  <span>{t("workflowConfig.motion.cameraMovement")}</span>
                   <Select value={motion} disabled={disabled} onValueChange={choosePreset}>
                     <SelectTrigger
-                      aria-label={`Scene ${sceneNumber} editor camera movement`}
+                      aria-label={t("workflowConfig.motion.editorCameraMovementAria", {
+                        scene: sceneNumber,
+                      })}
                       className="border-input bg-background text-foreground h-11"
                     >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {STANDARD_MOTION_OPTIONS.map(([value, label]) => (
+                      {STANDARD_MOTION_OPTIONS.map(([value, , labelKey]) => (
                         <SelectItem key={value} value={value}>
-                          {label}
+                          {t(labelKey)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </label>
-                {renderEndpoint("start", "First frame", startCrop, startScale, startRotation)}
-                {renderEndpoint("end", "Last frame", endCrop, endScale, endRotation)}
+                {renderEndpoint("start", startCrop, startScale, startRotation)}
+                {renderEndpoint("end", endCrop, endScale, endRotation)}
                 {!customCropIsSafe && (
                   <p
                     role="alert"
                     className="border-secondary/25 bg-secondary/10 text-secondary rounded-lg border p-4 text-sm leading-6"
                   >
-                    Move or zoom out until the product and artwork remain visible in both keyframes.
+                    {t("workflowConfig.motion.unsafeCropWarning")}
                   </p>
                 )}
               </aside>
@@ -1643,7 +1670,7 @@ export function StandardMotionEditor({
 
             <section
               className="border-border bg-muted/20 border-t px-5 py-2.5 sm:px-6"
-              aria-label="Scene timeline"
+              aria-label={t("workflowConfig.motion.timelineAria")}
             >
               <div className="mb-1 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
@@ -1651,7 +1678,11 @@ export function StandardMotionEditor({
                     type="button"
                     size="icon"
                     variant="ghost"
-                    aria-label={playing ? "Pause motion preview" : "Play motion preview"}
+                    aria-label={
+                      playing
+                        ? t("workflowConfig.motion.pausePreview")
+                        : t("workflowConfig.motion.playPreview")
+                    }
                     onClick={() => {
                       if (playhead >= 1) setPlayhead(0);
                       setPlaying((value) => !value);
@@ -1683,7 +1714,7 @@ export function StandardMotionEditor({
                   className="text-muted-foreground hover:bg-muted hover:text-foreground min-h-9"
                 >
                   <RotateCcw aria-hidden="true" />
-                  Start from default
+                  {t("workflowConfig.motion.startFromDefault")}
                 </Button>
               </div>
               <div className="border-border bg-background relative h-14 overflow-hidden rounded-lg border shadow-sm">
@@ -1715,7 +1746,9 @@ export function StandardMotionEditor({
                   max={1}
                   step={0.001}
                   value={playhead}
-                  aria-label={`Scene ${sceneNumber} timeline playhead`}
+                  aria-label={t("workflowConfig.motion.timelinePlayheadAria", {
+                    scene: sceneNumber,
+                  })}
                   onChange={(event) => {
                     setPlaying(false);
                     setPlayhead(Number(event.currentTarget.value));
@@ -1735,7 +1768,7 @@ export function StandardMotionEditor({
                     setPlayhead(0);
                   }}
                   className="bg-background/95 text-primary focus-visible:ring-ring absolute top-1/2 left-3 z-30 -translate-y-1/2 rounded-md p-1.5 shadow-sm focus-visible:ring-2"
-                  aria-label="Go to first frame"
+                  aria-label={t("workflowConfig.motion.goToFirstFrame")}
                 >
                   <Diamond className="size-3 fill-current" />
                 </button>
@@ -1746,7 +1779,7 @@ export function StandardMotionEditor({
                     setPlayhead(1);
                   }}
                   className="bg-background/95 text-primary focus-visible:ring-ring absolute top-1/2 right-3 z-30 -translate-y-1/2 rounded-md p-1.5 shadow-sm focus-visible:ring-2"
-                  aria-label="Go to last frame"
+                  aria-label={t("workflowConfig.motion.goToLastFrame")}
                 >
                   <Diamond className="size-3 fill-current" />
                 </button>
@@ -1759,21 +1792,21 @@ export function StandardMotionEditor({
               {hasRenderedVideo ? (
                 <>
                   <Sparkles className="text-primary size-4" aria-hidden="true" />
-                  Save changes, then rerender to update the generated video.
+                  {t("workflowConfig.motion.rerenderHint")}
                 </>
               ) : (
-                "These settings will be used when this scene is rendered."
+                t("workflowConfig.motion.renderHint")
               )}
             </p>
             <Button type="button" variant="ghost" onClick={cancelEditor}>
-              Cancel
+              {t("workflowConfig.motion.cancel")}
             </Button>
             <Button
               type="button"
               disabled={disabled || !customCropIsSafe || (!source && motion === "custom")}
               onClick={apply}
             >
-              Apply motion
+              {t("workflowConfig.motion.applyMotion")}
             </Button>
           </DialogFooter>
         </DialogContent>

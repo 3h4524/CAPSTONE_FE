@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
+import { Trans, useTranslation } from "react-i18next";
 
 import { FormResendVerification } from "@/components/auth/form-resend-verification";
 import { FormInputField } from "@/components/commons/forms/form-input-field";
@@ -12,6 +13,7 @@ import { type RegisterFormValues, registerSchema } from "@/schemas/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 export const FormRegister = () => {
+  const { t } = useTranslation("common");
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
   const { mutate: registerAccount, isPending } = useRegister();
 
@@ -40,8 +42,11 @@ export const FormRegister = () => {
     return (
       <div className="space-y-4">
         <p className="text-ink-600 text-sm">
-          We sent a verification link to <span className="font-medium">{registeredEmail}</span>.
-          Open it to activate your account.
+          <Trans
+            i18nKey="auth.register.verificationSent"
+            values={{ email: registeredEmail }}
+            components={{ email: <span className="font-medium" /> }}
+          />
         </p>
         <FormResendVerification defaultEmail={registeredEmail} />
       </div>
@@ -53,9 +58,9 @@ export const FormRegister = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <FormInputField
           id="fullName"
-          label="Full name"
+          label={t("auth.register.fullName")}
           type="text"
-          placeholder="Jane Doe"
+          placeholder={t("auth.register.fullNamePlaceholder")}
           registration={register("fullName")}
           error={errors.fullName}
           autoComplete="name"
@@ -63,7 +68,7 @@ export const FormRegister = () => {
 
         <FormInputField
           id="email"
-          label="Email"
+          label={t("auth.email")}
           type="email"
           placeholder="you@example.com"
           registration={register("email")}
@@ -74,19 +79,19 @@ export const FormRegister = () => {
 
         <FormInputField
           id="password"
-          label="Password"
+          label={t("auth.password")}
           type="password"
           placeholder="••••••••"
           registration={register("password")}
           error={errors.password}
           autoComplete="new-password"
-          hint="At least 8 characters, with uppercase, lowercase, and a digit."
+          hint={t("auth.passwordHint")}
           required
         />
 
         <FormInputField
           id="confirmPassword"
-          label="Confirm password"
+          label={t("auth.register.confirmPassword")}
           type="password"
           placeholder="••••••••"
           registration={register("confirmPassword")}
@@ -96,14 +101,14 @@ export const FormRegister = () => {
         />
 
         <Button type="submit" className="w-full" disabled={isSubmitting || isPending}>
-          {isPending ? "Creating account..." : "Create account"}
+          {isPending ? t("auth.register.creating") : t("auth.register.submit")}
         </Button>
       </form>
 
       <p className="text-muted-foreground text-center text-sm">
-        Already have an account?{" "}
+        {t("auth.register.hasAccount")}{" "}
         <Link href="/login" className="text-primary font-medium hover:underline">
-          Log in
+          {t("auth.register.logIn")}
         </Link>
       </p>
     </div>

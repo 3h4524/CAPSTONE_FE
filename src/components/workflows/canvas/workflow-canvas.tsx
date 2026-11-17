@@ -1,6 +1,7 @@
 "use client";
 
 import { type DragEvent, type PointerEvent as ReactPointerEvent, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 import { SelectionToolbar } from "@/components/workflows/canvas/selection-toolbar";
 import { ShortcutCheatsheet } from "@/components/workflows/canvas/shortcut-cheatsheet";
@@ -59,13 +60,19 @@ const getNodeIdAtPointer = (event: MouseEvent | TouchEvent) => {
 };
 
 export const WorkflowCanvas = () => {
+  const { t } = useTranslation("common");
   const { screenToFlowPosition, fitView } = useReactFlow();
   const focusRequest = useWorkflowStore((state) => state.focusRequest);
 
   useEffect(() => {
     if (!focusRequest) return;
     const timer = window.setTimeout(() => {
-      void fitView({ nodes: focusRequest.nodeIds.map((id) => ({ id })), duration: 400, maxZoom: 1, padding: 0.4 });
+      void fitView({
+        nodes: focusRequest.nodeIds.map((id) => ({ id })),
+        duration: 400,
+        maxZoom: 1,
+        padding: 0.4,
+      });
     }, FOCUS_DELAY_MS);
     return () => window.clearTimeout(timer);
   }, [focusRequest, fitView]);
@@ -130,7 +137,7 @@ export const WorkflowCanvas = () => {
     const fromTargetHandle = fromHandleType === "target";
     const handleType = fromTargetHandle ? "source" : "target";
     if (!canConnectToNode(targetId, handleType))
-      return { connection: null, issue: "That node cannot accept this connection." };
+      return { connection: null, issue: t("workflowEditor.canvas.cannotConnect") };
     const source = fromTargetHandle ? targetId : fromNodeId;
     const target = fromTargetHandle ? fromNodeId : targetId;
     const connection: Connection = { source, target, sourceHandle: null, targetHandle: null };
@@ -190,7 +197,7 @@ export const WorkflowCanvas = () => {
             targetId
           );
           if (issue || !connection) {
-            showWorkflowActionToast("warning", issue ?? "That node cannot accept this connection.");
+            showWorkflowActionToast("warning", issue ?? t("workflowEditor.canvas.cannotConnect"));
             return;
           }
           connect(connection);

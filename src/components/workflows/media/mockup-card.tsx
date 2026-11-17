@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { Check, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,31 +17,32 @@ const APPROVAL_STYLES: Record<string, string> = {
 };
 
 export const MockupCard = ({ asset, selected, selectable, onSelect, review }: { asset: MockupAsset; selected: boolean; selectable: boolean; onSelect: (id: string, selected: boolean) => void; review: boolean }) => {
+  const { t } = useTranslation("common");
   const { mutate: approve, isPending } = useReviewMockupAsset();
   // Shared with the template picker's list, so naming the template asks the server nothing more.
   const { data: templates } = useMockupTemplates(undefined, Boolean(asset.mockupTemplateId));
   const templateName = asset.mockupTemplateId ? templates?.find((template) => template.id === asset.mockupTemplateId)?.name : undefined;
   return <div className={cn("bg-card overflow-hidden rounded-lg border transition-shadow", selected && "border-primary/50 ring-primary/15 ring-2", asset.approvalStatus === "rejected" && "opacity-75")}>
     <div className="bg-ink-50 relative">
-      <Image src={asset.previewUrl} alt={`${asset.role} product mockup`} width={asset.width} height={asset.height} unoptimized className="h-44 w-full object-contain" />
-      <span className={cn("absolute top-2 right-2 rounded-full px-2 py-0.5 text-[11px] font-semibold shadow-sm", APPROVAL_STYLES[asset.approvalStatus] ?? "bg-card text-ink-600")}>{asset.approvalStatus} · r{asset.revision}</span>
+      <Image src={asset.previewUrl} alt={t("workflowMedia.mockupCard.alt", { role: t(`workflowMedia.assetRoles.${asset.role}`, { defaultValue: asset.role }) })} width={asset.width} height={asset.height} unoptimized className="h-44 w-full object-contain" />
+      <span className={cn("absolute top-2 right-2 rounded-full px-2 py-0.5 text-[11px] font-semibold shadow-sm", APPROVAL_STYLES[asset.approvalStatus] ?? "bg-card text-ink-600")}>{t("workflowMedia.mockupCard.statusRevision", { status: t(`workflowMedia.approvalStatuses.${asset.approvalStatus}`, { defaultValue: asset.approvalStatus }), revision: asset.revision })}</span>
     </div>
     <div className="space-y-2.5 p-3">
-      <div className="flex flex-wrap items-center gap-1.5"><Badge variant="outline" className="border-ink-200 bg-ink-50 text-ink-700">{asset.role}</Badge>{templateName && <span className="text-muted-foreground truncate text-xs" title="The mock-up template it was made from: a scene using it uses each design's own mock-up from this template.">{templateName}</span>}{asset.variantKey && <span className="text-muted-foreground text-xs">Variant: {asset.variantKey}</span>}</div>
+      <div className="flex flex-wrap items-center gap-1.5"><Badge variant="outline" className="border-ink-200 bg-ink-50 text-ink-700">{t(`workflowMedia.assetRoles.${asset.role}`, { defaultValue: asset.role })}</Badge>{templateName && <span className="text-muted-foreground truncate text-xs" title={t("workflowMedia.mockupCard.templateTitle")}>{templateName}</span>}{asset.variantKey && <span className="text-muted-foreground text-xs">{t("workflowMedia.mockupCard.variant", { variant: asset.variantKey })}</span>}</div>
       {asset.warnings.map(w => <p key={w} className="rounded-md bg-amber-50 px-2 py-1.5 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-300">{w}</p>)}
-      {selectable && <label className="flex min-h-9 cursor-pointer items-center gap-2 text-sm font-medium"><Checkbox checked={selected} onCheckedChange={checked => onSelect(asset.id, checked === true)} />Use in this run</label>}
+      {selectable && <label className="flex min-h-9 cursor-pointer items-center gap-2 text-sm font-medium"><Checkbox checked={selected} onCheckedChange={checked => onSelect(asset.id, checked === true)} />{t("workflowMedia.mockupCard.useInRun")}</label>}
       {review && (
         <div className="grid grid-cols-2 gap-2">
           <Button
             type="button"
             size="sm"
-            aria-label="Approve mockup"
+            aria-label={t("workflowMedia.mockupCard.approveMockup")}
             className="h-10 w-full gap-1.5 rounded-md px-2.5 text-xs hover:translate-y-0"
             disabled={isPending || asset.approvalStatus === "approved"}
             onClick={() => approve({ id: asset.id, revision: asset.revision, approved: true })}
           >
             <Check aria-hidden="true" className="size-3.5" />
-            Approve
+            {t("workflowMedia.mockupCard.approve")}
           </Button>
           <Button
             type="button"
@@ -51,7 +53,7 @@ export const MockupCard = ({ asset, selected, selectable, onSelect, review }: { 
             onClick={() => approve({ id: asset.id, revision: asset.revision, approved: false })}
           >
             <X aria-hidden="true" className="size-3.5" />
-            Reject
+            {t("workflowMedia.mockupCard.reject")}
           </Button>
         </div>
       )}

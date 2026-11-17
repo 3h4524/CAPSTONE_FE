@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { PageLoading } from "@/components/commons/layout/page-loading";
 import { ActionInbox } from "@/components/dashboard/action-inbox";
@@ -32,6 +33,7 @@ const reveal = (step: number) => ({
  * by stage. A new Seller gets the first steps instead.
  */
 export const SellerDashboard = () => {
+  const { t } = useTranslation("common");
   const [days, setDays] = useState<DashboardPeriod>(30);
   const [actionsOpen, setActionsOpen] = useState(false);
   const { data: summary, isPending: isSummaryPending, isError } = useDashboardSummary(days);
@@ -41,12 +43,12 @@ export const SellerDashboard = () => {
   const { data: allowances } = useAllowances();
   const hasAllowance = (allowances?.items.length ?? 0) > 0;
 
-  if (isSummaryPending) return <PageLoading label="Loading dashboard" />;
+  if (isSummaryPending) return <PageLoading label={t("dashboard.page.loading")} />;
   if (isError || !summary)
     return (
       <div className="space-y-1 p-4 sm:p-6">
-        <h1 className="text-base font-semibold">Your dashboard is temporarily unavailable</h1>
-        <p className="text-muted-foreground text-sm">Please refresh the page and try again.</p>
+        <h1 className="text-base font-semibold">{t("dashboard.page.unavailableTitle")}</h1>
+        <p className="text-muted-foreground text-sm">{t("dashboard.page.unavailableHint")}</p>
       </div>
     );
 
@@ -54,7 +56,7 @@ export const SellerDashboard = () => {
     <div className="flex w-full min-w-0 flex-col gap-4 md:block md:space-y-4 md:p-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-muted-foreground text-sm max-md:hidden">
-          Overview of the last <span className="text-foreground font-medium">{days} days</span>
+          {t("dashboard.page.overview", { days })}
         </p>
         <div className="flex flex-wrap items-center gap-2 max-md:w-full max-md:justify-between">
           <PeriodSwitcher value={days} onChange={setDays} />

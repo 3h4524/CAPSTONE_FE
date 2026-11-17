@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { listMusicTracks, videoWorkflowKeys } from "@/api/video-workflow";
 import {
@@ -120,6 +121,7 @@ export const StoryboardPlayer = ({
   assets: MockupAsset[];
   config: GenerateVideoConfig;
 }) => {
+  const { t } = useTranslation("common");
   const effectiveVideoEdit = config.videoEdit ?? board.videoEdit;
   const music = effectiveVideoEdit?.music;
   const expectsMusic = Boolean(music && !music.muted);
@@ -219,7 +221,7 @@ export const StoryboardPlayer = ({
   if (Object.keys(remoteSources).length !== requiredSourceIds.length)
     return (
       <p className="text-sm text-amber-700">
-        A storyboard source is no longer available. Refresh the preview.
+        {t("workflowMedia.storyboardPlayer.sourceUnavailable")}
       </p>
     );
 
@@ -233,7 +235,7 @@ export const StoryboardPlayer = ({
         >
           <span className="inline-flex items-center gap-2 text-sm font-medium">
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            Preparing soundtrack…
+            {t("workflowMedia.storyboardPlayer.preparingSoundtrack")}
           </span>
         </div>
       </VideoPreviewFrame>
@@ -246,7 +248,7 @@ export const StoryboardPlayer = ({
           className="grid size-full place-items-center bg-slate-950 p-6 text-center text-sm text-amber-200"
           role="alert"
         >
-          The selected soundtrack could not be loaded. Refresh the storyboard preview to retry.
+          {t("workflowMedia.storyboardPlayer.soundtrackFailed")}
         </p>
       </VideoPreviewFrame>
     );

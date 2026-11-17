@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 import { parsePrintArea } from "@/helpers/mockup-template";
 import { previewFallbackFor } from "@/helpers/preview-fallback";
@@ -26,6 +27,7 @@ const percent = (value: number, total: number) => `${(value / total) * 100}%`;
 export const MockupTemplatePreview = ({ template, color, background, designUrl, className }: MockupTemplatePreviewProps) => {
   // Kept per photo: the panel reuses this preview for every template pointed at, and one broken photo
   // must not leave the fallback over the next template's working one.
+  const { t } = useTranslation("common");
   const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null);
   const photoFailed = failedPhotoUrl === template.baseImageUrl;
   const area = parsePrintArea(template.printAreaConfig);
@@ -84,7 +86,7 @@ export const MockupTemplatePreview = ({ template, color, background, designUrl, 
         >
           {designUrl && (
             // object-contain mirrors how the design is fitted into the print area when mock-ups are made.
-            <Image src={designUrl} alt="Your design in the print area" fill unoptimized sizes="200px" className="object-contain" />
+            <Image src={designUrl} alt={t("batchSetup.mockup.designInArea")} fill unoptimized sizes="200px" className="object-contain" />
           )}
         </div>
       )}

@@ -1,15 +1,20 @@
 import { z } from "zod";
 
+import { i18n } from "@/i18n/client";
 import type { WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
 
 const AI_ADVANCED_CONTROLS_ENABLED = false;
 
-const wholeNumber = (label: string, min: number, max: number) =>
+type NumberLabel = "timelineFrame" | "fadeIn" | "fadeOut" | "variants" | "videoDuration" | "sceneDuration" | "transitionDuration";
+
+const numberLabel = (label: NumberLabel) => i18n.t(`workflowConfig.schema.numberLabels.${label}`);
+
+const wholeNumber = (label: NumberLabel, min: number, max: number) =>
   z
-    .number({ error: `Enter the ${label}.` })
-    .int(`The ${label} must be a whole number.`)
-    .min(min, `The ${label} must be at least ${min}.`)
-    .max(max, `The ${label} cannot exceed ${max}.`);
+    .number({ error: () => i18n.t("workflowConfig.schema.enterNumber", { label: numberLabel(label) }) })
+    .int({ error: () => i18n.t("workflowConfig.schema.wholeNumber", { label: numberLabel(label) }) })
+    .min(min, { error: () => i18n.t("workflowConfig.schema.numberMin", { label: numberLabel(label), min }) })
+    .max(max, { error: () => i18n.t("workflowConfig.schema.numberMax", { label: numberLabel(label), max }) });
 
 const videoRegionSchema = z.object({
   x: z.number().min(-1).max(1),
@@ -64,7 +69,7 @@ const normalizeLegacyStandardMotion = (value: unknown) =>
 const MIN_VIDEO_DURATION_SECONDS = 5;
 const MAX_VIDEO_DURATION_SECONDS = 15;
 const MAX_VIDEO_FRAMES = MAX_VIDEO_DURATION_SECONDS * 30;
-const timelineFrame = wholeNumber("timeline frame", 0, MAX_VIDEO_FRAMES);
+const timelineFrame = wholeNumber("timelineFrame", 0, MAX_VIDEO_FRAMES);
 const videoOverlaySchema = z
   .object({
     id: z.string().min(1),
@@ -85,13 +90,13 @@ const videoOverlaySchema = z
       ctx.addIssue({
         code: "custom",
         path: ["endFrame"],
-        message: "Text must remain visible for at least 15 frames.",
+        message: i18n.t("workflowConfig.schema.textMinFrames"),
       });
     if (overlay.type === "cta" && overlay.text.length > 40)
       ctx.addIssue({
         code: "custom",
         path: ["text"],
-        message: "CTA text must be 40 characters or less.",
+        message: i18n.t("workflowConfig.schema.ctaMaxLength"),
       });
   });
 
@@ -104,8 +109,8 @@ const videoEditSchema = z
         startFrame: timelineFrame,
         sourceOffsetFrames: timelineFrame,
         volume: z.number().finite().min(0).max(1),
-        fadeInFrames: wholeNumber("fade in", 0, 150),
-        fadeOutFrames: wholeNumber("fade out", 0, 150),
+        fadeInFrames: wholeNumber("fadeIn", 0, 150),
+        fadeOutFrames: wholeNumber("fadeOut", 0, 150),
         loop: z.boolean(),
         muted: z.boolean(),
       })
@@ -115,56 +120,56 @@ const videoEditSchema = z
   .optional();
 
 export const productInputConfigSchema = z.object({
-  batchId: z.string().min(1, "Choose the batch that feeds this workflow."),
+  batchId: z.string().min(1, { error: () => i18n.t("workflowConfig.schema.chooseBatch") }),
   // Only the video needs one product, so it may stay empty; a workflow with a video step is checked for it separately.
   productId: z.union([
     z.literal(""),
-    z.string().uuid("Choose one product from the selected batch."),
+    z.string().uuid({ error: () => i18n.t("workflowConfig.schema.chooseProduct") }),
   ]),
 });
 
 export const promptSynthesisConfigSchema = z.object({
-  designTemplateId: z.string().min(1, "Choose a design template."),
+  designTemplateId: z.string().min(1, { error: () => i18n.t("workflowConfig.schema.chooseDesignTemplate") }),
   stylePresetId: z.string(),
-  instructions: z.string().trim().max(500, "Keep instructions under 500 characters."),
+  instructions: z.string().trim().max(500, { error: () => i18n.t("workflowConfig.schema.instructionsMax") }),
 });
 
 export const designImageConfigSchema = z.object({
-  imageProvider: z.enum(["gemini", "ideogram"], { error: "Choose an image model." }),
-  variants: wholeNumber("number of variants", 1, 4),
-  aspectRatio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"], { error: "Choose an aspect ratio." }),
+  imageProvider: z.enum(["gemini", "ideogram"], { error: () => i18n.t("workflowConfig.schema.chooseImageModel") }),
+  variants: wholeNumber("variants", 1, 4),
+  aspectRatio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"], { error: () => i18n.t("workflowConfig.schema.chooseAspectRatio") }),
 });
 
 export const designApprovalConfigSchema = z.object({
-  mode: z.enum(["manual", "auto"], { error: "Choose how designs are approved." }),
+  mode: z.enum(["manual", "auto"], { error: () => i18n.t("workflowConfig.schema.chooseDesignApproval") }),
 });
 
 export const approvalGateConfigSchema = z.object({
-  mode: z.enum(["manual", "auto"], { error: "Choose how mock-ups are approved." }),
+  mode: z.enum(["manual", "auto"], { error: () => i18n.t("workflowConfig.schema.chooseMockupApproval") }),
 });
 
 export const reviewVideoConfigSchema = z.object({
-  mode: z.enum(["manual", "auto"], { error: "Choose how videos are approved." }),
+  mode: z.enum(["manual", "auto"], { error: () => i18n.t("workflowConfig.schema.chooseVideoApproval") }),
 });
 
 export const applyMockupConfigSchema = z.object({
   // May be empty: a video can also be made from uploaded mock-ups alone. A run that generates designs asks for at least one.
-  mockupTemplateIds: z.array(z.string()).max(5, "Choose up to 5 mock-up templates."),
+  mockupTemplateIds: z.array(z.string()).max(5, { error: () => i18n.t("workflowConfig.schema.mockupTemplatesMax") }),
   templateColors: z.record(
     z.string(),
     z
-      .array(z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Garment colors must look like #RRGGBB."))
-      .max(5, "Choose up to 5 garment colors per template.")
+      .array(z.string().regex(/^#[0-9A-Fa-f]{6}$/, { error: () => i18n.t("workflowConfig.schema.garmentColorFormat") }))
+      .max(5, { error: () => i18n.t("workflowConfig.schema.garmentColorsMax") })
   ),
   // Per template, a background per garment color (or "default"). A workflow saved while a template had a
   // single background holds a plain color there, which reads as its default.
   templateBackgrounds: z.record(
     z.string(),
     z.union([
-      z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Background colors must look like #RRGGBB."),
+      z.string().regex(/^#[0-9A-Fa-f]{6}$/, { error: () => i18n.t("workflowConfig.schema.backgroundColorFormat") }),
       z.record(
         z.string(),
-        z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Background colors must look like #RRGGBB.")
+        z.string().regex(/^#[0-9A-Fa-f]{6}$/, { error: () => i18n.t("workflowConfig.schema.backgroundColorFormat") })
       ),
     ])
   ),
@@ -182,10 +187,10 @@ export const generateVideoConfigSchema = z
     target: z.literal("etsy"),
     // Standard scenes use the selected image and camera movement directly. This
     // legacy field remains for stored workflow compatibility and AI fallback only.
-    template: z.string().trim().min(1, "Choose a video template.").default("auto"),
+    template: z.string().trim().min(1, { error: () => i18n.t("workflowConfig.schema.chooseVideoTemplate") }).default("auto"),
     templateVersion: z.number().int().min(1).max(2).optional(),
     outputFormat: z.enum(["square", "portrait", "landscape"]).catch("portrait").default("portrait"),
-    durationSeconds: wholeNumber("video duration", MIN_VIDEO_DURATION_SECONDS, MAX_VIDEO_DURATION_SECONDS),
+    durationSeconds: wholeNumber("videoDuration", MIN_VIDEO_DURATION_SECONDS, MAX_VIDEO_DURATION_SECONDS),
     assetSelection: z.enum(["automatic", "manual"]),
     // The backend keeps these as null when no mock-up is picked (a design's own settings, a run's): that is none.
     selectedMockupIds: z.preprocess(
@@ -193,7 +198,7 @@ export const generateVideoConfigSchema = z
       z
         .array(z.string().uuid())
         .max(8)
-        .refine((ids) => new Set(ids).size === ids.length, "Select each mockup once.")
+        .refine((ids) => new Set(ids).size === ids.length, { error: () => i18n.t("workflowConfig.schema.mockupOnce") })
     ),
     sceneOrder: z.preprocess(
       (ids) => ids ?? [],
@@ -202,7 +207,7 @@ export const generateVideoConfigSchema = z
         .max(4)
         .refine(
           (ids) => new Set(ids).size === ids.length,
-          "Use each mockup once in the scene order."
+          { error: () => i18n.t("workflowConfig.schema.sceneOrderOnce") }
         )
     ),
     standardScenes: z
@@ -217,7 +222,7 @@ export const generateVideoConfigSchema = z
       .max(4)
       .refine(
         (scenes) => new Set(scenes.map((scene) => scene.mockupId)).size === scenes.length,
-        "Configure each mockup's framing once."
+        { error: () => i18n.t("workflowConfig.schema.framingOnce") }
       )
       .optional(),
     textOverlay: z.string().max(120),
@@ -260,7 +265,7 @@ export const generateVideoConfigSchema = z
           mockupId: z.string().uuid().nullable(),
           templateCode: z.string().min(1),
           subtemplateCode: z.string().min(1).nullable().optional(),
-          durationSeconds: wholeNumber("scene duration", 1, MAX_VIDEO_DURATION_SECONDS),
+          durationSeconds: wholeNumber("sceneDuration", 1, MAX_VIDEO_DURATION_SECONDS),
           framing: z.string().min(1),
           cameraAngle: z.string().min(1),
           cameraMovement: z.string().min(1),
@@ -268,7 +273,7 @@ export const generateVideoConfigSchema = z
           motionIntensity: z.string().min(1),
           lighting: z.string().min(1),
           extraInstructions: AI_ADVANCED_CONTROLS_ENABLED
-            ? z.string().trim().max(500, "Keep scene instructions under 500 characters.").nullable()
+            ? z.string().trim().max(500, { error: () => i18n.t("workflowConfig.schema.sceneInstructionsMax") }).nullable()
             : z.unknown().optional().transform(() => null),
           rightsConfirmed: z.boolean(),
           startFrameMode: z.enum(["direct", "studio"]).nullable().optional(),
@@ -277,7 +282,7 @@ export const generateVideoConfigSchema = z
           studioPrompt: z
             .string()
             .trim()
-            .max(500, "Keep keyframe directions under 500 characters.")
+            .max(500, { error: () => i18n.t("workflowConfig.schema.keyframeDirectionsMax") })
             .nullable()
             .optional(),
           studioReferenceHashes: z.array(z.string().length(64)).max(3).nullable().optional(),
@@ -293,12 +298,12 @@ export const generateVideoConfigSchema = z
           standardStartRotation: z.number().finite().min(-9999).max(9999).nullable().optional(),
           standardEndRotation: z.number().finite().min(-9999).max(9999).nullable().optional(),
           aiCropPosition: z.object({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1) }).nullable().optional(),
-          aiStartFrameCrop: z.object({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1), width: z.number().finite().positive().max(1), height: z.number().finite().positive().max(1) }).refine(crop => crop.x + crop.width <= 1 && crop.y + crop.height <= 1, "The start frame crop must stay inside the image.").nullable().optional(),
-          displayDurationFrames: wholeNumber("scene duration", 30, MAX_VIDEO_FRAMES).nullable().optional(),
+          aiStartFrameCrop: z.object({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1), width: z.number().finite().positive().max(1), height: z.number().finite().positive().max(1) }).refine(crop => crop.x + crop.width <= 1 && crop.y + crop.height <= 1, { error: () => i18n.t("workflowConfig.schema.cropInsideImage") }).nullable().optional(),
+          displayDurationFrames: wholeNumber("sceneDuration", 30, MAX_VIDEO_FRAMES).nullable().optional(),
           trimStartFrames: timelineFrame.nullable().optional(),
           trimEndFrames: timelineFrame.nullable().optional(),
           transitionIn: videoTransitionSchema.nullable().optional(),
-          transitionDurationFrames: wholeNumber("transition duration", 0, 30).nullable().optional(),
+          transitionDurationFrames: wholeNumber("transitionDuration", 0, 30).nullable().optional(),
         })
       )
       .max(4)
@@ -307,7 +312,7 @@ export const generateVideoConfigSchema = z
       ? z
           .string()
           .trim()
-          .max(500, "Keep shared AI scene direction under 500 characters.")
+          .max(500, { error: () => i18n.t("workflowConfig.schema.sharedDirectionMax") })
           .nullable()
           .optional()
       : z.unknown().optional().transform(() => null),
@@ -328,7 +333,7 @@ export const generateVideoConfigSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["selectedMockupIds"],
-        message: "Choose at least one approved mockup.",
+        message: i18n.t("workflowConfig.schema.chooseApprovedMockup"),
       });
     if (
       value.mode === "ai_shot" &&
@@ -337,12 +342,12 @@ export const generateVideoConfigSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["template"],
-        message: "Choose a supported AI video template.",
+        message: i18n.t("workflowConfig.schema.supportedAiTemplate"),
       });
     if (value.mode !== "ai_shot") return;
     if (value.aiScenes?.length) {
       if (value.aiScenes.length > 4)
-        ctx.addIssue({ code: "custom", path: ["aiScenes"], message: "Use up to four scenes." });
+        ctx.addIssue({ code: "custom", path: ["aiScenes"], message: i18n.t("workflowConfig.schema.scenesMax") });
       // A scene may leave its image open: the run picks each design's own (its matching mock-up, its model photo for a
       // scene with a person, else its main mock-up), so a scene list is set up once, before any mock-up exists.
       value.aiScenes.forEach((scene, index) => {
@@ -350,7 +355,7 @@ export const generateVideoConfigSchema = z
           ctx.addIssue({
             code: "custom",
             path: ["aiScenes", index, "durationSeconds"],
-            message: `AI scene ${index + 1} must be between 4 and 15 seconds.`,
+            message: i18n.t("workflowConfig.schema.aiSceneDuration", { scene: index + 1 }),
           });
         }
       });
@@ -359,13 +364,13 @@ export const generateVideoConfigSchema = z
         ctx.addIssue({
           code: "custom",
           path: ["aiScenes"],
-          message: "Scenes must total between 5 and 15 seconds.",
+          message: i18n.t("workflowConfig.schema.scenesTotal"),
         });
       if (value.durationSeconds !== total)
         ctx.addIssue({
           code: "custom",
           path: ["durationSeconds"],
-          message: "Total duration is calculated from the scene durations.",
+          message: i18n.t("workflowConfig.schema.totalFromScenes"),
         });
       value.aiScenes.forEach((scene, index) => {
         const sourceDuration =
@@ -377,7 +382,7 @@ export const generateVideoConfigSchema = z
           ctx.addIssue({
             code: "custom",
             path: ["aiScenes", index],
-            message: "Each scene must remain at least one second after trimming.",
+            message: i18n.t("workflowConfig.schema.sceneMinAfterTrim"),
           });
       });
       return;
@@ -386,7 +391,7 @@ export const generateVideoConfigSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["aiShotOptions"],
-        message: "Configure at least one AI video scene.",
+        message: i18n.t("workflowConfig.schema.configureAiScene"),
       });
       return;
     }
@@ -394,13 +399,13 @@ export const generateVideoConfigSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["durationSeconds"],
-        message: "Full AI video must be 8 or 15 seconds.",
+        message: i18n.t("workflowConfig.schema.fullAiDuration"),
       });
     if (value.aiShotOptions.coverage === "single_scene" && value.durationSeconds < 12)
       ctx.addIssue({
         code: "custom",
         path: ["durationSeconds"],
-        message: "Mixed AI and Standard video needs 12–15 seconds.",
+        message: i18n.t("workflowConfig.schema.mixedDuration"),
       });
   });
 
@@ -439,12 +444,12 @@ export const videoAssetSelectionSchema = z
   })
   .refine((value) => value.assetSelection !== "manual" || value.selectedMockupIds.length > 0, {
     path: ["selectedMockupIds"],
-    message: "Choose at least one approved mockup.",
+    error: () => i18n.t("workflowConfig.schema.chooseApprovedMockup"),
   });
 
 export const generateListingConfigSchema = z.object({
-  model: z.enum(["gpt-4o", "gemini"], { error: "Choose a language model." }),
-  tone: z.enum(["friendly", "professional", "playful"], { error: "Choose a tone." }),
+  model: z.enum(["gpt-4o", "gemini"], { error: () => i18n.t("workflowConfig.schema.chooseLanguageModel") }),
+  tone: z.enum(["friendly", "professional", "playful"], { error: () => i18n.t("workflowConfig.schema.chooseTone") }),
   includeSeoScore: z.boolean(),
 });
 
@@ -460,9 +465,9 @@ export const publishPrintifyConfigSchema = z
     colors: z.array(z.string()),
     sizes: z.array(z.string()),
     targetProfit: z
-      .number({ error: "Set the profit per item." })
-      .min(0, "The profit cannot be negative.")
-      .max(500, "Keep the profit per item at $500 or less."),
+      .number({ error: () => i18n.t("workflowConfig.schema.setProfit") })
+      .min(0, { error: () => i18n.t("workflowConfig.schema.profitNegative") })
+      .max(500, { error: () => i18n.t("workflowConfig.schema.profitMax") }),
     designId: z.string().nullable(),
     publishToEtsy: z.boolean(),
     addMockups: z.boolean(),
@@ -472,10 +477,10 @@ export const publishPrintifyConfigSchema = z
   })
   .superRefine((value, context) => {
     if (value.source ? value.source === "mockup" : !value.blueprintId) return;
-    if (!value.blueprintId) context.addIssue({ code: "custom", path: ["blueprintId"], message: "Choose a product type." });
-    else if (!value.printProviderId) context.addIssue({ code: "custom", path: ["printProviderId"], message: "Choose a print provider." });
+    if (!value.blueprintId) context.addIssue({ code: "custom", path: ["blueprintId"], message: i18n.t("workflowConfig.schema.chooseProductType") });
+    else if (!value.printProviderId) context.addIssue({ code: "custom", path: ["printProviderId"], message: i18n.t("workflowConfig.schema.choosePrintProvider") });
     else if (value.colors.length === 0 || value.sizes.length === 0)
-      context.addIssue({ code: "custom", path: ["colors"], message: "Choose at least one color and one size." });
+      context.addIssue({ code: "custom", path: ["colors"], message: i18n.t("workflowConfig.schema.chooseColorSize") });
   });
 
 /**
@@ -484,9 +489,9 @@ export const publishPrintifyConfigSchema = z
  */
 export const publishPrintifyFollowingMockupSchema = z.object({
   targetProfit: z
-    .number({ error: "Set the profit per item." })
-    .min(0, "The profit cannot be negative.")
-    .max(500, "Keep the profit per item at $500 or less."),
+    .number({ error: () => i18n.t("workflowConfig.schema.setProfit") })
+    .min(0, { error: () => i18n.t("workflowConfig.schema.profitNegative") })
+    .max(500, { error: () => i18n.t("workflowConfig.schema.profitMax") }),
   leadPhoto: z.enum(["printify", "apcs"]).optional(),
 });
 
@@ -503,8 +508,8 @@ const hasPrintifyProducts = (config: WorkflowNodeConfig) =>
 export const publishEtsyConfigSchema = z
   .object({
     listingType: z.enum(["download", "physical"]),
-    price: z.number().positive("Set a price.").max(50000).nullable(),
-    quantity: z.number().int().min(1, "Quantity is at least 1.").max(999, "Quantity is at most 999."),
+    price: z.number().positive({ error: () => i18n.t("workflowConfig.schema.setPrice") }).max(50000).nullable(),
+    quantity: z.number().int().min(1, { error: () => i18n.t("workflowConfig.schema.quantityMin") }).max(999, { error: () => i18n.t("workflowConfig.schema.quantityMax") }),
     taxonomyId: z.number().int().positive().nullable(),
     taxonomyPath: z.string().nullable(),
     whoMade: z.enum(["i_did", "someone_else", "collective"]),
@@ -515,14 +520,14 @@ export const publishEtsyConfigSchema = z
     productionPartnerIds: z.array(z.number().int().positive()).optional(),
   })
   .superRefine((value, context) => {
-    if (!value.price) context.addIssue({ code: "custom", path: ["price"], message: "Set a price." });
-    else if (!value.taxonomyId) context.addIssue({ code: "custom", path: ["taxonomyId"], message: "Choose an Etsy category." });
+    if (!value.price) context.addIssue({ code: "custom", path: ["price"], message: i18n.t("workflowConfig.schema.setPrice") });
+    else if (!value.taxonomyId) context.addIssue({ code: "custom", path: ["taxonomyId"], message: i18n.t("workflowConfig.schema.chooseEtsyCategory") });
     else if (value.listingType === "physical" && !value.shippingProfileId)
-      context.addIssue({ code: "custom", path: ["shippingProfileId"], message: "A physical listing needs a shipping profile." });
+      context.addIssue({ code: "custom", path: ["shippingProfileId"], message: i18n.t("workflowConfig.schema.shippingProfileRequired") });
     else if (value.listingType === "physical" && !value.madeBy)
-      context.addIssue({ code: "custom", path: ["madeBy"], message: "Say who makes this item: you or a production partner." });
+      context.addIssue({ code: "custom", path: ["madeBy"], message: i18n.t("workflowConfig.schema.whoMakesRequired") });
     else if (value.listingType === "physical" && value.madeBy === "partner" && !value.productionPartnerIds?.length)
-      context.addIssue({ code: "custom", path: ["productionPartnerIds"], message: "Choose the production partner that makes this item." });
+      context.addIssue({ code: "custom", path: ["productionPartnerIds"], message: i18n.t("workflowConfig.schema.choosePartner") });
   });
 
 export const workflowNodeConfigSchemas: Record<
@@ -547,9 +552,9 @@ export const workflowMetaSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(2, "Give the workflow a name (at least 2 characters).")
-    .max(120, "Keep the name under 120 characters."),
-  description: z.string().trim().max(500, "Keep the description under 500 characters."),
+    .min(2, { error: () => i18n.t("workflowConfig.schema.nameMin") })
+    .max(120, { error: () => i18n.t("workflowConfig.schema.nameMax") }),
+  description: z.string().trim().max(500, { error: () => i18n.t("workflowConfig.schema.descriptionMax") }),
 });
 
 export type WorkflowMetaFormValues = z.infer<typeof workflowMetaSchema>;

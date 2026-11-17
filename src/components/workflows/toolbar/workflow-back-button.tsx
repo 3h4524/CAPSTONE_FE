@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +11,7 @@ type WorkflowBackButtonProps = {
 };
 
 export const WorkflowBackButton = ({ guardUnsavedChanges }: WorkflowBackButtonProps) => {
+  const { t } = useTranslation("common");
   const router = useRouter();
 
   const goBack = () => {
@@ -22,12 +24,12 @@ export const WorkflowBackButton = ({ guardUnsavedChanges }: WorkflowBackButtonPr
       type="button"
       variant="ghost"
       size="sm"
-      aria-label="Back"
+      aria-label={t("workflowEditor.toolbar.back")}
       className="shrink-0 px-2"
       onClick={() => guardUnsavedChanges(goBack)}
     >
       <ArrowLeft aria-hidden="true" />
-      <span className="hidden sm:inline">Back</span>
+      <span className="hidden sm:inline">{t("workflowEditor.toolbar.back")}</span>
     </Button>
   );
 };

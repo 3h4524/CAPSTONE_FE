@@ -1,3 +1,4 @@
+import { i18n } from "@/i18n/client";
 import type { FeatureCatalogItem } from "@/types/feature-catalog";
 import type { Entitlements, PlanFeatureFlag } from "@/types/subscription";
 
@@ -247,17 +248,17 @@ export const planIssues = (
 ): PlanIssue[] => {
   const issues: PlanIssue[] = [];
   if (nodeType === "generate-listing" && !hasFeature(entitlements, "workflow_listing")) {
-    issues.push({ message: "Listing content is part of Pro. Remove this step to run the workflow on your plan." });
+    issues.push({ message: i18n.t("workflowConfig.planLock.listingPro") });
   }
   if ((nodeType === "publish-etsy" || nodeType === "publish-printify") && !hasFeature(entitlements, "workflow_publish")) {
-    issues.push({ message: "Publishing is part of Pro." });
+    issues.push({ message: i18n.t("workflowConfig.planLock.publishPro") });
   }
   if (nodeType === "design-image") {
     const maxVariations = featureLimit(entitlements, "design_variations");
     if (typeof maxVariations === "number" && Number(config.variants) > maxVariations) {
       issues.push({
-        message: `Your plan generates up to ${maxVariations} variation${maxVariations === 1 ? "" : "s"} per product.`,
-        fix: { label: `Use ${maxVariations}`, patch: { variants: maxVariations } },
+        message: i18n.t("workflowConfig.planLock.variationsLimit", { count: maxVariations }),
+        fix: { label: i18n.t("workflowConfig.planLock.useCount", { count: maxVariations }), patch: { variants: maxVariations } },
       });
     }
   }
@@ -267,21 +268,21 @@ export const planIssues = (
     !hasFeature(entitlements, "auto_approval")
   ) {
     issues.push({
-      message: "Automatic approval is part of Pro.",
-      fix: { label: "Use manual review", patch: { mode: "manual" } },
+      message: i18n.t("workflowConfig.planLock.autoApprovalPro"),
+      fix: { label: i18n.t("workflowConfig.planLock.useManualReview"), patch: { mode: "manual" } },
     });
   }
   if (nodeType === "generate-video") {
     if (config.mode === "ai_shot" && !hasFeature(entitlements, "ai_video")) {
       issues.push({
-        message: "AI Scene Video is part of Pro. Your plan renders Standard Showcase videos.",
-        fix: { label: "Use Standard Showcase", patch: { mode: "standard" } },
+        message: i18n.t("workflowConfig.planLock.aiVideoPro"),
+        fix: { label: i18n.t("workflowConfig.planLock.useStandard"), patch: { mode: "standard" } },
       });
     }
     if (config.outputFormat === "landscape" && !hasFeature(entitlements, "all_video_formats")) {
       issues.push({
-        message: "Landscape video is part of Pro. Your plan renders square and portrait.",
-        fix: { label: "Use portrait", patch: { outputFormat: "portrait" } },
+        message: i18n.t("workflowConfig.planLock.landscapePro"),
+        fix: { label: i18n.t("workflowConfig.planLock.usePortrait"), patch: { outputFormat: "portrait" } },
       });
     }
   }

@@ -585,6 +585,21 @@ export function OpportunityRadarPage() {
           <ProLocked
             label={paywallTopics.competitors.title}
             hint={paywallTopics.competitors.description}
+            actionLabel={t("marketRadar.lock.unlock", { defaultValue: "Unlock Pro Analytics" })}
+            features={[
+              {
+                title: t("marketRadar.lock.featureShopsTitle", { defaultValue: "Leading shops" }),
+                description: t("marketRadar.lock.featureShopsDescription", { defaultValue: "Who holds the top of this niche" }),
+              },
+              {
+                title: t("marketRadar.lock.featureListingsTitle", { defaultValue: "Their listings" }),
+                description: t("marketRadar.lock.featureListingsDescription", { defaultValue: "What sells and how fast it gains favorites" }),
+              },
+              {
+                title: t("marketRadar.lock.featurePricesTitle", { defaultValue: "Price positions" }),
+                description: t("marketRadar.lock.featurePricesDescription", { defaultValue: "Where each shop prices against you" }),
+              },
+            ]}
             onUnlock={() => setPaywall(paywallTopics.competitors)}
           >
             <div className="space-y-4"><ProPlaceholderRows rows={5} /><ProPlaceholderChart /></div>
@@ -703,6 +718,21 @@ export function OpportunityRadarPage() {
             <ProLocked
               label={t("marketRadar.lock.moreOpportunities", { defaultValue: "{{count}} more opportunities with Pro", count: hiddenOpportunities })}
               hint={paywallTopics.opportunities.description}
+              actionLabel={t("marketRadar.lock.unlock", { defaultValue: "Unlock Pro Analytics" })}
+              features={[
+                {
+                  title: t("marketRadar.lock.featureRadarTitle", { defaultValue: "The whole radar" }),
+                  description: t("marketRadar.lock.featureRadarDescription", { defaultValue: "Every opportunity ranked for your shop" }),
+                },
+                {
+                  title: t("marketRadar.lock.featureAnalysisTitle", { defaultValue: "AI analysis" }),
+                  description: t("marketRadar.lock.featureAnalysisDescription", { defaultValue: "The decision, the risks and a 3-step plan" }),
+                },
+                {
+                  title: t("marketRadar.lock.featureRankTitle", { defaultValue: "Rank any time" }),
+                  description: t("marketRadar.lock.featureRankDescription", { defaultValue: "Re-rank whenever your profile changes" }),
+                },
+              ]}
               onUnlock={() => setPaywall(paywallTopics.opportunities)}
             >
               <ProPlaceholderRows rows={Math.min(4, hiddenOpportunities)} />
@@ -712,7 +742,7 @@ export function OpportunityRadarPage() {
           </>
         )}
       </div>
-      <ProPaywallDialog topic={paywall} benefits={paywallBenefits} onClose={() => setPaywall(null)} onUnlocked={readRadarAgain} />
+      <ProPaywallDialog topic={paywall} benefits={paywallBenefits} featureCode="market_radar_full" onClose={() => setPaywall(null)} onUnlocked={readRadarAgain} />
     </TooltipProvider>
   );
 }
@@ -1151,6 +1181,21 @@ function NicheConclusionCard({ insight: source, minimumPrice, maximumPrice, lock
           className="mx-4 mb-4"
           label={t("marketRadar.lock.nicheTitle", { defaultValue: "Niche keywords and charts are part of Pro" })}
           hint={t("marketRadar.lock.nicheDescription", { defaultValue: "See the keywords buyers use, how price meets interest, and the risks to watch in this niche." })}
+          actionLabel={t("marketRadar.lock.unlock", { defaultValue: "Unlock Pro Analytics" })}
+          features={[
+            {
+              title: t("marketRadar.lock.featureKeywordsTitle", { defaultValue: "High-intent keywords" }),
+              description: t("marketRadar.lock.featureKeywordsDescription", { defaultValue: "Real search queries buyers type" }),
+            },
+            {
+              title: t("marketRadar.lock.featurePriceTitle", { defaultValue: "Price vs demand" }),
+              description: t("marketRadar.lock.featurePriceDescription", { defaultValue: "The price sweet spot, on a chart" }),
+            },
+            {
+              title: t("marketRadar.lock.featureRiskTitle", { defaultValue: "Risks & saturation" }),
+              description: t("marketRadar.lock.featureRiskDescription", { defaultValue: "What to watch before entering" }),
+            },
+          ]}
           onUnlock={() => onUnlock?.()}
         >
           <div className="space-y-3"><ProPlaceholderChart /><ProPlaceholderRows rows={3} /></div>

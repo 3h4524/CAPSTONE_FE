@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Lock, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { SubscriptionCheckoutModal } from "@/components/subscription/checkout-modal/subscription-checkout-modal";
+import { HighlightPro, ProLockBadge } from "@/components/subscription/pro-paywall/pro-locked";
 import { SubscriptionUpgradeModal } from "@/components/subscription/upgrade-modal/subscription-upgrade-modal";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { SUBSCRIPTION_PATH } from "@/helpers/plan-errors";
 import { showToast } from "@/helpers/toast";
 import { useStartTrial } from "@/hooks/mutations/use-start-trial";
 import { ENTITLEMENTS_QUERY_KEY } from "@/hooks/queries/use-entitlements";
 import { SUBSCRIPTION_OVERVIEW_QUERY_KEY, useSubscriptionOverview } from "@/hooks/queries/use-subscription-overview";
-import type { AvailablePlan } from "@/types/subscription";
+import type { AvailablePlan, SubscriptionOverview } from "@/types/subscription";
 import { formatDate } from "@/utils/format-date";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -25,9 +25,28 @@ type ProPaywallDialogProps = {
   topic: ProPaywallTopic | null;
   /** What Pro adds here, shown as a short list. */
   benefits: string[];
+  /** The plan feature that opens what was locked; the plan offered is the cheapest one that has it. */
+  featureCode?: string;
   onClose: () => void;
   /** After a trial started or a plan was bought, for the page to read what it opens again. */
   onUnlocked?: () => void;
+};
+
+/**
+ * The plan to offer: the cheapest other plan with the feature turned on, else the seeded Pro plan by its tier or as the
+ * trial plan. An Admin may rename plans and tiers, so neither the name "Pro" nor the Recommended mark is trusted alone:
+ * the Recommended plan may well not open the feature.
+ */
+export const pickProPlan = (overview: SubscriptionOverview | undefined, featureCode?: string): AvailablePlan | null => {
+  const others = (overview?.availablePlans ?? []).filter((plan) => !plan.isCurrentPlan);
+  const byPrice = [...others].sort((a, b) => a.monthlyPriceUsd - b.monthlyPriceUsd);
+  const withFeature = featureCode
+    ? byPrice.find((plan) => plan.features?.some((feature) => feature.featureCode === featureCode && feature.isEnabled))
+    : undefined;
+  return withFeature
+    ?? others.find((plan) => plan.tier === "pro")
+    ?? others.find((plan) => overview?.trialPlanName != null && plan.name === overview.trialPlanName)
+    ?? null;
 };
 
 /**
@@ -35,15 +54,14 @@ type ProPaywallDialogProps = {
  * who never had a trial starts one; one on Free buys Pro, and one on another paid plan upgrades, in the same modals the
  * Subscription page uses, without leaving the page.
  */
-export const ProPaywallDialog = ({ topic, benefits, onClose, onUnlocked }: ProPaywallDialogProps) => {
+export const ProPaywallDialog = ({ topic, benefits, featureCode, onClose, onUnlocked }: ProPaywallDialogProps) => {
   const { t, i18n } = useTranslation("common");
   const queryClient = useQueryClient();
   const { data: overview } = useSubscriptionOverview();
   const { mutate: startTrial, isPending: isStartingTrial } = useStartTrial();
   const [checkoutPlan, setCheckoutPlan] = useState<AvailablePlan | null>(null);
   const [upgradePlan, setUpgradePlan] = useState<AvailablePlan | null>(null);
-  const plans = overview?.availablePlans ?? [];
-  const pro = plans.find((plan) => plan.tier === "pro") ?? plans.find((plan) => plan.isRecommended);
+  const pro = pickProPlan(overview, featureCode);
 
   const unlocked = () => {
     void queryClient.invalidateQueries({ queryKey: ENTITLEMENTS_QUERY_KEY });
@@ -73,51 +91,69 @@ export const ProPaywallDialog = ({ topic, benefits, onClose, onUnlocked }: ProPa
     onClose();
   };
 
+  const trialFirst = Boolean(overview?.trialEligible);
+  const primary = "inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-6 py-3 text-sm font-bold text-[#0b1324] shadow-[0_8px_24px_rgba(245,158,11,0.35)] transition hover:from-amber-300 hover:to-amber-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 disabled:opacity-60";
+  const secondary = "inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+
   return (
     <>
       <Dialog open={topic !== null && !checkoutPlan && !upgradePlan} onOpenChange={(open) => { if (!open) onClose(); }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <span className="mb-1 flex size-11 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-              <Lock className="size-5" aria-hidden="true" />
-            </span>
-            <DialogTitle>{topic?.title}</DialogTitle>
-            <DialogDescription>{topic?.description}</DialogDescription>
-          </DialogHeader>
-          {benefits.length > 0 && (
-            <ul className="space-y-2 text-sm">
-              {benefits.map((benefit) => (
-                <li key={benefit} className="text-ink-700 flex items-start gap-2">
-                  <Check className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-                  {benefit}
-                </li>
-              ))}
-            </ul>
-          )}
-          {pro && (
-            <p className="text-ink-500 text-sm">
-              {t("proPaywall.price", { defaultValue: "{{name}} from ${{price}} a month.", name: pro.name, price: pro.monthlyPriceUsd })}
-            </p>
-          )}
-          <div className="flex flex-col gap-2 pt-1">
-            {overview?.trialEligible && (
-              <Button type="button" variant="primaryBlue" disabled={isStartingTrial} onClick={tryPro}>
-                <Sparkles className="size-4" />
-                {t("proPaywall.tryFree", { defaultValue: "Try {{name}} free for {{days}} days", name: overview.trialPlanName ?? "Pro", days: overview.trialDays })}
-              </Button>
+        <DialogContent className="overflow-hidden border-white/10 bg-[#0b1324] p-0 text-white sm:max-w-lg [&>button]:text-white/70 [&>button:hover]:text-white">
+          <div className="bg-[radial-gradient(ellipse_at_top,rgba(251,191,36,0.18),transparent_65%)] px-6 pt-8 pb-6 text-center sm:px-8">
+            <ProLockBadge className="mx-auto mb-5" />
+            <DialogTitle className="text-xl font-bold text-balance text-white sm:text-2xl">
+              {topic && <HighlightPro text={topic.title} />}
+            </DialogTitle>
+            <DialogDescription className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-pretty text-white/70">
+              {topic?.description}
+            </DialogDescription>
+          </div>
+
+          <div className="space-y-5 px-6 pb-7 sm:px-8">
+            {benefits.length > 0 && (
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {benefits.map((benefit) => (
+                  <li key={benefit} className="flex items-start gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white/90">
+                    <Check className="mt-0.5 size-4 shrink-0 text-amber-400" aria-hidden="true" />
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
             )}
-            {pro ? (
-              <Button type="button" variant={overview?.trialEligible ? "outline" : "primaryBlue"} onClick={buyPro}>
-                {overview?.hasActivePaidPlan
-                  ? t("proPaywall.upgrade", { defaultValue: "Upgrade to {{name}}", name: pro.name })
-                  : t("proPaywall.buy", { defaultValue: "Get {{name}}", name: pro.name })}
-              </Button>
-            ) : (
-              <Button asChild variant="primaryBlue"><Link href={SUBSCRIPTION_PATH}>{t("proPaywall.seePlans", { defaultValue: "See plans" })}</Link></Button>
+
+            {pro && (
+              <div className="flex items-baseline justify-center gap-1.5">
+                <span className="text-3xl font-bold tracking-tight text-white">{`$${pro.monthlyPriceUsd}`}</span>
+                <span className="text-sm text-white/60">
+                  {t("proPaywall.perMonth", { defaultValue: "/ month · {{name}} plan", name: pro.name })}
+                </span>
+              </div>
             )}
-            <Link href={SUBSCRIPTION_PATH} className="text-ink-500 hover:text-ink-800 text-center text-xs underline-offset-2 hover:underline">
-              {t("proPaywall.allPlans", { defaultValue: "Compare all plans" })}
-            </Link>
+
+            <div className="flex flex-col gap-2.5">
+              {trialFirst && (
+                <button type="button" className={primary} disabled={isStartingTrial} onClick={tryPro}>
+                  <Sparkles className="size-4" aria-hidden="true" />
+                  {t("proPaywall.tryFree", { defaultValue: "Try {{name}} free for {{days}} days", name: overview?.trialPlanName ?? pro?.name ?? "Pro", days: overview?.trialDays })}
+                </button>
+              )}
+              {pro ? (
+                <button type="button" className={trialFirst ? secondary : primary} onClick={buyPro}>
+                  {overview?.hasActivePaidPlan
+                    ? t("proPaywall.upgrade", { defaultValue: "Upgrade to {{name}}", name: pro.name })
+                    : t("proPaywall.buy", { defaultValue: "Get {{name}}", name: pro.name })}
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </button>
+              ) : (
+                <Link href={SUBSCRIPTION_PATH} className={primary}>
+                  {t("proPaywall.seePlans", { defaultValue: "See plans" })}
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </Link>
+              )}
+              <Link href={SUBSCRIPTION_PATH} className="text-center text-xs text-white/60 underline-offset-2 hover:text-white hover:underline">
+                {t("proPaywall.allPlans", { defaultValue: "Compare all plans" })}
+              </Link>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

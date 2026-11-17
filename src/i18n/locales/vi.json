@@ -319,7 +319,13 @@
       "upgrade": "Nâng lên {{name}}",
       "buy": "Mua {{name}}",
       "seePlans": "Xem các gói",
-      "allPlans": "So sánh tất cả các gói"
+      "allPlans": "So sánh tất cả các gói",
+      "perMonth": "/ tháng · gói {{name}}",
+      "lock": {
+        "unlock": "Mở khoá Pro",
+        "viewPlans": "Xem tất cả các gói",
+        "trialNote": "Dùng thử Pro miễn phí {{days}} ngày"
+      }
     },
     "marketRadar": {
       "lock": {
@@ -338,7 +344,26 @@
         "benefitOpportunities": "Mọi cơ hội trên radar của bạn",
         "benefitKeywords": "Từ khoá, biểu đồ, kế hoạch hành động và rủi ro của niche",
         "benefitCompetitors": "Các shop và listing dẫn đầu từng niche",
-        "benefitAnalysis": "Phân tích AI cho từng cơ hội"
+        "benefitAnalysis": "Phân tích AI cho từng cơ hội",
+        "unlock": "Mở khoá phân tích Pro",
+        "featureKeywordsTitle": "Từ khoá có ý định mua",
+        "featureKeywordsDescription": "Những từ khoá người mua thật sự tìm",
+        "featurePriceTitle": "Giá và nhu cầu",
+        "featurePriceDescription": "Vùng giá tốt nhất, trên biểu đồ",
+        "featureRiskTitle": "Rủi ro và độ bão hoà",
+        "featureRiskDescription": "Những điều cần để ý trước khi vào",
+        "featureShopsTitle": "Shop dẫn đầu",
+        "featureShopsDescription": "Ai đang giữ top của niche này",
+        "featureListingsTitle": "Listing của họ",
+        "featureListingsDescription": "Cái gì bán được và tăng yêu thích nhanh ra sao",
+        "featurePricesTitle": "Vị trí giá",
+        "featurePricesDescription": "Mỗi shop định giá thế nào so với bạn",
+        "featureRadarTitle": "Toàn bộ radar",
+        "featureRadarDescription": "Mọi cơ hội được xếp hạng cho shop của bạn",
+        "featureAnalysisTitle": "Phân tích AI",
+        "featureAnalysisDescription": "Quyết định, rủi ro và kế hoạch 3 bước",
+        "featureRankTitle": "Xếp hạng bất cứ lúc nào",
+        "featureRankDescription": "Xếp hạng lại mỗi khi bạn đổi hồ sơ"
       },
       "title": "Radar cơ hội thị trường",
       "subtitle": "Tín hiệu thị trường được xếp hạng theo mục tiêu và khoảng giá cửa hàng.",

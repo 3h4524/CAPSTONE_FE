@@ -315,7 +315,13 @@
       "upgrade": "Upgrade to {{name}}",
       "buy": "Get {{name}}",
       "seePlans": "See plans",
-      "allPlans": "Compare all plans"
+      "allPlans": "Compare all plans",
+      "perMonth": "/ month · {{name}} plan",
+      "lock": {
+        "unlock": "Unlock Pro",
+        "viewPlans": "View all plans",
+        "trialNote": "{{days}}-day free trial of Pro"
+      }
     },
     "marketRadar": {
       "lock": {
@@ -334,7 +340,26 @@
         "benefitOpportunities": "Every opportunity on your radar",
         "benefitKeywords": "Niche keywords, charts, action plan and risks",
         "benefitCompetitors": "The shops and listings leading each niche",
-        "benefitAnalysis": "AI analysis of an opportunity"
+        "benefitAnalysis": "AI analysis of an opportunity",
+        "unlock": "Unlock Pro Analytics",
+        "featureKeywordsTitle": "High-intent keywords",
+        "featureKeywordsDescription": "Real search queries buyers type",
+        "featurePriceTitle": "Price vs demand",
+        "featurePriceDescription": "The price sweet spot, on a chart",
+        "featureRiskTitle": "Risks & saturation",
+        "featureRiskDescription": "What to watch before entering",
+        "featureShopsTitle": "Leading shops",
+        "featureShopsDescription": "Who holds the top of this niche",
+        "featureListingsTitle": "Their listings",
+        "featureListingsDescription": "What sells and how fast it gains favorites",
+        "featurePricesTitle": "Price positions",
+        "featurePricesDescription": "Where each shop prices against you",
+        "featureRadarTitle": "The whole radar",
+        "featureRadarDescription": "Every opportunity ranked for your shop",
+        "featureAnalysisTitle": "AI analysis",
+        "featureAnalysisDescription": "The decision, the risks and a 3-step plan",
+        "featureRankTitle": "Rank any time",
+        "featureRankDescription": "Re-rank whenever your profile changes"
       },
       "title": "Market Opportunity Radar",
       "subtitle": "Market signals ranked against your shop goals and price range.",

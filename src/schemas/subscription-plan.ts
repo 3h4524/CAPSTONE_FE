@@ -1,32 +1,38 @@
 import { z } from "zod";
 
+import { i18n } from "@/i18n/client";
+
+const limitLabel = (labelKey: string) => i18n.t(`admin.schemas.subscriptionPlan.limits.${labelKey}`);
+
 // BR195: usage limits must be >= 0, or exactly -1 to mean "unlimited".
-const nonNegativeOrUnlimited = (label: string) =>
+const nonNegativeOrUnlimited = (labelKey: string) =>
   z
-    .number({ message: `Enter a number for ${label}.` })
-    .refine((value) => value >= 0 || value === -1, `${label} must be 0 or greater, or -1 for unlimited.`);
+    .number({ error: () => i18n.t("admin.schemas.subscriptionPlan.enterNumber", { label: limitLabel(labelKey) }) })
+    .refine((value) => value >= 0 || value === -1, {
+      error: () => i18n.t("admin.schemas.subscriptionPlan.mustBeZeroOrUnlimited", { label: limitLabel(labelKey) }),
+    });
 
 export const subscriptionPlanFormSchema = z.object({
-  name: z.string().trim().min(1, "Enter a plan name.").max(100),
+  name: z.string().trim().min(1, { error: () => i18n.t("admin.schemas.subscriptionPlan.planName") }).max(100),
   // BR194: lowercase, no spaces, immutable after creation — only editable when creating.
   tier: z
     .string()
     .trim()
-    .min(1, "Enter a tier slug.")
-    .regex(/^[a-z0-9-]+$/, "Tier slug must be lowercase and contain no spaces."),
+    .min(1, { error: () => i18n.t("admin.schemas.subscriptionPlan.tierRequired") })
+    .regex(/^[a-z0-9-]+$/, { error: () => i18n.t("admin.schemas.subscriptionPlan.tierSlugFormat") }),
   description: z.string().trim().max(2000).optional(),
-  monthlyPriceUsd: z.number({ message: "Enter a monthly price." }).min(0, "Monthly price must be 0 or greater."),
-  annualPriceUsd: z.number().min(0, "Annual price must be 0 or greater.").optional(),
+  monthlyPriceUsd: z.number({ error: () => i18n.t("admin.schemas.subscriptionPlan.monthlyPrice") }).min(0, { error: () => i18n.t("admin.schemas.subscriptionPlan.monthlyPriceMin") }),
+  annualPriceUsd: z.number().min(0, { error: () => i18n.t("admin.schemas.subscriptionPlan.annualPriceMin") }).optional(),
   // Only set when the Admin prices in VND; kept out of the USD branch, where they stay undefined.
-  monthlyPriceVnd: z.number().min(0, "Monthly price must be 0 or greater.").optional(),
-  annualPriceVnd: z.number().min(0, "Annual price must be 0 or greater.").optional(),
-  maxBatchSize: nonNegativeOrUnlimited("Max batch size"),
-  maxConcurrentJobs: nonNegativeOrUnlimited("Concurrent jobs"),
-  maxProductsPerMonth: nonNegativeOrUnlimited("Products / month"),
-  imageGenerationQuota: nonNegativeOrUnlimited("Images / month"),
-  videoGenerationQuota: nonNegativeOrUnlimited("Videos / month"),
-  apiCallQuota: nonNegativeOrUnlimited("API calls / month"),
-  storageQuotaGb: nonNegativeOrUnlimited("Storage (GB)"),
+  monthlyPriceVnd: z.number().min(0, { error: () => i18n.t("admin.schemas.subscriptionPlan.monthlyPriceMin") }).optional(),
+  annualPriceVnd: z.number().min(0, { error: () => i18n.t("admin.schemas.subscriptionPlan.annualPriceMin") }).optional(),
+  maxBatchSize: nonNegativeOrUnlimited("maxBatchSize"),
+  maxConcurrentJobs: nonNegativeOrUnlimited("concurrentJobs"),
+  maxProductsPerMonth: nonNegativeOrUnlimited("productsPerMonth"),
+  imageGenerationQuota: nonNegativeOrUnlimited("imagesPerMonth"),
+  videoGenerationQuota: nonNegativeOrUnlimited("videosPerMonth"),
+  apiCallQuota: nonNegativeOrUnlimited("apiCallsPerMonth"),
+  storageQuotaGb: nonNegativeOrUnlimited("storageQuotaGb"),
   customApiKeysAllowed: z.boolean(),
   whiteLabelExportEnabled: z.boolean(),
   prioritySupport: z.boolean(),
@@ -37,9 +43,9 @@ export const subscriptionPlanFormSchema = z.object({
     z.object({
       isEnabled: z.boolean(),
       limitValue: z
-        .number({ message: "Enter a whole number, or leave it empty for no limit." })
-        .int("Enter a whole number.")
-        .min(0, "Enter 0 or more, or leave it empty for no limit.")
+        .number({ error: () => i18n.t("admin.schemas.subscriptionPlan.limitEnterOrEmpty") })
+        .int({ error: () => i18n.t("admin.schemas.subscriptionPlan.limitWhole") })
+        .min(0, { error: () => i18n.t("admin.schemas.subscriptionPlan.limitZeroOrMore") })
         .nullable(),
     })
   ).optional(),
@@ -48,7 +54,7 @@ export const subscriptionPlanFormSchema = z.object({
 export type SubscriptionPlanFormValues = z.infer<typeof subscriptionPlanFormSchema>;
 
 export const deletePlanFormSchema = z.object({
-  reason: z.string().trim().min(1, "Enter a reason for deleting this plan.").max(500),
+  reason: z.string().trim().min(1, { error: () => i18n.t("admin.schemas.subscriptionPlan.deleteReason") }).max(500),
 });
 
 export type DeletePlanFormValues = z.infer<typeof deletePlanFormSchema>;

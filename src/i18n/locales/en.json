@@ -96,6 +96,12 @@
         "shopNamePlaceholder": "Your shop name",
         "shopDescription": "Shop description",
         "shopDescriptionPlaceholder": "A short description of your shop"
+      },
+      "schema": {
+        "fullNameRequired": "Full name is required",
+        "emailTooLong": "Email is too long",
+        "shopNameTooLong": "Shop name is too long",
+        "shopDescriptionTooLong": "Shop description is too long"
       }
     },
     "subscription": {
@@ -858,7 +864,13 @@
       "actionsFor": "Actions for {{name}}",
       "system": "System",
       "custom": "Custom",
-      "mine": "Mine"
+      "mine": "Mine",
+      "schema": {
+        "nameMin": "Give the style a name (at least 2 characters).",
+        "descriptionMin": "Add a little more detail (at least 10 characters).",
+        "modifiersMin": "Add the keywords appended to the prompt.",
+        "recommendationsMax": "Keep recommendations under 500 characters."
+      }
     },
     "usage": {
       "pageTitle": "Usage",
@@ -1063,7 +1075,13 @@
       "uploadingStatus": "Uploading…",
       "readyStatus": "Ready",
       "selectedAttachments": "Selected attachments",
-      "removeAttachment": "Remove {{name}}"
+      "removeAttachment": "Remove {{name}}",
+      "schema": {
+        "subjectMin": "Enter a short subject (at least 3 characters).",
+        "categorySelect": "Select a category.",
+        "prioritySelect": "Select a priority.",
+        "descriptionMin": "Add a little more detail (at least 10 characters)."
+      }
     },
     "mockups": {
       "cancel": "Cancel",
@@ -1333,6 +1351,14 @@
         "close": "Close",
         "generate": "Generate",
         "generating": "Generating…"
+      },
+      "schema": {
+        "nameMin": "Enter a template name.",
+        "positionNumber": "Enter a position.",
+        "positionMin": "Must be 0 or more.",
+        "widthNumber": "Enter a width.",
+        "heightNumber": "Enter a height.",
+        "minOne": "Must be at least 1."
       }
     },
     "apiKeys": {
@@ -1832,6 +1858,38 @@
         "default": "Default",
         "aiTemplate": "Video style",
         "aiTemplateAria": "Scene {{scene}} video style",
+        "startFromTemplate": "Start from a template",
+        "startFromTemplateDescription": "A ready-made set of scenes to start from. You can still change, add or remove scenes below.",
+        "customizedSuffix": "customized",
+        "ownScenesSummary": "Your own scenes, set up one by one.",
+        "loadingShort": "Loading…",
+        "changeTemplate": "Change",
+        "browseTemplates": "Browse templates",
+        "chooseTemplateTitle": "Choose a video template",
+        "chooseTemplateDescription": "A template fills in a ready-made set of scenes. Every scene stays editable afterwards.",
+        "replaceScenesQuestion": "Replace your {{count}} current scenes with {{name}}?",
+        "replaceScenesDetail": "Their selected start frames are removed. Your output format, shared model, shared mockup and caption stay unchanged.",
+        "keepCurrentScenes": "Keep current scenes",
+        "startFromScratch": "Start from scratch",
+        "startFromScratchKeep": "Build your own list of scenes. The scenes you have now stay as they are.",
+        "startFromScratchDescription": "Add scenes one by one and choose how each one is made.",
+        "packMeta": "{{count}} scenes · {{seconds}}s",
+        "tagAiVideo": "AI video · uses AI credits",
+        "tagPhotoMotion": "Photo motion · no AI cost",
+        "photoMotion": "Photo motion",
+        "photoMotionDescription": "Zooms and pans across a product image. Ready in seconds, no AI cost.",
+        "aiVideoDescription": "AI brings the image to life as a real 4 to 15 second clip. Uses AI credits.",
+        "aiVideoNeedsSeconds": "Needs at least 4 seconds. Shorten the other scenes first.",
+        "lifestyleFramesDescription": "{{name}} starts from a lifestyle image: a model wearing the product. The selected image is saved when you click it.",
+        "thisStyle": "This style",
+        "noLifestyleImage": "No approved lifestyle image yet",
+        "noLifestyleImageDescription": "Make a lifestyle image of this design on a model at Mockup Approval and approve it, or switch this scene to another video style.",
+        "noScenesTitle": "No scenes yet",
+        "noScenesDescription": "Add the first scene, or pick a template above, to set up this video.",
+        "addFirstScene": "Add first scene",
+        "sharedStartFramesNote": "Start frames are product images, so they are not set in the shared settings. Each product starts from its default mockup ({{image}}). Choose a product in Video product to see or change its start frames.",
+        "sharedStartFramesLifestyle": "its lifestyle image",
+        "sharedStartFramesDefault": "its hero image, or its lifestyle image for a scene with a model",
         "shotTemplate": "Shot template",
         "shotTemplateAria": "Scene {{scene}} shot template",
         "startFrameAria": "Scene {{scene}} start frame",
@@ -1925,39 +1983,7 @@
         "imagePreview": "Image preview",
         "selectedStartFrameForScene": "Selected start frame image for scene {{scene}}",
         "selectedStartFramePreview": "Selected start frame image preview",
-        "startFrameImageAlt": "Start frame image for scene {{scene}}",
-        "startFromTemplate": "Start from a template",
-        "startFromTemplateDescription": "A ready-made set of scenes to start from. You can still change, add or remove scenes below.",
-        "customizedSuffix": "customized",
-        "ownScenesSummary": "Your own scenes, set up one by one.",
-        "loadingShort": "Loading…",
-        "changeTemplate": "Change",
-        "browseTemplates": "Browse templates",
-        "chooseTemplateTitle": "Choose a video template",
-        "chooseTemplateDescription": "A template fills in a ready-made set of scenes. Every scene stays editable afterwards.",
-        "replaceScenesQuestion": "Replace your {{count}} current scenes with {{name}}?",
-        "replaceScenesDetail": "Their selected start frames are removed. Your output format, shared model, shared mockup and caption stay unchanged.",
-        "keepCurrentScenes": "Keep current scenes",
-        "startFromScratch": "Start from scratch",
-        "startFromScratchKeep": "Build your own list of scenes. The scenes you have now stay as they are.",
-        "startFromScratchDescription": "Add scenes one by one and choose how each one is made.",
-        "packMeta": "{{count}} scenes · {{seconds}}s",
-        "tagAiVideo": "AI video · uses AI credits",
-        "tagPhotoMotion": "Photo motion · no AI cost",
-        "photoMotion": "Photo motion",
-        "photoMotionDescription": "Zooms and pans across a product image. Ready in seconds, no AI cost.",
-        "aiVideoDescription": "AI brings the image to life as a real 4 to 15 second clip. Uses AI credits.",
-        "aiVideoNeedsSeconds": "Needs at least 4 seconds. Shorten the other scenes first.",
-        "lifestyleFramesDescription": "{{name}} starts from a lifestyle image: a model wearing the product. The selected image is saved when you click it.",
-        "thisStyle": "This style",
-        "noLifestyleImage": "No approved lifestyle image yet",
-        "noLifestyleImageDescription": "Make a lifestyle image of this design on a model at Mockup Approval and approve it, or switch this scene to another video style.",
-        "noScenesTitle": "No scenes yet",
-        "noScenesDescription": "Add the first scene, or pick a template above, to set up this video.",
-        "addFirstScene": "Add first scene",
-        "sharedStartFramesNote": "Start frames are product images, so they are not set in the shared settings. Each product starts from its default mockup ({{image}}). Choose a product in Video product to see or change its start frames.",
-        "sharedStartFramesLifestyle": "its lifestyle image",
-        "sharedStartFramesDefault": "its hero image, or its lifestyle image for a scene with a model"
+        "startFrameImageAlt": "Start frame image for scene {{scene}}"
       },
       "panel": {
         "issueCount_one": "{{count}} issue · ",
@@ -2336,6 +2362,7 @@
         "mockupOnce": "Select each mockup once.",
         "sceneOrderOnce": "Use each mockup once in the scene order.",
         "framingOnce": "Configure each mockup's framing once.",
+        "addScene": "Add at least one scene to the video.",
         "sceneInstructionsMax": "Keep scene instructions under 500 characters.",
         "keyframeDirectionsMax": "Keep keyframe directions under 500 characters.",
         "cropInsideImage": "The start frame crop must stay inside the image.",
@@ -2380,8 +2407,7 @@
         "wholeNumber": "The {{label}} must be a whole number.",
         "numberMin": "The {{label}} must be at least {{min}}.",
         "numberMax": "The {{label}} cannot exceed {{max}}.",
-        "aiSceneDuration": "AI scene {{scene}} must be between 4 and 15 seconds.",
-        "addScene": "Add at least one scene to the video."
+        "aiSceneDuration": "AI scene {{scene}} must be between 4 and 15 seconds."
       },
       "overview": {
         "productStatuses": {
@@ -2686,6 +2712,17 @@
         "drinkware": "A mug print wraps around the mug; 1:1 fits one side.",
         "wall_art": "Posters print at 3:4 portrait, 4:3 landscape or square.",
         "phone_cases": "A phone case is tall and narrow."
+      },
+      "schema": {
+        "enterBatchName": "Enter a batch name.",
+        "chooseBatchMakes": "Choose what the batch makes.",
+        "enterProductName": "Enter a product name.",
+        "enterNiche": "Enter a niche.",
+        "enterKeyword": "Enter at least one keyword.",
+        "maxKeywords": "Use no more than 13 keywords.",
+        "maxProductDescription": "Use no more than 2,000 characters.",
+        "designTextMax": "Keep the design text under 100 characters.",
+        "customPromptMax": "Keep the image prompt under 1,000 characters."
       }
     },
     "designTemplates": {
@@ -8456,8 +8493,82 @@
             "planPriceVnd": "Plan Price (VND)"
           }
         }
+      },
+      "schemas": {
+        "subscriptionPlan": {
+          "enterNumber": "Enter a number for {{label}}.",
+          "mustBeZeroOrUnlimited": "{{label}} must be 0 or greater, or -1 for unlimited.",
+          "planName": "Enter a plan name.",
+          "tierRequired": "Enter a tier slug.",
+          "tierSlugFormat": "Tier slug must be lowercase and contain no spaces.",
+          "monthlyPrice": "Enter a monthly price.",
+          "monthlyPriceMin": "Monthly price must be 0 or greater.",
+          "annualPriceMin": "Annual price must be 0 or greater.",
+          "limitEnterOrEmpty": "Enter a whole number, or leave it empty for no limit.",
+          "limitWhole": "Enter a whole number.",
+          "limitZeroOrMore": "Enter 0 or more, or leave it empty for no limit.",
+          "deleteReason": "Enter a reason for deleting this plan.",
+          "limits": {
+            "maxBatchSize": "Max batch size",
+            "concurrentJobs": "Concurrent jobs",
+            "productsPerMonth": "Products / month",
+            "imagesPerMonth": "Images / month",
+            "videosPerMonth": "Videos / month",
+            "apiCallsPerMonth": "API calls / month",
+            "storageQuotaGb": "Storage (GB)"
+          }
+        },
+        "featureCatalog": {
+          "labelMin": "Enter a label.",
+          "labelMax": "Keep the label under 120 characters.",
+          "descriptionMax": "Keep the description under 500 characters.",
+          "groupMin": "Enter a group.",
+          "groupMax": "Keep the group under 60 characters.",
+          "unitMax": "Keep the unit under 40 characters.",
+          "wholeNumber": "Enter a whole number.",
+          "enterOrEmpty": "Enter a whole number, or leave it empty for no limit.",
+          "defaultMin": "The default must be 0 or greater.",
+          "defaultMax": "The default must be 10,000 or less.",
+          "positionNumber": "Enter a position.",
+          "positionMin": "The position must be 0 or greater.",
+          "positionMax": "The position must be 10,000 or less."
+        },
+        "systemApiKeys": {
+          "nameMin": "Name the key, such as the account it belongs to.",
+          "nameMax": "Keep the name under 100 characters.",
+          "keyMin": "Paste the whole key.",
+          "keyMax": "This is longer than any key.",
+          "dailyLimit": "Enter a whole number from 0 to 1,000,000, or leave it empty for no limit.",
+          "concurrentLimit": "Enter a whole number from 1 to 1,000, or leave it empty for no limit."
+        },
+        "moderation": {
+          "termMin": "Enter a word or phrase.",
+          "termMax": "Keep the term under 100 characters.",
+          "categoryChoose": "Choose a category.",
+          "termNoteMax": "Keep the note under 300 characters.",
+          "phraseMin": "Enter a phrase.",
+          "phraseMax": "Keep the phrase under 200 characters."
+        },
+        "imageEval": {
+          "fileNoVersions": "The file lists no prompt versions.",
+          "fileNoImages": "The file holds no scored images.",
+          "unknownVersion": "Some images name a prompt version the file does not list.",
+          "thumbnailBase64": "A thumbnail must be a base64 image.",
+          "runNameMin": "Name the run (at least 3 characters).",
+          "chooseExportFile": "Choose the export file the scoring scripts wrote.",
+          "chooseJson": "Choose a .json file.",
+          "fileMax": "The file must be at most {{mb}} MB."
+        }
       }
     },
-    "justNow": "just now"
+    "justNow": "just now",
+    "productPrompt": {
+      "schema": {
+        "subjectRequired": "The Subject field is required.",
+        "artStyleRequired": "The Art Style field is required.",
+        "moodToneRequired": "The Mood Tone field is required.",
+        "customPromptMax": "Keep the image prompt under 1,000 characters."
+      }
+    }
   }
 }

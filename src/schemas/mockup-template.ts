@@ -1,14 +1,15 @@
 import { z } from "zod";
 
+import { i18n } from "@/i18n/client";
 import { productTypes } from "@/schemas/batches";
 
 export const mockupTemplateSchema = z.object({
-  name: z.string().trim().min(1, "Enter a template name.").max(120),
+  name: z.string().trim().min(1, { error: () => i18n.t("mockups.schema.nameMin") }).max(120),
   productType: z.enum(productTypes),
-  x: z.number({ message: "Enter a position." }).int().min(0, "Must be 0 or more."),
-  y: z.number({ message: "Enter a position." }).int().min(0, "Must be 0 or more."),
-  width: z.number({ message: "Enter a width." }).int().min(1, "Must be at least 1."),
-  height: z.number({ message: "Enter a height." }).int().min(1, "Must be at least 1."),
+  x: z.number({ error: () => i18n.t("mockups.schema.positionNumber") }).int().min(0, { error: () => i18n.t("mockups.schema.positionMin") }),
+  y: z.number({ error: () => i18n.t("mockups.schema.positionNumber") }).int().min(0, { error: () => i18n.t("mockups.schema.positionMin") }),
+  width: z.number({ error: () => i18n.t("mockups.schema.widthNumber") }).int().min(1, { error: () => i18n.t("mockups.schema.minOne") }),
+  height: z.number({ error: () => i18n.t("mockups.schema.heightNumber") }).int().min(1, { error: () => i18n.t("mockups.schema.minOne") }),
 });
 
 export type MockupTemplateFormValues = z.infer<typeof mockupTemplateSchema>;

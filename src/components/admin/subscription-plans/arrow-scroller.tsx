@@ -2,6 +2,7 @@
 
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/utils/cn";
 
@@ -109,7 +110,9 @@ export function ArrowScroller({ children, label, className }: { children: ReactN
 }
 
 function EdgeArrow({ side, visible, onClick }: { side: "left" | "right"; visible: boolean; onClick: () => void }) {
+  const { t } = useTranslation("common");
   const Icon = side === "left" ? ChevronLeft : ChevronRight;
+  const label = side === "left" ? t("admin.plans.arrowScroller.scrollBack") : t("admin.plans.arrowScroller.scrollForward");
   return (
     <div
       className={cn(
@@ -121,7 +124,7 @@ function EdgeArrow({ side, visible, onClick }: { side: "left" | "right"; visible
     >
       <button
         type="button"
-        aria-label={side === "left" ? "Scroll back" : "Scroll forward"}
+        aria-label={label}
         tabIndex={visible ? 0 : -1}
         onClick={onClick}
         className={cn(

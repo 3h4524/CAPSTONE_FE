@@ -2,6 +2,7 @@
 
 import React from "react";
 import { AlertTriangle, Plug, Share2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { IntegrationStatusDto } from "@/types/system-statistics";
 
@@ -14,6 +15,8 @@ export function IntegrationHealthCards({
   integrationStatus,
   isLoading,
 }: IntegrationHealthCardsProps) {
+  const { t } = useTranslation("common");
+
   if (isLoading || !integrationStatus) {
     return (
       <div className="border-ink-200/80 bg-card flex h-full flex-col justify-between rounded-2xl border p-5 shadow-2xs max-md:p-4">
@@ -38,7 +41,7 @@ export function IntegrationHealthCards({
       return (
         <span className="text-ink-500 inline-flex items-center gap-1.5 text-[11px] font-medium">
           <span className="bg-ink-400 h-1.5 w-1.5 rounded-full" />
-          Inactive
+          {t("admin.statistics.integrations.inactive")}
         </span>
       );
     }
@@ -66,9 +69,9 @@ export function IntegrationHealthCards({
           <Plug className="h-5 w-5" />
         </div>
         <div>
-          <h3 className="text-ink-900 text-sm font-bold">Integrations</h3>
+          <h3 className="text-ink-900 text-sm font-bold">{t("admin.statistics.integrations.title")}</h3>
           <p className="text-ink-500 text-xs">
-            Uploads and shares sent to Etsy, Printify and social channels
+            {t("admin.statistics.integrations.subtitle")}
           </p>
         </div>
       </div>
@@ -82,7 +85,7 @@ export function IntegrationHealthCards({
               Etsy
             </div>
             <span className="text-ink-800 text-xs font-semibold">
-              Etsy Marketplace
+              {t("admin.statistics.integrations.etsyMarketplace")}
             </span>
           </div>
           <div className="min-w-0 text-right">
@@ -105,7 +108,7 @@ export function IntegrationHealthCards({
               P
             </div>
             <span className="text-ink-800 text-xs font-semibold">
-              Printify Fulfillment
+              {t("admin.statistics.integrations.printifyFulfillment")}
             </span>
           </div>
           <div className="min-w-0 text-right">
@@ -128,7 +131,7 @@ export function IntegrationHealthCards({
               <Share2 className="h-4 w-4" />
             </div>
             <span className="text-ink-800 text-xs font-semibold">
-              Social Media Shares
+              {t("admin.statistics.integrations.socialMediaShares")}
             </span>
           </div>
           <div className="min-w-0 text-right">
@@ -151,7 +154,7 @@ export function IntegrationHealthCards({
               <AlertTriangle className="h-4 w-4" />
             </div>
             <span className="text-ink-800 text-xs font-semibold">
-              Sync Incidents
+              {t("admin.statistics.integrations.syncIncidents")}
             </span>
           </div>
           <div className="min-w-0 text-right">
@@ -168,12 +171,12 @@ export function IntegrationHealthCards({
               {integrationStatus.failedIntegrationsCount > 0 ? (
                 <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-600 dark:text-rose-400">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />
-                  Action Req
+                  {t("admin.statistics.integrations.actionRequired")}
                 </span>
               ) : (
                 <span className="text-ink-500 inline-flex items-center gap-1.5 text-[11px] font-medium">
                   <span className="bg-ink-400 h-1.5 w-1.5 rounded-full" />
-                  No traffic
+                  {t("admin.statistics.integrations.noTraffic")}
                 </span>
               )}
             </div>

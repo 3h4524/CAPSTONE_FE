@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { exportSystemStatisticsCsv } from "@/api/system-statistics";
@@ -20,11 +21,12 @@ const COMPARISON_PERIODS: Record<string, string> = {
   "7d": "week",
   "30d": "month",
   "90d": "quarter",
-  "180d": "6 months",
+  "180d": "sixMonths",
   year: "year",
 };
 
 export function SystemStatisticsDashboard() {
+  const { t } = useTranslation("common");
   const [timeRange, setTimeRange] = useState<string>("30d");
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
@@ -33,7 +35,10 @@ export function SystemStatisticsDashboard() {
       timeRange,
     });
 
-  const comparisonLabel = `vs previous ${COMPARISON_PERIODS[timeRange] ?? "period"}`;
+  const comparisonPeriodKey = COMPARISON_PERIODS[timeRange] ?? "period";
+  const comparisonLabel = t("admin.statistics.dashboard.comparisonLabel", {
+    period: t(`admin.statistics.dashboard.comparisonPeriods.${comparisonPeriodKey}`),
+  });
 
   const handleExportCSV = async () => {
     try {
@@ -53,9 +58,9 @@ export function SystemStatisticsDashboard() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
-      toast.success("System statistics exported successfully!");
+      toast.success(t("admin.statistics.dashboard.exportSuccess"));
     } catch {
-      toast.error("Failed to export statistics. Please try again.");
+      toast.error(t("admin.statistics.dashboard.exportError"));
     } finally {
       setIsExporting(false);
     }
@@ -77,10 +82,10 @@ export function SystemStatisticsDashboard() {
         <div className="bg-card my-8 flex flex-col items-center justify-center rounded-2xl border border-rose-200 p-8 text-center shadow-2xs dark:border-rose-500/30">
           <AlertCircle className="mb-3 h-10 w-10 text-rose-500" />
           <h3 className="text-base font-semibold text-rose-900 dark:text-rose-300">
-            Failed to load system statistics
+            {t("admin.statistics.dashboard.loadErrorTitle")}
           </h3>
           <p className="mt-1 text-sm text-rose-600 dark:text-rose-400">
-            An error occurred while communicating with the analytics server. Please try again.
+            {t("admin.statistics.dashboard.loadErrorDescription")}
           </p>
           <Button
             onClick={() => refetch()}
@@ -88,7 +93,7 @@ export function SystemStatisticsDashboard() {
             className="bg-card mt-4 cursor-pointer gap-2 border-rose-200 hover:bg-rose-50 dark:border-rose-500/30 dark:hover:bg-rose-500/10"
           >
             <RefreshCw className="h-4 w-4 text-rose-500" />
-            <span>Retry</span>
+            <span>{t("admin.statistics.dashboard.retry")}</span>
           </Button>
         </div>
       ) : (

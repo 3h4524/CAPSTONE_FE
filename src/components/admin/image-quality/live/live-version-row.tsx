@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { RateMeter } from "@/components/admin/image-quality/rate-meter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import {
@@ -14,35 +16,43 @@ type LiveVersionRowProps = {
 };
 
 // The cells a phone's card shows as well, so the two cannot read differently.
-export const LiveVersionName = ({ version }: LiveVersionRowProps) => (
-  <>
-    <span className="text-ink-900 flex flex-wrap items-center gap-2 text-sm font-medium">
-      {version.label}
-      {version.labeledImages < version.images ? (
-        <span className="bg-ink-100 text-ink-600 rounded px-1.5 py-0.5 text-[11px] font-normal">
-          by date
-        </span>
-      ) : null}
-    </span>
-    <span className="text-ink-500 mt-0.5 block text-xs">
-      {formatImageQualityDate(version.sinceUtc)} →{" "}
-      {version.untilUtc ? formatImageQualityDate(version.untilUtc) : "now"}
-    </span>
-  </>
-);
+export const LiveVersionName = ({ version }: LiveVersionRowProps) => {
+  const { t } = useTranslation("common");
+
+  return (
+    <>
+      <span className="text-ink-900 flex flex-wrap items-center gap-2 text-sm font-medium">
+        {version.label}
+        {version.labeledImages < version.images ? (
+          <span className="bg-ink-100 text-ink-600 rounded px-1.5 py-0.5 text-[11px] font-normal">
+            {t("admin.imageQuality.live.byDate")}
+          </span>
+        ) : null}
+      </span>
+      <span className="text-ink-500 mt-0.5 block text-xs">
+        {formatImageQualityDate(version.sinceUtc)} →{" "}
+        {version.untilUtc ? formatImageQualityDate(version.untilUtc) : t("admin.imageQuality.live.now")}
+      </span>
+    </>
+  );
+};
 
 export const LiveApproval = ({ version }: LiveVersionRowProps) => {
+  const { t } = useTranslation("common");
   const decided = version.approvedImages + version.rejectedImages;
   return decided > 0 ? (
     <RateMeter value={version.approvalRate} caption={`${version.approvedImages}/${decided}`} />
   ) : (
     <span className="text-ink-500 text-[13px]">
-      {version.reviewedImages > 0 ? `${version.reviewedImages} waiting` : "No review asked"}
+      {version.reviewedImages > 0
+        ? t("admin.imageQuality.live.waitingCount", { count: version.reviewedImages })
+        : t("admin.imageQuality.live.noReviewAsked")}
     </span>
   );
 };
 
 export const LiveTextCheck = ({ version }: LiveVersionRowProps) => {
+  const { t } = useTranslation("common");
   const textChecked = version.textCheckedImages ?? 0;
   return textChecked > 0 ? (
     <RateMeter
@@ -50,7 +60,7 @@ export const LiveTextCheck = ({ version }: LiveVersionRowProps) => {
       caption={`${version.textOkImages ?? 0}/${textChecked} · CER ${formatImageQualityNumber(version.averageCharacterErrorRate ?? null, 3)}`}
     />
   ) : (
-    <span className="text-ink-500 text-[13px]">Not checked</span>
+    <span className="text-ink-500 text-[13px]">{t("admin.imageQuality.live.notChecked")}</span>
   );
 };
 
@@ -62,6 +72,8 @@ export const LiveFailure = ({ version }: LiveVersionRowProps) => (
 );
 
 export const LiveVersionRow = ({ version }: LiveVersionRowProps) => {
+  const { t } = useTranslation("common");
+
   return (
     <TableRow>
       <TableCell className="py-3 pl-5 whitespace-normal sm:pl-6">
@@ -70,7 +82,7 @@ export const LiveVersionRow = ({ version }: LiveVersionRowProps) => {
       <TableCell className="text-ink-800 text-right font-mono text-sm">
         {version.images}
         <span className="text-ink-500 block text-[11px]">
-          {version.products} products · {version.jobs} jobs
+          {t("admin.imageQuality.live.productsJobs", { products: version.products, jobs: version.jobs })}
         </span>
       </TableCell>
       <TableCell>
@@ -81,7 +93,9 @@ export const LiveVersionRow = ({ version }: LiveVersionRowProps) => {
       </TableCell>
       <TableCell className="text-ink-800 text-right font-mono text-sm">
         {formatImageQualityNumber(version.regenerateRate, 2)}
-        <span className="text-ink-500 block text-[11px]">{version.regenerateRequests} requests</span>
+        <span className="text-ink-500 block text-[11px]">
+          {t("admin.imageQuality.live.requestsCount", { count: version.regenerateRequests })}
+        </span>
       </TableCell>
       <TableCell>
         <LiveFailure version={version} />
@@ -92,7 +106,7 @@ export const LiveVersionRow = ({ version }: LiveVersionRowProps) => {
       <TableCell className="text-ink-800 pr-5 text-right font-mono text-sm sm:pr-6">
         {formatImageQualityUsd(version.averageCostUsd)}
         <span className="text-ink-500 block text-[11px]">
-          {formatImageQualityUsd(version.totalCostUsd)} total
+          {t("admin.imageQuality.live.totalSuffix", { value: formatImageQualityUsd(version.totalCostUsd) })}
         </span>
       </TableCell>
     </TableRow>

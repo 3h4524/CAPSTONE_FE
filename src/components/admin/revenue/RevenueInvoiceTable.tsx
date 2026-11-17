@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Calendar, ChevronLeft, ChevronRight, Eye, Receipt, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { Card } from "@/components/ui/card";
@@ -19,7 +20,6 @@ import {
   formatTransactionDate,
   getPageItems,
   getTransactionStatusStyle,
-  TRANSACTION_STATUS_STYLE,
   TRANSACTION_STATUSES,
 } from "@/helpers/revenue-transactions";
 import { useIsPhone } from "@/hooks/use-is-phone";
@@ -52,6 +52,15 @@ interface RevenueInvoiceTableProps {
 const ALL_FILTER = "all";
 const FILTER_TRIGGER_CLASS = "h-9 rounded-lg text-xs font-medium max-md:w-full max-md:min-w-0 max-md:text-base max-md:font-normal";
 
+const STATUS_I18N_KEYS: Record<TransactionStatus, string> = {
+  paid: "admin.revenue.invoiceTable.status.paid",
+  pending: "admin.revenue.invoiceTable.status.pending",
+  overdue: "admin.revenue.invoiceTable.status.overdue",
+  refunded: "admin.revenue.invoiceTable.status.refunded",
+  cancelled: "admin.revenue.invoiceTable.status.cancelled",
+  draft: "admin.revenue.invoiceTable.status.draft",
+};
+
 export function RevenueInvoiceTable({
   data,
   isLoading,
@@ -64,6 +73,8 @@ export function RevenueInvoiceTable({
   onPageChange,
 }: RevenueInvoiceTableProps) {
   const isPhone = useIsPhone();
+  const { t } = useTranslation("common");
+  const statusLabel = (status: string) => STATUS_I18N_KEYS[status as TransactionStatus] ? t(STATUS_I18N_KEYS[status as TransactionStatus]) : getTransactionStatusStyle(status).label;
   const [searchInput, setSearchInput] = useState(tableFilter.search);
   const [selected, setSelected] = useState<RevenueInvoiceDto | null>(null);
 
@@ -88,7 +99,7 @@ export function RevenueInvoiceTable({
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
             <Receipt className="h-5 w-5" />
           </div>
-          <h3 className="text-ink-900 text-sm font-bold whitespace-nowrap dark:text-slate-100">Recent Transactions</h3>
+          <h3 className="text-ink-900 text-sm font-bold whitespace-nowrap dark:text-slate-100">{t("admin.revenue.invoiceTable.title")}</h3>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 max-md:grid max-md:w-full max-md:grid-cols-2">
@@ -98,8 +109,8 @@ export function RevenueInvoiceTable({
               type="search"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={isPhone ? "Search transactions" : "Search invoice, customer, email or user ID..."}
-              aria-label="Search transactions"
+              placeholder={isPhone ? t("admin.revenue.invoiceTable.searchTransactions") : t("admin.revenue.invoiceTable.searchPlaceholder")}
+              aria-label={t("admin.revenue.invoiceTable.searchTransactions")}
               className="border-ink-200 bg-card text-ink-700 placeholder:text-ink-400 h-9 w-full rounded-lg border pr-3 pl-8 text-xs focus:border-blue-400 focus:outline-none max-md:text-base dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             />
           </div>
@@ -108,11 +119,11 @@ export function RevenueInvoiceTable({
             value={tableFilter.plan || ALL_FILTER}
             onValueChange={(value) => onTableFilterChange({ ...tableFilter, plan: value === ALL_FILTER ? "" : value })}
           >
-            <SelectTrigger aria-label="Filter by plan" className={FILTER_TRIGGER_CLASS}>
+            <SelectTrigger aria-label={t("admin.revenue.invoiceTable.filterPlanAria")} className={FILTER_TRIGGER_CLASS}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_FILTER}>All Plans</SelectItem>
+              <SelectItem value={ALL_FILTER}>{t("admin.revenue.invoiceTable.allPlans")}</SelectItem>
               {planOptions.map((p) => (
                 <SelectItem key={p} value={p}>
                   {p}
@@ -125,21 +136,21 @@ export function RevenueInvoiceTable({
             value={tableFilter.status || ALL_FILTER}
             onValueChange={(value) => onTableFilterChange({ ...tableFilter, status: value === ALL_FILTER ? "" : (value as TransactionStatus) })}
           >
-            <SelectTrigger aria-label="Filter by status" className={FILTER_TRIGGER_CLASS}>
+            <SelectTrigger aria-label={t("admin.revenue.invoiceTable.filterStatusAria")} className={FILTER_TRIGGER_CLASS}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_FILTER}>All Status</SelectItem>
+              <SelectItem value={ALL_FILTER}>{t("admin.revenue.invoiceTable.allStatus")}</SelectItem>
               {TRANSACTION_STATUSES.map((s) => (
                 <SelectItem key={s} value={s}>
-                  {TRANSACTION_STATUS_STYLE[s].label}
+                  {statusLabel(s)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           <div
-            title="Change the period with the date filter at the top of the page"
+            title={t("admin.revenue.invoiceTable.periodHint")}
             className="border-ink-200 text-ink-600 flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs whitespace-nowrap max-md:hidden dark:border-slate-800 dark:text-slate-300"
           >
             <Calendar className="text-ink-400 size-3.5" />
@@ -151,9 +162,9 @@ export function RevenueInvoiceTable({
       {/* Table */}
       {isPhone ? (
         isLoading ? (
-          <p className="text-ink-400 py-8 text-center text-sm">Loading transactions…</p>
+          <p className="text-ink-400 py-8 text-center text-sm">{t("admin.revenue.invoiceTable.loading")}</p>
         ) : !data || data.items.length === 0 ? (
-          <p className="text-ink-400 py-8 text-center text-sm">No transactions match these filters.</p>
+          <p className="text-ink-400 py-8 text-center text-sm">{t("admin.revenue.invoiceTable.empty")}</p>
         ) : (
           <ul className="divide-ink-100 divide-y dark:divide-slate-800">
             {data.items.map((invoice) => {
@@ -174,7 +185,7 @@ export function RevenueInvoiceTable({
                   </p>
                   <p className="text-ink-500 flex items-center justify-between gap-2 dark:text-slate-400">
                     <span>{invoice.paymentMethod ?? "—"}</span>
-                    <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${status.className}`}>{status.label}</span>
+                    <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${status.className}`}>{statusLabel(invoice.status)}</span>
                   </p>
                   <div className="text-ink-500 flex items-center justify-between gap-2 dark:text-slate-400">
                     <span>{formatTransactionDate(invoice.paymentDate, invoice.createdAt)}</span>
@@ -184,7 +195,7 @@ export function RevenueInvoiceTable({
                       className="border-ink-200 text-ink-600 inline-flex min-h-10 cursor-pointer items-center gap-1 rounded-md border px-3 text-[11px] font-medium dark:border-slate-800 dark:text-slate-300"
                     >
                       <Eye className="size-3" />
-                      View
+                      {t("admin.revenue.invoiceTable.view")}
                     </button>
                   </div>
                 </li>
@@ -197,14 +208,14 @@ export function RevenueInvoiceTable({
         <table className="w-full min-w-[820px] text-xs tabular-nums">
           <thead>
             <tr className="border-ink-100 text-ink-500 border-b text-left text-[11px] font-semibold dark:border-slate-800 dark:text-slate-400">
-              <th className="py-2.5 pr-3 font-semibold">Invoice No.</th>
-              <th className="px-3 py-2.5 font-semibold">Customer</th>
-              <th className="px-3 py-2.5 font-semibold">Plan</th>
-              <th className="px-3 py-2.5 text-right font-semibold">Amount</th>
-              <th className="px-3 py-2.5 font-semibold">Payment Method</th>
-              <th className="px-3 py-2.5 font-semibold">Status</th>
-              <th className="px-3 py-2.5 font-semibold">Date</th>
-              <th className="py-2.5 pl-3 text-right font-semibold">Actions</th>
+              <th className="py-2.5 pr-3 font-semibold">{t("admin.revenue.invoiceTable.columns.invoiceNo")}</th>
+              <th className="px-3 py-2.5 font-semibold">{t("admin.revenue.invoiceTable.columns.customer")}</th>
+              <th className="px-3 py-2.5 font-semibold">{t("admin.revenue.invoiceTable.columns.plan")}</th>
+              <th className="px-3 py-2.5 text-right font-semibold">{t("admin.revenue.invoiceTable.columns.amount")}</th>
+              <th className="px-3 py-2.5 font-semibold">{t("admin.revenue.invoiceTable.columns.paymentMethod")}</th>
+              <th className="px-3 py-2.5 font-semibold">{t("admin.revenue.invoiceTable.columns.status")}</th>
+              <th className="px-3 py-2.5 font-semibold">{t("admin.revenue.invoiceTable.columns.date")}</th>
+              <th className="py-2.5 pl-3 text-right font-semibold">{t("admin.revenue.invoiceTable.columns.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -221,7 +232,7 @@ export function RevenueInvoiceTable({
             ) : !data || data.items.length === 0 ? (
               <tr>
                 <td colSpan={8} className="text-ink-400 h-32 text-center">
-                  No transactions match these filters.
+                  {t("admin.revenue.invoiceTable.empty")}
                 </td>
               </tr>
             ) : (
@@ -258,7 +269,7 @@ export function RevenueInvoiceTable({
                     </td>
                     <td className="px-3 py-3">
                       <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${status.className}`}>
-                        {status.label}
+                        {statusLabel(invoice.status)}
                       </span>
                     </td>
                     <td className="text-ink-500 px-3 py-3 whitespace-nowrap dark:text-slate-400">
@@ -271,7 +282,7 @@ export function RevenueInvoiceTable({
                         className="border-ink-200 text-ink-600 hover:border-ink-300 hover:text-ink-900 inline-flex cursor-pointer items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium transition-colors dark:border-slate-700 dark:text-slate-300"
                       >
                         <Eye className="size-3" />
-                        View
+                        {t("admin.revenue.invoiceTable.view")}
                       </button>
                     </td>
                   </tr>
@@ -286,15 +297,15 @@ export function RevenueInvoiceTable({
       {/* Footer: count + numbered pager */}
       <div className="border-ink-100 mt-4 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
         <p className="text-ink-500 text-xs">
-          Showing <span className="text-ink-700 font-semibold dark:text-slate-200">{firstRow}</span> –{" "}
-          <span className="text-ink-700 font-semibold dark:text-slate-200">{lastRow}</span> of{" "}
-          <span className="text-ink-700 font-semibold dark:text-slate-200">{totalCount}</span> transactions
+          {t("admin.revenue.invoiceTable.showingFrom")} <span className="text-ink-700 font-semibold dark:text-slate-200">{firstRow}</span> –{" "}
+          <span className="text-ink-700 font-semibold dark:text-slate-200">{lastRow}</span> {t("admin.revenue.invoiceTable.showingOf")}{" "}
+          <span className="text-ink-700 font-semibold dark:text-slate-200">{totalCount}</span> {t("admin.revenue.common.transactions")}
         </p>
         {isPhone ? (
-          <PhonePager page={page} pageCount={totalPages} onPageChange={onPageChange} label="Transactions pages" anchorId="recent-transactions" />
+          <PhonePager page={page} pageCount={totalPages} onPageChange={onPageChange} label={t("admin.revenue.invoiceTable.transactionsPagesAria")} anchorId="recent-transactions" />
         ) : totalPages > 1 && (
-          <nav aria-label="Transactions pages" className="flex flex-wrap items-center gap-1">
-            <PagerButton label="Previous page" disabled={page <= 1 || isLoading} onClick={() => onPageChange(page - 1)}>
+          <nav aria-label={t("admin.revenue.invoiceTable.transactionsPagesAria")} className="flex flex-wrap items-center gap-1">
+            <PagerButton label={t("admin.revenue.invoiceTable.previousPage")} disabled={page <= 1 || isLoading} onClick={() => onPageChange(page - 1)}>
               <ChevronLeft className="size-3.5" />
             </PagerButton>
             {getPageItems(page, totalPages).map((item, i) =>
@@ -305,7 +316,7 @@ export function RevenueInvoiceTable({
               ) : (
                 <PagerButton
                   key={item}
-                  label={`Page ${item}`}
+                  label={t("admin.revenue.invoiceTable.pageNumber", { page: item })}
                   active={item === page}
                   disabled={isLoading}
                   onClick={() => onPageChange(item)}
@@ -315,7 +326,7 @@ export function RevenueInvoiceTable({
               )
             )}
             <PagerButton
-              label="Next page"
+              label={t("admin.revenue.invoiceTable.nextPage")}
               disabled={page >= totalPages || isLoading}
               onClick={() => onPageChange(page + 1)}
             >
@@ -368,6 +379,8 @@ function TransactionDetailDialog({
   invoice: RevenueInvoiceDto | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation("common");
+  const statusLabel = (status: string) => STATUS_I18N_KEYS[status as TransactionStatus] ? t(STATUS_I18N_KEYS[status as TransactionStatus]) : getTransactionStatusStyle(status).label;
   const status = invoice ? getTransactionStatusStyle(invoice.status) : null;
 
   return (
@@ -377,30 +390,30 @@ function TransactionDetailDialog({
           <>
             <DialogHeader>
               <DialogTitle>{invoice.invoiceNumber}</DialogTitle>
-              <DialogDescription>Transaction details</DialogDescription>
+              <DialogDescription>{t("admin.revenue.invoiceTable.dialogDescription")}</DialogDescription>
             </DialogHeader>
             <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2.5 text-sm">
-              <dt className="text-ink-500">Customer</dt>
+              <dt className="text-ink-500">{t("admin.revenue.invoiceTable.columns.customer")}</dt>
               <dd className="text-right font-medium">{invoice.customerName}</dd>
-              <dt className="text-ink-500">User ID</dt>
+              <dt className="text-ink-500">{t("admin.revenue.invoiceTable.userId")}</dt>
               <dd className="truncate text-right font-mono text-xs" title={invoice.userId}>
                 {invoice.userId}
               </dd>
-              <dt className="text-ink-500">Email</dt>
+              <dt className="text-ink-500">{t("admin.revenue.invoiceTable.email")}</dt>
               <dd className="truncate text-right">{invoice.customerEmail}</dd>
-              <dt className="text-ink-500">Plan</dt>
+              <dt className="text-ink-500">{t("admin.revenue.invoiceTable.columns.plan")}</dt>
               <dd className="text-right font-medium">{invoice.planName}</dd>
-              <dt className="text-ink-500">Amount</dt>
+              <dt className="text-ink-500">{t("admin.revenue.invoiceTable.columns.amount")}</dt>
               <dd className="text-right font-semibold">{formatVnd(invoice.amount)}</dd>
-              <dt className="text-ink-500">Payment method</dt>
+              <dt className="text-ink-500">{t("admin.revenue.invoiceTable.paymentMethodDialog")}</dt>
               <dd className="text-right">{invoice.paymentMethod ?? "—"}</dd>
-              <dt className="text-ink-500">Status</dt>
+              <dt className="text-ink-500">{t("admin.revenue.invoiceTable.columns.status")}</dt>
               <dd className="text-right">
                 <span className={`inline-flex rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ${status.className}`}>
-                  {status.label}
+                  {statusLabel(invoice.status)}
                 </span>
               </dd>
-              <dt className="text-ink-500">Date</dt>
+              <dt className="text-ink-500">{t("admin.revenue.invoiceTable.columns.date")}</dt>
               <dd className="text-right">{formatTransactionDate(invoice.paymentDate, invoice.createdAt)}</dd>
             </dl>
           </>

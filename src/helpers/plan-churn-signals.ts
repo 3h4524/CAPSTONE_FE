@@ -1,3 +1,4 @@
+import { getCurrentLocale, i18n } from "@/i18n/client";
 import type { FeatureChurnSignal, LeaveGroup, PlanChurnSignal } from "@/types/plan-insights";
 
 export interface FeatureGap {
@@ -34,29 +35,37 @@ export function featureGaps(signal: PlanChurnSignal): FeatureGap[] {
 
 /** One sentence an Admin can read before the bars; null when there is nothing to compare. */
 export function churnHeadline(signal: PlanChurnSignal): string | null {
-  if (signal.left === 0) return "No customers stopped paying in this period.";
+  const t = i18n.t.bind(i18n);
+  if (signal.left === 0) return t("admin.plans.churnSignals.noneStopped");
   const gaps = featureGaps(signal);
   const widest = gaps[0];
   if (!widest) return null;
 
   const lead = gaps.every((item) => item.gap > 0)
-    ? "Customers who left used every feature less than those who stayed."
+    ? t("admin.plans.churnSignals.leadEvery")
     : gaps.some((item) => item.gap > 0)
-      ? "Customers who left used most features less than those who stayed."
-      : "Customers who left used the features as much as those who stayed.";
+      ? t("admin.plans.churnSignals.leadMost")
+      : t("admin.plans.churnSignals.leadAsMuch");
   if (widest.gap <= 0) return lead;
-  return `${lead} The biggest gap is ${widest.label}: ${widest.stayedRate}% of those who stayed used it, against ${widest.leftRate}% of those who left.`;
+  return `${lead} ${t("admin.plans.churnSignals.biggestGap", { label: widest.label, stayed: widest.stayedRate, left: widest.leftRate })}`;
 }
 
 /** The plan's core features in a sentence, e.g. "rendered mockups or design images". */
-const coreNames = (signal: PlanChurnSignal, joiner: "or" | "and") =>
-  signal.coreFeatures.map((name) => name.toLowerCase()).join(` ${joiner} `);
+const coreNames = (signal: PlanChurnSignal, joiner: "or" | "and") => {
+  const separator = getCurrentLocale() === "vi" ? (joiner === "or" ? " hoặc " : " và ") : ` ${joiner} `;
+  return signal.coreFeatures.map((name) => name.toLowerCase()).join(separator);
+};
 
 /** The share of those who left who never used the plan's core features, as a sentence. */
 export function coreUseLine(signal: PlanChurnSignal): string | null {
   if (signal.left === 0 || signal.leftWithoutCoreUseRate === null || signal.coreFeatures.length === 0) return null;
   const people = Math.round((signal.leftWithoutCoreUseRate / 100) * signal.left);
-  return `${signal.leftWithoutCoreUseRate}% of those who left (${people} of ${signal.left}) never used ${coreNames(signal, "or")}.`;
+  return i18n.t("admin.plans.churnSignals.coreUseLine", {
+    rate: signal.leftWithoutCoreUseRate,
+    people,
+    total: signal.left,
+    features: coreNames(signal, "or"),
+  });
 }
 
 /** What each leave group means, in the words the page shows under its name. */
@@ -64,21 +73,25 @@ export function leaveGroupDescription(group: LeaveGroup, signal: PlanChurnSignal
   switch (group.key) {
     case "never_started":
       return signal.coreFeatures.length > 0
-        ? `Never used ${coreNames(signal, "or")}, the plan's most used features.`
-        : "Never used the plan's main features.";
+        ? i18n.t("admin.plans.churnSignals.neverStartedCore", { features: coreNames(signal, "or") })
+        : i18n.t("admin.plans.churnSignals.neverStartedMain");
     case "hit_failures":
-      return "At least 20% of their attempts failed in their last 30 days.";
+      return i18n.t("admin.plans.churnSignals.hitFailures");
     case "hit_limits":
-      return "Reached a daily cap on 3 or more of their last 30 days.";
+      return i18n.t("admin.plans.churnSignals.hitLimits");
     case "faded":
-      return "Used the plan at least 50% less than in the month before.";
+      return i18n.t("admin.plans.churnSignals.faded");
     case "steady":
-      return "None of these: the data does not show why they left.";
+      return i18n.t("admin.plans.churnSignals.steady");
   }
 }
 
 /** A warning when either group is below the minimum, so the comparison may not hold yet; else null. */
 export function smallSampleNote(signal: PlanChurnSignal): string | null {
   if (signal.hasEnoughData || signal.left === 0) return null;
-  return `Small sample: only ${signal.left} ${signal.left === 1 ? "customer" : "customers"} left and ${signal.stayed} stayed, so these comparisons may not be accurate yet. They become reliable from ${signal.minimumGroup} in each group.`;
+  return i18n.t("admin.plans.churnSignals.smallSample", {
+    count: signal.left,
+    stayed: signal.stayed,
+    minimumGroup: signal.minimumGroup,
+  });
 }

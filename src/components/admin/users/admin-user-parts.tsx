@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy, Edit2, Eye, MoreHorizontal, ShieldAlert, ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -35,8 +36,17 @@ export const USER_DIALOG_FOOTER_ON_PHONE =
 
 // The pieces of a user, shared by the desktop table's row and the phone's card.
 
-export const UserRoles = ({ user }: { user: AdminUserDto }) => (
-  <div className="flex flex-wrap gap-1">
+const ACCOUNT_STATUS_KEYS: Record<string, string> = {
+  active: "admin.users.statusActive",
+  pending_verification: "admin.users.statusPending",
+  suspended: "admin.users.statusSuspended",
+};
+
+export const UserRoles = ({ user }: { user: AdminUserDto }) => {
+  const { t } = useTranslation("common");
+
+  return (
+    <div className="flex flex-wrap gap-1">
                     {user.roles.length > 0 ? (
                       user.roles.map((role) => (
                         <span 
@@ -54,11 +64,12 @@ export const UserRoles = ({ user }: { user: AdminUserDto }) => (
                       ))
                     ) : (
                       <span className="border-ink-200 bg-ink-50 text-ink-500 inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium">
-                        User
+                        {t("admin.users.rolesFallback")}
                       </span>
                     )}
                   </div>
-);
+  );
+};
 
 export const UserPlan = ({ user }: { user: AdminUserDto }) => (
   <span
@@ -74,8 +85,12 @@ export const UserPlan = ({ user }: { user: AdminUserDto }) => (
                   </span>
 );
 
-export const UserStatus = ({ user }: { user: AdminUserDto }) => (
-  <span
+export const UserStatus = ({ user }: { user: AdminUserDto }) => {
+  const { t } = useTranslation("common");
+  const statusKey = ACCOUNT_STATUS_KEYS[user.accountStatus.toLowerCase()];
+
+  return (
+    <span
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium",
                       user.accountStatus.toLowerCase() === "active" && "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
@@ -89,48 +104,53 @@ export const UserStatus = ({ user }: { user: AdminUserDto }) => (
                       user.accountStatus.toLowerCase() === "pending_verification" && "bg-amber-500",
                       user.accountStatus.toLowerCase() === "suspended" && "bg-rose-500"
                     )} />
-                    {user.accountStatus.toLowerCase() === "pending_verification" ? "Pending" : user.accountStatus}
+                    {statusKey ? t(statusKey) : user.accountStatus}
                   </span>
-);
+  );
+};
 
-export const UserActions = ({ user, onView, onEdit, onSuspend, onUnlock, onCopyId }: AdminUserActions & { user: AdminUserDto }) => (
+export const UserActions = ({ user, onView, onEdit, onSuspend, onUnlock, onCopyId }: AdminUserActions & { user: AdminUserDto }) => {
+  const { t } = useTranslation("common");
+
+  return (
   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="text-ink-500 hover:text-ink-900 h-8 w-8 p-0 max-md:size-10">
-                        <span className="sr-only">Open menu</span>
+                        <span className="sr-only">{t("admin.users.openMenu")}</span>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[160px]">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuLabel>{t("admin.users.actions")}</DropdownMenuLabel>
                       <DropdownMenuItem onClick={() => onCopyId(user.id)} className="cursor-pointer">
                         <Copy className="text-ink-400 mr-2 h-4 w-4" />
-                        Copy User ID
+                        {t("admin.users.copyUserId")}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => onView(user)} className="cursor-pointer">
                         <Eye className="text-ink-400 mr-2 h-4 w-4" />
-                        View details
+                        {t("admin.users.viewDetails")}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onEdit(user)} className="cursor-pointer">
                         <Edit2 className="text-ink-400 mr-2 h-4 w-4" />
-                        Edit user
+                        {t("admin.users.editUser")}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {user.accountStatus.toLowerCase() === "suspended" ? (
                         <DropdownMenuItem onClick={() => onUnlock(user)} className="cursor-pointer text-emerald-600 focus:bg-emerald-50 focus:text-emerald-700 dark:text-emerald-400 dark:focus:bg-emerald-500/10 dark:focus:text-emerald-300">
                           <ShieldCheck className="mr-2 h-4 w-4" />
-                          Unlock account
+                          {t("admin.users.unlockAccount")}
                         </DropdownMenuItem>
                       ) : (
                         <DropdownMenuItem onClick={() => onSuspend(user)} className="cursor-pointer text-rose-600 focus:bg-rose-50 focus:text-rose-700 dark:text-rose-400 dark:focus:bg-rose-500/10 dark:focus:text-rose-300">
                           <ShieldAlert className="mr-2 h-4 w-4" />
-                          Suspend account
+                          {t("admin.users.suspendAccount")}
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
-);
+  );
+};
 
 export const UserIdentity = ({ user }: { user: AdminUserDto }) => (
   <div className="flex items-center gap-3">
@@ -153,12 +173,15 @@ export const UserIdentity = ({ user }: { user: AdminUserDto }) => (
 );
 
 /** A user on the phone, where eight columns have no room. */
-export const AdminUserCard = ({ user, actions }: { user: AdminUserDto; actions: AdminUserActions }) => (
+export const AdminUserCard = ({ user, actions }: { user: AdminUserDto; actions: AdminUserActions }) => {
+  const { t } = useTranslation("common");
+
+  return (
   <li className="border-ink-200/80 bg-card space-y-2.5 rounded-xl border p-3.5 shadow-2xs">
     <div className="flex items-start gap-2">
       <button
         type="button"
-        aria-label={`View ${user.fullName}`}
+        aria-label={t("admin.users.viewNamedUser", { name: user.fullName })}
         className="min-w-0 flex-1 text-left wrap-anywhere"
         onClick={() => actions.onView(user)}
       >
@@ -173,8 +196,9 @@ export const AdminUserCard = ({ user, actions }: { user: AdminUserDto; actions: 
     </div>
     <p className="text-ink-500 text-xs">
       <span className="text-ink-700 font-medium tabular-nums">{user.totalJobs.toLocaleString()}</span>{" "}
-      {user.totalJobs === 1 ? "job" : "jobs"} ·{" "}
-      <span className="text-ink-700 font-medium tabular-nums">{formatVnd(user.monthlyApiCost)}</span>/month
+      {user.totalJobs === 1 ? t("admin.users.jobsSingular") : t("admin.users.jobsPlural")} ·{" "}
+      <span className="text-ink-700 font-medium tabular-nums">{formatVnd(user.monthlyApiCost)}</span>{t("admin.users.perMonth")}
     </p>
   </li>
-);
+  );
+};

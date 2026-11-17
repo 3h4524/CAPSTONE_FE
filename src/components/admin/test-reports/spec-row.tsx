@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { ChevronDown, RotateCcw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { TestReportStatusBadge } from "@/components/admin/test-reports/status-badge";
+import { i18n } from "@/i18n/client";
 import type { TestReportSpec } from "@/types/admin-test-reports";
 import { cn } from "@/utils/cn";
 
@@ -11,10 +13,17 @@ type TestReportSpecRowProps = {
   spec: TestReportSpec;
 };
 
-const formatDuration = (durationMs: number) =>
-  durationMs < 1000 ? `${durationMs} ms` : `${(durationMs / 1000).toFixed(1)} s`;
+const formatDuration = (durationMs: number) => {
+  const t = i18n.t.bind(i18n);
+  return durationMs < 1000
+    ? t("admin.testReports.runTook.milliseconds", { value: durationMs })
+    : t("admin.testReports.runTook.seconds", {
+        value: (durationMs / 1000).toFixed(1),
+      });
+};
 
 export const TestReportSpecRow = ({ spec }: TestReportSpecRowProps) => {
+  const { t } = useTranslation("common");
   const [isOpen, setIsOpen] = useState(false);
   const hasError = Boolean(spec.errorMessage || spec.errorStack || spec.errorSnippet);
 
@@ -32,13 +41,13 @@ export const TestReportSpecRow = ({ spec }: TestReportSpecRowProps) => {
         </span>
         {spec.isKnownIssue && (
           <span className="shrink-0 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-amber-700 uppercase dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-            known gap
+            {t("admin.testReports.knownGap")}
           </span>
         )}
         {spec.retries > 0 && (
           <span
             className="flex shrink-0 items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400"
-            title="The test passed only after a retry"
+            title={t("admin.testReports.specRow.retriedTitle")}
           >
             <RotateCcw className="size-3" />
             {spec.retries}
@@ -52,7 +61,11 @@ export const TestReportSpecRow = ({ spec }: TestReportSpecRowProps) => {
             type="button"
             onClick={() => setIsOpen((open) => !open)}
             className="text-ink-400 hover:bg-ink-100 hover:text-ink-700 flex size-6 shrink-0 items-center justify-center rounded transition-colors"
-            aria-label={isOpen ? "Hide the failure" : "Show the failure"}
+            aria-label={
+              isOpen
+                ? t("admin.testReports.specRow.hideFailure")
+                : t("admin.testReports.specRow.showFailure")
+            }
             aria-expanded={isOpen}
           >
             <ChevronDown className={cn("size-4 transition-transform", isOpen && "rotate-180")} />
@@ -75,7 +88,7 @@ export const TestReportSpecRow = ({ spec }: TestReportSpecRowProps) => {
           {spec.errorStack && (
             <details className="group">
               <summary className="text-ink-500 cursor-pointer text-[10px] font-semibold tracking-wide uppercase select-none">
-                Stack trace
+                {t("admin.testReports.specRow.stackTrace")}
               </summary>
               <pre className="border-ink-200 bg-card text-ink-600 mt-2 overflow-x-auto rounded border p-3 font-mono text-[11px] leading-relaxed">
                 {spec.errorStack}

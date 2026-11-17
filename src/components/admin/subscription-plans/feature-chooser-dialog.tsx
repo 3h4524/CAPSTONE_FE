@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Plus, Search, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,6 +25,7 @@ type FeatureChooserDialogProps = {
 // Picks features from the catalog: search, grouped, several at once, each marked with the plans
 // that already have it. Used to add features to a plan and to a plan being created.
 export function FeatureChooserDialog({ open, title, description, candidates, isPending = false, onAdd, onClose }: FeatureChooserDialogProps) {
+  const { t } = useTranslation("common");
   const [query, setQuery] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
   const close = () => {
@@ -59,7 +61,7 @@ export function FeatureChooserDialog({ open, title, description, candidates, isP
             <Plus className="size-[18px]" aria-hidden="true" />
           </div>
           <div className="space-y-1">
-            <p className="text-ink-500 text-[10px] font-bold tracking-[0.16em]">ADD FEATURES</p>
+            <p className="text-ink-500 text-[10px] font-bold tracking-[0.16em]">{t("admin.plans.chooser.eyebrow")}</p>
             <DialogTitle className="font-display text-xl tracking-[-0.02em]">{title}</DialogTitle>
             <DialogDescription className="leading-5">{description}</DialogDescription>
           </div>
@@ -69,7 +71,7 @@ export function FeatureChooserDialog({ open, title, description, candidates, isP
             size="icon"
             className="text-ink-500 hover:bg-ink-100 absolute top-4 right-4 size-10 rounded-lg hover:translate-y-0"
             onClick={close}
-            aria-label="Close"
+            aria-label={t("admin.plans.shared.close")}
           >
             <X aria-hidden="true" />
           </Button>
@@ -81,8 +83,8 @@ export function FeatureChooserDialog({ open, title, description, candidates, isP
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search features"
-              aria-label="Search features"
+              placeholder={t("admin.plans.chooser.searchFeature")}
+              aria-label={t("admin.plans.chooser.searchFeature")}
               className="pl-9"
             />
           </div>
@@ -91,7 +93,7 @@ export function FeatureChooserDialog({ open, title, description, candidates, isP
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-3 sm:px-6">
           {shown.length === 0 ? (
             <p className="bg-ink-50 text-ink-500 rounded-xl px-4 py-6 text-center text-sm">
-              {query ? "No feature matches your search." : "Every feature on offer is already included."}
+              {query ? t("admin.plans.chooser.noMatch") : t("admin.plans.chooser.allIncluded")}
             </p>
           ) : (
             groups.map((group) => (
@@ -115,7 +117,7 @@ export function FeatureChooserDialog({ open, title, description, candidates, isP
                           </span>
                           {feature.plans.length > 0 && (
                             <span className="bg-ink-100 text-ink-500 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold">
-                              In {feature.plans.join(", ")}
+                              {t("admin.plans.chooser.inPlans", { plans: feature.plans.join(", ") })}
                             </span>
                           )}
                         </label>
@@ -129,11 +131,11 @@ export function FeatureChooserDialog({ open, title, description, candidates, isP
 
         <div className="border-ink-100 flex justify-end gap-2 border-t px-5 py-4 sm:px-6">
           <Button type="button" variant="outline" onClick={close} disabled={isPending}>
-            Cancel
+            {t("admin.plans.shared.cancel")}
           </Button>
           <Button type="button" onClick={submit} disabled={picked.length === 0 || isPending}>
             {isPending && <Spinner className="size-4" />}
-            {picked.length > 1 ? `Add ${picked.length} features` : "Add feature"}
+            {t("admin.plans.chooser.addFeatures", { count: picked.length })}
           </Button>
         </div>
       </DialogContent>

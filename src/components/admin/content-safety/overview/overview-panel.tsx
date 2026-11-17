@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, CircleDashed, Gauge, ScanSearch, ShieldX, Timer } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AdminMetricCard } from "@/components/admin/admin-metric-card";
 import { CategoryBreakdown, DeciderBreakdown, FeatureBreakdown } from "@/components/admin/content-safety/overview/breakdowns";
@@ -21,29 +22,33 @@ import { useModerationOffenders, useModerationOverview } from "@/hooks/queries/u
 import type { ModerationRangeDays } from "@/types/admin-moderation";
 import { cn } from "@/utils/cn";
 
-const RangePicker = ({ value, onChange }: { value: ModerationRangeDays; onChange: (days: ModerationRangeDays) => void }) => (
-  <div role="radiogroup" aria-label="Period" className="bg-ink-100 inline-flex rounded-lg p-1">
-    {RANGE_OPTIONS.map((days) => (
-      <button
-        key={days}
-        type="button"
-        role="radio"
-        aria-checked={value === days}
-        onClick={() => onChange(days)}
-        className={cn(
-          "min-h-9 rounded-md px-3 text-sm font-medium transition-colors",
-          value === days
-            ? "bg-card text-ink-900 shadow-sm dark:ring-1 dark:ring-white/15"
-            : "text-ink-600 hover:text-ink-900"
-        )}
-      >
-        {days} days
-      </button>
-    ))}
-  </div>
-);
+const RangePicker = ({ value, onChange }: { value: ModerationRangeDays; onChange: (days: ModerationRangeDays) => void }) => {
+  const { t } = useTranslation("common");
+  return (
+    <div role="radiogroup" aria-label={t("admin.contentSafety.common.period")} className="bg-ink-100 inline-flex rounded-lg p-1">
+      {RANGE_OPTIONS.map((days) => (
+        <button
+          key={days}
+          type="button"
+          role="radio"
+          aria-checked={value === days}
+          onClick={() => onChange(days)}
+          className={cn(
+            "min-h-9 rounded-md px-3 text-sm font-medium transition-colors",
+            value === days
+              ? "bg-card text-ink-900 shadow-sm dark:ring-1 dark:ring-white/15"
+              : "text-ink-600 hover:text-ink-900"
+          )}
+        >
+          {t("admin.contentSafety.overview.rangeDays", { days })}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 export const OverviewPanel = ({ onOpenLog }: { onOpenLog: () => void }) => {
+  const { t } = useTranslation("common");
   const [days, setDays] = useState<ModerationRangeDays>(7);
   const overview = useModerationOverview(days);
   const offenders = useModerationOffenders(days);
@@ -54,35 +59,59 @@ export const OverviewPanel = ({ onOpenLog }: { onOpenLog: () => void }) => {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <RangePicker value={days} onChange={setDays} />
         <Button type="button" variant="outline" size="sm" onClick={onOpenLog}>
-          Open activity log
+          {t("admin.contentSafety.overview.openLog")}
         </Button>
       </div>
 
       {data && !data.storageReady && <StorageMissingBanner />}
 
       {overview.isError ? (
-        <Section title="Overview">
-          <PanelMessage tone="error" title="The overview could not be loaded." description="Check the API and try again." />
+        <Section title={t("admin.contentSafety.tabs.overview")}>
+          <PanelMessage
+            tone="error"
+            title={t("admin.contentSafety.overview.loadError")}
+            description={t("admin.contentSafety.common.checkApiRetry")}
+          />
         </Section>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             {data ? (
               <>
-                <AdminMetricCard label="Checks" value={formatNumber(data.totals.checks)} context={`Last ${days} days`} icon={ScanSearch} />
-                <AdminMetricCard label="Blocked" value={formatNumber(data.totals.blocked)} context="Refused by the guardrail" icon={ShieldX} />
-                <AdminMetricCard label="Block rate" value={formatPercent(data.totals.blockRate)} context="Of all checks" icon={Gauge} />
-                <AdminMetricCard label="Flagged" value={formatNumber(data.totals.flagged)} context="Let through, worth a look" icon={AlertTriangle} />
                 <AdminMetricCard
-                  label="Unchecked"
+                  label={t("admin.contentSafety.metrics.checks")}
+                  value={formatNumber(data.totals.checks)}
+                  context={t("admin.contentSafety.metrics.lastDays", { days })}
+                  icon={ScanSearch}
+                />
+                <AdminMetricCard
+                  label={t("admin.contentSafety.decisions.block")}
+                  value={formatNumber(data.totals.blocked)}
+                  context={t("admin.contentSafety.metrics.refused")}
+                  icon={ShieldX}
+                />
+                <AdminMetricCard
+                  label={t("admin.contentSafety.metrics.blockRate")}
+                  value={formatPercent(data.totals.blockRate)}
+                  context={t("admin.contentSafety.metrics.ofAllChecks")}
+                  icon={Gauge}
+                />
+                <AdminMetricCard
+                  label={t("admin.contentSafety.decisions.flagged")}
+                  value={formatNumber(data.totals.flagged)}
+                  context={t("admin.contentSafety.metrics.letThrough")}
+                  icon={AlertTriangle}
+                />
+                <AdminMetricCard
+                  label={t("admin.contentSafety.decisions.unchecked")}
                   value={formatNumber(data.totals.unchecked)}
-                  context="Gemini could not answer"
+                  context={t("admin.contentSafety.metrics.geminiNoAnswer")}
                   icon={CircleDashed}
                 />
                 <AdminMetricCard
-                  label="Avg. check time"
+                  label={t("admin.contentSafety.metrics.avgCheckTime")}
                   value={data.totals.averageLatencyMs === null ? "—" : `${formatNumber(data.totals.averageLatencyMs)} ms`}
-                  context="Blocklist and Gemini"
+                  context={t("admin.contentSafety.metrics.blocklistAndGemini")}
                   icon={Timer}
                 />
               </>
@@ -92,27 +121,30 @@ export const OverviewPanel = ({ onOpenLog }: { onOpenLog: () => void }) => {
           </div>
 
           <Section
-            title="Decisions per day"
-            description="Every check the guardrail ran, by what it decided. Cached repeats of the same text are not counted again."
+            title={t("admin.contentSafety.overview.decisionsPerDay")}
+            description={t("admin.contentSafety.overview.decisionsPerDayDesc")}
           >
             {data ? <DecisionsChart daily={data.daily} /> : <Skeleton className="h-64 w-full" />}
           </Section>
 
           <div className="grid gap-5 max-md:gap-3 lg:grid-cols-3">
-            <Section title="By category" description="Checks blocked or flagged in each category.">
+            <Section title={t("admin.contentSafety.overview.byCategory")} description={t("admin.contentSafety.overview.byCategoryDesc")}>
               {data ? <CategoryBreakdown items={data.byCategory} /> : <Skeleton className="h-40 w-full" />}
             </Section>
-            <Section title="Who blocked" description="Blocks made by the keyword blocklist, by Gemini, or by Gemini's own safety filter.">
+            <Section title={t("admin.contentSafety.overview.whoBlocked")} description={t("admin.contentSafety.overview.whoBlockedDesc")}>
               {data ? <DeciderBreakdown items={data.byDecider} /> : <Skeleton className="h-40 w-full" />}
             </Section>
-            <Section title="By feature" description="Where the checks ran, with the blocked share in red.">
+            <Section title={t("admin.contentSafety.overview.byFeature")} description={t("admin.contentSafety.overview.byFeatureDesc")}>
               {data ? <FeatureBreakdown items={data.byFeature} /> : <Skeleton className="h-40 w-full" />}
             </Section>
           </div>
 
-          <Section title="Sellers blocked most often" description={`The ten sellers with the most blocks in the last ${days} days.`}>
+          <Section
+            title={t("admin.contentSafety.overview.sellersBlockedMost")}
+            description={t("admin.contentSafety.overview.sellersBlockedMostDesc", { days })}
+          >
             {offenders.isError ? (
-              <PanelMessage tone="error" title="The sellers could not be loaded." />
+              <PanelMessage tone="error" title={t("admin.contentSafety.overview.sellersLoadError")} />
             ) : offenders.data ? (
               <OffendersTable offenders={offenders.data} />
             ) : (

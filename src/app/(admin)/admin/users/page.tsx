@@ -13,6 +13,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import {
@@ -54,6 +55,7 @@ const PHONE_PAGE_SIZE = 5;
 export default function AdminUsersPage() {
   const queryClient = useQueryClient();
   const isPhone = useIsPhone();
+  const { t } = useTranslation("common");
 
   const [request, setRequest] = useState<GetUsersRequest>({
     pageIndex: 1,
@@ -101,20 +103,20 @@ export default function AdminUsersPage() {
   const suspendMutation = useMutation({
     mutationFn: (params: { id: string, durationDays: number | null, reason: string }) => suspendAdminUser(params),
     onSuccess: () => {
-      toast.success("Account suspended successfully");
+      toast.success(t("admin.pages.users.toasts.suspendSuccess"));
       queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
       setIsBanModalOpen(false);
     },
-    onError: () => toast.error("Failed to suspend account"),
+    onError: () => toast.error(t("admin.pages.users.toasts.suspendError")),
   });
 
   const unlockMutation = useMutation({
     mutationFn: unlockAdminUser,
     onSuccess: () => {
-      toast.success("Account unlocked successfully");
+      toast.success(t("admin.pages.users.toasts.unlockSuccess"));
       queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
     },
-    onError: () => toast.error("Failed to unlock account"),
+    onError: () => toast.error(t("admin.pages.users.toasts.unlockError")),
   });
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,7 +125,7 @@ export default function AdminUsersPage() {
 
   const handleCopyId = (id: string) => {
     navigator.clipboard.writeText(id);
-    toast.success("User ID copied to clipboard");
+    toast.success(t("admin.pages.users.toasts.copySuccess"));
   };
 
   const handlePageChange = (newIndex: number) => {
@@ -138,11 +140,11 @@ export default function AdminUsersPage() {
       const data = await getAdminUsers(exportRequest);
       
       if (!data || data.items.length === 0) {
-        toast.error("No data found to export.");
+        toast.error(t("admin.pages.users.toasts.noExportData"));
         return;
       }
 
-      const headers = ["ID", "Name", "Email", "Role", "Plan", "Status", "Joined At", "Active Jobs", "Plan Price (VND)"];
+      const headers = [t("admin.pages.users.csv.id"), t("admin.pages.users.csv.name"), t("admin.pages.users.csv.email"), t("admin.pages.users.csv.role"), t("admin.pages.users.csv.plan"), t("admin.pages.users.csv.status"), t("admin.pages.users.csv.joinedAt"), t("admin.pages.users.stats.activeJobs"), t("admin.pages.users.csv.planPriceVnd")];
       const csvContent = data.items.map(u => {
         const name = `"${u.fullName.replace(/"/g, '""')}"`;
         const email = `"${u.email}"`;
@@ -164,9 +166,9 @@ export default function AdminUsersPage() {
       a.click();
       document.body.removeChild(a);
       
-      toast.success(`Exported ${data.items.length} users successfully!`);
+      toast.success(t("admin.pages.users.toasts.exportedUsers", { count: data.items.length }));
     } catch {
-      toast.error("An error occurred while exporting data.");
+      toast.error(t("admin.pages.users.toasts.exportError"));
     } finally {
       setIsExporting(false);
     }
@@ -193,10 +195,10 @@ export default function AdminUsersPage() {
         <PageHeader
           title={
             <>
-              Users<span className="max-md:hidden"> Management</span>
+              {t("admin.pages.users.title")}<span className="max-md:hidden">{t("admin.pages.users.titleSuffix")}</span>
             </>
           }
-          description="Search, filter, and manage registered user accounts."
+          description={t("admin.pages.users.description")}
           actions={
             <Button
               variant="outline"
@@ -206,7 +208,7 @@ export default function AdminUsersPage() {
               disabled={(!result || result.items.length === 0) || isExporting}
             >
               <Download className="h-4 w-4" />
-              {isExporting ? "Exporting..." : "Export CSV"}
+              {isExporting ? t("admin.pages.users.exporting") : t("admin.pages.users.exportCsv")}
             </Button>
           }
         />
@@ -214,47 +216,47 @@ export default function AdminUsersPage() {
         <div className="grid grid-cols-1 gap-4 max-md:grid-cols-2 max-md:gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
           <div className="border-ink-200/80 bg-card relative overflow-hidden rounded-xl border p-5 shadow-sm max-md:p-3.5">
             <div className="flex items-center justify-between">
-              <p className="text-ink-500 text-sm font-medium">Total Users</p>
+              <p className="text-ink-500 text-sm font-medium">{t("admin.pages.users.stats.totalUsers")}</p>
               <Users className="text-ink-400 h-4 w-4" />
             </div>
             <div className="mt-2">
               <p className="text-ink-900 text-2xl font-bold">{metrics?.totalUsers || 0}</p>
               <p className="text-ink-400 mt-1 text-xs">
-                {operations ? `${operations.activeSellers.toLocaleString()} active sellers this year` : "All registered accounts"}
+                {operations ? t("admin.pages.users.stats.activeSellersThisYear", { count: operations.activeSellers.toLocaleString() }) : t("admin.pages.users.stats.allRegisteredAccounts")}
               </p>
             </div>
           </div>
           <div className="border-ink-200/80 bg-card relative overflow-hidden rounded-xl border p-5 shadow-sm max-md:p-3.5">
             <div className="flex items-center justify-between">
-              <p className="text-ink-500 text-sm font-medium">Active Paid Users</p>
+              <p className="text-ink-500 text-sm font-medium">{t("admin.pages.users.stats.activePaidUsers")}</p>
               <CreditCard className="text-ink-400 h-4 w-4" />
             </div>
             <div className="mt-2">
               <p className="text-ink-900 text-2xl font-bold">{metrics?.activePaidUsers || 0}</p>
-              <p className="text-ink-400 mt-1 text-xs">{paidShare}% of all users</p>
+              <p className="text-ink-400 mt-1 text-xs">{t("admin.pages.users.stats.ofAllUsers", { share: paidShare })}</p>
             </div>
           </div>
           {/* The Dashboard shows this and Active Jobs: a phone goes straight on to the users. */}
           <div className="border-ink-200/80 bg-card relative overflow-hidden rounded-xl border p-5 shadow-sm max-md:hidden">
             <div className="flex items-center justify-between">
-              <p className="text-ink-500 text-sm font-medium">Total Revenue</p>
+              <p className="text-ink-500 text-sm font-medium">{t("admin.pages.users.stats.totalRevenue")}</p>
               <DollarSign className="text-ink-400 h-4 w-4" />
             </div>
             <div className="mt-2">
               <p className="text-ink-900 text-2xl font-bold">
                 {formatVnd(metrics?.totalRevenue || 0)}
               </p>
-              <p className="text-ink-400 mt-1 text-xs">Collected this year</p>
+              <p className="text-ink-400 mt-1 text-xs">{t("admin.pages.users.stats.collectedThisYear")}</p>
             </div>
           </div>
           <div className="border-ink-200/80 bg-card relative overflow-hidden rounded-xl border p-5 shadow-sm max-md:hidden">
             <div className="flex items-center justify-between">
-              <p className="text-ink-500 text-sm font-medium">Active Jobs</p>
+              <p className="text-ink-500 text-sm font-medium">{t("admin.pages.users.stats.activeJobs")}</p>
               <Activity className="text-ink-400 h-4 w-4" />
             </div>
             <div className="mt-2">
               <p className="text-ink-900 text-2xl font-bold">{metrics?.activeBatchJobs || 0}</p>
-              <p className="text-ink-400 mt-1 text-xs">{(metrics?.totalBatchJobs ?? 0).toLocaleString()} jobs in total</p>
+              <p className="text-ink-400 mt-1 text-xs">{t("admin.pages.users.stats.jobsInTotal", { count: (metrics?.totalBatchJobs ?? 0).toLocaleString() })}</p>
             </div>
           </div>
         </div>
@@ -266,7 +268,7 @@ export default function AdminUsersPage() {
               <div className="relative w-72 max-md:col-span-full max-md:w-full">
                 <Search className="text-ink-400 absolute top-2.5 left-2.5 h-4 w-4" />
                 <Input
-                  placeholder="Search by name, email, or ID..."
+                  placeholder={t("admin.pages.users.filters.searchPlaceholder")}
                   className="bg-card w-full pl-9"
                   value={request.searchTerm}
                   onChange={handleSearch}
@@ -278,10 +280,10 @@ export default function AdminUsersPage() {
                 onValueChange={(val) => setRequest((prev) => ({ ...prev, role: val, pageIndex: 1 }))}
               >
                 <SelectTrigger className="bg-card w-[120px] max-md:w-full max-md:px-2 max-md:text-xs">
-                  <SelectValue placeholder="All roles" />
+                  <SelectValue placeholder={t("admin.pages.users.filters.allRoles")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="All">All roles</SelectItem>
+                  <SelectItem value="All">{t("admin.pages.users.filters.allRoles")}</SelectItem>
                   <SelectItem value="Admin">Admin</SelectItem>
                   <SelectItem value="Seller">Seller</SelectItem>
                 </SelectContent>
@@ -292,10 +294,10 @@ export default function AdminUsersPage() {
                 onValueChange={(val) => setRequest((prev) => ({ ...prev, plan: val, pageIndex: 1 }))}
               >
                 <SelectTrigger className="bg-card w-[120px] max-md:w-full max-md:px-2 max-md:text-xs">
-                  <SelectValue placeholder="All plans" />
+                  <SelectValue placeholder={t("admin.pages.users.filters.allPlans")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="All">All plans</SelectItem>
+                  <SelectItem value="All">{t("admin.pages.users.filters.allPlans")}</SelectItem>
                   {plansData?.map((planName) => (
                     <SelectItem key={planName} value={planName}>{planName}</SelectItem>
                   ))}
@@ -307,12 +309,12 @@ export default function AdminUsersPage() {
                 onValueChange={(val) => setRequest((prev) => ({ ...prev, status: val, pageIndex: 1 }))}
               >
                 <SelectTrigger className="bg-card w-[130px] max-[359px]:col-span-2 max-md:w-full max-md:px-2 max-md:text-xs">
-                  <SelectValue placeholder="All statuses" />
+                  <SelectValue placeholder={t("admin.pages.users.filters.allStatuses")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="All">All statuses</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Suspended">Suspended</SelectItem>
+                  <SelectItem value="All">{t("admin.pages.users.filters.allStatuses")}</SelectItem>
+                  <SelectItem value="Active">{t("admin.users.statusActive")}</SelectItem>
+                  <SelectItem value="Suspended">{t("admin.users.statusSuspended")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -324,15 +326,15 @@ export default function AdminUsersPage() {
           <div className="mt-2">
             {isLoading ? (
               <div className="text-ink-500 flex h-64 items-center justify-center text-sm">
-                Loading users...
+                {t("admin.pages.users.table.loadingUsers")}
               </div>
             ) : isError ? (
               <div className="flex h-64 items-center justify-center text-sm text-rose-500">
-                Failed to load user list. Please try again or contact support.
+                {t("admin.pages.users.table.loadError")}
               </div>
             ) : result && result.items.length === 0 ? (
               <div className="text-ink-500 flex h-64 items-center justify-center text-sm">
-                No users match the search or filter criteria.
+                {t("admin.pages.users.table.noMatch")}
               </div>
             ) : result ? (
               <div className="flex flex-col gap-4">
@@ -346,14 +348,14 @@ export default function AdminUsersPage() {
                 />
                 <div className="flex items-center justify-between max-md:flex-col max-md:items-stretch max-md:gap-3">
                   <p className="text-ink-500 text-sm max-md:text-center max-md:text-xs">
-                    Showing {result.items.length} of {result.totalCount} users
+                    {t("admin.pages.users.table.showingOf", { count: result.items.length, total: result.totalCount })}
                   </p>
                   {isPhone ? (
                     <PhonePager
                       page={request.pageIndex || 1}
                       pageCount={result.totalPages}
                       onPageChange={handlePageChange}
-                      label="User pages"
+                      label={t("admin.pages.users.table.userPages")}
                     />
                   ) : (
                   <div className="flex items-center gap-2">
@@ -363,10 +365,10 @@ export default function AdminUsersPage() {
                       disabled={(request.pageIndex || 1) <= 1}
                       onClick={() => handlePageChange((request.pageIndex || 1) - 1)}
                     >
-                      Previous
+                      {t("admin.pages.users.table.previous")}
                     </Button>
                     <div className="text-ink-600 px-2 text-sm">
-                      Page {result.pageNumber} of {result.totalPages}
+                      {t("admin.pages.users.table.pageOf", { page: result.pageNumber, total: result.totalPages })}
                     </div>
                     <Button
                       variant="outline"
@@ -374,7 +376,7 @@ export default function AdminUsersPage() {
                       disabled={(request.pageIndex || 1) >= result.totalPages}
                       onClick={() => handlePageChange((request.pageIndex || 1) + 1)}
                     >
-                      Next
+                      {t("admin.pages.users.table.next")}
                     </Button>
                   </div>
                   )}
@@ -405,13 +407,13 @@ export default function AdminUsersPage() {
                 {selectedUser?.accountStatus.toLowerCase() === "active" && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100/60 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-emerald-700 ring-1 ring-emerald-600/20 ring-inset dark:bg-emerald-500/15 dark:text-emerald-300">
                     <span className="size-1.5 rounded-full bg-emerald-500" />
-                    Active Account
+                    {t("admin.pages.users.viewModal.activeAccount")}
                   </span>
                 )}
                 {selectedUser?.accountStatus.toLowerCase() === "suspended" && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-100/60 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-rose-700 ring-1 ring-rose-600/20 ring-inset dark:bg-rose-500/15 dark:text-rose-300">
                     <span className="size-1.5 rounded-full bg-rose-500" />
-                    Suspended Account
+                    {t("admin.pages.users.viewModal.suspendedAccount")}
                   </span>
                 )}
               </div>
@@ -426,11 +428,11 @@ export default function AdminUsersPage() {
                     <div className="border-ink-100/60 bg-card rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                       <div className="mb-2 flex items-center gap-2">
                         <Shield className="text-ink-400 size-4" />
-                        <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">User ID</span>
+                        <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">{t("admin.pages.users.viewModal.userIdLabel")}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-ink-700 mr-2 truncate font-mono text-sm font-semibold" title={selectedUser.id}>{selectedUser.id.substring(0, 8)}...</span>
-                        <button onClick={() => handleCopyId(selectedUser.id)} className="text-ink-400 hover:text-ink-900 transition-colors">
+                        <button onClick={() => handleCopyId(selectedUser.id)} aria-label={t("admin.users.copyUserId")} className="text-ink-400 hover:text-ink-900 transition-colors">
                           <Copy className="size-4" />
                         </button>
                       </div>
@@ -438,9 +440,9 @@ export default function AdminUsersPage() {
                     <div className="border-ink-100/60 bg-card rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                       <div className="mb-2 flex items-center gap-2">
                         <Users className="text-ink-400 size-4" />
-                        <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Role</span>
+                        <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">{t("admin.users.roleLabel")}</span>
                       </div>
-                      <span className="text-ink-900 text-sm font-semibold">{selectedUser.roles.join(", ") || "None"}</span>
+                      <span className="text-ink-900 text-sm font-semibold">{selectedUser.roles.join(", ") || t("admin.pages.users.viewModal.roleNone")}</span>
                     </div>
                   </div>
 
@@ -449,14 +451,14 @@ export default function AdminUsersPage() {
                     <div className="border-ink-100/60 bg-card rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                       <div className="mb-2 flex items-center gap-2">
                         <Zap className="size-4 text-amber-500" />
-                        <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Plan</span>
+                        <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">{t("admin.pages.users.viewModal.planLabel")}</span>
                       </div>
                       <span className="text-ink-900 text-sm font-semibold">{selectedUser.plan}</span>
                     </div>
                     <div className="border-ink-100/60 bg-card rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md max-md:p-3">
                       <div className="mb-2 flex items-center gap-2">
                         <Calendar className="text-ink-400 size-4" />
-                        <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Joined Date</span>
+                        <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">{t("admin.pages.users.viewModal.joinedDate")}</span>
                       </div>
                       <span className="text-ink-900 text-sm font-semibold">{new Date(selectedUser.createdAt).toLocaleDateString()}</span>
                     </div>
@@ -467,14 +469,14 @@ export default function AdminUsersPage() {
                     <div>
                       <div className="mb-1 flex items-center gap-2">
                         <Activity className="size-4 text-emerald-500" />
-                        <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Active Jobs</span>
+                        <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">{t("admin.pages.users.stats.activeJobs")}</span>
                       </div>
                       <span className="text-ink-900 text-xl font-bold">{selectedUser.totalJobs}</span>
                     </div>
                     <div className="bg-ink-100 h-10 w-px"></div>
                     <div className="text-right">
                       <div className="mb-1 flex items-center justify-end gap-2">
-                        <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Plan Price</span>
+                        <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">{t("admin.pages.users.viewModal.planPrice")}</span>
                       </div>
                       <span className="text-ink-900 text-xl font-bold">{formatVnd(selectedUser.monthlyApiCost)}</span>
                     </div>
@@ -484,7 +486,7 @@ export default function AdminUsersPage() {
                 {/* Footer Actions */}
                 <div className="mt-2 flex items-center justify-center gap-3 max-md:grid max-md:grid-cols-2 max-md:gap-2.5">
                   <Button variant="outline" className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 hover:text-ink-900 h-11 flex-1 rounded-xl font-semibold shadow-sm" onClick={() => setIsViewModalOpen(false)}>
-                    Close
+                    {t("admin.pages.users.viewModal.close")}
                   </Button>
                   <Button 
                     variant="outline" 
@@ -494,7 +496,7 @@ export default function AdminUsersPage() {
                       if (selectedUser) handleEditUser(selectedUser);
                     }}
                   >
-                    Edit User
+                    {t("admin.pages.users.viewModal.editUser")}
                   </Button>
                   {selectedUser.accountStatus.toLowerCase() !== "suspended" && (
                     <Button
@@ -505,7 +507,7 @@ export default function AdminUsersPage() {
                         handleSuspendUser(selectedUser);
                       }}
                     >
-                      Suspend User
+                      {t("admin.pages.users.viewModal.suspendUser")}
                     </Button>
                   )}
                 </div>

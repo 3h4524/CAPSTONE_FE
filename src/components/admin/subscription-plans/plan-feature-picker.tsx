@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check, Plus, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { FeatureChooserDialog } from "@/components/admin/subscription-plans/feature-chooser-dialog";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,7 @@ type PlanFeaturePickerProps = {
 // A new plan's features: what it includes so far (the basics to start with), a button to add more
 // from the catalog, and its limits. It can also start from an existing plan's features.
 export function PlanFeaturePicker({ catalog, plans, picks, onChange }: PlanFeaturePickerProps) {
+  const { t } = useTranslation("common");
   const [isChoosing, setIsChoosing] = useState(false);
   const features = offered(catalog);
   const flags = features.filter((feature) => feature.kind === "flag");
@@ -76,7 +78,7 @@ export function PlanFeaturePicker({ catalog, plans, picks, onChange }: PlanFeatu
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted-foreground text-xs">Starts with the basic pipeline. Add what else this plan sells.</p>
+        <p className="text-muted-foreground text-xs">{t("admin.plans.picker.startsWithBasics")}</p>
         {plans.length > 0 && (
           <Select
             value=""
@@ -85,8 +87,8 @@ export function PlanFeaturePicker({ catalog, plans, picks, onChange }: PlanFeatu
               if (plan) onChange(picksFromPlan(catalog, plan));
             }}
           >
-            <SelectTrigger className="h-8 w-52 text-xs" aria-label="Copy features from a plan">
-              <SelectValue placeholder="Copy features from…" />
+            <SelectTrigger className="h-8 w-52 text-xs" aria-label={t("admin.plans.picker.copyFromPlanAria")}>
+              <SelectValue placeholder={t("admin.plans.picker.copyFromPlanPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {plans.map((plan) => (
@@ -100,9 +102,9 @@ export function PlanFeaturePicker({ catalog, plans, picks, onChange }: PlanFeatu
       </div>
 
       <div>
-        <p className="text-ink-500 mb-1.5 text-[11px] font-semibold tracking-wide uppercase">Included · {included.length}</p>
+        <p className="text-ink-500 mb-1.5 text-[11px] font-semibold tracking-wide uppercase">{t("admin.plans.picker.includedCount", { count: included.length })}</p>
         {included.length === 0 ? (
-          <p className="bg-ink-50 text-ink-500 rounded-xl px-4 py-3 text-xs">No features yet. Add the ones this plan sells.</p>
+          <p className="bg-ink-50 text-ink-500 rounded-xl px-4 py-3 text-xs">{t("admin.plans.shared.noFeaturesYet")}</p>
         ) : (
           <ul className="divide-ink-100 border-ink-200 divide-y rounded-xl border">
             {included.map((feature) => (
@@ -114,7 +116,7 @@ export function PlanFeaturePicker({ catalog, plans, picks, onChange }: PlanFeatu
                 </span>
                 <button
                   type="button"
-                  aria-label={`Remove ${feature.label}`}
+                  aria-label={t("admin.plans.picker.removeFeature", { name: feature.label })}
                   onClick={() => set(feature.code, { on: false })}
                   className="text-ink-400 rounded p-1 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                 >
@@ -132,14 +134,14 @@ export function PlanFeaturePicker({ catalog, plans, picks, onChange }: PlanFeatu
           disabled={included.length === flags.length}
           onClick={() => setIsChoosing(true)}
         >
-          <Plus className="size-3.5" /> {included.length === flags.length ? "Every feature on offer is included" : "Add feature"}
+          <Plus className="size-3.5" /> {included.length === flags.length ? t("admin.plans.picker.allFeatureIncluded") : t("admin.plans.chooser.addFeatureLabel")}
         </Button>
       </div>
 
       {limits.length > 0 && (
         <div>
-          <p className="text-ink-500 mb-1.5 text-[11px] font-semibold tracking-wide uppercase">Limits</p>
-          <p className="text-ink-500 mb-2 text-xs">Each starts at its catalog default; leave one empty for no limit.</p>
+          <p className="text-ink-500 mb-1.5 text-[11px] font-semibold tracking-wide uppercase">{t("admin.plans.picker.limits")}</p>
+          <p className="text-ink-500 mb-2 text-xs">{t("admin.plans.picker.limitsHint")}</p>
           <ul className="divide-ink-100 border-ink-200 divide-y rounded-xl border">
             {limits.map((feature) => {
               const id = `new-plan-${feature.code}`;
@@ -147,14 +149,14 @@ export function PlanFeaturePicker({ catalog, plans, picks, onChange }: PlanFeatu
                 <li key={feature.code} className="flex items-center gap-3 px-3.5 py-2.5">
                   <label htmlFor={id} className="text-ink-700 min-w-0 flex-1 text-sm font-medium">
                     {feature.label}
-                    {isSafetyCap(feature.code) && <span className="text-ink-400 ml-1 text-xs font-normal">· hidden from Sellers</span>}
+                    {isSafetyCap(feature.code) && <span className="text-ink-400 ml-1 text-xs font-normal">· {t("admin.plans.shared.hiddenFromSellers")}</span>}
                   </label>
                   <Input
                     id={id}
                     type="number"
                     min={0}
                     max={MAX_LIMIT}
-                    placeholder="No limit"
+                    placeholder={t("admin.plans.shared.noLimit")}
                     className="h-8 w-24 text-right"
                     value={picks[feature.code]?.limit ?? ""}
                     onChange={(event) => set(feature.code, { on: true, limit: event.target.value === "" ? null : Number(event.target.value) })}
@@ -169,8 +171,8 @@ export function PlanFeaturePicker({ catalog, plans, picks, onChange }: PlanFeatu
 
       <FeatureChooserDialog
         open={isChoosing}
-        title="Add features to the new plan"
-        description="Pick what else this plan sells. You can still change it on the plan card later."
+        title={t("admin.plans.picker.chooserTitle")}
+        description={t("admin.plans.picker.chooserDescription")}
         candidates={flags.filter((feature) => !picks[feature.code]?.on)}
         onAdd={(codes) => {
           onChange({ ...picks, ...Object.fromEntries(codes.map((code) => [code, { on: true, limit: null }])) });

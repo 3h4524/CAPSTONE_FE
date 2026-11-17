@@ -1,6 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,7 @@ type DeleteRunDialogProps = {
 };
 
 export const DeleteRunDialog = ({ open, run, onClose, onDeleted }: DeleteRunDialogProps) => {
+  const { t } = useTranslation("common");
   const { mutate: deleteRun, isPending } = useDeleteImageEvalRun();
 
   if (!run) {
@@ -42,19 +44,18 @@ export const DeleteRunDialog = ({ open, run, onClose, onDeleted }: DeleteRunDial
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Trash2 className="size-5 text-rose-600 dark:text-rose-400" />
-            Delete “{run.name}”?
+            {t("admin.imageQuality.evaluation.deleteTitle", { name: run.name })}
           </DialogTitle>
           <DialogDescription>
-            The {run.imageCount} scores and their thumbnails are removed for good. The generated
-            designs themselves are not touched. Upload the export file again to bring the run back.
+            {t("admin.imageQuality.evaluation.deleteDescription", { count: run.imageCount })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
+            {t("admin.imageQuality.shared.cancel")}
           </Button>
           <Button type="button" variant="destructive" onClick={confirm} disabled={isPending}>
-            Delete
+            {t("admin.imageQuality.shared.delete")}
           </Button>
         </DialogFooter>
       </DialogContent>

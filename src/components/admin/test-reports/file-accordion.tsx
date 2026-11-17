@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, FileCode2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { TestReportSpecRow } from "@/components/admin/test-reports/spec-row";
 import { TestReportStatusBadge } from "@/components/admin/test-reports/status-badge";
@@ -13,6 +14,7 @@ type TestReportFileAccordionProps = {
 };
 
 export const TestReportFileAccordion = ({ files }: TestReportFileAccordionProps) => {
+  const { t } = useTranslation("common");
   // Only the files that lost a test to a new problem open by default; the ones that only
   // hold the known gaps stay closed.
   const [openFiles, setOpenFiles] = useState<string[]>(() =>
@@ -59,22 +61,30 @@ export const TestReportFileAccordion = ({ files }: TestReportFileAccordionProps)
               </span>
               <span className="flex shrink-0 items-center gap-2 font-mono text-[11px]">
                 {file.passed > 0 && (
-                  <span className="text-emerald-600 dark:text-emerald-400">{file.passed} ok</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    {t("admin.testReports.fileAccordion.ok", { count: file.passed })}
+                  </span>
                 )}
                 {file.failed > 0 && (
                   <span className="text-rose-600 dark:text-rose-400">
-                    {file.failed -
-                      file.specs.filter(
-                        (spec) => spec.status === "failed" && spec.isKnownIssue
-                      ).length}{" "}
-                    failed
+                    {t("admin.testReports.fileAccordion.failed", {
+                      count:
+                        file.failed -
+                        file.specs.filter(
+                          (spec) => spec.status === "failed" && spec.isKnownIssue
+                        ).length,
+                    })}
                   </span>
                 )}
                 {file.flaky > 0 && (
-                  <span className="text-amber-600 dark:text-amber-400">{file.flaky} flaky</span>
+                  <span className="text-amber-600 dark:text-amber-400">
+                    {t("admin.testReports.fileAccordion.flaky", { count: file.flaky })}
+                  </span>
                 )}
                 {file.skipped > 0 && (
-                  <span className="text-ink-400">{file.skipped} skipped</span>
+                  <span className="text-ink-400">
+                    {t("admin.testReports.fileAccordion.skipped", { count: file.skipped })}
+                  </span>
                 )}
               </span>
               <TestReportStatusBadge status={file.status} className="shrink-0" />

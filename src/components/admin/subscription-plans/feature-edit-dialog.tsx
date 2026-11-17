@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -35,6 +36,7 @@ const toValues = (feature: AdminFeature | null): FeatureFormValues => ({
 
 // Edits how a feature is shown. The code and kind are fixed by the backend, so they are only shown.
 export function FeatureEditDialog({ feature, groups, onClose }: FeatureEditDialogProps) {
+  const { t } = useTranslation("common");
   const mutation = useUpdateAdminFeature(onClose);
   const isLimit = feature?.kind === "limit";
   const {
@@ -77,11 +79,11 @@ export function FeatureEditDialog({ feature, groups, onClose }: FeatureEditDialo
             <SlidersHorizontal className="size-[18px]" aria-hidden="true" />
           </div>
           <div className="min-w-0 space-y-1">
-            <p className="text-ink-500 text-[10px] font-bold tracking-[0.16em]">EDIT FEATURE</p>
+            <p className="text-ink-500 text-[10px] font-bold tracking-[0.16em]">{t("admin.plans.featureEdit.eyebrow")}</p>
             <DialogTitle className="font-display truncate text-xl tracking-[-0.02em]">{feature?.label}</DialogTitle>
             <DialogDescription className="leading-5">
               <span className="text-ink-400 font-mono text-[11px]">{feature?.code}</span> ·{" "}
-              {isLimit ? "Limit" : "On/off"}. The code and type are built in; this changes how the feature is shown and offered.
+              {isLimit ? t("admin.plans.shared.limit") : t("admin.plans.shared.onOff")}. {t("admin.plans.featureEdit.codeFixedDescription")}
             </DialogDescription>
           </div>
           <Button
@@ -90,7 +92,7 @@ export function FeatureEditDialog({ feature, groups, onClose }: FeatureEditDialo
             size="icon"
             className="text-ink-500 hover:bg-ink-100 absolute top-4 right-4 size-10 rounded-lg hover:translate-y-0"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("admin.plans.shared.close")}
           >
             <X aria-hidden="true" />
           </Button>
@@ -98,14 +100,14 @@ export function FeatureEditDialog({ feature, groups, onClose }: FeatureEditDialo
 
         <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-3 sm:px-6">
-            <Field label="Label" htmlFor="feature-label" error={errors.label?.message}>
+            <Field label={t("admin.plans.featureEdit.labelField")} htmlFor="feature-label" error={errors.label?.message}>
               <Input id="feature-label" aria-invalid={Boolean(errors.label)} {...register("label")} />
             </Field>
-            <Field label="Description" htmlFor="feature-description" error={errors.description?.message}>
+            <Field label={t("admin.plans.shared.description")} htmlFor="feature-description" error={errors.description?.message}>
               <Textarea id="feature-description" className="min-h-16" {...register("description")} />
             </Field>
             <div className="grid gap-4 sm:grid-cols-[1fr_120px]">
-              <Field label="Group" htmlFor="feature-group" error={errors.group?.message}>
+              <Field label={t("admin.plans.featureEdit.group")} htmlFor="feature-group" error={errors.group?.message}>
                 <Input id="feature-group" list="feature-groups" aria-invalid={Boolean(errors.group)} {...register("group")} />
                 <datalist id="feature-groups">
                   {groups.map((group) => (
@@ -113,7 +115,7 @@ export function FeatureEditDialog({ feature, groups, onClose }: FeatureEditDialo
                   ))}
                 </datalist>
               </Field>
-              <Field label="Position" htmlFor="feature-sort-order" error={errors.sortOrder?.message}>
+              <Field label={t("admin.plans.featureEdit.position")} htmlFor="feature-sort-order" error={errors.sortOrder?.message}>
                 <Input
                   id="feature-sort-order"
                   type="number"
@@ -125,15 +127,15 @@ export function FeatureEditDialog({ feature, groups, onClose }: FeatureEditDialo
             </div>
             {isLimit && (
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Unit" htmlFor="feature-unit" error={errors.unit?.message}>
-                  <Input id="feature-unit" placeholder="e.g. per day" {...register("unit")} />
+                <Field label={t("admin.plans.featureEdit.unit")} htmlFor="feature-unit" error={errors.unit?.message}>
+                  <Input id="feature-unit" placeholder={t("admin.plans.featureEdit.unitPlaceholder")} {...register("unit")} />
                 </Field>
-                <Field label="Default when added to a plan" htmlFor="feature-default-limit" error={errors.defaultLimit?.message}>
+                <Field label={t("admin.plans.featureEdit.defaultWhenAdded")} htmlFor="feature-default-limit" error={errors.defaultLimit?.message}>
                   <Input
                     id="feature-default-limit"
                     type="number"
                     min={0}
-                    placeholder="No limit"
+                    placeholder={t("admin.plans.shared.noLimit")}
                     aria-invalid={Boolean(errors.defaultLimit)}
                     {...register("defaultLimit", { setValueAs: (value) => (value === "" || value === null ? null : Number(value)) })}
                   />
@@ -144,25 +146,25 @@ export function FeatureEditDialog({ feature, groups, onClose }: FeatureEditDialo
               <SwitchRow
                 control={control}
                 name="isActive"
-                title="Offer when adding features to a plan"
-                hint="Turning this off hides it from the list. Plans that already have it keep it."
+                title={t("admin.plans.featureEdit.offerTitle")}
+                hint={t("admin.plans.featureEdit.offerHint")}
               />
               <SwitchRow
                 control={control}
                 name="trialAvailable"
-                title="Include in the free trial"
-                hint="When the trial's plan has this feature, trial users get it too."
+                title={t("admin.plans.featureEdit.trialTitle")}
+                hint={t("admin.plans.featureEdit.trialHint")}
               />
             </div>
           </div>
 
           <div className="border-ink-100 flex justify-end gap-2 border-t px-5 py-4 sm:px-6">
             <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
-              Cancel
+              {t("admin.plans.shared.cancel")}
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending && <Spinner className="size-4" />}
-              Save changes
+              {t("admin.plans.shared.saveChanges")}
             </Button>
           </div>
         </form>

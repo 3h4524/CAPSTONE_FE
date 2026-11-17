@@ -1,5 +1,7 @@
 import Link from "next/link";
+import type { TFunction } from "i18next";
 import { ArrowUpRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { formatUsd, timeAgo } from "@/helpers/admin-dashboard";
 import { useIsPhone } from "@/hooks/use-is-phone";
@@ -34,32 +36,46 @@ const toneOf = (value: string, tone?: string): Tone => {
   return "amber";
 };
 
-const formatTicketStatus = (status: string) => {
-  const s = status.toLowerCase().replace(/_/g, " ");
-  switch (s) {
-    case "open":
-      return "Open";
-    case "in progress":
-      return "In progress";
-    case "resolved":
-      return "Resolved";
-    case "closed":
-      return "Closed";
-    default:
-      return s.charAt(0).toUpperCase() + s.slice(1);
-  }
+const JOB_STATUS_KEYS: Record<string, string> = {
+  queued: "admin.dashboard.activity.jobStatus.queued",
+  pending: "admin.dashboard.activity.jobStatus.pending",
+  processing: "admin.dashboard.activity.jobStatus.processing",
+  running: "admin.dashboard.activity.jobStatus.running",
+  paused: "admin.dashboard.activity.jobStatus.paused",
+  completed: "admin.dashboard.activity.jobStatus.completed",
+  failed: "admin.dashboard.activity.jobStatus.failed",
+  cancelled: "admin.dashboard.activity.jobStatus.cancelled",
+};
+
+const TICKET_STATUS_KEYS: Record<string, string> = {
+  open: "admin.dashboard.activity.ticketStatus.open",
+  "in progress": "admin.dashboard.activity.ticketStatus.inProgress",
+  resolved: "admin.dashboard.activity.ticketStatus.resolved",
+  closed: "admin.dashboard.activity.ticketStatus.closed",
+};
+
+type TranslationFn = TFunction<"common">;
+
+const ticketStatusLabel = (status: string, t: TranslationFn) => {
+  const normalized = status.toLowerCase().replace(/_/g, " ");
+  const labelKey = TICKET_STATUS_KEYS[normalized];
+  if (labelKey) return t(labelKey);
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 };
 
 // A phone lists only the latest few: the links beside each heading lead to the rest.
 const PHONE_LATEST_ITEMS = 3;
 
 const JobStatus = ({ job }: { job: BatchJobDto }) => {
+  const { t } = useTranslation("common");
   const tone = toneOf(job.status, job.tone);
   const finished = job.progressPercentage === "100%";
+  const statusKey = job.status.toLowerCase();
+  const labelKey = JOB_STATUS_KEYS[statusKey];
   return (
     <span className="text-ink-700 inline-flex items-center gap-1.5 capitalize">
       <span className={`size-1.5 rounded-full ${DOT[tone]}`} aria-hidden="true" />
-      {job.status.toLowerCase()}
+      {labelKey ? t(labelKey) : statusKey}
       {!finished && tone !== "rose" && (
         <span className="text-ink-400 text-xs tabular-nums">{job.progressPercentage}</span>
       )}
@@ -67,7 +83,10 @@ const JobStatus = ({ job }: { job: BatchJobDto }) => {
   );
 };
 
-const BatchJobCard = ({ job, now }: { job: BatchJobDto; now?: Date }) => (
+const BatchJobCard = ({ job, now }: { job: BatchJobDto; now?: Date }) => {
+  const { t } = useTranslation("common");
+
+  return (
   <li className="space-y-0.5 py-2.5 text-sm">
     <div className="flex items-start justify-between gap-3">
       <p className="text-ink-900 min-w-0 truncate font-medium">{job.batchName ?? job.name}</p>
@@ -76,17 +95,19 @@ const BatchJobCard = ({ job, now }: { job: BatchJobDto; now?: Date }) => (
       </span>
     </div>
     <p className="text-ink-400 truncate text-xs">
-      {job.batchName ? job.name : "Batch job"}
+      {job.batchName ? job.name : t("admin.dashboard.activity.batchJobFallback")}
       {job.createdAt && ` · ${timeAgo(job.createdAt, now)}`}
     </p>
     <p className="text-ink-600 flex justify-between gap-3 text-xs">
       <span className="min-w-0 truncate">{job.userName}</span>
       <span className="shrink-0 tabular-nums">
-        {job.itemCount.toLocaleString()} products{job.aiCostUsd ? ` · ${formatUsd(job.aiCostUsd)}` : ""}
+        {t("admin.dashboard.activity.productsLine", { products: job.itemCount.toLocaleString() })}
+        {job.aiCostUsd ? ` · ${formatUsd(job.aiCostUsd)}` : ""}
       </span>
     </p>
   </li>
-);
+  );
+};
 
 const AdminActivityPanels = ({
   latestTickets = [],
@@ -110,24 +131,28 @@ const BatchJobsPanel = ({
   now?: Date;
 }) => {
   const isPhone = useIsPhone();
+  const { t } = useTranslation("common");
   const shown = isPhone ? jobs.slice(0, PHONE_LATEST_ITEMS) : jobs;
 
   return (
   <section className="border-ink-200 bg-card flex flex-col overflow-hidden rounded-xl border shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
     <div className="p-5 pb-3 max-md:p-4 max-md:pb-2">
       <PanelHeading
-        title="Latest batch jobs"
+        title={t("admin.dashboard.activity.latestBatchJobs")}
         subtitle={
           totalJobs !== undefined
-            ? `${shown.length} most recent of ${totalJobs.toLocaleString()}`
-            : "The most recent generation runs"
+            ? t("admin.dashboard.activity.batchJobsSubtitleTotal", {
+                shown: shown.length,
+                total: totalJobs.toLocaleString(),
+              })
+            : t("admin.dashboard.activity.batchJobsSubtitleDefault")
         }
-        action={<PanelLink href="/admin/analytics" label="System statistics" />}
+        action={<PanelLink href="/admin/analytics" label={t("admin.dashboard.activity.systemStatistics")} />}
       />
     </div>
     {isPhone ? (
       <ul className="divide-ink-100 divide-y px-4 pb-1.5">
-        {shown.length === 0 && <li className="text-ink-400 py-6 text-center text-xs">No batch jobs yet.</li>}
+        {shown.length === 0 && <li className="text-ink-400 py-6 text-center text-xs">{t("admin.dashboard.activity.noBatchJobs")}</li>}
         {shown.map((job, index) => (
           <BatchJobCard key={`${job.name}-${index}`} job={job} now={now} />
         ))}
@@ -137,18 +162,18 @@ const BatchJobsPanel = ({
       <table className="w-full min-w-[620px] table-fixed text-left text-sm">
         <thead className="border-ink-100 bg-ink-50/60 text-ink-500 border-y text-xs">
           <tr>
-            <th className="w-[43%] px-5 py-2 font-medium">Batch</th>
-            <th className="w-[19%] px-4 py-2 font-medium whitespace-nowrap">Seller</th>
-            <th className="w-[11%] px-4 py-2 text-left font-medium whitespace-nowrap">Products</th>
-            <th className="w-[12%] px-4 py-2 text-left font-medium whitespace-nowrap">AI cost</th>
-            <th className="w-[15%] px-5 py-2 font-medium whitespace-nowrap">Status</th>
+            <th className="w-[43%] px-5 py-2 font-medium">{t("admin.dashboard.activity.batch")}</th>
+            <th className="w-[19%] px-4 py-2 font-medium whitespace-nowrap">{t("admin.dashboard.activity.seller")}</th>
+            <th className="w-[11%] px-4 py-2 text-left font-medium whitespace-nowrap">{t("admin.dashboard.activity.products")}</th>
+            <th className="w-[12%] px-4 py-2 text-left font-medium whitespace-nowrap">{t("admin.dashboard.activity.aiCost")}</th>
+            <th className="w-[15%] px-5 py-2 font-medium whitespace-nowrap">{t("admin.dashboard.activity.status")}</th>
           </tr>
         </thead>
         <tbody className="divide-ink-100 divide-y">
           {jobs.length === 0 && (
             <tr>
               <td colSpan={5} className="text-ink-400 p-6 text-center text-xs">
-                No batch jobs yet.
+                {t("admin.dashboard.activity.noBatchJobs")}
               </td>
             </tr>
           )}
@@ -160,7 +185,7 @@ const BatchJobsPanel = ({
                     {job.batchName ?? job.name}
                   </p>
                   <p className="text-ink-400 truncate text-xs">
-                    {job.batchName ? job.name : "Batch job"}
+                    {job.batchName ? job.name : t("admin.dashboard.activity.batchJobFallback")}
                     {job.createdAt && ` · ${timeAgo(job.createdAt, now)}`}
                   </p>
                 </td>
@@ -187,6 +212,7 @@ const BatchJobsPanel = ({
 
 const TicketsPanel = ({ tickets }: { tickets: SupportTicketDto[] }) => {
   const isPhone = useIsPhone();
+  const { t } = useTranslation("common");
   const shown = isPhone ? tickets.slice(0, PHONE_LATEST_ITEMS) : tickets;
   const openCount = tickets.filter(
     (ticket) => !["resolved", "closed"].includes(ticket.status.toLowerCase())
@@ -195,15 +221,17 @@ const TicketsPanel = ({ tickets }: { tickets: SupportTicketDto[] }) => {
   return (
     <section className="border-ink-200 bg-card flex flex-col rounded-xl border p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] max-md:p-4">
       <PanelHeading
-        title="Latest support tickets"
+        title={t("admin.dashboard.activity.latestTickets")}
         subtitle={
-          tickets.length > 0 ? `${openCount} of ${tickets.length} awaiting a reply` : "Nothing yet"
+          tickets.length > 0
+            ? t("admin.dashboard.activity.ticketsSubtitleOpen", { open: openCount, total: tickets.length })
+            : t("admin.dashboard.activity.nothingYet")
         }
-        action={<PanelLink href="/admin/support-tickets" label="All tickets" />}
+        action={<PanelLink href="/admin/support-tickets" label={t("admin.dashboard.activity.allTickets")} />}
       />
       <ul className="divide-ink-100 mt-3 flex-1 divide-y">
         {tickets.length === 0 && (
-          <li className="text-ink-400 py-6 text-center text-xs">No tickets found.</li>
+          <li className="text-ink-400 py-6 text-center text-xs">{t("admin.dashboard.activity.noTickets")}</li>
         )}
         {shown.map((ticket) => {
           const tone = toneOf(ticket.status);
@@ -216,13 +244,13 @@ const TicketsPanel = ({ tickets }: { tickets: SupportTicketDto[] }) => {
                 </p>
                 <p className="text-ink-400 mt-0.5 truncate text-xs">
                   {ticket.userName}
-                  {ticket.priority && ` · ${ticket.priority} priority`}
+                  {ticket.priority && ` · ${t("admin.dashboard.activity.priority", { priority: ticket.priority })}`}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3 max-md:w-full max-md:justify-between">
                 <span className="text-ink-600 inline-flex w-24 items-center gap-1.5 text-xs">
                   <span className={`size-1.5 rounded-full ${DOT[tone]}`} aria-hidden="true" />
-                  {formatTicketStatus(ticket.status)}
+                  {ticketStatusLabel(ticket.status, t)}
                 </span>
                 <Link
                   href={`/admin/support-tickets?ticketId=${ticket.id}`}
@@ -232,7 +260,7 @@ const TicketsPanel = ({ tickets }: { tickets: SupportTicketDto[] }) => {
                       : "border-sky-200 bg-sky-50/70 text-sky-700 hover:border-sky-300 hover:bg-sky-100 hover:text-sky-900 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300 dark:hover:border-sky-500/40 dark:hover:bg-sky-500/15 dark:hover:text-sky-300"
                   }`}
                 >
-                  {isDone ? "View" : "Reply"}
+                  {isDone ? t("admin.dashboard.activity.view") : t("admin.dashboard.activity.reply")}
                 </Link>
               </div>
             </li>

@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -21,7 +22,9 @@ export const DialogHead = ({
   title: string;
   description: ReactNode;
   onClose: () => void;
-}) => (
+}) => {
+  const { t } = useTranslation("common");
+  return (
   <DialogHeader className="relative flex-row items-start gap-3 px-5 pt-6 pr-16 pb-3 text-left sm:px-6">
     <div className="text-primary bg-ink-100 flex size-10 shrink-0 items-center justify-center rounded-xl">
       <Icon className="size-[18px]" aria-hidden="true" />
@@ -37,12 +40,13 @@ export const DialogHead = ({
       size="icon"
       className="text-ink-500 hover:bg-ink-100 absolute top-4 right-4 size-10 rounded-lg hover:translate-y-0"
       onClick={onClose}
-      aria-label="Close"
+      aria-label={t("admin.contentSafety.common.close")}
     >
       <X aria-hidden="true" />
     </Button>
   </DialogHeader>
-);
+  );
+};
 
 export const Field = ({
   label,

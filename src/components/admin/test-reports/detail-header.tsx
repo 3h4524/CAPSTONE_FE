@@ -1,6 +1,7 @@
 "use client";
 
 import { GitBranch, Hash, User } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { RunTook } from "@/components/admin/test-reports/run-took";
 import { TestReportStatusBadge } from "@/components/admin/test-reports/status-badge";
@@ -10,7 +11,10 @@ type TestReportDetailHeaderProps = {
   run: TestReportRun;
 };
 
-export const TestReportDetailHeader = ({ run }: TestReportDetailHeaderProps) => (
+export const TestReportDetailHeader = ({ run }: TestReportDetailHeaderProps) => {
+  const { t } = useTranslation("common");
+
+  return (
   <section className="border-ink-200 bg-card rounded-lg border p-5 shadow-[0_2px_8px_rgba(15,23,42,0.02)] sm:p-6">
     <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
       <div className="min-w-0">
@@ -21,17 +25,20 @@ export const TestReportDetailHeader = ({ run }: TestReportDetailHeaderProps) => 
           <TestReportStatusBadge status={run.status} />
         </div>
         <p className="text-ink-500 mt-1 text-[11px]">
-          Started{" "}
-          {new Date(run.startedAtUtc).toLocaleString("en-GB", {
-            dateStyle: "medium",
-            timeStyle: "short",
+          {t("admin.testReports.detailHeader.started", {
+            date: new Date(run.startedAtUtc).toLocaleString("en-GB", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            }),
           })}
           {run.finishedAtUtc
-            ? ` · ended ${new Date(run.finishedAtUtc).toLocaleString("en-GB", {
-                dateStyle: "medium",
-                timeStyle: "short",
+            ? ` · ${t("admin.testReports.detailHeader.ended", {
+                date: new Date(run.finishedAtUtc).toLocaleString("en-GB", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                }),
               })}`
-            : " · still going"}
+            : ` · ${t("admin.testReports.detailHeader.stillGoing")}`}
         </p>
       </div>
 
@@ -55,7 +62,7 @@ export const TestReportDetailHeader = ({ run }: TestReportDetailHeaderProps) => 
           </span>
         )}
         <span className="font-mono">
-          took <RunTook run={run} />
+          {t("admin.testReports.detailHeader.took")} <RunTook run={run} />
         </span>
       </div>
     </div>
@@ -66,4 +73,5 @@ export const TestReportDetailHeader = ({ run }: TestReportDetailHeaderProps) => 
       </pre>
     )}
   </section>
-);
+  );
+};

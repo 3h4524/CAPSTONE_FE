@@ -1,3 +1,4 @@
+import { getCurrentLocale, i18n } from "@/i18n/client";
 import type {
   DailyJobsPointDto,
   SystemStatisticsOverviewDto,
@@ -23,7 +24,9 @@ const SEVERITY_ORDER: Record<InsightSeverity, number> = {
   positive: 3,
 };
 
-const formatNumber = (val: number) => new Intl.NumberFormat("en-US").format(val);
+const dateTimeLocale = () => (getCurrentLocale() === "vi" ? "vi-VN" : "en-US");
+
+const formatNumber = (val: number) => new Intl.NumberFormat(dateTimeLocale()).format(val);
 
 /** Parses a "yyyy-MM-dd" label as a local calendar date (new Date("yyyy-MM-dd") is UTC and shifts a day west of GMT). */
 export function parseDateLabel(label: string): Date | null {
@@ -37,7 +40,7 @@ export function formatDateLabel(
   options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" }
 ): string {
   const date = parseDateLabel(label);
-  return date ? new Intl.DateTimeFormat("en-US", options).format(date) : label;
+  return date ? new Intl.DateTimeFormat(dateTimeLocale(), options).format(date) : label;
 }
 
 const average = (points: DailyJobsPointDto[]) =>
@@ -72,19 +75,25 @@ export function buildStatisticsInsights(data: SystemStatisticsOverviewDto): Stat
       id: "etsy-bottleneck",
       target: "integrations",
       severity: "critical",
-      title: `${formatNumber(listings)} listings generated, none published to Etsy`,
-      detail:
-        "The pipeline stops before the marketplace: Etsy has no upload activity in this period. Check seller Etsy connections and the publish step.",
+      title: i18n.t("admin.statistics.insights.etsyBottleneck.title", {
+        listings: formatNumber(listings),
+      }),
+      detail: i18n.t("admin.statistics.insights.etsyBottleneck.detail"),
     });
   } else if (listings > 0) {
     const publishRate = (etsyUploads / listings) * 100;
     if (publishRate < 50) {
       insights.push({
         id: "etsy-low-publish",
-      target: "integrations",
+        target: "integrations",
         severity: "warning",
-        title: `Only ${publishRate.toFixed(1)}% of listings reach Etsy`,
-        detail: `${formatNumber(etsyUploads)} Etsy uploads for ${formatNumber(listings)} generated listings.`,
+        title: i18n.t("admin.statistics.insights.etsyLowPublish.title", {
+          rate: publishRate.toFixed(1),
+        }),
+        detail: i18n.t("admin.statistics.insights.etsyLowPublish.detail", {
+          uploads: formatNumber(etsyUploads),
+          listings: formatNumber(listings),
+        }),
       });
     }
   }
@@ -99,10 +108,13 @@ export function buildStatisticsInsights(data: SystemStatisticsOverviewDto): Stat
       id: "idle-tail",
       target: "volume",
       severity: "critical",
-      title: `No batch jobs for the last ${idleTail} days`,
+      title: i18n.t("admin.statistics.insights.idleTail.title", { count: idleTail }),
       detail: lastActive
-        ? `Last activity on ${formatDateLabel(lastActive.dateLabel)} (${formatNumber(lastActive.count)} jobs). Verify the job queue and workers are running.`
-        : "Verify the job queue and workers are running.",
+        ? i18n.t("admin.statistics.insights.idleTail.detailWithActivity", {
+            date: formatDateLabel(lastActive.dateLabel),
+            count: formatNumber(lastActive.count),
+          })
+        : i18n.t("admin.statistics.insights.idleTail.noActivityDetail"),
     });
   }
 
@@ -114,8 +126,11 @@ export function buildStatisticsInsights(data: SystemStatisticsOverviewDto): Stat
       id: "growth-gap",
       target: "pipeline",
       severity: "warning",
-      title: "Listing output is lagging image generation",
-      detail: `Images grew ${imageGrowth > 0 ? "+" : ""}${imageGrowth}% but listings only ${listingGrowth > 0 ? "+" : ""}${listingGrowth}% vs the previous period, so more designs stall before becoming listings.`,
+      title: i18n.t("admin.statistics.insights.growthGap.title"),
+      detail: i18n.t("admin.statistics.insights.growthGap.detail", {
+        imageGrowth: `${imageGrowth > 0 ? "+" : ""}${imageGrowth}`,
+        listingGrowth: `${listingGrowth > 0 ? "+" : ""}${listingGrowth}`,
+      }),
     });
   }
 
@@ -126,16 +141,27 @@ export function buildStatisticsInsights(data: SystemStatisticsOverviewDto): Stat
         id: "reliability",
         target: "errors",
         severity: reliability.successRate < 80 ? "critical" : "warning",
-        title: `Job success rate is ${reliability.successRate}%`,
-        detail: `${formatNumber(reliability.failedJobs)} failed and ${formatNumber(reliability.partiallyCompletedJobs)} partially completed out of ${formatNumber(reliability.finishedJobs)} finished jobs.`,
+        title: i18n.t("admin.statistics.insights.reliability.lowTitle", {
+          rate: reliability.successRate,
+        }),
+        detail: i18n.t("admin.statistics.insights.reliability.lowDetail", {
+          failed: formatNumber(reliability.failedJobs),
+          partial: formatNumber(reliability.partiallyCompletedJobs),
+          finished: formatNumber(reliability.finishedJobs),
+        }),
       });
     } else {
       insights.push({
         id: "reliability",
         target: "errors",
         severity: "positive",
-        title: `Healthy job success rate: ${reliability.successRate}%`,
-        detail: `${formatNumber(reliability.completedJobs)} of ${formatNumber(reliability.finishedJobs)} finished jobs completed fully.`,
+        title: i18n.t("admin.statistics.insights.reliability.healthyTitle", {
+          rate: reliability.successRate,
+        }),
+        detail: i18n.t("admin.statistics.insights.reliability.healthyDetail", {
+          completed: formatNumber(reliability.completedJobs),
+          finished: formatNumber(reliability.finishedJobs),
+        }),
       });
     }
   }
@@ -153,10 +179,20 @@ export function buildStatisticsInsights(data: SystemStatisticsOverviewDto): Stat
         const projected = Math.round(lastWeek * dailyJobs.length);
         insights.push({
           id: "trend",
-      target: "volume",
+          target: "volume",
           severity: change > 0 ? "info" : "warning",
-          title: `Daily workload ${change > 0 ? "up" : "down"} ${Math.abs(change).toFixed(0)}% across the period`,
-          detail: `${lastWeek.toFixed(0)} jobs/day in the latest week vs ${firstWeek.toFixed(0)} in the first. At the current pace, the next ${dailyJobs.length} days would see about ${formatNumber(projected)} jobs.`,
+          title: i18n.t(
+            change > 0
+              ? "admin.statistics.insights.trend.titleUp"
+              : "admin.statistics.insights.trend.titleDown",
+            { change: Math.abs(change).toFixed(0) }
+          ),
+          detail: i18n.t("admin.statistics.insights.trend.detail", {
+            lastWeek: lastWeek.toFixed(0),
+            firstWeek: firstWeek.toFixed(0),
+            days: dailyJobs.length,
+            projected: formatNumber(projected),
+          }),
         });
       }
     }
@@ -168,14 +204,22 @@ export function buildStatisticsInsights(data: SystemStatisticsOverviewDto): Stat
   if (jobs > 0 && assets > 0) {
     const costPart =
       reliability && reliability.totalCostUsd > 0
-        ? ` AI cost averages $${(reliability.totalCostUsd / jobs).toFixed(2)} per job.`
+        ? i18n.t("admin.statistics.insights.efficiency.costPart", {
+            cost: (reliability.totalCostUsd / jobs).toFixed(2),
+          })
         : "";
     insights.push({
       id: "efficiency",
       target: "pipeline",
       severity: "info",
-      title: `${(assets / jobs).toFixed(1)} assets produced per batch job`,
-      detail: `${formatNumber(assets)} assets from ${formatNumber(jobs)} jobs.${costPart}`,
+      title: i18n.t("admin.statistics.insights.efficiency.title", {
+        ratio: (assets / jobs).toFixed(1),
+      }),
+      detail: i18n.t("admin.statistics.insights.efficiency.detail", {
+        assets: formatNumber(assets),
+        jobs: formatNumber(jobs),
+        costPart,
+      }),
     });
   }
 

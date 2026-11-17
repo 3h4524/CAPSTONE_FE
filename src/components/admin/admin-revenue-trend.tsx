@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { RevenueTrendCard } from "@/components/admin/revenue/RevenueTrendCard";
 import { dashboardTrendFilter } from "@/helpers/revenue-trend";
@@ -15,6 +16,7 @@ type AdminRevenueTrendProps = {
 
 /** The Revenue page's trend card on the Dashboard, following the Dashboard's range. */
 const AdminRevenueTrend = ({ timeRange }: AdminRevenueTrendProps) => {
+  const { t } = useTranslation("common");
   const filter = useMemo(() => dashboardTrendFilter(timeRange), [timeRange]);
   const { data, isLoading } = useRevenueCharts(filter);
 
@@ -28,7 +30,7 @@ const AdminRevenueTrend = ({ timeRange }: AdminRevenueTrendProps) => {
           href="/admin/revenue"
           className="text-ink-500 hover:text-ink-900 flex items-center gap-0.5 text-[11px] font-semibold dark:text-slate-400 dark:hover:text-slate-100"
         >
-          Revenue report <ArrowUpRight className="size-3" />
+          {t("admin.dashboard.revenueTrend.reportLink")} <ArrowUpRight className="size-3" />
         </Link>
       }
     />

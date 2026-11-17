@@ -1,7 +1,9 @@
 "use client";
 
 import React, { type ReactNode, useMemo } from "react";
+import type { TFunction } from "i18next";
 import { TrendingUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Area,
   AreaChart,
@@ -28,6 +30,8 @@ interface RevenueTrendCardProps {
   actions?: ReactNode;
 }
 
+const MONTH_KEYS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"] as const;
+
 /**
  * Format Y-axis ticks compactly without repeating currency symbols (matching mockup: 0, 300k, 600k, 900k, 1.2M)
  */
@@ -52,8 +56,10 @@ function formatTrendYAxis(realVal: number): string {
  */
 function buildTrendSeries(
   backendTrend: RevenueTrendPointDto[],
-  filter?: RevenueFilterDto
+  filter: RevenueFilterDto | undefined,
+  t: TFunction
 ): Array<{ dateLabel: string; amount: number; previousAmount: number }> {
+  const monthName = (monthIndex: number) => t(`admin.revenue.common.months.${MONTH_KEYS[monthIndex]}`);
   if (!filter?.startDate || !filter?.endDate) {
     return backendTrend.map((p) => ({
       dateLabel: p.dateLabel,
@@ -82,11 +88,6 @@ function buildTrendSeries(
 
   // CASE 2: Month Granularity (Yearly preset: e.g. 2026-01-01 to 2026-10-21)
   if (isMonthGranularity) {
-    const monthNames = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ];
-
     // Index actual DB points by "YYYY-MM"
     const dbMap = new Map<string, { amount: number; prev: number }>();
     backendTrend.forEach((p) => {
@@ -114,8 +115,8 @@ function buildTrendSeries(
       const dbPoint = dbMap.get(key);
 
       const label = isMultiYear
-        ? `${monthNames[curM - 1]} '${String(curY).slice(2)}`
-        : monthNames[curM - 1];
+        ? `${monthName(curM - 1)} '${String(curY).slice(2)}`
+        : monthName(curM - 1);
 
       series.push({
         dateLabel: label,
@@ -172,8 +173,8 @@ function buildTrendSeries(
     const d = String(cur.getDate()).padStart(2, "0");
     const dateKey = `${y}-${m}-${d}`;
 
-    const monthShort = cur.toLocaleDateString("en-US", { month: "short" });
-    const label = `${monthShort} ${d}`;
+    const monthShort = monthName(cur.getMonth());
+    const label = t("admin.revenue.common.dayMonth", { month: monthShort, day: d });
 
     const dbPoint = dbDayMap.get(dateKey);
     series.push({
@@ -190,7 +191,8 @@ function buildTrendSeries(
 
 /** Collected revenue over the period against the equally long period before it. */
 export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueTrendCardProps) {
-  const trendData = useMemo(() => buildTrendSeries(trend ?? [], filter), [trend, filter]);
+  const { t } = useTranslation("common");
+  const trendData = useMemo(() => buildTrendSeries(trend ?? [], filter, t), [trend, filter, t]);
 
   return (
     <Card className="border-ink-200/80 bg-card flex h-full flex-col justify-between rounded-2xl border p-5 shadow-xs transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
@@ -201,9 +203,9 @@ export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueT
             <TrendingUp className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-ink-900 text-sm font-bold dark:text-slate-100">Revenue Trend</h3>
+            <h3 className="text-ink-900 text-sm font-bold dark:text-slate-100">{t("admin.revenue.trend.title")}</h3>
             <p className="text-ink-400 text-[11px] font-medium dark:text-slate-500">
-              Total revenue (collected) vs. previous period
+              {t("admin.revenue.trend.subtitle")}
             </p>
           </div>
         </div>
@@ -213,11 +215,11 @@ export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueT
           <div className="flex items-center gap-3 text-[11px] font-medium">
             <div className="text-ink-700 flex items-center gap-1.5 dark:text-slate-300">
               <span className="h-0.5 w-3.5 rounded-full bg-[#e07a5f]" />
-              <span>Current period</span>
+              <span>{t("admin.revenue.common.currentPeriod")}</span>
             </div>
             <div className="text-ink-400 flex items-center gap-1.5 dark:text-slate-500">
               <span className="h-0.5 w-3.5 border-b-2 border-dashed border-[#48a999]" />
-              <span>Previous period</span>
+              <span>{t("admin.revenue.common.previousPeriod")}</span>
             </div>
           </div>
           {actions}
@@ -259,7 +261,7 @@ export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueT
               <Area
                 type="monotone"
                 dataKey="amount"
-                name="Current period"
+                name={t("admin.revenue.common.currentPeriod")}
                 stroke="#e07a5f"
                 strokeWidth={2.4}
                 fill="url(#revenueTrendGrad)"
@@ -270,7 +272,7 @@ export function RevenueTrendCard({ trend, isLoading, filter, actions }: RevenueT
               <Line
                 type="monotone"
                 dataKey="previousAmount"
-                name="Previous period"
+                name={t("admin.revenue.common.previousPeriod")}
                 stroke="#48a999"
                 strokeWidth={1.8}
                 strokeDasharray="4 4"

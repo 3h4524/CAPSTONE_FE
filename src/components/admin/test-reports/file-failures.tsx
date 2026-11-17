@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Bar,
   BarChart,
@@ -18,6 +19,7 @@ type TestReportFileFailuresProps = {
 };
 
 export const TestReportFileFailures = ({ files }: TestReportFileFailuresProps) => {
+  const { t } = useTranslation("common");
   const rows = useMemo(
     () =>
       files
@@ -37,9 +39,11 @@ export const TestReportFileFailures = ({ files }: TestReportFileFailuresProps) =
     return (
       <section className="border-ink-200 bg-card rounded-xl border p-5">
         <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
-          Which files are red
+          {t("admin.testReports.fileFailures.heading")}
         </h3>
-        <p className="text-ink-400 mt-2 text-[11px]">No file has a failed test.</p>
+        <p className="text-ink-400 mt-2 text-[11px]">
+          {t("admin.testReports.fileFailures.empty")}
+        </p>
       </section>
     );
   }
@@ -47,10 +51,10 @@ export const TestReportFileFailures = ({ files }: TestReportFileFailuresProps) =
   return (
     <section className="border-ink-200 bg-card rounded-xl border p-5">
       <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
-        Which files are red
+        {t("admin.testReports.fileFailures.heading")}
       </h3>
       <p className="text-ink-400 mt-0.5 mb-3 text-[10px]">
-        How many tests each file lost. The pale part is the known gaps.
+        {t("admin.testReports.fileFailures.description")}
       </p>
 
       <div className="h-[220px] w-full">
@@ -71,7 +75,15 @@ export const TestReportFileFailures = ({ files }: TestReportFileFailuresProps) =
             />
             <Tooltip
               formatter={(value, name) =>
-                name === "knownIssues" ? [`${value} known gaps`, "known gaps"] : [`${value} tests`, "failed"]
+                name === "knownIssues"
+                  ? [
+                      t("admin.testReports.fileFailures.knownGapsValue", { value }),
+                      t("admin.testReports.fileFailures.knownGapsName"),
+                    ]
+                  : [
+                      t("admin.testReports.fileFailures.failedValue", { value }),
+                      t("admin.testReports.fileFailures.failedName"),
+                    ]
               }
               contentStyle={{
                 borderRadius: 8,

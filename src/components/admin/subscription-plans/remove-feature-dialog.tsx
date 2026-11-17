@@ -1,6 +1,7 @@
 "use client";
 
 import { MinusCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { FeatureImpactNote } from "@/components/admin/subscription-plans/feature-impact-note";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ export type FeatureTarget = { plan: AdminSubscriptionPlan; code: string; label: 
 
 // Confirms taking an on/off feature off a plan, after showing who it reaches.
 export function RemoveFeatureDialog({ target, onClose }: { target: FeatureTarget | null; onClose: () => void }) {
+  const { t } = useTranslation("common");
   const impact = usePlanFeatureImpact(target ? { planId: target.plan.id, code: target.code } : null);
   const mutation = useChangePlanFeatures(onClose);
 
@@ -26,9 +28,9 @@ export function RemoveFeatureDialog({ target, onClose }: { target: FeatureTarget
           </div>
           <div className="space-y-1">
             <DialogTitle className="font-display text-xl tracking-[-0.02em]">
-              Remove {target?.label} from {target?.plan.name}?
+              {t("admin.plans.removeFeature.title", { feature: target?.label ?? "", plan: target?.plan.name ?? "" })}
             </DialogTitle>
-            <DialogDescription>No one loses what they paid for: current subscribers keep it until their period ends.</DialogDescription>
+            <DialogDescription>{t("admin.plans.removeFeature.description")}</DialogDescription>
           </div>
         </DialogHeader>
         <div className="px-6 py-3">
@@ -36,7 +38,7 @@ export function RemoveFeatureDialog({ target, onClose }: { target: FeatureTarget
         </div>
         <div className="border-ink-100 flex justify-end gap-2 border-t px-6 py-4">
           <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
-            Cancel
+            {t("admin.plans.shared.cancel")}
           </Button>
           <Button
             type="button"
@@ -45,7 +47,7 @@ export function RemoveFeatureDialog({ target, onClose }: { target: FeatureTarget
             onClick={() => target && mutation.mutate({ type: "remove", planId: target.plan.id, code: target.code })}
           >
             {mutation.isPending && <Spinner className="size-4" />}
-            Remove from {target?.plan.name}
+            {t("admin.plans.removeFeature.removeFrom", { plan: target?.plan.name ?? "" })}
           </Button>
         </div>
       </DialogContent>

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Pencil, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { ViStatusBadge } from "@/components/admin/style-art-presets/vi-status-badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,8 @@ type StylePresetListProps = {
 };
 
 export const StylePresetList = ({ isPending, isError, error, presets, onEdit }: StylePresetListProps) => {
+  const { t } = useTranslation("common");
+
   if (isPending) {
     return (
       <div className="flex flex-col gap-2">
@@ -30,14 +33,14 @@ export const StylePresetList = ({ isPending, isError, error, presets, onEdit }: 
   }
 
   if (isError) {
-    return <p className="text-sm text-rose-700">{getErrorMessage(error)}</p>;
+    return <p className="text-sm text-rose-700">{getErrorMessage(error, t("admin.styles.list.loadErrorFallback"))}</p>;
   }
 
   if (!presets?.length) {
     return (
       <div className="border-ink-200 text-ink-600 flex flex-col items-center gap-2 rounded-md border border-dashed p-8 text-center text-sm">
         <Sparkles className="text-ink-400 size-5" />
-        No system styles yet. Create the first one to show sellers a translated picker.
+        {t("admin.styles.list.emptyState")}
       </div>
     );
   }
@@ -47,11 +50,11 @@ export const StylePresetList = ({ isPending, isError, error, presets, onEdit }: 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-16">Preview</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead className="w-20">Used</TableHead>
-            <TableHead className="w-40">VI status</TableHead>
-            <TableHead className="w-20 text-right">Edit</TableHead>
+            <TableHead className="w-16">{t("admin.styles.list.previewHeader")}</TableHead>
+            <TableHead>{t("admin.styles.list.nameHeader")}</TableHead>
+            <TableHead className="w-20">{t("admin.styles.list.usedHeader")}</TableHead>
+            <TableHead className="w-40">{t("admin.styles.list.viStatusHeader")}</TableHead>
+            <TableHead className="w-20 text-right">{t("admin.styles.list.editHeader")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -69,21 +72,21 @@ export const StylePresetList = ({ isPending, isError, error, presets, onEdit }: 
                   />
                 ) : (
                   <div className="bg-ink-100 text-ink-400 flex size-12 items-center justify-center rounded-md text-[10px] font-semibold">
-                    No img
+                    {t("admin.styles.list.noImage")}
                   </div>
                 )}
               </TableCell>
               <TableCell>
                 <div className="text-ink-900 font-medium">{preset.name}</div>
                 <div className="text-ink-500 max-w-md truncate text-xs">{preset.description}</div>
-                {!preset.isActive && <div className="text-[10px] font-semibold text-rose-700">INACTIVE</div>}
+                {!preset.isActive && <div className="text-[10px] font-semibold text-rose-700">{t("admin.styles.list.inactiveBadge")}</div>}
               </TableCell>
               <TableCell className="text-ink-700 tabular-nums">{preset.usageCount}</TableCell>
               <TableCell>
                 <ViStatusBadge status={preset.viStatus} />
               </TableCell>
               <TableCell className="text-right">
-                <Button type="button" variant="ghost" size="icon" aria-label={`Edit ${preset.name}`} onClick={() => onEdit(preset)}>
+                <Button type="button" variant="ghost" size="icon" aria-label={t("admin.styles.list.editAriaLabel", { name: preset.name })} onClick={() => onEdit(preset)}>
                   <Pencil className="size-4" />
                 </Button>
               </TableCell>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { getRevenueInvoices } from "@/api/revenue";
@@ -25,6 +26,7 @@ const TRANSACTIONS_PAGE_SIZE = 5;
 
 
 export function RevenueDashboard() {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
   const [filter, setFilter] = useState<RevenueFilterDto>({
     startDate: `${new Date().getFullYear()}-01-01`, // First day of current year
@@ -83,7 +85,7 @@ export function RevenueDashboard() {
 
   const handleExport = async (format: ReportFormat) => {
     if (!metricsData || !chartsData || !insightsData) {
-      toast.error("The dashboard is still loading. Try again in a moment.");
+      toast.error(t("admin.revenue.dashboard.stillLoading"));
       return;
     }
 
@@ -108,9 +110,9 @@ export function RevenueDashboard() {
           : new Blob([toCsv(sections)], { type: "text/csv;charset=utf-8" });
       downloadBlob(blob, `${reportFileName(filter)}.${format}`);
 
-      toast.success(`Revenue report exported as ${format === "xlsx" ? "Excel" : "CSV"}.`);
+      toast.success(t("admin.revenue.dashboard.exportSuccess", { format: format === "xlsx" ? "Excel" : "CSV" }));
     } catch {
-      toast.error("An error occurred while exporting the report.");
+      toast.error(t("admin.revenue.dashboard.exportFailed"));
     } finally {
       setIsExporting(false);
     }
@@ -119,8 +121,8 @@ export function RevenueDashboard() {
   return (
     <div className="flex h-full flex-col gap-4 p-0">
       <PageHeader
-        title="Revenue Intelligence"
-        description="Track revenue, subscriptions, and financial performance with real-time insights."
+        title={t("admin.revenue.dashboard.title")}
+        description={t("admin.revenue.dashboard.description")}
         actions={isPhone ? <RevenueExportMenu compact onExport={handleExport} isExporting={isExporting} /> : undefined}
       />
 

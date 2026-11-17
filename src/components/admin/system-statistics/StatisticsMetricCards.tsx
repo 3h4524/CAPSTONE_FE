@@ -7,6 +7,7 @@ import {
   Layers,
   Tag,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AdminMetricCard, Delta } from "@/components/admin/admin-metric-card";
 import type {
@@ -33,6 +34,8 @@ export function StatisticsMetricCards({
   comparisonLabel,
   dailyJobs = [],
 }: StatisticsMetricCardsProps) {
+  const { t } = useTranslation("common");
+
   const jobPoints =
     dailyJobs.length > 1
       ? dailyJobs.map((d) => d.count)
@@ -62,7 +65,7 @@ export function StatisticsMetricCards({
     <section className="mb-4.5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       {/* 1. Batch jobs */}
       <AdminMetricCard
-        label="Batch jobs"
+        label={t("admin.statistics.metricCards.batchJobs")}
         value={metrics.totalBatchJobs.value.toLocaleString()}
         context={
           <Delta
@@ -76,7 +79,7 @@ export function StatisticsMetricCards({
 
       {/* 2. Images generated */}
       <AdminMetricCard
-        label="Images generated"
+        label={t("admin.statistics.metricCards.imagesGenerated")}
         value={metrics.imagesGenerated.value.toLocaleString()}
         context={
           <Delta
@@ -90,7 +93,7 @@ export function StatisticsMetricCards({
 
       {/* 3. Videos rendered */}
       <AdminMetricCard
-        label="Videos rendered"
+        label={t("admin.statistics.metricCards.videosRendered")}
         value={metrics.videosRendered.value.toLocaleString()}
         context={
           <Delta
@@ -104,7 +107,7 @@ export function StatisticsMetricCards({
 
       {/* 4. Listings generated */}
       <AdminMetricCard
-        label="Listings generated"
+        label={t("admin.statistics.metricCards.listingsGenerated")}
         value={metrics.listingsGenerated.value.toLocaleString()}
         context={
           <Delta

@@ -32,7 +32,7 @@ const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
     <header className="border-ink-200 bg-ink-50 sticky top-0 z-20 border-b">
       <div className="border-ink-200 bg-card/80 flex h-[52px] items-center justify-between gap-4 border-b px-4 max-md:h-16 md:px-7">
         <div className="flex min-w-0 items-center gap-3">
-          <Link href="/admin/dashboard" aria-label="Podivo admin, go to the dashboard" className="flex min-w-0 items-center gap-2 md:hidden">
+          <Link href="/admin/dashboard" aria-label={t("admin.dashboard.topbar.logoAria")} className="flex min-w-0 items-center gap-2 md:hidden">
             <span aria-hidden="true" className="flex shrink-0">
               <Logo height={36} width={36} />
             </span>
@@ -43,7 +43,7 @@ const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
             type="button"
             onClick={onMenuClick}
             className="text-ink-500 hover:bg-ink-100 rounded-md p-1.5 max-md:hidden lg:hidden"
-            aria-label="Open navigation"
+            aria-label={t("admin.dashboard.topbar.openNavigation")}
           >
             <Menu className="size-4" />
           </button>

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { ProductImages } from "@/components/admin/image-quality/evaluation/product-images";
 import { SectionCard } from "@/components/admin/image-quality/section-card";
@@ -12,6 +13,7 @@ type ImageGalleryProps = {
 };
 
 export const ImageGallery = ({ comparison, versions }: ImageGalleryProps) => {
+  const { t } = useTranslation("common");
   const lanes = useMemo(() => groupImageEvalByProduct(comparison), [comparison]);
   const labels = useMemo(
     () => new Map(versions.map((version) => [version.key, version.label])),
@@ -21,12 +23,12 @@ export const ImageGallery = ({ comparison, versions }: ImageGalleryProps) => {
 
   return (
     <SectionCard
-      title="Every image"
-      description="The images behind the comparison, before on the left and after on the right. Transparent artwork sits on grey. A note is the check by eye where it disagreed with OCR."
+      title={t("admin.imageQuality.evaluation.everyImageTitle")}
+      description={t("admin.imageQuality.evaluation.everyImageDescription")}
     >
       {lanes.length === 0 ? (
         <p className="text-ink-500 px-6 py-12 text-center text-sm">
-          No image matches the versions picked above.
+          {t("admin.imageQuality.evaluation.noImageMatches")}
         </p>
       ) : (
         <Accordion

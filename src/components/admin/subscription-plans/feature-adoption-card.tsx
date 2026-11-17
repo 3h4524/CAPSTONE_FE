@@ -1,6 +1,7 @@
 "use client";
 
 import { Gauge, Info, type LucideIcon,TrendingDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -51,6 +52,7 @@ type Flag = { label: string; style: string; icon: LucideIcon };
  * (underused, a daily cap reached), so nothing needs reading above the table.
  */
 export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatures, onFeatureSelect }: FeatureAdoptionCardProps) {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
   const features = orderFeatures(plans[0]?.adoption ?? []);
 
@@ -70,10 +72,10 @@ export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatu
     const capped = included.filter((view) => (view.cell!.usersAtDailyCap ?? 0) > 0);
     const flags: Flag[] = [];
     if (underused.length > 0)
-      flags.push({ label: `Underused on ${underused.join(", ")}`, style: "bg-orange-100 dark:bg-orange-500/15 text-orange-800 dark:text-orange-300", icon: TrendingDown });
+      flags.push({ label: t("admin.plans.adoption.underusedOn", { plans: underused.join(", ") }), style: "bg-orange-100 dark:bg-orange-500/15 text-orange-800 dark:text-orange-300", icon: TrendingDown });
     if (capped.length > 0)
       flags.push({
-        label: `Daily cap hit: ${capped.map((view) => `${view.cell!.usersAtDailyCap} on ${view.plan.name}`).join(", ")}`,
+        label: t("admin.plans.adoption.dailyCapHit", { details: capped.map((view) => `${view.cell!.usersAtDailyCap} on ${view.plan.name}`).join(", ") }),
         style: "bg-ink-100 text-ink-700",
         icon: Gauge,
       });
@@ -88,35 +90,34 @@ export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatu
       <Card className="border-ink-200 bg-card gap-0 overflow-hidden rounded-2xl border p-0 shadow-none">
         {/* How to read it, in view: the bar, the orange of underused, and the drop mark. */}
         <div className="border-ink-100 bg-ink-50/60 text-ink-500 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b px-5 py-3 text-xs">
-          <p>Share of each plan’s Sellers who used a feature at least once in the last {days} days.</p>
+          <p>{t("admin.plans.adoption.headerIntro", { days })}</p>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <span className="flex items-center gap-1.5">
-              <span className={cn("h-1.5 w-5 rounded-full", BAR)} /> Used
+              <span className={cn("h-1.5 w-5 rounded-full", BAR)} /> {t("admin.plans.adoption.used")}
             </span>
             <span className="flex items-center gap-1.5">
-              <span className={cn("h-1.5 w-5 rounded-full", BAR_UNDERUSED)} /> Underused, under {underusedBelow}%
+              <span className={cn("h-1.5 w-5 rounded-full", BAR_UNDERUSED)} /> {t("admin.plans.adoption.underusedUnder", { threshold: underusedBelow })}
             </span>
             <span className="flex items-center gap-1 font-semibold text-[#c4553a] dark:text-[#dea091]">
-              ▼<span className="text-ink-500 font-normal">{MIN_DROP_POINTS}+ points below the cheaper plan</span>
+              ▼<span className="text-ink-500 font-normal">{t("admin.plans.adoption.pointsBelow", { points: MIN_DROP_POINTS })}</span>
             </span>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button type="button" aria-label="How to read this table" className="text-ink-400 hover:text-ink-600">
+                <button type="button" aria-label={t("admin.plans.adoption.howToRead")} className="text-ink-400 hover:text-ink-600">
                   <Info className="size-3.5" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-background max-w-xs text-xs">
-                The figure is the share; the small one the Sellers behind it. Hover a figure for how often the typical user used it.
-                Underused uses the same {underusedBelow}% rule as the AI review.
+                {t("admin.plans.adoption.howToReadBody", { threshold: underusedBelow })}
               </TooltipContent>
             </Tooltip>
           </p>
         </div>
 
         {plans.length === 0 ? (
-          <p className="text-ink-500 py-10 text-center text-sm">No Sellers have a plan yet.</p>
+          <p className="text-ink-500 py-10 text-center text-sm">{t("admin.plans.adoption.noSellersYet")}</p>
         ) : isPhone ? (
-          <ul aria-label="Feature adoption by plan" className="divide-ink-100 divide-y">
+          <ul aria-label={t("admin.plans.adoption.tableAria")} className="divide-ink-100 divide-y">
             {features.map((feature) => {
               const cells = cellsFor(feature.metric);
               const flags = flagsFor(cells);
@@ -146,7 +147,7 @@ export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatu
           </ul>
         ) : (
           <div className="overflow-x-auto">
-            <table aria-label="Feature adoption by plan" className="w-full min-w-[760px] table-fixed border-collapse text-sm">
+            <table aria-label={t("admin.plans.adoption.tableAria")} className="w-full min-w-[760px] table-fixed border-collapse text-sm">
               <colgroup>
                 <col style={{ width: `${FEATURE_COLUMN}%` }} />
                 {plans.map((plan) => (
@@ -157,20 +158,20 @@ export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatu
               <thead>
                 <tr className="border-ink-200 border-b text-left">
                   <th scope="col" className="text-ink-500 px-5 py-3 text-xs font-medium">
-                    Feature
+                    {t("admin.plans.shared.feature")}
                   </th>
                   {plans.map((plan, index) => (
                     <th key={plan.key} scope="col" className="px-5 py-3 font-normal">
                       <span className="text-ink-900 flex items-center gap-1.5 text-sm font-semibold">
                         <span className="size-2 rounded-full" style={{ backgroundColor: getPlanColor(plan.name, index) }} />
                         {plan.name}
-                        <span className="text-ink-400 text-xs font-normal">· {plan.subscribers.toLocaleString()} Sellers</span>
+                        <span className="text-ink-400 text-xs font-normal">{t("admin.plans.adoption.planSubscribers", { count: plan.subscribers.toLocaleString() })}</span>
                       </span>
-                      {!plan.hasEnoughData && <span className="text-xs text-amber-800 dark:text-amber-300">Not enough data</span>}
+                      {!plan.hasEnoughData && <span className="text-xs text-amber-800 dark:text-amber-300">{t("admin.plans.status.notEnoughData")}</span>}
                     </th>
                   ))}
                   <th scope="col" className="text-ink-500 px-5 py-3 text-xs font-medium">
-                    What stands out
+                    {t("admin.plans.adoption.whatStandsOut")}
                   </th>
                 </tr>
               </thead>
@@ -216,6 +217,7 @@ export function FeatureAdoptionCard({ plans, underusedBelow, days, reviewedFeatu
 }
 
 function FeatureName({ label, onSelect }: { label: string; onSelect?: () => void }) {
+  const { t } = useTranslation("common");
   const { name, ai } = splitAiLabel(label);
   const content = (
     <>
@@ -227,7 +229,7 @@ function FeatureName({ label, onSelect }: { label: string; onSelect?: () => void
     <button
       type="button"
       onClick={onSelect}
-      title="Open the AI review of this feature"
+      title={t("admin.plans.adoption.openAiReview")}
       className="text-ink-800 text-left text-sm underline-offset-2 hover:text-[#3f5f8a] hover:underline focus-visible:underline focus-visible:outline-none dark:hover:text-[#9db4d2]"
     >
       {content}
@@ -248,20 +250,21 @@ function AdoptionCell({
   underusedBelow: number;
   days: number;
 }) {
+  const { t } = useTranslation("common");
   const { plan, cell, previous } = view;
   const { name } = splitAiLabel(feature.label);
   if (!cell || !cell.includedInPlan) {
-    return <span className="text-ink-400 text-xs">Not in plan</span>;
+    return <span className="text-ink-400 text-xs">{t("admin.plans.adoption.notInPlan")}</span>;
   }
 
   const underused = isUnderused(cell.rate, underusedBelow);
   const drop = adoptionDrop(cell.rate, previous?.rate ?? null);
   const share = formatShare(cell.rate);
   const label = [
-    `${name}, ${plan.name}, ${share}`,
-    `${cell.users} of ${plan.subscribers} Sellers`,
-    underused ? "underused" : null,
-    drop !== null && previous ? `down ${drop.toFixed(1)} points from ${previous.name}` : null,
+    t("admin.plans.adoption.cellSummary", { name, plan: plan.name, share }),
+    t("admin.plans.adoption.cellSellers", { users: cell.users.toLocaleString(), subscribers: plan.subscribers.toLocaleString() }),
+    underused ? t("admin.plans.adoption.underusedWord") : null,
+    drop !== null && previous ? t("admin.plans.adoption.droppedVsPrevious", { drop: drop.toFixed(1), plan: previous.name }) : null,
   ]
     .filter(Boolean)
     .join(", ");
@@ -278,7 +281,7 @@ function AdoptionCell({
             <span className={cn("text-sm font-semibold", underused ? "text-orange-700 dark:text-orange-300" : "text-ink-900")}>{share}</span>
             {drop !== null && previous && (
               <span className="text-[11px] font-semibold whitespace-nowrap text-[#c4553a] dark:text-[#dea091]">
-                ▼{drop.toFixed(1)} vs {previous.name}
+                {t("admin.plans.adoption.dropVsPlan", { drop: drop.toFixed(1), plan: previous.name })}
               </span>
             )}
             <span className="text-ink-400 ml-auto text-[11px]">
@@ -295,23 +298,23 @@ function AdoptionCell({
       </TooltipTrigger>
       <TooltipContent side="top" className="text-background [&_p]:text-background w-60 space-y-0.5 p-3 text-xs">
         <p className="font-semibold">
-          {name} · {plan.name}
+          {t("admin.plans.adoption.tooltipTitle", { name, plan: plan.name })}
         </p>
         <p>
-          {cell.users} of {plan.subscribers} Sellers used it ({share})
+          {t("admin.plans.adoption.tooltipSellersUsed", { users: cell.users.toLocaleString(), subscribers: plan.subscribers.toLocaleString(), share })}
         </p>
         {cell.medianUses != null && (
           <p>
-            Typical user: {cell.medianUses.toLocaleString()}× in {days} days
+            {t("admin.plans.adoption.tooltipTypical", { medianUses: cell.medianUses.toLocaleString(), days })}
           </p>
         )}
         {drop !== null && previous && (
           <p>
-            ▼ {drop.toFixed(1)} points from {previous.name}
+            {t("admin.plans.adoption.tooltipDrop", { drop: drop.toFixed(1), plan: previous.name })}
           </p>
         )}
-        {underused && <p>Underused: under {underusedBelow}%</p>}
-        {plan.subscribers < SMALL_SAMPLE_SELLERS && <p>Small sample: under {SMALL_SAMPLE_SELLERS} Sellers</p>}
+        {underused && <p>{t("admin.plans.adoption.tooltipUnderused", { threshold: underusedBelow })}</p>}
+        {plan.subscribers < SMALL_SAMPLE_SELLERS && <p>{t("admin.plans.adoption.tooltipSmallSample", { sample: SMALL_SAMPLE_SELLERS })}</p>}
       </TooltipContent>
     </Tooltip>
   );

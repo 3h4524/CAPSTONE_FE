@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Clapperboard, ImageIcon, KeyRound } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { KeyActions, KeyName, KeyStatus, KeyUsage, lastChecked } from "@/components/admin/system-api-keys/key-parts";
 import { Button } from "@/components/ui/button";
@@ -18,14 +19,14 @@ import { useIsPhone } from "@/hooks/use-is-phone";
 import { type SystemApiKeyProviderFormValues, systemApiKeyProviderSchema, toLimit } from "@/schemas/admin-system-api-keys";
 import type { AdminSystemApiKey, AdminSystemApiKeyProvider, SystemApiKeyStrategy } from "@/types/admin-system-api-keys";
 
-const PROVIDER_USE: Record<string, { icon: typeof ImageIcon; text: string }> = {
-  ideogram: { icon: ImageIcon, text: "Design images and mock-ups for plans that include platform image keys." },
-  minimax: { icon: Clapperboard, text: "AI scene videos." },
+const PROVIDER_USE: Record<string, { icon: typeof ImageIcon; textKey: string }> = {
+  ideogram: { icon: ImageIcon, textKey: "admin.systemApiKeys.providerUse.ideogram" },
+  minimax: { icon: Clapperboard, textKey: "admin.systemApiKeys.providerUse.minimax" },
 };
 
-const STRATEGY_TEXT: Record<SystemApiKeyStrategy, string> = {
-  fill: "Fill: the first key until it is used up or refused for the day, then the next. A request that finds every slot of a key taken moves on rather than waiting.",
-  rotate: "Rotate: each request starts at the next key, so the uses spread evenly.",
+const STRATEGY_TEXT_KEYS: Record<SystemApiKeyStrategy, string> = {
+  fill: "admin.systemApiKeys.strategy.fill",
+  rotate: "admin.systemApiKeys.strategy.rotate",
 };
 
 const toDraft = (provider: AdminSystemApiKeyProvider): SystemApiKeyProviderFormValues => ({
@@ -40,9 +41,10 @@ type ProviderSectionProps = {
 };
 
 export const ProviderSection = ({ provider, onDelete }: ProviderSectionProps) => {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
-  const use = PROVIDER_USE[provider.provider] ?? { icon: KeyRound, text: "" };
-  const Icon = use.icon;
+  const use = PROVIDER_USE[provider.provider];
+  const Icon = use?.icon ?? KeyRound;
   const inUse = provider.keys.filter((key) => key.isActive && key.readable).length;
 
   return (
@@ -55,10 +57,10 @@ export const ProviderSection = ({ provider, onDelete }: ProviderSectionProps) =>
           <h2 id={`provider-${provider.provider}`} className="text-ink-900 text-base font-semibold">
             {provider.name}
           </h2>
-          <p className="text-muted-foreground text-sm">{use.text}</p>
+          <p className="text-muted-foreground text-sm">{use ? t(use.textKey) : ""}</p>
         </div>
         <span className="bg-ink-100 text-ink-700 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold tabular-nums">
-          {inUse} of {provider.keys.length} in use
+          {t("admin.systemApiKeys.inUseBadge", { inUse, total: provider.keys.length })}
         </span>
       </header>
 
@@ -67,7 +69,7 @@ export const ProviderSection = ({ provider, onDelete }: ProviderSectionProps) =>
       {provider.keys.length === 0 ? (
         <div className="text-ink-600 m-5 flex flex-col items-center gap-2 rounded-md border border-dashed p-6 text-center text-sm max-md:m-4">
           <KeyRound className="text-ink-400 size-5" aria-hidden="true" />
-          No {provider.name} keys yet. Until one is added, requests use the Seller&apos;s own key, or stop with a message.
+          {t("admin.systemApiKeys.emptyState", { provider: provider.name })}
         </div>
       ) : isPhone ? (
         <ul className="divide-y">
@@ -94,19 +96,19 @@ export const ProviderSection = ({ provider, onDelete }: ProviderSectionProps) =>
                   #
                 </th>
                 <th scope="col" className="px-3 py-2.5">
-                  Key
+                  {t("admin.systemApiKeys.table.key")}
                 </th>
                 <th scope="col" className="px-3 py-2.5">
-                  Status
+                  {t("admin.systemApiKeys.table.status")}
                 </th>
                 <th scope="col" className="px-3 py-2.5">
-                  Today
+                  {t("admin.systemApiKeys.table.today")}
                 </th>
                 <th scope="col" className="px-3 py-2.5">
-                  Last check
+                  {t("admin.systemApiKeys.table.lastCheck")}
                 </th>
                 <th scope="col" className="px-5 py-2.5 text-right">
-                  Actions
+                  {t("admin.systemApiKeys.table.actions")}
                 </th>
               </tr>
             </thead>
@@ -178,6 +180,7 @@ const KeyRowActions = ({
 };
 
 const ProviderLimits = ({ provider }: { provider: AdminSystemApiKeyProvider }) => {
+  const { t } = useTranslation("common");
   const save = useUpdateSystemApiKeyProvider();
   const saved = useMemo(() => toDraft(provider), [provider]);
   const [draft, setDraft] = useState(saved);
@@ -211,41 +214,41 @@ const ProviderLimits = ({ provider }: { provider: AdminSystemApiKeyProvider }) =
   };
 
   return (
-    <form onSubmit={submit} className="bg-ink-50 border-b px-5 py-4 max-md:px-4" aria-label={`${provider.name} limits`}>
+    <form onSubmit={submit} className="bg-ink-50 border-b px-5 py-4 max-md:px-4" aria-label={t("admin.systemApiKeys.limits.formAria", { provider: provider.name })}>
       <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)_auto] md:items-start">
         <LimitField
           id={id("daily")}
-          label="Requests per key per day"
-          hint="Counted per UTC day across every server. Empty for no limit."
+          label={t("admin.systemApiKeys.limits.dailyLabel")}
+          hint={t("admin.systemApiKeys.limits.dailyHint")}
           value={draft.dailyLimitPerKey}
           error={errors.dailyLimitPerKey}
           onChange={(value) => setDraft({ ...draft, dailyLimitPerKey: value })}
         />
         <LimitField
           id={id("concurrent")}
-          label="Requests per key at once"
-          hint="On each server. Empty for no limit."
+          label={t("admin.systemApiKeys.limits.concurrentLabel")}
+          hint={t("admin.systemApiKeys.limits.concurrentHint")}
           value={draft.maxConcurrentPerKey}
           error={errors.maxConcurrentPerKey}
           onChange={(value) => setDraft({ ...draft, maxConcurrentPerKey: value })}
         />
         <div className="space-y-1.5">
           <label htmlFor={id("strategy")} className="text-ink-700 text-sm font-medium">
-            Order
+            {t("admin.systemApiKeys.limits.orderLabel")}
           </label>
           <Select value={draft.strategy} onValueChange={(value) => setDraft({ ...draft, strategy: value as SystemApiKeyStrategy })}>
             <SelectTrigger id={id("strategy")} className="bg-card w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="fill">Fill, one key at a time</SelectItem>
-              <SelectItem value="rotate">Rotate, keys in turn</SelectItem>
+              <SelectItem value="fill">{t("admin.systemApiKeys.strategy.fillOption")}</SelectItem>
+              <SelectItem value="rotate">{t("admin.systemApiKeys.strategy.rotateOption")}</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-ink-500 text-xs leading-relaxed">{STRATEGY_TEXT[draft.strategy]}</p>
+          <p className="text-ink-500 text-xs leading-relaxed">{t(STRATEGY_TEXT_KEYS[draft.strategy])}</p>
         </div>
         <Button type="submit" variant="outline" className="md:mt-6" disabled={!dirty || save.isPending}>
-          {save.isPending ? "Saving…" : "Save limits"}
+          {save.isPending ? t("admin.systemApiKeys.limits.saving") : t("admin.systemApiKeys.limits.save")}
         </Button>
       </div>
     </form>
@@ -266,23 +269,26 @@ const LimitField = ({
   value: string;
   error?: string;
   onChange: (value: string) => void;
-}) => (
-  <div className="space-y-1.5">
-    <label htmlFor={id} className="text-ink-700 text-sm font-medium">
-      {label}
-    </label>
-    <Input
-      id={id}
-      inputMode="numeric"
-      placeholder="No limit"
-      className="bg-card"
-      value={value}
-      aria-invalid={error ? true : undefined}
-      aria-describedby={`${id}-hint`}
-      onChange={(event) => onChange(event.target.value)}
-    />
-    <p id={`${id}-hint`} role={error ? "alert" : undefined} className={error ? "text-destructive text-xs" : "text-ink-500 text-xs leading-relaxed"}>
-      {error ?? hint}
-    </p>
-  </div>
-);
+}) => {
+  const { t } = useTranslation("common");
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="text-ink-700 text-sm font-medium">
+        {label}
+      </label>
+      <Input
+        id={id}
+        inputMode="numeric"
+        placeholder={t("admin.systemApiKeys.limits.noLimitPlaceholder")}
+        className="bg-card"
+        value={value}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={`${id}-hint`}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      <p id={`${id}-hint`} role={error ? "alert" : undefined} className={error ? "text-destructive text-xs" : "text-ink-500 text-xs leading-relaxed"}>
+        {error ?? hint}
+      </p>
+    </div>
+  );
+};

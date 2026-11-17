@@ -1,3 +1,4 @@
+import { getCurrentLocale } from "@/i18n/client";
 import type { TransactionStatus } from "@/types/revenue";
 
 export const TRANSACTION_STATUSES: TransactionStatus[] = [
@@ -48,6 +49,8 @@ export function getTransactionStatusStyle(status: string) {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS_VI = ["thg 1", "thg 2", "thg 3", "thg 4", "thg 5", "thg 6", "thg 7", "thg 8", "thg 9", "thg 10", "thg 11", "thg 12"];
+const monthNames = () => (getCurrentLocale() === "vi" ? MONTHS_VI : MONTHS);
 
 /**
  * Formats a transaction date as "30 Oct 2026 11:20". Only the payment date is stored, so the time
@@ -56,7 +59,7 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 export function formatTransactionDate(paymentDate: string | null, createdAt?: string | null): string {
   if (!paymentDate) return "—";
   const [y, m, d] = paymentDate.split("-").map(Number);
-  const day = `${pad(d)} ${MONTHS[m - 1]} ${y}`;
+  const day = `${pad(d)} ${monthNames()[m - 1]} ${y}`;
 
   if (!createdAt) return day;
   const created = new Date(createdAt);
@@ -68,7 +71,7 @@ export function formatTransactionDate(paymentDate: string | null, createdAt?: st
 /** Formats a YYYY-MM-DD filter date as "Oct 01, 2026". */
 export function formatRangeDate(isoDate: string): string {
   const [y, m, d] = isoDate.split("-").map(Number);
-  return `${MONTHS[m - 1]} ${pad(d)}, ${y}`;
+  return getCurrentLocale() === "vi" ? `${pad(d)} ${monthNames()[m - 1]} ${y}` : `${MONTHS[m - 1]} ${pad(d)}, ${y}`;
 }
 
 /**

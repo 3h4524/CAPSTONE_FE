@@ -14,6 +14,7 @@ import {
   Store,
   Workflow,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { HealthCheck } from "@/components/admin/admin-attention-panel";
 import {
@@ -42,6 +43,7 @@ export const AdminHealthCheckDrawer = ({
   onOpenChange,
   healthChecks,
 }: AdminHealthCheckDrawerProps) => {
+  const { t } = useTranslation("common");
   const issues = healthChecks.filter((check) => check.status !== "ok");
   const healthy = healthChecks.filter((check) => check.status === "ok");
 
@@ -52,13 +54,13 @@ export const AdminHealthCheckDrawer = ({
           <div className="flex items-center gap-2">
             <Activity className="text-ink-700 size-4.5" />
             <SheetTitle className="text-ink-900 text-base font-bold">
-              Platform health checks
+              {t("admin.dashboard.drawer.title")}
             </SheetTitle>
           </div>
           <SheetDescription className="text-ink-500 mt-0.5 text-xs">
             {issues.length > 0
-              ? `${issues.length} of ${healthChecks.length} areas need attention`
-              : "All system areas are currently operational and healthy"}
+              ? t("admin.dashboard.drawer.subtitleIssues", { issues: issues.length, total: healthChecks.length })
+              : t("admin.dashboard.drawer.subtitleOk")}
           </SheetDescription>
         </SheetHeader>
 
@@ -70,9 +72,9 @@ export const AdminHealthCheckDrawer = ({
                 <CheckCircle2 className="size-5" />
               </div>
               <div>
-                <p className="text-xs font-bold text-emerald-900 dark:text-emerald-300">All systems operational</p>
+                <p className="text-xs font-bold text-emerald-900 dark:text-emerald-300">{t("admin.dashboard.drawer.allOperational")}</p>
                 <p className="mt-0.5 text-xs text-emerald-700 dark:text-emerald-300">
-                  All services, revenue pipelines, and AI models are running smoothly.
+                  {t("admin.dashboard.drawer.allOperationalDesc")}
                 </p>
               </div>
             </div>
@@ -81,9 +83,9 @@ export const AdminHealthCheckDrawer = ({
               <AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
               <p className="flex-1">
                 <strong className="font-semibold">
-                  {issues.length} {issues.length === 1 ? "issue" : "issues"} detected.
+                  {t("admin.dashboard.drawer.issuesDetected", { count: issues.length })}
                 </strong>{" "}
-                Review the details below to take action.
+                {t("admin.dashboard.drawer.reviewDetails")}
               </p>
             </div>
           )}
@@ -92,7 +94,7 @@ export const AdminHealthCheckDrawer = ({
           {issues.length > 0 && (
             <div className="space-y-3">
               <p className="text-ink-400 text-[11px] font-semibold tracking-wider uppercase">
-                Needs attention ({issues.length})
+                {t("admin.dashboard.drawer.needsAttention", { total: issues.length })}
               </p>
               {issues.map((check) => {
                 const AreaIcon = AREA_ICONS[check.key] || Activity;
@@ -136,7 +138,7 @@ export const AdminHealthCheckDrawer = ({
                         className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-semibold tracking-wide uppercase ${badgeColor}`}
                       >
                         <StatusIcon className="size-3" />
-                        {isCritical ? "Critical" : "Warning"}
+                        {isCritical ? t("admin.dashboard.attention.badgeCritical") : t("admin.dashboard.attention.badgeWarning")}
                       </span>
                     </div>
 
@@ -190,7 +192,7 @@ export const AdminHealthCheckDrawer = ({
           {healthy.length > 0 && (
             <div className="space-y-2">
               <p className="text-ink-400 text-[11px] font-semibold tracking-wider uppercase">
-                Operating normally ({healthy.length})
+                {t("admin.dashboard.drawer.operatingNormally", { total: healthy.length })}
               </p>
               <div className="divide-ink-100 border-ink-200/80 bg-card divide-y overflow-hidden rounded-xl border shadow-2xs">
                 {healthy.map((check) => {
@@ -213,7 +215,7 @@ export const AdminHealthCheckDrawer = ({
                       </div>
                       <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
                         <CheckCircle2 className="size-2.5 text-emerald-600 dark:text-emerald-400" />
-                        Healthy
+                        {t("admin.dashboard.drawer.healthy")}
                       </span>
                     </div>
                   );

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { AlertTriangle, BarChart3 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Area,
   CartesianGrid,
@@ -36,6 +37,7 @@ export function RevenueForecastCard({
   isLoading,
 }: RevenueForecastCardProps) {
   const [timeHorizon, setTimeHorizon] = useState<TimeHorizon>(3);
+  const { t } = useTranslation("common");
 
   const status = data?.status ?? "insufficient";
   const sampleWeeks = data?.sampleWeeks ?? 0;
@@ -62,13 +64,15 @@ export function RevenueForecastCard({
   const formatYAxis = (val: number) => formatCompactVndAmount(val);
 
   const weeklyTrend = data?.weeklyTrend ?? 0;
-  const trendLabel = `${weeklyTrend >= 0 ? "+" : ""}${formatVnd(weeklyTrend)}/week`;
+  const trendLabel = t("admin.revenue.forecast.trendPerWeek", {
+    value: `${weeklyTrend >= 0 ? "+" : ""}${formatVnd(weeklyTrend)}`,
+  });
 
   const warning =
     status === "insufficient"
-      ? `Not enough data to forecast: at least ${MIN_WEEKS} weeks of revenue are needed, ${sampleWeeks} available.`
+      ? t("admin.revenue.forecast.warningInsufficient", { min: MIN_WEEKS, count: sampleWeeks })
       : status === "low_confidence"
-        ? `Low confidence: only ${sampleWeeks} weeks of data (${RELIABLE_WEEKS} needed), so no forecast line is drawn.`
+        ? t("admin.revenue.forecast.warningLowConfidence", { count: sampleWeeks, reliable: RELIABLE_WEEKS })
         : null;
 
   return (
@@ -80,19 +84,19 @@ export function RevenueForecastCard({
             <BarChart3 className="h-5 w-5" />
           </div>
           <h3 className="text-ink-900 text-sm font-bold dark:text-slate-100">
-            Revenue Forecast
+            {t("admin.revenue.forecast.title")}
           </h3>
         </div>
 
         {/* Time Horizon Selector */}
         <Select value={String(timeHorizon)} onValueChange={(value) => setTimeHorizon(Number(value) as TimeHorizon)}>
-          <SelectTrigger aria-label="Forecast horizon" size="sm" className="rounded-xl text-xs font-semibold">
+          <SelectTrigger aria-label={t("admin.revenue.forecast.horizonAria")} size="sm" className="rounded-xl text-xs font-semibold">
             <SelectValue />
           </SelectTrigger>
           <SelectContent align="end">
-            <SelectItem value="3">3 months</SelectItem>
-            <SelectItem value="6">6 months</SelectItem>
-            <SelectItem value="12">12 months</SelectItem>
+            <SelectItem value="3">{t("admin.revenue.forecast.months3")}</SelectItem>
+            <SelectItem value="6">{t("admin.revenue.forecast.months6")}</SelectItem>
+            <SelectItem value="12">{t("admin.revenue.forecast.months12")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -115,7 +119,7 @@ export function RevenueForecastCard({
           </div>
         ) : chartData.length === 0 ? (
           <div className="text-ink-400 flex h-full w-full items-center justify-center text-xs">
-            No revenue recorded yet.
+            {t("admin.revenue.forecast.empty")}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -155,7 +159,7 @@ export function RevenueForecastCard({
                   return (
                     <div className="border-ink-200 bg-card rounded-xl border p-3 shadow-lg dark:border-slate-800 dark:bg-slate-900">
                       <p className="text-ink-400 text-xs font-semibold dark:text-slate-500">
-                        Week of {label} {isF ? "(Forecast)" : "(Actual)"}
+                        {t("admin.revenue.forecast.weekOf", { label, kind: isF ? t("admin.revenue.forecast.kindForecast") : t("admin.revenue.forecast.kindActual") })}
                       </p>
                       <div className="mt-1 flex items-baseline gap-2">
                         <span className="text-ink-900 text-base font-bold dark:text-slate-100">
@@ -165,11 +169,13 @@ export function RevenueForecastCard({
                       {isF && (
                         <>
                           <p className="text-ink-500 mt-1 text-[11px] dark:text-slate-400">
-                            95%: {formatVnd(item?.conservative ?? 0)} –{" "}
-                            {formatVnd(item?.optimistic ?? 0)}
+                            {t("admin.revenue.forecast.confidenceRange", {
+                              conservative: formatVnd(item?.conservative ?? 0),
+                              optimistic: formatVnd(item?.optimistic ?? 0),
+                            })}
                           </p>
                           <p className="text-ink-600 mt-0.5 text-[11px] font-semibold dark:text-slate-300">
-                            {pct >= 0 ? `+${pct}%` : `${pct}%`} vs. last completed week
+                            {t("admin.revenue.forecast.vsLastCompletedWeek", { change: pct >= 0 ? `+${pct}%` : `${pct}%` })}
                           </p>
                         </>
                       )}
@@ -187,7 +193,7 @@ export function RevenueForecastCard({
                 fillOpacity={0.1}
                 activeDot={false}
                 isAnimationActive={false}
-                name="95% interval"
+                name={t("admin.revenue.forecast.intervalName")}
               />
 
               {/* Actual Area: straight segments between weekly points, no smoothing */}
@@ -198,7 +204,7 @@ export function RevenueForecastCard({
                 stroke="#2563eb"
                 strokeWidth={2}
                 dot={{ r: 1.5, fill: "#2563eb" }}
-                name="Actual"
+                name={t("admin.revenue.forecast.seriesActual")}
               />
 
               <Line
@@ -208,7 +214,7 @@ export function RevenueForecastCard({
                 strokeWidth={1.8}
                 strokeDasharray="4 4"
                 dot={false}
-                name="Forecast (Base)"
+                name={t("admin.revenue.forecast.seriesForecastBase")}
               />
               <Line
                 type="linear"
@@ -217,7 +223,7 @@ export function RevenueForecastCard({
                 strokeWidth={1.2}
                 strokeDasharray="4 4"
                 dot={false}
-                name="Optimistic"
+                name={t("admin.revenue.forecast.seriesOptimistic")}
               />
               <Line
                 type="linear"
@@ -226,7 +232,7 @@ export function RevenueForecastCard({
                 strokeWidth={1.2}
                 strokeDasharray="4 4"
                 dot={false}
-                name="Conservative"
+                name={t("admin.revenue.forecast.seriesConservative")}
               />
             </ComposedChart>
           </ResponsiveContainer>
@@ -237,7 +243,7 @@ export function RevenueForecastCard({
       {!isLoading && showForecast && (
         <div className="text-ink-500 mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-[11px] dark:text-slate-400">
           <span>
-            Linear regression over the {sampleWeeks} weeks before today, R² = {(data?.rSquared ?? 0).toFixed(2)}
+            {t("admin.revenue.forecast.modelSummary", { count: sampleWeeks, rSquared: (data?.rSquared ?? 0).toFixed(2) })}
           </span>
           <span
             className={
@@ -255,25 +261,25 @@ export function RevenueForecastCard({
       <div className="border-ink-100 text-ink-500 mt-2 flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1 border-t pt-2 text-[10px] font-medium dark:border-slate-800 dark:text-slate-400">
         <div className="flex items-center gap-1.5">
           <span className="h-0.5 w-3 rounded-full bg-blue-600" />
-          <span>Actual</span>
+          <span>{t("admin.revenue.forecast.seriesActual")}</span>
         </div>
         {showForecast && (
           <>
             <div className="flex items-center gap-1.5">
               <span className="h-0.5 w-3 rounded-full border-t border-dashed border-blue-500" />
-              <span>Forecast (Base)</span>
+              <span>{t("admin.revenue.forecast.seriesForecastBase")}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="h-0.5 w-3 rounded-full border-t border-dashed border-emerald-500" />
-              <span>Optimistic</span>
+              <span>{t("admin.revenue.forecast.seriesOptimistic")}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="h-0.5 w-3 rounded-full border-t border-dashed border-rose-500" />
-              <span>Conservative</span>
+              <span>{t("admin.revenue.forecast.seriesConservative")}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="h-2 w-3 rounded-sm bg-blue-500/15" />
-              <span>95% interval</span>
+              <span>{t("admin.revenue.forecast.intervalName")}</span>
             </div>
           </>
         )}

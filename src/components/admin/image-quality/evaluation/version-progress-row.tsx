@@ -1,8 +1,9 @@
+import { useTranslation } from "react-i18next";
+
 import { RateMeter } from "@/components/admin/image-quality/rate-meter";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { IMAGE_EVAL_PHASE_LABELS } from "@/constants/image-quality";
 import { formatImageQualityNumber } from "@/helpers/image-quality-format";
-import type { ImageEvalVersionStats } from "@/types/admin-image-quality";
+import type { ImageEvalPhase, ImageEvalVersionStats } from "@/types/admin-image-quality";
 import { cn } from "@/utils/cn";
 
 type VersionProgressRowProps = {
@@ -15,36 +16,46 @@ export const PHASE_TONES = {
   trial: "bg-card text-ink-400 ring-1 ring-ink-200",
 } as const;
 
-export const VersionProgressRow = ({ stats }: VersionProgressRowProps) => (
-  <TableRow className={cn(stats.version.phase === "trial" && "text-ink-500")}>
-    <TableCell className="py-2.5 pl-5 whitespace-normal sm:pl-6">
-      <span className="text-ink-900 flex flex-wrap items-center gap-2 text-sm font-medium">
-        {stats.version.label}
-        <span
-          className={cn(
-            "rounded px-1.5 py-0.5 text-[11px] font-medium",
-            PHASE_TONES[stats.version.phase]
-          )}
-        >
-          {IMAGE_EVAL_PHASE_LABELS[stats.version.phase]}
+export const PHASE_KEYS: Record<ImageEvalPhase, string> = {
+  before: "admin.imageQuality.evaluation.phases.before",
+  after: "admin.imageQuality.evaluation.phases.after",
+  trial: "admin.imageQuality.evaluation.phases.trial",
+};
+
+export const VersionProgressRow = ({ stats }: VersionProgressRowProps) => {
+  const { t } = useTranslation("common");
+
+  return (
+    <TableRow className={cn(stats.version.phase === "trial" && "text-ink-500")}>
+      <TableCell className="py-2.5 pl-5 whitespace-normal sm:pl-6">
+        <span className="text-ink-900 flex flex-wrap items-center gap-2 text-sm font-medium">
+          {stats.version.label}
+          <span
+            className={cn(
+              "rounded px-1.5 py-0.5 text-[11px] font-medium",
+              PHASE_TONES[stats.version.phase]
+            )}
+          >
+            {t(PHASE_KEYS[stats.version.phase])}
+          </span>
         </span>
-      </span>
-    </TableCell>
-    <TableCell className="text-ink-600 text-right font-mono text-sm">{stats.letteredCount}</TableCell>
-    <TableCell>
-      <RateMeter value={stats.textOk} />
-    </TableCell>
-    <TableCell>
-      <RateMeter value={stats.textClear} />
-    </TableCell>
-    <TableCell>
-      <RateMeter value={stats.layoutOk} />
-    </TableCell>
-    <TableCell className="text-ink-700 text-right font-mono text-sm">
-      {formatImageQualityNumber(stats.clipOverall, 1)}
-    </TableCell>
-    <TableCell className="text-ink-700 pr-5 text-right font-mono text-sm sm:pr-6">
-      {formatImageQualityNumber(stats.musiq, 1)}
-    </TableCell>
-  </TableRow>
-);
+      </TableCell>
+      <TableCell className="text-ink-600 text-right font-mono text-sm">{stats.letteredCount}</TableCell>
+      <TableCell>
+        <RateMeter value={stats.textOk} />
+      </TableCell>
+      <TableCell>
+        <RateMeter value={stats.textClear} />
+      </TableCell>
+      <TableCell>
+        <RateMeter value={stats.layoutOk} />
+      </TableCell>
+      <TableCell className="text-ink-700 text-right font-mono text-sm">
+        {formatImageQualityNumber(stats.clipOverall, 1)}
+      </TableCell>
+      <TableCell className="text-ink-700 pr-5 text-right font-mono text-sm sm:pr-6">
+        {formatImageQualityNumber(stats.musiq, 1)}
+      </TableCell>
+    </TableRow>
+  );
+};

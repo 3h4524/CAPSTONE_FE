@@ -2,6 +2,7 @@
 
 import React, { useMemo } from "react";
 import { BarChart2, Calendar, CalendarDays } from "lucide-react";
+import { Trans,useTranslation } from "react-i18next";
 import {
   Bar,
   CartesianGrid,
@@ -46,6 +47,7 @@ export function DailyJobsBarChart({
   isLoading,
   periodEnd,
 }: DailyJobsBarChartProps) {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
   const stats = useMemo(() => {
     if (dailyJobs.length === 0) {
@@ -91,14 +93,14 @@ export function DailyJobsBarChart({
           <Calendar className="h-3 w-3" />
           <span>
             {formatDateLabel(point.dateLabel, { weekday: "short", month: "short", day: "numeric" })}
-            {point.isToday && " · in progress"}
+            {point.isToday && ` · ${t("admin.statistics.dailyJobs.inProgress")}`}
           </span>
         </div>
         <div className="mt-1 flex items-baseline gap-1.5">
           <span className="text-ink-900 text-lg font-bold tracking-tight">
             {point.count.toLocaleString()}
           </span>
-          <span className="text-ink-500 text-xs">jobs</span>
+          <span className="text-ink-500 text-xs">{t("admin.statistics.dailyJobs.jobsUnit")}</span>
         </div>
         <div className="text-ink-500 mt-1 space-y-0.5 text-[11px]">
           <div>
@@ -106,9 +108,11 @@ export function DailyJobsBarChart({
               {diff >= 0 ? "+" : "−"}
               {Math.abs(diff).toFixed(1)}
             </span>{" "}
-            vs period average
+            {t("admin.statistics.dailyJobs.vsPeriodAverage")}
           </div>
-          {point.ma7 !== null && <div>7-day average: {point.ma7}</div>}
+          {point.ma7 !== null && (
+            <div>{t("admin.statistics.dailyJobs.sevenDayValue", { value: point.ma7 })}</div>
+          )}
         </div>
       </div>
     );
@@ -122,17 +126,25 @@ export function DailyJobsBarChart({
             <CalendarDays className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-ink-900 text-sm font-bold">Daily batch jobs</h3>
+            <h3 className="text-ink-900 text-sm font-bold">{t("admin.statistics.dailyJobs.title")}</h3>
             {isLoading ? (
               <div className="bg-ink-100 mt-1 h-3.5 w-52 animate-pulse rounded" />
             ) : (
               !isEmpty && (
                 <p className="text-ink-500 text-xs">
-                  {dailyJobs.length} days · avg <span className="text-ink-700 font-semibold">{stats.avg}</span>/day
+                  <Trans
+                    i18nKey="admin.statistics.dailyJobs.summary"
+                    values={{ days: dailyJobs.length, avg: stats.avg }}
+                    components={{ avg: <span className="text-ink-700 font-semibold" /> }}
+                  />
                   {stats.peak.count > 0 && (
                     <>
-                      {" "}· peak <span className="text-ink-700 font-semibold">{stats.peak.count}</span> on{" "}
-                      {formatDateLabel(stats.peak.date)}
+                      {" "}
+                      <Trans
+                        i18nKey="admin.statistics.dailyJobs.peakSummary"
+                        values={{ count: stats.peak.count, date: formatDateLabel(stats.peak.date) }}
+                        components={{ count: <span className="text-ink-700 font-semibold" /> }}
+                      />
                     </>
                   )}
                 </p>
@@ -145,17 +157,17 @@ export function DailyJobsBarChart({
           <div className="text-ink-500 flex flex-wrap items-center gap-3 text-[11px] font-medium">
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: BAR_COLOR }} />
-              Jobs per day
+              {t("admin.statistics.dailyJobs.legendJobs")}
             </span>
             {hasTrendLine && (
               <span className="flex items-center gap-1.5">
                 <span className="bg-ink-900 h-0.5 w-3.5 rounded-full" />
-                7-day average
+                {t("admin.statistics.dailyJobs.sevenDayAverage")}
               </span>
             )}
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: PEAK_COLOR }} />
-              Peak day
+              {t("admin.statistics.dailyJobs.legendPeak")}
             </span>
           </div>
         )}
@@ -179,10 +191,10 @@ export function DailyJobsBarChart({
             </div>
             <div>
               <p className="text-ink-700 text-sm font-medium">
-                No batch jobs in this timeframe
+                {t("admin.statistics.dailyJobs.emptyTitle")}
               </p>
               <p className="text-ink-400 text-xs">
-                Jobs will appear here as sellers start generation runs.
+                {t("admin.statistics.dailyJobs.emptyDescription")}
               </p>
             </div>
           </div>
@@ -212,10 +224,10 @@ export function DailyJobsBarChart({
                   stroke="var(--ink-400)"
                   strokeDasharray="4 4"
                   strokeWidth={1}
-                  label={{ value: "avg", position: "insideTopLeft", fontSize: 10, fill: "var(--ink-400)" }}
+                  label={{ value: t("admin.statistics.dailyJobs.avgShort"), position: "insideTopLeft", fontSize: 10, fill: "var(--ink-400)" }}
                 />
               )}
-              <Bar dataKey="count" name="Jobs" radius={[3, 3, 0, 0]} maxBarSize={28}>
+              <Bar dataKey="count" name={t("admin.statistics.dailyJobs.jobsName")} radius={[3, 3, 0, 0]} maxBarSize={28}>
                 {chartData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
@@ -234,7 +246,7 @@ export function DailyJobsBarChart({
                 <Line
                   type="monotone"
                   dataKey="ma7"
-                  name="7-day average"
+                  name={t("admin.statistics.dailyJobs.sevenDayAverage")}
                   stroke={TREND_COLOR}
                   strokeWidth={2}
                   dot={false}

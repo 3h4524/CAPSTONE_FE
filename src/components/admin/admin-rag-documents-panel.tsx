@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Tag,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { RagAdminDocument } from "@/api/rag";
 import { Badge } from "@/components/ui/badge";
@@ -41,13 +42,21 @@ import { useIsPhone } from "@/hooks/use-is-phone";
 import { cn } from "@/utils/cn";
 
 const STATUS_OPTIONS = [
-  ["", "All statuses"],
-  ["queued", "Queued"],
-  ["ready", "Ready"],
-  ["processing", "Processing"],
-  ["superseded", "Superseded"],
-  ["failed", "Failed"],
+  ["", "admin.dashboard.ragDocuments.statusAll"],
+  ["queued", "admin.dashboard.ragDocuments.statusQueued"],
+  ["ready", "admin.dashboard.ragDocuments.statusReady"],
+  ["processing", "admin.dashboard.ragDocuments.statusProcessing"],
+  ["superseded", "admin.dashboard.ragDocuments.statusSuperseded"],
+  ["failed", "admin.dashboard.ragDocuments.statusFailed"],
 ] as const;
+
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  queued: "admin.dashboard.ragDocuments.statusQueued",
+  ready: "admin.dashboard.ragDocuments.statusReady",
+  processing: "admin.dashboard.ragDocuments.statusProcessing",
+  superseded: "admin.dashboard.ragDocuments.statusSuperseded",
+  failed: "admin.dashboard.ragDocuments.statusFailed",
+};
 const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
 type AdminRagDocumentsPanelProps = {
@@ -55,6 +64,7 @@ type AdminRagDocumentsPanelProps = {
 };
 
 const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
+  const { t } = useTranslation("common");
   const [status, setStatus] = useState("");
   const [sourceId, setSourceId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -96,9 +106,9 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
   };
 
   const detailPanel = !selectedId ? (
-    <PanelMessage text="Select a document to inspect its version and chunks." />
+    <PanelMessage text={t("admin.dashboard.ragDocuments.selectDocumentHint")} />
   ) : detailQuery.isPending ? (
-    <PanelMessage text="Loading document detail..." />
+    <PanelMessage text={t("admin.dashboard.ragDocuments.loadingDetail")} />
   ) : detailQuery.data ? (
     <DocumentDetail
       detail={detailQuery.data.document}
@@ -111,7 +121,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
       isActivating={activateMutation.isPending}
     />
   ) : (
-    <PanelMessage text="Document detail is unavailable." />
+    <PanelMessage text={t("admin.dashboard.ragDocuments.detailUnavailable")} />
   );
 
   return (
@@ -119,14 +129,13 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
       <div className="flex flex-col justify-between gap-4 max-md:gap-3 sm:flex-row sm:items-end">
         <div>
           <p className="text-ink-400 text-[10px] font-bold tracking-[0.16em] uppercase">
-            Knowledge base
+            {t("admin.dashboard.ragDocuments.kbEyebrow")}
           </p>
           <h2 className="font-display text-ink-900 mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
-            Documents & versions
+            {t("admin.dashboard.ragDocuments.kbTitle")}
           </h2>
           <p className="text-ink-500 mt-1 max-w-2xl text-xs leading-5">
-            Track every ingested version, inspect its chunks, and choose which completed version is
-            active for retrieval.
+            {t("admin.dashboard.ragDocuments.kbDescription")}
           </p>
         </div>
         <div className="flex gap-2 max-md:grid max-md:grid-cols-2">
@@ -138,10 +147,10 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
             disabled={documentsQuery.isFetching}
           >
             <RefreshCw className={cn("size-3.5", documentsQuery.isFetching && "animate-spin")} />{" "}
-            Refresh
+            {t("admin.dashboard.ragDocuments.refresh")}
           </Button>
           <Button type="button" size="sm" onClick={onIngest}>
-            Ingest document
+            {t("admin.dashboard.ragDocuments.ingestDocument")}
           </Button>
         </div>
       </div>
@@ -151,13 +160,13 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
           <Input
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search title or listing ID"
+            placeholder={t("admin.dashboard.ragDocuments.searchPlaceholder")}
             className="max-md:col-span-2 md:max-w-xs"
           />
           <Input
             value={sourceId}
             onChange={(event) => setSourceId(event.target.value)}
-            placeholder="Filter by source ID"
+            placeholder={t("admin.dashboard.ragDocuments.sourceIdPlaceholder")}
             className="md:max-w-xs"
           />
           <Select
@@ -165,18 +174,21 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
             onValueChange={(value) => setStatus(value === "all" ? "" : value)}
           >
             <SelectTrigger className="w-full md:w-[162px]">
-              <SelectValue placeholder="All statuses" />
+              <SelectValue placeholder={t("admin.dashboard.ragDocuments.statusAll")} />
             </SelectTrigger>
             <SelectContent>
-              {STATUS_OPTIONS.map(([value, label]) => (
+              {STATUS_OPTIONS.map(([value, labelKey]) => (
                 <SelectItem key={value || "all"} value={value || "all"}>
-                  {label}
+                  {t(labelKey)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <span className="text-ink-400 self-center text-xs">
-            {filteredDocuments.length} of {documentsQuery.data?.length ?? 0} documents
+            {t("admin.dashboard.ragDocuments.documentsCount", {
+              shown: filteredDocuments.length,
+              total: documentsQuery.data?.length ?? 0,
+            })}
           </span>
           <Select value={pageSize} onValueChange={setPageSize}>
             <SelectTrigger className="w-full max-md:w-32 max-md:justify-self-end md:ml-auto md:w-[130px]">
@@ -185,7 +197,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
             <SelectContent>
               {PAGE_SIZE_OPTIONS.map((size) => (
                 <SelectItem key={size} value={String(size)}>
-                  {size} per page
+                  {t("admin.dashboard.ragDocuments.perPage", { size })}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -196,9 +208,9 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
       <div className="grid grid-cols-1 items-start gap-5 max-md:gap-3 xl:grid-cols-[minmax(0,1fr)_390px]">
         <section className="border-ink-200 bg-card min-w-0 overflow-hidden rounded-xl border shadow-sm max-md:overflow-visible max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none">
           {documentsQuery.isPending ? (
-            <PanelMessage text="Loading RAG documents..." />
+            <PanelMessage text={t("admin.dashboard.ragDocuments.loadingDocuments")} />
           ) : documentsQuery.isError ? (
-            <PanelMessage text="Could not load RAG documents." />
+            <PanelMessage text={t("admin.dashboard.ragDocuments.loadError")} />
           ) : documentsQuery.data?.length && isPhone ? (
             <ul className="space-y-2">
               {visibleDocuments.map((document) => (
@@ -211,11 +223,11 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Document</TableHead>
-                  <TableHead>Version</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Chunks</TableHead>
-                  <TableHead>Updated</TableHead>
+                  <TableHead>{t("admin.dashboard.ragDocuments.thDocument")}</TableHead>
+                  <TableHead>{t("admin.dashboard.ragDocuments.thVersion")}</TableHead>
+                  <TableHead>{t("admin.dashboard.ragDocuments.thStatus")}</TableHead>
+                  <TableHead>{t("admin.dashboard.ragDocuments.thChunks")}</TableHead>
+                  <TableHead>{t("admin.dashboard.ragDocuments.thUpdated")}</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -231,7 +243,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
               </TableBody>
             </Table>
           ) : (
-            <PanelMessage text="No RAG documents match these filters." />
+            <PanelMessage text={t("admin.dashboard.ragDocuments.noMatch")} />
           )}
           {filteredDocuments.length > 0 && (
             <DocumentPagination
@@ -247,7 +259,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
         {isPhone ? (
           <Dialog open={Boolean(selectedId)} onOpenChange={(open) => !open && setSelectedId(null)}>
             <DialogContent className="grid-cols-[minmax(0,1fr)] p-4" aria-describedby={undefined}>
-              <DialogTitle className="sr-only">Document detail</DialogTitle>
+              <DialogTitle className="sr-only">{t("admin.dashboard.ragDocuments.dialogDetailTitle")}</DialogTitle>
               {detailPanel}
             </DialogContent>
           </Dialog>
@@ -269,14 +281,17 @@ const DocumentPagination = ({
   totalPages: number;
   onPrevious: () => void;
   onNext: () => void;
-}) => (
+}) => {
+  const { t } = useTranslation("common");
+
+  return (
   <div className="border-ink-100 bg-ink-50/50 flex items-center justify-between border-t px-4 py-3 max-md:border-t-0 max-md:bg-transparent max-md:px-0">
     <p className="text-ink-500 text-xs">
-      Page {page} of {totalPages}
+      {t("admin.dashboard.ragDocuments.pageOf", { page, totalPages })}
     </p>
     <div className="flex items-center gap-2">
       <Button type="button" variant="outline" size="sm" onClick={onPrevious} disabled={page === 1}>
-        <ChevronLeft className="size-3.5" /> Previous
+        <ChevronLeft className="size-3.5" /> {t("admin.dashboard.ragDocuments.previous")}
       </Button>
       <Button
         type="button"
@@ -285,14 +300,18 @@ const DocumentPagination = ({
         onClick={onNext}
         disabled={page === totalPages}
       >
-        Next <ChevronRight className="size-3.5" />
+        {t("admin.dashboard.ragDocuments.next")} <ChevronRight className="size-3.5" />
       </Button>
     </div>
   </div>
-);
+  );
+};
 
 /** A document on a phone: everything its table row shows, without the columns. */
-const DocumentCard = ({ document, onSelect }: { document: RagAdminDocument; onSelect: () => void }) => (
+const DocumentCard = ({ document, onSelect }: { document: RagAdminDocument; onSelect: () => void }) => {
+  const { t } = useTranslation("common");
+
+  return (
   <button type="button" onClick={onSelect} className="border-ink-200 bg-card w-full rounded-xl border p-3 text-left shadow-xs">
     <span className="flex items-start justify-between gap-2">
       <span className="min-w-0">
@@ -302,14 +321,18 @@ const DocumentCard = ({ document, onSelect }: { document: RagAdminDocument; onSe
       <StatusBadge status={document.status} />
     </span>
     <span className="border-ink-100 text-ink-500 mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px]">
-      <span className="min-w-0 truncate">{document.version || "Unversioned"} · {document.chunkCount} chunks</span>
+      <span className="min-w-0 truncate">
+        {document.version || t("admin.dashboard.ragDocuments.unversioned")} ·{" "}
+        {t("admin.dashboard.ragDocuments.chunksCount", { chunks: document.chunkCount })}
+      </span>
       <span className="flex shrink-0 items-center gap-1">
         {formatDate(document.updatedAt)}
         <ChevronRight className="text-ink-300 size-3.5" aria-hidden="true" />
       </span>
     </span>
   </button>
-);
+  );
+};
 
 const DocumentRow = ({
   document,
@@ -319,7 +342,10 @@ const DocumentRow = ({
   document: RagAdminDocument;
   isSelected: boolean;
   onSelect: () => void;
-}) => (
+}) => {
+  const { t } = useTranslation("common");
+
+  return (
   <TableRow className={cn("cursor-pointer", isSelected && "bg-ink-50")} onClick={onSelect}>
     <TableCell>
       <div className="max-w-[230px]">
@@ -329,7 +355,7 @@ const DocumentRow = ({
     </TableCell>
     <TableCell>
       <span className="text-ink-700 text-xs font-medium">
-        {document.version || "Unversioned"}
+        {document.version || t("admin.dashboard.ragDocuments.unversioned")}
       </span>
     </TableCell>
     <TableCell>
@@ -345,7 +371,8 @@ const DocumentRow = ({
       <ChevronRight className="text-ink-300 size-4" />
     </TableCell>
   </TableRow>
-);
+  );
+};
 
 const DocumentDetail = ({
   detail,
@@ -364,17 +391,18 @@ const DocumentDetail = ({
   onActivate: () => void;
   isActivating: boolean;
 }) => {
+  const { t } = useTranslation("common");
   const metadata = chunks[0]?.metadata ?? {};
   const viralScore = readNumber(metadata.viralScore);
   const favorites = readNumber(metadata.favorites);
   const views = readNumber(metadata.views);
   const matchedQuery = readString(metadata.niche);
   const qualityWarnings = [
-    !detail.sourceUrl ? "No source URL is attached." : null,
-    detail.title.trim().length < 12 ? "Title is very short." : null,
-    chunks.length === 0 ? "No chunks were generated." : null,
+    !detail.sourceUrl ? t("admin.dashboard.ragDocuments.warningNoUrl") : null,
+    detail.title.trim().length < 12 ? t("admin.dashboard.ragDocuments.warningShortTitle") : null,
+    chunks.length === 0 ? t("admin.dashboard.ragDocuments.warningNoChunks") : null,
     chunks.length > 0 && chunks.every((chunk) => chunk.content.trim().length < 80)
-      ? "Stored content is unusually short."
+      ? t("admin.dashboard.ragDocuments.warningShortContent")
       : null,
   ].filter((warning): warning is string => Boolean(warning));
 
@@ -392,7 +420,7 @@ const DocumentDetail = ({
                 href={detail.sourceUrl}
                 target="_blank"
                 rel="noreferrer"
-                aria-label="Open listing on Etsy"
+                aria-label={t("admin.dashboard.ragDocuments.openOnEtsy")}
               >
                 <ExternalLink className="size-4" />
               </a>
@@ -404,24 +432,24 @@ const DocumentDetail = ({
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <SignalCard
-          label="Trend score"
+          label={t("admin.dashboard.ragDocuments.signalTrendScore")}
           value={viralScore == null ? "—" : `${viralScore.toFixed(1)}/100`}
           tone="slate"
         />
         <SignalCard
-          label="Favorites"
+          label={t("admin.dashboard.ragDocuments.signalFavorites")}
           value={formatCompact(favorites)}
           icon={<Heart className="size-3.5" />}
           tone="rose"
         />
         <SignalCard
-          label="Views"
+          label={t("admin.dashboard.ragDocuments.signalViews")}
           value={formatCompact(views)}
           icon={<Eye className="size-3.5" />}
           tone="sky"
         />
         <SignalCard
-          label="Keyword"
+          label={t("admin.dashboard.ragDocuments.signalKeyword")}
           value={matchedQuery || "—"}
           icon={<Tag className="size-3.5" />}
           tone="slate"
@@ -429,12 +457,12 @@ const DocumentDetail = ({
       </div>
 
       <div className="border-ink-100 mt-4 grid grid-cols-2 gap-3 border-y py-4 text-xs">
-        <Meta label="Version" value={detail.version || "Unversioned"} />
-        <Meta label="Chunks" value={String(detail.chunkCount)} />
-        <Meta label="Type" value={detail.contentType} />
-        <Meta label="Language" value={detail.language} />
-        <Meta label="Created" value={formatDate(detail.createdAt)} />
-        <Meta label="Updated" value={formatDate(detail.updatedAt)} />
+        <Meta label={t("admin.dashboard.ragDocuments.metaVersion")} value={detail.version || t("admin.dashboard.ragDocuments.unversioned")} />
+        <Meta label={t("admin.dashboard.ragDocuments.metaChunks")} value={String(detail.chunkCount)} />
+        <Meta label={t("admin.dashboard.ragDocuments.metaType")} value={detail.contentType} />
+        <Meta label={t("admin.dashboard.ragDocuments.metaLanguage")} value={detail.language} />
+        <Meta label={t("admin.dashboard.ragDocuments.metaCreated")} value={formatDate(detail.createdAt)} />
+        <Meta label={t("admin.dashboard.ragDocuments.metaUpdated")} value={formatDate(detail.updatedAt)} />
       </div>
       {detail.ingestionError && (
         <div className="my-4 rounded-lg bg-rose-50 p-3 text-xs leading-5 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
@@ -444,7 +472,7 @@ const DocumentDetail = ({
       {qualityWarnings.length > 0 && (
         <div className="my-4 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
           <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300">
-            <AlertTriangle className="size-3.5" /> Quality checks
+            <AlertTriangle className="size-3.5" /> {t("admin.dashboard.ragDocuments.qualityChecks")}
           </div>
           <ul className="mt-2 space-y-1 text-[11px] leading-5 text-amber-700 dark:text-amber-300">
             {qualityWarnings.map((warning) => (
@@ -463,18 +491,20 @@ const DocumentDetail = ({
             onClick={onActivate}
             disabled={isActivating}
           >
-            <Check className="size-4" /> Activate this version
+            <Check className="size-4" /> {t("admin.dashboard.ragDocuments.activateVersion")}
           </Button>
         )}
       <div className="mt-5">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-ink-900 text-xs font-bold">Listing content</p>
+            <p className="text-ink-900 text-xs font-bold">{t("admin.dashboard.ragDocuments.listingContent")}</p>
             <p className="text-ink-400 mt-1 text-[11px]">
-              Expand a chunk to inspect the stored title, description, tags and signals.
+              {t("admin.dashboard.ragDocuments.expandChunkHint")}
             </p>
           </div>
-          <span className="text-ink-400 shrink-0 text-[10px]">{chunks.length} chunks</span>
+          <span className="text-ink-400 shrink-0 text-[10px]">
+            {t("admin.dashboard.ragDocuments.chunksCount", { chunks: chunks.length })}
+          </span>
         </div>
         <div className="mt-3 max-h-[430px] space-y-2 overflow-x-hidden overflow-y-auto pr-1 max-md:max-h-none max-md:pr-0">
           {chunks.map((chunk) => (
@@ -483,9 +513,9 @@ const DocumentDetail = ({
               className="group border-ink-200 bg-card rounded-lg border shadow-sm"
             >
               <summary className="text-ink-700 flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-xs font-semibold [&::-webkit-details-marker]:hidden">
-                Chunk {chunk.chunkIndex + 1}
+                {t("admin.dashboard.ragDocuments.chunkTitle", { number: chunk.chunkIndex + 1 })}
                 <span className="text-ink-400 ml-auto text-[10px] font-normal">
-                  {chunk.tokenCount} tokens
+                  {t("admin.dashboard.ragDocuments.tokens", { tokens: chunk.tokenCount })}
                 </span>
                 <span className="text-ink-300 transition-transform group-open:rotate-90">›</span>
               </summary>
@@ -529,6 +559,7 @@ const SignalCard = ({
 
 const CopyButton = ({ value }: { value: string }) => {
   const [copied, setCopied] = useState(false);
+  const { t } = useTranslation("common");
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(value);
@@ -541,12 +572,16 @@ const CopyButton = ({ value }: { value: string }) => {
   return (
     <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-[10px]" onClick={copy}>
       <Clipboard className="mr-1 size-3" />
-      {copied ? "Copied" : "Copy"}
+      {copied ? t("admin.dashboard.ragDocuments.copied") : t("admin.dashboard.ragDocuments.copy")}
     </Button>
   );
 };
 
-const StatusBadge = ({ status }: { status: RagAdminDocument["status"] }) => (
+const StatusBadge = ({ status }: { status: RagAdminDocument["status"] }) => {
+  const { t } = useTranslation("common");
+  const labelKey = STATUS_LABEL_KEYS[status];
+
+  return (
   <Badge
     variant={status === "ready" ? "default" : status === "failed" ? "destructive" : "outline"}
     className={cn(
@@ -556,9 +591,10 @@ const StatusBadge = ({ status }: { status: RagAdminDocument["status"] }) => (
       status === "superseded" && "text-ink-500"
     )}
   >
-    {status}
+    {labelKey ? t(labelKey) : status}
   </Badge>
-);
+  );
+};
 const Meta = ({ label, value }: { label: string; value: string }) => (
   <div>
     <p className="text-ink-400 text-[10px] font-semibold tracking-wide uppercase">{label}</p>

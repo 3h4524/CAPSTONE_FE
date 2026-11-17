@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Ruler, Trash2, Unlink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   adminPrintifyKeys,
@@ -36,6 +37,7 @@ type PrintifySettingsDialogProps = {
 
 /** What a template linked to Printify is pushed with, its blueprint's colors, and its other sides. */
 export const PrintifySettingsDialog = ({ template, onOpenChange }: PrintifySettingsDialogProps) => {
+  const { t } = useTranslation("common");
   const [measuring, setMeasuring] = useState(false);
   const linked = template?.printify ?? null;
 
@@ -44,9 +46,17 @@ export const PrintifySettingsDialog = ({ template, onOpenChange }: PrintifySetti
       <Dialog open={template !== null && !measuring} onOpenChange={onOpenChange}>
         <DialogContent className="flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0">
           <DialogHeader className="border-b px-5 py-3.5 pr-12 text-left">
-            <DialogTitle>Printify settings</DialogTitle>
+            <DialogTitle>{t("admin.mockups.shared.printifySettings")}</DialogTitle>
             <DialogDescription>
-              {linked ? `${template?.name}: ${linked.blueprintTitle}${linked.printProviderTitle ? ` by ${linked.printProviderTitle}` : ""}.` : null}
+              {linked
+                ? linked.printProviderTitle
+                  ? t("admin.mockups.settingsDialog.descriptionWithProvider", {
+                      name: template?.name,
+                      blueprint: linked.blueprintTitle,
+                      provider: linked.printProviderTitle,
+                    })
+                  : t("admin.mockups.settingsDialog.description", { name: template?.name, blueprint: linked.blueprintTitle })
+                : null}
             </DialogDescription>
           </DialogHeader>
           {template && linked && (
@@ -60,6 +70,7 @@ export const PrintifySettingsDialog = ({ template, onOpenChange }: PrintifySetti
 };
 
 const SettingsBody = ({ template, onMeasure, onUnlinked }: { template: MockupTemplate; onMeasure: () => void; onUnlinked: () => void }) => {
+  const { t } = useTranslation("common");
   const linked = template.printify!;
   const queryClient = useQueryClient();
   const openPopup = usePopupStore((state) => state.openPopup);
@@ -89,39 +100,39 @@ const SettingsBody = ({ template, onMeasure, onUnlinked }: { template: MockupTem
       }),
     onSuccess: async () => {
       await refreshTemplates();
-      showToast("success", "The default sizes were saved.");
+      showToast("success", t("admin.mockups.settingsDialog.sizesSavedToast"));
     },
   });
   const unlink = useMutation({
     mutationFn: () => unlinkMockupTemplatePrintify(template.id),
     onSuccess: async () => {
       await refreshTemplates();
-      showToast("success", `${template.name} is no longer linked to Printify.`);
+      showToast("success", t("admin.mockups.settingsDialog.unlinkedToast", { name: template.name }));
       onUnlinked();
     },
   });
 
   const askUnlink = () =>
     openPopup({
-      title: `Unlink ${template.name} from Printify?`,
-      description: "It stays, with its photos, as an ordinary template: its print area and colors can then be changed freely, and it is not offered for Printify products.",
-      positiveLabel: "Unlink",
+      title: t("admin.mockups.settingsDialog.unlinkTitle", { name: template.name }),
+      description: t("admin.mockups.settingsDialog.unlinkDescription"),
+      positiveLabel: t("admin.mockups.shared.unlink"),
       onPositive: () => unlink.mutate(),
     });
 
   return (
     <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-4">
       <section className="space-y-2">
-        <h3 className="text-ink-900 text-sm font-medium">Default sizes</h3>
+        <h3 className="text-ink-900 text-sm font-medium">{t("admin.mockups.shared.defaultSizes")}</h3>
         {catalog.data ? (
           <ChipGroup
-            label="Sizes"
+            label={t("admin.mockups.shared.sizes")}
             options={catalog.data.sizes}
             selected={sizes}
             onToggle={(size) => setSizes((current) => (current.includes(size) ? current.filter((item) => item !== size) : [...current, size]))}
           />
         ) : (
-          <p className="text-muted-foreground text-xs">{catalog.isError ? getErrorMessage(catalog.error) : "Reading the provider’s sizes…"}</p>
+          <p className="text-muted-foreground text-xs">{catalog.isError ? getErrorMessage(catalog.error) : t("admin.mockups.settingsDialog.readingSizes")}</p>
         )}
         {saveSizes.isError && (
           <p role="alert" className="text-sm text-red-600">
@@ -129,16 +140,16 @@ const SettingsBody = ({ template, onMeasure, onUnlinked }: { template: MockupTem
           </p>
         )}
         <Button type="button" size="sm" variant="outline" disabled={sizes.length === 0 || saveSizes.isPending} onClick={() => saveSizes.mutate()}>
-          {saveSizes.isPending ? "Saving…" : "Save sizes"}
+          {saveSizes.isPending ? t("admin.mockups.shared.saving") : t("admin.mockups.settingsDialog.saveSizes")}
         </Button>
       </section>
 
       <section className="space-y-2">
-        <h3 className="text-ink-900 text-sm font-medium">Sides and colors from Printify</h3>
-        <p className="text-muted-foreground text-xs">Add the back or a sleeve, photograph one again, or measure more colors. The server reads them on Printify, as it did for this template.</p>
+        <h3 className="text-ink-900 text-sm font-medium">{t("admin.mockups.settingsDialog.sideColorsTitle")}</h3>
+        <p className="text-muted-foreground text-xs">{t("admin.mockups.settingsDialog.sideColorsDescription")}</p>
         <Button type="button" size="sm" variant="outline" onClick={onMeasure}>
           <Ruler aria-hidden="true" />
-          Measure sides or colors
+          {t("admin.mockups.settingsDialog.measureSidesOrColors")}
         </Button>
       </section>
 
@@ -152,7 +163,7 @@ const SettingsBody = ({ template, onMeasure, onUnlinked }: { template: MockupTem
         )}
         <Button type="button" size="sm" variant="ghost" className="text-red-600 hover:text-red-700" disabled={unlink.isPending} onClick={askUnlink}>
           <Unlink aria-hidden="true" />
-          Unlink from Printify
+          {t("admin.mockups.settingsDialog.unlinkFromPrintify")}
         </Button>
       </section>
     </div>
@@ -161,6 +172,7 @@ const SettingsBody = ({ template, onMeasure, onUnlinked }: { template: MockupTem
 
 /** The blueprint's garment colors, as every template of it recolors its white photo. */
 const ColorTable = ({ blueprintId, catalogColors }: { blueprintId: number; catalogColors: string[] }) => {
+  const { t } = useTranslation("common");
   const queryClient = useQueryClient();
   const colors = useQuery({ queryKey: adminPrintifyKeys.colors(blueprintId), queryFn: () => listPrintifyColors(blueprintId) });
   const [newName, setNewName] = useState("");
@@ -185,21 +197,21 @@ const ColorTable = ({ blueprintId, catalogColors }: { blueprintId: number; catal
 
   return (
     <section className="space-y-2">
-      <h3 className="text-ink-900 text-sm font-medium">Colors of this blueprint</h3>
-      <p className="text-muted-foreground text-xs">Every template of this blueprint uses them. The hex recolors the white photo; a shared color is used when the blueprint has none of its own.</p>
+      <h3 className="text-ink-900 text-sm font-medium">{t("admin.mockups.settingsDialog.colorsTitle")}</h3>
+      <p className="text-muted-foreground text-xs">{t("admin.mockups.settingsDialog.colorsDescription")}</p>
       {colors.isError && <p className="text-sm text-red-600">{getErrorMessage(colors.error)}</p>}
       <ul className="divide-y rounded-md border">
         {(colors.data ?? []).map((row) => (
           <ColorRow key={row.id} row={row} busy={save.isPending || remove.isPending} onSave={(hex) => save.mutate({ name: row.name, hex })} onDelete={() => remove.mutate(row.id)} />
         ))}
-        {colors.data?.length === 0 && <li className="text-muted-foreground px-3 py-2 text-sm">No colors yet.</li>}
+        {colors.data?.length === 0 && <li className="text-muted-foreground px-3 py-2 text-sm">{t("admin.mockups.settingsDialog.noColorsYet")}</li>}
       </ul>
       <div className="flex flex-wrap items-end gap-2">
         <div className="min-w-40 flex-1 space-y-1">
-          <Label htmlFor="printify-color-name">Add a color</Label>
+          <Label htmlFor="printify-color-name">{t("admin.mockups.settingsDialog.addAColor")}</Label>
           <Select value={newName} onValueChange={(value) => setNewName(value ?? "")}>
             <SelectTrigger id="printify-color-name" className="w-full">
-              <SelectValue placeholder="Printify color" />
+              <SelectValue placeholder={t("admin.mockups.settingsDialog.printifyColorPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {addable.map((color) => (
@@ -211,12 +223,12 @@ const ColorTable = ({ blueprintId, catalogColors }: { blueprintId: number; catal
           </Select>
         </div>
         <div className="w-28 space-y-1">
-          <Label htmlFor="printify-color-hex">Hex</Label>
+          <Label htmlFor="printify-color-hex">{t("admin.mockups.settingsDialog.hexLabel")}</Label>
           <Input id="printify-color-hex" value={newHex} placeholder="#232424" maxLength={7} onChange={(event) => setNewHex(event.target.value.trim())} />
         </div>
         <Button type="button" size="sm" disabled={!newName || !HEX.test(newHex) || save.isPending} onClick={() => save.mutate({ name: newName, hex: newHex })}>
           <Plus aria-hidden="true" />
-          Add
+          {t("admin.mockups.settingsDialog.add")}
         </Button>
       </div>
       {(save.isError || remove.isError) && (
@@ -229,6 +241,7 @@ const ColorTable = ({ blueprintId, catalogColors }: { blueprintId: number; catal
 };
 
 const ColorRow = ({ row, busy, onSave, onDelete }: { row: PrintifyColorRow; busy: boolean; onSave: (hex: string) => void; onDelete: () => void }) => {
+  const { t } = useTranslation("common");
   const [hex, setHex] = useState(row.hex);
   const changed = hex.toUpperCase() !== row.hex.toUpperCase();
   return (
@@ -237,18 +250,18 @@ const ColorRow = ({ row, busy, onSave, onDelete }: { row: PrintifyColorRow; busy
       <span className="text-ink-900 min-w-0 flex-1 truncate">{row.name}</span>
       {row.shared ? (
         <>
-          <Badge variant="outline">Shared</Badge>
+          <Badge variant="outline">{t("admin.mockups.settingsDialog.sharedBadge")}</Badge>
           <span className="text-muted-foreground font-mono text-xs">{row.hex}</span>
         </>
       ) : (
         <>
-          <Input aria-label={`${row.name} hex`} value={hex} maxLength={7} className="h-8 w-24 font-mono text-xs" onChange={(event) => setHex(event.target.value.trim())} />
+          <Input aria-label={t("admin.mockups.settingsDialog.hexAria", { name: row.name })} value={hex} maxLength={7} className="h-8 w-24 font-mono text-xs" onChange={(event) => setHex(event.target.value.trim())} />
           {changed && (
             <Button type="button" size="sm" variant="outline" disabled={busy || !HEX.test(hex)} onClick={() => onSave(hex)}>
-              Save
+              {t("admin.mockups.shared.save")}
             </Button>
           )}
-          <Button type="button" size="sm" variant="ghost" aria-label={`Delete ${row.name}`} disabled={busy} onClick={onDelete}>
+          <Button type="button" size="sm" variant="ghost" aria-label={t("admin.mockups.settingsDialog.deleteAria", { name: row.name })} disabled={busy} onClick={onDelete}>
             <Trash2 aria-hidden="true" />
           </Button>
         </>

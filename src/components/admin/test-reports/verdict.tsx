@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, CheckCircle2, FlaskConical, Loader2, OctagonAlert } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { RunTook } from "@/components/admin/test-reports/run-took";
 import type { TestReportRun } from "@/types/admin-test-reports";
@@ -30,22 +31,21 @@ const VERDICT_STYLES = {
 } as const;
 
 export const TestReportVerdict = ({ run }: TestReportVerdictProps) => {
+  const { t } = useTranslation("common");
   const style = VERDICT_STYLES[run.status];
   const unexpectedFailedCount = run.unexpectedFailedTests;
 
   const title =
-    run.status === "running" ? (
-      "The suite is running"
-    ) : run.status === "error" ? (
-      "The run broke before it could report"
-    ) : run.failedTests > 0 ? (
-      <>
-        {unexpectedFailedCount} of {run.failedTests} failed test
-        {run.failedTests === 1 ? "" : "s"} need a look
-      </>
-    ) : (
-      <>Every test passed</>
-    );
+    run.status === "running"
+      ? t("admin.testReports.verdict.runningTitle")
+      : run.status === "error"
+        ? t("admin.testReports.verdict.errorTitle")
+        : run.failedTests > 0
+          ? t("admin.testReports.verdict.failedTitle", {
+              unexpected: unexpectedFailedCount,
+              count: run.failedTests,
+            })
+          : t("admin.testReports.verdict.passedTitle");
 
   return (
     <section className={cn("overflow-hidden rounded-xl border", style.frame)}>
@@ -72,26 +72,34 @@ export const TestReportVerdict = ({ run }: TestReportVerdictProps) => {
             <p className="text-ink-500 mt-1 text-xs">
               {run.status === "running" ? (
                 <>
-                  The Playwright suite is going on this machine — took{" "}
-                  <RunTook run={run} /> so far. This page follows the live state and
-                  flips as soon as the run lands.
+                  {t("admin.testReports.verdict.runningDescriptionBefore")} <RunTook run={run} />{" "}
+                  {t("admin.testReports.verdict.runningDescriptionAfter")}
                 </>
               ) : run.status === "error" ? (
-                <>
-                  The command behind this run failed without a report — its log tail is pinned at
-                  the top of this page.
-                </>
+                <>{t("admin.testReports.verdict.errorDescription")}</>
               ) : run.status === "failed" ? (
-                <>
-                  The report below lists every test that went red, the file it lives in and the
-                  error the runner captured.
-                </>
+                <>{t("admin.testReports.verdict.failedDescription")}</>
               ) : (
                 <>
-                  {run.totalTests} tests over {run.fileCount} spec files
-                  {run.flakyTests > 0 && ` · ${run.flakyTests} flaky`}
-                  {run.skippedTests > 0 && ` · ${run.skippedTests} skipped`}
-                  {` · ${Math.round(run.durationMs / 1000)}s`}
+                  {t("admin.testReports.verdict.passedDescription", {
+                    count: run.totalTests,
+                    fileCount: run.fileCount,
+                  })}
+                  {run.flakyTests > 0 && (
+                    <>
+                      {" · "}
+                      {t("admin.testReports.verdict.flakySuffix", { count: run.flakyTests })}
+                    </>
+                  )}
+                  {run.skippedTests > 0 && (
+                    <>
+                      {" · "}
+                      {t("admin.testReports.verdict.skippedSuffix", { count: run.skippedTests })}
+                    </>
+                  )}
+                  {` · ${t("admin.testReports.verdict.durationSuffix", {
+                    value: Math.round(run.durationMs / 1000),
+                  })}`}
                 </>
               )}
             </p>
@@ -102,10 +110,12 @@ export const TestReportVerdict = ({ run }: TestReportVerdictProps) => {
           <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/80 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
             <FlaskConical className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
-              <span className="font-bold">{run.knownIssueTests} failures</span> are the tests
-              that pin a known gap (<span className="font-mono">BUG B…</span>). They fail while
-              the gap is there and go red again once the gap is fixed — the fix is to drop those
-              specs, not to chase them.
+              <span className="font-bold">
+                {t("admin.testReports.verdict.knownIssueLead", { count: run.knownIssueTests })}
+              </span>{" "}
+              {t("admin.testReports.verdict.knownIssueBefore")}
+              <span className="font-mono">BUG B…</span>
+              {t("admin.testReports.verdict.knownIssueAfter")}
             </p>
           </div>
         )}

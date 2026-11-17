@@ -10,6 +10,7 @@ import {
   Layers,
   TrendingDown,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Card } from "@/components/ui/card";
 import {
@@ -78,6 +79,7 @@ export function FinancialAlertsCard({
   onReview,
 }: FinancialAlertsCardProps) {
   const [showAll, setShowAll] = useState(false);
+  const { t } = useTranslation("common");
   const userId = useAuthStore((s) => s.user?.id);
   // null until read from storage, so the badge never flashes for alerts already seen.
   const [seen, setSeen] = useState<SeenAlerts | null>(null);
@@ -112,13 +114,13 @@ export function FinancialAlertsCard({
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
             <Bell className="h-5 w-5" />
           </div>
-          <h3 className="text-ink-900 text-sm font-bold dark:text-slate-100">Financial Alerts</h3>
+          <h3 className="text-ink-900 text-sm font-bold dark:text-slate-100">{t("admin.revenue.financialAlerts.title")}</h3>
           {unseenCount > 0 && (
             <span
-              title={`${unseenCount} new alert${unseenCount === 1 ? "" : "s"} — open View all to mark as read`}
+              title={t("admin.revenue.financialAlerts.newAlert", { count: unseenCount })}
               className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] leading-none font-bold text-white"
             >
-              {unseenCount} new
+              {t("admin.revenue.financialAlerts.newCount", { count: unseenCount })}
             </span>
           )}
         </div>
@@ -129,7 +131,7 @@ export function FinancialAlertsCard({
             onClick={openAll}
             className="phone-hit-area text-ink-400 hover:text-ink-700 cursor-pointer text-xs font-semibold transition-colors dark:hover:text-slate-200"
           >
-            View all ({list.length})
+            {t("admin.revenue.financialAlerts.viewAll", { count: list.length })}
           </button>
         )}
       </div>
@@ -146,7 +148,7 @@ export function FinancialAlertsCard({
             </div>
           ))
         ) : list.length === 0 ? (
-          <p className="text-ink-400 py-6 text-center text-xs">No alert data for this period.</p>
+          <p className="text-ink-400 py-6 text-center text-xs">{t("admin.revenue.financialAlerts.empty")}</p>
         ) : (
           list
             .slice(0, VISIBLE_ALERTS)
@@ -159,9 +161,9 @@ export function FinancialAlertsCard({
       <Dialog open={showAll} onOpenChange={setShowAll}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Financial Alerts</DialogTitle>
+            <DialogTitle>{t("admin.revenue.financialAlerts.title")}</DialogTitle>
             <DialogDescription>
-              Every alert raised for the selected period, most urgent first. New ones are marked with a dot.
+              {t("admin.revenue.financialAlerts.dialogDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="flex max-h-[60vh] flex-col gap-4 overflow-y-auto pr-1">
@@ -189,6 +191,7 @@ function AlertItem({
   isNew?: boolean;
   onReview: (status: TransactionStatus) => void;
 }) {
+  const { t } = useTranslation("common");
   const style = ALERT_STYLE[alert.type] ?? ALERT_STYLE.info;
   const Icon = style.icon;
 
@@ -200,7 +203,7 @@ function AlertItem({
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2 max-md:flex-wrap">
           <h4 className={`flex items-center gap-1.5 text-xs leading-tight font-bold ${style.title}`}>
-            {isNew && <span aria-label="New" className="size-1.5 shrink-0 rounded-full bg-rose-500" />}
+            {isNew && <span aria-label={t("admin.revenue.financialAlerts.newDotAria")} className="size-1.5 shrink-0 rounded-full bg-rose-500" />}
             {alert.title}
           </h4>
           <span className="text-ink-400 shrink-0 text-[10px] font-medium max-md:max-w-full max-md:shrink max-md:wrap-anywhere dark:text-slate-500">{alert.scope}</span>
@@ -224,7 +227,7 @@ function AlertItem({
                 onClick={() => onReview(alert.actionStatus!)}
                 className="flex shrink-0 cursor-pointer items-center gap-0.5 text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400"
               >
-                Review
+                {t("admin.revenue.financialAlerts.review")}
                 <ArrowRight className="size-3" />
               </button>
             )}

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { TFunction } from "i18next";
 import { Layers, X } from "lucide-react";
 import { Controller, useForm, useWatch } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import {
   type FeaturePicks,
@@ -45,9 +47,9 @@ type PlanFormDialogProps = {
   onClose: () => void;
 };
 
-const chargedVnd = (priceUsd: number | undefined, rate: number | null) =>
+const chargedVnd = (priceUsd: number | undefined, rate: number | null, t: TFunction) =>
   rate !== null && typeof priceUsd === "number" && Number.isFinite(priceUsd)
-    ? `≈ ${formatVnd(usdToVnd(priceUsd, rate))} charged via PayOS`
+    ? t("admin.plans.form.chargedViaPayos", { amount: formatVnd(usdToVnd(priceUsd, rate)) })
     : null;
 
 // The old quota columns and the API key, white-label and priority support switches are kept as they
@@ -99,6 +101,7 @@ const toFormValues = (plan: AdminSubscriptionPlan | null): SubscriptionPlanFormV
     : EMPTY_VALUES;
 
 export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: PlanFormDialogProps) {
+  const { t } = useTranslation("common");
   const isEditing = plan !== null;
   // A new plan's features come from the catalog, as the Admin set it up.
   const { data: catalog = [] } = useAdminFeatures();
@@ -122,8 +125,8 @@ export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: Pla
     control,
     name: ["monthlyPriceUsd", "annualPriceUsd"],
   });
-  const monthlyCharged = chargedVnd(monthlyPriceUsd, usdToVndRate);
-  const annualCharged = chargedVnd(annualPriceUsd, usdToVndRate);
+  const monthlyCharged = chargedVnd(monthlyPriceUsd, usdToVndRate, t);
+  const annualCharged = chargedVnd(annualPriceUsd, usdToVndRate, t);
 
   useEffect(() => {
     if (open) {
@@ -171,13 +174,13 @@ export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: Pla
           </div>
           <div className="space-y-1">
             <p className="text-ink-500 text-[10px] font-bold tracking-[0.16em]">
-              {isEditing ? "EDIT PLAN" : "NEW PLAN"}
+              {isEditing ? t("admin.plans.form.editPlanEyebrow") : t("admin.plans.form.newPlanEyebrow")}
             </p>
             <DialogTitle className="font-display text-xl tracking-[-0.02em]">
-              {isEditing ? `Edit ${plan.name}` : "Create New Subscription Plan"}
+              {isEditing ? t("admin.plans.form.editPlanTitle", { name: plan.name }) : t("admin.plans.form.createPlanTitle")}
             </DialogTitle>
             <DialogDescription className="leading-5">
-              Configure tiers, limits, and feature access for a billing cycle.
+              {t("admin.plans.form.description")}
             </DialogDescription>
           </div>
           <Button
@@ -186,7 +189,7 @@ export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: Pla
             size="icon"
             className="text-ink-500 hover:bg-ink-100 absolute top-4 right-4 size-10 rounded-lg hover:translate-y-0"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("admin.plans.shared.close")}
           >
             <X aria-hidden="true" />
           </Button>
@@ -195,14 +198,14 @@ export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: Pla
         <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <div className="space-y-6 px-5 py-3 sm:px-6">
-              <FormSection title="Basic information">
-                <Field label="Plan name" htmlFor="plan-name" error={errors.name?.message}>
+              <FormSection title={t("admin.plans.form.sectionBasic")}>
+                <Field label={t("admin.plans.form.planName")} htmlFor="plan-name" error={errors.name?.message}>
                   <Input id="plan-name" aria-invalid={Boolean(errors.name)} {...register("name")} />
                 </Field>
-                <Field label="Tier slug" htmlFor="plan-tier" error={errors.tier?.message}>
+                <Field label={t("admin.plans.shared.tierSlug")} htmlFor="plan-tier" error={errors.tier?.message}>
                   <Input
                     id="plan-tier"
-                    placeholder="e.g. creator"
+                    placeholder={t("admin.plans.form.tierPlaceholder")}
                     disabled={isEditing}
                     aria-invalid={Boolean(errors.tier)}
                     {...register("tier")}
@@ -223,13 +226,13 @@ export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: Pla
                   />
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Monthly price (USD)" htmlFor="plan-monthly-price" error={errors.monthlyPriceUsd?.message}>
+                    <Field label={t("admin.plans.form.monthlyPriceUsd")} htmlFor="plan-monthly-price" error={errors.monthlyPriceUsd?.message}>
                       <Input
                         id="plan-monthly-price"
                         type="number"
                         step="0.01"
                         min={0}
-                        placeholder="e.g. 9.99"
+                        placeholder={t("admin.plans.form.monthlyPlaceholder")}
                         aria-invalid={Boolean(errors.monthlyPriceUsd)}
                         {...register("monthlyPriceUsd", { valueAsNumber: true })}
                       />
@@ -237,67 +240,62 @@ export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: Pla
                     </Field>
                     {isEditing && (
                       <p className="text-ink-400 text-[11px] leading-relaxed sm:col-span-2">
-                        A new price applies to new purchases and renewals; a period already paid keeps its price.
+                        {t("admin.plans.form.priceAppliesNote")}
                       </p>
                     )}
-                    <Field label="Annual price (USD)" htmlFor="plan-annual-price" error={errors.annualPriceUsd?.message}>
+                    <Field label={t("admin.plans.form.annualPriceUsd")} htmlFor="plan-annual-price" error={errors.annualPriceUsd?.message}>
                       <Input
                         id="plan-annual-price"
                         type="number"
                         step="0.01"
                         min={0}
-                        placeholder="Optional, e.g. 99.99"
+                        placeholder={t("admin.plans.form.annualPlaceholder")}
                         aria-invalid={Boolean(errors.annualPriceUsd)}
                         {...register("annualPriceUsd", { setValueAs: (v) => (v === "" ? undefined : Number(v)) })}
                       />
                       <p className="text-ink-400 mt-1 text-[11px]">
-                        {annualCharged ?? "Leave empty to offer monthly billing only"}
+                        {annualCharged ?? t("admin.plans.form.monthlyBillingOnly")}
                       </p>
                     </Field>
                   </div>
                 )}
-                <Field label="Description" htmlFor="plan-description" error={errors.description?.message}>
+                <Field label={t("admin.plans.shared.description")} htmlFor="plan-description" error={errors.description?.message}>
                   <Textarea id="plan-description" className="min-h-20" {...register("description")} />
                 </Field>
               </FormSection>
 
               {/* Plans differ by feature, not by monthly quota, so only the speed limits are set here. */}
-              <FormSection title="Run limits">
+              <FormSection title={t("admin.plans.form.runLimits")}>
                 <p className="text-muted-foreground -mt-1 text-xs">
-                  These set how fast a Seller can work, not how much. Use -1 for no limit.
+                  {t("admin.plans.form.runLimitsHint")}
                 </p>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <NumberField label="Products per run" htmlFor="plan-max-batch-size" name="maxBatchSize" register={register} error={errors.maxBatchSize?.message} />
-                  <NumberField label="Design jobs at once" htmlFor="plan-max-concurrent-jobs" name="maxConcurrentJobs" register={register} error={errors.maxConcurrentJobs?.message} />
+                  <NumberField label={t("admin.plans.compare.productsPerRun")} htmlFor="plan-max-batch-size" name="maxBatchSize" register={register} error={errors.maxBatchSize?.message} />
+                  <NumberField label={t("admin.plans.compare.designJobsAtOnce")} htmlFor="plan-max-concurrent-jobs" name="maxConcurrentJobs" register={register} error={errors.maxConcurrentJobs?.message} />
                 </div>
               </FormSection>
 
               {isEditing ? (
                 <p className="bg-ink-50 text-ink-500 rounded-xl px-4 py-3 text-xs leading-relaxed">
-                  Features and limits are changed on the plan card, so current subscribers keep what they paid for until
-                  their period ends.
+                  {t("admin.plans.form.featuresOnCardNote")}
                 </p>
               ) : (
-                <FormSection title="Features">
+                <FormSection title={t("admin.plans.form.featuresSection")}>
                   <PlanFeaturePicker catalog={catalog} plans={plans} picks={picks} onChange={setPicks} />
                   {!picksValid && (
                     <p role="alert" className="text-destructive text-xs">
-                      Each limit must be a whole number from 0 to 10,000, or empty for no limit.
+                      {t("admin.plans.form.limitInvalid")}
                     </p>
                   )}
                 </FormSection>
               )}
 
-              <FormSection title="Sale">
+              <FormSection title={t("admin.plans.form.sale")}>
                 <ToggleField
                   control={control}
                   name="isActive"
-                  label="On sale"
-                  description={
-                    isEditing
-                      ? "Sellers can buy it. Taking it off sale keeps current subscribers on it."
-                      : "Leave off until you have checked the new plan; Sellers cannot buy it until then."
-                  }
+                  label={t("admin.plans.form.onSale")}
+                  description={isEditing ? t("admin.plans.form.onSaleEditing") : t("admin.plans.form.onSaleCreating")}
                 />
               </FormSection>
             </div>
@@ -305,11 +303,11 @@ export function PlanFormDialog({ open, plan, usdToVndRate, plans, onClose }: Pla
 
           <div className="border-ink-100 bg-card flex shrink-0 justify-end gap-2 border-t px-5 pt-4 pb-6 sm:px-6">
             <Button type="button" variant="outline" className="border-ink-300 hover:border-ink-400 min-h-11 px-5 hover:translate-y-0" onClick={onClose} disabled={isPending}>
-              Cancel
+              {t("admin.plans.shared.cancel")}
             </Button>
             <Button type="submit" className="min-h-11 px-5" disabled={isPending}>
               {isPending ? <Spinner aria-hidden="true" /> : null}
-              {isEditing ? "Save changes" : "Create plan"}
+              {isEditing ? t("admin.plans.shared.saveChanges") : t("admin.plans.form.createPlan")}
             </Button>
           </div>
         </form>
@@ -341,15 +339,16 @@ function VndPriceSection({
   monthlyCharged: string | null;
   annualCharged: string | null;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <Field label="Monthly price (VND)" htmlFor="plan-monthly-price" error={monthlyError}>
+      <Field label={t("admin.plans.form.monthlyPriceVnd")} htmlFor="plan-monthly-price" error={monthlyError}>
         <Input
           id="plan-monthly-price"
           type="number"
           step="1"
           min={0}
-          placeholder="e.g. 249750"
+          placeholder={t("admin.plans.form.monthlyVndPlaceholder")}
           aria-invalid={monthlyInvalid}
           {...register("monthlyPriceVnd", {
             valueAsNumber: true,
@@ -367,16 +366,16 @@ function VndPriceSection({
       </Field>
       {isEditing && (
         <p className="text-ink-400 text-[11px] leading-relaxed sm:col-span-2">
-          A new price applies to new purchases and renewals; a period already paid keeps its price.
+          {t("admin.plans.form.priceAppliesNote")}
         </p>
       )}
-      <Field label="Annual price (VND)" htmlFor="plan-annual-price" error={annualError}>
+      <Field label={t("admin.plans.form.annualPriceVnd")} htmlFor="plan-annual-price" error={annualError}>
         <Input
           id="plan-annual-price"
           type="number"
           step="1"
           min={0}
-          placeholder="Optional, e.g. 2497500"
+          placeholder={t("admin.plans.form.annualVndPlaceholder")}
           aria-invalid={annualInvalid}
           {...register("annualPriceVnd", {
             setValueAs: (v) => (v === "" ? undefined : Number(v)),
@@ -390,7 +389,7 @@ function VndPriceSection({
           })}
         />
         <p className="text-ink-400 mt-1 text-[11px]">
-          {annualCharged ?? "Leave empty to offer monthly billing only"}
+          {annualCharged ?? t("admin.plans.form.monthlyBillingOnly")}
         </p>
       </Field>
     </div>

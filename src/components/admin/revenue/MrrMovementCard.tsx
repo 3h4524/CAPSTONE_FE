@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { BarChart3,ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Bar,
   BarChart,
@@ -32,15 +33,26 @@ interface MrrMovementCardProps {
   aiReview?: PlanAiReviewResponse;
 }
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_KEYS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"] as const;
 
-const shortDate = (iso: string) => {
-  const [, month, day] = iso.split("-").map(Number);
-  return `${MONTHS[month - 1]} ${day}`;
+const CAUSE_KEYS = ["new", "expansion", "contraction", "churn"] as const;
+
+const BRIDGE_ROW_LABEL_KEYS: Record<string, string> = {
+  New: "admin.revenue.mrrMovement.causes.new",
+  "Moved in": "admin.revenue.mrrMovement.causes.movedIn",
+  Expansion: "admin.revenue.mrrMovement.causes.expansion",
+  Contraction: "admin.revenue.mrrMovement.causes.contraction",
+  "Moved out": "admin.revenue.mrrMovement.causes.movedOut",
+  Churn: "admin.revenue.mrrMovement.causes.churn",
 };
 
 export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview }: MrrMovementCardProps) {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
+  const shortDate = (iso: string) => {
+    const [, month, day] = iso.split("-").map(Number);
+    return t("admin.revenue.common.dayMonth", { month: t(`admin.revenue.common.months.${MONTH_KEYS[month - 1]}`), day });
+  };
   // A phone shows the chart first and keeps the per-plan breakdown folded.
   const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
   const showsBreakdown = !isPhone || isBreakdownOpen;
@@ -49,14 +61,14 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
   const months = useMemo(
     () =>
       (data?.months ?? []).map((month) => ({
-        label: MONTHS[Number(month.monthStart.slice(5, 7)) - 1],
+        label: t(`admin.revenue.common.months.${MONTH_KEYS[Number(month.monthStart.slice(5, 7)) - 1]}`),
         new: month.new,
         expansion: month.expansion,
         contraction: -month.contraction,
         churn: -month.churn,
         net: month.net,
       })),
-    [data?.months]
+    [data?.months, t]
   );
 
   if (isLoading || !data) {
@@ -84,17 +96,17 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
             <BarChart3 className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-ink-900 text-sm font-bold dark:text-slate-100">MRR Movement</h3>
+            <h3 className="text-ink-900 text-sm font-bold dark:text-slate-100">{t("admin.revenue.mrrMovement.title")}</h3>
             <p className="text-ink-400 text-[11px] font-medium dark:text-slate-500">
-              Where monthly recurring revenue came from and where it went
+              {t("admin.revenue.mrrMovement.subtitle")}
             </p>
           </div>
         </div>
         <div className="text-ink-600 flex flex-wrap items-center gap-3 text-[11px] font-medium dark:text-slate-300">
-          {(["new", "expansion", "contraction", "churn"] as const).map((key) => (
-            <span key={key} className="flex items-center gap-1.5 capitalize">
+          {CAUSE_KEYS.map((key) => (
+            <span key={key} className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: COLORS[key] }} />
-              {key}
+              {t(`admin.revenue.mrrMovement.causes.${key}`)}
             </span>
           ))}
         </div>
@@ -104,7 +116,7 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
         {/* Six months of movement */}
         <div className="flex min-w-0 flex-3 flex-col gap-2">
           <span className="text-ink-500 text-[11px] font-semibold dark:text-slate-400">
-            6 months ending {chartEnd}
+            {t("admin.revenue.mrrMovement.sixMonthsEnding", { date: chartEnd })}
           </span>
           <div className="h-[260px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -127,14 +139,14 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
                     return (
                       <div className="border-ink-200/90 bg-card rounded-xl border px-3 py-2 text-xs shadow-xl dark:border-slate-800 dark:bg-slate-900">
                         <p className="text-ink-900 mb-1 font-bold dark:text-slate-100">{label}</p>
-                        {(["new", "expansion", "contraction", "churn"] as const).map((key) => (
-                          <p key={key} className="text-ink-600 flex justify-between gap-4 capitalize dark:text-slate-300">
-                            <span>{key}</span>
+                        {CAUSE_KEYS.map((key) => (
+                          <p key={key} className="text-ink-600 flex justify-between gap-4 dark:text-slate-300">
+                            <span>{t(`admin.revenue.mrrMovement.causes.${key}`)}</span>
                             <span className="tabular-nums">{signedVnd(point[key])}</span>
                           </p>
                         ))}
                         <p className="border-ink-100 mt-1 flex justify-between gap-4 border-t pt-1 font-bold dark:border-slate-800">
-                          <span>Net</span>
+                          <span>{t("admin.revenue.mrrMovement.net")}</span>
                           <span className={`tabular-nums ${point.net >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
                             {signedVnd(point.net)}
                           </span>
@@ -159,7 +171,7 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
             ))}
           </div>
           <p className="text-ink-400 text-[11px] dark:text-slate-500">
-            Net change per month, built from paid invoices. Bars above the line add MRR, bars below remove it.
+            {t("admin.revenue.mrrMovement.netChangeCaption")}
           </p>
         </div>
 
@@ -168,9 +180,9 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
           <div className="border-ink-100 bg-ink-50/80 flex min-w-0 flex-2 flex-col gap-3 rounded-xl border p-4 dark:border-slate-800 dark:bg-slate-800/40">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-ink-900 text-xs font-bold dark:text-slate-100">
-                {shortDate(startDate)} – {shortDate(endDate)} by plan
+                {t("admin.revenue.mrrMovement.byPlan", { start: shortDate(startDate), end: shortDate(endDate) })}
               </span>
-              <div role="tablist" aria-label="MRR movement plan" className="bg-ink-200/70 flex flex-wrap gap-1 rounded-lg p-0.5 dark:bg-slate-800">
+              <div role="tablist" aria-label={t("admin.revenue.mrrMovement.planTablistAria")} className="bg-ink-200/70 flex flex-wrap gap-1 rounded-lg p-0.5 dark:bg-slate-800">
                 {bridges.map((b) => {
                   const isSelected = b.planName === bridge.planName;
                   return (
@@ -186,7 +198,7 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
                           : "text-ink-500 hover:text-ink-800 dark:text-slate-400 dark:hover:text-slate-200"
                       }`}
                     >
-                      {b.planName ?? "All plans"}
+                      {b.planName ?? t("admin.revenue.mrrMovement.allPlans")}
                     </button>
                   );
                 })}
@@ -194,10 +206,10 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
             </div>
 
             <div className="flex flex-col gap-1.5 text-xs tabular-nums">
-              <BridgeLine label={`MRR on ${shortDate(previousDay(startDate))}`} value={formatVnd(bridge.start)} strong />
+              <BridgeLine label={t("admin.revenue.mrrMovement.mrrOn", { date: shortDate(previousDay(startDate)) })} value={formatVnd(bridge.start)} strong />
               {rows.map((row) => (
                 <div key={row.label} className="grid grid-cols-[104px_minmax(0,1fr)_128px] items-center gap-2 max-md:grid-cols-[84px_minmax(0,1fr)_auto]">
-                  <span className="text-ink-600 dark:text-slate-300">{row.label}</span>
+                  <span className="text-ink-600 dark:text-slate-300">{BRIDGE_ROW_LABEL_KEYS[row.label] ? t(BRIDGE_ROW_LABEL_KEYS[row.label]) : row.label}</span>
                   <span className="bg-ink-200/70 h-3 overflow-hidden rounded dark:bg-slate-700/60">
                     <span
                       className="block h-3"
@@ -209,9 +221,9 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
                   </span>
                 </div>
               ))}
-              <BridgeLine label={`MRR on ${shortDate(endDate)}`} value={formatVnd(bridge.end)} strong />
+              <BridgeLine label={t("admin.revenue.mrrMovement.mrrOn", { date: shortDate(endDate) })} value={formatVnd(bridge.end)} strong />
               <BridgeLine
-                label="Net change"
+                label={t("admin.revenue.mrrMovement.netChange")}
                 value={`${signedVnd(net)}${bridge.start > 0 ? ` (${net >= 0 ? "+" : "−"}${Math.abs((net / bridge.start) * 100).toFixed(1)}%)` : ""}`}
                 strong
                 tone={net > 0 ? "good" : net < 0 ? "bad" : undefined}
@@ -241,7 +253,7 @@ export function MrrMovementCard({ data, isLoading, startDate, endDate, aiReview 
           className="text-ink-600 flex min-h-11 items-center justify-center gap-1 text-xs font-semibold dark:text-slate-300"
           onClick={() => setIsBreakdownOpen((open) => !open)}
         >
-          {isBreakdownOpen ? "Hide breakdown" : "Show breakdown"}
+          {isBreakdownOpen ? t("admin.revenue.mrrMovement.hideBreakdown") : t("admin.revenue.mrrMovement.showBreakdown")}
           <ChevronDown className={`size-3.5 transition-transform ${isBreakdownOpen ? "rotate-180" : ""}`} aria-hidden="true" />
         </button>
       )}

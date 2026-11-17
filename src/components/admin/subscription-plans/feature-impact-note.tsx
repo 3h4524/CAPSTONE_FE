@@ -1,4 +1,5 @@
 import { AlertTriangle, Info } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Spinner } from "@/components/ui/spinner";
 import type { PlanFeatureImpact } from "@/types/admin-subscription-plan";
@@ -6,8 +7,6 @@ import { cn } from "@/utils/cn";
 
 const formatDate = (date: string) =>
   new Date(`${date}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-
-const plural = (count: number, word: string) => `${count.toLocaleString()} ${word}${count === 1 ? "" : "s"}`;
 
 // Who a change to a plan feature reaches, shown before the Admin confirms it.
 export function FeatureImpactNote({
@@ -19,15 +18,22 @@ export function FeatureImpactNote({
   isLoading: boolean;
   planName: string;
 }) {
+  const { t } = useTranslation("common");
+
   if (isLoading || !impact) {
     return (
       <div className="bg-ink-50 text-ink-500 flex items-center gap-2 rounded-xl px-4 py-3 text-sm">
-        <Spinner className="size-4" /> Checking who this reaches…
+        <Spinner className="size-4" /> {t("admin.plans.impact.checkingWhoThisReaches")}
       </div>
     );
   }
 
-  const onPlan = `${plural(impact.subscribers, "paying subscriber")}${impact.trials > 0 ? ` and ${plural(impact.trials, "trial")}` : ""} on ${planName}`;
+  const subscribers = t("admin.plans.impact.payingSubscribers", { count: impact.subscribers, formatted: impact.subscribers.toLocaleString() });
+  const trials = t("admin.plans.impact.trials", { count: impact.trials, formatted: impact.trials.toLocaleString() });
+  const onPlan =
+    impact.trials > 0
+      ? t("admin.plans.impact.onPlanWithTrials", { subscribers, trials, plan: planName })
+      : t("admin.plans.impact.onPlan", { subscribers, plan: planName });
 
   return (
     <div
@@ -44,35 +50,33 @@ export function FeatureImpactNote({
       <ul className="space-y-1">
         {impact.isReduction ? (
           <>
-            <li>New subscribers get the new setting at once.</li>
+            <li>{t("admin.plans.impact.newSubscribersAtOnce")}</li>
             {impact.givenRecently ? (
-              <li>It was given less than a day ago, so nobody keeps it: this undoes a recent change.</li>
+              <li>{t("admin.plans.impact.undoneRecentChange")}</li>
             ) : impact.keptBy === 0 ? (
-              <li>Nobody on {planName} has a period left to keep the old setting for.</li>
+              <li>{t("admin.plans.impact.nobodyHasPeriod", { plan: planName })}</li>
             ) : (
               <>
                 {impact.paidForBy > 0 && (
                   <li>
-                    {plural(impact.paidForBy, "subscriber")} paid for it and keep it until their period ends (latest{" "}
-                    {formatDate(impact.paidForUntil!)}).
+                    {t("admin.plans.impact.paidFor", { count: impact.paidForBy, formatted: impact.paidForBy.toLocaleString(), date: formatDate(impact.paidForUntil!) })}
                   </li>
                 )}
                 {impact.noticeBy > 0 && (
                   <li>
-                    {plural(impact.noticeBy, "subscriber")} got it after their period began and keep it for{" "}
-                    {impact.noticeDays} days (until {formatDate(impact.noticeUntil!)} at the latest).
+                    {t("admin.plans.impact.noticeBy", { count: impact.noticeBy, formatted: impact.noticeBy.toLocaleString(), days: impact.noticeDays, date: formatDate(impact.noticeUntil!) })}
                   </li>
                 )}
               </>
             )}
           </>
         ) : (
-          <li>Applies at once to the {onPlan}.</li>
+          <li>{t("admin.plans.impact.appliesAtOnce", { scope: onPlan })}</li>
         )}
-        {impact.isReduction && <li className="text-xs opacity-80">Now: {onPlan}.</li>}
+        {impact.isReduction && <li className="text-xs opacity-80">{t("admin.plans.impact.nowScope", { scope: onPlan })}</li>}
         {impact.usedRecently !== null && (
           <li className="text-xs opacity-80">
-            {impact.usedRecently.toLocaleString()} of them used it in the last {impact.usageDays} days.
+            {t("admin.plans.impact.usedRecently", { used: impact.usedRecently.toLocaleString(), days: impact.usageDays })}
           </li>
         )}
       </ul>

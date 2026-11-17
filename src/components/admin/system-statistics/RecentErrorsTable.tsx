@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { AlertCircle, AlertTriangle, ListFilter, ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   Table,
@@ -12,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useIsPhone } from "@/hooks/use-is-phone";
+import { getCurrentLocale } from "@/i18n/client";
 import type { SystemErrorLogDto } from "@/types/system-statistics";
 
 interface RecentErrorsTableProps {
@@ -26,6 +28,7 @@ export function RecentErrorsTable({
   recentErrors = [],
   isLoading,
 }: RecentErrorsTableProps) {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
   const [showsAll, setShowsAll] = useState(false);
   const [openError, setOpenError] = useState<string | null>(null);
@@ -36,7 +39,7 @@ export function RecentErrorsTable({
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/50 bg-amber-50/80 px-2.5 py-0.5 text-[11px] font-medium text-amber-700/90 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
           <AlertTriangle className="h-3 w-3 text-amber-500/80" />
-          Warning
+          {t("admin.statistics.recentErrors.badgeWarning")}
         </span>
       );
     }
@@ -44,14 +47,14 @@ export function RecentErrorsTable({
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-100 bg-rose-50/70 px-2.5 py-0.5 text-[11px] font-medium text-rose-500 dark:border-rose-500/30 dark:bg-rose-500/10">
           <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
-          Job failed
+          {t("admin.statistics.recentErrors.badgeJobFailed")}
         </span>
       );
     }
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-100 bg-rose-50/70 px-2.5 py-0.5 text-[11px] font-medium text-rose-500 dark:border-rose-500/30 dark:bg-rose-500/10">
         <AlertCircle className="h-3 w-3 text-rose-400" />
-        Error
+        {t("admin.statistics.recentErrors.badgeError")}
       </span>
     );
   };
@@ -59,13 +62,13 @@ export function RecentErrorsTable({
   const formatDate = (isoString: string) => {
     try {
       const date = new Date(isoString);
-      return new Intl.DateTimeFormat("en-US", {
+      return new Intl.DateTimeFormat(getCurrentLocale() === "vi" ? "vi-VN" : "en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
         hour: "numeric",
         minute: "2-digit",
-        hour12: true,
+        hour12: getCurrentLocale() !== "vi",
       }).format(date);
     } catch {
       return isoString;
@@ -81,14 +84,16 @@ export function RecentErrorsTable({
             <ListFilter className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-ink-900 text-sm font-bold">Recent errors</h3>
+            <h3 className="text-ink-900 text-sm font-bold">{t("admin.statistics.recentErrors.title")}</h3>
             <p className="text-ink-500 text-xs">
-              Latest failures, rate limits and gateway errors from batch jobs
+              {t("admin.statistics.recentErrors.subtitle")}
             </p>
           </div>
         </div>
         <span className="text-ink-400 text-xs font-medium max-md:hidden">
-          Showing latest {recentErrors.length > 0 ? recentErrors.length : 10}
+          {t("admin.statistics.recentErrors.showingLatest", {
+            count: recentErrors.length > 0 ? recentErrors.length : 10,
+          })}
         </span>
       </div>
 
@@ -110,10 +115,10 @@ export function RecentErrorsTable({
               <ShieldCheck className="h-6 w-6" />
             </div>
             <p className="text-ink-900 mt-2 text-sm font-semibold">
-              No errors recorded
+              {t("admin.statistics.recentErrors.emptyTitle")}
             </p>
             <p className="text-ink-400 mt-0.5 text-xs">
-              Batch jobs logged no failures, rate limits or gateway errors in this period.
+              {t("admin.statistics.recentErrors.emptyDescription")}
             </p>
           </div>
         ) : isPhone ? (
@@ -121,10 +126,12 @@ export function RecentErrorsTable({
             <ul className="divide-ink-100 divide-y">
               {shownErrors.map((err) => {
                 const isOpen = openError === err.id;
+                const sourceLabel =
+                  err.source || t("admin.statistics.recentErrors.unknownSource");
                 return (
                   <li key={err.id} className="px-4 py-3 text-xs">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-ink-800 min-w-0 truncate font-semibold">{err.source || "Batch job / Generation"}</p>
+                      <p className="text-ink-800 min-w-0 truncate font-semibold">{sourceLabel}</p>
                       <span className="shrink-0">{getBadgeForErrorType(err.errorType)}</span>
                     </div>
                     <p className="text-ink-400 mt-0.5 text-[11px]">{formatDate(err.timestamp)}</p>
@@ -146,7 +153,9 @@ export function RecentErrorsTable({
                 className="border-ink-100 text-ink-600 min-h-11 w-full border-t text-xs font-semibold"
                 onClick={() => setShowsAll((value) => !value)}
               >
-                {showsAll ? "Show fewer" : `Show all ${recentErrors.length}`}
+                {showsAll
+                  ? t("admin.statistics.recentErrors.showFewer")
+                  : t("admin.statistics.recentErrors.showAll", { count: recentErrors.length })}
               </button>
             )}
           </>
@@ -155,43 +164,47 @@ export function RecentErrorsTable({
             <TableHeader className="bg-ink-50/80">
               <TableRow className="border-ink-200/90 border-b hover:bg-transparent">
                 <TableHead className="text-ink-600 w-[150px] text-xs font-bold sm:w-[170px]">
-                  Timestamp
+                  {t("admin.statistics.recentErrors.columns.timestamp")}
                 </TableHead>
                 <TableHead className="text-ink-600 w-[180px] text-xs font-bold sm:w-[240px]">
-                  Component / Job
+                  {t("admin.statistics.recentErrors.columns.component")}
                 </TableHead>
                 <TableHead className="text-ink-600 w-[110px] text-xs font-bold sm:w-[130px]">
-                  Classification
+                  {t("admin.statistics.recentErrors.columns.classification")}
                 </TableHead>
                 <TableHead className="text-ink-600 text-xs font-bold">
-                  Message
+                  {t("admin.statistics.recentErrors.columns.message")}
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentErrors.map((err) => (
-                <TableRow
-                  key={err.id}
-                  className="border-ink-100 hover:bg-ink-50/70 border-b text-xs transition-colors"
-                >
-                  <TableCell className="text-ink-600 font-medium whitespace-nowrap">
-                    {formatDate(err.timestamp)}
-                  </TableCell>
-                  <TableCell className="text-ink-800 font-semibold">
-                    <div className="truncate" title={err.source || "Batch job / Generation"}>
-                      {err.source || "Batch job / Generation"}
-                    </div>
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {getBadgeForErrorType(err.errorType)}
-                  </TableCell>
-                  <TableCell className="text-ink-600 font-normal">
-                    <div className="truncate" title={err.message}>
-                      {err.message}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {recentErrors.map((err) => {
+                const sourceLabel =
+                  err.source || t("admin.statistics.recentErrors.unknownSource");
+                return (
+                  <TableRow
+                    key={err.id}
+                    className="border-ink-100 hover:bg-ink-50/70 border-b text-xs transition-colors"
+                  >
+                    <TableCell className="text-ink-600 font-medium whitespace-nowrap">
+                      {formatDate(err.timestamp)}
+                    </TableCell>
+                    <TableCell className="text-ink-800 font-semibold">
+                      <div className="truncate" title={sourceLabel}>
+                        {sourceLabel}
+                      </div>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {getBadgeForErrorType(err.errorType)}
+                    </TableCell>
+                    <TableCell className="text-ink-600 font-normal">
+                      <div className="truncate" title={err.message}>
+                        {err.message}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}

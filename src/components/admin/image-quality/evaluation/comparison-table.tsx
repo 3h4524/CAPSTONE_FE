@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { ComparisonGroupRows } from "@/components/admin/image-quality/evaluation/comparison-group-rows";
 import { ComparisonPhoneList } from "@/components/admin/image-quality/evaluation/comparison-phone-list";
@@ -13,13 +14,14 @@ type ComparisonTableProps = {
 };
 
 export const ComparisonTable = ({ comparison }: ComparisonTableProps) => {
+  const { t } = useTranslation("common");
   const groups = useMemo(() => groupImageEvalMetrics(comparison.metrics), [comparison.metrics]);
   const isPhone = useIsPhone();
 
   return (
     <SectionCard
-      title="Before and after"
-      description="Every metric on the same images. Rates are tested with a two-sided Fisher exact test on image counts; a p-value under 0.05 is in bold. Means are not tested."
+      title={t("admin.imageQuality.evaluation.comparisonTitle")}
+      description={t("admin.imageQuality.evaluation.comparisonDescription")}
     >
       {isPhone ? (
         <ComparisonPhoneList
@@ -32,22 +34,22 @@ export const ComparisonTable = ({ comparison }: ComparisonTableProps) => {
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead className="text-ink-600 w-[44%] pl-5 text-xs font-semibold sm:pl-6">
-              Metric
+              {t("admin.imageQuality.evaluation.metricColumn")}
             </TableHead>
             <TableHead className="text-ink-600 text-right text-xs font-semibold">
-              Before
+              {t("admin.imageQuality.shared.before")}
               <span className="text-ink-400 block text-[11px] font-normal">
-                {comparison.beforeImages.length} images
+                {t("admin.imageQuality.shared.imagesCount", { count: comparison.beforeImages.length })}
               </span>
             </TableHead>
             <TableHead className="bg-sky-50/70 text-right text-xs font-semibold text-sky-900 dark:bg-sky-500/10 dark:text-sky-300">
-              After
+              {t("admin.imageQuality.shared.after")}
               <span className="block text-[11px] font-normal text-sky-800/70 dark:text-sky-300">
-                {comparison.afterImages.length} images
+                {t("admin.imageQuality.shared.imagesCount", { count: comparison.afterImages.length })}
               </span>
             </TableHead>
-            <TableHead className="text-ink-600 text-xs font-semibold">Change</TableHead>
-            <TableHead className="text-ink-600 pr-5 text-xs font-semibold sm:pr-6">Test</TableHead>
+            <TableHead className="text-ink-600 text-xs font-semibold">{t("admin.imageQuality.evaluation.changeColumn")}</TableHead>
+            <TableHead className="text-ink-600 pr-5 text-xs font-semibold sm:pr-6">{t("admin.imageQuality.evaluation.testColumn")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

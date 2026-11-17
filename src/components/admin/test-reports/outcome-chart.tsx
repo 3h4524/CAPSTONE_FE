@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import {
   Cell,
   Pie,
@@ -27,11 +28,13 @@ export const TestReportOutcomeChart = ({
   flaky,
   skipped,
 }: TestReportOutcomeChartProps) => {
+  const { t } = useTranslation("common");
+
   const outcomes: Outcome[] = [
-    { name: "Passed", value: passed, color: "#10b981" },
-    { name: "Failed", value: failed, color: "#f43f5e" },
-    { name: "Flaky", value: flaky, color: "#f59e0b" },
-    { name: "Skipped", value: skipped, color: "var(--ink-400)" },
+    { name: t("admin.testReports.outcomeChart.passed"), value: passed, color: "#10b981" },
+    { name: t("admin.testReports.outcomeChart.failed"), value: failed, color: "#f43f5e" },
+    { name: t("admin.testReports.outcomeChart.flaky"), value: flaky, color: "#f59e0b" },
+    { name: t("admin.testReports.outcomeChart.skipped"), value: skipped, color: "var(--ink-400)" },
   ].filter((outcome) => outcome.value > 0);
 
   const total = outcomes.reduce((sum, outcome) => sum + outcome.value, 0);
@@ -39,7 +42,7 @@ export const TestReportOutcomeChart = ({
   if (total === 0) {
     return (
       <div className="text-ink-400 flex h-[220px] items-center justify-center text-xs">
-        The run covered no test.
+        {t("admin.testReports.outcomeChart.empty")}
       </div>
     );
   }
@@ -62,7 +65,10 @@ export const TestReportOutcomeChart = ({
             ))}
           </Pie>
           <Tooltip
-            formatter={(value, name) => [`${value} tests`, name]}
+            formatter={(value, name) => [
+              t("admin.testReports.outcomeChart.tooltipValue", { value }),
+              name,
+            ]}
             contentStyle={{
               borderRadius: 8,
               border: "1px solid var(--ink-200)",
@@ -73,7 +79,9 @@ export const TestReportOutcomeChart = ({
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
         <span className="font-display text-ink-900 text-2xl font-bold">{total}</span>
-        <span className="text-ink-400 text-[10px] tracking-wide uppercase">tests</span>
+        <span className="text-ink-400 text-[10px] tracking-wide uppercase">
+          {t("admin.testReports.outcomeChart.tests")}
+        </span>
       </div>
     </div>
   );

@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { LiveVersionCard } from "@/components/admin/image-quality/live/live-version-card";
 import { LiveVersionRow } from "@/components/admin/image-quality/live/live-version-row";
 import { SectionCard } from "@/components/admin/image-quality/section-card";
@@ -11,23 +13,24 @@ type LiveVersionTableProps = {
 };
 
 const COLUMNS = [
-  { label: "Provider · prompt version", isNumeric: false },
-  { label: "Images", isNumeric: true },
-  { label: "Approved on review", isNumeric: false },
-  { label: "Text correct (OCR)", isNumeric: false },
-  { label: "Regenerate / product", isNumeric: true },
-  { label: "Failed or blocked", isNumeric: false },
-  { label: "Time / image", isNumeric: true },
-  { label: "Cost / image", isNumeric: true },
+  { labelKey: "admin.imageQuality.live.providerPromptVersion", isNumeric: false },
+  { labelKey: "admin.imageQuality.shared.images", isNumeric: true },
+  { labelKey: "admin.imageQuality.shared.approvedOnReview", isNumeric: false },
+  { labelKey: "admin.imageQuality.shared.textCorrectOcr", isNumeric: false },
+  { labelKey: "admin.imageQuality.shared.regeneratePerProduct", isNumeric: true },
+  { labelKey: "admin.imageQuality.shared.failedOrBlocked", isNumeric: false },
+  { labelKey: "admin.imageQuality.shared.timePerImage", isNumeric: true },
+  { labelKey: "admin.imageQuality.shared.costPerImage", isNumeric: true },
 ] as const;
 
 export const LiveVersionTable = ({ versions }: LiveVersionTableProps) => {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
 
   return (
   <SectionCard
-    title="Every version"
-    description="One row per image provider and prompt version, oldest first. The counts behind every rate sit next to it."
+    title={t("admin.imageQuality.live.tableTitle")}
+    description={t("admin.imageQuality.live.tableDescription")}
   >
     {isPhone ? (
       <ul className="divide-ink-100 divide-y">
@@ -41,7 +44,7 @@ export const LiveVersionTable = ({ versions }: LiveVersionTableProps) => {
         <TableRow className="hover:bg-transparent">
           {COLUMNS.map((column, index) => (
             <TableHead
-              key={column.label}
+              key={column.labelKey}
               className={cn(
                 "text-ink-600 text-xs font-semibold",
                 column.isNumeric && "text-right",
@@ -49,7 +52,7 @@ export const LiveVersionTable = ({ versions }: LiveVersionTableProps) => {
                 index === COLUMNS.length - 1 && "pr-5 sm:pr-6"
               )}
             >
-              {column.label}
+              {t(column.labelKey)}
             </TableHead>
           ))}
         </TableRow>

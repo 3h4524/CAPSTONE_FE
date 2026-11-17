@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Activity, Calendar, Camera, Loader2, Mail, ShieldAlert, ShieldCheck, UserCircle2, Zap } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { sendResetPasswordLink, updateAdminUser } from "@/api/admin";
@@ -40,6 +41,7 @@ const ROLES = [
 
 export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation("common");
 
   const [formData, setFormData] = useState<UpdateAdminUserRequest>({
     fullName: "",
@@ -69,23 +71,23 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
   const updateMutation = useMutation({
     mutationFn: (data: UpdateAdminUserRequest) => updateAdminUser(user!.id, data),
     onSuccess: () => {
-      toast.success("User updated successfully");
+      toast.success(t("admin.users.editModal.toastUpdated"));
       queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
       onClose();
     },
     onError: (error: unknown) => {
       const err = error as { response?: { data?: { title?: string } } };
-      toast.error(err?.response?.data?.title || "Failed to update user");
+      toast.error(err?.response?.data?.title || t("admin.users.editModal.toastUpdateFailed"));
     },
   });
 
   const resetPasswordMutation = useMutation({
     mutationFn: () => sendResetPasswordLink(user!.id),
     onSuccess: () => {
-      toast.success("Reset password link sent to user's email");
+      toast.success(t("admin.users.editModal.toastResetSent"));
     },
     onError: () => {
-      toast.error("Failed to send reset password link");
+      toast.error(t("admin.users.editModal.toastResetFailed"));
     },
   });
 
@@ -102,7 +104,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
 
   const handleSave = () => {
     if (!formData.fullName || !formData.email) {
-      toast.error("Full Name and Email are required");
+      toast.error(t("admin.users.editModal.toastFullNameEmailRequired"));
       return;
     }
 
@@ -111,7 +113,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (selectedDate >= today) {
-        toast.error("Birthday must be in the past");
+        toast.error(t("admin.users.editModal.toastBirthdayPast"));
         return;
       }
     }
@@ -155,10 +157,10 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
             </div>
 
             <DialogTitle className="text-ink-900 mt-5 text-2xl font-bold tracking-tight max-md:mt-3 max-md:text-xl">
-              Edit User Profile
+              {t("admin.users.editModal.title")}
             </DialogTitle>
             <p className="text-ink-500 mt-1 text-sm font-medium">
-              Update information and access settings
+              {t("admin.users.editModal.subtitle")}
             </p>
           </div>
 
@@ -169,7 +171,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
               <div className="animate-in fade-in slide-in-from-top-2 border-ink-100/60 bg-card rounded-2xl border p-4 shadow-sm">
                 <div className="mb-2 flex items-center gap-2">
                   <Camera className="text-ink-400 size-4" />
-                  <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Avatar URL</span>
+                  <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">{t("admin.users.editModal.avatarUrlLabel")}</span>
                 </div>
                 <Input
                   id="avatarUrl"
@@ -187,7 +189,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <UserCircle2 className="text-ink-400 size-4" />
-                  <Label htmlFor="fullName" className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Full Name</Label>
+                  <Label htmlFor="fullName" className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">{t("admin.users.editModal.fullNameLabel")}</Label>
                 </div>
                 <Input
                   id="fullName"
@@ -201,7 +203,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <Mail className="text-ink-400 size-4" />
-                  <Label htmlFor="email" className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Email</Label>
+                  <Label htmlFor="email" className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">{t("admin.users.editModal.emailLabel")}</Label>
                 </div>
                 <Input
                   id="email"
@@ -216,7 +218,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <Calendar className="text-ink-400 size-4" />
-                  <Label htmlFor="birthday" className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Birthday</Label>
+                  <Label htmlFor="birthday" className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">{t("admin.users.editModal.birthdayLabel")}</Label>
                 </div>
                 <Input
                   id="birthday"
@@ -232,19 +234,19 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <Activity className="text-ink-400 size-4" />
-                  <Label className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Status</Label>
+                  <Label className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">{t("admin.users.editModal.statusLabel")}</Label>
                 </div>
                 <Select
                   value={formData.accountStatus}
                   onValueChange={(val) => setFormData((prev) => ({ ...prev, accountStatus: val }))}
                 >
                   <SelectTrigger className="border-ink-200 focus:ring-ink-400 h-10 w-full text-sm">
-                    <SelectValue placeholder="Select Status" />
+                    <SelectValue placeholder={t("admin.users.editModal.selectStatusPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active" className="text-sm font-semibold">Active</SelectItem>
-                    <SelectItem value="pending_verification" className="text-sm font-semibold">Pending</SelectItem>
-                    <SelectItem value="suspended" className="text-sm font-semibold text-rose-600 dark:text-rose-400">Suspended</SelectItem>
+                    <SelectItem value="active" className="text-sm font-semibold">{t("admin.users.statusActive")}</SelectItem>
+                    <SelectItem value="pending_verification" className="text-sm font-semibold">{t("admin.users.statusPending")}</SelectItem>
+                    <SelectItem value="suspended" className="text-sm font-semibold text-rose-600 dark:text-rose-400">{t("admin.users.statusSuspended")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -254,7 +256,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
             <div className="border-ink-100/60 bg-card rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-3 flex items-center gap-2">
                 <ShieldAlert className="text-ink-400 size-4" />
-                <Label className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Role</Label>
+                <Label className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">{t("admin.users.roleLabel")}</Label>
               </div>
               <div className="flex gap-2">
                 {ROLES.map((role) => {
@@ -284,14 +286,14 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
                 <div>
                   <div className="mb-1 flex items-center gap-2">
                     <Zap className="size-4 text-indigo-500" />
-                    <span className="text-[10px] font-bold tracking-wider text-indigo-400 uppercase">Current Plan</span>
+                    <span className="text-[10px] font-bold tracking-wider text-indigo-400 uppercase">{t("admin.users.editModal.currentPlan")}</span>
                   </div>
                   <span className="mt-1 inline-block rounded-full bg-indigo-100 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-indigo-700 uppercase dark:bg-indigo-500/15 dark:text-indigo-300">{user.plan}</span>
                 </div>
                 <div className="h-10 w-px bg-indigo-100 dark:bg-indigo-500/15"></div>
                 <div className="text-right">
                   <div className="mb-1 flex items-center justify-end gap-2">
-                    <span className="text-[10px] font-bold tracking-wider text-indigo-400 uppercase">Plan Price / Mo</span>
+                    <span className="text-[10px] font-bold tracking-wider text-indigo-400 uppercase">{t("admin.users.editModal.planPricePerMo")}</span>
                   </div>
                   <span className="text-lg font-bold text-indigo-900 dark:text-indigo-300">{formatVnd(user.monthlyApiCost)}</span>
                 </div>
@@ -302,7 +304,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
             <div className="border-ink-100/60 bg-card rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-3 flex items-center gap-2">
                 <ShieldCheck className="text-ink-400 size-4" />
-                <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">Password</span>
+                <span className="text-ink-400 text-[10px] font-bold tracking-wider uppercase">{t("admin.users.editModal.passwordLabel")}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-ink-400 font-mono text-lg leading-none">••••••••</span>
@@ -319,7 +321,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
                   ) : (
                     <Mail className="text-ink-500 mr-1.5 size-3" />
                   )}
-                  Reset Password
+                  {t("admin.users.editModal.resetPassword")}
                 </Button>
               </div>
             </div>
@@ -334,7 +336,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
               onClick={onClose} 
               className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 hover:text-ink-900 h-11 flex-1 rounded-xl font-semibold shadow-sm"
             >
-              Cancel
+              {t("admin.users.cancel")}
             </Button>
             <Button 
               onClick={handleSave} 
@@ -342,7 +344,7 @@ export const EditUserModal = ({ user, isOpen, onClose }: EditUserModalProps) => 
               className="bg-ink-900 text-card hover:bg-ink-800 h-11 flex-1 rounded-xl font-semibold shadow-sm transition-all active:scale-[0.98]"
             >
               {updateMutation.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-              Save Changes
+              {t("admin.users.editModal.saveChanges")}
             </Button>
           </div>
 

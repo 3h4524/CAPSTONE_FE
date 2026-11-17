@@ -1,6 +1,8 @@
+import { useTranslation } from "react-i18next";
+
 import {
-  CATEGORY_LABELS,
-  DECIDERS,
+  CATEGORY_LABEL_KEYS,
+  DECIDER_LABEL_KEYS,
   DECISION_CHART_COLORS,
   featureLabel,
   formatNumber,
@@ -18,22 +20,27 @@ const widthOf = (value: number, max: number) => `${max === 0 ? 0 : Math.max(2, (
 
 /** Blocked and flagged checks per category, largest first; each bar is labelled with both numbers. */
 export const CategoryBreakdown = ({ items }: { items: ModerationCategoryCount[] }) => {
-  if (items.length === 0) return <Empty text="Nothing blocked or flagged in this period." />;
+  const { t } = useTranslation("common");
+  if (items.length === 0) return <Empty text={t("admin.contentSafety.breakdowns.nothingBlockedFlagged")} />;
   const max = Math.max(...items.map((item) => item.blocked + item.flagged));
   return (
     <ul className="space-y-3">
       {items.map((item) => (
         <li key={item.category} className="space-y-1">
           <div className="flex items-baseline justify-between gap-3 text-sm">
-            <span className="text-ink-800 dark:text-ink-100 font-medium">{CATEGORY_LABELS[item.category] ?? item.category}</span>
+            <span className="text-ink-800 dark:text-ink-100 font-medium">{t(CATEGORY_LABEL_KEYS[item.category])}</span>
             <span className="text-ink-500 text-xs tabular-nums">
-              {formatNumber(item.blocked)} blocked · {formatNumber(item.flagged)} flagged
+              {t("admin.contentSafety.stats.blockedFlagged", { blocked: formatNumber(item.blocked), flagged: formatNumber(item.flagged) })}
             </span>
           </div>
           <div
             className="bg-ink-100 dark:bg-ink-800/60 flex h-2.5 overflow-hidden rounded-full"
             role="img"
-            aria-label={`${CATEGORY_LABELS[item.category] ?? item.category}: ${item.blocked} blocked, ${item.flagged} flagged`}
+            aria-label={t("admin.contentSafety.breakdowns.categoryAria", {
+              category: t(CATEGORY_LABEL_KEYS[item.category]),
+              blocked: item.blocked,
+              flagged: item.flagged,
+            })}
           >
             <span
               className="h-full"
@@ -54,7 +61,8 @@ export const CategoryBreakdown = ({ items }: { items: ModerationCategoryCount[] 
 
 /** Blocks by the layer that made them. One measure, so one neutral color; the label names the layer. */
 export const DeciderBreakdown = ({ items }: { items: ModerationCount[] }) => {
-  if (items.length === 0) return <Empty text="No blocks in this period." />;
+  const { t } = useTranslation("common");
+  if (items.length === 0) return <Empty text={t("admin.contentSafety.breakdowns.noBlocks")} />;
   const max = Math.max(...items.map((item) => item.count));
   const total = items.reduce((sum, item) => sum + item.count, 0);
   return (
@@ -63,7 +71,7 @@ export const DeciderBreakdown = ({ items }: { items: ModerationCount[] }) => {
         <li key={item.key} className="space-y-1">
           <div className="flex items-baseline justify-between gap-3 text-sm">
             <span className="text-ink-800 dark:text-ink-100 font-medium">
-              {DECIDERS[item.key as ModerationDecider]?.label ?? item.key}
+              {DECIDER_LABEL_KEYS[item.key as ModerationDecider] ? t(DECIDER_LABEL_KEYS[item.key as ModerationDecider]) : item.key}
             </span>
             <span className="text-ink-500 text-xs tabular-nums">
               {formatNumber(item.count)} · {Math.round((item.count / total) * 100)}%
@@ -80,7 +88,8 @@ export const DeciderBreakdown = ({ items }: { items: ModerationCount[] }) => {
 
 /** Checks per feature with the blocked share drawn inside each bar. */
 export const FeatureBreakdown = ({ items }: { items: ModerationFeatureCount[] }) => {
-  if (items.length === 0) return <Empty text="No checks in this period." />;
+  const { t } = useTranslation("common");
+  if (items.length === 0) return <Empty text={t("admin.contentSafety.breakdowns.noChecks")} />;
   const max = Math.max(...items.map((item) => item.checks));
   return (
     <ul className="space-y-3">
@@ -89,7 +98,7 @@ export const FeatureBreakdown = ({ items }: { items: ModerationFeatureCount[] })
           <div className="flex items-baseline justify-between gap-3 text-sm">
             <span className="text-ink-800 dark:text-ink-100 font-medium">{featureLabel(item.feature)}</span>
             <span className="text-ink-500 text-xs tabular-nums">
-              {formatNumber(item.checks)} checks · {formatNumber(item.blocked)} blocked
+              {t("admin.contentSafety.stats.checksBlocked", { checks: formatNumber(item.checks), blocked: formatNumber(item.blocked) })}
             </span>
           </div>
           <div className="bg-ink-100 dark:bg-ink-800/60 h-2.5 overflow-hidden rounded-full" aria-hidden="true">

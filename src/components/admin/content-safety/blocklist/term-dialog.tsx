@@ -3,9 +3,10 @@
 import { useEffect } from "react";
 import { ShieldBan } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { DIALOG_CLASS, DialogHead, Field, SwitchRow } from "@/components/admin/content-safety/blocklist/form-parts";
-import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/components/admin/content-safety/shared";
+import { CATEGORY_LABEL_KEYS, CATEGORY_ORDER } from "@/components/admin/content-safety/shared";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -34,11 +35,12 @@ const valuesOf = (target: TermDialogTarget): ModerationTermFormValues =>
     : { term: "", category: "sexual", severity: "block", matchUnaccented: false, language: "vi", isActive: true, note: "" };
 
 const SEVERITY_OPTIONS = [
-  { value: "block", title: "Block", hint: "Refuse the text at once, without asking Gemini." },
-  { value: "flag", title: "Flag", hint: "Let Gemini decide, telling it to look at this category closely." },
+  { value: "block", titleKey: "admin.contentSafety.severity.block", hintKey: "admin.contentSafety.termDialog.severityBlockHint" },
+  { value: "flag", titleKey: "admin.contentSafety.severity.flag", hintKey: "admin.contentSafety.termDialog.severityFlagHint" },
 ] as const;
 
 export const TermDialog = ({ target, onClose }: { target: TermDialogTarget; onClose: () => void }) => {
+  const { t } = useTranslation("common");
   const editing = target && "term" in target ? target.term : null;
   const mutation = useSaveModerationTerm(onClose);
   const {
@@ -78,24 +80,24 @@ export const TermDialog = ({ target, onClose }: { target: TermDialogTarget; onCl
       <DialogContent showCloseButton={false} className={DIALOG_CLASS}>
         <DialogHead
           icon={ShieldBan}
-          eyebrow={editing ? "EDIT BLOCKLIST TERM" : "ADD BLOCKLIST TERM"}
-          title={editing ? editing.term : "New blocklist term"}
-          description="Terms match whole words of the seller's text, ignoring case, look-alike characters (s3x) and letters spaced out (s.e.x)."
+          eyebrow={t(editing ? "admin.contentSafety.termDialog.eyebrowEdit" : "admin.contentSafety.termDialog.eyebrowAdd")}
+          title={editing ? editing.term : t("admin.contentSafety.termDialog.titleAdd")}
+          description={t("admin.contentSafety.termDialog.description")}
           onClose={onClose}
         />
         <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-3 sm:px-6">
             <Field
-              label="Word or phrase"
+              label={t("admin.contentSafety.termDialog.termLabel")}
               htmlFor="term-text"
-              hint={isPhrase ? "Several words: matched as a phrase, with any punctuation between them." : "One word: matched as a whole word only."}
+              hint={t(isPhrase ? "admin.contentSafety.termDialog.termHintPhrase" : "admin.contentSafety.termDialog.termHintWord")}
               error={errors.term?.message}
             >
               <Input id="term-text" autoComplete="off" aria-invalid={Boolean(errors.term)} {...register("term")} />
             </Field>
 
             <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
-              <Field label="Category" htmlFor="term-category" error={errors.category?.message}>
+              <Field label={t("admin.contentSafety.common.category")} htmlFor="term-category" error={errors.category?.message}>
                 <Controller
                   name="category"
                   control={control}
@@ -107,7 +109,7 @@ export const TermDialog = ({ target, onClose }: { target: TermDialogTarget; onCl
                       <SelectContent>
                         {CATEGORY_ORDER.map((category) => (
                           <SelectItem key={category} value={category}>
-                            {CATEGORY_LABELS[category]}
+                            {t(CATEGORY_LABEL_KEYS[category])}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -115,7 +117,7 @@ export const TermDialog = ({ target, onClose }: { target: TermDialogTarget; onCl
                   )}
                 />
               </Field>
-              <Field label="Language" htmlFor="term-language">
+              <Field label={t("admin.contentSafety.termDialog.languageLabel")} htmlFor="term-language">
                 <Controller
                   name="language"
                   control={control}
@@ -125,8 +127,8 @@ export const TermDialog = ({ target, onClose }: { target: TermDialogTarget; onCl
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="vi">Vietnamese</SelectItem>
-                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="vi">{t("admin.contentSafety.termDialog.languageVi")}</SelectItem>
+                        <SelectItem value="en">{t("admin.contentSafety.termDialog.languageEn")}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -135,7 +137,7 @@ export const TermDialog = ({ target, onClose }: { target: TermDialogTarget; onCl
             </div>
 
             <fieldset className="space-y-2">
-              <legend className="text-ink-700 text-sm font-medium">When it matches</legend>
+              <legend className="text-ink-700 text-sm font-medium">{t("admin.contentSafety.common.whenItMatches")}</legend>
               <Controller
                 name="severity"
                 control={control}
@@ -149,8 +151,8 @@ export const TermDialog = ({ target, onClose }: { target: TermDialogTarget; onCl
                       >
                         <RadioGroupItem id={`term-severity-${option.value}`} value={option.value} className="mt-0.5" />
                         <span>
-                          <span className="text-ink-800 dark:text-ink-100 block text-sm font-semibold">{option.title}</span>
-                          <span className="text-ink-500 block text-xs leading-relaxed">{option.hint}</span>
+                          <span className="text-ink-800 dark:text-ink-100 block text-sm font-semibold">{t(option.titleKey)}</span>
+                          <span className="text-ink-500 block text-xs leading-relaxed">{t(option.hintKey)}</span>
                         </span>
                       </label>
                     ))}
@@ -166,13 +168,8 @@ export const TermDialog = ({ target, onClose }: { target: TermDialogTarget; onCl
                 render={({ field }) => (
                   <SwitchRow
                     id="term-unaccented"
-                    title="Also match without accents"
-                    hint={
-                      <>
-                        Turn on only when the accent-free spelling is not an everyday word. “địt” → “dit” is safe;
-                        “lồn” → “lon” (a can) or “cặc” → “các” would block normal text.
-                      </>
-                    }
+                    title={t("admin.contentSafety.termDialog.unaccentedTitle")}
+                    hint={t("admin.contentSafety.termDialog.unaccentedHint")}
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />
@@ -184,8 +181,8 @@ export const TermDialog = ({ target, onClose }: { target: TermDialogTarget; onCl
                 render={({ field }) => (
                   <SwitchRow
                     id="term-active"
-                    title="Active"
-                    hint="A paused term stays listed but is not matched."
+                    title={t("admin.contentSafety.common.active")}
+                    hint={t("admin.contentSafety.termDialog.activeHint")}
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />
@@ -193,17 +190,22 @@ export const TermDialog = ({ target, onClose }: { target: TermDialogTarget; onCl
               />
             </div>
 
-            <Field label="Note (optional)" htmlFor="term-note" error={errors.note?.message}>
-              <Textarea id="term-note" className="min-h-16" placeholder="Why it is listed, other meanings to watch" {...register("note")} />
+            <Field label={t("admin.contentSafety.common.noteLabel")} htmlFor="term-note" error={errors.note?.message}>
+              <Textarea
+                id="term-note"
+                className="min-h-16"
+                placeholder={t("admin.contentSafety.termDialog.notePlaceholder")}
+                {...register("note")}
+              />
             </Field>
           </div>
           <div className="border-ink-100 flex justify-end gap-2 border-t px-5 py-4 sm:px-6">
             <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
-              Cancel
+              {t("admin.contentSafety.common.cancel")}
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending && <Spinner className="size-4" />}
-              {editing ? "Save changes" : "Add term"}
+              {t(editing ? "admin.contentSafety.dialog.saveChanges" : "admin.contentSafety.common.addTerm")}
             </Button>
           </div>
         </form>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { KeyRound, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { DIALOG_CLASS, DialogHead, Field } from "@/components/admin/content-safety/blocklist/form-parts";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ type AddKeyDialogProps = {
 };
 
 export const AddKeyDialog = ({ open, providers, onClose }: AddKeyDialogProps) => {
+  const { t } = useTranslation("common");
   const first = providers[0]?.provider ?? "ideogram";
   const [values, setValues] = useState(() => empty(first));
   const [errors, setErrors] = useState<Partial<Record<keyof AddSystemApiKeyFormValues, string>>>({});
@@ -50,14 +52,14 @@ export const AddKeyDialog = ({ open, providers, onClose }: AddKeyDialogProps) =>
       <DialogContent showCloseButton={false} className={DIALOG_CLASS}>
         <DialogHead
           icon={KeyRound}
-          eyebrow="PLATFORM API KEY"
-          title="Add a key"
-          description="The key is checked with the provider before it is saved, then stored encrypted. It is never shown again."
+          eyebrow={t("admin.systemApiKeys.addKeyDialog.eyebrow")}
+          title={t("admin.systemApiKeys.addKeyDialog.title")}
+          description={t("admin.systemApiKeys.addKeyDialog.description")}
           onClose={onClose}
         />
         <form onSubmit={submit} className="flex min-h-0 flex-col">
           <div className="space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
-            <Field label="Provider" htmlFor="system-key-provider">
+            <Field label={t("admin.systemApiKeys.addKeyDialog.providerLabel")} htmlFor="system-key-provider">
               <Select
                 value={values.provider}
                 onValueChange={(provider) => setValues({ ...values, provider: provider as SystemApiKeyProviderName })}
@@ -74,17 +76,22 @@ export const AddKeyDialog = ({ open, providers, onClose }: AddKeyDialogProps) =>
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Name" htmlFor="system-key-label" hint="Which account the key belongs to, so others can tell keys apart." error={errors.label}>
+            <Field
+              label={t("admin.systemApiKeys.addKeyDialog.nameLabel")}
+              htmlFor="system-key-label"
+              hint={t("admin.systemApiKeys.addKeyDialog.nameHint")}
+              error={errors.label}
+            >
               <Input
                 id="system-key-label"
                 value={values.label}
                 maxLength={100}
-                placeholder="e.g. Ideogram – team account 2"
+                placeholder={t("admin.systemApiKeys.addKeyDialog.namePlaceholder")}
                 aria-invalid={errors.label ? true : undefined}
                 onChange={(event) => setValues({ ...values, label: event.target.value })}
               />
             </Field>
-            <Field label="API key" htmlFor="system-key-value" error={errors.key}>
+            <Field label={t("admin.systemApiKeys.addKeyDialog.apiKeyLabel")} htmlFor="system-key-value" error={errors.key}>
               <Input
                 id="system-key-value"
                 type="password"
@@ -98,10 +105,10 @@ export const AddKeyDialog = ({ open, providers, onClose }: AddKeyDialogProps) =>
           </div>
           <DialogFooter className="border-t px-5 py-4 sm:px-6">
             <Button type="button" variant="outline" onClick={onClose} disabled={add.isPending}>
-              Cancel
+              {t("admin.systemApiKeys.cancel")}
             </Button>
             <Button type="submit" disabled={add.isPending}>
-              {add.isPending ? "Checking…" : "Check and add"}
+              {add.isPending ? t("admin.systemApiKeys.addKeyDialog.checking") : t("admin.systemApiKeys.addKeyDialog.submit")}
             </Button>
           </DialogFooter>
         </form>
@@ -116,6 +123,7 @@ type DeleteKeyDialogProps = {
 };
 
 export const DeleteKeyDialog = ({ apiKey, onClose }: DeleteKeyDialogProps) => {
+  const { t } = useTranslation("common");
   const remove = useDeleteSystemApiKey(onClose);
 
   return (
@@ -123,17 +131,19 @@ export const DeleteKeyDialog = ({ apiKey, onClose }: DeleteKeyDialogProps) => {
       <DialogContent showCloseButton={false} className={`${DIALOG_CLASS} max-w-[460px]`}>
         <DialogHead
           icon={Trash2}
-          eyebrow="DELETE KEY"
-          title={apiKey ? `Delete ${apiKey.label}?` : "Delete key?"}
-          description="New requests stop using it, and the key itself is thrown away. A video scene still being made with it fails when its progress is asked for; switch the key off instead to let those finish."
+          eyebrow={t("admin.systemApiKeys.deleteKeyDialog.eyebrow")}
+          title={
+            apiKey ? t("admin.systemApiKeys.deleteKeyDialog.title", { label: apiKey.label }) : t("admin.systemApiKeys.deleteKeyDialog.titleFallback")
+          }
+          description={t("admin.systemApiKeys.deleteKeyDialog.description")}
           onClose={onClose}
         />
         <DialogFooter className="border-t px-5 py-4 sm:px-6">
           <Button type="button" variant="outline" onClick={onClose} disabled={remove.isPending}>
-            Cancel
+            {t("admin.systemApiKeys.cancel")}
           </Button>
           <Button type="button" variant="destructive" disabled={!apiKey || remove.isPending} onClick={() => apiKey && remove.mutate(apiKey.id)}>
-            {remove.isPending ? "Deleting…" : "Delete key"}
+            {remove.isPending ? t("admin.systemApiKeys.deleteKeyDialog.deleting") : t("admin.systemApiKeys.deleteKeyDialog.submit")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -2,18 +2,19 @@
 
 import { useDeferredValue, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AllowlistDialog,type AllowlistDialogTarget } from "@/components/admin/content-safety/blocklist/allowlist-dialog";
 import { CheckDetailSheet } from "@/components/admin/content-safety/log/check-detail-sheet";
 import {
-  CATEGORY_LABELS,
+  CATEGORY_LABEL_KEYS,
   CATEGORY_ORDER,
   CategoryChips,
+  DECIDER_LABEL_KEYS,
   DeciderBadge,
-  DECIDERS,
+  DECISION_LABEL_KEYS,
   DecisionBadge,
-  DECISIONS,
-  FEATURE_LABELS,
+  FEATURE_LABEL_KEYS,
   featureLabel,
   formatDateTime,
   formatNumber,
@@ -42,11 +43,11 @@ const PAGE_SIZE = 20;
 const headClass = "text-ink-500 text-xs font-semibold tracking-wider uppercase";
 
 const PERIODS = [
-  { value: "1", label: "Last 24 hours" },
-  { value: "7", label: "Last 7 days" },
-  { value: "30", label: "Last 30 days" },
-  { value: "90", label: "Last 90 days" },
-  { value: ALL, label: "All time" },
+  { value: "1", labelKey: "admin.contentSafety.periods.hours24" },
+  { value: "7", labelKey: "admin.contentSafety.periods.days7" },
+  { value: "30", labelKey: "admin.contentSafety.periods.days30" },
+  { value: "90", labelKey: "admin.contentSafety.periods.days90" },
+  { value: ALL, labelKey: "admin.contentSafety.periods.all" },
 ] as const;
 
 type Filters = {
@@ -95,19 +96,20 @@ const FilterSelect = <T extends string>({
   </Select>
 );
 
-const Excerpt = ({ item }: { item: ModerationCheckListItem }) =>
-  item.excerptPreview ? (
+const Excerpt = ({ item }: { item: ModerationCheckListItem }) => {
+  const { t } = useTranslation("common");
+  const missingText = t(item.direction === "output" ? "admin.contentSafety.log.imageKeepsNoText" : "admin.contentSafety.common.allowedTextNotKept");
+  return item.excerptPreview ? (
     <span className="text-ink-700 dark:text-ink-200 line-clamp-2 max-w-72 text-xs">{item.excerptPreview}</span>
   ) : (
-    <span
-      className="text-ink-400 text-xs"
-      title={item.direction === "output" ? "Image checks keep no text" : "Allowed text is not kept"}
-    >
-      —<span className="sr-only">{item.direction === "output" ? "Image checks keep no text" : "Allowed text is not kept"}</span>
+    <span className="text-ink-400 text-xs" title={missingText}>
+      —<span className="sr-only">{missingText}</span>
     </span>
   );
+};
 
 export const LogPanel = () => {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
   const [filters, setFilters] = useState<Filters>({ period: "30" });
   const [search, setSearch] = useState("");
@@ -144,8 +146,8 @@ export const LogPanel = () => {
   return (
     <div className="flex flex-col gap-5 max-md:gap-3">
       <Section
-        title="Activity log"
-        description="Every decision the guardrail made, newest first. The seller's text is kept only when it was not allowed."
+        title={t("admin.contentSafety.tabs.log")}
+        description={t("admin.contentSafety.log.description")}
       >
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-2">
@@ -153,8 +155,8 @@ export const LogPanel = () => {
               <Search className="text-ink-400 pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" aria-hidden="true" />
               <Input
                 type="search"
-                aria-label="Search seller by email or name"
-                placeholder="Seller email or name"
+                aria-label={t("admin.contentSafety.log.searchAria")}
+                placeholder={t("admin.contentSafety.log.searchPlaceholder")}
                 className="pl-9"
                 value={search}
                 onChange={(event) => {
@@ -164,63 +166,63 @@ export const LogPanel = () => {
               />
             </div>
             <Select value={filters.period} onValueChange={(period) => updateFilters({ period })}>
-              <SelectTrigger className="w-40" aria-label="Period">
+              <SelectTrigger className="w-40" aria-label={t("admin.contentSafety.common.period")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {PERIODS.map((period) => (
                   <SelectItem key={period.value} value={period.value}>
-                    {period.label}
+                    {t(period.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <FilterSelect
-              label="Decision"
-              allLabel="All decisions"
+              label={t("admin.contentSafety.common.decision")}
+              allLabel={t("admin.contentSafety.log.allDecisions")}
               value={filters.decision}
               onChange={(decision) => updateFilters({ decision })}
               options={(["block", "flagged", "unchecked", "allow"] as ModerationDecision[]).map((value) => ({
                 value,
-                label: DECISIONS[value].label,
+                label: t(DECISION_LABEL_KEYS[value]),
               }))}
             />
             <FilterSelect
-              label="Decided by"
-              allLabel="Any layer"
+              label={t("admin.contentSafety.common.decidedBy")}
+              allLabel={t("admin.contentSafety.log.anyLayer")}
               value={filters.decidedBy}
               onChange={(decidedBy) => updateFilters({ decidedBy })}
               options={(["blocklist", "gemini", "provider_safety", "error"] as ModerationDecider[]).map((value) => ({
                 value,
-                label: DECIDERS[value].label,
+                label: t(DECIDER_LABEL_KEYS[value]),
               }))}
             />
             <FilterSelect
-              label="Feature"
-              allLabel="All features"
+              label={t("admin.contentSafety.common.feature")}
+              allLabel={t("admin.contentSafety.log.allFeatures")}
               value={filters.feature}
               onChange={(feature) => updateFilters({ feature })}
-              options={Object.entries(FEATURE_LABELS).map(([value, label]) => ({ value, label }))}
+              options={Object.entries(FEATURE_LABEL_KEYS).map(([value, key]) => ({ value, label: t(key) }))}
               className="w-44"
             />
             <FilterSelect
-              label="Category"
-              allLabel="All categories"
+              label={t("admin.contentSafety.common.category")}
+              allLabel={t("admin.contentSafety.common.allCategories")}
               value={filters.category}
               onChange={(category) => updateFilters({ category })}
-              options={CATEGORY_ORDER.map((value) => ({ value, label: CATEGORY_LABELS[value] }))}
+              options={CATEGORY_ORDER.map((value) => ({ value, label: t(CATEGORY_LABEL_KEYS[value]) }))}
               className="w-44"
             />
           </div>
 
           {checks.isError ? (
-            <PanelMessage tone="error" title="The log could not be loaded." description="Check the API and try again." />
+            <PanelMessage tone="error" title={t("admin.contentSafety.log.loadError")} description={t("admin.contentSafety.common.checkApiRetry")} />
           ) : !data ? (
             <Skeleton className="h-72 w-full" />
           ) : data.items.length === 0 ? (
             <PanelMessage
-              title="No check matches these filters."
-              description="Widen the period or clear a filter. Repeats of a text already checked are served from the cache and not logged again."
+              title={t("admin.contentSafety.log.emptyTitle")}
+              description={t("admin.contentSafety.log.emptyDescription")}
             />
           ) : isPhone ? (
             <ul className="space-y-2">
@@ -236,10 +238,10 @@ export const LogPanel = () => {
                       <span className="text-ink-500 text-xs">{formatDateTime(item.createdAt)}</span>
                     </div>
                     <p className="text-ink-900 dark:text-ink-50 mt-2 truncate text-sm font-medium">
-                      {item.userEmail ?? "Unknown seller"}
+                      {item.userEmail ?? t("admin.contentSafety.log.unknownSeller")}
                     </p>
                     <p className="text-ink-500 text-xs">
-                      {featureLabel(item.feature)} · {subjectLabel(item.subjectType)} · {DECIDERS[item.decidedBy]?.label}
+                      {featureLabel(item.feature)} · {subjectLabel(item.subjectType)} · {t(DECIDER_LABEL_KEYS[item.decidedBy])}
                     </p>
                     {item.excerptPreview ? (
                       <p className="text-ink-700 dark:text-ink-200 mt-1.5 line-clamp-2 text-xs">{item.excerptPreview}</p>
@@ -253,14 +255,14 @@ export const LogPanel = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className={headClass}>Time</TableHead>
-                    <TableHead className={headClass}>Seller</TableHead>
-                    <TableHead className={headClass}>Where</TableHead>
-                    <TableHead className={headClass}>Decision</TableHead>
-                    <TableHead className={headClass}>Decided by</TableHead>
-                    <TableHead className={headClass}>Categories</TableHead>
-                    <TableHead className={headClass}>Text</TableHead>
-                    <TableHead className={`${headClass} text-right`}>Time taken</TableHead>
+                    <TableHead className={headClass}>{t("admin.contentSafety.log.time")}</TableHead>
+                    <TableHead className={headClass}>{t("admin.contentSafety.common.seller")}</TableHead>
+                    <TableHead className={headClass}>{t("admin.contentSafety.log.where")}</TableHead>
+                    <TableHead className={headClass}>{t("admin.contentSafety.common.decision")}</TableHead>
+                    <TableHead className={headClass}>{t("admin.contentSafety.common.decidedBy")}</TableHead>
+                    <TableHead className={headClass}>{t("admin.contentSafety.common.categories")}</TableHead>
+                    <TableHead className={headClass}>{t("admin.contentSafety.log.text")}</TableHead>
+                    <TableHead className={`${headClass} text-right`}>{t("admin.contentSafety.log.timeTaken")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -268,7 +270,7 @@ export const LogPanel = () => {
                     <TableRow
                       key={item.id}
                       tabIndex={0}
-                      aria-label={`Open the check of ${formatDateTime(item.createdAt)}`}
+                      aria-label={t("admin.contentSafety.log.openCheckAria", { time: formatDateTime(item.createdAt) })}
                       onClick={() => setOpenCheck(item.id)}
                       onKeyDown={(event) => {
                         if (event.key === "Enter" || event.key === " ") {
@@ -311,7 +313,11 @@ export const LogPanel = () => {
           {data && data.totalCount > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-ink-500 text-sm" aria-live="polite">
-                {formatNumber(first)}–{formatNumber(last)} of {formatNumber(data.totalCount)} checks
+                {t("admin.contentSafety.pagination.checksRange", {
+                  from: formatNumber(first),
+                  to: formatNumber(last),
+                  total: formatNumber(data.totalCount),
+                })}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -322,10 +328,10 @@ export const LogPanel = () => {
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
                 >
                   <ChevronLeft aria-hidden="true" />
-                  Previous
+                  {t("admin.contentSafety.pagination.previous")}
                 </Button>
                 <span className="text-ink-600 text-sm tabular-nums">
-                  Page {data.pageNumber} of {Math.max(1, data.totalPages)}
+                  {t("admin.contentSafety.pagination.pageOf", { current: data.pageNumber, total: Math.max(1, data.totalPages) })}
                 </span>
                 <Button
                   type="button"
@@ -334,7 +340,7 @@ export const LogPanel = () => {
                   disabled={page >= data.totalPages || checks.isFetching}
                   onClick={() => setPage((current) => current + 1)}
                 >
-                  Next
+                  {t("admin.contentSafety.pagination.next")}
                   <ChevronRight aria-hidden="true" />
                 </Button>
               </div>

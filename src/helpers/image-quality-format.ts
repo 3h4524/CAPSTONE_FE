@@ -1,4 +1,5 @@
 import { IMAGE_EVAL_SIGNIFICANCE_LEVEL } from "@/constants/image-quality";
+import { getCurrentLocale, i18n } from "@/i18n/client";
 import type { ImageEvalMetricResult, ImageEvalSideValue } from "@/types/admin-image-quality";
 
 export type ImageEvalDeltaTone = "better" | "worse" | "same" | "none";
@@ -57,7 +58,7 @@ export const formatImageEvalDelta = (result: ImageEvalMetricResult): string => {
     return EMPTY_VALUE;
   }
   if (rounded === 0) {
-    return "no change";
+    return i18n.t("admin.imageQuality.format.noChange");
   }
   const sign = rounded > 0 ? "+" : "−";
   const size = Math.abs(rounded);
@@ -87,8 +88,8 @@ export const formatImageQualitySeconds = (value: number | null): string =>
 
 export const formatImageQualityDate = (value: string | null): string =>
   value === null
-    ? "the start"
-    : new Date(value).toLocaleDateString("en-GB", {
+    ? i18n.t("admin.imageQuality.format.theStart")
+    : new Date(value).toLocaleDateString(getCurrentLocale() === "vi" ? "vi-VN" : "en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",

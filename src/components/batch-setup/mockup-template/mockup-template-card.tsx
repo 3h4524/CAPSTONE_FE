@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -39,7 +40,9 @@ const TemplateThumbnail = ({ template }: { template: MockupTemplate }) => {
   );
 };
 
-export const MockupTemplateCard = ({ template, selected, onToggle, onFocusTemplate, colors = [] }: MockupTemplateCardProps) => (
+export const MockupTemplateCard = ({ template, selected, onToggle, onFocusTemplate, colors = [] }: MockupTemplateCardProps) => {
+  const { t } = useTranslation("common");
+  return (
   <label
     onPointerEnter={() => onFocusTemplate?.(template.id)}
     onFocusCapture={() => onFocusTemplate?.(template.id)}
@@ -54,12 +57,13 @@ export const MockupTemplateCard = ({ template, selected, onToggle, onFocusTempla
       <span className="text-ink-900 block truncate text-sm font-semibold">{template.name}</span>
       <span className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1.5 text-xs">
         <span className="line-clamp-2">{template.productType}</span>
-        {template.allowRecolor && <span>· recolorable</span>}
-        {template.views && template.views.length > 0 && <span>· {template.views.length + 1} sides</span>}
+        {template.allowRecolor && <span>· {t("batchSetup.mockup.recolorableLower")}</span>}
+        {template.views && template.views.length > 0 && <span>· {t("batchSetup.mockup.sides", { count: template.views.length + 1 })}</span>}
         {(selected && colors.length > 0 ? colors : template.garmentColor ? [template.garmentColor] : []).map((hex) => (
           <GarmentColorSwatch key={hex} hex={hex} />
         ))}
       </span>
     </span>
   </label>
-);
+  );
+};

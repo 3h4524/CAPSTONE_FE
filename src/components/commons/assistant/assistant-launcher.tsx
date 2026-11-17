@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { Bot } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -11,6 +12,7 @@ import { useAssistantRunNudge } from "@/hooks/use-assistant-run-nudge";
 import { useAssistantStore } from "@/stores/assistant";
 
 export const AssistantLauncher = () => {
+  const { t } = useTranslation("common");
   const pathname = usePathname();
   const toggleOpen = useAssistantStore((state) => state.toggleOpen);
   const isReplying = useAssistantStore((state) => state.streamingMessageId !== null);
@@ -29,7 +31,7 @@ export const AssistantLauncher = () => {
           <Button
             type="button"
             size="icon"
-            aria-label="Open Podi"
+            aria-label={t("commons.assistant.open")}
             aria-describedby={isReplying ? "assistant-launcher-busy" : undefined}
             variant="outline"
             className="fixed z-40 cursor-grab touch-none overflow-hidden rounded-full p-0 shadow-lg transition-none active:cursor-grabbing"
@@ -40,7 +42,7 @@ export const AssistantLauncher = () => {
             <Bot className="text-primary size-6" aria-hidden="true" />
             {isReplying ? (
               <span id="assistant-launcher-busy" className="bg-primary ring-background absolute top-1.5 right-1.5 size-2.5 animate-pulse rounded-full ring-2">
-                <span className="sr-only">Podi is replying</span>
+                <span className="sr-only">{t("commons.assistant.replying")}</span>
               </span>
             ) : nudge ? (
               <span className="ring-background absolute top-1.5 right-1.5 size-2.5 rounded-full bg-amber-500 ring-2">
@@ -49,7 +51,7 @@ export const AssistantLauncher = () => {
             ) : null}
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="left">{nudge ? nudge.label : "Drag to move, click to chat with Podi"}</TooltipContent>
+        <TooltipContent side="left">{nudge ? nudge.label : t("commons.assistant.launcherHint")}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );

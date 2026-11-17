@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { MockupTemplatePreview } from "@/components/batch-setup/mockup-template/mockup-template-preview";
 import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
 import { Badge } from "@/components/ui/badge";
@@ -24,12 +26,13 @@ type MockupTemplateDetailProps = {
 };
 
 export const MockupTemplateDetail = ({ template, colors = [], backgrounds, designUrl, shownColor, onShowColor }: MockupTemplateDetailProps) => {
+  const { t } = useTranslation("common");
 
   if (!template) {
     return (
       <div className="bg-ink-50 flex h-full flex-col justify-center gap-2 rounded-xl p-5 text-sm">
-        <p className="text-ink-900 font-semibold">No template to preview</p>
-        <p className="text-muted-foreground">Point at a template on the left to see how it looks.</p>
+        <p className="text-ink-900 font-semibold">{t("batchSetup.mockup.noPreview")}</p>
+        <p className="text-muted-foreground">{t("batchSetup.mockup.noPreviewHint")}</p>
       </div>
     );
   }
@@ -48,18 +51,18 @@ export const MockupTemplateDetail = ({ template, colors = [], backgrounds, desig
           <div className="mt-2 flex flex-wrap gap-1.5">
             <Badge variant="secondary">{template.productType}</Badge>
             <Badge variant="outline">{template.outputWidthPx} x {template.outputHeightPx}</Badge>
-            {template.allowRecolor && <Badge variant="outline">Recolorable</Badge>}
+            {template.allowRecolor && <Badge variant="outline">{t("batchSetup.mockup.recolorable")}</Badge>}
           </div>
         </div>
         {template.allowRecolor && colors.length > 1 && (
           <div>
-            <p className="text-ink-500 text-xs font-semibold tracking-wide uppercase">Preview color</p>
+            <p className="text-ink-500 text-xs font-semibold tracking-wide uppercase">{t("batchSetup.mockup.previewColor")}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {colors.map((hex) => (
                 <button
                   key={hex}
                   type="button"
-                  aria-label={`Preview in ${garmentColorName(hex)}`}
+                  aria-label={t("batchSetup.mockup.previewIn", { name: garmentColorName(hex) })}
                   aria-pressed={hex === pickedColor}
                   onClick={() => onShowColor?.(hex)}
                   className={cn("rounded-full p-0.5", hex === pickedColor && "ring-primary ring-2")}
@@ -72,10 +75,11 @@ export const MockupTemplateDetail = ({ template, colors = [], backgrounds, desig
         )}
         <div className="text-muted-foreground space-y-1 text-xs">
           <p>
-            The dashed box is where your design is placed
-            {area ? ` (${Math.round(area.width)} × ${Math.round(area.height)} px)` : ""}.
+            {area
+              ? t("batchSetup.mockup.dashedBoxSize", { width: Math.round(area.width), height: Math.round(area.height) })
+              : t("batchSetup.mockup.dashedBox")}
           </p>
-          <p>{designUrl ? "Shown with your first generated design." : "Generate designs first to see one in place."}</p>
+          <p>{designUrl ? t("batchSetup.mockup.shownWithDesign") : t("batchSetup.mockup.generateFirst")}</p>
         </div>
       </div>
     </ScrollArea>

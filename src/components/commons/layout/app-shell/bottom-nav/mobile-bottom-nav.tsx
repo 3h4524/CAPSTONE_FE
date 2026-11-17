@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Ellipsis } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { MOBILE_TABS } from "@/constants/navigation";
 import { cn } from "@/utils/cn";
@@ -16,6 +17,17 @@ type MobileBottomNavProps = {
   isMoreOpen?: boolean;
 };
 
+const TAB_LABEL_KEYS: Record<string, string> = {
+  "/dashboard": "navigation.items.dashboard",
+  "/shop": "navigation.items.shop",
+  "/workflows": "navigation.items.workflows",
+  "/batches": "navigation.items.batches",
+  "/admin/dashboard": "navigation.admin.items.dashboard",
+  "/admin/users": "navigation.admin.items.users",
+  "/admin/revenue": "commons.mobileTabs.revenue",
+  "/admin/support-tickets": "navigation.items.support",
+};
+
 const TAB_CLASS_NAME =
   "text-muted-foreground focus-visible:ring-ring/40 flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-inset";
 const ACTIVE_TAB_CLASS_NAME = "text-primary font-semibold";
@@ -27,12 +39,13 @@ const ACTIVE_ICON_CLASS_NAME = "bg-muted";
  * so every page keeps its full height above it without reserving any space of its own.
  */
 export const MobileBottomNav = ({ onOpenMore, tabs = MOBILE_TABS, alertHref, isMoreOpen = false }: MobileBottomNavProps) => {
+  const { t } = useTranslation("common");
   const pathname = usePathname();
   const isTabActive = (href: string) => !isMoreOpen && (pathname === href || pathname.startsWith(`${href}/`));
   const isMoreActive = isMoreOpen || !tabs.some((tab) => isTabActive(tab.href));
 
   return (
-    <nav aria-label="Main tabs" className="bg-card grid shrink-0 grid-cols-5 border-t md:hidden">
+    <nav aria-label={t("commons.mobileTabs.label")} className="bg-card grid shrink-0 grid-cols-5 border-t md:hidden">
       {tabs.map(({ label, href, icon: Icon }) => {
         const isActive = isTabActive(href);
         return (
@@ -46,11 +59,11 @@ export const MobileBottomNav = ({ onOpenMore, tabs = MOBILE_TABS, alertHref, isM
               <Icon className="size-5" aria-hidden="true" />
               {href === alertHref && (
                 <span className="absolute top-0.5 right-2.5 size-2 rounded-full bg-rose-500">
-                  <span className="sr-only">Needs attention</span>
+                  <span className="sr-only">{t("commons.mobileTabs.needsAttention")}</span>
                 </span>
               )}
             </span>
-            {label}
+            {TAB_LABEL_KEYS[href] ? t(TAB_LABEL_KEYS[href], { defaultValue: label }) : label}
           </Link>
         );
       })}
@@ -63,7 +76,7 @@ export const MobileBottomNav = ({ onOpenMore, tabs = MOBILE_TABS, alertHref, isM
         <span className={cn(ICON_CLASS_NAME, isMoreActive && ACTIVE_ICON_CLASS_NAME)}>
           <Ellipsis className="size-5" aria-hidden="true" />
         </span>
-        More
+        {t("commons.mobileTabs.more")}
       </button>
     </nav>
   );

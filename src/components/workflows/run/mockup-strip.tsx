@@ -3,6 +3,7 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { AlertTriangle, Check, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { useReviewMockupAsset } from "@/hooks/mutations/use-review-mockup-asset";
@@ -63,6 +64,7 @@ export const ScrollStrip = ({
     };
   }, [measure, itemCount]);
 
+  const { t } = useTranslation("common");
   const scrollBy = (direction: 1 | -1) => {
     const strip = stripRef.current;
     if (!strip) return;
@@ -77,7 +79,11 @@ export const ScrollStrip = ({
   const arrow = (direction: 1 | -1, visible: boolean) => (
     <button
       type="button"
-      aria-label={direction === 1 ? "Show later mock-ups" : "Show earlier mock-ups"}
+      aria-label={
+        direction === 1
+          ? t("workflowEditor.mockupStrip.showLater")
+          : t("workflowEditor.mockupStrip.showEarlier")
+      }
       tabIndex={visible ? 0 : -1}
       onClick={() => scrollBy(direction)}
       className={cn(
@@ -133,11 +139,20 @@ export const ScrollStrip = ({
 };
 
 // Same states, colours and layout as the card of a design in the Design Approval step, so both reviews read alike.
-const STATE: Record<string, { label: string; className: string }> = {
-  approved: { label: "Approved", className: "bg-emerald-100 text-emerald-700" },
-  rejected: { label: "Rejected", className: "bg-rose-100 text-rose-700" },
+const STATE: Record<string, { labelKey: string; className: string }> = {
+  approved: {
+    labelKey: "workflowEditor.mockupStrip.approved",
+    className: "bg-emerald-100 text-emerald-700",
+  },
+  rejected: {
+    labelKey: "workflowEditor.mockupStrip.rejected",
+    className: "bg-rose-100 text-rose-700",
+  },
 };
-const PENDING_STATE = { label: "To review", className: "bg-ink-100 text-ink-600" };
+const PENDING_STATE = {
+  labelKey: "workflowEditor.mockupStrip.toReview",
+  className: "bg-ink-100 text-ink-600",
+};
 
 /**
  * One mock-up in a design's strip: large enough to judge at a glance, with approve / reject one tap away. Read only
@@ -150,10 +165,12 @@ export const MockupStripCard = ({
   asset: MockupAsset;
   readOnly?: boolean;
 }) => {
+  const { t } = useTranslation("common");
   const { mutate: review, isPending } = useReviewMockupAsset();
   const approved = asset.approvalStatus === "approved";
   const rejected = asset.approvalStatus === "rejected";
   const state = STATE[asset.approvalStatus] ?? PENDING_STATE;
+  const stateLabel = t(state.labelKey);
   const swatch =
     asset.variantKey && SWATCH_PATTERN.test(asset.variantKey) ? asset.variantKey : null;
   const decide = (next: boolean) =>
@@ -169,7 +186,10 @@ export const MockupStripCard = ({
     >
       <Image
         src={asset.previewUrl}
-        alt={`${asset.role} mock-up, ${state.label.toLowerCase()}`}
+        alt={t("workflowEditor.mockupStrip.alt", {
+          role: asset.role,
+          state: stateLabel.toLowerCase(),
+        })}
         width={asset.width}
         height={asset.height}
         unoptimized
@@ -205,7 +225,7 @@ export const MockupStripCard = ({
               state.className
             )}
           >
-            {state.label}
+            {stateLabel}
           </span>
           {!readOnly && (
             <div className="flex gap-1.5">
@@ -213,9 +233,9 @@ export const MockupStripCard = ({
                 type="button"
                 variant={approved ? "default" : "outline"}
                 size="icon-sm"
-                aria-label="Approve mock-up"
+                aria-label={t("workflowEditor.mockupStrip.approveMockup")}
                 aria-pressed={approved}
-                title="Approve"
+                title={t("workflowEditor.mockupStrip.approve")}
                 disabled={isPending || approved}
                 onClick={() => decide(true)}
                 className="disabled:opacity-100"
@@ -226,9 +246,9 @@ export const MockupStripCard = ({
                 type="button"
                 variant={rejected ? "destructive" : "outline"}
                 size="icon-sm"
-                aria-label="Reject mock-up"
+                aria-label={t("workflowEditor.mockupStrip.rejectMockup")}
                 aria-pressed={rejected}
-                title="Reject"
+                title={t("workflowEditor.mockupStrip.reject")}
                 disabled={isPending || rejected}
                 onClick={() => decide(false)}
                 className="disabled:opacity-100"
@@ -244,23 +264,26 @@ export const MockupStripCard = ({
 };
 
 /** Placeholder cards while a product's mock-ups load, the size of the real ones so nothing jumps. */
-export const MockupStripSkeleton = () => (
-  <div
-    className="flex gap-3 overflow-hidden px-3 pt-1 pb-3"
-    aria-busy="true"
-    aria-label="Loading mock-ups"
-  >
-    {[0, 1, 2].map((index) => (
-      <div
-        key={index}
-        className="bg-card w-44 shrink-0 animate-pulse overflow-hidden rounded-lg border motion-reduce:animate-none"
-      >
-        <div className="bg-muted aspect-square" />
-        <div className="space-y-2 p-2">
-          <div className="bg-muted h-3 w-16 rounded" />
-          <div className="bg-muted h-8 rounded-md" />
+export const MockupStripSkeleton = () => {
+  const { t } = useTranslation("common");
+  return (
+    <div
+      className="flex gap-3 overflow-hidden px-3 pt-1 pb-3"
+      aria-busy="true"
+      aria-label={t("workflowEditor.mockupStrip.loading")}
+    >
+      {[0, 1, 2].map((index) => (
+        <div
+          key={index}
+          className="bg-card w-44 shrink-0 animate-pulse overflow-hidden rounded-lg border motion-reduce:animate-none"
+        >
+          <div className="bg-muted aspect-square" />
+          <div className="space-y-2 p-2">
+            <div className="bg-muted h-3 w-16 rounded" />
+            <div className="bg-muted h-8 rounded-md" />
+          </div>
         </div>
-      </div>
-    ))}
-  </div>
-);
+      ))}
+    </div>
+  );
+};

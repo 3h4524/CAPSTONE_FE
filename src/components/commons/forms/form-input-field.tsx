@@ -3,6 +3,7 @@
 import { type ComponentProps,useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import type { FieldError, UseFormRegisterReturn } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { FormLabel } from "@/components/ui/form";
@@ -43,6 +44,7 @@ export const FormInputField = ({
   className,
   showToggle = false,
 }: FormInputFieldProps) => {
+  const { t } = useTranslation("common");
   const [isRevealed, setIsRevealed] = useState(false);
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
@@ -79,7 +81,7 @@ export const FormInputField = ({
             type="button"
             onClick={() => setIsRevealed((previous) => !previous)}
             className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
-            aria-label={isRevealed ? "Hide password" : "Show password"}
+            aria-label={isRevealed ? t("commons.forms.hidePassword") : t("commons.forms.showPassword")}
             tabIndex={-1}
           >
             {isRevealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}

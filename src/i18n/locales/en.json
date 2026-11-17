@@ -3407,6 +3407,14 @@
         "notInPlan": "Not included in your plan",
         "title": "Nodes",
         "description": "Drag onto the canvas or click to add."
+      },
+      "canvasPatch": {
+        "unknownStepType": "Unknown step type",
+        "afterStepNotFound": "The step to add after was not found",
+        "stepNotFound": "Step not found",
+        "stepsNotConnected": "Those steps are not connected",
+        "noSettingsToUpdate": "No settings to update",
+        "renamingOff": "Renaming steps is turned off"
       }
     },
     "workflowMedia": {
@@ -4413,7 +4421,13 @@
         "uploadedWithVideo": "{{count}} image(s) and the video uploaded",
         "filesAttached": "{{count}} design file(s) attached for buyers to download",
         "reviewOnEtsy": "Review it on Etsy and publish when you are ready. Etsy charges its listing fee when you publish.",
-        "openOnEtsy": "Open draft on Etsy"
+        "openOnEtsy": "Open draft on Etsy",
+        "historyStatuses": {
+          "pending": "pending",
+          "retrying": "retrying",
+          "success": "success",
+          "failed": "failed"
+        }
       },
       "insights": {
         "issues": {
@@ -4584,7 +4598,88 @@
         "openListing": "Open the Etsy listing",
         "productType": "Product type",
         "blueprintPlaceholder": "e.g. gildan 64000, bella canvas 3001, mug 11oz",
-        "nothingMatches": "Nothing matches."
+        "nothingMatches": "Nothing matches.",
+        "states": {
+          "created": "created",
+          "publishing": "publishing",
+          "published": "published",
+          "failed": "failed"
+        }
+      },
+      "page": {
+        "waitingPopup": "Finish signing in to Etsy in the popup window.",
+        "showEtsyWindow": "Show the Etsy window",
+        "loadingShop": "Loading your shop…",
+        "loadError": "Your shop could not be loaded.",
+        "tryAgain": "Try again",
+        "connectTitle": "Connect your Etsy shop",
+        "connectDescription": "Connect once to see your shop here and send what your workflows make straight to Etsy as drafts. You sign in on Etsy; Podivo never sees your Etsy password.",
+        "notConfigured": "Etsy is not configured on this server yet. Ask the administrator to add the Etsy app key.",
+        "waitingForEtsy": "Waiting for Etsy…",
+        "connectWithEtsy": "Connect with Etsy",
+        "tokensNote": "Tokens are stored encrypted. You can disconnect at any time.",
+        "outcomes": {
+          "connected": "Your Etsy shop is connected.",
+          "denied": "You declined the Etsy permission request, so nothing was connected.",
+          "expired": "The connection request expired or was already used. Start again.",
+          "noShop": "This Etsy account has no shop yet. Open a shop on Etsy, then connect again.",
+          "shopTaken": "This Etsy shop is already connected to another account here. One shop can be connected to one account only: Etsy may treat a shop run from several accounts as fraud. Disconnect it there first.",
+          "failed": "Etsy could not complete the connection. Try again in a moment."
+        },
+        "disconnectSuccess": "Etsy shop disconnected.",
+        "disconnectFailed": "Could not disconnect the shop. Try again.",
+        "connectFailed": "Could not start the Etsy connection. Try again.",
+        "syncFailed": "Could not read Etsy right now. Try again in a moment.",
+        "permissions": {
+          "readShop": {
+            "title": "Read your shop",
+            "detail": "Name, listings count, sales and reviews, to show them here."
+          },
+          "readListings": {
+            "title": "Read your listings",
+            "detail": "To compare what you sell with the Market Radar."
+          },
+          "readOrders": {
+            "title": "Read your orders",
+            "detail": "Revenue, orders per day and fulfilment time. Podivo never changes or ships an order."
+          },
+          "createDrafts": {
+            "title": "Create draft listings",
+            "detail": "To send workflow designs, mockups and videos as drafts. Nothing goes live until you publish it on Etsy."
+          }
+        },
+        "reconnectBanner": "The Etsy connection expired or was revoked. Connect again to keep reading your shop and sending drafts.",
+        "reconnectEtsy": "Reconnect Etsy",
+        "etsyUnavailable": "Etsy is not answering right now, so the figures below are missing. Your connection is still in place.",
+        "statActiveListings": "Active listings",
+        "statAllTimeSales": "All-time sales",
+        "statShopFavorites": "Shop favorites",
+        "statRating": "Rating",
+        "noReviewsYet": "No reviews yet",
+        "reviewsCount": "{{count}} reviews",
+        "reconnectNeeded": "Reconnect needed",
+        "connected": "Connected",
+        "onVacation": "On vacation",
+        "syncing": "Syncing…",
+        "syncNow": "Sync now",
+        "viewOnEtsy": "View on Etsy",
+        "readFromEtsy": "Read from Etsy {{time}}",
+        "readingInsights": "Reading orders, listings and reviews from Etsy…",
+        "insightsLoadError": "Shop insights could not be loaded.",
+        "connectionDetails": "Connection details",
+        "factShopId": "Shop ID",
+        "factCurrency": "Currency",
+        "factConnectedSince": "Connected since",
+        "factLastSynced": "Last synced",
+        "reconnectBy": "Etsy asks you to confirm the connection again by {{date}}; Podivo renews access automatically until then.",
+        "disconnectNote": "Disconnecting removes the stored Etsy tokens from Podivo.",
+        "disconnectConfirm": "Disconnect this shop?",
+        "cancel": "Cancel",
+        "disconnect": "Disconnect",
+        "timeJustNow": "just now",
+        "timeMinutesAgo": "{{count}} min ago",
+        "timeHoursAgo": "{{count}} h ago",
+        "etsyTrademark": "The term “Etsy” is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc."
       }
     },
     "marketInsights": {
@@ -4700,6 +4795,63 @@
         "description": "Upload one product idea and watch the workflow generate, score, and publish it.",
         "primary": "Get started for free",
         "secondary": "Back to home"
+      },
+      "features": {
+        "design": {
+          "title": "AI Design Generation",
+          "tagline": "Original artwork, on demand",
+          "description": "Describe your niche and product idea once. The AI workflow produces original, print-ready designs plus lifestyle mockups across apparel, posters, stickers, and totes.",
+          "bullets": {
+            "0": "Prompt-to-design in minutes, no designer required",
+            "1": "Print-ready exports with transparent backgrounds",
+            "2": "Auto mockups on shirts, posters, stickers, and totes",
+            "3": "Variations per design to test what sells"
+          }
+        },
+        "video": {
+          "title": "Video Creation",
+          "tagline": "Listings that move",
+          "description": "Every design ships with a short promo video: animated mockup showcases rendered in listing-ready and vertical formats for Etsy, TikTok, and Reels.",
+          "bullets": {
+            "0": "Auto-generated from your designs, no editing skills needed",
+            "1": "Listing-ready landscape plus vertical social cuts",
+            "2": "Zoom, rotate, and lifestyle scene transitions",
+            "3": "Captions and hooks matched to the listing copy"
+          }
+        },
+        "listing": {
+          "title": "Etsy Listing Content",
+          "tagline": "Copy written to rank",
+          "description": "Get complete listing copy tuned for Etsy search: keyword-rich titles, persuasive descriptions, all 13 tags, materials, and attributes filled in.",
+          "bullets": {
+            "0": "SEO titles built from real buyer keywords",
+            "1": "Descriptions structured to convert browsers to buyers",
+            "2": "Full 13-tag sets plus materials and attributes",
+            "3": "Tone matched to your shop and niche"
+          }
+        },
+        "batch": {
+          "title": "Batch Processing",
+          "tagline": "One upload, hundreds of listings",
+          "description": "Drop a single CSV with your product ideas and let the workflow run: designs, videos, and listing content generated for the whole batch while you review by exception.",
+          "bullets": {
+            "0": "CSV import for ideas, niches, and product types",
+            "1": "Parallel generation across the entire batch",
+            "2": "Live progress per item with retry on failures",
+            "3": "Review queue that surfaces only what needs you"
+          }
+        },
+        "platforms": {
+          "title": "Platform Integrations",
+          "tagline": "Publish everywhere in one click",
+          "description": "Approved listings go live straight from Podivo. Designs, mockups, videos, and copy are packaged and pushed to Etsy and connected marketplaces with inventory in sync.",
+          "bullets": {
+            "0": "One-click publish to Etsy with all assets attached",
+            "1": "Printify connection for seamless fulfillment",
+            "2": "Listings stay in sync when you edit in Podivo",
+            "3": "Draft mode for final review before going live"
+          }
+        }
       }
     },
     "landing": {
@@ -5289,6 +5441,11 @@
         "panelDescription": "Ask Podi questions or get help with your workflows.",
         "whatNow": "What now?",
         "starterIntro": "Ask me anything, or try one of these."
+      }
+    },
+    "workflowRun": {
+      "validation": {
+        "chooseMockupTemplate": "{{label}}: Choose at least one mock-up template."
       }
     }
   }

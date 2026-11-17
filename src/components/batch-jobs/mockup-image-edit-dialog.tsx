@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { RotateCcw, Trash2, Undo2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   resetMockupOverride,
@@ -150,6 +151,7 @@ export const MockupImageEditDialog = ({
   onSaved,
   printifyOnly = false,
 }: MockupImageEditDialogProps) => {
+  const { t } = useTranslation("common");
   const open = image !== null;
   // Only templates for this product's own type: any other is refused. The photos of their other sides come with them.
   const { data: typeTemplates, isPending: isLoadingTemplates } = useMockupTemplates(
@@ -645,42 +647,44 @@ export const MockupImageEditDialog = ({
   };
 
   const scopes: { value: MockupChangeScope; label: string; count?: number }[] = [
-    { value: "this", label: "This mock-up only" },
-    { value: "template", label: "Mock-ups on this template", count: othersOnTemplate },
+    { value: "this", label: t("batchJobs.editMockup.scopeThis") },
+    { value: "template", label: t("batchJobs.editMockup.scopeTemplate"), count: othersOnTemplate },
   ];
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !busy && onOpenChange(false)}>
       <DialogContent className="flex h-[min(88dvh,780px)] w-[calc(100%-2rem)] max-w-5xl flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl">
         <DialogHeader className="border-b px-5 py-3.5 pr-12 text-left">
-          <DialogTitle>Edit this mock-up</DialogTitle>
+          <DialogTitle>{t("batchJobs.editMockup.title")}</DialogTitle>
           <DialogDescription>
-            Changes the mock-up of “{productName}”
-            {showColors && showSides
-              ? " in every garment color, with its other sides"
-              : showColors
-                ? " in every garment color"
-                : showSides
-                  ? " and its other sides"
-                  : ""}
-            . The job keeps the changes when its mock-ups are made again.
+            {t(
+              showColors && showSides
+                ? "batchJobs.editMockup.descriptionColorsSides"
+                : showColors
+                  ? "batchJobs.editMockup.descriptionColors"
+                  : showSides
+                    ? "batchJobs.editMockup.descriptionSides"
+                    : "batchJobs.editMockup.description",
+              { name: productName }
+            )}
           </DialogDescription>
         </DialogHeader>
 
         {isLoadingTemplates ? (
           <div className="flex flex-1 items-center justify-center">
-            <SectionLoading label="Loading mock-up templates" />
+            <SectionLoading label={t("batchJobs.editMockup.loadingTemplates")} />
           </div>
         ) : !listed || listed.length === 0 ? (
           <p className="text-muted-foreground flex-1 p-5 text-sm">
-            No {productType ? productTypeLabel(productType) : ""} mock-up templates. Add one on the
-            Mock-up Templates page first.
+            {productType
+              ? t("batchJobs.editMockup.noTypeTemplates", { type: productTypeLabel(productType) })
+              : t("batchJobs.editMockup.noTemplates")}
           </p>
         ) : (
           <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[minmax(0,1fr)_22rem] md:overflow-hidden">
             {/* The side's photo, as large as the dialog allows, with the sides under it. */}
             <section
-              aria-label={`${sideLabel} photo`}
+              aria-label={t("batchJobs.editMockup.sidePhoto", { side: sideLabel })}
               className="bg-ink-50 flex min-h-0 flex-col gap-3 px-4 py-4 md:overflow-y-auto"
             >
               <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
@@ -699,7 +703,7 @@ export const MockupImageEditDialog = ({
                       }}
                     >
                       <RotateCcw className="size-3.5" aria-hidden="true" />
-                      Template’s position
+                      {t("batchJobs.editMockup.templatePosition")}
                     </Button>
                   )}
                   {showSides && photo && (
@@ -726,7 +730,7 @@ export const MockupImageEditDialog = ({
                       ) : (
                         <Trash2 className="size-3.5" aria-hidden="true" />
                       )}
-                      {removed ? "Keep side" : "Remove side"}
+                      {removed ? t("batchJobs.editMockup.keepSide") : t("batchJobs.editMockup.removeSide")}
                     </Button>
                   )}
                 </div>
@@ -735,13 +739,14 @@ export const MockupImageEditDialog = ({
               <div className="flex flex-1 flex-col items-center">
                 {!photo ? (
                   <p className="text-muted-foreground my-auto max-w-sm text-center text-sm">
-                    {main?.name ?? "This template"} has no {sideLabel.toLowerCase()} photo, so this
-                    side is removed when you save. Pick a template with one to keep it.
+                    {t("batchJobs.editMockup.noSidePhoto", {
+                      template: main?.name ?? t("batchJobs.editMockup.thisTemplate"),
+                      side: sideLabel.toLowerCase(),
+                    })}
                   </p>
                 ) : removed ? (
                   <p className="text-muted-foreground my-auto max-w-sm text-center text-sm">
-                    The {sideLabel.toLowerCase()} is removed when you save. Choose Keep side to make
-                    it again.
+                    {t("batchJobs.editMockup.sideRemoved", { side: sideLabel.toLowerCase() })}
                   </p>
                 ) : active ? (
                   <div className="my-auto max-w-full">
@@ -858,7 +863,7 @@ export const MockupImageEditDialog = ({
                                 background={next.backgroundColor}
                               />
                             ) : undefined,
-                          title: `${mockupViewLabel(view)}: added when you save`,
+                          title: t("batchJobs.editMockup.addedOnSave", { side: mockupViewLabel(view) }),
                           removed: removedViews.includes(view),
                         };
                       }),
@@ -871,10 +876,10 @@ export const MockupImageEditDialog = ({
             {/* Settings beside the photo: the template, color and background go to every side. */}
             <aside className="space-y-4 border-t px-5 py-4 md:overflow-y-auto md:border-t-0 md:border-l">
               <div className="space-y-2">
-                <Label htmlFor="mockup-edit-template">Template</Label>
+                <Label htmlFor="mockup-edit-template">{t("batchJobs.editMockup.template")}</Label>
                 <Select value={mainId} onValueChange={chooseTemplate} disabled={busy}>
                   <SelectTrigger id="mockup-edit-template" className="w-full">
-                    <SelectValue placeholder="Choose a mock-up template" />
+                    <SelectValue placeholder={t("batchJobs.editMockup.chooseTemplate")} />
                   </SelectTrigger>
                   <SelectContent>
                     {listed.map((item) => (
@@ -883,7 +888,7 @@ export const MockupImageEditDialog = ({
                         {item.views && item.views.length > 0 && (
                           <span className="text-muted-foreground">
                             {" "}
-                            · {item.views.length + 1} sides
+                            · {t("batchJobs.editMockup.sidesCount", { count: item.views.length + 1 })}
                           </span>
                         )}
                       </SelectItem>
@@ -892,7 +897,7 @@ export const MockupImageEditDialog = ({
                 </Select>
                 {printifyOnly && !main?.printify && (
                   <p className="text-xs text-amber-700">
-                    The mock-ups are for a Printify product. Choose a Printify template: this one does not show what Printify prints.
+                    {t("batchJobs.editMockup.printifyOnly")}
                   </p>
                 )}
               </div>
@@ -900,10 +905,9 @@ export const MockupImageEditDialog = ({
               {recolorable && (
                 <div className="space-y-2 rounded-lg border p-3">
                   <div>
-                    <p className="text-sm font-medium">Garment colors</p>
+                    <p className="text-sm font-medium">{t("batchJobs.mockups.garmentColors")}</p>
                     <p className="text-muted-foreground text-xs">
-                      One mock-up in each color ticked{showSides ? ", every side" : ""}. None keeps
-                      the photo’s own color.
+                      {showSides ? t("batchJobs.editMockup.colorsHintSides") : t("batchJobs.editMockup.colorsHint")}
                     </p>
                   </div>
                   <GarmentColorPicker
@@ -916,13 +920,13 @@ export const MockupImageEditDialog = ({
                   />
                   {colors.length > 1 && (
                     <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                      <span className="text-muted-foreground">Shown in</span>
+                      <span className="text-muted-foreground">{t("batchJobs.editMockup.shownIn")}</span>
                       {colors.map((hex) => (
                         <button
                           key={hex}
                           type="button"
                           aria-pressed={sameColor(hex, previewColor)}
-                          aria-label={`Show in ${garmentColorName(hex, main?.printify?.colors)}`}
+                          aria-label={t("batchJobs.mockups.showIn", { name: garmentColorName(hex, main?.printify?.colors) })}
                           title={garmentColorName(hex, main?.printify?.colors)}
                           disabled={busy}
                           onClick={() => setShownColor(hex)}
@@ -941,8 +945,7 @@ export const MockupImageEditDialog = ({
 
               {!recolorable && colorCards.length > 1 && main && (
                 <p className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:bg-amber-500/10 dark:text-amber-300">
-                  {main.name} can’t be recolored, so one mock-up in the photo’s own color takes the
-                  place of the {colorCards.length} colors.
+                  {t("batchJobs.editMockup.cantRecolor", { name: main.name, count: colorCards.length })}
                 </p>
               )}
 
@@ -950,14 +953,14 @@ export const MockupImageEditDialog = ({
                 <div className="space-y-2 rounded-lg border p-3">
                   <div>
                     <p className="text-sm font-medium">
-                      Background
+                      {t("batchJobs.editMockup.background")}
                       {showSides ? (
-                        <span className="text-muted-foreground font-normal"> · every side</span>
+                        <span className="text-muted-foreground font-normal"> · {t("batchJobs.editMockup.everySide")}</span>
                       ) : null}
                     </p>
                     {colors.length > 1 && (
                       <p className="text-muted-foreground text-xs">
-                        Each garment color has its own: pick a color to set its background.
+                        {t("batchJobs.editMockup.backgroundPerColor")}
                       </p>
                     )}
                   </div>
@@ -965,7 +968,7 @@ export const MockupImageEditDialog = ({
                     <div
                       className="flex flex-wrap items-center gap-1.5"
                       role="group"
-                      aria-label="Garment color to choose the background for"
+                      aria-label={t("batchJobs.editMockup.backgroundColorGroup")}
                     >
                       {colors.map((hex) => {
                         const shown = sameColor(hex, previewColor);
@@ -974,7 +977,7 @@ export const MockupImageEditDialog = ({
                           <button
                             key={hex}
                             type="button"
-                            aria-label={`Background for the ${garmentColorName(hex, main?.printify?.colors)} garment`}
+                            aria-label={t("batchJobs.editMockup.backgroundFor", { name: garmentColorName(hex, main?.printify?.colors) })}
                             aria-pressed={shown}
                             disabled={busy}
                             onClick={() => setShownColor(hex)}
@@ -995,7 +998,7 @@ export const MockupImageEditDialog = ({
                   {colors.length > 1 && previewColor && (
                     <p className="text-ink-700 flex items-center gap-1.5 text-xs">
                       <GarmentColorSwatch hex={previewColor} />
-                      {garmentColorName(previewColor, main?.printify?.colors)} garment
+                      {t("batchJobs.editMockup.garment", { name: garmentColorName(previewColor, main?.printify?.colors) })}
                     </p>
                   )}
                   {/* Keyed by the garment color, so a color typed for one is not left in the field for the next. */}
@@ -1030,10 +1033,9 @@ export const MockupImageEditDialog = ({
               {main && othersOnTemplate > 0 && (
                 <div className="space-y-2.5 rounded-lg border p-3">
                   <div>
-                    <p className="text-sm font-medium">Apply to</p>
+                    <p className="text-sm font-medium">{t("batchJobs.editMockup.applyTo")}</p>
                     <p className="text-muted-foreground text-xs">
-                      Copies the background and each side’s design position. Each mock-up keeps its
-                      own garment color.
+                      {t("batchJobs.editMockup.applyToHint")}
                     </p>
                   </div>
                   <RadioGroup
@@ -1056,7 +1058,7 @@ export const MockupImageEditDialog = ({
                         <span className={item.count === 0 ? "text-muted-foreground" : undefined}>
                           {item.label}
                           {item.count !== undefined && (
-                            <span className="text-muted-foreground"> · {item.count} more</span>
+                            <span className="text-muted-foreground"> · {t("batchJobs.editMockup.more", { count: item.count })}</span>
                           )}
                         </span>
                       </label>
@@ -1065,8 +1067,8 @@ export const MockupImageEditDialog = ({
                   {scope !== "this" && (
                     <p className="text-muted-foreground text-xs" aria-live="polite">
                       {spread.length === 0
-                        ? "The other mock-ups already look like this, so only this one is saved."
-                        : `${spread.length} other mock-up${spread.length === 1 ? "" : "s"} will change.`}
+                        ? t("batchJobs.editMockup.alreadySame")
+                        : t("batchJobs.editMockup.willChange", { count: spread.length })}
                     </p>
                   )}
                 </div>
@@ -1074,22 +1076,22 @@ export const MockupImageEditDialog = ({
 
               {unrecolorableSides.length > 0 && (
                 <p className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:bg-amber-500/10 dark:text-amber-300">
-                  The{" "}
-                  {unrecolorableSides
-                    .map((side) => mockupViewLabel(side.view).toLowerCase())
-                    .join(" and ")}{" "}
-                  photo can’t be recolored, so it keeps its own color. Edit the template and save it
-                  again to prepare that photo for recoloring.
+                  {t("batchJobs.editMockup.sideCantRecolor", {
+                    sides: unrecolorableSides
+                      .map((side) => mockupViewLabel(side.view).toLowerCase())
+                      .join(t("batchJobs.editMockup.and")),
+                  })}
                 </p>
               )}
 
               {missingSides.length > 0 && (
                 <p className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:bg-amber-500/10 dark:text-amber-300">
-                  {main?.name} has no{" "}
-                  {missingSides
-                    .map((side) => mockupViewLabel(side.view).toLowerCase())
-                    .join(" or ")}{" "}
-                  photo: that side is removed when you save.
+                  {t("batchJobs.editMockup.missingSides", {
+                    name: main?.name ?? "",
+                    sides: missingSides
+                      .map((side) => mockupViewLabel(side.view).toLowerCase())
+                      .join(t("batchJobs.editMockup.or")),
+                  })}
                 </p>
               )}
 
@@ -1098,8 +1100,7 @@ export const MockupImageEditDialog = ({
                   role="alert"
                   className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:bg-amber-500/10 dark:text-amber-300"
                 >
-                  This would look exactly like another mock-up of this design ({duplicateName}).
-                  Choose another garment color, or remove this mock-up instead.
+                  {t("batchJobs.editMockup.duplicate", { name: duplicateName })}
                 </p>
               )}
             </aside>
@@ -1108,11 +1109,11 @@ export const MockupImageEditDialog = ({
 
         <DialogFooter className="flex-wrap items-center gap-2 border-t px-5 py-3">
           <Button type="button" variant="ghost" disabled={busy} onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("batchJobs.regenerate.cancel")}
           </Button>
           {edited.length > 0 && (
             <Button type="button" variant="outline" disabled={busy} onClick={() => reset.mutate()}>
-              {reset.isPending ? "Resetting…" : "Use the job’s settings"}
+              {reset.isPending ? t("batchJobs.editMockup.resetting") : t("batchJobs.editMockup.useJobSettings")}
             </Button>
           )}
           <Button
@@ -1123,10 +1124,10 @@ export const MockupImageEditDialog = ({
             onClick={() => save.mutate({ removeAll: true })}
           >
             {showColors
-              ? "Remove all colors"
+              ? t("batchJobs.editMockup.removeAllColors")
               : showSides
-                ? "Remove all sides"
-                : "Remove this mock-up"}
+                ? t("batchJobs.editMockup.removeAllSides")
+                : t("batchJobs.editMockup.removeThis")}
           </Button>
           <Button
             type="button"
@@ -1142,7 +1143,7 @@ export const MockupImageEditDialog = ({
               changes.length === 0 ? onOpenChange(false) : save.mutate({ removeAll: false })
             }
           >
-            {save.isPending ? "Saving…" : "Save"}
+            {save.isPending ? t("batchJobs.editMockup.saving") : t("batchJobs.editMockup.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

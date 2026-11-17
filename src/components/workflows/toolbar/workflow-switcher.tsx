@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -32,39 +33,62 @@ export const WorkflowSwitcher = ({
   disabled,
   onSelect,
   onCreate,
-}: WorkflowSwitcherProps) => (
-  <div className="flex min-w-0 items-center gap-2">
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button type="button" variant="ghost" size="sm" className="max-w-72 min-w-0 px-2" disabled={disabled}>
-          <span className="text-ink-900 truncate text-base font-semibold">{name || "Workflow"}</span>
-          <ChevronsUpDown className="text-muted-foreground" aria-hidden="true" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-72">
-        <DropdownMenuLabel>Your workflows</DropdownMenuLabel>
-        {workflows.map((workflow) => (
-          <DropdownMenuItem key={workflow.id} onSelect={() => onSelect(workflow.id)} className="gap-2">
-            <Check
-              className={cn("size-4", workflow.id === activeWorkflowId ? "opacity-100" : "opacity-0")}
-              aria-hidden="true"
-            />
-            <span className="min-w-0 flex-1 truncate">{workflow.name}</span>
-            <span className="text-muted-foreground text-xs">{workflow.nodeCount} {workflow.nodeCount === 1 ? "node" : "nodes"}</span>
+}: WorkflowSwitcherProps) => {
+  const { t } = useTranslation("common");
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="max-w-72 min-w-0 px-2"
+            disabled={disabled}
+          >
+            <span className="text-ink-900 truncate text-base font-semibold">
+              {name || t("workflowEditor.switcher.workflow")}
+            </span>
+            <ChevronsUpDown className="text-muted-foreground" aria-hidden="true" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-72">
+          <DropdownMenuLabel>{t("workflowEditor.switcher.yourWorkflows")}</DropdownMenuLabel>
+          {workflows.map((workflow) => (
+            <DropdownMenuItem
+              key={workflow.id}
+              onSelect={() => onSelect(workflow.id)}
+              className="gap-2"
+            >
+              <Check
+                className={cn(
+                  "size-4",
+                  workflow.id === activeWorkflowId ? "opacity-100" : "opacity-0"
+                )}
+                aria-hidden="true"
+              />
+              <span className="min-w-0 flex-1 truncate">{workflow.name}</span>
+              <span className="text-muted-foreground text-xs">
+                {t("workflowEditor.switcher.nodeCount", { count: workflow.nodeCount })}
+              </span>
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={onCreate} className="gap-2">
+            <Plus className="size-4" aria-hidden="true" />
+            {t("workflowEditor.metaDialog.newTitle")}
           </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={onCreate} className="gap-2">
-          <Plus className="size-4" aria-hidden="true" />
-          New workflow
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-    {isDirty && (
-      <span className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-300" role="status">
-        <span className="size-2 rounded-full bg-amber-500" aria-hidden="true" />
-        Unsaved
-      </span>
-    )}
-  </div>
-);
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {isDirty && (
+        <span
+          className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-300"
+          role="status"
+        >
+          <span className="size-2 rounded-full bg-amber-500" aria-hidden="true" />
+          {t("workflowEditor.switcher.unsaved")}
+        </span>
+      )}
+    </div>
+  );
+};

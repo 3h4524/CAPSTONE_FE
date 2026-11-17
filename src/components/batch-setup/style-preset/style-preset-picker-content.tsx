@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { StylePresetCard } from "@/components/batch-setup/style-preset/style-preset-card";
 import { StylePresetDetail } from "@/components/batch-setup/style-preset/style-preset-detail";
@@ -21,12 +22,13 @@ type StylePresetPickerContentProps = {
 };
 
 export const StylePresetPickerContent = ({ presets, initialId, onApply, onClose }: StylePresetPickerContentProps) => {
+  const { t } = useTranslation("common");
   const [draftId, setDraftId] = useState(initialId ?? NO_STYLE_VALUE);
   const draftPreset = presets.find((preset) => preset.id === draftId) ?? null;
 
   const applyDraft = () => {
     onApply(draftId === NO_STYLE_VALUE ? null : draftId);
-    showToast("success", "Art style applied.");
+    showToast("success", t("batchSetup.style.applied"));
     onClose();
   };
 
@@ -34,11 +36,11 @@ export const StylePresetPickerContent = ({ presets, initialId, onApply, onClose 
     <>
       <div className="grid min-h-0 flex-1 gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <ScrollArea className="min-h-0">
-          <RadioGroup value={draftId} onValueChange={setDraftId} className="gap-2 pr-1" aria-label="Art style">
+          <RadioGroup value={draftId} onValueChange={setDraftId} className="gap-2 pr-1" aria-label={t("batchSetup.style.artStyle")}>
             <StylePresetCard
               value={NO_STYLE_VALUE}
-              name="No style"
-              description="Use the prompt exactly as written, with no extra style keywords."
+              name={t("batchSetup.style.noStyle")}
+              description={t("batchSetup.style.noStyleDescription")}
               previewImageUrl={null}
               selected={draftId === NO_STYLE_VALUE}
             />
@@ -59,8 +61,8 @@ export const StylePresetPickerContent = ({ presets, initialId, onApply, onClose 
         </div>
       </div>
       <DialogFooter className="gap-2">
-        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button type="button" onClick={applyDraft}>Apply style</Button>
+        <Button type="button" variant="ghost" onClick={onClose}>{t("batchSetup.cancel")}</Button>
+        <Button type="button" onClick={applyDraft}>{t("batchSetup.style.apply")}</Button>
       </DialogFooter>
     </>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ type ArtStyleFieldProps = {
 };
 
 export const ArtStyleField = ({ value, presets, creating, disabled = false, error, onChange, onCreateNew }: ArtStyleFieldProps) => {
+  const { t } = useTranslation("common");
   const [draft, setDraft] = useState(value);
   const query = draft.trim().toLowerCase();
   const matches =
@@ -36,7 +38,7 @@ export const ArtStyleField = ({ value, presets, creating, disabled = false, erro
   return (
     <div className="space-y-2">
       <Label htmlFor="prompt-style">
-        Art Style <span aria-hidden="true">*</span>
+        {t("batchConfig.artStyle")} <span aria-hidden="true">*</span>
       </Label>
       <Input
         id="prompt-style"
@@ -51,7 +53,7 @@ export const ArtStyleField = ({ value, presets, creating, disabled = false, erro
         }}
       />
       {matches.length > 0 && (
-        <ul className="border-ink-200 bg-card overflow-hidden rounded-xl border" aria-label="Matching art styles">
+        <ul className="border-ink-200 bg-card overflow-hidden rounded-xl border" aria-label={t("batchConfig.matchingStyles")}>
           {matches.map((preset) => (
             <li key={preset.id}>
               <button
@@ -64,7 +66,7 @@ export const ArtStyleField = ({ value, presets, creating, disabled = false, erro
                 )}
               >
                 <span className="truncate">{preset.name}</span>
-                {preset.isMine ? null : <span className="text-muted-foreground text-xs">System</span>}
+                {preset.isMine ? null : <span className="text-muted-foreground text-xs">{t("batchConfig.system")}</span>}
               </button>
             </li>
           ))}
@@ -73,7 +75,7 @@ export const ArtStyleField = ({ value, presets, creating, disabled = false, erro
       {query.length > 0 && !exactMatch && (
         <Button type="button" variant="outline" size="sm" disabled={disabled || creating} onClick={() => onCreateNew(draft.trim())}>
           <Plus aria-hidden="true" />
-          {creating ? "Creating style..." : `Create new style "${draft.trim()}"`}
+          {creating ? t("batchConfig.creatingStyle") : t("batchConfig.createStyle", { name: draft.trim() })}
         </Button>
       )}
       {error && (

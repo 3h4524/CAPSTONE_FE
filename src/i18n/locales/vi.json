@@ -3397,6 +3397,14 @@
         "notInPlan": "Không có trong gói của bạn",
         "title": "Node",
         "description": "Kéo vào canvas hoặc nhấp để thêm."
+      },
+      "canvasPatch": {
+        "unknownStepType": "Loại bước không xác định",
+        "afterStepNotFound": "Không tìm thấy bước cần thêm phía sau",
+        "stepNotFound": "Không tìm thấy bước",
+        "stepsNotConnected": "Các bước này chưa được nối với nhau",
+        "noSettingsToUpdate": "Không có cài đặt nào để cập nhật",
+        "renamingOff": "Đã tắt tính năng đổi tên bước"
       }
     },
     "workflowMedia": {
@@ -4403,7 +4411,13 @@
         "uploadedWithVideo": "Đã tải lên {{count}} ảnh và video",
         "filesAttached": "đã đính kèm {{count}} tệp thiết kế để người mua tải xuống",
         "reviewOnEtsy": "Hãy xem lại trên Etsy và đăng khi sẵn sàng. Etsy tính phí đăng listing khi bạn đăng.",
-        "openOnEtsy": "Mở bản nháp trên Etsy"
+        "openOnEtsy": "Mở bản nháp trên Etsy",
+        "historyStatuses": {
+          "pending": "đang chờ",
+          "retrying": "đang thử lại",
+          "success": "thành công",
+          "failed": "thất bại"
+        }
       },
       "insights": {
         "issues": {
@@ -4574,7 +4588,88 @@
         "openListing": "Mở listing Etsy",
         "productType": "Loại sản phẩm",
         "blueprintPlaceholder": "ví dụ: gildan 64000, bella canvas 3001, mug 11oz",
-        "nothingMatches": "Không có kết quả phù hợp."
+        "nothingMatches": "Không có kết quả phù hợp.",
+        "states": {
+          "created": "đã tạo",
+          "publishing": "đang đăng",
+          "published": "đã đăng",
+          "failed": "thất bại"
+        }
+      },
+      "page": {
+        "waitingPopup": "Hoàn tất đăng nhập Etsy ở cửa sổ popup.",
+        "showEtsyWindow": "Hiện cửa sổ Etsy",
+        "loadingShop": "Đang tải shop của bạn…",
+        "loadError": "Không thể tải shop của bạn.",
+        "tryAgain": "Thử lại",
+        "connectTitle": "Kết nối shop Etsy của bạn",
+        "connectDescription": "Kết nối một lần để xem shop tại đây và gửi những gì workflow tạo tới Etsy dưới dạng bản nháp. Bạn đăng nhập trên Etsy; Podivo không bao giờ thấy mật khẩu Etsy của bạn.",
+        "notConfigured": "Etsy chưa được cấu hình trên máy chủ này. Hãy nhờ quản trị viên thêm Etsy app key.",
+        "waitingForEtsy": "Đang chờ Etsy…",
+        "connectWithEtsy": "Kết nối với Etsy",
+        "tokensNote": "Token được lưu mã hóa. Bạn có thể ngắt kết nối bất cứ lúc nào.",
+        "outcomes": {
+          "connected": "Shop Etsy của bạn đã được kết nối.",
+          "denied": "Bạn đã từ chối quyền Etsy yêu cầu, nên chưa có gì được kết nối.",
+          "expired": "Yêu cầu kết nối đã hết hạn hoặc đã được sử dụng. Hãy bắt đầu lại.",
+          "noShop": "Tài khoản Etsy này chưa có shop. Hãy mở shop trên Etsy rồi kết nối lại.",
+          "shopTaken": "Shop Etsy này đã được kết nối với tài khoản khác tại đây. Mỗi shop chỉ có thể kết nối với một tài khoản: Etsy có thể coi shop vận hành từ nhiều tài khoản là gian lận. Hãy ngắt kết nối ở đó trước.",
+          "failed": "Etsy không thể hoàn tất kết nối. Hãy thử lại sau ít phút."
+        },
+        "disconnectSuccess": "Shop Etsy đã ngắt kết nối.",
+        "disconnectFailed": "Không thể ngắt kết nối shop. Hãy thử lại.",
+        "connectFailed": "Không thể bắt đầu kết nối với Etsy. Hãy thử lại.",
+        "syncFailed": "Không thể đọc Etsy lúc này. Hãy thử lại sau ít phút.",
+        "permissions": {
+          "readShop": {
+            "title": "Đọc shop của bạn",
+            "detail": "Tên, số lượng listing, doanh số và đánh giá, để hiện tại đây."
+          },
+          "readListings": {
+            "title": "Đọc listing của bạn",
+            "detail": "Để so sánh những gì bạn bán với Market Radar."
+          },
+          "readOrders": {
+            "title": "Đọc đơn của bạn",
+            "detail": "Doanh thu, đơn theo ngày và thời gian xử lý. Podivo không bao giờ sửa hoặc giao đơn."
+          },
+          "createDrafts": {
+            "title": "Tạo bản nháp listing",
+            "detail": "Để gửi thiết kế, mock-up và video từ workflow dưới dạng bản nháp. Không có gì lên sóng cho đến khi bạn đăng lên Etsy."
+          }
+        },
+        "reconnectBanner": "Kết nối với Etsy đã hết hạn hoặc bị thu hồi. Kết nối lại để tiếp tục đọc shop và gửi bản nháp.",
+        "reconnectEtsy": "Kết nối lại Etsy",
+        "etsyUnavailable": "Etsy không phản hồi lúc này, nên các số liệu dưới đây đang thiếu. Kết nối của bạn vẫn còn nguyên.",
+        "statActiveListings": "Listing đang hoạt động",
+        "statAllTimeSales": "Tổng đơn đã bán",
+        "statShopFavorites": "Yêu thích shop",
+        "statRating": "Đánh giá",
+        "noReviewsYet": "Chưa có đánh giá nào",
+        "reviewsCount": "{{count}} đánh giá",
+        "reconnectNeeded": "Cần kết nối lại",
+        "connected": "Đã kết nối",
+        "onVacation": "Tạm nghỉ",
+        "syncing": "Đang đồng bộ…",
+        "syncNow": "Đồng bộ ngay",
+        "viewOnEtsy": "Xem trên Etsy",
+        "readFromEtsy": "Đã đọc từ Etsy lúc {{time}}",
+        "readingInsights": "Đang đọc đơn, listing và đánh giá từ Etsy…",
+        "insightsLoadError": "Không thể tải thống kê shop.",
+        "connectionDetails": "Chi tiết kết nối",
+        "factShopId": "ID shop",
+        "factCurrency": "Tiền tệ",
+        "factConnectedSince": "Kết nối từ",
+        "factLastSynced": "Đồng bộ gần nhất",
+        "reconnectBy": "Etsy yêu cầu xác nhận lại kết nối trước {{date}}; Podivo tự động gia hạn quyền truy cập cho đến lúc đó.",
+        "disconnectNote": "Ngắt kết nối sẽ xóa các token Etsy đã lưu khỏi Podivo.",
+        "disconnectConfirm": "Ngắt kết nối shop này?",
+        "cancel": "Hủy",
+        "disconnect": "Ngắt kết nối",
+        "timeJustNow": "vừa xong",
+        "timeMinutesAgo": "{{count}} phút trước",
+        "timeHoursAgo": "{{count}} giờ trước",
+        "etsyTrademark": "Cụm từ “Etsy” là thương hiệu của Etsy, Inc. Ứng dụng này sử dụng Etsy API nhưng không được Etsy, Inc. tài trợ hoặc chứng nhận."
       }
     },
     "marketInsights": {
@@ -4690,6 +4785,63 @@
         "description": "Tải lên một ý tưởng sản phẩm và xem quy trình tạo, chấm điểm và đăng nó.",
         "primary": "Bắt đầu miễn phí",
         "secondary": "Về trang chủ"
+      },
+      "features": {
+        "design": {
+          "title": "Tạo thiết kế bằng AI",
+          "tagline": "Tác phẩm gốc, theo yêu cầu",
+          "description": "Mô tả niche và ý tưởng sản phẩm một lần. Workflow AI tạo ra thiết kế gốc, sẵn sàng in kèm mock-up lifestyle trên áo quần, poster, sticker và túi tote.",
+          "bullets": {
+            "0": "Từ prompt ra thiết kế trong vài phút, không cần nhà thiết kế",
+            "1": "Xuất file sẵn sàng in với nền trong suốt",
+            "2": "Tự động tạo mock-up trên áo, poster, sticker và túi tote",
+            "3": "Nhiều biến thể cho mỗi thiết kế để thử nghiệm cái bán chạy"
+          }
+        },
+        "video": {
+          "title": "Tạo video",
+          "tagline": "Listing sinh động hơn",
+          "description": "Mỗi thiết kế đi kèm một video quảng bá ngắn: mock-up động được render theo định dạng sẵn sàng cho listing và định dạng dọc cho Etsy, TikTok và Reels.",
+          "bullets": {
+            "0": "Tự tạo từ thiết kế của bạn, không cần kỹ năng dựng video",
+            "1": "Bản ngang sẵn sàng cho listing và bản dọc cho mạng xã hội",
+            "2": "Hiệu ứng zoom, xoay và chuyển cảnh lifestyle",
+            "3": "Caption và hook khớp với nội dung listing"
+          }
+        },
+        "listing": {
+          "title": "Nội dung listing trên Etsy",
+          "tagline": "Nội dung viết để xếp hạng",
+          "description": "Có ngay nội dung listing hoàn chỉnh tối ưu cho tìm kiếm trên Etsy: tiêu đề giàu từ khóa, mô tả thuyết phục, đủ 13 thẻ, chất liệu và thuộc tính.",
+          "bullets": {
+            "0": "Tiêu đề SEO xây từ từ khóa người mua thực",
+            "1": "Mô tả được cấu trúc để chuyển khách xem thành người mua",
+            "2": "Đủ bộ 13 thẻ cùng chất liệu và thuộc tính",
+            "3": "Giọng văn phù hợp với shop và niche của bạn"
+          }
+        },
+        "batch": {
+          "title": "Xử lý hàng loạt",
+          "tagline": "Một lần tải lên, hàng trăm listing",
+          "description": "Thả một file CSV duy nhất với ý tưởng sản phẩm và để workflow chạy: thiết kế, video và nội dung listing được tạo cho cả lô trong khi bạn chỉ xem lại các ngoại lệ.",
+          "bullets": {
+            "0": "Nhập CSV cho ý tưởng, niche và loại sản phẩm",
+            "1": "Tạo song song trên toàn bộ lô",
+            "2": "Tiến trình trực tiếp từng item, tự thử lại khi lỗi",
+            "3": "Hàng chờ duyệt chỉ nêu ra những gì cần bạn xử lý"
+          }
+        },
+        "platforms": {
+          "title": "Tích hợp đa nền tảng",
+          "tagline": "Xuất bản mọi nơi chỉ với một cú nhấp",
+          "description": "Listing đã duyệt được đăng ngay từ Podivo. Thiết kế, mock-up, video và nội dung được đóng gói và đẩy lên Etsy cùng các sàn đã kết nối, tồn kho luôn đồng bộ.",
+          "bullets": {
+            "0": "Đăng lên Etsy một cú nhấp với đầy đủ assets đi kèm",
+            "1": "Kết nối Printify để xử lý đơn liền mạch",
+            "2": "Listing luôn đồng bộ khi bạn sửa trong Podivo",
+            "3": "Chế độ nháp để duyệt lần cuối trước khi đăng"
+          }
+        }
       }
     },
     "landing": {
@@ -5279,6 +5431,11 @@
         "panelDescription": "Hỏi Podi hoặc nhờ hỗ trợ với các quy trình của bạn.",
         "whatNow": "Giờ làm gì?",
         "starterIntro": "Hãy hỏi bất cứ điều gì, hoặc thử một trong các gợi ý sau."
+      }
+    },
+    "workflowRun": {
+      "validation": {
+        "chooseMockupTemplate": "{{label}}: Chọn ít nhất một mẫu mock-up."
       }
     }
   }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { History, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AssistantDeleteAllDialog } from "@/components/commons/assistant/assistant-delete-all-dialog";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { useAssistantStore } from "@/stores/assistant";
 const SKELETON_ROWS = [0, 1, 2];
 
 export const AssistantHistoryMenu = () => {
+  const { t } = useTranslation("common");
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirmingDeleteAll, setIsConfirmingDeleteAll] = useState(false);
   const setDraft = useAssistantStore((state) => state.setDraft);
@@ -55,13 +57,13 @@ export const AssistantHistoryMenu = () => {
     <>
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
-          <Button type="button" variant="ghost" size="icon" aria-label="Chat history">
+          <Button type="button" variant="ghost" size="icon" aria-label={t("commons.assistant.history.label")}>
             <History aria-hidden="true" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-72">
           <div className="flex items-center justify-between px-2 py-1.5">
-            <span className="text-sm font-semibold">Recent chats</span>
+            <span className="text-sm font-semibold">{t("commons.assistant.history.recent")}</span>
             <Button
               type="button"
               variant="none"
@@ -73,14 +75,14 @@ export const AssistantHistoryMenu = () => {
                 setIsConfirmingDeleteAll(true);
               }}
             >
-              Delete all
+              {t("commons.assistant.deleteAll.confirm")}
             </Button>
           </div>
           <DropdownMenuSeparator />
           {isLoadingConversations
             ? SKELETON_ROWS.map((row) => <Skeleton key={row} className="mx-2 my-2 h-5" />)
             : null}
-          {conversations?.length === 0 ? <p className="text-muted-foreground px-2 py-1.5 text-sm">No chats yet</p> : null}
+          {conversations?.length === 0 ? <p className="text-muted-foreground px-2 py-1.5 text-sm">{t("commons.assistant.history.empty")}</p> : null}
           {conversations?.map((conversation) => (
             <div key={conversation.id} className="flex items-center gap-1">
               <DropdownMenuItem className="min-w-0 flex-1" onSelect={() => openConversation(conversation.id)}>
@@ -90,7 +92,7 @@ export const AssistantHistoryMenu = () => {
                 type="button"
                 variant="none"
                 size="icon-sm"
-                aria-label={`Delete chat ${conversation.title}`}
+                aria-label={t("commons.assistant.history.delete", { title: conversation.title })}
                 className="text-ink-400 size-7 hover:translate-y-0 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                 onClick={() => removeConversation(conversation.id)}
               >

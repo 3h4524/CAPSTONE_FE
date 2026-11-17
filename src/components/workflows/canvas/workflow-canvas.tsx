@@ -163,6 +163,7 @@ export const WorkflowCanvas = () => {
 
   return (
     <div
+      data-guide="workflows.canvas"
       className={cn("relative h-full w-full", selectModifierHeld && "wf-select-mode")}
       onPointerMoveCapture={handleConnectionPointerMove}
       onPointerLeave={() => hoverConnection(null, null)}

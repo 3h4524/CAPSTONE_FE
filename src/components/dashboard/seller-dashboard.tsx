@@ -11,6 +11,7 @@ import { BatchGaugeCard } from "@/components/dashboard/batch-gauge-card";
 import { DashboardHero } from "@/components/dashboard/dashboard-hero";
 import { ExportButton } from "@/components/dashboard/export-button";
 import { KpiRow } from "@/components/dashboard/kpi-row";
+import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
 import { PeriodSwitcher } from "@/components/dashboard/period-switcher";
 import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
 import { ProductionChart } from "@/components/dashboard/production-chart";
@@ -68,6 +69,8 @@ export const SellerDashboard = () => {
       <div {...reveal(0)}>
         <KpiRow kpis={summary.kpis} days={days} />
       </div>
+
+      <OnboardingChecklist />
 
       {/* 2. Who they are and what needs them, beside the running batch and what is left of the
           plan, kept compact so the welcome card stays wide and low. A paid plan has no

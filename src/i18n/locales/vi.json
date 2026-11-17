@@ -4371,8 +4371,28 @@
         "periodDays": "{{count}} ngày"
       },
       "onboarding": {
-        "title": "Bắt đầu lô đầu tiên",
-        "description": "Bốn bước từ CSV tới một listing sẵn sàng cho Etsy. Bảng điều khiển của bạn sẽ tự điền dần theo tiến độ.",
+        "title": "Chuẩn bị không gian làm việc",
+        "description": "Bốn bước từ kết nối nhà cung cấp tới lần chạy workflow đầu tiên. Mỗi bước tự đánh dấu khi bạn làm xong.",
+        "progress": "Đã xong {{done}}/{{count}}",
+        "dismiss": "Ẩn danh sách",
+        "steps": {
+          "apiKeys": {
+            "title": "Kết nối nhà cung cấp",
+            "description": "Thêm khoá Gemini, Ideogram hoặc Printify để tạo sản phẩm."
+          },
+          "batches": {
+            "title": "Tạo lô hàng",
+            "description": "Nhập CSV hoặc thêm sản phẩm thủ công."
+          },
+          "mockups": {
+            "title": "Thêm mẫu mock-up",
+            "description": "Tải ảnh sản phẩm của bạn lên hoặc chọn mẫu có sẵn."
+          },
+          "workflows": {
+            "title": "Chạy workflow",
+            "description": "Biến thiết kế đã duyệt thành mock-up, video và listing."
+          }
+        },
         "start": "Bắt đầu",
         "open": "Mở"
       },
@@ -4430,6 +4450,96 @@
         "unavailableTitle": "Bảng điều khiển tạm thời không khả dụng",
         "unavailableHint": "Hãy tải lại trang và thử lại.",
         "overview": "Tổng quan {{days}} ngày qua"
+      }
+    },
+    "pageGuides": {
+      "replay": "Xem hướng dẫn trang",
+      "locale": {
+        "back": "Quay lại",
+        "close": "Đóng",
+        "next": "Tiếp",
+        "last": "Xong",
+        "skip": "Bỏ qua"
+      },
+      "apiKeys": {
+        "steps": {
+          "connect": {
+            "title": "Kết nối dịch vụ",
+            "body": "Podivo chạy bằng tài khoản Gemini, Ideogram và Printify của bạn. Chuyến tham quan ngắn này chỉ nơi quản lý các kết nối."
+          },
+          "readiness": {
+            "title": "Sẵn sàng cho workflow",
+            "body": "Ba mảng này chạy toàn bộ pipeline. Dấu tích xanh nghĩa là lô có thể chạy từ đầu tới lúc đăng bán."
+          },
+          "add": {
+            "title": "Thêm kết nối",
+            "body": "Chọn nhà cung cấp, dán khoá và xác nhận. Bạn có thể thêm nhiều khoá và đổi qua lại bất cứ lúc nào."
+          },
+          "manage": {
+            "title": "Quản lý kết nối",
+            "body": "Kết nối lại khoá hết hạn, xem lần dùng gần nhất hoặc xoá. Danh sách trên bảng điều khiển tự tích khi có khoá hoạt động."
+          }
+        }
+      },
+      "batches": {
+        "steps": {
+          "start": {
+            "title": "Lô hàng",
+            "body": "Một lô gom các sản phẩm cùng dòng sản phẩm và cùng lần chạy. Chuyến tham quan này chỉ từng phần của trang."
+          },
+          "actions": {
+            "title": "Tạo hoặc nhập",
+            "body": "Tạo lô thủ công, hoặc nhập CSV mỗi dòng một sản phẩm. Lô cần có dòng sản phẩm trước khi chạy."
+          },
+          "list": {
+            "title": "Danh sách lô",
+            "body": "Mọi lô nằm ở đây kèm số sản phẩm theo trạng thái. Sau khi tạo, bạn chuyển giữa các lô ngay tại đây."
+          },
+          "products": {
+            "title": "Sản phẩm trong lô",
+            "body": "Mỗi dòng là một sản phẩm với trạng thái riêng. Sản phẩm lỗi có thể đưa về chờ mà không ảnh hưởng sản phẩm khác."
+          },
+          "help": {
+            "title": "Cách hoạt động",
+            "body": "Mở lại hướng dẫn từng bước mỗi khi cần nhìn cả pipeline trong một màn hình."
+          }
+        }
+      },
+      "mockups": {
+        "steps": {
+          "start": {
+            "title": "Thư viện mock-up",
+            "body": "Mock-up biến thiết kế phẳng thành ảnh sản phẩm. Chuyến tham quan này chỉ nơi chứa mẫu và ảnh người mẫu."
+          },
+          "tabs": {
+            "title": "Hai loại ảnh",
+            "body": "Ảnh sản phẩm đặt thiết kế lên sản phẩm; ảnh người mẫu thêm người mặc sản phẩm."
+          },
+          "templates": {
+            "title": "Ảnh sản phẩm",
+            "body": "Dùng mẫu có sẵn hoặc tải ảnh vùng in của bạn lên, rồi chọn màu áo khi chạy workflow."
+          },
+          "models": {
+            "title": "Ảnh người mẫu",
+            "body": "Mở tab này để tải lên hoặc tạo ảnh phong cách sống với người mặc sản phẩm."
+          }
+        }
+      },
+      "workflows": {
+        "steps": {
+          "start": {
+            "title": "Trình dựng workflow",
+            "body": "Canvas biến một lô thành thiết kế, mock-up, video và listing. Validate giúp tránh một lần chạy tốn tiền, còn Run chỉ hỏi chi phí một lần."
+          },
+          "palette": {
+            "title": "Bảng node",
+            "body": "Kéo node vào canvas, hoặc bấm để đặt. Pipeline mặc định đã nối sẵn chín bước cần thiết."
+          },
+          "canvas": {
+            "title": "Canvas",
+            "body": "Chọn node để sửa ở bên phải. Node hiện trạng thái trực tiếp khi lượt chạy đi qua."
+          }
+        }
       }
     },
     "shop": {

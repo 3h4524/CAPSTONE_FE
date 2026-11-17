@@ -1,17 +1,22 @@
+"use client";
+
+import { useTranslation } from "react-i18next";
+
 import { Container } from "@/components/commons/layout/container";
 import { Button } from "@/components/ui/button";
 import { CTA_CONTENT } from "@/data/landing-content";
 
 export const CtaSection = () => {
+  const { t } = useTranslation("common");
   return (
     <section id="signup" className="scroll-mt-16 pb-10 md:pb-24">
       <Container>
         <div className="bg-primary text-primary-foreground rounded-lg px-6 py-9 text-center md:p-16">
           <h2 className="font-display mx-auto max-w-2xl text-3xl font-bold tracking-tight text-balance md:text-4xl">
-            {CTA_CONTENT.title}
+            {t("landing.cta.title", { defaultValue: CTA_CONTENT.title })}
           </h2>
           <p className="text-primary-foreground/70 mx-auto mt-4 max-w-xl">
-            {CTA_CONTENT.description}
+            {t("landing.cta.description", { defaultValue: CTA_CONTENT.description })}
           </p>
           <Button
             variant="defaultWithTextWhite"
@@ -20,7 +25,7 @@ export const CtaSection = () => {
             asChild
           >
             <a href={CTA_CONTENT.primaryCta.href}>
-              {CTA_CONTENT.primaryCta.label}
+              {t("landing.cta.primary", { defaultValue: CTA_CONTENT.primaryCta.label })}
             </a>
           </Button>
         </div>

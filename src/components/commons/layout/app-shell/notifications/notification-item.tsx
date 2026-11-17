@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { vi } from "date-fns/locale";
+import { enUS, vi } from "date-fns/locale";
 import { Bell } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { useMarkNotificationAsRead } from "@/hooks/queries/use-notifications";
 import type { NotificationDto } from "@/types/notification";
@@ -13,6 +14,7 @@ type NotificationItemProps = {
 };
 
 export const NotificationItem = ({ notification }: NotificationItemProps) => {
+  const { i18n } = useTranslation("common");
   const router = useRouter();
   const markAsRead = useMarkNotificationAsRead();
 
@@ -41,7 +43,7 @@ export const NotificationItem = ({ notification }: NotificationItemProps) => {
     }
   };
 
-  const timeAgo = formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: vi });
+  const timeAgo = formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: i18n.language.startsWith("vi") ? vi : enUS });
 
   return (
     <div 

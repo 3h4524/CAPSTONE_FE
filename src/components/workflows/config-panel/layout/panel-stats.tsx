@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import type { PanelStat, PanelStatTone } from "@/helpers/workflow-panel";
 import { cn } from "@/utils/cn";
 
@@ -9,11 +11,12 @@ const VALUE_TONES: Record<PanelStatTone, string> = {
 
 // The step's key numbers in one row under the header, read before the settings.
 export const PanelStats = ({ stats }: { stats: PanelStat[] }) => {
+  const { t } = useTranslation("common");
   if (stats.length === 0) return null;
 
   return (
     <dl
-      aria-label="Summary"
+      aria-label={t("workflowConfig.panel.summary")}
       className="grid divide-x border-b"
       style={{ gridTemplateColumns: `repeat(${stats.length}, minmax(0, 1fr))` }}
     >

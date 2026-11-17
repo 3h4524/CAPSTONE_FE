@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { ArtStyleField } from "@/components/batch-config/edit-design-prompt/art-style-field";
 import { EffectivePromptPreview } from "@/components/batch-config/edit-design-prompt/effective-prompt-preview";
@@ -40,6 +41,7 @@ const toFormValues = (prompt: BatchProductPrompt): ProductPromptFormValues => ({
 });
 
 export const EditDesignPromptDialog = ({ rowId, open, onOpenChange }: EditDesignPromptDialogProps) => {
+  const { t } = useTranslation("common");
   const { data: prompt, isPending: isLoadingPrompt, isError: isPromptError, refetch: refetchPrompt } = useBatchProductPrompt(rowId, open);
   const { mutate: savePrompt, isPending: isSaving } = useSaveProductPrompt();
   const { mutate: restorePrompt, isPending: isRestoring } = useRestoreProductPrompt();
@@ -48,20 +50,20 @@ export const EditDesignPromptDialog = ({ rowId, open, onOpenChange }: EditDesign
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-2xl flex-col overflow-hidden">
         <DialogHeader className="text-left">
-          <DialogTitle>Edit design prompt</DialogTitle>
-          <DialogDescription>Fine-tune the AI prompt for this product before generation begins.</DialogDescription>
+          <DialogTitle>{t("batchConfig.title")}</DialogTitle>
+          <DialogDescription>{t("batchConfig.description")}</DialogDescription>
         </DialogHeader>
         {isLoadingPrompt ? (
-          <SectionLoading label="Loading prompt" />
+          <SectionLoading label={t("batchConfig.loading")} />
         ) : isPromptError || !prompt ? (
           <div className="flex flex-col items-center justify-center gap-4 p-8 text-center" role="alert">
             <div>
-              <p className="text-ink-900 font-semibold">Prompt unavailable</p>
-              <p className="text-muted-foreground mt-1 text-sm">We could not load this prompt. Check your connection and try again.</p>
+              <p className="text-ink-900 font-semibold">{t("batchConfig.unavailable")}</p>
+              <p className="text-muted-foreground mt-1 text-sm">{t("batchConfig.unavailableDescription")}</p>
             </div>
             <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-              <Button type="button" onClick={() => refetchPrompt()}>Try again</Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("batchConfig.close")}</Button>
+              <Button type="button" onClick={() => refetchPrompt()}>{t("batchConfig.tryAgain")}</Button>
             </div>
           </div>
         ) : (
@@ -87,6 +89,7 @@ type EditDesignPromptContentProps = {
 };
 
 const EditDesignPromptContent = ({ prompt, pending, onSave, onRestore, onClose }: EditDesignPromptContentProps) => {
+  const { t } = useTranslation("common");
   const openPopup = usePopupStore((state) => state.openPopup);
   const { data: stylePresets } = useStylePresets();
   const { mutate: quickCreateStyle, isPending: isCreatingStyle } = useQuickCreateStylePreset();
@@ -129,18 +132,18 @@ const EditDesignPromptContent = ({ prompt, pending, onSave, onRestore, onClose }
       return;
     }
     openPopup({
-      title: "Discard changes?",
-      description: "Your edits will be lost.",
-      positiveLabel: "Discard",
+      title: t("batchConfig.discardTitle"),
+      description: t("batchConfig.discardDescription"),
+      positiveLabel: t("batchConfig.discard"),
       onPositive: onClose,
     });
   };
 
   const askRestore = () => {
     openPopup({
-      title: "Restore default prompt?",
-      description: "This clears all manual edits.",
-      positiveLabel: "Restore",
+      title: t("batchConfig.restoreTitle"),
+      description: t("batchConfig.restoreDescription"),
+      positiveLabel: t("batchConfig.restore"),
       onPositive: onRestore,
     });
   };
@@ -153,14 +156,14 @@ const EditDesignPromptContent = ({ prompt, pending, onSave, onRestore, onClose }
       >
         <ScrollArea className="min-h-0 flex-1">
           <div className="space-y-4 px-1 py-1">
-            <FormTextareaField id="prompt-custom" label="Custom image prompt" placeholder="Leave empty to use the design template" registration={register("customPrompt")} error={errors.customPrompt} rows={3} />
-            <p className="text-muted-foreground -mt-2 text-xs">Replaces the design template and art style for this product, so describe the style in the prompt. With it, Subject holds the words to print; leave Subject empty for a design without words.</p>
+            <FormTextareaField id="prompt-custom" label={t("batchConfig.customPrompt")} placeholder={t("batchConfig.customPromptPlaceholder")} registration={register("customPrompt")} error={errors.customPrompt} rows={3} />
+            <p className="text-muted-foreground -mt-2 text-xs">{t("batchConfig.customPromptHint")}</p>
             {customPromptWarnings(values.customPrompt, values.subject).map((warning) => (
               <p key={warning} className="-mt-2 text-xs text-amber-700 dark:text-amber-300">{warning.replace("Design text", "Subject")}</p>
             ))}
-            <FormInputField id="prompt-subject" label={customPrompt ? "Subject (words to print)" : "Subject"} type="text" placeholder={customPrompt ? "Leave empty for no words" : "Space cat"} registration={register("subject")} error={errors.subject} required={!customPrompt} />
+            <FormInputField id="prompt-subject" label={customPrompt ? t("batchConfig.subjectWords") : t("batchConfig.subject")} type="text" placeholder={customPrompt ? t("batchConfig.noWords") : "Space cat"} registration={register("subject")} error={errors.subject} required={!customPrompt} />
             {customPrompt ? (
-              <p className="text-muted-foreground text-xs">Art style does not apply to a product with its own image prompt, nor does the art style set in the workflow.</p>
+              <p className="text-muted-foreground text-xs">{t("batchConfig.artStyleNotApplied")}</p>
             ) : (
               <Controller
                 name="artStyle"
@@ -180,19 +183,19 @@ const EditDesignPromptContent = ({ prompt, pending, onSave, onRestore, onClose }
                 )}
               />
             )}
-            <FormInputField id="prompt-mood" label="Mood & Tone" type="text" placeholder="Calm" registration={register("moodTone")} error={errors.moodTone} required={!customPrompt} />
-            <FormTextareaField id="prompt-negative" label="Negative Terms" placeholder="Blurry, dark" registration={register("negativeTerms")} error={errors.negativeTerms} rows={2} />
-            <FormTextareaField id="prompt-instructions" label="Instructions" placeholder="Front print" registration={register("instructions")} error={errors.instructions} rows={2} />
+            <FormInputField id="prompt-mood" label={t("batchConfig.moodTone")} type="text" placeholder="Calm" registration={register("moodTone")} error={errors.moodTone} required={!customPrompt} />
+            <FormTextareaField id="prompt-negative" label={t("batchConfig.negativeTerms")} placeholder="Blurry, dark" registration={register("negativeTerms")} error={errors.negativeTerms} rows={2} />
+            <FormTextareaField id="prompt-instructions" label={t("batchConfig.instructions")} placeholder="Front print" registration={register("instructions")} error={errors.instructions} rows={2} />
             {!customPrompt && <KeywordUse motifs={prompt.motifs} ignoredKeywords={prompt.ignoredKeywords} />}
             {removingCustomPrompt
-              ? <p className="text-muted-foreground text-sm">The design template's prompt is used again once you save.</p>
+              ? <p className="text-muted-foreground text-sm">{t("batchConfig.templateUsedAgain")}</p>
               : <EffectivePromptPreview prompt={preview} />}
           </div>
         </ScrollArea>
         <DialogFooter className="gap-2 pt-4">
-          <Button type="button" variant="ghost" onClick={askRestore} disabled={pending || !prompt.isCustomized}>Restore default</Button>
-          <Button type="button" variant="ghost" onClick={askClose} disabled={pending}>Cancel</Button>
-          <Button type="submit" disabled={pending || overLimit}>Save changes</Button>
+          <Button type="button" variant="ghost" onClick={askRestore} disabled={pending || !prompt.isCustomized}>{t("batchConfig.restoreDefault")}</Button>
+          <Button type="button" variant="ghost" onClick={askClose} disabled={pending}>{t("batchConfig.cancel")}</Button>
+          <Button type="submit" disabled={pending || overLimit}>{t("batchConfig.saveChanges")}</Button>
         </DialogFooter>
       </form>
     </>

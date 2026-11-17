@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/utils/cn";
@@ -31,8 +34,10 @@ type StatusBadgeProps = {
 };
 
 export function StatusBadge({ status, children, className }: StatusBadgeProps) {
+  const { t } = useTranslation("common");
   const normalizedStatus = status.toLowerCase();
-  const label = children ?? normalizedStatus.replaceAll("_", " ");
+  const label =
+    children ?? t(`commons.statuses.${normalizedStatus}`, { defaultValue: normalizedStatus.replaceAll("_", " ") });
 
   return (
     <Badge

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { PanelSection } from "@/components/workflows/config-panel/layout/panel-section";
 import { readString } from "@/helpers/workflow-config";
 import { useDesignTemplate } from "@/hooks/queries/use-design-template";
@@ -14,6 +16,7 @@ type PromptRecipeProps = {
 // What each design prompt is made from, in the order the server joins it: the template, the product,
 // the art style and the person's own instructions.
 export const PromptRecipe = ({ config }: PromptRecipeProps) => {
+  const { t } = useTranslation("common");
   const templateId = readString(config.designTemplateId);
   const stylePresetId = readString(config.stylePresetId);
   const instructions = readString(config.instructions).trim();
@@ -23,21 +26,22 @@ export const PromptRecipe = ({ config }: PromptRecipeProps) => {
 
   const parts = [
     {
-      label: "Template",
-      text: !templateId ? null : isLoadingTemplate ? "Loading…" : template?.basePrompt || null,
-      empty: templateId ? "No base prompt" : "Not chosen",
-      note: template?.negativePrompt ? `Avoid: ${template.negativePrompt}` : null,
+      key: "template",
+      label: t("workflowConfig.promptRecipe.template"),
+      text: !templateId ? null : isLoadingTemplate ? t("workflowConfig.promptRecipe.loading") : template?.basePrompt || null,
+      empty: templateId ? t("workflowConfig.promptRecipe.noBasePrompt") : t("workflowConfig.promptRecipe.notChosen"),
+      note: template?.negativePrompt ? t("workflowConfig.promptRecipe.avoid", { prompt: template.negativePrompt }) : null,
     },
-    { label: "Product", text: "Name, niche and keywords of each product", empty: "", note: null },
-    { label: "Style", text: preset?.styleModifiers || null, empty: stylePresetId ? "Adds nothing" : "None", note: null },
-    { label: "Instructions", text: instructions || null, empty: "None", note: null },
+    { key: "product", label: t("workflowConfig.promptRecipe.product"), text: t("workflowConfig.promptRecipe.productText"), empty: "", note: null },
+    { key: "style", label: t("workflowConfig.promptRecipe.style"), text: preset?.styleModifiers || null, empty: stylePresetId ? t("workflowConfig.promptRecipe.addsNothing") : t("workflowConfig.promptRecipe.none"), note: null },
+    { key: "instructions", label: t("workflowConfig.promptRecipe.instructions"), text: instructions || null, empty: t("workflowConfig.promptRecipe.none"), note: null },
   ];
 
   return (
-    <PanelSection title="Prompt preview" description="Each product's prompt is built from these parts.">
+    <PanelSection title={t("workflowConfig.promptRecipe.title")} description={t("workflowConfig.promptRecipe.description")}>
       <dl className="bg-ink-50/60 divide-y rounded-md border text-xs">
         {parts.map((part) => (
-          <div key={part.label} className="flex gap-3 px-3 py-2.5">
+          <div key={part.key} className="flex gap-3 px-3 py-2.5">
             <dt className="text-muted-foreground w-20 shrink-0">{part.label}</dt>
             <dd className="min-w-0 flex-1 space-y-1">
               <p className={cn("line-clamp-4 leading-relaxed wrap-break-word", part.text ? "text-ink-800" : "text-muted-foreground")}>{part.text ?? part.empty}</p>

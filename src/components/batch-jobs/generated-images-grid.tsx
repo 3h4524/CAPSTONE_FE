@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { CircleAlert, RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { DesignTextCheckNote } from "@/components/batch-jobs/design-text-check-note";
 import { ImageLightbox } from "@/components/commons/data-display/image-lightbox";
@@ -44,6 +45,7 @@ export const GeneratedImagesGrid = ({
   onRegenerate,
   regenerateDisabled = false,
 }: GeneratedImagesGridProps) => {
+  const { t } = useTranslation("common");
   const [viewing, setViewing] = useState<number | null>(null);
   const shown = products.filter(shownInResults);
   const gallery = designLightboxImages(shown.filter((product) => product.images.length > 0));
@@ -57,7 +59,7 @@ export const GeneratedImagesGrid = ({
             {product.productType && <Badge variant="outline" className="border-ink-200 bg-ink-50 text-ink-700">{productTypeLabel(product.productType)}</Badge>}
             {onRegenerate &&
               (IN_PROGRESS_STATUSES.includes(product.status) ? (
-                <span className="text-muted-foreground ml-auto shrink-0 text-xs">Generating new designs…</span>
+                <span className="text-muted-foreground ml-auto shrink-0 text-xs">{t("batchJobs.images.generatingNew")}</span>
               ) : (
                 <Button
                   type="button"
@@ -68,7 +70,7 @@ export const GeneratedImagesGrid = ({
                   onClick={() => onRegenerate(product)}
                 >
                   <RefreshCw className="size-3.5" aria-hidden="true" />
-                  Edit &amp; regenerate
+                  {t("batchJobs.images.editRegenerate")}
                 </Button>
               ))}
           </div>
@@ -96,13 +98,13 @@ export const GeneratedImagesGrid = ({
                   <Button
                     type="button"
                     variant="none"
-                    aria-label={`View ${product.productName}, variation ${position + 1} larger`}
+                    aria-label={t("batchJobs.images.viewLarger", { name: product.productName, number: position + 1 })}
                     onClick={() => setViewing(gallery.findIndex((item) => item.id === image.id))}
                     className="group block h-auto w-full cursor-zoom-in overflow-hidden rounded-none p-0 hover:translate-y-0"
                   >
                     <Image
                       src={image.imageUrl}
-                      alt={`${product.productName}, variation ${position + 1}`}
+                      alt={t("batchJobs.images.variationAlt", { name: product.productName, number: position + 1 })}
                       width={image.widthPx || 512}
                       height={image.heightPx || 512}
                       unoptimized
@@ -110,7 +112,7 @@ export const GeneratedImagesGrid = ({
                     />
                   </Button>
                   <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 p-2">
-                    <p className="text-muted-foreground text-xs whitespace-nowrap">Variation {position + 1}</p>
+                    <p className="text-muted-foreground text-xs whitespace-nowrap">{t("batchJobs.images.variation", { number: position + 1 })}</p>
                     <Button
                       type="button"
                       variant="outline"
@@ -120,7 +122,7 @@ export const GeneratedImagesGrid = ({
                         onPreview({ designImageId: image.id, designImageUrl: image.imageUrl, productName: product.productName, productType: product.productType })
                       }
                     >
-                      Preview on mock-up
+                      {t("batchJobs.images.previewOnMockup")}
                     </Button>
                   </div>
                   <DesignTextCheckNote check={image.textCheck} className="px-2 pb-2" />

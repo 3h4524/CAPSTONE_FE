@@ -2,9 +2,16 @@
 
 import { useState } from "react";
 import { Pencil, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { MockupTemplatePickerContent } from "@/components/batch-setup/mockup-template/mockup-template-picker-content";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { NodeControl } from "@/components/workflows/nodes/node-control";
 import { countProductTypes } from "@/helpers/mockup-template";
 import {
@@ -28,6 +35,7 @@ type NodeMockupFieldProps = {
 };
 
 export const NodeMockupField = ({ nodeId, data, disabled = false }: NodeMockupFieldProps) => {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const batchId = useWorkflowStore((state) => {
@@ -35,7 +43,9 @@ export const NodeMockupField = ({ nodeId, data, disabled = false }: NodeMockupFi
     return readString(input?.data.config.batchId);
   });
   // The mock-ups show a Printify product when the node says so or a Push to Printify step follows it.
-  const printifyLocked = useWorkflowStore((state) => hasPrintifyDownstream(nodeId, state.nodes, state.edges));
+  const printifyLocked = useWorkflowStore((state) =>
+    hasPrintifyDownstream(nodeId, state.nodes, state.edges)
+  );
   const printify = printifyLocked || data.config.mockupTarget === "printify";
   const runJob = useWorkflowRunStore((state) => state.job);
   const { data: templates, isPending, isError } = useMockupTemplates(undefined, open);
@@ -61,11 +71,12 @@ export const NodeMockupField = ({ nodeId, data, disabled = false }: NodeMockupFi
         : products
           ? countProductTypes(products)
           : undefined;
-  const counts = productTypeCounts && Object.keys(productTypeCounts).length > 0 ? productTypeCounts : undefined;
+  const counts =
+    productTypeCounts && Object.keys(productTypeCounts).length > 0 ? productTypeCounts : undefined;
   const label =
     selectedIds.length > 0
-      ? `${selectedIds.length} ${selectedIds.length === 1 ? "template" : "templates"}`
-      : "Choose mock-up templates";
+      ? t("workflowEditor.mockupField.templateCount", { count: selectedIds.length })
+      : t("workflowEditor.mockupField.chooseTemplates");
 
   return (
     <>
@@ -74,7 +85,7 @@ export const NodeMockupField = ({ nodeId, data, disabled = false }: NodeMockupFi
           type="button"
           disabled={disabled}
           aria-haspopup="dialog"
-          aria-label="Choose mock-up templates"
+          aria-label={t("workflowEditor.mockupField.chooseTemplates")}
           onClick={() => setOpen(true)}
           className={cn(
             "border-wf-line bg-wf-muted/50 hover:border-wf-accent/50 flex h-8 w-full min-w-0 items-center gap-2 rounded-md border px-2.5 text-left text-[11px] leading-none transition-colors disabled:cursor-not-allowed disabled:opacity-50",
@@ -103,17 +114,25 @@ export const NodeMockupField = ({ nodeId, data, disabled = false }: NodeMockupFi
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-4xl flex-col overflow-hidden p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>{printify ? "Choose a Printify template" : "Choose mock-up templates"}</DialogTitle>
+            <DialogTitle>
+              {printify
+                ? t("workflowEditor.mockupField.choosePrintify")
+                : t("workflowEditor.mockupField.chooseTemplates")}
+            </DialogTitle>
             <DialogDescription>
               {printify
-                ? "Pick the Printify product and its Printify colors this step uses. Changes apply to this node only."
-                : "Pick the templates and garment colors this step uses. Changes apply to this node only."}
+                ? t("workflowEditor.mockupField.printifyDescription")
+                : t("workflowEditor.mockupField.description")}
             </DialogDescription>
           </DialogHeader>
           {isPending ? (
-            <p className="text-muted-foreground text-sm">Loading mock-up templates…</p>
+            <p className="text-muted-foreground text-sm">
+              {t("workflowEditor.mockupField.loading")}
+            </p>
           ) : isError ? (
-            <p className="text-muted-foreground text-sm">Mock-up templates could not be loaded.</p>
+            <p className="text-muted-foreground text-sm">
+              {t("workflowEditor.mockupField.loadError")}
+            </p>
           ) : templates ? (
             <MockupTemplatePickerContent
               templates={templates}
@@ -136,7 +155,7 @@ export const NodeMockupField = ({ nodeId, data, disabled = false }: NodeMockupFi
               printifyOnly={printify}
             />
           ) : (
-            <p className="text-muted-foreground text-sm">No mock-up templates are available yet.</p>
+            <p className="text-muted-foreground text-sm">{t("workflowEditor.mockupField.empty")}</p>
           )}
         </DialogContent>
       </Dialog>

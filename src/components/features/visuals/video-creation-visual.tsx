@@ -1,14 +1,18 @@
+"use client";
+
 import { Clapperboard, Play } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
 export const VideoCreationVisual = () => {
+  const { t } = useTranslation("common");
   return (
     <Card className="gap-4 overflow-hidden p-0 shadow-lg" aria-hidden="true">
       <div className="from-primary via-primary/80 to-secondary relative flex aspect-video flex-col justify-between bg-gradient-to-br p-5">
         <div className="flex items-center justify-between gap-3">
-          <Badge className="bg-white/15 text-white">Etsy video</Badge>
+          <Badge className="bg-white/15 text-white">{t("featuresPage.visuals.etsyVideo")}</Badge>
           <Badge className="bg-white/15 text-white">0:24</Badge>
         </div>
         <div className="flex items-center justify-center">
@@ -28,7 +32,7 @@ export const VideoCreationVisual = () => {
           <Clapperboard className="text-primary size-4" />
           sunset-tee-promo.mp4
         </p>
-        <Badge variant="outline">9:16 cut included</Badge>
+        <Badge variant="outline">{t("featuresPage.visuals.verticalCut")}</Badge>
       </div>
     </Card>
   );

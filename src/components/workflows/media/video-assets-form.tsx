@@ -2,6 +2,7 @@
 
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 type AssetForm = z.infer<typeof videoAssetSelectionSchema>;
 
 export const VideoAssetsForm = ({ node, assets, disabled }: { node: WorkflowNode; assets: MockupAsset[]; disabled: boolean }) => {
+  const { t } = useTranslation("common");
   const form = useForm<AssetForm>({
     resolver: zodResolver(videoAssetSelectionSchema),
     defaultValues: {
@@ -34,6 +36,11 @@ export const VideoAssetsForm = ({ node, assets, disabled }: { node: WorkflowNode
   const chosen = form.watch("selectedMockupIds");
   const motions = form.watch("sceneMotionPresets") ?? [];
   const approved = assets.filter(asset => asset.approvalStatus === "approved" && asset.approvedRevision === asset.revision);
+
+  const sceneSourceLabel = (id: string) => {
+    const role = assets.find(asset => asset.id === id)?.role;
+    return role ? t(`workflowMedia.assetRoles.${role}`, { defaultValue: role }) : id.slice(0, 8);
+  };
 
   const move = (index: number, direction: -1 | 1) => {
     form.setValue("sceneOrder", moveScene(order, index, direction), { shouldDirty: true });
@@ -51,30 +58,30 @@ export const VideoAssetsForm = ({ node, assets, disabled }: { node: WorkflowNode
     form.reset(values);
   })}>
     <fieldset className="space-y-3" disabled={disabled}>
-      <FormField control={form.control} name="assetSelection" render={({ field }) => <FormItem><FormLabel>Assets</FormLabel><Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="automatic">Choose approved assets automatically</SelectItem><SelectItem value="manual">Choose approved assets myself</SelectItem></SelectContent></Select><FormMessage /></FormItem>} />
-      {form.watch("assetSelection") === "manual" && approved.map((asset, index) => <label key={asset.id} className="flex min-h-11 items-center gap-2 text-sm"><Checkbox checked={chosen.includes(asset.id)} onCheckedChange={checked => form.setValue("selectedMockupIds", checked ? [...chosen, asset.id] : chosen.filter(id => id !== asset.id), { shouldDirty: true, shouldValidate: true })} />{index + 1}. {asset.role} · {asset.variantKey ?? asset.id.slice(0, 8)}</label>)}
+      <FormField control={form.control} name="assetSelection" render={({ field }) => <FormItem><FormLabel>{t("workflowMedia.videoAssets.assets")}</FormLabel><Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="automatic">{t("workflowMedia.videoAssets.automatic")}</SelectItem><SelectItem value="manual">{t("workflowMedia.videoAssets.manual")}</SelectItem></SelectContent></Select><FormMessage /></FormItem>} />
+      {form.watch("assetSelection") === "manual" && approved.map((asset, index) => <label key={asset.id} className="flex min-h-11 items-center gap-2 text-sm"><Checkbox checked={chosen.includes(asset.id)} onCheckedChange={checked => form.setValue("selectedMockupIds", checked ? [...chosen, asset.id] : chosen.filter(id => id !== asset.id), { shouldDirty: true, shouldValidate: true })} />{index + 1}. {t(`workflowMedia.assetRoles.${asset.role}`, { defaultValue: asset.role })} · {asset.variantKey ?? asset.id.slice(0, 8)}</label>)}
       <FormField control={form.control} name="selectedMockupIds" render={() => <FormItem><FormMessage /></FormItem>} />
-      <p className="text-muted-foreground text-xs">Build 2–4 scenes from approved mockups. You can reuse one image for two camera moves; leave order automatic to follow the template.</p>
+      <p className="text-muted-foreground text-xs">{t("workflowMedia.videoAssets.hint")}</p>
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" size="sm" onClick={() => {
           const next = (chosen.length ? chosen : approved.map(asset => asset.id)).slice(0, 4);
           form.setValue("sceneOrder", next, { shouldDirty: true });
           form.setValue("sceneMotionPresets", next.map(() => null), { shouldDirty: true });
-        }}>Use this order</Button>
+        }}>{t("workflowMedia.videoAssets.useThisOrder")}</Button>
         <Button type="button" variant="ghost" size="sm" onClick={() => {
           form.setValue("sceneOrder", [], { shouldDirty: true });
           form.setValue("sceneMotionPresets", [], { shouldDirty: true });
-        }}>Auto order</Button>
+        }}>{t("workflowMedia.videoAssets.autoOrder")}</Button>
       </div>
       {order.map((id, index) => <div key={id} className="flex items-center justify-between gap-2 rounded-md border p-2">
-        <span className="text-xs">Scene {index + 1} · {assets.find(asset => asset.id === id)?.role ?? id.slice(0, 8)}</span>
+        <span className="text-xs">{t("workflowMedia.videoAssets.sceneRow", { scene: index + 1, source: sceneSourceLabel(id) })}</span>
         <div className="flex gap-2">
-          <Button type="button" size="icon-sm" variant="outline" aria-label={`Move scene ${index + 1} up`} disabled={index === 0} onClick={() => move(index, -1)}><ArrowUp className="size-4" /></Button>
-          <Button type="button" size="icon-sm" variant="outline" aria-label={`Move scene ${index + 1} down`} disabled={index === order.length - 1} onClick={() => move(index, 1)}><ArrowDown className="size-4" /></Button>
+          <Button type="button" size="icon-sm" variant="outline" aria-label={t("workflowMedia.videoAssets.moveUp", { scene: index + 1 })} disabled={index === 0} onClick={() => move(index, -1)}><ArrowUp className="size-4" /></Button>
+          <Button type="button" size="icon-sm" variant="outline" aria-label={t("workflowMedia.videoAssets.moveDown", { scene: index + 1 })} disabled={index === order.length - 1} onClick={() => move(index, 1)}><ArrowDown className="size-4" /></Button>
         </div>
       </div>)}
       <FormField control={form.control} name="sceneOrder" render={() => <FormItem><FormMessage /></FormItem>} />
-      <Button type="submit" size="sm" disabled={!form.formState.isDirty}>Apply scene changes</Button>
+      <Button type="submit" size="sm" disabled={!form.formState.isDirty}>{t("workflowMedia.videoAssets.apply")}</Button>
     </fieldset>
   </form></Form>;
 };

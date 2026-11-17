@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { BatchSelect } from "@/components/workflows/config-panel/fields/batch-select";
 import { DesignTemplateSelect } from "@/components/workflows/config-panel/fields/design-template-select";
 import { StylePresetSelect } from "@/components/workflows/config-panel/fields/style-preset-select";
@@ -14,7 +16,8 @@ type SourceSelectProps = {
 };
 
 export const SourceSelect = ({ source, label, value, noneLabel, onChange }: SourceSelectProps) => {
-  const placeholder = `Choose ${label.toLowerCase()}`;
+  const { t } = useTranslation("common");
+  const placeholder = t("workflowConfig.fields.choosePlaceholder", { label: label.toLowerCase() });
 
   switch (source) {
     case "batches":

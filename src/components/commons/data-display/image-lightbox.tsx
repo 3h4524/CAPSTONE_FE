@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { KeyboardEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -18,6 +19,7 @@ type ImageLightboxProps = {
 // Opens a gallery picture large on the page, with the previous and next ones a click or an arrow key
 // away, so looking closer never takes the person to another tab.
 export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxProps) => {
+  const { t } = useTranslation("common");
   const image = index === null ? undefined : images[index];
   const position = index ?? 0;
   const hasPrevious = position > 0;
@@ -33,7 +35,7 @@ export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxPro
       <DialogContent className="max-w-[calc(100%-2rem)] gap-3 p-3 sm:max-w-5xl" onKeyDown={step}>
         {/* The title stays while the dialog animates closed, when the image is already gone. */}
         <div className="flex min-w-0 items-baseline gap-3 pt-1 pr-10 pl-1">
-          <DialogTitle className="truncate text-sm font-medium">{image?.caption ?? "Image"}</DialogTitle>
+          <DialogTitle className="truncate text-sm font-medium">{image?.caption ?? t("commons.lightbox.image")}</DialogTitle>
           <DialogDescription className="shrink-0 text-xs tabular-nums">
             {images.length > 1 ? `${position + 1} / ${images.length}` : ""}
           </DialogDescription>
@@ -77,7 +79,7 @@ export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxPro
                     type="button"
                     variant="outline"
                     size="icon"
-                    aria-label="Previous image"
+                    aria-label={t("commons.lightbox.previous")}
                     disabled={!hasPrevious}
                     onClick={() => onIndexChange(position - 1)}
                     className="bg-card/90 absolute top-1/2 left-3 -translate-y-1/2 rounded-full shadow-sm hover:-translate-y-1/2"
@@ -88,7 +90,7 @@ export const ImageLightbox = ({ images, index, onIndexChange }: ImageLightboxPro
                     type="button"
                     variant="outline"
                     size="icon"
-                    aria-label="Next image"
+                    aria-label={t("commons.lightbox.next")}
                     disabled={!hasNext}
                     onClick={() => onIndexChange(position + 1)}
                     className="bg-card/90 absolute top-1/2 right-3 -translate-y-1/2 rounded-full shadow-sm hover:-translate-y-1/2"

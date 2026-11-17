@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 import { AssistantChip } from "@/components/commons/assistant/assistant-chip";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,15 +26,7 @@ type AssistantWorkflowCommandCardProps = {
   state: AssistantClientActionState;
 };
 
-const STATE_TEXT: Record<WorkflowCommandKind, Record<AssistantClientActionDecision, string>> = {
-  run: { applied: "Run requested", dismissed: "Dismissed" },
-  save: { applied: "Save requested", dismissed: "Dismissed" },
-  continue: { applied: "Continue requested", dismissed: "Dismissed" },
-};
-
 const MAX_LIVE_WARNINGS = 2;
-
-const TITLE: Record<WorkflowCommandKind, string> = { run: "Run workflow", save: "Save workflow", continue: "Continue run" };
 
 export const AssistantWorkflowCommandCard = ({
   messageId,
@@ -42,10 +35,11 @@ export const AssistantWorkflowCommandCard = ({
   workflowId,
   workflowName,
   warnings = [],
-  continueLabel = "Continue",
+  continueLabel,
   runRef,
   state,
 }: AssistantWorkflowCommandCardProps) => {
+  const { t } = useTranslation("common");
   const pathname = usePathname();
   const openWorkflowId = useWorkflowStore((store) => store.workflowId);
   const isDirty = useWorkflowStore((store) => store.isDirty);
@@ -63,7 +57,14 @@ export const AssistantWorkflowCommandCard = ({
           .map((issue) => issue.message)
       : warnings;
   const canAct = isOpen && !isStreaming && (kind !== "save" || isDirty);
-  const buttonLabel = kind === "save" ? "Save" : kind === "continue" ? continueLabel : isDirty ? "Save and run" : "Run workflow";
+  const buttonLabel =
+    kind === "save"
+      ? t("commons.assistant.command.save")
+      : kind === "continue"
+        ? (continueLabel ?? t("commons.assistant.command.continue"))
+        : isDirty
+          ? t("commons.assistant.command.saveAndRun")
+          : t("commons.assistant.command.titles.run");
 
   const settle = (next: AssistantClientActionDecision) => settleClientAction(messageId, actionId, next);
 
@@ -76,10 +77,10 @@ export const AssistantWorkflowCommandCard = ({
   return (
     <Card className="gap-0 rounded-xl py-3 shadow-none">
       <CardContent className="flex flex-col gap-2.5 px-3">
-        <p className="text-ink-500 text-xs font-semibold tracking-wide uppercase">{TITLE[kind]}</p>
+        <p className="text-ink-500 text-xs font-semibold tracking-wide uppercase">{t(`commons.assistant.command.titles.${kind}`)}</p>
         <p className="text-ink-800 text-sm">{workflowName}</p>
         {kind !== "save" ? (
-          <p className="bg-ink-50 text-ink-600 rounded-md px-2 py-1 text-xs">Paid steps show their cost for you to confirm first.</p>
+          <p className="bg-ink-50 text-ink-600 rounded-md px-2 py-1 text-xs">{t("commons.assistant.command.paidSteps")}</p>
         ) : null}
         {shownWarnings.map((warning) => (
           <p key={warning} className="rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
@@ -95,13 +96,13 @@ export const AssistantWorkflowCommandCard = ({
                     <AssistantChip label={buttonLabel} variant="default" disabled={!canAct} onClick={act} />
                   </span>
                 </TooltipTrigger>
-                {isOpen ? null : <TooltipContent>Open this workflow first</TooltipContent>}
+                {isOpen ? null : <TooltipContent>{t("commons.assistant.command.openFirst")}</TooltipContent>}
               </Tooltip>
             </TooltipProvider>
-            <AssistantChip label="Dismiss" variant="ghost" disabled={isStreaming} onClick={() => settle("dismissed")} />
+            <AssistantChip label={t("commons.assistant.cards.dismiss")} variant="ghost" disabled={isStreaming} onClick={() => settle("dismissed")} />
           </div>
         ) : (
-          <p className="text-ink-500 text-xs font-medium">{STATE_TEXT[kind][state]}</p>
+          <p className="text-ink-500 text-xs font-medium">{t(state === "applied" ? `commons.assistant.command.requested.${kind}` : "commons.assistant.cards.states.dismissed")}</p>
         )}
       </CardContent>
     </Card>

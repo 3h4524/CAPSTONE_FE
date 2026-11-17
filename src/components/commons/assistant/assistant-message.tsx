@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useShallow } from "zustand/react/shallow";
 
 import { AssistantChoiceChips } from "@/components/commons/assistant/assistant-choice-chips";
@@ -17,6 +18,7 @@ type AssistantMessageProps = {
 };
 
 export const AssistantMessage = ({ message }: AssistantMessageProps) => {
+  const { t } = useTranslation("common");
   const pendingActions = useAssistantStore(
     useShallow((state) => message.pendingActionIds.map((id) => state.pendingActions[id]))
   );
@@ -38,7 +40,9 @@ export const AssistantMessage = ({ message }: AssistantMessageProps) => {
       {isWaiting || isRetrying ? (
         <p className="text-muted-foreground flex items-center gap-2 text-xs">
           <Spinner className="size-3" />
-          {isRetrying ? `Podi is busy, retrying in ${message.retryInSeconds}s…` : "Thinking…"}
+          {isRetrying
+            ? t("commons.assistant.busyRetrying", { seconds: message.retryInSeconds })
+            : t("commons.assistant.thinking")}
         </p>
       ) : null}
       {message.content ? (
@@ -59,7 +63,7 @@ export const AssistantMessage = ({ message }: AssistantMessageProps) => {
       {message.choices ? (
         <AssistantChoiceChips messageId={message.id} choices={message.choices} choicesUsed={message.choicesUsed} />
       ) : null}
-      {message.isStopped ? <p className="text-muted-foreground text-xs">Stopped</p> : null}
+      {message.isStopped ? <p className="text-muted-foreground text-xs">{t("commons.assistant.stopped")}</p> : null}
       {message.error ? <AssistantMessageError messageKey={message.key} error={message.error} /> : null}
     </div>
   );

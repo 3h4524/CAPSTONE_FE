@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { NodeCheck } from "@/components/workflows/nodes/node-check";
 import { NodeField } from "@/components/workflows/nodes/node-field";
 import { NodeFrame } from "@/components/workflows/nodes/node-frame";
@@ -18,11 +20,17 @@ import type { NodeProps } from "@xyflow/react";
 const LISTING_TYPE: WorkflowNodeType = "generate-listing";
 
 export const ListingCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
+  const { t } = useTranslation("common");
   const model = readString(data.config.model);
   const tone = readString(data.config.tone);
   const modelLabel = getSelectFieldLabel(LISTING_TYPE, "model", model);
   const modelOptions = getSelectFieldOptions(LISTING_TYPE, "model");
-  const toneOptions = getSelectFieldOptions(LISTING_TYPE, "tone");
+  const toneOptions = getSelectFieldOptions(LISTING_TYPE, "tone").map((option) => ({
+    ...option,
+    label: t(`workflowEditor.fields.${LISTING_TYPE}.tone.options.${option.value}.label`, {
+      defaultValue: option.label,
+    }),
+  }));
   const seoScore = readBoolean(data.config.includeSeoScore);
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const disabled = useNodeSettingsLocked(data.type);
@@ -36,18 +44,18 @@ export const ListingCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => 
           options={modelOptions}
           onChange={(next) => updateNodeConfig(id, { ...data.config, model: next })}
           disabled={disabled}
-          placeholder="Choose language model"
-          ariaLabel="Language model"
+          placeholder={t("workflowEditor.nodeCards.chooseLanguageModel")}
+          ariaLabel={t("workflowEditor.fields.generate-listing.model.label")}
         />
         <NodeSegmented
           options={toneOptions}
           value={tone}
           onChange={(next) => updateNodeConfig(id, { ...data.config, tone: next })}
           disabled={disabled}
-          ariaLabel="Tone"
+          ariaLabel={t("workflowEditor.fields.generate-listing.tone.label")}
         />
         <NodeCheck
-          label="SEO score"
+          label={t("workflowEditor.fields.generate-listing.includeSeoScore.label")}
           checked={seoScore}
           onChange={(next) => updateNodeConfig(id, { ...data.config, includeSeoScore: next })}
           disabled={disabled}

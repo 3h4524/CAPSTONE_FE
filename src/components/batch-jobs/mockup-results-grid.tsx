@@ -3,6 +3,7 @@
 import { type ReactNode, useState } from "react";
 import Image from "next/image";
 import { Pencil } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { HorizontalStrip } from "@/components/commons/data-display/horizontal-strip";
 import { ImageLightbox } from "@/components/commons/data-display/image-lightbox";
@@ -54,6 +55,7 @@ export const MockupResultsGrid = ({
   onRestore,
   disabled = false,
 }: MockupResultsGridProps) => {
+  const { t } = useTranslation("common");
   const [viewing, setViewing] = useState<number | null>(null);
   // The side each color shows; its front until another is picked.
   const [shownViews, setShownViews] = useState<Record<string, MockupView>>({});
@@ -108,24 +110,27 @@ export const MockupResultsGrid = ({
     const sides = partly
       ? ` · ${items.map((item) => mockupViewLabel(item.side?.view ?? "front")).join(", ")}`
       : "";
-    return `${productNameById.get(slot.productId) ?? "Product"} · ${main?.name ?? slot.templateName}${sides}`;
+    return `${productNameById.get(slot.productId) ?? t("batchJobs.mockups.product")} · ${main?.name ?? slot.templateName}${sides}`;
   };
 
   return (
     <div className="space-y-4">
       <p className="text-muted-foreground text-sm">
-        Generated {result.generatedCount} new mock-up{result.generatedCount === 1 ? "" : "s"}.
+        {t("batchJobs.mockups.generated", { count: result.generatedCount })}
         {(withSides || withColors) &&
-          ` Each card holds a design’s ${withColors ? "garment colors" : ""}${withColors && withSides ? " and " : ""}${withSides ? "front and other sides" : ""}: pick one under its picture.`}
-        {strip &&
-          groups.length > 1 &&
-          ` ${groups.length} shown: scroll sideways or click one to view them large.`}
-        {result.noDesignImageCount > 0 &&
-          ` ${result.noDesignImageCount} products have no image yet.`}
+          ` ${t(
+            withColors && withSides
+              ? "batchJobs.mockups.cardHoldsBoth"
+              : withColors
+                ? "batchJobs.mockups.cardHoldsColors"
+                : "batchJobs.mockups.cardHoldsSides"
+          )}`}
+        {strip && groups.length > 1 && ` ${t("batchJobs.mockups.shownCount", { count: groups.length })}`}
+        {result.noDesignImageCount > 0 && ` ${t("batchJobs.mockups.noImage", { count: result.noDesignImageCount })}`}
         {result.noCompatibleTemplateCount > 0 &&
-          ` ${result.noCompatibleTemplateCount} products have no matching template.`}
+          ` ${t("batchJobs.mockups.noTemplate", { count: result.noCompatibleTemplateCount })}`}
         {(result.noApprovedImageCount ?? 0) > 0 &&
-          ` ${result.noApprovedImageCount} products have no approved design.`}
+          ` ${t("batchJobs.mockups.noApproved", { count: result.noApprovedImageCount })}`}
       </p>
       {result.errors.length > 0 && (
         <ul className="text-destructive space-y-1 text-xs">
@@ -143,7 +148,7 @@ export const MockupResultsGrid = ({
               card.sides.find((side) => side.view === shownViews[card.key]) ?? card.sides[0];
             const mockupImage = shown.image;
             const imageIndex = result.images.findIndex((item) => item.id === mockupImage.id);
-            const productName = productNameById.get(mockupImage.productId) ?? "Product";
+            const productName = productNameById.get(mockupImage.productId) ?? t("batchJobs.mockups.product");
             const removedSides = removedOnCard(card.key);
             const sideName =
               card.sides.length + removedSides.length > 1
@@ -158,7 +163,9 @@ export const MockupResultsGrid = ({
                 view,
                 thumbnail: pictureOf(slot),
                 removed: true,
-                title: `${mockupViewLabel(view)}: removed${onRestore ? ". Click to put it back" : ""}`,
+                title: onRestore
+                  ? t("batchJobs.mockups.removedRestorable", { side: mockupViewLabel(view) })
+                  : t("batchJobs.mockups.removedSide", { side: mockupViewLabel(view) }),
               })),
             ].sort((a, b) => viewOrder(a.view) - viewOrder(b.view));
             const chooseSide = (view: MockupView) => {
@@ -179,13 +186,13 @@ export const MockupResultsGrid = ({
                   <Button
                     type="button"
                     variant="none"
-                    aria-label={`View the mock-up of ${productName}${sideName} larger`}
+                    aria-label={t("batchJobs.mockups.viewLarger", { name: `${productName}${sideName}` })}
                     onClick={() => setViewing(imageIndex)}
                     className="block h-auto w-full cursor-zoom-in overflow-hidden rounded-none p-0 hover:translate-y-0"
                   >
                     <Image
                       src={mockupImage.mockupImageUrl}
-                      alt={`${productNameById.get(mockupImage.productId) ?? "Mock-up"}${sideName}`}
+                      alt={`${productNameById.get(mockupImage.productId) ?? t("batchJobs.mockups.mockup")}${sideName}`}
                       width={mockupImage.mockupWidthPx}
                       height={mockupImage.mockupHeightPx}
                       unoptimized
@@ -196,19 +203,19 @@ export const MockupResultsGrid = ({
                   {group.colors.length > 1 && (
                     <div
                       role="tablist"
-                      aria-label="Garment colors"
+                      aria-label={t("batchJobs.mockups.garmentColors")}
                       className="bg-ink-50 flex flex-wrap justify-center gap-1.5 border-b px-2 py-1.5"
                     >
                       {group.colors.map((item) => {
                         const hex = cardColor(item);
-                        const name = hex ? garmentColorName(hex) : "Photo’s own color";
+                        const name = hex ? garmentColorName(hex) : t("batchJobs.mockups.photoColor");
                         return (
                           <button
                             key={item.key}
                             type="button"
                             role="tab"
                             aria-selected={item.key === card.key}
-                            aria-label={`Show in ${name}`}
+                            aria-label={t("batchJobs.mockups.showIn", { name })}
                             title={name}
                             onClick={() =>
                               setShownColors((current) => ({ ...current, [group.key]: item.key }))
@@ -246,7 +253,7 @@ export const MockupResultsGrid = ({
                       variant="outline"
                       className="border-ink-200 bg-ink-50 text-ink-700"
                     >
-                      Edited
+                      {t("batchJobs.mockups.edited")}
                     </Badge>
                   )}
                   {onEdit && mockupImage.slotKey && (
@@ -254,11 +261,11 @@ export const MockupResultsGrid = ({
                       type="button"
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Edit this mock-up of ${productName}`}
+                      aria-label={t("batchJobs.mockups.editOf", { name: productName })}
                       title={
                         group.colors.length > 1
-                          ? "Edit this mock-up in all its colors"
-                          : "Edit this mock-up only"
+                          ? t("batchJobs.mockups.editAllColors")
+                          : t("batchJobs.mockups.editOnly")
                       }
                       disabled={disabled}
                       onClick={() => onEdit(mockupImage)}
@@ -275,9 +282,9 @@ export const MockupResultsGrid = ({
       {onRestore && result.removed && result.removed.length > 0 && (
         <section
           className="space-y-1.5 rounded-lg border border-dashed p-3 text-xs"
-          aria-label="Removed mock-ups"
+          aria-label={t("batchJobs.mockups.removed")}
         >
-          <p className="text-ink-700 font-medium">Removed for single products</p>
+          <p className="text-ink-700 font-medium">{t("batchJobs.mockups.removedTitle")}</p>
           <ul className="space-y-1.5">
             {removedRows.map((row) => {
               return (
@@ -319,7 +326,7 @@ export const MockupResultsGrid = ({
                     disabled={disabled}
                     onClick={() => onRestore(row.items.map((item) => item.slot))}
                   >
-                    Restore
+                    {t("batchJobs.mockups.restore")}
                   </Button>
                 </li>
               );
@@ -343,11 +350,13 @@ const ImagesLayout = ({
   count: number;
   columnsClassName: string;
   children: ReactNode;
-}) =>
-  strip ? (
-    <HorizontalStrip itemsLabel="mock-ups" itemCount={count}>
+}) => {
+  const { t } = useTranslation("common");
+  return strip ? (
+    <HorizontalStrip itemsLabel={t("batchJobs.mockups.itemsLabel")} itemCount={count}>
       {children}
     </HorizontalStrip>
   ) : (
     <div className={cn("grid", columnsClassName)}>{children}</div>
   );
+};

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Loader2, RotateCcw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,7 @@ export const videoDesigns = (group: RunGroup) =>
  * changes apply when it is re-rendered.
  */
 export const DesignScopeSelect = ({ nodeId }: { nodeId: string }) => {
+  const { t } = useTranslation("common");
   const groupId = useRunGroupId();
   const { data: group } = useRunGroup(groupId);
   const workflowId = useWorkflowStore((state) => state.workflowId);
@@ -87,7 +89,7 @@ export const DesignScopeSelect = ({ nodeId }: { nodeId: string }) => {
 
   const choose = (value: string) => {
     if (value === (scope?.key ?? "")) return;
-    if (unsaved && scope && !window.confirm(`Discard the unsaved changes to ${scope.label}?`)) return;
+    if (unsaved && scope && !window.confirm(t("workflowConfig.productScope.discardConfirm", { name: scope.label }))) return;
     if (!value) {
       leave();
       return;
@@ -114,7 +116,7 @@ export const DesignScopeSelect = ({ nodeId }: { nodeId: string }) => {
       {
         onSuccess: () => {
           show(target, shared);
-          showWorkflowActionToast("success", `${scope.label} uses the shared video settings again.`);
+          showWorkflowActionToast("success", t("workflowConfig.designScope.usesSharedAgain", { name: scope.label }));
         },
       }
     );
@@ -125,49 +127,49 @@ export const DesignScopeSelect = ({ nodeId }: { nodeId: string }) => {
     label: design.productName,
     hint: waiting
       ? design.hasOwnConfig
-        ? "Own settings"
+        ? t("workflowConfig.productScope.ownSettings")
         : readProductConfigs(sharedConfig())[design.productId]
-          ? "Product's settings"
-          : "Shared settings"
+          ? t("workflowConfig.designScope.productSettings")
+          : t("workflowConfig.productScope.sharedSettings")
       : runStatusOf(design.runStatus).label,
     imageUrl: design.previewUrl,
   }));
 
   return (
-    <section className="bg-ink-50/70 space-y-2.5 rounded-lg border p-3" aria-label="Which product's video settings">
-      <Label htmlFor={FIELD_ID}>Video product</Label>
+    <section className="bg-ink-50/70 space-y-2.5 rounded-lg border p-3" aria-label={t("workflowConfig.productScope.aria")}>
+      <Label htmlFor={FIELD_ID}>{t("workflowConfig.form.videoProduct")}</Label>
       <OptionSelect
         standaloneId={FIELD_ID}
         value={scope?.key ?? ""}
         options={options}
-        placeholder="All products"
-        noneLabel="All products (shared settings)"
+        placeholder={t("workflowConfig.productScope.allProducts")}
+        noneLabel={t("workflowConfig.productScope.allProductsShared")}
         onChange={choose}
         disabled={isPending}
       />
       {!scope ? (
         <p className="text-muted-foreground text-xs leading-relaxed">
-          Every product uses these settings. Choose a product to see its video settings and give it its own.
+          {t("workflowConfig.designScope.everyProductShared")}
         </p>
       ) : waiting ? (
         <>
           <PanelNotice tone={unsaved ? "warning" : "info"}>
             {unsaved
-              ? `Unsaved changes to ${scope.label}. Save keeps them for this product only; the shared settings stay as they are.`
+              ? t("workflowConfig.productScope.unsaved", { name: scope.label })
               : target?.hasOwnConfig
-                ? `${scope.label} has its own settings. Everything below applies to this product only.`
-                : `${scope.label} follows the shared settings. Change anything below and Save keeps it for this product only.`}
+                ? t("workflowConfig.productScope.hasOwn", { name: scope.label })
+                : t("workflowConfig.productScope.followsShared", { name: scope.label })}
           </PanelNotice>
           {(target?.hasOwnConfig || unsaved) && (
             <Button type="button" size="sm" variant="outline" className="gap-1.5 hover:translate-y-0" disabled={isPending} onClick={useShared}>
               {isPending ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : <RotateCcw className="size-3.5" aria-hidden="true" />}
-              Use shared settings
+              {t("workflowConfig.productScope.useShared")}
             </Button>
           )}
         </>
       ) : (
         <PanelNotice tone="info">
-          {`These are the settings ${scope.label}'s video was made with. Change them, then re-render this video from the review below.`}
+          {t("workflowConfig.designScope.madeWith", { name: scope.label })}
         </PanelNotice>
       )}
     </section>

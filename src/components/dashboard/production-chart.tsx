@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { ProductionChartTooltip } from "@/components/dashboard/production-chart-tooltip";
@@ -8,13 +9,15 @@ import { formatTrendDay } from "@/helpers/seller-dashboard";
 import type { TrendPoint } from "@/types/seller-dashboard";
 
 const SERIES = [
-  { key: "products", label: "Added", color: "#4f75b3" },
-  { key: "finished", label: "Finished", color: "#48a999" },
-  { key: "failed", label: "Failed", color: "#e07a5f" },
+  { key: "products", labelKey: "dashboard.chart.added", color: "#4f75b3" },
+  { key: "finished", labelKey: "dashboard.chart.finished", color: "#48a999" },
+  { key: "failed", labelKey: "dashboard.chart.failed", color: "#e07a5f" },
 ] as const;
 
 /** Products added, finished and failed each day of the period, as stacked-free layered areas. */
 export const ProductionChart = ({ trend }: { trend: TrendPoint[] }) => {
+  const { t, i18n } = useTranslation("common");
+  const formatCount = (value: number) => new Intl.NumberFormat(i18n.language).format(value);
   const total = trend.reduce((sum, point) => sum + point.products, 0);
   const finished = trend.reduce((sum, point) => sum + point.finished, 0);
 
@@ -22,18 +25,18 @@ export const ProductionChart = ({ trend }: { trend: TrendPoint[] }) => {
     <Card className="h-full gap-4 rounded-2xl p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold">Production overview</h2>
+          <h2 className="text-base font-semibold">{t("dashboard.chart.title")}</h2>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            <span className="text-ink-800 font-semibold">{total.toLocaleString()} added</span>
+            <span className="text-ink-800 font-semibold">{t("dashboard.chart.addedCount", { count: total })}</span>
             {" · "}
-            {finished.toLocaleString()} finished in this period
+            {t("dashboard.chart.finishedCount", { count: finished })}
           </p>
         </div>
         <ul className="flex flex-wrap gap-3 text-xs">
           {SERIES.map((series) => (
             <li key={series.key} className="text-muted-foreground flex items-center gap-1.5">
               <span className="size-2 rounded-full" style={{ backgroundColor: series.color }} />
-              {series.label}
+              {t(series.labelKey)}
             </li>
           ))}
         </ul>
@@ -41,7 +44,7 @@ export const ProductionChart = ({ trend }: { trend: TrendPoint[] }) => {
       <div
         className="min-h-80 flex-1"
         role="img"
-        aria-label={`Products added per day, ${total} in all`}
+        aria-label={t("dashboard.chart.ariaLabel", { total: formatCount(total) })}
       >
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={trend} margin={{ top: 8, right: 4, bottom: 0, left: -24 }}>

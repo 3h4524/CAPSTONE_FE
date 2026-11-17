@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type LoadState = "loading" | "ready" | "streaming";
 
 export const PreloadedVideo = ({ src, poster, label }: { src: string; poster?: string; label: string }) => {
+  const { t } = useTranslation("common");
   // Keep the first signed URL for this mounted video. Query refreshes can return a newly signed URL
   // for the same asset and must not restart a download that is already in progress.
   const [sourceUrl] = useState(src);
@@ -66,8 +68,8 @@ export const PreloadedVideo = ({ src, poster, label }: { src: string; poster?: s
     {loadState === "loading" && <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 px-6 text-center text-white" role="status" aria-live="polite">
       <Loader2 className="size-6 animate-spin" aria-hidden="true" />
       <div className="space-y-1">
-        <p className="text-sm font-medium">Preparing smooth playback</p>
-        <p className="text-xs text-white/75">{progress === undefined ? "Loading video…" : `${progress}% loaded`}</p>
+        <p className="text-sm font-medium">{t("workflowMedia.preloadedVideo.preparingPlayback")}</p>
+        <p className="text-xs text-white/75">{progress === undefined ? t("workflowMedia.preloadedVideo.loadingVideo") : t("workflowMedia.preloadedVideo.percentLoaded", { progress })}</p>
       </div>
       <div className="h-1.5 w-full max-w-52 overflow-hidden rounded-full bg-white/20" aria-hidden="true">
         <div className="h-full rounded-full bg-white transition-[width] duration-200" style={{ width: `${progress ?? 12}%` }} />

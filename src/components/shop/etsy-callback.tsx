@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { ETSY_CONNECTION_MESSAGE } from "@/components/shop/etsy-connection";
 
@@ -11,6 +12,7 @@ import { ETSY_CONNECTION_MESSAGE } from "@/components/shop/etsy-connection";
  * Opened as a full page (the popup was blocked): forwards to the shop page with the outcome.
  */
 export function EtsyCallback() {
+  const { t } = useTranslation("common");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [closeFailed, setCloseFailed] = useState(false);
@@ -33,9 +35,9 @@ export function EtsyCallback() {
   return (
     <main className="bg-card text-ink-600 flex min-h-screen items-center justify-center p-6 text-center text-sm">
       {closeFailed ? (
-        <p>Done. You can close this window and return to Podivo.</p>
+        <p>{t("shop.etsyCallback.done")}</p>
       ) : (
-        <p className="flex items-center gap-2"><Loader2 className="size-4 animate-spin" />Finishing the Etsy connection…</p>
+        <p className="flex items-center gap-2"><Loader2 className="size-4 animate-spin" />{t("shop.etsyCallback.finishing")}</p>
       )}
     </main>
   );

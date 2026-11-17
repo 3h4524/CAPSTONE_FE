@@ -96,6 +96,12 @@
         "shopNamePlaceholder": "Your shop name",
         "shopDescription": "Shop description",
         "shopDescriptionPlaceholder": "A short description of your shop"
+      },
+      "schema": {
+        "fullNameRequired": "Full name is required",
+        "emailTooLong": "Email is too long",
+        "shopNameTooLong": "Shop name is too long",
+        "shopDescriptionTooLong": "Shop description is too long"
       }
     },
     "subscription": {
@@ -858,7 +864,13 @@
       "actionsFor": "Actions for {{name}}",
       "system": "System",
       "custom": "Custom",
-      "mine": "Mine"
+      "mine": "Mine",
+      "schema": {
+        "nameMin": "Give the style a name (at least 2 characters).",
+        "descriptionMin": "Add a little more detail (at least 10 characters).",
+        "modifiersMin": "Add the keywords appended to the prompt.",
+        "recommendationsMax": "Keep recommendations under 500 characters."
+      }
     },
     "usage": {
       "pageTitle": "Usage",
@@ -1063,7 +1075,13 @@
       "uploadingStatus": "Uploading…",
       "readyStatus": "Ready",
       "selectedAttachments": "Selected attachments",
-      "removeAttachment": "Remove {{name}}"
+      "removeAttachment": "Remove {{name}}",
+      "schema": {
+        "subjectMin": "Enter a short subject (at least 3 characters).",
+        "categorySelect": "Select a category.",
+        "prioritySelect": "Select a priority.",
+        "descriptionMin": "Add a little more detail (at least 10 characters)."
+      }
     },
     "mockups": {
       "cancel": "Cancel",
@@ -1333,6 +1351,14 @@
         "close": "Close",
         "generate": "Generate",
         "generating": "Generating…"
+      },
+      "schema": {
+        "nameMin": "Enter a template name.",
+        "positionNumber": "Enter a position.",
+        "positionMin": "Must be 0 or more.",
+        "widthNumber": "Enter a width.",
+        "heightNumber": "Enter a height.",
+        "minOne": "Must be at least 1."
       }
     },
     "apiKeys": {
@@ -2651,6 +2677,17 @@
         "drinkware": "A mug print wraps around the mug; 1:1 fits one side.",
         "wall_art": "Posters print at 3:4 portrait, 4:3 landscape or square.",
         "phone_cases": "A phone case is tall and narrow."
+      },
+      "schema": {
+        "enterBatchName": "Enter a batch name.",
+        "chooseBatchMakes": "Choose what the batch makes.",
+        "enterProductName": "Enter a product name.",
+        "enterNiche": "Enter a niche.",
+        "enterKeyword": "Enter at least one keyword.",
+        "maxKeywords": "Use no more than 13 keywords.",
+        "maxProductDescription": "Use no more than 2,000 characters.",
+        "designTextMax": "Keep the design text under 100 characters.",
+        "customPromptMax": "Keep the image prompt under 1,000 characters."
       }
     },
     "designTemplates": {
@@ -8418,8 +8455,82 @@
             "planPriceVnd": "Plan Price (VND)"
           }
         }
+      },
+      "schemas": {
+        "subscriptionPlan": {
+          "enterNumber": "Enter a number for {{label}}.",
+          "mustBeZeroOrUnlimited": "{{label}} must be 0 or greater, or -1 for unlimited.",
+          "planName": "Enter a plan name.",
+          "tierRequired": "Enter a tier slug.",
+          "tierSlugFormat": "Tier slug must be lowercase and contain no spaces.",
+          "monthlyPrice": "Enter a monthly price.",
+          "monthlyPriceMin": "Monthly price must be 0 or greater.",
+          "annualPriceMin": "Annual price must be 0 or greater.",
+          "limitEnterOrEmpty": "Enter a whole number, or leave it empty for no limit.",
+          "limitWhole": "Enter a whole number.",
+          "limitZeroOrMore": "Enter 0 or more, or leave it empty for no limit.",
+          "deleteReason": "Enter a reason for deleting this plan.",
+          "limits": {
+            "maxBatchSize": "Max batch size",
+            "concurrentJobs": "Concurrent jobs",
+            "productsPerMonth": "Products / month",
+            "imagesPerMonth": "Images / month",
+            "videosPerMonth": "Videos / month",
+            "apiCallsPerMonth": "API calls / month",
+            "storageQuotaGb": "Storage (GB)"
+          }
+        },
+        "featureCatalog": {
+          "labelMin": "Enter a label.",
+          "labelMax": "Keep the label under 120 characters.",
+          "descriptionMax": "Keep the description under 500 characters.",
+          "groupMin": "Enter a group.",
+          "groupMax": "Keep the group under 60 characters.",
+          "unitMax": "Keep the unit under 40 characters.",
+          "wholeNumber": "Enter a whole number.",
+          "enterOrEmpty": "Enter a whole number, or leave it empty for no limit.",
+          "defaultMin": "The default must be 0 or greater.",
+          "defaultMax": "The default must be 10,000 or less.",
+          "positionNumber": "Enter a position.",
+          "positionMin": "The position must be 0 or greater.",
+          "positionMax": "The position must be 10,000 or less."
+        },
+        "systemApiKeys": {
+          "nameMin": "Name the key, such as the account it belongs to.",
+          "nameMax": "Keep the name under 100 characters.",
+          "keyMin": "Paste the whole key.",
+          "keyMax": "This is longer than any key.",
+          "dailyLimit": "Enter a whole number from 0 to 1,000,000, or leave it empty for no limit.",
+          "concurrentLimit": "Enter a whole number from 1 to 1,000, or leave it empty for no limit."
+        },
+        "moderation": {
+          "termMin": "Enter a word or phrase.",
+          "termMax": "Keep the term under 100 characters.",
+          "categoryChoose": "Choose a category.",
+          "termNoteMax": "Keep the note under 300 characters.",
+          "phraseMin": "Enter a phrase.",
+          "phraseMax": "Keep the phrase under 200 characters."
+        },
+        "imageEval": {
+          "fileNoVersions": "The file lists no prompt versions.",
+          "fileNoImages": "The file holds no scored images.",
+          "unknownVersion": "Some images name a prompt version the file does not list.",
+          "thumbnailBase64": "A thumbnail must be a base64 image.",
+          "runNameMin": "Name the run (at least 3 characters).",
+          "chooseExportFile": "Choose the export file the scoring scripts wrote.",
+          "chooseJson": "Choose a .json file.",
+          "fileMax": "The file must be at most {{mb}} MB."
+        }
       }
     },
-    "justNow": "just now"
+    "justNow": "just now",
+    "productPrompt": {
+      "schema": {
+        "subjectRequired": "The Subject field is required.",
+        "artStyleRequired": "The Art Style field is required.",
+        "moodToneRequired": "The Mood Tone field is required.",
+        "customPromptMax": "Keep the image prompt under 1,000 characters."
+      }
+    }
   }
 }

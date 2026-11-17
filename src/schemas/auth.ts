@@ -1,42 +1,44 @@
 import { z } from "zod";
 
+import { i18n } from "@/i18n/client";
+
 const passwordSchema = z
   .string()
-  .min(8, "Password must be at least 8 characters")
-  .max(128, "Password must be at most 128 characters")
-  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-  .regex(/[0-9]/, "Password must contain at least one digit");
+  .min(8, { error: () => i18n.t("auth.validation.passwordMin") })
+  .max(128, { error: () => i18n.t("auth.validation.passwordMax") })
+  .regex(/[A-Z]/, { error: () => i18n.t("auth.validation.passwordUppercase") })
+  .regex(/[a-z]/, { error: () => i18n.t("auth.validation.passwordLowercase") })
+  .regex(/[0-9]/, { error: () => i18n.t("auth.validation.passwordDigit") });
 
 export const registerSchema = z
   .object({
-    fullName: z.string().max(255, "Full name is too long").optional(),
-    email: z.email("Please enter a valid email address"),
+    fullName: z.string().max(255, { error: () => i18n.t("auth.validation.fullNameTooLong") }).optional(),
+    email: z.email({ error: () => i18n.t("auth.validation.emailInvalid") }),
     password: passwordSchema,
-    confirmPassword: z.string().min(1, "Please confirm your password"),
+    confirmPassword: z.string().min(1, { error: () => i18n.t("auth.validation.confirmPasswordRequired") }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
+    message: i18n.t("auth.validation.passwordsMismatch"),
     path: ["confirmPassword"],
   });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export const resendVerificationSchema = z.object({
-  email: z.email("Please enter a valid email address"),
+  email: z.email({ error: () => i18n.t("auth.validation.emailInvalid") }),
 });
 
 export type ResendVerificationFormValues = z.infer<typeof resendVerificationSchema>;
 
 export const loginSchema = z.object({
-  email: z.email("Please enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
+  email: z.email({ error: () => i18n.t("auth.validation.emailInvalid") }),
+  password: z.string().min(1, { error: () => i18n.t("auth.validation.passwordRequired") }),
 });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const forgotPasswordSchema = z.object({
-  email: z.email("Please enter a valid email address"),
+  email: z.email({ error: () => i18n.t("auth.validation.emailInvalid") }),
 });
 
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
@@ -44,10 +46,10 @@ export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 export const resetPasswordSchema = z
   .object({
     newPassword: passwordSchema,
-    confirmPassword: z.string().min(1, "Please confirm your password"),
+    confirmPassword: z.string().min(1, { error: () => i18n.t("auth.validation.confirmPasswordRequired") }),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords do not match",
+    message: i18n.t("auth.validation.passwordsMismatch"),
     path: ["confirmPassword"],
   });
 
@@ -55,12 +57,12 @@ export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Please enter your current password"),
+    currentPassword: z.string().min(1, { error: () => i18n.t("auth.validation.currentPasswordRequired") }),
     newPassword: passwordSchema,
-    confirmNewPassword: z.string().min(1, "Please confirm your new password"),
+    confirmNewPassword: z.string().min(1, { error: () => i18n.t("auth.validation.confirmNewPasswordRequired") }),
   })
   .refine((data) => data.newPassword === data.confirmNewPassword, {
-    message: "Passwords do not match",
+    message: i18n.t("auth.validation.passwordsMismatch"),
     path: ["confirmNewPassword"],
   });
 

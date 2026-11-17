@@ -50,12 +50,12 @@ export const OgImageCard = ({ backgroundSrc, title = SITE_CONFIG.tagline, subtit
         <div style={{ display: "flex", fontSize: 58, fontWeight: 700, letterSpacing: -2, lineHeight: 1.08 }}>
           {title}
         </div>
-        <div style={{ color: "#C4B5FD", display: "flex", fontSize: 27, fontWeight: 500, lineHeight: 1.4, marginTop: 24 }}>
+        <div style={{ color: "#BFD3EE", display: "flex", fontSize: 27, fontWeight: 500, lineHeight: 1.4, marginTop: 24 }}>
           {subtitle}
         </div>
       </div>
-      <div style={{ alignItems: "center", color: "#DDD6FE", display: "flex", fontSize: 24, fontWeight: 500 }}>
-        <div style={{ background: "#8B5CF6", borderRadius: 6, display: "flex", height: 12, marginRight: 14, width: 12 }} />
+      <div style={{ alignItems: "center", color: "#DCE6F3", display: "flex", fontSize: 24, fontWeight: 500 }}>
+        <div style={{ background: "#4A6FA5", borderRadius: 6, display: "flex", height: 12, marginRight: 14, width: 12 }} />
         {SITE_HOST}
       </div>
     </div>

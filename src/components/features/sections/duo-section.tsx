@@ -19,14 +19,14 @@ export const DuoSection = ({ listing, batch }: DuoSectionProps) => {
           className="border-border bg-background flex scroll-mt-32 flex-col gap-5 rounded-2xl border p-6 shadow-sm md:p-8 lg:col-span-3"
         >
           <div className="flex items-center gap-3">
-            <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
+            <span className="bg-brand-soft text-brand-ink flex size-10 shrink-0 items-center justify-center rounded-lg">
               <listing.icon
                 className="size-5"
                 strokeWidth={2}
                 aria-hidden="true"
               />
             </span>
-            <h2 className="font-display text-2xl font-bold tracking-tight md:text-3xl">
+            <h2 className="font-display text-brand-ink text-2xl font-bold tracking-tight md:text-3xl">
               {listing.title}
             </h2>
           </div>
@@ -49,13 +49,13 @@ export const DuoSection = ({ listing, batch }: DuoSectionProps) => {
         </article>
         <article
           id={batch.id}
-          className="border-primary/25 bg-primary/[0.04] flex scroll-mt-32 flex-col gap-5 rounded-2xl border p-6 shadow-sm md:p-8 lg:col-span-2"
+          className="border-border bg-brand-soft flex scroll-mt-32 flex-col gap-5 rounded-2xl border p-6 shadow-sm md:p-8 lg:col-span-2"
         >
           <div className="flex items-center gap-3">
-            <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
+            <span className="bg-card text-brand-ink flex size-10 shrink-0 items-center justify-center rounded-lg border">
               <batch.icon className="size-5" strokeWidth={2} aria-hidden="true" />
             </span>
-            <h2 className="font-display text-2xl font-bold tracking-tight md:text-3xl">
+            <h2 className="font-display text-brand-ink text-2xl font-bold tracking-tight md:text-3xl">
               {batch.title}
             </h2>
           </div>

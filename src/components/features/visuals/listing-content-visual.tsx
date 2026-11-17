@@ -22,7 +22,7 @@ export const ListingContentVisual = () => {
             {tag}
           </Badge>
         ))}
-        <Badge variant="secondary">+ 7 more</Badge>
+        <Badge variant="outline" className="bg-muted">+ 7 more</Badge>
       </div>
       <ul className="flex flex-col gap-2 p-0">
         {LISTING_CHECKS.map((check) => (

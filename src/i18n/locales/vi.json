@@ -96,6 +96,12 @@
         "shopNamePlaceholder": "Tên cửa hàng của bạn",
         "shopDescription": "Mô tả cửa hàng",
         "shopDescriptionPlaceholder": "Mô tả ngắn gọn về cửa hàng của bạn"
+      },
+      "schema": {
+        "fullNameRequired": "Họ và tên là bắt buộc",
+        "emailTooLong": "Email quá dài",
+        "shopNameTooLong": "Tên cửa hàng quá dài",
+        "shopDescriptionTooLong": "Mô tả cửa hàng quá dài"
       }
     },
     "subscription": {
@@ -858,7 +864,13 @@
       "custom": "Cá nhân",
       "mine": "Của tôi",
       "styleCount_one": "{{count}} phong cách",
-      "usedCount_one": "Đã dùng {{count}} lần"
+      "usedCount_one": "Đã dùng {{count}} lần",
+      "schema": {
+        "nameMin": "Đặt tên cho phong cách (ít nhất 2 ký tự).",
+        "descriptionMin": "Thêm một chút chi tiết (ít nhất 10 ký tự).",
+        "modifiersMin": "Thêm các từ khóa chèn vào cuối prompt.",
+        "recommendationsMax": "Giữ phần gợi ý dưới 500 ký tự."
+      }
     },
     "usage": {
       "pageTitle": "Sử dụng",
@@ -1063,7 +1075,13 @@
       "selectedAttachments": "Tệp đính kèm đã chọn",
       "removeAttachment": "Xóa {{name}}",
       "showingCount_one": "Đang hiển thị {{shown}}/{{total}} phiếu",
-      "starUnit_one": "{{count}} sao"
+      "starUnit_one": "{{count}} sao",
+      "schema": {
+        "subjectMin": "Nhập tiêu đề ngắn gọn (ít nhất 3 ký tự).",
+        "categorySelect": "Chọn một danh mục.",
+        "prioritySelect": "Chọn một mức ưu tiên.",
+        "descriptionMin": "Thêm một chút chi tiết (ít nhất 10 ký tự)."
+      }
     },
     "mockups": {
       "cancel": "Hủy",
@@ -1333,6 +1351,14 @@
         "close": "Đóng",
         "generate": "Tạo",
         "generating": "Đang tạo…"
+      },
+      "schema": {
+        "nameMin": "Nhập tên mẫu.",
+        "positionNumber": "Nhập một vị trí.",
+        "positionMin": "Phải từ 0 trở lên.",
+        "widthNumber": "Nhập một chiều rộng.",
+        "heightNumber": "Nhập một chiều cao.",
+        "minOne": "Phải ít nhất là 1."
       }
     },
     "apiKeys": {
@@ -2651,6 +2677,17 @@
         "drinkware": "Hình in quấn quanh ly; 1:1 vừa một mặt.",
         "wall_art": "Poster in theo khổ dọc 3:4, ngang 4:3 hoặc vuông.",
         "phone_cases": "Ốp điện thoại cao và hẹp."
+      },
+      "schema": {
+        "enterBatchName": "Nhập tên lô.",
+        "chooseBatchMakes": "Chọn loại sản phẩm mà lô tạo.",
+        "enterProductName": "Nhập tên sản phẩm.",
+        "enterNiche": "Nhập niche.",
+        "enterKeyword": "Nhập ít nhất một từ khóa.",
+        "maxKeywords": "Không dùng quá 13 từ khóa.",
+        "maxProductDescription": "Không dùng quá 2.000 ký tự.",
+        "designTextMax": "Giữ chữ trên thiết kế dưới 100 ký tự.",
+        "customPromptMax": "Giữ prompt ảnh dưới 1.000 ký tự."
       }
     },
     "designTemplates": {
@@ -8418,8 +8455,82 @@
             "planPriceVnd": "Giá gói (VND)"
           }
         }
+      },
+      "schemas": {
+        "subscriptionPlan": {
+          "enterNumber": "Nhập một số cho {{label}}.",
+          "mustBeZeroOrUnlimited": "{{label}} phải từ 0 trở lên, hoặc -1 để không giới hạn.",
+          "planName": "Nhập tên gói.",
+          "tierRequired": "Nhập slug bậc gói.",
+          "tierSlugFormat": "Slug bậc gói phải viết thường và không chứa khoảng trắng.",
+          "monthlyPrice": "Nhập giá theo tháng.",
+          "monthlyPriceMin": "Giá theo tháng phải từ 0 trở lên.",
+          "annualPriceMin": "Giá theo năm phải từ 0 trở lên.",
+          "limitEnterOrEmpty": "Nhập một số nguyên, hoặc để trống để không giới hạn.",
+          "limitWhole": "Nhập một số nguyên.",
+          "limitZeroOrMore": "Nhập 0 trở lên, hoặc để trống để không giới hạn.",
+          "deleteReason": "Nhập lý do xóa gói này.",
+          "limits": {
+            "maxBatchSize": "Kích thước lô tối đa",
+            "concurrentJobs": "Số job đồng thời",
+            "productsPerMonth": "Sản phẩm / tháng",
+            "imagesPerMonth": "Ảnh / tháng",
+            "videosPerMonth": "Video / tháng",
+            "apiCallsPerMonth": "Lời gọi API / tháng",
+            "storageQuotaGb": "Lưu trữ (GB)"
+          }
+        },
+        "featureCatalog": {
+          "labelMin": "Nhập một nhãn.",
+          "labelMax": "Giữ nhãn dưới 120 ký tự.",
+          "descriptionMax": "Giữ mô tả dưới 500 ký tự.",
+          "groupMin": "Nhập một nhóm.",
+          "groupMax": "Giữ nhóm dưới 60 ký tự.",
+          "unitMax": "Giữ đơn vị dưới 40 ký tự.",
+          "wholeNumber": "Nhập một số nguyên.",
+          "enterOrEmpty": "Nhập một số nguyên, hoặc để trống để không giới hạn.",
+          "defaultMin": "Giá trị mặc định phải từ 0 trở lên.",
+          "defaultMax": "Giá trị mặc định không được quá 10.000.",
+          "positionNumber": "Nhập một vị trí.",
+          "positionMin": "Vị trí phải từ 0 trở lên.",
+          "positionMax": "Vị trí không được quá 10.000."
+        },
+        "systemApiKeys": {
+          "nameMin": "Đặt tên cho key, ví dụ tên tài khoản sở hữu key.",
+          "nameMax": "Giữ tên dưới 100 ký tự.",
+          "keyMin": "Dán toàn bộ key.",
+          "keyMax": "Key này dài hơn mọi key.",
+          "dailyLimit": "Nhập một số nguyên từ 0 đến 1.000.000, hoặc để trống để không giới hạn.",
+          "concurrentLimit": "Nhập một số nguyên từ 1 đến 1.000, hoặc để trống để không giới hạn."
+        },
+        "moderation": {
+          "termMin": "Nhập một từ hoặc cụm từ.",
+          "termMax": "Giữ từ khóa dưới 100 ký tự.",
+          "categoryChoose": "Chọn một danh mục.",
+          "termNoteMax": "Giữ ghi chú dưới 300 ký tự.",
+          "phraseMin": "Nhập một cụm từ.",
+          "phraseMax": "Giữ cụm từ dưới 200 ký tự."
+        },
+        "imageEval": {
+          "fileNoVersions": "Tệp không liệt kê phiên bản prompt nào.",
+          "fileNoImages": "Tệp không chứa ảnh nào đã chấm.",
+          "unknownVersion": "Một số ảnh ghi phiên bản prompt không có trong tệp.",
+          "thumbnailBase64": "Ảnh thu nhỏ phải là ảnh base64.",
+          "runNameMin": "Đặt tên cho lượt chạy (ít nhất 3 ký tự).",
+          "chooseExportFile": "Chọn tệp xuất mà các script chấm điểm đã tạo.",
+          "chooseJson": "Chọn một tệp .json.",
+          "fileMax": "Tệp phải nhỏ hơn hoặc bằng {{mb}} MB."
+        }
       }
     },
-    "justNow": "Vừa xong"
+    "justNow": "Vừa xong",
+    "productPrompt": {
+      "schema": {
+        "subjectRequired": "Trường Chủ đề là bắt buộc.",
+        "artStyleRequired": "Trường Phong cách nghệ thuật là bắt buộc.",
+        "moodToneRequired": "Trường Tâm trạng & sắc thái là bắt buộc.",
+        "customPromptMax": "Giữ prompt ảnh dưới 1.000 ký tự."
+      }
+    }
   }
 }

@@ -1,13 +1,15 @@
 import { z } from "zod";
 
+import { i18n } from "@/i18n/client";
+
 export const MAX_EFFECTIVE_PROMPT_LENGTH = 1000;
 
 export const MAX_CUSTOM_PROMPT_LENGTH = 1000;
 
 const requiredForTemplate = {
-  subject: "The Subject field is required.",
-  artStyle: "The Art Style field is required.",
-  moodTone: "The Mood Tone field is required.",
+  subject: "subjectRequired",
+  artStyle: "artStyleRequired",
+  moodTone: "moodToneRequired",
 } as const;
 
 export const productPromptSchema = z
@@ -18,13 +20,13 @@ export const productPromptSchema = z
     negativeTerms: z.string().max(500),
     instructions: z.string().max(1000),
     // Left out, the product keeps the image prompt it has; empty removes it.
-    customPrompt: z.string().max(MAX_CUSTOM_PROMPT_LENGTH, "Keep the image prompt under 1,000 characters.").optional(),
+    customPrompt: z.string().max(MAX_CUSTOM_PROMPT_LENGTH, { error: () => i18n.t("productPrompt.schema.customPromptMax") }).optional(),
   })
   .superRefine((values, context) => {
     // A template needs its subject, style and mood; a custom image prompt says all of it itself.
     if (values.customPrompt?.trim()) return;
-    for (const [field, message] of Object.entries(requiredForTemplate)) {
-      if (!values[field as keyof typeof requiredForTemplate]) context.addIssue({ code: "custom", path: [field], message });
+    for (const [field, key] of Object.entries(requiredForTemplate)) {
+      if (!values[field as keyof typeof requiredForTemplate]) context.addIssue({ code: "custom", path: [field], message: i18n.t(`productPrompt.schema.${key}`) });
     }
   });
 

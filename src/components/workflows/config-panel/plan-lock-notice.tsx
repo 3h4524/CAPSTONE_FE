@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Lock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { SUBSCRIPTION_PATH } from "@/helpers/plan-errors";
@@ -22,6 +23,7 @@ export const PlanLockNotice = ({
   onFix,
   disabled = false,
 }: PlanLockNoticeProps) => {
+  const { t } = useTranslation("common");
   const { data: entitlements } = useEntitlements();
   if (!entitlements) return null;
 
@@ -56,7 +58,7 @@ export const PlanLockNotice = ({
               href={SUBSCRIPTION_PATH}
               className="font-semibold text-amber-900 underline underline-offset-2 dark:text-amber-300"
             >
-              View plans
+              {t("workflowConfig.planLock.viewPlans")}
             </Link>
           </div>
         </div>

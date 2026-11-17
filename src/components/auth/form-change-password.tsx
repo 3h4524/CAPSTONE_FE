@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { FormInputField } from "@/components/commons/forms/form-input-field";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { useAuthStore } from "@/stores/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 export const FormChangePassword = () => {
+  const { t } = useTranslation("common");
   // isHydrated flips to true only after the app-mount silent refresh resolves, so this waits
   // instead of flashing "not signed in" while that check is still in flight.
   const isHydrated = useAuthStore((state) => state.isHydrated);
@@ -39,9 +41,9 @@ export const FormChangePassword = () => {
   if (!isSignedIn) {
     return (
       <div className="space-y-4">
-        <p className="text-ink-600 text-sm">You need to sign in to change your password.</p>
+        <p className="text-ink-600 text-sm">{t("auth.changePassword.signInRequired")}</p>
         <Link href="/login" className="text-primary text-sm font-medium hover:underline">
-          Go to login
+          {t("auth.changePassword.goToLogin")}
         </Link>
       </div>
     );
@@ -58,7 +60,7 @@ export const FormChangePassword = () => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <FormInputField
         id="currentPassword"
-        label="Current Password"
+        label={t("auth.changePassword.currentPassword")}
         type="password"
         placeholder="••••••••"
         registration={register("currentPassword")}
@@ -70,20 +72,20 @@ export const FormChangePassword = () => {
 
       <FormInputField
         id="newPassword"
-        label="New Password"
+        label={t("auth.changePassword.newPassword")}
         type="password"
         placeholder="••••••••"
         registration={register("newPassword")}
         error={errors.newPassword}
         autoComplete="new-password"
-        hint="At least 8 characters, with uppercase, lowercase, and a digit."
+        hint={t("auth.passwordHint")}
         showToggle
         required
       />
 
       <FormInputField
         id="confirmNewPassword"
-        label="Confirm New Password"
+        label={t("auth.changePassword.confirmNewPassword")}
         type="password"
         placeholder="••••••••"
         registration={register("confirmNewPassword")}
@@ -95,12 +97,12 @@ export const FormChangePassword = () => {
 
       {isError && (
         <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-          {getErrorMessage(error, "Could not change your password.")}
+          {getErrorMessage(error, t("auth.changePassword.failed"))}
         </p>
       )}
 
       <Button type="submit" className="w-full" disabled={isSubmitting || isPending}>
-        {isPending ? "Updating..." : "Change Password"}
+        {isPending ? t("auth.updating") : t("auth.changePassword.submit")}
       </Button>
     </form>
   );

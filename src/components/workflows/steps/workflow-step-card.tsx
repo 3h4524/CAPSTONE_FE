@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { AlertTriangle, CheckCircle2, ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { NodeConfigForm } from "@/components/workflows/config-panel/node-config-form";
 import { WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
@@ -20,7 +21,15 @@ type WorkflowStepCardProps = {
 };
 
 /** One step of the phone's workflow list: what it is, whether it is ready, and its settings. */
-export const WorkflowStepCard = ({ node, stepNumber, issue, isExpanded, opensFullScreen, onToggle }: WorkflowStepCardProps) => {
+export const WorkflowStepCard = ({
+  node,
+  stepNumber,
+  issue,
+  isExpanded,
+  opensFullScreen,
+  onToggle,
+}: WorkflowStepCardProps) => {
+  const { t } = useTranslation("common");
   const cardRef = useRef<HTMLElement>(null);
   const definition = WORKFLOW_NODE_DEFINITIONS[node.data.type];
   const Icon = definition.icon;
@@ -35,7 +44,10 @@ export const WorkflowStepCard = ({ node, stepNumber, issue, isExpanded, opensFul
   return (
     <article
       ref={cardRef}
-      className={cn("bg-card scroll-mt-16 rounded-2xl border shadow-sm", isExpanded && "border-primary ring-primary/20 ring-2")}
+      className={cn(
+        "bg-card scroll-mt-16 rounded-2xl border shadow-sm",
+        isExpanded && "border-primary ring-primary/20 ring-2"
+      )}
     >
       <button
         type="button"
@@ -47,29 +59,46 @@ export const WorkflowStepCard = ({ node, stepNumber, issue, isExpanded, opensFul
           <Icon className="size-5" aria-hidden="true" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="text-ink-900 block truncate text-sm font-semibold">{node.data.label}</span>
+          <span className="text-ink-900 block truncate text-sm font-semibold">
+            {node.data.label}
+          </span>
           {issue ? (
             <span className="mt-0.5 flex items-center gap-1 text-xs text-amber-800 dark:text-amber-300">
               <AlertTriangle className="size-3 shrink-0" aria-hidden="true" />
-              <span className="truncate">Needs attention</span>
+              <span className="truncate">
+                {t("workflowEditor.runGroup.runStatuses.waiting_for_input")}
+              </span>
             </span>
           ) : pill ? null : (
             <span className="text-muted-foreground mt-0.5 flex items-center gap-1 text-xs">
-              <CheckCircle2 className="size-3 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-              Ready
+              <CheckCircle2
+                className="size-3 shrink-0 text-emerald-600 dark:text-emerald-400"
+                aria-hidden="true"
+              />
+              {t("workflowEditor.steps.ready")}
             </span>
           )}
         </span>
         <span className="flex shrink-0 flex-col items-end gap-1">
           <span className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5 text-[10px] font-semibold">
-            {isTrigger ? "Trigger" : `Step ${stepNumber}`}
+            {isTrigger
+              ? t("workflowEditor.categories.trigger")
+              : t("workflowEditor.steps.stepNumber", { number: stepNumber })}
           </span>
           {pill && (
-            <span className={cn("rounded-md px-1.5 py-0.5 text-[10px] font-semibold", pill.className)}>{pill.label}</span>
+            <span
+              className={cn("rounded-md px-1.5 py-0.5 text-[10px] font-semibold", pill.className)}
+            >
+              {t(`workflowEditor.nodeStatuses.${node.data.status}`, { defaultValue: pill.label })}
+            </span>
           )}
         </span>
         <ChevronDown
-          className={cn("text-muted-foreground size-4 shrink-0 transition-transform", showsInline && "rotate-180", opensFullScreen && "-rotate-90")}
+          className={cn(
+            "text-muted-foreground size-4 shrink-0 transition-transform",
+            showsInline && "rotate-180",
+            opensFullScreen && "-rotate-90"
+          )}
           aria-hidden="true"
         />
       </button>

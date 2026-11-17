@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, CheckCircle2, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { validateWorkflow } from "@/helpers/workflow-graph";
@@ -16,6 +17,7 @@ type PanelFooterProps = {
 
 // Says whether the step is ready to run (the same checks as Validate) and offers to delete it.
 export const PanelFooter = ({ node }: PanelFooterProps) => {
+  const { t } = useTranslation("common");
   const nodes = useWorkflowStore((state) => state.nodes);
   const edges = useWorkflowStore((state) => state.edges);
   const isRunning = useWorkflowStore((state) => state.isRunning);
@@ -44,14 +46,14 @@ export const PanelFooter = ({ node }: PanelFooterProps) => {
           <>
             <AlertTriangle className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
             <span className="truncate text-amber-800 dark:text-amber-300" title={issues.map((issue) => issue.message).join("\n")}>
-              {issues.length > 1 ? `${issues.length} issues · ` : ""}
+              {issues.length > 1 ? t("workflowConfig.panel.issueCount", { count: issues.length }) : ""}
               {issueTextForNode(firstIssue.message, node.data.label)}
             </span>
           </>
         ) : (
           <>
             <CheckCircle2 className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-            <span className="text-muted-foreground">Ready to run</span>
+            <span className="text-muted-foreground">{t("workflowConfig.panel.readyToRun")}</span>
           </>
         )}
       </p>
@@ -64,7 +66,7 @@ export const PanelFooter = ({ node }: PanelFooterProps) => {
         disabled={isRunning}
       >
         <Trash2 aria-hidden="true" />
-        Delete node
+        {t("workflowConfig.panel.deleteNode")}
       </Button>
     </div>
   );

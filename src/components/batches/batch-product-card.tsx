@@ -1,6 +1,7 @@
 "use client";
 
 import { Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { StatusBadge } from "@/components/commons/data-display/status-badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ type BatchProductCardProps = {
 
 /** One product on the phone, where a table has no room for its niche and keywords. */
 export const BatchProductCard = ({ product, typeLabel, statusLabel, isBusy, onEdit, onDelete, onReset }: BatchProductCardProps) => {
+  const { t } = useTranslation("common");
   const extraKeywords = product.keywords.length - VISIBLE_KEYWORDS;
 
   return (
@@ -39,12 +41,12 @@ export const BatchProductCard = ({ product, typeLabel, statusLabel, isBusy, onEd
 
       {product.niche && (
         <p className="bg-muted/60 mt-2 inline-block max-w-full rounded-md px-2 py-1 text-xs">
-          <span className="text-muted-foreground mr-1.5 text-[10px] font-semibold uppercase">Niche</span>
+          <span className="text-muted-foreground mr-1.5 text-[10px] font-semibold uppercase">{t("batches.product.nicheTag")}</span>
           {product.niche}
         </p>
       )}
 
-      {product.customPrompt && <p className="text-muted-foreground mt-1.5 text-xs">Own image prompt</p>}
+      {product.customPrompt && <p className="text-muted-foreground mt-1.5 text-xs">{t("batches.product.ownImagePrompt")}</p>}
 
       {(product.keywords.length > 0 || onEdit || onDelete || onReset) && (
         <div className="mt-2 flex items-center gap-2 border-t pt-2">
@@ -57,19 +59,19 @@ export const BatchProductCard = ({ product, typeLabel, statusLabel, isBusy, onEd
             {extraKeywords > 0 && <span className="text-muted-foreground shrink-0 text-xs">+{extraKeywords}</span>}
           </div>
           {onEdit && (
-            <Button variant="ghost" size="icon" className="size-8" aria-label={`Edit ${product.name}`} onClick={onEdit}>
+            <Button variant="ghost" size="icon" className="size-8" aria-label={t("batches.product.editAria", { name: product.name })} onClick={onEdit}>
               <Pencil className="size-4" />
             </Button>
           )}
           {onDelete && (
-            <Button variant="ghost" size="icon" className="text-muted-foreground size-8" aria-label={`Delete ${product.name}`} disabled={isBusy} onClick={onDelete}>
+            <Button variant="ghost" size="icon" className="text-muted-foreground size-8" aria-label={t("batches.product.deleteAria", { name: product.name })} disabled={isBusy} onClick={onDelete}>
               <Trash2 className="size-4" />
             </Button>
           )}
           {onReset && (
-            <Button variant="outline" size="sm" className="h-8 px-3 text-xs" aria-label={`Reset ${product.name} to pending`} disabled={isBusy} onClick={onReset}>
+            <Button variant="outline" size="sm" className="h-8 px-3 text-xs" aria-label={t("batches.product.resetAria", { name: product.name })} disabled={isBusy} onClick={onReset}>
               <RotateCcw className="size-3.5" aria-hidden="true" />
-              Reset
+              {t("batches.product.reset")}
             </Button>
           )}
         </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
 import { PanelSection } from "@/components/workflows/config-panel/layout/panel-section";
 import { MockupPanel } from "@/components/workflows/media/mockup-panel";
@@ -16,10 +18,11 @@ import { useWorkflowStore } from "@/stores/workflow";
  * part of its settings otherwise.
  */
 export const MockupApprovalResults = () => {
+  const { t } = useTranslation("common");
   const groupId = useRunGroupId();
   const perDesign = useWorkflowStore((state) => runsPerDesign(state.nodes));
   const withVideo = useWorkflowStore((state) => hasVideoSteps(state.nodes));
-  const title = withVideo ? "Designs that get a video" : "Designs to continue with";
+  const title = withVideo ? t("workflowConfig.mockupApproval.designsWithVideo") : t("workflowConfig.mockupApproval.designsToContinue");
 
   if (groupId)
     return (
@@ -31,15 +34,14 @@ export const MockupApprovalResults = () => {
     return (
       <PanelSection title={title}>
         <PanelNotice tone="info">
-          When a run reaches this step, every design of its products is listed here. Approve the mock-ups of the designs
-          {withVideo ? " that should get a video" : " to continue with"}, then choose Continue.
+          {withVideo ? t("workflowConfig.mockupApproval.waitingNoticeVideo") : t("workflowConfig.mockupApproval.waitingNotice")}
         </PanelNotice>
       </PanelSection>
     );
   return (
     <PanelSection
-      title="Mock-ups for the video"
-      description="Approve the mock-ups to use in the video. The ones made by Apply mock-up are added here when the video part starts."
+      title={t("workflowConfig.form.videoMockups")}
+      description={t("workflowConfig.mockupApproval.videoMockupsDescription")}
     >
       <RunStatusPanel />
       <VideoSourcesHeader />

@@ -1,4 +1,5 @@
 import { api } from "@/api/client";
+import { getCurrentLocale } from "@/i18n/client";
 import type {
   DesignTemplateDetail,
   DesignTemplateFilters,
@@ -13,10 +14,11 @@ export const designTemplateKeys = {
   lists: () => [...designTemplateKeys.all, "list"] as const,
   listsByScope: (scope: DesignTemplateScope) =>
     [...designTemplateKeys.lists(), scope] as const,
-  list: (filters: DesignTemplateFilters) =>
-    [...designTemplateKeys.listsByScope(filters.scope), filters] as const,
+  list: (filters: DesignTemplateFilters, locale: string = getCurrentLocale()) =>
+    [...designTemplateKeys.listsByScope(filters.scope), filters, locale] as const,
   details: () => [...designTemplateKeys.all, "detail"] as const,
-  detail: (id: string) => [...designTemplateKeys.details(), id] as const,
+  detail: (id: string, locale: string = getCurrentLocale()) =>
+    [...designTemplateKeys.details(), id, locale] as const,
   options: () => [...designTemplateKeys.all, "options"] as const,
 };
 

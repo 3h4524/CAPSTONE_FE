@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AssistantChip } from "@/components/commons/assistant/assistant-chip";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ const TONE_CLASS: Record<AssistantRunNudge["tone"], string> = {
 };
 
 export const AssistantRunNudgeBar = () => {
+  const { t } = useTranslation("common");
   const { nudge, dismiss } = useAssistantRunNudge();
   const { send, isStreaming } = useAssistantChat();
 
@@ -29,8 +31,8 @@ export const AssistantRunNudgeBar = () => {
   return (
     <div role="status" className={cn("mx-3 mb-2 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs", TONE_CLASS[nudge.tone])}>
       <p className="min-w-0 flex-1 font-medium">{nudge.label}</p>
-      <AssistantChip label="What now?" variant="outline" disabled={isStreaming} onClick={ask} />
-      <Button type="button" variant="ghost" size="icon-sm" aria-label="Dismiss" className="size-6" onClick={dismiss}>
+      <AssistantChip label={t("commons.assistant.whatNow")} variant="outline" disabled={isStreaming} onClick={ask} />
+      <Button type="button" variant="ghost" size="icon-sm" aria-label={t("commons.assistant.cards.dismiss")} className="size-6" onClick={dismiss}>
         <X aria-hidden="true" />
       </Button>
     </div>

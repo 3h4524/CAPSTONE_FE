@@ -1,6 +1,7 @@
 "use client";
 
 import { type CSSProperties, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 import { AssistantComposer } from "@/components/commons/assistant/assistant-composer";
 import { AssistantHeader } from "@/components/commons/assistant/assistant-header";
@@ -20,6 +21,7 @@ import { useAssistantStore } from "@/stores/assistant";
 import { cn } from "@/utils/cn";
 
 export const AssistantPanel = () => {
+  const { t } = useTranslation("common");
   const isOpen = useAssistantStore(isDockedPanelOpen);
   const setOpen = useAssistantStore((state) => state.setOpen);
   const setPanelWidth = useAssistantStore((state) => state.setPanelWidth);
@@ -45,8 +47,8 @@ export const AssistantPanel = () => {
       >
         <div
           {...separatorProps}
-          aria-label="Resize Podi"
-          title="Drag to resize, double-click to reset"
+          aria-label={t("commons.assistant.resize")}
+          title={t("workflowEditor.resizeAside.title")}
           className={cn(
             "group absolute inset-y-0 -left-1.5 z-10 hidden w-3 cursor-col-resize touch-none outline-none sm:block",
             "after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 after:-translate-x-1/2 after:rounded-full after:transition-colors",
@@ -55,7 +57,7 @@ export const AssistantPanel = () => {
           )}
         />
         <AssistantHeader variant="panel" />
-        <SheetDescription className="sr-only">Ask Podi questions or get help with your workflows.</SheetDescription>
+        <SheetDescription className="sr-only">{t("commons.assistant.panelDescription")}</SheetDescription>
         <AssistantMessageList />
         <AssistantRunNudgeBar />
         <AssistantComposer />

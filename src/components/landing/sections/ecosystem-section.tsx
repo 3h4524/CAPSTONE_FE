@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Container } from "@/components/commons/layout/container";
 import { Button } from "@/components/ui/button";
@@ -8,22 +11,23 @@ import { ECOSYSTEM_CONTENT, ECOSYSTEM_FEATURES } from "@/data/landing-content";
 import { cn } from "@/utils/cn";
 
 export const EcosystemSection = () => {
+  const { t } = useTranslation("common");
   return (
     <section id="features" className="bg-muted/40 scroll-mt-16 border-y py-10 md:py-24">
       <Container className="grid gap-6 md:gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-14">
         <div className="flex flex-col items-start gap-4 self-start lg:sticky lg:top-24">
           <span className="text-primary text-xs font-semibold tracking-widest uppercase">
-            {ECOSYSTEM_CONTENT.eyebrow}
+            {t("landing.ecosystem.eyebrow", { defaultValue: ECOSYSTEM_CONTENT.eyebrow })}
           </span>
           <h2 className="font-display text-3xl font-bold tracking-tight text-balance md:text-4xl">
-            {ECOSYSTEM_CONTENT.title}
+            {t("landing.ecosystem.title", { defaultValue: ECOSYSTEM_CONTENT.title })}
           </h2>
           <p className="text-muted-foreground max-w-xl leading-relaxed">
-            {ECOSYSTEM_CONTENT.description}
+            {t("landing.ecosystem.description", { defaultValue: ECOSYSTEM_CONTENT.description })}
           </p>
           <Button variant="outline" asChild>
             <Link href={ECOSYSTEM_CONTENT.cta.href}>
-              {ECOSYSTEM_CONTENT.cta.label}
+              {t("landing.ecosystem.cta", { defaultValue: ECOSYSTEM_CONTENT.cta.label })}
               <ArrowRight aria-hidden="true" />
             </Link>
           </Button>
@@ -45,9 +49,9 @@ export const EcosystemSection = () => {
                   aria-hidden="true"
                 />
               </div>
-              <h3 className="font-semibold max-md:text-sm max-md:leading-snug">{feature.title}</h3>
+              <h3 className="font-semibold max-md:text-sm max-md:leading-snug">{t(`landing.ecosystem.features.${index}.title`, { defaultValue: feature.title })}</h3>
               <p className="text-muted-foreground text-sm leading-relaxed max-md:hidden">
-                {feature.description}
+                {t(`landing.ecosystem.features.${index}.description`, { defaultValue: feature.description })}
               </p>
             </Card>
           ))}

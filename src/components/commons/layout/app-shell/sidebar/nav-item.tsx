@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -14,6 +15,7 @@ type NavItemProps = {
 };
 
 export const NavItem = ({ item, collapsed }: NavItemProps) => {
+  const { t } = useTranslation("common");
   const pathname = usePathname();
   const Icon = item.icon;
   const isActive =
@@ -39,7 +41,7 @@ export const NavItem = ({ item, collapsed }: NavItemProps) => {
             </Button>
           </span>
         </TooltipTrigger>
-        <TooltipContent side="right">Coming soon</TooltipContent>
+        <TooltipContent side="right">{t("commons.comingSoon")}</TooltipContent>
       </Tooltip>
     );
   }

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,7 +13,14 @@ import {
 } from "@/components/ui/dialog";
 import { usePopupStore } from "@/stores/popup";
 
+const DEFAULT_LABEL_KEYS: Record<string, string> = {
+  Confirm: "commons.popup.confirm",
+  Cancel: "commons.popup.cancel",
+};
+
 export function GlobalPopup() {
+  const { t } = useTranslation("common");
+  const buttonLabel = (label: string) => (DEFAULT_LABEL_KEYS[label] ? t(DEFAULT_LABEL_KEYS[label]) : label);
   const {
     isOpen,
     title,
@@ -49,9 +58,9 @@ export function GlobalPopup() {
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={handleNegative}>
-            {negativeLabel}
+            {buttonLabel(negativeLabel)}
           </Button>
-          <Button onClick={handlePositive}>{positiveLabel}</Button>
+          <Button onClick={handlePositive}>{buttonLabel(positiveLabel)}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

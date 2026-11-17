@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect } from "react";
 import Link from "next/link";
 import { ChevronRight, KeyRound, Loader2, Store, TriangleAlert } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { getPrintifyCatalog, getPrintifyConnection, getPrintifyDraft, getPrintifyProviders } from "@/api/printify";
 import { getEtsyDraft } from "@/api/shop";
@@ -22,18 +23,6 @@ import { useWorkflowStore } from "@/stores/workflow";
 import type { WorkflowNode, WorkflowNodeConfig } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 import { useQuery } from "@tanstack/react-query";
-
-/** Every design here is made by an image model, and Etsy requires a listing to say so; the server adds the sentence. */
-const AI_DISCLOSURE_NOTE =
-  "Etsy requires listings to say when AI made the design, so a sentence saying it was created with AI image tools from your prompts is added to the end of the description.";
-
-/** The pace the server keeps; a step that reaches it waits and carries on by itself. */
-const PACE_NOTE =
-  "A young Etsy shop that adds many listings at once looks like spam to Etsy. Under 30 days old, APCS adds up to 3 listings an hour and 10 a day (25 a day under 90 days, then 100); a step past that waits its turn and carries on by itself.";
-
-/** Where the print goes when the product follows the mock-ups. */
-const PLACEMENT_NOTE =
-  "The design is printed where the front mock-up places it, at the same size. A design smaller than the print is enlarged for Printify, and the step warns when it may print soft.";
 
 const num = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : null);
 const str = (value: unknown) => (typeof value === "string" && value ? value : null);
@@ -195,6 +184,7 @@ function Toggle({ id, label, description, checked, disabled, onChange }: { id: s
  * and the profit each sale should leave. Prices are set per size from Printify's cost when the step runs.
  */
 export function PrintifyPublishSettings({ node, disabled }: { node: WorkflowNode; disabled: boolean }) {
+  const { t } = useTranslation("common");
   const { config, patch } = useConfig(node);
   const productId = useWorkflowProductId();
   const blueprintId = num(config.blueprintId);
@@ -238,14 +228,14 @@ export function PrintifyPublishSettings({ node, disabled }: { node: WorkflowNode
   const addMockups = publishToEtsy && config.addMockups !== false;
   const shopTitle = connection.data?.shopTitle;
 
-  if (connection.isPending) return <p className="text-muted-foreground flex items-center gap-2 px-5 py-5 text-xs"><Loader2 className="size-3.5 animate-spin" />Checking Printify…</p>;
+  if (connection.isPending) return <p className="text-muted-foreground flex items-center gap-2 px-5 py-5 text-xs"><Loader2 className="size-3.5 animate-spin" />{t("workflowConfig.publish.checkingPrintify")}</p>;
   if (!ready)
     return (
       <div className="px-5 py-5">
-        <PanelNotice tone="warning" action={<Button asChild size="sm" variant="outline"><Link href="/api-keys"><KeyRound className="size-3.5" />Open API Keys</Link></Button>}>
+        <PanelNotice tone="warning" action={<Button asChild size="sm" variant="outline"><Link href="/api-keys"><KeyRound className="size-3.5" />{t("workflowConfig.publish.openApiKeys")}</Link></Button>}>
           {connection.data?.status === "no_store"
-            ? "Your Printify account has no store. Add one linked to your Etsy shop on Printify."
-            : "Add a working Printify API key on the API Keys page to choose what Printify makes."}
+            ? t("workflowConfig.publish.noStore")
+            : t("workflowConfig.publish.addApiKey")}
         </PanelNotice>
       </div>
     );
@@ -254,29 +244,29 @@ export function PrintifyPublishSettings({ node, disabled }: { node: WorkflowNode
   // rarely changed settings fold away.
   return (
     <>
-      <PanelSection title="Product" description={shopTitle ? `Made and shipped by your Printify store "${shopTitle}".` : undefined}>
+      <PanelSection title={t("workflowConfig.publish.product")} description={shopTitle ? t("workflowConfig.publish.madeByStore", { shop: shopTitle }) : undefined}>
         {fromMockup ? (
           <>
             <ul className="space-y-2 text-sm">
               {Object.entries(chosen).map(([type, setup]) => (
                 <li key={type} className="border-ink-200 rounded-md border p-2.5">
-                  <p className="text-ink-900 font-medium">{productTypeLabel(type)}: {setup.blueprintTitle ?? `Product ${setup.blueprintId}`}</p>
+                  <p className="text-ink-900 font-medium">{t(`batches.productTypes.${type.toLowerCase()}`, { defaultValue: productTypeLabel(type) })}: {setup.blueprintTitle ?? t("workflowConfig.publish.productNumber", { id: setup.blueprintId })}</p>
                   <p className="text-muted-foreground text-xs">
-                    {setup.printProviderTitle ?? "No provider"} · {setup.colors.join(", ") || "no color"} · {setup.sizes.join(", ") || "no size"}
+                    {setup.printProviderTitle ?? t("workflowConfig.publish.noProvider")} · {setup.colors.join(", ") || t("workflowConfig.publish.noColor")} · {setup.sizes.join(", ") || t("workflowConfig.publish.noSize")}
                   </p>
                 </li>
               ))}
             </ul>
-            <p className="text-muted-foreground text-xs">Set on Apply mock-up. Change it there.</p>
+            <p className="text-muted-foreground text-xs">{t("workflowConfig.publish.setOnApplyMockup")}</p>
           </>
         ) : (
           <>
             {!hasApplyMockup && (
               <Segmented
-                label="Product, colors and provider"
+                label={t("workflowConfig.publish.sourceLabel")}
                 value={source}
                 disabled={disabled}
-                options={[{ value: "mockup", label: "Match the mock-ups" }, { value: "manual", label: "Choose myself" }]}
+                options={[{ value: "mockup", label: t("workflowConfig.publish.matchMockups") }, { value: "manual", label: t("workflowConfig.publish.chooseMyself") }]}
                 onChange={(next) => patch({ source: next })}
               />
             )}
@@ -284,59 +274,59 @@ export function PrintifyPublishSettings({ node, disabled }: { node: WorkflowNode
               <>
                 <p className="text-muted-foreground text-xs">
                   {hasApplyMockup
-                    ? "Printify makes the garment and colors chosen on Apply mock-up, printed where the approved mock-ups show the design."
-                    : "Picked from the approved mock-ups when the step runs."}
+                    ? t("workflowConfig.publish.fromApplyMockup")
+                    : t("workflowConfig.publish.pickedFromMockups")}
                 </p>
-                <Fold title="How it is matched">
+                <Fold title={t("workflowConfig.publish.howMatched")}>
                   <ul className="list-disc space-y-1 pl-4">
-                    <li>Product: the Printify product the template shows.</li>
-                    <li>Colors: each garment color of the approved mock-ups.</li>
-                    <li>Provider: the template&apos;s own, or one that makes all those colors, US first.</li>
-                    <li>{PLACEMENT_NOTE}</li>
-                    <li>Back and sleeves: the design is printed there too, as their mock-ups show it, when the provider prints that side.</li>
-                    {!hasApplyMockup && <li>Mock-ups made with your own templates cannot be matched: choose the product yourself instead.</li>}
+                    <li>{t("workflowConfig.publish.matchProduct")}</li>
+                    <li>{t("workflowConfig.publish.matchColors")}</li>
+                    <li>{t("workflowConfig.publish.matchProvider")}</li>
+                    <li>{t("workflowConfig.publish.placementNote")}</li>
+                    <li>{t("workflowConfig.publish.matchBackSleeves")}</li>
+                    {!hasApplyMockup && <li>{t("workflowConfig.publish.ownTemplatesNote")}</li>}
                   </ul>
                 </Fold>
               </>
             ) : (
               <fieldset disabled={disabled} className="space-y-4">
                 <BlueprintPicker
-                  value={blueprintId ? { id: blueprintId, title: str(config.blueprintTitle) ?? `Product ${blueprintId}` } : null}
+                  value={blueprintId ? { id: blueprintId, title: str(config.blueprintTitle) ?? t("workflowConfig.publish.productNumber", { id: blueprintId }) } : null}
                   onChange={(next) => patch({ blueprintId: next.id, blueprintTitle: next.title, printProviderId: null, printProviderTitle: null, colors: [], sizes: [] })}
                 />
                 <div className="space-y-1.5">
-                  <Label htmlFor={`${node.id}-provider`}>Print provider</Label>
+                  <Label htmlFor={`${node.id}-provider`}>{t("workflowConfig.publish.printProvider")}</Label>
                   <PanelSelect id={`${node.id}-provider`} value={providerId ? String(providerId) : ""} disabled={disabled || !providers.data?.length}
-                    placeholder={providers.isFetching ? "Loading providers…" : blueprintId ? "Choose a provider (US first)" : "Choose a product first"}
+                    placeholder={providers.isFetching ? t("workflowConfig.publish.loadingProviders") : blueprintId ? t("workflowConfig.publish.chooseProvider") : t("workflowConfig.publish.chooseProductFirst")}
                     options={(providers.data ?? []).map((item) => ({ value: String(item.id), label: `${item.title}${item.country ? ` — ${item.country}` : ""}` }))}
                     onChange={(next) => {
                       const picked = providers.data?.find((item) => item.id === Number(next));
                       patch({ printProviderId: picked?.id ?? null, printProviderTitle: picked?.title ?? null, colors: [], sizes: [] });
                     }} />
                 </div>
-                {catalog.isFetching && <p className="text-muted-foreground flex items-center gap-2 text-xs"><Loader2 className="size-3.5 animate-spin" />Loading colors and sizes…</p>}
+                {catalog.isFetching && <p className="text-muted-foreground flex items-center gap-2 text-xs"><Loader2 className="size-3.5 animate-spin" />{t("workflowConfig.publish.loadingColorsSizes")}</p>}
                 {catalog.data && (
                   <>
-                    <PickerChips label="Colors" swatch options={catalog.data.colors} selected={colors}
-                      actions={colors.length > 0 && <QuickAction label="Clear" onClick={() => patch({ colors: [] })} />}
+                    <PickerChips label={t("workflowConfig.publish.colors")} swatch options={catalog.data.colors} selected={colors}
+                      actions={colors.length > 0 && <QuickAction label={t("workflowConfig.publish.clear")} onClick={() => patch({ colors: [] })} />}
                       onToggle={(value) => toggle("colors", colors, value)} />
-                    <PickerChips label="Sizes" options={catalogSizes} selected={sortSizes(sizes)}
+                    <PickerChips label={t("workflowConfig.publish.sizes")} options={catalogSizes} selected={sortSizes(sizes)}
                       actions={
                         <>
                           {catalogSizes.some((size) => COMMON_SIZES.includes(size)) && (
                             <QuickAction label="S–2XL" onClick={() => patch({ sizes: catalogSizes.filter((size) => COMMON_SIZES.includes(size)) })} />
                           )}
-                          <QuickAction label="All" onClick={() => patch({ sizes: catalogSizes })} />
-                          {sizes.length > 0 && <QuickAction label="Clear" onClick={() => patch({ sizes: [] })} />}
+                          <QuickAction label={t("workflowConfig.publish.all")} onClick={() => patch({ sizes: catalogSizes })} />
+                          {sizes.length > 0 && <QuickAction label={t("workflowConfig.publish.clear")} onClick={() => patch({ sizes: [] })} />}
                         </>
                       }
                       onToggle={(value) => toggle("sizes", sizes, value)} />
                     {tooManyVariants ? (
-                      <PanelNotice tone="warning">{variantCount} variants: Etsy allows {MAX_VARIANTS}. Choose fewer colors or sizes.</PanelNotice>
+                      <PanelNotice tone="warning">{t("workflowConfig.publish.tooManyVariants", { count: variantCount, max: MAX_VARIANTS })}</PanelNotice>
                     ) : (
                       <p className="text-muted-foreground text-xs">
-                        {variantCount} variant(s)
-                        {catalog.data.usShippingFirstItem != null && ` · US shipping $${catalog.data.usShippingFirstItem.toFixed(2)}`}
+                        {t("workflowConfig.publish.variantCount", { count: variantCount })}
+                        {catalog.data.usShippingFirstItem != null && t("workflowConfig.publish.usShipping", { price: catalog.data.usShippingFirstItem.toFixed(2) })}
                       </p>
                     )}
                   </>
@@ -347,64 +337,64 @@ export function PrintifyPublishSettings({ node, disabled }: { node: WorkflowNode
         )}
       </PanelSection>
 
-      <PanelSection title="Price">
+      <PanelSection title={t("workflowConfig.publish.price")}>
         <div className="space-y-1.5">
-          <Label htmlFor={`${node.id}-profit`}>Profit per item</Label>
+          <Label htmlFor={`${node.id}-profit`}>{t("workflowConfig.publish.profitPerItem")}</Label>
           <div className="relative">
             <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm">$</span>
             <Input id={`${node.id}-profit`} className="pl-6" type="number" min={0} max={500} step={1} value={profit} disabled={disabled}
               onChange={(event) => patch({ targetProfit: event.target.value === "" ? 0 : Number(event.target.value) })} />
           </div>
-          <p className="text-muted-foreground text-xs">After Etsy fees. Each size is priced from its Printify cost, so larger sizes cost more.</p>
+          <p className="text-muted-foreground text-xs">{t("workflowConfig.publish.profitHint")}</p>
         </div>
       </PanelSection>
 
       <PanelSection title="Etsy">
         <div className="space-y-4">
-          <Toggle id={`${node.id}-publish`} label="Publish to Etsy" disabled={disabled} checked={publishToEtsy}
-            description={publishToEtsy ? "Printify lists it on your Etsy shop." : "The product stays on Printify for you to publish."}
+          <Toggle id={`${node.id}-publish`} label={t("workflowConfig.publish.publishToEtsy")} disabled={disabled} checked={publishToEtsy}
+            description={publishToEtsy ? t("workflowConfig.publish.printifyLists") : t("workflowConfig.publish.staysOnPrintify")}
             onChange={(next) => patch({ publishToEtsy: next })} />
           {publishToEtsy && (
             <>
-              <Toggle id={`${node.id}-media`} label="Add mock-ups" disabled={disabled} checked={addMockups}
-                description="Your approved mock-ups go on the listing. Printify takes the design and mock-ups, not the video."
+              <Toggle id={`${node.id}-media`} label={t("workflowConfig.publish.addMockups")} disabled={disabled} checked={addMockups}
+                description={t("workflowConfig.publish.addMockupsHint")}
                 onChange={(next) => patch({ addMockups: next })} />
               <p className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-300">
                 <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
-                <span>Etsy needs Printify set as a production partner. See More options.</span>
+                <span>{t("workflowConfig.publish.partnerWarning")}</span>
               </p>
             </>
           )}
         </div>
       </PanelSection>
 
-      <section aria-label="More options" className="border-t px-5 py-4">
-        <Fold title="More options" strong>
+      <section aria-label={t("workflowConfig.publish.moreOptions")} className="border-t px-5 py-4">
+        <Fold title={t("workflowConfig.publish.moreOptions")} strong>
           <div className="space-y-4">
             <fieldset disabled={disabled} className="space-y-1.5">
-              <Label htmlFor={`${node.id}-design`}>Design to print</Label>
-              <PanelSelect id={`${node.id}-design`} value={str(config.designId) ?? ""} disabled={disabled} noneLabel="The final approved design"
+              <Label htmlFor={`${node.id}-design`}>{t("workflowConfig.publish.designToPrint")}</Label>
+              <PanelSelect id={`${node.id}-design`} value={str(config.designId) ?? ""} disabled={disabled} noneLabel={t("workflowConfig.publish.finalDesign")}
                 options={(draft.data?.designs ?? []).map((design, index) => ({
                   value: design.id,
-                  label: `Design ${index + 1} · ${design.width}×${design.height}${design.isFinal ? " · final" : ""}`,
+                  label: `${t("workflowConfig.publish.designNumber", { number: index + 1, width: design.width, height: design.height })}${design.isFinal ? t("workflowConfig.publish.final") : ""}`,
                 }))}
                 onChange={(next) => patch({ designId: next || null })} />
-              {!productId && <p className="text-muted-foreground text-xs">Choose the product on Product Input to pick a specific design.</p>}
+              {!productId && <p className="text-muted-foreground text-xs">{t("workflowConfig.publish.chooseProductForDesign")}</p>}
             </fieldset>
             {addMockups && (
               <fieldset disabled={disabled} className="space-y-1.5">
-                <Label htmlFor={`${node.id}-lead`}>First listing photo</Label>
+                <Label htmlFor={`${node.id}-lead`}>{t("workflowConfig.publish.firstPhoto")}</Label>
                 <PanelSelect id={`${node.id}-lead`} value={leadPhoto} disabled={disabled}
-                  options={[{ value: "printify", label: "Printify's photo of the garment" }, { value: "apcs", label: "Your first approved mock-up" }]}
+                  options={[{ value: "printify", label: t("workflowConfig.publish.printifyPhoto") }, { value: "apcs", label: t("workflowConfig.publish.firstMockup") }]}
                   onChange={(next) => patch({ leadPhoto: next })} />
               </fieldset>
             )}
             {publishToEtsy && (
               <ul className="text-muted-foreground list-disc space-y-1.5 pl-4 text-xs leading-relaxed">
-                <li>Add Printify under Etsy Shop Manager &gt; Settings &gt; Production partners. Publishing stops while your shop has none.</li>
-                <li>{AI_DISCLOSURE_NOTE}</li>
-                <li>{PACE_NOTE}</li>
-                <li>Whether the listing starts active or as a draft follows your Printify store&apos;s publishing settings.</li>
+                <li>{t("workflowConfig.publish.addPartnerNote")}</li>
+                <li>{t("workflowConfig.publish.aiDisclosure")}</li>
+                <li>{t("workflowConfig.publish.paceNote")}</li>
+                <li>{t("workflowConfig.publish.activeOrDraft")}</li>
               </ul>
             )}
           </div>
@@ -416,6 +406,7 @@ export function PrintifyPublishSettings({ node, disabled }: { node: WorkflowNode
 
 /** Publish to Etsy: one draft listing from the product's listing content and approved media. */
 export function EtsyPublishSettings({ node, disabled }: { node: WorkflowNode; disabled: boolean }) {
+  const { t } = useTranslation("common");
   const { config, patch } = useConfig(node);
   const productId = useWorkflowProductId();
   const physical = config.listingType === "physical";
@@ -428,33 +419,33 @@ export function EtsyPublishSettings({ node, disabled }: { node: WorkflowNode; di
     <>
       {draft.data && !connected && (
         <div className="px-5 pt-4">
-          <PanelNotice tone="warning" action={<Button asChild size="sm" variant="outline"><Link href="/shop"><Store className="size-3.5" />Go to Shop</Link></Button>}>
-            Connect your Etsy shop on the Shop page before running this step.
+          <PanelNotice tone="warning" action={<Button asChild size="sm" variant="outline"><Link href="/shop"><Store className="size-3.5" />{t("workflowConfig.publish.goToShop")}</Link></Button>}>
+            {t("workflowConfig.publish.connectEtsy")}
           </PanelNotice>
         </div>
       )}
-      <PanelSection title="Listing" description="Title, description and tags come from Listing Content; the photos are the approved mock-ups. Etsy gets a draft to publish yourself.">
+      <PanelSection title={t("workflowConfig.publish.listing")} description={t("workflowConfig.publish.listingDescription")}>
         <fieldset disabled={disabled} className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Type</Label>
+            <Label>{t("workflowConfig.publish.type")}</Label>
             <div className="flex gap-4 text-sm">
-              <label className="flex items-center gap-1.5"><input type="radio" name={`${node.id}-type`} checked={!physical} onChange={() => patch({ listingType: "download", shippingProfileId: null })} />Digital download</label>
-              <label className="flex items-center gap-1.5"><input type="radio" name={`${node.id}-type`} checked={physical} onChange={() => patch({ listingType: "physical" })} />Physical item</label>
+              <label className="flex items-center gap-1.5"><input type="radio" name={`${node.id}-type`} checked={!physical} onChange={() => patch({ listingType: "download", shippingProfileId: null })} />{t("workflowConfig.publish.digitalDownload")}</label>
+              <label className="flex items-center gap-1.5"><input type="radio" name={`${node.id}-type`} checked={physical} onChange={() => patch({ listingType: "physical" })} />{t("workflowConfig.publish.physicalItem")}</label>
             </div>
             <p className="text-muted-foreground text-xs">
               {physical
-                ? "Not linked to a print provider: for print-on-demand use Push to Printify, so orders are fulfilled automatically."
-                : "Buyers download the approved designs (up to five files) after paying."}
+                ? t("workflowConfig.publish.physicalHint")
+                : t("workflowConfig.publish.digitalHint")}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor={`${node.id}-price`}>Price{draft.data?.currency ? ` (${draft.data.currency})` : ""}</Label>
+              <Label htmlFor={`${node.id}-price`}>{t("workflowConfig.publish.price")}{draft.data?.currency ? ` (${draft.data.currency})` : ""}</Label>
               <Input id={`${node.id}-price`} type="number" min={0.2} step={0.01} value={num(config.price) ?? ""} placeholder={physical ? "24.99" : "4.99"}
                 onChange={(event) => patch({ price: event.target.value === "" ? null : Number(event.target.value) })} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor={`${node.id}-quantity`}>Quantity</Label>
+              <Label htmlFor={`${node.id}-quantity`}>{t("workflowConfig.publish.quantity")}</Label>
               <Input id={`${node.id}-quantity`} type="number" min={1} max={999} value={num(config.quantity) ?? 999}
                 onChange={(event) => patch({ quantity: Number(event.target.value) || 1 })} />
             </div>
@@ -466,28 +457,28 @@ export function EtsyPublishSettings({ node, disabled }: { node: WorkflowNode; di
           />
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor={`${node.id}-who`}>Who made it</Label>
+              <Label htmlFor={`${node.id}-who`}>{t("workflowConfig.publish.whoMade")}</Label>
               <PanelSelect id={`${node.id}-who`} value={str(config.whoMade) ?? "i_did"} disabled={disabled}
-                options={[{ value: "i_did", label: "I did" }, { value: "collective", label: "A member of my shop" }, { value: "someone_else", label: "Another company or person" }]}
+                options={[{ value: "i_did", label: t("workflowConfig.publish.iDid") }, { value: "collective", label: t("workflowConfig.publish.shopMember") }, { value: "someone_else", label: t("workflowConfig.publish.someoneElse") }]}
                 onChange={(next) => patch({ whoMade: next })} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor={`${node.id}-when`}>When it was made</Label>
+              <Label htmlFor={`${node.id}-when`}>{t("workflowConfig.publish.whenMade")}</Label>
               <PanelSelect id={`${node.id}-when`} value={str(config.whenMade) ?? "made_to_order"} disabled={disabled}
-                options={[{ value: "made_to_order", label: "Made to order" }, { value: "2020_2026", label: "2020–2026" }]}
+                options={[{ value: "made_to_order", label: t("workflowConfig.publish.madeToOrder") }, { value: "2020_2026", label: "2020–2026" }]}
                 onChange={(next) => patch({ whenMade: next })} />
             </div>
           </div>
           {physical && (
             <div className="space-y-1.5">
-              <Label htmlFor={`${node.id}-shipping`}>Shipping profile</Label>
+              <Label htmlFor={`${node.id}-shipping`}>{t("workflowConfig.publish.shippingProfile")}</Label>
               {!productId ? (
-                <p className="text-muted-foreground text-xs">Choose the product on Product Input to load your shipping profiles.</p>
+                <p className="text-muted-foreground text-xs">{t("workflowConfig.publish.chooseProductForShipping")}</p>
               ) : draft.data?.shippingProfiles.length === 0 ? (
-                <p className="text-xs text-amber-700 dark:text-amber-300">Your Etsy shop has no shipping profile yet.</p>
+                <p className="text-xs text-amber-700 dark:text-amber-300">{t("workflowConfig.publish.noShippingProfile")}</p>
               ) : (
                 <PanelSelect id={`${node.id}-shipping`} value={num(config.shippingProfileId) ? String(num(config.shippingProfileId)) : ""} disabled={disabled}
-                  placeholder="Choose a shipping profile"
+                  placeholder={t("workflowConfig.publish.chooseShippingProfile")}
                   options={(draft.data?.shippingProfiles ?? []).map((option) => ({ value: String(option.id), label: option.label }))}
                   onChange={(next) => patch({ shippingProfileId: Number(next) || null })} />
               )}
@@ -495,21 +486,21 @@ export function EtsyPublishSettings({ node, disabled }: { node: WorkflowNode; di
           )}
           {physical && (
             <div className="space-y-1.5">
-              <Label>Who produces it</Label>
+              <Label>{t("workflowConfig.publish.whoProduces")}</Label>
               <div className="flex gap-4 text-sm">
                 <label className="flex items-center gap-1.5">
-                  <input type="radio" name={`${node.id}-made-by`} checked={madeBy === "me"} onChange={() => patch({ madeBy: "me", productionPartnerIds: [] })} />I make it myself
+                  <input type="radio" name={`${node.id}-made-by`} checked={madeBy === "me"} onChange={() => patch({ madeBy: "me", productionPartnerIds: [] })} />{t("workflowConfig.publish.makeMyself")}
                 </label>
                 <label className="flex items-center gap-1.5">
-                  <input type="radio" name={`${node.id}-made-by`} checked={madeBy === "partner"} onChange={() => patch({ madeBy: "partner" })} />A production partner
+                  <input type="radio" name={`${node.id}-made-by`} checked={madeBy === "partner"} onChange={() => patch({ madeBy: "partner" })} />{t("workflowConfig.publish.productionPartner")}
                 </label>
               </div>
               {madeBy === "partner" &&
                 (!productId ? (
-                  <p className="text-muted-foreground text-xs">Choose the product on Product Input to load your production partners.</p>
+                  <p className="text-muted-foreground text-xs">{t("workflowConfig.publish.chooseProductForPartners")}</p>
                 ) : draft.data?.productionPartners.length === 0 ? (
                   <p className="text-xs text-amber-700">
-                    Your Etsy shop lists no production partner. Add the print shop under Shop Manager &gt; Settings &gt; Production partners, then reopen this step.
+                    {t("workflowConfig.publish.noPartner")}
                   </p>
                 ) : (
                   <div className="space-y-1">
@@ -522,13 +513,13 @@ export function EtsyPublishSettings({ node, disabled }: { node: WorkflowNode; di
                     ))}
                   </div>
                 ))}
-              <p className="text-muted-foreground text-xs">Etsy requires a listing to name the partner that makes it. Hiding it can get the shop suspended.</p>
+              <p className="text-muted-foreground text-xs">{t("workflowConfig.publish.partnerRequired")}</p>
             </div>
           )}
-          <Toggle id={`${node.id}-video`} label="Attach the approved video" disabled={disabled} checked={config.includeVideo !== false}
-            description="The video the run approved goes on the listing." onChange={(next) => patch({ includeVideo: next })} />
-          <PanelNotice tone="info">{AI_DISCLOSURE_NOTE}</PanelNotice>
-          <PanelNotice tone="info">{PACE_NOTE}</PanelNotice>
+          <Toggle id={`${node.id}-video`} label={t("workflowConfig.publish.attachVideo")} disabled={disabled} checked={config.includeVideo !== false}
+            description={t("workflowConfig.publish.attachVideoHint")} onChange={(next) => patch({ includeVideo: next })} />
+          <PanelNotice tone="info">{t("workflowConfig.publish.aiDisclosure")}</PanelNotice>
+          <PanelNotice tone="info">{t("workflowConfig.publish.paceNote")}</PanelNotice>
         </fieldset>
       </PanelSection>
     </>

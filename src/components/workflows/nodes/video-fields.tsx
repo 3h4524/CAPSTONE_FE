@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { NodeField } from "@/components/workflows/nodes/node-field";
 import { NodeSegmented } from "@/components/workflows/nodes/node-segmented";
 import { getVideoOutputFormat, getVideoOutputFormats } from "@/helpers/video-output-formats";
@@ -21,11 +23,22 @@ const readTransition = (config: WorkflowNodeConfig) => {
 };
 
 export const VideoFields = ({ nodeId, data, disabled = false }: VideoFieldsProps) => {
+  const { t } = useTranslation("common");
   const mode = readString(data.config.mode) || "standard";
   const format = getVideoOutputFormat(data.config.outputFormat, mode);
   const transition = readTransition(data.config);
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
-  const transitionOptions = getSelectFieldOptions(data.type, "standardOptions.transition");
+  const transitionLabel = (value: string, fallback: string | undefined) =>
+    fallback &&
+    t(`workflowEditor.fields.${data.type}.standardOptions_transition.options.${value}.label`, {
+      defaultValue: fallback,
+    });
+  const transitionOptions = getSelectFieldOptions(data.type, "standardOptions.transition").map(
+    (option) => ({
+      ...option,
+      label: transitionLabel(option.value, option.label) ?? option.label,
+    })
+  );
   const updateStandardOption = (name: string, value: string) => {
     const current = data.config.standardOptions;
     const options =
@@ -42,16 +55,19 @@ export const VideoFields = ({ nodeId, data, disabled = false }: VideoFieldsProps
         value={format.value}
         onChange={(next) => updateNodeConfig(nodeId, { ...data.config, outputFormat: next })}
         disabled={disabled}
-        ariaLabel="Output format"
+        ariaLabel={t("workflowEditor.fields.generate-video.outputFormat.label")}
       />
       <NodeField
         value={transition}
-        displayValue={getSelectFieldLabel(data.type, "standardOptions.transition", transition)}
+        displayValue={transitionLabel(
+          transition,
+          getSelectFieldLabel(data.type, "standardOptions.transition", transition)
+        )}
         options={transitionOptions}
         onChange={(next) => updateStandardOption("transition", next)}
         disabled={disabled}
-        placeholder="Transition"
-        ariaLabel="Transition"
+        placeholder={t("workflowEditor.fields.generate-video.standardOptions_transition.label")}
+        ariaLabel={t("workflowEditor.fields.generate-video.standardOptions_transition.label")}
       />
     </>
   );

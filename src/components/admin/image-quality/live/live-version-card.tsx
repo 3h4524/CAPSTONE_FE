@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   LiveApproval,
@@ -31,35 +32,43 @@ const Rate = ({ label, children }: { label: string; children: ReactNode }) => (
 );
 
 /** One provider and prompt version on a phone: every column of its table row, stacked. */
-export const LiveVersionCard = ({ version }: { version: ImageQualityLiveVersion }) => (
-  <li className="space-y-3 px-4 py-3">
-    <div>
-      <LiveVersionName version={version} />
-    </div>
-    <div className="space-y-2">
-      <Rate label="Approved on review">
-        <LiveApproval version={version} />
-      </Rate>
-      <Rate label="Text correct (OCR)">
-        <LiveTextCheck version={version} />
-      </Rate>
-      <Rate label="Failed or blocked">
-        <LiveFailure version={version} />
-      </Rate>
-    </div>
-    <dl className="grid grid-cols-2 gap-x-3 gap-y-2">
-      <Figure label="Images" value={version.images} detail={`${version.products} products · ${version.jobs} jobs`} />
-      <Figure
-        label="Regenerate / product"
-        value={formatImageQualityNumber(version.regenerateRate, 2)}
-        detail={`${version.regenerateRequests} requests`}
-      />
-      <Figure label="Time / image" value={formatImageQualitySeconds(version.averageGenerationSeconds)} />
-      <Figure
-        label="Cost / image"
-        value={formatImageQualityUsd(version.averageCostUsd)}
-        detail={`${formatImageQualityUsd(version.totalCostUsd)} total`}
-      />
-    </dl>
-  </li>
-);
+export const LiveVersionCard = ({ version }: { version: ImageQualityLiveVersion }) => {
+  const { t } = useTranslation("common");
+
+  return (
+    <li className="space-y-3 px-4 py-3">
+      <div>
+        <LiveVersionName version={version} />
+      </div>
+      <div className="space-y-2">
+        <Rate label={t("admin.imageQuality.shared.approvedOnReview")}>
+          <LiveApproval version={version} />
+        </Rate>
+        <Rate label={t("admin.imageQuality.shared.textCorrectOcr")}>
+          <LiveTextCheck version={version} />
+        </Rate>
+        <Rate label={t("admin.imageQuality.shared.failedOrBlocked")}>
+          <LiveFailure version={version} />
+        </Rate>
+      </div>
+      <dl className="grid grid-cols-2 gap-x-3 gap-y-2">
+        <Figure
+          label={t("admin.imageQuality.shared.images")}
+          value={version.images}
+          detail={t("admin.imageQuality.live.productsJobs", { products: version.products, jobs: version.jobs })}
+        />
+        <Figure
+          label={t("admin.imageQuality.shared.regeneratePerProduct")}
+          value={formatImageQualityNumber(version.regenerateRate, 2)}
+          detail={t("admin.imageQuality.live.requestsCount", { count: version.regenerateRequests })}
+        />
+        <Figure label={t("admin.imageQuality.shared.timePerImage")} value={formatImageQualitySeconds(version.averageGenerationSeconds)} />
+        <Figure
+          label={t("admin.imageQuality.shared.costPerImage")}
+          value={formatImageQualityUsd(version.averageCostUsd)}
+          detail={t("admin.imageQuality.live.totalSuffix", { value: formatImageQualityUsd(version.totalCostUsd) })}
+        />
+      </dl>
+    </li>
+  );
+};

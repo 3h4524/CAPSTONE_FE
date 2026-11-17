@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuthStore } from "@/stores/auth";
@@ -20,6 +22,7 @@ const AVATAR_SIZES = {
 } as const;
 
 export const UserAvatar = ({ size = "default", className, accent = false }: UserAvatarProps) => {
+  const { t } = useTranslation("common");
   const user = useAuthStore((state) => state.user);
 
   if (!user) {
@@ -31,7 +34,7 @@ export const UserAvatar = ({ size = "default", className, accent = false }: User
           className
         )}
       >
-        <Spinner className="size-4" aria-label="Loading account" />
+        <Spinner className="size-4" aria-label={t("commons.account.loading")} />
       </span>
     );
   }

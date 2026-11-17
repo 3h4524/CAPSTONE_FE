@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import { api } from "@/api/client";
+import { getCurrentLocale } from "@/i18n/client";
 import type {
   AiCharacterCatalogItem,
   AiSceneVideo,
@@ -29,10 +30,10 @@ import type {
 
 export const videoWorkflowKeys = {
   capabilities: () => ["workflow-capabilities"] as const,
-  templates: () => ["video-templates"] as const,
-  aiTemplates: () => ["ai-video-templates"] as const,
-  videoPacks: () => ["video-packs"] as const,
-  aiCharacters: () => ["ai-character-models"] as const,
+  templates: (locale: string = getCurrentLocale()) => ["video-templates", locale] as const,
+  aiTemplates: (locale: string = getCurrentLocale()) => ["ai-video-templates", locale] as const,
+  videoPacks: (locale: string = getCurrentLocale()) => ["video-packs", locale] as const,
+  aiCharacters: (locale: string = getCurrentLocale()) => ["ai-character-models", locale] as const,
   run: (id: string | null) => ["workflow-runs", id] as const,
   latestRun: (workflowId: string | null) => ["workflow-runs", "latest", workflowId] as const,
   videoRuns: (workflowId: string | null) => ["workflow-runs", "videos", workflowId] as const,
@@ -43,7 +44,7 @@ export const videoWorkflowKeys = {
     ["video-scene-quality", runId, videoId, sceneOrder] as const,
   videoQualitySummary: (runId: string | null, videoId: string | null) =>
     ["video-quality-summary", runId, videoId] as const,
-  music: () => ["music-tracks"] as const,
+  music: (locale: string = getCurrentLocale()) => ["music-tracks", locale] as const,
 };
 export const getWorkflowCapabilities = async () =>
   (await api.get<WorkflowCapabilities>("/api/workflows/capabilities")).data;

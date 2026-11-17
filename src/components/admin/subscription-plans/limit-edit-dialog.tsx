@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Gauge } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { FeatureImpactNote } from "@/components/admin/subscription-plans/feature-impact-note";
 import type { FeatureTarget } from "@/components/admin/subscription-plans/remove-feature-dialog";
@@ -19,6 +20,7 @@ export type LimitTarget = FeatureTarget & { current: number | null; unit: string
 
 // Sets a limit on a plan. Lowering it shows who keeps the old value until their period ends.
 export function LimitEditDialog({ target, onClose }: { target: LimitTarget | null; onClose: () => void }) {
+  const { t } = useTranslation("common");
   const [text, setText] = useState("");
   const [noLimit, setNoLimit] = useState(false);
   // The value the preview asks about, settled after typing stops.
@@ -55,14 +57,21 @@ export function LimitEditDialog({ target, onClose }: { target: LimitTarget | nul
           <div className="space-y-1">
             <DialogTitle className="font-display text-xl tracking-[-0.02em]">{target?.label}</DialogTitle>
             <DialogDescription>
-              On {target?.plan.name}. Now {target?.current === null ? "no limit" : `${target?.current.toLocaleString()}${target?.unit ? ` ${target.unit}` : ""}`}.
+              {t("admin.plans.limitEdit.description", {
+                plan: target?.plan.name ?? "",
+                current:
+                  target?.current === null
+                    ? t("admin.plans.limitEdit.noLimit")
+                    : `${target?.current?.toLocaleString()}${target?.unit ? ` ${target.unit}` : ""}`,
+              })}
             </DialogDescription>
           </div>
         </DialogHeader>
         <div className="space-y-3 px-6 py-3">
           <div className="space-y-1.5">
             <label htmlFor="plan-limit-value" className="text-ink-700 text-sm font-medium">
-              New limit{target?.unit ? ` (${target.unit})` : ""}
+              {t("admin.plans.limitEdit.newLimit")}
+              {target?.unit ? ` (${target.unit})` : ""}
             </label>
             <Input
               id="plan-limit-value"
@@ -71,15 +80,15 @@ export function LimitEditDialog({ target, onClose }: { target: LimitTarget | nul
               max={MAX_LIMIT}
               value={noLimit ? "" : text}
               disabled={noLimit}
-              placeholder={noLimit ? "No limit" : "e.g. 300"}
+              placeholder={noLimit ? t("admin.plans.shared.noLimit") : t("admin.plans.limitEdit.placeholderExample")}
               aria-invalid={!isValid}
               onChange={(event) => setText(event.target.value)}
             />
-            {!isValid && <p className="text-destructive text-xs">Enter a whole number from 0 to 10,000, or choose no limit.</p>}
+            {!isValid && <p className="text-destructive text-xs">{t("admin.plans.limitEdit.invalid")}</p>}
           </div>
           <label className="text-ink-700 flex items-center gap-2 text-sm">
-            <Checkbox checked={noLimit} onCheckedChange={(checked) => setNoLimit(checked === true)} aria-label="No limit" />
-            No limit
+            <Checkbox checked={noLimit} onCheckedChange={(checked) => setNoLimit(checked === true)} aria-label={t("admin.plans.shared.noLimit")} />
+            {t("admin.plans.shared.noLimit")}
           </label>
           {preview !== undefined && (
             <FeatureImpactNote impact={impact.data} isLoading={impact.isLoading} planName={target?.plan.name ?? ""} />
@@ -87,7 +96,7 @@ export function LimitEditDialog({ target, onClose }: { target: LimitTarget | nul
         </div>
         <div className="border-ink-100 flex justify-end gap-2 border-t px-6 py-4">
           <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
-            Cancel
+            {t("admin.plans.shared.cancel")}
           </Button>
           <Button
             type="button"
@@ -95,7 +104,7 @@ export function LimitEditDialog({ target, onClose }: { target: LimitTarget | nul
             onClick={() => target && mutation.mutate({ type: "limit", planId: target.plan.id, code: target.code, limitValue: parsed as number | null })}
           >
             {mutation.isPending && <Spinner className="size-4" />}
-            Save limit
+            {t("admin.plans.limitEdit.saveLimit")}
           </Button>
         </div>
       </DialogContent>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { TFunction } from "i18next";
 import {
   Clock3,
   Database,
@@ -13,6 +14,7 @@ import {
   Search,
   Sparkles,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   getMarketResearchSchedule,
@@ -65,24 +67,25 @@ const RESEARCH_RUN_COUNTER_KEY = "apcs.admin.market-research.run-counter";
 
 const SUGGESTED_NICHES = [
   {
-    label: "Hiking & outdoors",
+    labelKey: "admin.dashboard.marketResearch.niches.hiking",
     queries: ["hiking shirt", "outdoor shirt", "mountain hiking gift"],
   },
   {
-    label: "Camping gifts",
+    labelKey: "admin.dashboard.marketResearch.niches.camping",
     queries: ["camping t shirt", "camping gift", "nature lover gift"],
   },
   {
-    label: "Adventure apparel",
+    labelKey: "admin.dashboard.marketResearch.niches.adventure",
     queries: ["adventure shirt", "travel shirt", "funny outdoor shirt"],
   },
   {
-    label: "Seasonal ideas",
+    labelKey: "admin.dashboard.marketResearch.niches.seasonal",
     queries: ["christmas camping shirt", "summer outdoor shirt", "fall hiking gift"],
   },
 ];
 
 const AdminMarketResearchPanel = () => {
+  const { t } = useTranslation("common");
   const scheduleQuery = useQuery({
     queryKey: ["admin", "market-research", "schedule"],
     queryFn: getMarketResearchSchedule,
@@ -104,7 +107,7 @@ const AdminMarketResearchPanel = () => {
     mutationFn: updateMarketResearchSchedule,
     onSuccess: (data) => {
       setEnabled(data.enabled);
-      showToast("success", "Etsy schedule saved.");
+      showToast("success", t("admin.dashboard.marketResearch.saveSuccess"));
       void scheduleQuery.refetch();
     },
   });
@@ -157,19 +160,19 @@ const AdminMarketResearchPanel = () => {
     const batch = Number(batchSize);
     const window = Number(runWindowMinutes);
     if (enabled && !normalizedQueries.length)
-      return showToast("error", "Add at least one keyword before enabling the schedule.");
+      return showToast("error", t("admin.dashboard.marketResearch.toastAddKeyword"));
     if (!Number.isInteger(limit) || limit < 1 || limit > 100)
-      return showToast("error", "Candidates per niche must be between 1 and 100.");
+      return showToast("error", t("admin.dashboard.marketResearch.toastCandidatesRange"));
     if (!Number.isInteger(top) || top < 1 || top > 25)
-      return showToast("error", "Top listings must be between 1 and 25.");
+      return showToast("error", t("admin.dashboard.marketResearch.toastTopRange"));
     if (!Number.isFinite(score) || score < 0 || score > 100)
-      return showToast("error", "Minimum score must be between 0 and 100.");
+      return showToast("error", t("admin.dashboard.marketResearch.toastScoreRange"));
     if (!Number.isInteger(interval) || interval < 1 || interval > 10080)
-      return showToast("error", "Run frequency must be between 1 and 10080 minutes.");
+      return showToast("error", t("admin.dashboard.marketResearch.toastIntervalRange"));
     if (!Number.isInteger(batch) || batch < 1 || batch > 100)
-      return showToast("error", "Niches per batch must be between 1 and 100.");
+      return showToast("error", t("admin.dashboard.marketResearch.toastBatchRange"));
     if (!Number.isInteger(window) || window < 1 || window > 43200)
-      return showToast("error", "Run window must be between 1 and 43200 minutes (30 days).");
+      return showToast("error", t("admin.dashboard.marketResearch.toastWindowRange"));
     saveMutation.mutate({
       enabled,
       platform: 1,
@@ -249,14 +252,16 @@ const AdminMarketResearchPanel = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-ink-900 flex items-center gap-2 text-sm font-bold">
-              <Clock3 className="text-ink-500 size-4" /> Automatic refresh
+              <Clock3 className="text-ink-500 size-4" /> {t("admin.dashboard.marketResearch.autoRefresh")}
             </p>
             <p className="text-ink-500 mt-1 text-xs">
               {enabled
                 ? scheduleQuery.data?.nextRunAtUtc
-                  ? `Next run ${formatDate(scheduleQuery.data.nextRunAtUtc)}`
-                  : "Will run shortly after saving"
-                : "Paused — use Run now for a one-off research pass"}
+                  ? t("admin.dashboard.marketResearch.nextRun", {
+                      date: formatDate(scheduleQuery.data.nextRunAtUtc),
+                    })
+                  : t("admin.dashboard.marketResearch.willRunShortly")
+                : t("admin.dashboard.marketResearch.paused")}
             </p>
           </div>
           <label className="border-ink-200 bg-card text-ink-700 flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold shadow-sm">
@@ -265,11 +270,11 @@ const AdminMarketResearchPanel = () => {
               onCheckedChange={setEnabled}
               size="sm"
             />{" "}
-            Enable schedule
+            {t("admin.dashboard.marketResearch.enableSchedule")}
           </label>
         </div>
         <div className="mt-4 grid gap-3 max-md:grid-cols-2 max-md:items-end md:grid-cols-2 xl:grid-cols-6">
-          <Field label="Run frequency (minutes)">
+          <Field label={t("admin.dashboard.marketResearch.fieldRunFrequency")}>
             <Input
               type="number"
               min={1}
@@ -280,7 +285,7 @@ const AdminMarketResearchPanel = () => {
               className="bg-card mt-2"
             />
           </Field>
-          <Field label="Candidates / keyword">
+          <Field label={t("admin.dashboard.marketResearch.fieldCandidatesPerKeyword")}>
             <Input
               type="number"
               min={1}
@@ -290,7 +295,7 @@ const AdminMarketResearchPanel = () => {
               className="mt-2"
             />
           </Field>
-          <Field label="Top listings / niche">
+          <Field label={t("admin.dashboard.marketResearch.fieldTopListingsPerNiche")}>
             <Input
               type="number"
               min={1}
@@ -300,7 +305,7 @@ const AdminMarketResearchPanel = () => {
               className="mt-2"
             />
           </Field>
-          <Field label="Minimum trend score">
+          <Field label={t("admin.dashboard.marketResearch.fieldMinimumTrendScore")}>
             <Input
               type="number"
               min={0}
@@ -310,7 +315,7 @@ const AdminMarketResearchPanel = () => {
               className="mt-2"
             />
           </Field>
-          <Field label="Niches / batch">
+          <Field label={t("admin.dashboard.marketResearch.fieldNichesPerBatch")}>
             <Input
               type="number"
               min={1}
@@ -320,7 +325,7 @@ const AdminMarketResearchPanel = () => {
               className="mt-2"
             />
           </Field>
-          <Field label="Run window (minutes)">
+          <Field label={t("admin.dashboard.marketResearch.fieldRunWindow")}>
             <Input
               type="number"
               min={1}
@@ -343,44 +348,47 @@ const AdminMarketResearchPanel = () => {
             ) : (
               <Save className="size-4" />
             )}{" "}
-            Save schedule
+            {t("admin.dashboard.marketResearch.saveSchedule")}
           </Button>
         </div>
       </section>
       <div className="space-y-3">
         <label className="text-ink-700 block text-xs font-semibold">
-          Niches / keywords <span className="text-rose-500">*</span>
+          {t("admin.dashboard.marketResearch.nichesKeywords")} <span className="text-rose-500">*</span>
           <Textarea
             value={queries}
             onChange={(event) => setQueries(event.target.value)}
             className="bg-card mt-2 max-h-[418px] min-h-32 resize-y overflow-y-auto text-sm max-md:max-h-56 max-md:text-base"
-            placeholder="One keyword per line, e.g. hiking shirt"
+            placeholder={t("admin.dashboard.marketResearch.keywordsPlaceholder")}
           />
           <span className="text-ink-400 mt-1 block text-[11px] font-normal">
-            {normalizedQueries.length}/{MAX_QUERIES} keywords · public Etsy data only
+            {t("admin.dashboard.marketResearch.keywordsCount", {
+              shown: normalizedQueries.length,
+              max: MAX_QUERIES,
+            })}
           </span>
         </label>
         <div className="border-ink-200 bg-ink-50/60 rounded-lg border p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-ink-700 text-xs font-semibold">Suggested niches</p>
+              <p className="text-ink-700 text-xs font-semibold">{t("admin.dashboard.marketResearch.suggestedNiches")}</p>
               <p className="text-ink-500 mt-1 text-[11px] font-normal">
-                Start with a preset if you are not sure which keywords to research.
+                {t("admin.dashboard.marketResearch.suggestedHint")}
               </p>
             </div>
-            <span className="text-ink-500 text-[10px] font-medium">Click to add keywords</span>
+            <span className="text-ink-500 text-[10px] font-medium">{t("admin.dashboard.marketResearch.clickToAddKeywords")}</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {SUGGESTED_NICHES.map((niche) => (
               <Button
-                key={niche.label}
+                key={niche.labelKey}
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => addSuggestedNiche(niche.queries)}
                 className="h-8 text-[11px]"
               >
-                {niche.label}
+                {t(niche.labelKey)}
               </Button>
             ))}
           </div>
@@ -388,7 +396,7 @@ const AdminMarketResearchPanel = () => {
         <div className="flex flex-wrap items-center justify-end gap-3">
           {/* Say why the button is off, so it never looks broken. */}
           {!normalizedQueries.length && (
-            <p className="text-ink-500 text-xs">Add at least one keyword above, or pick a suggested niche, to run.</p>
+            <p className="text-ink-500 text-xs">{t("admin.dashboard.marketResearch.addOneKeywordToRun")}</p>
           )}
           <Button
             type="button"
@@ -398,11 +406,11 @@ const AdminMarketResearchPanel = () => {
           >
             {retrieveMutation.isPending ? (
               <>
-                <Loader2 className="size-4 animate-spin" /> Researching…
+                <Loader2 className="size-4 animate-spin" /> {t("admin.dashboard.marketResearch.researching")}
               </>
             ) : (
               <>
-                <Play className="size-4" /> Run now
+                <Play className="size-4" /> {t("admin.dashboard.marketResearch.runNow")}
               </>
             )}
           </Button>
@@ -442,20 +450,27 @@ const ResearchHistory = ({
   selectedId: string | null;
   isLoading: boolean;
   onSelect: (entry: ResearchHistoryEntry) => void;
-}) => (
+}) => {
+  const { t } = useTranslation("common");
+
+  return (
   <div className="border-ink-100 border-t pt-4">
     <div className="flex items-center justify-between gap-3">
       <div>
-        <p className="text-ink-800 text-xs font-bold">Recent research history</p>
-        <p className="text-ink-400 mt-1 text-[11px]">Saved locally for quick reuse by admin.</p>
+        <p className="text-ink-800 text-xs font-bold">{t("admin.dashboard.marketResearch.historyTitle")}</p>
+        <p className="text-ink-400 mt-1 text-[11px]">{t("admin.dashboard.marketResearch.historySubtitle")}</p>
       </div>
-      <span className="text-ink-400 text-[10px]">{history.length}/5 runs</span>
+      <span className="text-ink-400 text-[10px]">
+        {t("admin.dashboard.marketResearch.historyCount", { shown: history.length })}
+      </span>
     </div>
     {history.length ? (
       <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-5">
         {history.map((entry, index) => {
           const runNumber = entry.runNumber ?? index + 1;
-          const runLabel = `Research Run #${String(runNumber).padStart(2, "0")}`;
+          const runLabel = t("admin.dashboard.marketResearch.runLabel", {
+            number: String(runNumber).padStart(2, "0"),
+          });
           const nicheLabel = entry.queries.join(" · ");
           return (
             <Tooltip key={entry.id}>
@@ -466,21 +481,29 @@ const ResearchHistory = ({
                   onClick={() => onSelect(entry)}
                   disabled={isLoading}
                   aria-pressed={selectedId === entry.id}
-                  aria-label={`${runLabel}: ${nicheLabel}`}
+                  aria-label={t("admin.dashboard.marketResearch.historyAria", { run: runLabel, niches: nicheLabel })}
                   className={`hover:border-ink-400 hover:bg-ink-50 rounded-lg border p-3 text-left transition disabled:cursor-wait disabled:opacity-60 ${selectedId === entry.id ? "border-primary bg-ink-50 ring-primary/30 ring-1" : "border-ink-200 bg-card"}`}
                 >
                   <p className="text-ink-700 truncate text-[11px] font-semibold">{runLabel}</p>
                   <p className="text-ink-400 mt-2 text-[10px]">{formatDate(entry.createdAt)}</p>
                   <p className="text-ink-500 mt-1 text-[10px]">
-                    {entry.retrievedCount} scanned · {entry.selectedCount} selected · avg{" "}
-                    {entry.averageScore.toFixed(1)}
+                    {t("admin.dashboard.marketResearch.scanLine", {
+                      scanned: entry.retrievedCount,
+                      selected: entry.selectedCount,
+                      avg: entry.averageScore.toFixed(1),
+                    })}
                   </p>
                   {/* A phone has no hover, so what the tooltip says is written on the card. */}
                   <p className="text-ink-500 mt-1 line-clamp-2 text-[10px] md:hidden">
-                    {entry.queries.length} niches: {nicheLabel}
+                    {t("admin.dashboard.marketResearch.nichesLine", {
+                      total: entry.queries.length,
+                      niches: nicheLabel,
+                    })}
                   </p>
                   <p className="text-ink-600 mt-1 text-[10px] font-medium md:hidden">
-                    {entry.result ? "Tap to restore this snapshot" : "Tap to run this research again"}
+                    {entry.result
+                      ? t("admin.dashboard.marketResearch.tapRestore")
+                      : t("admin.dashboard.marketResearch.tapRunAgain")}
                   </p>
                 </button>
               </TooltipTrigger>
@@ -491,7 +514,7 @@ const ResearchHistory = ({
                 className="w-fit max-w-[min(28rem,calc(100vw-2rem))] min-w-64 rounded-xl border border-slate-700 bg-slate-900 p-3 text-white shadow-xl"
               >
                 <p className="text-[10px] font-semibold tracking-[0.14em] text-white/70 uppercase">
-                  Niches researched ({entry.queries.length})
+                  {t("admin.dashboard.marketResearch.nichesResearched", { total: entry.queries.length })}
                 </p>
                 <div className="mt-2 flex max-h-48 flex-wrap content-start gap-1.5 overflow-y-auto pr-1 [scrollbar-color:#475569_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-600 [&::-webkit-scrollbar-track]:bg-transparent">
                   {entry.queries.map((query) => (
@@ -505,8 +528,8 @@ const ResearchHistory = ({
                 </div>
                 <p className="mt-3 border-t border-slate-800 pt-2 text-[10px] text-white/60">
                   {entry.result
-                    ? "Click to restore this snapshot"
-                    : "Click to run this research again"}
+                    ? t("admin.dashboard.marketResearch.clickRestore")
+                    : t("admin.dashboard.marketResearch.clickRunAgain")}
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -515,29 +538,33 @@ const ResearchHistory = ({
       </div>
     ) : (
       <p className="border-ink-200 text-ink-400 mt-3 rounded-lg border border-dashed p-3 text-[11px]">
-        Your completed research runs will appear here.
+        {t("admin.dashboard.marketResearch.historyEmpty")}
       </p>
     )}
   </div>
-);
+  );
+};
 
-const Header = () => (
+const Header = () => {
+  const { t } = useTranslation("common");
+
+  return (
   <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
     <div>
       <p className="text-ink-400 text-[10px] font-bold tracking-[0.16em] uppercase">
-        Etsy trend intelligence
+        {t("admin.dashboard.marketResearch.headerEyebrow")}
       </p>
       <h2 className="text-ink-900 mt-1 flex items-center gap-2 text-base font-bold">
-        <Sparkles className="text-ink-500 size-4" /> Public listing research
+        <Sparkles className="text-ink-500 size-4" /> {t("admin.dashboard.marketResearch.headerTitle")}
       </h2>
       <p className="text-ink-500 mt-1 max-w-2xl text-xs leading-5">
-        Turn Etsy signals into searchable trend references. The schedule runs in the background;
-        every selected listing is queued for RAG automatically.
+        {t("admin.dashboard.marketResearch.headerDescription")}
       </p>
     </div>
-    <Badge variant="outline" className="w-fit">Admin only</Badge>
+    <Badge variant="outline" className="w-fit">{t("admin.dashboard.marketResearch.adminOnly")}</Badge>
   </div>
-);
+  );
+};
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <label className="text-ink-700 block text-xs font-semibold">
     {label}
@@ -546,6 +573,7 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 );
 
 const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
+  const { t } = useTranslation("common");
   const items = Array.isArray(result.items) ? result.items : [];
   const avgScore = items.length
     ? items.reduce((sum, item) => sum + (Number(item.viralScore) || 0), 0) / items.length
@@ -563,40 +591,40 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
         <div>
           <p className="text-[10px] font-bold tracking-[0.16em] text-emerald-600 uppercase dark:text-emerald-400">
-            Latest research snapshot
+            {t("admin.dashboard.marketResearch.snapshotEyebrow")}
           </p>
           <h3 className="text-ink-900 mt-1 text-base font-bold">
-            What Etsy is signalling right now
+            {t("admin.dashboard.marketResearch.snapshotTitle")}
           </h3>
         </div>
         <p className="text-ink-500 text-xs">
-          {result.selectedCount} high-signal references queued to RAG across the selected niches
+          {t("admin.dashboard.marketResearch.snapshotQueued", { total: result.selectedCount })}
         </p>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3 max-md:gap-2 lg:grid-cols-5 max-md:[&>:last-child]:col-span-2">
         <Metric
-          label="Listings scanned"
+          label={t("admin.dashboard.marketResearch.metricsListingsScanned")}
           value={result.retrievedCount.toLocaleString()}
           icon={<Search className="size-4" />}
         />
         <Metric
-          label="Selected for RAG"
+          label={t("admin.dashboard.marketResearch.metricsSelectedForRag")}
           value={result.selectedCount.toLocaleString()}
           icon={<Database className="size-4" />}
           tone="emerald"
         />
         <Metric
-          label="Average trend score"
+          label={t("admin.dashboard.marketResearch.metricsAverageTrendScore")}
           value={avgScore.toFixed(1)}
           icon={<Sparkles className="size-4" />}
         />
         <Metric
-          label="Observed favorites"
+          label={t("admin.dashboard.marketResearch.metricsObservedFavorites")}
           value={formatCompact(totalFavorites)}
           icon={<Heart className="size-4" />}
         />
         <Metric
-          label="Top keyword"
+          label={t("admin.dashboard.marketResearch.metricsTopKeyword")}
           value={topKeyword}
           icon={<Search className="size-4" />}
         />
@@ -609,11 +637,11 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
           <table className="w-full min-w-[720px] text-left text-xs">
             <thead className="bg-ink-50 text-ink-400 text-[10px] tracking-wide uppercase">
               <tr>
-                <th className="px-4 py-3">Rank / listing</th>
-                <th className="px-4 py-3">Matched keyword</th>
-                <th className="px-4 py-3">Trend score</th>
-                <th className="px-4 py-3">Observed signals</th>
-                <th className="px-4 py-3">Knowledge status</th>
+                <th className="px-4 py-3">{t("admin.dashboard.marketResearch.thRankListing")}</th>
+                <th className="px-4 py-3">{t("admin.dashboard.marketResearch.thMatchedKeyword")}</th>
+                <th className="px-4 py-3">{t("admin.dashboard.marketResearch.thTrendScore")}</th>
+                <th className="px-4 py-3">{t("admin.dashboard.marketResearch.thObservedSignals")}</th>
+                <th className="px-4 py-3">{t("admin.dashboard.marketResearch.thKnowledgeStatus")}</th>
               </tr>
             </thead>
             <tbody>
@@ -642,7 +670,7 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
                           </TooltipContent>
                         </Tooltip>
                         <span className="text-ink-400 text-[10px]">
-                          Listing #{item.externalListingId}
+                          {t("admin.dashboard.marketResearch.listingNumber", { id: item.externalListingId })}
                         </span>
                       </div>
                     </div>
@@ -658,20 +686,24 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
                             </span>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="space-y-1 text-left">
-                            <p className="font-semibold">Score drivers</p>
+                            <p className="font-semibold">{t("admin.dashboard.marketResearch.scoreDrivers")}</p>
                             <p>
-                              Favorites:{" "}
-                              {formatScoreDriver(
-                                item.scoreBreakdown?.favoritesScore,
-                                item.scoreBreakdown?.favoritesWeight
-                              )}
+                              {t("admin.dashboard.marketResearch.favoritesLine", {
+                                driver: formatScoreDriver(
+                                  item.scoreBreakdown?.favoritesScore,
+                                  item.scoreBreakdown?.favoritesWeight,
+                                  t
+                                ),
+                              })}
                             </p>
                             <p>
-                              Views:{" "}
-                              {formatScoreDriver(
-                                item.scoreBreakdown?.viewsScore,
-                                item.scoreBreakdown?.viewsWeight
-                              )}
+                              {t("admin.dashboard.marketResearch.viewsLine", {
+                                driver: formatScoreDriver(
+                                  item.scoreBreakdown?.viewsScore,
+                                  item.scoreBreakdown?.viewsWeight,
+                                  t
+                                ),
+                              })}
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -694,7 +726,7 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
                   </td>
                   <td className="px-4 py-3">
                     <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-                      <Database className="mr-1 size-3" /> Queued
+                      <Database className="mr-1 size-3" /> {t("admin.dashboard.marketResearch.queued")}
                     </Badge>
                   </td>
                 </tr>
@@ -704,20 +736,22 @@ const ResearchResult = ({ result }: { result: MarketResearchResponse }) => {
         </div>
         {!items.length && (
           <p className="text-ink-400 p-8 text-center text-xs">
-            No listings met the minimum trend score. Lower the threshold or broaden the keywords.
+            {t("admin.dashboard.marketResearch.noListingsMetScore")}
           </p>
         )}
       </div>
       <p className="text-ink-400 mt-3 text-[11px] leading-5">
-        Favorites and views are observed public signals, not sales claims. Use this snapshot for
-        direction, keywords and structure — not for copying listing content.
+        {t("admin.dashboard.marketResearch.signalsDisclaimer")}
       </p>
     </div>
   );
 };
 
 /** One result on a phone: the table's columns, and the score drivers its tooltip holds. */
-const ResearchResultCard = ({ item, rank }: { item: MarketResearchResponse["items"][number]; rank: number }) => (
+const ResearchResultCard = ({ item, rank }: { item: MarketResearchResponse["items"][number]; rank: number }) => {
+  const { t } = useTranslation("common");
+
+  return (
   <li className="text-ink-500 space-y-2 p-3 text-[11px]">
     <div className="flex items-start gap-2">
       <span className="bg-ink-100 text-ink-600 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold">
@@ -727,10 +761,12 @@ const ResearchResultCard = ({ item, rank }: { item: MarketResearchResponse["item
         <a href={item.url ?? undefined} target="_blank" rel="noreferrer" className="text-ink-800 line-clamp-2 text-xs font-semibold">
           {item.title}
         </a>
-        <span className="text-ink-400 text-[10px]">Listing #{item.externalListingId}</span>
+        <span className="text-ink-400 text-[10px]">
+          {t("admin.dashboard.marketResearch.listingNumber", { id: item.externalListingId })}
+        </span>
       </div>
       <Badge className="shrink-0 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-        <Database className="mr-1 size-3" /> Queued
+        <Database className="mr-1 size-3" /> {t("admin.dashboard.marketResearch.queued")}
       </Badge>
     </div>
     <div className="flex items-center gap-2">
@@ -739,9 +775,21 @@ const ResearchResultCard = ({ item, rank }: { item: MarketResearchResponse["item
       <Progress value={item.viralScore} className="h-1.5 flex-1" />
     </div>
     <p>
-      Favorites: {formatScoreDriver(item.scoreBreakdown?.favoritesScore, item.scoreBreakdown?.favoritesWeight)}
+      {t("admin.dashboard.marketResearch.favoritesLine", {
+        driver: formatScoreDriver(
+          item.scoreBreakdown?.favoritesScore,
+          item.scoreBreakdown?.favoritesWeight,
+          t
+        ),
+      })}
       <br />
-      Views: {formatScoreDriver(item.scoreBreakdown?.viewsScore, item.scoreBreakdown?.viewsWeight)}
+      {t("admin.dashboard.marketResearch.viewsLine", {
+        driver: formatScoreDriver(
+          item.scoreBreakdown?.viewsScore,
+          item.scoreBreakdown?.viewsWeight,
+          t
+        ),
+      })}
     </p>
     <div className="flex items-center justify-between gap-3">
       <span className="min-w-0 truncate">{item.matchedQuery || "—"}</span>
@@ -751,39 +799,44 @@ const ResearchResultCard = ({ item, rank }: { item: MarketResearchResponse["item
       </span>
     </div>
   </li>
-);
+  );
+};
 
-const ResearchEmptyState = () => (
+const ResearchEmptyState = () => {
+  const { t } = useTranslation("common");
+
+  return (
   <div className="border-ink-100 border-t pt-5">
     <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
       <div>
         <p className="text-ink-400 text-[10px] font-bold tracking-[0.16em] uppercase">
-          Research insights
+          {t("admin.dashboard.marketResearch.insightsEyebrow")}
         </p>
         <h3 className="text-ink-900 mt-1 text-base font-bold">
-          Your latest snapshot will appear here
+          {t("admin.dashboard.marketResearch.snapshotEmptyTitle")}
         </h3>
       </div>
-      <p className="text-ink-400 text-xs">Run a research pass to populate the metrics</p>
+      <p className="text-ink-400 text-xs">{t("admin.dashboard.marketResearch.snapshotEmptyHint")}</p>
     </div>
     <div className="mt-4 grid grid-cols-2 gap-3 max-md:gap-2 lg:grid-cols-5 max-md:[&>:last-child]:col-span-2">
-      <Metric label="Listings scanned" value="—" icon={<Search className="size-4" />} />
+      <Metric label={t("admin.dashboard.marketResearch.metricsListingsScanned")} value="—" icon={<Search className="size-4" />} />
       <Metric
-        label="Selected for RAG"
+        label={t("admin.dashboard.marketResearch.metricsSelectedForRag")}
         value="—"
         icon={<Database className="size-4" />}
         tone="emerald"
       />
       <Metric
-        label="Average trend score"
+        label={t("admin.dashboard.marketResearch.metricsAverageTrendScore")}
         value="—"
         icon={<Sparkles className="size-4" />}
       />
-      <Metric label="Observed favorites" value="—" icon={<Heart className="size-4" />} />
-      <Metric label="Top keyword" value="—" icon={<Search className="size-4" />} />
+      <Metric label={t("admin.dashboard.marketResearch.metricsObservedFavorites")} value="—" icon={<Heart className="size-4" />} />
+      <Metric label={t("admin.dashboard.marketResearch.metricsTopKeyword")} value="—" icon={<Search className="size-4" />} />
     </div>
   </div>
-);
+  );
+};
 
 const Metric = ({
   label,
@@ -810,10 +863,17 @@ const formatCompact = (value: number | null) =>
   value == null
     ? "—"
     : Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(value);
-const formatScoreDriver = (score: number | null | undefined, weight: number | undefined) =>
+const formatScoreDriver = (
+  score: number | null | undefined,
+  weight: number | undefined,
+  t: TFunction<"common">
+) =>
   score == null
-    ? "Unavailable"
-    : `${score.toFixed(1)}/100 · ${Math.round((weight ?? 0) * 100)}% weight`;
+    ? t("admin.dashboard.marketResearch.unavailable")
+    : t("admin.dashboard.marketResearch.weightScore", {
+        score: score.toFixed(1),
+        weight: Math.round((weight ?? 0) * 100),
+      });
 const formatDate = (value: string) =>
   new Date(value).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
 

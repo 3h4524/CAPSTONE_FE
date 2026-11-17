@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 import { SELECT_CLEARABLE_TRIGGER, SelectClearButton } from "@/components/commons/forms/select-clear-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,15 +24,14 @@ const STATUS_DOTS: Record<string, string> = {
   paused: "bg-ink-400",
 };
 
-const formatDate = (value: string | null) =>
-  value ? new Date(value).toLocaleString([], { dateStyle: "short", timeStyle: "short" }) : "";
-const statusText = (status: string) => status.replaceAll("_", " ");
+const formatDate = (value: string | null, locale: string) =>
+  value ? new Date(value).toLocaleString(locale, { dateStyle: "short", timeStyle: "short" }) : "";
 const statusDot = (status: string) => STATUS_DOTS[status.toLowerCase()] ?? "bg-ink-300";
 
 // Where a run was started, when it was not from the workflow that is open. Runs from before this was
 // recorded, or started outside a workflow, have nothing to say.
 const runOrigin = (runWorkflowId: string | null | undefined, openWorkflowId: string | null) =>
-  !runWorkflowId || !openWorkflowId ? "" : runWorkflowId === openWorkflowId ? " · this workflow" : " · another workflow";
+  !runWorkflowId || !openWorkflowId ? null : runWorkflowId === openWorkflowId ? "this" : "another";
 
 type PreviousRunsSelectProps = {
   batchId: string;
@@ -40,6 +40,7 @@ type PreviousRunsSelectProps = {
 // Opens an earlier job of the batch on the canvas to see its images and mock-ups or retry its failed
 // products. It never changes what Run does: that always generates for the batch's pending products.
 export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
+  const { t, i18n } = useTranslation("common");
   const router = useRouter();
   const openRunId = useSearchParams().get(BATCH_JOB_PARAM);
   const isRunning = useWorkflowStore((state) => state.isRunning);
@@ -79,31 +80,40 @@ export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
     router.replace(`/workflows?${params.toString()}`);
   };
   const canClose = Boolean(openRun) && !isRunning;
+  const statusText = (status: string) => {
+    const humanized = status.replaceAll("_", " ");
+    return t(`batches.statuses.${status.toLowerCase()}`, { defaultValue: humanized.charAt(0).toUpperCase() + humanized.slice(1) });
+  };
+  const runTitle = (number: number, status: string) => t("workflowConfig.previousRuns.runTitle", { number, status: statusText(status) });
+  const originText = (runWorkflowId: string | null | undefined) => {
+    const origin = runOrigin(runWorkflowId, workflowId);
+    return origin === "this" ? t("workflowConfig.previousRuns.thisWorkflow") : origin === "another" ? t("workflowConfig.previousRuns.anotherWorkflow") : "";
+  };
 
   return (
     <PanelSection
-      title="Previous runs"
+      title={t("workflowConfig.previousRuns.title")}
       aside={<span className="text-muted-foreground text-xs tabular-nums">{startedRuns.length}</span>}
-      description="See an earlier run's images and mock-ups, or retry its failed products. Run still generates for the pending products."
+      description={t("workflowConfig.previousRuns.description")}
     >
       <Select value={openRun?.job.id ?? ""} onValueChange={openRunById} disabled={isRunning}>
         <div className="relative min-w-0">
         <SelectTrigger
           id="previous-runs"
-          aria-label="Previous runs"
+          aria-label={t("workflowConfig.previousRuns.title")}
           className={cn("bg-card w-full min-w-0", canClose && SELECT_CLEARABLE_TRIGGER)}
         >
           {/* Short on purpose: the full details are in the list, and a long value would push the panel wider. */}
-          <SelectValue placeholder="Open an earlier run">
+          <SelectValue placeholder={t("workflowConfig.previousRuns.placeholder")}>
             {openRun && (
               <span className="flex min-w-0 items-center gap-2">
                 <span className={cn("size-2 shrink-0 rounded-full", statusDot(openRun.job.status))} aria-hidden="true" />
-                <span className="truncate capitalize">{`Run #${openRun.number} · ${statusText(openRun.job.status)}`}</span>
+                <span className="truncate">{runTitle(openRun.number, openRun.job.status)}</span>
               </span>
             )}
           </SelectValue>
         </SelectTrigger>
-        {canClose && <SelectClearButton label="Close this run" onClear={closeRun} />}
+        {canClose && <SelectClearButton label={t("workflowConfig.previousRuns.closeRun")} onClear={closeRun} />}
         </div>
         <SelectContent position="popper" className={PANEL_SELECT_CONTENT_CLASS}>
           {startedRuns.map(({ job, number }) => (
@@ -111,9 +121,9 @@ export const PreviousRunsSelect = ({ batchId }: PreviousRunsSelectProps) => {
               <span className="flex items-start gap-2">
                 <span className={cn("mt-1.5 size-2 shrink-0 rounded-full", statusDot(job.status))} aria-hidden="true" />
                 <span className="flex flex-col">
-                  <span className="capitalize">{`Run #${number} · ${statusText(job.status)}`}</span>
+                  <span>{runTitle(number, job.status)}</span>
                   <span className="text-muted-foreground text-xs">
-                    {`${job.totalProducts} ${job.totalProducts === 1 ? "product" : "products"} · ${formatDate(job.startedAt ?? job.createdAt)}${runOrigin(job.workflowId, workflowId)}`}
+                    {`${t("workflowConfig.fields.productCount", { count: job.totalProducts })} · ${formatDate(job.startedAt ?? job.createdAt, i18n.language)}${originText(job.workflowId)}`}
                   </span>
                 </span>
               </span>

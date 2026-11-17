@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { DECISION_CHART_COLORS, DECISIONS, formatNumber } from "@/components/admin/content-safety/shared";
+import { DECISION_CHART_COLORS, DECISION_LABEL_KEYS, formatNumber } from "@/components/admin/content-safety/shared";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { ModerationDailyPoint, ModerationDecision } from "@/types/admin-moderation";
@@ -22,6 +23,7 @@ const shortDate = (value: string) =>
 type TooltipEntry = { dataKey?: string | number; value?: number };
 
 const ChartTooltip = ({ active, label, payload }: { active?: boolean; label?: string; payload?: TooltipEntry[] }) => {
+  const { t } = useTranslation("common");
   if (!active || !payload?.length || !label) return null;
   const values = Object.fromEntries(payload.map((entry) => [String(entry.dataKey), Number(entry.value ?? 0)]));
   const total = SERIES.reduce((sum, series) => sum + (values[series.key] ?? 0), 0);
@@ -37,14 +39,14 @@ const ChartTooltip = ({ active, label, payload }: { active?: boolean; label?: st
                 style={{ backgroundColor: DECISION_CHART_COLORS[series.decision] }}
                 aria-hidden="true"
               />
-              {DECISIONS[series.decision].label}
+              {t(DECISION_LABEL_KEYS[series.decision])}
             </span>
             <span className="font-medium tabular-nums">{formatNumber(values[series.key] ?? 0)}</span>
           </li>
         ))}
       </ul>
       <p className="border-ink-100 mt-1.5 flex justify-between border-t pt-1.5 font-semibold">
-        <span>Total</span>
+        <span>{t("admin.contentSafety.chart.total")}</span>
         <span className="tabular-nums">{formatNumber(total)}</span>
       </p>
     </div>
@@ -53,13 +55,14 @@ const ChartTooltip = ({ active, label, payload }: { active?: boolean; label?: st
 
 /** Checks per day by decision, with a legend above it and a table view for the same numbers. */
 export const DecisionsChart = ({ daily }: { daily: ModerationDailyPoint[] }) => {
+  const { t } = useTranslation("common");
   const [showTable, setShowTable] = useState(false);
   const hasData = daily.some((day) => day.allowed + day.flagged + day.blocked + day.unchecked > 0);
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <ul className="flex flex-wrap gap-x-4 gap-y-1" aria-label="Legend">
+        <ul className="flex flex-wrap gap-x-4 gap-y-1" aria-label={t("admin.contentSafety.chart.legend")}>
           {[...SERIES].reverse().map((series) => (
             <li key={series.key} className="text-ink-600 flex items-center gap-1.5 text-xs">
               <span
@@ -67,7 +70,7 @@ export const DecisionsChart = ({ daily }: { daily: ModerationDailyPoint[] }) => 
                 style={{ backgroundColor: DECISION_CHART_COLORS[series.decision] }}
                 aria-hidden="true"
               />
-              {DECISIONS[series.decision].label}
+              {t(DECISION_LABEL_KEYS[series.decision])}
             </li>
           ))}
         </ul>
@@ -79,7 +82,7 @@ export const DecisionsChart = ({ daily }: { daily: ModerationDailyPoint[] }) => 
           aria-pressed={showTable}
           onClick={() => setShowTable((value) => !value)}
         >
-          {showTable ? "Show chart" : "Show as table"}
+          {t(showTable ? "admin.contentSafety.chart.showChart" : "admin.contentSafety.chart.showTable")}
         </Button>
       </div>
 
@@ -88,10 +91,10 @@ export const DecisionsChart = ({ daily }: { daily: ModerationDailyPoint[] }) => 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Day</TableHead>
+                <TableHead>{t("admin.contentSafety.chart.day")}</TableHead>
                 {[...SERIES].reverse().map((series) => (
                   <TableHead key={series.key} className="text-right">
-                    {DECISIONS[series.decision].label}
+                    {t(DECISION_LABEL_KEYS[series.decision])}
                   </TableHead>
                 ))}
               </TableRow>
@@ -114,7 +117,7 @@ export const DecisionsChart = ({ daily }: { daily: ModerationDailyPoint[] }) => 
         <div className="relative h-64 w-full">
           {!hasData && (
             <p className="text-ink-500 absolute inset-0 z-10 grid place-items-center text-sm">
-              No checks in this period yet.
+              {t("admin.contentSafety.chart.empty")}
             </p>
           )}
           <ResponsiveContainer width="100%" height="100%">
@@ -147,7 +150,7 @@ export const DecisionsChart = ({ daily }: { daily: ModerationDailyPoint[] }) => 
                   strokeWidth={1}
                   radius={index === SERIES.length - 1 ? [4, 4, 0, 0] : 0}
                   isAnimationActive={false}
-                  name={DECISIONS[series.decision].label}
+                  name={t(DECISION_LABEL_KEYS[series.decision])}
                 />
               ))}
             </BarChart>

@@ -20,6 +20,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   generateAiStudioFrame,
@@ -77,6 +78,7 @@ import { useVideoPacks } from "@/hooks/queries/use-video-packs";
 import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowSave } from "@/hooks/use-workflow-save";
+import { i18n } from "@/i18n/client";
 import { generateVideoConfigSchema } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
 import type {
@@ -336,7 +338,7 @@ const buildProductOnModelScenes = (
 
 const loadCharacterReference = async (character: AiCharacter) => {
   const response = await fetch(character.imageUrl);
-  if (!response.ok) throw new Error(`Could not load ${character.name}'s reference image.`);
+  if (!response.ok) throw new Error(i18n.t("workflowConfig.aiShot.characterImageError", { name: character.name }));
   const image = await response.blob();
   return new File([image], `character-${character.id}.png`, {
     type: image.type || "image/png",
@@ -344,6 +346,7 @@ const loadCharacterReference = async (character: AiCharacter) => {
 };
 
 function MockupOption({ asset }: { asset: MockupAsset }) {
+  const { t } = useTranslation("common");
   return (
     <SelectItem value={asset.id}>
       <span className="flex min-w-0 items-center gap-2">
@@ -356,7 +359,7 @@ function MockupOption({ asset }: { asset: MockupAsset }) {
           className="bg-background size-10 shrink-0 rounded border object-contain"
         />
         <span className="min-w-0 truncate">
-          {asset.role} | {asset.width}x{asset.height} | {asset.variantKey || asset.id.slice(0, 6)}
+          {t(`workflowMedia.assetRoles.${asset.role}`, { defaultValue: asset.role })} | {asset.width}x{asset.height} | {asset.variantKey || asset.id.slice(0, 6)}
         </span>
       </span>
     </SelectItem>
@@ -374,6 +377,7 @@ function ReferenceImageTile({
   disabled: boolean;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation("common");
   const [previewUrl, setPreviewUrl] = useState("");
 
   useEffect(() => {
@@ -388,7 +392,7 @@ function ReferenceImageTile({
         {previewUrl && (
           <Image
             src={previewUrl}
-            alt={`Reference image ${index + 1}: ${file.name}`}
+            alt={t("workflowConfig.aiShot.referenceImageAlt", { index: index + 1, name: file.name })}
             fill
             sizes="80px"
             unoptimized
@@ -400,7 +404,7 @@ function ReferenceImageTile({
           variant="ghost"
           size="icon"
           disabled={disabled}
-          aria-label={`Remove reference image ${index + 1}`}
+          aria-label={t("workflowConfig.aiShot.removeReferenceImage", { index: index + 1 })}
           onClick={onRemove}
           className="absolute top-0.5 right-0.5 size-10 rounded-full bg-black/70 text-white hover:bg-black/85 hover:text-white"
         >
@@ -433,6 +437,7 @@ export function AiShotOptions({
     sharedInstructions?: string | null
   ) => void;
 }) {
+  const { t } = useTranslation("common");
   const dragIndex = useRef<number | null>(null);
   const referenceFileInput = useRef<HTMLInputElement | null>(null);
   const referenceUploadSceneIndex = useRef<number | null>(null);
@@ -934,7 +939,7 @@ export function AiShotOptions({
       .nodes.find((item) => item.id === nodeId);
     const parsed = generateVideoConfigSchema.safeParse(currentNode?.data.config ?? node.data.config);
     if (!parsed.success) {
-      showToast("warning", parsed.error.issues[0]?.message ?? "Check AI scene settings.");
+      showToast("warning", parsed.error.issues[0]?.message ?? t("workflowConfig.aiShot.checkSceneSettings"));
       return;
     }
 
@@ -950,7 +955,7 @@ export function AiShotOptions({
       const shot = storyboard.aiShots?.find((item) => item.sceneOrder === sceneOrder);
       if (!shot) {
         setScenePromptPreview(null);
-        showToast("error", `Could not compile the prompt for Scene ${sceneOrder + 1}.`);
+        showToast("error", t("workflowConfig.aiShot.compilePromptFailed", { scene: sceneOrder + 1 }));
         return;
       }
       setScenePromptPreview({
@@ -996,8 +1001,8 @@ export function AiShotOptions({
       showToast(
         "success",
         existingScene
-          ? `Scene ${sceneOrder + 1} is being regenerated.`
-          : `Scene ${sceneOrder + 1} is being generated.`
+          ? t("workflowConfig.aiShot.sceneRegenerating", { scene: sceneOrder + 1 })
+          : t("workflowConfig.aiShot.sceneGenerating", { scene: sceneOrder + 1 })
       );
     } catch (error) {
       void queryClient.invalidateQueries({ queryKey: videoWorkflowKeys.sceneVideos(run.id) });
@@ -1021,8 +1026,8 @@ export function AiShotOptions({
       showToast(
         "error",
         areCharactersError
-          ? "Could not load the shared model catalog. Retry before creating a keyframe."
-          : "No active shared model is available."
+          ? t("workflowConfig.aiShot.sharedModelCatalogError")
+          : t("workflowConfig.aiShot.noSharedModel")
       );
       return;
     }
@@ -1074,14 +1079,14 @@ export function AiShotOptions({
         showToast(
           "success",
           frame.approvalStatus === "approved" && frame.approvedRevision === frame.revision
-            ? "Matching approved keyframe selected. No new image was generated."
-            : "Matching keyframe found. Review and approve it before using it in video."
+            ? t("workflowConfig.aiShot.matchingApprovedKeyframe")
+            : t("workflowConfig.aiShot.matchingKeyframeFound")
         );
         return;
       }
       const estimate = quote.estimatedCostUsd.toFixed(2);
       const confirmed = window.confirm(
-        `Generate one custom prompt keyframe with Gemini Image? Estimated image cost: $${estimate} USD. This is charged separately from AI video generation.`
+        t("workflowConfig.aiShot.confirmKeyframeCost", { estimate })
       );
       if (!confirmed) return;
       const result = await generateAiStudioFrame({
@@ -1112,7 +1117,7 @@ export function AiShotOptions({
       });
       showToast(
         "success",
-        `Keyframe created. Review and approve it before generating video; estimated image cost: $${result.estimatedCostUsd.toFixed(2)} USD.`
+        t("workflowConfig.aiShot.keyframeCreated", { cost: result.estimatedCostUsd.toFixed(2) })
       );
     } catch (error) {
       showToast("error", getErrorMessage(error));
@@ -1181,11 +1186,11 @@ export function AiShotOptions({
     setPendingPack(null);
     setIsTemplatePickerOpen(false);
     queueMicrotask(() => saveWorkflow());
-    showToast("success", `${pack.name} added with ${nextScenes.length} scenes.`);
+    showToast("success", t("workflowConfig.aiShot.packAdded", { name: pack.name, sceneCount: nextScenes.length }));
   };
   const requestVideoPack = (pack: VideoPackDefinition) => {
     if (catalog.length === 0 && pack.scenes.some((scene) => scene.mode !== "standard")) {
-      showToast("error", "The AI scene catalog is still loading. Try the video template again in a moment.");
+      showToast("error", t("workflowConfig.aiShot.catalogLoading"));
       return;
     }
     const hasExistingWork = scenes.some(
@@ -1217,7 +1222,7 @@ export function AiShotOptions({
     setBatchFrameState({});
     setIsSharedMockupPickerOpen(false);
     queueMicrotask(() => saveWorkflow());
-    showToast("success", "Shared mockup updated. Existing start frames were cleared.");
+    showToast("success", t("workflowConfig.aiShot.sharedMockupUpdated"));
   };
   const persistGeneratedPackFrame = (index: number, source: MockupAsset, frame: MockupAsset) => {
     const currentNode = useWorkflowStore.getState().nodes.find((item) => item.id === nodeId);
@@ -1257,11 +1262,11 @@ export function AiShotOptions({
       .join(" ");
   const quotePackFrames = async (requestedIndexes?: number[]) => {
     if (!isProductOnModelPack || !productId || !sharedMockup) {
-      showToast("error", "Choose an approved shared mockup before preparing start frames.");
+      showToast("error", t("workflowConfig.aiShot.chooseSharedMockupFirst"));
       return;
     }
     if (!selectedAiCharacter) {
-      showToast("error", "Choose a shared model before preparing start frames.");
+      showToast("error", t("workflowConfig.aiShot.chooseSharedModelFirst"));
       return;
     }
     const indexes = requestedIndexes ?? scenes.map((_, index) => index);
@@ -1276,7 +1281,7 @@ export function AiShotOptions({
       const results = await Promise.allSettled(
         indexes.map(async (index): Promise<BatchFrameQuote> => {
           const scene = scenes[index];
-          if (!scene) throw new Error(`Scene ${index + 1} is unavailable.`);
+          if (!scene) throw new Error(t("workflowConfig.aiShot.sceneUnavailable", { scene: index + 1 }));
           const quote = await quoteAiStudioFrame({
             productId,
             sourceMockupId: sharedMockup.id,
@@ -1323,7 +1328,7 @@ export function AiShotOptions({
       if (failures.length > 0)
         showToast(
           "warning",
-          `${failures.length} start-frame quote(s) failed. Retry only those scenes after reviewing the error.`
+          t("workflowConfig.aiShot.quoteFailures", { failed: failures.length })
         );
     } catch (error) {
       const message = getErrorMessage(error);
@@ -1399,8 +1404,8 @@ export function AiShotOptions({
     showToast(
       failedCount > 0 ? "warning" : "success",
       failedCount > 0
-        ? "Some start frames need attention. Retry only the failed scenes."
-        : "Start frames are ready for review."
+        ? t("workflowConfig.aiShot.framesNeedAttention")
+        : t("workflowConfig.aiShot.framesReady")
     );
   };
   const approveAllPackFrames = async () => {
@@ -1423,8 +1428,8 @@ export function AiShotOptions({
     showToast(
       failed > 0 ? "warning" : "success",
       failed > 0
-        ? `${pending.length - failed} frame(s) approved. Retry the ${failed} failed review(s).`
-        : "All start frames were approved and are ready for video generation."
+        ? t("workflowConfig.aiShot.framesPartlyApproved", { approved: pending.length - failed, failed })
+        : t("workflowConfig.aiShot.framesAllApproved")
     );
   };
   const chooseReferenceFile = (sceneIndex: number) => {
@@ -1444,7 +1449,7 @@ export function AiShotOptions({
     ) {
       showToast(
         "error",
-        "Choose JPEG, PNG or WebP references totaling 20 MB or less, up to 2 images. The selected model is added automatically."
+        t("workflowConfig.aiShot.invalidReferenceFile")
       );
       return;
     }
@@ -1472,7 +1477,7 @@ export function AiShotOptions({
       return Object.fromEntries(files.map((value, position) => [position, value]));
     });
     update(next);
-    setAnnouncement(`Scene moved to position ${nextIndex + 1} of ${scenes.length}.`);
+    setAnnouncement(t("workflowConfig.aiShot.sceneMoved", { position: nextIndex + 1, total: scenes.length }));
   };
   const totalSeconds = scenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
   const aiSceneSeconds = scenes.reduce(
@@ -1549,12 +1554,9 @@ export function AiShotOptions({
     {
       code: "custom",
       icon: Plus,
-      name: "Start from scratch",
+      name: t("workflowConfig.aiShot.startFromScratch"),
       meta: null,
-      description:
-        scenes.length > 0
-          ? "Build your own list of scenes. The scenes you have now stay as they are."
-          : "Add scenes one by one and choose how each one is made.",
+      description: scenes.length > 0 ? t("workflowConfig.aiShot.startFromScratchKeep") : t("workflowConfig.aiShot.startFromScratchDescription"),
       tag: null,
     },
     ...videoPacks.map((pack): TemplateOption => {
@@ -1563,9 +1565,9 @@ export function AiShotOptions({
         code: pack.code,
         icon: usesAi ? Sparkles : ImageIcon,
         name: pack.name,
-        meta: `${pack.scenes.length} scenes · ${pack.totalDurationSeconds}s`,
+        meta: t("workflowConfig.aiShot.packMeta", { count: pack.scenes.length, seconds: pack.totalDurationSeconds }),
         description: pack.description,
-        tag: usesAi ? { label: "AI video · uses AI credits", ai: true } : { label: "Photo motion · no AI cost", ai: false },
+        tag: usesAi ? { label: t("workflowConfig.aiShot.tagAiVideo"), ai: true } : { label: t("workflowConfig.aiShot.tagPhotoMotion"), ai: false },
         pack,
       };
     }),
@@ -1596,16 +1598,18 @@ export function AiShotOptions({
     .filter(([, state]) => state.status === "failed")
     .map(([index]) => Number(index));
 
+  const roleLabel = (role: string) => t(`workflowMedia.assetRoles.${role}`, { defaultValue: role });
+
   return (
     <>
       {beforeTemplate}
       <section className="space-y-2" aria-labelledby="video-template-heading">
         <div>
           <p id="video-template-heading" className="text-sm font-semibold">
-            Start from a template
+            {t("workflowConfig.aiShot.startFromTemplate")}
           </p>
           <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
-            A ready-made set of scenes to start from. You can still change, add or remove scenes below.
+            {t("workflowConfig.aiShot.startFromTemplateDescription")}
           </p>
         </div>
         <div className="flex items-center gap-3 rounded-lg border p-3">
@@ -1620,12 +1624,12 @@ export function AiShotOptions({
               {currentTemplate.meta && (
                 <span className="text-muted-foreground text-xs tabular-nums">
                   {currentTemplate.meta}
-                  {isPackCustomized && " · customized"}
+                  {isPackCustomized && ` · ${t("workflowConfig.aiShot.customizedSuffix")}`}
                 </span>
               )}
             </p>
             <p className="text-muted-foreground truncate text-xs">
-              {currentTemplate.tag?.label ?? "Your own scenes, set up one by one."}
+              {currentTemplate.tag?.label ?? t("workflowConfig.aiShot.ownScenesSummary")}
             </p>
           </div>
           <Button
@@ -1636,12 +1640,12 @@ export function AiShotOptions({
             disabled={disabled || templatesLoading}
             onClick={() => setIsTemplatePickerOpen(true)}
           >
-            {templatesLoading ? "Loading…" : selectedVideoPack ? "Change" : "Browse templates"}
+            {templatesLoading ? t("workflowConfig.aiShot.loadingShort") : selectedVideoPack ? t("workflowConfig.aiShot.changeTemplate") : t("workflowConfig.aiShot.browseTemplates")}
           </Button>
         </div>
         {selectedVideoPack && isPackCustomized && (
           <p className="text-muted-foreground text-xs leading-relaxed">
-            The scenes below differ from the template: their order, length or setup was changed.
+            {t("workflowConfig.aiShot.packCustomizedNote")}
           </p>
         )}
       </section>
@@ -1655,13 +1659,13 @@ export function AiShotOptions({
       >
         <DialogContent className="flex max-h-[85dvh] max-w-3xl flex-col gap-0 overflow-hidden p-0">
           <DialogHeader className="border-b px-5 py-4 text-left">
-            <DialogTitle>Choose a video template</DialogTitle>
+            <DialogTitle>{t("workflowConfig.aiShot.chooseTemplateTitle")}</DialogTitle>
             <DialogDescription>
-              A template fills in a ready-made set of scenes. Every scene stays editable afterwards.
+              {t("workflowConfig.aiShot.chooseTemplateDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="min-h-0 overflow-y-auto p-5">
-            <div role="radiogroup" aria-label="Video template" className="grid gap-3 sm:grid-cols-2">
+            <div role="radiogroup" aria-label={t("workflowConfig.aiShot.videoTemplate")} className="grid gap-3 sm:grid-cols-2">
               {templateOptions.map((option) => {
                 const selected = option.code === currentTemplate.code;
                 const pending = pendingPack?.code === option.code;
@@ -1710,16 +1714,17 @@ export function AiShotOptions({
               className="flex flex-col gap-3 border-t bg-amber-50/70 px-5 py-4 sm:flex-row sm:items-center dark:bg-amber-950/20"
             >
               <p className="min-w-0 flex-1 text-xs leading-relaxed">
-                <span className="font-semibold">Replace your {scenes.length} current scenes with {pendingPack.name}?</span>{" "}
-                Their selected start frames are removed. Your output format, shared model, shared mockup and caption
-                stay unchanged.
+                <span className="font-semibold">
+                  {t("workflowConfig.aiShot.replaceScenesQuestion", { count: scenes.length, name: pendingPack.name })}
+                </span>{" "}
+                {t("workflowConfig.aiShot.replaceScenesDetail")}
               </p>
               <div className="flex shrink-0 gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={() => setPendingPack(null)}>
-                  Keep current scenes
+                  {t("workflowConfig.aiShot.keepCurrentScenes")}
                 </Button>
                 <Button type="button" size="sm" onClick={() => applyVideoPack(pendingPack)}>
-                  Replace scenes
+                  {t("workflowConfig.aiShot.replaceScenes")}
                 </Button>
               </div>
             </div>
@@ -1728,14 +1733,16 @@ export function AiShotOptions({
       </Dialog>
       {sharedBatchSettings && scenes.length > 0 && (
         <p className="text-muted-foreground bg-muted/30 rounded-lg border border-dashed p-3 text-xs leading-relaxed">
-          Start frames are product images, so they are not set in the shared settings. Each product starts from its
-          default mockup ({isProductOnModelPack ? "its lifestyle image" : "its hero image, or its lifestyle image for a scene with a model"}).
-          Choose a product in Video product to see or change its start frames.
+          {t("workflowConfig.aiShot.sharedStartFramesNote", {
+            image: isProductOnModelPack
+              ? t("workflowConfig.aiShot.sharedStartFramesLifestyle")
+              : t("workflowConfig.aiShot.sharedStartFramesDefault"),
+          })}
         </p>
       )}
       {isProductOnModelPack && !sharedBatchSettings && (
         <>
-          <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label="Shared mockup">
+          <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label={t("workflowConfig.aiShot.sharedMockup")}>
             <div className="flex min-w-0 items-center gap-3">
               <div className="bg-muted relative h-14 w-11 shrink-0 overflow-hidden rounded-md border">
                 {sharedMockup ? (
@@ -1752,11 +1759,11 @@ export function AiShotOptions({
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold">Shared mockup</p>
+                <p className="text-sm font-semibold">{t("workflowConfig.aiShot.sharedMockup")}</p>
                 <p className="text-muted-foreground truncate text-xs" title={sharedMockup?.variantKey ?? undefined}>
                   {sharedMockup
-                    ? `${sharedMockup.role} · ${sharedMockup.variantKey || `${sharedMockup.width} × ${sharedMockup.height}`}`
-                    : "Choose one approved product image for all four scenes"}
+                    ? `${roleLabel(sharedMockup.role)} · ${sharedMockup.variantKey || `${sharedMockup.width} × ${sharedMockup.height}`}`
+                    : t("workflowConfig.aiShot.chooseSharedMockupHint")}
                 </p>
               </div>
               <Button
@@ -1766,27 +1773,27 @@ export function AiShotOptions({
                 disabled={disabled || areAssetsLoading || sharedMockupOptions.length === 0}
                 onClick={() => setIsSharedMockupPickerOpen(true)}
               >
-                {sharedMockup ? "Change" : "Choose mockup"}
+                {sharedMockup ? t("workflowConfig.aiShot.change") : t("workflowConfig.aiShot.chooseMockup")}
               </Button>
             </div>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Only current approved images from this product&apos;s artwork group are available. Changing it clears every generated start frame.
+              {t("workflowConfig.aiShot.sharedMockupNote")}
             </p>
           </section>
           <Dialog open={isSharedMockupPickerOpen} onOpenChange={setIsSharedMockupPickerOpen}>
             <DialogContent className="flex max-h-[85dvh] max-w-3xl flex-col overflow-hidden p-0">
               <DialogHeader className="border-b px-5 py-5 text-left">
-                <DialogTitle>Choose the shared mockup</DialogTitle>
+                <DialogTitle>{t("workflowConfig.aiShot.chooseSharedMockupTitle")}</DialogTitle>
                 <DialogDescription>
-                  This approved product image is used to create the start frame for every Product on Model scene.
+                  {t("workflowConfig.aiShot.chooseSharedMockupDescription")}
                 </DialogDescription>
               </DialogHeader>
               <div className="min-h-0 overflow-y-auto p-5">
                 {sharedMockupOptions.length === 0 ? (
                   <div className="bg-muted/30 flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
-                    <p className="text-sm font-semibold">No approved mockups available</p>
+                    <p className="text-sm font-semibold">{t("workflowConfig.aiShot.noApprovedMockups")}</p>
                     <p className="text-muted-foreground mt-1 max-w-sm text-xs leading-relaxed">
-                      Approve a mockup at its current revision in this product&apos;s artwork group first.
+                      {t("workflowConfig.aiShot.noApprovedMockupsDescription")}
                     </p>
                   </div>
                 ) : (
@@ -1804,14 +1811,14 @@ export function AiShotOptions({
                         >
                           <Image
                             src={asset.previewUrl}
-                            alt={`${asset.role} mockup`}
+                            alt={t("workflowConfig.aiShot.mockupAlt", { role: roleLabel(asset.role) })}
                             fill
                             sizes="(max-width: 640px) 45vw, 260px"
                             unoptimized
                             className="object-contain transition-transform duration-300 group-hover:scale-[1.025]"
                           />
                           <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-3 pt-10 pb-3 text-xs font-semibold text-white">
-                            {asset.role}{asset.variantKey ? ` · ${asset.variantKey}` : ""}
+                            {roleLabel(asset.role)}{asset.variantKey ? ` · ${asset.variantKey}` : ""}
                           </span>
                           {selected && (
                             <span className="bg-primary text-primary-foreground absolute top-2.5 right-2.5 grid size-7 place-items-center rounded-full shadow-sm">
@@ -1826,37 +1833,37 @@ export function AiShotOptions({
               </div>
             </DialogContent>
           </Dialog>
-          <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label="Start frame preparation">
+          <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label={t("workflowConfig.aiShot.startFramePreparation")}>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold">Start frame preparation</p>
+                <p className="text-sm font-semibold">{t("workflowConfig.aiShot.startFramePreparation")}</p>
                 <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
-                  Prepare and review all four scene frames in one pass. A new image is never charged without one total confirmation.
+                  {t("workflowConfig.aiShot.startFramePreparationDescription")}
                 </p>
               </div>
               <div className="text-muted-foreground shrink-0 text-xs tabular-nums" aria-live="polite">
-                {generatedOrReusableCount}/4 ready
+                {t("workflowConfig.aiShot.readyCount", { ready: generatedOrReusableCount })}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {packFrameStates.map(({ index, frame, isCurrent, approved: frameApproved }) => {
                 const progress = batchFrameState[index];
                 const label = frameApproved
-                  ? "Approved"
+                  ? t("workflowConfig.aiShot.packFrameStatus.approved")
                   : progress?.status === "generating"
-                    ? "Generating"
+                    ? t("workflowConfig.aiShot.packFrameStatus.generating")
                     : progress?.status === "failed"
-                      ? "Failed"
+                      ? t("workflowConfig.aiShot.packFrameStatus.failed")
                       : frame && isCurrent
-                        ? "Review"
-                        : "Missing";
+                        ? t("workflowConfig.aiShot.packFrameStatus.review")
+                        : t("workflowConfig.aiShot.packFrameStatus.missing");
                 return (
                   <div key={index} className="bg-background overflow-hidden rounded-lg border">
                     <div className="bg-muted relative aspect-[4/3]">
                       {frame ? (
                         <Image
                           src={frame.previewUrl}
-                          alt={`Start frame for scene ${index + 1}`}
+                          alt={t("workflowConfig.aiShot.startFrameForSceneAlt", { scene: index + 1 })}
                           fill
                           sizes="(max-width: 640px) 45vw, 180px"
                           unoptimized
@@ -1867,7 +1874,7 @@ export function AiShotOptions({
                       ) : null}
                     </div>
                     <div className="flex items-center justify-between gap-2 px-2.5 py-2">
-                      <span className="truncate text-xs font-medium">Scene {index + 1}</span>
+                      <span className="truncate text-xs font-medium">{t("workflowConfig.aiShot.sceneLabel", { scene: index + 1 })}</span>
                       <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${frameApproved ? "bg-emerald-100 text-emerald-800" : progress?.status === "failed" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
                         {label}
                       </span>
@@ -1884,7 +1891,7 @@ export function AiShotOptions({
                 onClick={() => void quotePackFrames()}
               >
                 {isPreparingAllFrames ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : <Sparkles aria-hidden="true" />}
-                Generate all start frames
+                {t("workflowConfig.aiShot.generateAllStartFrames")}
               </Button>
               {failedFrameIndexes.length > 0 && (
                 <Button
@@ -1894,7 +1901,7 @@ export function AiShotOptions({
                   disabled={disabled || isPreparingAllFrames}
                   onClick={() => void quotePackFrames(failedFrameIndexes)}
                 >
-                  Retry failed
+                  {t("workflowConfig.aiShot.retryFailed")}
                 </Button>
               )}
               <Button
@@ -1905,11 +1912,11 @@ export function AiShotOptions({
                 onClick={() => void approveAllPackFrames()}
               >
                 {isApprovingAllFrames ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : <BadgeCheck aria-hidden="true" />}
-                Approve all
+                {t("workflowConfig.aiShot.approveAll")}
               </Button>
               {allPackFramesApproved && (
                 <span className="flex items-center gap-1 text-xs font-medium text-emerald-700">
-                  <Check aria-hidden="true" className="size-3.5" /> Ready for video
+                  <Check aria-hidden="true" className="size-3.5" /> {t("workflowConfig.aiShot.readyForVideo")}
                 </span>
               )}
             </div>
@@ -1917,9 +1924,9 @@ export function AiShotOptions({
           <Dialog open={batchQuote !== null} onOpenChange={(open) => !open && setBatchQuote(null)}>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Confirm start-frame generation</DialogTitle>
+                <DialogTitle>{t("workflowConfig.aiShot.confirmGenerationTitle")}</DialogTitle>
                 <DialogDescription>
-                  One confirmation covers all four scenes. Reused frames are not charged.
+                  {t("workflowConfig.aiShot.confirmGenerationDescription")}
                 </DialogDescription>
               </DialogHeader>
               {batchQuote && (() => {
@@ -1928,21 +1935,21 @@ export function AiShotOptions({
                 const cost = batchQuote.reduce((sum, quote) => sum + (quote.existingFrame ? 0 : quote.estimatedCostUsd), 0);
                 return (
                   <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                    <div className="bg-muted/50 rounded-md border p-3"><p className="text-muted-foreground text-xs">New</p><p className="mt-1 font-semibold">{newFrames}</p></div>
-                    <div className="bg-muted/50 rounded-md border p-3"><p className="text-muted-foreground text-xs">Reuse</p><p className="mt-1 font-semibold">{reusable}</p></div>
-                    <div className="bg-muted/50 rounded-md border p-3"><p className="text-muted-foreground text-xs">Estimated</p><p className="mt-1 font-semibold">${cost.toFixed(2)}</p></div>
+                    <div className="bg-muted/50 rounded-md border p-3"><p className="text-muted-foreground text-xs">{t("workflowConfig.aiShot.quoteNew")}</p><p className="mt-1 font-semibold">{newFrames}</p></div>
+                    <div className="bg-muted/50 rounded-md border p-3"><p className="text-muted-foreground text-xs">{t("workflowConfig.aiShot.quoteReuse")}</p><p className="mt-1 font-semibold">{reusable}</p></div>
+                    <div className="bg-muted/50 rounded-md border p-3"><p className="text-muted-foreground text-xs">{t("workflowConfig.aiShot.quoteEstimated")}</p><p className="mt-1 font-semibold">${cost.toFixed(2)}</p></div>
                   </div>
                 );
               })()}
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setBatchQuote(null)}>Cancel</Button>
-                <Button type="button" onClick={() => void confirmGenerateAllPackFrames()}>Generate frames</Button>
+                <Button type="button" variant="outline" onClick={() => setBatchQuote(null)}>{t("workflowConfig.aiShot.cancel")}</Button>
+                <Button type="button" onClick={() => void confirmGenerateAllPackFrames()}>{t("workflowConfig.aiShot.generateFrames")}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </>
       )}
-      <section className="space-y-3" aria-label="Scene setup">
+      <section className="space-y-3" aria-label={t("workflowConfig.aiShot.sceneSetup")}>
         <input
           ref={referenceFileInput}
           type="file"
@@ -1968,15 +1975,15 @@ export function AiShotOptions({
           >
             <DialogHeader>
               <DialogTitle>
-                Review prompt for Scene {(scenePromptPreview?.sceneOrder ?? 0) + 1}
+                {t("workflowConfig.aiShot.reviewPromptTitle", { scene: (scenePromptPreview?.sceneOrder ?? 0) + 1 })}
               </DialogTitle>
               <DialogDescription>
-                This is the compiled prompt that will be sent when you generate this scene.
+                {t("workflowConfig.aiShot.reviewPromptDescription")}
               </DialogDescription>
             </DialogHeader>
             {isPreviewingScenePrompt || !scenePromptPreview?.prompt ? (
               <div className="space-y-3" aria-busy="true" aria-live="polite">
-                <p className="text-muted-foreground text-sm">Compiling the prompt…</p>
+                <p className="text-muted-foreground text-sm">{t("workflowConfig.aiShot.compilingPrompt")}</p>
                 <div className="bg-muted h-4 animate-pulse rounded" />
                 <div className="bg-muted h-4 animate-pulse rounded" />
                 <div className="bg-muted h-24 animate-pulse rounded" />
@@ -1985,11 +1992,11 @@ export function AiShotOptions({
               <>
                 <dl className="grid grid-cols-2 gap-2 text-sm">
                   <div className="bg-muted/50 rounded-md border px-3 py-2">
-                    <dt className="text-muted-foreground text-xs">Model</dt>
+                    <dt className="text-muted-foreground text-xs">{t("workflowConfig.aiShot.model")}</dt>
                     <dd className="mt-0.5 font-medium">{scenePromptPreview.model}</dd>
                   </div>
                   <div className="bg-muted/50 rounded-md border px-3 py-2">
-                    <dt className="text-muted-foreground text-xs">Duration</dt>
+                    <dt className="text-muted-foreground text-xs">{t("workflowConfig.aiShot.duration")}</dt>
                     <dd className="mt-0.5 font-medium tabular-nums">
                       {scenePromptPreview.durationSeconds}s
                     </dd>
@@ -2009,7 +2016,7 @@ export function AiShotOptions({
                 disabled={regeneratingSceneIndex !== null}
                 onClick={() => setScenePromptPreview(null)}
               >
-                Back
+                {t("workflowConfig.aiShot.back")}
               </Button>
               <Button
                 type="button"
@@ -2021,36 +2028,35 @@ export function AiShotOptions({
                 onClick={() => scenePromptPreview && void generateScene(scenePromptPreview)}
               >
                 {regeneratingSceneIndex !== null
-                  ? "Starting…"
+                  ? t("workflowConfig.aiShot.starting")
                   : sceneVideos.some((clip) => clip.sceneOrder === scenePromptPreview?.sceneOrder)
-                    ? "Regenerate this scene"
-                    : "Generate this scene"}
+                    ? t("workflowConfig.aiShot.regenerateThisScene")
+                    : t("workflowConfig.aiShot.generateThisScene")}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
         <div className="space-y-2">
           <div>
-            <p className="text-sm font-semibold">Scenes</p>
+            <p className="text-sm font-semibold">{t("workflowConfig.aiShot.scenes")}</p>
             <p className="text-muted-foreground mt-1 text-xs">
-              Set each scene separately. Drag the grip, or select a grip then a destination scene to
-              reorder.
+              {t("workflowConfig.aiShot.scenesDescription")}
             </p>
           </div>
           <div
             className="bg-background flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-md border px-3 py-2"
-            aria-label={`Total video duration: ${totalSeconds} of ${MAX_VIDEO_DURATION_SECONDS} seconds`}
+            aria-label={t("workflowConfig.aiShot.totalDurationAria", { total: totalSeconds, max: MAX_VIDEO_DURATION_SECONDS })}
           >
             <p className="text-foreground text-sm font-semibold whitespace-nowrap tabular-nums">
-              Total duration {totalSeconds}s / {MAX_VIDEO_DURATION_SECONDS}s
+              {t("workflowConfig.aiShot.totalDuration", { total: totalSeconds, max: MAX_VIDEO_DURATION_SECONDS })}
             </p>
             <div
               role="progressbar"
-              aria-label="Total video duration"
+              aria-label={t("workflowConfig.aiShot.totalVideoDuration")}
               aria-valuemin={0}
               aria-valuemax={MAX_VIDEO_DURATION_SECONDS}
               aria-valuenow={Math.min(totalSeconds, MAX_VIDEO_DURATION_SECONDS)}
-              aria-valuetext={`${totalSeconds} of ${MAX_VIDEO_DURATION_SECONDS} seconds`}
+              aria-valuetext={t("workflowConfig.aiShot.durationValueText", { total: totalSeconds, max: MAX_VIDEO_DURATION_SECONDS })}
               className="bg-muted h-2 min-w-12 flex-1 basis-16 overflow-hidden rounded-full"
             >
               <div
@@ -2059,15 +2065,15 @@ export function AiShotOptions({
               />
             </div>
             <span className="text-muted-foreground text-xs whitespace-nowrap tabular-nums">
-              {scenes.length} {scenes.length === 1 ? "scene" : "scenes"}
+              {t("workflowConfig.aiShot.sceneCount", { count: scenes.length })}
             </span>
           </div>
         </div>
         {hasAiScenes && AI_ADVANCED_CONTROLS_ENABLED && (
           <label className="block space-y-1 text-xs font-medium">
-            Shared direction for AI scenes{" "}
+            {t("workflowConfig.aiShot.sharedDirection")}{" "}
             <span className="text-muted-foreground font-normal">
-              (optional, up to 500 characters)
+              {t("workflowConfig.aiShot.optionalUpTo500")}
             </span>
             <textarea
               disabled={disabled}
@@ -2080,19 +2086,18 @@ export function AiShotOptions({
               className="bg-background min-h-16 w-full rounded-md border p-2 text-sm font-normal"
             />
             <span className="text-muted-foreground block text-right text-[11px] font-normal">
-              {sharedInstructions?.length ?? 0}/500 | appended before product-preservation
-              guardrails
+              {t("workflowConfig.aiShot.sharedDirectionCounter", { length: sharedInstructions?.length ?? 0 })}
             </span>
           </label>
         )}
         {hasAiScenes && isPending && (
-          <p className="text-muted-foreground text-xs">Loading AI scene templates... </p>
+          <p className="text-muted-foreground text-xs">{t("workflowConfig.aiShot.loadingAiTemplates")}</p>
         )}
         {hasAiScenes && isError && (
           <div className="flex items-center justify-between gap-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900">
-            <span>Could not load the AI template catalog. Your scene settings are preserved.</span>
+            <span>{t("workflowConfig.aiShot.catalogError")}</span>
             <Button type="button" variant="outline" size="sm" onClick={() => void refetch()}>
-              Retry
+              {t("workflowConfig.aiShot.retry")}
             </Button>
           </div>
         )}
@@ -2296,14 +2301,14 @@ export function AiShotOptions({
           );
           const frameStatusLabel =
             preparingSceneIndex === index
-              ? "Generating"
+              ? t("workflowConfig.aiShot.keyframeStatus.generating")
               : sceneFrame?.approvalStatus === "pending"
-                ? "Pending approval"
+                ? t("workflowConfig.aiShot.keyframeStatus.pendingApproval")
                 : frameIsCurrentAndApproved
-                  ? "Ready"
+                  ? t("workflowConfig.aiShot.keyframeStatus.ready")
                   : sceneFrame?.approvalStatus === "approved"
-                    ? "Needs update"
-                    : "Rejected";
+                    ? t("workflowConfig.aiShot.keyframeStatus.needsUpdate")
+                    : t("workflowConfig.aiShot.keyframeStatus.rejected");
           const frameStatusClass =
             preparingSceneIndex === index
               ? "bg-muted text-muted-foreground"
@@ -2336,8 +2341,8 @@ export function AiShotOptions({
             showToast(
               "success",
               keyframeToUse.approvalStatus === "pending"
-                ? "Keyframe selected for this scene. Approve it before generating video."
-                : "Keyframe selected for this scene."
+                ? t("workflowConfig.aiShot.keyframeSelectedPending")
+                : t("workflowConfig.aiShot.keyframeSelected")
             );
           };
           return (
@@ -2357,19 +2362,19 @@ export function AiShotOptions({
             >
               <header className="flex flex-wrap items-center gap-2">
                 <h3 className="bg-background flex size-7 items-center justify-center rounded-md border text-sm font-semibold tabular-nums">
-                  <span className="sr-only">Scene </span>
+                  <span className="sr-only">{t("workflowConfig.aiShot.sceneSrPrefix")}</span>
                   {index + 1}
                 </h3>
                 {isProductOnModelPack && (
                   <span className="bg-primary/10 text-primary inline-flex h-8 items-center rounded-md px-2.5 text-xs font-semibold">
-                    AI video
+                    {t("workflowConfig.aiShot.aiVideo")}
                   </span>
                 )}
                 {aiVideoLocked && scene.mode !== "standard" && (
                   <Badge
                     variant="outline"
                     className="gap-1 text-[10px]"
-                    title="AI video is not included in your plan. Switch this scene to Photo motion."
+                    title={t("workflowConfig.aiShot.aiVideoNotInPlan")}
                   >
                     <Lock className="size-3" aria-hidden="true" /> Pro
                   </Badge>
@@ -2379,7 +2384,7 @@ export function AiShotOptions({
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={`Decrease scene ${index + 1} duration`}
+                    aria-label={t("workflowConfig.aiShot.decreaseDurationAria", { scene: index + 1 })}
                     disabled={
                       disabled || scene.durationSeconds <= (scene.mode === "standard" ? 1 : 4)
                     }
@@ -2401,7 +2406,7 @@ export function AiShotOptions({
                     step={1}
                     value={scene.durationSeconds}
                     disabled={disabled}
-                    aria-label={`Scene ${index + 1} duration`}
+                    aria-label={t("workflowConfig.aiShot.sceneDurationAria", { scene: index + 1 })}
                     onChange={(event) =>
                       changeScene(index, { durationSeconds: Number(event.target.value) })
                     }
@@ -2411,7 +2416,7 @@ export function AiShotOptions({
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={`Increase scene ${index + 1} duration`}
+                    aria-label={t("workflowConfig.aiShot.increaseDurationAria", { scene: index + 1 })}
                     disabled={disabled || scene.durationSeconds >= maxDuration}
                     onClick={() =>
                       changeScene(index, {
@@ -2431,8 +2436,8 @@ export function AiShotOptions({
                     variant="ghost"
                     size="icon-sm"
                     className="cursor-grab active:cursor-grabbing"
-                    aria-label={`Drag scene ${index + 1}; use arrow keys to reorder`}
-                    title="Reorder with arrow keys when focused"
+                    aria-label={t("workflowConfig.aiShot.dragSceneAria", { scene: index + 1 })}
+                    title={t("workflowConfig.aiShot.reorderTitle")}
                     disabled={disabled}
                     draggable={!disabled}
                     onDragStart={(event) => {
@@ -2460,11 +2465,11 @@ export function AiShotOptions({
                       if (selectedForMove === null) {
                         setSelectedForMove(index);
                         setAnnouncement(
-                          `Scene ${index + 1} selected. Select another scene to move it.`
+                          t("workflowConfig.aiShot.sceneSelectedForMove", { scene: index + 1 })
                         );
                       } else if (selectedForMove === index) {
                         setSelectedForMove(null);
-                        setAnnouncement("Scene move cancelled.");
+                        setAnnouncement(t("workflowConfig.aiShot.sceneMoveCancelled"));
                       } else {
                         moveScene(selectedForMove, index);
                         setSelectedForMove(null);
@@ -2477,8 +2482,8 @@ export function AiShotOptions({
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={`Copy scene ${index + 1}`}
-                    title="Copy scene"
+                    aria-label={t("workflowConfig.aiShot.copySceneAria", { scene: index + 1 })}
+                    title={t("workflowConfig.aiShot.copyScene")}
                     disabled={disabled || isProductOnModelPack || !canDuplicate}
                     onClick={() => copyScene(index)}
                   >
@@ -2488,7 +2493,7 @@ export function AiShotOptions({
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={`Remove scene ${index + 1}`}
+                    aria-label={t("workflowConfig.aiShot.removeSceneAria", { scene: index + 1 })}
                     disabled={disabled || isProductOnModelPack || scenes.length <= 1}
                     onClick={() => removeScene(index)}
                     className="text-destructive hover:text-destructive"
@@ -2523,24 +2528,22 @@ export function AiShotOptions({
                   {
                     value: "standard" as const,
                     icon: ImageIcon,
-                    title: "Photo motion",
-                    description: "Zooms and pans across a product image. Ready in seconds, no AI cost.",
+                    title: t("workflowConfig.aiShot.photoMotion"),
+                    description: t("workflowConfig.aiShot.photoMotionDescription"),
                     unavailable: false,
                   },
                   {
                     value: "ai" as const,
                     icon: Sparkles,
-                    title: "AI video",
-                    description: aiUnavailable
-                      ? "Needs at least 4 seconds. Shorten the other scenes first."
-                      : "AI brings the image to life as a real 4 to 15 second clip. Uses AI credits.",
+                    title: t("workflowConfig.aiShot.aiVideo"),
+                    description: aiUnavailable ? t("workflowConfig.aiShot.aiVideoNeedsSeconds") : t("workflowConfig.aiShot.aiVideoDescription"),
                     unavailable: aiUnavailable || aiVideoLocked,
                   },
                 ];
                 return (
                   <div
                     role="radiogroup"
-                    aria-label={`Scene ${index + 1} generation mode`}
+                    aria-label={t("workflowConfig.aiShot.generationModeAria", { scene: index + 1 })}
                     className="grid gap-2 @min-[22rem]:grid-cols-2"
                   >
                     {modes.map((mode) => {
@@ -2565,7 +2568,7 @@ export function AiShotOptions({
                             <span className="flex items-center gap-1.5 text-sm font-semibold">
                               {mode.title}
                               {mode.value === "ai" && aiVideoLocked && (
-                                <Badge variant="outline" className="gap-1 text-[10px]" title="Not included in your plan">
+                                <Badge variant="outline" className="gap-1 text-[10px]" title={t("workflowConfig.aiShot.notInPlan")}>
                                   <Lock className="size-3" aria-hidden="true" /> Pro
                                 </Badge>
                               )}
@@ -2581,13 +2584,13 @@ export function AiShotOptions({
               {scene.mode === "ai" && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-medium">AI video model</span>
-                    <span className="text-muted-foreground text-[11px]">Choose per scene</span>
+                    <span className="text-xs font-medium">{t("workflowConfig.aiShot.aiVideoModel")}</span>
+                    <span className="text-muted-foreground text-[11px]">{t("workflowConfig.aiShot.choosePerScene")}</span>
                   </div>
                   <div
                     className="grid grid-cols-2 gap-2"
                     role="group"
-                    aria-label={`Scene ${index + 1} AI video model`}
+                    aria-label={t("workflowConfig.aiShot.aiVideoModelAria", { scene: index + 1 })}
                   >
                     {([
                       { value: "minimax_h3_lite", label: "MiniMax-H3 Lite", isDefault: true },
@@ -2610,7 +2613,7 @@ export function AiShotOptions({
                           <span className="block text-xs font-semibold">{option.label}</span>
                           {option.isDefault && (
                             <span className="text-muted-foreground mt-0.5 block text-[10px] font-normal">
-                              Default
+                              {t("workflowConfig.aiShot.default")}
                             </span>
                           )}
                         </button>
@@ -2621,7 +2624,7 @@ export function AiShotOptions({
               )}
               {scene.mode !== "standard" && !isProductOnModelPack && (
                 <label className="flex flex-col gap-2 text-xs font-medium">
-                  <span>Video style</span>
+                  <span>{t("workflowConfig.aiShot.aiTemplate")}</span>
                   <Select
                     disabled={disabled || isPending || catalog.length === 0}
                     value={scene.templateCode}
@@ -2654,7 +2657,7 @@ export function AiShotOptions({
                       });
                     }}
                   >
-                    <SelectTrigger aria-label={`Scene ${index + 1} video style`}>
+                    <SelectTrigger aria-label={t("workflowConfig.aiShot.aiTemplateAria", { scene: index + 1 })}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -2675,7 +2678,7 @@ export function AiShotOptions({
               {template?.subtemplates && template.subtemplates.length > 0 && (
                 <div className="bg-muted/20 space-y-2 rounded-md border p-3">
                   <label className="flex flex-col gap-2 text-xs font-medium">
-                    <span>Shot template</span>
+                    <span>{t("workflowConfig.aiShot.shotTemplate")}</span>
                     <Select
                       disabled={disabled || isPending}
                       value={subtemplate?.code}
@@ -2701,7 +2704,7 @@ export function AiShotOptions({
                         });
                       }}
                     >
-                      <SelectTrigger aria-label={`Scene ${index + 1} shot template`}>
+                      <SelectTrigger aria-label={t("workflowConfig.aiShot.shotTemplateAria", { scene: index + 1 })}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -2723,12 +2726,12 @@ export function AiShotOptions({
               {!isProductOnModelPack && !sharedBatchSettings && (
                 <section
                   className="space-y-3 rounded-md border p-3"
-                  aria-label={`Scene ${index + 1} start frame`}
+                  aria-label={t("workflowConfig.aiShot.startFrameAria", { scene: index + 1 })}
                 >
                 <div>
-                  <p className="text-sm font-semibold">Start frame</p>
+                  <p className="text-sm font-semibold">{t("workflowConfig.aiShot.startFrame")}</p>
                   <p className="text-muted-foreground mt-1 max-w-md text-xs leading-relaxed">
-                    Choose the image this scene starts from, or create a custom keyframe.
+                    {t("workflowConfig.aiShot.startFrameDescription")}
                   </p>
                 </div>
                 <div className="bg-background relative rounded-lg">
@@ -2736,7 +2739,7 @@ export function AiShotOptions({
                   type="button"
                   disabled={disabled}
                   onClick={() => setFramePicker({ sceneIndex: index, view: "library" })}
-                  aria-label={`${selectedStartFrame ? "Change" : "Choose"} start frame for scene ${index + 1}`}
+                  aria-label={selectedStartFrame ? t("workflowConfig.aiShot.changeStartFrameAria", { scene: index + 1 }) : t("workflowConfig.aiShot.chooseStartFrameAria", { scene: index + 1 })}
                   className="hover:bg-muted/40 focus-visible:ring-ring group flex min-h-24 w-full cursor-pointer items-center gap-3 rounded-lg p-2.5 text-left transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {selectedStartFrame ? (
@@ -2785,50 +2788,50 @@ export function AiShotOptions({
                     <span className="block truncate text-sm font-semibold">
                       {automaticSource && !selectedSource
                         ? automaticSourceIsPerson
-                          ? "Model photo (automatic)"
-                          : "Main mock-up (automatic)"
+                          ? t("workflowConfig.aiShot.modelPhotoAutomatic")
+                          : t("workflowConfig.aiShot.mainMockupAutomatic")
                         : selectedStartFrame
-                          ? "Selected image"
-                          : "Choose a start frame"}
+                          ? t("workflowConfig.aiShot.selectedImage")
+                          : t("workflowConfig.aiShot.chooseAStartFrame")}
                     </span>
                     <span className="text-muted-foreground mt-1 block truncate text-xs">
                       {selectedSourceFrame
-                        ? `Approved keyframe · revision ${selectedSourceFrame.revision}`
+                        ? t("workflowConfig.aiShot.approvedKeyframeRevision", { revision: selectedSourceFrame.revision })
                         : shownSource
-                          ? `${shownSource.role} · ${shownSource.width} × ${shownSource.height}${shownSource.variantKey ? ` · ${shownSource.variantKey}` : ""}`
-                          : "Browse approved images or create a new keyframe"}
+                          ? `${roleLabel(shownSource.role)} · ${shownSource.width} × ${shownSource.height}${shownSource.variantKey ? ` · ${shownSource.variantKey}` : ""}`
+                          : t("workflowConfig.aiShot.browseApproved")}
                     </span>
                     {automaticSource && !selectedSource && !selectedSourceFrame && (
                       <span className="text-muted-foreground mt-0.5 block text-[11px] leading-snug">
                         {automaticSourceIsPerson
-                          ? "Each design uses its own approved model photo. Choose an image to start from another one."
-                          : "Each design uses its own main mock-up. Choose an image to start from another one."}
+                          ? t("workflowConfig.aiShot.automaticModelPhotoNote")
+                          : t("workflowConfig.aiShot.automaticMainMockupNote")}
                       </span>
                     )}
                     {matchedSource && !selectedSourceFrame && (
                       <span className="text-muted-foreground mt-0.5 block text-[11px] leading-snug">
-                        Chosen on another design; each design uses its own image of the same template and color.
+                        {t("workflowConfig.aiShot.matchedSourceNote")}
                       </span>
                     )}
                     {unsavedForRun && (
                       <span className="mt-0.5 block text-[11px] leading-snug font-medium text-amber-700">
-                        Not saved yet: Mockup Approval and the videos still use the saved start frame.
+                        {t("workflowConfig.aiShot.notSavedYet")}
                       </span>
                     )}
                     {scene.mode === "ai" && scene.aiStartFrameCrop && (
                       <span className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-700">
-                        <Check aria-hidden="true" className="size-3 shrink-0" /> Crop applied
+                        <Check aria-hidden="true" className="size-3 shrink-0" /> {t("workflowConfig.aiShot.cropApplied")}
                       </span>
                     )}
                     <span className={`text-primary mt-1 block text-xs font-semibold ${editableAiFrame ? "pr-16" : ""}`}>
-                      {selectedStartFrame ? "Change" : "Choose"}
+                      {selectedStartFrame ? t("workflowConfig.aiShot.change") : t("workflowConfig.aiShot.choose")}
                     </span>
                   </span>
                 </button>
                 {editableAiFrame && (
                     <span className="absolute inset-y-0 right-2 flex items-center">
-                      <Button type="button" variant="ghost" size="sm" aria-label="Edit start frame" className={`text-muted-foreground hover:text-foreground gap-1.5 px-2.5 text-xs shadow-none hover:translate-y-0 ${scene.aiStartFrameCrop ? "h-8" : "h-9"}`} disabled={disabled} onClick={() => setCropEditor({ sceneIndex: index, asset: editableAiFrame })}>
-                        <Pencil aria-hidden="true" className="size-3.5" /> Edit
+                      <Button type="button" variant="ghost" size="sm" aria-label={t("workflowConfig.aiShot.editStartFrame")} className={`text-muted-foreground hover:text-foreground gap-1.5 px-2.5 text-xs shadow-none hover:translate-y-0 ${scene.aiStartFrameCrop ? "h-8" : "h-9"}`} disabled={disabled} onClick={() => setCropEditor({ sceneIndex: index, asset: editableAiFrame })}>
+                        <Pencil aria-hidden="true" className="size-3.5" /> {t("workflowConfig.aiShot.edit")}
                       </Button>
                     </span>
                 )}
@@ -2842,15 +2845,15 @@ export function AiShotOptions({
                 >
                   <DialogContent className="flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-4xl flex-col gap-0 overflow-hidden p-0">
                     <DialogHeader className="border-b px-5 pt-5 pb-4 text-left">
-                      <DialogTitle>Choose start frame</DialogTitle>
+                      <DialogTitle>{t("workflowConfig.aiShot.chooseStartFrame")}</DialogTitle>
                       <DialogDescription>
-                        Select an approved image for scene {index + 1}, or create a custom keyframe.
+                        {t("workflowConfig.aiShot.chooseStartFrameDescription", { scene: index + 1 })}
                       </DialogDescription>
                     </DialogHeader>
                     <div
                       className="border-b px-5 pt-3"
                       role="tablist"
-                      aria-label="Start frame options"
+                      aria-label={t("workflowConfig.aiShot.startFrameOptions")}
                     >
                       <div className="flex gap-5">
                         <button
@@ -2864,7 +2867,7 @@ export function AiShotOptions({
                               : "text-muted-foreground hover:text-foreground border-transparent"
                           }`}
                         >
-                          Approved frames
+                          {t("workflowConfig.aiShot.approvedFrames")}
                         </button>
                         <button
                           type="button"
@@ -2877,7 +2880,7 @@ export function AiShotOptions({
                               : "text-muted-foreground hover:text-foreground border-transparent"
                           }`}
                         >
-                          Create new keyframe
+                          {t("workflowConfig.aiShot.createNewKeyframe")}
                         </button>
                       </div>
                     </div>
@@ -2885,11 +2888,11 @@ export function AiShotOptions({
                       {framePicker?.view === "library" ? (
                         <div className="space-y-4">
                           <div>
-                            <p className="text-sm font-semibold">Approved frames</p>
+                            <p className="text-sm font-semibold">{t("workflowConfig.aiShot.approvedFrames")}</p>
                             <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
                               {needsModelPhoto
-                                ? `${template?.name ?? "This style"} starts from a lifestyle image: a model wearing the product. The selected image is saved when you click it.`
-                                : "Select a frame to use immediately. The selected item is saved when you click it."}
+                                ? t("workflowConfig.aiShot.lifestyleFramesDescription", { name: template?.name ?? t("workflowConfig.aiShot.thisStyle") })
+                                : t("workflowConfig.aiShot.approvedFramesDescription")}
                             </p>
                           </div>
                           {pickableFrames.length > 0 ? (
@@ -2910,7 +2913,7 @@ export function AiShotOptions({
                                     type="button"
                                     disabled={disabled}
                                     aria-pressed={isSelected}
-                                    aria-label={`Use ${isGeneratedFrame ? "approved keyframe" : asset.role} ${asset.variantKey || asset.id.slice(0, 6)} for scene ${index + 1}`}
+                                    aria-label={t("workflowConfig.aiShot.useSourceAria", { source: isGeneratedFrame ? t("workflowConfig.aiShot.approvedKeyframeLower") : roleLabel(asset.role), variant: asset.variantKey || asset.id.slice(0, 6), scene: index + 1 })}
                                     onClick={() => {
                                       if (reusableFrame) {
                                         persistScene(index, {
@@ -2975,9 +2978,9 @@ export function AiShotOptions({
                                     <span className="absolute right-3 bottom-3 left-3 text-white">
                                       <span
                                         className="block truncate text-sm font-semibold drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
-                                        title={isGeneratedFrame ? "Approved keyframe" : asset.role}
+                                        title={isGeneratedFrame ? t("workflowConfig.aiShot.approvedKeyframe") : roleLabel(asset.role)}
                                       >
-                                        {isGeneratedFrame ? "Approved keyframe" : asset.role}
+                                        {isGeneratedFrame ? t("workflowConfig.aiShot.approvedKeyframe") : roleLabel(asset.role)}
                                       </span>
                                     </span>
                                   </button>
@@ -2987,12 +2990,12 @@ export function AiShotOptions({
                           ) : (
                             <div className="bg-muted/30 flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
                               <p className="text-sm font-semibold">
-                                {needsModelPhoto ? "No approved lifestyle image yet" : "No approved frames yet"}
+                                {needsModelPhoto ? t("workflowConfig.aiShot.noLifestyleImage") : t("workflowConfig.aiShot.noApprovedFrames")}
                               </p>
                               <p className="text-muted-foreground mt-1 max-w-sm text-xs leading-relaxed">
                                 {needsModelPhoto
-                                  ? "Make a lifestyle image of this design on a model at Mockup Approval and approve it, or switch this scene to another video style."
-                                  : "Approve a product image first, or create a custom keyframe from an approved source."}
+                                  ? t("workflowConfig.aiShot.noLifestyleImageDescription")
+                                  : t("workflowConfig.aiShot.noApprovedFramesDescription")}
                               </p>
                             </div>
                           )}
@@ -3001,13 +3004,13 @@ export function AiShotOptions({
                         <div className="space-y-4">
                           {selectedStudioSource?.role === "Lifestyle" && (
                             <p className="text-muted-foreground text-xs">
-                              The approved people and setting stay in the image.
+                              {t("workflowConfig.aiShot.lifestyleNote")}
                             </p>
                           )}
                           <label className="flex flex-col gap-2 text-xs font-medium">
                             <span>
-                              Approved product image{" "}
-                              <span className="text-muted-foreground font-normal">(required)</span>
+                              {t("workflowConfig.aiShot.approvedProductImage")}{" "}
+                              <span className="text-muted-foreground font-normal">{t("workflowConfig.aiShot.required")}</span>
                             </span>
                             <Select
                               disabled={disabled || originalApproved.length === 0}
@@ -3029,10 +3032,10 @@ export function AiShotOptions({
                               }}
                             >
                               <SelectTrigger
-                                aria-label={`Scene ${index + 1} mockup source for new keyframe`}
+                                aria-label={t("workflowConfig.aiShot.mockupSourceAria", { scene: index + 1 })}
                                 aria-required="true"
                               >
-                                <SelectValue placeholder="Select an image" />
+                                <SelectValue placeholder={t("workflowConfig.aiShot.selectAnImage")} />
                               </SelectTrigger>
                               <SelectContent>
                                 {originalApproved.map((asset) => (
@@ -3044,9 +3047,9 @@ export function AiShotOptions({
                           <label className="block space-y-1.5 text-xs font-medium">
                             <span className="flex items-baseline justify-between gap-3">
                               <span>
-                                Custom keyframe prompt{" "}
+                                {t("workflowConfig.aiShot.customKeyframePrompt")}{" "}
                                 <span className="text-muted-foreground font-normal">
-                                  (optional)
+                                  {t("workflowConfig.aiShot.optional")}
                                 </span>
                               </span>
                               <span className="text-muted-foreground shrink-0 text-[11px] font-normal tabular-nums">
@@ -3063,16 +3066,15 @@ export function AiShotOptions({
                                   studioFrameId: null,
                                 })
                               }
-                              placeholder="Describe how the product should appear and how the reference images should guide the scene."
+                              placeholder={t("workflowConfig.aiShot.keyframePromptPlaceholder")}
                               className="bg-background min-h-24 w-full resize-y rounded-md border p-2.5 text-sm leading-relaxed font-normal"
                             />
                           </label>
                           <div className="space-y-1.5">
                             <p className="text-xs font-medium">
-                              Reference images{" "}
+                              {t("workflowConfig.aiShot.referenceImages")}{" "}
                               <span className="text-muted-foreground font-normal tabular-nums">
-                                ({sceneReferenceFiles.length}/2, optional; model is included
-                                automatically)
+                                {t("workflowConfig.aiShot.referenceImagesHint", { selected: sceneReferenceFiles.length })}
                               </span>
                             </p>
                             <div className="flex flex-wrap items-start gap-2">
@@ -3091,11 +3093,11 @@ export function AiShotOptions({
                                   variant="outline"
                                   disabled={disabled}
                                   onClick={() => chooseReferenceFile(index)}
-                                  aria-label={`Add reference image ${sceneReferenceFiles.length + 1} of 2`}
+                                  aria-label={t("workflowConfig.aiShot.addReferenceImageAria", { index: sceneReferenceFiles.length + 1 })}
                                   className="text-muted-foreground hover:text-foreground flex size-20 shrink-0 flex-col gap-1 rounded-md border-dashed p-2"
                                 >
                                   <Plus aria-hidden="true" className="size-5" />
-                                  <span className="text-[11px] font-medium">Add image</span>
+                                  <span className="text-[11px] font-medium">{t("workflowConfig.aiShot.addImage")}</span>
                                 </Button>
                               )}
                             </div>
@@ -3103,11 +3105,11 @@ export function AiShotOptions({
                           {(sceneFrame || preparingSceneIndex === index) && (
                             <section
                               className="bg-muted/40 space-y-3 rounded-md p-3"
-                              aria-label={`Scene ${index + 1} keyframe result`}
+                              aria-label={t("workflowConfig.aiShot.keyframeResultAria", { scene: index + 1 })}
                               aria-live="polite"
                             >
                               <div className="flex items-center justify-between gap-3">
-                                <p className="text-xs font-semibold">Keyframe preview</p>
+                                <p className="text-xs font-semibold">{t("workflowConfig.aiShot.keyframePreview")}</p>
                                 <span
                                   className={`rounded-full px-2 py-1 text-[11px] font-semibold ${frameStatusClass}`}
                                 >
@@ -3121,10 +3123,10 @@ export function AiShotOptions({
                                 {preparingSceneIndex === index ? (
                                   <div
                                     role="status"
-                                    aria-label="Generating keyframe preview"
+                                    aria-label={t("workflowConfig.aiShot.generatingKeyframePreview")}
                                     className="bg-muted aspect-[9/16] w-28 animate-pulse rounded-md"
                                   >
-                                    <span className="sr-only">Generating keyframe...</span>
+                                    <span className="sr-only">{t("workflowConfig.aiShot.generatingKeyframe")}</span>
                                   </div>
                                 ) : (
                                   sceneFrame && (
@@ -3136,13 +3138,13 @@ export function AiShotOptions({
                                           scene: index + 1,
                                         })
                                       }
-                                      aria-label={`View keyframe for scene ${index + 1}`}
-                                      title="View keyframe"
+                                      aria-label={t("workflowConfig.aiShot.viewKeyframeAria", { scene: index + 1 })}
+                                      title={t("workflowConfig.aiShot.viewKeyframe")}
                                       className="bg-background focus-visible:ring-ring relative aspect-[9/16] w-28 cursor-zoom-in overflow-hidden rounded-md focus-visible:ring-2 focus-visible:ring-offset-2"
                                     >
                                       <Image
                                         src={sceneFrame.previewUrl}
-                                        alt={`Scene ${index + 1} studio keyframe preview`}
+                                        alt={t("workflowConfig.aiShot.keyframePreviewAlt", { scene: index + 1 })}
                                         fill
                                         sizes="112px"
                                         unoptimized
@@ -3154,24 +3156,23 @@ export function AiShotOptions({
                                 <div className="min-w-0 self-center text-xs">
                                   {preparingSceneIndex === index ? (
                                     <>
-                                      <p className="font-medium">Creating your keyframe</p>
+                                      <p className="font-medium">{t("workflowConfig.aiShot.creatingKeyframe")}</p>
                                       <p className="text-muted-foreground mt-1 leading-relaxed">
-                                        This may take a moment. The preview will appear here when it
-                                        is ready.
+                                        {t("workflowConfig.aiShot.creatingKeyframeDescription")}
                                       </p>
                                     </>
                                   ) : (
                                     sceneFrame && (
                                       <>
-                                        <p className="font-medium">Generated keyframe</p>
+                                        <p className="font-medium">{t("workflowConfig.aiShot.generatedKeyframe")}</p>
                                         <p className="text-muted-foreground mt-1 leading-relaxed">
                                           {sceneFrame.approvalStatus === "pending"
-                                            ? "Review and approve this image before generating video."
+                                            ? t("workflowConfig.aiShot.keyframePendingNote")
                                             : frameIsCurrentAndApproved
-                                              ? "Approved and ready to use for this scene."
+                                              ? t("workflowConfig.aiShot.keyframeApprovedNote")
                                               : sceneFrame.approvalStatus === "approved"
-                                                ? "The source or direction has changed. Generate another matching keyframe."
-                                                : "This keyframe was rejected. Generate another to continue."}
+                                                ? t("workflowConfig.aiShot.keyframeOutdatedNote")
+                                                : t("workflowConfig.aiShot.keyframeRejectedNote")}
                                         </p>
                                         {sceneFrame.approvalStatus === "pending" && (
                                           <div className="mt-3 flex flex-wrap gap-2">
@@ -3187,7 +3188,7 @@ export function AiShotOptions({
                                                 })
                                               }
                                             >
-                                              Approve
+                                              {t("workflowConfig.aiShot.approve")}
                                             </Button>
                                             <Button
                                               type="button"
@@ -3202,7 +3203,7 @@ export function AiShotOptions({
                                                 })
                                               }
                                             >
-                                              Reject
+                                              {t("workflowConfig.aiShot.reject")}
                                             </Button>
                                           </div>
                                         )}
@@ -3242,17 +3243,17 @@ export function AiShotOptions({
                                     className="size-4 animate-spin rounded-full border-2 border-current border-r-transparent"
                                     aria-hidden="true"
                                   />
-                                  Generating keyframe...
+                                  {t("workflowConfig.aiShot.generatingKeyframe")}
                                 </>
                               ) : hasSceneKeyframe ? (
                                 <>
                                   <Check aria-hidden="true" />
-                                  Use keyframe for this scene
+                                  {t("workflowConfig.aiShot.useKeyframe")}
                                 </>
                               ) : (
                                 <>
                                   <Sparkles aria-hidden="true" />
-                                  Create keyframe
+                                  {t("workflowConfig.aiShot.createKeyframe")}
                                 </>
                               )}
                             </Button>
@@ -3272,24 +3273,22 @@ export function AiShotOptions({
                                   )
                                 }
                               >
-                                Generate another
+                                {t("workflowConfig.aiShot.generateAnother")}
                               </Button>
                             )}
                           </div>
                           <p className="text-muted-foreground text-xs leading-relaxed">
                             {sceneFrame?.approvalStatus === "pending"
-                              ? "Approve the generated image before creating the video."
+                              ? t("workflowConfig.aiShot.approveBeforeVideo")
                               : frameIsCurrentAndApproved
-                                ? "This approved keyframe is ready for the current scene."
-                                : "Matching approved keyframes are reused without a new image generation call."}
+                                ? t("workflowConfig.aiShot.keyframeReadyNote")
+                                : t("workflowConfig.aiShot.keyframeReuseNote")}
                           </p>
                           {template?.requiresDetail &&
                             selectedStudioSource &&
                             !hasUsableDetail(selectedStudioSource) && (
                               <p className="rounded-md border border-blue-200 bg-blue-50 p-2 text-xs leading-relaxed text-blue-900">
-                                This image can be used directly. Create an approved close-up keyframe
-                                for the clearest detail. Review generated keyframes because fine print
-                                may be reinterpreted.
+                                {t("workflowConfig.aiShot.detailNote")}
                               </p>
                             )}
                         </div>
@@ -3302,11 +3301,11 @@ export function AiShotOptions({
               {isProductOnModelPack && editableAiFrame && (
                 <div className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
                   <div>
-                    <p className="text-sm font-semibold">Start frame</p>
-                    <p className="text-muted-foreground text-xs">{scene.aiStartFrameCrop ? "Crop applied" : "Approved keyframe"}</p>
+                    <p className="text-sm font-semibold">{t("workflowConfig.aiShot.startFrame")}</p>
+                    <p className="text-muted-foreground text-xs">{scene.aiStartFrameCrop ? t("workflowConfig.aiShot.cropApplied") : t("workflowConfig.aiShot.approvedKeyframe")}</p>
                   </div>
-                  <Button type="button" variant="ghost" size="sm" aria-label="Edit start frame" className="text-muted-foreground hover:text-foreground h-9 gap-1.5 px-2.5 text-xs shadow-none hover:translate-y-0" disabled={disabled} onClick={() => setCropEditor({ sceneIndex: index, asset: editableAiFrame })}>
-                    <Pencil aria-hidden="true" className="size-3.5" /> Edit
+                  <Button type="button" variant="ghost" size="sm" aria-label={t("workflowConfig.aiShot.editStartFrame")} className="text-muted-foreground hover:text-foreground h-9 gap-1.5 px-2.5 text-xs shadow-none hover:translate-y-0" disabled={disabled} onClick={() => setCropEditor({ sceneIndex: index, asset: editableAiFrame })}>
+                    <Pencil aria-hidden="true" className="size-3.5" /> {t("workflowConfig.aiShot.edit")}
                   </Button>
                 </div>
               )}
@@ -3361,12 +3360,12 @@ export function AiShotOptions({
                       )}
                       <section
                         className="bg-muted/35 space-y-3 rounded-md border p-3"
-                        aria-label={`Scene ${index + 1} Standard camera motion`}
+                        aria-label={t("workflowConfig.aiShot.standardMotionAria", { scene: index + 1 })}
                       >
                         <div>
-                          <p className="text-sm font-semibold">Scene video</p>
+                          <p className="text-sm font-semibold">{t("workflowConfig.aiShot.sceneVideo")}</p>
                           <p className="text-muted-foreground mt-0.5 text-xs">
-                            Preview this scene with the selected camera movement.
+                            {t("workflowConfig.aiShot.sceneVideoDescription")}
                           </p>
                         </div>
                         <div className="grid items-center gap-4 @min-[22rem]:grid-cols-[6.5rem_minmax(0,1fr)] @min-[36rem]:grid-cols-[7.5rem_minmax(0,1fr)]">
@@ -3379,7 +3378,7 @@ export function AiShotOptions({
                           />
                           <div className="min-w-0 space-y-3">
                             <label className="flex flex-col gap-2 text-xs font-medium">
-                              <span>Camera movement</span>
+                              <span>{t("workflowConfig.motion.cameraMovement")}</span>
                               <Select
                                 disabled={disabled}
                                 value={
@@ -3396,14 +3395,14 @@ export function AiShotOptions({
                               >
                                 <SelectTrigger
                                   className="w-full min-w-0"
-                                  aria-label={`Scene ${index + 1} Standard camera movement`}
+                                  aria-label={t("workflowConfig.aiShot.standardMovementAria", { scene: index + 1 })}
                                 >
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {STANDARD_MOTION_OPTIONS.map(([value, label]) => (
+                                  {STANDARD_MOTION_OPTIONS.map(([value, label, labelKey]) => (
                                     <SelectItem key={value} value={value}>
-                                      {label}
+                                      {t(labelKey, { defaultValue: label })}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
@@ -3429,19 +3428,19 @@ export function AiShotOptions({
               {!hasRequiredSource && (
                 <p className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs leading-relaxed text-amber-900">
                   {template?.requiresLifestyle
-                    ? "Choose an approved product image. You may attach optional approved reference images and describe their use in the keyframe direction."
+                    ? t("workflowConfig.aiShot.noSourceLifestyle")
                     : template?.requiresDetail
-                      ? "Choose any approved mockup or keyframe. A close-up keyframe gives the clearest detail."
-                      : "Approve at least one product image before generating this scene."}{" "}
+                      ? t("workflowConfig.aiShot.noSourceDetail")
+                      : t("workflowConfig.aiShot.noSourceDefault")}{" "}
                   {effectiveChosenMockupIds.length > 0 || effectiveArtworkGroupKey
-                    ? "Also check that the image is included in Apply Mockup's allowed images and selected artwork group."
+                    ? t("workflowConfig.aiShot.noSourceFilterNote")
                     : ""}
                 </p>
               )}
               {scene.mode !== "standard" && AI_ADVANCED_CONTROLS_ENABLED && (
                 <details className="group bg-muted/20 rounded-md border p-2">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-semibold">
-                    Advanced camera, motion and lighting
+                    {t("workflowConfig.aiShot.advancedSettings")}
                     <ChevronDown
                       className="size-3.5 transition-transform group-open:rotate-180"
                       aria-hidden="true"
@@ -3453,21 +3452,21 @@ export function AiShotOptions({
                         const field = key as TemplateSettingField;
                         return (
                           <label key={key} className="flex flex-col gap-2 text-xs font-medium">
-                            <span>{SETTING_LABELS[key] ?? key}</span>
+                            <span>{t(`workflowConfig.aiShot.settings.${key}`, { defaultValue: SETTING_LABELS[key] ?? key })}</span>
                             <Select
                               disabled={disabled}
                               value={scene[field]}
                               onValueChange={(value) => changeScene(index, { [field]: value })}
                             >
                               <SelectTrigger
-                                aria-label={`Scene ${index + 1} ${SETTING_LABELS[key] ?? key}`}
+                                aria-label={t("workflowConfig.aiShot.settingAria", { scene: index + 1, setting: t(`workflowConfig.aiShot.settings.${key}`, { defaultValue: SETTING_LABELS[key] ?? key }) })}
                               >
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
                                 {choices.map((choice) => (
                                   <SelectItem key={choice} value={choice}>
-                                    {labelFor(choice)}
+                                    {t(`workflowConfig.aiShot.values.${choice}`, { defaultValue: labelFor(choice) })}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -3476,9 +3475,9 @@ export function AiShotOptions({
                         );
                       })}
                     <label className="block space-y-1 text-xs font-medium sm:col-span-2">
-                      Custom direction{" "}
+                      {t("workflowConfig.aiShot.customDirection")}{" "}
                       <span className="text-muted-foreground font-normal">
-                        (optional, up to 500 characters)
+                        {t("workflowConfig.aiShot.optionalUpTo500")}
                       </span>
                       <textarea
                         disabled={disabled}
@@ -3495,10 +3494,10 @@ export function AiShotOptions({
                       <div className="sm:col-span-2">
                         <details className="text-xs">
                           <summary className="text-muted-foreground cursor-pointer">
-                            View compiled prompt building blocks | v{template.promptVersion}
+                            {t("workflowConfig.aiShot.viewPromptBlocks", { version: template.promptVersion })}
                           </summary>
                           <p className="text-muted-foreground mt-2 font-semibold">
-                            Template prompt
+                            {t("workflowConfig.aiShot.templatePrompt")}
                           </p>
                           <p className="bg-muted mt-1 rounded p-2 leading-relaxed">
                             {template.basePrompt}
@@ -3506,7 +3505,7 @@ export function AiShotOptions({
                           {template.commonPrompt && (
                             <>
                               <p className="text-muted-foreground mt-2 font-semibold">
-                                Shared product-preservation rules
+                                {t("workflowConfig.aiShot.sharedPreservationRules")}
                               </p>
                               <p className="bg-muted mt-1 rounded p-2 leading-relaxed">
                                 {template.commonPrompt}
@@ -3543,11 +3542,9 @@ export function AiShotOptions({
         >
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Confirm image rights</DialogTitle>
+              <DialogTitle>{t("workflowConfig.aiShot.confirmRightsTitle")}</DialogTitle>
               <DialogDescription>
-                This scene uses a person-focused template. Confirm that you have permission to use
-                people shown in the selected product and reference images before creating its
-                keyframe or video.
+                {t("workflowConfig.aiShot.confirmRightsDescription")}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -3556,10 +3553,10 @@ export function AiShotOptions({
                 variant="outline"
                 onClick={() => setRightsConfirmation(null)}
               >
-                Cancel
+                {t("workflowConfig.aiShot.cancel")}
               </Button>
               <Button type="button" onClick={confirmSceneRights}>
-                I have the rights
+                {t("workflowConfig.aiShot.haveRights")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -3570,9 +3567,9 @@ export function AiShotOptions({
               <Clapperboard aria-hidden="true" className="size-5" strokeWidth={1.75} />
             </span>
             <div className="space-y-1">
-              <p className="text-sm font-semibold">No scenes yet</p>
+              <p className="text-sm font-semibold">{t("workflowConfig.aiShot.noScenesTitle")}</p>
               <p className="text-muted-foreground mx-auto max-w-xs text-xs leading-relaxed">
-                Add the first scene, or pick a template above, to set up this video.
+                {t("workflowConfig.aiShot.noScenesDescription")}
               </p>
             </div>
             <Button
@@ -3584,7 +3581,7 @@ export function AiShotOptions({
               className="h-9 gap-1.5 px-3.5 text-[13px] font-semibold hover:translate-y-0"
             >
               <Plus aria-hidden="true" className="size-4" strokeWidth={1.75} />
-              <span>Add first scene</span>
+              <span>{t("workflowConfig.aiShot.addFirstScene")}</span>
             </Button>
           </div>
         ) : (
@@ -3600,19 +3597,19 @@ export function AiShotOptions({
                 className="text-primary hover:bg-primary/5 h-10 gap-1.5 rounded-md px-3 text-[13px] font-semibold shadow-none transition-colors hover:translate-y-0 focus-visible:ring-2 focus-visible:ring-offset-2"
               >
                 <Plus aria-hidden="true" className="size-4" strokeWidth={1.75} />
-                <span>Add scene</span>
+                <span>{t("workflowConfig.aiShot.addScene")}</span>
               </Button>
               <span aria-hidden="true" className="bg-border/70 h-px flex-1" />
             </div>
             {hasAiScenes && (
               <p className="text-muted-foreground text-center text-xs">
-                Estimated AI footage ${aiSceneCost.toFixed(2)} USD at 768P
+                {t("workflowConfig.aiShot.estimatedFootage", { cost: aiSceneCost.toFixed(2) })}
               </p>
             )}
           </div>
         )}
-        <section aria-label="Full video editing" className="space-y-2 pt-1">
-          <p className="text-sm font-semibold">Full video</p>
+        <section aria-label={t("workflowConfig.aiShot.fullVideoEditing")} className="space-y-2 pt-1">
+          <p className="text-sm font-semibold">{t("workflowConfig.aiShot.fullVideo")}</p>
           <VideoTimelineEditor
             disabled={disabled}
             config={node.data.config as GenerateVideoConfig}
@@ -3627,14 +3624,10 @@ export function AiShotOptions({
         <details className="group text-muted-foreground text-xs">
           <summary className="hover:text-foreground flex min-h-9 cursor-pointer list-none items-center gap-1.5 font-medium transition-colors">
             <ChevronDown aria-hidden="true" className="size-3.5 transition-transform group-open:rotate-180" />
-            About estimates and keyframes
+            {t("workflowConfig.aiShot.aboutEstimates")}
           </summary>
           <p className="pb-1 leading-relaxed">
-            The AI estimate assumes each AI clip is new; the final quote accounts for reusable clips
-            before rendering. Photo motion scenes use smooth camera movement between the selected framing
-            points. Keyframes combine the shared model, an approved product source and up to two
-            optional visual references. Review AI clips and every generated keyframe for product
-            fidelity.
+            {t("workflowConfig.aiShot.aboutEstimatesBody")}
           </p>
         </details>
         <Dialog
@@ -3649,7 +3642,7 @@ export function AiShotOptions({
           >
             <button
               type="button"
-              aria-label="Close image preview"
+              aria-label={t("workflowConfig.aiShot.closeImagePreview")}
               onClick={() => setPreviewFrame(null)}
               data-taste-skill-ignore="dialog overlay shadow"
               className="absolute -top-9 right-0 z-10 inline-flex size-8 items-center justify-center text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
@@ -3657,18 +3650,18 @@ export function AiShotOptions({
               <X aria-hidden="true" className="size-6" />
             </button>
             <DialogHeader className="sr-only">
-              <DialogTitle>Image preview</DialogTitle>
+              <DialogTitle>{t("workflowConfig.aiShot.imagePreview")}</DialogTitle>
               <DialogDescription>
                 {previewFrame
-                  ? `Selected start frame image for scene ${previewFrame.scene}`
-                  : "Selected start frame image preview"}
+                  ? t("workflowConfig.aiShot.selectedStartFrameForScene", { scene: previewFrame.scene })
+                  : t("workflowConfig.aiShot.selectedStartFramePreview")}
               </DialogDescription>
             </DialogHeader>
             {previewFrame && (
               <div className="relative mx-auto h-full w-full">
                 <Image
                   src={previewFrame.url}
-                  alt={`Start frame image for scene ${previewFrame.scene}`}
+                  alt={t("workflowConfig.aiShot.startFrameImageAlt", { scene: previewFrame.scene })}
                   fill
                   sizes="90vw"
                   unoptimized

@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { ImageCard } from "@/components/admin/image-quality/evaluation/image-card";
 import { HorizontalStrip } from "@/components/commons/data-display/horizontal-strip";
 import { useIsPhone } from "@/hooks/use-is-phone";
@@ -12,6 +14,7 @@ type ImageLaneProps = {
 };
 
 export const ImageLane = ({ title, images, versionLabels, isAfter = false }: ImageLaneProps) => {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
   const cards = images.map((image) => (
     <ImageCard
@@ -37,14 +40,14 @@ export const ImageLane = ({ title, images, versionLabels, isAfter = false }: Ima
     >
       {title}
       <span className="text-ink-500 text-xs font-normal">
-        {images.length} {images.length === 1 ? "image" : "images"}
+        {t("admin.imageQuality.shared.imageCount", { count: images.length })}
       </span>
     </h4>
     {images.length === 0 ? (
-      <p className="text-ink-500 text-[13px]">No image on this side.</p>
+      <p className="text-ink-500 text-[13px]">{t("admin.imageQuality.evaluation.noImageOnThisSide")}</p>
     ) : isPhone ? (
       // Side by side the images compare at a glance; stacked, one would fill the screen.
-      <HorizontalStrip itemsLabel={`${title.toLowerCase()} images`} itemCount={images.length} className="gap-3">
+      <HorizontalStrip itemsLabel={t(isAfter ? "admin.imageQuality.evaluation.laneItemsAfter" : "admin.imageQuality.evaluation.laneItemsBefore")} itemCount={images.length} className="gap-3">
         {cards}
       </HorizontalStrip>
     ) : (

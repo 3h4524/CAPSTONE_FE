@@ -1,3 +1,4 @@
+import { getCurrentLocale, i18n } from "@/i18n/client";
 import type { AdminOperationsDto, OperationsBucket } from "@/types/admin";
 
 /** The Dashboard's periods, each ending today. */
@@ -153,7 +154,7 @@ export const formatUsd = (amount: number) =>
 /** "3 hours ago", "2 days ago": how long ago a moment was, for activity lists. */
 export const timeAgo = (moment: string, now = new Date()) => {
   const seconds = Math.round((new Date(moment).getTime() - now.getTime()) / 1000);
-  const format = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  const format = new Intl.RelativeTimeFormat(getCurrentLocale(), { numeric: "auto" });
   const units: [Intl.RelativeTimeFormatUnit, number][] = [
     ["year", 31_536_000],
     ["month", 2_592_000],
@@ -164,5 +165,5 @@ export const timeAgo = (moment: string, now = new Date()) => {
   for (const [unit, size] of units) {
     if (Math.abs(seconds) >= size) return format.format(Math.round(seconds / size), unit);
   }
-  return "just now";
+  return i18n.t("common.justNow");
 };

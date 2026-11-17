@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Check, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
 import { GenerateModelPhotoDialog } from "@/components/mockups/generate-model-photo-dialog";
@@ -58,6 +59,7 @@ export const ModelPhotoMockupForm = ({
   productId: string;
   assets: MockupAsset[];
 }) => {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState("");
   const garments = assets.filter(isModelPhotoSource);
   // Mock-ups Apply mock-up made since they were last added (a new template or color) are added on opening, so
@@ -81,12 +83,12 @@ export const ModelPhotoMockupForm = ({
     >
       <AccordionItem value="model-photo">
         <AccordionTrigger className="py-2.5 hover:no-underline">
-          <span className="text-ink-900 text-sm font-medium">Put on a model photo (no AI)</span>
+          <span className="text-ink-900 text-sm font-medium">{t("workflowMedia.modelPhotoForm.title")}</span>
         </AccordionTrigger>
         <AccordionContent>
           {isAdding && (
             <p role="status" className="text-muted-foreground mb-2 text-xs">
-              Adding the newest mock-ups of this product…
+              {t("workflowMedia.modelPhotoForm.addingNewest")}
             </p>
           )}
           {garments.length === 0 ? (
@@ -99,7 +101,7 @@ export const ModelPhotoMockupForm = ({
                       if (!mockups.some(isModelPhotoSource))
                         showToast(
                           "info",
-                          "This product has no mock-ups yet. Make them with Apply mock-up first."
+                          t("workflowMedia.modelPhotoForm.noMockupsToast")
                         );
                     },
                   })
@@ -121,12 +123,12 @@ export const ModelPhotoMockupForm = ({
 };
 
 // The product's mock-ups are made by Apply mock-up; they are listed here once added from the job.
-const NoMockupsYet = ({ adding, onAdd }: { adding: boolean; onAdd: () => void }) => (
+const NoMockupsYet = ({ adding, onAdd }: { adding: boolean; onAdd: () => void }) => {
+  const { t } = useTranslation("common");
+  return (
   <div className="space-y-2">
     <p className="text-muted-foreground text-xs leading-relaxed">
-      A model photo wears one of this product’s mock-ups: its garment color and its design, where it
-      sits on the mock-up. This product has none yet: make them with Apply mock-up, then add them
-      here.
+      {t("workflowMedia.modelPhotoForm.noMockupsDescription")}
     </p>
     <Button
       type="button"
@@ -136,10 +138,11 @@ const NoMockupsYet = ({ adding, onAdd }: { adding: boolean; onAdd: () => void })
       disabled={adding}
       onClick={onAdd}
     >
-      {adding ? "Adding mock-ups…" : "Add this product’s mock-ups"}
+      {adding ? t("workflowMedia.modelPhotoForm.addingMockups") : t("workflowMedia.modelPhotoForm.addMockups")}
     </Button>
   </div>
-);
+  );
+};
 
 const ModelPhotoMockupFields = ({
   productId,
@@ -148,6 +151,7 @@ const ModelPhotoMockupFields = ({
   productId: string;
   garments: MockupAsset[];
 }) => {
+  const { t } = useTranslation("common");
   const [garmentMockupId, setGarmentMockupId] = useState("");
   const [pickedPhotoId, setModelPhotoId] = useState("");
   const [filter, setFilter] = useState<ModelPhotoFilter>({});
@@ -177,7 +181,7 @@ const ModelPhotoMockupFields = ({
 
   const submit = () => {
     if (!modelPhotoId) {
-      showToast("warning", "Choose a model photo.");
+      showToast("warning", t("workflowMedia.modelPhotoForm.chooseModelPhoto"));
       return;
     }
     generate(
@@ -186,45 +190,43 @@ const ModelPhotoMockupFields = ({
         onSuccess: () =>
           showToast(
             "success",
-            "Model photo image created. Review and approve it like any mock-up."
+            t("workflowMedia.modelPhotoForm.created")
           ),
       }
     );
   };
 
   return (
-    <div className="space-y-3" aria-label="Put on a model photo">
+    <div className="space-y-3" aria-label={t("workflowMedia.modelPhotoForm.putOnAria")}>
       <p className="text-muted-foreground text-xs leading-relaxed">
-        The person’s garment takes the mock-up’s color and the design is printed where it sits on
-        the mock-up, with the fabric’s folds. Free, and the print stays exactly as designed. The
-        result is added as a Lifestyle image.
+        {t("workflowMedia.modelPhotoForm.description")}
       </p>
       <div className="space-y-2">
-        <Label htmlFor="model-photo-source">Mock-up to put on</Label>
+        <Label htmlFor="model-photo-source">{t("workflowMedia.modelPhotoForm.mockupToPutOn")}</Label>
         <Select
           value={chosenGarment}
           onValueChange={(value) => value && setGarmentMockupId(value)}
           disabled={isPending}
         >
           <SelectTrigger id="model-photo-source" className="bg-card w-full">
-            <SelectValue placeholder="Choose a mockup" />
+            <SelectValue placeholder={t("workflowMedia.modelPhotoForm.chooseMockup")} />
           </SelectTrigger>
           <SelectContent>
             {garments.map((asset) => (
               <SelectItem key={asset.id} value={asset.id}>
-                {asset.role} · {asset.variantKey ?? asset.id.slice(0, 8)}
+                {t(`workflowMedia.assetRoles.${asset.role}`, { defaultValue: asset.role })} · {asset.variantKey ?? asset.id.slice(0, 8)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
           {garmentHex && isGarmentColor(garmentHex) && <GarmentColorSwatch hex={garmentHex} />}
-          The model’s garment takes this mock-up’s color.
+          {t("workflowMedia.modelPhotoForm.garmentColorNote")}
         </p>
       </div>
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-ink-900 text-sm font-medium">Model photo</p>
+          <p className="text-ink-900 text-sm font-medium">{t("workflowMedia.modelPhotoForm.modelPhoto")}</p>
           <Button
             type="button"
             variant="ghost"
@@ -234,7 +236,7 @@ const ModelPhotoMockupFields = ({
             onClick={() => setGenerating(true)}
           >
             <Sparkles aria-hidden="true" />
-            Make with AI
+            {t("workflowMedia.modelPhotoForm.makeWithAi")}
           </Button>
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-3">
@@ -242,36 +244,36 @@ const ModelPhotoMockupFields = ({
           <ModelPhotoFilterBar value={filter} onChange={setFilter} disabled={isPending} />
         </div>
         {isLoadingPhotos ? (
-          <p className="text-muted-foreground text-xs">Loading model photos…</p>
+          <p className="text-muted-foreground text-xs">{t("workflowMedia.modelPhotoForm.loadingPhotos")}</p>
         ) : isError ? (
           <p role="alert" className="text-xs text-red-600 dark:text-red-400">
-            Model photos could not be loaded.
+            {t("workflowMedia.modelPhotoForm.photosLoadError")}
           </p>
         ) : usable.length === 0 && (Object.keys(filter).length > 0 || source !== null) ? (
           <p className="text-muted-foreground text-xs">
-            No model photos of these people yet.{" "}
+            {t("workflowMedia.modelPhotoForm.noMatchingPhotos")}{" "}
             <button
               type="button"
               className="text-primary font-medium underline-offset-2 hover:underline"
               onClick={() => setGenerating(true)}
             >
-              Make one with AI
+              {t("workflowMedia.modelPhotoForm.makeOneWithAi")}
             </button>
             .
           </p>
         ) : usable.length === 0 ? (
           <p className="text-muted-foreground text-xs">
-            No model photos yet. Add one under{" "}
+            {t("workflowMedia.modelPhotoForm.noPhotosAddUnder")}{" "}
             <Link
               href="/mockups"
               className="text-primary font-medium underline-offset-2 hover:underline"
             >
-              Mock-up templates → Model photos
+              {t("workflowMedia.modelPhotoForm.mockupTemplatesModelPhotos")}
             </Link>
             .
           </p>
         ) : (
-          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Model photo">
+          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label={t("workflowMedia.modelPhotoForm.modelPhoto")}>
             {usable.map((photo) => (
               <button
                 key={photo.id}
@@ -298,7 +300,7 @@ const ModelPhotoMockupFields = ({
                 <PhotoSourceTag system={photo.isSystemTemplate} className="absolute top-1 left-1" />
                 <span className="text-ink-700 block truncate px-1.5 py-1 text-[11px]">
                   {modelAttributesLabel(photo.attributes) ?? photo.name} ·{" "}
-                  {productTypeLabel(photo.productType)}
+                  {t(`batches.productTypes.${photo.productType.toLowerCase()}`, { defaultValue: productTypeLabel(photo.productType) })}
                 </span>
                 {modelPhotoId === photo.id && (
                   <span className="bg-primary text-primary-foreground absolute top-1 right-1 flex size-5 items-center justify-center rounded-full">
@@ -325,7 +327,7 @@ const ModelPhotoMockupFields = ({
         disabled={isPending || !modelPhotoId}
         onClick={submit}
       >
-        {isPending ? "Putting it on…" : "Put on model photo"}
+        {isPending ? t("workflowMedia.modelPhotoForm.puttingOn") : t("workflowMedia.modelPhotoForm.putOn")}
       </Button>
       {generating && (
         <GenerateModelPhotoDialog
@@ -347,6 +349,7 @@ const ModelPhotoPreview = (input: {
   modelPhotoId: string;
   garmentColor: string | null;
 }) => {
+  const { t } = useTranslation("common");
   const { data, isPending, isError, error } = useModelPhotoPreview(input, true);
   const [loaded, setLoaded] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
@@ -354,7 +357,7 @@ const ModelPhotoPreview = (input: {
 
   return (
     <div className="space-y-1.5">
-      <p className="text-ink-900 text-sm font-medium">Preview</p>
+      <p className="text-ink-900 text-sm font-medium">{t("workflowMedia.modelPhotoForm.preview")}</p>
       {isError ? (
         <p role="alert" className="text-xs text-red-600 dark:text-red-400">
           {getErrorMessage(error)}
@@ -366,7 +369,7 @@ const ModelPhotoPreview = (input: {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={data.url}
-              alt="The mock-up on the model photo"
+              alt={t("workflowMedia.modelPhotoForm.previewAlt")}
               className="max-h-80 w-full object-contain"
               onLoad={() => setLoaded(data.url)}
               onError={() => setFailed(data.url)}
@@ -378,14 +381,14 @@ const ModelPhotoPreview = (input: {
               role="status"
             >
               <Spinner className="size-4" />
-              Rendering the preview…
+              {t("workflowMedia.modelPhotoForm.rendering")}
             </div>
           )}
         </div>
       )}
       {data && failed === data.url && (
         <p role="alert" className="text-xs text-red-600 dark:text-red-400">
-          The preview could not be rendered. Try again in a moment.
+          {t("workflowMedia.modelPhotoForm.renderFailed")}
         </p>
       )}
     </div>

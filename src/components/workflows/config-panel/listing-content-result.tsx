@@ -1,16 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import { FileText, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { evaluateListingSeo, generateListingContent, getListingContent } from "@/api/listing-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { OptionSelect } from "@/components/workflows/config-panel/fields/option-select";
 import { hasFeature } from "@/helpers/plan-features";
 import { showToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
+import { toProductOptions } from "@/helpers/workflow-panel";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
+import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useEntitlements } from "@/hooks/queries/use-entitlements";
 import { useQuery } from "@/hooks/queries/use-query";
 import { useAppQueryClient } from "@/hooks/use-query-client";
@@ -19,7 +25,16 @@ import { useWorkflowStore } from "@/stores/workflow";
 import type { ListingContentResult, ListingSeoFeedback, ListingSeoScoreResult } from "@/types/listing-content";
 
 export const ListingContentResultPanel = () => {
-  const productId = useWorkflowStore((state) => readString(state.nodes.find((node) => node.data.type === "product-input")?.data.config.productId));
+  const { t } = useTranslation("common");
+  const inputProductId = useWorkflowStore((state) => readString(state.nodes.find((node) => node.data.type === "product-input")?.data.config.productId));
+  const batchId = useWorkflowStore((state) => readString(state.nodes.find((node) => node.data.type === "product-input")?.data.config.batchId));
+  // Each product of the batch has a listing of its own, written from its own details: the seller picks whose to see.
+  const { data: products, isPending: productsPending, isError: productsFailed, refetch: refetchProducts } = useBatchProducts(batchId);
+  const [chosenProductId, setChosenProductId] = useState("");
+  // The product picked here while it is still in the batch; else the one Product input names; else the batch's first.
+  const productId = chosenProductId && products?.some((product) => product.id === chosenProductId)
+    ? chosenProductId
+    : inputProductId || products?.[0]?.id || "";
   const listingNodeId = useWorkflowStore(
     (state) => state.nodes.find((node) => node.data.type === "generate-listing")?.id
   );
@@ -42,7 +57,7 @@ export const ListingContentResultPanel = () => {
       if (listingNodeId) {
         setNodeRuntime(listingNodeId, {
           status: "running",
-          stage: "Regenerating listing content",
+          stage: t("workflowConfig.listing.stageRegenerating"),
           progress: 0,
         });
       }
@@ -52,17 +67,17 @@ export const ListingContentResultPanel = () => {
       if (listingNodeId) {
         setNodeRuntime(listingNodeId, {
           status: "success",
-          stage: "Generated",
+          stage: t("workflowConfig.listing.stageGenerated"),
           progress: 100,
         });
       }
-      showToast("success", "Listing content generated successfully.");
+      showToast("success", t("workflowConfig.listing.generatedToast"));
     },
     onSettled: (_listing, error) => {
       if (error && listingNodeId) {
         setNodeRuntime(listingNodeId, {
           status: "failed",
-          stage: "Generation failed",
+          stage: t("workflowConfig.listing.stageFailed"),
           progress: 0,
         });
       }
@@ -70,12 +85,12 @@ export const ListingContentResultPanel = () => {
   });
   const seoMutation = useMutation<ListingSeoScoreResult, string>({
     mutationFn: evaluateListingSeo,
-    onSuccess: (score) => showToast("success", `SEO score evaluated: ${score.overallScore}/100.`),
+    onSuccess: (score) => showToast("success", t("workflowConfig.listing.seoEvaluatedToast", { score: score.overallScore })),
   });
 
   const generate = () => {
     if (!productId) {
-      showToast("error", "Choose a product in Product input before generating listing content.");
+      showToast("error", t("workflowConfig.listing.chooseProductToGenerate"));
       return;
     }
     mutation.mutate({ productId, seoFeedback: seoMutation.data ?? undefined });
@@ -83,14 +98,21 @@ export const ListingContentResultPanel = () => {
     seoMutation.reset();
   };
 
+  const chooseProduct = (next: string) => {
+    setChosenProductId(next);
+    // A score belongs to the listing it was taken of.
+    seoMutation.reset();
+  };
+
   const { mutate: act, isPending: isRetrying } = useWorkflowRunAction();
   const listingStep = run?.nodes.find((node) => node.nodeType === "generate-listing");
   const workflowOutput = listingStep?.output as Partial<ListingContentResult> | undefined;
   // The listing failing does not stop the video, so it is written again from here while the run goes on.
-  const failedInRun = listingStep?.status === "failed" && !mutation.data;
+  const failedInRun = listingStep?.status === "failed" && !mutation.data && run?.productId === productId;
   const fromRun = workflowOutput?.title && (!productId || run?.productId === productId) ? workflowOutput as ListingContentResult : undefined;
   const stored = saved && fromRun ? (saved.versionNumber >= fromRun.versionNumber ? saved : fromRun) : saved ?? fromRun;
-  const result = mutation.data ?? stored;
+  // A listing just written for another product is not this one's.
+  const result = (mutation.variables?.productId === productId ? mutation.data : undefined) ?? stored;
   // While the designs and mock-ups are being made, the run that follows is about to write the listing itself,
   // and two listings written at once for a product would clash. Once that run exists its listing is done, so
   // regenerating here is safe again and does not affect the video.
@@ -105,28 +127,30 @@ export const ListingContentResultPanel = () => {
 
   const evaluateSeo = () => {
     if (!productId) {
-      showToast("error", "Choose a product before evaluating SEO.");
+      showToast("error", t("workflowConfig.listing.chooseProductToEvaluate"));
       return;
     }
     seoMutation.mutate(productId);
   };
 
   const recommendationLabel = seo?.recommendation === "regenerate"
-    ? "Regenerate recommended"
+    ? t("workflowConfig.listing.regenerateRecommended")
     : seo?.recommendation === "keep"
-      ? "Good to keep"
-      : "Review recommended";
+      ? t("workflowConfig.listing.goodToKeep")
+      : t("workflowConfig.listing.reviewRecommended");
 
   return (
-    <section className="bg-ink-50/60 space-y-4 rounded-lg border p-4" aria-label="Listing content result">
+    <section className="bg-ink-50/60 space-y-4 rounded-lg border p-4" aria-label={t("workflowConfig.listing.sectionAria")}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <FileText className="size-4 text-violet-600 dark:text-violet-400" />
-            <h3 className="text-sm font-semibold">Listing result</h3>
+            <h3 className="text-sm font-semibold">{t("workflowConfig.listing.title")}</h3>
           </div>
           <p className="text-muted-foreground mt-1 text-xs">
-            Generate content for the product selected in Product input.
+            {(products?.length ?? 0) > 1
+              ? t("workflowConfig.listing.batchDescription", { defaultValue: "Each product of the batch has its own listing. Choose one to see or regenerate it." })
+              : t("workflowConfig.listing.description")}
           </p>
         </div>
         <Button
@@ -134,19 +158,38 @@ export const ListingContentResultPanel = () => {
           size="sm"
           onClick={generate}
           disabled={waitingForRunToStart || mutation.isPending || isRetrying || regenerateLocked}
-          title={listingLocked ? "Listing content is part of Pro." : regenerateLocked ? "Regenerating a listing is part of Pro." : undefined}
+          title={listingLocked ? t("workflowConfig.listing.listingPro") : regenerateLocked ? t("workflowConfig.listing.regeneratePro") : undefined}
         >
           {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-          {mutation.isPending ? "Generating…" : result ? "Regenerate" : "Generate"}
+          {mutation.isPending ? t("workflowConfig.listing.generating") : result ? t("workflowConfig.listing.regenerate") : t("workflowConfig.listing.generate")}
           {regenerateLocked && <Badge variant="outline" className="ml-1 text-[10px]">Pro</Badge>}
         </Button>
       </div>
 
-      {!productId && <p className="text-muted-foreground text-xs">Select a product in the Product input node first.</p>}
-      {waitingForRunToStart && <p className="text-muted-foreground text-xs">Available once the designs and mock-ups are done: the run writes the listing itself then.</p>}
+      {(products?.length ?? 0) > 1 && (
+        <div className="space-y-1.5">
+          <Label htmlFor="listing-content-product">{t("workflowConfig.listing.product", { defaultValue: "Product" })}</Label>
+          <OptionSelect
+            standaloneId="listing-content-product"
+            value={productId}
+            onChange={chooseProduct}
+            options={toProductOptions(products)}
+            placeholder={t("workflowConfig.listing.chooseProduct", { defaultValue: "Choose a product" })}
+            isLoading={Boolean(batchId) && productsPending}
+            isError={productsFailed}
+            onRetry={() => void refetchProducts()}
+            disabled={mutation.isPending}
+          />
+        </div>
+      )}
+      {!productId && <p className="text-muted-foreground text-xs">{t("workflowConfig.listing.selectProductFirst")}</p>}
+      {productId && !result && !mutation.isPending && !failedInRun && !waitingForRunToStart && (
+        <p className="text-muted-foreground text-xs">{t("workflowConfig.listing.noListingYet", { defaultValue: "This product has no listing yet." })}</p>
+      )}
+      {waitingForRunToStart && <p className="text-muted-foreground text-xs">{t("workflowConfig.listing.availableAfterDesigns")}</p>}
       {failedInRun && run && (
         <div className="space-y-2 rounded-md border border-red-200 bg-red-50 p-3 dark:border-red-500/30 dark:bg-red-500/10" role="alert">
-          <p className="text-xs text-red-800 dark:text-red-300">{listingStep?.errorMessage ?? "Listing content could not be generated."}</p>
+          <p className="text-xs text-red-800 dark:text-red-300">{listingStep?.errorMessage ?? t("workflowConfig.listing.failed")}</p>
           {run.status !== "cancelled" && (
             <Button
               type="button"
@@ -156,10 +199,10 @@ export const ListingContentResultPanel = () => {
               onClick={() => act({ runId: run.id, expectedRevision: run.revision, action: "retry_listing" })}
             >
               {isRetrying ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-              {isRetrying ? "Generating…" : "Try again"}
+              {isRetrying ? t("workflowConfig.listing.generating") : t("workflowConfig.listing.tryAgain")}
             </Button>
           )}
-          {run.status === "running" && <p className="text-muted-foreground text-xs">Available once the video step is waiting for you or has finished.</p>}
+          {run.status === "running" && <p className="text-muted-foreground text-xs">{t("workflowConfig.listing.availableAfterVideo")}</p>}
         </div>
       )}
       {result && (
@@ -168,7 +211,7 @@ export const ListingContentResultPanel = () => {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
-                <p className="text-sm font-semibold">SEO evaluation</p>
+                <p className="text-sm font-semibold">{t("workflowConfig.listing.seoEvaluation")}</p>
               </div>
               <Button
                 type="button"
@@ -176,17 +219,17 @@ export const ListingContentResultPanel = () => {
                 variant="outline"
                 onClick={evaluateSeo}
                 disabled={seoMutation.isPending || !canRegenerate}
-                title={canRegenerate ? undefined : "SEO scoring is part of Pro."}
+                title={canRegenerate ? undefined : t("workflowConfig.listing.seoPro")}
               >
                 {seoMutation.isPending && <Loader2 className="size-4 animate-spin" />}
-                {seoMutation.isPending ? "Checking…" : "Check SEO score"}
+                {seoMutation.isPending ? t("workflowConfig.listing.checking") : t("workflowConfig.listing.checkSeo")}
                 {!canRegenerate && <Badge variant="outline" className="ml-1 text-[10px]">Pro</Badge>}
               </Button>
             </div>
             {seo && (
               <div className="mt-3 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-ink-600 text-xs">Overall score</span>
+                  <span className="text-ink-600 text-xs">{t("workflowConfig.listing.overallScore")}</span>
                   <span className={`text-lg font-bold ${seo.shouldRegenerate ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}`}>
                     {seo.overallScore}/100
                   </span>
@@ -194,17 +237,17 @@ export const ListingContentResultPanel = () => {
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   {(
                     [
-                      ["Title", seo.titleScore, "/100"],
-                      ["Tags", seo.tagsScore, "/100"],
-                      ["Description", seo.descriptionScore, "/100"],
-                      ["Keywords", seo.keywordOptimizationScore, "/100"],
-                      ["Tag relevance", seo.tagRelevanceScore, "/100"],
+                      ["title", seo.titleScore, "/100"],
+                      ["tags", seo.tagsScore, "/100"],
+                      ["description", seo.descriptionScore, "/100"],
+                      ["keywords", seo.keywordOptimizationScore, "/100"],
+                      ["tagRelevance", seo.tagRelevanceScore, "/100"],
                       // A share of the description's words, not a score.
-                      ["Keyword density", seo.keywordDensity, "%"],
+                      ["keywordDensity", seo.keywordDensity, "%"],
                     ] as const
                   ).map(([label, value, unit]) => (
                     <div key={label} className="bg-ink-50 flex justify-between rounded px-2 py-1.5">
-                      <span className="text-ink-500">{label}</span>
+                      <span className="text-ink-500">{t(`workflowConfig.listing.scores.${label}`)}</span>
                       <span className="font-medium">{value}{unit}</span>
                     </div>
                   ))}
@@ -221,23 +264,23 @@ export const ListingContentResultPanel = () => {
             )}
           </div>
           <div className="space-y-1">
-            <p className="text-ink-600 text-xs font-medium">Title</p>
+            <p className="text-ink-600 text-xs font-medium">{t("workflowConfig.listing.scores.title")}</p>
             <p className="bg-card rounded-md border p-2 text-sm font-medium">{result.title}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-ink-600 text-xs font-medium">Description</p>
+            <p className="text-ink-600 text-xs font-medium">{t("workflowConfig.listing.scores.description")}</p>
             <Textarea readOnly value={result.description} className="bg-card min-h-32 resize-y text-sm leading-6" />
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-ink-600 text-xs font-medium">Tags</p>
+              <p className="text-ink-600 text-xs font-medium">{t("workflowConfig.listing.scores.tags")}</p>
               <span className="text-muted-foreground text-[11px]">{result.tags.length}/13</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {result.tags.map((tag) => <Badge key={`${tag.position}-${tag.value}`} variant="secondary">{tag.value}</Badge>)}
             </div>
           </div>
-          <p className="text-muted-foreground text-[11px]">Generated with {result.model} · version {result.versionNumber}</p>
+          <p className="text-muted-foreground text-[11px]">{t("workflowConfig.listing.generatedWith", { model: result.model, version: result.versionNumber })}</p>
         </div>
       )}
     </section>

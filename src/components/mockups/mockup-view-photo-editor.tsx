@@ -279,7 +279,7 @@ export const MockupViewPhotoEditor = ({
       {/* The photo, as large as the dialog allows, with the sides under it. */}
       <section
         aria-label={t("mockups.sidesEditor.label", { label })}
-        className="bg-ink-50 flex min-h-0 flex-col gap-3 px-4 py-4 outline-none md:overflow-y-auto"
+        className="bg-ink-50 flex flex-col gap-3 px-4 py-4 outline-none md:min-h-0 md:overflow-y-auto"
       >
         <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
           <div>

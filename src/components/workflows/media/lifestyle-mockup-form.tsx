@@ -3,6 +3,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import { Check, ImagePlus, SlidersHorizontal, Sparkles } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { HorizontalStrip } from "@/components/commons/data-display/horizontal-strip";
 import { ImageLightbox } from "@/components/commons/data-display/image-lightbox";
@@ -44,6 +45,7 @@ import { useGenerateLifestyleMockup } from "@/hooks/mutations/use-generate-lifes
 import { useEntitlements } from "@/hooks/queries/use-entitlements";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { useModelPhotos } from "@/hooks/queries/use-model-photos";
+import { i18n } from "@/i18n/client";
 import type { LifestyleMockupFormValues } from "@/schemas/video-workflow";
 import { lifestyleMockupSchema, MAX_LIFESTYLE_MOCKUPS } from "@/schemas/video-workflow";
 import type { ModelPhotoFilter } from "@/types/mockup-templates";
@@ -72,7 +74,7 @@ export const lifestyleGarmentsOf = (assets: MockupAsset[]): LifestyleGarment[] =
     .map((asset) => ({
       id: asset.id,
       productId: asset.productId,
-      label: `${asset.role} · ${asset.variantKey ?? asset.id.slice(0, 8)}`,
+      label: `${i18n.t(`workflowMedia.assetRoles.${asset.role}`, { defaultValue: asset.role })} · ${asset.variantKey ?? asset.id.slice(0, 8)}`,
       imageUrl: asset.previewUrl,
     }));
 
@@ -89,10 +91,12 @@ const GarmentPicker = ({
   value: string[];
   onChange: (ids: string[]) => void;
   disabled: boolean;
-}) => (
+}) => {
+  const { t } = useTranslation("common");
+  return (
   <div
     role="group"
-    aria-label="Product mockups to wear"
+    aria-label={t("workflowMedia.lifestyle.mockupsToWear")}
     className="grid max-h-[65vh] auto-rows-max grid-cols-2 gap-2 overflow-y-auto p-0.5 sm:grid-cols-3 md:grid-cols-4"
   >
     {garments.map((garment) => {
@@ -129,7 +133,7 @@ const GarmentPicker = ({
             />
           ) : (
             <span className="bg-ink-50 text-ink-500 flex aspect-square w-full items-center justify-center text-xs">
-              No picture
+              {t("workflowMedia.lifestyle.noPicture")}
             </span>
           )}
           <span className="text-ink-700 block truncate px-1.5 py-1 text-[11px]">
@@ -144,7 +148,8 @@ const GarmentPicker = ({
       );
     })}
   </div>
-);
+  );
+};
 
 // The chosen mock-ups, shown small: the same mock-ups are listed just above in the results, so the full choice
 // opens in a dialog instead of repeating them here.
@@ -161,6 +166,7 @@ const GarmentChooser = ({
   disabled: boolean;
   id?: string;
 }) => {
+  const { t } = useTranslation("common");
   const [choosing, setChoosing] = useState(false);
   const chosen = garments.filter((garment) => value.includes(garment.id));
   const shown = chosen.slice(0, 4);
@@ -169,7 +175,7 @@ const GarmentChooser = ({
       <div id={id} className="bg-card flex items-center gap-3 rounded-md border p-2">
         {shown.length === 0 ? (
           <span className="bg-ink-50 text-ink-500 flex size-20 shrink-0 items-center justify-center rounded border border-dashed text-[11px]">
-            None
+            {t("workflowMedia.lifestyle.none")}
           </span>
         ) : (
           <span className="flex shrink-0 gap-1.5">
@@ -192,7 +198,7 @@ const GarmentChooser = ({
                   key={garment.id}
                   className="bg-ink-50 text-ink-500 flex size-14 shrink-0 items-center justify-center rounded border text-[10px]"
                 >
-                  No picture
+                  {t("workflowMedia.lifestyle.noPicture")}
                 </span>
               )
             )}
@@ -200,10 +206,10 @@ const GarmentChooser = ({
         )}
         <span className="text-ink-800 line-clamp-2 min-w-0 flex-1 text-sm">
           {chosen.length === 0
-            ? "Choose a mockup"
+            ? t("workflowMedia.lifestyle.chooseMockup")
             : chosen.length === 1
               ? chosen[0].label
-              : `${chosen.length} mockups${chosen.length > shown.length ? ` (+${chosen.length - shown.length} more)` : ""}`}
+              : `${t("workflowMedia.lifestyle.mockupCount", { count: chosen.length })}${chosen.length > shown.length ? t("workflowMedia.lifestyle.moreCount", { count: chosen.length - shown.length }) : ""}`}
         </span>
         {garments.length > 1 && (
           <Button
@@ -214,17 +220,16 @@ const GarmentChooser = ({
             disabled={disabled}
             onClick={() => setChoosing(true)}
           >
-            Change
+            {t("workflowMedia.lifestyle.change")}
           </Button>
         )}
       </div>
       <Dialog open={choosing} onOpenChange={setChoosing}>
         <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Choose the mockups to wear</DialogTitle>
+            <DialogTitle>{t("workflowMedia.lifestyle.chooseTitle")}</DialogTitle>
             <DialogDescription>
-              One lifestyle image is made for each mockup ticked, up to {MAX_LIFESTYLE_MOCKUPS}: the
-              model wears its garment, color and print.
+              {t("workflowMedia.lifestyle.chooseDescription", { max: MAX_LIFESTYLE_MOCKUPS })}
             </DialogDescription>
           </DialogHeader>
           <GarmentPicker
@@ -234,14 +239,14 @@ const GarmentChooser = ({
             onChange={onChange}
           />
           <div className="flex items-center justify-between gap-3">
-            <span className="text-muted-foreground text-xs">{value.length} selected</span>
+            <span className="text-muted-foreground text-xs">{t("workflowMedia.lifestyle.selectedCount", { count: value.length })}</span>
             <Button
               type="button"
               size="sm"
               className="hover:translate-y-0"
               onClick={() => setChoosing(false)}
             >
-              Done
+              {t("workflowMedia.lifestyle.done")}
             </Button>
           </div>
         </DialogContent>
@@ -250,9 +255,9 @@ const GarmentChooser = ({
   );
 };
 
-const SOURCE_OPTIONS: { value: "upload" | "library"; label: string; hint: string }[] = [
-  { value: "upload", label: "Upload a photo", hint: "Your own photo of people" },
-  { value: "library", label: "From model photos", hint: "Ready-made people, no upload" },
+const SOURCE_OPTIONS: { value: "upload" | "library"; labelKey: "uploadLabel" | "libraryLabel"; hintKey: "uploadHint" | "libraryHint" }[] = [
+  { value: "upload", labelKey: "uploadLabel", hintKey: "uploadHint" },
+  { value: "library", labelKey: "libraryLabel", hintKey: "libraryHint" },
 ];
 
 // One numbered step of the form: what to do, then the controls for it.
@@ -291,6 +296,7 @@ const UploadPhoto = ({
   onChange: (file: File | undefined) => void;
   disabled: boolean;
 }) => {
+  const { t } = useTranslation("common");
   const [preview, setPreview] = useState<string | null>(null);
   useEffect(() => {
     if (!value) {
@@ -311,7 +317,7 @@ const UploadPhoto = ({
     >
       <input
         type="file"
-        aria-label="Photo of a model"
+        aria-label={t("workflowMedia.lifestyle.photoOfModel")}
         accept="image/jpeg,image/png,image/webp"
         disabled={disabled}
         className="sr-only"
@@ -336,12 +342,12 @@ const UploadPhoto = ({
       )}
       <span className="min-w-0 flex-1 text-xs leading-relaxed">
         <span className="text-ink-800 block truncate font-medium">
-          {value ? value.name : "Choose a photo"}
+          {value ? value.name : t("workflowMedia.lifestyle.choosePhoto")}
         </span>
         <span className="text-muted-foreground block">
           {value
-            ? "Click to choose another."
-            : "JPEG, PNG or WebP, up to 8 MB. A sharper photo gives a sharper image."}
+            ? t("workflowMedia.lifestyle.chooseAnother")
+            : t("workflowMedia.lifestyle.uploadHintDetail")}
         </span>
       </span>
     </label>
@@ -358,6 +364,7 @@ const LibraryModelPicker = ({
   onChange: (id: string) => void;
   disabled: boolean;
 }) => {
+  const { t } = useTranslation("common");
   const [filter, setFilter] = useState<ModelPhotoFilter>({});
   const [source, setSource] = useState<PhotoSource | null>(null);
   const { data: allPhotos, isPending, isError } = useModelPhotos("seller", undefined, true, filter);
@@ -369,7 +376,7 @@ const LibraryModelPicker = ({
     <div className="min-w-0 space-y-2">
       <div className="flex items-center justify-between gap-2">
         <span className="text-muted-foreground text-xs">
-          {photos ? `${photos.length} photo${photos.length === 1 ? "" : "s"}` : ""}
+          {photos ? t("workflowMedia.lifestyle.photoCount", { count: photos.length }) : ""}
         </span>
         <Button
           type="button"
@@ -380,7 +387,7 @@ const LibraryModelPicker = ({
           onClick={() => setFiltering((open) => !open)}
         >
           <SlidersHorizontal aria-hidden="true" />
-          {active > 0 ? `Filters (${active})` : "Filters"}
+          {active > 0 ? t("workflowMedia.lifestyle.filtersActive", { count: active }) : t("workflowMedia.lifestyle.filters")}
         </Button>
       </div>
       {filtering && (
@@ -390,21 +397,20 @@ const LibraryModelPicker = ({
         </div>
       )}
       {isPending ? (
-        <p className="text-muted-foreground text-xs">Loading model photos…</p>
+        <p className="text-muted-foreground text-xs">{t("workflowMedia.modelPhotoForm.loadingPhotos")}</p>
       ) : isError ? (
         <p role="alert" className="text-xs text-red-600 dark:text-red-400">
-          Model photos could not be loaded.
+          {t("workflowMedia.modelPhotoForm.photosLoadError")}
         </p>
       ) : (photos ?? []).length === 0 ? (
         <p className="text-muted-foreground text-xs">
-          No model photos match. Change the filters, or add or make one under Mock-up templates →
-          Model photos.
+          {t("workflowMedia.lifestyle.noPhotosMatch")}
         </p>
       ) : (
         <HorizontalStrip
           role="radiogroup"
-          aria-label="Model photo to dress"
-          itemsLabel="model photos"
+          aria-label={t("workflowMedia.lifestyle.photoToDress")}
+          itemsLabel={t("workflowMedia.lifestyle.itemsLabel")}
           itemCount={(photos ?? []).length}
         >
           {(photos ?? []).map((photo) => {
@@ -461,6 +467,7 @@ export const LifestyleMockupForm = ({
   garments: LifestyleGarment[];
   showResults?: boolean;
 }) => {
+  const { t } = useTranslation("common");
   const form = useForm<LifestyleMockupFormValues>({
     resolver: zodResolver(lifestyleMockupSchema),
     values: {
@@ -530,34 +537,33 @@ export const LifestyleMockupForm = ({
       });
       showToast(
         "success",
-        `${made} lifestyle image${made === 1 ? "" : "s"} created. Check the print before you use ${made === 1 ? "it" : "them"}.`
+        t("workflowMedia.lifestyle.createdToast", { count: made })
       );
     }
     if (failures.length > 0)
-      showToast("error", `${failures.length} could not be made. ${failures.join(" · ")}`);
+      showToast("error", t("workflowMedia.lifestyle.failedToast", { count: failures.length, details: failures.join(" · ") }));
   };
   // Folded away by default: it is an extra, paid step.
   return (
     <Accordion type="single" collapsible className="rounded-lg border px-3">
       <AccordionItem value="lifestyle">
         <AccordionTrigger className="py-2.5 hover:no-underline">
-          <span className="text-ink-900 text-sm font-medium">AI lifestyle image</span>
+          <span className="text-ink-900 text-sm font-medium">{t("workflowMedia.lifestyle.title")}</span>
         </AccordionTrigger>
         <AccordionContent className="space-y-4">
           <Form {...form}>
             <form
               className="space-y-5 pb-1"
-              aria-label="AI lifestyle image"
+              aria-label={t("workflowMedia.lifestyle.title")}
               onSubmit={form.handleSubmit(generateAll)}
             >
               <p className="text-muted-foreground text-xs leading-relaxed">
-                AI puts your product on real people: the cut and color come from the mockup, the
-                print from its design.
+                {t("workflowMedia.lifestyle.intro")}
               </p>
               <Step
                 number={1}
-                title="Choose the mockups"
-                hint={`One image is made for each, up to ${MAX_LIFESTYLE_MOCKUPS}.`}
+                title={t("workflowMedia.lifestyle.step1Title")}
+                hint={t("workflowMedia.lifestyle.step1Hint", { max: MAX_LIFESTYLE_MOCKUPS })}
               >
                 <FormField
                   control={form.control}
@@ -579,8 +585,8 @@ export const LifestyleMockupForm = ({
               </Step>
               <Step
                 number={2}
-                title="Choose who wears them"
-                hint="Everyone in a group photo wears the product."
+                title={t("workflowMedia.lifestyle.step2Title")}
+                hint={t("workflowMedia.lifestyle.step2Hint")}
               >
                 <FormField
                   control={form.control}
@@ -590,7 +596,7 @@ export const LifestyleMockupForm = ({
                       <FormControl>
                         <div
                           role="group"
-                          aria-label="People to dress"
+                          aria-label={t("workflowMedia.lifestyle.peopleToDress")}
                           className="bg-ink-100 grid grid-cols-2 gap-1 rounded-lg p-1"
                         >
                           {SOURCE_OPTIONS.map((option) => {
@@ -600,7 +606,7 @@ export const LifestyleMockupForm = ({
                                 key={option.value}
                                 type="button"
                                 aria-pressed={picked}
-                                aria-label={option.label}
+                                aria-label={t(`workflowMedia.lifestyle.${option.labelKey}`)}
                                 disabled={isPending}
                                 onClick={() => field.onChange(option.value)}
                                 className={cn(
@@ -616,10 +622,10 @@ export const LifestyleMockupForm = ({
                                     picked ? "text-ink-900" : "text-ink-600"
                                   )}
                                 >
-                                  {option.label}
+                                  {t(`workflowMedia.lifestyle.${option.labelKey}`)}
                                 </span>
                                 <span className="text-muted-foreground block text-[11px] leading-snug">
-                                  {option.hint}
+                                  {t(`workflowMedia.lifestyle.${option.hintKey}`)}
                                 </span>
                               </button>
                             );
@@ -680,8 +686,7 @@ export const LifestyleMockupForm = ({
                                 />
                               </FormControl>
                               <FormLabel className="text-ink-700 text-xs leading-relaxed font-normal">
-                                I have the rights to this photo, and the consent of a parent or
-                                guardian for anyone under 18 in it.
+                                {t("workflowMedia.lifestyle.rightsConfirm")}
                               </FormLabel>
                             </div>
                             <FormMessage />
@@ -692,15 +697,15 @@ export const LifestyleMockupForm = ({
                   )}
                 </div>
               </Step>
-              <Step number={3} title="Make the images">
+              <Step number={3} title={t("workflowMedia.lifestyle.step3Title")}>
                 <div className="space-y-2">
                   {chosen.length > 0 && !locked && (
                     <p className="bg-ink-50 flex items-baseline justify-between gap-2 rounded-md px-2.5 py-1.5 text-xs">
                       <span className="text-ink-700">
-                        {chosen.length} image{chosen.length === 1 ? "" : "s"}
+                        {t("workflowMedia.lifestyle.imageCount", { count: chosen.length })}
                       </span>
                       <span className="text-muted-foreground">
-                        about ${(chosen.length * 0.03).toFixed(2)} on your Ideogram key
+                        {t("workflowMedia.lifestyle.costEstimate", { cost: (chosen.length * 0.03).toFixed(2) })}
                       </span>
                     </p>
                   )}
@@ -712,16 +717,16 @@ export const LifestyleMockupForm = ({
                     {!locked && !progress && <Sparkles aria-hidden="true" />}
                     {progress
                       ? progress.total > 1
-                        ? `Generating… ${progress.done} of ${progress.total} done`
-                        : "Generating…"
+                        ? t("workflowMedia.lifestyle.generatingProgress", { done: progress.done, total: progress.total })
+                        : t("workflowMedia.lifestyle.generating")
                       : locked
-                        ? "Lifestyle images are part of Pro"
+                        ? t("workflowMedia.lifestyle.proOnly")
                         : chosen.length > 1
-                          ? `Generate ${chosen.length} lifestyle images`
-                          : "Generate lifestyle image"}
+                          ? t("workflowMedia.lifestyle.generateMany", { count: chosen.length })
+                          : t("workflowMedia.lifestyle.generateOne")}
                   </Button>
                   <p className="text-muted-foreground text-[11px] leading-relaxed">
-                    AI can change the print slightly, so check each image before you use it.
+                    {t("workflowMedia.lifestyle.checkPrint")}
                   </p>
                 </div>
               </Step>
@@ -734,7 +739,7 @@ export const LifestyleMockupForm = ({
                 productId={productId}
                 title={
                   productIds.length > 1
-                    ? `Lifestyle images · ${chosen.find((garment) => garment.productId === productId)?.label ?? "product"}`
+                    ? t("workflowMedia.lifestyle.resultsFor", { label: chosen.find((garment) => garment.productId === productId)?.label ?? t("workflowMedia.lifestyle.product") })
                     : undefined
                 }
               />
@@ -748,11 +753,12 @@ export const LifestyleMockupForm = ({
 // The lifestyle images made for one product, newest first; each opens large in a viewer on the page.
 const LifestyleResults = ({
   productId,
-  title = "Lifestyle images of this product",
+  title,
 }: {
   productId: string;
   title?: string;
 }) => {
+  const { t } = useTranslation("common");
   const { data: assets } = useMockupAssets(productId);
   const [viewing, setViewing] = useState<number | null>(null);
   const made = (assets ?? []).filter((asset) => asset.role === "Lifestyle");
@@ -760,14 +766,14 @@ const LifestyleResults = ({
   const gallery = made.map((asset, index) => ({
     id: asset.id,
     url: asset.previewUrl,
-    alt: "Lifestyle image",
-    caption: `Lifestyle image ${index + 1}`,
+    alt: t("workflowMedia.lifestyle.imageAlt"),
+    caption: t("workflowMedia.lifestyle.imageCaption", { index: index + 1 }),
     width: asset.width,
     height: asset.height,
   }));
   return (
-    <section className="space-y-2 border-t pt-4" aria-label="Lifestyle images">
-      <p className="text-ink-700 text-xs font-medium">{title}</p>
+    <section className="space-y-2 border-t pt-4" aria-label={t("workflowMedia.lifestyle.images")}>
+      <p className="text-ink-700 text-xs font-medium">{title ?? t("workflowMedia.lifestyle.resultsTitle")}</p>
       <div className="grid grid-cols-2 gap-2 @sm:grid-cols-3">
         {made.map((asset, index) => (
           <button
@@ -775,11 +781,11 @@ const LifestyleResults = ({
             type="button"
             onClick={() => setViewing(index)}
             className="bg-ink-50 hover:border-ink-400 block cursor-zoom-in overflow-hidden rounded-md border transition-colors"
-            aria-label={`View lifestyle image ${index + 1} larger`}
+            aria-label={t("workflowMedia.lifestyle.viewLarger", { index: index + 1 })}
           >
             <Image
               src={asset.previewUrl}
-              alt="Lifestyle image"
+              alt={t("workflowMedia.lifestyle.imageAlt")}
               width={asset.width}
               height={asset.height}
               unoptimized

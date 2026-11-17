@@ -9,6 +9,7 @@ import {
 } from "@/constants/workflow";
 import { getWorkflowNodeDefinition, normalizeNodeConfig, readString } from "@/helpers/workflow-config";
 import { findMissingMockupTemplates, isRunnableNode, publishesWithoutVideo, supportsBatchVideos } from "@/helpers/workflow-run";
+import { i18n } from "@/i18n/client";
 import { nodeConfigSchemaIn } from "@/schemas/workflow";
 import type {
   WorkflowDefinition,
@@ -40,8 +41,10 @@ const PRINTIFY: WorkflowNodeType = "publish-printify";
 // Approval, as the backend checks.
 const runOrderOf = (type: WorkflowNodeType) => (type === PRINTIFY ? -1 : RUN_ORDER.indexOf(type));
 
-const PRINTIFY_SOURCE_MESSAGE = "Connect Push to Printify after Apply mock-up or Mockup Approval: it publishes the design and its mock-ups, not the video.";
-const PRINTIFY_END_MESSAGE = "Push to Printify ends its branch: connect the next steps to the step before it.";
+const printifySourceMessage = () => i18n.t("workflowConfig.checks.printifySource");
+const printifyEndMessage = () => i18n.t("workflowConfig.checks.printifyEnd");
+const nodeTypeLabel = (type: WorkflowNodeType) =>
+  i18n.t(`workflowEditor.nodeTypes.${type}.label`, { defaultValue: WORKFLOW_NODE_DEFINITIONS[type].label });
 
 const buildAdjacency = (edges: WorkflowEdge[], direction: "forward" | "backward") => {
   const adjacency = new Map<string, string[]>();
@@ -83,9 +86,9 @@ export const getConnectionIssue = (
   nodes?: WorkflowNode[]
 ): string | null => {
   const { source, target } = connection;
-  if (!source || !target) return "Drop the connection on another node.";
-  if (source === target) return "A node cannot connect to itself.";
-  if (edges.some((edge) => edge.source === source && edge.target === target)) return "These nodes are already connected.";
+  if (!source || !target) return i18n.t("workflowConfig.checks.dropOnNode");
+  if (source === target) return i18n.t("workflowConfig.checks.selfConnection");
+  if (edges.some((edge) => edge.source === source && edge.target === target)) return i18n.t("workflowConfig.checks.alreadyConnected");
   if (nodes) {
     // Two steps of a run connect only to the next step that is on the canvas, so no approval can be skipped.
     const fromNode = nodes.find(n => n.id === source);
@@ -94,23 +97,23 @@ export const getConnectionIssue = (
     const to = toNode?.data.type;
     // Push to Printify takes the design and its approved mock-ups, not the video: it branches off one of the mock-up
     // steps and nothing follows it.
-    if (from === PRINTIFY) return PRINTIFY_END_MESSAGE;
+    if (from === PRINTIFY) return printifyEndMessage();
     if (to === PRINTIFY) {
-      if (!from || !PRINTIFY_SOURCES.includes(from)) return PRINTIFY_SOURCE_MESSAGE;
-      if (edges.some((edge) => edge.target === target)) return "Push to Printify already follows a step.";
+      if (!from || !PRINTIFY_SOURCES.includes(from)) return printifySourceMessage();
+      if (edges.some((edge) => edge.target === target)) return i18n.t("workflowConfig.checks.printifyAlreadyFollows");
     }
     if (from && to && runOrderOf(from) >= 0 && runOrderOf(to) >= 0) {
       const next = nodes.map(n => runOrderOf(n.data.type)).filter(order => order > runOrderOf(from)).sort((a, b) => a - b)[0];
       if (runOrderOf(to) !== next) {
-        const fromLabel = fromNode?.data.label ?? WORKFLOW_NODE_DEFINITIONS[from].label;
-        if (next === undefined) return `${fromLabel} is the last step in the workflow, so it has no next node.`;
+        const fromLabel = fromNode?.data.label ?? nodeTypeLabel(from);
+        if (next === undefined) return i18n.t("workflowConfig.checks.lastStep", { label: fromLabel });
         const nextType = nodes.find(n => runOrderOf(n.data.type) === next)?.data.type;
-        const nextLabel = nextType ? WORKFLOW_NODE_DEFINITIONS[nextType].label : "the next step";
-        return `Steps run in order. Connect ${fromLabel} to ${nextLabel} next.`;
+        const nextLabel = nextType ? nodeTypeLabel(nextType) : i18n.t("workflowConfig.checks.theNextStep");
+        return i18n.t("workflowConfig.checks.runInOrder", { from: fromLabel, next: nextLabel });
       }
     }
   }
-  if (collectReachable([target], buildAdjacency(edges, "forward")).has(source)) return "That connection would create a loop. Workflows run in one direction.";
+  if (collectReachable([target], buildAdjacency(edges, "forward")).has(source)) return i18n.t("workflowConfig.checks.loop");
   return null;
 };
 
@@ -179,9 +182,9 @@ const printifyIssues = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowI
     const into = edges.filter(e => e.target === node.id).map(e => nodes.find(n => n.id === e.source)?.data.type);
     const issues: WorkflowIssue[] = [];
     if (into.length !== 1 || !into[0] || !PRINTIFY_SOURCES.includes(into[0]))
-      issues.push({ id: `printify-source-${node.id}`, nodeId: node.id, message: PRINTIFY_SOURCE_MESSAGE });
+      issues.push({ id: `printify-source-${node.id}`, nodeId: node.id, message: printifySourceMessage() });
     if (edges.some(e => e.source === node.id))
-      issues.push({ id: `printify-end-${node.id}`, nodeId: node.id, message: PRINTIFY_END_MESSAGE });
+      issues.push({ id: `printify-end-${node.id}`, nodeId: node.id, message: printifyEndMessage() });
     return issues;
   });
 
@@ -195,7 +198,7 @@ const lineIssues = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue
     const current = line[i];
     const throughListing = nodes.some(node => node.data.type === "generate-listing" && edges.some(e => e.source === previous.id && e.target === node.id) && edges.some(e => e.source === node.id && e.target === current.id));
     if (previous.data.type !== current.data.type && edges.filter(e => e.source === previous.id && e.target === current.id).length + (throughListing ? 1 : 0) !== 1)
-      issues.push({ id: `required-edge-${current.id}`, nodeId: current.id, message: `${current.data.label} must follow ${previous.data.label}.` });
+      issues.push({ id: `required-edge-${current.id}`, nodeId: current.id, message: i18n.t("workflowConfig.checks.mustFollow", { label: current.data.label, previous: previous.data.label }) });
   }
   return issues;
 };
@@ -206,16 +209,16 @@ const lineIssues = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue
 const validatePublishPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowIssue[] => {
   const issues: WorkflowIssue[] = [];
   if (PUBLISH_PIPELINE.some(type => nodes.filter(n => n.data.type === type).length !== 1))
-    issues.push({ id: "publish-pipeline", nodeId: null, message: "Publishing without a video needs exactly one each of Product Input → Apply Mockup → Mockup Approval before Push to Printify or Publish to Etsy." });
+    issues.push({ id: "publish-pipeline", nodeId: null, message: i18n.t("workflowConfig.checks.publishPipeline") });
   nodes.filter(node => node.data.type === "review-video" || node.data.type === "export-zip").forEach(node =>
-    issues.push({ id: `publish-needs-video-${node.id}`, nodeId: node.id, message: `${node.data.label} needs Generate Video. Remove it to publish without a video.` })
+    issues.push({ id: `publish-needs-video-${node.id}`, nodeId: node.id, message: i18n.t("workflowConfig.checks.publishNeedsVideo", { label: node.data.label }) })
   );
   nodes.filter(node => !isRunnableNode(node.data.type)).forEach(node =>
-    issues.push({ id: `publish-unsupported-${node.id}`, nodeId: node.id, message: `${node.data.label} cannot run yet. Remove it to run the workflow.` })
+    issues.push({ id: `publish-unsupported-${node.id}`, nodeId: node.id, message: i18n.t("workflowConfig.checks.cannotRunWorkflow", { label: node.data.label }) })
   );
   issues.push(...lineIssues(nodes, edges));
   if (issues.length === 0 && edges.length !== nodes.length - 1)
-    issues.push({ id: "publish-extra-edges", nodeId: null, message: "A run goes through its steps in one line. Remove the extra connections." });
+    issues.push({ id: "publish-extra-edges", nodeId: null, message: i18n.t("workflowConfig.checks.publishExtraEdges") });
   return issues;
 };
 
@@ -227,21 +230,21 @@ const validateVideoPipeline = (nodes: WorkflowNode[], edges: WorkflowEdge[]): Wo
   const issues: WorkflowIssue[] = [];
   if (STANDARD_PIPELINE.some(type => nodes.filter(n => n.data.type === type).length !== 1) ||
     OPTIONAL_VIDEO_STEPS.some(type => nodes.filter(n => n.data.type === type).length > 1))
-    issues.push({ id: "mvp-pipeline", nodeId: null, message: "A video needs exactly one each of Product Input → Apply Mockup → Mockup Approval → Generate Video → Review Video. Export ZIP is optional, once at most." });
+    issues.push({ id: "mvp-pipeline", nodeId: null, message: i18n.t("workflowConfig.checks.videoPipeline") });
   nodes.filter(node => !isRunnableNode(node.data.type)).forEach(node =>
-    issues.push({ id: `video-unsupported-${node.id}`, nodeId: node.id, message: `${node.data.label} cannot run yet. Remove it to run the video.` })
+    issues.push({ id: `video-unsupported-${node.id}`, nodeId: node.id, message: i18n.t("workflowConfig.checks.cannotRunVideo", { label: node.data.label }) })
   );
 
   issues.push(...lineIssues(nodes, edges));
   if (issues.length === 0 && edges.length !== nodes.length - 1)
-    issues.push({ id: "video-extra-edges", nodeId: null, message: "A video runs its steps in one line. Remove the extra connections." });
+    issues.push({ id: "video-extra-edges", nodeId: null, message: i18n.t("workflowConfig.checks.videoExtraEdges") });
 
   // A scene list makes a video for every design chosen at Mockup Approval; other settings fit one product only.
   const input = nodes.find(node => node.data.type === "product-input");
   // The product is stored in Product input but chosen at Mockup Approval, so the issue points there.
   const approval = nodes.find(node => node.data.type === "approval-gate");
   if (input && !readString(input.data.config.productId) && !supportsBatchVideos(nodes))
-    issues.push({ id: `video-product-${input.id}`, nodeId: approval?.id ?? input.id, message: "These video settings make one product's video. Choose it under Product for the video in Mockup Approval." });
+    issues.push({ id: `video-product-${input.id}`, nodeId: approval?.id ?? input.id, message: i18n.t("workflowConfig.checks.videoProduct") });
   return issues;
 };
 
@@ -254,14 +257,14 @@ export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
   const inputNodes = nodes.filter((node) => node.data.type === "product-input");
 
   if (inputNodes.length === 0) {
-    issues.push({ id: "missing-input", nodeId: null, message: "Add a Product input node to start the workflow." });
+    issues.push({ id: "missing-input", nodeId: null, message: i18n.t("workflowConfig.checks.missingInput") });
   }
   inputNodes.slice(1).forEach((node) =>
-    issues.push({ id: `extra-input-${node.id}`, nodeId: node.id, message: "A workflow can only have one Product input." })
+    issues.push({ id: `extra-input-${node.id}`, nodeId: node.id, message: i18n.t("workflowConfig.checks.extraInput") })
   );
 
   if (!nodes.some((node) => WORKFLOW_NODE_DEFINITIONS[node.data.type].category === "output")) {
-    issues.push({ id: "missing-output", nodeId: null, message: "Add at least one output step such as Export ZIP." });
+    issues.push({ id: "missing-output", nodeId: null, message: i18n.t("workflowConfig.checks.missingOutput") });
   }
 
   const reachable = collectReachable(
@@ -271,27 +274,27 @@ export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
 
   nodes.forEach((node) => {
     if (inputNodes.length > 0 && !reachable.has(node.id)) {
-      issues.push({ id: `unreachable-${node.id}`, nodeId: node.id, message: `${node.data.label} is not connected to the Product input.` });
+      issues.push({ id: `unreachable-${node.id}`, nodeId: node.id, message: i18n.t("workflowConfig.checks.unreachable", { label: node.data.label }) });
     }
 
     const parsed = nodeConfigSchemaIn(node.data.type, nodes).safeParse(node.data.config);
     if (!parsed.success) {
       const [firstIssue] = parsed.error.issues;
-      issues.push({ id: `config-${node.id}`, nodeId: node.id, message: `${node.data.label}: ${firstIssue?.message ?? "check its settings."}` });
+      issues.push({ id: `config-${node.id}`, nodeId: node.id, message: i18n.t("workflowConfig.checks.configIssue", { label: node.data.label, issue: firstIssue?.message ?? i18n.t("workflowConfig.checks.checkSettings") }) });
     }
 
     // A Printify product is made on one blueprint, so its mock-ups come from exactly one Printify template.
     if (node.data.type === "apply-mockup" && effectiveMockupTarget(node, nodes, edges) === "printify") {
       const chosen = Array.isArray(node.data.config.mockupTemplateIds) ? node.data.config.mockupTemplateIds.length : 0;
       if (chosen !== 1)
-        issues.push({ id: `printify-template-${node.id}`, nodeId: node.id, message: `${node.data.label}: choose exactly one Printify template.` });
+        issues.push({ id: `printify-template-${node.id}`, nodeId: node.id, message: i18n.t("workflowConfig.checks.printifyTemplate", { label: node.data.label }) });
     }
 
     if (APPROVAL_REQUIRED_TYPES.includes(node.data.type) && !hasApprovalUpstream(node, nodes, edges)) {
       issues.push({
         id: `approval-${node.id}`,
         nodeId: node.id,
-        message: `${node.data.label} needs a Mockup Approval step before it.`,
+        message: i18n.t("workflowConfig.checks.needsApproval", { label: node.data.label }),
       });
     }
   });

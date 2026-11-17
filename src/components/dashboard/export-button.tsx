@@ -1,6 +1,7 @@
 "use client";
 
 import { Download } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { buildDashboardCsv } from "@/helpers/seller-dashboard";
@@ -9,6 +10,7 @@ import type { DashboardSummary } from "@/types/seller-dashboard";
 
 /** Downloads the Dashboard's figures for the period as a CSV. */
 export const ExportButton = ({ summary }: { summary: DashboardSummary }) => {
+  const { t } = useTranslation("common");
   const exportCsv = () => {
     try {
       const url = URL.createObjectURL(
@@ -20,7 +22,7 @@ export const ExportButton = ({ summary }: { summary: DashboardSummary }) => {
       anchor.click();
       URL.revokeObjectURL(url);
     } catch {
-      showToast("error", "We couldn't export your dashboard. Please try again.");
+      showToast("error", t("dashboard.exportButton.exportError"));
     }
   };
 
@@ -33,7 +35,7 @@ export const ExportButton = ({ summary }: { summary: DashboardSummary }) => {
       onClick={exportCsv}
     >
       <Download className="size-3.5" aria-hidden="true" />
-      Export
+      {t("dashboard.exportButton.export")}
     </Button>
   );
 };

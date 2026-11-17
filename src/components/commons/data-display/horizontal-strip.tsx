@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
@@ -27,6 +28,7 @@ export const HorizontalStrip = ({
   className,
   ...rest
 }: HorizontalStripProps) => {
+  const { t } = useTranslation("common");
   const row = useRef<HTMLDivElement>(null);
   const [ends, setEnds] = useState({ left: false, right: false });
 
@@ -80,7 +82,7 @@ export const HorizontalStrip = ({
           type="button"
           variant="outline"
           size="icon-sm"
-          aria-label={`Earlier ${itemsLabel}`}
+          aria-label={t("commons.strip.earlier", { items: itemsLabel })}
           onClick={() => scrollBy(-1)}
           className="bg-card/95 absolute top-[40%] left-1 z-10 -translate-y-1/2 rounded-full shadow-sm hover:-translate-y-1/2"
         >
@@ -92,7 +94,7 @@ export const HorizontalStrip = ({
           type="button"
           variant="outline"
           size="icon-sm"
-          aria-label={`More ${itemsLabel}`}
+          aria-label={t("commons.strip.more", { items: itemsLabel })}
           onClick={() => scrollBy(1)}
           className="bg-card/95 absolute top-[40%] right-1 z-10 -translate-y-1/2 rounded-full shadow-sm hover:-translate-y-1/2"
         >

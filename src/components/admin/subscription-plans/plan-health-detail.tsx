@@ -2,30 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { Layers, LineChart, ListChecks, Scale, UserMinus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { LeaveGroups } from "@/components/admin/subscription-plans/leave-groups";
 import { MrrBridgeStrip } from "@/components/admin/subscription-plans/mrr-bridge-strip";
 import {
+  ACTION_KIND_LABEL_KEY,
+  FEATURE_KIND_LABEL_KEY,
   Figures,
   FindingList,
   KIND_STYLE,
   OUTLOOK_ICON,
+  OUTLOOK_LABEL_KEY,
   Pill,
   Section,
+  STATUS_LABEL_KEY,
   STATUS_STYLE,
 } from "@/components/admin/subscription-plans/plan-health-parts";
 import { StayedVsLeft } from "@/components/admin/subscription-plans/stayed-vs-left";
 import { Card } from "@/components/ui/card";
-import {
-  ACTION_KIND_LABEL,
-  FEATURE_KIND_LABEL,
-  featureName,
-  OUTLOOK_LABEL,
-  planName,
-  sortActions,
-  STATUS_LABEL,
-  strongestReasons,
-} from "@/helpers/plan-ai-review";
+import { featureName, planName, sortActions, strongestReasons } from "@/helpers/plan-ai-review";
 import type { PlanAiAssessment, PlanAiReviewSnapshot } from "@/types/plan-ai-review";
 import type { PlanChurnSignal, PlanVerdict } from "@/types/plan-insights";
 import { cn } from "@/utils/cn";
@@ -54,6 +50,7 @@ export function PlanDetail({
   // A feature to show, opened from elsewhere: switches to the Features tab.
   focusFeature?: string;
 }) {
+  const { t } = useTranslation("common");
   const [tab, setTab] = useState<DetailTab>(focusFeature ? "features" : "overview");
   useEffect(() => {
     if (focusFeature) setTab("features");
@@ -64,9 +61,9 @@ export function PlanDetail({
   const hasFindings = plan.strengths.length > 0 || plan.risks.length > 0;
   const bridge = snapshot.mrrBridges?.find((item) => item.planName === planName(snapshot, plan.plan));
   const tabs: { key: DetailTab; label: string; count?: number }[] = [
-    { key: "overview", label: "Overview" },
-    { key: "churn", label: "Why customers leave", count: (signal?.left ?? reasons.length) || undefined },
-    { key: "features", label: "Features", count: plan.featureInsights.length || undefined },
+    { key: "overview", label: t("admin.plans.healthDetail.tabOverview") },
+    { key: "churn", label: t("admin.plans.healthDetail.tabChurn"), count: (signal?.left ?? reasons.length) || undefined },
+    { key: "features", label: t("admin.plans.healthDetail.tabFeatures"), count: plan.featureInsights.length || undefined },
   ];
 
   return (
@@ -80,7 +77,7 @@ export function PlanDetail({
           <Reason
             label={
               <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5", STATUS_STYLE[plan.status].chip)}>
-                <span className="tabular-nums">{`${plan.score ?? "—"} · ${STATUS_LABEL[plan.status]}`}</span>
+                <span className="tabular-nums">{`${plan.score ?? "—"} · ${t(STATUS_LABEL_KEY[plan.status])}`}</span>
               </span>
             }
             text={plan.scoreReason}
@@ -88,7 +85,7 @@ export function PlanDetail({
           <Reason
             label={
               <span className="bg-card text-ink-700 ring-ink-200 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 ring-1">
-                <Outlook className="size-3.5" /> {OUTLOOK_LABEL[plan.outlook.direction]}
+                <Outlook className="size-3.5" /> {t(OUTLOOK_LABEL_KEY[plan.outlook.direction])}
               </span>
             }
             text={plan.outlook.reason}
@@ -96,7 +93,7 @@ export function PlanDetail({
         </dl>
       </div>
 
-      <div className="border-ink-100 flex gap-6 overflow-x-auto border-b px-6" aria-label="Plan detail sections">
+      <div className="border-ink-100 flex gap-6 overflow-x-auto border-b px-6" aria-label={t("admin.plans.healthDetail.sectionsAria")}>
         {tabs.map((item) => (
           <button
             key={item.key}
@@ -128,7 +125,7 @@ export function PlanDetail({
           <div className="space-y-8">
             <div className={cn("grid gap-8 max-md:grid-cols-[minmax(0,1fr)]", bridge && "lg:grid-cols-2")}>
               {bridge && (
-                <Section icon={LineChart} title="MRR this period">
+                <Section icon={LineChart} title={t("admin.plans.healthDetail.mrrThisPeriod")}>
                   <MrrBridgeStrip
                     bridge={bridge}
                     periodStart={snapshot.periodStart}
@@ -137,9 +134,9 @@ export function PlanDetail({
                   />
                 </Section>
               )}
-              <Section icon={ListChecks} title="What to do">
+              <Section icon={ListChecks} title={t("admin.plans.healthDetail.whatToDo")}>
                 {plan.actions.length === 0 ? (
-                  <p className="border-ink-200 text-ink-500 rounded-xl border border-dashed p-4 text-sm">Nothing to change now.</p>
+                  <p className="border-ink-200 text-ink-500 rounded-xl border border-dashed p-4 text-sm">{t("admin.plans.healthDetail.nothingToChange")}</p>
                 ) : (
                   <ol className="divide-ink-100 border-ink-200 divide-y rounded-xl border">
                     {sortActions(plan.actions).map((action) => (
@@ -149,7 +146,7 @@ export function PlanDetail({
                         </span>
                         <div className="min-w-0">
                           <span className="text-ink-400 block text-[11px] font-semibold tracking-wide uppercase">
-                            {ACTION_KIND_LABEL[action.kind]}
+                            {t(ACTION_KIND_LABEL_KEY[action.kind])}
                           </span>
                           <span className="text-ink-800 font-medium">
                             <Figures text={action.text} />
@@ -163,8 +160,8 @@ export function PlanDetail({
             </div>
             {hasFindings && (
               <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                <FindingList title="Strengths" tone="bg-[#2a9d8f]" items={plan.strengths.map((item) => item.text)} />
-                <FindingList title="Risks" tone="bg-[#e76e50]" items={plan.risks.map((item) => item.text)} />
+                <FindingList title={t("admin.plans.healthDetail.strengths")} tone="bg-[#2a9d8f]" items={plan.strengths.map((item) => item.text)} />
+                <FindingList title={t("admin.plans.healthDetail.risks")} tone="bg-[#e76e50]" items={plan.risks.map((item) => item.text)} />
               </div>
             )}
           </div>
@@ -173,9 +170,9 @@ export function PlanDetail({
         {tab === "churn" && (
           <div className="space-y-6">
             {signal && <LeaveGroups signal={signal} />}
-            <Section icon={UserMinus} title="What the AI reads in it">
+            <Section icon={UserMinus} title={t("admin.plans.healthDetail.whatAiReadsInIt")}>
               {reasons.length === 0 ? (
-                <p className="text-ink-500 text-sm">{plan.churnNote ?? "No clear pattern in the figures."}</p>
+                <p className="text-ink-500 text-sm">{plan.churnNote ?? t("admin.plans.healthDetail.noClearPattern")}</p>
               ) : (
                 <ol className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                   {reasons.map((reason) => (
@@ -190,12 +187,12 @@ export function PlanDetail({
                       {reason.hypothesis && (
                         <div className="border-ink-200 text-ink-500 mt-3 space-y-1 border-l-2 pl-3 text-xs">
                           <p>
-                            <span className="text-ink-600 font-semibold">Possible explanation, unconfirmed: </span>
+                            <span className="text-ink-600 font-semibold">{t("admin.plans.healthDetail.possibleExplanation")} </span>
                             {reason.hypothesis}
                           </p>
                           {reason.howToConfirm && (
                             <p>
-                              <span className="text-ink-600 font-semibold">To confirm: </span>
+                              <span className="text-ink-600 font-semibold">{t("admin.plans.healthDetail.toConfirm")} </span>
                               {reason.howToConfirm}
                             </p>
                           )}
@@ -213,7 +210,7 @@ export function PlanDetail({
           <div className="space-y-6">
             {signal && <StayedVsLeft signal={signal} days={days} />}
             {plan.featureInsights.length > 0 && (
-              <Section icon={Layers} title="What the AI reads in them">
+              <Section icon={Layers} title={t("admin.plans.healthDetail.whatAiReadsInThem")}>
                 <ul className="grid gap-3 sm:grid-cols-2">
                   {/* An odd last note spans both columns, leaving no hole. */}
                   {plan.featureInsights.map((insight, index, all) => (
@@ -229,7 +226,7 @@ export function PlanDetail({
                         <span className="text-ink-900 font-semibold">{featureName(snapshot, plan.plan, insight.feature)}</span>
                         {insight.kinds.map((kind) => (
                           <span key={kind} className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", KIND_STYLE[kind])}>
-                            {FEATURE_KIND_LABEL[kind]}
+                            {t(FEATURE_KIND_LABEL_KEY[kind])}
                           </span>
                         ))}
                       </div>
@@ -242,7 +239,7 @@ export function PlanDetail({
                 </ul>
               </Section>
             )}
-            {!signal && plan.featureInsights.length === 0 && <p className="text-ink-500 text-sm">No feature figures for this plan.</p>}
+            {!signal && plan.featureInsights.length === 0 && <p className="text-ink-500 text-sm">{t("admin.plans.healthDetail.noFeatureFigures")}</p>}
           </div>
         )}
       </div>
@@ -251,9 +248,9 @@ export function PlanDetail({
         <div className="border-ink-100 bg-ink-50/60 text-ink-500 flex gap-2 border-t px-6 py-3 text-xs">
           <Scale className="text-ink-400 mt-0.5 size-3.5 shrink-0" />
           <p>
-            <span className="text-ink-600 font-semibold">Rule-based check ({verdict.verdictLabel}): </span>
+            <span className="text-ink-600 font-semibold">{t("admin.plans.healthDetail.ruleBasedCheck", { label: verdict.verdictLabel })} </span>
             <Figures text={verdict.evidence.join(" ")} className="text-ink-700 font-semibold" />
-            {verdict.action && <> Next step: {verdict.action}</>}
+            {verdict.action && <> {t("admin.plans.healthDetail.nextStep")} {verdict.action}</>}
           </p>
         </div>
       )}

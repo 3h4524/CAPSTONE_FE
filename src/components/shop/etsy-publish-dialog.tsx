@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Check, ExternalLink, Loader2, Search, Store } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { type EtsyDraft, getEtsyDraft, publishEtsyDraft, type PublishEtsyDraftResult, searchEtsyTaxonomy, type ShopDesign } from "@/api/shop";
 import { Button } from "@/components/ui/button";
@@ -17,27 +18,28 @@ const MAX_TITLE = 140;
 const MAX_TAGS = 13;
 const MAX_TAG_LENGTH = 20;
 
-const whenMadeOptions: [string, string][] = [
-  ["made_to_order", "Made to order"], ["2020_2026", "2020–2026"], ["2010_2019", "2010–2019"], ["2007_2009", "2007–2009"], ["before_2007", "Before 2007"],
+const whenMadeOptions: [string, string | null][] = [
+  ["made_to_order", "madeToOrder"], ["2020_2026", null], ["2010_2019", null], ["2007_2009", null], ["before_2007", "before2007"],
 ];
-const whoMadeOptions: [string, string][] = [["i_did", "I did"], ["collective", "A member of my shop"], ["someone_else", "Another company or person"]];
+const whoMadeOptions: [string, string][] = [["i_did", "iDid"], ["collective", "collective"], ["someone_else", "someoneElse"]];
 
 const selectClass = "h-9 w-full rounded-md border border-ink-200 bg-card px-2 text-sm text-ink-900 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none";
 
 /** Sends one product to the seller's Etsy shop as a draft listing, from a form filled with its content and last settings. */
 export function EtsyPublishDialog({ productId, open, onOpenChange }: { productId: string; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { t } = useTranslation("common");
   const draftQuery = useQuery({ queryKey: ["etsy-draft", productId], queryFn: () => getEtsyDraft(productId), enabled: open, staleTime: 0 });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Push to Etsy</DialogTitle>
-          <DialogDescription>Creates a draft listing in your Etsy shop. Nothing goes live until you publish it on Etsy.</DialogDescription>
+          <DialogTitle>{t("shop.etsyPublish.title")}</DialogTitle>
+          <DialogDescription>{t("shop.etsyPublish.description")}</DialogDescription>
         </DialogHeader>
         {draftQuery.isPending ? (
-          <p className="text-ink-500 flex items-center gap-2 py-10 text-sm"><Loader2 className="size-4 animate-spin" />Preparing the listing…</p>
+          <p className="text-ink-500 flex items-center gap-2 py-10 text-sm"><Loader2 className="size-4 animate-spin" />{t("shop.etsyPublish.preparing")}</p>
         ) : draftQuery.isError || !draftQuery.data ? (
-          <p className="py-6 text-sm text-rose-700 dark:text-rose-300">{getErrorMessage(draftQuery.error) || "The product could not be loaded."}</p>
+          <p className="py-6 text-sm text-rose-700 dark:text-rose-300">{getErrorMessage(draftQuery.error) || t("shop.etsyPublish.loadError")}</p>
         ) : draftQuery.data.connectionStatus !== "connected" ? (
           <NotConnected status={draftQuery.data.connectionStatus} />
         ) : (
@@ -49,15 +51,17 @@ export function EtsyPublishDialog({ productId, open, onOpenChange }: { productId
 }
 
 function NotConnected({ status }: { status: string }) {
+  const { t } = useTranslation("common");
   return (
     <div className="text-ink-700 space-y-3 py-4 text-sm">
-      <p>{status === "unavailable" ? "Etsy is not answering right now. Try again in a moment." : status === "reconnect_required" ? "Your Etsy connection expired. Connect it again to push listings." : "Connect your Etsy shop first to push listings."}</p>
-      {status !== "unavailable" && <Button asChild size="sm"><Link href="/shop"><Store className="size-4" />Go to Shop</Link></Button>}
+      <p>{status === "unavailable" ? t("shop.etsyPublish.unavailable") : status === "reconnect_required" ? t("shop.etsyPublish.reconnect") : t("shop.etsyPublish.connectFirst")}</p>
+      {status !== "unavailable" && <Button asChild size="sm"><Link href="/shop"><Store className="size-4" />{t("shop.etsyPublish.goToShop")}</Link></Button>}
     </div>
   );
 }
 
 function PublishForm({ draft, productId, onDone }: { draft: EtsyDraft; productId: string; onDone: () => void }) {
+  const { t, i18n } = useTranslation("common");
   const defaults = draft.defaults;
   const [title, setTitle] = useState(draft.title);
   const [description, setDescription] = useState(draft.description);
@@ -82,20 +86,20 @@ function PublishForm({ draft, productId, onDone }: { draft: EtsyDraft; productId
 
   const tags = useMemo(() => tagText.split(",").map((tag) => tag.trim()).filter(Boolean), [tagText]);
   const tagProblems = [
-    tags.length > MAX_TAGS && `Etsy allows ${MAX_TAGS} tags; you have ${tags.length}.`,
-    tags.some((tag) => tag.length > MAX_TAG_LENGTH) && `Each tag must be ${MAX_TAG_LENGTH} characters or fewer.`,
+    tags.length > MAX_TAGS && t("shop.etsyPublish.problems.tooManyTags", { max: MAX_TAGS, count: tags.length }),
+    tags.some((tag) => tag.length > MAX_TAG_LENGTH) && t("shop.etsyPublish.problems.tagTooLong", { max: MAX_TAG_LENGTH }),
   ].filter(Boolean) as string[];
   const priceValue = Number(price);
   const quantityValue = Number(quantity);
   const problems = [
-    !title.trim() && "Add a title.",
-    !description.trim() && "Add a description.",
-    !(priceValue > 0) && "Set a price.",
-    !(quantityValue >= 1 && quantityValue <= 999) && "Quantity must be between 1 and 999.",
-    !taxonomy && "Choose an Etsy category.",
-    type === "physical" && !shippingProfileId && "Choose a shipping profile; create one on Etsy if the list is empty.",
-    mockupIds.length === 0 && "Choose at least one image.",
-    type === "download" && designIds.length === 0 && "Choose the design file buyers download.",
+    !title.trim() && t("shop.etsyPublish.problems.title"),
+    !description.trim() && t("shop.etsyPublish.problems.description"),
+    !(priceValue > 0) && t("shop.etsyPublish.problems.price"),
+    !(quantityValue >= 1 && quantityValue <= 999) && t("shop.etsyPublish.problems.quantity"),
+    !taxonomy && t("shop.etsyPublish.problems.category"),
+    type === "physical" && !shippingProfileId && t("shop.etsyPublish.problems.shipping"),
+    mockupIds.length === 0 && t("shop.etsyPublish.problems.image"),
+    type === "download" && designIds.length === 0 && t("shop.etsyPublish.problems.designFile"),
     ...tagProblems,
   ].filter(Boolean) as string[];
 
@@ -123,21 +127,21 @@ function PublishForm({ draft, productId, onDone }: { draft: EtsyDraft; productId
       )}
       {draft.history[0] && (
         <p className="text-ink-500 text-xs">
-          Last push {new Date(draft.history[0].attemptedAtUtc).toLocaleString()}: {draft.history[0].status}
-          {draft.history[0].editUrl && <> · <a className="underline" href={draft.history[0].editUrl} target="_blank" rel="noreferrer">open draft</a></>}
+          {t("shop.etsyPublish.lastPush", { date: new Date(draft.history[0].attemptedAtUtc).toLocaleString(i18n.language) })}: {t(`shop.etsyPublish.historyStatuses.${draft.history[0].status}`, { defaultValue: draft.history[0].status })}
+          {draft.history[0].editUrl && <> · <a className="underline" href={draft.history[0].editUrl} target="_blank" rel="noreferrer">{t("shop.etsyPublish.openDraft")}</a></>}
           {draft.history[0].error && ` · ${draft.history[0].error}`}
         </p>
       )}
 
       <section className="space-y-2">
-        <Label>Images <span className="text-ink-500 font-normal">({mockupIds.length} selected, shown on Etsy in the order picked)</span></Label>
+        <Label>{t("shop.etsyPublish.images")} <span className="text-ink-500 font-normal">({t("shop.etsyPublish.imagesHint", { count: mockupIds.length })})</span></Label>
         {draft.mockups.some((mockup) => mockup.aiMade) && (
           <p className="text-ink-500 text-xs">
-            Photos marked AI were made with AI. A physical listing also needs one that is not, such as a mock-up on a garment template; lead with it.
+            {t("shop.etsyPublish.aiPhotos")}
           </p>
         )}
         {draft.mockups.length === 0 ? (
-          <p className="text-ink-500 text-sm">No approved mock-ups. Approve mock-ups in the workflow first.</p>
+          <p className="text-ink-500 text-sm">{t("shop.etsyPublish.noMockups")}</p>
         ) : (
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
             {draft.mockups.map((mockup) => {
@@ -149,7 +153,7 @@ function PublishForm({ draft, productId, onDone }: { draft: EtsyDraft; productId
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={mockup.previewUrl} alt="" className="size-full object-cover" />
                   {order >= 0 && <span className="absolute top-1 left-1 flex size-5 items-center justify-center rounded-full bg-blue-600 text-[11px] font-semibold text-white">{order + 1}</span>}
-                  {mockup.aiMade && <span className="absolute right-1 bottom-1 rounded bg-slate-900/75 px-1 text-[10px] font-semibold text-white" title="Made with AI">AI</span>}
+                  {mockup.aiMade && <span className="absolute right-1 bottom-1 rounded bg-slate-900/75 px-1 text-[10px] font-semibold text-white" title={t("shop.etsyPublish.madeWithAi")}>AI</span>}
                 </button>
               );
             })}
@@ -158,65 +162,65 @@ function PublishForm({ draft, productId, onDone }: { draft: EtsyDraft; productId
         {draft.video && (
           <label className="text-ink-700 flex items-center gap-2 text-sm">
             <input type="checkbox" checked={includeVideo} onChange={(event) => setIncludeVideo(event.target.checked)} />
-            Attach the approved video ({draft.video.durationSeconds}s)
+            {t("shop.etsyPublish.attachVideo", { seconds: draft.video.durationSeconds })}
           </label>
         )}
       </section>
 
       <section className="space-y-3">
         <div className="space-y-1.5">
-          <div className="flex justify-between"><Label htmlFor="etsy-title">Title</Label><span className={`text-xs ${title.length > MAX_TITLE ? "text-rose-600 dark:text-rose-400" : "text-ink-400"}`}>{title.length}/{MAX_TITLE}</span></div>
+          <div className="flex justify-between"><Label htmlFor="etsy-title">{t("shop.etsyPublish.fields.title")}</Label><span className={`text-xs ${title.length > MAX_TITLE ? "text-rose-600 dark:text-rose-400" : "text-ink-400"}`}>{title.length}/{MAX_TITLE}</span></div>
           <Input id="etsy-title" value={title} onChange={(event) => setTitle(event.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="etsy-description">Description</Label>
+          <Label htmlFor="etsy-description">{t("shop.etsyPublish.fields.description")}</Label>
           <Textarea id="etsy-description" rows={6} value={description} onChange={(event) => setDescription(event.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <div className="flex justify-between"><Label htmlFor="etsy-tags">Tags <span className="text-ink-500 font-normal">(comma-separated)</span></Label><span className={`text-xs ${tags.length > MAX_TAGS ? "text-rose-600 dark:text-rose-400" : "text-ink-400"}`}>{tags.length}/{MAX_TAGS}</span></div>
+          <div className="flex justify-between"><Label htmlFor="etsy-tags">{t("shop.etsyPublish.fields.tags")} <span className="text-ink-500 font-normal">({t("shop.etsyPublish.fields.commaSeparated")})</span></Label><span className={`text-xs ${tags.length > MAX_TAGS ? "text-rose-600 dark:text-rose-400" : "text-ink-400"}`}>{tags.length}/{MAX_TAGS}</span></div>
           <Input id="etsy-tags" value={tagText} onChange={(event) => setTagText(event.target.value)} />
         </div>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="etsy-price">Price{draft.currency ? ` (${draft.currency})` : ""}</Label>
+          <Label htmlFor="etsy-price">{t("shop.etsyPublish.fields.price")}{draft.currency ? ` (${draft.currency})` : ""}</Label>
           <Input id="etsy-price" type="number" min="0.2" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="24.99" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="etsy-quantity">Quantity</Label>
+          <Label htmlFor="etsy-quantity">{t("shop.etsyPublish.fields.quantity")}</Label>
           <Input id="etsy-quantity" type="number" min="1" max="999" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
         </div>
         <TaxonomyPicker value={taxonomy} onChange={setTaxonomy} initialQuery={draft.productName} />
         <div className="space-y-1.5">
-          <Label>Type</Label>
+          <Label>{t("shop.etsyPublish.fields.type")}</Label>
           <div className="text-ink-700 flex gap-4 pt-1.5 text-sm">
-            <label className="flex items-center gap-1.5"><input type="radio" name="etsy-type" checked={type === "physical"} onChange={() => setType("physical")} />Physical item</label>
-            <label className="flex items-center gap-1.5"><input type="radio" name="etsy-type" checked={type === "download"} onChange={() => setType("download")} />Digital download</label>
+            <label className="flex items-center gap-1.5"><input type="radio" name="etsy-type" checked={type === "physical"} onChange={() => setType("physical")} />{t("shop.etsyPublish.physicalItem")}</label>
+            <label className="flex items-center gap-1.5"><input type="radio" name="etsy-type" checked={type === "download"} onChange={() => setType("download")} />{t("shop.etsyPublish.digitalDownload")}</label>
           </div>
           {type === "physical" && (
-            <p className="text-ink-500 text-xs">A listing pushed here is not linked to a print provider. For print-on-demand, use Push to Printify so orders are fulfilled automatically.</p>
+            <p className="text-ink-500 text-xs">{t("shop.etsyPublish.physicalHint")}</p>
           )}
         </div>
         {type === "download" && <DesignFiles designs={draft.designs} selected={designIds} onChange={setDesignIds} />}
         <div className="space-y-1.5">
-          <Label htmlFor="etsy-who">Who made it</Label>
+          <Label htmlFor="etsy-who">{t("shop.etsyPublish.fields.whoMade")}</Label>
           <select id="etsy-who" className={selectClass} value={whoMade} onChange={(event) => setWhoMade(event.target.value as typeof whoMade)}>
-            {whoMadeOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            {whoMadeOptions.map(([value, labelKey]) => <option key={value} value={value}>{t(`shop.etsyPublish.whoMade.${labelKey}`)}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="etsy-when">When it was made</Label>
+          <Label htmlFor="etsy-when">{t("shop.etsyPublish.fields.whenMade")}</Label>
           <select id="etsy-when" className={selectClass} value={whenMade} onChange={(event) => setWhenMade(event.target.value)}>
-            {whenMadeOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            {whenMadeOptions.map(([value, labelKey]) => <option key={value} value={value}>{labelKey ? t(`shop.etsyPublish.whenMade.${labelKey}`) : value.replace("_", "–")}</option>)}
           </select>
         </div>
         {type === "physical" && (
           <>
             <div className="space-y-1.5">
-              <Label htmlFor="etsy-shipping">Shipping profile</Label>
+              <Label htmlFor="etsy-shipping">{t("shop.etsyPublish.fields.shippingProfile")}</Label>
               {draft.shippingProfiles.length === 0 ? (
-                <p className="text-xs text-amber-700 dark:text-amber-300">Your shop has no shipping profile. <a className="underline" href="https://www.etsy.com/your/shops/me/tools/shipping-profiles" target="_blank" rel="noreferrer">Create one on Etsy</a>, then reopen this window.</p>
+                <p className="text-xs text-amber-700 dark:text-amber-300">{t("shop.etsyPublish.noShipping")} <a className="underline" href="https://www.etsy.com/your/shops/me/tools/shipping-profiles" target="_blank" rel="noreferrer">{t("shop.etsyPublish.createOnEtsy")}</a>{t("shop.etsyPublish.thenReopen")}</p>
               ) : (
                 <select id="etsy-shipping" className={selectClass} value={shippingProfileId ?? ""} onChange={(event) => setShippingProfileId(Number(event.target.value) || null)}>
                   {draft.shippingProfiles.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
@@ -224,9 +228,9 @@ function PublishForm({ draft, productId, onDone }: { draft: EtsyDraft; productId
               )}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="etsy-processing">Processing profile <span className="text-ink-500 font-normal">(optional)</span></Label>
+              <Label htmlFor="etsy-processing">{t("shop.etsyPublish.fields.processingProfile")} <span className="text-ink-500 font-normal">({t("shop.etsyPublish.fields.optional")})</span></Label>
               <select id="etsy-processing" className={selectClass} value={readinessStateId ?? ""} onChange={(event) => setReadinessStateId(Number(event.target.value) || null)}>
-                <option value="">Shop default</option>
+                <option value="">{t("shop.etsyPublish.shopDefault")}</option>
                 {draft.processingProfiles.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
               </select>
             </div>
@@ -234,7 +238,7 @@ function PublishForm({ draft, productId, onDone }: { draft: EtsyDraft; productId
         )}
         {draft.productionPartners.length > 0 && (
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Production partners <span className="text-ink-500 font-normal">(who prints or makes it)</span></Label>
+            <Label>{t("shop.etsyPublish.fields.productionPartners")} <span className="text-ink-500 font-normal">({t("shop.etsyPublish.fields.productionPartnersHint")})</span></Label>
             <div className="text-ink-700 flex flex-wrap gap-x-4 gap-y-1 text-sm">
               {draft.productionPartners.map((partner) => (
                 <label key={partner.id} className="flex items-center gap-1.5">
@@ -250,10 +254,10 @@ function PublishForm({ draft, productId, onDone }: { draft: EtsyDraft; productId
       {publishMutation.isError && <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{getErrorMessage(publishMutation.error)}</p>}
 
       <DialogFooter className="items-center gap-3 sm:justify-between">
-        <p className="text-ink-500 text-xs">{problems[0] ?? `Sends to ${draft.shopName ?? "your shop"} as a draft.`}</p>
+        <p className="text-ink-500 text-xs">{problems[0] ?? t("shop.etsyPublish.sendsTo", { shop: draft.shopName ?? t("shop.etsyPublish.yourShop") })}</p>
         <Button type="button" onClick={() => publishMutation.mutate()} disabled={problems.length > 0 || publishMutation.isPending}>
           {publishMutation.isPending && <Loader2 className="size-4 animate-spin" />}
-          {publishMutation.isPending ? "Sending to Etsy…" : "Create Etsy draft"}
+          {publishMutation.isPending ? t("shop.etsyPublish.sending") : t("shop.etsyPublish.createDraft")}
         </Button>
       </DialogFooter>
     </div>
@@ -262,6 +266,7 @@ function PublishForm({ draft, productId, onDone }: { draft: EtsyDraft; productId
 
 /** Searches Etsy's categories by the words typed; the most specific matches come first. */
 export function TaxonomyPicker({ value, onChange, initialQuery }: { value: { id: number; path: string } | null; onChange: (value: { id: number; path: string }) => void; initialQuery: string }) {
+  const { t } = useTranslation("common");
   const [query, setQuery] = useState(value ? "" : initialQuery.split(/\s+/).slice(-2).join(" "));
   const [debounced, setDebounced] = useState(query);
   const [editing, setEditing] = useState(!value);
@@ -273,22 +278,22 @@ export function TaxonomyPicker({ value, onChange, initialQuery }: { value: { id:
 
   return (
     <div className="space-y-1.5 sm:col-span-2">
-      <Label htmlFor="etsy-category">Etsy category</Label>
+      <Label htmlFor="etsy-category">{t("shop.etsyPublish.fields.category")}</Label>
       {value && !editing ? (
         <div className="border-ink-200 flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm">
           <span className="text-ink-800 truncate" title={value.path}>{value.path}</span>
-          <button type="button" className="shrink-0 text-xs font-medium text-blue-700 hover:underline dark:text-blue-300" onClick={() => setEditing(true)}>Change</button>
+          <button type="button" className="shrink-0 text-xs font-medium text-blue-700 hover:underline dark:text-blue-300" onClick={() => setEditing(true)}>{t("shop.etsyPublish.change")}</button>
         </div>
       ) : (
         <>
           <div className="relative">
             <Search className="text-ink-400 absolute top-2.5 left-2.5 size-4" />
-            <Input id="etsy-category" className="pl-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="e.g. t-shirts, sweatshirts, mugs" />
+            <Input id="etsy-category" className="pl-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("shop.etsyPublish.categoryPlaceholder")} />
           </div>
-          {results.isFetching && <p className="text-ink-500 text-xs">Searching…</p>}
+          {results.isFetching && <p className="text-ink-500 text-xs">{t("shop.etsyPublish.searching")}</p>}
           {results.data && (
             <ul className="border-ink-200 max-h-44 overflow-y-auto rounded-md border text-sm">
-              {results.data.length === 0 && <li className="text-ink-500 px-3 py-2">No category matches.</li>}
+              {results.data.length === 0 && <li className="text-ink-500 px-3 py-2">{t("shop.etsyPublish.noCategory")}</li>}
               {results.data.map((item) => (
                 <li key={item.id}>
                   <button type="button" className="hover:bg-ink-50 flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left" onClick={() => { onChange(item); setEditing(false); }}>
@@ -309,12 +314,13 @@ const MAX_FILES = 5;
 
 /** The design files a buyer of a digital listing downloads after paying (Etsy allows five, 20 MB each). */
 function DesignFiles({ designs, selected, onChange }: { designs: ShopDesign[]; selected: string[]; onChange: (ids: string[]) => void }) {
+  const { t } = useTranslation("common");
   const toggle = (id: string) => onChange(selected.includes(id) ? selected.filter((item) => item !== id) : selected.length >= MAX_FILES ? selected : [...selected, id]);
   return (
     <div className="space-y-1.5 sm:col-span-2">
-      <Label>Files buyers download <span className="text-ink-500 font-normal">({selected.length}/{MAX_FILES} selected)</span></Label>
+      <Label>{t("shop.etsyPublish.files")} <span className="text-ink-500 font-normal">({t("shop.etsyPublish.filesSelected", { selected: selected.length, max: MAX_FILES })})</span></Label>
       {designs.length === 0 ? (
-        <p className="text-sm text-amber-700 dark:text-amber-300">This product has no approved design to sell as a file. Approve a design first.</p>
+        <p className="text-sm text-amber-700 dark:text-amber-300">{t("shop.etsyPublish.noDesign")}</p>
       ) : (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
           {designs.map((design) => {
@@ -325,35 +331,38 @@ function DesignFiles({ designs, selected, onChange }: { designs: ShopDesign[]; s
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={design.previewUrl} alt="" className="aspect-square w-full bg-[repeating-conic-gradient(#f1f5f9_0_25%,#fff_0_50%)] bg-[length:16px_16px] object-contain" />
                 <span className="text-ink-600 block px-1.5 py-1 text-[11px]">
-                  {design.width}×{design.height} · {design.fileFormat.toUpperCase()} · {design.fileSizeMb.toFixed(1)} MB{design.isFinal ? " · final" : ""}
+                  {design.width}×{design.height} · {design.fileFormat.toUpperCase()} · {design.fileSizeMb.toFixed(1)} MB{design.isFinal ? ` · ${t("shop.etsyPublish.final")}` : ""}
                 </span>
               </button>
             );
           })}
         </div>
       )}
-      <p className="text-ink-500 text-xs">Buyers get the original file. State in the description what they may use it for (personal or commercial use).</p>
+      <p className="text-ink-500 text-xs">{t("shop.etsyPublish.filesHint")}</p>
     </div>
   );
 }
 
 function Published({ result }: { result: PublishEtsyDraftResult }) {
+  const { t } = useTranslation("common");
   return (
     <div className="text-ink-700 space-y-3 py-2 text-sm">
       <p className="text-ink-900 font-medium">
-        {result.alreadyPublished ? "This exact listing was already sent; here is the draft it made." : "Draft created in your Etsy shop."}
+        {result.alreadyPublished ? t("shop.etsyPublish.alreadySent") : t("shop.etsyPublish.draftCreated")}
       </p>
       {!result.alreadyPublished && (
         <p>
-          {result.imagesUploaded} image(s){result.videoUploaded ? " and the video" : ""} uploaded
-          {result.filesUploaded > 0 && `; ${result.filesUploaded} design file(s) attached for buyers to download`}.
+          {result.videoUploaded
+            ? t("shop.etsyPublish.uploadedWithVideo", { count: result.imagesUploaded })
+            : t("shop.etsyPublish.uploaded", { count: result.imagesUploaded })}
+          {result.filesUploaded > 0 && `; ${t("shop.etsyPublish.filesAttached", { count: result.filesUploaded })}`}.
         </p>
       )}
       {result.warnings.length > 0 && (
         <ul className="list-disc space-y-0.5 pl-5 text-amber-800 dark:text-amber-300">{result.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
       )}
-      <p className="text-ink-500">Review it on Etsy and publish when you are ready. Etsy charges its listing fee when you publish.</p>
-      <Button asChild><a href={result.editUrl} target="_blank" rel="noreferrer"><ExternalLink className="size-4" />Open draft on Etsy</a></Button>
+      <p className="text-ink-500">{t("shop.etsyPublish.reviewOnEtsy")}</p>
+      <Button asChild><a href={result.editUrl} target="_blank" rel="noreferrer"><ExternalLink className="size-4" />{t("shop.etsyPublish.openOnEtsy")}</a></Button>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   adminPrintifyKeys,
@@ -31,7 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getErrorMessage } from "@/helpers/error-message";
-import { mockupViewLabel, productTypeLabel, templateView } from "@/helpers/mockup-template";
+import { productTypeLabel, templateView } from "@/helpers/mockup-template";
 import { showToast } from "@/helpers/toast";
 import { productTypes } from "@/schemas/batches";
 import type { MockupTemplate } from "@/types/mockup-templates";
@@ -41,6 +42,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 /** Colors most sellers want, ticked for measuring when the provider makes them. */
 const SUGGESTED_COLORS = ["Black", "Navy", "Sport Grey", "Athletic Heather", "Dark Grey Heather", "Red", "Royal", "True Royal", "Forest Green", "Maroon", "Natural", "Sand"];
 const MAX_COLORS = 20;
+
+const VIEW_KEYS: Record<PrintifySide, string> = {
+  front: "admin.mockups.views.front",
+  back: "admin.mockups.views.back",
+  left: "admin.mockups.views.left",
+  right: "admin.mockups.views.right",
+};
 
 type PrintifyTemplateDialogProps = {
   open: boolean;
@@ -67,6 +75,7 @@ export const PrintifyTemplateDialog = ({ open, onOpenChange, template = null }: 
 };
 
 const PrintifyTemplateFlow = ({ template, onBusy, onClose }: { template: MockupTemplate | null; onBusy: (busy: boolean) => void; onClose: () => void }) => {
+  const { t } = useTranslation("common");
   const linked = template?.printify ?? null;
   const [blueprint, setBlueprint] = useState<Pick<PrintifyBlueprint, "id" | "title"> | null>(() =>
     linked ? { id: linked.blueprintId, title: linked.blueprintTitle } : null
@@ -147,16 +156,13 @@ const PrintifyTemplateFlow = ({ template, onBusy, onClose }: { template: MockupT
     blueprintId !== null && providerId !== null && catalog.data !== undefined && (views.length > 0 || colors.length > 0) && (linked !== null || views.includes("front"));
 
   const result = job.data;
-  const title = linked ? `Measure more of ${template?.name}` : "Create a template from Printify";
+  const title = linked ? t("admin.mockups.createDialog.titleMeasure", { name: template?.name }) : t("admin.mockups.createDialog.titleCreate");
 
   return (
     <>
         <DialogHeader className="border-b px-5 py-3.5 pr-12 text-left">
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            The server prints a calibration sheet on a temporary product in the platform’s Printify store, finds the print area on Printify’s own photos,
-            measures the colors and deletes the product. Nothing is uploaded.
-          </DialogDescription>
+          <DialogDescription>{t("admin.mockups.createDialog.description")}</DialogDescription>
         </DialogHeader>
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4">
           {!jobId ? (
@@ -185,15 +191,15 @@ const PrintifyTemplateFlow = ({ template, onBusy, onClose }: { template: MockupT
           ) : !result || isJobRunning(result) ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center" role="status">
               <Loader2 className="text-ink-400 size-8 animate-spin" aria-hidden="true" />
-              <p className="text-ink-900 font-medium">{result?.step ?? "Starting"}…</p>
-              <p className="text-muted-foreground max-w-md text-sm">This takes a minute or two. You can close this window: the job keeps running for an hour.</p>
+              <p className="text-ink-900 font-medium">{result?.step ?? t("admin.mockups.createDialog.starting")}…</p>
+              <p className="text-muted-foreground max-w-md text-sm">{t("admin.mockups.createDialog.runningNote")}</p>
             </div>
           ) : result.status === "failed" ? (
             <div className="space-y-3 py-6 text-center" role="alert">
-              <p className="text-ink-900 font-medium">Measuring failed</p>
+              <p className="text-ink-900 font-medium">{t("admin.mockups.createDialog.failedTitle")}</p>
               <p className="text-sm text-red-600">{result.error}</p>
               <Button type="button" variant="outline" onClick={() => setJobId(null)}>
-                Change and start again
+                {t("admin.mockups.createDialog.changeAndStartAgain")}
               </Button>
             </div>
           ) : (
@@ -213,10 +219,10 @@ const PrintifyTemplateFlow = ({ template, onBusy, onClose }: { template: MockupT
         {!jobId && (
           <DialogFooter className="border-t px-5 py-3">
             <Button type="button" variant="ghost" onClick={onClose}>
-              Cancel
+              {t("mockups.cancel")}
             </Button>
             <Button type="button" disabled={!canStart || start.isPending} onClick={() => start.mutate()}>
-              {start.isPending ? "Starting…" : "Start"}
+              {start.isPending ? t("admin.mockups.createDialog.startPending") : t("admin.mockups.createDialog.start")}
             </Button>
           </DialogFooter>
         )}
@@ -245,21 +251,23 @@ type SetupStepProps = {
   onToggleColor: (color: string) => void;
 };
 
-const SetupStep = (props: SetupStepProps) => (
+const SetupStep = (props: SetupStepProps) => {
+  const { t } = useTranslation("common");
+  return (
   <div className="space-y-5">
     {props.linked ? (
       <p className="text-ink-700 text-sm">
-        {props.blueprint?.title}. A side measured again replaces the photo it has; colors measured are added to the blueprint’s colors.
+        {t("admin.mockups.createDialog.linkedIntro", { title: props.blueprint?.title })}
       </p>
     ) : (
       <div className="grid gap-4 sm:grid-cols-2">
         <BlueprintPicker value={props.blueprint} onChange={props.onBlueprint} search={searchAdminPrintifyBlueprints} queryKey="admin-printify-blueprints" />
         {props.blueprint && (
           <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="printify-provider">Print provider</Label>
+            <Label htmlFor="printify-provider">{t("admin.mockups.shared.printProvider")}</Label>
             <Select value={props.providerId ? String(props.providerId) : ""} onValueChange={(value) => value && props.onProvider(Number(value))}>
               <SelectTrigger id="printify-provider" className="w-full">
-                <SelectValue placeholder={props.providersLoading ? "Loading providers…" : "Choose a provider"} />
+                <SelectValue placeholder={props.providersLoading ? t("admin.mockups.shared.loadingProviders") : t("admin.mockups.shared.chooseProvider")} />
               </SelectTrigger>
               <SelectContent>
                 {props.providers.map((provider) => (
@@ -270,7 +278,7 @@ const SetupStep = (props: SetupStepProps) => (
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-muted-foreground text-xs">Providers in the United States are listed first. Each provider’s photos and print area differ.</p>
+            <p className="text-muted-foreground text-xs">{t("admin.mockups.createDialog.providersHint")}</p>
           </div>
         )}
       </div>
@@ -280,13 +288,13 @@ const SetupStep = (props: SetupStepProps) => (
         {props.catalogError}
       </p>
     )}
-    {props.catalogLoading && <p className="text-muted-foreground text-sm">Reading what this provider makes…</p>}
+    {props.catalogLoading && <p className="text-muted-foreground text-sm">{t("admin.mockups.createDialog.readingCatalog")}</p>}
     {props.offeredViews.length > 0 || props.offeredColors.length > 0 ? (
       <>
         <fieldset className="space-y-2">
-          <legend className="text-ink-900 text-sm font-medium">Sides</legend>
+          <legend className="text-ink-900 text-sm font-medium">{t("admin.mockups.createDialog.sidesTitle")}</legend>
           {props.offeredViews.length === 0 ? (
-            <p className="text-muted-foreground text-xs">This provider prints on no other side.</p>
+            <p className="text-muted-foreground text-xs">{t("admin.mockups.createDialog.noOtherSide")}</p>
           ) : (
             <div className="flex flex-wrap gap-3">
               {props.offeredViews.map((view) => (
@@ -296,38 +304,39 @@ const SetupStep = (props: SetupStepProps) => (
                     disabled={!props.linked && view === "front"}
                     onCheckedChange={() => props.onToggleView(view)}
                   />
-                  {mockupViewLabel(view)}
-                  {props.existingViews.has(view) && <span className="text-muted-foreground text-xs">(replaces the one it has)</span>}
+                  {t(VIEW_KEYS[view])}
+                  {props.existingViews.has(view) && <span className="text-muted-foreground text-xs">{t("admin.mockups.createDialog.replacesTheOneItHas")}</span>}
                 </label>
               ))}
             </div>
           )}
-          {!props.linked && <p className="text-muted-foreground text-xs">Only the sides this provider prints on are offered. The front is the template itself.</p>}
+          {!props.linked && <p className="text-muted-foreground text-xs">{t("admin.mockups.createDialog.sidesHint")}</p>}
           {!props.linked && !props.offeredViews.includes("front") && (
-            <p className="text-destructive text-xs">This provider doesn&apos;t print on the front, so it can&apos;t make a template. Choose another provider.</p>
+            <p className="text-destructive text-xs">{t("admin.mockups.createDialog.noFrontProvider")}</p>
           )}
         </fieldset>
         <div className="space-y-1">
-          <ChipGroup label="Colors to measure" options={props.offeredColors} selected={props.colors} onToggle={props.onToggleColor} />
-          <p className="text-muted-foreground text-xs">White is always measured: the other colors are measured against it. At most {MAX_COLORS}.</p>
+          <ChipGroup label={t("admin.mockups.shared.colorsToMeasure")} options={props.offeredColors} selected={props.colors} onToggle={props.onToggleColor} />
+          <p className="text-muted-foreground text-xs">{t("admin.mockups.createDialog.whiteAlwaysNote", { max: MAX_COLORS })}</p>
           {props.savedColorsTicked && (
-            <p className="text-muted-foreground text-xs">
-              The colors this blueprint already has are ticked and listed first. Measuring one again replaces its hex, also one changed by hand: untick it to keep it.
-            </p>
+            <p className="text-muted-foreground text-xs">{t("admin.mockups.createDialog.savedColorsNote")}</p>
           )}
         </div>
       </>
     ) : null}
   </div>
-);
+  );
+};
 
 /** A measured photo with its print area framed, as a button to pick it. */
-const CandidatePhoto = ({ candidate, selected, onSelect }: { candidate: PrintifyCameraCandidate; selected: boolean; onSelect: () => void }) => (
+const CandidatePhoto = ({ candidate, selected, onSelect }: { candidate: PrintifyCameraCandidate; selected: boolean; onSelect: () => void }) => {
+  const { t } = useTranslation("common");
+  return (
   <button
     type="button"
     onClick={onSelect}
     aria-pressed={selected}
-    aria-label={`Use the ${candidate.camera} photo`}
+    aria-label={t("admin.mockups.createDialog.useCameraAria", { camera: candidate.camera })}
     className={cn("bg-ink-100 relative w-40 shrink-0 overflow-hidden rounded-lg border-2 text-left", selected ? "border-emerald-600" : "border-transparent")}
   >
     {/* eslint-disable-next-line @next/next/no-img-element -- a measured photo on the image CDN, shown as is */}
@@ -347,9 +356,11 @@ const CandidatePhoto = ({ candidate, selected, onSelect }: { candidate: Printify
       {candidate.camera}
     </span>
   </button>
-);
+  );
+};
 
 const ReviewStep = ({ job, template, onDone }: { job: PrintifyTemplateJob; template: MockupTemplate | null; onDone: () => void }) => {
+  const { t } = useTranslation("common");
   const queryClient = useQueryClient();
   const [cameras, setCameras] = useState<Partial<Record<PrintifySide, string>>>(() =>
     Object.fromEntries(job.sides.filter((side) => side.candidates.length > 0).map((side) => [side.view, side.candidates[0].camera]))
@@ -365,7 +376,7 @@ const ReviewStep = ({ job, template, onDone }: { job: PrintifyTemplateJob; templ
     onSuccess: async (saved) => {
       await queryClient.invalidateQueries({ queryKey: mockupTemplateKeys.all });
       await queryClient.invalidateQueries({ queryKey: adminPrintifyKeys.colors(job.blueprintId) });
-      showToast("success", creating ? `${saved.name} was created.` : `${saved.name} was updated.`);
+      showToast("success", t(creating ? "admin.mockups.createDialog.createdToast" : "admin.mockups.createDialog.updatedToast", { name: saved.name }));
       onDone();
     },
   });
@@ -383,7 +394,7 @@ const ReviewStep = ({ job, template, onDone }: { job: PrintifyTemplateJob; templ
       )}
       {job.sides.map((side) => (
         <section key={side.view} className="space-y-2">
-          <h3 className="text-ink-900 text-sm font-medium">{mockupViewLabel(side.view)}</h3>
+          <h3 className="text-ink-900 text-sm font-medium">{t(VIEW_KEYS[side.view])}</h3>
           {side.candidates.length === 0 ? (
             <p className="text-sm text-red-600">{side.problem}</p>
           ) : (
@@ -402,8 +413,8 @@ const ReviewStep = ({ job, template, onDone }: { job: PrintifyTemplateJob; templ
       ))}
       {job.measuredColors.length > 0 && (
         <section className="space-y-2">
-          <h3 className="text-ink-900 text-sm font-medium">Colors</h3>
-          <p className="text-muted-foreground text-xs">Saved for every template of this blueprint. Untick a color to leave it out.</p>
+          <h3 className="text-ink-900 text-sm font-medium">{t("admin.mockups.shared.colors")}</h3>
+          <p className="text-muted-foreground text-xs">{t("admin.mockups.createDialog.colorsDescription")}</p>
           <ul className="grid gap-1.5 sm:grid-cols-2">
             {job.measuredColors.map((color) => (
               <li key={color.name}>
@@ -412,7 +423,7 @@ const ReviewStep = ({ job, template, onDone }: { job: PrintifyTemplateJob; templ
                     checked={kept.includes(color.name)}
                     onCheckedChange={() => setKept((current) => (current.includes(color.name) ? current.filter((item) => item !== color.name) : [...current, color.name]))}
                   />
-                  <span className="size-4 shrink-0 rounded-full border" style={{ backgroundColor: color.photoHex }} title={`Printify photo ${color.photoHex}`} />
+                  <span className="size-4 shrink-0 rounded-full border" style={{ backgroundColor: color.photoHex }} title={t("admin.mockups.createDialog.printifyPhotoTitle", { hex: color.photoHex })} />
                   <span className="text-ink-900 min-w-0 flex-1 truncate">{color.name}</span>
                   <span className="text-muted-foreground font-mono text-xs">{color.recolorHex}</span>
                 </label>
@@ -424,11 +435,11 @@ const ReviewStep = ({ job, template, onDone }: { job: PrintifyTemplateJob; templ
       {creating && (
         <section className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="printify-template-name">Template name</Label>
+            <Label htmlFor="printify-template-name">{t("admin.mockups.createDialog.templateName")}</Label>
             <Input id="printify-template-name" value={name} maxLength={100} onChange={(event) => setName(event.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="printify-template-type">Product type</Label>
+            <Label htmlFor="printify-template-type">{t("admin.mockups.createDialog.productType")}</Label>
             <Select value={productType} onValueChange={(value) => value && setProductType(value)}>
               <SelectTrigger id="printify-template-type" className="w-full">
                 <SelectValue />
@@ -436,14 +447,14 @@ const ReviewStep = ({ job, template, onDone }: { job: PrintifyTemplateJob; templ
               <SelectContent>
                 {productTypes.map((type) => (
                   <SelectItem key={type} value={type}>
-                    {productTypeLabel(type)}
+                    {t(`mockups.productTypes.${type}`, { defaultValue: productTypeLabel(type) })}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="sm:col-span-2">
-            <ChipGroup label="Default sizes" options={job.sizes} selected={sizes} onToggle={(size) => setSizes((current) => (current.includes(size) ? current.filter((item) => item !== size) : [...current, size]))} />
+            <ChipGroup label={t("admin.mockups.shared.defaultSizes")} options={job.sizes} selected={sizes} onToggle={(size) => setSizes((current) => (current.includes(size) ? current.filter((item) => item !== size) : [...current, size]))} />
           </div>
         </section>
       )}
@@ -454,10 +465,10 @@ const ReviewStep = ({ job, template, onDone }: { job: PrintifyTemplateJob; templ
       )}
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onDone} disabled={save.isPending}>
-          Close
+          {t("admin.mockups.createDialog.close")}
         </Button>
         <Button type="button" disabled={save.isPending || frontMissing || (creating && name.trim().length === 0)} onClick={() => save.mutate()}>
-          {save.isPending ? "Saving…" : creating ? "Create template" : "Save"}
+          {save.isPending ? t("admin.mockups.shared.saving") : creating ? t("admin.mockups.createDialog.createTemplate") : t("admin.mockups.shared.save")}
         </Button>
       </div>
     </div>

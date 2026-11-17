@@ -1,10 +1,11 @@
 import { getAllowancesRequest } from "@/api/allowances";
 import { apiKeyKeys, listApiKeys } from "@/api/api-keys";
 import { batchJobKeys, getBatchJob, listBatchJobs } from "@/api/batch-jobs";
-import { approveBatch, batchKeys, listBatchProducts } from "@/api/batches";
+import { approveBatch, batchKeys, listBatches, listBatchProducts } from "@/api/batches";
 import { designTemplateKeys, getDesignTemplate } from "@/api/design-templates";
 import { listMockupTemplates, mockupTemplateKeys } from "@/api/mockup-templates";
 import { getEntitlementsRequest } from "@/api/subscription";
+import { productLineLabels, productLineOf, productLineRatios } from "@/constants/batches";
 import { allowanceBlocksRun } from "@/helpers/allowance";
 import { missingDesignTextWarning, thinInputWarning } from "@/helpers/design-text";
 import { countProductTypes, productTypeLabel } from "@/helpers/mockup-template";
@@ -12,7 +13,8 @@ import { featureLimit, hasFeature } from "@/helpers/plan-features";
 import { ACTIVE_JOB_STATUSES, narrowMockupSelection, type RunPlan } from "@/helpers/workflow-run";
 import { ALLOWANCES_QUERY_KEY } from "@/hooks/queries/use-allowances";
 import { ENTITLEMENTS_QUERY_KEY } from "@/hooks/queries/use-entitlements";
-import type { Product } from "@/types/batches";
+import { getCurrentLocale } from "@/i18n/client";
+import type { Product, ProductLine } from "@/types/batches";
 import type { Entitlements } from "@/types/subscription";
 import type { QueryClient } from "@tanstack/react-query";
 
@@ -59,6 +61,25 @@ export const failedProductsBlockRun = (products: Pick<Product, "status">[]): str
   return `${failed} ${failed === 1 ? "product" : "products"} of this batch failed in an earlier run, so ${failed === 1 ? "it has" : "they have"} no design yet. Open that run under Previous runs in Product input, then choose Retry failed products in Design image.`;
 };
 
+// Why a batch's products cannot run as one line, or null when they can. A run makes one product line: its designs
+// share one aspect ratio, and its mock-ups, videos and listings are of one kind. Mirrors the backend's ApproveAsync.
+export const productLineBlocksRun = (
+  line: ProductLine | null,
+  aspectRatio: string,
+  pending: Pick<Product, "name" | "productType">[]
+): string | null => {
+  if (!line) return "This batch has no product line yet. Edit it on the Batches page and choose what it makes, then run it.";
+  const outside = pending.filter((product) => productLineOf(product.productType) !== line).map((product) => product.name);
+  if (outside.length > 0) {
+    return `This is a ${productLineLabels[line].toLowerCase()} batch, but ${outside.slice(0, 5).join(", ")} ${outside.length === 1 ? "is" : "are"} not. Move or delete those pending products on the Batches page.`;
+  }
+  const { ratios, why } = productLineRatios[line];
+  if (!ratios.includes(aspectRatio)) {
+    return `A ${aspectRatio} design does not suit a ${productLineLabels[line].toLowerCase()} batch. ${why} Choose ${ratios.join(" or ")} in Design image.`;
+  }
+  return null;
+};
+
 // Whether the Seller must connect their own key for the image provider. A plan with the platform's keys makes Ideogram
 // images on those; the backend still asks for the Seller's key when the platform has none configured.
 export const needsOwnImageKey = (entitlements: Entitlements, imageProvider: string): boolean =>
@@ -95,6 +116,9 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
     );
   }
   const pendingIds = new Set(pending.map((product) => product.id));
+  const batches = await queryClient.fetchQuery({ queryKey: batchKeys.all, queryFn: listBatches, ...fresh });
+  const lineProblem = productLineBlocksRun(batches.find((batch) => batch.id === plan.batchId)?.productLine ?? null, plan.aspectRatio, pending);
+  if (lineProblem) throw new RunBlockedError(lineProblem);
 
   let reusableDraftId: string | null = null;
   for (const draft of jobs.filter((job) => job.status.toLowerCase() === "draft")) {
@@ -134,7 +158,7 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
 
   // Plans differ by feature, not by monthly quota: the run must fit what the plan includes.
   const entitlements = await queryClient.fetchQuery({
-    queryKey: ENTITLEMENTS_QUERY_KEY,
+    queryKey: [...ENTITLEMENTS_QUERY_KEY, getCurrentLocale()],
     queryFn: getEntitlementsRequest,
     ...fresh,
   });

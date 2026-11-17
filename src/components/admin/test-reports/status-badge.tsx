@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslation } from "react-i18next";
+
 import { Badge } from "@/components/ui/badge";
 import type {
   TestReportSpecStatus,
@@ -20,6 +24,16 @@ const SPEC_STYLES: Record<TestReportSpecStatus, string> = {
   unknown: "border-ink-200 bg-ink-50 text-ink-500",
 };
 
+const STATUS_LABEL_KEYS: Record<TestReportStatus | TestReportSpecStatus, string> = {
+  running: "admin.testReports.status.running",
+  passed: "admin.testReports.status.passed",
+  failed: "admin.testReports.status.failed",
+  error: "admin.testReports.status.error",
+  flaky: "admin.testReports.status.flaky",
+  skipped: "admin.testReports.status.skipped",
+  unknown: "admin.testReports.status.unknown",
+};
+
 type TestReportStatusBadgeProps = {
   status: TestReportStatus | TestReportSpecStatus;
   className?: string;
@@ -29,6 +43,7 @@ export const TestReportStatusBadge = ({
   status,
   className,
 }: TestReportStatusBadgeProps) => {
+  const { t } = useTranslation("common");
   const style = RUN_STYLES[status as TestReportStatus] ?? SPEC_STYLES[status as TestReportSpecStatus];
 
   return (
@@ -40,7 +55,7 @@ export const TestReportStatusBadge = ({
         className
       )}
     >
-      {status}
+      {t(STATUS_LABEL_KEYS[status])}
     </Badge>
   );
 };

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check, Pencil, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,8 +24,6 @@ type PlanCompareTableProps = {
   onEditLimit: (plan: AdminSubscriptionPlan, feature: PlanFeatureDefinition, current: number | null) => void;
 };
 
-const formatRunLimit = (value: number) => (value < 0 ? "No limit" : value.toLocaleString());
-
 // A plan's value for a feature: on/off for a flag; for a limit, null is no limit and 0 is off.
 const settingOf = (plan: AdminSubscriptionPlan, feature: PlanFeatureDefinition) => {
   const row = plan.features.find((item) => item.code === feature.code);
@@ -35,6 +34,8 @@ const settingOf = (plan: AdminSubscriptionPlan, feature: PlanFeatureDefinition) 
 // Every plan side by side, one feature per row, so the Admin can set several plans on one screen.
 // A click adds a feature at once; removing one or changing a limit asks first, as on the cards.
 export function PlanCompareTable({ plans, features, catalog, isAdding, onAdd, onRemove, onEditLimit }: PlanCompareTableProps) {
+  const { t } = useTranslation("common");
+  const formatRunLimit = (value: number) => (value < 0 ? t("admin.plans.shared.noLimit") : value.toLocaleString());
   const isPhone = useIsPhone();
   const byCode = new Map(catalog.map((feature) => [feature.code, feature]));
   // A feature hidden from the add list keeps its row while any plan still has it.
@@ -68,25 +69,25 @@ export function PlanCompareTable({ plans, features, catalog, isAdding, onAdd, on
           <thead className="bg-card sticky top-0 z-10">
             <tr className="border-ink-200 border-b">
               <th scope="col" className="text-ink-500 w-[38%] px-5 py-4 text-left text-[11px] font-semibold tracking-wide uppercase">
-                Feature
+                {t("admin.plans.shared.feature")}
               </th>
               {plans.map((plan) => (
                 <th key={plan.id} scope="col" className="px-4 py-4 text-center align-bottom">
                   <p className="text-ink-900 font-bold">{plan.name}</p>
-                  <p className="text-ink-500 text-xs font-normal tabular-nums">{formatVnd(plan.monthlyPriceVnd)} / month</p>
+                  <p className="text-ink-500 text-xs font-normal tabular-nums">{t("admin.plans.shared.pricePerMonth", { amount: formatVnd(plan.monthlyPriceVnd) })}</p>
                   <p className="text-ink-400 text-[11px] font-normal">
-                    {plan.activeSubscriberCount.toLocaleString()} subscribers
+                    {t("admin.plans.compare.subscribers", { formatted: plan.activeSubscriberCount.toLocaleString() })}
                   </p>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            <GroupRow label="Run limits" span={plans.length + 1} />
+            <GroupRow label={t("admin.plans.compare.runLimits")} span={plans.length + 1} />
             <tr className="border-ink-100 border-b">
               <th scope="row" className="text-ink-700 px-5 py-2.5 text-left font-normal">
-                Products per run
-                <span className="text-ink-400 ml-1 text-xs">· set on Edit plan</span>
+                {t("admin.plans.compare.productsPerRun")}
+                <span className="text-ink-400 ml-1 text-xs">· {t("admin.plans.compare.setOnEditPlan")}</span>
               </th>
               {plans.map((plan) => (
                 <td key={plan.id} className="text-ink-700 px-4 py-2.5 text-center font-semibold tabular-nums">
@@ -96,8 +97,8 @@ export function PlanCompareTable({ plans, features, catalog, isAdding, onAdd, on
             </tr>
             <tr className="border-ink-100 border-b">
               <th scope="row" className="text-ink-700 px-5 py-2.5 text-left font-normal">
-                Design jobs at once
-                <span className="text-ink-400 ml-1 text-xs">· set on Edit plan</span>
+                {t("admin.plans.compare.designJobsAtOnce")}
+                <span className="text-ink-400 ml-1 text-xs">· {t("admin.plans.compare.setOnEditPlan")}</span>
               </th>
               {plans.map((plan) => (
                 <td key={plan.id} className="text-ink-700 px-4 py-2.5 text-center font-semibold tabular-nums">
@@ -155,6 +156,7 @@ function FeatureGroup({
   onRemove: PlanCompareTableProps["onRemove"];
   onEditLimit: PlanCompareTableProps["onEditLimit"];
 }) {
+  const { t } = useTranslation("common");
   return (
     <>
       <GroupRow label={group} span={plans.length + 1} />
@@ -162,7 +164,7 @@ function FeatureGroup({
         <tr key={feature.code} className="border-ink-100 hover:bg-ink-50/60 border-b">
           <th scope="row" className="text-ink-700 px-5 py-2.5 text-left font-normal wrap-anywhere max-md:px-3">
             {feature.label}
-            {isSafetyCap(feature.code) && <span className="text-ink-400 ml-1 text-xs">· hidden from Sellers</span>}
+            {isSafetyCap(feature.code) && <span className="text-ink-400 ml-1 text-xs">· {t("admin.plans.shared.hiddenFromSellers")}</span>}
           </th>
           {plans.map((plan) => (
             <PlanCell
@@ -199,18 +201,19 @@ function PlanCell({
   onRemove: PlanCompareTableProps["onRemove"];
   onEditLimit: PlanCompareTableProps["onEditLimit"];
 }) {
+  const { t } = useTranslation("common");
   const { isOn, limit } = settingOf(plan, feature);
   if (feature.kind === "limit") {
     return (
       <td className="px-4 py-1.5 text-center max-md:px-1">
         <button
           type="button"
-          aria-label={`Change ${feature.label} on ${plan.name}`}
+          aria-label={t("admin.plans.compare.changeFeatureOnPlan", { feature: feature.label, plan: plan.name })}
           onClick={() => onEditLimit(plan, feature, limit)}
           className="group text-ink-700 hover:bg-ink-100 inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-semibold tabular-nums max-md:min-h-10 max-md:flex-col max-md:justify-center max-md:gap-0 max-md:px-1"
         >
-          <span className="max-md:hidden">{limit === null ? "No limit" : `${limit.toLocaleString()}${unit ? ` ${unit}` : ""}`}</span>
-          <span className="md:hidden">{limit === null ? "No limit" : limit.toLocaleString()}</span>
+          <span className="max-md:hidden">{limit === null ? t("admin.plans.shared.noLimit") : `${limit.toLocaleString()}${unit ? ` ${unit}` : ""}`}</span>
+          <span className="md:hidden">{limit === null ? t("admin.plans.shared.noLimit") : limit.toLocaleString()}</span>
           {limit !== null && unit && <span className="text-ink-400 text-[10px] leading-tight font-normal wrap-anywhere md:hidden">{unit}</span>}
           <Pencil className="text-ink-300 group-hover:text-ink-600 size-3 max-md:hidden" />
         </button>
@@ -223,8 +226,8 @@ function PlanCell({
         type="button"
         role="switch"
         aria-checked={isOn}
-        aria-label={`${feature.label} on ${plan.name}`}
-        title={isOn ? "Remove from this plan" : "Add to this plan"}
+        aria-label={t("admin.plans.compare.featureOnPlan", { feature: feature.label, plan: plan.name })}
+        title={isOn ? t("admin.plans.shared.removeFromThisPlan") : t("admin.plans.shared.addToThisPlan")}
         disabled={!isOn && isAdding}
         onClick={() => (isOn ? onRemove(plan, feature.code, feature.label) : onAdd(plan, feature.code))}
         className={cn(
@@ -247,8 +250,8 @@ const sameSetting = (a: AdminSubscriptionPlan, b: AdminSubscriptionPlan, feature
 };
 
 const RUN_LIMITS = [
-  { label: "Products per run", valueOf: (plan: AdminSubscriptionPlan) => plan.maxBatchSize },
-  { label: "Design jobs at once", valueOf: (plan: AdminSubscriptionPlan) => plan.maxConcurrentJobs },
+  { labelKey: "admin.plans.compare.productsPerRun", valueOf: (plan: AdminSubscriptionPlan) => plan.maxBatchSize },
+  { labelKey: "admin.plans.compare.designJobsAtOnce", valueOf: (plan: AdminSubscriptionPlan) => plan.maxConcurrentJobs },
 ];
 
 /**
@@ -274,6 +277,8 @@ function PhonePlanCompare({
   onRemove: PlanCompareTableProps["onRemove"];
   onEditLimit: PlanCompareTableProps["onEditLimit"];
 }) {
+  const { t } = useTranslation("common");
+  const formatRunLimit = (value: number) => (value < 0 ? t("admin.plans.shared.noLimit") : value.toLocaleString());
   const [leftId, setLeftId] = useState(plans[0].id);
   const [rightId, setRightId] = useState(plans[1].id);
   const [differencesOnly, setDifferencesOnly] = useState(true);
@@ -301,7 +306,7 @@ function PhonePlanCompare({
         {pair.map((plan, index) => (
           <div key={index} className="border-ink-200 bg-card min-w-0 rounded-xl border p-2.5">
             <Select value={plan.id} onValueChange={(id) => choose(index === 0 ? "left" : "right", id)}>
-              <SelectTrigger aria-label={index === 0 ? "First plan" : "Second plan"} className="bg-card w-full font-semibold">
+              <SelectTrigger aria-label={index === 0 ? t("admin.plans.compare.firstPlan") : t("admin.plans.compare.secondPlan")} className="bg-card w-full font-semibold">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" className="bg-card w-(--radix-select-trigger-width)">
@@ -312,22 +317,22 @@ function PhonePlanCompare({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-ink-700 mt-2 text-xs font-semibold tabular-nums">{formatVnd(plan.monthlyPriceVnd)}/month</p>
-            <p className="text-ink-400 text-[11px]">{plan.activeSubscriberCount.toLocaleString()} subscribers</p>
+            <p className="text-ink-700 mt-2 text-xs font-semibold tabular-nums">{t("admin.plans.compare.perMonthShort", { amount: formatVnd(plan.monthlyPriceVnd) })}</p>
+            <p className="text-ink-400 text-[11px]">{t("admin.plans.compare.subscribers", { formatted: plan.activeSubscriberCount.toLocaleString() })}</p>
           </div>
         ))}
       </div>
 
       <label className="text-ink-600 flex min-h-11 items-center justify-between gap-3 text-xs font-medium">
         <span>
-          Only what differs <span className="text-ink-400 tabular-nums">· {differencesOnly ? `${shown} of ${total}` : `all ${total}`}</span>
+          {t("admin.plans.compare.onlyWhatDiffers")} <span className="text-ink-400 tabular-nums">· {differencesOnly ? t("admin.plans.compare.shownOfTotal", { shown, total }) : t("admin.plans.compare.allTotal", { total })}</span>
         </span>
-        <Switch checked={differencesOnly} onCheckedChange={setDifferencesOnly} aria-label="Only what differs" />
+        <Switch checked={differencesOnly} onCheckedChange={setDifferencesOnly} aria-label={t("admin.plans.compare.onlyWhatDiffers")} />
       </label>
 
       {shown === 0 ? (
         <p className="border-ink-300 bg-card text-ink-500 rounded-xl border border-dashed p-6 text-center text-sm">
-          {left.name} and {right.name} match on every feature.
+          {t("admin.plans.compare.matchEveryFeature", { left: left.name, right: right.name })}
         </p>
       ) : (
         <Card className="border-ink-200/80 bg-card gap-0 rounded-2xl border p-0 shadow-xs">
@@ -339,7 +344,7 @@ function PhonePlanCompare({
             </colgroup>
             <thead className="bg-card sticky top-16 z-10">
               <tr className="border-ink-200 text-ink-500 border-b text-[11px] font-semibold">
-                <th scope="col" className="bg-card rounded-tl-2xl px-3 py-2 text-left">Feature</th>
+                <th scope="col" className="bg-card rounded-tl-2xl px-3 py-2 text-left">{t("admin.plans.shared.feature")}</th>
                 {pair.map((plan) => (
                   <th key={plan.id} scope="col" className="bg-card truncate px-1 py-2 text-center last:rounded-tr-2xl">
                     {plan.name}
@@ -348,10 +353,10 @@ function PhonePlanCompare({
               </tr>
             </thead>
             <tbody>
-              {runLimits.length > 0 && <GroupRow label="Run limits" span={3} />}
+              {runLimits.length > 0 && <GroupRow label={t("admin.plans.compare.runLimits")} span={3} />}
               {runLimits.map((row) => (
-                <tr key={row.label} className="border-ink-100 border-b">
-                  <th scope="row" className="text-ink-700 px-3 py-2.5 text-left font-normal wrap-anywhere">{row.label}</th>
+                <tr key={row.labelKey} className="border-ink-100 border-b">
+                  <th scope="row" className="text-ink-700 px-3 py-2.5 text-left font-normal wrap-anywhere">{t(row.labelKey)}</th>
                   {pair.map((plan) => (
                     <td key={plan.id} className="text-ink-700 px-1 py-2.5 text-center font-semibold tabular-nums">
                       {formatRunLimit(row.valueOf(plan))}
@@ -381,7 +386,7 @@ function PhonePlanCompare({
           </table>
         </Card>
       )}
-      <p className="text-ink-400 text-[11px]">Run limits are set on Edit plan.</p>
+      <p className="text-ink-400 text-[11px]">{t("admin.plans.compare.runLimitsOnEditPlan")}</p>
     </div>
   );
 }

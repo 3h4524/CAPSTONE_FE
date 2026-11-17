@@ -3,9 +3,15 @@
 import { type ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { NodeControl } from "@/components/workflows/nodes/node-control";
-import { STOPPED, useGroupVideos, videoStatusOf, WITH_VIDEO } from "@/hooks/queries/use-group-videos";
+import {
+  STOPPED,
+  useGroupVideos,
+  videoStatusOf,
+  WITH_VIDEO,
+} from "@/hooks/queries/use-group-videos";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import type { PromoVideo, RunGroupTarget } from "@/types/video-workflow";
 import { cn } from "@/utils/cn";
@@ -35,12 +41,15 @@ const chunk = <T,>(items: T[]) =>
  * shows `fallback` (the single run's preview).
  */
 export const RunGroupVideoStrip = ({ fallback }: { fallback: ReactNode }) => {
+  const { t } = useTranslation("common");
   const { videos } = useGroupVideos();
   const { runId, selectRun } = useWorkflowRuntime();
   const [page, setPage] = useState(0);
 
   const targets = videos.map((item) => item.target);
-  const latest = new Map<string, PromoVideo | undefined>(videos.map((item) => [item.target.runId!, item.video]));
+  const latest = new Map<string, PromoVideo | undefined>(
+    videos.map((item) => [item.target.runId!, item.video])
+  );
 
   const pages = chunk(targets);
   const lastPage = Math.max(0, pages.length - 1);
@@ -55,23 +64,33 @@ export const RunGroupVideoStrip = ({ fallback }: { fallback: ReactNode }) => {
   if (targets.length === 0) return <>{fallback}</>;
 
   const done = targets.filter((target) => videoStatusOf(target) === "completed").length;
-  const toReview = targets.filter((target) => videoStatusOf(target) === "waiting_for_review").length;
+  const toReview = targets.filter(
+    (target) => videoStatusOf(target) === "waiting_for_review"
+  ).length;
 
   return (
     <NodeControl className="space-y-1.5">
       <div className="flex items-baseline justify-between gap-2 px-0.5">
         <span className="text-wf-dim text-[10px] font-medium tracking-[0.08em] uppercase">
-          Videos · {targets.length}
+          {t("workflowEditor.videoStrip.title", { count: targets.length })}
         </span>
         <span className="text-wf-faint text-[10px] tabular-nums">
-          {done > 0 && `${done} done`}
+          {done > 0 && t("workflowEditor.videoStrip.doneCount", { count: done })}
           {done > 0 && toReview > 0 && " · "}
-          {toReview > 0 && `${toReview} to review`}
+          {toReview > 0 && t("workflowEditor.runGroup.toReviewCount", { count: toReview })}
           {pages.length > 1 && ` · ${shownPage + 1}/${pages.length}`}
         </span>
       </div>
       <div className="relative">
-        <div className="overflow-hidden" role="group" aria-label={`Videos ${shownPage * VIDEOS_PER_PAGE + 1} to ${Math.min(targets.length, (shownPage + 1) * VIDEOS_PER_PAGE)} of ${targets.length}`}>
+        <div
+          className="overflow-hidden"
+          role="group"
+          aria-label={t("workflowEditor.videoStrip.pageLabel", {
+            from: shownPage * VIDEOS_PER_PAGE + 1,
+            to: Math.min(targets.length, (shownPage + 1) * VIDEOS_PER_PAGE),
+            total: targets.length,
+          })}
+        >
           <div
             className="flex transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
             style={{ transform: `translate3d(-${shownPage * 100}%, 0, 0)` }}
@@ -99,8 +118,16 @@ export const RunGroupVideoStrip = ({ fallback }: { fallback: ReactNode }) => {
         </div>
         {pages.length > 1 && (
           <>
-            <PageArrow direction="previous" disabled={shownPage === 0} onClick={() => setPage(shownPage - 1)} />
-            <PageArrow direction="next" disabled={shownPage === lastPage} onClick={() => setPage(shownPage + 1)} />
+            <PageArrow
+              direction="previous"
+              disabled={shownPage === 0}
+              onClick={() => setPage(shownPage - 1)}
+            />
+            <PageArrow
+              direction="next"
+              disabled={shownPage === lastPage}
+              onClick={() => setPage(shownPage + 1)}
+            />
           </>
         )}
       </div>
@@ -108,35 +135,74 @@ export const RunGroupVideoStrip = ({ fallback }: { fallback: ReactNode }) => {
   );
 };
 
-const PageArrow = ({ direction, disabled, onClick }: { direction: "previous" | "next"; disabled: boolean; onClick: () => void }) => (
-  <button
-    type="button"
-    aria-label={direction === "next" ? "Next videos" : "Previous videos"}
-    disabled={disabled}
-    onClick={onClick}
-    className={cn(
-      "border-wf-line bg-wf-surface text-wf-dim hover:text-wf-ink absolute top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded-full border shadow-sm",
-      "focus-visible:ring-wf-accent transition-opacity duration-200 focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none",
-      direction === "next" ? "-right-2" : "-left-2",
-      disabled && "pointer-events-none opacity-0"
-    )}
-  >
-    {direction === "next" ? <ChevronRight className="size-3.5" aria-hidden="true" /> : <ChevronLeft className="size-3.5" aria-hidden="true" />}
-  </button>
-);
+const PageArrow = ({
+  direction,
+  disabled,
+  onClick,
+}: {
+  direction: "previous" | "next";
+  disabled: boolean;
+  onClick: () => void;
+}) => {
+  const { t } = useTranslation("common");
+  return (
+    <button
+      type="button"
+      aria-label={
+        direction === "next"
+          ? t("workflowEditor.videoStrip.next")
+          : t("workflowEditor.videoStrip.previous")
+      }
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "border-wf-line bg-wf-surface text-wf-dim hover:text-wf-ink absolute top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded-full border shadow-sm",
+        "focus-visible:ring-wf-accent transition-opacity duration-200 focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none",
+        direction === "next" ? "-right-2" : "-left-2",
+        disabled && "pointer-events-none opacity-0"
+      )}
+    >
+      {direction === "next" ? (
+        <ChevronRight className="size-3.5" aria-hidden="true" />
+      ) : (
+        <ChevronLeft className="size-3.5" aria-hidden="true" />
+      )}
+    </button>
+  );
+};
 
-const VideoTile = ({ target, video, active, onOpen }: { target: RunGroupTarget; video?: PromoVideo; active: boolean; onOpen: () => void }) => {
+const VideoTile = ({
+  target,
+  video,
+  active,
+  onOpen,
+}: {
+  target: RunGroupTarget;
+  video?: PromoVideo;
+  active: boolean;
+  onOpen: () => void;
+}) => {
+  const { t } = useTranslation("common");
   const status = videoStatusOf(target);
-  const aspect = ASPECT[target.config?.outputFormat ?? video?.outputFormat ?? "portrait"] ?? ASPECT.portrait;
+  const aspect =
+    ASPECT[target.config?.outputFormat ?? video?.outputFormat ?? "portrait"] ?? ASPECT.portrait;
   const stopped = STOPPED.has(status);
   const made = WITH_VIDEO.has(status);
   const thumbnail = made ? video?.thumbnailUrl : null;
   const progress = Math.max(0, Math.min(100, Math.round(target.progress)));
   const label = made
-    ? status === "completed" ? "Done" : "Ready to review"
+    ? status === "completed"
+      ? t("workflowEditor.runGroup.runStatuses.completed")
+      : t("workflowEditor.runGroup.runStatuses.waiting_for_review")
     : stopped
-      ? status === "failed" ? "Failed" : status === "cancelled" ? "Stopped" : "Needs attention"
-      : status === "queued" ? "Queued" : `Processing ${progress}%`;
+      ? status === "failed"
+        ? t("workflowEditor.runGroup.runStatuses.failed")
+        : status === "cancelled"
+          ? t("workflowEditor.runGroup.stopped")
+          : t("workflowEditor.runGroup.runStatuses.waiting_for_input")
+      : status === "queued"
+        ? t("workflowEditor.runGroup.runStatuses.queued")
+        : t("workflowEditor.videoStrip.processingProgress", { progress });
 
   return (
     <button
@@ -162,7 +228,10 @@ const VideoTile = ({ target, video, active, onOpen }: { target: RunGroupTarget; 
         />
       ) : made ? (
         // Made, its thumbnail still loading: a quiet placeholder, not a progress that is already over.
-        <span aria-hidden="true" className="bg-wf-line/60 absolute inset-0 animate-pulse motion-reduce:animate-none" />
+        <span
+          aria-hidden="true"
+          className="bg-wf-line/60 absolute inset-0 animate-pulse motion-reduce:animate-none"
+        />
       ) : stopped ? (
         <span className="text-wf-fail absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-1">
           <AlertTriangle className="size-3" aria-hidden="true" />
@@ -171,15 +240,25 @@ const VideoTile = ({ target, video, active, onOpen }: { target: RunGroupTarget; 
       ) : (
         <>
           {/* Only the backdrop pulses, so the number stays readable. */}
-          <span aria-hidden="true" className="bg-wf-line/70 absolute inset-0 animate-pulse motion-reduce:animate-none" />
+          <span
+            aria-hidden="true"
+            className="bg-wf-line/70 absolute inset-0 animate-pulse motion-reduce:animate-none"
+          />
           <span className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-1">
             <span className="text-wf-ink text-[11px] leading-none font-semibold tabular-nums">
               {status === "queued" ? "—" : `${progress}%`}
             </span>
-            <span className="text-wf-faint text-[8px] leading-none">{status === "queued" ? "Queued" : "Processing"}</span>
+            <span className="text-wf-faint text-[8px] leading-none">
+              {status === "queued"
+                ? t("workflowEditor.runGroup.runStatuses.queued")
+                : t("workflowEditor.videoStrip.processing")}
+            </span>
           </span>
           <span aria-hidden="true" className="bg-wf-line absolute inset-x-0 bottom-0 h-0.5">
-            <span className="bg-wf-accent block h-full transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${progress}%` }} />
+            <span
+              className="bg-wf-accent block h-full transition-[width] duration-500 motion-reduce:transition-none"
+              style={{ width: `${progress}%` }}
+            />
           </span>
         </>
       )}

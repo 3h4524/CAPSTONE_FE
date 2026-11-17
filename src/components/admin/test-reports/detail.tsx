@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { TestReportComparison } from "@/components/admin/test-reports/comparison";
 import { TestReportFailureGroups } from "@/components/admin/test-reports/failure-groups";
@@ -30,6 +31,7 @@ type TestReportDetailProps = {
 };
 
 export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
+  const { t } = useTranslation("common");
   const { data, isLoading, isError, refetch } = useAdminTestReport(runId);
   const { data: list } = useAdminTestReports({ pageSize: 20 });
   useTestReportEvents();
@@ -54,12 +56,14 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/admin/test-reports">All test reports</Link>
+                <Link href="/admin/test-reports">
+                  {t("admin.testReports.detail.breadcrumbAll")}
+                </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Report</BreadcrumbPage>
+              <BreadcrumbPage>{t("admin.testReports.detail.breadcrumbReport")}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -70,7 +74,7 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
           size="sm"
           onClick={() => refetch()}
           className="size-8 p-0"
-          aria-label="Refresh the report"
+          aria-label={t("admin.testReports.detail.refreshAriaLabel")}
         >
           <RefreshCw className="size-4" />
         </Button>
@@ -84,14 +88,14 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
         {header}
         <div className="rounded-lg border border-rose-200 bg-rose-50/50 px-5 py-14 text-center dark:border-rose-500/30 dark:bg-rose-500/10">
           <p className="text-sm font-semibold text-rose-800 dark:text-rose-300">
-            This report could not be read
+            {t("admin.testReports.detail.loadErrorTitle")}
           </p>
           <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
-            The backend that keeps the reports did not answer.
+            {t("admin.testReports.detail.loadErrorDescription")}
           </p>
           <Button variant="outline" className="mt-4" onClick={() => refetch()}>
             <RefreshCw className="size-4" />
-            Try again
+            {t("admin.testReports.detail.tryAgain")}
           </Button>
         </div>
       </div>
@@ -116,9 +120,7 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
       <TestReportVerdict run={data.run} />
       {isRunning ? (
         <p className="text-ink-600 rounded-xl border border-sky-100 bg-sky-50/40 px-5 py-4 text-xs leading-relaxed dark:border-sky-500/30 dark:bg-sky-500/10">
-          This page follows the live state, so the verdict above flips the moment the suite lands —
-          the took on this page counts up while it is still going. The arrow above still forces a
-          pull if you want one.
+          {t("admin.testReports.detail.liveNotice")}
         </p>
       ) : (
         <>
@@ -134,10 +136,10 @@ export const TestReportDetail = ({ runId }: TestReportDetailProps) => {
           <section className="border-ink-200 bg-card overflow-hidden rounded-xl border">
             <div className="border-ink-100 border-b px-5 py-4">
               <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
-                The slowest tests
+                {t("admin.testReports.detail.slowestTestsHeading")}
               </h3>
               <p className="text-ink-400 mt-0.5 text-[10px]">
-                The tests that took the most time in this run.
+                {t("admin.testReports.detail.slowestTestsDescription")}
               </p>
             </div>
             <TestReportSlowestSpecs files={data.files} limit={6} />

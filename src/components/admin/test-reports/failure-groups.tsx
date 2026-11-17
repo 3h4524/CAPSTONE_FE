@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { ChevronDown, Layers } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { TestReportStatusBadge } from "@/components/admin/test-reports/status-badge";
+import { i18n } from "@/i18n/client";
 import type { TestReportFile, TestReportSpec } from "@/types/admin-test-reports";
 import { cn } from "@/utils/cn";
 
@@ -19,11 +21,12 @@ type FailureGroup = {
 
 const signatureOf = (spec: TestReportSpec) => {
   const message = spec.errorMessage?.split("\n").find((line) => line.trim());
-  if (!message) return "The test failed without a message";
+  if (!message) return i18n.t("admin.testReports.failureGroups.noMessageSignature");
   return message.trim().slice(0, 140);
 };
 
 export const TestReportFailureGroups = ({ files }: TestReportFailureGroupsProps) => {
+  const { t } = useTranslation("common");
   const [openGroup, setOpenGroup] = useState<string | null>(null);
 
   const groups = useMemo(() => {
@@ -52,10 +55,10 @@ export const TestReportFailureGroups = ({ files }: TestReportFailureGroupsProps)
     return (
       <section className="border-ink-200 bg-card rounded-xl border p-5">
         <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
-          Why the tests failed
+          {t("admin.testReports.failureGroups.heading")}
         </h3>
         <p className="text-ink-400 mt-2 text-[11px]">
-          No test failed in this run.
+          {t("admin.testReports.failureGroups.empty")}
         </p>
       </section>
     );
@@ -65,10 +68,10 @@ export const TestReportFailureGroups = ({ files }: TestReportFailureGroupsProps)
     <section className="border-ink-200 bg-card rounded-xl border">
       <div className="border-ink-100 border-b px-5 py-4">
         <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
-          Why the tests failed
+          {t("admin.testReports.failureGroups.heading")}
         </h3>
         <p className="text-ink-400 mt-0.5 text-[10px]">
-          {groups.length} different reasons. Open one to see the tests that share it.
+          {t("admin.testReports.failureGroups.description", { count: groups.length })}
         </p>
       </div>
 
@@ -102,11 +105,11 @@ export const TestReportFailureGroups = ({ files }: TestReportFailureGroupsProps)
                 </span>
                 {allKnown && (
                   <span className="shrink-0 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-amber-700 uppercase dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-                    known gap
+                    {t("admin.testReports.knownGap")}
                   </span>
                 )}
                 <span className="text-ink-500 w-16 shrink-0 text-right text-[11px] font-bold">
-                  {group.specs.length} test{group.specs.length === 1 ? "" : "s"}
+                  {t("admin.testReports.failureGroups.tests", { count: group.specs.length })}
                 </span>
               </button>
 
@@ -123,7 +126,7 @@ export const TestReportFailureGroups = ({ files }: TestReportFailureGroupsProps)
                       </span>
                       {spec.isKnownIssue && (
                         <span className="shrink-0 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-amber-700 uppercase dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-                          known gap
+                          {t("admin.testReports.knownGap")}
                         </span>
                       )}
                       <span className="text-ink-400 shrink-0 font-mono text-[10px]">

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import type { TFunction } from "i18next";
 import { Check, ChevronLeft, ChevronRight, EyeOff, Pencil, Search, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { FeatureEditDialog } from "@/components/admin/subscription-plans/feature-edit-dialog";
 import { PhonePager } from "@/components/commons/data-display/phone-pager";
@@ -16,24 +18,31 @@ import { cn } from "@/utils/cn";
 const DESKTOP_PAGE_SIZE = 10;
 const PHONE_PAGE_SIZE = 5;
 
-const formatEdited = (feature: AdminFeature) =>
+const formatEdited = (feature: AdminFeature, t: TFunction) =>
   feature.updatedAt
-    ? `Edited ${new Date(feature.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}${feature.updatedByName ? ` by ${feature.updatedByName}` : ""}`
+    ? feature.updatedByName
+      ? t("admin.plans.catalog.editedBy", {
+          date: new Date(feature.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+          name: feature.updatedByName,
+        })
+      : t("admin.plans.catalog.edited", {
+          date: new Date(feature.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+        })
     : null;
 
-const limitSummary = (feature: AdminFeature) =>
-  [feature.defaultLimit === null ? "No limit by default" : `Default ${feature.defaultLimit.toLocaleString()}`, feature.unit]
+const limitSummary = (feature: AdminFeature, t: TFunction) =>
+  [feature.defaultLimit === null ? t("admin.plans.catalog.noLimitByDefault") : t("admin.plans.catalog.defaultValue", { value: feature.defaultLimit.toLocaleString() }), feature.unit]
     .filter(Boolean)
     .join(" ");
 
 // The quick filters, each with the features it keeps.
 const FILTERS = [
-  { key: "all", label: "All", keep: () => true },
-  { key: "flag", label: "On/off", keep: (feature: AdminFeature) => feature.kind === "flag" },
-  { key: "limit", label: "Limits", keep: (feature: AdminFeature) => feature.kind === "limit" },
-  { key: "no-plan", label: "In no plan", keep: (feature: AdminFeature) => feature.plans.length === 0 },
-  { key: "no-trial", label: "Not in trial", keep: (feature: AdminFeature) => !feature.trialAvailable },
-  { key: "hidden", label: "Hidden", keep: (feature: AdminFeature) => !feature.isActive },
+  { key: "all", labelKey: "admin.plans.catalog.filterAll", keep: () => true },
+  { key: "flag", labelKey: "admin.plans.shared.onOff", keep: (feature: AdminFeature) => feature.kind === "flag" },
+  { key: "limit", labelKey: "admin.plans.catalog.filterLimits", keep: (feature: AdminFeature) => feature.kind === "limit" },
+  { key: "no-plan", labelKey: "admin.plans.catalog.inNoPlan", keep: (feature: AdminFeature) => feature.plans.length === 0 },
+  { key: "no-trial", labelKey: "admin.plans.catalog.notInTrial", keep: (feature: AdminFeature) => !feature.trialAvailable },
+  { key: "hidden", labelKey: "admin.plans.catalog.hidden", keep: (feature: AdminFeature) => !feature.isActive },
 ] as const;
 
 type FilterKey = (typeof FILTERS)[number]["key"];
@@ -52,6 +61,7 @@ const planColumns = (features: AdminFeature[]) => {
  * how they are named, ordered and offered.
  */
 export function FeatureCatalogPanel() {
+  const { t } = useTranslation("common");
   const { data: features, isLoading } = useAdminFeatures();
   const isPhone = useIsPhone();
   const pageSize = isPhone ? PHONE_PAGE_SIZE : DESKTOP_PAGE_SIZE;
@@ -90,7 +100,7 @@ export function FeatureCatalogPanel() {
               setPage(1);
             }}
           >
-            <SelectTrigger aria-label="Filter features" className="bg-card w-full">
+            <SelectTrigger aria-label={t("admin.plans.catalog.filterAria")} className="bg-card w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent position="popper" className="bg-card w-(--radix-select-trigger-width)">
@@ -99,14 +109,14 @@ export function FeatureCatalogPanel() {
                 if (item.key !== "all" && count === 0) return null;
                 return (
                   <SelectItem key={item.key} value={item.key}>
-                    {item.label} · {count}
+                    {t(item.labelKey)} · {count}
                   </SelectItem>
                 );
               })}
             </SelectContent>
           </Select>
         ) : (
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter features">
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("admin.plans.catalog.filterAria")}>
           {FILTERS.map((item) => {
             const count = features.filter(item.keep).length;
             if (item.key !== "all" && count === 0) return null;
@@ -124,7 +134,7 @@ export function FeatureCatalogPanel() {
                   filter === item.key ? "border-ink-900 bg-ink-900 text-card" : "border-ink-200 bg-card text-ink-600 hover:border-ink-300"
                 )}
               >
-                {item.label}
+                {t(item.labelKey)}
                 <span className={cn("tabular-nums", filter === item.key ? "text-white/70" : "text-ink-400")}>{count}</span>
               </button>
             );
@@ -140,8 +150,8 @@ export function FeatureCatalogPanel() {
               setQuery(event.target.value);
               setPage(1);
             }}
-            placeholder="Search by name or code"
-            aria-label="Search features"
+            placeholder={t("admin.plans.catalog.searchPlaceholder")}
+            aria-label={t("admin.plans.catalog.searchAria")}
             className="border-ink-200 bg-card placeholder:text-ink-400 focus:border-ink-400 h-9 w-full rounded-lg border pr-3 pl-8 text-sm outline-none"
           />
         </label>
@@ -161,12 +171,11 @@ export function FeatureCatalogPanel() {
               </section>
             );
           })}
-          {shown.length === 0 && <p className="text-ink-500 py-10 text-center text-sm">No feature matches.</p>}
+          {shown.length === 0 && <p className="text-ink-500 py-10 text-center text-sm">{t("admin.plans.catalog.noFeatureMatch")}</p>}
           <p className="text-ink-400 text-xs">
-            {features.length} features in {groups.length} groups. New features are built by developers; here you choose how they are
-            shown and offered.
+            {t("admin.plans.catalog.footerNote", { features: features.length, groups: groups.length })}
           </p>
-          <PhonePager page={current} pageCount={totalPages} onPageChange={setPage} label="Feature pages" />
+          <PhonePager page={current} pageCount={totalPages} onPageChange={setPage} label={t("admin.plans.catalog.pages")} />
         </div>
       ) : (
       <Card className="border-ink-200 bg-card gap-0 overflow-hidden rounded-2xl border p-0 shadow-none">
@@ -174,14 +183,14 @@ export function FeatureCatalogPanel() {
           <table className="w-full min-w-[900px] border-collapse text-sm">
             <thead>
               <tr className="border-ink-200 bg-ink-50/70 text-ink-500 border-b text-left text-[11px] font-semibold tracking-wide uppercase">
-                <th scope="col" className="px-5 py-2.5">Feature</th>
-                <th scope="col" className="px-3 py-2.5">Type</th>
-                <th scope="col" className="px-3 py-2.5">Plans</th>
-                <th scope="col" className="px-3 py-2.5">Trial</th>
-                <th scope="col" className="px-3 py-2.5">Default</th>
-                <th scope="col" className="px-3 py-2.5">Status</th>
+                <th scope="col" className="px-5 py-2.5">{t("admin.plans.shared.feature")}</th>
+                <th scope="col" className="px-3 py-2.5">{t("admin.plans.catalog.type")}</th>
+                <th scope="col" className="px-3 py-2.5">{t("admin.plans.catalog.plans")}</th>
+                <th scope="col" className="px-3 py-2.5">{t("admin.plans.catalog.trial")}</th>
+                <th scope="col" className="px-3 py-2.5">{t("admin.plans.catalog.defaultColumn")}</th>
+                <th scope="col" className="px-3 py-2.5">{t("admin.plans.catalog.status")}</th>
                 <th scope="col" className="w-12 px-3 py-2.5">
-                  <span className="sr-only">Edit</span>
+                  <span className="sr-only">{t("admin.plans.shared.edit")}</span>
                 </th>
               </tr>
             </thead>
@@ -203,28 +212,27 @@ export function FeatureCatalogPanel() {
             })}
           </table>
         </div>
-        {shown.length === 0 && <p className="text-ink-500 py-10 text-center text-sm">No feature matches.</p>}
+        {shown.length === 0 && <p className="text-ink-500 py-10 text-center text-sm">{t("admin.plans.catalog.noFeatureMatch")}</p>}
         {totalPages > 1 && (
-          <nav aria-label="Feature pages" className="border-ink-100 text-ink-500 flex flex-wrap items-center justify-between gap-3 border-t px-5 py-2.5 text-xs">
+          <nav aria-label={t("admin.plans.catalog.pages")} className="border-ink-100 text-ink-500 flex flex-wrap items-center justify-between gap-3 border-t px-5 py-2.5 text-xs">
             <span className="tabular-nums">
-              {(current - 1) * pageSize + 1}–{(current - 1) * pageSize + pageRows.length} of {ordered.length}
+              {t("admin.plans.catalog.rangeOfTotal", { from: (current - 1) * pageSize + 1, to: (current - 1) * pageSize + pageRows.length, total: ordered.length })}
             </span>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" className="h-8" disabled={current <= 1} onClick={() => setPage(current - 1)}>
-                <ChevronLeft className="size-3.5" /> Previous
+                <ChevronLeft className="size-3.5" /> {t("admin.plans.catalog.previous")}
               </Button>
               <span className="tabular-nums">
-                Page {current} of {totalPages}
+                {t("admin.plans.catalog.pageOf", { page: current, total: totalPages })}
               </span>
               <Button variant="outline" size="sm" className="h-8" disabled={current >= totalPages} onClick={() => setPage(current + 1)}>
-                Next <ChevronRight className="size-3.5" />
+                {t("admin.plans.catalog.next")} <ChevronRight className="size-3.5" />
               </Button>
             </div>
           </nav>
         )}
         <p className="border-ink-100 text-ink-400 border-t px-5 py-2.5 text-[11px]">
-          {features.length} features in {groups.length} groups. New features are built by developers; here you choose how they are shown and
-          offered.
+          {t("admin.plans.catalog.footerNote", { features: features.length, groups: groups.length })}
         </p>
       </Card>
       )}
@@ -234,28 +242,33 @@ export function FeatureCatalogPanel() {
   );
 }
 
-const FeatureTrial = ({ feature }: { feature: AdminFeature }) =>
-  feature.trialAvailable ? (
+const FeatureTrial = ({ feature }: { feature: AdminFeature }) => {
+  const { t } = useTranslation("common");
+  return feature.trialAvailable ? (
           <span className="inline-flex items-center gap-1 text-[#21796e] dark:text-[#8fe0d6]">
-            <Check className="size-3.5" aria-hidden="true" /> In trial
+            <Check className="size-3.5" aria-hidden="true" /> {t("admin.plans.catalog.inTrial")}
           </span>
         ) : (
           <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-300">
-            <X className="size-3.5" aria-hidden="true" /> Not in trial
+            <X className="size-3.5" aria-hidden="true" /> {t("admin.plans.catalog.notInTrial")}
           </span>
         );
+};
 
-const FeatureOffered = ({ feature }: { feature: AdminFeature }) =>
-  feature.isActive ? (
-          <span className="text-ink-500">Offered</span>
+const FeatureOffered = ({ feature }: { feature: AdminFeature }) => {
+  const { t } = useTranslation("common");
+  return feature.isActive ? (
+          <span className="text-ink-500">{t("admin.plans.catalog.offered")}</span>
         ) : (
           <span className="bg-ink-200/70 text-ink-600 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold">
-            <EyeOff className="size-3" aria-hidden="true" /> Hidden
+            <EyeOff className="size-3" aria-hidden="true" /> {t("admin.plans.catalog.hidden")}
           </span>
         );
+};
 
 /** A feature on a phone, where the table's seven columns have no room. */
 function FeatureCard({ feature, onEdit }: { feature: AdminFeature; onEdit: (feature: AdminFeature) => void }) {
+  const { t } = useTranslation("common");
   return (
     <article className={cn("border-ink-200 bg-card rounded-xl border p-3.5 shadow-2xs", !feature.isActive && "bg-ink-50/60")}>
       <div className="flex items-start gap-2">
@@ -263,19 +276,19 @@ function FeatureCard({ feature, onEdit }: { feature: AdminFeature; onEdit: (feat
           <p className="flex flex-wrap items-center gap-1.5">
             <span className={cn("text-sm font-semibold", feature.isActive ? "text-ink-900" : "text-ink-500")}>{feature.label}</span>
             <span className="bg-ink-100 text-ink-600 rounded-full px-2 py-0.5 text-[11px] font-semibold">
-              {feature.kind === "limit" ? "Limit" : "On/off"}
+              {feature.kind === "limit" ? t("admin.plans.shared.limit") : t("admin.plans.shared.onOff")}
             </span>
           </p>
           {feature.description && <p className="text-ink-500 mt-1 text-xs">{feature.description}</p>}
           <p className="text-ink-400 mt-1 font-mono text-[11px] wrap-anywhere">{feature.code}</p>
         </div>
-        <Button variant="ghost" size="icon-sm" aria-label={`Edit ${feature.label}`} onClick={() => onEdit(feature)}>
+        <Button variant="ghost" size="icon-sm" aria-label={t("admin.plans.catalog.editFeature", { name: feature.label })} onClick={() => onEdit(feature)}>
           <Pencil className="size-3.5" />
         </Button>
       </div>
       <div className="border-ink-100 mt-2.5 space-y-2 border-t pt-2.5 text-xs">
         {feature.plans.length === 0 ? (
-          <span className="inline-block rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">In no plan</span>
+          <span className="inline-block rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">{t("admin.plans.catalog.inNoPlan")}</span>
         ) : (
           <span className="flex flex-wrap gap-1">
             {feature.plans.map((plan) => (
@@ -291,7 +304,7 @@ function FeatureCard({ feature, onEdit }: { feature: AdminFeature; onEdit: (feat
         )}
         <p className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
           <FeatureTrial feature={feature} />
-          {feature.kind === "limit" && <span className="text-ink-600 tabular-nums">{limitSummary(feature)}</span>}
+          {feature.kind === "limit" && <span className="text-ink-600 tabular-nums">{limitSummary(feature, t)}</span>}
           <FeatureOffered feature={feature} />
         </p>
       </div>
@@ -300,7 +313,8 @@ function FeatureCard({ feature, onEdit }: { feature: AdminFeature; onEdit: (feat
 }
 
 function FeatureRow({ feature, plans, onEdit }: { feature: AdminFeature; plans: string[]; onEdit: (feature: AdminFeature) => void }) {
-  const edited = formatEdited(feature);
+  const { t } = useTranslation("common");
+  const edited = formatEdited(feature, t);
   return (
     <tr className={cn("group hover:bg-ink-50/70 align-top", !feature.isActive && "bg-ink-50/50")}>
       <th scope="row" className="px-5 py-3 text-left font-normal">
@@ -313,12 +327,12 @@ function FeatureRow({ feature, plans, onEdit }: { feature: AdminFeature; plans: 
       </th>
       <td className="px-3 py-3">
         <span className="bg-ink-100 text-ink-600 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap">
-          {feature.kind === "limit" ? "Limit" : "On/off"}
+          {feature.kind === "limit" ? t("admin.plans.shared.limit") : t("admin.plans.shared.onOff")}
         </span>
       </td>
       <td className="px-3 py-3">
         {feature.plans.length === 0 ? (
-          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">In no plan</span>
+          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">{t("admin.plans.catalog.inNoPlan")}</span>
         ) : (
           // One chip per plan, filled when the plan includes it, so coverage reads down the column.
           <span className="flex flex-wrap gap-1">
@@ -327,7 +341,7 @@ function FeatureRow({ feature, plans, onEdit }: { feature: AdminFeature; plans: 
               return (
                 <span
                   key={plan}
-                  aria-label={`${plan}: ${included ? "included" : "not included"}`}
+                  aria-label={t(included ? "admin.plans.catalog.planIncludedAria" : "admin.plans.catalog.planNotIncludedAria", { plan })}
                   className={cn(
                     "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap",
                     included ? "border-[#2a9d8f]/30 bg-[#2a9d8f]/10 text-[#21796e] dark:text-[#8fe0d6]" : "border-ink-200 text-ink-400 border-dashed"
@@ -345,13 +359,13 @@ function FeatureRow({ feature, plans, onEdit }: { feature: AdminFeature; plans: 
         <FeatureTrial feature={feature} />
       </td>
       <td className="text-ink-600 px-3 py-3 text-xs whitespace-nowrap tabular-nums">
-        {feature.kind === "limit" ? limitSummary(feature) : <span className="text-ink-300">—</span>}
+        {feature.kind === "limit" ? limitSummary(feature, t) : <span className="text-ink-300">—</span>}
       </td>
       <td className="px-3 py-3 text-xs whitespace-nowrap">
         <FeatureOffered feature={feature} />
       </td>
       <td className="px-3 py-2.5">
-        <Button variant="ghost" size="icon-sm" aria-label={`Edit ${feature.label}`} onClick={() => onEdit(feature)}>
+        <Button variant="ghost" size="icon-sm" aria-label={t("admin.plans.catalog.editFeature", { name: feature.label })} onClick={() => onEdit(feature)}>
           <Pencil className="size-3.5" />
         </Button>
       </td>

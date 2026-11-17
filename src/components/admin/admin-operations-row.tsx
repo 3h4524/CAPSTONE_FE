@@ -1,8 +1,9 @@
 import Link from "next/link";
+import type { TFunction } from "i18next";
 import { ArrowUpRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
-  aiFeatureLabel,
   aiSummary,
   biggestDrop,
   bucketLabel,
@@ -31,6 +32,20 @@ const TEXT: Record<DashboardTone, string> = {
   slate: "text-ink-500",
 };
 
+const AI_FEATURE_LABEL_KEYS: Record<string, string> = {
+  image_generation: "admin.dashboard.operations.aiFeatures.imageGeneration",
+  mockup: "admin.dashboard.operations.aiFeatures.mockup",
+  listing: "admin.dashboard.operations.aiFeatures.listing",
+  video: "admin.dashboard.operations.aiFeatures.video",
+};
+
+const aiFeatureLabel = (feature: string, t: TFunction<"common">) => {
+  const labelKey = AI_FEATURE_LABEL_KEYS[feature];
+  if (labelKey) return t(labelKey);
+  const label = feature.replaceAll("_", " ");
+  return label.charAt(0).toUpperCase() + label.slice(1);
+};
+
 const DOT: Record<DashboardTone, string> = {
   emerald: "bg-emerald-500",
   amber: "bg-amber-400",
@@ -40,31 +55,35 @@ const DOT: Record<DashboardTone, string> = {
   slate: "bg-ink-300",
 };
 
-const AdminOperationsRow = ({ operations, isLoading }: AdminOperationsRowProps) => (
+const AdminOperationsRow = ({ operations, isLoading }: AdminOperationsRowProps) => {
+  const { t } = useTranslation("common");
+
+  return (
   <div className="grid grid-cols-1 gap-4.5 lg:grid-cols-3">
     <OperationsCard
-      title="Throughput"
-      subtitle="Products created and sellers at work"
+      title={t("admin.dashboard.operations.throughput")}
+      subtitle={t("admin.dashboard.operations.throughputSubtitle")}
       href="/admin/analytics"
     >
       {operations ? <Throughput operations={operations} /> : <Placeholder isLoading={isLoading} />}
     </OperationsCard>
     <OperationsCard
-      title="Pipeline funnel"
-      subtitle="How far this period's products got"
+      title={t("admin.dashboard.operations.funnel")}
+      subtitle={t("admin.dashboard.operations.funnelSubtitle")}
       href="/admin/analytics"
     >
       {operations ? <Funnel operations={operations} /> : <Placeholder isLoading={isLoading} />}
     </OperationsCard>
     <OperationsCard
-      title="AI usage"
-      subtitle="What the AI work cost and how often it failed"
+      title={t("admin.dashboard.operations.aiUsage")}
+      subtitle={t("admin.dashboard.operations.aiUsageSubtitle")}
       href="/admin/analytics"
     >
       {operations ? <AiUsage operations={operations} /> : <Placeholder isLoading={isLoading} />}
     </OperationsCard>
   </div>
-);
+  );
+};
 
 const OperationsCard = ({
   title,
@@ -76,7 +95,10 @@ const OperationsCard = ({
   subtitle: string;
   href: string;
   children: React.ReactNode;
-}) => (
+}) => {
+  const { t } = useTranslation("common");
+
+  return (
   <section className="border-ink-200 bg-card flex flex-col rounded-xl border p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] max-md:p-4">
     <div className="flex items-start justify-between gap-3">
       <div>
@@ -87,21 +109,25 @@ const OperationsCard = ({
         href={href}
         className="text-ink-500 hover:text-ink-900 flex shrink-0 items-center gap-0.5 text-xs font-medium max-md:-my-1.5 max-md:min-h-8"
       >
-        Details <ArrowUpRight className="size-3" />
+        {t("admin.dashboard.operations.details")} <ArrowUpRight className="size-3" />
       </Link>
     </div>
     <div className="mt-4 flex flex-1 flex-col">{children}</div>
   </section>
-);
+  );
+};
 
-const Placeholder = ({ isLoading }: { isLoading: boolean }) =>
-  isLoading ? (
+const Placeholder = ({ isLoading }: { isLoading: boolean }) => {
+  const { t } = useTranslation("common");
+
+  return isLoading ? (
     <div className="bg-ink-100 h-48 animate-pulse rounded-lg" />
   ) : (
     <p className="text-ink-400 flex h-48 items-center justify-center text-xs">
-      Could not load this period.
+      {t("admin.dashboard.operations.loadError")}
     </p>
   );
+};
 
 const Headline = ({
   value,
@@ -131,6 +157,7 @@ const Insight = ({ tone, children }: { tone: DashboardTone; children: React.Reac
 );
 
 const Throughput = ({ operations }: { operations: AdminOperationsDto }) => {
+  const { t } = useTranslation("common");
   const buckets = operations.throughput;
   const products = buckets.reduce((sum, bucket) => sum + bucket.products, 0);
   const jobs = buckets.reduce((sum, bucket) => sum + bucket.jobs, 0);
@@ -147,23 +174,23 @@ const Throughput = ({ operations }: { operations: AdminOperationsDto }) => {
     <>
       <Headline
         value={products.toLocaleString()}
-        unit="products"
+        unit={t("admin.dashboard.operations.productsUnit")}
         aside={
           <>
             <span className="text-ink-800 font-semibold tabular-nums">
               {perDay.toLocaleString(undefined, { maximumFractionDigits: 1 })}
             </span>{" "}
-            a day
+            {t("admin.dashboard.operations.aDay")}
           </>
         }
       />
       <dl className="text-ink-500 mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
         <div className="flex gap-1">
-          <dt>Batch jobs</dt>
+          <dt>{t("admin.dashboard.operations.batchJobs")}</dt>
           <dd className="text-ink-800 font-semibold tabular-nums">{jobs.toLocaleString()}</dd>
         </div>
         <div className="flex items-center gap-1">
-          <dt>Active sellers</dt>
+          <dt>{t("admin.dashboard.operations.activeSellers")}</dt>
           <dd className="text-ink-800 font-semibold tabular-nums">
             {operations.activeSellers.toLocaleString()}
           </dd>
@@ -175,12 +202,16 @@ const Throughput = ({ operations }: { operations: AdminOperationsDto }) => {
       <div
         className="mt-4 flex h-28 items-end gap-px"
         role="img"
-        aria-label="Products created per period"
+        aria-label={t("admin.dashboard.operations.productsPerPeriodAria")}
       >
         {buckets.map((bucket) => (
           <div
             key={bucket.start}
-            title={`${bucketLabel(bucket.start, operations.bucket)}: ${bucket.products.toLocaleString()} products, ${bucket.jobs.toLocaleString()} jobs`}
+            title={t("admin.dashboard.operations.barTitle", {
+              label: bucketLabel(bucket.start, operations.bucket),
+              products: bucket.products.toLocaleString(),
+              jobs: bucket.jobs.toLocaleString(),
+            })}
             className={`min-h-px flex-1 rounded-t-sm transition-colors ${
               bucket === busiest && bucket.products > 0
                 ? "bg-ink-600"
@@ -197,11 +228,14 @@ const Throughput = ({ operations }: { operations: AdminOperationsDto }) => {
       <Insight tone="slate">
         {products > 0 ? (
           <>
-            Busiest: <strong>{bucketLabel(busiest.start, operations.bucket)}</strong> with{" "}
-            {busiest.products.toLocaleString()} products.
+            {t("admin.dashboard.operations.busiest")}{" "}
+            <strong>{bucketLabel(busiest.start, operations.bucket)}</strong>{" "}
+            {t("admin.dashboard.operations.busiestWith", {
+              products: busiest.products.toLocaleString(),
+            })}
           </>
         ) : (
-          "No products were created in this period."
+          t("admin.dashboard.operations.noProductsPeriod")
         )}
       </Insight>
     </>
@@ -209,27 +243,39 @@ const Throughput = ({ operations }: { operations: AdminOperationsDto }) => {
 };
 
 const Funnel = ({ operations }: { operations: AdminOperationsDto }) => {
+  const { t } = useTranslation("common");
   const steps = funnelSteps(operations.funnel);
   const drop = biggestDrop(steps);
   const reached = steps[steps.length - 1];
+  const localizedStep = (label: string) => {
+    const match = steps.find((step) => step.label === label);
+    return match ? t(`admin.dashboard.operations.funnelSteps.${match.key}`) : label;
+  };
 
   return (
     <>
       <Headline
         value={`${reached.ofCreated.toLocaleString(undefined, { maximumFractionDigits: 1 })}%`}
-        unit="published"
-        aside={`of ${operations.funnel.products.toLocaleString()} products`}
+        unit={t("admin.dashboard.operations.publishedUnit")}
+        aside={t("admin.dashboard.operations.ofProducts", {
+          total: operations.funnel.products.toLocaleString(),
+        })}
       />
       <ol className="mt-4 space-y-2.5">
         {steps.map((step, index) => (
           <li key={step.key}>
             <div className="flex items-baseline justify-between gap-2 text-xs">
-              <span className="text-ink-700 font-medium">{step.label}</span>
+              <span className="text-ink-700 font-medium">
+                {t(`admin.dashboard.operations.funnelSteps.${step.key}`)}
+              </span>
               <span className="text-ink-400 text-[10px]">
                 <span className="text-ink-800 text-xs font-semibold tabular-nums">
                   {step.count.toLocaleString()}
                 </span>
-                {index > 0 && ` · ${step.fromPrevious.toFixed(1)}% of previous`}
+                {index > 0 &&
+                  ` · ${t("admin.dashboard.operations.ofPrevious", {
+                    percent: step.fromPrevious.toFixed(1),
+                  })}`}
               </span>
             </div>
             <div className="bg-ink-100 mt-1 h-2 overflow-hidden rounded-full">
@@ -253,17 +299,20 @@ const Funnel = ({ operations }: { operations: AdminOperationsDto }) => {
         }
       >
         {operations.funnel.products === 0 ? (
-          "No products were created in this period."
+          t("admin.dashboard.operations.noProductsPeriod")
         ) : drop ? (
           <>
-            Biggest drop:{" "}
+            {t("admin.dashboard.operations.biggestDrop")}{" "}
             <strong>
-              {drop.from} → {drop.to}
+              {localizedStep(drop.from)} → {localizedStep(drop.to)}
             </strong>
-            . {drop.lost.toLocaleString()} products stop there; only {drop.kept.toFixed(1)}% go on.
+            {t("admin.dashboard.operations.biggestDropRest", {
+              lost: drop.lost.toLocaleString(),
+              kept: drop.kept.toFixed(1),
+            })}
           </>
         ) : (
-          "Every product went all the way to publishing."
+          t("admin.dashboard.operations.everyProductThrough")
         )}
       </Insight>
     </>
@@ -272,6 +321,7 @@ const Funnel = ({ operations }: { operations: AdminOperationsDto }) => {
 
 const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
   const isPhone = useIsPhone();
+  const { t } = useTranslation("common");
   const summary = aiSummary(operations.aiUsage, operations.funnel.products);
   const overall = failureTone(summary.failureRate);
 
@@ -279,14 +329,14 @@ const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
     <>
       <Headline
         value={formatUsd(summary.costUsd)}
-        unit="spent"
+        unit={t("admin.dashboard.operations.spentUnit")}
         aside={
           summary.costPerProduct !== null && (
             <>
               <span className="text-ink-800 font-semibold tabular-nums">
                 {formatUsd(summary.costPerProduct)}
               </span>{" "}
-              per product
+              {t("admin.dashboard.operations.perProduct")}
             </>
           )
         }
@@ -295,13 +345,13 @@ const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
         <span className="text-ink-800 font-semibold tabular-nums">
           {summary.calls.toLocaleString()}
         </span>{" "}
-        calls ·
+        {t("admin.dashboard.operations.callsDot")}{" "}
         <span className={`font-semibold tabular-nums ${TEXT[overall]}`}>
-          {summary.failureRate.toFixed(1)}% failed
+          {t("admin.dashboard.operations.percentFailed", { rate: summary.failureRate.toFixed(1) })}
         </span>
       </p>
       {operations.aiUsage.length === 0 ? (
-        <p className="text-ink-400 mt-4 text-xs">No AI calls in this period.</p>
+        <p className="text-ink-400 mt-4 text-xs">{t("admin.dashboard.operations.noAiCallsPeriod")}</p>
       ) : isPhone ? (
         <ul className="divide-ink-100 mt-3 divide-y text-xs">
           {operations.aiUsage.map((feature) => {
@@ -309,12 +359,14 @@ const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
             return (
               <li key={feature.feature} className="py-2">
                 <p className="flex justify-between gap-3">
-                  <span className="text-ink-700 min-w-0 truncate font-medium">{aiFeatureLabel(feature.feature)}</span>
+                  <span className="text-ink-700 min-w-0 truncate font-medium">{aiFeatureLabel(feature.feature, t)}</span>
                   <span className="text-ink-800 shrink-0 font-semibold tabular-nums">{formatUsd(feature.costUsd)}</span>
                 </p>
                 <p className="text-ink-500 mt-0.5 tabular-nums">
-                  {feature.calls.toLocaleString()} calls ·{" "}
-                  <span className={`font-semibold ${TEXT[failureTone(rate)]}`}>{rate.toFixed(1)}% failed</span>
+                  {feature.calls.toLocaleString()} {t("admin.dashboard.operations.callsDot")}{" "}
+                  <span className={`font-semibold ${TEXT[failureTone(rate)]}`}>
+                    {t("admin.dashboard.operations.percentFailed", { rate: rate.toFixed(1) })}
+                  </span>
                 </p>
               </li>
             );
@@ -324,10 +376,10 @@ const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
         <table className="mt-3 w-full text-left text-xs">
           <thead className="text-ink-400 text-[11px]">
             <tr>
-              <th className="py-1 font-medium">Feature</th>
-              <th className="py-1 text-right font-medium">Calls</th>
-              <th className="py-1 text-right font-medium">Failed</th>
-              <th className="py-1 text-right font-medium">Cost</th>
+              <th className="py-1 font-medium">{t("admin.dashboard.operations.featureColumn")}</th>
+              <th className="py-1 text-right font-medium">{t("admin.dashboard.operations.callsColumn")}</th>
+              <th className="py-1 text-right font-medium">{t("admin.dashboard.operations.failedColumn")}</th>
+              <th className="py-1 text-right font-medium">{t("admin.dashboard.operations.costColumn")}</th>
             </tr>
           </thead>
           <tbody className="divide-ink-100 divide-y">
@@ -335,7 +387,7 @@ const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
               const rate = feature.calls > 0 ? (feature.failed / feature.calls) * 100 : 0;
               return (
                 <tr key={feature.feature}>
-                  <td className="text-ink-700 py-1.5">{aiFeatureLabel(feature.feature)}</td>
+                  <td className="text-ink-700 py-1.5">{aiFeatureLabel(feature.feature, t)}</td>
                   <td className="text-ink-600 py-1.5 text-right tabular-nums">
                     {feature.calls.toLocaleString()}
                   </td>
@@ -364,14 +416,16 @@ const AiUsage = ({ operations }: { operations: AdminOperationsDto }) => {
       >
         {summary.worst ? (
           <>
-            <strong>{aiFeatureLabel(summary.worst.feature)}</strong> fails{" "}
-            {summary.worst.failureRate.toFixed(1)}% of calls (
-            {summary.worst.failed.toLocaleString()} failed). Check the provider keys and quotas.
+            <strong>{aiFeatureLabel(summary.worst.feature, t)}</strong>{" "}
+            {t("admin.dashboard.operations.featureFailsShare", {
+              rate: summary.worst.failureRate.toFixed(1),
+              failed: summary.worst.failed.toLocaleString(),
+            })}
           </>
         ) : summary.calls > 0 ? (
-          "Every AI feature fails less than 2% of its calls."
+          t("admin.dashboard.operations.everyFeatureUnder2")
         ) : (
-          "No AI work in this period."
+          t("admin.dashboard.operations.noAiWorkPeriod")
         )}
       </Insight>
     </>

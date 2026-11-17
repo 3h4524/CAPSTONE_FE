@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check, ChevronDown, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { StatusBadge } from "@/components/commons/data-display/status-badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -9,6 +10,11 @@ import { Input } from "@/components/ui/input";
 import type { Batch } from "@/types/batches";
 
 const SEARCH_FROM = 6;
+
+const humanizeStatus = (status: string) => {
+  const text = status.replaceAll("_", " ");
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
 
 type BatchPickerProps = {
   batches: Batch[];
@@ -19,6 +25,7 @@ type BatchPickerProps = {
 /** Chooses the batch on a phone: says which one is open and how many there are, then drops down the rest. */
 export const BatchPicker = ({ batches, selected, onSelect }: BatchPickerProps) => {
   const [query, setQuery] = useState("");
+  const { t } = useTranslation("common");
   const matches = batches.filter((batch) => batch.name.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (
@@ -26,7 +33,7 @@ export const BatchPicker = ({ batches, selected, onSelect }: BatchPickerProps) =
       <DropdownMenuTrigger className="bg-card focus-visible:ring-ring/40 data-[state=open]:border-primary flex min-h-14 w-full items-center gap-3 rounded-xl border px-4 py-2 text-left shadow-sm outline-none focus-visible:ring-2">
         <span className="min-w-0 flex-1">
           <span className="text-muted-foreground block text-xs">
-            Choose a batch · {batches.length} {batches.length === 1 ? "batch" : "batches"}
+            {t("batches.picker.choose", { count: batches.length })}
           </span>
           <span className="block truncate text-sm font-semibold">{selected.name}</span>
         </span>
@@ -41,8 +48,8 @@ export const BatchPicker = ({ batches, selected, onSelect }: BatchPickerProps) =
               onChange={(event) => setQuery(event.target.value)}
               // The menu reads typing as jumping between items, which would take the focus away.
               onKeyDown={(event) => event.stopPropagation()}
-              placeholder="Find a batch"
-              aria-label="Find a batch"
+              placeholder={t("batches.list.search")}
+              aria-label={t("batches.list.search")}
               className="pl-9"
             />
           </div>
@@ -54,17 +61,17 @@ export const BatchPicker = ({ batches, selected, onSelect }: BatchPickerProps) =
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-medium">{batch.name}</span>
               <span className="text-muted-foreground block text-xs">
-                <span className="tabular-nums">{batch.productCount}</span> {batch.productCount === 1 ? "product" : "products"}
+                <span className="tabular-nums">{batch.productCount}</span> {t("batches.productCount", { count: batch.productCount })}
               </span>
             </span>
-            <StatusBadge status={batch.status} className="shrink-0 px-1.5 py-0 text-[10px] capitalize">
-              {batch.status}
+            <StatusBadge status={batch.status} className="shrink-0 px-1.5 py-0 text-[10px]">
+              {t(`batches.statuses.${batch.status.toLowerCase()}`, { defaultValue: humanizeStatus(batch.status) })}
             </StatusBadge>
             <Check className={batch.id === selected.id ? "text-primary size-4 shrink-0" : "invisible size-4 shrink-0"} aria-hidden="true" />
           </DropdownMenuItem>
         ))}
         </div>
-        {matches.length === 0 && <p className="text-muted-foreground px-3 py-4 text-center text-sm">No batches match “{query}”.</p>}
+        {matches.length === 0 && <p className="text-muted-foreground px-3 py-4 text-center text-sm">{t("batches.list.noMatch", { search: query })}</p>}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -1,4 +1,5 @@
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { formatImageEvalDelta, getImageEvalDeltaTone } from "@/helpers/image-quality-format";
 import type { ImageEvalMetricResult } from "@/types/admin-image-quality";
@@ -8,17 +9,19 @@ type DeltaTextProps = {
   result: ImageEvalMetricResult;
 };
 
-const TONE_TEXT = {
-  better: "better",
-  worse: "worse",
-  same: "unchanged",
+const TONE_KEYS: Record<ReturnType<typeof getImageEvalDeltaTone>, string> = {
+  better: "admin.imageQuality.evaluation.delta.better",
+  worse: "admin.imageQuality.evaluation.delta.worse",
+  same: "admin.imageQuality.evaluation.delta.same",
   none: "",
-} as const;
+};
 
 export const DeltaText = ({ result }: DeltaTextProps) => {
+  const { t } = useTranslation("common");
   const tone = getImageEvalDeltaTone(result);
   const isRising = (result.delta ?? 0) > 0;
   const Icon = tone === "same" || tone === "none" ? Minus : isRising ? ArrowUpRight : ArrowDownRight;
+  const toneKey = TONE_KEYS[tone];
 
   return (
     <span
@@ -31,7 +34,7 @@ export const DeltaText = ({ result }: DeltaTextProps) => {
     >
       <Icon className="size-4" aria-hidden="true" />
       {formatImageEvalDelta(result)}
-      {TONE_TEXT[tone] ? <span className="sr-only">({TONE_TEXT[tone]})</span> : null}
+      {toneKey ? <span className="sr-only">({t(toneKey)})</span> : null}
     </span>
   );
 };

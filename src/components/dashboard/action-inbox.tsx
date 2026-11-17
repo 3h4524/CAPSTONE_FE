@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   Sheet,
@@ -33,21 +34,22 @@ type ActionInboxProps = {
  * failures to fix first, then work to review, as one timeline.
  */
 export const ActionInbox = ({ items, isLoading, open, onOpenChange }: ActionInboxProps) => {
+  const { t } = useTranslation("common");
   const { fixNow, toReview } = splitActionItems(items);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full gap-0 sm:max-w-md">
         <SheetHeader className="border-b">
-          <SheetTitle>Needs your attention</SheetTitle>
+          <SheetTitle>{t("dashboard.inbox.title")}</SheetTitle>
           <SheetDescription>
             {isLoading
-              ? "Checking what waits on you…"
+              ? t("dashboard.inbox.checking")
               : items.length === 0
-                ? "Nothing waits on you"
+                ? t("dashboard.inbox.none")
                 : [
-                    fixNow.length > 0 && `${fixNow.length} to fix`,
-                    toReview.length > 0 && `${toReview.length} to review`,
+                    fixNow.length > 0 && t("dashboard.inbox.toFix", { count: fixNow.length }),
+                    toReview.length > 0 && t("dashboard.inbox.toReview", { count: toReview.length }),
                   ]
                     .filter(Boolean)
                     .join(" · ")}
@@ -58,12 +60,12 @@ export const ActionInbox = ({ items, isLoading, open, onOpenChange }: ActionInbo
           {!isLoading && items.length === 0 ? (
             <div className="flex items-center gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
               <CheckCircle2 className="size-5" aria-hidden="true" />
-              You&apos;re all caught up.
+              {t("dashboard.inbox.caughtUp")}
             </div>
           ) : (
             [
-              { title: "Fix now", group: fixNow },
-              { title: "To review", group: toReview },
+              { title: t("dashboard.inbox.fixNow"), group: fixNow },
+              { title: t("dashboard.inbox.toReviewTitle"), group: toReview },
             ]
               .filter(({ group }) => group.length > 0)
               .map(({ title, group }) => (

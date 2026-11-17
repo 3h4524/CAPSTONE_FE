@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useGoogleLogin } from "@/hooks/mutations/use-google-login";
 
@@ -52,6 +53,8 @@ export const GoogleSignInButton = ({
   clientId,
   onTwoFactorRequired,
 }: GoogleSignInButtonProps) => {
+  const { i18n } = useTranslation("common");
+  const locale = i18n.language;
   const containerRef = useRef<HTMLDivElement>(null);
   const { mutate: googleLogin } = useGoogleLogin(onTwoFactorRequired);
 
@@ -71,14 +74,16 @@ export const GoogleSignInButton = ({
       if (width === drawnWidth || !window.google) return;
       drawnWidth = width;
       container.replaceChildren();
-      window.google.accounts.id.renderButton(container, {
+      const options = {
         type: "standard",
         theme: "outline",
         size: "large",
         shape: "rectangular",
         text,
         width,
-      });
+        locale,
+      } as const;
+      window.google.accounts.id.renderButton(container, options);
     };
 
     loadGoogleScript()
@@ -105,7 +110,7 @@ export const GoogleSignInButton = ({
       cancelled = true;
       observer?.disconnect();
     };
-  }, [clientId, googleLogin, text]);
+  }, [clientId, googleLogin, text, locale]);
 
   return <div ref={containerRef} className="flex w-full min-w-0 justify-center overflow-hidden" />;
 };

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Logo } from "@/components/commons/icons/logo";
 import { Container } from "@/components/commons/layout/container";
@@ -21,6 +22,9 @@ import { useNavigation } from "@/hooks/use-navigation";
 import { cn } from "@/utils/cn";
 
 export const SiteHeader = () => {
+  const { t } = useTranslation("common");
+  const linkLabel = (link: (typeof NAV_LINKS)[number]) =>
+    t(`commons.siteHeader.links.${link.href.replace("/", "")}`, { defaultValue: link.label });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { handleNavClick, isItemActive } = useNavigation();
 
@@ -38,7 +42,7 @@ export const SiteHeader = () => {
           </span>
           Podivo
         </Link>
-        <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-8 md:flex" aria-label={t("commons.siteHeader.primary")}>
           {NAV_LINKS.map((link) => {
             const isActive = isItemActive(link);
             return (
@@ -53,7 +57,7 @@ export const SiteHeader = () => {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {link.label}
+                {linkLabel(link)}
               </button>
             );
           })}
@@ -63,24 +67,24 @@ export const SiteHeader = () => {
             href="/login"
             className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors focus-visible:underline focus-visible:outline-none"
           >
-            Login
+            {t("commons.siteHeader.login")}
           </Link>
           <Button variant="defaultWithTextWhite" size="sm" asChild>
-            <Link href="/register">Get Started</Link>
+            <Link href="/register">{t("commons.siteHeader.getStarted")}</Link>
           </Button>
         </div>
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
+            <Button variant="ghost" size="icon" className="md:hidden" aria-label={t("commons.siteHeader.openMenu")}>
               <Menu />
             </Button>
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
               <SheetTitle className="font-display text-left">Podivo</SheetTitle>
-              <SheetDescription className="sr-only">Site navigation</SheetDescription>
+              <SheetDescription className="sr-only">{t("commons.siteHeader.siteNavigation")}</SheetDescription>
             </SheetHeader>
-            <nav className="flex flex-col gap-1 px-4" aria-label="Mobile">
+            <nav className="flex flex-col gap-1 px-4" aria-label={t("commons.siteHeader.mobile")}>
               {NAV_LINKS.map((link) => {
                 const isActive = isItemActive(link);
                 return (
@@ -95,7 +99,7 @@ export const SiteHeader = () => {
                         : "hover:bg-muted text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    {link.label}
+                    {linkLabel(link)}
                   </button>
                 );
               })}
@@ -104,7 +108,7 @@ export const SiteHeader = () => {
                   href="/login"
                   className="hover:bg-muted focus-visible:ring-ring rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
                 >
-                  Login
+                  {t("commons.siteHeader.login")}
                 </Link>
               </SheetClose>
             </nav>
@@ -117,7 +121,7 @@ export const SiteHeader = () => {
                     className: "w-full",
                   })}
                 >
-                  Get Started
+                  {t("commons.siteHeader.getStarted")}
                 </Link>
               </SheetClose>
             </div>

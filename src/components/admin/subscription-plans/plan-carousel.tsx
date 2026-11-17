@@ -2,6 +2,7 @@
 
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/utils/cn";
 
@@ -21,6 +22,7 @@ const perViewFor = (width: number) =>
 // do not fit slide sideways with arrows instead of wrapping onto a second row.
 // Card widths are worked out here rather than in class names, so any number of plans lays out the same.
 export function PlanCarousel({ items }: { items: { key: string; node: ReactNode }[] }) {
+  const { t } = useTranslation("common");
   const scroller = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [first, setFirst] = useState(0);
@@ -54,7 +56,7 @@ export function PlanCarousel({ items }: { items: { key: string; node: ReactNode 
       onScroll={track}
       className={cn("flex", slides ? "min-w-0 flex-1 snap-x snap-mandatory overflow-x-auto scroll-smooth pb-1 max-sm:order-first max-sm:basis-full" : "flex-wrap")}
       style={{ gap: GAP, scrollbarWidth: slides ? "none" : undefined }}
-      aria-label={slides ? `Plans ${first + 1} to ${last} of ${items.length}` : undefined}
+      aria-label={slides ? t("admin.plans.carousel.ariaPosition", { first: first + 1, last, total: items.length }) : undefined}
     >
       {items.map((item) => (
         <div
@@ -79,18 +81,19 @@ export function PlanCarousel({ items }: { items: { key: string; node: ReactNode 
         <ArrowButton side="right" disabled={last >= items.length} onClick={() => go(1)} />
       </div>
       <p className="text-ink-500 mt-2 text-center text-xs tabular-nums">
-        Plans {first + 1}–{last} of {items.length}
+        {t("admin.plans.carousel.position", { first: first + 1, last, total: items.length })}
       </p>
     </div>
   );
 }
 
 function ArrowButton({ side, disabled, onClick }: { side: "left" | "right"; disabled: boolean; onClick: () => void }) {
+  const { t } = useTranslation("common");
   const Icon = side === "left" ? ChevronLeft : ChevronRight;
   return (
     <button
       type="button"
-      aria-label={side === "left" ? "Previous plans" : "Next plans"}
+      aria-label={side === "left" ? t("admin.plans.carousel.previousPlans") : t("admin.plans.carousel.nextPlans")}
       disabled={disabled}
       onClick={onClick}
       className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 flex size-10 shrink-0 items-center justify-center rounded-full border shadow-sm transition disabled:pointer-events-none disabled:opacity-30"

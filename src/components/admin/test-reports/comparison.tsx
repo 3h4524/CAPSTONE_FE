@@ -1,4 +1,5 @@
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { TestReportDetail } from "@/types/admin-test-reports";
 
@@ -18,14 +19,16 @@ export const TestReportComparison = ({
   current,
   previous,
 }: TestReportComparisonProps) => {
+  const { t } = useTranslation("common");
+
   if (!previous) {
     return (
       <section className="border-ink-200 bg-card rounded-xl border p-5">
         <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
-          Compared with the run before
+          {t("admin.testReports.comparison.heading")}
         </h3>
         <p className="text-ink-400 mt-2 text-[11px]">
-          This is the first run kept on this machine, so there is nothing to compare it with yet.
+          {t("admin.testReports.comparison.firstRun")}
         </p>
       </section>
     );
@@ -40,21 +43,21 @@ export const TestReportComparison = ({
 
   const cards = [
     {
-      label: "New failures",
+      labelKey: "admin.testReports.comparison.newFailures",
       count: newFailures.length,
       tone: newFailures.length > 0 ? "rose" : "slate",
       icon: ArrowUpRight,
       titles: newFailures,
     },
     {
-      label: "Fixed since last run",
+      labelKey: "admin.testReports.comparison.fixedSinceLastRun",
       count: fixed.length,
       tone: fixed.length > 0 ? "emerald" : "slate",
       icon: ArrowDownRight,
       titles: fixed,
     },
     {
-      label: "Still failing",
+      labelKey: "admin.testReports.comparison.stillFailing",
       count: stillFailing.length,
       tone: stillFailing.length > 0 ? "amber" : "slate",
       icon: Minus,
@@ -66,7 +69,7 @@ export const TestReportComparison = ({
     <section className="border-ink-200 bg-card rounded-xl border p-5">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
-          Compared with the run before
+          {t("admin.testReports.comparison.heading")}
         </h3>
         <span className="text-ink-400 font-mono text-[10px]">
           {previous.run.runId}
@@ -74,9 +77,9 @@ export const TestReportComparison = ({
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        {cards.map(({ label, count, tone, icon: Icon, titles }) => (
+        {cards.map(({ labelKey, count, tone, icon: Icon, titles }) => (
           <div
-            key={label}
+            key={labelKey}
             className={`rounded-lg border p-3.5 ${
               tone === "rose"
                 ? "border-rose-200 bg-rose-50/60 dark:border-rose-500/30 dark:bg-rose-500/10"
@@ -89,7 +92,7 @@ export const TestReportComparison = ({
           >
             <div className="flex items-center justify-between">
               <span className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">
-                {label}
+                {t(labelKey)}
               </span>
               <Icon
                 className={`size-3.5 ${
@@ -117,7 +120,7 @@ export const TestReportComparison = ({
                 ))}
                 {titles.length > 3 && (
                   <li className="text-ink-400 text-[10px]">
-                    +{titles.length - 3} more
+                    {t("admin.testReports.comparison.more", { count: titles.length - 3 })}
                   </li>
                 )}
               </ul>

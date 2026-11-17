@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PlayCircle, RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { TestReportMetricCards } from "@/components/admin/test-reports/metric-cards";
 import { TestReportRunDialog } from "@/components/admin/test-reports/run-dialog";
@@ -22,16 +23,17 @@ import type { TestReportStatus } from "@/types/admin-test-reports";
 
 const STATUS_FILTERS: ReadonlyArray<{
   value: "all" | TestReportStatus;
-  label: string;
+  labelKey: string;
 }> = [
-  { value: "all", label: "Every state" },
-  { value: "failed", label: "Failed" },
-  { value: "error", label: "Broken" },
-  { value: "running", label: "Running" },
-  { value: "passed", label: "Passed" },
+  { value: "all", labelKey: "admin.testReports.dashboard.filterAll" },
+  { value: "failed", labelKey: "admin.testReports.dashboard.filterFailed" },
+  { value: "error", labelKey: "admin.testReports.dashboard.filterError" },
+  { value: "running", labelKey: "admin.testReports.dashboard.filterRunning" },
+  { value: "passed", labelKey: "admin.testReports.dashboard.filterPassed" },
 ];
 
 export const TestReportsDashboard = () => {
+  const { t } = useTranslation("common");
   const [status, setStatus] = useState<"all" | TestReportStatus>("all");
   const [isRunDialogOpen, setIsRunDialogOpen] = useState(false);
   const filter = useMemo(() => (status === "all" ? {} : { status }), [status]);
@@ -63,8 +65,8 @@ export const TestReportsDashboard = () => {
     <>
       <div className="flex flex-col gap-5">
         <PageHeader
-          title="End-to-end test reports"
-          description="Every run of the Playwright suite is kept on the machine that made it. Press “Run tests” to run the suite here; the running row counts up here and flips by itself the moment the suite lands."
+          title={t("admin.testReports.dashboard.title")}
+          description={t("admin.testReports.dashboard.description")}
           actions={
             <Button
               type="button"
@@ -77,7 +79,7 @@ export const TestReportsDashboard = () => {
               ) : (
                 <PlayCircle className="size-4" />
               )}
-              Run tests
+              {t("admin.testReports.dashboard.runTests")}
             </Button>
           }
         />
@@ -93,9 +95,11 @@ export const TestReportsDashboard = () => {
         <section className="border-ink-200 bg-card overflow-hidden rounded-lg border shadow-[0_2px_8px_rgba(15,23,42,0.02)]">
           <div className="border-ink-100 flex flex-col justify-between gap-3 border-b px-5 py-4 sm:flex-row sm:items-center">
             <div>
-              <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">Test runs</h3>
+              <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
+                {t("admin.testReports.dashboard.runsHeading")}
+              </h3>
               <p className="text-ink-500 mt-0.5 text-[10px]">
-                Newest first. Open a run to see every test it covered.
+                {t("admin.testReports.dashboard.runsDescription")}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -111,7 +115,7 @@ export const TestReportsDashboard = () => {
                 <SelectContent>
                   {STATUS_FILTERS.map((option) => (
                     <SelectItem key={option.value} value={option.value} className="text-xs">
-                      {option.label}
+                      {t(option.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -122,7 +126,7 @@ export const TestReportsDashboard = () => {
                 size="sm"
                 onClick={() => refetch()}
                 className="size-8 p-0"
-                aria-label="Refresh the list of runs"
+                aria-label={t("admin.testReports.dashboard.refreshAriaLabel")}
               >
                 <RefreshCw className="size-4" />
               </Button>
@@ -132,10 +136,10 @@ export const TestReportsDashboard = () => {
           {isError ? (
             <div className="px-5 py-14 text-center">
               <p className="text-ink-700 text-sm font-semibold">
-                The list of runs could not be read
+                {t("admin.testReports.dashboard.loadErrorTitle")}
               </p>
               <p className="text-ink-500 mt-1 text-xs">
-                The backend that keeps the reports did not answer.
+                {t("admin.testReports.dashboard.loadErrorDescription")}
               </p>
             </div>
           ) : (

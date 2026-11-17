@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import type { AdminUserActions} from "@/components/admin/users/admin-user-parts";
 import { AdminUserCard, UserActions, UserIdentity, UserPlan, UserRoles, UserStatus } from "@/components/admin/users/admin-user-parts";
@@ -15,12 +16,13 @@ interface AdminUsersTableProps extends AdminUserActions {
 
 export const AdminUsersTable = ({ users, ...actions }: AdminUsersTableProps) => {
   const isPhone = useIsPhone();
+  const { t } = useTranslation("common");
 
   if (isPhone) {
     return (
       <div>
         {users.length === 0 ? (
-          <p className="text-ink-500 py-8 text-center text-sm">No users found.</p>
+          <p className="text-ink-500 py-8 text-center text-sm">{t("admin.users.noUsersFound")}</p>
         ) : (
           <ul className="space-y-2.5">
             {users.map((user) => (
@@ -38,28 +40,28 @@ export const AdminUsersTable = ({ users, ...actions }: AdminUsersTableProps) => 
         <TableHeader>
           <TableRow className="bg-ink-50/80 hover:bg-ink-50/80">
             <TableHead className="text-ink-500 w-12 text-center text-xs font-semibold tracking-wider uppercase">
-              NO.
+              {t("admin.users.tableNo")}
             </TableHead>
             <TableHead className="text-ink-500 text-xs font-semibold tracking-wider uppercase">
-              USER
+              {t("admin.users.tableUser")}
             </TableHead>
             <TableHead className="text-ink-500 text-xs font-semibold tracking-wider uppercase">
-              ROLE
+              {t("admin.users.tableRole")}
             </TableHead>
             <TableHead className="text-ink-500 text-xs font-semibold tracking-wider uppercase">
-              PLAN
+              {t("admin.users.tablePlan")}
             </TableHead>
             <TableHead className="text-ink-500 text-xs font-semibold tracking-wider uppercase">
-              STATUS
+              {t("admin.users.tableStatus")}
             </TableHead>
             <TableHead className="text-ink-500 w-28 text-center text-xs font-semibold tracking-wider uppercase">
-              JOBS
+              {t("admin.users.tableJobs")}
             </TableHead>
             <TableHead className="text-ink-500 w-32 text-center text-xs font-semibold tracking-wider uppercase">
-              PLAN PRICE
+              {t("admin.users.tablePlanPrice")}
             </TableHead>
             <TableHead className="text-ink-500 w-28 text-center text-xs font-semibold tracking-wider uppercase">
-              ACTIONS
+              {t("admin.users.tableActions")}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -67,7 +69,7 @@ export const AdminUsersTable = ({ users, ...actions }: AdminUsersTableProps) => 
           {users.length === 0 ? (
             <TableRow>
               <TableCell colSpan={8} className="text-ink-500 h-24 text-center">
-                No users found.
+                {t("admin.users.noUsersFound")}
               </TableCell>
             </TableRow>
           ) : (

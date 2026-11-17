@@ -1,13 +1,14 @@
 "use client";
 import { useId, useState } from "react";
 import {
-  Check,
+  Check,
   Download,
-  Film,
-  History,
-  RotateCcw,
-  X,
+  Film,
+  History,
+  RotateCcw,
+  X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { Button } from "@/components/ui/button";
@@ -38,8 +39,8 @@ import { generateVideoConfigSchema } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { GenerateVideoConfig, VideoRunSummary } from "@/types/video-workflow";
 
-const formatRunDate = (value: string) =>
-  `${new Intl.DateTimeFormat("en-GB", {
+const formatRunDate = (value: string, language: string) =>
+  `${new Intl.DateTimeFormat(language === "en" ? "en-GB" : language, {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "UTC",
@@ -64,20 +65,21 @@ const VideoRunHistory = ({
   onChange: (runId: string) => void;
   onRetry: () => void;
 }) => {
+  const { t, i18n } = useTranslation("common");
   const labelId = useId();
   const statusId = useId();
   const selectedValue = runs.some((run) => run.id === selectedRunId)
     ? (selectedRunId ?? undefined)
     : undefined;
   const placeholder = !workflowAvailable
-    ? "History is not available yet"
+    ? t("workflowMedia.videoReview.historyNotAvailable")
     : isPending
-      ? "Loading generated videos..."
+      ? t("workflowMedia.videoReview.loadingGenerated")
       : isError
-        ? "Video history is unavailable"
+        ? t("workflowMedia.videoReview.historyUnavailable")
         : runs.length === 0
-          ? "No saved generated videos"
-          : "Choose a previous generated video";
+          ? t("workflowMedia.videoReview.noSavedVideos")
+          : t("workflowMedia.videoReview.choosePrevious");
 
   return (
     <div className="bg-muted/25 border-b px-4 py-3">
@@ -86,7 +88,7 @@ const VideoRunHistory = ({
           <span className="bg-background grid size-6 shrink-0 place-items-center rounded-full border">
             <History className="text-muted-foreground size-3.5" aria-hidden="true" />
           </span>
-          Video history
+          {t("workflowMedia.videoReview.videoHistory")}
         </span>
         <Select
           value={selectedValue}
@@ -99,8 +101,8 @@ const VideoRunHistory = ({
           <SelectContent>
             {runs.map((run) => (
               <SelectItem key={run.id} value={run.id}>
-                {formatRunDate(run.createdAt)} · {run.videoCount}{" "}
-                {run.videoCount === 1 ? "video" : "videos"} · {run.status.replaceAll("_", " ")}
+                {formatRunDate(run.createdAt, i18n.language)} · {t("workflowMedia.videoReview.videoCount", { count: run.videoCount })} ·{" "}
+                {t(`workflowMedia.runStatus.statuses.${run.status}`, { defaultValue: run.status.replaceAll("_", " ") })}
               </SelectItem>
             ))}
           </SelectContent>
@@ -113,13 +115,13 @@ const VideoRunHistory = ({
         aria-live="polite"
       >
         {!workflowAvailable ? (
-          <span>Video history becomes available after the workflow is created.</span>
+          <span>{t("workflowMedia.videoReview.historyAfterCreate")}</span>
         ) : isPending ? (
-          <span>Checking completed videos for this workflow...</span>
+          <span>{t("workflowMedia.videoReview.checkingCompleted")}</span>
         ) : isError ? (
           <>
             <span>
-              Could not load history. Restart the backend if it is still running an older build.
+              {t("workflowMedia.videoReview.historyLoadError")}
             </span>
             <Button
               type="button"
@@ -128,13 +130,13 @@ const VideoRunHistory = ({
               className="h-7 px-3 text-xs"
               onClick={onRetry}
             >
-              Try again
+              {t("workflowMedia.videoReview.tryAgain")}
             </Button>
           </>
         ) : runs.length === 0 ? (
-          <span>No completed video with a stored file was found for this workflow.</span>
+          <span>{t("workflowMedia.videoReview.noCompleted")}</span>
         ) : (
-          <span>Select a previous run to review or download its final video.</span>
+          <span>{t("workflowMedia.videoReview.selectPrevious")}</span>
         )}
       </div>
     </div>
@@ -142,6 +144,7 @@ const VideoRunHistory = ({
 };
 
 export const VideoReviewPanel = () => {
+  const { t } = useTranslation("common");
   const { run, runId, selectRun } = useWorkflowRuntime();
   const { data: videos, isPending } = useRunVideos(runId);
   const { data: sceneVideos = [] } = useRunSceneVideos(runId);
@@ -198,7 +201,7 @@ export const VideoReviewPanel = () => {
     if (!run || !timelineConfig) return;
     const parsed = generateVideoConfigSchema.safeParse(timelineConfig);
     if (!parsed.success) {
-      showToast("warning", parsed.error.issues[0]?.message ?? "Check video settings.");
+      showToast("warning", parsed.error.issues[0]?.message ?? t("workflowMedia.runStatus.checkVideoSettings"));
       return;
     }
     try {
@@ -226,13 +229,13 @@ export const VideoReviewPanel = () => {
     return (
       <section className="bg-card rounded-xl border p-4" aria-labelledby="final-video-title">
         <h3 id="final-video-title" className="text-base font-semibold">
-          Final video
+          {t("workflowMedia.videoReview.finalVideo")}
         </h3>
         <div className="-mx-4 mt-3">{history}</div>
         <div className="bg-muted/35 text-muted-foreground mt-3 flex min-h-32 flex-col items-center justify-center gap-2 rounded-lg px-4 text-center">
           <Film className="size-5" aria-hidden="true" />
           <p className="text-xs leading-relaxed">
-            Run the workflow to generate and join the scene videos.
+            {t("workflowMedia.videoReview.runToGenerate")}
           </p>
         </div>
       </section>
@@ -244,11 +247,11 @@ export const VideoReviewPanel = () => {
         aria-labelledby="final-video-title"
       >
         <h3 id="final-video-title" className="p-4 text-base font-semibold">
-          Final video
+          {t("workflowMedia.videoReview.finalVideo")}
         </h3>
         {history}
         <div className="p-4">
-          <SectionLoading label="Loading video versions" />
+          <SectionLoading label={t("workflowMedia.videoReview.loadingVersions")} />
         </div>
       </section>
     );
@@ -259,11 +262,11 @@ export const VideoReviewPanel = () => {
         aria-labelledby="final-video-title"
       >
         <h3 id="final-video-title" className="p-4 text-base font-semibold">
-          Final video
+          {t("workflowMedia.videoReview.finalVideo")}
         </h3>
         {history}
         <p className="text-muted-foreground p-4 text-xs">
-          This run has no joined video. Choose a previous generated video from Video history.
+          {t("workflowMedia.videoReview.noJoinedVideo")}
         </p>
       </section>
     );
@@ -275,21 +278,21 @@ export const VideoReviewPanel = () => {
       <header className="flex flex-wrap items-end justify-between gap-3 p-4">
         <div className="space-y-1">
           <h3 id="final-video-title" className="text-base font-semibold">
-            Final video
+            {t("workflowMedia.videoReview.finalVideo")}
           </h3>
           <p className="text-muted-foreground text-xs">
-            Review the joined output before approval or download.
+            {t("workflowMedia.videoReview.reviewDescription")}
           </p>
         </div>
         <div className="w-full min-w-0 min-[420px]:max-w-52">
           <Select value={video.id} onValueChange={setViewedId}>
-            <SelectTrigger className="w-full" aria-label="Video version">
+            <SelectTrigger className="w-full" aria-label={t("workflowMedia.videoReview.videoVersion")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {videos?.map((v) => (
                 <SelectItem key={v.id} value={v.id}>
-                  Version {v.version} · {v.approvalStatus}
+                  {t("workflowMedia.videoReview.versionOption", { version: v.version, status: t(`workflowMedia.approvalStatuses.${v.approvalStatus}`, { defaultValue: v.approvalStatus }) })}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -304,36 +307,36 @@ export const VideoReviewPanel = () => {
               key={video.id}
               src={video.previewUrl}
               poster={video.thumbnailUrl ?? undefined}
-              label={`Final video version ${video.version}`}
+              label={t("workflowMedia.videoReview.finalVideoVersion", { version: video.version })}
             />
           </VideoPreviewFrame>
         ) : (
           <div className="bg-muted/35 text-muted-foreground flex min-h-40 flex-col items-center justify-center gap-2 rounded-lg px-4 text-center">
             <Film className="size-5" aria-hidden="true" />
-            <p className="text-xs leading-relaxed">The joined preview is being prepared.</p>
+            <p className="text-xs leading-relaxed">{t("workflowMedia.videoReview.preparing")}</p>
           </div>
         )}
         <dl className="bg-muted/35 grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg p-3 sm:grid-cols-4">
           <div>
-            <dt className="text-muted-foreground text-[11px]">Version</dt>
+            <dt className="text-muted-foreground text-[11px]">{t("workflowMedia.videoReview.version")}</dt>
             <dd className="mt-0.5 text-xs font-semibold">{video.version}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground text-[11px]">Format</dt>
+            <dt className="text-muted-foreground text-[11px]">{t("workflowMedia.storyboard.format")}</dt>
             <dd className="mt-0.5 text-xs font-semibold">
               {video.aspectRatio} · {video.width} × {video.height}
             </dd>
           </div>
           <div>
-            <dt className="text-muted-foreground text-[11px]">Review</dt>
-            <dd className="mt-0.5 text-xs font-semibold">Revision {video.reviewRevision}</dd>
+            <dt className="text-muted-foreground text-[11px]">{t("workflowMedia.videoReview.review")}</dt>
+            <dd className="mt-0.5 text-xs font-semibold">{t("workflowMedia.videoReview.revision", { revision: video.reviewRevision })}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground text-[11px]">Quality check</dt>
+            <dt className="text-muted-foreground text-[11px]">{t("workflowMedia.videoReview.qualityCheck")}</dt>
             <dd className="mt-0.5 text-xs font-semibold">
               {(typeof video.qa.technical === "object" && video.qa.technical !== null
                 ? (video.qa.technical as Record<string, unknown>).fullDecode
-                : video.qa.fullDecode) === true ? "Passed" : "Pending"}
+                : video.qa.fullDecode) === true ? t("workflowMedia.videoReview.passed") : t("workflowMedia.videoReview.pending")}
             </dd>
           </div>
         </dl>
@@ -342,8 +345,8 @@ export const VideoReviewPanel = () => {
           <Button
             type="button"
             size="icon-sm"
-            aria-label="Approve video"
-            title="Approve video"
+            aria-label={t("workflowMedia.videoReview.approveVideo")}
+            title={t("workflowMedia.videoReview.approveVideo")}
             disabled={!canReview || isActing || video.approvalStatus === "approved"}
             onClick={() =>
               run &&
@@ -362,8 +365,8 @@ export const VideoReviewPanel = () => {
             type="button"
             size="icon-sm"
             variant="outline"
-            aria-label="Reject video"
-            title="Reject video"
+            aria-label={t("workflowMedia.videoReview.rejectVideo")}
+            title={t("workflowMedia.videoReview.rejectVideo")}
             disabled={!canReview || isActing || video.approvalStatus === "rejected"}
             onClick={() =>
               run &&
@@ -382,8 +385,8 @@ export const VideoReviewPanel = () => {
             type="button"
             size="icon-sm"
             variant="outline"
-            aria-label="Download MP4"
-            title="Download MP4"
+            aria-label={t("workflowMedia.videoReview.downloadMp4")}
+            title={t("workflowMedia.videoReview.downloadMp4")}
             disabled={isDownloading || !video.previewUrl}
             onClick={() =>
               download(
@@ -398,8 +401,8 @@ export const VideoReviewPanel = () => {
             type="button"
             size="icon-sm"
             variant="outline"
-            aria-label={isPreviewing ? "Checking storyboard" : "Re-render video"}
-            title={isPreviewing ? "Checking storyboard…" : "Re-render video"}
+            aria-label={isPreviewing ? t("workflowMedia.videoReview.checkingStoryboard") : t("workflowMedia.videoReview.rerender")}
+            title={isPreviewing ? t("workflowMedia.videoReview.checkingStoryboardDots") : t("workflowMedia.videoReview.rerender")}
             disabled={!canReview || isActing || isPreviewing}
             onClick={rerender}
           >
@@ -422,8 +425,7 @@ export const VideoReviewPanel = () => {
         </div>
         {!canReview && (
           <p className="text-muted-foreground text-xs leading-relaxed">
-            Only the current completed version can be approved. Older versions remain available from
-            the version menu.
+            {t("workflowMedia.videoReview.onlyCurrent")}
           </p>
         )}
       </div>

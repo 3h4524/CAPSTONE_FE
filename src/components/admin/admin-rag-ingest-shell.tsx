@@ -26,23 +26,23 @@ import { useIsPhone } from "@/hooks/use-is-phone";
 import { cn } from "@/utils/cn";
 
 const CONTENT_TYPES = [
-  ["listing", "Listings"],
-  ["policy", "Policies"],
-  ["keyword", "Keywords"],
-  ["faq", "FAQ"],
-  ["image", "Image knowledge"],
-  ["video", "Video knowledge"],
+  ["listing", "admin.dashboard.ragIngest.contentTypes.listings"],
+  ["policy", "admin.dashboard.ragIngest.contentTypes.policies"],
+  ["keyword", "admin.dashboard.ragIngest.contentTypes.keywords"],
+  ["faq", "admin.dashboard.ragIngest.contentTypes.faq"],
+  ["image", "admin.dashboard.ragIngest.contentTypes.image"],
+  ["video", "admin.dashboard.ragIngest.contentTypes.video"],
 ] as const;
 
 const ACCEPTED_FILES = ".txt,.md,.csv,.json,.html,.htm";
 
 type AdminRagTab = "ingest" | "research" | "documents" | "search";
 
-const RAG_TABS: { value: AdminRagTab; label: string; shortLabel: string }[] = [
-  { value: "ingest", label: "Ingest document", shortLabel: "Ingest" },
-  { value: "research", label: "Market Insights", shortLabel: "Insights" },
-  { value: "documents", label: "Documents & versions", shortLabel: "Docs" },
-  { value: "search", label: "Search playground", shortLabel: "Search" },
+const RAG_TABS: { value: AdminRagTab; labelKey: string; shortLabelKey: string }[] = [
+  { value: "ingest", labelKey: "admin.dashboard.ragIngest.tabs.ingest", shortLabelKey: "admin.dashboard.ragIngest.tabs.ingestShort" },
+  { value: "research", labelKey: "admin.dashboard.ragIngest.tabs.research", shortLabelKey: "admin.dashboard.ragIngest.tabs.researchShort" },
+  { value: "documents", labelKey: "admin.dashboard.ragIngest.tabs.documents", shortLabelKey: "admin.dashboard.ragIngest.tabs.documentsShort" },
+  { value: "search", labelKey: "admin.dashboard.ragIngest.tabs.search", shortLabelKey: "admin.dashboard.ragIngest.tabs.searchShort" },
 ];
 
 type AdminRagIngestShellProps = {
@@ -74,7 +74,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
   const mutation = useMutation({
     mutationFn: ingestRagDocument,
     onSuccess: ({ documentId }) => {
-      showToast("success", `Document ingested successfully (${documentId.slice(0, 8)}…).`);
+      showToast("success", t("admin.dashboard.ragIngest.ingestSuccess", { id: documentId.slice(0, 8) }));
       setFileName("");
       setContent("");
     },
@@ -83,7 +83,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
   const handleFile = async (file: File) => {
     const extension = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`;
     if (!ACCEPTED_FILES.split(",").includes(extension)) {
-      showToast("error", "Use a TXT, MD, CSV, JSON, or HTML file.");
+      showToast("error", t("admin.dashboard.ragIngest.fileTypeError"));
       return;
     }
 
@@ -93,7 +93,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
       setTitle((current) => current || file.name.replace(/\.[^.]+$/, ""));
       setSourceType((current) => (current === "manual" ? "file" : current));
     } catch {
-      showToast("error", "Could not read this file.");
+      showToast("error", t("admin.dashboard.ragIngest.fileReadError"));
     }
   };
 
@@ -112,7 +112,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
 
   const submit = () => {
     if (!title.trim() || !content.trim()) {
-      showToast("error", "Add a title and document content before ingesting.");
+      showToast("error", t("admin.dashboard.ragIngest.titleContentRequired"));
       return;
     }
 
@@ -133,12 +133,16 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
       <div className="flex flex-col justify-between gap-4 max-md:gap-3 md:flex-row md:items-end">
         <PageHeader
           className={cn((activeTab === "documents" || activeTab === "search") && "max-md:hidden")}
-          eyebrow="Knowledge base"
-          title={activeTab === "research" ? "Market Insights" : "RAG Knowledge Base"}
+          eyebrow={t("admin.dashboard.ragIngest.eyebrow")}
+          title={
+            activeTab === "research"
+              ? t("admin.dashboard.ragIngest.titleInsights")
+              : t("admin.dashboard.ragIngest.titleRag")
+          }
           description={
             activeTab === "research"
-              ? "Manage the shared public Etsy dataset used by seller-facing Market Radar."
-              : "Ingest documents, review versions, and control which knowledge is active for retrieval."
+              ? t("admin.dashboard.ragIngest.descriptionInsights")
+              : t("admin.dashboard.ragIngest.descriptionRag")
           }
         />
         <div className="border-ink-200 bg-card flex flex-wrap rounded-lg border p-1 shadow-sm max-md:grid max-md:grid-cols-4 max-md:gap-1">
@@ -151,8 +155,8 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
               className="max-md:min-h-10 max-md:min-w-0 max-md:px-1 max-md:text-xs"
               onClick={() => setActiveTab(tab.value)}
             >
-              <span className="max-md:hidden">{tab.label}</span>
-              <span className="md:hidden">{tab.shortLabel}</span>
+              <span className="max-md:hidden">{t(tab.labelKey)}</span>
+              <span className="md:hidden">{t(tab.shortLabelKey)}</span>
             </Button>
           ))}
         </div>
@@ -174,9 +178,9 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
           <section className="border-ink-200 bg-card rounded-xl border p-5 shadow-sm max-md:p-4 sm:p-6">
             <div className="border-ink-100 flex items-center justify-between gap-3 border-b pb-4">
               <div>
-                <h2 className="text-ink-900 text-sm font-bold">Document content</h2>
+                <h2 className="text-ink-900 text-sm font-bold">{t("admin.dashboard.ragIngest.contentHeading")}</h2>
                 <p className="text-ink-500 mt-1 text-xs">
-                  Plain text is sent to the RAG ingestion pipeline.
+                  {t("admin.dashboard.ragIngest.contentHint")}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -187,7 +191,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                   onClick={resetForm}
                   disabled={mutation.isPending}
                 >
-                  <RotateCcw className="size-3.5" /> Reset
+                  <RotateCcw className="size-3.5" /> {t("admin.dashboard.ragIngest.resetButton")}
                 </Button>
                 <Button
                   type="button"
@@ -196,7 +200,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                   className="max-md:hidden"
                   onClick={() => inputRef.current?.click()}
                 >
-                  <Upload className="size-3.5" /> Choose file
+                  <Upload className="size-3.5" /> {t("admin.dashboard.ragIngest.chooseFile")}
                 </Button>
               </div>
             </div>
@@ -236,10 +240,10 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                 <>
                   <Upload className="text-primary size-6 animate-bounce" />
                   <span className="text-primary mt-2 text-xs font-semibold">
-                    Release to upload
+                    {t("admin.dashboard.ragIngest.releaseToUpload")}
                   </span>
                   <span className="text-ink-500 mt-1 text-[11px]">
-                    Your document will be loaded here
+                    {t("admin.dashboard.ragIngest.dropLoads")}
                   </span>
                 </>
               ) : fileName ? (
@@ -248,20 +252,20 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                   <span className="text-ink-700 mt-2 max-w-full truncate text-xs font-semibold">
                     {fileName}
                   </span>
-                  <span className="text-ink-500 mt-1 text-[11px] max-md:hidden">Click to replace</span>
-                  <span className="text-ink-500 mt-1 text-[11px] md:hidden">Tap to replace</span>
+                  <span className="text-ink-500 mt-1 text-[11px] max-md:hidden">{t("admin.dashboard.ragIngest.clickReplace")}</span>
+                  <span className="text-ink-500 mt-1 text-[11px] md:hidden">{t("admin.dashboard.ragIngest.tapReplace")}</span>
                 </>
               ) : (
                 <>
                   <FileText className="text-ink-400 size-6" />
                   <span className="text-ink-600 mt-2 text-xs font-semibold max-md:hidden">
-                    Drop a document here or browse
+                    {t("admin.dashboard.ragIngest.dropBrowse")}
                   </span>
                   <span className="text-ink-600 mt-2 text-xs font-semibold md:hidden">
-                    Tap to choose a file
+                    {t("admin.dashboard.ragIngest.tapChooseFile")}
                   </span>
                   <span className="text-ink-500 mt-1 text-[11px]">
-                    TXT, MD, CSV, JSON, or HTML
+                    {t("admin.dashboard.ragIngest.acceptedTypes")}
                   </span>
                 </>
               )}
@@ -285,34 +289,34 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
               className="text-ink-700 mt-5 block text-xs font-semibold"
               htmlFor="rag-content"
             >
-              Content <span className="text-rose-500">*</span>
+              {t("admin.dashboard.ragIngest.contentLabel")} <span className="text-rose-500">*</span>
             </label>
             <Textarea
               id="rag-content"
               value={content}
               onChange={(event) => setContent(event.target.value)}
-              placeholder="Paste or review the document content…"
+              placeholder={t("admin.dashboard.ragIngest.contentPlaceholder")}
               className="mt-2 min-h-[300px] resize-y text-sm leading-6 max-md:min-h-40 max-md:text-base"
             />
             <p className="text-ink-500 mt-2 text-right text-[11px]">
-              {content.length.toLocaleString()} characters
+              {t("admin.dashboard.ragIngest.characters", { chars: content.length.toLocaleString() })}
             </p>
           </section>
 
           <aside className="border-ink-200 bg-card rounded-xl border p-5 shadow-sm max-md:p-4 sm:p-6">
-            <h2 className="text-ink-900 text-sm font-bold">Document metadata</h2>
+            <h2 className="text-ink-900 text-sm font-bold">{t("admin.dashboard.ragIngest.metadataHeading")}</h2>
             <p className="text-ink-500 mt-1 text-xs leading-5">
-              These fields help retrieval target the right knowledge.
+              {t("admin.dashboard.ragIngest.metadataHint")}
             </p>
             <div className="mt-5 space-y-4">
-              <Field label="Title" required>
+              <Field label={t("admin.dashboard.ragIngest.fieldTitle")} required>
                 <Input
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
-                  placeholder="e.g. Shipping policy"
+                  placeholder={t("admin.dashboard.ragIngest.titlePlaceholder")}
                 />
               </Field>
-              <Field label="Content type" required>
+              <Field label={t("admin.dashboard.ragIngest.fieldContentType")} required>
                 <Select
                   value={contentType}
                   onValueChange={(value) =>
@@ -320,16 +324,16 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select content type" />
+                    <SelectValue placeholder={t("admin.dashboard.ragIngest.selectContentType")} />
                   </SelectTrigger>
                   <SelectContent
                     position="popper"
                     align="start"
                     className="z-[100] w-[var(--radix-select-trigger-width)]"
                   >
-                    {CONTENT_TYPES.map(([value, label]) => (
+                    {CONTENT_TYPES.map(([value, labelKey]) => (
                       <SelectItem key={value} value={value}>
-                        {label}
+                        {t(labelKey)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -341,46 +345,50 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                 onClick={() => setIsMoreOpen((open) => !open)}
                 className="text-ink-700 flex min-h-10 w-full items-center justify-between text-xs font-semibold md:hidden"
               >
-                More details
+                {t("admin.dashboard.ragIngest.moreDetails")}
                 <ChevronDown className={cn("text-ink-400 size-4 transition-transform", isMoreOpen && "rotate-180")} aria-hidden="true" />
               </button>
               <div className={cn("space-y-4", !isMoreOpen && "max-md:hidden")}>
-              <Field label="Source id">
+              <Field label={t("admin.dashboard.ragIngest.fieldSourceId")}>
                 <Input
                   value={sourceId}
                   onChange={(event) => setSourceId(event.target.value)}
-                  placeholder={isPhone ? "faq-about-apcs" : "faq-about-apcs (same id replaces the older version)"}
+                  placeholder={
+                    isPhone
+                      ? t("admin.dashboard.ragIngest.sourceIdPlaceholder")
+                      : t("admin.dashboard.ragIngest.sourceIdPlaceholderLong")
+                  }
                 />
-                <span className="text-ink-500 mt-1 block text-[11px] font-normal md:hidden">The same id replaces the older version.</span>
+                <span className="text-ink-500 mt-1 block text-[11px] font-normal md:hidden">{t("admin.dashboard.ragIngest.sourceIdHint")}</span>
               </Field>
-              <Field label="Source type">
+              <Field label={t("admin.dashboard.ragIngest.fieldSourceType")}>
                 <Input
                   value={sourceType}
                   onChange={(event) => setSourceType(event.target.value)}
-                  placeholder="manual, file, url…"
+                  placeholder={t("admin.dashboard.ragIngest.sourceTypePlaceholder")}
                 />
               </Field>
-              <Field label="Source URL">
+              <Field label={t("admin.dashboard.ragIngest.fieldSourceUrl")}>
                 <Input
                   type="url"
                   value={sourceUrl}
                   onChange={(event) => setSourceUrl(event.target.value)}
-                  placeholder="https://…"
+                  placeholder={t("admin.dashboard.ragIngest.sourceUrlPlaceholder")}
                 />
               </Field>
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Language">
+                <Field label={t("admin.dashboard.ragIngest.fieldLanguage")}>
                   <Input
                     value={language}
                     onChange={(event) => setLanguage(event.target.value)}
-                    placeholder="en"
+                    placeholder={t("admin.dashboard.ragIngest.languagePlaceholder")}
                   />
                 </Field>
-                <Field label="Version">
+                <Field label={t("admin.dashboard.ragIngest.fieldVersion")}>
                   <Input
                     value={version}
                     onChange={(event) => setVersion(event.target.value)}
-                    placeholder="v1"
+                    placeholder={t("admin.dashboard.ragIngest.versionPlaceholder")}
                   />
                 </Field>
               </div>
@@ -395,18 +403,24 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
               >
                 {mutation.isPending ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" /> Ingesting…
+                    <Loader2 className="size-4 animate-spin" /> {t("admin.dashboard.ragIngest.ingesting")}
                   </>
                 ) : (
                   <>
-                    <Upload className="size-4" /> Ingest document
+                    <Upload className="size-4" /> {t("admin.dashboard.ragIngest.ingestButton")}
                   </>
                 )}
               </Button>
               <p className="text-ink-500 mt-3 text-center text-[11px] leading-4">
                 {!title.trim() || !content.trim()
-                  ? `Add ${!title.trim() && !content.trim() ? "a title and content" : !title.trim() ? "a title" : "content"} to ingest the document.`
-                  : "The document will be chunked and embedded for semantic search."}
+                  ? t("admin.dashboard.ragIngest.hintMissing", {
+                      missing: !title.trim()
+                        ? !content.trim()
+                          ? t("admin.dashboard.ragIngest.hintBoth")
+                          : t("admin.dashboard.ragIngest.hintTitle")
+                        : t("admin.dashboard.ragIngest.hintContent"),
+                    })
+                  : t("admin.dashboard.ragIngest.readyHint")}
               </p>
             </div>
           </aside>
@@ -440,6 +454,7 @@ const Field = ({
 
 const RagUsageGuide = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation("common");
   return (
     <section className="border-ink-200 bg-card mt-6 rounded-xl border p-4 shadow-sm max-md:mt-3 sm:p-5">
       <div className="flex items-start gap-3 max-md:flex-wrap max-md:gap-y-1">
@@ -449,10 +464,10 @@ const RagUsageGuide = () => {
         {/* On a phone the text keeps the row beside the icon and the button drops below it. */}
         <div className="max-md:basis-[calc(100%-2.75rem)]">
           <h2 className="text-ink-900 text-sm font-bold">
-            Quick guide: how to use the RAG knowledge base
+            {t("admin.dashboard.ragIngest.guideTitle")}
           </h2>
           <p className="text-ink-500 mt-1 text-xs leading-5">
-            Add trusted information here so Podi can find and use it later.
+            {t("admin.dashboard.ragIngest.guideSubtitle")}
           </p>
         </div>
         <Button
@@ -464,7 +479,7 @@ const RagUsageGuide = () => {
           aria-expanded={isOpen}
         >
           <ChevronDown className={`size-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-          {isOpen ? "Hide steps" : "Show steps"}
+          {isOpen ? t("admin.dashboard.ragIngest.hideSteps") : t("admin.dashboard.ragIngest.showSteps")}
         </Button>
       </div>
       {isOpen && (
@@ -472,33 +487,32 @@ const RagUsageGuide = () => {
           <div className="mt-4 grid gap-3 md:grid-cols-4">
             <GuideStep
               number="1"
-              title="Choose a source"
-              text="Paste content, upload a file, or run Etsy research for public listing signals."
+              title={t("admin.dashboard.ragIngest.guide1Title")}
+              text={t("admin.dashboard.ragIngest.guide1Text")}
             />
             <GuideStep
               number="2"
-              title="Add metadata"
-              text="Enter a clear title, content type, language, and version so documents are easy to find."
+              title={t("admin.dashboard.ragIngest.guide2Title")}
+              text={t("admin.dashboard.ragIngest.guide2Text")}
             />
             <GuideStep
               number="3"
-              title="Ingest document"
-              text="Click Ingest document. The system splits, embeds, and indexes the content for search."
+              title={t("admin.dashboard.ragIngest.guide3Title")}
+              text={t("admin.dashboard.ragIngest.guide3Text")}
             />
             <GuideStep
               number="4"
-              title="Review versions"
-              text="Open Documents & versions to check status and manage which version is active."
+              title={t("admin.dashboard.ragIngest.guide4Title")}
+              text={t("admin.dashboard.ragIngest.guide4Text")}
             />
           </div>
           <div className="border-ink-100 text-ink-500 mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t pt-3 text-[11px] leading-5">
-            <span className="text-ink-800 font-semibold">Etsy tip:</span>
+            <span className="text-ink-800 font-semibold">{t("admin.dashboard.ragIngest.etsyTip")}</span>
             <span>
-              Run now automatically selects the top 3 listings and queues them for RAG. Enable a schedule
-              for recurring research.
+              {t("admin.dashboard.ragIngest.etsyTipBody")}
             </span>
             <ArrowRight className="text-ink-400 size-3.5" />
-            <span>Use only information you are allowed to store and retrieve.</span>
+            <span>{t("admin.dashboard.ragIngest.storageNote")}</span>
           </div>
         </>
       )}

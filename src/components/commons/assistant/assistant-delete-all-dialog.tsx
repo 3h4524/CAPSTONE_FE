@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -9,23 +11,26 @@ type AssistantDeleteAllDialogProps = {
   onConfirm: () => void;
 };
 
-export const AssistantDeleteAllDialog = ({ open, onOpenChange, onConfirm }: AssistantDeleteAllDialogProps) => (
+export const AssistantDeleteAllDialog = ({ open, onOpenChange, onConfirm }: AssistantDeleteAllDialogProps) => {
+  const { t } = useTranslation("common");
+  return (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="sm:max-w-sm">
       <DialogHeader>
-        <DialogTitle>Delete all chats?</DialogTitle>
+        <DialogTitle>{t("commons.assistant.deleteAll.title")}</DialogTitle>
         <DialogDescription>
-          Every chat in your history is deleted except the one that is open now. This cannot be undone.
+          {t("commons.assistant.deleteAll.description")}
         </DialogDescription>
       </DialogHeader>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-          Cancel
+          {t("commons.popup.cancel")}
         </Button>
         <Button type="button" variant="destructive" onClick={onConfirm}>
-          Delete all
+          {t("commons.assistant.deleteAll.confirm")}
         </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
-);
+  );
+};

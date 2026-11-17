@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import type { WorkflowIssue } from "@/types/workflow";
@@ -13,6 +14,7 @@ type IssueRowProps = {
 };
 
 const IssueRow = ({ issue, onFix }: IssueRowProps) => {
+  const { t } = useTranslation("common");
   const { nodeId } = issue;
   return (
     <li className="flex items-start gap-2 text-sm text-amber-900 dark:text-amber-300">
@@ -24,7 +26,7 @@ const IssueRow = ({ issue, onFix }: IssueRowProps) => {
           onClick={() => onFix(nodeId)}
           className="-my-2 min-h-10 shrink-0 px-1 text-xs font-semibold underline underline-offset-2"
         >
-          Fix
+          {t("workflowEditor.checks.fix")}
         </button>
       )}
     </li>
@@ -39,21 +41,36 @@ type WorkflowChecksSummaryProps = {
 
 /** The first few problems above the steps, so a workflow that cannot run says so straight away. */
 export const WorkflowChecksSummary = ({ issues, onFix, onViewAll }: WorkflowChecksSummaryProps) => {
+  const { t } = useTranslation("common");
   if (issues.length === 0) return null;
 
   return (
-    <section aria-label="Workflow checks" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
+    <section
+      aria-label={t("workflowEditor.checks.label")}
+      className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10"
+    >
       <div className="flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden="true" />
+        <AlertTriangle
+          className="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-300"
+          aria-hidden="true"
+        />
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold text-amber-950 dark:text-amber-300">
-            {issues.length} workflow {issues.length === 1 ? "check needs" : "checks need"} attention
+            {t("workflowEditor.checks.needAttention", { count: issues.length })}
           </h2>
-          <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-300">Fix these before you run this workflow.</p>
+          <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-300">
+            {t("workflowEditor.checks.fixBeforeRun")}
+          </p>
         </div>
         {issues.length > SUMMARY_LENGTH && (
-          <Button type="button" variant="outline" size="sm" className="bg-card h-8 shrink-0 px-3 text-xs" onClick={onViewAll}>
-            View
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="bg-card h-8 shrink-0 px-3 text-xs"
+            onClick={onViewAll}
+          >
+            {t("workflowEditor.runGroup.view")}
           </Button>
         )}
       </div>
@@ -73,17 +90,24 @@ type WorkflowChecksListProps = {
 
 /** Every problem with the workflow, each leading to the step that has it. */
 export const WorkflowChecksList = ({ issues, onFix }: WorkflowChecksListProps) => {
+  const { t } = useTranslation("common");
   if (issues.length === 0) {
     return (
-      <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300" role="status">
+      <div
+        className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+        role="status"
+      >
         <CheckCircle2 className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-        Every step is connected and configured. Press Run to start the batch.
+        {t("workflowEditor.checks.allGood")}
       </div>
     );
   }
 
   return (
-    <ul aria-label="Workflow issues" className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
+    <ul
+      aria-label={t("workflowEditor.checks.issues")}
+      className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10"
+    >
       {issues.map((issue) => (
         <IssueRow key={issue.id} issue={issue} onFix={onFix} />
       ))}

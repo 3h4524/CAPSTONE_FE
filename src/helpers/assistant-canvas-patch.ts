@@ -1,5 +1,6 @@
 import { NODE_CARD_WIDTHS, WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
 import { createWorkflowNode, getConnectionIssue, withUniqueLabels } from "@/helpers/workflow-graph";
+import { i18n } from "@/i18n/client";
 import type { AssistantCanvasOperation } from "@/types/assistant";
 import type { WorkflowEdge, WorkflowNode } from "@/types/workflow";
 import { addEdge, type Connection } from "@xyflow/react";
@@ -64,9 +65,9 @@ export const applyCanvasPatch = (
   const runOperation = (operation: AssistantCanvasOperation): OperationOutcome => {
     switch (operation.op) {
       case "add_node": {
-        if (!operation.type || !WORKFLOW_NODE_DEFINITIONS[operation.type]) return { reason: "Unknown step type" };
+        if (!operation.type || !WORKFLOW_NODE_DEFINITIONS[operation.type]) return { reason: i18n.t("workflowEditor.canvasPatch.unknownStepType") };
         const afterId = resolve(operation.after);
-        if (operation.after && !afterId) return { reason: "The step to add after was not found" };
+        if (operation.after && !afterId) return { reason: i18n.t("workflowEditor.canvasPatch.afterStepNotFound") };
         const after = state.nodes.find((node) => node.id === afterId);
         const defaultNode = createWorkflowNode(operation.type, nextPosition(state.nodes, after));
         const created = operation.config
@@ -78,7 +79,7 @@ export const applyCanvasPatch = (
       }
       case "remove_node": {
         const nodeId = resolve(operation.nodeId);
-        if (!nodeId) return { reason: "Step not found" };
+        if (!nodeId) return { reason: i18n.t("workflowEditor.canvasPatch.stepNotFound") };
         return {
           state: {
             nodes: state.nodes.filter((node) => node.id !== nodeId),
@@ -89,7 +90,7 @@ export const applyCanvasPatch = (
       case "connect": {
         const source = resolve(operation.source);
         const target = resolve(operation.target);
-        if (!source || !target) return { reason: "Step not found" };
+        if (!source || !target) return { reason: i18n.t("workflowEditor.canvasPatch.stepNotFound") };
         const connection: Connection = { source, target, sourceHandle: null, targetHandle: null };
         const issue = getConnectionIssue(connection, state.edges, state.nodes);
         if (issue) return { reason: issue };
@@ -98,15 +99,15 @@ export const applyCanvasPatch = (
       case "disconnect": {
         const source = resolve(operation.source);
         const target = resolve(operation.target);
-        if (!source || !target) return { reason: "Step not found" };
+        if (!source || !target) return { reason: i18n.t("workflowEditor.canvasPatch.stepNotFound") };
         const remaining = state.edges.filter((edge) => !(edge.source === source && edge.target === target));
-        if (remaining.length === state.edges.length) return { reason: "Those steps are not connected" };
+        if (remaining.length === state.edges.length) return { reason: i18n.t("workflowEditor.canvasPatch.stepsNotConnected") };
         return { state: { nodes: state.nodes, edges: remaining } };
       }
       case "update_config": {
         const nodeId = resolve(operation.nodeId);
-        if (!nodeId) return { reason: "Step not found" };
-        if (!operation.config) return { reason: "No settings to update" };
+        if (!nodeId) return { reason: i18n.t("workflowEditor.canvasPatch.stepNotFound") };
+        if (!operation.config) return { reason: i18n.t("workflowEditor.canvasPatch.noSettingsToUpdate") };
         const config = operation.config;
         return {
           state: {
@@ -118,7 +119,7 @@ export const applyCanvasPatch = (
         };
       }
       case "rename_node":
-        return { reason: "Renaming steps is turned off" };
+        return { reason: i18n.t("workflowEditor.canvasPatch.renamingOff") };
     }
   };
 

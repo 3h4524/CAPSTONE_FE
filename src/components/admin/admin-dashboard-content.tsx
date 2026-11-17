@@ -11,6 +11,7 @@ import {
   Package,
   Users,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AdminActivityPanels } from "@/components/admin/admin-activity-panels";
 import { healthChecks } from "@/components/admin/admin-attention-panel";
@@ -44,6 +45,20 @@ type AdminDashboardContentProps = {
   onExport: () => void;
 };
 
+const RANGE_LABEL_KEYS: Record<string, string> = {
+  Week: "admin.dashboard.ranges.week",
+  Month: "admin.dashboard.ranges.month",
+  HalfYear: "admin.dashboard.ranges.halfYear",
+  Year: "admin.dashboard.ranges.year",
+};
+
+const RANGE_PERIOD_KEYS: Record<string, string> = {
+  Week: "admin.dashboard.periods.week",
+  Month: "admin.dashboard.periods.month",
+  HalfYear: "admin.dashboard.periods.halfYear",
+  Year: "admin.dashboard.periods.year",
+};
+
 export const AdminDashboardContent = ({
   fullName,
   metrics,
@@ -52,6 +67,7 @@ export const AdminDashboardContent = ({
   isExporting,
   onExport,
 }: AdminDashboardContentProps) => {
+  const { t } = useTranslation("common");
   const [isHealthCheckOpen, setIsHealthCheckOpen] = useState(false);
 
   const paidShare =
@@ -61,7 +77,8 @@ export const AdminDashboardContent = ({
   const activeJobs = metrics?.activeBatchJobs ?? 0;
   const pendingTickets = metrics?.pendingTickets ?? 0;
   const range = DASHBOARD_RANGES.find((option) => option.key === timeRange) ?? DASHBOARD_RANGES[0];
-  const rangeLabel = range.label;
+  const rangeLabel = t(RANGE_LABEL_KEYS[range.key] ?? RANGE_LABEL_KEYS.Week);
+  const rangePeriod = t(RANGE_PERIOD_KEYS[range.key] ?? RANGE_PERIOD_KEYS.Week);
 
   // The Revenue and System Statistics pages' figures, for the same period, so each number shows its trend.
   const revenueFilter = useMemo(() => dashboardTrendFilter(timeRange), [timeRange]);
@@ -76,18 +93,13 @@ export const AdminDashboardContent = ({
   const revenueValue = revenue?.totalRevenue.value ?? metrics?.totalRevenue ?? 0;
   const mrrValue = revenue?.subscriptionMrr.value ?? metrics?.recurringRevenue ?? 0;
 
-  // Compute health check items to feed into Hero summary and Drawer
-  const checks = useMemo(
-    () =>
-      healthChecks({
-        financialAlerts: insights?.financialAlerts,
-        integrationStatus: statistics?.integrationStatus,
-        recentErrors: statistics?.recentErrors,
-        aiUsage: operations?.aiUsage,
-        pendingTickets,
-      }),
-    [insights, statistics, operations, pendingTickets]
-  );
+  const checks = healthChecks({
+    financialAlerts: insights?.financialAlerts,
+    integrationStatus: statistics?.integrationStatus,
+    recentErrors: statistics?.recentErrors,
+    aiUsage: operations?.aiUsage,
+    pendingTickets,
+  });
 
   return (
     <>
@@ -96,9 +108,9 @@ export const AdminDashboardContent = ({
         <div className="flex flex-col justify-between gap-4 max-md:gap-0 lg:flex-row lg:items-end">
           <PageHeader
             className="max-md:sr-only"
-            eyebrow="Platform overview"
-            title="Admin Dashboard"
-            description="Growth, production and what needs your attention, for the period you pick."
+            eyebrow={t("admin.dashboard.header.platformOverview")}
+            title={t("admin.dashboard.header.title")}
+            description={t("admin.dashboard.header.description")}
           />
           <div className="flex flex-wrap items-center gap-2 max-md:flex-nowrap">
             <DropdownMenu>
@@ -119,7 +131,7 @@ export const AdminDashboardContent = ({
                     onClick={() => onTimeRangeChange(option.key)}
                     className={`text-xs ${timeRange === option.key ? "text-primary font-semibold" : ""}`}
                   >
-                    {option.label}
+                    {t(RANGE_LABEL_KEYS[option.key] ?? RANGE_LABEL_KEYS.Week)}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -132,7 +144,8 @@ export const AdminDashboardContent = ({
               onClick={onExport}
               disabled={isExporting}
             >
-              <Download className="size-3.5" /> {isExporting ? "Exporting..." : "Export Report"}
+              <Download className="size-3.5" />{" "}
+              {isExporting ? t("admin.dashboard.header.exporting") : t("admin.dashboard.header.exportReport")}
             </Button>
           </div>
         </div>
@@ -140,9 +153,12 @@ export const AdminDashboardContent = ({
         {/* 5 KPI Metric Cards */}
         <section className="mt-4.5 grid gap-3.5 max-md:mt-0 max-md:grid-cols-2 max-md:gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
           <AdminMetricCard
-            label="Users"
+            label={t("admin.dashboard.kpi.users")}
             value={metrics?.totalUsers.toLocaleString() ?? "-"}
-            context={`${paidShare}% on a paid plan (${metrics?.activePaidUsers.toLocaleString() ?? 0})`}
+            context={t("admin.dashboard.kpi.paidShare", {
+              share: paidShare,
+              paid: metrics?.activePaidUsers.toLocaleString() ?? 0,
+            })}
             sparkline={
               metrics?.totalUsers
                 ? [
@@ -156,50 +172,53 @@ export const AdminDashboardContent = ({
             icon={Users}
           />
           <AdminMetricCard
-            label="Revenue"
+            label={t("admin.dashboard.kpi.revenue")}
             value={formatVnd(revenueValue)}
             exactValue={formatVnd(revenueValue)}
             context={
               <Delta
                 percent={revenue?.totalRevenue.percentageChange}
-                suffix={`vs previous ${range.period}`}
+                suffix={t("admin.dashboard.vsPreviousPeriod", { period: rangePeriod })}
               />
             }
             sparkline={revenue?.totalRevenue.sparkline}
             icon={Database}
           />
           <AdminMetricCard
-            label={<>Monthly recurring<span className="max-md:hidden"> revenue</span></>}
+            label={<>{t("admin.dashboard.kpi.mrrLabel")}<span className="max-md:hidden">{t("admin.dashboard.kpi.mrrLabelSuffix")}</span></>}
             value={formatVnd(mrrValue)}
             exactValue={formatVnd(mrrValue)}
             context={
               <Delta
                 percent={revenue?.subscriptionMrr.percentageChange}
-                suffix="vs start of period"
+                suffix={t("admin.dashboard.vsStartOfPeriod")}
               />
             }
             sparkline={revenue?.subscriptionMrr.sparkline}
             icon={BarChart3}
           />
           <AdminMetricCard
-            label="Products made"
+            label={t("admin.dashboard.kpi.productsMade")}
             value={operations ? operations.funnel.products.toLocaleString() : "-"}
             context={
               operations
-                ? `${operations.activeSellers.toLocaleString()} sellers · ${activeJobs} job${activeJobs === 1 ? "" : "s"} running`
-                : "Loading…"
+                ? t("admin.dashboard.kpi.sellersJobsRunning", {
+                    sellers: operations.activeSellers.toLocaleString(),
+                    count: activeJobs,
+                  })
+                : t("admin.dashboard.kpi.loading")
             }
             sparkline={operations?.throughput.map((bucket) => bucket.products)}
             icon={Package}
           />
           <AdminMetricCard
-            label="Open tickets"
+            label={t("admin.dashboard.kpi.openTickets")}
             value={pendingTickets.toLocaleString()}
             context={
               pendingTickets > 0 ? (
-                <span className="font-medium text-rose-600 dark:text-rose-400">Awaiting a reply</span>
+                <span className="font-medium text-rose-600 dark:text-rose-400">{t("admin.dashboard.kpi.awaitingReply")}</span>
               ) : (
-                "Support queue is clear"
+                t("admin.dashboard.kpi.supportQueueClear")
               )
             }
             icon={Headphones}
@@ -232,9 +251,9 @@ export const AdminDashboardContent = ({
         </div>
 
         <footer className="border-ink-200 text-ink-400 mt-6 flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-[10px] max-md:hidden">
-          <span>Podivo Admin Console · Platform overview</span>
+          <span>{t("admin.dashboard.footer.console")}</span>
           <span className="flex items-center gap-1">
-            <Activity className="size-3" /> Last synced just now
+            <Activity className="size-3" /> {t("admin.dashboard.footer.lastSynced")}
           </span>
         </footer>
       </div>

@@ -1,5 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, type LucideIcon } from "lucide-react";
 import type { ComponentType } from "react";
+import { useTranslation } from "react-i18next";
 
 type AdminMetricCardProps = {
   label: React.ReactNode;
@@ -81,8 +82,9 @@ export const Delta = ({
   suffix: string;
   polarity?: "higher-is-better" | "lower-is-better";
 }) => {
+  const { t } = useTranslation("common");
   if (percent === null || percent === undefined)
-    return <span className="text-ink-400">No earlier period to compare</span>;
+    return <span className="text-ink-400">{t("admin.dashboard.metricCard.noEarlierPeriod")}</span>;
   const isPositive = percent > 0;
   const isFavorable = polarity === "higher-is-better" ? isPositive : !isPositive;
   const Arrow = isPositive ? ArrowUpRight : ArrowDownRight;
@@ -98,7 +100,11 @@ export const Delta = ({
           {Math.abs(percent).toFixed(1)}%
         </span>
       )}
-      <span>{percent === 0 ? `No change ${suffix}` : suffix}</span>
+      <span>
+        {percent === 0
+          ? t("admin.dashboard.metricCard.noChange", { suffix })
+          : suffix}
+      </span>
     </span>
   );
 };

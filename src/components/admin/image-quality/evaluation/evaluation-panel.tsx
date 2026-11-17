@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { DeleteRunDialog } from "@/components/admin/image-quality/evaluation/delete-run-dialog";
 import { EmptyRuns } from "@/components/admin/image-quality/evaluation/empty-runs";
@@ -12,6 +13,7 @@ import { useAdminImageEvalRun } from "@/hooks/queries/use-admin-image-eval-run";
 import { useAdminImageEvalRuns } from "@/hooks/queries/use-admin-image-eval-runs";
 
 export const EvaluationPanel = () => {
+  const { t } = useTranslation("common");
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -25,13 +27,13 @@ export const EvaluationPanel = () => {
     if (isRunsError) {
       return (
         <div className="border-ink-200 bg-card rounded-xl border px-5 py-14 text-center">
-          <p className="text-ink-700 text-sm font-semibold">The evaluation runs could not be read</p>
-          <p className="text-ink-500 mt-1 text-[13px]">The backend that keeps them did not answer.</p>
+          <p className="text-ink-700 text-sm font-semibold">{t("admin.imageQuality.evaluation.runsErrorTitle")}</p>
+          <p className="text-ink-500 mt-1 text-[13px]">{t("admin.imageQuality.evaluation.runsErrorBody")}</p>
         </div>
       );
     }
     if (isLoadingRuns || isLoadingRun) {
-      return <SectionLoading label="Loading the evaluation run" />;
+      return <SectionLoading label={t("admin.imageQuality.evaluation.loadingRun")} />;
     }
     if (!run) {
       return <EmptyRuns onUpload={() => setIsUploadOpen(true)} />;

@@ -4,6 +4,7 @@ import {
   FlaskConical,
   Layers,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/utils/cn";
 
@@ -30,32 +31,34 @@ export const TestReportMetricCards = ({
   flakyTests,
   isLoading,
 }: TestReportMetricCardsProps) => {
+  const { t } = useTranslation("common");
+
   const cards: MetricCard[] = [
     {
-      label: "Test runs",
+      label: t("admin.testReports.metricCards.testRuns"),
       value: String(totalRuns),
-      note: "Runs kept on this machine",
+      note: t("admin.testReports.metricCards.testRunsNote"),
       icon: Layers,
       tone: "bg-ink-100 text-ink-600",
     },
     {
-      label: "Pass rate",
+      label: t("admin.testReports.metricCards.passRate"),
       value: `${passRate}%`,
-      note: "Of every test of the latest runs",
+      note: t("admin.testReports.metricCards.passRateNote"),
       icon: CheckCircle2,
       tone: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
     },
     {
-      label: "Failing tests",
+      label: t("admin.testReports.metricCards.failingTests"),
       value: String(failingTests),
-      note: "Tests that did not pass at all",
+      note: t("admin.testReports.metricCards.failingTestsNote"),
       icon: AlertTriangle,
       tone: "bg-rose-50 dark:bg-rose-500/10 text-rose-500",
     },
     {
-      label: "Flaky tests",
+      label: t("admin.testReports.metricCards.flakyTests"),
       value: String(flakyTests),
-      note: "Passed only after a retry",
+      note: t("admin.testReports.metricCards.flakyTestsNote"),
       icon: FlaskConical,
       tone: "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400",
     },

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { StoryboardPlayer } from "@/components/workflows/media/storyboard-player";
@@ -61,6 +62,7 @@ const previewConfig = (config: GenerateVideoConfig): GenerateVideoConfig => ({
 });
 
 export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
+  const { t } = useTranslation("common");
   const inputProductId = useWorkflowStore((state) =>
     readString(
       state.nodes.find((candidate) => candidate.data.type === "product-input")?.data.config
@@ -107,8 +109,8 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
         setBoard(null);
         setPreviewError(
           parsed.success
-            ? "Select a product to preview the storyboard."
-            : (parsed.error.issues[0]?.message ?? "Check video settings.")
+            ? t("workflowMedia.storyboard.selectProduct")
+            : (parsed.error.issues[0]?.message ?? t("workflowMedia.runStatus.checkVideoSettings"))
         );
         return;
       }
@@ -145,6 +147,7 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
       productId,
       designRun,
       previewDesign,
+      t,
     ]
   );
 
@@ -169,18 +172,18 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
       <header className="flex items-start justify-between gap-4 p-4">
         <div className="min-w-0 space-y-1">
           <h3 id="storyboard-preview-title" className="text-base font-semibold">
-            Storyboard preview
+            {t("workflowMedia.storyboard.title")}
           </h3>
           <p className="text-muted-foreground text-xs leading-relaxed">
-            Watch the assembled output using each scene's selected keyframe, format, and motion.
+            {t("workflowMedia.storyboard.description")}
           </p>
         </div>
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          aria-label="Refresh storyboard preview"
-          title="Refresh preview"
+          aria-label={t("workflowMedia.storyboard.refreshAria")}
+          title={t("workflowMedia.storyboard.refresh")}
           disabled={isPending || !productId}
           onClick={refresh}
         >
@@ -199,13 +202,13 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
         {!board && isPending && (
           <div
             className="grid grid-cols-2 gap-3 sm:grid-cols-3"
-            aria-label="Loading storyboard preview"
+            aria-label={t("workflowMedia.storyboard.loading")}
             role="status"
           >
             {[0, 1, 2].map((item) => (
               <div key={item} className="bg-muted/60 aspect-[4/5] animate-pulse rounded-lg" />
             ))}
-            <span className="sr-only">Loading storyboard preview</span>
+            <span className="sr-only">{t("workflowMedia.storyboard.loading")}</span>
           </div>
         )}
         {board && (
@@ -217,29 +220,29 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
             />
             <p className="text-muted-foreground text-xs font-medium capitalize" aria-live="polite">
               {board.template.replaceAll("_", " ")} · {board.aspectRatio} · {board.width}×
-              {board.height} · {board.durationSeconds}s · {board.scenes.length} scenes
+              {board.height} · {board.durationSeconds}s · {t("workflowMedia.storyboard.sceneCount", { count: board.scenes.length })}
             </p>
             <dl className="bg-muted/35 grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg p-3 sm:grid-cols-4">
               <div>
-                <dt className="text-muted-foreground text-[11px]">Scenes</dt>
+                <dt className="text-muted-foreground text-[11px]">{t("workflowMedia.storyboard.scenes")}</dt>
                 <dd className="mt-0.5 text-xs font-semibold">{board.scenes.length}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground text-[11px]">Format</dt>
+                <dt className="text-muted-foreground text-[11px]">{t("workflowMedia.storyboard.format")}</dt>
                 <dd className="mt-0.5 text-xs font-semibold">
                   {board.aspectRatio} · {board.width} × {board.height}
                 </dd>
               </div>
               {aiClipSeconds != null && (
                 <div>
-                  <dt className="text-muted-foreground text-[11px]">AI footage</dt>
+                  <dt className="text-muted-foreground text-[11px]">{t("workflowMedia.storyboard.aiFootage")}</dt>
                   <dd className="mt-0.5 text-xs font-semibold tabular-nums">
                     {aiClipSeconds.toFixed(1)}s
                   </dd>
                 </div>
               )}
               <div>
-                <dt className="text-muted-foreground text-[11px]">Final duration</dt>
+                <dt className="text-muted-foreground text-[11px]">{t("workflowMedia.storyboard.finalDuration")}</dt>
                 <dd className="mt-0.5 text-xs font-semibold tabular-nums">
                   {outputSeconds.toFixed(1)}s
                 </dd>
@@ -247,8 +250,7 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
             </dl>
             {storyboardHasAiScenes && (
               <p className="text-muted-foreground text-xs leading-relaxed">
-                Standard scenes play their selected camera movement here. AI scenes use their
-                selected start frame until their generated clips are ready.
+                {t("workflowMedia.storyboard.aiScenesNote")}
               </p>
             )}
           </>

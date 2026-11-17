@@ -1,3 +1,4 @@
+import { i18n } from "@/i18n/client";
 import type {
   ModelAgeGroup,
   ModelAttributes,
@@ -7,27 +8,35 @@ import type {
   ModelPhotoFilter,
 } from "@/types/mockup-templates";
 
+// The label is read when it is shown, so it follows the language chosen at that time.
+const translatedOption = <T extends string>(value: T, key: string) => ({
+  value,
+  get label() {
+    return i18n.t(`workflowMedia.modelAttributes.${key}`);
+  },
+});
+
 export const PEOPLE_OPTIONS: { value: ModelPeople; label: string }[] = [
-  { value: "single", label: "One person" },
-  { value: "group", label: "Several people" },
+  translatedOption<ModelPeople>("single", "people.single"),
+  translatedOption<ModelPeople>("group", "people.group"),
 ];
 
 export const AGE_GROUP_OPTIONS: { value: ModelAgeGroup; label: string }[] = [
-  { value: "child", label: "Child" },
-  { value: "teen", label: "Teen" },
-  { value: "adult", label: "Adult" },
-  { value: "senior", label: "Senior" },
+  translatedOption<ModelAgeGroup>("child", "ageGroups.child"),
+  translatedOption<ModelAgeGroup>("teen", "ageGroups.teen"),
+  translatedOption<ModelAgeGroup>("adult", "ageGroups.adult"),
+  translatedOption<ModelAgeGroup>("senior", "ageGroups.senior"),
 ];
 
 export const GENDER_OPTIONS: { value: ModelGender; label: string }[] = [
-  { value: "female", label: "Female" },
-  { value: "male", label: "Male" },
+  translatedOption<ModelGender>("female", "genders.female"),
+  translatedOption<ModelGender>("male", "genders.male"),
 ];
 
 export const GROUP_TYPE_OPTIONS: { value: ModelGroupType; label: string }[] = [
-  { value: "family", label: "Family" },
-  { value: "friends", label: "Friends" },
-  { value: "couple", label: "Couple" },
+  translatedOption<ModelGroupType>("family", "groupTypes.family"),
+  translatedOption<ModelGroupType>("friends", "groupTypes.friends"),
+  translatedOption<ModelGroupType>("couple", "groupTypes.couple"),
 ];
 
 const labelOf = <T extends string>(options: { value: T; label: string }[], value?: T | null) =>
@@ -37,12 +46,12 @@ const labelOf = <T extends string>(options: { value: T; label: string }[], value
 export const modelAttributesLabel = (attributes?: ModelAttributes | null) => {
   if (!attributes) return null;
   if (attributes.people === "group")
-    return labelOf(GROUP_TYPE_OPTIONS, attributes.groupType) ?? "Group";
+    return labelOf(GROUP_TYPE_OPTIONS, attributes.groupType) ?? i18n.t("workflowMedia.modelAttributes.group");
   const parts = [
     labelOf(AGE_GROUP_OPTIONS, attributes.ageGroup),
     labelOf(GENDER_OPTIONS, attributes.gender),
   ];
-  return parts.filter(Boolean).join(" · ") || "One person";
+  return parts.filter(Boolean).join(" · ") || i18n.t("workflowMedia.modelAttributes.people.single");
 };
 
 /** Whether the attributes say all a photo needs: an age group and gender for one person, a kind for a group. */

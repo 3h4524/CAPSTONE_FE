@@ -12,7 +12,13 @@ import { cn } from "@/utils/cn";
 
 /** Videos side by side on the node; the rest are a page away. */
 export const VIDEOS_PER_PAGE = 4;
-export const ASPECT: Record<string, string> = { portrait: "9 / 16", square: "1 / 1", landscape: "16 / 9" };
+export const ASPECT: Record<string, string> = {
+  portrait: "9 / 16",
+  classic_portrait: "3 / 4",
+  square: "1 / 1",
+  classic_landscape: "4 / 3",
+  landscape: "16 / 9",
+};
 
 /** The page that holds the video at `index`. */
 export const pageOf = (index: number) => Math.max(0, Math.floor(index / VIDEOS_PER_PAGE));

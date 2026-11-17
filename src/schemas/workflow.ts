@@ -61,6 +61,8 @@ const legacyAiCameraMotionAliases: Record<string, StandardSceneMotion> = {
 };
 const normalizeLegacyStandardMotion = (value: unknown) =>
   typeof value === "string" ? (legacyAiCameraMotionAliases[value] ?? value) : value;
+// The backend writes a list or setting it left out as null (a design's own settings, a run's): that is not set.
+const nullAsMissing = (value: unknown) => value ?? undefined;
 const MIN_VIDEO_DURATION_SECONDS = 5;
 const MAX_VIDEO_DURATION_SECONDS = 15;
 const MAX_VIDEO_FRAMES = MAX_VIDEO_DURATION_SECONDS * 30;
@@ -110,7 +112,7 @@ const videoEditSchema = z
         muted: z.boolean(),
       })
       .nullable(),
-    overlays: z.array(videoOverlaySchema).max(12),
+    overlays: z.preprocess((overlays) => overlays ?? [], z.array(videoOverlaySchema).max(12)),
   })
   .optional();
 
@@ -184,7 +186,10 @@ export const generateVideoConfigSchema = z
     // legacy field remains for stored workflow compatibility and AI fallback only.
     template: z.string().trim().min(1, "Choose a video template.").default("auto"),
     templateVersion: z.number().int().min(1).max(2).optional(),
-    outputFormat: z.enum(["square", "portrait", "landscape"]).catch("portrait").default("portrait"),
+    outputFormat: z
+      .enum(["square", "portrait", "landscape", "classic_landscape", "classic_portrait"])
+      .catch("square")
+      .default("square"),
     durationSeconds: wholeNumber("video duration", MIN_VIDEO_DURATION_SECONDS, MAX_VIDEO_DURATION_SECONDS),
     assetSelection: z.enum(["automatic", "manual"]),
     // The backend keeps these as null when no mock-up is picked (a design's own settings, a run's): that is none.
@@ -205,21 +210,24 @@ export const generateVideoConfigSchema = z
           "Use each mockup once in the scene order."
         )
     ),
-    standardScenes: z
-      .array(
-        z.object({
-          mockupId: z.string().uuid(),
-          baseCrop: videoRegionSchema.nullable().optional(),
-          startCrop: videoRegionSchema.nullable().optional(),
-          endCrop: videoRegionSchema.nullable().optional(),
-        })
-      )
-      .max(4)
-      .refine(
-        (scenes) => new Set(scenes.map((scene) => scene.mockupId)).size === scenes.length,
-        "Configure each mockup's framing once."
-      )
-      .optional(),
+    standardScenes: z.preprocess(
+      nullAsMissing,
+      z
+        .array(
+          z.object({
+            mockupId: z.string().uuid(),
+            baseCrop: videoRegionSchema.nullable().optional(),
+            startCrop: videoRegionSchema.nullable().optional(),
+            endCrop: videoRegionSchema.nullable().optional(),
+          })
+        )
+        .max(4)
+        .refine(
+          (scenes) => new Set(scenes.map((scene) => scene.mockupId)).size === scenes.length,
+          "Configure each mockup's framing once."
+        )
+        .optional()
+    ),
     textOverlay: z.string().max(120),
     standardOptions: z.object({
       motionPreset: z.preprocess(
@@ -229,10 +237,13 @@ export const generateVideoConfigSchema = z
       crop: z.literal("safe"),
       transition: videoTransitionSchema,
     }),
-    sceneMotionPresets: z
-      .array(z.preprocess(normalizeLegacyStandardMotion, z.enum(standardSceneMotions).nullable()))
-      .max(4)
-      .optional(),
+    sceneMotionPresets: z.preprocess(
+      nullAsMissing,
+      z
+        .array(z.preprocess(normalizeLegacyStandardMotion, z.enum(standardSceneMotions).nullable()))
+        .max(4)
+        .optional()
+    ),
     fallbackToStandard: z.boolean(),
     aiCharacterModelId: z.string().uuid().nullable().optional(),
     sharedMockupId: z.string().uuid().nullable().optional(),
@@ -252,7 +263,9 @@ export const generateVideoConfigSchema = z
         fullSceneMockupIds: z.array(z.string().uuid()).max(2).nullable(),
       })
       .optional(),
-    aiScenes: z
+    aiScenes: z.preprocess(
+      nullAsMissing,
+      z
       .array(
         z.object({
           mode: z.enum(["ai", "standard"]).default("ai"),
@@ -302,7 +315,8 @@ export const generateVideoConfigSchema = z
         })
       )
       .max(4)
-      .optional(),
+      .optional()
+    ),
     aiGlobalInstructions: AI_ADVANCED_CONTROLS_ENABLED
       ? z
           .string()
@@ -318,10 +332,13 @@ export const generateVideoConfigSchema = z
       .default("hanging_window"),
     aiStudioSourceMockupId: z.string().uuid().nullable().optional(),
     aiStudioFrameId: z.string().uuid().nullable().optional(),
-    videoEdit: videoEditSchema,
+    videoEdit: z.preprocess(nullAsMissing, videoEditSchema),
     // Before a batch run, some products' own Generate Video settings (product id to a whole config), each checked when
     // it is edited (see `ProductScopeSelect`).
-    productConfigs: z.record(z.string().uuid(), z.record(z.string(), z.unknown())).optional(),
+    productConfigs: z.preprocess(
+      nullAsMissing,
+      z.record(z.string().uuid(), z.record(z.string(), z.unknown())).optional()
+    ),
   })
   .superRefine((value, ctx) => {
     if (value.assetSelection === "manual" && value.selectedMockupIds.length === 0)
@@ -339,6 +356,15 @@ export const generateVideoConfigSchema = z
         path: ["template"],
         message: "Choose a supported AI video template.",
       });
+    // A new video has no scenes until the seller adds one; settings from before the scene editor (a legacy AI shot,
+    // or Standard mock-ups chosen by id) still describe a video on their own.
+    const hasLegacyVideo =
+      Boolean(value.aiShotOptions) ||
+      (value.mode === "standard" && (value.sceneOrder.length > 0 || value.selectedMockupIds.length > 0));
+    if (!value.aiScenes?.length && !hasLegacyVideo) {
+      ctx.addIssue({ code: "custom", path: ["aiScenes"], message: "Add at least one scene to the video." });
+      return;
+    }
     if (value.mode !== "ai_shot") return;
     if (value.aiScenes?.length) {
       if (value.aiScenes.length > 4)

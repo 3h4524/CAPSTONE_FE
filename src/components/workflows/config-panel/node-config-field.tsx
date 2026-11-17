@@ -12,8 +12,7 @@ import { MockupSelectionField } from "@/components/workflows/config-panel/fields
 import { OptionSelect } from "@/components/workflows/config-panel/fields/option-select";
 import { ProductSelect } from "@/components/workflows/config-panel/fields/product-select";
 import { SourceSelect } from "@/components/workflows/config-panel/fields/source-select";
-import { VideoOutputFormatCards } from "@/components/workflows/config-panel/fields/video-output-format-cards";
-import { getVideoOutputFormat } from "@/helpers/video-output-formats";
+import { getVideoOutputFormat, getVideoOutputFormats } from "@/helpers/video-output-formats";
 import { parseAspectRatio, readBoolean, readNumber, readString, readStringArray } from "@/helpers/workflow-config";
 import type { WorkflowField, WorkflowNodeConfig } from "@/types/workflow";
 import { cn } from "@/utils/cn";
@@ -45,7 +44,30 @@ export const NodeConfigField = ({ field, control, videoMode }: NodeConfigFieldPr
               <FormMessage />
             </FormItem>
           );
-        case "video-formats": return <FormItem><FormLabel>{field.label}</FormLabel><VideoOutputFormatCards mode={videoMode} value={getVideoOutputFormat(controller.value, videoMode).value} onChange={controller.onChange} /><FormMessage /></FormItem>;
+        case "video-formats": {
+          const selected = getVideoOutputFormat(controller.value, videoMode);
+          return (
+            <FormItem>
+              <FormLabel required>{field.label}</FormLabel>
+              <FormControl>
+                <ChoiceButtons
+                  choices={getVideoOutputFormats(videoMode).map((format) => ({
+                    value: format.value,
+                    label: format.aspectRatio,
+                    ratio: parseAspectRatio(format.aspectRatio),
+                  }))}
+                  value={selected.value}
+                  label={field.label}
+                  onChange={controller.onChange}
+                />
+              </FormControl>
+              <FormDescription className={DESCRIPTION_CLASS}>
+                {selected.label} · {selected.dimensions} px
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          );
+        }
         case "text": return <FormItem><FormLabel>{field.label}</FormLabel><FormControl><Input value={readString(controller.value)} onChange={controller.onChange} /></FormControl><FormMessage /></FormItem>;
         case "switch":
           return (

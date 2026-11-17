@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AiShotOptions } from "@/components/workflows/config-panel/fields/ai-shot-options";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -11,12 +11,13 @@ import userEvent from "@testing-library/user-event";
 let entitlements: Entitlements | undefined;
 let assets: MockupAsset[] = [];
 let packs: VideoPackDefinition[] = [];
+let aiTemplates: unknown[] = [];
 
 vi.mock("@/hooks/queries/use-entitlements", () => ({
   useEntitlements: () => ({ data: entitlements }),
 }));
 vi.mock("@/hooks/queries/use-ai-video-templates", () => ({
-  useAiVideoTemplates: () => ({ data: [], isPending: false, isError: false, refetch: vi.fn() }),
+  useAiVideoTemplates: () => ({ data: aiTemplates, isPending: false, isError: false, refetch: vi.fn() }),
 }));
 vi.mock("@/hooks/queries/use-ai-character-models", () => ({
   useAiCharacterModels: () => ({ data: [], isPending: false, isError: false, refetch: vi.fn() }),
@@ -26,6 +27,10 @@ vi.mock("@/hooks/queries/use-video-packs", () => ({
 }));
 vi.mock("@/hooks/queries/use-mockup-assets", () => ({
   useMockupAssets: () => ({ data: assets, isPending: false }),
+}));
+let batchProducts: { id: string; name: string }[] = [];
+vi.mock("@/hooks/queries/use-batch-products", () => ({
+  useBatchProducts: (batchId: string) => ({ data: batchId ? batchProducts : undefined }),
 }));
 let previewDesign: unknown = null;
 vi.mock("@/hooks/queries/use-preview-design", () => ({ usePreviewDesign: () => previewDesign }));
@@ -105,16 +110,16 @@ const renderWithScene = (mode: AiVideoSceneOptions["mode"], changes: Partial<AiV
   render(<AiShotOptions nodeId="video" disabled={false} onChange={vi.fn()} />);
 };
 
-const openModeMenu = async () => {
-  await userEvent.click(screen.getByRole("combobox", { name: "Scene 1 generation mode" }));
-  return screen.getByRole("option", { name: /AI video/ });
-};
+// The scene's mode is a pair of cards below its header: Photo motion and AI video.
+const aiVideoMode = () =>
+  within(screen.getByRole("radiogroup", { name: "Scene 1 generation mode" })).getByRole("radio", { name: /AI video/ });
 
 describe("AiShotOptions plan lock", () => {
   beforeEach(() => {
     entitlements = undefined;
     assets = [];
     previewDesign = null;
+    useWorkflowStore.setState({ designScope: null });
     // jsdom has no matchMedia; the Standard motion preview asks it about reduced motion.
     vi.stubGlobal(
       "matchMedia",
@@ -122,42 +127,43 @@ describe("AiShotOptions plan lock", () => {
     );
   });
 
-  it("locks AI video with a Pro badge when the plan leaves it out", async () => {
+  it("locks AI video with a Pro badge when the plan leaves it out", () => {
     entitlements = planWith(false);
     renderWithScene("standard");
 
-    const aiVideo = await openModeMenu();
+    const aiVideo = aiVideoMode();
 
-    expect(aiVideo).toHaveAttribute("aria-disabled", "true");
+    expect(aiVideo).toBeDisabled();
     expect(within(aiVideo).getByText("Pro")).toBeInTheDocument();
   });
 
-  it("lets a plan with AI video pick it", async () => {
+  it("lets a plan with AI video pick it", () => {
     entitlements = planWith(true);
     renderWithScene("standard");
 
-    const aiVideo = await openModeMenu();
+    const aiVideo = aiVideoMode();
 
-    expect(aiVideo).not.toHaveAttribute("aria-disabled", "true");
+    expect(aiVideo).not.toBeDisabled();
     expect(within(aiVideo).queryByText("Pro")).not.toBeInTheDocument();
   });
 
-  it("does not lock AI video while the plan is still loading", async () => {
+  it("does not lock AI video while the plan is still loading", () => {
     renderWithScene("standard");
 
-    const aiVideo = await openModeMenu();
+    const aiVideo = aiVideoMode();
 
-    expect(aiVideo).not.toHaveAttribute("aria-disabled", "true");
+    expect(aiVideo).not.toBeDisabled();
   });
 
-  it("flags a scene saved as AI video on a plan without it, keeping the trigger to its label", () => {
+  it("flags a scene saved as AI video on a plan without it, and lets it switch to Photo motion", () => {
     entitlements = planWith(false);
     renderWithScene("ai");
 
-    const trigger = screen.getByRole("combobox", { name: "Scene 1 generation mode" });
-    expect(trigger).toHaveTextContent(/^AI video$/);
+    const modes = within(screen.getByRole("radiogroup", { name: "Scene 1 generation mode" }));
+    expect(modes.getByRole("radio", { name: /AI video/ })).toHaveAttribute("aria-checked", "true");
+    expect(modes.getByRole("radio", { name: /Photo motion/ })).not.toBeDisabled();
     expect(
-      screen.getByTitle("AI video is not included in your plan. Switch this scene to Standard.")
+      screen.getByTitle("AI video is not included in your plan. Switch this scene to Photo motion.")
     ).toHaveTextContent("Pro");
   });
 
@@ -177,7 +183,8 @@ describe("AiShotOptions plan lock", () => {
       width: 1200, height: 1600, previewUrl: "/mockup.png", warnings: [],
       regions: { focalPoint: null, product: null, artwork: null, detail: null },
     }));
-    renderWithScene("ai", { mockupId: first });
+    // A 9:16 frame of a 3:4 image at 2x zoom is half its height.
+    renderWithFormat("portrait", "ai", { mockupId: first });
     await userEvent.click(screen.getByRole("button", { name: "Edit start frame" }));
     fireEvent.change(screen.getByRole("slider", { name: /Zoom/ }), { target: { value: "2" } });
     await userEvent.click(screen.getByRole("button", { name: "Save crop" }));
@@ -262,6 +269,155 @@ describe("AiShotOptions plan lock", () => {
     expect(screen.getByAltText("Motion preview for scene 1")).toHaveAttribute("src", "/black.png");
     expect(screen.getByText(/Not saved yet/)).toBeVisible();
   });
+
+  const renderBatchScene = (productScope: string | null) => {
+    assets = [hero("111111")];
+    batchProducts = [{ id: "shirt", name: "Shirt" }, { id: "hoodie", name: "Hoodie" }];
+    const video = {
+      id: "video",
+      type: "workflow",
+      position: { x: 0, y: 0 },
+      data: { type: "generate-video", config: { mode: "standard", outputFormat: "square", aiScenes: [scene("standard")] } },
+    } as unknown as WorkflowNode;
+    const input = {
+      id: "input",
+      type: "workflow",
+      position: { x: 0, y: 0 },
+      data: { type: "product-input", config: { batchId: "batch", productId: "" } },
+    } as unknown as WorkflowNode;
+    useWorkflowStore.setState({ nodes: [input, video], savedGraph: { nodes: [input, video], edges: [] }, designScope: null });
+    if (productScope)
+      useWorkflowStore.getState().enterDesignScope(
+        { kind: "product", key: `product:${productScope}`, productId: productScope, artworkGroupKey: "", label: "Shirt", runId: null },
+        video.data.config
+      );
+    render(<AiShotOptions nodeId="video" disabled={false} onChange={vi.fn()} />);
+  };
+
+  it("in a batch's shared settings, hides the start frame: it belongs to one product", () => {
+    renderBatchScene(null);
+
+    expect(screen.queryByRole("region", { name: "Scene 1 start frame" })).not.toBeInTheDocument();
+    expect(screen.getByText(/Choose a product in Video product/)).toBeVisible();
+  });
+
+  it("shows a batch product's start frame, its main mock-up by default, once the product is chosen", () => {
+    renderBatchScene("shirt");
+
+    expect(screen.getByRole("region", { name: "Scene 1 start frame" })).toBeVisible();
+    expect(screen.getByText("Main mock-up (automatic)")).toBeVisible();
+    expect(screen.queryByText(/Choose a product in Video product/)).not.toBeInTheDocument();
+  });
+});
+
+describe("AiShotOptions start frame of a style with a person", () => {
+  beforeEach(() => {
+    entitlements = undefined;
+    previewDesign = null;
+    packs = [];
+    useWorkflowStore.setState({ designScope: null });
+    vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
+  });
+  afterEach(() => {
+    aiTemplates = [];
+  });
+
+  const image = (id: string, role: string): MockupAsset => ({
+    id, productId: "product", sourceType: "generated", role, artworkGroupKey: "group", variantKey: id, revision: 1,
+    approvalStatus: "approved", approvedRevision: 1, width: 1500, height: 1500, previewUrl: `/${id}.png`, warnings: [],
+    regions: { focalPoint: null, product: null, artwork: null, detail: null },
+  });
+
+  it("offers only lifestyle images for Product On Model", async () => {
+    aiTemplates = [{
+      code: "lifestyle_in_use", version: 1, name: "Product On Model", description: "On a model.", requiresLifestyle: true,
+      requiresDetail: false, defaults: { ...scene("ai"), templateCode: "lifestyle_in_use" }, allowedSettings: {},
+    }];
+    assets = [image("hero", "Hero"), image("model", "Lifestyle")];
+    renderWithScene("ai", { templateCode: "lifestyle_in_use", mockupId: "model" });
+
+    await userEvent.click(screen.getByRole("button", { name: /start frame for scene 1/ }));
+    const picker = await screen.findByRole("dialog");
+
+    expect(within(picker).getByRole("button", { name: "Use Lifestyle model for scene 1" })).toBeVisible();
+    expect(within(picker).queryByRole("button", { name: "Use Hero hero for scene 1" })).not.toBeInTheDocument();
+    expect(within(picker).getByText(/starts from a lifestyle image/)).toBeVisible();
+  });
+
+  it("offers every approved image for a style without a person", async () => {
+    assets = [image("hero", "Hero"), image("model", "Lifestyle")];
+    renderWithScene("ai", { mockupId: "hero" });
+
+    await userEvent.click(screen.getByRole("button", { name: /start frame for scene 1/ }));
+    const picker = await screen.findByRole("dialog");
+
+    expect(within(picker).getByRole("button", { name: "Use Hero hero for scene 1" })).toBeVisible();
+    expect(within(picker).getByRole("button", { name: "Use Lifestyle model for scene 1" })).toBeVisible();
+  });
+});
+
+describe("AiShotOptions retired templates", () => {
+  beforeEach(() => {
+    entitlements = undefined;
+    assets = [];
+    previewDesign = null;
+    packs = [];
+    useWorkflowStore.setState({ designScope: null });
+    vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
+  });
+
+  // The server no longer offers them, so a scene saved with one moves to the closest template still offered.
+  it.each([
+    ["creator_pov_ugc", "lifestyle_in_use"],
+    ["everyday_story_moment", "lifestyle_in_use"],
+    ["signature_product_reveal", "cinematic_product_showcase"],
+  ])("moves a scene saved with %s to %s", (retired, current) => {
+    // The saved scenes are rewritten once the product's images are known, as for any other scene fix-up.
+    const input = { id: "input", type: "workflow", position: { x: 0, y: 0 },
+      data: { type: "product-input", config: { productId: "product", batchId: "" } } } as unknown as WorkflowNode;
+    const video = { id: "video", type: "workflow", position: { x: 0, y: 0 },
+      data: { type: "generate-video", config: { mode: "ai_shot", aiScenes: [{ ...scene("ai"), templateCode: retired, subtemplateCode: "anything" }] } } } as unknown as WorkflowNode;
+    useWorkflowStore.setState({ nodes: [input, video] });
+    render(<AiShotOptions nodeId="video" disabled={false} onChange={vi.fn()} />);
+
+    const [saved] = useWorkflowStore.getState().nodes[1]!.data.config.aiScenes as AiVideoSceneOptions[];
+    expect(saved!.templateCode).toBe(current);
+    expect(saved!.subtemplateCode).not.toBe("anything");
+  });
+});
+
+describe("AiShotOptions first scene", () => {
+  beforeEach(() => {
+    entitlements = undefined;
+    assets = [];
+    previewDesign = null;
+    packs = [];
+    useWorkflowStore.setState({ designScope: null });
+    vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
+  });
+
+  const renderEmpty = () => {
+    useWorkflowStore.setState({
+      nodes: [
+        { id: "video", type: "workflow", position: { x: 0, y: 0 }, data: { type: "generate-video", config: { mode: "standard", aiScenes: [] } } } as unknown as WorkflowNode,
+      ],
+    });
+    render(<AiShotOptions nodeId="video" disabled={false} onChange={vi.fn()} />);
+  };
+
+  it("offers the first scene inside the empty state, with no Add scene button below it", async () => {
+    renderEmpty();
+
+    expect(screen.getByText("No scenes yet")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Add scene" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Add first scene" }));
+
+    const scenes = useWorkflowStore.getState().nodes[0]!.data.config.aiScenes as AiVideoSceneOptions[];
+    expect(scenes).toHaveLength(1);
+    expect(screen.queryByText("No scenes yet")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add first scene" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add scene" })).toBeVisible();
+  });
 });
 
 describe("AiShotOptions video template of Standard scenes", () => {
@@ -307,10 +463,11 @@ describe("AiShotOptions video template of Standard scenes", () => {
     });
     render(<AiShotOptions nodeId="video" disabled={false} onChange={onChange} />);
 
-    await userEvent.click(screen.getByRole("combobox", { name: "Video template" }));
-    await userEvent.click(screen.getByRole("option", { name: /Rotating Showcase/ }));
-    // The scene the panel starts with is replaced once the seller agrees.
-    await userEvent.click(await screen.findByRole("button", { name: "Replace scenes" }));
+    await userEvent.click(screen.getByRole("button", { name: "Browse templates" }));
+    await userEvent.click(within(await screen.findByRole("radiogroup", { name: "Video template" })).getByRole("radio", { name: /Rotating Showcase/ }));
+    // Applying a template closes the picker.
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // A new node has no scenes yet, so the template fills them in without asking to replace any.
 
     const [scenes, seconds] = onChange.mock.calls.at(-1)!;
     expect(seconds).toBe(14);
@@ -325,6 +482,27 @@ describe("AiShotOptions video template of Standard scenes", () => {
     const config = useWorkflowStore.getState().nodes[0]!.data.config;
     expect(config).toMatchObject({ mode: "standard", template: "standard_rotate_showcase", templateVersion: 1, durationSeconds: 14 });
     expect(config).not.toHaveProperty("sharedMockupId");
+  });
+
+  it("explains each template in the picker: how many scenes, how long, and whether it costs AI credits", async () => {
+    packs = [rotatingShowcase, { ...rotatingShowcase, code: "product_on_model_pack", name: "Product on Model", requiresCharacter: true,
+      scenes: [{ id: "a", mode: "ai", durationSeconds: 4, templateCode: "lifestyle_in_use", subtemplateCode: "natural_motion" }] }];
+    useWorkflowStore.setState({
+      nodes: [{ id: "video", type: "workflow", position: { x: 0, y: 0 }, data: { type: "generate-video", config: { mode: "standard", aiScenes: [] } } } as unknown as WorkflowNode],
+    });
+    render(<AiShotOptions nodeId="video" disabled={false} onChange={vi.fn()} />);
+
+    // The panel shows only what is in use; the templates are in the picker.
+    expect(screen.getByText("Start from scratch")).toBeVisible();
+    expect(screen.queryByRole("radiogroup", { name: "Video template" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Browse templates" }));
+
+    const templates = within(await screen.findByRole("radiogroup", { name: "Video template" }));
+    expect(templates.getByRole("radio", { name: /Start from scratch/ })).toHaveAttribute("aria-checked", "true");
+    const rotating = templates.getByRole("radio", { name: /Rotating Showcase/ });
+    expect(within(rotating).getByText("4 scenes · 14s")).toBeVisible();
+    expect(within(rotating).getByText("Photo motion · no AI cost")).toBeVisible();
+    expect(within(templates.getByRole("radio", { name: /Product on Model/ })).getByText("AI video · uses AI credits")).toBeVisible();
   });
 
   it("names the pack and the length it runs, until a scene is changed", () => {
@@ -353,6 +531,32 @@ describe("AiShotOptions video template of Standard scenes", () => {
     });
     render(<AiShotOptions nodeId="video" disabled={false} onChange={vi.fn()} />);
 
-    expect(screen.getByText("14s pack")).toBeVisible();
+    expect(screen.getByText("Rotating Showcase")).toBeVisible();
+    expect(screen.getByText("4 scenes · 14s")).toBeVisible();
+    expect(screen.queryByText(/customized/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Change" })).toBeVisible();
+  });
+
+  it("asks inside the picker before a template replaces scenes already set up, and keeps them on No", async () => {
+    packs = [rotatingShowcase];
+    useWorkflowStore.setState({
+      nodes: [{ id: "video", type: "workflow", position: { x: 0, y: 0 },
+        data: { type: "generate-video", config: { mode: "standard", aiScenes: [{ ...scene("standard"), durationSeconds: 5 }] } } } as unknown as WorkflowNode],
+    });
+    render(<AiShotOptions nodeId="video" disabled={false} onChange={vi.fn()} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Browse templates" }));
+    const picker = await screen.findByRole("dialog");
+    await userEvent.click(within(picker).getByRole("radio", { name: /Rotating Showcase/ }));
+
+    expect(within(picker).getByRole("alert")).toHaveTextContent("Replace your 1 current scenes with Rotating Showcase?");
+    await userEvent.click(within(picker).getByRole("button", { name: "Keep current scenes" }));
+    expect(within(picker).queryByRole("alert")).not.toBeInTheDocument();
+    expect(useWorkflowStore.getState().nodes[0]!.data.config.aiScenes as AiVideoSceneOptions[]).toHaveLength(1);
+
+    await userEvent.click(within(picker).getByRole("radio", { name: /Rotating Showcase/ }));
+    await userEvent.click(within(picker).getByRole("button", { name: "Replace scenes" }));
+    expect(useWorkflowStore.getState().nodes[0]!.data.config.aiScenes as AiVideoSceneOptions[]).toHaveLength(4);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

@@ -49,6 +49,19 @@ export const hasListingSteps = (nodes: WorkflowNode[]) => nodes.some((node) => n
 export const hasBatchSteps = (nodes: WorkflowNode[]) =>
   nodes.some((node) => node.data.type === "prompt-synthesis" || node.data.type === "design-image");
 
+/**
+ * The products of the batch the next run makes videos for. Mirrors the server (`RunCostEstimateService`): a workflow
+ * that makes designs runs on the batch's pending products only, so a product finished by an earlier run gets no new
+ * video; with nothing pending, or without design steps, the run goes on with every product.
+ */
+export const videoRunProducts = <T extends { status: string }>(nodes: WorkflowNode[], products: T[]): T[] => {
+  const makesDesigns = nodes.some((node) =>
+    ["prompt-synthesis", "design-image", "design-approval"].includes(node.data.type)
+  );
+  const pending = products.filter((product) => product.status === "pending");
+  return makesDesigns && pending.length > 0 ? pending : products;
+};
+
 /** The workflow makes a video, so a run includes the server's video run. */
 export const hasVideoSteps = (nodes: WorkflowNode[]) => nodes.some((node) => node.data.type === "generate-video");
 

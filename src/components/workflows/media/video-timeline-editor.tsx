@@ -62,6 +62,8 @@ import {
 } from "@/components/workflows/config-panel/fields/standard-motion-editor";
 import { sceneStartImage } from "@/helpers/main-mockup";
 import { loadMusicPreview } from "@/helpers/music-preview";
+import { getVideoOutputFormat } from "@/helpers/video-output-formats";
+import { parseAspectRatio } from "@/helpers/workflow-config";
 import type {
   AiSceneVideo,
   AiVideoSceneOptions,
@@ -180,7 +182,7 @@ const contains = (outer: Region, inner: Region) =>
   inner.x + inner.width <= outer.x + outer.width &&
   inner.y + inner.height <= outer.y + outer.height;
 const aspectForFormat = (format: GenerateVideoConfig["outputFormat"]) =>
-  format === "square" ? [1, 1] : format === "landscape" ? [16, 9] : [9, 16];
+  parseAspectRatio(getVideoOutputFormat(format).aspectRatio);
 function standardMotionFrames(motion: string, base: Region): [Region, Region] {
   if (motion === "contain_gentle") return [FULL_REGION, FULL_REGION];
   if (

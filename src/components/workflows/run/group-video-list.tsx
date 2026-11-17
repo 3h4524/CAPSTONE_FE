@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { AlertTriangle, ArrowRight, Check, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, Download, X } from "lucide-react";
 
 import { runGroupKeys } from "@/api/run-groups";
 import { getWorkflowRun } from "@/api/video-workflow";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollStrip } from "@/components/workflows/run/mockup-strip";
 import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
+import { useMediaDownload } from "@/hooks/mutations/use-media-download";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { type GroupVideo, type GroupVideoState, groupVideoState, useGroupVideos, videoStatusOf } from "@/hooks/queries/use-group-videos";
 import { useAppQueryClient } from "@/hooks/use-query-client";
@@ -166,6 +167,7 @@ const VideoCard = ({
   const { target, video } = item;
   const client = useAppQueryClient();
   const { mutate: act } = useWorkflowRunAction();
+  const { mutate: download, isPending: isDownloading } = useMediaDownload();
   const [isDeciding, setIsDeciding] = useState(false);
   const state = groupVideoState(target);
   const label = stateLabel(item, state);
@@ -173,6 +175,8 @@ const VideoCard = ({
   const thumbnail = state === "review" || state === "approved" ? video?.thumbnailUrl : null;
   const approved = state === "approved";
   const canDecide = state === "review" && Boolean(video) && !isDeciding;
+  // A finished video can be saved whatever its review says: the MP4 the review panel downloads.
+  const canDownload = Boolean(video?.previewUrl) && (state === "review" || state === "approved") && !isDownloading;
   const refreshGroup = () => {
     if (groupId) void client.invalidateQueries({ queryKey: runGroupKeys.detail(groupId) });
   };
@@ -280,6 +284,24 @@ const VideoCard = ({
               onClick={() => void decide(false)}
             >
               <X aria-hidden="true" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              aria-label="Download video"
+              title="Download MP4"
+              disabled={!canDownload}
+              onClick={() =>
+                video &&
+                download(
+                  { id: video.id, zip: false },
+                  // A failed request is reported by the mutation hook itself.
+                  { onSuccess: (url) => window.location.assign(url) }
+                )
+              }
+            >
+              <Download aria-hidden="true" />
             </Button>
           </div>
         </div>

@@ -13,7 +13,7 @@ import {
   withoutProductConfigs,
 } from "@/helpers/product-video-configs";
 import { readString } from "@/helpers/workflow-config";
-import { supportsBatchVideos } from "@/helpers/workflow-run";
+import { supportsBatchVideos, videoRunProducts } from "@/helpers/workflow-run";
 import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { sharedGraphNodes, useWorkflowStore } from "@/stores/workflow";
 
@@ -30,18 +30,23 @@ export const ProductScopeSelect = ({ nodeId }: { nodeId: string }) => {
     readString(state.nodes.find((node) => node.data.type === "product-input")?.data.config.batchId)
   );
   const batchVideos = useWorkflowStore((state) => supportsBatchVideos(sharedGraphNodes(state)));
+  const nodes = useWorkflowStore((state) => state.nodes);
   const scope = useWorkflowStore((state) => (state.designScope?.kind === "product" ? state.designScope : null));
   const otherScope = useWorkflowStore((state) => state.designScope?.kind === "design");
   const nodeConfig = useWorkflowStore((state) => state.nodes.find((node) => node.id === nodeId)?.data.config);
   const enter = useWorkflowStore((state) => state.enterDesignScope);
   const leave = useWorkflowStore((state) => state.leaveDesignScope);
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
-  const { data: products } = useBatchProducts(batchId);
+  const { data: batchProducts } = useBatchProducts(batchId);
+  // Only the products the next run makes videos for: one finished by an earlier run gets no new video.
+  const products = batchProducts && videoRunProducts(nodes, batchProducts);
 
   if (otherScope || !batchId || !batchVideos || !products || products.length < 2) return null;
 
   const shared = scope ? scope.sharedConfig : (nodeConfig ?? {});
-  const own = readProductConfigs(shared);
+  const runIds = new Set(products.map((product) => product.id));
+  // Settings kept for a product the run skips stay in the workflow, but are not counted here.
+  const own = Object.fromEntries(Object.entries(readProductConfigs(shared)).filter(([id]) => runIds.has(id)));
   const sharedView = withoutProductConfigs(shared);
   const unsaved = Boolean(scope && nodeConfig && !sameConfig(nodeConfig, scope.baseConfig));
   const hasOwn = Boolean(scope && own[scope.productId]);
@@ -83,8 +88,8 @@ export const ProductScopeSelect = ({ nodeId }: { nodeId: string }) => {
       {!scope ? (
         <p className="text-muted-foreground text-xs leading-relaxed">
           {Object.keys(own).length > 0
-            ? `${Object.keys(own).length} of ${products.length} products have their own settings; the others use these.`
-            : "Every product uses these settings. Choose a product to give its video settings of its own."}
+            ? `${Object.keys(own).length} of the ${products.length} products to run have their own settings; the others use these.`
+            : `The ${products.length} products to run use these settings. Choose a product to give its video settings of its own.`}
         </p>
       ) : (
         <>

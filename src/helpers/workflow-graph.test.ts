@@ -70,6 +70,7 @@ const VALID_CONFIGS: Record<WorkflowNodeType, WorkflowNodeConfig> = {
     textOverlay: "",
     standardOptions: { motionPreset: "varied", crop: "safe", transition: "fade" },
     fallbackToStandard: true,
+    aiScenes: [{ mode: "standard", mockupId: null, templateCode: "cinematic_product_showcase", durationSeconds: 12, framing: "medium", cameraAngle: "three_quarter", cameraMovement: "push_in", subjectMotion: "none", motionIntensity: "subtle", lighting: "soft_studio", extraInstructions: null, rightsConfirmed: false }],
   },
   "review-video": { mode: "manual" },
   "generate-listing": { model: "gpt-4o", tone: "friendly", includeSeoScore: true },

@@ -58,13 +58,16 @@ import { confirmAiShot } from "@/helpers/confirm-ai-shot";
 import { getErrorMessage } from "@/helpers/error-message";
 import { counterpartMockup, mainMockup, personMockup } from "@/helpers/main-mockup";
 import { hasFeature } from "@/helpers/plan-features";
+import { sameConfig } from "@/helpers/product-video-configs";
 import { showToast } from "@/helpers/toast";
 import { getVideoOutputFormat } from "@/helpers/video-output-formats";
 import { readString, readStringArray } from "@/helpers/workflow-config";
+import { videoRunProducts } from "@/helpers/workflow-run";
 import { useReviewMockupAsset } from "@/hooks/mutations/use-review-mockup-asset";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { useAiCharacterModels } from "@/hooks/queries/use-ai-character-models";
 import { useAiVideoTemplates } from "@/hooks/queries/use-ai-video-templates";
+import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useEntitlements } from "@/hooks/queries/use-entitlements";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { usePreviewDesign } from "@/hooks/queries/use-preview-design";
@@ -127,6 +130,18 @@ const BASE_SCENE: AiVideoSceneOptions = {
   studioReferenceHashes: [],
 };
 const EMPTY_SCENES: AiVideoSceneOptions[] = [];
+// AI templates the server no longer offers (AiVideoPromptCompiler.RetiredTemplateCodes), and the one a scene saved with
+// each moves to: the two with a person to Product On Model, the reveal to the product showcase. Without it such a scene
+// would show no template and its video could not be planned.
+const RETIRED_TEMPLATES: Record<string, string> = {
+  creator_pov_ugc: "lifestyle_in_use",
+  everyday_story_moment: "lifestyle_in_use",
+  signature_product_reveal: "cinematic_product_showcase",
+};
+const withCurrentTemplate = (scene: AiVideoSceneOptions): AiVideoSceneOptions => {
+  const replacement = RETIRED_TEMPLATES[scene.templateCode];
+  return replacement ? { ...scene, templateCode: replacement, subtemplateCode: null } : scene;
+};
 const EMPTY_IDS: string[] = [];
 const workflowModeForScenes = (scenes: AiVideoSceneOptions[]) =>
   scenes.length > 0 && scenes.every((scene) => scene.mode === "standard") ? "standard" : "ai_shot";
@@ -192,7 +207,7 @@ function convertLegacy(
       : legacy?.concept === "lifestyle_motion"
         ? "lifestyle_in_use"
         : legacy?.concept === "product_in_use"
-          ? "creator_pov_ugc"
+          ? "lifestyle_in_use"
           : "cinematic_product_showcase";
   const duration = legacy?.coverage === "full_video" ? 8 : legacy ? 6 : 4;
   const defaults = definition?.defaults ?? BASE_SCENE;
@@ -436,6 +451,7 @@ export function AiShotOptions({
   } | null>(null);
   const [isSharedMockupPickerOpen, setIsSharedMockupPickerOpen] = useState(false);
   const [pendingPack, setPendingPack] = useState<VideoPackDefinition | null>(null);
+  const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
   const [batchQuote, setBatchQuote] = useState<BatchFrameQuote[] | null>(null);
   const [batchFrameState, setBatchFrameState] = useState<BatchFrameState>({});
   const [isPreparingAllFrames, setIsPreparingAllFrames] = useState(false);
@@ -460,7 +476,23 @@ export function AiShotOptions({
   const designRun = run?.runGroupId && run.runGroupId === openGroupId ? run : null;
   // A batch video run has no product in Product input: its scenes are set up on one of the run's designs.
   const previewDesign = usePreviewDesign();
-  const productId = designRun?.productId ?? previewDesign?.productId ?? inputProductId;
+  // Before a batch video run, the product chosen in "Video product" (its own settings); "All products" names none.
+  const batchId = useWorkflowStore((state) =>
+    readString(state.nodes.find((item) => item.data.type === "product-input")?.data.config.batchId)
+  );
+  const scopedProductId = useWorkflowStore((state) =>
+    state.designScope?.kind === "product" ? state.designScope.productId : ""
+  );
+  const { data: batchProducts } = useBatchProducts(designRun || previewDesign ? "" : batchId);
+  const allNodes = useWorkflowStore((state) => state.nodes);
+  const runProducts = batchProducts ? videoRunProducts(allNodes, batchProducts) : [];
+  // With one product to run there is no "Video product" choice: its images are the ones shown.
+  const soleBatchProductId = runProducts.length === 1 ? runProducts[0]!.id : "";
+  const productId =
+    designRun?.productId ?? previewDesign?.productId ?? (scopedProductId || soleBatchProductId || inputProductId);
+  // The shared settings of a batch apply to every product: a start frame is one product's image, so it is chosen
+  // (and its default shown) only once a product is picked in "Video product".
+  const sharedBatchSettings = Boolean(batchId) && !designRun && !previewDesign && !productId;
   const applyMockupNode = useWorkflowStore((state) =>
     state.nodes.find((item) => item.data.type === "apply-mockup")
   );
@@ -588,7 +620,8 @@ export function AiShotOptions({
     );
   });
   const approved = [...originalApproved, ...approvedFrames];
-  const scenes: AiVideoSceneOptions[] = rawScenes.map((scene) => {
+  const scenes: AiVideoSceneOptions[] = rawScenes.map((saved) => {
+    const scene = withCurrentTemplate(saved);
     const mode: AiVideoSceneOptions["mode"] = scene.mode === "standard" ? "standard" : "ai";
     const template =
       mode === "ai" ? catalog.find((item) => item.code === scene.templateCode) : undefined;
@@ -648,6 +681,13 @@ export function AiShotOptions({
   useEffect(() => {
     if (!node || scenes.length > 0) return;
     const legacy = node.data.config.aiShotOptions as LegacyOptions | undefined;
+    // Only settings made before the scene editor become scenes. A new node starts with none: the seller adds the
+    // first scene (or picks a video template) and so sets the video up rather than running a default one.
+    const hasLegacyStandard =
+      node.data.config.mode === "standard" &&
+      (readStringArray(node.data.config.sceneOrder).length > 0 ||
+        readStringArray(node.data.config.selectedMockupIds).length > 0);
+    if (!legacy && !hasLegacyStandard) return;
     let migrated: AiVideoSceneOptions[];
     if (node.data.config.mode === "standard" && !legacy) {
       const configuredIds = readStringArray(node.data.config.sceneOrder);
@@ -720,7 +760,7 @@ export function AiShotOptions({
           : legacy?.concept === "lifestyle_motion"
             ? "lifestyle_in_use"
             : legacy?.concept === "product_in_use"
-              ? "creator_pov_ugc"
+              ? "lifestyle_in_use"
               : "cinematic_product_showcase";
       migrated = convertLegacy(
         legacy,
@@ -744,7 +784,8 @@ export function AiShotOptions({
     // needs a person, and `catalog` is `[]` while that loads, which would otherwise auto-pick the main mock-up and
     // then never revisit it once a mock-up is set.
     if (!node || rawScenes.length === 0 || areAssetsLoading || !productId || isPending) return;
-    let normalizedScenes: AiVideoSceneOptions[] = rawScenes.map((scene) => {
+    let normalizedScenes: AiVideoSceneOptions[] = rawScenes.map((saved) => {
+      const scene = withCurrentTemplate(saved);
       const mode: AiVideoSceneOptions["mode"] = scene.mode === "standard" ? "standard" : "ai";
       const template =
         mode === "ai" ? catalog.find((item) => item.code === scene.templateCode) : undefined;
@@ -820,6 +861,7 @@ export function AiShotOptions({
             TEMPLATE_SETTING_FIELDS.some(
               (field) => scene[field] !== normalizedScenes[index]?.[field]
             )) ||
+          scene.templateCode !== normalizedScenes[index]?.templateCode ||
           scene.subtemplateCode !== normalizedScenes[index]?.subtemplateCode ||
           (scene.templateCode === "cinematic_product_showcase" && scene.startFrameMode == null) ||
           (scene.templateCode === "cinematic_product_showcase" &&
@@ -832,14 +874,21 @@ export function AiShotOptions({
       node.data.config.aiGlobalInstructions !== sharedInstructions;
     if (!needsNormalization) return;
     const seconds = normalizedScenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
-    useWorkflowStore.getState().updateNodeConfig(nodeId, {
+    const normalizedConfig = {
       ...node.data.config,
       mode: normalizedMode,
       aiScenes: normalizedScenes,
       aiGlobalInstructions: sharedInstructions,
       durationSeconds: seconds,
-    });
+    };
+    const store = useWorkflowStore.getState();
+    // Picking a product only fills in its default start images (what the server picks for it anyway): that is not
+    // a change of its settings, so it neither asks to be saved nor gives the product settings of its own.
+    const scope = store.designScope;
+    const untouchedProduct = scope?.kind === "product" && sameConfig(node.data.config, scope.baseConfig);
+    store.updateNodeConfig(nodeId, normalizedConfig);
     onChange(normalizedScenes, seconds, sharedInstructions);
+    if (untouchedProduct) store.markDesignSaved(useWorkflowStore.getState().nodes.find((item) => item.id === nodeId)?.data.config ?? normalizedConfig);
   }, [
     node,
     nodeId,
@@ -1130,6 +1179,7 @@ export function AiShotOptions({
     });
     setBatchFrameState({});
     setPendingPack(null);
+    setIsTemplatePickerOpen(false);
     queueMicrotask(() => saveWorkflow());
     showToast("success", `${pack.name} added with ${nextScenes.length} scenes.`);
   };
@@ -1462,7 +1512,8 @@ export function AiShotOptions({
       ...BASE_SCENE,
       ...(definition?.defaults ?? {}),
       mode: "standard",
-      durationSeconds: 1,
+      // The first scene is the whole video, so it starts at the shortest video allowed; later ones split the rest.
+      durationSeconds: scenes.length === 0 ? MIN_VIDEO_DURATION_SECONDS : 1,
       mockupId: null,
       extraInstructions: null,
       rightsConfirmed: false,
@@ -1485,6 +1536,59 @@ export function AiShotOptions({
           );
         }))
   );
+  type TemplateOption = {
+    code: string;
+    icon: typeof Plus;
+    name: string;
+    meta: string | null;
+    description: string;
+    tag: { label: string; ai: boolean } | null;
+    pack?: VideoPackDefinition;
+  };
+  const templateOptions: TemplateOption[] = [
+    {
+      code: "custom",
+      icon: Plus,
+      name: "Start from scratch",
+      meta: null,
+      description:
+        scenes.length > 0
+          ? "Build your own list of scenes. The scenes you have now stay as they are."
+          : "Add scenes one by one and choose how each one is made.",
+      tag: null,
+    },
+    ...videoPacks.map((pack): TemplateOption => {
+      const usesAi = pack.scenes.some((scene) => scene.mode !== "standard");
+      return {
+        code: pack.code,
+        icon: usesAi ? Sparkles : ImageIcon,
+        name: pack.name,
+        meta: `${pack.scenes.length} scenes · ${pack.totalDurationSeconds}s`,
+        description: pack.description,
+        tag: usesAi ? { label: "AI video · uses AI credits", ai: true } : { label: "Photo motion · no AI cost", ai: false },
+        pack,
+      };
+    }),
+  ];
+  const currentTemplate =
+    templateOptions.find((option) => option.code === (selectedVideoPack ? selectedVideoPack.code : "custom")) ??
+    templateOptions[0]!;
+  const CurrentTemplateIcon = currentTemplate.icon;
+  const templatesLoading = arePacksLoading || isPending;
+  const chooseTemplate = (option: TemplateOption) => {
+    if (option.code === currentTemplate.code) {
+      setIsTemplatePickerOpen(false);
+      return;
+    }
+    if (!option.pack) {
+      setPendingPack(null);
+      writePackConfiguration(scenes, { template: "auto", templateVersion: 2 });
+      setIsTemplatePickerOpen(false);
+      return;
+    }
+    // Replacing scenes the seller already set up is confirmed at the foot of the picker (see `pendingPack`).
+    requestVideoPack(option.pack);
+  };
   const generatedOrReusableCount = Object.values(batchFrameState).filter((state) =>
     ["reused", "generated"].includes(state.status)
   ).length;
@@ -1495,80 +1599,141 @@ export function AiShotOptions({
   return (
     <>
       {beforeTemplate}
-      <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label="Video template">
-        <div className="flex items-start gap-3">
-          <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
-            <Clapperboard aria-hidden="true" className="size-5" />
-          </div>
+      <section className="space-y-2" aria-labelledby="video-template-heading">
+        <div>
+          <p id="video-template-heading" className="text-sm font-semibold">
+            Start from a template
+          </p>
+          <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
+            A ready-made set of scenes to start from. You can still change, add or remove scenes below.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 rounded-lg border p-3">
+          <span className="bg-primary/10 text-primary grid size-9 shrink-0 place-items-center rounded-lg">
+            <CurrentTemplateIcon aria-hidden="true" className="size-4" />
+          </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold">Video template</p>
-            <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
-              Start from a complete sequence, then fine-tune its individual scenes below.
+            <p className="flex flex-wrap items-baseline gap-x-2">
+              <span className="text-sm font-semibold">
+                {currentTemplate.name}
+              </span>
+              {currentTemplate.meta && (
+                <span className="text-muted-foreground text-xs tabular-nums">
+                  {currentTemplate.meta}
+                  {isPackCustomized && " · customized"}
+                </span>
+              )}
+            </p>
+            <p className="text-muted-foreground truncate text-xs">
+              {currentTemplate.tag?.label ?? "Your own scenes, set up one by one."}
             </p>
           </div>
-          {selectedVideoPack && (
-            <span className="bg-primary/10 text-primary shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold">
-              {isPackCustomized ? "Customized" : `${selectedVideoPack.totalDurationSeconds}s pack`}
-            </span>
-          )}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="shrink-0 hover:translate-y-0"
+            disabled={disabled || templatesLoading}
+            onClick={() => setIsTemplatePickerOpen(true)}
+          >
+            {templatesLoading ? "Loading…" : selectedVideoPack ? "Change" : "Browse templates"}
+          </Button>
         </div>
-        <Select
-          value={selectedVideoPack ? selectedVideoPack.code : "custom"}
-          disabled={disabled || arePacksLoading || isPending}
-          onValueChange={(value) => {
-            if (value === "custom") {
-              writePackConfiguration(scenes, { template: "auto", templateVersion: 2 });
-              return;
-            }
-            const pack = videoPacks.find((item) => item.code === value);
-            if (pack) requestVideoPack(pack);
-          }}
-        >
-          <SelectTrigger aria-label="Video template">
-            <SelectValue placeholder={arePacksLoading ? "Loading video templates..." : "Custom scenes"} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="custom">Custom scenes</SelectItem>
-            {videoPacks.map((pack) => (
-              <SelectItem key={pack.code} value={pack.code}>
-                {pack.name} · {pack.totalDurationSeconds}s
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {selectedVideoPack && (
+        {selectedVideoPack && isPackCustomized && (
           <p className="text-muted-foreground text-xs leading-relaxed">
-            {selectedVideoPack.description}{" "}
-            {isPackCustomized
-              ? "Scene order, duration, or shot setup differs from the pack default."
-              : isStandardPack
-                ? "No AI scenes: each one is a camera move on a product image, so no AI provider is billed."
-                : "Prepared AI scenes with a shared cast and product mock-up."}
+            The scenes below differ from the template: their order, length or setup was changed.
           </p>
         )}
       </section>
       {afterTemplate}
-      <Dialog open={pendingPack !== null} onOpenChange={(open) => !open && setPendingPack(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Replace the current scene setup?</DialogTitle>
+      <Dialog
+        open={isTemplatePickerOpen}
+        onOpenChange={(open) => {
+          setIsTemplatePickerOpen(open);
+          if (!open) setPendingPack(null);
+        }}
+      >
+        <DialogContent className="flex max-h-[85dvh] max-w-3xl flex-col gap-0 overflow-hidden p-0">
+          <DialogHeader className="border-b px-5 py-4 text-left">
+            <DialogTitle>Choose a video template</DialogTitle>
             <DialogDescription>
-              Applying {pendingPack?.name ?? "this video pack"} replaces the current scenes and
-              removes their selected start frames. Your output format, shared model, shared mockup
-              and caption stay unchanged.
+              A template fills in a ready-made set of scenes. Every scene stays editable afterwards.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setPendingPack(null)}>
-              Keep current setup
-            </Button>
-            <Button type="button" onClick={() => pendingPack && applyVideoPack(pendingPack)}>
-              Replace scenes
-            </Button>
-          </DialogFooter>
+          <div className="min-h-0 overflow-y-auto p-5">
+            <div role="radiogroup" aria-label="Video template" className="grid gap-3 sm:grid-cols-2">
+              {templateOptions.map((option) => {
+                const selected = option.code === currentTemplate.code;
+                const pending = pendingPack?.code === option.code;
+                const Icon = option.icon;
+                return (
+                  <button
+                    key={option.code}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    disabled={disabled}
+                    onClick={() => chooseTemplate(option)}
+                    className={`focus-visible:ring-ring flex w-full items-start gap-3 rounded-lg border p-3.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-primary bg-primary/5" : pending ? "border-amber-500 bg-amber-50/60 dark:bg-amber-950/20" : "hover:bg-muted/50"}`}
+                  >
+                    <span
+                      className={`grid size-9 shrink-0 place-items-center rounded-lg ${selected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                    >
+                      <Icon aria-hidden="true" className="size-4" />
+                    </span>
+                    <span className="min-w-0 flex-1 space-y-1">
+                      <span className="flex flex-wrap items-baseline gap-x-2">
+                        <span className="text-sm font-semibold">{option.name}</span>
+                        {option.meta && (
+                          <span className="text-muted-foreground text-xs tabular-nums">{option.meta}</span>
+                        )}
+                      </span>
+                      <span className="text-muted-foreground block text-xs leading-snug">{option.description}</span>
+                      {option.tag && (
+                        <span
+                          className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${option.tag.ai ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
+                        >
+                          {option.tag.label}
+                        </span>
+                      )}
+                    </span>
+                    {selected && <Check aria-hidden="true" className="text-primary mt-0.5 size-4 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {/* Asked here rather than in a second dialog on top of the picker. */}
+          {pendingPack && (
+            <div
+              role="alert"
+              className="flex flex-col gap-3 border-t bg-amber-50/70 px-5 py-4 sm:flex-row sm:items-center dark:bg-amber-950/20"
+            >
+              <p className="min-w-0 flex-1 text-xs leading-relaxed">
+                <span className="font-semibold">Replace your {scenes.length} current scenes with {pendingPack.name}?</span>{" "}
+                Their selected start frames are removed. Your output format, shared model, shared mockup and caption
+                stay unchanged.
+              </p>
+              <div className="flex shrink-0 gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => setPendingPack(null)}>
+                  Keep current scenes
+                </Button>
+                <Button type="button" size="sm" onClick={() => applyVideoPack(pendingPack)}>
+                  Replace scenes
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
-      {isProductOnModelPack && (
+      {sharedBatchSettings && scenes.length > 0 && (
+        <p className="text-muted-foreground bg-muted/30 rounded-lg border border-dashed p-3 text-xs leading-relaxed">
+          Start frames are product images, so they are not set in the shared settings. Each product starts from its
+          default mockup ({isProductOnModelPack ? "its lifestyle image" : "its hero image, or its lifestyle image for a scene with a model"}).
+          Choose a product in Video product to see or change its start frames.
+        </p>
+      )}
+      {isProductOnModelPack && !sharedBatchSettings && (
         <>
           <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label="Shared mockup">
             <div className="flex min-w-0 items-center gap-3">
@@ -1777,7 +1942,7 @@ export function AiShotOptions({
           </Dialog>
         </>
       )}
-      <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label="Scene setup">
+      <section className="space-y-3" aria-label="Scene setup">
         <input
           ref={referenceFileInput}
           type="file"
@@ -1941,6 +2106,14 @@ export function AiShotOptions({
               : catalog.find((item) => item.code === scene.templateCode);
           const subtemplate = template ? resolveSubtemplate(scene, template) : undefined;
           const sources = scene.startFrameMode === "studio" ? originalApproved : approved;
+          // A style with a person (Product On Model) only ever starts from a model photo: the server swaps any other
+          // image for one (SceneSourceResolver), so the picker offers only those, and keyframes made from them.
+          const needsModelPhoto = Boolean(template?.requiresLifestyle);
+          const isModelPhoto = (asset: MockupAsset) => {
+            const source = studioMetadata(asset)?.sourceMockupId;
+            return (source ? allAssets.find((item) => item.id === source) : asset)?.role === "Lifestyle";
+          };
+          const pickableFrames = needsModelPhoto ? approved.filter(isModelPhoto) : approved;
           const hasRequiredSource = sources.length > 0;
           const selectedSource = scene.mockupId
             ? sources.find((asset) => asset.id === scene.mockupId)
@@ -2187,65 +2360,16 @@ export function AiShotOptions({
                   <span className="sr-only">Scene </span>
                   {index + 1}
                 </h3>
-                {isProductOnModelPack ? (
+                {isProductOnModelPack && (
                   <span className="bg-primary/10 text-primary inline-flex h-8 items-center rounded-md px-2.5 text-xs font-semibold">
                     AI video
                   </span>
-                ) : (
-                <Select
-                  disabled={disabled}
-                  value={scene.mode ?? "standard"}
-                  onValueChange={(value) => {
-                    if (value === "standard") {
-                      changeScene(index, {
-                        mode: "standard",
-                        durationSeconds: Math.min(scene.durationSeconds, MAX_VIDEO_DURATION_SECONDS - otherDuration),
-                        standardMotionPreset:
-                          scene.standardMotionPreset === "gentle"
-                            ? "zoom"
-                            : (scene.standardMotionPreset ?? "zoom"),
-                      });
-                      return;
-                    }
-                    const maxAiDuration = Math.min(MAX_VIDEO_DURATION_SECONDS, MAX_VIDEO_DURATION_SECONDS - otherDuration);
-                    if (maxAiDuration < 4) return;
-                    const aiDuration = Math.min(maxAiDuration, Math.max(4, scene.durationSeconds, MIN_VIDEO_DURATION_SECONDS - otherDuration));
-                    changeScene(index, { mode: "ai", durationSeconds: aiDuration });
-                  }}
-                >
-                  <SelectTrigger
-                    className="h-8 w-28 shrink-0"
-                    aria-label={`Scene ${index + 1} generation mode`}
-                  >
-                    <SelectValue>
-                      {scene.mode === "standard" ? "Standard" : "AI video"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem
-                      value="ai"
-                      disabled={otherDuration + 4 > MAX_VIDEO_DURATION_SECONDS || aiVideoLocked}
-                    >
-                      AI video
-                      {aiVideoLocked && (
-                        <Badge
-                          variant="outline"
-                          className="gap-1 text-[10px]"
-                          title="Not included in your plan"
-                        >
-                          <Lock className="size-3" aria-hidden="true" /> Pro
-                        </Badge>
-                      )}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
                 )}
                 {aiVideoLocked && scene.mode !== "standard" && (
                   <Badge
                     variant="outline"
                     className="gap-1 text-[10px]"
-                    title="AI video is not included in your plan. Switch this scene to Standard."
+                    title="AI video is not included in your plan. Switch this scene to Photo motion."
                   >
                     <Lock className="size-3" aria-hidden="true" /> Pro
                   </Badge>
@@ -2373,6 +2497,87 @@ export function AiShotOptions({
                   </Button>
                 </div>
               </header>
+              {/* How the scene is made, below the header so each choice can say what it does. */}
+              {!isProductOnModelPack && (() => {
+                const aiUnavailable = otherDuration + 4 > MAX_VIDEO_DURATION_SECONDS;
+                const chooseMode = (mode: "standard" | "ai") => {
+                  if (mode === scene.mode) return;
+                  if (mode === "standard") {
+                    changeScene(index, {
+                      mode: "standard",
+                      durationSeconds: Math.min(scene.durationSeconds, MAX_VIDEO_DURATION_SECONDS - otherDuration),
+                      standardMotionPreset:
+                        scene.standardMotionPreset === "gentle" ? "zoom" : (scene.standardMotionPreset ?? "zoom"),
+                    });
+                    return;
+                  }
+                  const maxAiDuration = Math.min(MAX_VIDEO_DURATION_SECONDS, MAX_VIDEO_DURATION_SECONDS - otherDuration);
+                  if (maxAiDuration < 4) return;
+                  const aiDuration = Math.min(
+                    maxAiDuration,
+                    Math.max(4, scene.durationSeconds, MIN_VIDEO_DURATION_SECONDS - otherDuration)
+                  );
+                  changeScene(index, { mode: "ai", durationSeconds: aiDuration });
+                };
+                const modes = [
+                  {
+                    value: "standard" as const,
+                    icon: ImageIcon,
+                    title: "Photo motion",
+                    description: "Zooms and pans across a product image. Ready in seconds, no AI cost.",
+                    unavailable: false,
+                  },
+                  {
+                    value: "ai" as const,
+                    icon: Sparkles,
+                    title: "AI video",
+                    description: aiUnavailable
+                      ? "Needs at least 4 seconds. Shorten the other scenes first."
+                      : "AI brings the image to life as a real 4 to 15 second clip. Uses AI credits.",
+                    unavailable: aiUnavailable || aiVideoLocked,
+                  },
+                ];
+                return (
+                  <div
+                    role="radiogroup"
+                    aria-label={`Scene ${index + 1} generation mode`}
+                    className="grid gap-2 @min-[22rem]:grid-cols-2"
+                  >
+                    {modes.map((mode) => {
+                      const selected = (scene.mode ?? "standard") === mode.value;
+                      const Icon = mode.icon;
+                      return (
+                        <button
+                          key={mode.value}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          disabled={disabled || (!selected && mode.unavailable)}
+                          onClick={() => chooseMode(mode.value)}
+                          className={`focus-visible:ring-ring flex min-w-0 items-start gap-2.5 rounded-md border p-2.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-primary bg-primary/5" : "hover:bg-muted/50"}`}
+                        >
+                          <span
+                            className={`grid size-7 shrink-0 place-items-center rounded-md ${selected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                          >
+                            <Icon aria-hidden="true" className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 space-y-0.5">
+                            <span className="flex items-center gap-1.5 text-sm font-semibold">
+                              {mode.title}
+                              {mode.value === "ai" && aiVideoLocked && (
+                                <Badge variant="outline" className="gap-1 text-[10px]" title="Not included in your plan">
+                                  <Lock className="size-3" aria-hidden="true" /> Pro
+                                </Badge>
+                              )}
+                            </span>
+                            <span className="text-muted-foreground block text-xs leading-snug">{mode.description}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
               {scene.mode === "ai" && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
@@ -2416,7 +2621,7 @@ export function AiShotOptions({
               )}
               {scene.mode !== "standard" && !isProductOnModelPack && (
                 <label className="flex flex-col gap-2 text-xs font-medium">
-                  <span>AI template</span>
+                  <span>Video style</span>
                   <Select
                     disabled={disabled || isPending || catalog.length === 0}
                     value={scene.templateCode}
@@ -2449,7 +2654,7 @@ export function AiShotOptions({
                       });
                     }}
                   >
-                    <SelectTrigger aria-label={`Scene ${index + 1} AI template`}>
+                    <SelectTrigger aria-label={`Scene ${index + 1} video style`}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -2515,7 +2720,7 @@ export function AiShotOptions({
                   )}
                 </div>
               )}
-              {!isProductOnModelPack && (
+              {!isProductOnModelPack && !sharedBatchSettings && (
                 <section
                   className="space-y-3 rounded-md border p-3"
                   aria-label={`Scene ${index + 1} start frame`}
@@ -2682,13 +2887,14 @@ export function AiShotOptions({
                           <div>
                             <p className="text-sm font-semibold">Approved frames</p>
                             <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
-                              Select a frame to use immediately. The selected item is saved when you
-                              click it.
+                              {needsModelPhoto
+                                ? `${template?.name ?? "This style"} starts from a lifestyle image: a model wearing the product. The selected image is saved when you click it.`
+                                : "Select a frame to use immediately. The selected item is saved when you click it."}
                             </p>
                           </div>
-                          {approved.length > 0 ? (
+                          {pickableFrames.length > 0 ? (
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                              {approved.map((asset) => {
+                              {pickableFrames.map((asset) => {
                                 const reusableFrame = reusableStudioFrames.find(
                                   (frame) => frame.id === asset.id
                                 );
@@ -2780,10 +2986,13 @@ export function AiShotOptions({
                             </div>
                           ) : (
                             <div className="bg-muted/30 flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
-                              <p className="text-sm font-semibold">No approved frames yet</p>
+                              <p className="text-sm font-semibold">
+                                {needsModelPhoto ? "No approved lifestyle image yet" : "No approved frames yet"}
+                              </p>
                               <p className="text-muted-foreground mt-1 max-w-sm text-xs leading-relaxed">
-                                Approve a product image first, or create a custom keyframe from an
-                                approved source.
+                                {needsModelPhoto
+                                  ? "Make a lifestyle image of this design on a model at Mockup Approval and approve it, or switch this scene to another video style."
+                                  : "Approve a product image first, or create a custom keyframe from an approved source."}
                               </p>
                             </div>
                           )}
@@ -3103,9 +3312,11 @@ export function AiShotOptions({
               )}
               {scene.mode !== "standard" && (
                 <>
-                  <div className="flex justify-center py-1" aria-hidden="true">
-                    <ArrowDown className="text-primary size-4" strokeWidth={2.25} />
-                  </div>
+                  {!sharedBatchSettings && (
+                    <div className="flex justify-center py-1" aria-hidden="true">
+                      <ArrowDown className="text-primary size-4" strokeWidth={2.25} />
+                    </div>
+                  )}
                   <SceneVideoResult
                     sceneNumber={index + 1}
                     aspectRatio={outputAspect}
@@ -3143,9 +3354,11 @@ export function AiShotOptions({
                     });
                   return (
                     <>
-                      <div className="flex justify-center py-1" aria-hidden="true">
-                        <ArrowDown className="text-primary size-4" strokeWidth={2.25} />
-                      </div>
+                      {!sharedBatchSettings && (
+                        <div className="flex justify-center py-1" aria-hidden="true">
+                          <ArrowDown className="text-primary size-4" strokeWidth={2.25} />
+                        </div>
+                      )}
                       <section
                         className="bg-muted/35 space-y-3 rounded-md border p-3"
                         aria-label={`Scene ${index + 1} Standard camera motion`}
@@ -3313,7 +3526,7 @@ export function AiShotOptions({
           <AiStartFrameCropDialog
             asset={cropEditor.asset}
             sceneNumber={cropEditor.sceneIndex + 1}
-            landscape={outputFormat === "landscape"}
+            aspectRatio={getVideoOutputFormat(outputFormat).aspectRatio}
             initialCrop={scenes[cropEditor.sceneIndex]?.aiStartFrameCrop}
             automaticCrop={scenes[cropEditor.sceneIndex]?.startFrameMode !== "studio" && catalog.find(item => item.code === scenes[cropEditor.sceneIndex]?.templateCode)?.requiresDetail
               ? [cropEditor.asset.regions.detail, cropEditor.asset.regions.artwork].find(region => region && Math.min(region.width * cropEditor.asset.width, region.height * cropEditor.asset.height) >= 512)
@@ -3351,28 +3564,53 @@ export function AiShotOptions({
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        <div className="space-y-2 py-1">
-          <div className="flex items-center gap-2">
-            <span aria-hidden="true" className="bg-border/70 h-px flex-1" />
+        {scenes.length === 0 ? (
+          <div className="bg-muted/30 flex flex-col items-center gap-3 rounded-lg border border-dashed px-4 py-7 text-center">
+            <span className="bg-background text-muted-foreground grid size-10 place-items-center rounded-full border shadow-xs">
+              <Clapperboard aria-hidden="true" className="size-5" strokeWidth={1.75} />
+            </span>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">No scenes yet</p>
+              <p className="text-muted-foreground mx-auto max-w-xs text-xs leading-relaxed">
+                Add the first scene, or pick a template above, to set up this video.
+              </p>
+            </div>
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               size="sm"
-              disabled={disabled || scenes.length >= 4 || totalSeconds + 1 > MAX_VIDEO_DURATION_SECONDS}
+              disabled={disabled}
               onClick={addScene}
-              className="text-primary hover:bg-primary/5 h-10 gap-1.5 rounded-md px-3 text-[13px] font-semibold shadow-none transition-colors hover:translate-y-0 focus-visible:ring-2 focus-visible:ring-offset-2"
+              className="h-9 gap-1.5 px-3.5 text-[13px] font-semibold hover:translate-y-0"
             >
               <Plus aria-hidden="true" className="size-4" strokeWidth={1.75} />
-              <span>Add scene</span>
+              <span>Add first scene</span>
             </Button>
-            <span aria-hidden="true" className="bg-border/70 h-px flex-1" />
           </div>
-          {hasAiScenes && (
-            <p className="text-muted-foreground text-center text-xs">
-              Estimated AI footage ${aiSceneCost.toFixed(2)} USD at 768P
-            </p>
-          )}
-        </div>
+        ) : (
+          <div className="space-y-2 py-1">
+            <div className="flex items-center gap-2">
+              <span aria-hidden="true" className="bg-border/70 h-px flex-1" />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={disabled || scenes.length >= 4 || totalSeconds + 1 > MAX_VIDEO_DURATION_SECONDS}
+                onClick={addScene}
+                className="text-primary hover:bg-primary/5 h-10 gap-1.5 rounded-md px-3 text-[13px] font-semibold shadow-none transition-colors hover:translate-y-0 focus-visible:ring-2 focus-visible:ring-offset-2"
+              >
+                <Plus aria-hidden="true" className="size-4" strokeWidth={1.75} />
+                <span>Add scene</span>
+              </Button>
+              <span aria-hidden="true" className="bg-border/70 h-px flex-1" />
+            </div>
+            {hasAiScenes && (
+              <p className="text-muted-foreground text-center text-xs">
+                Estimated AI footage ${aiSceneCost.toFixed(2)} USD at 768P
+              </p>
+            )}
+          </div>
+        )}
         <section aria-label="Full video editing" className="space-y-2 pt-1">
           <p className="text-sm font-semibold">Full video</p>
           <VideoTimelineEditor
@@ -3393,7 +3631,7 @@ export function AiShotOptions({
           </summary>
           <p className="pb-1 leading-relaxed">
             The AI estimate assumes each AI clip is new; the final quote accounts for reusable clips
-            before rendering. Standard scenes use smooth camera movement between the selected framing
+            before rendering. Photo motion scenes use smooth camera movement between the selected framing
             points. Keyframes combine the shared model, an approved product source and up to two
             optional visual references. Review AI clips and every generated keyframe for product
             fidelity.

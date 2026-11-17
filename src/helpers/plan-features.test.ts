@@ -135,6 +135,16 @@ describe("planIssues", () => {
     expect(issue.fix?.patch).toEqual({ outputFormat: "portrait" });
   });
 
+  it.each(["classic_landscape", "classic_portrait"])("offers portrait when %s is not in the plan", (outputFormat) => {
+    const [issue] = planIssues(entitlements(), "generate-video", { mode: "standard", outputFormat });
+
+    expect(issue.fix?.patch).toEqual({ outputFormat: "portrait" });
+  });
+
+  it("lets a plan without all video formats keep square", () => {
+    expect(planIssues(entitlements(), "generate-video", { mode: "standard", outputFormat: "square" })).toEqual([]);
+  });
+
   it("caps the variants at the plan's limit", () => {
     const [issue] = planIssues(entitlements(), "design-image", { variants: 4 });
 

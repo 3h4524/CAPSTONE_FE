@@ -62,7 +62,9 @@ const etsyLabels: Record<string, string> = {
   resolution: "Resolution", aspectRatio: "Aspect ratio",
 };
 // The promo videos are silent by design, so the audio check says nothing a seller can act on: it is not listed.
-const HIDDEN_ETSY_CHECKS = new Set(["audio"]);
+// The ratio is the seller's choice among the formats the app offers, so it is not judged either (older results
+// still carry that check).
+const HIDDEN_ETSY_CHECKS = new Set(["audio", "aspectRatio"]);
 const etsyIcons: Record<string, typeof Film> = {
   decode: PlayCircle, duration: Clock3, fileSize: HardDrive, format: FileVideo,
   resolution: Maximize2, aspectRatio: RectangleHorizontal,
@@ -318,7 +320,13 @@ export const VideoSceneQualityReview = ({ runId, video, showObservationForm = fa
     return { scene, status: saved?.status ?? current?.status ?? "not_applicable", metrics: saved?.metrics ?? current?.metrics ?? {} };
   });
   const isChecking = sceneStates.some(({ status }) => status === "running" || status === "queued") || ["running", "queued"].includes(summary.data?.status ?? "");
-  const hasIncompleteScenes = sceneStates.some(({ status }) => status !== "completed");
+  // A skipped evaluation (automatic scoring is off) is a finished one for the server's summary too, and there is
+  // nothing for the seller to do about it: only a scene that failed, was left unscored or is unclear holds the video back.
+  const hasIncompleteScenes = sceneStates.some(({ status }) => !["completed", "skipped"].includes(status));
+  const hasSkippedScenes = sceneStates.some(({ status }) => status === "skipped");
+  const etsyChecks = etsy?.checks.filter((check) => !HIDDEN_ETSY_CHECKS.has(check.key)) ?? [];
+  const etsyToReview = etsyChecks.filter((check) => ["warning", "pass_with_warning", "uncertain", "fail", "failed"].includes(check.status)).length;
+  const etsyPassed = etsyChecks.filter((check) => statusTone(check.status) === "pass").length;
   const failedPolicy = etsy?.status === "fail" || technical.fullDecode === false || summary.data?.status === "fail";
   const missingPolicy = !etsy || typeof technical.fullDecode !== "boolean";
   const overall: { label: string; tone: QualityTone; detail: string } = failedPolicy
@@ -326,11 +334,10 @@ export const VideoSceneQualityReview = ({ runId, video, showObservationForm = fa
     : isChecking ? { label: "Checking", tone: "pending", detail: "Scene evaluation is still running. You can review the video while you wait." }
     : missingPolicy ? { label: "Needs review", tone: "warning", detail: "Some final video checks were not saved, so an overall pass cannot be confirmed." }
     : hasIncompleteScenes ? { label: "Needs review", tone: "warning", detail: "One or more scene evaluations are missing or could not finish." }
-    : etsy?.status === "pass_with_warning" ? { label: "Pass with warnings", tone: "warning", detail: "The video passed required checks. Review the Etsy warnings below." }
-    : { label: "Pass", tone: "pass", detail: "The saved technical and Etsy checks passed and scene evaluations are complete." };
-  const etsyChecks = etsy?.checks.filter((check) => !HIDDEN_ETSY_CHECKS.has(check.key)) ?? [];
-  const etsyToReview = etsyChecks.filter((check) => ["warning", "pass_with_warning", "uncertain", "fail", "failed"].includes(check.status)).length;
-  const etsyPassed = etsyChecks.filter((check) => statusTone(check.status) === "pass").length;
+    : etsyToReview > 0 ? { label: "Pass with warnings", tone: "warning", detail: "The video passed required checks. Review the Etsy warnings below." }
+    : { label: "Pass", tone: "pass", detail: hasSkippedScenes
+      ? "The saved technical and Etsy checks passed. Automatic scene scoring was skipped."
+      : "The saved technical and Etsy checks passed and scene evaluations are complete." };
   const OverallIcon = toneIcon(overall.tone);
   const qualitySummary = summary.data ? (
     <div className="bg-card overflow-hidden rounded-xl border">

@@ -5,6 +5,7 @@ import {
   FileText,
   Layers,
   PiggyBank,
+  Printer,
   Rocket,
   Sparkles,
   Store,
@@ -16,21 +17,34 @@ export interface Benefit {
   icon: LucideIcon;
   title: string;
   description: string;
-  isFeatured: boolean;
 }
 
+/** Which product illustration a features tile draws. */
+export type FeatureVisualId = "design" | "video" | "listing" | "batch" | "platforms";
+
 export interface EcosystemFeature {
+  id: FeatureVisualId;
   icon: LucideIcon;
   title: string;
   description: string;
 }
 
+/** Which small product illustration a workflow step draws. */
+export type WorkflowVisualId = "upload" | "generate" | "seo" | "send";
+
 export interface WorkflowStep {
   index: string;
   title: string;
   description: string;
+  visual: WorkflowVisualId;
+}
+
+export interface PreviewDesign {
+  name: string;
+  productType: string;
+  /** Translation key under landing.productTypes. */
+  productTypeKey: "tshirt" | "poster" | "toteBag" | "mug";
   imageSrc: string;
-  imageAlt: string;
 }
 
 export interface ComparisonRow {
@@ -50,15 +64,41 @@ export const NAV_LINKS: NavItem[] = [
 ];
 
 export const HERO_CONTENT = {
-  title: "Scale Your POD Empire at AI Speed",
+  eyebrow: "AI content studio for Etsy POD",
+  titleLead: "Scale Your POD Empire at",
+  titleHighlight: "AI Speed",
   description: "Turn product ideas into designs, copy, and Etsy-ready listings in minutes with AI.",
   primaryCta: { label: "Get started for free", href: "/login" },
   secondaryCta: { label: "See how it works", href: "#workflow" },
+  worksWithLabel: "Works with",
+  worksWith: [
+    { name: "Etsy", icon: Store },
+    { name: "Printify", icon: Printer },
+  ],
 } as const;
 
-export const HERO_IMAGE = {
-  src: "/images/landing/hero-dashboard.webp",
-  alt: "Podivo Studio dashboard showing AI design generation progress and product mockup thumbnails",
+/** Sample artwork from the built-in design templates, shown in the product previews. */
+export const PREVIEW_DESIGNS: PreviewDesign[] = [
+  { name: "Desert Horizon", productType: "T-shirt", productTypeKey: "tshirt", imageSrc: "/images/design-templates/desert-horizon.webp" },
+  { name: "Campfire Crest", productType: "Poster", productTypeKey: "poster", imageSrc: "/images/design-templates/campfire-crest.webp" },
+  { name: "Blue Garden", productType: "Tote bag", productTypeKey: "toteBag", imageSrc: "/images/design-templates/blue-garden.webp" },
+  { name: "Coffee Geometry", productType: "Mug", productTypeKey: "mug", imageSrc: "/images/design-templates/coffee-geometry.webp" },
+];
+
+export const HERO_PREVIEW = {
+  address: "podivo / batches / autumn-drop",
+  batchName: "Autumn drop",
+  batchDetail: "24 products",
+  progressLabel: "Generating",
+  progressPercent: 86,
+  tagsLine: "13/13 tags filled",
+  tagsDetail: "vintage desert tee, camping poster, floral tote",
+} as const;
+
+export const BENEFITS_CONTENT = {
+  title: "Outstanding Benefits",
+  description:
+    "An integrated solution from generation to store management, helping your POD business grow sustainably.",
 } as const;
 
 export const BENEFITS: Benefit[] = [
@@ -66,25 +106,21 @@ export const BENEFITS: Benefit[] = [
     icon: Rocket,
     title: "Accelerate Operations",
     description:
-      "Automate manual tasks and process large volumes of data directly, cutting busywork during peak operations.",
-    isFeatured: true,
+      "Run whole batches of products through design, mockup, video, and listing generation, cutting busywork during peak seasons.",
   },
   {
     icon: PiggyBank,
     title: "Save Costs",
     description: "Reduce overhead and run lean while keeping every listing professional.",
-    isFeatured: false,
   },
   {
     icon: ChartColumn,
     title: "Smart Management",
-    description: "Track revenue, queues, and operational performance in real time.",
-    isFeatured: false,
+    description: "Track shop sales, generation progress, and plan usage from one dashboard.",
   },
 ];
 
 export const ECOSYSTEM_CONTENT = {
-  eyebrow: "Features",
   title: "Everything you need to launch POD listings",
   description:
     "Designs, videos, listing copy, batch runs, and publishing unified in one AI workflow.",
@@ -93,40 +129,44 @@ export const ECOSYSTEM_CONTENT = {
 
 export const ECOSYSTEM_FEATURES: EcosystemFeature[] = [
   {
+    id: "design",
     icon: Sparkles,
     title: "AI Design Generation",
     description:
       "Turn product ideas and prompts into original, print-ready designs and mockups in minutes.",
   },
   {
+    id: "video",
     icon: Clapperboard,
     title: "Video Creation",
     description:
-      "Auto-generate promo videos and mockup showcases from your designs for listings and socials.",
+      "Auto-generate vertical promo videos and mockup showcases from your designs for listings and socials.",
   },
   {
+    id: "listing",
     icon: FileText,
     title: "Etsy Listing Content",
     description: "Get SEO-ready titles, descriptions, tags, and attributes tuned for Etsy search.",
   },
   {
+    id: "batch",
     icon: Layers,
     title: "Batch Processing",
     description:
-      "Upload once via CSV and generate hundreds of designs, videos, and listings in a single run.",
+      "Import up to 500 products from one Excel sheet and generate designs, videos, and listings in a single run.",
   },
   {
+    id: "platforms",
     icon: Store,
     title: "Platform Integrations",
     description:
-      "Push approved listings straight to Etsy and other marketplaces in one click, assets included.",
+      "Send approved listings to Etsy as drafts with images and video attached, or publish through Printify.",
   },
 ];
 
 export const WORKFLOW_CONTENT = {
-  eyebrow: "How it works",
-  title: "From product idea to published listing in 4 steps",
-  description: "Upload once. Podivo runs the AI workflow, scores SEO, and publishes everywhere.",
+  title: "From product idea to Etsy-ready listing in 4 steps",
+  description: "Upload once. Podivo runs the AI workflow, scores SEO, and sends listings to your shop.",
 } as const;
 
 export const WORKFLOW_STEPS: WorkflowStep[] = [
@@ -134,33 +174,29 @@ export const WORKFLOW_STEPS: WorkflowStep[] = [
     index: "01",
     title: "Upload Product Info",
     description:
-      "Drop in your product idea, niche, and details, single item or bulk CSV, to kick off the workflow.",
-    imageSrc: "/images/landing/workflow-upload.webp",
-    imageAlt: "Spreadsheet data transforming into a stream of particles",
+      "Add your product idea, niche, and keywords, one at a time or in bulk from an Excel sheet, to kick off the workflow.",
+    visual: "upload",
   },
   {
     index: "02",
     title: "AI Generates Assets",
     description:
       "The connected AI workflow creates designs, mockup images, promo video, and full listing copy with titles, descriptions, and tags.",
-    imageSrc: "/images/landing/workflow-ai.webp",
-    imageAlt: "AI generating designs and apparel mockups on glass panels",
+    visual: "generate",
   },
   {
     index: "03",
     title: "Review SEO Score",
     description:
       "Every listing gets an SEO score with clear fixes. Approve only when titles, tags, and copy are ready to rank.",
-    imageSrc: "/images/landing/seo-score.webp",
-    imageAlt: "Dashboard showing SEO scores and listing quality checks",
+    visual: "seo",
   },
   {
     index: "04",
-    title: "Publish Everywhere",
+    title: "Send to Your Shop",
     description:
-      "Push approved listings live to Etsy and other platforms in one click, assets included.",
-    imageSrc: "/images/landing/workflow-etsy.webp",
-    imageAlt: "Storefront icon with growth charts and publish notifications",
+      "Send approved listings to Etsy as drafts with all assets attached, or publish them through Printify.",
+    visual: "send",
   },
 ];
 
@@ -182,13 +218,15 @@ export const MANUAL_ROWS: ComparisonRow[] = [
 ];
 
 export const APCS_ROWS: ComparisonRow[] = [
-  { label: "CSV preparation", value: "2 hours" },
+  { label: "Spreadsheet preparation", value: "2 hours" },
   { label: "AI generation", value: "Automated" },
   { label: "Review and tweak", value: "3 hours" },
-  { label: "1-click publish", value: "< 1 hour" },
+  { label: "1-click send to shop", value: "< 1 hour" },
 ];
 
 export const FAQ_CONTENT = {
+  supportHint: "Can't find your answer?",
+  supportCta: { label: "Contact support", href: "/support" },
   title: "Frequently Asked Questions",
   description: "Common questions before you start.",
 } as const;
@@ -197,20 +235,21 @@ export const FAQS: Faq[] = [
   {
     question: "How long does setup take?",
     answer:
-      "Uploading your first batch takes 15 to 30 minutes. Our team helps you operate the same day.",
+      "Creating an account takes a minute. Filling in the Excel template for your first batch usually takes 15 to 30 minutes.",
   },
   {
     question: "Do I need additional hardware?",
     answer: "No. Podivo runs on the web, so your existing computer is enough to manage generation.",
   },
   {
-    question: "Does the plan cover everything?",
-    answer: "The package includes storage, security, and feature updates with no hidden costs.",
+    question: "What do the plans include?",
+    answer:
+      "Each plan comes with a monthly quota for designs, mockups, videos, and listings. Higher plans add AI video, lifestyle mockups, and automatic approval. You can check your remaining usage at any time.",
   },
   {
     question: "How does support work?",
     answer:
-      "Our team replies 24/7 via chat and email, with critical issues prioritized for remote handling.",
+      "Open a support ticket from your dashboard, attach screenshots if needed, and our team replies to you there.",
   },
 ];
 

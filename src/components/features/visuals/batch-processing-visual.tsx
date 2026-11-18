@@ -16,15 +16,17 @@ export const BatchProcessingVisual = () => {
         {BATCH_ROWS.map((row, index) => (
           <div key={row.name} className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
-              <p className="flex items-center gap-2 text-sm font-medium">
-                <FileSpreadsheet className="text-primary size-4" />
-                {row.name}
+              <p className="flex min-w-0 items-center gap-2 text-sm font-medium">
+                <FileSpreadsheet className="text-brand size-4 shrink-0" />
+                <span className="truncate">{row.name}</span>
               </p>
-              <Badge variant={row.badgeVariant}>{t(`featuresPage.visuals.batchStatuses.${index}`, { defaultValue: row.status })}</Badge>
+              <Badge variant={row.badgeVariant} className="shrink-0">
+                {t(`featuresPage.visuals.batchStatuses.${index}`, { defaultValue: row.status })}
+              </Badge>
             </div>
             <span className="bg-muted h-2 overflow-hidden rounded-full">
               <span
-                className={cn("bg-primary block h-full rounded-full", row.progressClass)}
+                className={cn("bg-brand block h-full rounded-full", row.progressClass)}
               />
             </span>
           </div>

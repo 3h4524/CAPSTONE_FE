@@ -76,7 +76,8 @@ function Change({ current, previous }: { current: number; previous: number }) {
 function Kpi({ label, value, footer, icon: Icon, className }: { label: React.ReactNode; value: string; footer: React.ReactNode; icon: typeof Package; className?: string }) {
   return (
     <div className={cn("border-ink-200 bg-card flex flex-col gap-2 rounded-xl border p-4 shadow-xs max-md:gap-1 max-md:p-3.5", className)}>
-      <p className="text-ink-500 flex items-center gap-1.5 text-xs font-semibold"><Icon className="size-3.5" />{label}</p>
+      {/* The label sits in one span: as loose flex children, "Revenue" and ", last 30 days" got the gap between them. */}
+      <p className="text-ink-500 flex items-center gap-1.5 text-xs font-semibold"><Icon className="size-3.5 shrink-0" /><span>{label}</span></p>
       <p className="text-ink-900 truncate text-2xl font-bold tabular-nums max-md:text-xl">{value}</p>
       <div className="text-ink-500 mt-auto text-[11px]">{footer}</div>
     </div>

@@ -43,6 +43,7 @@ const JOB_STATUS_KEYS: Record<string, string> = {
   running: "admin.dashboard.activity.jobStatus.running",
   paused: "admin.dashboard.activity.jobStatus.paused",
   completed: "admin.dashboard.activity.jobStatus.completed",
+  partially_completed: "admin.dashboard.activity.jobStatus.partiallyCompleted",
   failed: "admin.dashboard.activity.jobStatus.failed",
   cancelled: "admin.dashboard.activity.jobStatus.cancelled",
 };
@@ -56,11 +57,16 @@ const TICKET_STATUS_KEYS: Record<string, string> = {
 
 type TranslationFn = TFunction<"common">;
 
+// A status with no translation still reads as words: "partially_completed" shows "Partially completed".
+const readableStatus = (status: string) => {
+  const words = status.toLowerCase().replace(/_/g, " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+};
+
 const ticketStatusLabel = (status: string, t: TranslationFn) => {
   const normalized = status.toLowerCase().replace(/_/g, " ");
   const labelKey = TICKET_STATUS_KEYS[normalized];
-  if (labelKey) return t(labelKey);
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  return labelKey ? t(labelKey) : readableStatus(status);
 };
 
 // A phone lists only the latest few: the links beside each heading lead to the rest.
@@ -73,9 +79,9 @@ const JobStatus = ({ job }: { job: BatchJobDto }) => {
   const statusKey = job.status.toLowerCase();
   const labelKey = JOB_STATUS_KEYS[statusKey];
   return (
-    <span className="text-ink-700 inline-flex items-center gap-1.5 capitalize">
-      <span className={`size-1.5 rounded-full ${DOT[tone]}`} aria-hidden="true" />
-      {labelKey ? t(labelKey) : statusKey}
+    <span className="text-ink-700 inline-flex items-center gap-1.5">
+      <span className={`size-1.5 shrink-0 rounded-full ${DOT[tone]}`} aria-hidden="true" />
+      {labelKey ? t(labelKey) : readableStatus(job.status)}
       {!finished && tone !== "rose" && (
         <span className="text-ink-400 text-xs tabular-nums">{job.progressPercentage}</span>
       )}
@@ -162,11 +168,13 @@ const BatchJobsPanel = ({
       <table className="w-full min-w-[620px] table-fixed text-left text-sm">
         <thead className="border-ink-100 bg-ink-50/60 text-ink-500 border-y text-xs">
           <tr>
-            <th className="w-[43%] px-5 py-2 font-medium">{t("admin.dashboard.activity.batch")}</th>
-            <th className="w-[19%] px-4 py-2 font-medium whitespace-nowrap">{t("admin.dashboard.activity.seller")}</th>
-            <th className="w-[11%] px-4 py-2 text-left font-medium whitespace-nowrap">{t("admin.dashboard.activity.products")}</th>
+            {/* Status gets the room for "Partially completed"; every cell stays inside its column, so the
+                fixed-layout table never grows a sideways scrollbar on a desktop. */}
+            <th className="w-[38%] px-5 py-2 font-medium">{t("admin.dashboard.activity.batch")}</th>
+            <th className="w-[18%] px-4 py-2 font-medium whitespace-nowrap">{t("admin.dashboard.activity.seller")}</th>
+            <th className="w-[10%] px-4 py-2 text-left font-medium whitespace-nowrap">{t("admin.dashboard.activity.products")}</th>
             <th className="w-[12%] px-4 py-2 text-left font-medium whitespace-nowrap">{t("admin.dashboard.activity.aiCost")}</th>
-            <th className="w-[15%] px-5 py-2 font-medium whitespace-nowrap">{t("admin.dashboard.activity.status")}</th>
+            <th className="w-[22%] px-5 py-2 font-medium whitespace-nowrap">{t("admin.dashboard.activity.status")}</th>
           </tr>
         </thead>
         <tbody className="divide-ink-100 divide-y">
@@ -189,14 +197,14 @@ const BatchJobsPanel = ({
                     {job.createdAt && ` · ${timeAgo(job.createdAt, now)}`}
                   </p>
                 </td>
-                <td className="text-ink-600 px-4 py-2.5 whitespace-nowrap">{job.userName}</td>
+                <td className="text-ink-600 truncate px-4 py-2.5" title={job.userName}>{job.userName}</td>
                 <td className="text-ink-700 px-4 py-2.5 text-left whitespace-nowrap tabular-nums">
                   {job.itemCount.toLocaleString()}
                 </td>
                 <td className="text-ink-700 px-4 py-2.5 text-left whitespace-nowrap tabular-nums">
                   {job.aiCostUsd ? formatUsd(job.aiCostUsd) : "—"}
                 </td>
-                <td className="px-5 py-2.5 whitespace-nowrap">
+                <td className="px-5 py-2.5">
                   <JobStatus job={job} />
                 </td>
               </tr>

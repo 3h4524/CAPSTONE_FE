@@ -22,12 +22,12 @@ export const StaticLogo = ({
   >
     <defs>
       <linearGradient id={`${gradientPrefix}-gradient`} x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#8B5CF6" />
-        <stop offset="50%" stopColor="#7C3AED" />
-        <stop offset="100%" stopColor="#4F46E5" />
+        <stop offset="0%" stopColor="#273750" />
+        <stop offset="50%" stopColor="#3A5683" />
+        <stop offset="100%" stopColor="#4A6FA5" />
       </linearGradient>
       <linearGradient id={`${gradientPrefix}-glow`} x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#C4B5FD" stopOpacity="0.6" />
+        <stop offset="0%" stopColor="#BFD3EE" stopOpacity="0.6" />
         <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
       </linearGradient>
     </defs>
@@ -71,7 +71,7 @@ export const StaticLogo = ({
     <path
       d="M 226 394 L 276 422 L 366 370"
       fill="none"
-      stroke="#C4B5FD"
+      stroke="#BFD3EE"
       strokeWidth="26"
       strokeLinecap="round"
       strokeLinejoin="round"

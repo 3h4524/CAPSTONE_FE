@@ -11,6 +11,7 @@ export const ListingContentVisual = () => {
   const { t } = useTranslation("common");
   return (
     <Card className="gap-4 p-5 shadow-lg" aria-hidden="true">
+      {/* The sample listing and its tags stay in English: they show what goes up on Etsy. */}
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold">
           Vintage Sunset T-Shirt, Retro Graphic Tee, Gift for Him
@@ -26,7 +27,7 @@ export const ListingContentVisual = () => {
             {tag}
           </Badge>
         ))}
-        <Badge variant="secondary">{t("featuresPage.visuals.moreTags")}</Badge>
+        <Badge variant="outline" className="bg-muted">{t("featuresPage.visuals.moreTags")}</Badge>
       </div>
       <ul className="flex flex-col gap-2 p-0">
         {LISTING_CHECKS.map((check, index) => (

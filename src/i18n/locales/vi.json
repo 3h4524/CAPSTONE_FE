@@ -5006,34 +5006,27 @@
           "1": "Đang xử lý 61 / 84",
           "2": "Đang chờ"
         },
-        "variations": "4 biến thể",
-        "designTiles": {
-          "0": "Áo thun vintage",
-          "1": "Poster hoa",
-          "2": "Sticker cắt viền",
-          "3": "Túi tote canvas"
-        },
-        "transparentPng": "PNG nền trong suốt",
-        "printReady": "300 DPI sẵn sàng in",
+        "printReady": "PNG sẵn sàng in",
         "moreTags": "+ 7 thẻ khác",
         "listingChecks": {
           "0": "Tiêu đề giàu từ khóa",
           "1": "Đã điền 13 / 13 thẻ",
-          "2": "Đã đặt chất liệu + thuộc tính"
+          "2": "Điểm SEO kèm cách sửa rõ ràng"
         },
         "platformDetails": {
-          "etsy": "128 listing đang bán",
+          "etsy": "Bản nháp kèm đầy đủ tài nguyên",
           "printify": "Đã đồng bộ xử lý đơn"
         },
         "connected": "Đã kết nối",
-        "moreMarketplaces": "Sắp có thêm sàn thương mại",
-        "connect": "+ Kết nối",
         "etsyVideo": "Video Etsy",
-        "verticalCut": "Kèm bản dọc 9:16"
+        "verticalCut": "Video dọc 9:16",
+        "designPrompt": "“vintage outdoors, warm print style”",
+        "designCount": "{{count}} thiết kế",
+        "mockupsIncluded": "Kèm mock-up"
       },
       "cta": {
         "title": "Sẵn sàng ra mắt lô sản phẩm đầu tiên?",
-        "description": "Tải lên một ý tưởng sản phẩm và xem quy trình tạo, chấm điểm và đăng nó.",
+        "description": "Tải lên một ý tưởng sản phẩm và xem quy trình tạo, chấm điểm và gửi nó lên shop của bạn.",
         "primary": "Bắt đầu miễn phí",
         "secondary": "Về trang chủ"
       },
@@ -5041,42 +5034,42 @@
         "design": {
           "title": "Tạo thiết kế bằng AI",
           "tagline": "Tác phẩm gốc, theo yêu cầu",
-          "description": "Mô tả niche và ý tưởng sản phẩm một lần. Workflow AI tạo ra thiết kế gốc, sẵn sàng in kèm mock-up lifestyle trên áo quần, poster, sticker và túi tote.",
+          "description": "Mô tả niche và ý tưởng sản phẩm một lần. Quy trình AI tạo ra thiết kế gốc, sẵn sàng in, kèm mock-up trên áo thun, áo hoodie, cốc, poster và túi tote.",
           "bullets": {
             "0": "Từ prompt ra thiết kế trong vài phút, không cần nhà thiết kế",
             "1": "Xuất file sẵn sàng in với nền trong suốt",
-            "2": "Tự động tạo mock-up trên áo, poster, sticker và túi tote",
+            "2": "Tự động tạo mock-up trên áo thun, hoodie, cốc, poster và túi tote",
             "3": "Nhiều biến thể cho mỗi thiết kế để thử nghiệm đâu là bản bán chạy"
           }
         },
         "video": {
           "title": "Tạo video",
           "tagline": "Listing sinh động hơn",
-          "description": "Mỗi thiết kế đi kèm một video quảng bá ngắn: mock-up động được render theo định dạng sẵn sàng cho listing và định dạng dọc cho Etsy, TikTok và Reels.",
+          "description": "Biến mock-up đã duyệt thành video quảng bá ngắn: video trình diễn sản phẩm dạng dọc cho listing Etsy và mạng xã hội.",
           "bullets": {
             "0": "Tự tạo từ thiết kế của bạn, không cần kỹ năng dựng video",
-            "1": "Bản ngang sẵn sàng cho listing và bản dọc cho mạng xã hội",
+            "1": "Video dọc 9:16 cho listing Etsy và mạng xã hội",
             "2": "Hiệu ứng zoom, xoay và chuyển cảnh lifestyle",
-            "3": "Caption và hook khớp với nội dung listing"
+            "3": "Nhạc nền từ thư viện có sẵn"
           }
         },
         "listing": {
           "title": "Nội dung listing trên Etsy",
           "tagline": "Nội dung viết để xếp hạng",
-          "description": "Có ngay nội dung listing hoàn chỉnh tối ưu cho tìm kiếm trên Etsy: tiêu đề giàu từ khóa, mô tả thuyết phục, đủ 13 thẻ, chất liệu và thuộc tính.",
+          "description": "Có ngay nội dung listing hoàn chỉnh tối ưu cho tìm kiếm trên Etsy: tiêu đề giàu từ khóa, mô tả thuyết phục và đủ 13 thẻ, kèm điểm SEO trước khi bạn duyệt.",
           "bullets": {
             "0": "Tiêu đề SEO xây từ từ khóa người mua thực",
             "1": "Mô tả được cấu trúc để chuyển khách xem thành người mua",
-            "2": "Đủ bộ 13 thẻ cùng chất liệu và thuộc tính",
+            "2": "Đủ bộ 13 thẻ kèm điểm SEO và cách sửa rõ ràng",
             "3": "Giọng văn phù hợp với shop và niche của bạn"
           }
         },
         "batch": {
           "title": "Xử lý hàng loạt",
           "tagline": "Một lần tải lên, hàng trăm listing",
-          "description": "Thả một file CSV duy nhất với ý tưởng sản phẩm và để workflow chạy: thiết kế, video và nội dung listing được tạo cho cả lô trong khi bạn chỉ xem lại các ngoại lệ.",
+          "description": "Điền một file Excel mẫu với ý tưởng sản phẩm và để quy trình chạy: thiết kế, video và nội dung listing được tạo cho cả lô, bạn chỉ cần xem lại những chỗ cần thiết.",
           "bullets": {
-            "0": "Nhập CSV cho ý tưởng, niche và loại sản phẩm",
+            "0": "Nhập từ Excel tối đa 500 sản phẩm kèm niche và từ khóa",
             "1": "Tạo song song trên toàn bộ lô",
             "2": "Tiến trình trực tiếp từng item, tự thử lại khi lỗi",
             "3": "Hàng chờ duyệt chỉ nêu ra những gì cần bạn xử lý"
@@ -5084,15 +5077,19 @@
         },
         "platforms": {
           "title": "Tích hợp đa nền tảng",
-          "tagline": "Xuất bản mọi nơi chỉ với một cú nhấp",
-          "description": "Listing đã duyệt được đăng ngay từ Podivo. Thiết kế, mock-up, video và nội dung được đóng gói và đẩy lên Etsy cùng các sàn đã kết nối, tồn kho luôn đồng bộ.",
+          "tagline": "Từ studio đến shop chỉ với một cú nhấp",
+          "description": "Listing đã duyệt rời Podivo với đầy đủ tài nguyên. Thiết kế, mock-up, video và nội dung được gửi lên Etsy dưới dạng bản nháp, hoặc sang Printify để xử lý đơn và đăng bán.",
           "bullets": {
-            "0": "Đăng lên Etsy một cú nhấp với đầy đủ assets đi kèm",
+            "0": "Tạo bản nháp Etsy một cú nhấp kèm ảnh và video",
             "1": "Kết nối Printify để xử lý đơn liền mạch",
-            "2": "Listing luôn đồng bộ khi bạn sửa trong Podivo",
+            "2": "Đồng bộ sản phẩm Printify sau khi bạn sửa trong Podivo",
             "3": "Chế độ nháp để duyệt lần cuối trước khi đăng"
           }
         }
+      },
+      "intro": {
+        "title": "Mọi thứ Podivo tự động hóa",
+        "description": "Thiết kế, mock-up, video quảng bá, listing Etsy và chạy theo lô, kết nối trong một quy trình AI."
       }
     },
     "landing": {
@@ -5102,7 +5099,7 @@
         "items": {
           "0": {
             "title": "Tăng tốc vận hành",
-            "description": "Tự động hóa việc thủ công và xử lý trực tiếp khối lượng dữ liệu lớn, giảm việc vặt trong mùa cao điểm."
+            "description": "Chạy cả lô sản phẩm qua các bước tạo thiết kế, mock-up, video và listing, giảm việc thủ công trong mùa cao điểm."
           },
           "1": {
             "title": "Tiết kiệm chi phí",
@@ -5110,7 +5107,7 @@
           },
           "2": {
             "title": "Quản lý thông minh",
-            "description": "Theo dõi doanh thu, hàng đợi và hiệu quả vận hành theo thời gian thực."
+            "description": "Theo dõi doanh số shop, tiến độ tạo nội dung và mức dùng gói trên một bảng điều khiển."
           }
         }
       },
@@ -5142,7 +5139,7 @@
         },
         "apcsRows": {
           "0": {
-            "label": "Chuẩn bị CSV",
+            "label": "Chuẩn bị bảng tính",
             "value": "2 giờ"
           },
           "1": {
@@ -5154,7 +5151,7 @@
             "value": "3 giờ"
           },
           "3": {
-            "label": "Đăng bằng 1 cú nhấp",
+            "label": "Gửi lên shop bằng 1 cú nhấp",
             "value": "< 1 giờ"
           }
         },
@@ -5167,7 +5164,6 @@
         "primary": "Bắt đầu miễn phí"
       },
       "ecosystem": {
-        "eyebrow": "Tính năng",
         "title": "Mọi thứ bạn cần để ra mắt listing POD",
         "description": "Thiết kế, video, nội dung listing, chạy theo lô và đăng bán hợp nhất trong một quy trình AI.",
         "cta": "Khám phá mọi tính năng",
@@ -5178,7 +5174,7 @@
           },
           "1": {
             "title": "Tạo video",
-            "description": "Tự động tạo video quảng bá và video trình diễn mock-up từ thiết kế cho listing và mạng xã hội."
+            "description": "Tự động tạo video quảng bá dạng dọc và video trình diễn mock-up từ thiết kế cho listing và mạng xã hội."
           },
           "2": {
             "title": "Nội dung listing Etsy",
@@ -5186,11 +5182,11 @@
           },
           "3": {
             "title": "Xử lý theo lô",
-            "description": "Tải lên một lần bằng CSV và tạo hàng trăm thiết kế, video và listing trong một lượt chạy."
+            "description": "Nhập tối đa 500 sản phẩm từ một file Excel và tạo thiết kế, video, listing trong một lượt chạy."
           },
           "4": {
             "title": "Tích hợp nền tảng",
-            "description": "Đẩy listing đã duyệt thẳng lên Etsy và các sàn khác chỉ với một cú nhấp, kèm đầy đủ tài nguyên."
+            "description": "Gửi listing đã duyệt lên Etsy dưới dạng bản nháp kèm ảnh và video, hoặc đăng qua Printify."
           }
         }
       },
@@ -5200,57 +5196,81 @@
         "items": {
           "0": {
             "question": "Thiết lập mất bao lâu?",
-            "answer": "Tải lên lô đầu tiên mất 15 đến 30 phút. Đội ngũ của chúng tôi hỗ trợ bạn vận hành ngay trong ngày."
+            "answer": "Tạo tài khoản chỉ mất một phút. Điền file Excel mẫu cho lô đầu tiên thường mất 15 đến 30 phút."
           },
           "1": {
             "question": "Tôi có cần thêm phần cứng không?",
             "answer": "Không. Podivo chạy trên web, nên máy tính hiện có là đủ để quản lý việc tạo nội dung."
           },
           "2": {
-            "question": "Gói có bao gồm mọi thứ không?",
-            "answer": "Gói bao gồm lưu trữ, bảo mật và cập nhật tính năng, không có chi phí ẩn."
+            "question": "Các gói bao gồm những gì?",
+            "answer": "Mỗi gói có hạn mức hằng tháng cho thiết kế, mock-up, video và listing. Các gói cao hơn có thêm video AI, mock-up lifestyle và tự động duyệt. Bạn có thể xem phần hạn mức còn lại bất cứ lúc nào."
           },
           "3": {
             "question": "Hỗ trợ hoạt động thế nào?",
-            "answer": "Đội ngũ phản hồi 24/7 qua chat và email, sự cố nghiêm trọng được ưu tiên xử lý từ xa."
+            "answer": "Mở một ticket hỗ trợ từ bảng điều khiển, đính kèm ảnh chụp màn hình nếu cần, đội ngũ sẽ trả lời bạn ngay tại đó."
           }
         },
         "showFewer": "Thu gọn",
-        "showAll": "Xem cả {{count}} câu hỏi"
+        "showAll": "Xem cả {{count}} câu hỏi",
+        "supportHint": "Không tìm thấy câu trả lời?",
+        "supportCta": "Liên hệ hỗ trợ"
       },
       "hero": {
         "title": "Mở rộng đế chế POD với tốc độ AI",
         "description": "Biến ý tưởng sản phẩm thành thiết kế, nội dung và listing sẵn sàng cho Etsy chỉ trong vài phút với AI.",
         "primary": "Bắt đầu miễn phí",
         "secondary": "Xem cách hoạt động",
-        "imageAlt": "Bảng điều khiển Podivo Studio hiển thị tiến độ tạo thiết kế bằng AI và ảnh thu nhỏ mock-up sản phẩm"
+        "eyebrow": "Studio nội dung AI cho POD trên Etsy",
+        "titleLead": "Mở rộng đế chế POD với",
+        "titleHighlight": "tốc độ AI",
+        "worksWith": "Hoạt động cùng"
       },
       "workflow": {
-        "eyebrow": "Cách hoạt động",
-        "title": "Từ ý tưởng sản phẩm đến listing đã đăng trong 4 bước",
-        "description": "Tải lên một lần. Podivo chạy quy trình AI, chấm điểm SEO và đăng bán khắp nơi.",
+        "title": "Từ ý tưởng sản phẩm đến listing sẵn sàng cho Etsy trong 4 bước",
+        "description": "Tải lên một lần. Podivo chạy quy trình AI, chấm điểm SEO và gửi listing lên shop của bạn.",
         "steps": {
           "01": {
             "title": "Tải lên thông tin sản phẩm",
-            "description": "Nhập ý tưởng sản phẩm, niche và chi tiết, từng sản phẩm hoặc CSV hàng loạt, để khởi động quy trình.",
-            "imageAlt": "Dữ liệu bảng tính biến thành dòng hạt"
+            "description": "Nhập ý tưởng sản phẩm, niche và từ khóa, từng sản phẩm hoặc hàng loạt từ file Excel, để khởi động quy trình."
           },
           "02": {
             "title": "AI tạo tài nguyên",
-            "description": "Quy trình AI liên kết tạo thiết kế, ảnh mock-up, video quảng bá và trọn bộ nội dung listing với tiêu đề, mô tả và thẻ.",
-            "imageAlt": "AI tạo thiết kế và mock-up trang phục trên các tấm kính"
+            "description": "Quy trình AI liên kết tạo thiết kế, ảnh mock-up, video quảng bá và trọn bộ nội dung listing với tiêu đề, mô tả và thẻ."
           },
           "03": {
             "title": "Xem điểm SEO",
-            "description": "Mỗi listing có điểm SEO kèm cách sửa rõ ràng. Chỉ duyệt khi tiêu đề, thẻ và nội dung đã sẵn sàng để lên hạng.",
-            "imageAlt": "Bảng điều khiển hiển thị điểm SEO và kiểm tra chất lượng listing"
+            "description": "Mỗi listing có điểm SEO kèm cách sửa rõ ràng. Chỉ duyệt khi tiêu đề, thẻ và nội dung đã sẵn sàng để lên hạng."
           },
           "04": {
-            "title": "Đăng bán khắp nơi",
-            "description": "Đưa listing đã duyệt lên Etsy và các nền tảng khác chỉ với một cú nhấp, kèm đầy đủ tài nguyên.",
-            "imageAlt": "Biểu tượng cửa hàng với biểu đồ tăng trưởng và thông báo đăng bán"
+            "title": "Gửi lên shop của bạn",
+            "description": "Gửi listing đã duyệt lên Etsy dưới dạng bản nháp kèm đầy đủ tài nguyên, hoặc đăng qua Printify."
           }
+        },
+        "visuals": {
+          "product": "Sản phẩm",
+          "niche": "Niche",
+          "keywords": "Từ khóa",
+          "generating": "Đang tạo tài nguyên",
+          "seoChecks": {
+            "0": "Từ khóa trong tiêu đề",
+            "1": "Đã điền 13 / 13 thẻ",
+            "2": "Độ dài mô tả"
+          },
+          "attached": "Đã kèm ảnh + video"
         }
+      },
+      "preview": {
+        "batchDetail": "{{count}} sản phẩm",
+        "generating": "Đang tạo",
+        "tagsFilled": "Đã điền 13/13 thẻ",
+        "etsyDraft": "Bản nháp Etsy"
+      },
+      "productTypes": {
+        "tshirt": "Áo thun",
+        "poster": "Poster",
+        "toteBag": "Túi tote",
+        "mug": "Cốc"
       }
     },
     "batchJobs": {
@@ -5763,7 +5783,8 @@
             "paused": "Tạm dừng",
             "completed": "Hoàn tất",
             "failed": "Thất bại",
-            "cancelled": "Đã hủy"
+            "cancelled": "Đã hủy",
+            "partiallyCompleted": "Hoàn thành một phần"
           },
           "ticketStatus": {
             "open": "Mở",

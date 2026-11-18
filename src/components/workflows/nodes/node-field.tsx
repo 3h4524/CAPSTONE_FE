@@ -117,7 +117,8 @@ export const NodeField = ({
         </div>
         <SelectContent
           position="popper"
-          className="border-wf-line bg-wf-surface text-wf-ink w-72 max-w-[min(20rem,90vw)] min-w-(--radix-select-trigger-width)"
+          // The list opens in a portal outside the canvas, so it names the canvas font to match its node.
+          className="font-canvas border-wf-line bg-wf-surface text-wf-ink w-72 max-w-[min(20rem,90vw)] min-w-(--radix-select-trigger-width)"
         >
           {options?.map((option) => (
             <SelectItem

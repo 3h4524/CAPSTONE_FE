@@ -24,12 +24,6 @@ export interface BatchRow {
   badgeVariant: "default" | "secondary" | "outline";
 }
 
-export interface DesignTile {
-  icon: LucideIcon;
-  label: string;
-  tileClass: string;
-}
-
 export interface ConnectedPlatform {
   icon: LucideIcon;
   name: string;

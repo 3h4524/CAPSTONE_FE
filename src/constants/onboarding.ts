@@ -1,6 +1,7 @@
 import type { OnboardingGuideKey, OnboardingSignals } from "@/types/onboarding";
 
 export type GuidePlacement =
+  | "center"
   | "top"
   | "top-start"
   | "top-end"
@@ -108,7 +109,7 @@ export const PAGE_GUIDES: Record<OnboardingGuideKey, PageGuideStep[]> = {
     },
     {
       target: '[data-guide="mockups.templates"]',
-      placement: "top",
+      placement: "center",
       titleKey: "pageGuides.mockups.steps.templates.title",
       bodyKey: "pageGuides.mockups.steps.templates.body",
     },
@@ -134,7 +135,7 @@ export const PAGE_GUIDES: Record<OnboardingGuideKey, PageGuideStep[]> = {
     },
     {
       target: '[data-guide="workflows.canvas"]',
-      placement: "top",
+      placement: "center",
       titleKey: "pageGuides.workflows.steps.canvas.title",
       bodyKey: "pageGuides.workflows.steps.canvas.body",
     },

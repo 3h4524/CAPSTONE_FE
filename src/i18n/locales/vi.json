@@ -4453,7 +4453,7 @@
       }
     },
     "pageGuides": {
-      "replay": "Xem hướng dẫn trang",
+      "replay": "Xem hướng dẫn",
       "locale": {
         "back": "Quay lại",
         "close": "Đóng",
@@ -4465,7 +4465,7 @@
         "steps": {
           "connect": {
             "title": "Kết nối dịch vụ",
-            "body": "Podivo chạy bằng tài khoản Gemini, Ideogram và Printify của bạn. Chuyến tham quan ngắn này chỉ nơi quản lý các kết nối."
+            "body": "Podivo chạy bằng tài khoản Gemini, Ideogram và Printify của bạn. Thêm khoá từng dịch vụ ở đây để lô có thể tạo ảnh."
           },
           "readiness": {
             "title": "Sẵn sàng cho workflow",
@@ -4485,7 +4485,7 @@
         "steps": {
           "start": {
             "title": "Lô hàng",
-            "body": "Một lô gom các sản phẩm cùng dòng sản phẩm và cùng lần chạy. Chuyến tham quan này chỉ từng phần của trang."
+            "body": "Một lô gom các sản phẩm cùng dòng sản phẩm và cùng lần chạy."
           },
           "actions": {
             "title": "Tạo hoặc nhập",
@@ -4509,7 +4509,7 @@
         "steps": {
           "start": {
             "title": "Thư viện mock-up",
-            "body": "Mock-up biến thiết kế phẳng thành ảnh sản phẩm. Chuyến tham quan này chỉ nơi chứa mẫu và ảnh người mẫu."
+            "body": "Mock-up biến thiết kế phẳng thành ảnh sản phẩm; thư viện lưu ảnh sản phẩm và ảnh người mẫu để các lô dùng lại."
           },
           "tabs": {
             "title": "Hai loại ảnh",

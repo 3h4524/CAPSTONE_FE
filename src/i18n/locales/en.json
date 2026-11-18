@@ -4453,7 +4453,7 @@
       }
     },
     "pageGuides": {
-      "replay": "Show the page guide",
+      "replay": "Show guide",
       "locale": {
         "back": "Back",
         "close": "Close",
@@ -4465,7 +4465,7 @@
         "steps": {
           "connect": {
             "title": "Connect your services",
-            "body": "Podivo runs on your own Gemini, Ideogram and Printify accounts. This short tour shows where connections live."
+            "body": "Podivo runs on your own Gemini, Ideogram and Printify accounts. Add each provider's key here so batches can generate."
           },
           "readiness": {
             "title": "Workflow readiness",
@@ -4485,7 +4485,7 @@
         "steps": {
           "start": {
             "title": "Batches",
-            "body": "A batch groups the products that share one product line and one run. This tour covers the pieces of the page."
+            "body": "A batch groups the products that share one product line and one run."
           },
           "actions": {
             "title": "Create or import",
@@ -4509,7 +4509,7 @@
         "steps": {
           "start": {
             "title": "Mock-up library",
-            "body": "Mock-ups turn a flat design into a product photo. This tour covers where templates and model photos live."
+            "body": "Mock-ups turn a flat design into a product photo; the library keeps the product and model photos your batches reuse."
           },
           "tabs": {
             "title": "Two kinds of photos",

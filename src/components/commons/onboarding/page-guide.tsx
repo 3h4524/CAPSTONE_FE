@@ -32,6 +32,7 @@ export const PageGuide = ({ guideKey, requiresDesktop }: PageGuideProps) => {
       PAGE_GUIDES[guideKey].map((step) => ({
         target: step.target,
         placement: step.placement,
+        floatingOptions: step.placement === "center" ? { hideArrow: true } : undefined,
         skipBeacon: true,
         content: (
           <div className="space-y-1.5">
@@ -107,7 +108,11 @@ export const PageGuide = ({ guideKey, requiresDesktop }: PageGuideProps) => {
         skip: t("pageGuides.locale.skip"),
       }}
       styles={{
-        tooltip: { borderRadius: 12 },
+        tooltip: {
+          borderRadius: 12,
+          maxHeight: "calc(100vh - 24px)",
+          overflowY: "auto",
+        },
       }}
     />
   );

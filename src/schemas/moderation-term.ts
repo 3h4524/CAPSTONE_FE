@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { i18n } from "@/i18n/client";
+
 const CATEGORIES = [
   "sexual",
   "sexual_minors",
@@ -11,21 +13,21 @@ const CATEGORIES = [
 ] as const;
 
 export const moderationTermSchema = z.object({
-  term: z.string().trim().min(1, "Enter a word or phrase.").max(100, "Keep the term under 100 characters."),
-  category: z.enum(CATEGORIES, { message: "Choose a category." }),
+  term: z.string().trim().min(1, { error: () => i18n.t("admin.schemas.moderation.termMin") }).max(100, { error: () => i18n.t("admin.schemas.moderation.termMax") }),
+  category: z.enum(CATEGORIES, { error: () => i18n.t("admin.schemas.moderation.categoryChoose") }),
   severity: z.enum(["block", "flag"]),
   matchUnaccented: z.boolean(),
   language: z.enum(["en", "vi"]),
   isActive: z.boolean(),
-  note: z.string().trim().max(300, "Keep the note under 300 characters."),
+  note: z.string().trim().max(300, { error: () => i18n.t("admin.schemas.moderation.termNoteMax") }),
 });
 
 export type ModerationTermFormValues = z.infer<typeof moderationTermSchema>;
 
 export const moderationAllowlistSchema = z.object({
-  phrase: z.string().trim().min(1, "Enter a phrase.").max(200, "Keep the phrase under 200 characters."),
+  phrase: z.string().trim().min(1, { error: () => i18n.t("admin.schemas.moderation.phraseMin") }).max(200, { error: () => i18n.t("admin.schemas.moderation.phraseMax") }),
   isActive: z.boolean(),
-  note: z.string().trim().max(300, "Keep the note under 300 characters."),
+  note: z.string().trim().max(300, { error: () => i18n.t("admin.schemas.moderation.termNoteMax") }),
 });
 
 export type ModerationAllowlistFormValues = z.infer<typeof moderationAllowlistSchema>;

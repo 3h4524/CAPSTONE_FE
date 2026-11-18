@@ -1,6 +1,7 @@
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-import type { PlanAiFeatureKind, PlanAiStatus } from "@/types/plan-ai-review";
+import type { PlanAiAction, PlanAiFeatureKind, PlanAiStatus } from "@/types/plan-ai-review";
 import { cn } from "@/utils/cn";
 
 // The same palette as the rest of Plan Insights: teal goes well, amber needs a look, coral goes badly.
@@ -9,6 +10,31 @@ export const STATUS_STYLE: Record<PlanAiStatus, { chip: string; selected: string
   watch: { chip: "bg-amber-100 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300", selected: "border-amber-400 bg-amber-50/60 dark:bg-amber-500/10", ring: "ring-amber-300/40 dark:ring-amber-500/40", score: "text-amber-700 dark:text-amber-300", stroke: "#f59e0b" },
   at_risk: { chip: "bg-[#e76e50]/12 text-[#c4553a] dark:text-[#dea091]", selected: "border-[#e76e50] bg-[#e76e50]/5", ring: "ring-[#e76e50]/25", score: "text-[#c4553a] dark:text-[#dea091]", stroke: "#e76e50" },
   not_enough_data: { chip: "bg-ink-100 text-ink-600", selected: "border-ink-400 bg-ink-50", ring: "ring-ink-300/40", score: "text-ink-400", stroke: "var(--ink-300)" },
+};
+
+export const STATUS_LABEL_KEY: Record<PlanAiStatus, string> = {
+  healthy: "admin.plans.status.healthy",
+  watch: "admin.plans.status.watch",
+  at_risk: "admin.plans.status.atRisk",
+  not_enough_data: "admin.plans.status.notEnoughData",
+};
+
+export const OUTLOOK_LABEL_KEY = {
+  improving: "admin.plans.outlook.improving",
+  stable: "admin.plans.outlook.stable",
+  declining: "admin.plans.outlook.declining",
+} as const;
+
+export const FEATURE_KIND_LABEL_KEY: Record<PlanAiFeatureKind, string> = {
+  needs_improvement: "admin.plans.featureKind.needsImprovement",
+  underused: "admin.plans.featureKind.underused",
+  keeps_customers: "admin.plans.featureKind.keepsCustomers",
+};
+
+export const ACTION_KIND_LABEL_KEY: Record<PlanAiAction["kind"], string> = {
+  change: "admin.plans.actionKind.change",
+  experiment: "admin.plans.actionKind.experiment",
+  investigate: "admin.plans.actionKind.investigate",
 };
 
 export const KIND_STYLE: Record<PlanAiFeatureKind, string> = {
@@ -24,7 +50,7 @@ const LEVEL_STYLE = {
   low: "bg-ink-100 text-ink-500",
 } as const;
 
-const LEVEL_LABEL = { high: "High", medium: "Medium", low: "Low" } as const;
+const LEVEL_LABEL_KEY = { high: "admin.plans.level.high", medium: "admin.plans.level.medium", low: "admin.plans.level.low" } as const;
 
 export const OUTLOOK_ICON = { improving: ArrowUpRight, stable: ArrowRight, declining: ArrowDownRight } as const;
 
@@ -36,6 +62,7 @@ export const OUTLOOK_CHIP = {
 } as const;
 
 export function FindingList({ title, tone, items, className }: { title: string; tone: string; items: string[]; className?: string }) {
+  const { t } = useTranslation("common");
   return (
     <div className={className}>
       <p className="text-ink-900 mb-3 flex items-center gap-2 text-sm font-semibold">
@@ -43,7 +70,7 @@ export function FindingList({ title, tone, items, className }: { title: string; 
         {title}
       </p>
       {items.length === 0 ? (
-        <p className="text-ink-400 text-sm">None noted.</p>
+        <p className="text-ink-400 text-sm">{t("admin.plans.healthParts.noneNoted")}</p>
       ) : (
         <ul className="text-ink-600 space-y-1.5 text-sm">
           {items.map((item) => (
@@ -58,8 +85,9 @@ export function FindingList({ title, tone, items, className }: { title: string; 
 }
 
 export function Pill({ level }: { level: keyof typeof LEVEL_STYLE }) {
+  const { t } = useTranslation("common");
   return (
-    <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold", LEVEL_STYLE[level])}>{LEVEL_LABEL[level]}</span>
+    <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold", LEVEL_STYLE[level])}>{t(LEVEL_LABEL_KEY[level])}</span>
   );
 }
 

@@ -1,3 +1,4 @@
+import { getCurrentLocale, i18n } from "@/i18n/client";
 import type {
   PlanAiAction,
   PlanAiChurnReason,
@@ -9,6 +10,7 @@ import type {
 } from "@/types/plan-ai-review";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS_VI = ["thg 1", "thg 2", "thg 3", "thg 4", "thg 5", "thg 6", "thg 7", "thg 8", "thg 9", "thg 10", "thg 11", "thg 12"];
 
 export const STATUS_LABEL: Record<PlanAiStatus, string> = {
   healthy: "Healthy",
@@ -33,10 +35,11 @@ export const ACTION_KIND_LABEL: Record<PlanAiAction["kind"], string> = {
 
 const PRIORITY_ORDER: Record<PlanAiAction["priority"], number> = { high: 0, medium: 1, low: 2 };
 
-/** "1 Aug 2026" from a YYYY-MM-DD date or an ISO timestamp. */
+/** "1 Aug 2026" (en) or "1 thg 8 2026" (vi) from a YYYY-MM-DD date or an ISO timestamp. */
 export const formatDay = (value: string) => {
   const [year, month, day] = value.slice(0, 10).split("-").map(Number);
-  return `${day} ${MONTHS[month - 1]} ${year}`;
+  const months = getCurrentLocale() === "vi" ? MONTHS_VI : MONTHS;
+  return `${day} ${months[month - 1]} ${year}`;
 };
 
 /** "1 Aug – 29 Oct 2026", dropping the first year when both ends share it. */
@@ -113,9 +116,12 @@ export function churnInsightsFor(response: PlanAiReviewResponse | undefined, pla
 
 /** Why the Regenerate button is off, or null when an Admin may press it now. */
 export function regenerateBlocker(response: PlanAiReviewResponse, now: Date): string | null {
-  if (!response.isConfigured) return "No Gemini key is set on the server.";
-  if (response.isGenerating) return "A review is being written.";
+  if (!response.isConfigured) return i18n.t("admin.plans.aiReview.notConfigured");
+  if (response.isGenerating) return i18n.t("admin.plans.aiReview.isGenerating");
   if (response.regenerateAvailableAt && new Date(response.regenerateAvailableAt) > now)
-    return `Available again on ${formatDay(response.regenerateAvailableAt)} at ${response.regenerateAvailableAt.slice(11, 16)} UTC.`;
+    return i18n.t("admin.plans.aiReview.availableAgain", {
+      day: formatDay(response.regenerateAvailableAt),
+      time: response.regenerateAvailableAt.slice(11, 16),
+    });
   return null;
 }

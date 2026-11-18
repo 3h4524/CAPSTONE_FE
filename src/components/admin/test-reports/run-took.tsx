@@ -2,21 +2,32 @@
 
 import { useEffect, useState } from "react";
 
+import { i18n } from "@/i18n/client";
 import type { TestReportRun } from "@/types/admin-test-reports";
 import { cn } from "@/utils/cn";
 
 const formatStaticDuration = (durationMs: number) => {
+  const t = i18n.t.bind(i18n);
   if (durationMs <= 0) return "—";
-  if (durationMs < 1000) return `${durationMs} ms`;
+  if (durationMs < 1000)
+    return t("admin.testReports.runTook.milliseconds", { value: durationMs });
   const seconds = durationMs / 1000;
-  if (seconds < 60) return `${seconds.toFixed(1)} s`;
+  if (seconds < 60)
+    return t("admin.testReports.runTook.seconds", { value: seconds.toFixed(1) });
   const minutes = Math.floor(seconds / 60);
-  return `${minutes}m ${Math.round(seconds % 60)}s`;
+  return t("admin.testReports.runTook.minutesSeconds", {
+    minutes,
+    seconds: Math.round(seconds % 60),
+  });
 };
 
 const formatElapsed = (seconds: number) => {
-  if (seconds < 60) return `${seconds} s`;
-  return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+  const t = i18n.t.bind(i18n);
+  if (seconds < 60) return t("admin.testReports.runTook.seconds", { value: seconds });
+  return t("admin.testReports.runTook.minutesSeconds", {
+    minutes: Math.floor(seconds / 60),
+    seconds: seconds % 60,
+  });
 };
 
 type RunTookProps = {

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { HealthCheck } from "@/components/admin/admin-attention-panel";
 import { HERO_PRIMARY_ACTION } from "@/components/commons/layout/merch-hero";
@@ -22,10 +23,10 @@ const ADMIN_MERCH_FRAME =
 const today = () =>
   new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
 
-const getFirstName = (fullName?: string | null): string => {
-  if (!fullName) return "Admin";
+const getFirstName = (fullName?: string | null): string | null => {
+  if (!fullName) return null;
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  return parts[0] ?? "Admin";
+  return parts[0] ?? null;
 };
 
 export const AdminHeroCard = ({
@@ -33,18 +34,19 @@ export const AdminHeroCard = ({
   healthChecks,
   onOpenHealthCheck,
 }: AdminHeroCardProps) => {
-  const firstName = getFirstName(fullName);
+  const { t } = useTranslation("common");
+  const firstName = getFirstName(fullName) ?? t("admin.dashboard.hero.adminFallback");
   const issues = healthChecks.filter((check) => check.status !== "ok");
 
   const describeAttention = () => {
     if (issues.length === 0) {
-      return "All platform systems and integrations are healthy.";
+      return t("admin.dashboard.hero.healthy");
     }
     if (issues.length === 1) {
-      return `${issues[0].label} needs attention.`;
+      return t("admin.dashboard.hero.attentionOne", { label: issues[0].label });
     }
-    const topTwo = issues.slice(0, 2).map((item) => item.label).join(" and ");
-    return `${topTwo} need attention.`;
+    const topTwo = issues.slice(0, 2).map((item) => item.label).join(t("admin.dashboard.hero.listAnd"));
+    return t("admin.dashboard.hero.attentionMany", { labels: topTwo });
   };
 
   // Same build as the Seller dashboard hero (dashboard-hero.tsx): the card gradient, a one-line greeting
@@ -76,14 +78,14 @@ export const AdminHeroCard = ({
       <div className="relative z-10 max-w-[55%] min-w-0 max-md:max-w-full dark:md:max-w-[48%]">
         <p className="text-ink-900 dark:text-ink-500 text-xs font-semibold">{today()}</p>
         <h2 className="text-ink-900 mt-1 truncate text-2xl font-bold tracking-tight" title={fullName}>
-          Welcome back, {firstName}
+          {t("admin.dashboard.hero.welcomeNamed", { firstName })}
         </h2>
         <p className="text-ink-700 mt-1 text-sm">{describeAttention()}</p>
       </div>
 
       <div className="relative z-10 mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium max-md:mt-4 dark:md:mt-5">
         <button type="button" onClick={onOpenHealthCheck} className={`${HERO_PRIMARY_ACTION} cursor-pointer`}>
-          Health check
+          {t("admin.dashboard.hero.healthCheck")}
           <ArrowRight className="size-4" aria-hidden="true" />
         </button>
       </div>

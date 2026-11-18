@@ -19,6 +19,7 @@ import {
   TrendingUp,
   XCircle,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Bar,
   BarChart,
@@ -56,6 +57,21 @@ import { useIsPhone } from "@/hooks/use-is-phone";
 import { cn } from "@/utils/cn";
 
 type EvaluationContentType = "listing" | "image" | "video" | "policy" | "keyword";
+
+const CONTENT_TYPE_LABEL_KEYS: Record<string, string> = {
+  listing: "admin.rag.contentTypes.listing",
+  policy: "admin.rag.contentTypes.policy",
+  image: "admin.rag.contentTypes.image",
+  video: "admin.rag.contentTypes.video",
+  keyword: "admin.rag.contentTypes.keyword",
+};
+
+const CATEGORY_LABEL_KEYS: Record<string, string> = {
+  Retrieval: "admin.rag.evaluation.categoryRetrieval",
+  Groundedness: "admin.rag.evaluation.categoryGroundedness",
+  Citation: "admin.rag.evaluation.categoryCitation",
+  Abstention: "admin.rag.evaluation.categoryAbstention",
+};
 
 const evaluationContentTypes: EvaluationContentType[] = [
   "listing",
@@ -101,6 +117,7 @@ type EvaluationRun = {
 };
 
 const RagEvaluationDashboard = () => {
+  const { t } = useTranslation("common");
   const [runs, setRuns] = useState<EvaluationRun[]>([]);
   const [datasetCases, setDatasetCases] = useState<EvaluationCase[]>([]);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
@@ -121,9 +138,9 @@ const RagEvaluationDashboard = () => {
   });
   const selectedRun = runs.find((run) => run.id === selectedRunId) ?? {
     id: "no-run",
-    label: "No benchmark run",
+    label: t("admin.rag.evaluation.noBenchmarkRunLabel"),
     createdAt: "",
-    dataset: "No labeled retrieval benchmark",
+    dataset: t("admin.rag.evaluation.noLabeledDataset"),
     cases: 0,
     retrieval: 0,
     groundedness: 0,
@@ -161,11 +178,11 @@ const RagEvaluationDashboard = () => {
 
   const addEvaluationCase = () => {
     if (!draftCase.question.trim()) {
-      showToast("error", "Add a question before saving the evaluation case.");
+      showToast("error", t("admin.rag.evaluation.addQuestionFirst"));
       return;
     }
     if (!draftCase.expectedText.trim()) {
-      showToast("error", "Add expected evidence text to measure the offline case.");
+      showToast("error", t("admin.rag.evaluation.addExpectedEvidence"));
       return;
     }
 
@@ -179,12 +196,12 @@ const RagEvaluationDashboard = () => {
       correctness: 0,
       citation: 0,
       verdict: "review",
-      source: "Source will be shown by the live retrieval result",
+      source: t("admin.rag.evaluation.sourceShownLater"),
       expectedText: draftCase.expectedText.trim() || undefined,
       expected:
         draftCase.expectedText.trim() ||
-        "The selected content type and expected source should be retrieved.",
-      answer: "Live evaluation will inspect retrieved context for this case.",
+        t("admin.rag.evaluation.expectedFallback"),
+      answer: t("admin.rag.evaluation.answerFallback"),
     };
 
     setDatasetCases((current) => [...current, nextCase]);
@@ -202,16 +219,16 @@ const RagEvaluationDashboard = () => {
 
   const runListingRetrieval = async () => {
     if (!listingProductId.trim()) {
-      showToast("error", "Enter a product ID to replay the production listing retrieval flow.");
+      showToast("error", t("admin.rag.evaluation.enterProductId"));
       return;
     }
 
     setIsListingTraceRunning(true);
     try {
       setListingTrace(await evaluateListingRetrieval(listingProductId.trim()));
-      showToast("success", "Production listing retrieval completed.");
+      showToast("success", t("admin.rag.evaluation.listingRetrievalCompleted"));
     } catch {
-      showToast("error", "Listing retrieval failed. Check the product ID and RAG configuration.");
+      showToast("error", t("admin.rag.evaluation.listingRetrievalFailed"));
     } finally {
       setIsListingTraceRunning(false);
     }
@@ -263,7 +280,7 @@ const RagEvaluationDashboard = () => {
       const nextRun: EvaluationRun = {
         ...selectedRun,
         id: response.runId,
-        label: `Evaluation Run #${String(nextNumber).padStart(2, "0")}`,
+        label: t("admin.rag.evaluation.evaluationRunLabel", { number: String(nextNumber).padStart(2, "0") }),
         createdAt: new Date(response.completedAt).toLocaleString(),
         cases: response.caseCount,
         retrieval: response.retrievalScore,
@@ -286,9 +303,9 @@ const RagEvaluationDashboard = () => {
             citation: item.citationScore,
             verdict: item.verdict,
             failure: item.failure ?? undefined,
-            source: topResult?.sourceId ?? "No source retrieved",
-            expected: original?.expected ?? "Expected evidence should be retrieved.",
-            answer: topResult?.content ?? "No answer was generated; this run evaluates retrieval only.",
+            source: topResult?.sourceId ?? t("admin.rag.evaluation.noSourceRetrieved"),
+            expected: original?.expected ?? t("admin.rag.evaluation.expectedEvidenceShouldBeRetrieved"),
+            answer: topResult?.content ?? t("admin.rag.evaluation.noAnswerGenerated"),
             diagnostics: item.diagnostics,
             expectedSourceId: original?.expectedSourceId,
             expectedText: original?.expectedText,
@@ -301,9 +318,9 @@ const RagEvaluationDashboard = () => {
       // On a phone a selected case opens over the page, which a finished run should not do by itself.
       setSelectedCaseId(isPhone ? null : (nextRun.casesData[0]?.id ?? null));
       setIsBenchmarkOpen(true);
-      showToast("success", "Evaluation run completed.");
+      showToast("success", t("admin.rag.evaluation.evaluationRunCompleted"));
     } catch {
-      showToast("error", "Evaluation failed. Check the API and embedding configuration.");
+      showToast("error", t("admin.rag.evaluation.evaluationFailed"));
     } finally {
       setIsRunning(false);
     }
@@ -312,9 +329,9 @@ const RagEvaluationDashboard = () => {
   return (
     <div className="space-y-5 max-md:space-y-3">
       <PageHeader
-        eyebrow="RAG quality lab"
-        title="RAG Evaluation"
-        description="Inspect retrieval traces and corpus health before RAG reaches seller-facing workflows."
+        eyebrow={t("admin.rag.evaluation.eyebrow")}
+        title={t("admin.rag.evaluation.title")}
+        description={t("admin.rag.evaluation.description")}
         actions={
           <>
           {runs.length > 0 && (
@@ -325,7 +342,7 @@ const RagEvaluationDashboard = () => {
                 setSelectedCaseId(null);
               }}
             >
-              <SelectTrigger aria-label="Evaluation run" className="bg-card h-9 text-xs font-medium max-md:h-11 max-md:w-full max-md:text-base">
+              <SelectTrigger aria-label={t("admin.rag.evaluation.evaluationRunAria")} className="bg-card h-9 text-xs font-medium max-md:h-11 max-md:w-full max-md:text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent align="end">
@@ -339,7 +356,7 @@ const RagEvaluationDashboard = () => {
           )}
           {datasetCases.length > 0 && (
             <Button type="button" className="max-md:w-full" onClick={runEvaluation} disabled={isRunning} size="sm">
-            <Play className="size-3.5" /> {isRunning ? "Running..." : "Run evaluation"}
+            <Play className="size-3.5" /> {isRunning ? t("admin.rag.shared.running") : t("admin.rag.evaluation.runEvaluation")}
             </Button>
           )}
           </>
@@ -354,19 +371,16 @@ const RagEvaluationDashboard = () => {
                 <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
                   <Search className="size-4" />
                 </span>
-                Production listing retrieval
+                {t("admin.rag.evaluation.productionListingRetrieval")}
               </CardTitle>
-              <RagCardAbout>
-                Replay the end-user listing flow from a product input. The backend builds the
-                same production query, then retrieves policy Top 5 and listing references Top 3.
-              </RagCardAbout>
+              <RagCardAbout>{t("admin.rag.evaluation.productionListingAbout")}</RagCardAbout>
             </div>
             <Badge
               variant="outline"
               className="w-fit border-emerald-200 text-[10px] text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-300"
-              title="Runs retrieval only; no listing is written."
+              title={t("admin.rag.evaluation.readOnlyHint")}
             >
-              Read only
+              {t("admin.rag.shared.readOnly")}
             </Badge>
           </div>
         </CardHeader>
@@ -375,8 +389,8 @@ const RagEvaluationDashboard = () => {
             <Input
               value={listingProductId}
               onChange={(event) => setListingProductId(event.target.value)}
-              placeholder="Product ID, e.g. 3f2a…"
-              aria-label="Product ID"
+              placeholder={t("admin.rag.evaluation.productIdPlaceholder")}
+              aria-label={t("admin.rag.evaluation.productIdAria")}
               className="sm:max-w-md"
             />
             <Button
@@ -386,18 +400,18 @@ const RagEvaluationDashboard = () => {
               disabled={isListingTraceRunning}
             >
               <Search className="size-3.5" />
-              {isListingTraceRunning ? "Running..." : "Run production flow"}
+              {isListingTraceRunning ? t("admin.rag.shared.running") : t("admin.rag.evaluation.runProductionFlow")}
             </Button>
             <p className="text-ink-500 text-[11px]">
-              Paste the ID of a product to replay the retrieval its listing would use.
+              {t("admin.rag.evaluation.pasteProductIdHint")}
             </p>
           </div>
           {!listingTrace && !isListingTraceRunning && (
             <ol className="border-ink-200 bg-ink-50/60 grid gap-2 rounded-xl border border-dashed p-4 sm:grid-cols-3">
               {[
-                ["Product input", "Name, type, niche, audience, keywords and notes."],
-                ["Production query", "The same query the listing generator builds."],
-                ["Retrieved context", "Policy Top 5 and listing references Top 3, with scores."],
+                [t("admin.rag.evaluation.stepProductInput"), t("admin.rag.evaluation.stepProductInputText")],
+                [t("admin.rag.evaluation.stepProductionQuery"), t("admin.rag.evaluation.stepProductionQueryText")],
+                [t("admin.rag.evaluation.stepRetrievedContext"), t("admin.rag.evaluation.stepRetrievedContextText")],
               ].map(([title, text], index) => (
                 <li key={title} className="flex gap-2.5">
                   <span className="bg-card flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-200 dark:text-emerald-300 dark:ring-emerald-500/30">
@@ -417,7 +431,7 @@ const RagEvaluationDashboard = () => {
               <ProductInputCoverage trace={listingTrace} />
               <div>
                 <p className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">
-                  Production query
+                  {t("admin.rag.evaluation.productionQueryLabel")}
                 </p>
                 <p className="bg-card text-ink-600 mt-2 rounded-lg border border-emerald-100 p-3 text-xs leading-5 whitespace-pre-wrap max-md:[overflow-wrap:anywhere] dark:border-emerald-500/30">
                   {listingTrace.productionQuery}
@@ -425,13 +439,12 @@ const RagEvaluationDashboard = () => {
               </div>
               <TraceSections
                 sections={[
-                  { label: "Policy context · Top 5", diagnostics: listingTrace.policyContext },
-                  { label: "Listing references · Top 3", diagnostics: listingTrace.listingContext },
+                  { label: t("admin.rag.evaluation.policyContextTop5"), diagnostics: listingTrace.policyContext },
+                  { label: t("admin.rag.evaluation.listingReferencesTop3"), diagnostics: listingTrace.listingContext },
                 ]}
               />
               <p className="text-ink-500 text-[11px]">
-                Retrieval completed in {Math.round(listingTrace.durationMs)} ms. This trace
-                mirrors the retrieval stage used before listing generation; it does not write a new listing.
+                {t("admin.rag.evaluation.retrievalCompletedIn", { ms: Math.round(listingTrace.durationMs) })}
               </p>
             </div>
           )}
@@ -451,18 +464,15 @@ const RagEvaluationDashboard = () => {
                 <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
                   <FlaskConical className="size-4" />
                 </span>
-                Advanced offline benchmark
+                {t("admin.rag.evaluation.offlineBenchmarkTitle")}
               </CardTitle>
-              <RagCardAbout>
-                Use labeled evidence cases when you need a measurable Recall@K regression check.
-                Production listing retrieval above remains the primary RAG inspection flow.
-              </RagCardAbout>
+              <RagCardAbout>{t("admin.rag.evaluation.offlineBenchmarkAbout")}</RagCardAbout>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <Badge variant="outline" className="w-fit text-[10px]">
                 {datasetCases.length === 0
-                  ? "No labeled cases yet"
-                  : `${datasetCases.length} labeled case${datasetCases.length === 1 ? "" : "s"}`}
+                  ? t("admin.rag.evaluation.noLabeledCasesYet")
+                  : t("admin.rag.evaluation.labeledCases", { count: datasetCases.length })}
               </Badge>
               <Button
                 type="button"
@@ -474,7 +484,7 @@ const RagEvaluationDashboard = () => {
                 <ChevronDown
                   className={`size-3.5 transition-transform ${isBenchmarkOpen ? "rotate-180" : ""}`}
                 />
-                {isBenchmarkOpen ? "Hide" : "Open"}
+                {isBenchmarkOpen ? t("admin.rag.evaluation.hideCard") : t("admin.rag.evaluation.openCard")}
               </Button>
             </div>
           </div>
@@ -487,8 +497,8 @@ const RagEvaluationDashboard = () => {
               onChange={(event) =>
                 setDraftCase((current) => ({ ...current, question: event.target.value }))
               }
-              placeholder="Golden question"
-              aria-label="Golden question"
+              placeholder={t("admin.rag.evaluation.goldenQuestion")}
+              aria-label={t("admin.rag.evaluation.goldenQuestion")}
             />
             <Select
               value={draftCase.contentType}
@@ -496,13 +506,13 @@ const RagEvaluationDashboard = () => {
                 setDraftCase((current) => ({ ...current, contentType: value as EvaluationContentType }))
               }
             >
-              <SelectTrigger aria-label="Content type" className="bg-card w-full text-xs max-md:h-11 max-md:text-base">
+              <SelectTrigger aria-label={t("admin.rag.evaluation.contentTypeAria")} className="bg-card w-full text-xs max-md:h-11 max-md:text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {evaluationContentTypes.map((type) => (
                   <SelectItem key={type} value={type}>
-                    {type}
+                    {t(CONTENT_TYPE_LABEL_KEYS[type])}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -513,11 +523,11 @@ const RagEvaluationDashboard = () => {
                 setDraftCase((current) => ({ ...current, category: value as EvaluationCase["category"] }))
               }
             >
-              <SelectTrigger aria-label="Evaluation category" className="bg-card w-full text-xs max-md:h-11 max-md:text-base">
+              <SelectTrigger aria-label={t("admin.rag.evaluation.evaluationCategoryAria")} className="bg-card w-full text-xs max-md:h-11 max-md:text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Retrieval">Retrieval</SelectItem>
+                <SelectItem value="Retrieval">{t("admin.rag.evaluation.categoryRetrieval")}</SelectItem>
               </SelectContent>
             </Select>
             <Input
@@ -525,16 +535,16 @@ const RagEvaluationDashboard = () => {
               onChange={(event) =>
                 setDraftCase((current) => ({ ...current, expectedText: event.target.value }))
               }
-              placeholder="Expected evidence text"
-              aria-label="Expected evidence text"
+              placeholder={t("admin.rag.evaluation.expectedEvidenceText")}
+              aria-label={t("admin.rag.evaluation.expectedEvidenceText")}
             />
             <Button type="button" size="sm" onClick={addEvaluationCase}>
-              <Plus className="size-3.5" /> Add case
+              <Plus className="size-3.5" /> {t("admin.rag.evaluation.addCase")}
             </Button>
           </div>
           <div className="text-ink-500 flex flex-wrap gap-2 text-[11px]">
-            <span>Use evidence text copied from the expected chunk.</span>
-            <span>For image/video, index caption, OCR, transcript or metadata first.</span>
+            <span>{t("admin.rag.evaluation.useEvidenceTextHint")}</span>
+            <span>{t("admin.rag.evaluation.indexImageVideoHint")}</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {datasetCases.map((item) => (
@@ -547,14 +557,14 @@ const RagEvaluationDashboard = () => {
                   variant="outline"
                   className="border-indigo-200 px-1.5 py-0 text-[9px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300"
                 >
-                  {item.contentType}
+                  {t(CONTENT_TYPE_LABEL_KEYS[item.contentType])}
                 </Badge>
                 <span className="max-w-[220px] min-w-0 truncate">{item.question}</span>
                 <button
                   type="button"
                   onClick={() => removeEvaluationCase(item.id)}
                   className="text-ink-400 rounded-full p-0.5 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
-                  aria-label={`Remove ${item.id}`}
+                  aria-label={t("admin.rag.evaluation.removeCaseAria", { id: item.id })}
                 >
                   <Trash2 className="size-3" />
                 </button>
@@ -569,10 +579,9 @@ const RagEvaluationDashboard = () => {
       <>
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-[11px] text-indigo-800 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300">
         <FlaskConical className="size-3.5" />{" "}
-        <span className="font-semibold">Evaluation preview</span>
+        <span className="font-semibold">{t("admin.rag.evaluation.evaluationPreview")}</span>
         <span className="text-indigo-600 dark:text-indigo-400">
-           Run evaluation now sends the golden cases to the live RAG retrieval API. Groundedness
-           here means retrieved-context coverage; answer generation is not executed by this run.
+          {t("admin.rag.evaluation.evaluationPreviewNote")}
         </span>
       </div>
 
@@ -581,37 +590,37 @@ const RagEvaluationDashboard = () => {
       <section className="grid gap-3 max-md:grid-cols-2 max-md:gap-2 sm:grid-cols-2 xl:grid-cols-5 max-md:[&>:first-child]:col-span-2">
         <MetricCard
           icon={Gauge}
-          label="Overall quality"
+          label={t("admin.rag.evaluation.metricOverallQuality")}
           value={`${overall}%`}
-          detail="average across dimensions"
+          detail={t("admin.rag.evaluation.averageAcrossDimensions")}
           tone="indigo"
         />
         <MetricCard
           icon={Search}
-          label="Recall @5"
+          label={t("admin.rag.evaluation.metricRecallAt5")}
           value={`${selectedRun.retrieval}%`}
-          detail="relevant source found"
+          detail={t("admin.rag.evaluation.relevantSourceFound")}
           tone="blue"
         />
         <MetricCard
           icon={ShieldCheck}
-           label="Context coverage"
+           label={t("admin.rag.evaluation.metricContextCoverage")}
           value={`${selectedRun.groundedness}%`}
-           detail="expected evidence covered"
+           detail={t("admin.rag.evaluation.expectedEvidenceCovered")}
           tone="emerald"
         />
         <MetricCard
           icon={Target}
-          label="Citation accuracy"
+          label={t("admin.rag.evaluation.metricCitationAccuracy")}
           value={`${selectedRun.citation}%`}
-          detail="source points to evidence"
+          detail={t("admin.rag.evaluation.sourcePointsToEvidence")}
           tone="violet"
         />
         <MetricCard
           icon={Clock3}
-          label="Avg latency"
+          label={t("admin.rag.evaluation.metricAvgLatency")}
           value={`${selectedRun.latency}s`}
-          detail={`${selectedRun.cases} test cases`}
+          detail={t("admin.rag.evaluation.testCasesDetail", { count: selectedRun.cases })}
           tone="amber"
         />
       </section>
@@ -620,25 +629,25 @@ const RagEvaluationDashboard = () => {
         <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
           <CardTitle className="flex items-center gap-2 text-sm">
             <Target className="size-4 text-indigo-500" />
-            Accuracy by content type
+            {t("admin.rag.evaluation.accuracyByContentType")}
           </CardTitle>
           <CardDescription className="mt-1 text-xs">
-            Compare retrieval accuracy and evidence coverage for each indexed content type.
+            {t("admin.rag.evaluation.accuracyByContentTypeDesc")}
           </CardDescription>
         </CardHeader>
         <ul className="divide-ink-100 divide-y md:hidden">
           {selectedRun.typeMetrics.map((metric) => (
             <li key={metric.contentType} className="space-y-2 p-4">
               <p className="flex items-center justify-between gap-2 text-xs">
-                <span className="text-ink-800 font-semibold capitalize">{metric.contentType}</span>
-                <span className="text-ink-500 text-[11px]">{metric.caseCount} cases · {Math.round(metric.averageLatencyMs)} ms</span>
+                <span className="text-ink-800 font-semibold capitalize">{CONTENT_TYPE_LABEL_KEYS[metric.contentType] ? t(CONTENT_TYPE_LABEL_KEYS[metric.contentType]) : metric.contentType}</span>
+                <span className="text-ink-500 text-[11px]">{t("admin.rag.evaluation.caseCountLatency", { count: metric.caseCount, latency: Math.round(metric.averageLatencyMs) })}</span>
               </p>
               <PhoneScores
                 scores={[
-                  ["Recall @5", metric.retrievalScore],
-                  ["Context coverage", metric.contextCoverageScore],
-                  ["Citation", metric.citationScore],
-                  ["Abstention", metric.abstentionScore],
+                  [t("admin.rag.evaluation.metricRecallAt5"), metric.retrievalScore],
+                  [t("admin.rag.evaluation.metricContextCoverage"), metric.contextCoverageScore],
+                  [t("admin.rag.evaluation.metricCitation"), metric.citationScore],
+                  [t("admin.rag.evaluation.metricAbstention"), metric.abstentionScore],
                 ]}
               />
             </li>
@@ -648,20 +657,20 @@ const RagEvaluationDashboard = () => {
           <table className="w-full min-w-[820px] text-left text-xs">
             <thead className="bg-ink-50 text-ink-500 text-[10px] tracking-wide uppercase">
               <tr>
-                <th className="px-5 py-3">Content type</th>
-                <th className="px-3 py-3">Cases</th>
-                <th className="px-3 py-3">Recall @5</th>
-                <th className="px-3 py-3">Context coverage</th>
-                <th className="px-3 py-3">Citation</th>
-                <th className="px-3 py-3">Abstention</th>
-                <th className="px-5 py-3">Latency</th>
+                <th className="px-5 py-3">{t("admin.rag.shared.contentTypeHeader")}</th>
+                <th className="px-3 py-3">{t("admin.rag.shared.thCases")}</th>
+                <th className="px-3 py-3">{t("admin.rag.evaluation.metricRecallAt5")}</th>
+                <th className="px-3 py-3">{t("admin.rag.evaluation.metricContextCoverage")}</th>
+                <th className="px-3 py-3">{t("admin.rag.evaluation.metricCitation")}</th>
+                <th className="px-3 py-3">{t("admin.rag.evaluation.metricAbstention")}</th>
+                <th className="px-5 py-3">{t("admin.rag.evaluation.thLatency")}</th>
               </tr>
             </thead>
             <tbody>
               {selectedRun.typeMetrics.map((metric) => (
                 <tr key={metric.contentType} className="border-ink-100 border-t">
                   <td className="text-ink-800 px-5 py-3 font-semibold capitalize">
-                    {metric.contentType}
+                    {CONTENT_TYPE_LABEL_KEYS[metric.contentType] ? t(CONTENT_TYPE_LABEL_KEYS[metric.contentType]) : metric.contentType}
                   </td>
                   <td className="text-ink-500 px-3 py-3">{metric.caseCount}</td>
                   <td className="px-3 py-3"><ScoreBar value={metric.retrievalScore} /></td>
@@ -680,7 +689,7 @@ const RagEvaluationDashboard = () => {
       {selectedCase && isPhone && (
         <Dialog open onOpenChange={(open) => !open && setSelectedCaseId(null)}>
           <DialogContent showCloseButton={false} className="grid-cols-[minmax(0,1fr)] p-0" aria-describedby={undefined}>
-            <DialogTitle className="sr-only">Case detail</DialogTitle>
+            <DialogTitle className="sr-only">{t("admin.rag.evaluation.caseDetailTitle")}</DialogTitle>
             <CaseDetail item={selectedCase} onClose={() => setSelectedCaseId(null)} />
           </DialogContent>
         </Dialog>
@@ -690,10 +699,10 @@ const RagEvaluationDashboard = () => {
           <CardHeader className="border-b border-indigo-100 pb-4 dark:border-indigo-500/30">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Search className="size-4 text-indigo-500" />
-              Retrieved chunks for this case
+              {t("admin.rag.evaluation.retrievedChunksForCase")}
             </CardTitle>
             <CardDescription className="mt-1 text-xs">
-              Inspect the actual RAG results returned for the question. No generated answer is involved.
+              {t("admin.rag.evaluation.inspectRetrievedResults")}
             </CardDescription>
           </CardHeader>
           <CaseDetail item={selectedCase} onClose={() => setSelectedCaseId(null)} />
@@ -707,14 +716,14 @@ const RagEvaluationDashboard = () => {
               <div>
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <TrendingUp className="size-4 text-indigo-500" />
-                  Quality trend
+                  {t("admin.rag.evaluation.qualityTrend")}
                 </CardTitle>
                 <CardDescription className="mt-1 text-xs">
-                  Compare the evaluation dimensions across saved runs.
+                  {t("admin.rag.evaluation.qualityTrendDesc")}
                 </CardDescription>
               </div>
               <Badge variant="outline" className="text-[10px]">
-                {runs.length} runs
+                {t("admin.rag.evaluation.runsCount", { count: runs.length })}
               </Badge>
             </div>
           </CardHeader>
@@ -748,7 +757,7 @@ const RagEvaluationDashboard = () => {
                   <Line
                     type="monotone"
                     dataKey="retrieval"
-                    name="Recall @5"
+                    name={t("admin.rag.evaluation.metricRecallAt5")}
                     stroke="#6366f1"
                     strokeWidth={2.5}
                     dot={{ r: 3 }}
@@ -756,7 +765,7 @@ const RagEvaluationDashboard = () => {
                   <Line
                     type="monotone"
                     dataKey="groundedness"
-                     name="Context coverage"
+                     name={t("admin.rag.evaluation.metricContextCoverage")}
                     stroke="#10b981"
                     strokeWidth={2.5}
                     dot={{ r: 3 }}
@@ -764,7 +773,7 @@ const RagEvaluationDashboard = () => {
                   <Line
                     type="monotone"
                     dataKey="citation"
-                    name="Citation"
+                    name={t("admin.rag.evaluation.metricCitation")}
                     stroke="#8b5cf6"
                     strokeWidth={2.5}
                     dot={{ r: 3 }}
@@ -773,9 +782,9 @@ const RagEvaluationDashboard = () => {
               </ResponsiveContainer>
             </div>
             <div className="text-ink-500 mt-3 flex flex-wrap gap-4 text-[11px]">
-              <LegendDot color="bg-indigo-500" label="Recall @5" />
-               <LegendDot color="bg-emerald-500" label="Context coverage" />
-              <LegendDot color="bg-violet-500" label="Citation accuracy" />
+              <LegendDot color="bg-indigo-500" label={t("admin.rag.evaluation.metricRecallAt5")} />
+               <LegendDot color="bg-emerald-500" label={t("admin.rag.evaluation.metricContextCoverage")} />
+              <LegendDot color="bg-violet-500" label={t("admin.rag.evaluation.metricCitationAccuracy")} />
             </div>
           </CardContent>
         </Card>
@@ -783,10 +792,10 @@ const RagEvaluationDashboard = () => {
           <CardHeader className="border-ink-100 border-b pb-4 max-md:px-4">
             <CardTitle className="flex items-center gap-2 text-sm">
               <AlertTriangle className="size-4 text-amber-500" />
-              Failure patterns
+              {t("admin.rag.evaluation.failurePatterns")}
             </CardTitle>
             <CardDescription className="mt-1 text-xs">
-              Where the current run needs attention.
+              {t("admin.rag.evaluation.failurePatternsDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-5 max-md:px-4">
@@ -819,7 +828,7 @@ const RagEvaluationDashboard = () => {
                       fontSize: 12,
                     }}
                   />
-                  <Bar dataKey="value" name="Cases" radius={[0, 5, 5, 0]}>
+                  <Bar dataKey="value" name={t("admin.rag.shared.thCases")} radius={[0, 5, 5, 0]}>
                     {failureData.map((item) => (
                       <Cell key={item.name} fill={item.color} />
                     ))}
@@ -828,8 +837,7 @@ const RagEvaluationDashboard = () => {
               </ResponsiveContainer>
             </div>
             <p className="text-ink-500 mt-2 text-[11px] leading-5">
-              Most actionable issue: prevent unsupported product claims when the retrieved
-              source does not contain the attribute.
+              {t("admin.rag.evaluation.failurePatternsNote")}
             </p>
           </CardContent>
         </Card>
@@ -839,20 +847,20 @@ const RagEvaluationDashboard = () => {
         <InsightCard
           icon={Search}
           tone="indigo"
-          title="Retrieval is improving"
-          text={`Recall @5 increased ${Math.round(selectedRun.retrieval - runs[runs.length - 1].retrieval)} points since the first run.`}
+          title={t("admin.rag.evaluation.insightRetrievalTitle")}
+          text={t("admin.rag.evaluation.insightRetrievalText", { points: Math.round(selectedRun.retrieval - runs[runs.length - 1].retrieval) })}
         />
         <InsightCard
           icon={ShieldCheck}
           tone="emerald"
-          title="Groundedness is the next lever"
-          text={`${100 - selectedRun.groundedness}% of the current quality gap comes from unsupported or incomplete claims.`}
+          title={t("admin.rag.evaluation.insightGroundednessTitle")}
+          text={t("admin.rag.evaluation.insightGroundednessText", { percent: 100 - selectedRun.groundedness })}
         />
         <InsightCard
           icon={CircleHelp}
           tone="amber"
-          title="Add more no-answer cases"
-          text="Abstention accuracy is lower than retrieval. Expand the dataset with questions outside the knowledge base."
+          title={t("admin.rag.evaluation.insightNoAnswerTitle")}
+          text={t("admin.rag.evaluation.insightNoAnswerText")}
         />
       </section>
 
@@ -862,10 +870,10 @@ const RagEvaluationDashboard = () => {
             <div>
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Database className="text-ink-500 size-4" />
-                Test cases
+                {t("admin.rag.evaluation.testCases")}
               </CardTitle>
               <CardDescription className="mt-1 text-xs">
-                Inspect each question, retrieved source and evaluation verdict.
+                {t("admin.rag.evaluation.testCasesDesc")}
               </CardDescription>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2 max-md:w-full">
@@ -873,14 +881,14 @@ const RagEvaluationDashboard = () => {
                 value={contentTypeFilter}
                 onValueChange={(value) => setContentTypeFilter(value as "all" | EvaluationContentType)}
               >
-                <SelectTrigger aria-label="Filter by content type" size="sm" className="bg-card text-[11px] font-medium max-md:h-11 max-md:w-full max-md:text-base">
+                <SelectTrigger aria-label={t("admin.rag.evaluation.filterByContentTypeAria")} size="sm" className="bg-card text-[11px] font-medium max-md:h-11 max-md:w-full max-md:text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent align="end">
-                  <SelectItem value="all">All content types</SelectItem>
+                  <SelectItem value="all">{t("admin.rag.shared.allContentTypes")}</SelectItem>
                   {evaluationContentTypes.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {type}
+                      {t(CONTENT_TYPE_LABEL_KEYS[type])}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -894,8 +902,8 @@ const RagEvaluationDashboard = () => {
                   className={`rounded-md px-2.5 py-1.5 text-[11px] font-semibold capitalize transition max-md:min-h-9 max-md:px-0.5 max-md:text-[10px] ${filter === value ? "bg-card text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-800"}`}
                 >
                   {value === "all"
-                    ? `All (${visibleCases.length})`
-                    : `${value} (${value === "pass" ? passedCases : value === "review" ? reviewCases : failedCases})`}
+                    ? t("admin.rag.evaluation.filterAll", { count: visibleCases.length })
+                    : t(value === "pass" ? "admin.rag.evaluation.filterPass" : value === "review" ? "admin.rag.evaluation.filterReview" : "admin.rag.evaluation.filterFail", { count: value === "pass" ? passedCases : value === "review" ? reviewCases : failedCases })}
                 </button>
               ))}
               </div>
@@ -914,14 +922,14 @@ const RagEvaluationDashboard = () => {
                   <Verdict verdict={item.verdict} />
                 </span>
                 <span className="flex flex-wrap gap-1.5">
-                  <Badge variant="outline" className="border-indigo-200 text-[10px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300">{item.contentType}</Badge>
-                  <Badge variant="outline" className="text-[10px]">{item.category}</Badge>
+                  <Badge variant="outline" className="border-indigo-200 text-[10px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300">{CONTENT_TYPE_LABEL_KEYS[item.contentType] ? t(CONTENT_TYPE_LABEL_KEYS[item.contentType]) : item.contentType}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{CATEGORY_LABEL_KEYS[item.category] ? t(CATEGORY_LABEL_KEYS[item.category]) : item.category}</Badge>
                 </span>
                 <PhoneScores
                   scores={[
-                    ["Retrieval", item.retrieval],
-                    ["Context coverage", item.groundedness],
-                    ["Citation", item.citation],
+                    [t("admin.rag.evaluation.thRetrieval"), item.retrieval],
+                    [t("admin.rag.evaluation.metricContextCoverage"), item.groundedness],
+                    [t("admin.rag.evaluation.metricCitation"), item.citation],
                   ]}
                 />
               </button>
@@ -932,13 +940,13 @@ const RagEvaluationDashboard = () => {
           <table className="w-full min-w-[860px] text-left text-xs">
             <thead className="bg-ink-50 text-ink-500 text-[10px] tracking-wide uppercase">
               <tr>
-                <th className="px-5 py-3">Question</th>
-                <th className="px-3 py-3">Type</th>
-                <th className="px-3 py-3">Category</th>
-                <th className="px-3 py-3">Retrieval</th>
-                <th className="px-3 py-3">Context coverage</th>
-                <th className="px-3 py-3">Citation</th>
-                <th className="px-5 py-3 text-right">Verdict</th>
+                <th className="px-5 py-3">{t("admin.rag.evaluation.thQuestion")}</th>
+                <th className="px-3 py-3">{t("admin.rag.evaluation.thType")}</th>
+                <th className="px-3 py-3">{t("admin.rag.evaluation.thCategory")}</th>
+                <th className="px-3 py-3">{t("admin.rag.evaluation.thRetrieval")}</th>
+                <th className="px-3 py-3">{t("admin.rag.evaluation.metricContextCoverage")}</th>
+                <th className="px-3 py-3">{t("admin.rag.evaluation.metricCitation")}</th>
+                <th className="px-5 py-3 text-right">{t("admin.rag.evaluation.thVerdict")}</th>
               </tr>
             </thead>
             <tbody>
@@ -956,12 +964,12 @@ const RagEvaluationDashboard = () => {
                   </td>
                   <td className="px-3 py-3.5">
                     <Badge variant="outline" className="border-indigo-200 text-[10px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300">
-                      {item.contentType}
+                      {CONTENT_TYPE_LABEL_KEYS[item.contentType] ? t(CONTENT_TYPE_LABEL_KEYS[item.contentType]) : item.contentType}
                     </Badge>
                   </td>
                   <td className="px-3 py-3.5">
                     <Badge variant="outline" className="text-[10px]">
-                      {item.category}
+                      {CATEGORY_LABEL_KEYS[item.category] ? t(CATEGORY_LABEL_KEYS[item.category]) : item.category}
                     </Badge>
                   </td>
                   <td className="px-3 py-3.5">
@@ -988,10 +996,9 @@ const RagEvaluationDashboard = () => {
           <CardContent className="flex items-start gap-3 py-5">
             <CircleHelp className="mt-0.5 size-4 shrink-0 text-indigo-500" />
             <div>
-              <p className="text-ink-900 text-sm font-semibold">No benchmark result yet</p>
+              <p className="text-ink-900 text-sm font-semibold">{t("admin.rag.evaluation.noBenchmarkResultYet")}</p>
               <p className="text-ink-500 mt-1 text-xs leading-5">
-                The live listing trace and corpus health above are the RAG inspection tools. Add a
-                labeled evidence case only when you want a measurable Recall@K result; no sample score is shown here.
+                {t("admin.rag.evaluation.noBenchmarkResultBody")}
               </p>
             </div>
           </CardContent>
@@ -1068,56 +1075,67 @@ const ScoreBar = ({ value }: { value: number }) => (
   </div>
 );
 
-const Verdict = ({ verdict }: { verdict: EvaluationCase["verdict"] }) =>
-  verdict === "pass" ? (
-    <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-      <CheckCircle2 className="mr-1 size-3" />
-      Pass
-    </Badge>
-  ) : verdict === "review" ? (
-    <Badge className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-      <AlertTriangle className="mr-1 size-3" />
-      Review
-    </Badge>
-  ) : (
+const Verdict = ({ verdict }: { verdict: EvaluationCase["verdict"] }) => {
+  const { t } = useTranslation("common");
+  if (verdict === "pass") {
+    return (
+      <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+        <CheckCircle2 className="mr-1 size-3" />
+        {t("admin.rag.evaluation.verdictPass")}
+      </Badge>
+    );
+  }
+  if (verdict === "review") {
+    return (
+      <Badge className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+        <AlertTriangle className="mr-1 size-3" />
+        {t("admin.rag.evaluation.verdictReview")}
+      </Badge>
+    );
+  }
+  return (
     <Badge className="border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
       <XCircle className="mr-1 size-3" />
-      Fail
+      {t("admin.rag.evaluation.verdictFail")}
     </Badge>
   );
+};
 
-const CaseDetail = ({ item, onClose }: { item: EvaluationCase; onClose: () => void }) => (
+const CaseDetail = ({ item, onClose }: { item: EvaluationCase; onClose: () => void }) => {
+  const { t } = useTranslation("common");
+  const contentTypeKey = CONTENT_TYPE_LABEL_KEYS[item.contentType];
+  return (
   <div className="border-t border-indigo-100 bg-indigo-50/40 p-5 max-md:border-t-0 max-md:p-4 dark:border-indigo-500/30 dark:bg-indigo-500/10">
     <div className="flex items-start justify-between gap-4">
       <div>
         <p className="text-[10px] font-bold tracking-[0.14em] text-indigo-500 uppercase">
-          Case detail - {item.id}
+          {t("admin.rag.evaluation.caseDetailId", { id: item.id })}
         </p>
         <h3 className="text-ink-900 mt-1 max-w-3xl text-sm font-bold">{item.question}</h3>
       </div>
       <Button type="button" variant="ghost" size="sm" onClick={onClose}>
-        Close
+        {t("admin.rag.evaluation.close")}
       </Button>
     </div>
     <div className="mt-4 grid gap-4 lg:grid-cols-4">
-      <DetailBlock label="Content type" value={item.contentType} />
-      <DetailBlock label="Expected behavior" value={item.expected} />
-      <DetailBlock label="Model answer" value={item.answer} />
-      <DetailBlock label="Retrieved source" value={item.source} />
+      <DetailBlock label={t("admin.rag.shared.contentTypeHeader")} value={contentTypeKey ? t(contentTypeKey) : item.contentType} />
+      <DetailBlock label={t("admin.rag.evaluation.expectedBehavior")} value={item.expected} />
+      <DetailBlock label={t("admin.rag.evaluation.modelAnswer")} value={item.answer} />
+      <DetailBlock label={t("admin.rag.evaluation.retrievedSource")} value={item.source} />
     </div>
     <div className="bg-card mt-5 rounded-xl border border-indigo-100 p-4 max-md:p-3 dark:border-indigo-500/30">
       <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
         <div>
           <p className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">
-            Retrieved results
+            {t("admin.rag.evaluation.retrievedResults")}
           </p>
           <p className="text-ink-500 mt-1 text-xs">
-            Inspect the actual chunks returned for this question before trusting the verdict.
+            {t("admin.rag.evaluation.inspectChunksBeforeVerdict")}
           </p>
         </div>
         {item.retrievedResults && item.retrievedResults.length > 0 && (
           <Badge variant="outline" className="w-fit text-[10px]">
-            {item.retrievedResults.length} result{item.retrievedResults.length === 1 ? "" : "s"}
+            {t("admin.rag.evaluation.resultsCount", { count: item.retrievedResults.length })}
           </Badge>
         )}
       </div>
@@ -1130,19 +1148,19 @@ const CaseDetail = ({ item, onClose }: { item: EvaluationCase; onClose: () => vo
         </div>
       ) : (
         <p className="border-ink-200 bg-ink-50 text-ink-500 mt-3 rounded-lg border border-dashed px-3 py-4 text-xs">
-          No live retrieved result is attached to this case yet. Run the evaluation to fetch results
-          from the RAG API.
+          {t("admin.rag.evaluation.noLiveResultAttached")}
         </p>
       )}
     </div>
     {item.failure && (
       <p className="mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
         <AlertTriangle className="size-4 shrink-0" />
-        Failure pattern: {item.failure}
+        {t("admin.rag.evaluation.failurePattern", { pattern: item.failure })}
       </p>
     )}
   </div>
-);
+  );
+};
 
 const RetrievedResultCard = ({
   diagnostic,
@@ -1152,6 +1170,7 @@ const RetrievedResultCard = ({
   rank: number;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { t } = useTranslation("common");
   const isLong = diagnostic.result.content.length > 320;
   return (
   <div className="border-ink-200 bg-ink-50/70 rounded-lg border p-3">
@@ -1164,18 +1183,18 @@ const RetrievedResultCard = ({
         </Badge>
       </div>
       <div className="text-ink-500 flex flex-wrap gap-1.5 text-[10px]">
-        <ScorePill label="semantic" value={diagnostic.semanticScore} />
-        <ScorePill label="lexical" value={diagnostic.lexicalScore} />
-        <ScorePill label="viral" value={diagnostic.viralScore} />
-        <ScorePill label="fresh" value={diagnostic.freshnessScore} />
-        <ScorePill label="final" value={diagnostic.finalScore} emphasis />
+        <ScorePill label={t("admin.rag.evaluation.scoreSemantic")} value={diagnostic.semanticScore} />
+        <ScorePill label={t("admin.rag.evaluation.scoreLexical")} value={diagnostic.lexicalScore} />
+        <ScorePill label={t("admin.rag.evaluation.scoreViral")} value={diagnostic.viralScore} />
+        <ScorePill label={t("admin.rag.evaluation.scoreFresh")} value={diagnostic.freshnessScore} />
+        <ScorePill label={t("admin.rag.evaluation.scoreFinal")} value={diagnostic.finalScore} emphasis />
       </div>
     </div>
     <p className="text-ink-800 mt-2 line-clamp-2 text-xs font-semibold" title={diagnostic.result.title}>
       {diagnostic.result.title}
     </p>
-    <p className="text-ink-500 mt-0.5 truncate text-[10px]" title={`${diagnostic.result.sourceId ?? "n/a"} / ${diagnostic.result.chunkId}`}>
-      source {diagnostic.result.sourceId ?? "n/a"} · chunk {diagnostic.result.chunkId}
+    <p className="text-ink-500 mt-0.5 truncate text-[10px]" title={`${diagnostic.result.sourceId ?? t("admin.rag.evaluation.na")} / ${diagnostic.result.chunkId}`}>
+      {t("admin.rag.evaluation.sourceChunkLine", { sourceId: diagnostic.result.sourceId ?? t("admin.rag.evaluation.na"), chunkId: diagnostic.result.chunkId })}
     </p>
     <p className={`text-ink-600 mt-3 text-xs leading-5 whitespace-pre-wrap max-md:[overflow-wrap:anywhere] ${isLong && !isExpanded ? "line-clamp-4" : ""}`}>
       {diagnostic.result.content}
@@ -1186,7 +1205,7 @@ const RetrievedResultCard = ({
         onClick={() => setIsExpanded((value) => !value)}
         className="mt-1 text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
       >
-        {isExpanded ? "Show less" : "Show more"}
+        {isExpanded ? t("admin.rag.evaluation.showLess") : t("admin.rag.evaluation.showMore")}
       </button>
     )}
   </div>
@@ -1209,14 +1228,15 @@ const ProductInputCoverage = ({
 }: {
   trace: ListingRetrievalEvaluationResponse;
 }) => {
+  const { t } = useTranslation("common");
   const fields = [
-    { label: "Product name", value: trace.productName },
-    { label: "Product type", value: trace.productType },
-    { label: "Niche", value: trace.niche },
-    { label: "Target audience", value: trace.targetAudience },
-    { label: "Description", value: trace.description },
-    { label: "Keywords", value: trace.keywords.length > 0 ? trace.keywords.join(", ") : null },
-    { label: "Notes", value: trace.notes },
+    { label: t("admin.rag.evaluation.fieldProductName"), value: trace.productName },
+    { label: t("admin.rag.evaluation.fieldProductType"), value: trace.productType },
+    { label: t("admin.rag.evaluation.fieldNiche"), value: trace.niche },
+    { label: t("admin.rag.evaluation.fieldTargetAudience"), value: trace.targetAudience },
+    { label: t("admin.rag.evaluation.fieldDescription"), value: trace.description },
+    { label: t("admin.rag.evaluation.fieldKeywords"), value: trace.keywords.length > 0 ? trace.keywords.join(", ") : null },
+    { label: t("admin.rag.evaluation.fieldNotes"), value: trace.notes },
   ];
   const populatedCount = fields.filter((field) => Boolean(field.value?.trim())).length;
   const missingFields = fields.filter((field) => !field.value?.trim()).map((field) => field.label);
@@ -1225,16 +1245,16 @@ const ProductInputCoverage = ({
     <div className="border-ink-200 bg-card rounded-xl border p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-ink-800 text-xs font-bold">Product input coverage</p>
+          <p className="text-ink-800 text-xs font-bold">{t("admin.rag.evaluation.productInputCoverage")}</p>
           <p className="text-ink-500 mt-1 text-[11px]">
-            Fields used to build the production query and metadata filters.
+            {t("admin.rag.evaluation.productInputCoverageDesc")}
           </p>
         </div>
         <Badge
           variant="outline"
           className={missingFields.length === 0 ? "border-emerald-200 text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-300" : "border-amber-200 text-amber-700 dark:border-amber-500/30 dark:text-amber-300"}
         >
-          {populatedCount}/{fields.length} populated
+          {t("admin.rag.evaluation.populatedCount", { populated: populatedCount, total: fields.length })}
         </Badge>
       </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -1250,7 +1270,7 @@ const ProductInputCoverage = ({
               <div className="min-w-0">
                 <p className="text-ink-500 text-[10px] font-semibold">{field.label}</p>
                 <p className="text-ink-700 truncate text-[11px] max-md:line-clamp-2 max-md:whitespace-normal">
-                  {populated ? field.value : "Missing"}
+                  {populated ? field.value : t("admin.rag.evaluation.missing")}
                 </p>
               </div>
             </div>
@@ -1260,7 +1280,7 @@ const ProductInputCoverage = ({
       {missingFields.length > 0 && (
         <p className="mt-3 flex items-center gap-2 text-[11px] leading-5 text-amber-700 dark:text-amber-300">
           <AlertTriangle className="size-3.5 shrink-0" />
-          Missing input can make the production query and metadata filtering less specific: {missingFields.join(", ")}.
+          {t("admin.rag.evaluation.missingInputWarning", { fields: missingFields.join(", ") })}
         </p>
       )}
     </div>
@@ -1268,6 +1288,7 @@ const ProductInputCoverage = ({
 };
 
 const RetrievalInsight = ({ diagnostics }: { diagnostics: RagSearchDiagnostics }) => {
+  const { t } = useTranslation("common");
   const results = diagnostics.results ?? [];
   const beforeMetadata = diagnostics.candidatesBeforeMetadataFilter ?? diagnostics.metadataMatchedCandidateCount ?? 0;
   const metadataFiltered = diagnostics.metadataFilteredCandidateCount ?? 0;
@@ -1276,7 +1297,7 @@ const RetrievalInsight = ({ diagnostics }: { diagnostics: RagSearchDiagnostics }
   const confidence = diagnostics.confidence ?? (results.length > 0 ? "medium" : "none");
   const appliedFilters = diagnostics.appliedFilters ?? [];
   const warnings = diagnostics.warnings ?? [];
-  const statusLabel = status === "no_results" ? "No context returned" : status === "low_confidence" ? "Low confidence" : "Context retrieved";
+  const statusLabel = status === "no_results" ? t("admin.rag.evaluation.statusNoContextReturned") : status === "low_confidence" ? t("admin.rag.evaluation.statusLowConfidence") : t("admin.rag.evaluation.statusContextRetrieved");
   const statusClass = status === "retrieved"
     ? "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
     : "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300";
@@ -1287,38 +1308,38 @@ const RetrievalInsight = ({ diagnostics }: { diagnostics: RagSearchDiagnostics }
         <div className="flex items-center gap-2">
           {status === "retrieved" ? <CheckCircle2 className="size-4" /> : <AlertTriangle className="size-4" />}
           <div>
-            <p className="text-xs font-bold">Retrieval verdict: {statusLabel}</p>
+            <p className="text-xs font-bold">{t("admin.rag.evaluation.retrievalVerdict", { verdict: statusLabel })}</p>
             <p className="mt-0.5 text-[10px] opacity-80">
-              {results.length} result(s) survived the retrieval pipeline.
+              {t("admin.rag.evaluation.resultsSurvived", { count: results.length })}
             </p>
           </div>
         </div>
         <Badge variant="outline" className="border-current text-[10px] capitalize">
-          {confidence === "none" ? "No confidence" : `${confidence} confidence`}
+          {confidence === "none" ? t("admin.rag.evaluation.noConfidence") : t("admin.rag.evaluation.confidenceLevel", { confidence })}
         </Badge>
       </div>
 
       <div>
-        <p className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">Retrieval funnel</p>
+        <p className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">{t("admin.rag.evaluation.retrievalFunnel")}</p>
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          <FunnelMetric label="Before metadata filter" value={beforeMetadata} />
-          <FunnelMetric label="Metadata removed" value={metadataFiltered} tone={metadataFiltered > 0 ? "warning" : "default"} />
-          <FunnelMetric label="Vector candidates" value={diagnostics.vectorCandidateCount} />
-          <FunnelMetric label="Lexical candidates" value={diagnostics.lexicalCandidateCount} />
-          <FunnelMetric label="Threshold rejected" value={thresholdRejected} tone={thresholdRejected > 0 ? "warning" : "default"} />
-          <FunnelMetric label="Final results" value={results.length} tone={results.length > 0 ? "success" : "warning"} />
+          <FunnelMetric label={t("admin.rag.evaluation.funnelBeforeMetadataFilter")} value={beforeMetadata} />
+          <FunnelMetric label={t("admin.rag.evaluation.funnelMetadataRemoved")} value={metadataFiltered} tone={metadataFiltered > 0 ? "warning" : "default"} />
+          <FunnelMetric label={t("admin.rag.evaluation.funnelVectorCandidates")} value={diagnostics.vectorCandidateCount} />
+          <FunnelMetric label={t("admin.rag.evaluation.funnelLexicalCandidates")} value={diagnostics.lexicalCandidateCount} />
+          <FunnelMetric label={t("admin.rag.evaluation.funnelThresholdRejected")} value={thresholdRejected} tone={thresholdRejected > 0 ? "warning" : "default"} />
+          <FunnelMetric label={t("admin.rag.evaluation.funnelFinalResults")} value={results.length} tone={results.length > 0 ? "success" : "warning"} />
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        <ScoreMetric label="Best semantic" value={diagnostics.bestSemanticScore ?? 0} />
-        <ScoreMetric label="Best lexical" value={diagnostics.bestLexicalScore ?? 0} />
-        <ScoreMetric label="Best final" value={diagnostics.bestFinalScore ?? 0} />
+        <ScoreMetric label={t("admin.rag.evaluation.scoreBestSemantic")} value={diagnostics.bestSemanticScore ?? 0} />
+        <ScoreMetric label={t("admin.rag.evaluation.scoreBestLexical")} value={diagnostics.bestLexicalScore ?? 0} />
+        <ScoreMetric label={t("admin.rag.evaluation.scoreBestFinal")} value={diagnostics.bestFinalScore ?? 0} />
       </div>
 
       {appliedFilters.length > 0 && (
         <div>
-          <p className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">Applied filters</p>
+          <p className="text-ink-500 text-[10px] font-bold tracking-wide uppercase">{t("admin.rag.evaluation.appliedFilters")}</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {appliedFilters.map((filter) => (
               <Badge key={filter} variant="outline" className="max-w-full truncate text-[10px] font-normal">
@@ -1332,7 +1353,7 @@ const RetrievalInsight = ({ diagnostics }: { diagnostics: RagSearchDiagnostics }
       {warnings.length > 0 && (
         <div className="rounded-lg border border-amber-100 bg-amber-50/60 px-3 py-2 dark:border-amber-500/30 dark:bg-amber-500/10">
           <p className="flex items-center gap-2 text-[10px] font-bold tracking-wide text-amber-800 uppercase dark:text-amber-300">
-            <AlertTriangle className="size-3.5" /> Why this result needs attention
+            <AlertTriangle className="size-3.5" /> {t("admin.rag.evaluation.whyAttention")}
           </p>
           <ul className="mt-1.5 space-y-1 text-[11px] leading-5 text-amber-800 dark:text-amber-300">
             {warnings.map((warning) => <li key={warning}>- {warning}</li>)}
@@ -1395,13 +1416,14 @@ const TraceSections = ({ sections }: { sections: TraceSection[] }) => {
 
 const EmptyTraceSummary = ({ label, diagnostics }: TraceSection) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation("common");
   const reason = diagnostics.warnings?.[0];
   return (
     <div className="bg-card rounded-xl border border-amber-100 dark:border-amber-500/30">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5">
         <AlertTriangle className="size-4 shrink-0 text-amber-500" />
         <p className="text-ink-800 text-xs font-bold">{label}</p>
-        <span className="text-xs text-amber-700 dark:text-amber-300">No context returned · 0 retrieved</span>
+        <span className="text-xs text-amber-700 dark:text-amber-300">{t("admin.rag.evaluation.noContextReturnedZero")}</span>
         {reason && <span className="text-ink-500 min-w-0 flex-1 truncate text-[11px] max-md:basis-full max-md:whitespace-normal" title={reason}>{reason}</span>}
         <Button
           type="button"
@@ -1412,7 +1434,7 @@ const EmptyTraceSummary = ({ label, diagnostics }: TraceSection) => {
           aria-expanded={isOpen}
         >
           <ChevronDown className={`size-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-          {isOpen ? "Hide details" : "Show details"}
+          {isOpen ? t("admin.rag.evaluation.hideDetails") : t("admin.rag.evaluation.showDetails")}
         </Button>
       </div>
       {isOpen && (
@@ -1430,19 +1452,21 @@ const ListingTraceResults = ({
 }: {
   label: string;
   diagnostics: ListingRetrievalEvaluationResponse["policyContext"];
-}) => (
+}) => {
+  const { t } = useTranslation("common");
+  return (
   <div className="border-ink-200 bg-card rounded-xl border p-3">
     <div className="flex items-center justify-between gap-2">
       <p className="text-ink-800 text-xs font-bold">{label}</p>
       <Badge variant="outline" className="text-[10px]">
-        {diagnostics.results.length} retrieved
+        {t("admin.rag.evaluation.retrievedCount", { count: diagnostics.results.length })}
       </Badge>
     </div>
     <RetrievalInsight diagnostics={diagnostics} />
     <div className="mt-3 space-y-3">
       {diagnostics.results.length === 0 ? (
         <p className="border-ink-200 bg-ink-50 text-ink-500 rounded-lg border border-dashed px-3 py-4 text-xs">
-          No context was retrieved.
+          {t("admin.rag.evaluation.noContextRetrieved")}
         </p>
       ) : (
         diagnostics.results.map((item, index) => (
@@ -1451,7 +1475,8 @@ const ListingTraceResults = ({
       )}
     </div>
   </div>
-);
+  );
+};
 
 const DetailBlock = ({ label, value }: { label: string; value: string }) => (
   <div className="bg-card rounded-lg border border-white/80 p-3">

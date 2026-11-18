@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { FormInputField } from "@/components/commons/forms/form-input-field";
 import { FormTextareaField } from "@/components/commons/forms/form-textarea-field";
@@ -26,6 +27,7 @@ type StylePresetFormDialogProps = {
 };
 
 export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetFormDialogProps) => {
+  const { t } = useTranslation("common");
   const creating = preset === null;
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null);
@@ -81,11 +83,11 @@ export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetForm
   const pickFile = (file: File | undefined) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setFileError("Choose an image file for the preview.");
+      setFileError(t("admin.styles.form.fileNotImage"));
       return;
     }
     if (file.size > MAX_PREVIEW_BYTES) {
-      setFileError("The preview image cannot exceed 5 MB.");
+      setFileError(t("admin.styles.form.fileTooLarge"));
       return;
     }
     setFileError(null);
@@ -111,17 +113,17 @@ export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetForm
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogContent className="flex max-h-[88dvh] w-[calc(100%-2rem)] max-w-2xl flex-col overflow-hidden">
         <DialogHeader className="text-left">
-          <DialogTitle>{creating ? "New system style" : `Edit ${preset.name}`}</DialogTitle>
-          <DialogDescription>System styles ship to every seller. Write them in English; the Vietnamese translation is generated in the background after you save, and sellers see English until it is ready.</DialogDescription>
+          <DialogTitle>{creating ? t("admin.styles.form.titleNew") : t("admin.styles.form.titleEdit", { name: preset.name })}</DialogTitle>
+          <DialogDescription>{t("admin.styles.form.description")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
           <ScrollArea className="min-h-0 flex-1">
             <div className="space-y-4 px-1 py-1">
-              <FormInputField id="preset-name" label="Name" type="text" placeholder="Neon Glow" registration={register("name")} error={errors.name} required />
-              <FormTextareaField id="preset-description" label="Description" placeholder="When this style shines and what it suits." registration={register("description")} error={errors.description} rows={4} required />
-              <FormTextareaField id="preset-recommendations" label="Recommendations" placeholder="One use case per line." registration={register("recommendationsText")} error={errors.recommendationsText} rows={3} />
+              <FormInputField id="preset-name" label={t("admin.styles.form.nameLabel")} type="text" placeholder={t("admin.styles.form.namePlaceholder")} registration={register("name")} error={errors.name} required />
+              <FormTextareaField id="preset-description" label={t("admin.styles.form.descriptionLabel")} placeholder={t("admin.styles.form.descriptionPlaceholder")} registration={register("description")} error={errors.description} rows={4} required />
+              <FormTextareaField id="preset-recommendations" label={t("admin.styles.form.recommendationsLabel")} placeholder={t("admin.styles.form.recommendationsPlaceholder")} registration={register("recommendationsText")} error={errors.recommendationsText} rows={3} />
 
-              <FormTextareaField id="preset-style-modifiers" label="Prompt keywords — shared, never translated" placeholder="target FLAT, studio lighting, neon glow" registration={register("styleModifiers")} error={errors.styleModifiers} rows={2} />
+              <FormTextareaField id="preset-style-modifiers" label={t("admin.styles.form.styleModifiersLabel")} placeholder={t("admin.styles.form.styleModifiersPlaceholder")} registration={register("styleModifiers")} error={errors.styleModifiers} rows={2} />
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div className="min-w-0 flex-1">
@@ -138,16 +140,16 @@ export const StylePresetFormDialog = ({ open, preset, onClose }: StylePresetForm
                 </div>
                 {!creating && (
                   <label className="border-ink-200 flex items-center gap-3 rounded-md border px-3 py-2">
-                    <span className="text-ink-800 text-sm font-medium">Active</span>
-                    <Switch checked={isActive} onCheckedChange={setIsActive} disabled={pending} aria-label="Toggle active state" />
+                    <span className="text-ink-800 text-sm font-medium">{t("admin.styles.form.activeLabel")}</span>
+                    <Switch checked={isActive} onCheckedChange={setIsActive} disabled={pending} aria-label={t("admin.styles.form.activeAriaLabel")} />
                   </label>
                 )}
               </div>
             </div>
           </ScrollArea>
           <DialogFooter className="gap-2 pt-4">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>Cancel</Button>
-            <Button type="submit" disabled={(!isDirty && !isActiveDirty && !canRetryTranslation) || pending}>{creating ? "Create style" : "Save changes"}</Button>
+            <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>{t("admin.styles.form.cancel")}</Button>
+            <Button type="submit" disabled={(!isDirty && !isActiveDirty && !canRetryTranslation) || pending}>{creating ? t("admin.styles.form.createSubmit") : t("admin.styles.form.saveSubmit")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

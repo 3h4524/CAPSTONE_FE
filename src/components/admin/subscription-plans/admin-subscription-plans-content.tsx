@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { DeletePlanDialog } from "@/components/admin/subscription-plans/delete-plan-dialog";
 import { FeatureCatalogPanel } from "@/components/admin/subscription-plans/feature-catalog-panel";
@@ -22,9 +23,15 @@ type AdminSubscriptionPlansContentProps = {
 
 type View = "plans" | "features" | "history" | "insights";
 
-const VIEW_LABEL: Record<View, string> = { plans: "Plans", features: "Features", history: "History", insights: "Plan Insights" };
+const VIEW_LABEL_KEY: Record<View, string> = {
+  plans: "admin.plans.content.viewPlans",
+  features: "admin.plans.content.viewFeatures",
+  history: "admin.plans.content.viewHistory",
+  insights: "admin.plans.content.viewInsights",
+};
 
 const AdminSubscriptionPlansContent = ({ plans, isLoading }: AdminSubscriptionPlansContentProps) => {
+  const { t } = useTranslation("common");
   const [formPlan, setFormPlan] = useState<AdminSubscriptionPlan | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deletePlan, setDeletePlan] = useState<AdminSubscriptionPlan | null>(null);
@@ -47,11 +54,11 @@ const AdminSubscriptionPlansContent = ({ plans, isLoading }: AdminSubscriptionPl
   return (
     <>
       <PageHeader
-        title="Subscription Plans"
-        description="Configure tiers, pricing and the features each plan includes, and see how Sellers use them."
+        title={t("admin.plans.content.pageTitle")}
+        description={t("admin.plans.content.pageDescription")}
         actions={
-          <Button size="sm" aria-label="Create new plan" className="h-9 shrink-0 rounded-lg px-4 text-xs max-md:rounded-full" onClick={openCreateForm}>
-            <Plus className="size-3.5" /> <span>Create<span className="max-md:hidden"> new plan</span></span>
+          <Button size="sm" aria-label={t("admin.plans.content.createNewPlan")} className="h-9 shrink-0 rounded-lg px-4 text-xs max-md:rounded-full" onClick={openCreateForm}>
+            <Plus className="size-3.5" /> <span>{t("admin.plans.content.create")}<span className="max-md:hidden">{t("admin.plans.content.createNewPlanSuffix")}</span></span>
           </Button>
         }
       />
@@ -59,7 +66,7 @@ const AdminSubscriptionPlansContent = ({ plans, isLoading }: AdminSubscriptionPl
       <div
         className="border-ink-200 mt-5 flex gap-6 overflow-x-auto border-b max-md:mt-3 max-md:justify-between max-md:gap-3"
         role="tablist"
-        aria-label="Subscription plans view"
+        aria-label={t("admin.plans.content.viewAria")}
       >
         {(["plans", "features", "history", "insights"] as const).map((item) => (
           <button
@@ -75,7 +82,7 @@ const AdminSubscriptionPlansContent = ({ plans, isLoading }: AdminSubscriptionPl
                 : "text-ink-400 hover:border-ink-300 hover:text-ink-700 border-transparent"
             )}
           >
-            {VIEW_LABEL[item]}
+            {t(VIEW_LABEL_KEY[item])}
           </button>
         ))}
       </div>

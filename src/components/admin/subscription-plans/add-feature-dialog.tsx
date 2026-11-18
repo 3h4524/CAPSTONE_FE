@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { FeatureChooserDialog } from "@/components/admin/subscription-plans/feature-chooser-dialog";
 import { useChangePlanFeatures } from "@/hooks/mutations/use-change-plan-features";
 import type { AdminSubscriptionPlan } from "@/types/admin-subscription-plan";
@@ -23,13 +25,14 @@ export const addableFeatures = (plan: AdminSubscriptionPlan, catalog: AdminFeatu
 
 // Adds features to an existing plan; everyone on it gets them at once.
 export function AddFeatureDialog({ plan, catalog, onClose }: AddFeatureDialogProps) {
+  const { t } = useTranslation("common");
   const mutation = useChangePlanFeatures(onClose);
 
   return (
     <FeatureChooserDialog
       open={plan !== null}
-      title={`Add features to ${plan?.name ?? ""}`}
-      description={`Everyone on ${plan?.name ?? "the plan"} gets them at once, current subscribers included.`}
+      title={t("admin.plans.addFeatureDialog.title", { name: plan?.name ?? "" })}
+      description={t("admin.plans.addFeatureDialog.description", { name: plan?.name ?? t("admin.plans.shared.thePlan") })}
       candidates={plan ? addableFeatures(plan, catalog) : []}
       isPending={mutation.isPending}
       onAdd={(codes) => plan && mutation.mutate({ type: "add", planId: plan.id, features: codes.map((code) => ({ code })) })}

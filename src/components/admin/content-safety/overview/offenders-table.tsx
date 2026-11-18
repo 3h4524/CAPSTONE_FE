@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-import { CATEGORY_LABELS, formatDateTime, formatNumber } from "@/components/admin/content-safety/shared";
+import { CATEGORY_LABEL_KEYS, formatDateTime, formatNumber } from "@/components/admin/content-safety/shared";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import type { ModerationOffender } from "@/types/admin-moderation";
@@ -12,10 +13,11 @@ const headClass = "text-ink-500 text-xs font-semibold tracking-wider uppercase";
 
 /** The sellers blocked most often, each linked to the Users page. */
 export const OffendersTable = ({ offenders }: { offenders: ModerationOffender[] }) => {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
 
   if (offenders.length === 0)
-    return <p className="text-ink-500 py-6 text-center text-sm">No seller was blocked in this period.</p>;
+    return <p className="text-ink-500 py-6 text-center text-sm">{t("admin.contentSafety.offenders.empty")}</p>;
 
   if (isPhone)
     return (
@@ -33,12 +35,14 @@ export const OffendersTable = ({ offenders }: { offenders: ModerationOffender[] 
                 href={userLink(offender.email)}
                 className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-sky-700 dark:text-sky-300"
               >
-                View <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                {t("admin.contentSafety.common.view")} <ArrowUpRight className="size-3.5" aria-hidden="true" />
               </Link>
             </div>
             <p className="text-ink-600 mt-1 text-xs">
-              {formatNumber(offender.blocked)} blocked · {formatNumber(offender.flagged)} flagged
-              {offender.topCategory ? ` · mostly ${CATEGORY_LABELS[offender.topCategory]}` : ""}
+              {t("admin.contentSafety.stats.blockedFlagged", { blocked: formatNumber(offender.blocked), flagged: formatNumber(offender.flagged) })}
+              {offender.topCategory
+                ? ` · ${t("admin.contentSafety.offenders.mostlyCategory", { category: t(CATEGORY_LABEL_KEYS[offender.topCategory]) })}`
+                : ""}
             </p>
           </li>
         ))}
@@ -51,11 +55,11 @@ export const OffendersTable = ({ offenders }: { offenders: ModerationOffender[] 
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead className={`${headClass} w-10`}>#</TableHead>
-            <TableHead className={headClass}>Seller</TableHead>
-            <TableHead className={`${headClass} text-right`}>Blocked</TableHead>
-            <TableHead className={`${headClass} text-right`}>Flagged</TableHead>
-            <TableHead className={headClass}>Most often</TableHead>
-            <TableHead className={headClass}>Last blocked</TableHead>
+            <TableHead className={headClass}>{t("admin.contentSafety.common.seller")}</TableHead>
+            <TableHead className={`${headClass} text-right`}>{t("admin.contentSafety.decisions.block")}</TableHead>
+            <TableHead className={`${headClass} text-right`}>{t("admin.contentSafety.decisions.flagged")}</TableHead>
+            <TableHead className={headClass}>{t("admin.contentSafety.offenders.mostOften")}</TableHead>
+            <TableHead className={headClass}>{t("admin.contentSafety.offenders.lastBlocked")}</TableHead>
             <TableHead className="w-24" />
           </TableRow>
         </TableHeader>
@@ -72,7 +76,7 @@ export const OffendersTable = ({ offenders }: { offenders: ModerationOffender[] 
               </TableCell>
               <TableCell className="text-ink-700 text-right tabular-nums">{formatNumber(offender.flagged)}</TableCell>
               <TableCell className="text-ink-700">
-                {offender.topCategory ? CATEGORY_LABELS[offender.topCategory] : "—"}
+                {offender.topCategory ? t(CATEGORY_LABEL_KEYS[offender.topCategory]) : "—"}
               </TableCell>
               <TableCell className="text-ink-600 text-xs">{formatDateTime(offender.lastBlockedAt)}</TableCell>
               <TableCell className="text-right">
@@ -80,7 +84,7 @@ export const OffendersTable = ({ offenders }: { offenders: ModerationOffender[] 
                   href={userLink(offender.email)}
                   className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 hover:underline dark:text-sky-300"
                 >
-                  View seller <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                  {t("admin.contentSafety.common.viewSeller")} <ArrowUpRight className="size-3.5" aria-hidden="true" />
                 </Link>
               </TableCell>
             </TableRow>

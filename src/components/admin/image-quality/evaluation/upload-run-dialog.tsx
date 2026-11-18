@@ -2,6 +2,7 @@
 
 import { Upload } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { FileDropzone } from "@/components/commons/forms/file-dropzone";
 import { FormErrorText } from "@/components/commons/forms/form-error-text";
@@ -31,6 +32,7 @@ type UploadRunDialogProps = {
 const EMPTY_VALUES = { name: "", notes: "" };
 
 export const UploadRunDialog = ({ open, onClose, onUploaded }: UploadRunDialogProps) => {
+  const { t } = useTranslation("common");
   const { mutate: createRun, isPending } = useCreateImageEvalRun();
   const {
     register,
@@ -72,31 +74,30 @@ export const UploadRunDialog = ({ open, onClose, onUploaded }: UploadRunDialogPr
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="text-ink-500 size-5" />
-            Upload scoring results
+            {t("admin.imageQuality.evaluation.uploadTitle")}
           </DialogTitle>
           <DialogDescription>
-            Choose the file the export step of the offline scoring scripts wrote. Thumbnails inside
-            it are stored with the run, so the page never needs the scoring machine again.
+            {t("admin.imageQuality.evaluation.uploadDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="image-eval-name">Name</Label>
+            <Label htmlFor="image-eval-name">{t("admin.imageQuality.evaluation.nameLabel")}</Label>
             <Input
               id="image-eval-name"
-              placeholder="e.g. Keyword rules · 30/10"
+              placeholder={t("admin.imageQuality.evaluation.namePlaceholder")}
               aria-invalid={Boolean(errors.name)}
               {...register("name")}
             />
             <FormErrorText id="image-eval-name-error" message={errors.name?.message} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="image-eval-notes">Notes</Label>
+            <Label htmlFor="image-eval-notes">{t("admin.imageQuality.evaluation.notesLabel")}</Label>
             <Textarea
               id="image-eval-notes"
               rows={2}
-              placeholder="What changed in the prompt, which images were scored"
+              placeholder={t("admin.imageQuality.evaluation.notesPlaceholder")}
               aria-invalid={Boolean(errors.notes)}
               {...register("notes")}
             />
@@ -108,7 +109,7 @@ export const UploadRunDialog = ({ open, onClose, onUploaded }: UploadRunDialogPr
             render={({ field }) => (
               <div className="flex flex-col gap-1.5">
                 <FileDropzone
-                  label="Export file (.json, up to 10 MB)"
+                  label={t("admin.imageQuality.evaluation.exportFileLabel")}
                   accept=".json,application/json"
                   fileName={field.value?.name}
                   invalid={Boolean(errors.file)}
@@ -121,10 +122,10 @@ export const UploadRunDialog = ({ open, onClose, onUploaded }: UploadRunDialogPr
           />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose}>
-              Cancel
+              {t("admin.imageQuality.shared.cancel")}
             </Button>
             <Button type="submit" disabled={isPending || isSubmitting}>
-              Upload
+              {t("admin.imageQuality.shared.upload")}
             </Button>
           </DialogFooter>
         </form>

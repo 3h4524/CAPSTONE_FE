@@ -1,9 +1,10 @@
 import { ArrowDownRight, ArrowUpRight, ChevronRight, LineChart, Table2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { MrrBridgeStrip } from "@/components/admin/subscription-plans/mrr-bridge-strip";
-import { Figures, OUTLOOK_CHIP, OUTLOOK_ICON, Section, STATUS_STYLE } from "@/components/admin/subscription-plans/plan-health-parts";
+import { Figures, OUTLOOK_CHIP, OUTLOOK_ICON, OUTLOOK_LABEL_KEY, Section, STATUS_LABEL_KEY, STATUS_STYLE } from "@/components/admin/subscription-plans/plan-health-parts";
 import { Card } from "@/components/ui/card";
-import { OUTLOOK_LABEL, planName, STATUS_LABEL } from "@/helpers/plan-ai-review";
+import { planName } from "@/helpers/plan-ai-review";
 import type { PlanAiAssessment, PlanAiReviewSnapshot, PlanAiScore } from "@/types/plan-ai-review";
 import type { MrrBridgeDto } from "@/types/revenue";
 import { cn } from "@/utils/cn";
@@ -27,6 +28,7 @@ export function AllPlansTile({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const { t } = useTranslation("common");
   const net = bridge ? bridge.end - bridge.start : null;
   const pct = bridge && net !== null && bridge.start > 0 ? (net / bridge.start) * 100 : null;
   const Trend = net !== null && net < 0 ? ArrowDownRight : ArrowUpRight;
@@ -42,22 +44,22 @@ export function AllPlansTile({
         selected ? "border-[#2a9d8f] bg-[#2a9d8f]/5 shadow-md ring-2 ring-[#2a9d8f]/25" : "border-ink-200 shadow-xs"
       )}
     >
-      <p className="text-ink-500 text-[11px] font-semibold tracking-wide uppercase">All plans</p>
+      <p className="text-ink-500 text-[11px] font-semibold tracking-wide uppercase">{t("admin.plans.allPlans.label")}</p>
       <p className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1 tabular-nums">
         {paying !== undefined ? (
           <>
             <span className="text-ink-900 text-3xl leading-none font-bold tracking-tight">{paying.toLocaleString()}</span>{" "}
-            <span className="text-ink-500 text-sm">paying</span>
+            <span className="text-ink-500 text-sm">{t("admin.plans.allPlans.paying")}</span>
             {onTrial ? (
               <span className="bg-ink-100 text-ink-700 rounded-full px-2 py-0.5 text-[11px] font-semibold">
                 <span className="sr-only"> · </span>
-                {onTrial.toLocaleString()} on trial
+                {t("admin.plans.allPlans.onTrial", { count: onTrial, formatted: onTrial.toLocaleString() })}
               </span>
             ) : null}
           </>
         ) : (
           <span className="text-ink-900 text-3xl leading-none font-bold tracking-tight">
-            {planCount} plan{planCount === 1 ? "" : "s"}
+            {t("admin.plans.allPlans.planCount", { count: planCount })}
           </span>
         )}
       </p>
@@ -97,13 +99,14 @@ export function AllPlansDetail({
   previousScores: PlanAiScore[];
   onPick: (plan: string) => void;
 }) {
+  const { t } = useTranslation("common");
   return (
     <Card id="ai-review-all" role="tabpanel" className="border-ink-200 bg-card gap-0 overflow-hidden rounded-2xl border p-0 shadow-none">
       {overall && (
         <div className="border-ink-100 bg-ink-50 flex gap-4 border-b px-6 py-5">
           <span aria-hidden="true" className="w-1 shrink-0 rounded-full bg-[#2a9d8f]" />
           <div className="min-w-0">
-            <p className="text-ink-500 text-[11px] font-semibold tracking-wide uppercase">Across all plans</p>
+            <p className="text-ink-500 text-[11px] font-semibold tracking-wide uppercase">{t("admin.plans.allPlans.acrossAllPlans")}</p>
             <p className="text-ink-700 mt-1 text-[15px] leading-relaxed">
               <Figures text={overall} />
             </p>
@@ -113,7 +116,7 @@ export function AllPlansDetail({
 
       <div className={cn("grid gap-8 px-6 py-6 max-md:grid-cols-[minmax(0,1fr)] max-md:px-4", bridge && "lg:grid-cols-2")}>
         {bridge && (
-          <Section icon={LineChart} title="MRR this period, all plans">
+          <Section icon={LineChart} title={t("admin.plans.allPlans.mrrThisPeriodAllPlans")}>
             <MrrBridgeStrip
               bridge={bridge}
               periodStart={snapshot.periodStart}
@@ -123,15 +126,15 @@ export function AllPlansDetail({
           </Section>
         )}
 
-        <Section icon={Table2} title="Plans side by side">
+        <Section icon={Table2} title={t("admin.plans.allPlans.plansSideBySide")}>
           <div className="border-ink-200 overflow-hidden rounded-xl border max-md:overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-ink-50/70 text-ink-500 text-left text-[11px] tracking-wide uppercase">
-                  <th scope="col" className="px-4 py-2 font-semibold">Plan</th>
-                  <th scope="col" className="px-2 py-2 font-semibold">Health</th>
-                  <th scope="col" className="px-2 py-2 font-semibold">Outlook</th>
-                  <th scope="col" className="px-2 py-2 text-right font-semibold">Last review</th>
+                  <th scope="col" className="px-4 py-2 font-semibold">{t("admin.plans.shared.planColumn")}</th>
+                  <th scope="col" className="px-2 py-2 font-semibold">{t("admin.plans.shared.healthColumn")}</th>
+                  <th scope="col" className="px-2 py-2 font-semibold">{t("admin.plans.shared.outlookColumn")}</th>
+                  <th scope="col" className="px-2 py-2 text-right font-semibold">{t("admin.plans.shared.lastReviewColumn")}</th>
                   <th scope="col" className="w-8" />
                 </tr>
               </thead>
@@ -152,16 +155,16 @@ export function AllPlansDetail({
                       </th>
                       <td className="px-2 py-3">
                         <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_STYLE[plan.status].chip)}>
-                          <span className="tabular-nums">{`${plan.score ?? "—"} · ${STATUS_LABEL[plan.status]}`}</span>
+                          <span className="tabular-nums">{`${plan.score ?? "—"} · ${t(STATUS_LABEL_KEY[plan.status])}`}</span>
                         </span>
                       </td>
                       <td className="px-2 py-3 text-xs">
                         <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold", OUTLOOK_CHIP[plan.outlook.direction])}>
-                          <Outlook className="size-3.5" /> {OUTLOOK_LABEL[plan.outlook.direction]}
+                          <Outlook className="size-3.5" /> {t(OUTLOOK_LABEL_KEY[plan.outlook.direction])}
                         </span>
                       </td>
                       <td className="text-ink-400 px-2 py-3 text-right text-xs tabular-nums">
-                        {previous ? `${STATUS_LABEL[previous.status]} · ${previous.score ?? "—"}` : "First review"}
+                        {previous ? `${t(STATUS_LABEL_KEY[previous.status])} · ${previous.score ?? "—"}` : t("admin.plans.shared.firstReview")}
                       </td>
                       <td className="text-ink-300 pr-3">
                         <ChevronRight className="size-4" />

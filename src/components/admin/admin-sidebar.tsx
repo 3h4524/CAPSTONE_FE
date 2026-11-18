@@ -9,6 +9,7 @@ import {
   Settings,
   User,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Logo } from "@/components/commons/icons/logo";
 import { NavSection } from "@/components/commons/layout/app-shell/sidebar/nav-section";
@@ -43,12 +44,15 @@ const AdminSidebar = ({
   onClose,
   isCollapsed = false,
   onToggleCollapse,
-}: AdminSidebarProps) => (
+}: AdminSidebarProps) => {
+  const { t } = useTranslation("common");
+
+  return (
   <>
     {isMobileOpen && (
       <button
         type="button"
-        aria-label="Close navigation"
+        aria-label={t("admin.dashboard.sidebar.closeNavigation")}
         onClick={onClose}
         className="fixed inset-0 z-40 bg-slate-950/20 lg:hidden"
       />
@@ -79,7 +83,7 @@ const AdminSidebar = ({
           type="button"
           variant="ghost"
           size="icon"
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={isCollapsed ? t("admin.dashboard.sidebar.expandSidebar") : t("admin.dashboard.sidebar.collapseSidebar")}
           className="text-ink-500 hover:text-ink-900 size-8"
           onClick={onToggleCollapse ?? onClose}
         >
@@ -87,7 +91,7 @@ const AdminSidebar = ({
         </Button>
       </div>
 
-      <nav aria-label="Admin navigation" className="scrollbar-hide flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 py-6">
+      <nav aria-label={t("admin.dashboard.sidebar.adminNavigation")} className="scrollbar-hide flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 py-6">
         {ADMIN_NAV_SECTIONS.map((section, index) => (
           <Fragment key={section.label}>
             {index > 0 && <Separator />}
@@ -101,7 +105,7 @@ const AdminSidebar = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              title={isCollapsed ? "Profile" : undefined}
+              title={isCollapsed ? t("admin.dashboard.sidebar.profile") : undefined}
               className={cn(
                 "group hover:bg-ink-50 flex w-full items-center rounded-lg py-2 transition-colors focus:outline-none",
                 isCollapsed ? "justify-center px-0" : "gap-3 px-2 text-left"
@@ -131,26 +135,27 @@ const AdminSidebar = ({
             <DropdownMenuItem asChild>
               <Link href="/admin/profile">
                 <User className="mr-2 size-4" />
-                <span>Profile</span>
+                <span>{t("admin.dashboard.sidebar.profile")}</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/admin/settings">
                 <Settings className="mr-2 size-4" />
-                <span>Settings</span>
+                <span>{t("admin.dashboard.sidebar.settings")}</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onLogout}>
               <LogOut className="mr-2 size-4" />
-              <span>Log out</span>
+              <span>{t("admin.dashboard.sidebar.logOut")}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
     </aside>
   </>
-);
+  );
+};
 
 const getInitials = (name: string) =>
   name

@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { ImageOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { CheckChip } from "@/components/admin/image-quality/evaluation/check-chip";
 import { formatImageQualityNumber } from "@/helpers/image-quality-format";
@@ -13,6 +14,7 @@ type ImageCardProps = {
 };
 
 export const ImageCard = ({ image, versionLabel, isAfter }: ImageCardProps) => {
+  const { t } = useTranslation("common");
   const source = image.thumbnailUrl ?? image.imageUrl;
 
   return (
@@ -29,7 +31,7 @@ export const ImageCard = ({ image, versionLabel, isAfter }: ImageCardProps) => {
         >
           <img
             src={source}
-            alt={`${image.product}, ${versionLabel}`}
+            alt={t("admin.imageQuality.evaluation.imageAlt", { product: image.product, version: versionLabel })}
             loading="lazy"
             className="aspect-square w-full object-contain"
           />
@@ -37,30 +39,36 @@ export const ImageCard = ({ image, versionLabel, isAfter }: ImageCardProps) => {
       ) : (
         <div className="bg-ink-100 text-ink-500 flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-md px-3 text-center text-xs">
           <ImageOff className="size-5" />
-          Image only on the scoring machine
+          {t("admin.imageQuality.evaluation.imageOnlyOnScoringMachine")}
         </div>
       )}
       <figcaption className="flex min-w-0 flex-col gap-2 text-[13px]">
         <span className="text-ink-900 leading-snug font-semibold">{versionLabel}</span>
         <span className="flex flex-wrap gap-1">
           {image.textOk !== null ? (
-            <CheckChip label={image.textOk ? "Text correct" : "Text wrong"} isPassed={image.textOk} />
+            <CheckChip
+              label={image.textOk ? t("admin.imageQuality.shared.textCorrect") : t("admin.imageQuality.shared.textWrong")}
+              isPassed={image.textOk}
+            />
           ) : (
             <span className="bg-ink-100 text-ink-600 rounded-full px-2 py-0.5 text-xs">
-              No lettering
+              {t("admin.imageQuality.shared.noLettering")}
             </span>
           )}
           {image.textClear !== null ? (
-            <CheckChip label={image.textClear ? "Clear" : "Covered"} isPassed={image.textClear} />
+            <CheckChip
+              label={image.textClear ? t("admin.imageQuality.evaluation.clear") : t("admin.imageQuality.evaluation.covered")}
+              isPassed={image.textClear}
+            />
           ) : null}
           {image.layoutOk !== null ? (
-            <CheckChip label="Layout" isPassed={image.layoutOk} />
+            <CheckChip label={t("admin.imageQuality.evaluation.layoutChip")} isPassed={image.layoutOk} />
           ) : null}
         </span>
         {image.note ? <span className="text-ink-700 leading-snug">{image.note}</span> : null}
         {image.ocrText ? (
           <span className="bg-ink-50 text-ink-600 rounded px-1.5 py-1 font-mono text-[11px] break-words">
-            OCR: {image.ocrText}
+            {t("admin.imageQuality.evaluation.ocrLine", { text: image.ocrText })}
           </span>
         ) : null}
         <dl className="grid grid-cols-3 gap-1 text-center">

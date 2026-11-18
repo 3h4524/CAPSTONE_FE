@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Calendar } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { RevenueFilterDto } from "@/types/revenue";
 
@@ -11,6 +12,7 @@ interface RevenueFilterBarProps {
 }
 
 export function RevenueFilterBar({ filter, onFilterChange }: RevenueFilterBarProps) {
+  const { t } = useTranslation("common");
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, "0");
@@ -132,13 +134,13 @@ export function RevenueFilterBar({ filter, onFilterChange }: RevenueFilterBarPro
         {/* Period Preset Segmented Pill */}
         <div className="border-ink-200/90 bg-ink-50/80 flex items-center gap-1 rounded-xl border p-1 shadow-2xs max-md:w-full dark:border-slate-800 dark:bg-slate-900">
           <span className="text-ink-400 px-2 text-[11px] font-semibold max-md:hidden dark:text-slate-500">
-            Period:
+            {t("admin.revenue.filterBar.periodLabel")}
           </span>
           {[
-            { key: "Daily", label: "Daily", active: isDaily },
-            { key: "Monthly", label: "Monthly", active: isMonthly },
-            { key: "Yearly", label: "Yearly", active: isYearly },
-            { key: "All-Time", label: "All-Time", active: isAllTime },
+            { key: "Daily", labelKey: "admin.revenue.filterBar.presetDaily", active: isDaily },
+            { key: "Monthly", labelKey: "admin.revenue.filterBar.presetMonthly", active: isMonthly },
+            { key: "Yearly", labelKey: "admin.revenue.filterBar.presetYearly", active: isYearly },
+            { key: "All-Time", labelKey: "admin.revenue.filterBar.presetAllTime", active: isAllTime },
           ].map((item) => (
             <button
               key={item.key}
@@ -153,7 +155,7 @@ export function RevenueFilterBar({ filter, onFilterChange }: RevenueFilterBarPro
                   : "text-ink-500 hover:text-ink-800 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
             >
-              {item.label}
+              {t(item.labelKey)}
             </button>
           ))}
         </div>

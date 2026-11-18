@@ -1,6 +1,7 @@
 "use client";
 
 import { FlaskConical, RefreshCw, ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,17 +25,19 @@ export const TestReportRunDialog = ({
   onOpenChange,
   isPending,
   onConfirm,
-}: TestReportRunDialogProps) => (
+}: TestReportRunDialogProps) => {
+  const { t } = useTranslation("common");
+
+  return (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="sm:max-w-lg">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
           <FlaskConical className="text-ink-500 size-5" />
-          Run the end-to-end suite
+          {t("admin.testReports.runDialog.title")}
         </DialogTitle>
         <DialogDescription>
-          The backend seeds a verified seller, resets its own test data, then runs the Playwright
-          suite. Nothing has to be typed in here.
+          {t("admin.testReports.runDialog.description")}
         </DialogDescription>
       </DialogHeader>
 
@@ -42,16 +45,13 @@ export const TestReportRunDialog = ({
         <li className="flex gap-3">
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <span>
-            The seller{" "}
-            <span className="text-ink-800 font-mono text-xs">e2e.seller@apcs.test</span> is
-            registered and confirmed before every run, so the suite never needs a manual sign-in.
+            {t("admin.testReports.runDialog.sellerNote", { email: "e2e.seller@apcs.test" })}
           </span>
         </li>
         <li className="flex gap-3">
           <RefreshCw className="text-ink-500 mt-0.5 size-4 shrink-0" />
           <span>
-            Every run starts from a clean reset of the test data, while the report history stays in
-            the store — this dialog only asks the backend to append one more run there.
+            {t("admin.testReports.runDialog.cleanNote")}
           </span>
         </li>
       </ul>
@@ -63,12 +63,13 @@ export const TestReportRunDialog = ({
           onClick={() => onOpenChange(false)}
           disabled={isPending}
         >
-          Cancel
+          {t("admin.testReports.runDialog.cancel")}
         </Button>
         <Button type="button" onClick={onConfirm} disabled={isPending}>
-          Run the suite
+          {t("admin.testReports.runDialog.confirm")}
         </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
-);
+  );
+};

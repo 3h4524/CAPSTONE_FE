@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { HelpCircle, Package, Star } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip as ChartTooltip } from "recharts";
 
 import { Card } from "@/components/ui/card";
@@ -21,27 +22,9 @@ import { useIsPhone } from "@/hooks/use-is-phone";
 import type { RevenueByPlanDto } from "@/types/revenue";
 import { formatVnd } from "@/utils/format-currency";
 
-const HELP = {
-  revenue:
-    "Revenue collected from paid invoices for this plan in the selected period. The line below is the plan's share of total revenue.",
-  growth:
-    "Cash collected vs. the previous period of the same length. An annual payment counts in full in the month it is paid, so it can rise while MRR falls. Shows “New” when the previous period had no revenue.",
-  purchases:
-    "Successful payments for this plan in the selected period. The line below counts distinct paying customers.",
-  arpu: "Average revenue per user: this plan's revenue divided by the number of distinct customers who paid for it in the period.",
-  mrrChange:
-    "Monthly recurring revenue at the end of the period minus at its start. An annual plan adds 1/12 of its price and every customer who leaves lowers it, so it shows where next month's revenue is heading. The line below is the plan's MRR at the end.",
-  customers:
-    "Paying customers on this plan at the start of the period and at its end, counted like MRR. The line below bridges the two: customers who stopped paying, who switched to another plan (still paying, so still retained) and who joined (new or switched in). Hover a row's numbers for the full split.",
-  retention: `Of the customers on this plan at the start, the share still paying at the end, on this plan or another. Customers who joined during the period do not count here, so it can be low while the plan grows. Needs at least 5 customers at the start; below ${LOW_RETENTION_PERCENT}% is highlighted.`,
-};
-
 type View = "revenue" | "health";
 
-const VIEWS: { key: View; label: string; description: string }[] = [
-  { key: "revenue", label: "Revenue", description: "What each plan collected in the selected period" },
-  { key: "health", label: "Health", description: "Whether each plan's recurring revenue and customers are growing, and whether it keeps them" },
-];
+const VIEWS: View[] = ["revenue", "health"];
 
 interface RevenueByPlanCardProps {
   plans?: RevenueByPlanDto[];
@@ -50,6 +33,8 @@ interface RevenueByPlanCardProps {
 
 export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: RevenueByPlanCardProps) {
   const isPhone = useIsPhone();
+  const { t } = useTranslation("common");
+  const changeLabel = (raw: string) => (raw === "New" ? t("admin.revenue.common.new") : raw);
   // Shared by the donut and the table so hovering either highlights the same plan in both.
   const [activePlan, setActivePlan] = useState<string | null>(null);
   const [view, setView] = useState<View>("revenue");
@@ -88,28 +73,28 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
               <Package className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-ink-900 text-sm font-bold dark:text-slate-100">Revenue by Plan</h3>
+              <h3 className="text-ink-900 text-sm font-bold dark:text-slate-100">{t("admin.revenue.byPlan.title")}</h3>
               <p className="text-ink-400 text-[11px] font-medium dark:text-slate-500">
-                {VIEWS.find((v) => v.key === view)!.description}
+                {t(`admin.revenue.byPlan.views.${view}.description`)}
               </p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div role="tablist" aria-label="Revenue by plan view" className="bg-ink-100 flex rounded-lg p-0.5 dark:bg-slate-800">
+            <div role="tablist" aria-label={t("admin.revenue.byPlan.viewTablistAria")} className="bg-ink-100 flex rounded-lg p-0.5 dark:bg-slate-800">
               {VIEWS.map((item) => (
                 <button
-                  key={item.key}
+                  key={item}
                   type="button"
                   role="tab"
-                  aria-selected={view === item.key}
-                  onClick={() => setView(item.key)}
+                  aria-selected={view === item}
+                  onClick={() => setView(item)}
                   className={`phone-hit-area cursor-pointer rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
-                    view === item.key
+                    view === item
                       ? "bg-card text-ink-900 shadow-xs dark:bg-slate-700 dark:text-slate-100"
                       : "text-ink-500 hover:text-ink-800 dark:text-slate-400 dark:hover:text-slate-200"
                   }`}
                 >
-                  {item.label}
+                  {t(`admin.revenue.byPlan.views.${item}.label`)}
                 </button>
               ))}
             </div>
@@ -118,7 +103,7 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
 
         {plans.length === 0 ? (
           <div className="border-ink-200 text-ink-400 flex flex-1 items-center justify-center rounded-xl border border-dashed py-10 text-xs dark:border-slate-800">
-            No plan revenue in this period.
+            {t("admin.revenue.byPlan.empty")}
           </div>
         ) : (
           <div className="flex flex-col gap-5 @3xl:flex-row">
@@ -135,13 +120,13 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                           <div className="border-ink-200/80 bg-card rounded-xl border px-2.5 py-1.5 text-center shadow-lg dark:border-slate-800 dark:bg-slate-900">
                             <p className="text-ink-800 text-xs font-bold dark:text-slate-200">{data.planName}</p>
                             <p className="text-ink-900 text-xs font-extrabold dark:text-slate-100">{formatVnd(data.amount)}</p>
-                            <p className="text-ink-400 text-[10px]">{data.percentage}% of revenue</p>
+                            <p className="text-ink-400 text-[10px]">{t("admin.revenue.byPlan.percentOfRevenue", { percent: data.percentage })}</p>
                           </div>
                         );
                       }}
                     />
                     <Pie
-                      data={totalPlanRevenue > 0 ? plans : [{ planName: "Empty", amount: 1 }]}
+                      data={totalPlanRevenue > 0 ? plans : [{ planName: t("admin.revenue.byPlan.emptyLabel"), amount: 1 }]}
                       dataKey="amount"
                       nameKey="planName"
                       innerRadius={46}
@@ -175,15 +160,15 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                       <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: getPlanColor(centerPlan.planName, plans.indexOf(centerPlan)) }} />
                       {centerPlan.planName}
                     </span>
-                    <span className="text-ink-400 text-[9px]">of revenue</span>
+                    <span className="text-ink-400 text-[9px]">{t("admin.revenue.byPlan.ofRevenue")}</span>
                   </div>
                 )}
               </div>
               {/* The three headline figures side by side under the donut, split by faint rules. */}
               <div className="divide-ink-200/80 flex w-full justify-between divide-x dark:divide-slate-700/60">
-                <Stat label="Total revenue" value={formatVnd(totalPlanRevenue)} emphasis />
-                <Stat label="Plans · Purchases" value={`${plans.length} · ${totalPurchases}`} />
-                {topPlan && totalPlanRevenue > 0 && <Stat label="Top plan" value={`${topPlan.planName} · ${topPlan.percentage}%`} />}
+                <Stat label={t("admin.revenue.byPlan.statTotalRevenue")} value={formatVnd(totalPlanRevenue)} emphasis />
+                <Stat label={t("admin.revenue.byPlan.statPlansPurchases")} value={`${plans.length} · ${totalPurchases}`} />
+                {topPlan && totalPlanRevenue > 0 && <Stat label={t("admin.revenue.byPlan.statTopPlan")} value={`${topPlan.planName} · ${topPlan.percentage}%`} />}
               </div>
             </div>
 
@@ -202,31 +187,31 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                     <>
                       <thead>
                         <tr className="border-ink-100 text-ink-400 border-b text-[10px] font-semibold tracking-wide uppercase dark:border-slate-800">
-                          <th className="w-[1%] pr-6 pb-2 text-left font-semibold whitespace-nowrap">Plan</th>
-                          <HeaderCell label="Revenue" help={HELP.revenue} />
-                          <HeaderCell label="Growth" help={HELP.growth} />
-                          <HeaderCell label="Purchases" help={HELP.purchases} />
-                          <HeaderCell label="ARPU" help={HELP.arpu} />
+                          <th className="w-[1%] pr-6 pb-2 text-left font-semibold whitespace-nowrap">{t("admin.revenue.byPlan.planColumn")}</th>
+                          <HeaderCell label={t("admin.revenue.byPlan.views.revenue.label")} help={t("admin.revenue.byPlan.help.revenue")} />
+                          <HeaderCell label={t("admin.revenue.byPlan.growthColumn")} help={t("admin.revenue.byPlan.help.growth")} />
+                          <HeaderCell label={t("admin.revenue.byPlan.purchasesColumn")} help={t("admin.revenue.byPlan.help.purchases")} />
+                          <HeaderCell label="ARPU" help={t("admin.revenue.byPlan.help.arpu")} />
                         </tr>
                       </thead>
                       <tbody>
                         {plans.map((plan, idx) => (
                           <tr key={plan.planName} {...rowProps(plan.planName)}>
-                            <PlanCell plan={plan} index={idx} badge={plan.planName === leaders.mostPurchased ? `Most successful payments in this period (${plan.purchaseCount})` : null} />
+                            <PlanCell plan={plan} index={idx} badge={plan.planName === leaders.mostPurchased ? t("admin.revenue.byPlan.mostSuccessfulPayments", { count: plan.purchaseCount }) : null} />
                             <td className="px-2 py-3 text-center whitespace-nowrap">
                               <div className="text-ink-900 font-semibold dark:text-slate-100">{formatVnd(plan.amount)}</div>
-                              <div className="text-ink-400 text-[10px]">{plan.percentage}% of total</div>
+                              <div className="text-ink-400 text-[10px]">{t("admin.revenue.byPlan.percentOfTotal", { percent: plan.percentage })}</div>
                             </td>
                             <td className="px-2 py-3 text-center whitespace-nowrap">
                               {plan.percentageChange == null ? (
-                                <Hint text="The previous period had no revenue for this plan, so there is no percentage to compare.">
+                                <Hint text={t("admin.revenue.byPlan.noPreviousRevenue")}>
                                   <span className="bg-ink-100 text-ink-500 inline-flex cursor-help rounded-full px-1.5 py-px text-[10px] font-semibold dark:bg-slate-800 dark:text-slate-400">
-                                    {formatChange(plan.percentageChange, plan.amount)}
+                                    {changeLabel(formatChange(plan.percentageChange, plan.amount))}
                                   </span>
                                 </Hint>
                               ) : (
                                 <span className={`font-semibold ${CHANGE_TONE_CLASS[changeTone(plan.percentageChange)]}`}>
-                                  {formatChange(plan.percentageChange, plan.amount)}
+                                  {changeLabel(formatChange(plan.percentageChange, plan.amount))}
                                 </span>
                               )}
                             </td>
@@ -234,13 +219,13 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                               <div className="text-ink-900 font-semibold dark:text-slate-100">{plan.purchaseCount}</div>
                               {plan.uniqueCustomers != null && (
                                 <div className="text-ink-400 text-[10px]">
-                                  {plan.uniqueCustomers} {plan.uniqueCustomers === 1 ? "customer" : "customers"}
+                                  {t("admin.revenue.common.customerCount", { count: plan.uniqueCustomers })}
                                 </div>
                               )}
                             </td>
                             <td className="text-ink-900 px-2 py-3 text-center font-semibold whitespace-nowrap dark:text-slate-100">
                               <span className="inline-flex items-center gap-1">
-                                {plan.planName === leaders.topArpu && <LeaderStar label="Highest ARPU" />}
+                                {plan.planName === leaders.topArpu && <LeaderStar label={t("admin.revenue.byPlan.highestArpu")} />}
                                 {plan.arpu != null ? formatVnd(plan.arpu) : "—"}
                               </span>
                             </td>
@@ -252,10 +237,10 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                     <>
                       <thead>
                         <tr className="border-ink-100 text-ink-400 border-b text-[10px] font-semibold tracking-wide uppercase dark:border-slate-800">
-                          <th className="w-[1%] pr-6 pb-2 text-left font-semibold whitespace-nowrap">Plan</th>
-                          <HeaderCell label="MRR change" help={HELP.mrrChange} />
-                          <HeaderCell label="Customers" help={HELP.customers} />
-                          <HeaderCell label="Retention" help={HELP.retention} />
+                          <th className="w-[1%] pr-6 pb-2 text-left font-semibold whitespace-nowrap">{t("admin.revenue.byPlan.planColumn")}</th>
+                          <HeaderCell label={t("admin.revenue.byPlan.mrrChangeColumn")} help={t("admin.revenue.byPlan.help.mrrChange")} />
+                          <HeaderCell label={t("admin.revenue.byPlan.customersColumn")} help={t("admin.revenue.byPlan.help.customers")} />
+                          <HeaderCell label={t("admin.revenue.byPlan.retentionColumn")} help={t("admin.revenue.byPlan.help.retention", { percent: LOW_RETENTION_PERCENT })} />
                         </tr>
                       </thead>
                       <tbody>
@@ -269,9 +254,9 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                               <td className="px-2 py-3 text-center whitespace-nowrap">
                                 <div className={`font-semibold ${CHANGE_TONE_CLASS[changeTone(plan.mrrChangePercent)]}`}>
                                   {mrrDelta === 0 ? "0 ₫" : `${mrrDelta > 0 ? "+" : "−"}${formatVnd(Math.abs(mrrDelta))}`}
-                                  {plan.mrrChangePercent != null && ` (${formatChange(plan.mrrChangePercent, plan.mrrEnd)})`}
+                                  {plan.mrrChangePercent != null && ` (${changeLabel(formatChange(plan.mrrChangePercent, plan.mrrEnd))})`}
                                 </div>
-                                <div className="text-ink-400 text-[10px]">MRR {formatVnd(plan.mrrEnd)}</div>
+                                <div className="text-ink-400 text-[10px]">{t("admin.revenue.byPlan.mrrAtEnd", { value: formatVnd(plan.mrrEnd) })}</div>
                               </td>
                               <td className="px-2 py-3 text-center whitespace-nowrap">
                                 {/* Start to end at a glance; who stopped, switched and joined on hover. */}
@@ -291,7 +276,7 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                               </td>
                               <td className="px-2 py-3 text-center whitespace-nowrap">
                                 {plan.retentionRate == null ? (
-                                  <Hint text={`Not enough data: ${plan.customers.start} customer(s) at the start of the period, at least 5 needed.`}>
+                                  <Hint text={t("admin.revenue.byPlan.notEnoughRetentionData", { count: plan.customers.start })}>
                                     <span className="text-ink-400 cursor-help font-semibold">—</span>
                                   </Hint>
                                 ) : (
@@ -300,14 +285,14 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
                                       lowRetention ? "text-orange-600 dark:text-orange-400" : "text-ink-900 dark:text-slate-100"
                                     }`}
                                   >
-                                    {plan.planName === leaders.topRetention && <LeaderStar label="Highest retention" />}
+                                    {plan.planName === leaders.topRetention && <LeaderStar label={t("admin.revenue.byPlan.highestRetention")} />}
                                     {plan.retentionRate}%
                                   </span>
                                 )}
                                 {plan.customers.start > 0 && (
                                   <div className="text-ink-400 text-[10px]">
-                                    {retained} of {plan.customers.start} still paying
-                                    {plan.customers.switchedOut > 0 && ` (${plan.customers.switchedOut} on another plan)`}
+                                    {t("admin.revenue.byPlan.stillPaying", { retained, start: plan.customers.start })}
+                                    {plan.customers.switchedOut > 0 && ` ${t("admin.revenue.byPlan.onAnotherPlan", { count: plan.customers.switchedOut })}`}
                                   </div>
                                 )}
                               </td>
@@ -331,6 +316,8 @@ export function RevenueByPlanCard({ plans: plansProp, isLoading = false }: Reven
 
 /** A plan on a phone: its main figure on the first line and the rest in one short line under it. */
 function PlanSummary({ plan, index, view, isMostPurchased }: { plan: RevenueByPlanDto; index: number; view: View; isMostPurchased: boolean }) {
+  const { t } = useTranslation("common");
+  const changeLabel = (raw: string) => (raw === "New" ? t("admin.revenue.common.new") : raw);
   const mrrDelta = plan.mrrEnd - plan.mrrStart;
   const isRevenue = view === "revenue";
   const main = isRevenue
@@ -341,14 +328,14 @@ function PlanSummary({ plan, index, view, isMostPurchased }: { plan: RevenueByPl
   const details = isRevenue
     ? [
         `${plan.percentage}%`,
-        `${plan.purchaseCount} ${plan.purchaseCount === 1 ? "purchase" : "purchases"}`,
+        t("admin.revenue.byPlan.purchaseCount", { count: plan.purchaseCount }),
         plan.arpu == null ? null : `ARPU ${formatVnd(plan.arpu)}`,
-        formatChange(plan.percentageChange, plan.amount),
+        changeLabel(formatChange(plan.percentageChange, plan.amount)),
       ]
     : [
-        `MRR ${formatVnd(plan.mrrEnd)}`,
-        `${plan.customers.start} → ${plan.customers.end} customers`,
-        plan.retentionRate == null ? null : `${plan.retentionRate}% retained`,
+        t("admin.revenue.byPlan.mrrAtEnd", { value: formatVnd(plan.mrrEnd) }),
+        t("admin.revenue.byPlan.customersArrow", { start: plan.customers.start, end: plan.customers.end }),
+        plan.retentionRate == null ? null : t("admin.revenue.byPlan.percentRetained", { percent: plan.retentionRate }),
       ];
 
   return (
@@ -357,7 +344,7 @@ function PlanSummary({ plan, index, view, isMostPurchased }: { plan: RevenueByPl
         <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: getPlanColor(plan.planName, index) }} />
         <span className="text-ink-800 min-w-0 truncate font-semibold dark:text-slate-100">{plan.planName}</span>
         {isRevenue && isMostPurchased && (
-          <Star className="h-3 w-3 shrink-0 fill-orange-500 text-orange-500" role="img" aria-label="Most purchased" />
+          <Star className="h-3 w-3 shrink-0 fill-orange-500 text-orange-500" role="img" aria-label={t("admin.revenue.byPlan.mostPurchased")} />
         )}
         <span
           className={`ml-auto shrink-0 font-semibold ${
@@ -373,6 +360,7 @@ function PlanSummary({ plan, index, view, isMostPurchased }: { plan: RevenueByPl
 }
 
 function PlanCell({ plan, index, badge }: { plan: RevenueByPlanDto; index: number; badge: string | null }) {
+  const { t } = useTranslation("common");
   return (
     <td className="py-3 pr-6 whitespace-nowrap">
       <div className="flex min-w-0 items-center gap-x-1.5">
@@ -382,7 +370,7 @@ function PlanCell({ plan, index, badge }: { plan: RevenueByPlanDto; index: numbe
           <Hint text={badge}>
             <span className="inline-flex cursor-help items-center gap-1 rounded-full bg-orange-50 px-1.5 py-px text-[9px] font-semibold whitespace-nowrap text-orange-700 ring-1 ring-orange-200/70 dark:bg-orange-950/40 dark:text-orange-300 dark:ring-orange-800/60">
               <Star className="h-2 w-2 fill-orange-500 text-orange-500" />
-              Most purchased
+              {t("admin.revenue.byPlan.mostPurchased")}
             </span>
           </Hint>
         )}
@@ -408,23 +396,24 @@ function NetChip({ value }: { value: number }) {
 
 // The customer bridge as a small table on the dark tooltip: start, who left or switched, who joined, end.
 function CustomerFlow({ planName, flow }: { planName: string; flow: RevenueByPlanDto["customers"] }) {
+  const { t } = useTranslation("common");
   const rows = [
-    { label: "Stopped paying", value: -flow.stoppedPaying, tone: "text-rose-300" },
-    { label: "Switched to another plan", value: -flow.switchedOut, tone: "text-amber-300" },
-    { label: "New customers", value: flow.new, tone: "text-emerald-300" },
-    { label: "Switched in", value: flow.switchedIn, tone: "text-emerald-300" },
+    { label: t("admin.revenue.byPlan.stoppedPaying"), value: -flow.stoppedPaying, tone: "text-rose-300" },
+    { label: t("admin.revenue.byPlan.switchedToAnotherPlan"), value: -flow.switchedOut, tone: "text-amber-300" },
+    { label: t("admin.revenue.byPlan.newCustomers"), value: flow.new, tone: "text-emerald-300" },
+    { label: t("admin.revenue.byPlan.switchedIn"), value: flow.switchedIn, tone: "text-emerald-300" },
   ].filter((row) => row.value !== 0);
   return (
     <div className="flex flex-col gap-1 tabular-nums">
-      <p className="mb-0.5 font-semibold text-white">{planName} customers</p>
-      <FlowLine label="At the start" value={String(flow.start)} />
+      <p className="mb-0.5 font-semibold text-white">{t("admin.revenue.byPlan.planCustomers", { plan: planName })}</p>
+      <FlowLine label={t("admin.revenue.byPlan.atStart")} value={String(flow.start)} />
       {rows.map((row) => (
         <FlowLine key={row.label} label={row.label} value={`${row.value > 0 ? "+" : "−"}${Math.abs(row.value)}`} tone={row.tone} />
       ))}
       <div className="mt-0.5 border-t border-white/15 pt-1">
-        <FlowLine label="At the end" value={String(flow.end)} strong />
+        <FlowLine label={t("admin.revenue.byPlan.atEnd")} value={String(flow.end)} strong />
       </div>
-      <p className="text-ink-300 mt-1 text-[10px]">{flow.stayed} stayed on the plan the whole period.</p>
+      <p className="text-ink-300 mt-1 text-[10px]">{t("admin.revenue.byPlan.stayedWholePeriod", { count: flow.stayed })}</p>
     </div>
   );
 }

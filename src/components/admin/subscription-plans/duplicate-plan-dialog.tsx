@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Copy } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,18 +15,19 @@ const TIER = /^[a-z0-9-]+$/;
 
 // Starts a new plan from a copy of another: same prices, limits and features, a new name and tier.
 export function DuplicatePlanDialog({ plan, onClose }: { plan: AdminSubscriptionPlan | null; onClose: () => void }) {
+  const { t } = useTranslation("common");
   const [name, setName] = useState("");
   const [tier, setTier] = useState("");
   const mutation = useDuplicatePlan(onClose);
 
   useEffect(() => {
     if (!plan) return;
-    setName(`${plan.name} copy`);
+    setName(t("admin.plans.duplicatePlan.copyOfName", { name: plan.name }));
     setTier(`${plan.tier}-copy`);
-  }, [plan]);
+  }, [plan, t]);
 
-  const nameError = name.trim().length === 0 ? "Enter a plan name." : null;
-  const tierError = TIER.test(tier.trim()) ? null : "Use lowercase letters, digits and dashes, with no spaces.";
+  const nameError = name.trim().length === 0 ? t("admin.plans.duplicatePlan.nameRequired") : null;
+  const tierError = TIER.test(tier.trim()) ? null : t("admin.plans.duplicatePlan.tierInvalid");
 
   return (
     <Dialog open={plan !== null} onOpenChange={(open) => !open && onClose()}>
@@ -35,35 +37,35 @@ export function DuplicatePlanDialog({ plan, onClose }: { plan: AdminSubscription
             <Copy className="size-[18px]" aria-hidden="true" />
           </div>
           <div className="space-y-1">
-            <DialogTitle className="font-display text-xl tracking-[-0.02em]">Duplicate {plan?.name}</DialogTitle>
+            <DialogTitle className="font-display text-xl tracking-[-0.02em]">{t("admin.plans.duplicatePlan.title", { name: plan?.name ?? "" })}</DialogTitle>
             <DialogDescription>
-              Same prices, limits and features. The copy is not on sale until you check it and put it on sale.
+              {t("admin.plans.duplicatePlan.description")}
             </DialogDescription>
           </div>
         </DialogHeader>
         <div className="space-y-4 px-6 py-3">
           <div className="space-y-1.5">
             <label htmlFor="duplicate-name" className="text-ink-700 text-sm font-medium">
-              New plan name
+              {t("admin.plans.duplicatePlan.nameLabel")}
             </label>
             <Input id="duplicate-name" value={name} onChange={(event) => setName(event.target.value)} aria-invalid={nameError !== null} />
             {nameError && <p className="text-destructive text-xs">{nameError}</p>}
           </div>
           <div className="space-y-1.5">
             <label htmlFor="duplicate-tier" className="text-ink-700 text-sm font-medium">
-              Tier slug
+              {t("admin.plans.shared.tierSlug")}
             </label>
             <Input id="duplicate-tier" value={tier} onChange={(event) => setTier(event.target.value)} aria-invalid={tierError !== null} />
             {tierError ? (
               <p className="text-destructive text-xs">{tierError}</p>
             ) : (
-              <p className="text-ink-400 text-[11px]">Cannot be changed later.</p>
+              <p className="text-ink-400 text-[11px]">{t("admin.plans.shared.tierSlugHint")}</p>
             )}
           </div>
         </div>
         <div className="border-ink-100 flex justify-end gap-2 border-t px-6 py-4">
           <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
-            Cancel
+            {t("admin.plans.shared.cancel")}
           </Button>
           <Button
             type="button"
@@ -71,7 +73,7 @@ export function DuplicatePlanDialog({ plan, onClose }: { plan: AdminSubscription
             onClick={() => plan && mutation.mutate({ planId: plan.id, name: name.trim(), tier: tier.trim() })}
           >
             {mutation.isPending && <Spinner className="size-4" />}
-            Create copy
+            {t("admin.plans.duplicatePlan.createCopy")}
           </Button>
         </div>
       </DialogContent>

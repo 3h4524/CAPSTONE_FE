@@ -1,23 +1,25 @@
 import { z } from "zod";
 
+import { i18n } from "@/i18n/client";
+
 // Matches UpdateFeatureRequestDtoValidator and the features columns on the backend.
 export const featureFormSchema = z.object({
-  label: z.string().trim().min(1, "Enter a label.").max(120, "Keep the label under 120 characters."),
-  description: z.string().trim().max(500, "Keep the description under 500 characters."),
-  group: z.string().trim().min(1, "Enter a group.").max(60, "Keep the group under 60 characters."),
-  unit: z.string().trim().max(40, "Keep the unit under 40 characters."),
+  label: z.string().trim().min(1, { error: () => i18n.t("admin.schemas.featureCatalog.labelMin") }).max(120, { error: () => i18n.t("admin.schemas.featureCatalog.labelMax") }),
+  description: z.string().trim().max(500, { error: () => i18n.t("admin.schemas.featureCatalog.descriptionMax") }),
+  group: z.string().trim().min(1, { error: () => i18n.t("admin.schemas.featureCatalog.groupMin") }).max(60, { error: () => i18n.t("admin.schemas.featureCatalog.groupMax") }),
+  unit: z.string().trim().max(40, { error: () => i18n.t("admin.schemas.featureCatalog.unitMax") }),
   // Empty means no limit.
   defaultLimit: z
-    .number({ message: "Enter a whole number, or leave it empty for no limit." })
-    .int("Enter a whole number.")
-    .min(0, "The default must be 0 or greater.")
-    .max(10_000, "The default must be 10,000 or less.")
+    .number({ error: () => i18n.t("admin.schemas.featureCatalog.enterOrEmpty") })
+    .int({ error: () => i18n.t("admin.schemas.featureCatalog.wholeNumber") })
+    .min(0, { error: () => i18n.t("admin.schemas.featureCatalog.defaultMin") })
+    .max(10_000, { error: () => i18n.t("admin.schemas.featureCatalog.defaultMax") })
     .nullable(),
   sortOrder: z
-    .number({ message: "Enter a position." })
-    .int("Enter a whole number.")
-    .min(0, "The position must be 0 or greater.")
-    .max(10_000, "The position must be 10,000 or less."),
+    .number({ error: () => i18n.t("admin.schemas.featureCatalog.positionNumber") })
+    .int({ error: () => i18n.t("admin.schemas.featureCatalog.wholeNumber") })
+    .min(0, { error: () => i18n.t("admin.schemas.featureCatalog.positionMin") })
+    .max(10_000, { error: () => i18n.t("admin.schemas.featureCatalog.positionMax") }),
   trialAvailable: z.boolean(),
   isActive: z.boolean(),
 });

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DatabaseZap, Lock, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AddKeyDialog, DeleteKeyDialog } from "@/components/admin/system-api-keys/key-dialogs";
 import { ProviderSection } from "@/components/admin/system-api-keys/provider-section";
@@ -13,6 +14,7 @@ import { useAdminSystemApiKeys } from "@/hooks/queries/use-admin-system-api-keys
 import type { AdminSystemApiKey } from "@/types/admin-system-api-keys";
 
 export const SystemApiKeysShell = () => {
+  const { t } = useTranslation("common");
   const { data, isPending, isError, error } = useAdminSystemApiKeys();
   const [adding, setAdding] = useState(false);
   const [deleting, setDeleting] = useState<AdminSystemApiKey | null>(null);
@@ -21,19 +23,19 @@ export const SystemApiKeysShell = () => {
   return (
     <div className="flex flex-col gap-6 max-md:gap-4">
       <PageHeader
-        title="Platform API keys"
-        description="The platform's own Ideogram and MiniMax keys, used for plans that include them."
+        title={t("admin.systemApiKeys.pageTitle")}
+        description={t("admin.systemApiKeys.pageDescription")}
         actions={
           <Button type="button" onClick={() => setAdding(true)} disabled={!providers.length}>
             <Plus className="size-4" aria-hidden="true" />
-            Add key
+            {t("admin.systemApiKeys.addKey")}
           </Button>
         }
       />
 
       <p className="text-muted-foreground flex items-start gap-2 text-sm">
         <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-        Keys are stored encrypted and never shown again. A change applies on this server at once and on the others within a minute.
+        {t("admin.systemApiKeys.encryptionNote")}
       </p>
 
       {isPending ? (
@@ -48,10 +50,10 @@ export const SystemApiKeysShell = () => {
       ) : !data?.storageReady || providers.length === 0 ? (
         <div role="status" className="text-ink-600 flex flex-col items-center gap-2 rounded-md border border-dashed p-6 text-center text-sm">
           <DatabaseZap className="text-ink-400 size-5" aria-hidden="true" />
-          <p className="text-ink-800 font-medium">This database has no key tables yet.</p>
+          <p className="text-ink-800 font-medium">{t("admin.systemApiKeys.storageMissingTitle")}</p>
           <p className="max-w-xl">
-            They are created by the migration <code className="font-mono text-xs">V202611161400__system_api_keys</code> when it is
-            applied to this database. Until then the platform has no keys of its own, and images use the Seller&apos;s key.
+            {t("admin.systemApiKeys.storageMissingBefore")} <code className="font-mono text-xs">V202611161400__system_api_keys</code>{" "}
+            {t("admin.systemApiKeys.storageMissingAfter")}
           </p>
         </div>
       ) : (

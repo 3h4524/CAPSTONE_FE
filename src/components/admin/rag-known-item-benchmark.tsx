@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { ChevronDown, Play, RotateCcw, Target } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   type RagEvaluationCaseResult,
@@ -30,9 +31,9 @@ const HISTORY_LIMIT = 12;
 const SAMPLE_SIZES = [10, 20, 40];
 // A phone starts with the weakest few cases, which is where a run needs looking at.
 const PHONE_CASES = 5;
-const CATEGORY_LABELS: Record<string, string> = {
-  "known-item-short": "Short query",
-  "known-item-long": "Long query",
+const CATEGORY_LABEL_KEYS: Record<string, string> = {
+  "known-item-short": "admin.rag.knownItem.categoryShortQuery",
+  "known-item-long": "admin.rag.knownItem.categoryLongQuery",
 };
 
 const score = (cases: RagEvaluationCaseResult[]): Scores => {
@@ -66,6 +67,7 @@ const writeHistory = (entries: HistoryEntry[]) => {
 };
 
 export const RagKnownItemBenchmark = () => {
+  const { t } = useTranslation("common");
   const [sampleSize, setSampleSize] = useState(20);
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState<RagKnownItemBenchmarkResponse | null>(null);
@@ -85,7 +87,7 @@ export const RagKnownItemBenchmark = () => {
   const scores = useMemo(() => (result ? score(result.evaluation.cases) : null), [result]);
   const byCategory = useMemo(() => {
     if (!result) return [];
-    return Object.keys(CATEGORY_LABELS).map((category) => ({
+    return Object.keys(CATEGORY_LABEL_KEYS).map((category) => ({
       category,
       ...score(result.evaluation.cases.filter((item) => item.category === category)),
     }));
@@ -113,11 +115,11 @@ export const RagKnownItemBenchmark = () => {
       writeHistory(nextHistory);
       setHistory(nextHistory.slice(0, HISTORY_LIMIT));
       setResult(response);
-      showToast("success", response.reusedCaseSet ? "Case set run again." : "New case set created and scored.");
+      showToast("success", response.reusedCaseSet ? t("admin.rag.knownItem.toastCaseSetReused") : t("admin.rag.knownItem.toastCaseSetCreated"));
     } catch {
       showToast("error", caseSetId
-        ? "The case set could not be run. It may have expired; create a new one."
-        : "The benchmark failed. Check that ready listing documents exist and the RAG configuration.");
+        ? t("admin.rag.knownItem.toastCaseSetRunError")
+        : t("admin.rag.knownItem.toastBenchmarkFailed"));
     } finally {
       setIsRunning(false);
     }
@@ -132,40 +134,37 @@ export const RagKnownItemBenchmark = () => {
               <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
                 <Target className="size-4" />
               </span>
-              Known-item benchmark
+              {t("admin.rag.knownItem.title")}
             </CardTitle>
             <RagCardAbout>
-              Each case is a query written from one ready listing&apos;s niche, tags and description, so that listing is the
-              correct answer. A short query mirrors a seller search; a long one mirrors the listing generator. Run the same
-              case set again after a retrieval change to see its effect.
-              <span className="md:hidden"> MRR is the average of 1 / rank of the correct
-              listing (1.0 when it is always first), and Hit@k is the share of cases with the correct listing in the top k.</span>
+              {t("admin.rag.knownItem.aboutIntro")}
+              <span className="md:hidden">{t("admin.rag.knownItem.aboutMrrNote")}</span>
             </RagCardAbout>
           </div>
           <Badge variant="outline" className="w-fit border-indigo-200 text-[10px] text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-300">
-            Read only
+            {t("admin.rag.shared.readOnly")}
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4 max-md:px-4">
         <div className="flex flex-wrap items-center gap-2 max-md:grid max-md:grid-cols-2">
           <label className="text-ink-600 flex items-center gap-2 text-xs max-md:col-span-2 max-md:justify-between">
-            Listings
+            {t("admin.rag.knownItem.listings")}
             <Select value={String(sampleSize)} onValueChange={(value) => setSampleSize(Number(value))}>
-              <SelectTrigger aria-label="Listings" className="bg-card text-xs font-medium max-md:h-11 max-md:text-base">
+              <SelectTrigger aria-label={t("admin.rag.knownItem.listings")} className="bg-card text-xs font-medium max-md:h-11 max-md:text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent align="end">
                 {SAMPLE_SIZES.map((size) => (
                   <SelectItem key={size} value={String(size)}>
-                    {size} ({size * 2} cases)
+                    {t("admin.rag.knownItem.sampleSizeCases", { size, cases: size * 2 })}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </label>
           <Button type="button" size="sm" className="max-md:min-h-10 max-md:px-2" onClick={() => run()} disabled={isRunning}>
-            <Play className="size-3.5" /> {isRunning ? "Running..." : "New case set"}
+            <Play className="size-3.5" /> {isRunning ? t("admin.rag.shared.running") : t("admin.rag.knownItem.newCaseSet")}
           </Button>
           <Button
             type="button"
@@ -175,40 +174,39 @@ export const RagKnownItemBenchmark = () => {
             onClick={() => lastCaseSetId && run(lastCaseSetId)}
             disabled={isRunning || !lastCaseSetId}
           >
-            <RotateCcw className="size-3.5" /> <span className="max-md:hidden">Run last case set again</span><span className="md:hidden">Run last set</span>
+            <RotateCcw className="size-3.5" /> <span className="max-md:hidden">{t("admin.rag.knownItem.runLastCaseSetAgain")}</span><span className="md:hidden">{t("admin.rag.knownItem.runLastSet")}</span>
           </Button>
-          <p className="text-ink-500 text-[11px] max-md:col-span-2 max-md:text-center">A new set takes about a minute; a re-run is faster.</p>
+          <p className="text-ink-500 text-[11px] max-md:col-span-2 max-md:text-center">{t("admin.rag.knownItem.newSetHint")}</p>
         </div>
 
         {result && scores ? (
           <>
             <p className="text-ink-500 text-[11px]">
-              Case set <span className="text-ink-700 font-mono">{result.caseSetId.slice(0, 8)}</span> · seed {result.seed} ·{" "}
-              {result.sampleSize} listings · created {new Date(result.caseSetCreatedAt).toLocaleString()} · top {result.topK}
-              {result.reusedCaseSet ? " · re-run" : ""}
+              {t("admin.rag.knownItem.caseSetLabel")} <span className="text-ink-700 font-mono">{result.caseSetId.slice(0, 8)}</span>{t("admin.rag.knownItem.caseSetInfoSuffix", { seed: result.seed, sampleSize: result.sampleSize, created: new Date(result.caseSetCreatedAt).toLocaleString(), topK: result.topK })}
+              {result.reusedCaseSet ? t("admin.rag.knownItem.reRunSuffix") : ""}
             </p>
             <div className="grid gap-3 max-md:grid-cols-2 max-md:gap-2 sm:grid-cols-2 xl:grid-cols-5 max-md:[&>:last-child]:col-span-2">
               <ScoreTile label="MRR" value={scores.mrr.toFixed(3)} delta={previous ? scores.mrr - previous.mrr : null} digits={3}
-                hint="Average of 1 / rank of the correct listing" />
+                hint={t("admin.rag.knownItem.hintMrr")} />
               <ScoreTile label="Hit@1" value={`${scores.hit1.toFixed(1)}%`} delta={previous ? scores.hit1 - previous.hit1 : null}
-                hint="Correct listing ranked first" />
+                hint={t("admin.rag.knownItem.hintHit1")} />
               <ScoreTile label="Hit@5" value={`${scores.hit5.toFixed(1)}%`} delta={previous ? scores.hit5 - previous.hit5 : null}
-                hint="Correct listing in the top 5" />
+                hint={t("admin.rag.knownItem.hintHit5")} />
               <ScoreTile label="Hit@10" value={`${scores.hit10.toFixed(1)}%`} delta={previous ? scores.hit10 - previous.hit10 : null}
-                hint="Correct listing in the top 10" />
-              <ScoreTile label="Avg latency" value={`${Math.round(result.evaluation.averageLatencyMs)} ms`} delta={null}
-                hint="Per search, embedding included" />
+                hint={t("admin.rag.knownItem.hintHit10")} />
+              <ScoreTile label={t("admin.rag.evaluation.metricAvgLatency")} value={`${Math.round(result.evaluation.averageLatencyMs)} ms`} delta={null}
+                hint={t("admin.rag.knownItem.hintAvgLatency")} />
             </div>
             {!previous && (
-              <p className="text-ink-500 text-[11px]">Run this case set again after a change to see the difference here.</p>
+              <p className="text-ink-500 text-[11px]">{t("admin.rag.knownItem.runAgainForDiff")}</p>
             )}
 
             <ul className="divide-ink-100 border-ink-100 divide-y rounded-lg border md:hidden">
               {byCategory.map((row) => (
                 <li key={row.category} className="space-y-2 p-3 text-xs">
                   <p className="flex items-center justify-between gap-2">
-                    <span className="text-ink-800 font-medium">{CATEGORY_LABELS[row.category]}</span>
-                    <span className="text-ink-500 text-[11px] tabular-nums">{row.cases} cases</span>
+                    <span className="text-ink-800 font-medium">{CATEGORY_LABEL_KEYS[row.category] ? t(CATEGORY_LABEL_KEYS[row.category]) : row.category}</span>
+                    <span className="text-ink-500 text-[11px] tabular-nums">{t("admin.rag.knownItem.casesCount", { count: row.cases })}</span>
                   </p>
                   <PhoneFigures figures={[["MRR", row.mrr.toFixed(3)], ["Hit@1", `${row.hit1.toFixed(1)}%`], ["Hit@5", `${row.hit5.toFixed(1)}%`]]} />
                 </li>
@@ -218,8 +216,8 @@ export const RagKnownItemBenchmark = () => {
               <table className="w-full min-w-[28rem] text-left text-xs">
                 <thead className="bg-ink-50 text-ink-500 text-[10px] tracking-[0.08em] uppercase">
                   <tr>
-                    <th className="px-3 py-2 font-semibold">Query type</th>
-                    <th className="px-3 py-2 font-semibold">Cases</th>
+                    <th className="px-3 py-2 font-semibold">{t("admin.rag.knownItem.thQueryType")}</th>
+                    <th className="px-3 py-2 font-semibold">{t("admin.rag.shared.thCases")}</th>
                     <th className="px-3 py-2 font-semibold">MRR</th>
                     <th className="px-3 py-2 font-semibold">Hit@1</th>
                     <th className="px-3 py-2 font-semibold">Hit@5</th>
@@ -228,7 +226,7 @@ export const RagKnownItemBenchmark = () => {
                 <tbody className="divide-ink-100 divide-y">
                   {byCategory.map((row) => (
                     <tr key={row.category}>
-                      <td className="text-ink-800 px-3 py-2 font-medium">{CATEGORY_LABELS[row.category]}</td>
+                      <td className="text-ink-800 px-3 py-2 font-medium">{CATEGORY_LABEL_KEYS[row.category] ? t(CATEGORY_LABEL_KEYS[row.category]) : row.category}</td>
                       <td className="text-ink-600 px-3 py-2 tabular-nums">{row.cases}</td>
                       <td className="text-ink-800 px-3 py-2 tabular-nums">{row.mrr.toFixed(3)}</td>
                       <td className="text-ink-800 px-3 py-2 tabular-nums">{row.hit1.toFixed(1)}%</td>
@@ -240,9 +238,9 @@ export const RagKnownItemBenchmark = () => {
             </div>
 
             <div>
-              <p className="text-ink-500 text-[10px] font-bold tracking-[0.12em] uppercase">Cases</p>
+              <p className="text-ink-500 text-[10px] font-bold tracking-[0.12em] uppercase">{t("admin.rag.knownItem.casesLabel")}</p>
               <p className="text-ink-500 mt-0.5 text-[11px]">
-                A miss on a very generic short query is often a near-duplicate listing ranked first, not a wrong result.
+                {t("admin.rag.knownItem.genericShortQueryNote")}
               </p>
               {isPhone ? (
                 <>
@@ -262,7 +260,7 @@ export const RagKnownItemBenchmark = () => {
                       className="mt-1 min-h-10 w-full text-xs font-semibold text-indigo-600 dark:text-indigo-400"
                       onClick={() => setShowsAllCases((value) => !value)}
                     >
-                      {showsAllCases ? "Show fewer" : `Show all ${sortedCases.length}`}
+                      {showsAllCases ? t("admin.rag.knownItem.showFewer") : t("admin.rag.knownItem.showAll", { count: sortedCases.length })}
                     </button>
                   )}
                 </>
@@ -271,10 +269,10 @@ export const RagKnownItemBenchmark = () => {
                 <table className="w-full min-w-[40rem] text-left text-xs">
                   <thead className="bg-ink-50 text-ink-500 sticky top-0 text-[10px] tracking-[0.08em] uppercase">
                     <tr>
-                      <th className="px-3 py-2 font-semibold">Rank</th>
-                      <th className="px-3 py-2 font-semibold">Type</th>
-                      <th className="px-3 py-2 font-semibold">Query</th>
-                      <th className="px-3 py-2 font-semibold">Top result</th>
+                      <th className="px-3 py-2 font-semibold">{t("admin.rag.knownItem.thRank")}</th>
+                      <th className="px-3 py-2 font-semibold">{t("admin.rag.evaluation.thType")}</th>
+                      <th className="px-3 py-2 font-semibold">{t("admin.rag.knownItem.thQuery")}</th>
+                      <th className="px-3 py-2 font-semibold">{t("admin.rag.knownItem.thTopResult")}</th>
                       <th className="w-8 px-3 py-2" />
                     </tr>
                   </thead>
@@ -296,8 +294,7 @@ export const RagKnownItemBenchmark = () => {
         ) : (
           !isRunning && (
             <p className="border-ink-200 bg-ink-50/60 text-ink-500 rounded-xl border border-dashed p-4 text-xs leading-5">
-              No benchmark run yet. Create a case set to score retrieval<span className="max-md:hidden">: MRR is the average of 1 / rank of the correct
-              listing (1.0 when it is always first), and Hit@k is the share of cases with the correct listing in the top k.</span>
+              {t("admin.rag.knownItem.noBenchmarkRunPrefix")}<span className="max-md:hidden">{t("admin.rag.knownItem.noBenchmarkRunMrrSuffix")}</span>
               <span className="md:hidden">.</span>
             </p>
           )
@@ -305,7 +302,7 @@ export const RagKnownItemBenchmark = () => {
 
         {history.length > 0 && (
           <div>
-            <p className="text-ink-500 text-[10px] font-bold tracking-[0.12em] uppercase">Recent runs in this browser</p>
+            <p className="text-ink-500 text-[10px] font-bold tracking-[0.12em] uppercase">{t("admin.rag.knownItem.recentRunsInBrowser")}</p>
             <ul className="divide-ink-100 border-ink-100 mt-2 divide-y rounded-lg border md:hidden">
               {history.map((entry) => (
                 <li key={`${entry.caseSetId}-${entry.runAt}`} className="space-y-2 p-3 text-xs">
@@ -313,7 +310,7 @@ export const RagKnownItemBenchmark = () => {
                     <span className="text-ink-600">{new Date(entry.runAt).toLocaleString()}</span>
                     <span className="text-ink-700 font-mono">{entry.caseSetId.slice(0, 8)}</span>
                   </p>
-                  <PhoneFigures figures={[["Cases", String(entry.cases)], ["MRR", entry.mrr.toFixed(3)], ["Hit@5", `${entry.hit5.toFixed(1)}%`]]} />
+                  <PhoneFigures figures={[[t("admin.rag.shared.thCases"), String(entry.cases)], ["MRR", entry.mrr.toFixed(3)], ["Hit@5", `${entry.hit5.toFixed(1)}%`]]} />
                 </li>
               ))}
             </ul>
@@ -321,9 +318,9 @@ export const RagKnownItemBenchmark = () => {
               <table className="w-full min-w-[32rem] text-left text-xs">
                 <thead className="bg-ink-50 text-ink-500 text-[10px] tracking-[0.08em] uppercase">
                   <tr>
-                    <th className="px-3 py-2 font-semibold">Run at</th>
-                    <th className="px-3 py-2 font-semibold">Case set</th>
-                    <th className="px-3 py-2 font-semibold">Cases</th>
+                    <th className="px-3 py-2 font-semibold">{t("admin.rag.knownItem.thRunAt")}</th>
+                    <th className="px-3 py-2 font-semibold">{t("admin.rag.knownItem.caseSetLabel")}</th>
+                    <th className="px-3 py-2 font-semibold">{t("admin.rag.shared.thCases")}</th>
                     <th className="px-3 py-2 font-semibold">MRR</th>
                     <th className="px-3 py-2 font-semibold">Hit@5</th>
                   </tr>
@@ -389,7 +386,8 @@ const PhoneFigures = ({ figures }: { figures: [label: string, value: string][] }
 );
 
 const RankBadge = ({ rank }: { rank: number | null | undefined }) => {
-  if (rank == null) return <Badge className="border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">Missed</Badge>;
+  const { t } = useTranslation("common");
+  if (rank == null) return <Badge className="border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{t("admin.rag.knownItem.missed")}</Badge>;
   const tone =
     rank === 1
       ? "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
@@ -411,23 +409,24 @@ const PhoneCaseItem = ({
 }) => {
   const expectedSourceId = item.id.replace(/#(short|long)$/, "");
   const top = item.results[0]?.result;
+  const { t } = useTranslation("common");
   return (
     <li className="text-xs">
       <button type="button" aria-expanded={isOpen} onClick={onToggle} className="w-full space-y-1.5 p-3 text-left">
         <span className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-2">
             <RankBadge rank={item.matchedRank} />
-            <span className="text-ink-600 text-[11px]">{CATEGORY_LABELS[item.category] ?? item.category}</span>
+            <span className="text-ink-600 text-[11px]">{CATEGORY_LABEL_KEYS[item.category] ? t(CATEGORY_LABEL_KEYS[item.category]) : item.category}</span>
           </span>
           <ChevronDown className={`text-ink-400 size-3.5 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" />
         </span>
         <span className="text-ink-800 line-clamp-2">{item.query}</span>
-        <span className="text-ink-500 block truncate text-[11px]">Top result: {top?.title ?? "—"}</span>
+        <span className="text-ink-500 block truncate text-[11px]">{t("admin.rag.knownItem.topResultLine", { title: top?.title ?? "—" })}</span>
       </button>
       {isOpen && (
         <div className="bg-ink-50/60 px-3 py-3">
           <p className="text-ink-500 text-[11px] [overflow-wrap:anywhere]">
-            Expected listing <span className="text-ink-700 font-mono">{expectedSourceId}</span>
+            {t("admin.rag.knownItem.expectedListingLabel")} <span className="text-ink-700 font-mono">{expectedSourceId}</span>
           </p>
           <ol className="mt-2 space-y-1.5">
             {item.results.map((entry, index) => {
@@ -436,10 +435,10 @@ const PhoneCaseItem = ({
                 <li key={entry.result.chunkId} className={`rounded-md px-2 py-1 ${isExpected ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300" : "text-ink-700"}`}>
                   <p className="line-clamp-2">
                     <span className="text-ink-500 text-[11px] tabular-nums">#{index + 1}</span> {entry.result.title}
-                    {isExpected && <span className="text-[11px] font-semibold"> · Expected</span>}
+                    {isExpected && <span className="text-[11px] font-semibold"> · {t("admin.rag.knownItem.expectedLabel")}</span>}
                   </p>
                   <p className="text-ink-500 mt-0.5 text-[11px] tabular-nums">
-                    final {entry.finalScore.toFixed(3)} · semantic {entry.semanticScore.toFixed(3)} · lexical {entry.lexicalScore.toFixed(2)}
+                    {t("admin.rag.evaluation.scoreFinal")} {entry.finalScore.toFixed(3)} · {t("admin.rag.evaluation.scoreSemantic")} {entry.semanticScore.toFixed(3)} · {t("admin.rag.evaluation.scoreLexical")} {entry.lexicalScore.toFixed(2)}
                   </p>
                 </li>
               );
@@ -462,13 +461,14 @@ const CaseRow = ({
 }) => {
   const expectedSourceId = item.id.replace(/#(short|long)$/, "");
   const top = item.results[0]?.result;
+  const { t } = useTranslation("common");
   return (
     <Fragment>
       <tr className="hover:bg-ink-50/80 cursor-pointer" onClick={onToggle}>
         <td className="px-3 py-2">
           <RankBadge rank={item.matchedRank} />
         </td>
-        <td className="text-ink-600 px-3 py-2 whitespace-nowrap">{CATEGORY_LABELS[item.category] ?? item.category}</td>
+        <td className="text-ink-600 px-3 py-2 whitespace-nowrap">{CATEGORY_LABEL_KEYS[item.category] ? t(CATEGORY_LABEL_KEYS[item.category]) : item.category}</td>
         <td className="text-ink-800 max-w-72 truncate px-3 py-2" title={item.query}>
           {item.query}
         </td>
@@ -483,7 +483,7 @@ const CaseRow = ({
         <tr className="bg-ink-50/60">
           <td colSpan={5} className="px-3 py-3">
             <p className="text-ink-500 text-[11px]">
-              Expected listing <span className="text-ink-700 font-mono">{expectedSourceId}</span>
+              {t("admin.rag.knownItem.expectedListingLabel")} <span className="text-ink-700 font-mono">{expectedSourceId}</span>
             </p>
             <ol className="mt-2 space-y-1">
               {item.results.map((entry, index) => {
@@ -498,10 +498,10 @@ const CaseRow = ({
                       {entry.result.title}
                     </span>
                     <span className="text-ink-500 text-[11px] tabular-nums">
-                      final {entry.finalScore.toFixed(3)} · semantic {entry.semanticScore.toFixed(3)} · lexical{" "}
+                      {t("admin.rag.evaluation.scoreFinal")} {entry.finalScore.toFixed(3)} · {t("admin.rag.evaluation.scoreSemantic")} {entry.semanticScore.toFixed(3)} · {t("admin.rag.evaluation.scoreLexical")}{" "}
                       {entry.lexicalScore.toFixed(2)}
                     </span>
-                    {isExpected && <span className="text-[11px] font-semibold">Expected</span>}
+                    {isExpected && <span className="text-[11px] font-semibold">{t("admin.rag.knownItem.expectedLabel")}</span>}
                   </li>
                 );
               })}

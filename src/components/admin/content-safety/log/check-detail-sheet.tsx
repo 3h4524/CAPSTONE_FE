@@ -3,9 +3,10 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { ArrowUpRight, ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
-  CATEGORY_LABELS,
+  CATEGORY_LABEL_KEYS,
   DeciderBadge,
   DecisionBadge,
   featureLabel,
@@ -20,6 +21,12 @@ import { useModerationCheck } from "@/hooks/queries/use-admin-moderation";
 import type { ModerationCheckDetail } from "@/types/admin-moderation";
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const FINDING_SEVERITY_KEYS: Record<"low" | "medium" | "high", string> = {
+  low: "admin.contentSafety.findingSeverity.low",
+  medium: "admin.contentSafety.findingSeverity.medium",
+  high: "admin.contentSafety.findingSeverity.high",
+};
 
 /** The kept text with each piece of evidence marked, so the reviewer sees what was caught. */
 const HighlightedText = ({ text, evidence }: { text: string; evidence: string[] }) => {
@@ -61,6 +68,7 @@ export const CheckDetailSheet = ({
   onClose: () => void;
   onAllowlist: (phrase: string, note: string) => void;
 }) => {
+  const { t } = useTranslation("common");
   const check = useModerationCheck(checkId);
   const data = check.data;
 
@@ -68,12 +76,12 @@ export const CheckDetailSheet = ({
     <Sheet open={checkId !== null} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="right" className="w-full gap-0 overflow-y-auto sm:max-w-lg">
         <SheetHeader className="border-ink-100 border-b">
-          <SheetTitle className="font-display text-lg">Moderation check</SheetTitle>
-          <SheetDescription>{data ? formatDateTime(data.createdAt) : "Loading…"}</SheetDescription>
+          <SheetTitle className="font-display text-lg">{t("admin.contentSafety.sheet.title")}</SheetTitle>
+          <SheetDescription>{data ? formatDateTime(data.createdAt) : t("admin.contentSafety.sheet.loading")}</SheetDescription>
         </SheetHeader>
 
         {check.isError ? (
-          <PanelMessage tone="error" title="This check could not be loaded." />
+          <PanelMessage tone="error" title={t("admin.contentSafety.sheet.loadError")} />
         ) : !data ? (
           <div className="space-y-3 p-4">
             <Skeleton className="h-6 w-40" />
@@ -86,23 +94,24 @@ export const CheckDetailSheet = ({
               <DecisionBadge decision={data.decision} />
               <DeciderBadge decider={data.decidedBy} />
               <span className="text-ink-500 text-xs">
-                {featureLabel(data.feature)} · {subjectLabel(data.subjectType)} · {data.direction === "output" ? "AI output" : "Seller input"}
+                {featureLabel(data.feature)} · {subjectLabel(data.subjectType)} ·{" "}
+                {t(data.direction === "output" ? "admin.contentSafety.direction.output" : "admin.contentSafety.direction.input")}
               </span>
             </div>
 
             <section className="space-y-2">
-              <h3 className="text-ink-900 dark:text-ink-50 text-sm font-semibold">What was found</h3>
+              <h3 className="text-ink-900 dark:text-ink-50 text-sm font-semibold">{t("admin.contentSafety.sheet.whatFound")}</h3>
               {data.findings.length === 0 ? (
-                <p className="text-ink-500 text-sm">No concern was found.</p>
+                <p className="text-ink-500 text-sm">{t("admin.contentSafety.sheet.noConcern")}</p>
               ) : (
                 <ul className="space-y-2">
                   {data.findings.map((finding, index) => (
                     <li key={index} className="border-ink-200 rounded-lg border px-3 py-2 text-sm">
                       <p className="text-ink-900 dark:text-ink-50 font-medium">
-                        {CATEGORY_LABELS[finding.category] ?? finding.category}
-                        <span className="text-ink-500 font-normal"> · {finding.severity}</span>
+                        {t(CATEGORY_LABEL_KEYS[finding.category])}
+                        <span className="text-ink-500 font-normal"> · {t(FINDING_SEVERITY_KEYS[finding.severity])}</span>
                       </p>
-                      {finding.field ? <p className="text-ink-500 text-xs">In {finding.field}</p> : null}
+                      {finding.field ? <p className="text-ink-500 text-xs">{t("admin.contentSafety.sheet.inField", { field: finding.field })}</p> : null}
                       {finding.evidence ? <p className="text-ink-700 dark:text-ink-200 mt-1 text-xs">“{finding.evidence}”</p> : null}
                     </li>
                   ))}
@@ -112,7 +121,7 @@ export const CheckDetailSheet = ({
             </section>
 
             <section className="space-y-2">
-              <h3 className="text-ink-900 dark:text-ink-50 text-sm font-semibold">Seller text</h3>
+              <h3 className="text-ink-900 dark:text-ink-50 text-sm font-semibold">{t("admin.contentSafety.sheet.sellerText")}</h3>
               {data.contentExcerpt ? (
                 <p className="bg-ink-50 dark:bg-ink-800/40 text-ink-800 dark:text-ink-100 rounded-lg p-3 text-sm leading-relaxed whitespace-pre-wrap">
                   <HighlightedText
@@ -123,14 +132,14 @@ export const CheckDetailSheet = ({
               ) : (
                 <p className="text-ink-500 text-sm">
                   {data.direction === "output"
-                    ? "An image check keeps no text, and blocked images are not stored."
-                    : "Allowed text is not kept."}
+                    ? t("admin.contentSafety.sheet.imageNotStored")
+                    : t("admin.contentSafety.common.allowedTextNotKept")}
                 </p>
               )}
             </section>
 
             <dl className="border-ink-100 space-y-1.5 border-t pt-4">
-              <Meta label="Seller">
+              <Meta label={t("admin.contentSafety.common.seller")}>
                 {data.userEmail ? (
                   <>
                     {data.userName ? `${data.userName} · ` : ""}
@@ -140,10 +149,10 @@ export const CheckDetailSheet = ({
                   "—"
                 )}
               </Meta>
-              <Meta label="Model">{data.model ?? "—"}</Meta>
-              <Meta label="Check time">{data.latencyMs === null ? "—" : `${data.latencyMs} ms`}</Meta>
-              <Meta label="Policy version">{data.policyVersion}</Meta>
-              <Meta label="Content hash">
+              <Meta label={t("admin.contentSafety.sheet.model")}>{data.model ?? "—"}</Meta>
+              <Meta label={t("admin.contentSafety.sheet.checkTime")}>{data.latencyMs === null ? "—" : `${data.latencyMs} ms`}</Meta>
+              <Meta label={t("admin.contentSafety.sheet.policyVersion")}>{data.policyVersion}</Meta>
+              <Meta label={t("admin.contentSafety.sheet.contentHash")}>
                 <span className="font-mono text-xs">{data.contentHash}</span>
               </Meta>
             </dl>
@@ -154,16 +163,16 @@ export const CheckDetailSheet = ({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => onAllowlist(allowlistSeed(data), "Added from a check that was blocked by mistake.")}
+                  onClick={() => onAllowlist(allowlistSeed(data), t("admin.contentSafety.sheet.allowlistNote"))}
                 >
                   <ShieldCheck aria-hidden="true" />
-                  Add to allowlist
+                  {t("admin.contentSafety.sheet.addToAllowlist")}
                 </Button>
               )}
               {data.userEmail && (
                 <Button asChild type="button" variant="ghost" size="sm">
                   <Link href={`/admin/users?search=${encodeURIComponent(data.userEmail)}`}>
-                    View seller <ArrowUpRight aria-hidden="true" />
+                    {t("admin.contentSafety.common.viewSeller")} <ArrowUpRight aria-hidden="true" />
                   </Link>
                 </Button>
               )}

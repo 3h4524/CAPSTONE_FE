@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Sparkles, UserMinus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { churnInsightsFor, type PlanChurnInsight } from "@/helpers/plan-ai-review";
 import type { PlanAiReviewResponse } from "@/types/plan-ai-review";
@@ -11,6 +12,12 @@ const CONFIDENCE_STYLE = {
   medium: "bg-ink-200 text-ink-700 dark:bg-slate-700 dark:text-slate-200",
   low: "bg-ink-100 text-ink-500 dark:bg-slate-800 dark:text-slate-400",
 } as const;
+
+const CONFIDENCE_KEYS: Record<string, string> = {
+  high: "admin.revenue.whyCustomersLeave.confidence.high",
+  medium: "admin.revenue.whyCustomersLeave.confidence.medium",
+  low: "admin.revenue.whyCustomersLeave.confidence.low",
+};
 
 interface WhyCustomersLeaveProps {
   /** The plan the MRR movement shows; null for all plans. */
@@ -24,6 +31,7 @@ interface WhyCustomersLeaveProps {
  * days selected above, so it says which days it covers.
  */
 export function WhyCustomersLeave({ planName, aiReview }: WhyCustomersLeaveProps) {
+  const { t } = useTranslation("common");
   const insights = churnInsightsFor(aiReview, planName);
   if (!insights) return null;
   const focus = planName ? insights.plans[0]?.planKey : undefined;
@@ -33,18 +41,18 @@ export function WhyCustomersLeave({ planName, aiReview }: WhyCustomersLeaveProps
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
           <h4 className="text-ink-900 flex items-center gap-1.5 text-xs font-bold dark:text-slate-100">
-            <UserMinus className="size-3.5 text-rose-500" /> Why customers leave
+            <UserMinus className="size-3.5 text-rose-500" /> {t("admin.revenue.whyCustomersLeave.title")}
           </h4>
           <p className="text-ink-500 mt-0.5 flex items-center gap-1 text-[11px] dark:text-slate-400">
-            <Sparkles className="size-3 text-[#5b7aa6] dark:text-[#a2b4cd]" /> AI review of {insights.period}, whatever period is selected above.
-            Links, not proven causes.
+            <Sparkles className="size-3 text-[#5b7aa6] dark:text-[#a2b4cd]" /> {t("admin.revenue.whyCustomersLeave.aiReviewOf", { period: insights.period })}
+            {t("admin.revenue.whyCustomersLeave.linksNotCauses")}
           </p>
         </div>
         <Link
           href={`/admin/subscription-plans?view=insights${focus ? `&plan=${focus}` : ""}`}
           className="text-xs font-semibold text-[#3f5f8a] hover:underline dark:text-[#9db4d2] dark:text-slate-200"
         >
-          See details in Plan Insights →
+          {t("admin.revenue.whyCustomersLeave.seePlanInsights")}
         </Link>
       </div>
 
@@ -58,6 +66,7 @@ export function WhyCustomersLeave({ planName, aiReview }: WhyCustomersLeaveProps
 }
 
 function PlanColumn({ plan, showName, reasons }: { plan: PlanChurnInsight; showName: boolean; reasons: number }) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-card flex flex-col gap-1.5 rounded-lg p-3 text-xs leading-relaxed dark:bg-slate-900">
       {showName && <p className="text-ink-900 font-semibold dark:text-slate-100">{plan.planName}</p>}
@@ -68,7 +77,7 @@ function PlanColumn({ plan, showName, reasons }: { plan: PlanChurnInsight; showN
         plan.reasons.slice(0, reasons).map((reason) => (
           <div key={reason.pattern} className="flex gap-2">
             <span className={`mt-0.5 h-fit shrink-0 rounded px-1 py-px text-[9px] font-bold uppercase ${CONFIDENCE_STYLE[reason.confidence]}`}>
-              {reason.confidence}
+              {CONFIDENCE_KEYS[reason.confidence] ? t(CONFIDENCE_KEYS[reason.confidence]) : reason.confidence}
             </span>
             <span>
               <span className="text-ink-800 font-medium dark:text-slate-200">{reason.pattern}</span>{" "}

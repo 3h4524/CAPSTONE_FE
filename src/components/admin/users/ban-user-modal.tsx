@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { AlertTriangle, Clock, ShieldAlert } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { USER_DIALOG_FOOTER_ON_PHONE,USER_DIALOG_ON_PHONE } from "@/components/admin/users/admin-user-parts";
@@ -25,11 +26,11 @@ interface BanUserModalProps {
   isLoading?: boolean;
 }
 
-const banOptions = [
-  { value: "1", label: "1 Day", description: "Temporary suspension for minor violations" },
-  { value: "7", label: "7 Days", description: "Standard suspension for repeated offenses" },
-  { value: "30", label: "1 Month", description: "Long-term suspension for severe violations" },
-  { value: "permanent", label: "Permanent", description: "Indefinite ban from the platform" },
+const BAN_OPTION_KEYS = [
+  { value: "1", labelKey: "admin.users.banModal.option1DayLabel", descriptionKey: "admin.users.banModal.option1DayDescription" },
+  { value: "7", labelKey: "admin.users.banModal.option7DaysLabel", descriptionKey: "admin.users.banModal.option7DaysDescription" },
+  { value: "30", labelKey: "admin.users.banModal.option1MonthLabel", descriptionKey: "admin.users.banModal.option1MonthDescription" },
+  { value: "permanent", labelKey: "admin.users.banModal.optionPermanentLabel", descriptionKey: "admin.users.banModal.optionPermanentDescription" },
 ];
 
 export const BanUserModal = ({
@@ -39,6 +40,7 @@ export const BanUserModal = ({
   onConfirm,
   isLoading = false,
 }: BanUserModalProps) => {
+  const { t } = useTranslation("common");
   const [selectedDuration, setSelectedDuration] = useState<string>("7");
   const [reason, setReason] = useState("");
 
@@ -46,7 +48,7 @@ export const BanUserModal = ({
 
   const handleConfirm = () => {
     if (!reason.trim()) {
-      toast.error("Please provide a reason for suspension");
+      toast.error(t("admin.users.banModal.toastReasonRequired"));
       return;
     }
     const durationDays = selectedDuration === "permanent" ? null : parseInt(selectedDuration, 10);
@@ -65,10 +67,14 @@ export const BanUserModal = ({
             </div>
 
             <DialogTitle className="text-ink-900 mt-5 text-2xl font-bold tracking-tight max-md:mt-3 max-md:text-xl">
-              Suspend User Account
+              {t("admin.users.banModal.title")}
             </DialogTitle>
             <p className="text-ink-500 mt-1 text-sm font-medium">
-              You are about to suspend <span className="text-ink-800 font-bold">{user.fullName}</span> ({user.email}).
+              <Trans
+                i18nKey="admin.users.banModal.aboutToSuspend"
+                values={{ name: user.fullName, email: user.email }}
+                components={{ name: <span className="text-ink-800 font-bold" /> }}
+              />
             </p>
           </div>
 
@@ -76,19 +82,17 @@ export const BanUserModal = ({
             <div className="border-ink-200 bg-ink-100/60 text-ink-700 rounded-xl border p-3 text-sm">
               <div className="flex gap-2">
                 <AlertTriangle className="text-ink-600 size-5 shrink-0" />
-                <p>
-                  Suspending this account will immediately revoke all active sessions. The user will not be able to log in until the suspension period ends.
-                </p>
+                <p>{t("admin.users.banModal.suspendWarning")}</p>
               </div>
             </div>
 
             <div className="border-ink-100/60 bg-card space-y-4 rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md">
               <div>
-                <Label className="text-ink-400 mb-2 block text-[10px] font-bold tracking-wider uppercase">Suspension Reason</Label>
+                <Label className="text-ink-400 mb-2 block text-[10px] font-bold tracking-wider uppercase">{t("admin.users.banModal.reasonLabel")}</Label>
                 <Textarea 
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder="Briefly explain the reason for suspension (required)"
+                  placeholder={t("admin.users.banModal.reasonPlaceholder")}
                   className="border-ink-200 focus-visible:ring-ink-400 resize-none text-sm"
                   rows={3}
                 />
@@ -97,13 +101,13 @@ export const BanUserModal = ({
 
             <div className="border-ink-100/60 bg-card space-y-4 rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md">
               <div>
-                <Label className="text-ink-400 mb-3 block text-[10px] font-bold tracking-wider uppercase">Suspension Duration</Label>
+                <Label className="text-ink-400 mb-3 block text-[10px] font-bold tracking-wider uppercase">{t("admin.users.banModal.durationLabel")}</Label>
                 <RadioGroup 
                   value={selectedDuration} 
                   onValueChange={setSelectedDuration}
                   className="flex flex-col gap-2"
                 >
-                  {banOptions.map((option) => (
+                  {BAN_OPTION_KEYS.map((option) => (
                     <Label
                       key={option.value}
                       htmlFor={`ban-${option.value}`}
@@ -123,9 +127,9 @@ export const BanUserModal = ({
                         )} 
                       />
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-semibold">{option.label}</span>
+                        <span className="text-sm font-semibold">{t(option.labelKey)}</span>
                         <span className={cn("text-xs", selectedDuration === option.value ? "text-ink-300" : "text-ink-500")}>
-                          {option.description}
+                          {t(option.descriptionKey)}
                         </span>
                       </div>
                     </Label>
@@ -142,16 +146,16 @@ export const BanUserModal = ({
               onClick={onClose} 
               disabled={isLoading}
             >
-              Cancel
+              {t("admin.users.cancel")}
             </Button>
             <Button 
               className="bg-ink-900 text-card hover:bg-ink-800 h-11 flex-1 gap-2 rounded-xl font-semibold shadow-sm transition-all"
               onClick={handleConfirm} 
               disabled={isLoading}
-              aria-label={isLoading ? undefined : "Confirm Suspension"}
+              aria-label={isLoading ? undefined : t("admin.users.banModal.confirmAria")}
             >
               <Clock className="size-4" />
-              {isLoading ? "Suspending..." : <span>Confirm<span className="max-md:hidden"> Suspension</span></span>}
+              {isLoading ? t("admin.users.banModal.suspending") : <span>{t("admin.users.banModal.confirmShort")}<span className="max-md:hidden">{t("admin.users.banModal.confirmFull")}</span></span>}
             </Button>
           </div>
         </div>

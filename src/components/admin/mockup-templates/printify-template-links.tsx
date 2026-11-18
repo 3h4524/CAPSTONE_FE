@@ -39,13 +39,13 @@ export function PrintifyTemplateLinks() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Mock-up templates for Printify"
-        description="Link each system template to the Printify product its photo shows. When a workflow pushes to Printify, sellers can only choose linked templates, and Printify makes the linked product, so the listing's mock-ups show the garment that ships. Compare the template with Printify's photo before linking."
+        title={t("admin.mockups.links.title")}
+        description={t("admin.mockups.links.description")}
       />
       {connection.data && !ready && (
         <Alert>
           <TriangleAlert />
-          <AlertDescription>Searching Printify&apos;s products uses your own Printify API key. Add one on the API Keys page.</AlertDescription>
+          <AlertDescription>{t("admin.mockups.links.apiKeyNotice")}</AlertDescription>
         </Alert>
       )}
       {connection.isError && (
@@ -76,6 +76,7 @@ export function PrintifyTemplateLinks() {
 }
 
 function TemplateLinkCard({ template, canSearch }: { template: AdminMockupTemplate; canSearch: boolean }) {
+  const { t } = useTranslation("common");
   const queryClient = useQueryClient();
   const link = template.printify;
   const [editing, setEditing] = useState(false);
@@ -102,7 +103,7 @@ function TemplateLinkCard({ template, canSearch }: { template: AdminMockupTempla
         },
       }),
     onSuccess: async () => {
-      toast.success(`${template.name} is linked to ${blueprint!.title}.`);
+      toast.success(t("admin.mockups.shared.linkedToast", { name: template.name, blueprint: blueprint!.title }));
       setEditing(false);
       await refresh();
     },
@@ -111,7 +112,7 @@ function TemplateLinkCard({ template, canSearch }: { template: AdminMockupTempla
   const remove = useMutation({
     mutationFn: () => unlinkMockupTemplatePrintify(template.id),
     onSuccess: async () => {
-      toast.success(`${template.name} is no longer offered for Printify.`);
+      toast.success(t("admin.mockups.links.unlinkedToast", { name: template.name }));
       setBlueprint(null);
       setProviderId(null);
       setSizes([]);
@@ -125,7 +126,7 @@ function TemplateLinkCard({ template, canSearch }: { template: AdminMockupTempla
       // eslint-disable-next-line @next/next/no-img-element
       <img src={url} alt={label} className="border-ink-200 aspect-square w-full rounded-md border object-cover" />
     ) : (
-      <div className="border-ink-200 text-ink-400 flex aspect-square w-full items-center justify-center rounded-md border border-dashed text-xs">No Printify product</div>
+      <div className="border-ink-200 text-ink-400 flex aspect-square w-full items-center justify-center rounded-md border border-dashed text-xs">{t("admin.mockups.links.noPrintifyProduct")}</div>
     );
 
   return (
@@ -133,27 +134,30 @@ function TemplateLinkCard({ template, canSearch }: { template: AdminMockupTempla
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-ink-900 font-medium">{template.name}</p>
-          <p className="text-ink-500 text-xs">{productTypeLabel(template.productType)} · {template.kind}{template.isActive ? "" : " · inactive"}</p>
+          <p className="text-ink-500 text-xs">
+            {t(`mockups.productTypes.${template.productType.toLowerCase()}`, { defaultValue: productTypeLabel(template.productType) })} · {template.kind}
+            {template.isActive ? "" : ` · ${t("admin.mockups.links.inactive")}`}
+          </p>
         </div>
         {link ? (
-          <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700"><Link2 className="size-3" />Linked</span>
+          <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700"><Link2 className="size-3" />{t("admin.mockups.links.linked")}</span>
         ) : (
-          <span className="bg-ink-100 text-ink-600 rounded-full px-2 py-0.5 text-xs">Etsy only</span>
+          <span className="bg-ink-100 text-ink-600 rounded-full px-2 py-0.5 text-xs">{t("admin.mockups.links.etsyOnly")}</span>
         )}
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <p className="text-ink-500 text-xs">Template</p>
+          <p className="text-ink-500 text-xs">{t("admin.mockups.links.templateLabel")}</p>
           {imageOf(template.previewImageUrl ?? template.baseImageUrl, template.name)}
         </div>
         <div className="space-y-1">
-          <p className="text-ink-500 text-xs">Printify product</p>
-          {imageOf(blueprint?.imageUrl, blueprint?.title ?? "Printify product")}
+          <p className="text-ink-500 text-xs">{t("admin.mockups.links.printifyProduct")}</p>
+          {imageOf(blueprint?.imageUrl, blueprint?.title ?? t("admin.mockups.links.printifyProduct"))}
         </div>
       </div>
       {link && !editing && (
         <p className="text-ink-700 text-sm">
-          {link.blueprintTitle} · {link.printProviderTitle ?? "no default provider"}
+          {link.blueprintTitle} · {link.printProviderTitle ?? t("admin.mockups.links.noDefaultProvider")}
           {link.defaultSizes.length > 0 ? ` · ${link.defaultSizes.join(", ")}` : ""}
         </p>
       )}
@@ -168,29 +172,29 @@ function TemplateLinkCard({ template, canSearch }: { template: AdminMockupTempla
             }}
           />
           <div className="space-y-1.5">
-            <Label htmlFor={`${template.id}-provider`}>Default print provider</Label>
+            <Label htmlFor={`${template.id}-provider`}>{t("admin.mockups.links.defaultPrintProvider")}</Label>
             <Select
               value={providerId ? String(providerId) : NO_PROVIDER}
               disabled={!providers.data?.length}
               onValueChange={(value) => { setProviderId(value === NO_PROVIDER ? null : Number(value)); setSizes([]); }}
             >
               <SelectTrigger id={`${template.id}-provider`} className="w-full">
-                <SelectValue placeholder={providers.isFetching ? "Loading providers…" : "None (the seller chooses)"} />
+                <SelectValue placeholder={providers.isFetching ? t("admin.mockups.shared.loadingProviders") : t("admin.mockups.links.chooseNone")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={NO_PROVIDER}>{providers.isFetching ? "Loading providers…" : "None (the seller chooses)"}</SelectItem>
+                <SelectItem value={NO_PROVIDER}>{providers.isFetching ? t("admin.mockups.shared.loadingProviders") : t("admin.mockups.links.chooseNone")}</SelectItem>
                 {providers.data?.map((item) => <SelectItem key={item.id} value={String(item.id)}>{item.title}{item.country ? ` — ${item.country}` : ""}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           {catalog.data && (
-            <ChipGroup label="Default sizes" options={catalog.data.sizes} selected={sizes}
+            <ChipGroup label={t("admin.mockups.shared.defaultSizes")} options={catalog.data.sizes} selected={sizes}
               onToggle={(value) => setSizes((current) => (current.includes(value) ? current.filter((item) => item !== value) : [...current, value]))} />
           )}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>Cancel</Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>{t("mockups.cancel")}</Button>
             <Button type="button" size="sm" disabled={!blueprint || save.isPending} onClick={() => save.mutate()}>
-              {save.isPending && <Loader2 className="size-3.5 animate-spin" />}Save link
+              {save.isPending && <Loader2 className="size-3.5 animate-spin" />}{t("admin.mockups.links.saveLink")}
             </Button>
           </div>
         </div>
@@ -198,11 +202,11 @@ function TemplateLinkCard({ template, canSearch }: { template: AdminMockupTempla
         <div className="flex justify-end gap-2">
           {link && (
             <Button type="button" variant="ghost" size="sm" disabled={remove.isPending} onClick={() => remove.mutate()}>
-              <Unlink className="size-3.5" />Unlink
+              <Unlink className="size-3.5" />{t("admin.mockups.shared.unlink")}
             </Button>
           )}
           <Button type="button" variant="outline" size="sm" disabled={!canSearch} onClick={() => setEditing(true)}>
-            <Link2 className="size-3.5" />{link ? "Change" : "Link to Printify"}
+            <Link2 className="size-3.5" />{link ? t("admin.mockups.links.change") : t("admin.mockups.shared.linkToPrintify")}
           </Button>
         </div>
       )}

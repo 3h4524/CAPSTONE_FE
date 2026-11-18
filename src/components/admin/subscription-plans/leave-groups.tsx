@@ -1,3 +1,6 @@
+
+import { useTranslation } from "react-i18next";
+
 import { leaveGroupDescription } from "@/helpers/plan-churn-signals";
 import type { PlanChurnSignal } from "@/types/plan-insights";
 import { cn } from "@/utils/cn";
@@ -13,24 +16,25 @@ const LEFT = "#e76e50";
  * are named together at the end.
  */
 export function LeaveGroups({ signal }: { signal: PlanChurnSignal }) {
+  const { t } = useTranslation("common");
   if (signal.left === 0 || signal.leaveGroups.length === 0) return null;
   const groups = signal.leaveGroups.filter((group) => group.left > 0);
   const empty = signal.leaveGroups.filter((group) => group.left === 0);
 
   return (
-    <div aria-label="Leave groups" className="border-ink-200 overflow-hidden rounded-xl border text-sm">
+    <div aria-label={t("admin.plans.leaveGroups.aria")} className="border-ink-200 overflow-hidden rounded-xl border text-sm">
       <p className="text-ink-500 px-4 pt-3 text-xs">
-        What the {signal.left} customers who left did before leaving, one group each, against the {signal.stayed} who stayed.
+        {t("admin.plans.leaveGroups.intro", { left: signal.left, stayed: signal.stayed })}
       </p>
       <div className="overflow-x-auto">
         <table className="mt-2 w-full min-w-[560px] border-collapse">
           <thead>
             <tr className="border-ink-100 bg-ink-50/70 text-ink-500 border-y text-left text-[11px] font-semibold tracking-wide uppercase">
-              <th scope="col" className="px-4 py-2 font-semibold">Before leaving</th>
-              <th scope="col" className="px-2 py-2 text-right font-semibold">Left</th>
-              <th scope="col" className="px-2 py-2 text-right font-semibold">Stayed</th>
+              <th scope="col" className="px-4 py-2 font-semibold">{t("admin.plans.leaveGroups.beforeLeaving")}</th>
+              <th scope="col" className="px-2 py-2 text-right font-semibold">{t("admin.plans.shared.left")}</th>
+              <th scope="col" className="px-2 py-2 text-right font-semibold">{t("admin.plans.shared.stayed")}</th>
               <th scope="col" className="w-[28%] px-4 py-2 font-semibold">
-                <span className="sr-only">Comparison</span>
+                <span className="sr-only">{t("admin.plans.shared.comparison")}</span>
               </th>
             </tr>
           </thead>
@@ -40,14 +44,14 @@ export function LeaveGroups({ signal }: { signal: PlanChurnSignal }) {
                 <th scope="row" className="px-4 py-2.5 text-left font-normal">
                   <span className={cn("font-semibold", group.notable ? "text-ink-900" : "text-ink-700")}>{group.label}</span>
                   {group.notable && (
-                    <span className="ml-1.5 rounded bg-[#e76e50]/12 px-1.5 py-px text-[10px] font-semibold text-[#c4553a] dark:text-[#dea091]">Notable</span>
+                    <span className="ml-1.5 rounded bg-[#e76e50]/12 px-1.5 py-px text-[10px] font-semibold text-[#c4553a] dark:text-[#dea091]">{t("admin.plans.leaveGroups.notable")}</span>
                   )}
                   <span className="text-ink-400 mt-0.5 block text-xs">{leaveGroupDescription(group, signal)}</span>
                 </th>
                 <td className="px-2 py-2.5 text-right whitespace-nowrap tabular-nums">
                   <span className="text-ink-900 font-semibold">{group.leftRate ?? 0}%</span>
                   <span className="text-ink-400 block text-[11px]">
-                    {group.left} of {signal.left}
+                    {t("admin.plans.leaveGroups.ofTotal", { left: group.left, total: signal.left })}
                   </span>
                 </td>
                 <td className="text-ink-900 px-2 py-2.5 text-right font-semibold whitespace-nowrap tabular-nums">
@@ -63,10 +67,10 @@ export function LeaveGroups({ signal }: { signal: PlanChurnSignal }) {
       </div>
       <div className="border-ink-100 text-ink-500 flex flex-wrap items-center justify-between gap-2 border-t px-4 py-2 text-[11px]">
         <span className="flex gap-4">
-          <Key color={LEFT} label="Left" />
-          <Key color={STAYED} label="Stayed" />
+          <Key color={LEFT} label={t("admin.plans.shared.left")} />
+          <Key color={STAYED} label={t("admin.plans.shared.stayed")} />
         </span>
-        {empty.length > 0 && <span>Nobody who left fell in: {empty.map((group) => group.label.toLowerCase()).join(", ")}.</span>}
+        {empty.length > 0 && <span>{t("admin.plans.leaveGroups.nobodyFellIn", { list: empty.map((group) => group.label.toLowerCase()).join(", ") })}</span>}
       </div>
     </div>
   );
@@ -74,9 +78,10 @@ export function LeaveGroups({ signal }: { signal: PlanChurnSignal }) {
 
 /** Two thin bars on one 0–100% scale: those who left above, those who stayed below. */
 export function PairBars({ left, stayed, leftFirst = true }: { left: number; stayed: number; leftFirst?: boolean }) {
+  const { t } = useTranslation("common");
   const bars = [
-    { key: "left", value: left, color: LEFT, label: `Left ${left}%` },
-    { key: "stayed", value: stayed, color: STAYED, label: `Stayed ${stayed}%` },
+    { key: "left", value: left, color: LEFT, label: t("admin.plans.shared.leftPercent", { value: left }) },
+    { key: "stayed", value: stayed, color: STAYED, label: t("admin.plans.shared.stayedPercent", { value: stayed }) },
   ];
   return (
     <div className="space-y-[3px]" role="img" aria-label={bars.map((bar) => bar.label).join(", ")}>

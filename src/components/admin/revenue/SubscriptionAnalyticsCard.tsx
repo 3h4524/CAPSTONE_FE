@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { ArrowDown, ArrowUp, TrendingUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Area,
   CartesianGrid,
@@ -32,11 +33,24 @@ type SeriesKey = "newSubscriptions" | "renewals" | "cancellations";
 const TABS: TabType[] = ["Overview", "New Signups", "Renewals", "Churn"];
 
 // New + Renewals share the blue "growth" family; Cancellations is the only warm color.
-const SERIES: Array<{ key: SeriesKey; name: string; color: string }> = [
-  { key: "newSubscriptions", name: "New Subscriptions", color: "#2563eb" },
-  { key: "renewals", name: "Renewals", color: "#60a5fa" },
-  { key: "cancellations", name: "Cancellations", color: "#f43f5e" },
+const SERIES: Array<{ key: SeriesKey; color: string }> = [
+  { key: "newSubscriptions", color: "#2563eb" },
+  { key: "renewals", color: "#60a5fa" },
+  { key: "cancellations", color: "#f43f5e" },
 ];
+
+const TAB_KEYS: Record<TabType, string> = {
+  Overview: "admin.revenue.subscriptionAnalytics.tabs.overview",
+  "New Signups": "admin.revenue.subscriptionAnalytics.tabs.newSignups",
+  Renewals: "admin.revenue.subscriptionAnalytics.tabs.renewals",
+  Churn: "admin.revenue.subscriptionAnalytics.tabs.churn",
+};
+
+const SERIES_KEYS: Record<SeriesKey, string> = {
+  newSubscriptions: "admin.revenue.subscriptionAnalytics.series.newSubscriptions",
+  renewals: "admin.revenue.subscriptionAnalytics.series.renewals",
+  cancellations: "admin.revenue.subscriptionAnalytics.series.cancellations",
+};
 
 const FOCUS_BY_TAB: Record<TabType, SeriesKey | null> = {
   Overview: null,
@@ -49,6 +63,7 @@ export function SubscriptionAnalyticsCard({
   data,
   isLoading,
 }: SubscriptionAnalyticsCardProps) {
+  const { t } = useTranslation("common");
   const [activeTab, setActiveTab] = useState<TabType>("Overview");
 
   const points = data?.points ?? [];
@@ -64,7 +79,7 @@ export function SubscriptionAnalyticsCard({
               <TrendingUp className="h-5 w-5" />
             </div>
             <h3 className="text-ink-900 text-sm font-bold dark:text-slate-100">
-              Subscription Analytics
+              {t("admin.revenue.subscriptionAnalytics.title")}
             </h3>
           </div>
 
@@ -78,7 +93,7 @@ export function SubscriptionAnalyticsCard({
                 }`}
               >
                 <span className="size-2 rounded-full" style={{ backgroundColor: s.color }} />
-                <span>{s.name}</span>
+                <span>{t(SERIES_KEYS[s.key])}</span>
               </div>
             ))}
           </div>
@@ -96,7 +111,7 @@ export function SubscriptionAnalyticsCard({
                   : "text-ink-500 hover:text-ink-800 dark:text-slate-400 dark:hover:text-slate-200"
               }`}
             >
-              {tab}
+              {t(TAB_KEYS[tab])}
             </button>
           ))}
         </div>
@@ -113,7 +128,7 @@ export function SubscriptionAnalyticsCard({
               </div>
             ) : points.length === 0 ? (
               <div className="text-ink-400 flex h-full w-full items-center justify-center text-xs">
-                No subscription data recorded in this period.
+                {t("admin.revenue.subscriptionAnalytics.empty")}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -167,7 +182,7 @@ export function SubscriptionAnalyticsCard({
                         key={s.key}
                         type="linear"
                         dataKey={s.key}
-                        name={s.name}
+                        name={t(SERIES_KEYS[s.key])}
                         // Overview stacks New + Renewals as one "growth" group; single-series tabs don't stack.
                         stackId={focus === null && s.key !== "cancellations" ? "growth" : undefined}
                         stroke={s.color}
@@ -187,17 +202,17 @@ export function SubscriptionAnalyticsCard({
 
           {/* Right metrics column */}
           <div className="max-md:bg-ink-50 flex flex-col justify-between py-1 pl-2 max-md:grid max-md:grid-cols-2 max-md:gap-3 max-md:rounded-xl max-md:p-3 lg:col-span-4 dark:max-md:bg-slate-800/50">
-            <MetricRow label="New Subscriptions" metric={data?.newSubscriptions} />
-            <MetricRow label="Renewals" metric={data?.renewals} />
-            <MetricRow label="Cancellations" metric={data?.cancellations} polarity="lower-is-better" />
+            <MetricRow label={t("admin.revenue.subscriptionAnalytics.series.newSubscriptions")} metric={data?.newSubscriptions} />
+            <MetricRow label={t("admin.revenue.subscriptionAnalytics.series.renewals")} metric={data?.renewals} />
+            <MetricRow label={t("admin.revenue.subscriptionAnalytics.series.cancellations")} metric={data?.cancellations} polarity="lower-is-better" />
             <MetricRow
-              label="Churn Rate"
+              label={t("admin.revenue.subscriptionAnalytics.churnRate")}
               metric={data?.churnRate}
               polarity="lower-is-better"
               // Average monthly churn (cancellations / customer-months at risk); undefined with nobody active.
               formatValue={(v) => (data?.hasChurnRate ? `${v}%` : "—")}
               changeUnit=" pp"
-              hint={data?.hasChurnRate ? "average per month" : undefined}
+              hint={data?.hasChurnRate ? t("admin.revenue.subscriptionAnalytics.averagePerMonth") : undefined}
             />
           </div>
         </div>
@@ -222,13 +237,18 @@ function MetricRow({
   changeUnit?: "%" | " pp";
   hint?: string;
 }) {
+  const { t } = useTranslation("common");
   const value = metric?.value ?? 0;
   const pct = metric?.percentageChange;
   const tone = changeTone(pct, polarity);
+  const changeLabel = (raw: string) => (raw === "New" ? t("admin.revenue.common.new") : raw);
   // A large change against a small previous period is easier to read next to that period's value.
   const changeTitle = metric
-    ? `vs. previous period: ${formatValue(metric.previousValue)}${changeUnit === " pp" ? " (percentage points)" : ""}`
-    : "vs. previous period";
+    ? t("admin.revenue.subscriptionAnalytics.vsPreviousPeriodWith", {
+        value: formatValue(metric.previousValue),
+        points: changeUnit === " pp" ? t("admin.revenue.subscriptionAnalytics.percentagePointsSuffix") : "",
+      })
+    : t("admin.revenue.subscriptionAnalytics.vsPreviousPeriodShort");
 
   return (
     <div>
@@ -241,7 +261,7 @@ function MetricRow({
         >
           {pct != null && pct > 0 && <ArrowUp className="size-3" />}
           {pct != null && pct < 0 && <ArrowDown className="size-3" />}
-          {formatChange(pct, value, changeUnit)}
+          {changeLabel(formatChange(pct, value, changeUnit))}
         </span>
       </div>
       {hint && <p className="text-ink-400 text-[10px] dark:text-slate-500">{hint}</p>}

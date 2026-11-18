@@ -12,13 +12,13 @@ export const getOgBackgroundDataUrl = async () => {
 
 export const getOgFonts = async () => {
   const [medium, bold] = await Promise.all([
-    readFile(path.join(OG_ASSET_DIR, "fonts", "space-grotesk-500.ttf")),
-    readFile(path.join(OG_ASSET_DIR, "fonts", "space-grotesk-700.ttf")),
+    readFile(path.join(OG_ASSET_DIR, "fonts", "plus-jakarta-sans-500.ttf")),
+    readFile(path.join(OG_ASSET_DIR, "fonts", "plus-jakarta-sans-700.ttf")),
   ]);
 
   return [
-    { name: "Space Grotesk", data: medium, weight: 500 as const, style: "normal" as const },
-    { name: "Space Grotesk", data: bold, weight: 700 as const, style: "normal" as const },
+    { name: "Plus Jakarta Sans", data: medium, weight: 500 as const, style: "normal" as const },
+    { name: "Plus Jakarta Sans", data: bold, weight: 700 as const, style: "normal" as const },
   ];
 };
 

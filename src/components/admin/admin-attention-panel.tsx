@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   AI_FAILURE_CRITICAL,
   AI_FAILURE_WARNING,
-  aiFeatureLabel,
   aiSummary,
 } from "@/helpers/admin-dashboard";
+import { i18n } from "@/i18n/client";
 import type { AdminOperationsDto } from "@/types/admin";
 import type { FinancialAlertDto } from "@/types/revenue";
 import type { IntegrationStatusDto, SystemErrorLogDto } from "@/types/system-statistics";
@@ -37,16 +38,27 @@ export type HealthCheck = {
 
 const ORDER: Record<CheckStatus, number> = { critical: 0, warning: 1, ok: 2 };
 
-const STATUS_STYLES: Record<CheckStatus, { dot: string; badge: string }> = {
-  critical: { dot: "bg-rose-500", badge: "Critical" },
-  warning: { dot: "bg-amber-400", badge: "Warning" },
-  ok: { dot: "bg-emerald-500", badge: "OK" },
+const STATUS_STYLES: Record<CheckStatus, { dot: string; badgeKey: string }> = {
+  critical: { dot: "bg-rose-500", badgeKey: "admin.dashboard.attention.badgeCritical" },
+  warning: { dot: "bg-amber-400", badgeKey: "admin.dashboard.attention.badgeWarning" },
+  ok: { dot: "bg-emerald-500", badgeKey: "admin.dashboard.attention.badgeOk" },
+};
+
+const AI_FEATURE_LABEL_KEYS: Record<string, string> = {
+  image_generation: "admin.dashboard.operations.aiFeatures.imageGeneration",
+  mockup: "admin.dashboard.operations.aiFeatures.mockup",
+  listing: "admin.dashboard.operations.aiFeatures.listing",
+  video: "admin.dashboard.operations.aiFeatures.video",
+};
+
+const aiFeatureLabel = (feature: string) => {
+  const labelKey = AI_FEATURE_LABEL_KEYS[feature];
+  if (labelKey) return i18n.t(labelKey);
+  const label = feature.replaceAll("_", " ");
+  return label.charAt(0).toUpperCase() + label.slice(1);
 };
 
 const DAY_MS = 86_400_000;
-
-const plural = (count: number, word: string) =>
-  `${count.toLocaleString()} ${word}${count === 1 ? "" : "s"}`;
 
 /** Every area the platform should be watched on, worst first. */
 export const healthChecks = ({
@@ -57,13 +69,14 @@ export const healthChecks = ({
   pendingTickets,
   now = new Date(),
 }: AdminAttentionPanelProps): HealthCheck[] => {
+  const t = i18n.t.bind(i18n);
   const risks = financialAlerts
     .filter((alert) => alert.type === "danger" || alert.type === "warning")
     .sort((a, b) => (a.type === b.type ? 0 : a.type === "danger" ? -1 : 1));
   const atRisk = risks.reduce((sum, alert) => sum + (alert.amount ?? 0), 0);
   const revenue: HealthCheck = {
     key: "revenue",
-    label: "Revenue",
+    label: t("admin.dashboard.attention.revenueLabel"),
     status: risks.some((alert) => alert.type === "danger")
       ? "critical"
       : risks.length > 0
@@ -71,31 +84,42 @@ export const healthChecks = ({
         : "ok",
     summary:
       risks.length === 0
-        ? "No revenue at risk"
-        : `${plural(risks.length, "risk")}${atRisk > 0 ? ` · ${formatVnd(atRisk)} involved` : ""}`,
+        ? t("admin.dashboard.attention.noRevenueAtRisk")
+        : atRisk > 0
+          ? t("admin.dashboard.attention.risksWithAmount", {
+              risks: t("admin.dashboard.attention.risksCount", { count: risks.length }),
+              amount: formatVnd(atRisk),
+            })
+          : t("admin.dashboard.attention.risksCount", { count: risks.length }),
     details: risks.map((alert) => ({
       key: alert.id,
-      text: alert.count != null ? `${alert.title} (${alert.count.toLocaleString()})` : alert.title,
+      text:
+        alert.count != null
+          ? t("admin.dashboard.attention.riskDetailCount", {
+              title: alert.title,
+              total: alert.count.toLocaleString(),
+            })
+          : alert.title,
       figure:
         alert.amount != null
           ? `${formatVnd(alert.amount)}${alert.amountLabel ? ` ${alert.amountLabel}` : ""}`
           : undefined,
     })),
     href: "/admin/revenue",
-    action: "Open revenue",
+    action: t("admin.dashboard.attention.openRevenue"),
   };
 
   const support: HealthCheck = {
     key: "support",
-    label: "Support queue",
+    label: t("admin.dashboard.attention.supportLabel"),
     status: pendingTickets > 0 ? "warning" : "ok",
     summary:
       pendingTickets > 0
-        ? `${plural(pendingTickets, "ticket")} awaiting a reply`
-        : "No ticket waiting",
+        ? t("admin.dashboard.attention.ticketsAwaiting", { count: pendingTickets })
+        : t("admin.dashboard.attention.noTicketWaiting"),
     details: [],
     href: "/admin/support-tickets",
-    action: "Reply",
+    action: t("admin.dashboard.activity.reply"),
   };
 
   const ai = aiSummary(aiUsage, 0);
@@ -103,24 +127,32 @@ export const healthChecks = ({
   const aiRate = Math.max(ai.failureRate, ai.worst?.failureRate ?? 0);
   const aiCheck: HealthCheck = {
     key: "ai",
-    label: "AI reliability",
+    label: t("admin.dashboard.attention.aiLabel"),
     status:
       aiRate >= AI_FAILURE_CRITICAL ? "critical" : aiRate >= AI_FAILURE_WARNING ? "warning" : "ok",
     summary:
       ai.calls === 0
-        ? "No AI calls in this period"
-        : `${ai.failureRate.toFixed(1)}% of ${ai.calls.toLocaleString()} calls failed`,
+        ? t("admin.dashboard.attention.aiNoCalls")
+        : t("admin.dashboard.attention.aiCallsFailed", {
+            rate: ai.failureRate.toFixed(1),
+            calls: ai.calls.toLocaleString(),
+          }),
     details: ai.worst
       ? [
           {
             key: ai.worst.feature,
-            text: `${aiFeatureLabel(ai.worst.feature)} fails most`,
-            figure: `${ai.worst.failureRate.toFixed(1)}% · ${plural(ai.worst.failed, "call")}`,
+            text: t("admin.dashboard.attention.aiFailsMost", {
+              feature: aiFeatureLabel(ai.worst.feature),
+            }),
+            figure: t("admin.dashboard.attention.aiWorstFigure", {
+              rate: ai.worst.failureRate.toFixed(1),
+              count: ai.worst.failed,
+            }),
           },
         ]
       : [],
     href: "/admin/analytics",
-    action: "Investigate",
+    action: t("admin.dashboard.attention.investigate"),
   };
 
   const failedUploads = integrationStatus?.failedIntegrationsCount ?? 0;
@@ -130,17 +162,20 @@ export const healthChecks = ({
     (integrationStatus?.socialMediaTotal ?? 0);
   const uploadCheck: HealthCheck = {
     key: "uploads",
-    label: "Store uploads",
+    label: t("admin.dashboard.attention.uploadsLabel"),
     status: failedUploads === 0 ? "ok" : failedUploads / uploads >= 0.2 ? "critical" : "warning",
     summary:
       uploads === 0
-        ? "No uploads to Etsy, Printify or social media yet"
+        ? t("admin.dashboard.attention.uploadsNone")
         : failedUploads > 0
-          ? `${plural(failedUploads, "upload")} failed of ${uploads.toLocaleString()}`
-          : `All ${uploads.toLocaleString()} uploads succeeded`,
+          ? t("admin.dashboard.attention.uploadsFailed", {
+              count: failedUploads,
+              total: uploads.toLocaleString(),
+            })
+          : t("admin.dashboard.attention.uploadsAll", { total: uploads.toLocaleString() }),
     details: [],
     href: "/admin/analytics",
-    action: "Review",
+    action: t("admin.dashboard.attention.review"),
   };
 
   const lastDay = recentErrors.filter(
@@ -148,12 +183,12 @@ export const healthChecks = ({
   );
   const pipeline: HealthCheck = {
     key: "pipeline",
-    label: "Pipeline errors",
+    label: t("admin.dashboard.attention.pipelineLabel"),
     status: lastDay.length > 0 ? "warning" : "ok",
     summary:
       lastDay.length > 0
-        ? `${plural(lastDay.length, "error")} in the last 24 hours`
-        : "No error in the last 24 hours",
+        ? t("admin.dashboard.attention.errorsLastDay", { count: lastDay.length })
+        : t("admin.dashboard.attention.noErrorsLastDay"),
     details: lastDay.slice(0, 2).map((error) => ({
       key: error.id,
       text: `${error.errorType}: ${error.message}`,
@@ -163,7 +198,7 @@ export const healthChecks = ({
       }),
     })),
     href: "/admin/analytics",
-    action: "Investigate",
+    action: t("admin.dashboard.attention.investigate"),
   };
 
   return [revenue, support, aiCheck, uploadCheck, pipeline].sort(
@@ -172,15 +207,18 @@ export const healthChecks = ({
 };
 
 const AdminAttentionPanel = (props: AdminAttentionPanelProps) => {
+  const { t } = useTranslation("common");
   const checks = healthChecks(props);
   const issues = checks.filter((check) => check.status !== "ok").length;
 
   return (
     <section className="border-ink-200 bg-card flex flex-col rounded-xl border p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-ink-900 text-sm font-semibold">Health checks</h3>
+        <h3 className="text-ink-900 text-sm font-semibold">{t("admin.dashboard.attention.title")}</h3>
         <p className="text-ink-400 text-xs">
-          {issues > 0 ? `${issues} of ${checks.length} need attention` : "All areas healthy"}
+          {issues > 0
+            ? t("admin.dashboard.attention.issuesNeedAttention", { issues, total: checks.length })
+            : t("admin.dashboard.attention.allAreasHealthy")}
         </p>
       </div>
 
@@ -190,7 +228,7 @@ const AdminAttentionPanel = (props: AdminAttentionPanelProps) => {
             <div className="flex items-start gap-3">
               <span
                 className={`mt-1.5 size-2 shrink-0 rounded-full ${STATUS_STYLES[check.status].dot}`}
-                title={STATUS_STYLES[check.status].badge}
+                title={t(STATUS_STYLES[check.status].badgeKey)}
                 aria-hidden="true"
               />
               <div className="min-w-0 flex-1">
@@ -208,7 +246,7 @@ const AdminAttentionPanel = (props: AdminAttentionPanelProps) => {
                 <p
                   className={`mt-0.5 text-sm ${check.status === "ok" ? "text-ink-500" : "text-ink-900 font-medium"}`}
                 >
-                  <span className="sr-only">{STATUS_STYLES[check.status].badge}: </span>
+                  <span className="sr-only">{t(STATUS_STYLES[check.status].badgeKey)}: </span>
                   {check.summary}
                 </p>
                 {check.details.length > 0 && (

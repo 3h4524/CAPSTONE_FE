@@ -2,21 +2,31 @@
 
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { HealthCheck } from "@/components/admin/admin-attention-panel";
+import { HERO_PRIMARY_ACTION } from "@/components/commons/layout/merch-hero";
 
 type AdminHeroCardProps = {
   fullName: string;
   healthChecks: HealthCheck[];
   onOpenHealthCheck: () => void;
 };
+
+// The Seller hero's photo treatment, fitted to this taller, narrower card. Light: the photo sits in the
+// bottom-right corner at its own proportions (nothing cropped) and fades in from the left and from the
+// top, so the greeting above stays clear. Dark: like the Seller hero, the studio shot fills the right
+// half at full height behind a card-coloured scrim.
+const ADMIN_MERCH_FRAME =
+  "[mask-image:linear-gradient(to_right,transparent_0%,black_15%),linear-gradient(to_bottom,transparent_0%,black_18%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_15%),linear-gradient(to_bottom,transparent_0%,black_18%)] [mask-composite:intersect] [-webkit-mask-composite:source-in] dark:top-0 dark:aspect-auto dark:w-[50%] dark:overflow-hidden dark:[mask-image:none] dark:[-webkit-mask-image:none]";
+
 const today = () =>
   new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
 
-const getFirstName = (fullName?: string | null): string => {
-  if (!fullName) return "Admin";
+const getFirstName = (fullName?: string | null): string | null => {
+  if (!fullName) return null;
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  return parts[0] ?? "Admin";
+  return parts[0] ?? null;
 };
 
 export const AdminHeroCard = ({
@@ -24,67 +34,58 @@ export const AdminHeroCard = ({
   healthChecks,
   onOpenHealthCheck,
 }: AdminHeroCardProps) => {
-  const firstName = getFirstName(fullName);
+  const { t } = useTranslation("common");
+  const firstName = getFirstName(fullName) ?? t("admin.dashboard.hero.adminFallback");
   const issues = healthChecks.filter((check) => check.status !== "ok");
 
   const describeAttention = () => {
     if (issues.length === 0) {
-      return "All platform systems and integrations are healthy.";
+      return t("admin.dashboard.hero.healthy");
     }
     if (issues.length === 1) {
-      return `${issues[0].label} needs attention.`;
+      return t("admin.dashboard.hero.attentionOne", { label: issues[0].label });
     }
-    const topTwo = issues.slice(0, 2).map((item) => item.label).join(" and ");
-    return `${topTwo} need attention.`;
+    const topTwo = issues.slice(0, 2).map((item) => item.label).join(t("admin.dashboard.hero.listAnd"));
+    return t("admin.dashboard.hero.attentionMany", { labels: topTwo });
   };
 
+  // Same build as the Seller dashboard hero (dashboard-hero.tsx): the card gradient, a one-line greeting
+  // and the soft pill action; only the photo frame is fitted to this card's shape (ADMIN_MERCH_FRAME).
   return (
-    <section className="group border-ink-300 from-ink-200 via-ink-200 to-ink-300 text-ink-900 dark:border-border dark:bg-card relative order-first flex h-full min-h-64 flex-col justify-between overflow-hidden rounded-2xl border bg-linear-to-r p-6 shadow-sm transition-shadow duration-300 hover:shadow-md max-md:min-h-0 max-md:p-4 md:order-none dark:bg-[radial-gradient(120%_140%_at_0%_0%,rgba(45,212,191,0.12),transparent_55%)] dark:shadow-none dark:md:justify-center">
-      {/* Light: the whole product photo on the right. Dark: same layout as the seller hero, a
-          full-height studio shot whose left edge dissolves into the card behind a scrim. */}
+    <section className="group border-ink-300 from-ink-200 via-ink-300 to-ink-300 text-ink-900 dark:border-border dark:bg-card relative order-first flex h-full min-h-52 flex-col justify-between overflow-hidden rounded-2xl border bg-linear-to-r p-6 shadow-sm transition-shadow duration-300 hover:shadow-md max-md:p-5 md:order-none dark:bg-[radial-gradient(120%_140%_at_0%_0%,rgba(45,212,191,0.12),transparent_55%)] dark:shadow-none dark:md:justify-center">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 right-0 hidden max-w-[66%] items-center justify-end pr-3 md:flex xl:max-w-[70%] dark:w-[50%] dark:max-w-none dark:pr-0 dark:xl:max-w-none"
+        className={`pointer-events-none absolute right-0 bottom-0 hidden aspect-[1024/682] w-[66%] md:block ${ADMIN_MERCH_FRAME}`}
       >
-        <div className="relative aspect-[1024/682] h-[92%] max-w-full translate-y-2 dark:aspect-auto dark:h-full dark:w-full dark:translate-y-0 dark:overflow-hidden">
-          <Image
-            src="/images/dashboard/hero-merch-v4.webp"
-            alt=""
-            fill
-            sizes="(min-width: 1280px) 520px, 60vw"
-            priority
-            className="object-contain object-right transition-transform duration-500 group-hover:scale-[1.02] dark:hidden"
-          />
-          <Image
-            src="/images/dashboard/hero-merch-dark.webp"
-            alt=""
-            fill
-            sizes="(min-width: 1280px) 520px, 60vw"
-            className="hidden object-cover object-center transition-transform duration-500 group-hover:scale-[1.02] dark:block"
-          />
-          <div className="from-card via-card/60 absolute inset-y-0 -left-px hidden w-2/5 bg-linear-to-r to-transparent dark:block" />
-        </div>
+        <Image
+          src="/images/dashboard/hero-merch-v4.webp"
+          alt=""
+          fill
+          sizes="(min-width: 1280px) 460px, 60vw"
+          priority
+          className="object-cover object-bottom-right transition-transform duration-700 group-hover:scale-[1.03] dark:hidden"
+        />
+        <Image
+          src="/images/dashboard/hero-merch-dark.webp"
+          alt=""
+          fill
+          sizes="(min-width: 1280px) 460px, 60vw"
+          className="hidden object-cover object-center transition-transform duration-700 group-hover:scale-[1.03] dark:block"
+        />
+        <div className="from-card via-card/60 absolute inset-y-0 -left-px hidden w-2/5 bg-linear-to-r to-transparent dark:block" />
       </div>
 
-      {/* Text Info */}
-      <div className="relative z-10 max-w-[56%] min-w-0 max-md:max-w-full dark:md:max-w-[48%]">
+      <div className="relative z-10 max-w-[55%] min-w-0 max-md:max-w-full dark:md:max-w-[48%]">
         <p className="text-ink-900 dark:text-ink-500 text-xs font-semibold">{today()}</p>
-        <h2 className="text-ink-900 mt-1.5 text-2xl font-bold tracking-tight max-md:text-xl">
-          Welcome back, {firstName}
+        <h2 className="text-ink-900 mt-1 truncate text-2xl font-bold tracking-tight" title={fullName}>
+          {t("admin.dashboard.hero.welcomeNamed", { firstName })}
         </h2>
-        <p className="text-ink-700 mt-2 text-sm leading-snug">
-          {describeAttention()}
-        </p>
+        <p className="text-ink-700 mt-1 text-sm">{describeAttention()}</p>
       </div>
 
-      {/* Health Check Button */}
-      <div className="relative z-10 mt-6 max-md:mt-3 dark:md:mt-5">
-        <button
-          type="button"
-          onClick={onOpenHealthCheck}
-          className="bg-ink-800 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 hover:bg-ink-900 inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-105 active:scale-95"
-        >
-          Health check
+      <div className="relative z-10 mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium max-md:mt-4 dark:md:mt-5">
+        <button type="button" onClick={onOpenHealthCheck} className={`${HERO_PRIMARY_ACTION} cursor-pointer`}>
+          {t("admin.dashboard.hero.healthCheck")}
           <ArrowRight className="size-4" aria-hidden="true" />
         </button>
       </div>

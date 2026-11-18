@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   CartesianGrid,
   Line,
@@ -26,6 +27,7 @@ type Point = {
 };
 
 export const TestReportRunTrend = ({ runs, currentRunId }: TestReportRunTrendProps) => {
+  const { t } = useTranslation("common");
   const points = useMemo(
     () =>
       [...runs]
@@ -54,10 +56,10 @@ export const TestReportRunTrend = ({ runs, currentRunId }: TestReportRunTrendPro
   return (
     <section className="border-ink-200 bg-card rounded-xl border p-5">
       <h3 className="text-ink-800 text-xs font-bold tracking-wide uppercase">
-        Pass rate over the runs
+        {t("admin.testReports.runTrend.heading")}
       </h3>
       <p className="text-ink-400 mt-0.5 mb-3 text-[10px]">
-        Every run kept on this machine, oldest first. The big dot is this run.
+        {t("admin.testReports.runTrend.description")}
       </p>
 
       <div className="h-[180px] w-full">
@@ -79,7 +81,9 @@ export const TestReportRunTrend = ({ runs, currentRunId }: TestReportRunTrendPro
             />
             <Tooltip
               formatter={(value, name) =>
-                name === "passRate" ? [`${value}%`, "pass rate"] : [`${value}`, "failed"]
+                name === "passRate"
+                  ? [t("admin.testReports.runTrend.passRateValue", { value }), t("admin.testReports.runTrend.passRateName")]
+                  : [`${value}`, t("admin.testReports.runTrend.failedName")]
               }
               contentStyle={{
                 borderRadius: 8,

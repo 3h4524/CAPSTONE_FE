@@ -16,8 +16,8 @@ export const ShowcaseSection = ({ feature }: ShowcaseSectionProps) => {
     >
       <Container className="flex flex-col gap-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 className="font-display flex items-center gap-4 text-3xl font-bold tracking-tight text-balance md:text-5xl">
-            <span className="bg-primary text-primary-foreground flex size-12 shrink-0 items-center justify-center rounded-xl md:size-14">
+          <h2 className="font-display text-brand-ink flex items-center gap-4 text-3xl font-bold tracking-tight text-balance md:text-5xl">
+            <span className="bg-brand-soft text-brand-ink flex size-12 shrink-0 items-center justify-center rounded-xl md:size-14">
               <feature.icon
                 className="size-6 md:size-7"
                 strokeWidth={2}

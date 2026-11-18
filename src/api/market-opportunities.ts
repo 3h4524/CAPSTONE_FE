@@ -283,3 +283,29 @@ export const getLatestSellerOpportunityAnalysis = async (id: string): Promise<Op
     throw error;
   }
 };
+
+/** What the Seller's plan opens of the radar: the whole radar, or its best ranked opportunities only. */
+export type MarketRadarAccess = {
+  full: boolean;
+  /** How many opportunities are shown without the whole radar; null when every one is. */
+  visibleOpportunities: number | null;
+  totalOpportunities: number;
+  /** Most AI analyses a day; null for no cap, 0 when locked. */
+  analysesPerDay: number | null;
+  analysesUsedToday: number;
+};
+
+export const getMarketRadarAccess = async () =>
+  (await api.get<MarketRadarAccess>("/api/market-opportunities/access")).data;
+
+/** The plan error code of a failed request (Plan.FeatureLocked, Plan.DailyCapReached), when it is one. */
+export const planErrorCode = (error: unknown): string | undefined => {
+  const data = (error as { response?: { data?: { code?: unknown } } } | null)?.response?.data;
+  return typeof data?.code === "string" ? data.code : undefined;
+};
+
+/** The server's own explanation of a failed request, when it gave one. */
+export const problemDetail = (error: unknown): string | undefined => {
+  const data = (error as { response?: { data?: { detail?: unknown } } } | null)?.response?.data;
+  return typeof data?.detail === "string" ? data.detail : undefined;
+};

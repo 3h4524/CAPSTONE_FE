@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Play, Redo2, Save, ShieldCheck, Square, Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { GuideReplayButton } from "@/components/commons/onboarding/guide-replay-button";
 import { Button } from "@/components/ui/button";
 import { EditorPanelSheets } from "@/components/workflows/toolbar/editor-panel-sheets";
 import { WorkflowActionsMenu } from "@/components/workflows/toolbar/workflow-actions-menu";
@@ -141,7 +142,7 @@ export const WorkflowToolbar = ({
   };
 
   return (
-    <div className="bg-card flex flex-wrap items-center gap-2 border-b px-3 py-2 max-sm:gap-1 max-sm:px-2">
+    <div data-guide="workflows.toolbar" className="bg-card flex flex-wrap items-center gap-2 border-b px-3 py-2 max-sm:gap-1 max-sm:px-2">
       <WorkflowBackButton guardUnsavedChanges={guardUnsavedChanges} />
       {showsPanelButtons && <EditorPanelSheets />}
       <WorkflowSwitcher
@@ -154,6 +155,7 @@ export const WorkflowToolbar = ({
         onCreate={() => guardUnsavedChanges(() => setMetaDialogMode("create"))}
       />
       <div className="ml-auto flex items-center gap-2">
+        <GuideReplayButton guideKey="workflows" iconOnly className="hidden lg:inline-flex" />
         <Button
           type="button"
           variant="ghost"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { adminPrintifyKeys, getAdminPrintifyCatalog, getAdminPrintifyProviders, searchAdminPrintifyBlueprints } from "@/api/admin-mockup-printify";
 import { linkMockupTemplatePrintify } from "@/api/admin-mockup-templates";
@@ -29,22 +30,23 @@ type PrintifyLinkDialogProps = {
  * the uploaded ones, so they only match Printify as well as the admin compared them; "Create from Printify" measures
  * them instead.
  */
-export const PrintifyLinkDialog = ({ template, onOpenChange }: PrintifyLinkDialogProps) => (
-  <Dialog open={template !== null} onOpenChange={onOpenChange}>
-    <DialogContent className="flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0">
-      <DialogHeader className="border-b px-5 py-3.5 pr-12 text-left">
-        <DialogTitle>Link {template?.name} to Printify</DialogTitle>
-        <DialogDescription>
-          Choose the Printify product this photo shows. The photo and print area stay the uploaded ones: compare them with Printify’s photo, or make the
-          template with Create from Printify so they match exactly.
-        </DialogDescription>
-      </DialogHeader>
-      {template && <LinkForm key={template.id} template={template} onDone={() => onOpenChange(false)} />}
-    </DialogContent>
-  </Dialog>
-);
+export const PrintifyLinkDialog = ({ template, onOpenChange }: PrintifyLinkDialogProps) => {
+  const { t } = useTranslation("common");
+  return (
+    <Dialog open={template !== null} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="border-b px-5 py-3.5 pr-12 text-left">
+          <DialogTitle>{t("admin.mockups.linkDialog.title", { name: template?.name })}</DialogTitle>
+          <DialogDescription>{t("admin.mockups.linkDialog.description")}</DialogDescription>
+        </DialogHeader>
+        {template && <LinkForm key={template.id} template={template} onDone={() => onOpenChange(false)} />}
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const LinkForm = ({ template, onDone }: { template: MockupTemplate; onDone: () => void }) => {
+  const { t } = useTranslation("common");
   const queryClient = useQueryClient();
   const [blueprint, setBlueprint] = useState<PrintifyBlueprint | null>(null);
   const [providerId, setProviderId] = useState<number | null>(null);
@@ -80,7 +82,7 @@ const LinkForm = ({ template, onDone }: { template: MockupTemplate; onDone: () =
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: mockupTemplateKeys.all });
-      showToast("success", `${template.name} is linked to ${blueprint!.title}.`);
+      showToast("success", t("admin.mockups.shared.linkedToast", { name: template.name, blueprint: blueprint!.title }));
       onDone();
     },
   });
@@ -92,16 +94,18 @@ const LinkForm = ({ template, onDone }: { template: MockupTemplate; onDone: () =
           <figure className="space-y-1">
             {/* eslint-disable-next-line @next/next/no-img-element -- the template photo on the image CDN, shown as is */}
             <img src={template.previewImageUrl ?? template.baseImageUrl} alt="" className="bg-ink-100 aspect-square w-full rounded-md object-contain" />
-            <figcaption className="text-muted-foreground text-xs">This template</figcaption>
+            <figcaption className="text-muted-foreground text-xs">{t("admin.mockups.linkDialog.thisTemplate")}</figcaption>
           </figure>
           <figure className="space-y-1">
             {blueprint?.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- Printify's product photo, shown as is
               <img src={blueprint.imageUrl} alt="" className="bg-ink-100 aspect-square w-full rounded-md object-contain" />
             ) : (
-              <div className="border-ink-200 text-ink-400 flex aspect-square w-full items-center justify-center rounded-md border border-dashed text-xs">No Printify product yet</div>
+              <div className="border-ink-200 text-ink-400 flex aspect-square w-full items-center justify-center rounded-md border border-dashed text-xs">
+                {t("admin.mockups.linkDialog.noPrintifyYet")}
+              </div>
             )}
-            <figcaption className="text-muted-foreground text-xs">Printify’s product</figcaption>
+            <figcaption className="text-muted-foreground text-xs">{t("admin.mockups.linkDialog.printifyProduct")}</figcaption>
           </figure>
         </div>
         <BlueprintPicker
@@ -116,7 +120,7 @@ const LinkForm = ({ template, onDone }: { template: MockupTemplate; onDone: () =
         />
         {blueprint && (
           <div className="space-y-1.5">
-            <Label htmlFor="printify-link-provider">Print provider</Label>
+            <Label htmlFor="printify-link-provider">{t("admin.mockups.shared.printProvider")}</Label>
             <Select
               value={providerId ? String(providerId) : ""}
               onValueChange={(value) => {
@@ -126,7 +130,7 @@ const LinkForm = ({ template, onDone }: { template: MockupTemplate; onDone: () =
               }}
             >
               <SelectTrigger id="printify-link-provider" className="w-full">
-                <SelectValue placeholder={providers.isFetching ? "Loading providers…" : "Choose a provider"} />
+                <SelectValue placeholder={providers.isFetching ? t("admin.mockups.shared.loadingProviders") : t("admin.mockups.shared.chooseProvider")} />
               </SelectTrigger>
               <SelectContent>
                 {(providers.data ?? []).map((item) => (
@@ -141,7 +145,7 @@ const LinkForm = ({ template, onDone }: { template: MockupTemplate; onDone: () =
         )}
         {catalog.data && (
           <ChipGroup
-            label="Default sizes"
+            label={t("admin.mockups.shared.defaultSizes")}
             options={catalog.data.sizes}
             selected={chosenSizes}
             onToggle={(size) => setSizes(chosenSizes.includes(size) ? chosenSizes.filter((item) => item !== size) : [...chosenSizes, size])}
@@ -155,14 +159,14 @@ const LinkForm = ({ template, onDone }: { template: MockupTemplate; onDone: () =
       </div>
       <DialogFooter className="border-t px-5 py-3">
         <Button type="button" variant="ghost" onClick={onDone} disabled={save.isPending}>
-          Cancel
+          {t("mockups.cancel")}
         </Button>
         <Button
           type="button"
           disabled={!blueprint || !providerId || !catalog.data || save.isPending}
           onClick={() => save.mutate()}
         >
-          {save.isPending ? "Linking…" : "Link"}
+          {save.isPending ? t("admin.mockups.linkDialog.linking") : t("admin.mockups.linkDialog.link")}
         </Button>
       </DialogFooter>
     </>

@@ -2,6 +2,7 @@
 
 import { useTranslation } from "react-i18next";
 
+import { Logo } from "@/components/commons/icons/logo";
 import { Container } from "@/components/commons/layout/container";
 import { FOOTER_CONTENT } from "@/data/landing-content";
 
@@ -12,7 +13,10 @@ export const SiteFooter = () => {
   return (
     <footer className="border-t">
       <Container className="flex flex-col items-center justify-between gap-4 py-8 text-center md:flex-row md:text-left">
-        <span className="font-display text-lg font-bold tracking-tight">
+        <span className="font-display text-brand-ink flex items-center gap-2 text-lg font-bold tracking-tight">
+          <span aria-hidden="true" className="flex shrink-0">
+            <Logo height={28} width={28} />
+          </span>
           {FOOTER_CONTENT.brand}
         </span>
         <p className="text-muted-foreground text-sm">

@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 import { Award, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, Copy, GripVertical, Hourglass, Layers, LayoutGrid, MoreHorizontal, Pencil, Plus, Star, Table2, Tag, Trash2, Users, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AdminMetricCard } from "@/components/admin/admin-metric-card";
 import { addableFeatures,AddFeatureDialog } from "@/components/admin/subscription-plans/add-feature-dialog";
@@ -35,7 +36,7 @@ type PlanCardGridProps = {
   onDelete: (plan: AdminSubscriptionPlan) => void;
 };
 
-const formatLimit = (value: number) => (value < 0 ? "No limit" : value.toLocaleString());
+const formatLimit = (value: number, noLimit: string) => (value < 0 ? noLimit : value.toLocaleString());
 
 // The on/off features the plan has, in catalog order. What it does not have is added from the dialog.
 const includedFeatures = (plan: AdminSubscriptionPlan, features: PlanFeatureDefinition[]) =>
@@ -65,6 +66,7 @@ const PlanSlides = ({ items, initialKey }: { items: PhonePlanItem[]; initialKey?
   useIsPhone() ? <PhonePlanCarousel items={items} initialKey={initialKey} /> : <PlanCarousel items={items} />;
 
 export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGridProps) {
+  const { t } = useTranslation("common");
   // Labels and order as the Admin set them in the feature catalog.
   const { data: catalog = [] } = useAdminFeatures();
   const features = catalogFeatures(catalog);
@@ -127,8 +129,8 @@ export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGri
     return (
       <Card className="border-ink-300 bg-card mt-6 rounded-2xl border border-dashed p-10 text-center">
         <Layers className="text-ink-400 mx-auto size-6" />
-        <p className="text-ink-700 mt-2 text-sm font-semibold">No subscription plans yet</p>
-        <p className="text-ink-400 text-xs">Create the first one with “Create new plan”.</p>
+        <p className="text-ink-700 mt-2 text-sm font-semibold">{t("admin.plans.cardGrid.noPlans")}</p>
+        <p className="text-ink-400 text-xs">{t("admin.plans.cardGrid.noPlansHint")}</p>
       </Card>
     );
   }
@@ -149,41 +151,41 @@ export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGri
       <section className="grid gap-3.5 max-md:grid-cols-2 max-md:gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         <AdminMetricCard
           icon={Tag}
-          label="Plans on sale"
+          label={t("admin.plans.cardGrid.plansOnSale")}
           value={
             <span className="flex items-baseline gap-1.5">
               <span>{sellingPlans.length}</span>
               <span className="text-ink-400 text-xs font-normal tabular-nums">
-                of {plans.length}
+                {t("admin.plans.cardGrid.ofTotal", { count: plans.length })}
               </span>
             </span>
           }
           context={
             sellingPlans.length === plans.length
-              ? "All plans are on sale"
-              : `${plans.length - sellingPlans.length} taken off sale`
+              ? t("admin.plans.cardGrid.allOnSale")
+              : t("admin.plans.cardGrid.takenOffSale", { count: plans.length - sellingPlans.length })
           }
         />
         <AdminMetricCard
           icon={Users}
-          label="Paying subscribers"
+          label={t("admin.plans.shared.payingSubscribers")}
           value={totalSubscribers.toLocaleString()}
-          context="Across every plan"
+          context={t("admin.plans.cardGrid.acrossEveryPlan")}
         />
         <AdminMetricCard
           icon={Hourglass}
-          label="On free trial"
+          label={t("admin.plans.cardGrid.onFreeTrial")}
           value={totalTrials.toLocaleString()}
-          context="Not counted until they pay"
+          context={t("admin.plans.cardGrid.notCountedUntilPay")}
         />
         <AdminMetricCard
           icon={Award}
-          label="Most popular"
+          label={t("admin.plans.cardGrid.mostPopular")}
           value={totalSubscribers > 0 ? topPlan.name : "—"}
           context={
             totalSubscribers > 0
-              ? `${topShare}% of paying subscribers`
-              : "No paying subscribers yet"
+              ? t("admin.plans.cardGrid.shareOfPaying", { share: topShare })
+              : t("admin.plans.cardGrid.noPayingYet")
           }
           progress={totalSubscribers > 0 ? topShare : undefined}
         />
@@ -191,7 +193,7 @@ export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGri
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-ink-500 text-[11px] font-semibold tracking-wide uppercase">
-          {plans.length} plan{plans.length === 1 ? "" : "s"}
+          {t("admin.plans.cardGrid.planCount", { count: plans.length })}
         </p>
         <div className="flex items-center gap-2">
           {layout === "cards" && (
@@ -202,10 +204,10 @@ export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGri
               className="border-ink-200 bg-card text-ink-600 hover:text-ink-900 flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-colors"
             >
               <ChevronsUpDown className="size-3" />
-              {showDetails ? "Hide all details" : "Show all details"}
+              {showDetails ? t("admin.plans.cardGrid.hideAllDetails") : t("admin.plans.cardGrid.showAllDetails")}
             </button>
           )}
-        <div className="border-ink-200 bg-card flex rounded-lg border p-0.5" role="tablist" aria-label="Plans layout">
+        <div className="border-ink-200 bg-card flex rounded-lg border p-0.5" role="tablist" aria-label={t("admin.plans.cardGrid.layoutAria")}>
           {(["cards", "compare"] as const).map((item) => (
             <button
               key={item}
@@ -219,7 +221,7 @@ export function PlanCardGrid({ plans, isLoading, onEdit, onDelete }: PlanCardGri
               )}
             >
               {item === "cards" ? <LayoutGrid className="size-3" /> : <Table2 className="size-3" />}
-              {item === "cards" ? "Cards" : "Compare"}
+              {item === "cards" ? t("admin.plans.cardGrid.layoutCards") : t("admin.plans.cardGrid.layoutCompare")}
             </button>
           ))}
         </div>
@@ -359,6 +361,7 @@ function PlanCard({
   onRemove: (code: string, label: string) => void;
   onEditLimit: (target: Omit<LimitTarget, "plan">) => void;
 }) {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
   const included = includedFeatures(plan, definitions);
   // On a higher plan, the features the cheaper plan already has are said in one line, as Sellers see
@@ -410,8 +413,8 @@ function PlanCard({
           {!isPhone && position.count > 1 && (
             <button
               type="button"
-              aria-label={`Move ${plan.name}: drag, or use the arrow keys`}
-              title="Drag to reorder"
+              aria-label={t("admin.plans.cardGrid.movePlanAria", { plan: plan.name })}
+              title={t("admin.plans.cardGrid.dragToReorder")}
               onPointerDown={() => onArm(true)}
               onPointerUp={() => onArm(false)}
               onKeyDown={(event) => {
@@ -436,7 +439,7 @@ function PlanCard({
             <span className="-ml-2 hidden shrink-0 items-center [@media(pointer:coarse)]:inline-flex">
               <button
                 type="button"
-                aria-label={`${plan.name}: move earlier`}
+                aria-label={t("admin.plans.cardGrid.moveEarlierAria", { plan: plan.name })}
                 disabled={position.index === 0}
                 onClick={() => onMove(-1)}
                 className={cn("inline-flex size-10 items-center justify-center rounded disabled:opacity-30", isDark ? "text-white/80" : "text-ink-500")}
@@ -445,7 +448,7 @@ function PlanCard({
               </button>
               <button
                 type="button"
-                aria-label={`${plan.name}: move later`}
+                aria-label={t("admin.plans.cardGrid.moveLaterAria", { plan: plan.name })}
                 disabled={position.index >= position.count - 1}
                 onClick={() => onMove(1)}
                 className={cn("inline-flex size-10 items-center justify-center rounded disabled:opacity-30", isDark ? "text-white/80" : "text-ink-500")}
@@ -463,13 +466,13 @@ function PlanCard({
             )}
           >
             <span className={cn("size-1.5 rounded-full", plan.isActive ? "bg-emerald-500" : "bg-ink-400")} />
-            {plan.isActive ? "On sale" : "Not on sale"}
+            {plan.isActive ? t("admin.plans.cardGrid.onSale") : t("admin.plans.cardGrid.notOnSale")}
           </span>
           {/* Beside the sale status, the same size, so it adds no row and the cards stay level. */}
           {isDark && (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-300/40 bg-orange-400/15 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-orange-200 uppercase dark:border-orange-500/40">
               <span className="size-1.5 rounded-full bg-orange-300" />
-              Recommended
+              {t("admin.plans.cardGrid.recommended")}
             </span>
           )}
         </div>
@@ -477,7 +480,7 @@ function PlanCard({
         {isPhone ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm" className={iconButton} aria-label={`Actions for ${plan.name}`}>
+              <Button variant="ghost" size="icon-sm" className={iconButton} aria-label={t("admin.plans.cardGrid.actionsFor", { plan: plan.name })}>
                 <MoreHorizontal className="size-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -485,24 +488,24 @@ function PlanCard({
               {position.count > 1 && (
                 <>
                   <DropdownMenuItem disabled={position.index === 0} onClick={() => onMove(-1)}>
-                    <ChevronLeft className="size-3.5" /> Move earlier
+                    <ChevronLeft className="size-3.5" /> {t("admin.plans.cardGrid.moveEarlier")}
                   </DropdownMenuItem>
                   <DropdownMenuItem disabled={position.index >= position.count - 1} onClick={() => onMove(1)}>
-                    <ChevronRight className="size-3.5" /> Move later
+                    <ChevronRight className="size-3.5" /> {t("admin.plans.cardGrid.moveLater")}
                   </DropdownMenuItem>
                 </>
               )}
               <DropdownMenuItem disabled={isSavingRecommended || (!plan.isActive && !isRecommended)} onClick={onToggleRecommended}>
-                <Star className="size-3.5" /> {isRecommended ? "Stop recommending" : "Recommend"}
+                <Star className="size-3.5" /> {isRecommended ? t("admin.plans.cardGrid.stopRecommending") : t("admin.plans.cardGrid.recommend")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onDuplicate}>
-                <Copy className="size-3.5" /> Duplicate
+                <Copy className="size-3.5" /> {t("admin.plans.cardGrid.duplicate")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(plan)}>
-                <Pencil className="size-3.5" /> Edit
+                <Pencil className="size-3.5" /> {t("admin.plans.shared.edit")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDelete(plan)}>
-                <Trash2 className={cn("size-3.5", plan.canDelete && "text-rose-500")} /> Delete
+                <Trash2 className={cn("size-3.5", plan.canDelete && "text-rose-500")} /> {t("admin.plans.cardGrid.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -514,28 +517,28 @@ function PlanCard({
             variant="ghost"
             size="icon-sm"
             className={iconButton}
-            aria-label={isRecommended ? `Stop recommending ${plan.name}` : `Recommend ${plan.name}`}
+            aria-label={isRecommended ? t("admin.plans.cardGrid.stopRecommendingPlan", { plan: plan.name }) : t("admin.plans.cardGrid.recommendPlan", { plan: plan.name })}
             aria-pressed={isRecommended}
             title={
               isRecommended
-                ? "Stop recommending this plan"
+                ? t("admin.plans.cardGrid.stopRecommendingThisPlan")
                 : plan.isActive
-                  ? "Show this plan as Recommended to Sellers"
-                  : "Put this plan on sale to recommend it"
+                  ? t("admin.plans.cardGrid.showAsRecommended")
+                  : t("admin.plans.cardGrid.putOnSaleToRecommend")
             }
             disabled={isSavingRecommended || (!plan.isActive && !isRecommended)}
             onClick={onToggleRecommended}
           >
             <Star className={cn("size-3.5", isRecommended && "fill-orange-400 text-orange-400")} />
           </Button>
-          <Button variant="ghost" size="icon-sm" className={iconButton} aria-label={`Duplicate ${plan.name}`} title="Duplicate plan" onClick={onDuplicate}>
+          <Button variant="ghost" size="icon-sm" className={iconButton} aria-label={t("admin.plans.cardGrid.duplicatePlan", { plan: plan.name })} title={t("admin.plans.cardGrid.duplicatePlanTitle")} onClick={onDuplicate}>
             <Copy className="size-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="icon-sm"
             className={iconButton}
-            aria-label={`Edit ${plan.name}`}
+            aria-label={t("admin.plans.cardGrid.editPlan", { plan: plan.name })}
             onClick={() => onEdit(plan)}
           >
             <Pencil className="size-3.5" />
@@ -544,11 +547,11 @@ function PlanCard({
             variant="ghost"
             size="icon-sm"
             className={iconButton}
-            aria-label={`Delete ${plan.name}`}
+            aria-label={t("admin.plans.cardGrid.deletePlan", { plan: plan.name })}
             title={
               plan.canDelete
-                ? "Delete plan"
-                : "This plan has subscribers. Take it off sale instead."
+                ? t("admin.plans.cardGrid.deletePlanTitle")
+                : t("admin.plans.cardGrid.deleteBlockedTitle")
             }
             onClick={() => onDelete(plan)}
           >
@@ -566,10 +569,10 @@ function PlanCard({
           <span className={cn("text-4xl font-extrabold tracking-tight tabular-nums max-md:text-3xl", isDark ? "text-white" : "text-ink-900")}>
             {formatVnd(plan.monthlyPriceVnd)}
           </span>
-          <span className={cn("text-sm", isDark ? "text-white/80" : "text-ink-500")}>/month</span>
+          <span className={cn("text-sm", isDark ? "text-white/80" : "text-ink-500")}>{t("admin.plans.shared.perMonthSuffix")}</span>
         </p>
         <p className={cn("mt-1 min-h-4 text-xs", isDark ? "text-white/80" : "text-ink-500")}>
-          {plan.annualPriceVnd !== null ? `or ${formatVnd(plan.annualPriceVnd)} a year` : ""}
+          {plan.annualPriceVnd !== null ? t("admin.plans.cardGrid.annualAlternative", { amount: formatVnd(plan.annualPriceVnd) }) : ""}
         </p>
         {/* Two lines tall when any plan has a description, so the figures below line up across cards. */}
         {hasDescriptions && (
@@ -586,20 +589,20 @@ function PlanCard({
         )}
       >
         <Stat
-          label="Subscribers"
+          label={t("admin.plans.cardGrid.subscribers")}
           value={plan.activeSubscriberCount.toLocaleString()}
           icon
           isDark={isDark}
           extra={<TrialBadge count={plan.trialSubscriberCount ?? 0} planName={plan.name} isDark={isDark} />}
         />
-        <Stat label="Per run" value={formatLimit(plan.maxBatchSize)} isDark={isDark} />
-        <Stat label="Jobs at once" value={formatLimit(plan.maxConcurrentJobs)} isDark={isDark} />
+        <Stat label={t("admin.plans.cardGrid.perRun")} value={formatLimit(plan.maxBatchSize, t("admin.plans.shared.noLimit"))} isDark={isDark} />
+        <Stat label={t("admin.plans.cardGrid.jobsAtOnce")} value={formatLimit(plan.maxConcurrentJobs, t("admin.plans.shared.noLimit"))} isDark={isDark} />
       </div>
 
       <div className="flex-1 px-6 pt-5">
         <div className="mb-2 flex items-center justify-between gap-2">
           <p className={cn("flex items-center gap-1.5 text-[11px] font-semibold tracking-wide uppercase", isDark ? "text-white/80" : "text-ink-600")}>
-            Features
+            {t("admin.plans.content.viewFeatures")}
             <span
               className={cn(
                 "rounded-full px-1.5 py-px text-[10px] tabular-nums",
@@ -615,18 +618,19 @@ function PlanCard({
               onClick={() => setShowAllFeatures((value) => !value)}
               className={cn("text-[11px] font-semibold", isDark ? "text-white/80 hover:text-white" : "text-ink-500 hover:text-ink-900")}
             >
-              {showAllFeatures ? "Show only what's new" : `Show all ${included.length}`}
+              {showAllFeatures ? t("admin.plans.cardGrid.showOnlyWhatsNew") : t("admin.plans.cardGrid.showAllCount", { count: included.length })}
             </button>
           )}
         </div>
         {basePlan && !showAllFeatures && inherited > 0 && (
           <p className={cn("mb-1.5 text-xs font-semibold", isDark ? "text-white" : "text-ink-800")}>
-            Everything in {basePlan.name}
-            {listed.length > 0 ? ", plus:" : "."}
+            {listed.length > 0
+              ? t("admin.plans.cardGrid.everythingInPlus", { name: basePlan.name })
+              : t("admin.plans.cardGrid.everythingIn", { name: basePlan.name })}
           </p>
         )}
         {included.length === 0 ? (
-          <p className="text-ink-400 text-xs">No features yet. Add the ones this plan sells.</p>
+          <p className="text-ink-400 text-xs">{t("admin.plans.shared.noFeaturesYet")}</p>
         ) : (
           // A wide card lists the features in two columns.
           <ul className="grid gap-x-6 gap-y-1 @lg:grid-cols-2">
@@ -646,8 +650,8 @@ function PlanCard({
                 <span className="min-w-0 flex-1 truncate">{feature.label}</span>
                 <button
                   type="button"
-                  aria-label={`Remove ${feature.label} from ${plan.name}`}
-                  title="Remove from this plan"
+                  aria-label={t("admin.plans.cardGrid.removeFeatureFromPlan", { feature: feature.label, plan: plan.name })}
+                  title={t("admin.plans.shared.removeFromThisPlan")}
                   onClick={() => onRemove(feature.code, feature.label)}
                   className={cn(
                     "rounded p-0.5 opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100",
@@ -667,14 +671,14 @@ function PlanCard({
         {/* A plan with every feature keeps the row, so the footers of side-by-side cards line up. */}
         {missing.length === 0 && (
           <p className={cn("py-2.5 text-[11px] font-semibold tracking-wide uppercase", isDark ? "text-white/60" : "text-ink-400")}>
-            Every feature included
+            {t("admin.plans.cardGrid.everyFeatureIncluded")}
           </p>
         )}
         {missing.length > 0 && (
           <div className="py-2">
             <div className="flex items-center justify-between gap-2">
               <SectionToggle
-                label={`Not in ${plan.name} · ${missing.length}`}
+                label={t("admin.plans.cardGrid.notInPlan", { plan: plan.name, count: missing.length })}
                 isOpen={isMissingOpen}
                 isDark={isDark}
                 onToggle={() => setIsMissingOpen((value) => !value)}
@@ -687,7 +691,7 @@ function PlanCard({
                   isDark ? "text-slate-200 hover:bg-white/10" : "text-ink-600 hover:bg-ink-100"
                 )}
               >
-                <Plus className="size-3" /> Add several
+                <Plus className="size-3" /> {t("admin.plans.cardGrid.addSeveral")}
               </button>
             </div>
             {isMissingOpen && (
@@ -700,8 +704,8 @@ function PlanCard({
                   <span className="min-w-0 flex-1 truncate">{feature.label}</span>
                   <button
                     type="button"
-                    aria-label={`Add ${feature.label} to ${plan.name}`}
-                    title="Add to this plan"
+                    aria-label={t("admin.plans.cardGrid.addFeatureToPlan", { feature: feature.label, plan: plan.name })}
+                    title={t("admin.plans.shared.addToThisPlan")}
                     disabled={isAdding}
                     onClick={() => onQuickAdd(feature.code)}
                     className={cn(
@@ -720,7 +724,7 @@ function PlanCard({
 
         <div className="py-2">
         <SectionToggle
-          label={`Limits · ${limits.length}`}
+          label={t("admin.plans.cardGrid.limitsCount", { count: limits.length })}
           isOpen={isLimitsOpen}
           isDark={isDark}
           onToggle={() => setIsLimitsOpen((value) => !value)}
@@ -731,14 +735,14 @@ function PlanCard({
             <li key={limit.code} className={cn("group flex items-center gap-2 text-[11px]", isDark ? "text-white/80" : "text-ink-500")}>
               <span className="min-w-0 flex-1 truncate">
                 {limit.label}
-                {isSafetyCap(limit.code) && <span className={isDark ? "text-white/60" : "text-ink-400"}> · hidden from Sellers</span>}
+                {isSafetyCap(limit.code) && <span className={isDark ? "text-white/60" : "text-ink-400"}> · {t("admin.plans.shared.hiddenFromSellers")}</span>}
               </span>
               <span className={cn("font-semibold tabular-nums", isDark ? "text-slate-100" : "text-ink-700")}>
-                {limit.value === null ? "No limit" : `${limit.value.toLocaleString()}${units.get(limit.code) ? ` ${units.get(limit.code)}` : ""}`}
+                {limit.value === null ? t("admin.plans.shared.noLimit") : `${limit.value.toLocaleString()}${units.get(limit.code) ? ` ${units.get(limit.code)}` : ""}`}
               </span>
               <button
                 type="button"
-                aria-label={`Change ${limit.label} on ${plan.name}`}
+                aria-label={t("admin.plans.compare.changeFeatureOnPlan", { feature: limit.label, plan: plan.name })}
                 onClick={() => onEditLimit({ code: limit.code, label: limit.label, current: limit.value, unit: units.get(limit.code) ?? null })}
                 className={cn(
                   "rounded p-0.5",
@@ -785,9 +789,9 @@ function SectionToggle({
   );
 }
 
-
 // Trials sit beside the subscriber count, never added to it: they have not paid yet.
 function TrialBadge({ count, planName, isDark = false }: { count: number; planName: string; isDark?: boolean }) {
+  const { t } = useTranslation("common");
   if (count <= 0) return null;
   return (
     <TooltipProvider delayDuration={150}>
@@ -800,12 +804,11 @@ function TrialBadge({ count, planName, isDark = false }: { count: number; planNa
               isDark ? "bg-teal-400/20 text-teal-200" : "bg-[#2a9d8f]/12 text-[#21796e] dark:text-[#8fe0d6]"
             )}
           >
-            +{count.toLocaleString()} trial
+            {t("admin.plans.cardGrid.trialBadge", { count: count.toLocaleString() })}
           </span>
         </TooltipTrigger>
         <TooltipContent className="max-w-56 text-xs">
-          {count.toLocaleString()} Sellers on a free {planName} trial. Not counted as subscribers
-          until they pay.
+          {t("admin.plans.cardGrid.trialTooltip", { count: count.toLocaleString(), plan: planName })}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

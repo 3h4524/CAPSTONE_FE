@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Headphones, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { AdminTicketFilters } from "@/api/admin-support";
 import { TicketFilterSheet } from "@/components/admin/support/ticket-filter-sheet";
@@ -7,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useAdminSupportTickets } from "@/hooks/queries/use-admin-support-tickets";
-import type { TicketPriority, TicketStatus } from "@/types/support";
+import { i18n } from "@/i18n/client";
+import type { TicketCategory, TicketPriority, TicketStatus } from "@/types/support";
 import { cn } from "@/utils/cn";
 
 type TicketListPanelProps = {
@@ -17,12 +19,37 @@ type TicketListPanelProps = {
   onSelectTicket: (id: string) => void;
 };
 
-const TABS: { label: string; value: TicketStatus | "all" }[] = [
-  { label: "Open", value: "open" },
-  { label: "In Progress", value: "in_progress" },
-  { label: "Resolved", value: "resolved" },
-  { label: "Closed", value: "closed" },
+const TABS: { value: TicketStatus | "all" }[] = [
+  { value: "open" },
+  { value: "in_progress" },
+  { value: "resolved" },
+  { value: "closed" },
 ];
+
+const CATEGORY_LABEL_KEYS: Record<TicketCategory, string> = {
+  integration: "admin.support.categories.integration",
+  ai_generation: "admin.support.categories.ai_generation",
+  batch_processing: "admin.support.categories.batch_processing",
+  export_publishing: "admin.support.categories.export_publishing",
+  billing_subscription: "admin.support.categories.billing_subscription",
+  account_security: "admin.support.categories.account_security",
+  other: "admin.support.categories.other",
+};
+
+const PRIORITY_LABEL_KEYS: Record<TicketPriority, string> = {
+  low: "admin.support.priorities.low",
+  normal: "admin.support.priorities.normal",
+  high: "admin.support.priorities.high",
+  urgent: "admin.support.priorities.urgent",
+};
+
+const STATUS_LABEL_KEYS: Record<TicketStatus, string> = {
+  open: "admin.support.statuses.open",
+  in_progress: "admin.support.statuses.in_progress",
+  waiting_customer: "admin.support.statuses.waiting_customer",
+  resolved: "admin.support.statuses.resolved",
+  closed: "admin.support.statuses.closed",
+};
 
 export const TicketListPanel = ({
   filters,
@@ -30,6 +57,7 @@ export const TicketListPanel = ({
   selectedTicketId,
   onSelectTicket,
 }: TicketListPanelProps) => {
+  const { t } = useTranslation("common");
   const [searchTerm, setSearchTerm] = useState(filters.searchTerm || "");
   const [localReadState, setLocalReadState] = useState<Record<string, string>>({});
 
@@ -80,7 +108,7 @@ export const TicketListPanel = ({
       <div className="border-ink-200 border-b px-4 pt-4 pb-0">
         <h2 className="text-ink-900 mb-4 flex items-center gap-2 text-xl font-bold max-md:mb-3 md:hidden">
           <Headphones className="size-5" />
-          Support Tickets
+          {t("admin.support.supportTickets")}
         </h2>
 
         {/* Search & Filter */}
@@ -95,7 +123,7 @@ export const TicketListPanel = ({
                   onFiltersChange({ ...filters, searchTerm, pageIndex: 1 });
                 }
               }}
-              placeholder="Search tickets..."
+              placeholder={t("admin.support.searchPlaceholder")}
               className="border-ink-200 bg-ink-50 focus-visible:ring-ink-300 h-9 pl-9 text-[13px] shadow-none focus-visible:ring-1 max-md:text-base"
             />
           </div>
@@ -124,7 +152,7 @@ export const TicketListPanel = ({
                     : "text-ink-500 hover:border-ink-300 hover:text-ink-700 border-transparent"
                 )}
               >
-                {tab.label}
+                {tab.value === "all" ? t("admin.support.statuses.all") : t(STATUS_LABEL_KEYS[tab.value])}
               </button>
             );
           })}
@@ -139,11 +167,11 @@ export const TicketListPanel = ({
           </div>
         ) : isError ? (
           <div className="p-8 text-center text-sm text-red-500">
-            Failed to load tickets. Please try again.
+            {t("admin.support.ticketsLoadFailed")}
           </div>
         ) : !data?.items.length ? (
           <div className="text-ink-500 p-8 text-center text-sm">
-            No tickets found for the current filters.
+            {t("admin.support.noTicketsForFilters")}
           </div>
         ) : (
           <div className="divide-ink-100/60 divide-y">
@@ -173,7 +201,7 @@ export const TicketListPanel = ({
                       </span>
                       {hasUnread && (
                         <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] leading-none font-bold text-rose-600 uppercase shadow-sm dark:bg-rose-500/15 dark:text-rose-400">
-                          New
+                          {t("admin.support.unreadNew")}
                         </span>
                       )}
                     </div>
@@ -189,14 +217,14 @@ export const TicketListPanel = ({
                   )}
                   
                   <div className="text-ink-500 mb-2 text-[12px]">
-                    #{ticket.ticketNumber} • <span className="capitalize">{ticket.category.replace("_", " ")}</span>
+                    #{ticket.ticketNumber} • <span>{t(CATEGORY_LABEL_KEYS[ticket.category])}</span>
                   </div>
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className={cn("flex items-center gap-1.5 text-[12px] font-medium", ticket.priority === "urgent" ? "text-rose-600 dark:text-rose-400" : "text-ink-600")}>
                         <div className={cn("size-2 rounded-full", getPriorityDot(ticket.priority))} />
-                        <span className="capitalize">{ticket.priority}</span>
+                        <span>{t(PRIORITY_LABEL_KEYS[ticket.priority])}</span>
                       </div>
                     </div>
                     {ticket.assignedToName ? (
@@ -208,7 +236,7 @@ export const TicketListPanel = ({
                       </div>
                     ) : (
                       <div className="border-ink-300 bg-ink-50 text-ink-500 rounded-md border border-dashed px-2 py-0.5 text-[11px] font-medium">
-                        Unassigned
+                        {t("admin.support.unassigned")}
                       </div>
                     )}
                   </div>
@@ -228,10 +256,10 @@ export const TicketListPanel = ({
             disabled={filters.pageIndex <= 1}
             onClick={() => onFiltersChange({ ...filters, pageIndex: filters.pageIndex - 1 })}
           >
-            Previous
+            {t("admin.support.previous")}
           </Button>
           <span className="text-ink-500 text-xs">
-            Page {filters.pageIndex} of {data.totalPages}
+            {t("admin.support.pageOf", { page: filters.pageIndex, total: data.totalPages })}
           </span>
           <Button
             variant="outline"
@@ -239,7 +267,7 @@ export const TicketListPanel = ({
             disabled={filters.pageIndex >= data.totalPages}
             onClick={() => onFiltersChange({ ...filters, pageIndex: filters.pageIndex + 1 })}
           >
-            Next
+            {t("admin.support.next")}
           </Button>
         </div>
       )}
@@ -248,11 +276,12 @@ export const TicketListPanel = ({
 };
 
 function formatRelativeDate(value: string) {
+  const t = i18n.t.bind(i18n);
   const date = new Date(value);
   const differenceMinutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60_000));
-  if (differenceMinutes < 1) return "Just now";
-  if (differenceMinutes < 60) return `${differenceMinutes} min ago`;
-  if (differenceMinutes < 1_440) return `${Math.floor(differenceMinutes / 60)} hr ago`;
-  if (differenceMinutes < 2_880) return "Yesterday";
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
+  if (differenceMinutes < 1) return t("admin.support.justNow");
+  if (differenceMinutes < 60) return t("admin.support.minAgo", { count: differenceMinutes });
+  if (differenceMinutes < 1_440) return t("admin.support.hrAgo", { count: Math.floor(differenceMinutes / 60) });
+  if (differenceMinutes < 2_880) return t("admin.support.yesterday");
+  return new Intl.DateTimeFormat(i18n.language, { month: "short", day: "numeric" }).format(date);
 }

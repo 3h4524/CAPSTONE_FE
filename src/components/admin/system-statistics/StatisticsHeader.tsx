@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Download, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "@/components/commons/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -25,12 +26,12 @@ interface StatisticsHeaderProps {
 }
 
 const TIME_OPTIONS = [
-  { value: "7d", label: "Last 7 days" },
-  { value: "30d", label: "Last 30 days" },
-  { value: "90d", label: "Last 90 days" },
-  { value: "180d", label: "Last 180 days" },
-  { value: "year", label: "This year" },
-];
+  { value: "7d", key: "last7Days" },
+  { value: "30d", key: "last30Days" },
+  { value: "90d", key: "last90Days" },
+  { value: "180d", key: "last180Days" },
+  { value: "year", key: "thisYear" },
+] as const;
 
 export function StatisticsHeader({
   timeRange,
@@ -40,13 +41,15 @@ export function StatisticsHeader({
   periodStart,
   periodEnd,
 }: StatisticsHeaderProps) {
+  const { t } = useTranslation("common");
+
   return (
     <PageHeader
       className="mb-4.5"
-      title="System Statistics"
+      title={t("admin.statistics.header.title")}
       description={
         <>
-          Generation throughput, pipeline conversion and job reliability across all sellers
+          {t("admin.statistics.header.description")}
           {periodStart && periodEnd && (
             <>
               {" · "}
@@ -61,12 +64,12 @@ export function StatisticsHeader({
       <div className="flex flex-wrap items-center gap-2.5 max-md:flex-nowrap">
         <Select value={timeRange} onValueChange={onTimeRangeChange}>
           <SelectTrigger className="border-ink-200 bg-card text-ink-700 hover:bg-ink-50 focus:ring-ink-400 h-8.5 min-w-[135px] cursor-pointer rounded-xl px-3.5 text-xs font-medium shadow-2xs focus:ring-1 max-md:min-w-0 max-md:flex-1">
-            <SelectValue placeholder="Select period" />
+            <SelectValue placeholder={t("admin.statistics.header.selectPeriod")} />
           </SelectTrigger>
           <SelectContent className="border-ink-200 bg-card rounded-xl shadow-md">
             {TIME_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value} className="cursor-pointer text-xs font-medium">
-                {opt.label}
+                {t(`admin.statistics.header.timeRange.${opt.key}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -84,7 +87,7 @@ export function StatisticsHeader({
           ) : (
             <Download className="text-ink-600 h-3.5 w-3.5" />
           )}
-          <span>Export CSV</span>
+          <span>{t("admin.statistics.header.exportCsv")}</span>
         </Button>
       </div>
       }

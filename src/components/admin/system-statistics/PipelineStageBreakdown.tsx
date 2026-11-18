@@ -9,6 +9,7 @@ import {
   Tag,
   Wrench,
 } from "lucide-react";
+import { Trans,useTranslation } from "react-i18next";
 
 import type {
   IntegrationStatusDto,
@@ -22,51 +23,59 @@ interface PipelineStageBreakdownProps {
 }
 
 interface StepConfig {
-  badge: string;
+  badgeKey: string;
   icon: React.ReactNode;
   relativeTo?: string;
-  relativeNoun?: string;
+  noun?: "image" | "listing";
 }
 
 const PUBLISHED_STAGE = "Published to Etsy";
 
+const STAGE_KEYS: Record<string, string> = {
+  "Image Generation": "imageGeneration",
+  "Mock-up Rendering": "mockUpRendering",
+  "Video Rendering": "videoRendering",
+  "Listing Generation": "listingGeneration",
+  [PUBLISHED_STAGE]: "publishedToEtsy",
+};
+
 const STEP_DETAILS: Record<string, StepConfig> = {
   "Image Generation": {
-    badge: "Source Designs",
+    badgeKey: "sourceDesigns",
     icon: <ImageIcon className="text-ink-600 h-4 w-4" />,
   },
   "Mock-up Rendering": {
-    badge: "Product Mockups",
+    badgeKey: "productMockups",
     icon: <Wrench className="text-ink-600 h-4 w-4" />,
     relativeTo: "Image Generation",
-    relativeNoun: "image",
+    noun: "image",
   },
   "Video Rendering": {
-    badge: "Promo Videos",
+    badgeKey: "promoVideos",
     icon: <Clapperboard className="text-ink-600 h-4 w-4" />,
     relativeTo: "Image Generation",
-    relativeNoun: "image",
+    noun: "image",
   },
   "Listing Generation": {
-    badge: "Listing Copies",
+    badgeKey: "listingCopies",
     icon: <Tag className="text-ink-600 h-4 w-4" />,
     relativeTo: "Image Generation",
-    relativeNoun: "image",
+    noun: "image",
   },
   [PUBLISHED_STAGE]: {
-    badge: "Marketplace Uploads",
+    badgeKey: "marketplaceUploads",
     icon: (
       <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#f97316] text-[9px] font-bold text-white shadow-2xs">
         Etsy
       </div>
     ),
     relativeTo: "Listing Generation",
-    relativeNoun: "listing",
+    noun: "listing",
   },
 };
 
 const FALLBACK_STEP: StepConfig = {
-  badge: "Pipeline Stage",
+  badgeKey: "pipelineStage",
   icon: <Layers className="text-ink-600 h-4 w-4" />,
 };
 
@@ -75,6 +84,8 @@ export function PipelineStageBreakdown({
   integrationStatus,
   isLoading,
 }: PipelineStageBreakdownProps) {
+  const { t } = useTranslation("common");
+
   const totalAssets = useMemo(() => {
     return pipelineStages.reduce((sum, s) => sum + s.count, 0);
   }, [pipelineStages]);
@@ -90,19 +101,31 @@ export function PipelineStageBreakdown({
     return stages.map((stage) => {
       const details = STEP_DETAILS[stage.stageName];
       const reference = details?.relativeTo ? countByStage.get(details.relativeTo) ?? 0 : 0;
-      let ratioText = "Funnel entry";
+      const noun = details?.noun;
+      const nounPluralKey = noun ? `admin.statistics.pipeline.nouns.${noun}Plural` : null;
+      const nounKey = noun ? `admin.statistics.pipeline.nouns.${noun}` : null;
+      let ratioText = t("admin.statistics.pipeline.funnelEntry");
       let isZeroBottleneck = false;
 
-      if (details?.relativeTo && reference > 0) {
+      if (details?.relativeTo && reference > 0 && nounKey && nounPluralKey) {
         const ratio = stage.count / reference;
         if (ratio >= 1) {
-          ratioText = `${ratio.toFixed(2)}x per ${details.relativeNoun}`;
+          ratioText = t("admin.statistics.pipeline.ratioPer", {
+            ratio: ratio.toFixed(2),
+            noun: t(nounKey),
+          });
         } else {
-          ratioText = `${(ratio * 100).toFixed(1)}% of ${details.relativeNoun}s`;
+          ratioText = t("admin.statistics.pipeline.ratioOf", {
+            ratio: (ratio * 100).toFixed(1),
+            nouns: t(nounPluralKey),
+          });
           if (stage.count === 0) isZeroBottleneck = true;
         }
-      } else if (details?.relativeTo) {
-        ratioText = stage.count === 0 ? `0.0% of ${details.relativeNoun}s` : "—";
+      } else if (details?.relativeTo && nounPluralKey) {
+        ratioText =
+          stage.count === 0
+            ? t("admin.statistics.pipeline.ratioOf", { ratio: "0.0", nouns: t(nounPluralKey) })
+            : "—";
         if (stage.count === 0) isZeroBottleneck = true;
       }
 
@@ -114,7 +137,7 @@ export function PipelineStageBreakdown({
         width: stage.count === 0 ? 0 : Math.max((stage.count / maxCount) * 100, 2),
       };
     });
-  }, [pipelineStages, integrationStatus]);
+  }, [pipelineStages, integrationStatus, t]);
 
   const isEmpty = pipelineStages.length === 0 || totalAssets === 0;
 
@@ -125,13 +148,16 @@ export function PipelineStageBreakdown({
           <GitFork className="h-5 w-5" />
         </div>
         <div>
-          <h3 className="text-ink-900 text-sm font-bold">Pipeline conversion</h3>
+          <h3 className="text-ink-900 text-sm font-bold">{t("admin.statistics.pipeline.title")}</h3>
           {isLoading ? (
             <div className="bg-ink-100 mt-1 h-3.5 w-48 animate-pulse rounded" />
           ) : (
             <p className="text-ink-500 text-xs">
-              <span className="text-ink-700 font-semibold">{totalAssets.toLocaleString()}</span>{" "}
-              assets generated · each stage vs the one it builds on
+              <Trans
+                i18nKey="admin.statistics.pipeline.subtitle"
+                values={{ count: totalAssets.toLocaleString() }}
+                components={{ assets: <span className="text-ink-700 font-semibold" /> }}
+              />
             </p>
           )}
         </div>
@@ -152,12 +178,13 @@ export function PipelineStageBreakdown({
           </div>
         ) : isEmpty ? (
           <div className="text-ink-400 flex flex-1 items-center justify-center py-16 text-xs">
-            No generative assets recorded in this period.
+            {t("admin.statistics.pipeline.emptyState")}
           </div>
         ) : (
           <div className="flex flex-1 flex-col justify-around py-1">
             {rows.map((row) => {
               const details = row.details ?? FALLBACK_STEP;
+              const stageKey = STAGE_KEYS[row.stageName];
               return (
                 <div key={row.stageName} className="py-2.5">
                   <div className="flex items-center justify-between gap-3">
@@ -167,9 +194,11 @@ export function PipelineStageBreakdown({
                       </div>
                       <div className="min-w-0">
                         <p className="text-ink-900 text-xs font-bold">
-                          {row.stageName}
+                          {stageKey ? t(`admin.statistics.pipeline.stages.${stageKey}`) : row.stageName}
                         </p>
-                        <p className="text-ink-400 text-[11px]">{details.badge}</p>
+                        <p className="text-ink-400 text-[11px]">
+                          {t(`admin.statistics.pipeline.badges.${details.badgeKey}`)}
+                        </p>
                       </div>
                     </div>
                     <div className="shrink-0 text-right">

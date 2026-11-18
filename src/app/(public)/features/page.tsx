@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Reveal } from "@/components/commons/animations/reveal";
 import { CtaSection } from "@/components/features/sections/cta-section";
 import { DuoSection } from "@/components/features/sections/duo-section";
+import { IntroSection } from "@/components/features/sections/intro-section";
 import { PlatformsSection } from "@/components/features/sections/platforms-section";
 import { ShowcaseSection } from "@/components/features/sections/showcase-section";
 import { SpotlightSection } from "@/components/features/sections/spotlight-section";
@@ -18,13 +19,14 @@ import { getPageMetadata } from "@/data/metadata";
 export const metadata: Metadata = getPageMetadata({
   title: "Features",
   description:
-    "Explore what Podivo automates: AI design generation, mockups, promo videos, SEO-optimized Etsy listings, batch processing and publishing to Etsy and Printify.",
+    "Explore what Podivo automates: AI design generation, mockups, promo videos, SEO-optimized Etsy listings, batch processing and sending listings to Etsy and Printify.",
   pathname: "/features",
 });
 
 const FeaturesPage = () => {
   return (
     <main className="flex flex-col">
+      <IntroSection />
       <Reveal>
         <SpotlightSection feature={DESIGN_FEATURE} />
       </Reveal>

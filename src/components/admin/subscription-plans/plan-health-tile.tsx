@@ -1,5 +1,6 @@
-import { OUTLOOK_CHIP, OUTLOOK_ICON, STATUS_STYLE } from "@/components/admin/subscription-plans/plan-health-parts";
-import { OUTLOOK_LABEL, STATUS_LABEL } from "@/helpers/plan-ai-review";
+import { useTranslation } from "react-i18next";
+
+import { OUTLOOK_CHIP, OUTLOOK_ICON, OUTLOOK_LABEL_KEY, STATUS_LABEL_KEY, STATUS_STYLE } from "@/components/admin/subscription-plans/plan-health-parts";
 import type { PlanAiAssessment, PlanAiScore } from "@/types/plan-ai-review";
 import { cn } from "@/utils/cn";
 
@@ -20,6 +21,7 @@ export function PlanTile({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const { t } = useTranslation("common");
   const style = STATUS_STYLE[plan.status];
   const Outlook = OUTLOOK_ICON[plan.outlook.direction];
   const delta = previous?.score != null && plan.score != null ? plan.score - previous.score : null;
@@ -49,14 +51,14 @@ export function PlanTile({
               OUTLOOK_CHIP[plan.outlook.direction]
             )}
           >
-            <Outlook className="size-3.5" /> {OUTLOOK_LABEL[plan.outlook.direction]}
+            <Outlook className="size-3.5" /> {t(OUTLOOK_LABEL_KEY[plan.outlook.direction])}
           </span>
         </div>
         <span className={cn("mt-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold", style.chip)}>
-          {STATUS_LABEL[plan.status]}
+          {t(STATUS_LABEL_KEY[plan.status])}
         </span>
         <div className="text-ink-400 mt-1.5 flex items-center gap-1.5 text-[11px]">
-          <span>{previous ? `Last review: ${STATUS_LABEL[previous.status]} · ${previous.score ?? "—"}` : "First review"}</span>
+          <span>{previous ? t("admin.plans.tile.lastReview", { status: t(STATUS_LABEL_KEY[previous.status]), score: previous.score ?? "—" }) : t("admin.plans.shared.firstReview")}</span>
           {showDelta && delta !== null && (
             <span
               className={cn(

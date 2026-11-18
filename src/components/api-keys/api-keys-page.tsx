@@ -26,6 +26,8 @@ import {
 } from "@/components/api-keys/connection-parts";
 import { PageHeader } from "@/components/commons/layout/page-header";
 import { PageLoading } from "@/components/commons/layout/page-loading";
+import { GuideReplayButton } from "@/components/commons/onboarding/guide-replay-button";
+import { PageGuide } from "@/components/commons/onboarding/page-guide";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -269,17 +271,18 @@ export function ApiKeysPage() {
 
   return (
     <div className="w-full min-w-0 md:p-6">
-      <div className="mb-6 flex flex-col gap-2 max-md:mb-4">
+      <div className="mb-6 flex flex-col gap-2 max-md:mb-4" data-guide="api-keys.header">
         <PageHeader
           title={t("apiKeys.pageTitle")}
           description={t("apiKeys.pageDescription")}
           actions={
             <>
+              <GuideReplayButton guideKey="api-keys" className="max-md:hidden" />
               <Button variant="ghost" size="sm" onClick={() => setGuideOpen(true)}>
                 <BookOpen className="size-4" />
                 <span className="max-md:sr-only">{t("apiKeys.readSetupGuide")}</span>
               </Button>
-              <Button size="page-action" disabled={!query.data || forbidden || failed} onClick={() => setDialog({})}>
+              <Button size="page-action" data-guide="api-keys.add" disabled={!query.data || forbidden || failed} onClick={() => setDialog({})}>
                 <Plus className="size-4" />
                 <span>
                   {t("apiKeys.addShort")}<span className="max-md:hidden">{t("apiKeys.addSuffix")}</span>
@@ -325,13 +328,16 @@ export function ApiKeysPage() {
         <PageLoading label={t("apiKeys.loadingKeys")} />
       ) : data ? (
         <>
-          <WorkflowReadiness
-            items={data.items}
-            isReady={data.isReady}
-            onConnect={(provider) => setDialog({ initialProvider: provider })}
-            onFix={(connection) => setDialog({ connection })}
-          />
+          <div data-guide="api-keys.readiness">
+            <WorkflowReadiness
+              items={data.items}
+              isReady={data.isReady}
+              onConnect={(provider) => setDialog({ initialProvider: provider })}
+              onFix={(connection) => setDialog({ connection })}
+            />
+          </div>
           <section
+            data-guide="api-keys.connections"
             aria-labelledby="connected-services-title"
             className="bg-card overflow-hidden rounded-xl border shadow-sm"
           >
@@ -425,6 +431,7 @@ export function ApiKeysPage() {
       {dialog && data && (
         <ConnectionDialog {...dialog} connections={data.items} onClose={() => setDialog(null)} />
       )}
+      <PageGuide guideKey="api-keys" />
       <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
         <DialogContent>
           <DialogHeader>

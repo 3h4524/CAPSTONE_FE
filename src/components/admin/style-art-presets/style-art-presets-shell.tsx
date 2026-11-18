@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { StylePresetFormDialog } from "@/components/admin/style-art-presets/style-preset-form-dialog";
 import { StylePresetList } from "@/components/admin/style-art-presets/style-preset-list";
@@ -11,6 +12,7 @@ import { useAdminStyleArtPresets } from "@/hooks/queries/use-admin-style-art-pre
 import type { AdminStyleArtPreset } from "@/types/admin-style-art-presets";
 
 export const StyleArtPresetsShell = () => {
+  const { t } = useTranslation("common");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<AdminStyleArtPreset | null>(null);
   const { data, isPending, isError, error } = useAdminStyleArtPresets();
@@ -27,12 +29,12 @@ export const StyleArtPresetsShell = () => {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="System styles"
-        description="System art styles shown to every seller. English and Vietnamese fields are saved separately; sellers see whichever language the app is set to."
+        title={t("admin.styles.pageTitle")}
+        description={t("admin.styles.pageDescription")}
         actions={
           <Button type="button" onClick={openCreate}>
             <Plus className="size-4" />
-            New style
+            {t("admin.styles.newStyle")}
           </Button>
         }
       />

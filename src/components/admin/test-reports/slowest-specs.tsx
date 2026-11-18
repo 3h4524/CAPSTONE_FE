@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Timer } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { TestReportStatusBadge } from "@/components/admin/test-reports/status-badge";
 import type { TestReportFile } from "@/types/admin-test-reports";
@@ -15,6 +16,7 @@ export const TestReportSlowestSpecs = ({
   files,
   limit = 10,
 }: TestReportSlowestSpecsProps) => {
+  const { t } = useTranslation("common");
   const slowest = useMemo(
     () =>
       files
@@ -34,7 +36,7 @@ export const TestReportSlowestSpecs = ({
   if (slowest.length === 0) {
     return (
       <p className="text-ink-400 px-5 py-10 text-center text-xs">
-        The run covered no test.
+        {t("admin.testReports.slowestSpecs.empty")}
       </p>
     );
   }
@@ -53,8 +55,10 @@ export const TestReportSlowestSpecs = ({
             <span className="text-ink-500 flex shrink-0 items-center gap-1 font-mono text-[11px]">
               <Timer className="size-3" />
               {spec.durationMs < 1000
-                ? `${spec.durationMs} ms`
-                : `${(spec.durationMs / 1000).toFixed(1)} s`}
+                ? t("admin.testReports.runTook.milliseconds", { value: spec.durationMs })
+                : t("admin.testReports.runTook.seconds", {
+                    value: (spec.durationMs / 1000).toFixed(1),
+                  })}
             </span>
           </div>
           <div className="mt-1.5 flex items-center gap-2">

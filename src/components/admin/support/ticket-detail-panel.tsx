@@ -12,7 +12,8 @@ import { useReplyAdminTicket, useUpdateAdminTicketStatus } from "@/hooks/mutatio
 import { useAdminSupportTicketDetail } from "@/hooks/queries/use-admin-support-tickets";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import { useSupportHub } from "@/hooks/use-support-hub";
-import type { SupportTicketAttachment,TicketStatus } from "@/types/support";
+import { i18n } from "@/i18n/client";
+import type { SupportTicketAttachment, TicketCategory, TicketStatus } from "@/types/support";
 import { cn } from "@/utils/cn";
 
 type TicketDetailPanelProps = {
@@ -23,18 +24,39 @@ type TicketDetailPanelProps = {
   onBack?: () => void;
 };
 
+const CATEGORY_LABEL_KEYS: Record<TicketCategory, string> = {
+  integration: "admin.support.categories.integration",
+  ai_generation: "admin.support.categories.ai_generation",
+  batch_processing: "admin.support.categories.batch_processing",
+  export_publishing: "admin.support.categories.export_publishing",
+  billing_subscription: "admin.support.categories.billing_subscription",
+  account_security: "admin.support.categories.account_security",
+  other: "admin.support.categories.other",
+};
+
+const STATUS_LABEL_KEYS: Record<TicketStatus, string> = {
+  open: "admin.support.statuses.open",
+  in_progress: "admin.support.statuses.in_progress",
+  waiting_customer: "admin.support.statuses.waiting_customer",
+  resolved: "admin.support.statuses.resolved",
+  closed: "admin.support.statuses.closed",
+};
+
 const fileDetails = (file: SupportTicketAttachment) => {
   const size = file.fileSizeMb < 1 ? `${Math.max(1, Math.round(file.fileSizeMb * 1024))} KB` : `${file.fileSizeMb.toFixed(1)} MB`;
   const extension = file.fileName.split(".").pop()?.toUpperCase();
   return extension ? `${size} • ${extension}` : size;
 };
 
-const BackToListButton = ({ onClick }: { onClick: () => void }) => (
-  <Button variant="ghost" size="sm" className="-ml-2 self-start px-2 md:hidden" onClick={onClick}>
-    <ArrowLeft className="size-4" aria-hidden="true" />
-    All tickets
-  </Button>
-);
+const BackToListButton = ({ onClick }: { onClick: () => void }) => {
+  const { t } = useTranslation("common");
+  return (
+    <Button variant="ghost" size="sm" className="-ml-2 self-start px-2 md:hidden" onClick={onClick}>
+      <ArrowLeft className="size-4" aria-hidden="true" />
+      {t("admin.support.allTickets")}
+    </Button>
+  );
+};
 
 export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack }: TicketDetailPanelProps) => {
   const { t } = useTranslation("common");
@@ -101,9 +123,9 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
         <div className="bg-ink-100 text-ink-400 mb-4 flex size-16 items-center justify-center rounded-full">
           <Headphones className="size-8" />
         </div>
-        <h3 className="text-ink-900 mb-2 text-lg font-semibold">Select a ticket</h3>
+        <h3 className="text-ink-900 mb-2 text-lg font-semibold">{t("admin.support.selectTicketTitle")}</h3>
         <p className="text-ink-500 max-w-sm text-sm">
-          Choose a support ticket from the list on the left to view details and respond to the user.
+          {t("admin.support.selectTicketDescription")}
         </p>
       </div>
     );
@@ -125,7 +147,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
       <div className="flex h-full flex-col">
         {onBack && <div className="p-4 md:hidden"><BackToListButton onClick={onBack} /></div>}
         <div className="flex flex-1 items-center justify-center text-sm text-red-500">
-          Failed to load ticket details.
+          {t("admin.support.ticketDetailLoadFailed")}
         </div>
       </div>
     );
@@ -142,10 +164,10 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
             <span className="text-ink-500 text-sm font-medium wrap-anywhere max-md:text-xs">#{ticket.ticketNumber}</span>
             <button 
               type="button"
-              aria-label={t("adminUi.copyTicketId")}
+              aria-label={t("admin.support.copyTicketId")}
               onClick={() => {
                 navigator.clipboard.writeText(ticket.ticketNumber);
-                toast.success("Copied ticket ID");
+                toast.success(t("admin.support.copiedTicketId"));
               }}
               className="phone-hit-area text-ink-400 hover:text-ink-600 transition-colors"
             >
@@ -161,13 +183,13 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
               role: "button",
               tabIndex: 0,
               "aria-expanded": isSummaryOpen,
-              "aria-label": "Show the ticket's details",
+              "aria-label": t("admin.support.showTicketDetails"),
               onClick: () => setIsSummaryOpen((open) => !open),
             })}
           >
             <div className="flex shrink-0 items-center gap-2 max-md:gap-1">
               <Folder className="text-ink-400 size-4 max-md:size-3.5" />
-              <span className="capitalize">{ticket.category.replace("_", " ")}</span>
+              <span>{t(CATEGORY_LABEL_KEYS[ticket.category])}</span>
             </div>
             <div className="flex items-center gap-2 max-md:min-w-0 max-md:gap-1">
               <User className="text-ink-400 size-4 shrink-0 max-md:size-3.5" />
@@ -189,14 +211,14 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
             <SelectTrigger className="border-ink-200 bg-card focus:ring-ink-300 h-9 w-[130px] rounded-full text-sm font-medium shadow-sm focus:ring-1">
               <div className="flex items-center gap-2">
                 <div className={cn("size-2 rounded-full", ticket.status === "resolved" || ticket.status === "closed" ? "bg-emerald-500" : ticket.status === "in_progress" ? "bg-amber-500" : "bg-blue-600")} />
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t("admin.support.status")} />
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="open">Open</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="resolved">Resolved</SelectItem>
-              <SelectItem value="closed">Closed</SelectItem>
+              <SelectItem value="open">{t(STATUS_LABEL_KEYS.open)}</SelectItem>
+              <SelectItem value="in_progress">{t(STATUS_LABEL_KEYS.in_progress)}</SelectItem>
+              <SelectItem value="resolved">{t(STATUS_LABEL_KEYS.resolved)}</SelectItem>
+              <SelectItem value="closed">{t(STATUS_LABEL_KEYS.closed)}</SelectItem>
             </SelectContent>
           </Select>
           {onToggleExpand && (
@@ -205,7 +227,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
               size="icon"
               onClick={onToggleExpand}
               className="text-ink-500 hidden h-9 w-9 shadow-none md:flex"
-              title={isExpanded ? "Collapse" : "Expand"}
+              title={isExpanded ? t("admin.support.collapse") : t("admin.support.expand")}
             >
               {isExpanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
             </Button>
@@ -354,7 +376,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
                   <div key={index} className="border-ink-200 bg-ink-50 text-ink-600 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium">
                     <FileText className="text-ink-400 size-3.5" />
                     <span className="max-w-[150px] truncate">{file.name}</span>
-                    <button type="button" aria-label={t("adminUi.removeAttachment", { name: file.name })} onClick={() => removeAttachment(index)} className="text-ink-400 hover:text-ink-700 ml-1"><X className="size-3" /></button>
+                    <button type="button" aria-label={t("admin.support.removeAttachment", { name: file.name })} onClick={() => removeAttachment(index)} className="text-ink-400 hover:text-ink-700 ml-1"><X className="size-3" /></button>
                   </div>
                 ))}
               </div>
@@ -363,7 +385,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
               id="admin-reply"
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
-              placeholder="Type a reply..."
+              placeholder={t("admin.support.replyPlaceholder")}
               className="min-h-[60px] resize-none border-none bg-transparent p-3 text-base focus-visible:ring-0 max-md:max-h-28 max-md:min-h-10 max-md:w-0 max-md:min-w-0 max-md:flex-1 max-md:rounded-none max-md:px-1 max-md:py-2 max-md:leading-6 max-md:shadow-none md:text-[14px]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
@@ -376,7 +398,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
             />
             <div className="border-ink-100 bg-card flex items-center justify-between border-t p-2 max-md:contents">
               <div className="text-ink-400 flex items-center gap-1 max-md:order-first">
-                <Button variant="ghost" size="icon" aria-label="Attach a file" className="hover:bg-ink-100 size-9 rounded-full max-md:size-10 [@media(pointer:coarse)]:min-h-10 [@media(pointer:coarse)]:min-w-10" onClick={() => fileInputRef.current?.click()}>
+                <Button variant="ghost" size="icon" aria-label={t("admin.support.attachFile")} className="hover:bg-ink-100 size-9 rounded-full max-md:size-10 [@media(pointer:coarse)]:min-h-10 [@media(pointer:coarse)]:min-w-10" onClick={() => fileInputRef.current?.click()}>
                   <Paperclip className="size-5" />
                 </Button>
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" multiple accept="image/*,.pdf,.doc,.docx,.txt" />
@@ -387,7 +409,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
                 className="bg-ink-800 text-card hover:bg-ink-900 max-md:disabled:bg-ink-200 max-md:disabled:text-ink-400 h-8 gap-2 rounded-lg px-5 text-sm font-medium shadow-sm max-md:order-3 max-md:size-10 max-md:rounded-full max-md:p-0 max-md:disabled:opacity-100 [@media(pointer:coarse)]:min-h-10"
               >
                 {isSending ? <Spinner className="size-4" /> : <Send className="size-4" />}
-                <span className="max-md:sr-only">Send<span className="max-md:hidden"> Reply</span></span>
+                <span className="max-md:sr-only">{t("admin.support.sendReply")}</span>
               </Button>
             </div>
           </div>
@@ -396,7 +418,7 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
         <div className="border-ink-200 bg-ink-50 border-t px-6 py-6 text-center">
           {ticket.satisfactionRating ? (
             <div className="mb-4">
-              <h3 className="text-ink-900 text-sm font-semibold">Customer Satisfaction</h3>
+              <h3 className="text-ink-900 text-sm font-semibold">{t("admin.support.customerSatisfaction")}</h3>
               <div className="mt-2 flex items-center justify-center gap-1">
                 {[1, 2, 3, 4, 5].map((value) => (
                   <Star
@@ -410,14 +432,14 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
                   />
                 ))}
               </div>
-              <p className="mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">Rated {ticket.satisfactionRating}/5</p>
+              <p className="mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">{t("admin.support.ratedOutOf5", { rating: ticket.satisfactionRating })}</p>
             </div>
           ) : ticket.status === "resolved" ? (
-            <div className="text-ink-500 mb-4 text-sm">Waiting for customer to rate the support experience.</div>
+            <div className="text-ink-500 mb-4 text-sm">{t("admin.support.waitingForRating")}</div>
           ) : null}
           <div className="text-ink-500 flex items-center justify-center gap-2 text-xs font-medium">
             <CheckCircle2 className="text-ink-400 size-4" />
-            <span>This ticket is {ticket.status}. No further replies can be added.</span>
+            <span>{t("admin.support.readonlyTicketNotice", { status: t(STATUS_LABEL_KEYS[ticket.status]) })}</span>
           </div>
         </div>
       )}
@@ -426,11 +448,12 @@ export const TicketDetailPanel = ({ ticketId, isExpanded, onToggleExpand, onBack
 }
 
 function formatRelativeDate(value: string) {
+  const t = i18n.t.bind(i18n);
   const date = new Date(value);
   const differenceMinutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60_000));
-  if (differenceMinutes < 1) return "Just now";
-  if (differenceMinutes < 60) return `${differenceMinutes} min ago`;
-  if (differenceMinutes < 1_440) return `${Math.floor(differenceMinutes / 60)} hr ago`;
-  if (differenceMinutes < 2_880) return "Yesterday";
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
+  if (differenceMinutes < 1) return t("admin.support.justNow");
+  if (differenceMinutes < 60) return t("admin.support.minAgo", { count: differenceMinutes });
+  if (differenceMinutes < 1_440) return t("admin.support.hrAgo", { count: Math.floor(differenceMinutes / 60) });
+  if (differenceMinutes < 2_880) return t("admin.support.yesterday");
+  return new Intl.DateTimeFormat(i18n.language, { month: "short", day: "numeric" }).format(date);
 };

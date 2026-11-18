@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { i18n } from "@/i18n/client";
+
 const MAX_FILE_MEGABYTES = 10;
 const BYTES_PER_MEGABYTE = 1024 * 1024;
 
@@ -23,7 +25,7 @@ export const imageEvalFileImageSchema = z.object({
   imageUrl: z.string().url().nullable().optional(),
   thumbnail: z
     .string()
-    .regex(/^data:image\/(jpeg|png|webp);base64,/, "A thumbnail must be a base64 image.")
+    .regex(/^data:image\/(jpeg|png|webp);base64,/, { error: () => i18n.t("admin.schemas.imageEval.thumbnailBase64") })
     .nullable()
     .optional(),
   ocrText: z.string(),
@@ -47,26 +49,26 @@ export const imageEvalFileImageSchema = z.object({
 
 export const imageEvalFileSchema = z
   .object({
-    versions: z.array(imageEvalVersionSchema).min(1, "The file lists no prompt versions."),
-    images: z.array(imageEvalFileImageSchema).min(1, "The file holds no scored images."),
+    versions: z.array(imageEvalVersionSchema).min(1, { error: () => i18n.t("admin.schemas.imageEval.fileNoVersions") }),
+    images: z.array(imageEvalFileImageSchema).min(1, { error: () => i18n.t("admin.schemas.imageEval.fileNoImages") }),
   })
   .refine(
     (file) => {
       const keys = new Set(file.versions.map((version) => version.key));
       return file.images.every((image) => keys.has(image.version));
     },
-    { message: "Some images name a prompt version the file does not list.", path: ["images"] }
+    { error: () => i18n.t("admin.schemas.imageEval.unknownVersion"), path: ["images"] }
   );
 
 export const imageEvalUploadFormSchema = z.object({
-  name: z.string().trim().min(3, "Name the run (at least 3 characters).").max(200),
+  name: z.string().trim().min(3, { error: () => i18n.t("admin.schemas.imageEval.runNameMin") }).max(200),
   notes: z.string().trim().max(1000),
   file: z
-    .instanceof(File, { message: "Choose the export file the scoring scripts wrote." })
-    .refine((file) => file.name.toLowerCase().endsWith(".json"), "Choose a .json file.")
+    .instanceof(File, { error: () => i18n.t("admin.schemas.imageEval.chooseExportFile") })
+    .refine((file) => file.name.toLowerCase().endsWith(".json"), { error: () => i18n.t("admin.schemas.imageEval.chooseJson") })
     .refine(
       (file) => file.size > 0 && file.size <= MAX_FILE_MEGABYTES * BYTES_PER_MEGABYTE,
-      `The file must be at most ${MAX_FILE_MEGABYTES} MB.`
+      { error: () => i18n.t("admin.schemas.imageEval.fileMax", { mb: MAX_FILE_MEGABYTES }) }
     ),
 });
 

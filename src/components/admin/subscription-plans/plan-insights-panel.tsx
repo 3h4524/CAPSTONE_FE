@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import type { TFunction } from "i18next";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowDownRight,
@@ -18,6 +19,7 @@ import {
   Store,
   Tag,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { ArrowScroller } from "@/components/admin/subscription-plans/arrow-scroller";
 import { FeatureAdoptionCard } from "@/components/admin/subscription-plans/feature-adoption-card";
@@ -102,12 +104,13 @@ function InsightsContent({
   reviewedFeatures: ReadonlySet<string>;
   onFeatureSelect: (metric: string) => void;
 }) {
+  const { t } = useTranslation("common");
   // Running trials have their own card; the plan comparisons only show the plans people pay for.
   const paidPlans = data.plans.filter((plan) => !plan.isTrial);
 
   return (
     <>
-      <Group id="insights-features" label="Feature use" description="Which features each plan's Sellers actually use, and who runs into a daily cap.">
+      <Group id="insights-features" label={t("admin.plans.insights.featureUse")} description={t("admin.plans.insights.featureUseDescription")}>
         <FeatureAdoptionCard
           plans={paidPlans}
           underusedBelow={data.verdictRules.promoteBelowRate}
@@ -119,26 +122,27 @@ function InsightsContent({
 
       <Group
         id="insights-trials"
-        label="Trials"
-        description={`${data.trial.started.toLocaleString()} free trial${data.trial.started === 1 ? "" : "s"} started in the last ${data.days} days: how they ended, and what the ones that bought used.`}
+        label={t("admin.plans.insights.trials")}
+        description={t("admin.plans.insights.trialsDescription", { count: data.trial.started, days: data.days })}
       >
         <TrialCard data={data} />
       </Group>
 
       <Group
         id="insights-pipeline"
-        label="Where Sellers get stuck"
-        description={`How far the products added in the last ${data.days} days got through a workflow run, from the prompt to the store. Each step counts only products that passed every step before it.`}
+        label={t("admin.plans.insights.whereStuck")}
+        description={t("admin.plans.insights.whereStuckDescription", { days: data.days })}
       >
         <PipelineCard data={data} />
       </Group>
 
       <p className="text-ink-500 text-xs">
-        Plans under {data.minimumSample} subscribers are marked “not enough data”. Cost estimate:{" "}
+        {t("admin.plans.insights.minimumSample", { minimum: data.minimumSample })}{" "}
+        {t("admin.plans.insights.costEstimate")}{" "}
         {data.unitCosts
           .map(
             (cost) =>
-              `${cost.label} ${cost.isMeasured ? "(measured)" : `${formatCostVnd(cost.costVnd)} each`}`
+              `${cost.label} ${cost.isMeasured ? t("admin.plans.insights.measured") : t("admin.plans.insights.eachSuffix", { amount: formatCostVnd(cost.costVnd) })}`
           )
           .join(" · ")}
         .
@@ -157,6 +161,7 @@ const VERDICT_STYLE: Record<PlanVerdict["tone"], { chip: string; accent: string 
 
 // One card per paid plan: the verdict the rules reached, the figures behind it and what to do.
 function VerdictCards({ data }: { data: PlanInsights }) {
+  const { t } = useTranslation("common");
   const rules = data.verdictRules;
   return (
     <div className="space-y-2">
@@ -184,7 +189,7 @@ function VerdictCards({ data }: { data: PlanInsights }) {
               </ul>
               {verdict.action && (
                 <p className="bg-ink-50 text-ink-700 mt-4 rounded-lg px-3 py-2 text-sm">
-                  <span className="text-ink-900 font-semibold">Next step: </span>
+                  <span className="text-ink-900 font-semibold">{t("admin.plans.healthDetail.nextStep")} </span>
                   {verdict.action}
                 </p>
               )}
@@ -193,26 +198,28 @@ function VerdictCards({ data }: { data: PlanInsights }) {
         })}
       </div>
       <p className="text-ink-500 text-xs">
-        Judged by fixed rules on the last {data.days} days: a plan priced {rules.premiumPriceRatio}× or more above
-        the one below whose Sellers use no more is overpriced; the plan keeping the fewest customers (under{" "}
-        {rules.lowRetentionRate}%) is a retention risk; Sellers already making as many designs and mockups as a
-        typical Seller on a plan above (on sale, and used more) are upsell candidates; an included feature under{" "}
-        {rules.promoteBelowRate}% use is worth promoting. Plans under {data.minimumSample} subscribers are not judged.
-        Retention matches the Revenue page for the same days.
+        {t("admin.plans.insights.judgedByRules", {
+          days: data.days,
+          ratio: rules.premiumPriceRatio,
+          low: rules.lowRetentionRate,
+          promote: rules.promoteBelowRate,
+          minimum: data.minimumSample,
+        })}
       </p>
     </div>
   );
 }
 
 const SECTIONS = [
-  { id: "plan-health", label: "Plan health" },
-  { id: "insights-features", label: "Feature use" },
-  { id: "insights-trials", label: "Trials" },
-  { id: "insights-pipeline", label: "Pipeline" },
+  { id: "plan-health", labelKey: "admin.plans.aiReview.planHealth" },
+  { id: "insights-features", labelKey: "admin.plans.insights.featureUse" },
+  { id: "insights-trials", labelKey: "admin.plans.insights.trials" },
+  { id: "insights-pipeline", labelKey: "admin.plans.insights.pipeline" },
 ] as const;
 
 // Jumps between the sections of a long page, and marks the one in view; sticks under the top bar.
 function SectionNav({ days }: { days: number }) {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
   const [active, setActive] = useState<string>(SECTIONS[0].id);
   const jumpTo = (id: string) => {
@@ -238,18 +245,18 @@ function SectionNav({ days }: { days: number }) {
 
   return (
     <nav
-      aria-label="Plan Insights sections"
+      aria-label={t("admin.plans.insights.sectionsAria")}
       className="bg-ink-50/90 sticky top-[53px] z-10 -mx-1 flex items-center justify-between gap-3 px-1 py-2 backdrop-blur max-md:top-[65px]"
     >
       {isPhone ? (
         <Select value={active} onValueChange={jumpTo}>
-          <SelectTrigger aria-label="Jump to a section" className="bg-card w-full">
+          <SelectTrigger aria-label={t("admin.plans.insights.jumpToSection")} className="bg-card w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent position="popper" className="bg-card w-(--radix-select-trigger-width)">
             {SECTIONS.map((section) => (
               <SelectItem key={section.id} value={section.id}>
-                {section.label}
+                {t(section.labelKey)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -270,13 +277,13 @@ function SectionNav({ days }: { days: number }) {
               active === section.id ? "bg-ink-900 text-card" : "text-ink-500 hover:bg-ink-100 hover:text-ink-800"
             )}
           >
-            {section.label}
+            {t(section.labelKey)}
           </a>
         ))}
       </div>
       )}
       <span className="border-ink-200 bg-card text-ink-600 hidden shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium sm:inline">
-        Last {days} days
+        {t("admin.plans.insights.lastDays", { days })}
       </span>
     </nav>
   );
@@ -352,21 +359,22 @@ function ConversionChange({ trial }: { trial: PlanInsights["trial"] }) {
 }
 
 // Who bought: one entry per plan bought, from the per-plan counts when the backend sends them.
-const boughtByPlan = (trial: PlanInsights["trial"]) =>
+const boughtByPlan = (trial: PlanInsights["trial"], t: TFunction) =>
   (trial.convertedByPlan?.length
     ? trial.convertedByPlan.map((plan) => ({ name: plan.name, count: plan.count }))
     : [
-        { name: "Pro", count: trial.convertedToPro },
-        { name: "Starter", count: trial.convertedToStarter },
-        { name: "another plan", count: trial.convertedToOther },
+        { name: t("admin.plans.insights.boughtPro"), count: trial.convertedToPro },
+        { name: t("admin.plans.insights.boughtStarter"), count: trial.convertedToStarter },
+        { name: t("admin.plans.insights.anotherPlan"), count: trial.convertedToOther },
       ]
   ).filter((item) => item.count > 0);
 
 // The trials as four figures, then one table of what the trials that bought used against the
 // trials that went back to Free: plain numbers, a thin bar each, and the gap.
 function TrialCard({ data }: { data: PlanInsights }) {
+  const { t } = useTranslation("common");
   const { trial } = data;
-  const bought = boughtByPlan(trial);
+  const bought = boughtByPlan(trial, t);
   const converted = bought.reduce((sum, item) => sum + item.count, 0);
   const finished = converted + trial.returnedToFree;
 
@@ -381,7 +389,7 @@ function TrialCard({ data }: { data: PlanInsights }) {
   if (trial.started === 0) {
     return (
       <Panel>
-        <Empty text="No trials started in this period." />
+        <Empty text={t("admin.plans.insights.noTrialsStarted")} />
       </Panel>
     );
   }
@@ -389,41 +397,41 @@ function TrialCard({ data }: { data: PlanInsights }) {
   return (
     <Panel className="p-0">
       <dl className="divide-ink-100 border-ink-100 grid grid-cols-2 border-b lg:grid-cols-4 lg:divide-x">
-        <Figure label="Converted" hint={`${converted} of ${finished} finished trials`}>
+        <Figure label={t("admin.plans.insights.converted")} hint={t("admin.plans.insights.ofFinishedTrials", { converted, finished })}>
           <span className="flex items-center gap-2">
             {formatRate(trial.conversionRate)}
             <ConversionChange trial={trial} />
           </span>
         </Figure>
-        <Figure label="Bought a plan" hint={bought.map((item) => `${item.name} ${item.count}`).join(" · ") || "None yet"}>
+        <Figure label={t("admin.plans.insights.boughtPlan")} hint={bought.map((item) => `${item.name} ${item.count}`).join(" · ") || t("admin.plans.insights.noneYet")}>
           {converted.toLocaleString()}
         </Figure>
-        <Figure label="Still on trial" hint="Not counted until they end">
+        <Figure label={t("admin.plans.insights.stillOnTrial")} hint={t("admin.plans.insights.notCountedUntilEnd")}>
           {trial.running.toLocaleString()}
         </Figure>
-        <Figure label="Back to Free" hint={finished > 0 ? `${Math.round((trial.returnedToFree / finished) * 100)}% of finished trials` : ""}>
+        <Figure label={t("admin.plans.insights.backToFree")} hint={finished > 0 ? t("admin.plans.insights.percentOfFinished", { percent: Math.round((trial.returnedToFree / finished) * 100) }) : ""}>
           {trial.returnedToFree.toLocaleString()}
         </Figure>
       </dl>
 
       <div className="px-6 pt-5 pb-6">
-        <p className="text-ink-900 text-sm font-semibold">What trial users used</p>
+        <p className="text-ink-900 text-sm font-semibold">{t("admin.plans.insights.whatTrialUsersUsed")}</p>
         <p className="text-ink-500 mt-0.5 text-xs">
-          Share of finished trials that used each feature at least once, the widest gap between those who bought and those who did not first.
-          {trial.previousConversionRate !== null && <> Conversion was {formatRate(trial.previousConversionRate)} the {data.days} days before.</>}
+          {t("admin.plans.insights.whatTrialUsersUsedDescription")}
+          {trial.previousConversionRate !== null && <> {t("admin.plans.insights.conversionWas", { rate: formatRate(trial.previousConversionRate), days: data.days })}</>}
         </p>
 
         {used.length === 0 ? (
-          <Empty text="No trial used a feature yet." />
+          <Empty text={t("admin.plans.insights.noTrialUsed")} />
         ) : (
           <div className="max-md:overflow-x-auto">
           <table className="mt-3 w-full border-collapse text-sm tabular-nums">
             <thead>
               <tr className="border-ink-200 text-ink-500 border-b text-left text-xs">
-                <th scope="col" className="py-2 pr-4 font-medium">Feature</th>
-                <th scope="col" className="w-[28%] px-4 py-2 font-medium">Bought</th>
-                <th scope="col" className="w-[28%] px-4 py-2 font-medium">Back to Free</th>
-                <th scope="col" className="py-2 pl-4 text-right font-medium">Gap</th>
+                <th scope="col" className="py-2 pr-4 font-medium">{t("admin.plans.shared.feature")}</th>
+                <th scope="col" className="w-[28%] px-4 py-2 font-medium">{t("admin.plans.insights.bought")}</th>
+                <th scope="col" className="w-[28%] px-4 py-2 font-medium">{t("admin.plans.insights.backToFree")}</th>
+                <th scope="col" className="py-2 pl-4 text-right font-medium">{t("admin.plans.insights.gapHeader")}</th>
               </tr>
             </thead>
             <tbody className="divide-ink-100 divide-y">
@@ -447,10 +455,10 @@ function TrialCard({ data }: { data: PlanInsights }) {
                           "rounded px-1.5 py-px text-[11px] font-semibold",
                           item.gap >= 20 ? "bg-[#2a9d8f]/15 text-[#21796e] dark:text-[#8fe0d6]" : item.gap < 0 ? "bg-[#e76e50]/12 text-[#c4553a] dark:text-[#dea091]" : "bg-ink-100 text-ink-600"
                         )}
-                        title="Percentage points more of the trials that bought used it"
+                        title={t("admin.plans.insights.gapTooltip")}
                       >
                         {item.gap > 0 ? "+" : ""}
-                        {item.gap.toFixed(1)} pts
+                        {item.gap.toFixed(1)} {t("admin.plans.shared.pts")}
                       </span>
                     </td>
                   </tr>
@@ -461,7 +469,7 @@ function TrialCard({ data }: { data: PlanInsights }) {
 </div>
         )}
         {unused.length > 0 && (
-          <p className="text-ink-500 mt-3 text-xs">Not used in any trial: {unused.map((item) => splitAiLabel(item.label).name).join(", ")}.</p>
+          <p className="text-ink-500 mt-3 text-xs">{t("admin.plans.insights.notUsedInTrial", { list: unused.map((item) => splitAiLabel(item.label).name).join(", ") })}</p>
         )}
       </div>
     </Panel>
@@ -517,6 +525,7 @@ const PIPELINE_STAGE_ICONS: Record<string, LucideIcon> = {
  * showing where sellers get stuck with bottlenecks and review stages.
  */
 function PipelineCard({ data }: { data: PlanInsights }) {
+  const { t } = useTranslation("common");
   const total = data.pipeline[0]?.products ?? 0;
   const first = Math.max(1, total);
   const published =
@@ -541,31 +550,31 @@ function PipelineCard({ data }: { data: PlanInsights }) {
     <Card className="border-ink-200 bg-card gap-4 rounded-2xl border p-5 shadow-none">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-ink-900 text-base font-semibold">Production pipeline</h3>
+          <h3 className="text-ink-900 text-base font-semibold">{t("admin.plans.insights.pipelineTitle")}</h3>
           <p className="text-muted-foreground mt-0.5 text-xs">
             <span className="font-semibold text-[#5f8a4c] dark:text-[#b0cca3]">
-              {inProgress.toLocaleString()} in progress
+              {t("admin.plans.insights.inProgress", { count: inProgress.toLocaleString() })}
             </span>
             {bottleneckStages.length > 0 && (
               <span className="font-semibold text-rose-600 dark:text-rose-400">
                 {" "}
-                · {bottleneckStages.length.toLocaleString()} stuck
+                {t("admin.plans.insights.stuckCount", { count: bottleneckStages.length.toLocaleString() })}
               </span>
             )}
             {" · "}
-            {total.toLocaleString()} products in all
+            {t("admin.plans.insights.productsInAll", { count: total.toLocaleString() })}
           </p>
         </div>
         <Link
           href="/batches"
           className="text-ink-800 inline-flex items-center gap-1 text-xs font-medium hover:text-black hover:underline"
         >
-          Open batches
+          {t("admin.plans.insights.openBatches")}
           <ArrowRight className="size-3.5" aria-hidden="true" />
         </Link>
       </div>
 
-      <ArrowScroller label="Pipeline steps" className="-mx-1">
+      <ArrowScroller label={t("admin.plans.insights.pipelineSteps")} className="-mx-1">
         <div className="px-1 pb-1">
         <ol
           className="relative grid gap-2"
@@ -609,9 +618,9 @@ function PipelineCard({ data }: { data: PlanInsights }) {
                   )}
                   title={
                     isBusiest
-                      ? "Most products are here"
+                      ? t("admin.plans.insights.mostProductsHere")
                       : isBottleneck
-                        ? `Stuck bottleneck: −${drop}% drop from previous step`
+                        ? t("admin.plans.insights.stuckBottleneck", { drop })
                         : undefined
                   }
                 >
@@ -649,7 +658,7 @@ function PipelineCard({ data }: { data: PlanInsights }) {
                     {isLive ? stage.products.toLocaleString() : "—"}
                   </span>
                   <span className="text-ink-500 text-[11px] tabular-nums">
-                    {isLive ? `${share.toFixed(1)}% of products` : "Not live yet"}
+                    {isLive ? t("admin.plans.insights.percentOfProducts", { share: share.toFixed(1) }) : t("admin.plans.insights.notLiveYet")}
                   </span>
                   <div className="bg-ink-100 h-1.5 overflow-hidden rounded-full">
                     <div
@@ -664,19 +673,19 @@ function PipelineCard({ data }: { data: PlanInsights }) {
                     {isBottleneck ? (
                       <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">
                         <Hourglass className="size-3" aria-hidden="true" />
-                        {lost > 0 ? `${lost.toLocaleString()} stuck` : `−${drop}% drop`}
+                        {lost > 0 ? t("admin.plans.insights.lostStuck", { lost: lost.toLocaleString() }) : t("admin.plans.insights.dropPercent", { drop })}
                       </span>
                     ) : isReviewStage && stage.products > 0 ? (
                       <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
-                        Waits on review
+                        {t("admin.plans.insights.waitsOnReview")}
                       </span>
                     ) : drop > 0 ? (
                       <span className="bg-ink-100 text-ink-600 rounded-md px-1.5 py-0.5 text-[10px] font-medium">
-                        −{drop}% drop
+                        {t("admin.plans.insights.dropPercent", { drop })}
                       </span>
                     ) : !isLive ? (
                       <span className="bg-ink-100 text-ink-400 rounded-md px-1.5 py-0.5 text-[10px]">
-                        Not live yet
+                        {t("admin.plans.insights.notLiveYet")}
                       </span>
                     ) : null}
                   </div>
@@ -691,15 +700,15 @@ function PipelineCard({ data }: { data: PlanInsights }) {
       <ul className="text-muted-foreground border-ink-100 flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-3 text-[11px]">
         <li className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full bg-[#2fae93]" />
-          Where most products are
+          {t("admin.plans.insights.legendMost")}
         </li>
         <li className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full border-2 border-rose-400" />
-          Stuck: taking far longer than usual
+          {t("admin.plans.insights.legendStuck")}
         </li>
         <li className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full border-2 border-amber-400" />
-          Waits on your review
+          {t("admin.plans.insights.legendReview")}
         </li>
       </ul>
     </Card>

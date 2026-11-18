@@ -10,6 +10,7 @@ import {
   Shield,
   ShieldAlert,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   Sheet,
@@ -37,7 +38,15 @@ function scrollToSection(target: InsightTarget) {
   document.getElementById(sectionId(target))?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+const ACTION_KEYS: Partial<Record<InsightTarget, string>> = {
+  integrations: "integrations",
+  volume: "volume",
+  pipeline: "pipeline",
+  errors: "errors",
+};
+
 export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsPanelProps) {
+  const { t } = useTranslation("common");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const insights = useMemo(() => (data ? buildStatisticsInsights(data) : []), [data]);
@@ -51,30 +60,29 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
   }, [issues, insights]);
 
   const getActionLabel = (insight: StatisticsInsight) => {
-    if (insight.target === "integrations") return "Check integration";
-    if (insight.target === "volume") return "View daily volume";
-    if (insight.target === "pipeline") return "View pipeline";
-    if (insight.target === "errors") return "View error logs";
-    return "View section";
+    const actionKey = ACTION_KEYS[insight.target];
+    return actionKey
+      ? t(`admin.statistics.insightsPanel.actions.${actionKey}`)
+      : t("admin.statistics.insightsPanel.actions.fallback");
   };
 
   const getBadgeConfig = (severity: InsightSeverity) => {
     switch (severity) {
       case "critical":
         return {
-          label: "Issue",
+          label: t("admin.statistics.insightsPanel.badges.issue"),
           badgeClass: "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/70 dark:border-rose-500/30",
           icon: <AlertCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />,
         };
       case "warning":
         return {
-          label: "Warning",
+          label: t("admin.statistics.insightsPanel.badges.warning"),
           badgeClass: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-200/70 dark:border-amber-500/30",
           icon: <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />,
         };
       default:
         return {
-          label: "Info",
+          label: t("admin.statistics.insightsPanel.badges.info"),
           badgeClass: "bg-ink-100 text-ink-700 border border-ink-200",
           icon: <Info className="text-ink-600 h-4 w-4" />,
         };
@@ -90,20 +98,20 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
             <div className="bg-ink-100 text-ink-600 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">
               <ShieldAlert className="h-5 w-5" />
             </div>
-            <h3 className="text-ink-900 text-sm font-bold">System health</h3>
+            <h3 className="text-ink-900 text-sm font-bold">{t("admin.statistics.insightsPanel.title")}</h3>
           </div>
 
           <div className="flex items-center gap-1.5 text-xs">
             <span className="inline-flex items-center rounded-full border border-rose-200/70 bg-rose-50 px-2.5 py-0.5 font-semibold text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400">
-              {issues.length} issues
+              {t("admin.statistics.insightsPanel.issuesCount", { count: issues.length })}
             </span>
             <span className="text-ink-300">·</span>
             <span className="inline-flex items-center rounded-full border border-amber-200/70 bg-amber-50 px-2.5 py-0.5 font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-              {warnings.length} warnings
+              {t("admin.statistics.insightsPanel.warningsCount", { count: warnings.length })}
             </span>
             <span className="text-ink-300">·</span>
             <span className="border-ink-200 bg-ink-100 text-ink-700 inline-flex items-center rounded-full border px-2.5 py-0.5 font-semibold">
-              {infos.length} info
+              {t("admin.statistics.insightsPanel.infoCount", { count: infos.length })}
             </span>
           </div>
         </div>
@@ -124,7 +132,7 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
             </div>
           ) : topIssues.length === 0 ? (
             <div className="text-ink-500 py-6 text-center text-xs">
-              No health issues detected. All platform services are operational.
+              {t("admin.statistics.insightsPanel.emptyState")}
             </div>
           ) : (
             topIssues.map((issue) => (
@@ -166,8 +174,13 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
           >
             <ChevronDown className="text-ink-500 h-4 w-4" />
             <span>
-              {warnings.length} warnings · {infos.length} informational insight ·{" "}
-              <span className="text-ink-900 underline-offset-2 hover:underline">View all</span>
+              {t("admin.statistics.insightsPanel.footerSummary", {
+                warnings: warnings.length,
+                infos: infos.length,
+              })}{" "}
+              <span className="text-ink-900 underline-offset-2 hover:underline">
+                {t("admin.statistics.insightsPanel.viewAll")}
+              </span>
             </span>
           </button>
         </div>
@@ -182,22 +195,22 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
                 <Shield className="h-5 w-5" />
               </div>
               <SheetTitle className="text-ink-900 text-lg font-bold">
-                System health
+                {t("admin.statistics.insightsPanel.title")}
               </SheetTitle>
             </div>
 
             {/* Badges in Drawer Header */}
             <div className="mt-2.5 flex items-center gap-1.5 text-xs">
               <span className="inline-flex items-center rounded-full border border-rose-200/70 bg-rose-50 px-2.5 py-0.5 font-semibold text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400">
-                {issues.length} issues
+                {t("admin.statistics.insightsPanel.issuesCount", { count: issues.length })}
               </span>
               <span className="text-ink-300">·</span>
               <span className="inline-flex items-center rounded-full border border-amber-200/70 bg-amber-50 px-2.5 py-0.5 font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-                {warnings.length} warnings
+                {t("admin.statistics.insightsPanel.warningsCount", { count: warnings.length })}
               </span>
               <span className="text-ink-300">·</span>
               <span className="border-ink-200 bg-ink-100 text-ink-700 inline-flex items-center rounded-full border px-2.5 py-0.5 font-semibold">
-                {infos.length} info
+                {t("admin.statistics.insightsPanel.infoCount", { count: infos.length })}
               </span>
             </div>
           </SheetHeader>
@@ -234,7 +247,7 @@ export function StatisticsInsightsPanel({ data, isLoading }: StatisticsInsightsP
                       setIsDrawerOpen(false);
                       scrollToSection(insight.target);
                     }}
-                    title="Jump to section"
+                    title={t("admin.statistics.insightsPanel.jumpToSection")}
                     className="border-ink-200 bg-card text-ink-500 hover:bg-ink-50 hover:text-ink-900 mt-1 flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full border shadow-2xs"
                   >
                     <ArrowRight className="h-3.5 w-3.5" />

@@ -2,6 +2,7 @@
 
 import { ShieldAlert, TriangleAlert } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +27,7 @@ type DeletePlanDialogProps = {
 };
 
 export function DeletePlanDialog({ open, plan, onClose }: DeletePlanDialogProps) {
+  const { t } = useTranslation("common");
   const mutation = useDeleteSubscriptionPlan(onClose);
   const {
     register,
@@ -52,7 +54,7 @@ export function DeletePlanDialog({ open, plan, onClose }: DeletePlanDialogProps)
     mutation.mutate({ id: plan.id, reason: values.reason });
   });
 
-  const priceLabel = `${formatVnd(plan.monthlyPriceVnd)} / month`;
+  const priceLabel = t("admin.plans.shared.pricePerMonth", { amount: formatVnd(plan.monthlyPriceVnd) });
 
   if (!plan.canDelete) {
     return (
@@ -63,19 +65,20 @@ export function DeletePlanDialog({ open, plan, onClose }: DeletePlanDialogProps)
               <ShieldAlert className="size-[18px]" aria-hidden="true" />
             </div>
             <DialogTitle className="font-display text-xl tracking-[-0.02em]">
-              Can&apos;t delete {plan.name}
+              {t("admin.plans.deletePlan.cannotDeleteTitle", { name: plan.name })}
             </DialogTitle>
             <DialogDescription className="text-ink-600 leading-5">
-              One or more Sellers have subscribed to this plan at some point, so it can&apos;t be
-              permanently deleted. If you want to hide it from new Sellers instead, open{" "}
-              <strong>Edit</strong> and turn off <strong>&quot;Plan is active&quot;</strong> —
-              existing subscribers keep full access either way.
+              {t("admin.plans.deletePlan.cannotDeleteDescriptionLead")}{" "}
+              <strong>{t("admin.plans.shared.edit")}</strong>{" "}
+              {t("admin.plans.deletePlan.cannotDeleteDescriptionTurnOff")}{" "}
+              <strong>&quot;{t("admin.plans.deletePlan.planIsActive")}&quot;</strong>{" "}
+              {t("admin.plans.deletePlan.cannotDeleteDescriptionKeep")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex justify-end px-6 pb-6">
             <Button type="button" onClick={onClose}>
-              Got it
+              {t("admin.plans.deletePlan.gotIt")}
             </Button>
           </div>
         </DialogContent>
@@ -91,18 +94,18 @@ export function DeletePlanDialog({ open, plan, onClose }: DeletePlanDialogProps)
             <TriangleAlert className="size-[18px]" aria-hidden="true" />
           </div>
           <DialogTitle className="font-display text-xl tracking-[-0.02em]">
-            Delete Subscription Plan?
+            {t("admin.plans.deletePlan.title")}
           </DialogTitle>
           <DialogDescription className="text-ink-600 leading-5">
-            You are about to permanently delete <strong>{plan.name}</strong> ({priceLabel}). This
-            plan has no subscribers, so it will be removed entirely. This cannot be undone.
+            {t("admin.plans.deletePlan.descriptionBefore")} <strong>{plan.name}</strong> ({priceLabel}).{" "}
+            {t("admin.plans.deletePlan.descriptionAfter")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={submit} className="space-y-4 px-6 pb-6">
           <div className="space-y-1.5">
             <label htmlFor="delete-plan-reason" className="text-ink-700 text-sm font-medium">
-              Reason for deleting this plan
+              {t("admin.plans.deletePlan.reasonLabel")}
             </label>
             <Textarea
               id="delete-plan-reason"
@@ -119,11 +122,11 @@ export function DeletePlanDialog({ open, plan, onClose }: DeletePlanDialogProps)
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
-              Cancel
+              {t("admin.plans.shared.cancel")}
             </Button>
             <Button type="submit" variant="destructive" disabled={mutation.isPending}>
               {mutation.isPending ? <Spinner aria-hidden="true" /> : null}
-              Permanently delete
+              {t("admin.plans.deletePlan.permanentlyDelete")}
             </Button>
           </div>
         </form>

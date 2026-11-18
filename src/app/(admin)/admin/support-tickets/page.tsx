@@ -2,6 +2,7 @@
 
 import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 import type { AdminTicketFilters } from "@/api/admin-support";
 import { TicketDetailPanel } from "@/components/admin/support/ticket-detail-panel";
@@ -11,6 +12,7 @@ import { useAdminShellOptions } from "@/hooks/use-admin-shell-options";
 import { cn } from "@/utils/cn";
 
 function AdminSupportTicketsContent() {
+  const { t } = useTranslation("common");
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState<AdminTicketFilters>({
     pageIndex: 1,
@@ -42,7 +44,7 @@ function AdminSupportTicketsContent() {
 
   return (
     <>
-      <PageHeader title="Support Tickets" className="mb-4 max-md:sr-only" />
+      <PageHeader title={t("admin.pages.supportTickets.title")} className="mb-4 max-md:sr-only" />
       <div className="border-ink-200 bg-card flex h-[calc(100dvh-200px)] w-full overflow-hidden rounded-lg border shadow-sm max-md:h-auto max-md:min-h-0 max-md:flex-1 max-md:rounded-none max-md:border-0 max-md:shadow-none">
         <div className="divide-ink-200 grid h-full min-h-0 w-full grid-cols-12 divide-x">
           {/* Left Panel: Ticket List. Below md the two panels swap: list first, then the selected ticket. */}

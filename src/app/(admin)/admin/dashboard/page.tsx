@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { AdminDashboardContent } from "@/components/admin/admin-dashboard-content";
 import { PageLoading } from "@/components/commons/layout/page-loading";
@@ -9,6 +10,7 @@ import { useAdminDashboardMetrics } from "@/hooks/queries/use-admin-dashboard-me
 import { useAuthStore } from "@/stores/auth";
 
 const AdminDashboardPage = () => {
+  const { t } = useTranslation("common");
   const [timeRange, setTimeRange] = useState("Year");
   const user = useAuthStore((state) => state.user);
   const { mutate: exportReport, isPending: isExporting } = useExportAdminDashboardReport();
@@ -25,7 +27,7 @@ const AdminDashboardPage = () => {
   }
 
   if (isMetricsLoading) {
-    return <PageLoading label="Loading dashboard" />;
+    return <PageLoading label={t("admin.pages.dashboard.loading")} />;
   }
 
   return (

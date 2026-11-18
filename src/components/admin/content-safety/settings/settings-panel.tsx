@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Info, Lock, PowerOff } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
 
 import { DIALOG_CLASS, DialogHead } from "@/components/admin/content-safety/blocklist/form-parts";
 import {
-  CATEGORY_LABELS,
+  CATEGORY_LABEL_KEYS,
   formatDateTime,
   PanelMessage,
   Section,
@@ -32,11 +33,11 @@ const draftOf = (settings: ModerationSettings): Draft => ({
   ),
 });
 
-const CATEGORY_HINTS: Partial<Record<ModerationCategory, string>> = {
-  sexual: "Medium includes suggestive slang and sexual innuendo.",
-  violence_gore: "Medium includes stylized horror with blood.",
-  hate: "Medium includes edgy jokes about groups.",
-  ip_trademark: "Medium includes designs that only hint at a brand or character.",
+const CATEGORY_HINT_KEYS: Partial<Record<ModerationCategory, string>> = {
+  sexual: "admin.contentSafety.settings.hints.sexual",
+  violence_gore: "admin.contentSafety.settings.hints.violenceGore",
+  hate: "admin.contentSafety.settings.hints.hate",
+  ip_trademark: "admin.contentSafety.settings.hints.ipTrademark",
 };
 
 const Notice = ({ children }: { children: React.ReactNode }) => (
@@ -50,6 +51,7 @@ const Notice = ({ children }: { children: React.ReactNode }) => (
 );
 
 export const SettingsPanel = () => {
+  const { t } = useTranslation("common");
   const settings = useModerationSettings();
   const update = useUpdateModerationSettings();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -72,8 +74,8 @@ export const SettingsPanel = () => {
 
   if (settings.isError)
     return (
-      <Section title="Settings">
-        <PanelMessage tone="error" title="The settings could not be loaded." />
+      <Section title={t("admin.contentSafety.tabs.settings")}>
+        <PanelMessage tone="error" title={t("admin.contentSafety.settings.loadError")} />
       </Section>
     );
   if (!data || !draft) return <Skeleton className="h-96 w-full rounded-xl" />;
@@ -86,28 +88,32 @@ export const SettingsPanel = () => {
       {!data.storageReady && <StorageMissingBanner />}
       {!data.configEnabled && (
         <Notice>
-          <strong className="font-semibold">Gemini is switched off in the server configuration</strong>{" "}
-          (<code className="text-xs">Moderation:Enabled</code>). Only the blocklist runs, whatever is set here.
+          <Trans
+            i18nKey="admin.contentSafety.settings.noticeGeminiOff"
+            components={{ strong: <strong className="font-semibold" />, code: <code className="text-xs" /> }}
+          />
         </Notice>
       )}
       {data.configEnabled && !data.geminiConfigured && (
         <Notice>
-          <strong className="font-semibold">No Gemini key is configured</strong> for the platform, so only the blocklist
-          runs. Set <code className="text-xs">Gemini:TextGeneration:ApiKey</code>.
+          <Trans
+            i18nKey="admin.contentSafety.settings.noticeNoKey"
+            components={{ strong: <strong className="font-semibold" />, code: <code className="text-xs" /> }}
+          />
         </Notice>
       )}
 
       <Section
-        title="Gemini check"
-        description="The blocklist always runs. Gemini reads what the blocklist lets through, and every image the AI returns."
+        title={t("admin.contentSafety.settings.geminiCheck")}
+        description={t("admin.contentSafety.settings.geminiCheckDesc")}
       >
         <div className="flex items-center justify-between gap-4">
           <div>
             <label htmlFor="moderation-enabled" className="text-ink-800 dark:text-ink-100 text-sm font-semibold">
-              Check seller text and AI images with Gemini
+              {t("admin.contentSafety.settings.enabledLabel")}
             </label>
             <p className="text-ink-500 text-xs leading-relaxed">
-              Model {data.model} · policy version {data.policyVersion}. Paid with the platform&apos;s key, about $0.0005 per check.
+              {t("admin.contentSafety.settings.modelLine", { model: data.model, version: data.policyVersion })}
             </p>
           </div>
           <Switch
@@ -120,26 +126,28 @@ export const SettingsPanel = () => {
       </Section>
 
       <Section
-        title="When to block"
-        description="Gemini rates each concern low, medium or high. High always blocks; choose whether medium blocks too. Medium that does not block is let through and logged as flagged."
+        title={t("admin.contentSafety.settings.whenToBlock")}
+        description={t("admin.contentSafety.settings.whenToBlockDesc")}
       >
         <ul className="divide-ink-100 divide-y">
           {data.thresholds.map((threshold) => (
             <li key={threshold.category} className="grid gap-3 py-3 sm:grid-cols-[1fr_auto] sm:items-center">
               <div>
                 <p className="text-ink-800 dark:text-ink-100 flex items-center gap-1.5 text-sm font-semibold">
-                  {CATEGORY_LABELS[threshold.category]}
-                  {threshold.locked ? <Lock className="text-ink-400 size-3.5" aria-label="Locked" /> : null}
+                  {t(CATEGORY_LABEL_KEYS[threshold.category])}
+                  {threshold.locked ? (
+                    <Lock className="text-ink-400 size-3.5" aria-label={t("admin.contentSafety.settings.lockedAria")} />
+                  ) : null}
                 </p>
                 <p className="text-ink-500 text-xs leading-relaxed">
                   {threshold.locked
-                    ? "Any concern about minors in a sexual context blocks. This cannot be changed."
-                    : CATEGORY_HINTS[threshold.category] ?? "Medium covers edgy content common in streetwear designs."}
+                    ? t("admin.contentSafety.settings.lockedMinors")
+                    : t(CATEGORY_HINT_KEYS[threshold.category] ?? "admin.contentSafety.settings.hintFallback")}
                 </p>
               </div>
               {threshold.locked ? (
                 <span className="text-ink-600 bg-ink-100 dark:bg-ink-800/60 justify-self-start rounded-lg px-3 py-1.5 text-xs font-semibold sm:justify-self-end">
-                  Blocks at any rating
+                  {t("admin.contentSafety.settings.blocksAtAny")}
                 </span>
               ) : (
                 <RadioGroup
@@ -148,7 +156,7 @@ export const SettingsPanel = () => {
                     setDraft({ ...draft, blockAt: { ...draft.blockAt, [threshold.category]: value as ModerationThreshold } })
                   }
                   disabled={!editable}
-                  aria-label={`${CATEGORY_LABELS[threshold.category]} threshold`}
+                  aria-label={t("admin.contentSafety.settings.thresholdAria", { category: t(CATEGORY_LABEL_KEYS[threshold.category]) })}
                   className="bg-ink-100 dark:bg-ink-800/60 inline-flex gap-1 justify-self-start rounded-lg p-1 sm:justify-self-end"
                 >
                   {(["high", "medium"] as const).map((value) => (
@@ -158,7 +166,9 @@ export const SettingsPanel = () => {
                       className="has-[[data-state=checked]]:bg-card has-[[data-state=checked]]:text-ink-900 dark:has-[[data-state=checked]]:text-ink-50 text-ink-600 flex min-h-9 cursor-pointer items-center gap-2 rounded-md px-3 text-sm font-medium has-[[data-state=checked]]:shadow-sm"
                     >
                       <RadioGroupItem id={`threshold-${threshold.category}-${value}`} value={value} />
-                      {value === "high" ? "Block high only" : "Block medium too"}
+                      {value === "high"
+                        ? t("admin.contentSafety.settings.blockHighOnly")
+                        : t("admin.contentSafety.settings.blockMediumToo")}
                     </label>
                   ))}
                 </RadioGroup>
@@ -171,17 +181,19 @@ export const SettingsPanel = () => {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-ink-500 text-xs">
           {data.updatedAt
-            ? `Last changed ${formatDateTime(data.updatedAt)}${data.updatedByEmail ? ` by ${data.updatedByEmail}` : ""}.`
-            : "Using the default settings."}{" "}
-          Changes apply to the next check.
+            ? data.updatedByEmail
+              ? t("admin.contentSafety.settings.lastChangedBy", { time: formatDateTime(data.updatedAt), email: data.updatedByEmail })
+              : t("admin.contentSafety.settings.lastChanged", { time: formatDateTime(data.updatedAt) })
+            : t("admin.contentSafety.settings.defaultSettings")}{" "}
+          {t("admin.contentSafety.settings.changesApply")}
         </p>
         <div className="flex gap-2">
           <Button type="button" variant="outline" disabled={!dirty || update.isPending} onClick={() => setDraft(draftOf(data))}>
-            Discard
+            {t("admin.contentSafety.settings.discard")}
           </Button>
           <Button type="button" disabled={!dirty || !editable || update.isPending} onClick={save}>
             {update.isPending && <Spinner className="size-4" />}
-            Save settings
+            {t("admin.contentSafety.settings.saveSettings")}
           </Button>
         </div>
       </div>
@@ -190,14 +202,14 @@ export const SettingsPanel = () => {
         <DialogContent showCloseButton={false} className={`${DIALOG_CLASS} max-w-[460px]`}>
           <DialogHead
             icon={PowerOff}
-            eyebrow="SWITCH OFF GEMINI"
-            title="Check with the blocklist only?"
-            description="Without Gemini, only listed words are caught: explicit or hateful text written another way gets through, and AI images are no longer checked. Save to apply."
+            eyebrow={t("admin.contentSafety.settings.confirmOffEyebrow")}
+            title={t("admin.contentSafety.settings.confirmOffTitle")}
+            description={t("admin.contentSafety.settings.confirmOffDesc")}
             onClose={() => setConfirmOff(false)}
           />
           <div className="border-ink-100 flex justify-end gap-2 border-t px-5 py-4 sm:px-6">
             <Button type="button" variant="outline" onClick={() => setConfirmOff(false)}>
-              Keep Gemini on
+              {t("admin.contentSafety.settings.keepGeminiOn")}
             </Button>
             <Button
               type="button"
@@ -207,7 +219,7 @@ export const SettingsPanel = () => {
                 setConfirmOff(false);
               }}
             >
-              Switch off
+              {t("admin.contentSafety.settings.switchOff")}
             </Button>
           </div>
         </DialogContent>

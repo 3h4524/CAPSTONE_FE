@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Activity, AlertTriangle, Info, Loader2, RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AllPlansDetail, AllPlansTile } from "@/components/admin/subscription-plans/all-plans-health";
 import { PlanDetail } from "@/components/admin/subscription-plans/plan-health-detail";
@@ -32,6 +33,7 @@ interface PlanAiReviewSectionProps {
  * and left used APCS, its features, and its strengths and risks.
  */
 export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanAiReviewSectionProps) {
+  const { t } = useTranslation("common");
   const { data, isLoading, isError, refetch } = usePlanAiReview();
   const regenerate = useRegeneratePlanAiReview();
   const [picked, setPicked] = useState<string | null>(focusPlan ?? null);
@@ -69,15 +71,15 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
             </div>
             <div>
               <h2 id="ai-review-title" className="text-ink-900 flex items-center gap-1.5 text-lg font-semibold tracking-tight">
-                Plan health
+                {t("admin.plans.aiReview.planHealth")}
               </h2>
-              <p className="text-ink-400 text-xs">Loading AI review...</p>
+              <p className="text-ink-400 text-xs">{t("admin.plans.aiReview.loadingAIReview")}</p>
             </div>
           </div>
         </div>
         <Card className="border-ink-200 bg-card flex h-56 flex-col items-center justify-center rounded-2xl border p-6">
           <Loader2 className="text-ink-400 size-6 animate-spin" />
-          <p className="text-ink-400 mt-2 text-xs">Analyzing plan performance and subscriber health metrics...</p>
+          <p className="text-ink-400 mt-2 text-xs">{t("admin.plans.aiReview.analyzing")}</p>
         </Card>
       </section>
     );
@@ -93,9 +95,9 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
             </div>
             <div>
               <h2 id="ai-review-title" className="text-ink-900 flex items-center gap-1.5 text-lg font-semibold tracking-tight">
-                Plan health
+                {t("admin.plans.aiReview.planHealth")}
               </h2>
-              <p className="text-ink-500 text-xs">AI analysis unavailable</p>
+              <p className="text-ink-500 text-xs">{t("admin.plans.aiReview.analysisUnavailable")}</p>
             </div>
           </div>
           <Button
@@ -105,20 +107,20 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
             onClick={() => refetch?.()}
           >
             <RefreshCw className="mr-1.5 size-3.5" />
-            Retry
+            {t("admin.plans.aiReview.retry")}
           </Button>
         </div>
 
         <div className="border-ink-300 bg-card rounded-xl border border-dashed px-6 py-8 text-center max-md:p-4">
           <AlertTriangle className="mx-auto size-7 text-amber-500" />
-          <p className="text-ink-800 mt-2 text-sm font-semibold">AI Plan Review is currently unavailable</p>
+          <p className="text-ink-800 mt-2 text-sm font-semibold">{t("admin.plans.aiReview.unavailableTitle")}</p>
           <p className="text-ink-500 mx-auto mt-1 max-w-md text-xs">
-            Unable to connect to the AI review service or the server returned an error. The rule-based checks below still apply.
+            {t("admin.plans.aiReview.unavailableBody")}
           </p>
           <div className="mt-4 flex items-center justify-center gap-2">
             <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => refetch?.()}>
               <RefreshCw className="mr-1.5 size-3.5" />
-              Try again
+              {t("admin.plans.aiReview.tryAgain")}
             </Button>
           </div>
         </div>
@@ -144,19 +146,19 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
           </div>
           <div>
             <h2 id="ai-review-title" className="text-ink-900 flex items-center gap-1.5 text-lg font-semibold tracking-tight">
-              Plan health
+              {t("admin.plans.aiReview.planHealth")}
               {/* A plain title tooltip: the caveat stays one hover away instead of a third line. */}
               <span
                 className="text-ink-400 cursor-help"
-                title="Written by AI. Every figure it quotes is checked against the data. It shows what goes together, not proven causes."
+                title={t("admin.plans.aiReview.aboutReviewTitle")}
               >
-                <Info className="size-3.5" aria-label="About this review" />
+                <Info className="size-3.5" aria-label={t("admin.plans.aiReview.aboutReviewAria")} />
               </span>
             </h2>
             {snapshot && (
               <p className="text-ink-500 text-xs" title={snapshot.model ?? undefined}>
-                AI review of {formatPeriod(snapshot.periodStart, snapshot.periodEnd)} · Generated {formatDay(snapshot.generatedAt)}
-                {data.nextRefreshAt && <> · Next refresh {formatDay(data.nextRefreshAt)}</>}
+                {t("admin.plans.aiReview.subtitle", { period: formatPeriod(snapshot.periodStart, snapshot.periodEnd), generated: formatDay(snapshot.generatedAt) })}
+                {data.nextRefreshAt && <> · {t("admin.plans.aiReview.nextRefresh", { next: formatDay(data.nextRefreshAt) })}</>}
               </p>
             )}
           </div>
@@ -170,7 +172,7 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
             onClick={() => regenerate.mutate()}
           >
             {data.isGenerating ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
-            {data.isGenerating ? "Generating…" : "Regenerate"}
+            {data.isGenerating ? t("admin.plans.aiReview.generating") : t("admin.plans.aiReview.regenerate")}
           </Button>
           {blocker && !data.isGenerating && <span className="text-ink-400 text-[11px]">{blocker}</span>}
         </div>
@@ -181,7 +183,7 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
       {snapshot && selected ? (
         <>
           {/* Every plan together is picked like a plan, first in the row, instead of a card of its own. */}
-          <div role="tablist" aria-label="Plan" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div role="tablist" aria-label={t("admin.plans.aiReview.planTablist")} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {hasAllPlans && (
               <AllPlansTile
                 planCount={plans.length}
@@ -227,8 +229,9 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
       ) : (
         !data.isGenerating && (
           <p className="border-ink-300 bg-card text-ink-500 rounded-xl border border-dashed px-4 py-6 text-center text-sm">
-            No AI review yet. {data.isConfigured ? "Press Regenerate to write the first one, or wait for the scheduled one." : ""}
-            {" "}The rule-based checks below still apply.
+            {t("admin.plans.aiReview.noReviewYet")}{" "}
+            {data.isConfigured ? t("admin.plans.aiReview.pressRegenerate") : ""}{" "}
+            {t("admin.plans.aiReview.ruleBasedStillApply")}
           </p>
         )
       )}
@@ -237,24 +240,26 @@ export function PlanAiReviewSection({ focusPlan, focusFeature, insights }: PlanA
 }
 
 function StatusNotes({ data }: { data: PlanAiReviewResponse }) {
+  const { t } = useTranslation("common");
   return (
     <>
       {/* Slim one-line notes, so they inform without pushing the review down. */}
       {data.isGenerating && (
         <p className="flex items-center gap-2 rounded-lg border border-[#5b7aa6]/20 bg-[#5b7aa6]/5 px-3 py-1.5 text-xs text-[#3f5f8a] dark:text-[#9db4d2]">
-          <Loader2 className="size-3.5 shrink-0 animate-spin" /> Writing a new review. It takes a few minutes; this page updates when it is done.
+          <Loader2 className="size-3.5 shrink-0 animate-spin" /> {t("admin.plans.aiReview.generatingNote")}
         </p>
       )}
       {!data.isConfigured && (
         <p className="border-ink-200 bg-ink-50 text-ink-600 flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs">
-          <Info className="size-3.5 shrink-0" /> AI reviews are off: no Gemini key is set on the server.
+          <Info className="size-3.5 shrink-0" /> {t("admin.plans.aiReview.aiOffNote")}
         </p>
       )}
       {data.lastFailedAt && !data.isGenerating && (
         <p className="flex items-center gap-2 rounded-lg border border-amber-200/70 bg-amber-50/70 px-3 py-1.5 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
           <AlertTriangle className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-          The last attempt on {formatDay(data.lastFailedAt)} did not pass the checks
-          {data.latest ? ", so this is the previous review." : "."} It will be tried again automatically.
+          {data.latest
+            ? t("admin.plans.aiReview.failedNoteKept", { day: formatDay(data.lastFailedAt) })
+            : t("admin.plans.aiReview.failedNote", { day: formatDay(data.lastFailedAt) })}
         </p>
       )}
     </>

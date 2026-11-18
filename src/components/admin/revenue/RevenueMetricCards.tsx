@@ -10,6 +10,7 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AdminMetricCard, Delta } from "@/components/admin/admin-metric-card";
 import {
@@ -32,54 +33,50 @@ export function RevenueMetricCards({
   isLoading,
 }: RevenueMetricCardsProps) {
   const isPhone = useIsPhone();
+  const { t } = useTranslation("common");
   const cards = [
     {
-      title: "Total Revenue",
+      title: t("admin.revenue.metricCards.totalRevenue"),
       icon: Coins,
       metric: metrics?.totalRevenue,
       isCurrency: true,
-      tooltip:
-        "Gross revenue from all successful invoice payments in the selected period, including payments later refunded.",
+      tooltip: t("admin.revenue.metricCards.totalRevenueHelp"),
     },
     {
-      title: "Net Revenue",
+      title: t("admin.revenue.metricCards.netRevenue"),
       icon: Wallet,
       metric: metrics?.netRevenue ?? metrics?.totalNetRevenue,
       isCurrency: true,
-      tooltip:
-        "Net revenue retained after deducting refunds (Gross Revenue − Refunds) in the selected period.",
+      tooltip: t("admin.revenue.metricCards.netRevenueHelp"),
     },
     {
-      title: "MRR",
+      title: t("admin.revenue.metricCards.mrr"),
       icon: RefreshCw,
       metric: metrics?.subscriptionMrr,
       isCurrency: true,
-      tooltip:
-        "Monthly Recurring Revenue at the end of the period: each paying subscription's monthly price (annual plans count 1/12).",
+      tooltip: t("admin.revenue.metricCards.mrrHelp"),
     },
     {
-      title: "ARR",
+      title: t("admin.revenue.metricCards.arr"),
       icon: Calendar,
       metric: metrics?.arr,
       isCurrency: true,
-      tooltip:
-        "Annual Recurring Revenue: MRR × 12, at the end of the period and of the previous period.",
+      tooltip: t("admin.revenue.metricCards.arrHelp"),
     },
     {
-      title: "Active Subscribers",
+      title: t("admin.revenue.metricCards.activeSubscribers"),
       icon: Users,
       metric: metrics?.activeSubscribers,
       isCurrency: false,
-      tooltip:
-        "Sellers paying for a plan at the end of the period (free trials and unpaid renewals not counted).",
+      tooltip: t("admin.revenue.metricCards.activeSubscribersHelp"),
     },
     {
-      title: "Refund Amount",
+      title: t("admin.revenue.metricCards.refundAmount"),
       icon: RotateCcw,
       metric: metrics?.refundAmount,
       isCurrency: true,
       polarity: "lower-is-better" as const,
-      tooltip: "Total monetary value refunded to customers during the selected period.",
+      tooltip: t("admin.revenue.metricCards.refundAmountHelp"),
     },
   ];
 
@@ -144,7 +141,7 @@ export function RevenueMetricCards({
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        aria-label={`About ${config.title}`}
+                        aria-label={t("admin.revenue.metricCards.about", { title: config.title })}
                         className="phone-hit-area text-ink-400 hover:text-ink-600 inline-flex cursor-pointer transition-colors focus:outline-none"
                       >
                         <HelpCircle className="size-2.5" />
@@ -163,7 +160,7 @@ export function RevenueMetricCards({
                 isPhone && metric?.percentageChange == null ? null : (
                   <Delta
                     percent={metric?.percentageChange}
-                    suffix="vs previous period"
+                    suffix={t("admin.revenue.common.vsPreviousPeriod")}
                     polarity={config.polarity}
                   />
                 )

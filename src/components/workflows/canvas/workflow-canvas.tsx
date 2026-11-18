@@ -163,7 +163,9 @@ export const WorkflowCanvas = () => {
 
   return (
     <div
-      className={cn("relative h-full w-full", selectModifierHeld && "wf-select-mode")}
+      data-guide="workflows.canvas"
+      // Inter inside the canvas: node text runs 8 to 11px and reads more clearly in it than in the system font.
+      className={cn("font-canvas relative h-full w-full", selectModifierHeld && "wf-select-mode")}
       onPointerMoveCapture={handleConnectionPointerMove}
       onPointerLeave={() => hoverConnection(null, null)}
     >

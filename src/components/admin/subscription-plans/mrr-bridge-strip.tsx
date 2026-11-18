@@ -1,4 +1,5 @@
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { formatDay } from "@/helpers/plan-ai-review";
 import { bridgeRows, signedVnd } from "@/helpers/revenue-mrr-movement";
@@ -9,6 +10,16 @@ import { formatCompactVndAmount, formatVnd } from "@/utils/format-currency";
 // What came in is blue (new customers) or aqua (moves between plans); what went out is red (churn)
 // or yellow (moves and downgrades). Checked to tell apart, also with colour blindness; every card
 // also names its movement, so colour is never the only cue.
+const MOVEMENT_LABEL_KEY: Record<string, string> = {
+  New: "admin.plans.mrr.new",
+  "Moved in": "admin.plans.mrr.movedIn",
+  Expansion: "admin.plans.mrr.expansion",
+  "Plan changes": "admin.plans.mrr.planChanges",
+  Churn: "admin.plans.mrr.churn",
+  "Moved out": "admin.plans.mrr.movedOut",
+  Contraction: "admin.plans.mrr.contraction",
+};
+
 const MOVEMENT_COLOR: Record<string, string> = {
   New: "#2a78d6",
   "Moved in": "#1baf7a",
@@ -35,6 +46,7 @@ export function MrrBridgeStrip({
   periodEnd: string;
   className?: string;
 }) {
+  const { t } = useTranslation("common");
   // All plans together only know the net of moves between plans, which the review calls plan changes.
   const rows = bridgeRows(bridge).map((row) =>
     bridge.planName === null && (row.label === "Expansion" || row.label === "Contraction")
@@ -49,11 +61,11 @@ export function MrrBridgeStrip({
   const Trend = net > 0 ? ArrowUpRight : net < 0 ? ArrowDownRight : ArrowRight;
 
   return (
-    <div aria-label="MRR bridge" className={cn("text-xs tabular-nums", className)}>
+    <div aria-label={t("admin.plans.mrr.aria")} className={cn("text-xs tabular-nums", className)}>
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4">
-        <Total label={`MRR ${formatDay(dayBefore(periodStart))}`} value={bridge.start} muted />
+        <Total label={t("admin.plans.mrr.totalAt", { date: formatDay(dayBefore(periodStart)) })} value={bridge.start} muted />
         <ArrowRight className="text-ink-300 size-4" aria-hidden="true" />
-        <Total label={`MRR ${formatDay(periodEnd)}`} value={bridge.end} />
+        <Total label={t("admin.plans.mrr.totalAt", { date: formatDay(periodEnd) })} value={bridge.end} />
       </div>
 
       <p
@@ -84,9 +96,9 @@ export function MrrBridgeStrip({
                 <div>
                   <p className="text-ink-700 flex items-center gap-1.5 font-medium">
                     <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
-                    {row.label}
+                    {MOVEMENT_LABEL_KEY[row.label] ? t(MOVEMENT_LABEL_KEY[row.label]) : row.label}
                   </p>
-                  {share !== null && <p className="text-ink-400 mt-0.5 pl-3.5 text-[11px]">{share}% of start</p>}
+                  {share !== null && <p className="text-ink-400 mt-0.5 pl-3.5 text-[11px]">{t("admin.plans.mrr.percentOfStart", { share })}</p>}
                 </div>
                 <div className="bg-ink-100 h-2 overflow-hidden rounded-full">
                   <div

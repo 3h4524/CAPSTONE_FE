@@ -2,12 +2,13 @@
 
 import { useDeferredValue, useState } from "react";
 import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AllowlistDialog,type AllowlistDialogTarget } from "@/components/admin/content-safety/blocklist/allowlist-dialog";
 import { DIALOG_CLASS, DialogHead } from "@/components/admin/content-safety/blocklist/form-parts";
 import { TermDialog,type TermDialogTarget } from "@/components/admin/content-safety/blocklist/term-dialog";
 import {
-  CATEGORY_LABELS,
+  CATEGORY_LABEL_KEYS,
   CATEGORY_ORDER,
   formatDateTime,
   formatNumber,
@@ -44,22 +45,26 @@ const ALL = "all";
 const PAGE_SIZE = 20;
 const headClass = "text-ink-500 text-xs font-semibold tracking-wider uppercase";
 
-const SeverityBadge = ({ severity }: { severity: ModerationTermSeverity }) => (
-  <span
-    className={cn(
-      "inline-flex rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
-      severity === "block"
-        ? "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500/30"
-        : "bg-amber-50 text-amber-800 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-500/30"
-    )}
-  >
-    {severity === "block" ? "Block" : "Flag"}
-  </span>
-);
+const SeverityBadge = ({ severity }: { severity: ModerationTermSeverity }) => {
+  const { t } = useTranslation("common");
+  return (
+    <span
+      className={cn(
+        "inline-flex rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
+        severity === "block"
+          ? "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500/30"
+          : "bg-amber-50 text-amber-800 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-500/30"
+      )}
+    >
+      {t(severity === "block" ? "admin.contentSafety.severity.block" : "admin.contentSafety.severity.flag")}
+    </span>
+  );
+};
 
 type DeleteTarget = { kind: "term"; item: ModerationTerm } | { kind: "allowlist"; item: ModerationAllowlistItem } | null;
 
 const DeleteDialog = ({ target, onClose }: { target: DeleteTarget; onClose: () => void }) => {
+  const { t } = useTranslation("common");
   const deleteTerm = useDeleteModerationTerm(onClose);
   const deleteAllowlist = useDeleteModerationAllowlist(onClose);
   const pending = deleteTerm.isPending || deleteAllowlist.isPending;
@@ -70,18 +75,20 @@ const DeleteDialog = ({ target, onClose }: { target: DeleteTarget; onClose: () =
       <DialogContent showCloseButton={false} className={cn(DIALOG_CLASS, "max-w-[440px]")}>
         <DialogHead
           icon={Trash2}
-          eyebrow={target?.kind === "term" ? "DELETE TERM" : "REMOVE PHRASE"}
-          title={`Delete “${name ?? ""}”?`}
-          description={
+          eyebrow={t(
             target?.kind === "term"
-              ? "The next check no longer matches it. To stop it for a while instead, pause it."
-              : "Text containing it is matched by the blocklist again from the next check."
-          }
+              ? "admin.contentSafety.deleteDialog.eyebrowTerm"
+              : "admin.contentSafety.deleteDialog.eyebrowAllowlist"
+          )}
+          title={t("admin.contentSafety.deleteDialog.title", { name: name ?? "" })}
+          description={t(
+            target?.kind === "term" ? "admin.contentSafety.deleteDialog.descTerm" : "admin.contentSafety.deleteDialog.descAllowlist"
+          )}
           onClose={onClose}
         />
         <div className="border-ink-100 flex justify-end gap-2 border-t px-5 py-4 sm:px-6">
           <Button type="button" variant="outline" onClick={onClose} disabled={pending}>
-            Cancel
+            {t("admin.contentSafety.common.cancel")}
           </Button>
           <Button
             type="button"
@@ -92,7 +99,7 @@ const DeleteDialog = ({ target, onClose }: { target: DeleteTarget; onClose: () =
             }
           >
             {pending && <Spinner className="size-4" />}
-            Delete
+            {t("admin.contentSafety.common.delete")}
           </Button>
         </div>
       </DialogContent>
@@ -110,14 +117,16 @@ const TermFilters = ({
   onSearch: (value: string) => void;
   filter: ModerationTermFilter;
   onFilter: (filter: ModerationTermFilter) => void;
-}) => (
+}) => {
+  const { t } = useTranslation("common");
+  return (
   <div className="flex flex-wrap gap-2">
     <div className="relative min-w-52 flex-1">
       <Search className="text-ink-400 pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" aria-hidden="true" />
       <Input
         type="search"
-        aria-label="Search terms"
-        placeholder="Search terms"
+        aria-label={t("admin.contentSafety.blocklist.search")}
+        placeholder={t("admin.contentSafety.blocklist.search")}
         className="pl-9"
         value={search}
         onChange={(event) => onSearch(event.target.value)}
@@ -127,14 +136,14 @@ const TermFilters = ({
       value={filter.category ?? ALL}
       onValueChange={(value) => onFilter({ ...filter, category: value === ALL ? undefined : (value as ModerationCategory) })}
     >
-      <SelectTrigger className="w-44" aria-label="Category">
+      <SelectTrigger className="w-44" aria-label={t("admin.contentSafety.common.category")}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={ALL}>All categories</SelectItem>
+        <SelectItem value={ALL}>{t("admin.contentSafety.common.allCategories")}</SelectItem>
         {CATEGORY_ORDER.map((category) => (
           <SelectItem key={category} value={category}>
-            {CATEGORY_LABELS[category]}
+            {t(CATEGORY_LABEL_KEYS[category])}
           </SelectItem>
         ))}
       </SelectContent>
@@ -143,32 +152,34 @@ const TermFilters = ({
       value={filter.severity ?? ALL}
       onValueChange={(value) => onFilter({ ...filter, severity: value === ALL ? undefined : (value as ModerationTermSeverity) })}
     >
-      <SelectTrigger className="w-36" aria-label="Severity">
+      <SelectTrigger className="w-36" aria-label={t("admin.contentSafety.common.severity")}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={ALL}>Block and flag</SelectItem>
-        <SelectItem value="block">Block</SelectItem>
-        <SelectItem value="flag">Flag</SelectItem>
+        <SelectItem value={ALL}>{t("admin.contentSafety.severity.blockAndFlag")}</SelectItem>
+        <SelectItem value="block">{t("admin.contentSafety.severity.block")}</SelectItem>
+        <SelectItem value="flag">{t("admin.contentSafety.severity.flag")}</SelectItem>
       </SelectContent>
     </Select>
     <Select
       value={filter.active === undefined ? ALL : String(filter.active)}
       onValueChange={(value) => onFilter({ ...filter, active: value === ALL ? undefined : value === "true" })}
     >
-      <SelectTrigger className="w-36" aria-label="Status">
+      <SelectTrigger className="w-36" aria-label={t("admin.contentSafety.common.status")}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={ALL}>Any status</SelectItem>
-        <SelectItem value="true">Active</SelectItem>
-        <SelectItem value="false">Paused</SelectItem>
+        <SelectItem value={ALL}>{t("admin.contentSafety.common.anyStatus")}</SelectItem>
+        <SelectItem value="true">{t("admin.contentSafety.common.active")}</SelectItem>
+        <SelectItem value="false">{t("admin.contentSafety.common.paused")}</SelectItem>
       </SelectContent>
     </Select>
   </div>
-);
+  );
+};
 
 export const BlocklistPanel = () => {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
   const settings = useModerationSettings();
   const storageReady = settings.data?.storageReady ?? true;
@@ -212,7 +223,7 @@ export const BlocklistPanel = () => {
         variant="ghost"
         size="icon-sm"
         className="hover:translate-y-0"
-        aria-label={`Edit ${term.term}`}
+        aria-label={t("admin.contentSafety.common.editName", { name: term.term })}
         disabled={!storageReady}
         onClick={() => setTermTarget({ term })}
       >
@@ -223,7 +234,7 @@ export const BlocklistPanel = () => {
         variant="ghost"
         size="icon-sm"
         className="text-rose-600 hover:translate-y-0 hover:bg-rose-50 dark:hover:bg-rose-500/10"
-        aria-label={`Delete ${term.term}`}
+        aria-label={t("admin.contentSafety.common.deleteName", { name: term.term })}
         disabled={!storageReady}
         onClick={() => setDeleteTarget({ kind: "term", item: term })}
       >
@@ -237,12 +248,12 @@ export const BlocklistPanel = () => {
       {!storageReady && <StorageMissingBanner />}
 
       <Section
-        title="Blocklist terms"
-        description="Checked before Gemini on every seller text. A change applies to the next check."
+        title={t("admin.contentSafety.blocklist.title")}
+        description={t("admin.contentSafety.blocklist.description")}
         actions={
           <Button type="button" size="sm" disabled={!storageReady} onClick={() => setTermTarget({ create: true })}>
             <Plus aria-hidden="true" />
-            Add term
+            {t("admin.contentSafety.common.addTerm")}
           </Button>
         }
       >
@@ -260,13 +271,17 @@ export const BlocklistPanel = () => {
             }}
           />
           {terms.isError ? (
-            <PanelMessage tone="error" title="The blocklist could not be loaded." />
+            <PanelMessage tone="error" title={t("admin.contentSafety.blocklist.loadError")} />
           ) : !terms.data ? (
             <Skeleton className="h-48 w-full" />
           ) : terms.data.length === 0 ? (
             <PanelMessage
-              title={search || Object.keys(filter).some((key) => filter[key as keyof ModerationTermFilter] !== undefined) ? "No term matches these filters." : "The blocklist is empty."}
-              description="Add a word or phrase to block or flag it in seller text."
+              title={
+                search || Object.keys(filter).some((key) => filter[key as keyof ModerationTermFilter] !== undefined)
+                  ? t("admin.contentSafety.blocklist.emptyFiltered")
+                  : t("admin.contentSafety.blocklist.empty")
+              }
+              description={t("admin.contentSafety.blocklist.emptyDescription")}
             />
           ) : isPhone ? (
             <ul className="space-y-2">
@@ -276,8 +291,8 @@ export const BlocklistPanel = () => {
                     <div className="min-w-0">
                       <p className="text-ink-900 dark:text-ink-50 truncate font-semibold">{term.term}</p>
                       <p className="text-ink-500 mt-0.5 text-xs">
-                        {CATEGORY_LABELS[term.category]} · {term.matchType === "phrase" ? "Phrase" : "Word"}
-                        {term.matchUnaccented ? " · also without accents" : ""}
+                        {t(CATEGORY_LABEL_KEYS[term.category])} · {t(term.matchType === "phrase" ? "admin.contentSafety.matchType.phrase" : "admin.contentSafety.matchType.wordShort")}
+                        {term.matchUnaccented ? ` · ${t("admin.contentSafety.matchType.alsoWithoutAccents")}` : ""}
                       </p>
                     </div>
                     <SeverityBadge severity={term.severity} />
@@ -288,9 +303,9 @@ export const BlocklistPanel = () => {
                         checked={term.isActive}
                         disabled={!storageReady || toggleTerm.isPending}
                         onCheckedChange={(checked) => setTermActive(term, checked)}
-                        aria-label={`${term.term} active`}
+                        aria-label={t("admin.contentSafety.common.nameActive", { name: term.term })}
                       />
-                      {term.isActive ? "Active" : "Paused"}
+                      {t(term.isActive ? "admin.contentSafety.common.active" : "admin.contentSafety.common.paused")}
                     </label>
                     {termActions(term)}
                   </div>
@@ -302,12 +317,12 @@ export const BlocklistPanel = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className={headClass}>Term</TableHead>
-                    <TableHead className={headClass}>Category</TableHead>
-                    <TableHead className={headClass}>When it matches</TableHead>
-                    <TableHead className={headClass}>Matching</TableHead>
-                    <TableHead className={headClass}>Active</TableHead>
-                    <TableHead className={headClass}>Updated</TableHead>
+                    <TableHead className={headClass}>{t("admin.contentSafety.blocklist.tableTerm")}</TableHead>
+                    <TableHead className={headClass}>{t("admin.contentSafety.common.category")}</TableHead>
+                    <TableHead className={headClass}>{t("admin.contentSafety.common.whenItMatches")}</TableHead>
+                    <TableHead className={headClass}>{t("admin.contentSafety.blocklist.matching")}</TableHead>
+                    <TableHead className={headClass}>{t("admin.contentSafety.common.active")}</TableHead>
+                    <TableHead className={headClass}>{t("admin.contentSafety.blocklist.tableUpdated")}</TableHead>
                     <TableHead className="w-24" />
                   </TableRow>
                 </TableHeader>
@@ -318,20 +333,20 @@ export const BlocklistPanel = () => {
                         <p className="text-ink-900 dark:text-ink-50 font-semibold">{term.term}</p>
                         {term.note ? <p className="text-ink-500 max-w-64 truncate text-xs">{term.note}</p> : null}
                       </TableCell>
-                      <TableCell className="text-ink-700">{CATEGORY_LABELS[term.category]}</TableCell>
+                      <TableCell className="text-ink-700">{t(CATEGORY_LABEL_KEYS[term.category])}</TableCell>
                       <TableCell>
                         <SeverityBadge severity={term.severity} />
                       </TableCell>
                       <TableCell className="text-ink-600 text-xs">
-                        {term.matchType === "phrase" ? "Phrase" : "Whole word"} · {term.language.toUpperCase()}
-                        {term.matchUnaccented ? <span className="block">Also without accents</span> : null}
+                        {t(term.matchType === "phrase" ? "admin.contentSafety.matchType.phrase" : "admin.contentSafety.matchType.wholeWord")} · {term.language.toUpperCase()}
+                        {term.matchUnaccented ? <span className="block">{t("admin.contentSafety.matchType.alsoWithoutAccentsTitle")}</span> : null}
                       </TableCell>
                       <TableCell>
                         <Switch
                           checked={term.isActive}
                           disabled={!storageReady || toggleTerm.isPending}
                           onCheckedChange={(checked) => setTermActive(term, checked)}
-                          aria-label={`${term.term} active`}
+                          aria-label={t("admin.contentSafety.common.nameActive", { name: term.term })}
                         />
                       </TableCell>
                       <TableCell className="text-ink-500 text-xs">{formatDateTime(term.updatedAt)}</TableCell>
@@ -348,8 +363,11 @@ export const BlocklistPanel = () => {
           {terms.data && terms.data.length > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-ink-500 text-sm" aria-live="polite">
-                {formatNumber(firstIndex + 1)}–{formatNumber(firstIndex + visibleTerms.length)} of {formatNumber(termList.length)}{" "}
-                terms
+                {t("admin.contentSafety.pagination.termsRange", {
+                  from: formatNumber(firstIndex + 1),
+                  to: formatNumber(firstIndex + visibleTerms.length),
+                  total: formatNumber(termList.length),
+                })}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -360,10 +378,10 @@ export const BlocklistPanel = () => {
                   onClick={() => setPage(Math.max(1, currentPage - 1))}
                 >
                   <ChevronLeft aria-hidden="true" />
-                  Previous
+                  {t("admin.contentSafety.pagination.previous")}
                 </Button>
                 <span className="text-ink-600 text-sm tabular-nums">
-                  Page {currentPage} of {pageCount}
+                  {t("admin.contentSafety.pagination.pageOf", { current: currentPage, total: pageCount })}
                 </span>
                 <Button
                   type="button"
@@ -372,7 +390,7 @@ export const BlocklistPanel = () => {
                   disabled={currentPage >= pageCount}
                   onClick={() => setPage(currentPage + 1)}
                 >
-                  Next
+                  {t("admin.contentSafety.pagination.next")}
                   <ChevronRight aria-hidden="true" />
                 </Button>
               </div>
@@ -382,21 +400,21 @@ export const BlocklistPanel = () => {
       </Section>
 
       <Section
-        title="Allowlist"
-        description="Harmless phrases that contain a listed term, such as “naked eye”. They are ignored by the blocklist; Gemini still checks them."
+        title={t("admin.contentSafety.allowlist.title")}
+        description={t("admin.contentSafety.allowlist.sectionDescription")}
         actions={
           <Button type="button" size="sm" variant="outline" disabled={!storageReady} onClick={() => setAllowTarget({ phrase: "" })}>
             <Plus aria-hidden="true" />
-            Add phrase
+            {t("admin.contentSafety.common.addPhrase")}
           </Button>
         }
       >
         {allowlist.isError ? (
-          <PanelMessage tone="error" title="The allowlist could not be loaded." />
+          <PanelMessage tone="error" title={t("admin.contentSafety.allowlist.loadError")} />
         ) : !allowlist.data ? (
           <Skeleton className="h-32 w-full" />
         ) : allowlist.data.length === 0 ? (
-          <PanelMessage title="No allowlisted phrase yet." description="Add one when a harmless text keeps matching a term." />
+          <PanelMessage title={t("admin.contentSafety.allowlist.emptyTitle")} description={t("admin.contentSafety.allowlist.emptyDescription")} />
         ) : (
           <ul className="divide-ink-100 divide-y">
             {allowlist.data.map((item) => (
@@ -411,14 +429,14 @@ export const BlocklistPanel = () => {
                   onCheckedChange={(checked) =>
                     toggleAllowlist.mutate({ id: item.id, input: { phrase: item.phrase, isActive: checked, note: item.note } })
                   }
-                  aria-label={`${item.phrase} active`}
+                  aria-label={t("admin.contentSafety.common.nameActive", { name: item.phrase })}
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-sm"
                   className="hover:translate-y-0"
-                  aria-label={`Edit ${item.phrase}`}
+                  aria-label={t("admin.contentSafety.common.editName", { name: item.phrase })}
                   disabled={!storageReady}
                   onClick={() => setAllowTarget({ item })}
                 >
@@ -429,7 +447,7 @@ export const BlocklistPanel = () => {
                   variant="ghost"
                   size="icon-sm"
                   className="text-rose-600 hover:translate-y-0 hover:bg-rose-50 dark:hover:bg-rose-500/10"
-                  aria-label={`Delete ${item.phrase}`}
+                  aria-label={t("admin.contentSafety.common.deleteName", { name: item.phrase })}
                   disabled={!storageReady}
                   onClick={() => setDeleteTarget({ kind: "allowlist", item })}
                 >

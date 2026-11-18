@@ -4371,8 +4371,28 @@
         "periodDays": "{{count}} days"
       },
       "onboarding": {
-        "title": "Start your first batch",
-        "description": "Four steps from a CSV to a listing ready for Etsy. Your dashboard fills in as you go.",
+        "title": "Get your workspace ready",
+        "description": "Four steps from connecting a provider to your first workflow run. Each one ticks itself off as you do it.",
+        "progress": "{{done}} of {{count}} done",
+        "dismiss": "Hide checklist",
+        "steps": {
+          "apiKeys": {
+            "title": "Connect a provider",
+            "description": "Add a Gemini, Ideogram or Printify key so batches can generate."
+          },
+          "batches": {
+            "title": "Create a batch",
+            "description": "Import a CSV or add products by hand."
+          },
+          "mockups": {
+            "title": "Add mock-up templates",
+            "description": "Upload your product photos or pick from the system templates."
+          },
+          "workflows": {
+            "title": "Run a workflow",
+            "description": "Turn approved designs into mock-ups, video and a listing."
+          }
+        },
         "start": "Start",
         "open": "Open"
       },
@@ -4430,6 +4450,96 @@
         "unavailableTitle": "Your dashboard is temporarily unavailable",
         "unavailableHint": "Please refresh the page and try again.",
         "overview": "Overview of the last {{days}} days"
+      }
+    },
+    "pageGuides": {
+      "replay": "Show guide",
+      "locale": {
+        "back": "Back",
+        "close": "Close",
+        "next": "Next",
+        "last": "Done",
+        "skip": "Skip"
+      },
+      "apiKeys": {
+        "steps": {
+          "connect": {
+            "title": "Connect your services",
+            "body": "Podivo runs on your own Gemini, Ideogram and Printify accounts. Add each provider's key here so batches can generate."
+          },
+          "readiness": {
+            "title": "Workflow readiness",
+            "body": "These three stages drive every batch. A green check here means the pipeline can run from start to publish."
+          },
+          "add": {
+            "title": "Add a connection",
+            "body": "Pick a provider, paste its key and confirm. Add several keys and switch between them any time."
+          },
+          "manage": {
+            "title": "Manage connections",
+            "body": "Reconnect an expired key, check when it was last used or remove it. The dashboard checklist ticks itself once a key is active."
+          }
+        }
+      },
+      "batches": {
+        "steps": {
+          "start": {
+            "title": "Batches",
+            "body": "A batch groups the products that share one product line and one run."
+          },
+          "actions": {
+            "title": "Create or import",
+            "body": "Start a batch by hand, or import a CSV with one product per row. The batch needs a product line before anything runs."
+          },
+          "list": {
+            "title": "Your batches",
+            "body": "Every batch lives here with its product counts. Once you create one, this panel lists it and you can switch between them."
+          },
+          "products": {
+            "title": "Products in the batch",
+            "body": "Every row is a product with its own status. Failed products can go back to pending without touching the rest."
+          },
+          "help": {
+            "title": "How it works",
+            "body": "Reopen the numbered walkthrough whenever you need the pipeline in one screen."
+          }
+        }
+      },
+      "mockups": {
+        "steps": {
+          "start": {
+            "title": "Mock-up library",
+            "body": "Mock-ups turn a flat design into a product photo; the library keeps the product and model photos your batches reuse."
+          },
+          "tabs": {
+            "title": "Two kinds of photos",
+            "body": "Product photos place your design on the product; model photos add a person wearing it."
+          },
+          "templates": {
+            "title": "Product photos",
+            "body": "Use the system templates or upload your own print-area photo, then pick the garment colour when you run the workflow."
+          },
+          "models": {
+            "title": "Model photos",
+            "body": "Open this tab to upload or generate lifestyle photos of people wearing the product."
+          }
+        }
+      },
+      "workflows": {
+        "steps": {
+          "start": {
+            "title": "Workflow builder",
+            "body": "The canvas turns one batch into designs, mock-ups, a video and a listing. Validate saves you a paid run, and Run asks once for the cost."
+          },
+          "palette": {
+            "title": "Node palette",
+            "body": "Drag a node onto the canvas, or click it to place it. The default pipeline already wires the nine steps you need."
+          },
+          "canvas": {
+            "title": "Canvas",
+            "body": "Select a node to edit it on the right. Nodes show live status while a run moves through them."
+          }
+        }
       }
     },
     "shop": {

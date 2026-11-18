@@ -1,6 +1,7 @@
 "use client";
 
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +12,7 @@ import {
 import { useSidebarStore } from "@/stores/sidebar";
 
 export const CollapseToggle = () => {
+  const { t } = useTranslation("common");
   const isCollapsed = useSidebarStore((state) => state.isCollapsed);
   const toggleCollapsed = useSidebarStore((state) => state.toggleCollapsed);
   const Icon = isCollapsed ? PanelLeftOpen : PanelLeftClose;
@@ -23,13 +25,13 @@ export const CollapseToggle = () => {
           variant="ghost"
           size="icon-sm"
           onClick={toggleCollapsed}
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={isCollapsed ? t("commons.sidebar.expand") : t("commons.sidebar.collapse")}
         >
           <Icon />
         </Button>
       </TooltipTrigger>
       <TooltipContent side="right">
-        {isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        {isCollapsed ? t("commons.sidebar.expand") : t("commons.sidebar.collapse")}
       </TooltipContent>
     </Tooltip>
   );

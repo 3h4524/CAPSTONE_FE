@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { SELECT_CLEARABLE_TRIGGER, SelectClearButton } from "@/components/commons/forms/select-clear-button";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { Button } from "@/components/ui/button";
@@ -42,32 +44,33 @@ export const OptionSelect = ({
   onChange,
   isLoading = false,
   isError = false,
-  emptyMessage = "No options available yet.",
+  emptyMessage,
   onRetry,
   noneLabel,
   clearable = false,
   disabled = false,
   standaloneId,
 }: OptionSelectProps) => {
+  const { t } = useTranslation("common");
   const canClear = (clearable || Boolean(noneLabel)) && Boolean(value) && !disabled;
   // Shaped like the dropdown it stands in for, so the fields below do not jump when it loads.
-  if (isLoading) return <SectionLoading label="Loading options" className="bg-muted/40 h-9 justify-start rounded-md border px-3 py-0 [&_svg]:size-4 [&>span]:text-xs" />;
+  if (isLoading) return <SectionLoading label={t("workflowConfig.fields.loadingOptions")} className="bg-muted/40 h-9 justify-start rounded-md border px-3 py-0 [&_svg]:size-4 [&>span]:text-xs" />;
 
   if (isError) {
     return (
       <PanelNotice
         tone="error"
         action={onRetry && (
-          <Button type="button" variant="link" size="sm" className="h-auto px-0 text-xs text-rose-900 hover:translate-y-0 dark:text-rose-300" onClick={onRetry}>Retry</Button>
+          <Button type="button" variant="link" size="sm" className="h-auto px-0 text-xs text-rose-900 hover:translate-y-0 dark:text-rose-300" onClick={onRetry}>{t("workflowConfig.fields.retry")}</Button>
         )}
       >
-        Options could not be loaded.
+        {t("workflowConfig.fields.optionsLoadError")}
       </PanelNotice>
     );
   }
 
   if (options.length === 0 && !value) {
-    return <p className="text-muted-foreground rounded-md border border-dashed px-3 py-2.5 text-xs leading-relaxed">{emptyMessage}</p>;
+    return <p className="text-muted-foreground rounded-md border border-dashed px-3 py-2.5 text-xs leading-relaxed">{emptyMessage ?? t("workflowConfig.fields.noOptions")}</p>;
   }
 
   // Options with a thumbnail or a second line get a richer list; the closed field still shows one line.
@@ -97,7 +100,7 @@ export const OptionSelect = ({
     <Select value={value} onValueChange={(next) => next !== value && onChange(next)} disabled={disabled}>
       <div className="relative min-w-0">
         {standaloneId ? trigger : <FormControl>{trigger}</FormControl>}
-        {canClear && <SelectClearButton label={`Clear: ${selected?.label ?? "this choice"}`} onClear={() => onChange("")} />}
+        {canClear && <SelectClearButton label={t("workflowConfig.fields.clearChoice", { label: selected?.label ?? t("workflowConfig.fields.thisChoice") })} onClear={() => onChange("")} />}
       </div>
       <SelectContent position="popper" className={cn(PANEL_SELECT_CONTENT_CLASS, "w-(--radix-select-trigger-width)")}>
         {options.map((option) => (

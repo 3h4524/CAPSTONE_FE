@@ -3,10 +3,34 @@
 import { useState } from "react";
 import Image from "next/image";
 import { CalendarDays, Copy, Eye, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import type { DesignTemplateSummary } from "@/types/design-template";
 import { cn } from "@/utils/cn";
+
+const NICHE_KEYS: Record<string, string> = {
+  "Nature & Botanical": "natureBotanical",
+  Outdoors: "outdoors",
+  "Food & Drink": "foodDrink",
+  Vehicles: "vehicles",
+  "Quotes & Motivation": "quotesMotivation",
+  "Humor & Lifestyle": "humorLifestyle",
+  "Gifts & Occasions": "giftsOccasions",
+  "Pets & Animals": "petsAnimals",
+  "Sports & Fitness": "sportsFitness",
+  "Travel & Places": "travelPlaces",
+};
+
+const ART_STYLE_KEYS: Record<string, string> = {
+  vintage: "vintage",
+  minimalist: "minimalist",
+  watercolor: "watercolor",
+  bold_typography: "boldTypography",
+  dark_academia: "darkAcademia",
+  funny_quote: "funnyQuote",
+  floral: "floral",
+};
 
 type DesignTemplateCardProps = {
   template: DesignTemplateSummary;
@@ -25,8 +49,22 @@ export function DesignTemplateCard({
   onEdit,
   onDelete,
 }: DesignTemplateCardProps) {
+  const { t, i18n } = useTranslation("common");
   const [imageFailed, setImageFailed] = useState(false);
-  const styleLabel = template.artStyle?.replaceAll("_", " ") ?? "Unstyled";
+  const nicheKey = template.nicheCategory ? NICHE_KEYS[template.nicheCategory] : undefined;
+  const nicheLabel = template.nicheCategory
+    ? nicheKey
+      ? t(`designTemplates.niches.${nicheKey}`, { defaultValue: template.nicheCategory })
+      : template.nicheCategory
+    : t("designTemplates.general");
+  const artStyleKey = template.artStyle ? ART_STYLE_KEYS[template.artStyle] : undefined;
+  const styleLabel = template.artStyle
+    ? artStyleKey
+      ? t(`designTemplates.artStyles.${artStyleKey}`, {
+          defaultValue: template.artStyle.replaceAll("_", " "),
+        })
+      : template.artStyle.replaceAll("_", " ")
+    : t("designTemplates.unstyled");
 
   return (
     <article className="group border-ink-200 bg-card hover:border-ink-300 flex min-h-full flex-col overflow-hidden rounded-[18px] border shadow-[0_1px_2px_rgba(39,55,80,0.04)] transition-[box-shadow,border-color] duration-300 ease-out hover:shadow-[0_14px_34px_rgba(39,55,80,0.09)] motion-reduce:transition-none">
@@ -34,7 +72,7 @@ export function DesignTemplateCard({
         type="button"
         className="bg-ink-100 focus-visible:ring-primary/25 relative aspect-[4/3] w-full overflow-hidden text-left focus-visible:ring-3 focus-visible:outline-none focus-visible:ring-inset max-md:aspect-video"
         onClick={() => onView(template.id)}
-        aria-label={`View ${template.name}`}
+        aria-label={t("designTemplates.viewTemplate", { name: template.name })}
       >
         {template.previewImageUrl && !imageFailed ? (
           <Image
@@ -42,7 +80,7 @@ export function DesignTemplateCard({
             sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
             src={template.previewImageUrl}
             unoptimized
-            alt={`Preview artwork for ${template.name}`}
+            alt={t("designTemplates.previewAlt", { name: template.name })}
             className="transform-gpu object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.012] motion-reduce:transform-none motion-reduce:transition-none"
             onError={() => setImageFailed(true)}
           />
@@ -59,13 +97,13 @@ export function DesignTemplateCard({
               : "border-primary/15 bg-card/90 text-primary"
           )}
         >
-          {template.isSystemTemplate ? "System" : "Personal"}
+          {template.isSystemTemplate ? t("designTemplates.system") : t("designTemplates.personal")}
         </span>
       </button>
 
       <div className="flex flex-1 flex-col p-5 max-md:p-4">
         <div className="text-ink-500 flex flex-wrap items-center gap-2 text-[11px] font-semibold tracking-[0.04em]">
-          <span>{template.nicheCategory ?? "General"}</span>
+          <span>{nicheLabel}</span>
           <span className="bg-ink-300 size-1 rounded-full" aria-hidden="true" />
           <span className="capitalize">{styleLabel}</span>
         </div>
@@ -73,13 +111,13 @@ export function DesignTemplateCard({
           {template.name}
         </h2>
         <p className="text-ink-600 mt-2 line-clamp-2 min-h-10 text-sm leading-5 max-md:mt-1 max-md:min-h-0">
-          {template.styleDescription ?? "A personal prompt framework ready for your next collection."}
+          {template.styleDescription ?? t("designTemplates.personalFallbackDescription")}
         </p>
         <div className="border-ink-100 text-ink-500 mt-5 flex items-center justify-between border-t pt-4 text-xs max-md:mt-3 max-md:pt-3">
-          <span className={cn(template.usageCount === 0 && "max-md:invisible")}>{template.usageCount.toLocaleString()} uses</span>
+          <span className={cn(template.usageCount === 0 && "max-md:invisible")}>{t("designTemplates.usesCount", { uses: template.usageCount.toLocaleString(i18n.language) })}</span>
           <span className="inline-flex items-center gap-1.5">
             <CalendarDays className="size-3.5" aria-hidden="true" />
-            <time dateTime={template.updatedAtUtc}>{formatDate(template.updatedAtUtc)}</time>
+            <time dateTime={template.updatedAtUtc}>{formatDate(template.updatedAtUtc, i18n.language)}</time>
           </span>
         </div>
         <div className="mt-4 flex flex-wrap gap-2 max-md:mt-3">
@@ -90,7 +128,7 @@ export function DesignTemplateCard({
             className="border-ink-300 min-h-9 flex-1 px-3 hover:translate-y-0"
             onClick={() => onView(template.id)}
           >
-            <Eye aria-hidden="true" />View
+            <Eye aria-hidden="true" />{t("designTemplates.view")}
           </Button>
           {template.canClone && (
             <Button
@@ -100,7 +138,7 @@ export function DesignTemplateCard({
               disabled={cloning}
               onClick={() => onClone(template.id)}
             >
-              <Copy aria-hidden="true" />{cloning ? "Cloning..." : "Clone & customize"}
+              <Copy aria-hidden="true" />{cloning ? t("designTemplates.cloning") : t("designTemplates.cloneCustomize")}
             </Button>
           )}
           {template.canEdit && (
@@ -110,7 +148,7 @@ export function DesignTemplateCard({
               className="min-h-9 flex-1 px-3 hover:translate-y-0"
               onClick={() => onEdit(template.id)}
             >
-              <Pencil aria-hidden="true" />Edit
+              <Pencil aria-hidden="true" />{t("designTemplates.edit")}
             </Button>
           )}
           {template.canDelete && (
@@ -120,7 +158,7 @@ export function DesignTemplateCard({
               size="icon-sm"
               className="text-ink-500 min-h-9 hover:translate-y-0 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-500/10 dark:hover:text-red-300"
               onClick={() => onDelete(template)}
-              aria-label={`Delete ${template.name}`}
+              aria-label={t("designTemplates.deleteTemplateNamed", { name: template.name })}
             >
               <Trash2 aria-hidden="true" />
             </Button>
@@ -131,8 +169,8 @@ export function DesignTemplateCard({
   );
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(
+function formatDate(value: string, locale: string) {
+  return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric", year: "numeric" }).format(
     new Date(value)
   );
 }

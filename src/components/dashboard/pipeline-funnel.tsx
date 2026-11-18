@@ -12,6 +12,7 @@ import {
   Store,
   Tag,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Card } from "@/components/ui/card";
 import { PIPELINE_STAGE_LABELS, REVIEW_STAGES } from "@/constants/seller-dashboard";
@@ -41,6 +42,8 @@ const STAGE_ICONS: Record<PipelineStageKey, LucideIcon> = {
  * filled in; a stage with stuck products is outlined in red and one waiting on the Seller in amber.
  */
 export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) => {
+  const { t, i18n } = useTranslation("common");
+  const formatCount = (value: number) => new Intl.NumberFormat(i18n.language).format(value);
   const total = stages.reduce((sum, stage) => sum + stage.count, 0);
   const busiest = stages.reduce<PipelineStage | null>(
     (best, stage) => (stage.count > 0 && (!best || stage.count > best.count) ? stage : best),
@@ -51,26 +54,26 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
     <Card className="gap-4 rounded-2xl p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold">Production pipeline</h2>
+          <h2 className="text-base font-semibold">{t("dashboard.pipeline.title")}</h2>
           <p className="text-muted-foreground mt-0.5 text-xs">
             <span className="font-semibold text-[#5f8a4c] dark:text-[#b0cca3]">
-              {countInProgress(stages).toLocaleString()} in progress
+              {t("dashboard.pipeline.inProgress", { count: countInProgress(stages) })}
             </span>
             {failedProducts > 0 && (
               <span className="font-semibold text-rose-600 dark:text-rose-400">
                 {" "}
-                · {failedProducts.toLocaleString()} failed
+                · {t("dashboard.pipeline.failed", { count: failedProducts })}
               </span>
             )}
             {" · "}
-            {total.toLocaleString()} products in all
+            {t("dashboard.pipeline.total", { count: total })}
           </p>
         </div>
         <Link
           href="/batches"
           className="text-ink-800 inline-flex shrink-0 items-center gap-1 text-xs font-medium whitespace-nowrap hover:text-black hover:underline"
         >
-          Open batches
+          {t("dashboard.pipeline.openBatches")}
           <ArrowRight className="size-3.5" aria-hidden="true" />
         </Link>
       </div>
@@ -108,7 +111,7 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
                       ? "border-[#2fae93] bg-[#2fae93] text-white shadow-md shadow-emerald-900/10"
                       : "bg-card border-ink-200 text-ink-700"
                   )}
-                  title={isBusiest ? "Most of your products are here" : undefined}
+                  title={isBusiest ? t("dashboard.pipeline.mostHere") : undefined}
                 >
                   {index + 1}
                 </span>
@@ -119,7 +122,7 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
                   )}
                 >
                   <Icon className="size-3.5 shrink-0 max-lg:hidden" aria-hidden="true" />
-                  <span className="truncate">{PIPELINE_STAGE_LABELS[stage.stage]}</span>
+                  <span className="truncate">{t(`dashboard.pipeline.stages.${stage.stage}`, { defaultValue: PIPELINE_STAGE_LABELS[stage.stage] })}</span>
                 </span>
 
                 <div
@@ -138,10 +141,10 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
                       stage.count === 0 && "text-muted-foreground/40"
                     )}
                   >
-                    {stage.count.toLocaleString()}
+                    {formatCount(stage.count)}
                   </span>
                   <span className="text-muted-foreground text-[11px] tabular-nums">
-                    {share.toFixed(1)}% of products
+                    {t("dashboard.pipeline.ofProducts", { share: share.toFixed(1) })}
                   </span>
                   <div className="bg-ink-100 h-1.5 overflow-hidden rounded-full">
                     <div
@@ -156,11 +159,11 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
                     {isStuck ? (
                       <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">
                         <Hourglass className="size-3" aria-hidden="true" />
-                        {stage.stuckCount} stuck
+                        {t("dashboard.pipeline.stuck", { count: stage.stuckCount })}
                       </span>
                     ) : waitsOnSeller ? (
                       <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
-                        Waits on you
+                        {t("dashboard.pipeline.waitsOnYou")}
                       </span>
                     ) : null}
                   </div>
@@ -174,15 +177,15 @@ export const PipelineFunnel = ({ stages, failedProducts }: PipelineFunnelProps) 
       <ul className="text-muted-foreground flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-3 text-[11px]">
         <li className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full bg-[#2fae93]" />
-          Where most products are
+          {t("dashboard.pipeline.legendBusiest")}
         </li>
         <li className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full border-2 border-rose-400" />
-          Stuck: taking <span className="max-md:hidden">far</span> longer<span className="max-md:hidden"> than usual</span>
+          {t("dashboard.pipeline.legendStuck")}
         </li>
         <li className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full border-2 border-amber-400" />
-          Waits on your review
+          {t("dashboard.pipeline.legendWaits")}
         </li>
       </ul>
     </Card>

@@ -2,12 +2,22 @@
 
 import { Fragment, useState } from "react";
 import { GitBranch } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { NodeConfigPanel } from "@/components/workflows/config-panel/node-config-panel";
 import { AddStepSheet } from "@/components/workflows/steps/add-step-sheet";
-import { WorkflowChecksList, WorkflowChecksSummary } from "@/components/workflows/steps/workflow-checks";
+import {
+  WorkflowChecksList,
+  WorkflowChecksSummary,
+} from "@/components/workflows/steps/workflow-checks";
 import { WorkflowStepCard } from "@/components/workflows/steps/workflow-step-card";
 import { validateWorkflow } from "@/helpers/workflow-graph";
 import { orderSteps } from "@/helpers/workflow-steps";
@@ -17,7 +27,11 @@ import type { WorkflowNode, WorkflowNodeType } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 
 // Too much to edit inside a card; everything else opens in place.
-const FULL_SCREEN_STEPS: WorkflowNodeType[] = ["generate-video", "review-video", "generate-listing"];
+const FULL_SCREEN_STEPS: WorkflowNodeType[] = [
+  "generate-video",
+  "review-video",
+  "generate-listing",
+];
 
 type ListTab = "flow" | "checks";
 
@@ -39,7 +53,9 @@ export const WorkflowStepList = ({ onShowDiagram }: WorkflowStepListProps) => {
 
   const steps = orderSteps(nodes, edges);
   const issues = validateWorkflow(nodes, edges);
-  const opensFullScreen = (node: WorkflowNode) => hasRun || FULL_SCREEN_STEPS.includes(node.data.type);
+  const { t } = useTranslation("common");
+  const opensFullScreen = (node: WorkflowNode) =>
+    hasRun || FULL_SCREEN_STEPS.includes(node.data.type);
   const selected = steps.find((node) => node.id === selectedId);
 
   const fix = (nodeId: string) => {
@@ -50,7 +66,11 @@ export const WorkflowStepList = ({ onShowDiagram }: WorkflowStepListProps) => {
   return (
     <div className="bg-background absolute inset-0 overflow-y-auto">
       <div className="bg-background/95 sticky top-0 z-10 px-3 py-2 backdrop-blur">
-        <div className="bg-muted grid grid-cols-2 gap-1 rounded-xl p-1" role="group" aria-label="Workflow view">
+        <div
+          className="bg-muted grid grid-cols-2 gap-1 rounded-xl p-1"
+          role="group"
+          aria-label={t("workflowEditor.steps.view")}
+        >
           {(["flow", "checks"] as const).map((item) => (
             <button
               key={item}
@@ -58,13 +78,15 @@ export const WorkflowStepList = ({ onShowDiagram }: WorkflowStepListProps) => {
               aria-pressed={tab === item}
               onClick={() => setTab(item)}
               className={cn(
-                "text-muted-foreground flex min-h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold capitalize",
+                "text-muted-foreground flex min-h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold",
                 tab === item && "bg-card text-primary shadow-sm"
               )}
             >
-              {item}
+              {t(`workflowEditor.steps.tabs.${item}`)}
               {item === "checks" && issues.length > 0 && (
-                <span className="rounded-full bg-amber-100 px-1.5 text-[11px] text-amber-800 tabular-nums dark:bg-amber-500/15 dark:text-amber-300">{issues.length}</span>
+                <span className="rounded-full bg-amber-100 px-1.5 text-[11px] text-amber-800 tabular-nums dark:bg-amber-500/15 dark:text-amber-300">
+                  {issues.length}
+                </span>
               )}
             </button>
           ))}
@@ -77,7 +99,7 @@ export const WorkflowStepList = ({ onShowDiagram }: WorkflowStepListProps) => {
         ) : (
           <>
             <WorkflowChecksSummary issues={issues} onFix={fix} onViewAll={() => setTab("checks")} />
-            <ol aria-label="Workflow steps">
+            <ol aria-label={t("workflowEditor.steps.steps")}>
               {steps.map((node, index) => (
                 <Fragment key={node.id}>
                   {index > 0 && <li aria-hidden="true" className="bg-border mx-auto h-4 w-px" />}
@@ -95,19 +117,27 @@ export const WorkflowStepList = ({ onShowDiagram }: WorkflowStepListProps) => {
               ))}
             </ol>
             <AddStepSheet />
-            <Button type="button" variant="ghost" className="text-muted-foreground w-full" onClick={onShowDiagram}>
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-muted-foreground w-full"
+              onClick={onShowDiagram}
+            >
               <GitBranch aria-hidden="true" />
-              View diagram
+              {t("workflowEditor.steps.viewDiagram")}
             </Button>
           </>
         )}
       </div>
 
-      <Sheet open={selected !== undefined && opensFullScreen(selected)} onOpenChange={(open) => !open && selectNode(null)}>
+      <Sheet
+        open={selected !== undefined && opensFullScreen(selected)}
+        onOpenChange={(open) => !open && selectNode(null)}
+      >
         <SheetContent side="bottom" showCloseButton={false} className="h-dvh gap-0 p-0">
           <SheetHeader className="sr-only">
-            <SheetTitle>{selected?.data.label ?? "Step"}</SheetTitle>
-            <SheetDescription>Settings and results of this step.</SheetDescription>
+            <SheetTitle>{selected?.data.label ?? t("workflowEditor.steps.step")}</SheetTitle>
+            <SheetDescription>{t("workflowEditor.steps.sheetDescription")}</SheetDescription>
           </SheetHeader>
           <NodeConfigPanel />
         </SheetContent>

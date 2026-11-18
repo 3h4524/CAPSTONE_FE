@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { WORKFLOW_VISUALS } from "@/components/landing/visuals/workflow-visuals";
 import { Card } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import { cn } from "@/utils/cn";
  * search engines read them all whichever one is open.
  */
 export const WorkflowSteps = () => {
+  const { t } = useTranslation("common");
   const isPhone = useIsPhone();
   const [openStep, setOpenStep] = useState<string | null>(WORKFLOW_STEPS[0]?.index ?? null);
 
@@ -37,7 +39,9 @@ export const WorkflowSteps = () => {
                   <span className="bg-brand-soft text-brand font-display flex size-12 shrink-0 items-center justify-center rounded-full border text-sm font-bold max-md:size-9">
                     {step.index}
                   </span>
-                  <span className="text-brand-ink max-md:flex-1">{step.title}</span>
+                  <span className="text-brand-ink max-md:flex-1">
+                    {t(`landing.workflow.steps.${step.index}.title`, { defaultValue: step.title })}
+                  </span>
                   <ChevronDown
                     className={cn("text-muted-foreground size-4 shrink-0 transition-transform md:hidden", isOpen && "rotate-180")}
                     aria-hidden="true"
@@ -45,7 +49,9 @@ export const WorkflowSteps = () => {
                 </button>
               </h3>
               <div className={cn("flex flex-col gap-4 max-md:gap-3 max-md:px-3.5 max-md:pb-3.5", !isOpen && "max-md:hidden")}>
-                <p className="text-muted-foreground text-sm leading-relaxed">{step.description}</p>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {t(`landing.workflow.steps.${step.index}.description`, { defaultValue: step.description })}
+                </p>
                 <div className="bg-muted/40 mt-auto aspect-video overflow-hidden rounded-md border" aria-hidden="true">
                   <Visual />
                 </div>

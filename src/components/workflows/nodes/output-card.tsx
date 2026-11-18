@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 
 import { NodeFrame } from "@/components/workflows/nodes/node-frame";
 import { NodeReadonlyText } from "@/components/workflows/nodes/node-readonly-text";
@@ -16,43 +18,79 @@ import type { NodeProps } from "@xyflow/react";
 const count = (value: unknown) => (Array.isArray(value) ? value.length : 0);
 
 /** One line per setting that matters, so the canvas shows what the step will do without opening it. */
-const publishSummary = (type: string, config: WorkflowNodeConfig, followsMockup = false): string[] => {
+const publishSummary = (
+  type: string,
+  config: WorkflowNodeConfig,
+  t: TFunction,
+  followsMockup = false
+): string[] => {
+  const etsyLine =
+    config.publishToEtsy === false
+      ? t("workflowEditor.outputCard.printifyOnly")
+      : t("workflowEditor.outputCard.printifyPublishes");
   if (type === "publish-printify" && followsMockup) {
     const profit = typeof config.targetProfit === "number" ? config.targetProfit : 10;
     return [
-      "Product set on Apply mock-up",
-      `~$${profit.toFixed(0)} profit each`,
-      config.publishToEtsy === false ? "Printify only, not published to Etsy" : "Printify publishes to Etsy",
+      t("workflowEditor.outputCard.productSetOnMockup"),
+      t("workflowEditor.outputCard.profitEach", { profit: profit.toFixed(0) }),
+      etsyLine,
     ];
   }
   if (type === "publish-printify") {
     const product = typeof config.blueprintTitle === "string" ? config.blueprintTitle : null;
-    const provider = typeof config.printProviderTitle === "string" ? config.printProviderTitle : null;
+    const provider =
+      typeof config.printProviderTitle === "string" ? config.printProviderTitle : null;
     const profit = typeof config.targetProfit === "number" ? config.targetProfit : 10;
     return [
-      product ?? "Choose a product type",
+      product ?? t("workflowEditor.outputCard.chooseProductType"),
       ...(provider ? [provider] : []),
-      ...(product ? [`${count(config.colors)} color(s) · ${count(config.sizes)} size(s) · ~$${profit.toFixed(0)} profit each`] : []),
-      config.publishToEtsy === false ? "Printify only, not published to Etsy" : "Printify publishes to Etsy",
+      ...(product
+        ? [
+            t("workflowEditor.outputCard.variantSummary", {
+              colors: count(config.colors),
+              sizes: count(config.sizes),
+              profit: profit.toFixed(0),
+            }),
+          ]
+        : []),
+      etsyLine,
     ];
   }
   const digital = config.listingType !== "physical";
-  const price = typeof config.price === "number" ? `$${config.price.toFixed(2)}` : "No price yet";
+  const price =
+    typeof config.price === "number"
+      ? `$${config.price.toFixed(2)}`
+      : t("workflowEditor.outputCard.noPrice");
   return [
-    `${digital ? "Digital download" : "Physical item"} · ${price}`,
-    typeof config.taxonomyPath === "string" ? config.taxonomyPath.split(" > ").slice(-1)[0] : "Choose an Etsy category",
-    "Saved as an Etsy draft",
+    `${digital ? t("workflowEditor.outputCard.digitalDownload") : t("workflowEditor.outputCard.physicalItem")} · ${price}`,
+    typeof config.taxonomyPath === "string"
+      ? config.taxonomyPath.split(" > ").slice(-1)[0]
+      : t("workflowEditor.outputCard.chooseEtsyCategory"),
+    t("workflowEditor.outputCard.savedAsDraft"),
   ];
 };
 
 export const OutputCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
+  const { t } = useTranslation("common");
   const isPublish = data.type === "publish-etsy" || data.type === "publish-printify";
-  const description = getWorkflowNodeDefinition(data.type)?.description;
+  const definitionDescription = getWorkflowNodeDefinition(data.type)?.description;
+  const description =
+    definitionDescription &&
+    t(`workflowEditor.nodeTypes.${data.type}.description`, { defaultValue: definitionDescription });
   // Push to Printify shows the Printify product Apply mock-up set from its templates.
   const nodes = useWorkflowStore((state) => state.nodes);
-  const followsMockup = data.type === "publish-printify" && Object.keys(readPrintifyProducts(nodes.find((node) => node.data.type === "apply-mockup")?.data.config)).length > 0;
-  const problem = isPublish ? nodeConfigSchemaIn(data.type, nodes).safeParse(data.config).error?.issues[0]?.message : undefined;
-  const connections = useShopConnections({ etsy: data.type === "publish-etsy", printify: data.type === "publish-printify" });
+  const followsMockup =
+    data.type === "publish-printify" &&
+    Object.keys(
+      readPrintifyProducts(nodes.find((node) => node.data.type === "apply-mockup")?.data.config)
+    ).length > 0;
+  const problem = isPublish
+    ? nodeConfigSchemaIn(data.type, nodes).safeParse(data.config).error?.issues[0]?.message
+    : undefined;
+  const connections = useShopConnections({
+    etsy: data.type === "publish-etsy",
+    printify: data.type === "publish-printify",
+  });
   const connectionIssue = publishConnectionIssue(data.type, connections);
 
   return (
@@ -60,21 +98,37 @@ export const OutputCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
       <div className="space-y-1 px-2.5 pb-2.5">
         {isPublish ? (
           <>
-            {publishSummary(data.type, data.config, followsMockup).map((line) => (
-              <p key={line} className="text-wf-faint truncate px-0.5 text-[11px] leading-4" title={line}>{line}</p>
+            {publishSummary(data.type, data.config, t, followsMockup).map((line) => (
+              <p
+                key={line}
+                className="text-wf-faint truncate px-0.5 text-[11px] leading-4"
+                title={line}
+              >
+                {line}
+              </p>
             ))}
-            {problem && <p className="px-0.5 text-[10px] leading-4 text-amber-700 dark:text-amber-300">{problem}</p>}
+            {problem && (
+              <p className="px-0.5 text-[10px] leading-4 text-amber-700 dark:text-amber-300">
+                {problem}
+              </p>
+            )}
             {connectionIssue && (
               <p className="px-0.5 text-[10px] leading-4 text-amber-700 dark:text-amber-300">
                 {connectionIssue.message}{" "}
-                <Link href={connectionIssue.href} className="nodrag font-semibold underline underline-offset-2">
+                <Link
+                  href={connectionIssue.href}
+                  className="nodrag font-semibold underline underline-offset-2"
+                >
                   {connectionIssue.linkLabel}
                 </Link>
               </p>
             )}
           </>
         ) : (
-          <NodeReadonlyText value={description} placeholder="Packages the final assets." />
+          <NodeReadonlyText
+            value={description}
+            placeholder={t("workflowEditor.exportZip.packagesFinal")}
+          />
         )}
       </div>
     </NodeFrame>

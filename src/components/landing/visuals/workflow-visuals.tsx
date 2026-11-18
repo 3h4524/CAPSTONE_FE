@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import { Check, FileSpreadsheet, Printer, Store } from "lucide-react";
 import type { ComponentType } from "react";
+import { useTranslation } from "react-i18next";
 
 import { PREVIEW_DESIGNS, type WorkflowVisualId } from "@/data/landing-content";
 
@@ -10,7 +13,9 @@ const SHEET_ROWS = [
   ["Garden tote", "Florals", "iris, garden"],
 ];
 
-const UploadVisual = () => (
+const UploadVisual = () => {
+  const { t } = useTranslation("common");
+  return (
   <div className="flex h-full flex-col gap-2 p-3">
     <p className="flex items-center gap-1.5 text-[11px] font-semibold">
       <FileSpreadsheet className="text-brand size-3.5" />
@@ -18,9 +23,9 @@ const UploadVisual = () => (
     </p>
     <div className="overflow-hidden rounded-md border text-[10px]">
       <div className="bg-muted text-muted-foreground grid grid-cols-3 gap-2 px-2 py-1 font-semibold uppercase">
-        <span>Product</span>
-        <span>Niche</span>
-        <span>Keywords</span>
+        <span>{t("landing.workflow.visuals.product")}</span>
+        <span>{t("landing.workflow.visuals.niche")}</span>
+        <span>{t("landing.workflow.visuals.keywords")}</span>
       </div>
       {SHEET_ROWS.map((row) => (
         <div key={row[0]} className="grid grid-cols-3 gap-2 border-t px-2 py-1">
@@ -33,9 +38,12 @@ const UploadVisual = () => (
       ))}
     </div>
   </div>
-);
+  );
+};
 
-const GenerateVisual = () => (
+const GenerateVisual = () => {
+  const { t } = useTranslation("common");
+  return (
   <div className="flex h-full flex-col justify-between gap-2 p-3">
     <div className="grid grid-cols-3 gap-2">
       {PREVIEW_DESIGNS.slice(0, 3).map((design) => (
@@ -46,7 +54,7 @@ const GenerateVisual = () => (
     </div>
     <div className="flex flex-col gap-1">
       <div className="text-muted-foreground flex justify-between text-[10px]">
-        <span>Generating assets</span>
+        <span>{t("landing.workflow.visuals.generating")}</span>
         <span>18 / 24</span>
       </div>
       <span className="bg-muted h-1.5 overflow-hidden rounded-full">
@@ -54,11 +62,13 @@ const GenerateVisual = () => (
       </span>
     </div>
   </div>
-);
+  );
+};
 
 const SEO_CHECKS = ["Keywords in title", "13 / 13 tags filled", "Description length"];
 
 const SeoVisual = () => {
+  const { t } = useTranslation("common");
   const score = 92;
   // Ring of radius 26: circumference 2 × π × 26 ≈ 163.4, so 92 % of it is drawn.
   const circumference = 2 * Math.PI * 26;
@@ -82,10 +92,10 @@ const SeoVisual = () => {
         <span className="absolute inset-0 flex items-center justify-center text-sm font-bold">{score}</span>
       </div>
       <ul className="flex list-none flex-col gap-1.5 p-0">
-        {SEO_CHECKS.map((check) => (
+        {SEO_CHECKS.map((check, index) => (
           <li key={check} className="flex items-center gap-1.5 text-[11px]">
             <Check className="size-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
-            {check}
+            {t(`landing.workflow.visuals.seoChecks.${index}`, { defaultValue: check })}
           </li>
         ))}
       </ul>
@@ -94,6 +104,7 @@ const SeoVisual = () => {
 };
 
 const SendVisual = () => {
+  const { t } = useTranslation("common");
   const design = PREVIEW_DESIGNS[0];
   return (
     <div className="flex h-full flex-col justify-between gap-2 p-3">
@@ -103,13 +114,13 @@ const SendVisual = () => {
         </div>
         <div className="min-w-0">
           <p className="truncate text-[11px] font-semibold">Desert Horizon Vintage Tee</p>
-          <p className="text-muted-foreground text-[10px]">Images + video attached</p>
+          <p className="text-muted-foreground text-[10px]">{t("landing.workflow.visuals.attached")}</p>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold">
         <span className="bg-surface-strong text-surface-strong-foreground flex items-center justify-center gap-1 rounded-md py-1.5">
           <Store className="size-3" />
-          Etsy draft
+          {t("landing.preview.etsyDraft")}
         </span>
         <span className="text-muted-foreground flex items-center justify-center gap-1 rounded-md border py-1.5">
           <Printer className="size-3" />

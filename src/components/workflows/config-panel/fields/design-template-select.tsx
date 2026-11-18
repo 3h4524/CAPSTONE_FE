@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { OptionSelect } from "@/components/workflows/config-panel/fields/option-select";
 import { SourcePreview } from "@/components/workflows/config-panel/fields/source-preview";
 import { useDesignTemplates } from "@/hooks/queries/use-design-templates";
@@ -15,6 +17,7 @@ type DesignTemplateSelectProps = {
 };
 
 export const DesignTemplateSelect = ({ value, placeholder, onChange, id }: DesignTemplateSelectProps) => {
+  const { t } = useTranslation("common");
   const {
     data: systemTemplates,
     isPending: isLoadingSystem,
@@ -33,8 +36,8 @@ export const DesignTemplateSelect = ({ value, placeholder, onChange, id }: Desig
   );
   const options = templates.map((template) => ({
     value: template.id,
-    label: template.isSystemTemplate ? template.name : `${template.name} (mine)`,
-    hint: [template.nicheCategory, template.artStyle].filter(Boolean).join(" · ") || (template.isSystemTemplate ? "System template" : "My template"),
+    label: template.isSystemTemplate ? template.name : t("workflowConfig.fields.mineLabel", { name: template.name }),
+    hint: [template.nicheCategory, template.artStyle].filter(Boolean).join(" · ") || (template.isSystemTemplate ? t("workflowConfig.fields.systemTemplate") : t("workflowConfig.fields.myTemplate")),
     imageUrl: template.previewImageUrl,
   }));
   const chosen = templates.find((template) => template.id === value);
@@ -53,13 +56,13 @@ export const DesignTemplateSelect = ({ value, placeholder, onChange, id }: Desig
           void refetchSystem();
           void refetchPersonal();
         }}
-        emptyMessage="No design templates are available yet."
+        emptyMessage={t("workflowConfig.fields.noDesignTemplates")}
       />
       {chosen && (
         <SourcePreview
           imageUrl={chosen.previewImageUrl}
           title={chosen.name}
-          tags={[chosen.nicheCategory, chosen.artStyle, chosen.isSystemTemplate ? "System" : "Mine"].filter((tag): tag is string => Boolean(tag))}
+          tags={[chosen.nicheCategory, chosen.artStyle, chosen.isSystemTemplate ? t("workflowConfig.fields.system") : t("workflowConfig.fields.mine")].filter((tag): tag is string => Boolean(tag))}
           description={chosen.styleDescription}
         />
       )}

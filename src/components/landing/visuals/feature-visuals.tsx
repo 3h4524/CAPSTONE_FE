@@ -1,12 +1,17 @@
+"use client";
+
 import Image from "next/image";
 import { FileSpreadsheet, Gauge, Play } from "lucide-react";
 import type { ComponentType } from "react";
+import { useTranslation } from "react-i18next";
 
 import { BATCH_ROWS, CONNECTED_PLATFORMS, LISTING_TAGS } from "@/data/features-content";
 import { type FeatureVisualId, PREVIEW_DESIGNS } from "@/data/landing-content";
 import { cn } from "@/utils/cn";
 
-const DesignVisual = () => (
+const DesignVisual = () => {
+  const { t } = useTranslation("common");
+  return (
   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
     {PREVIEW_DESIGNS.map((design) => (
       <div key={design.name} className="flex flex-col gap-1.5">
@@ -19,11 +24,14 @@ const DesignVisual = () => (
             className="object-cover"
           />
         </div>
-        <span className="text-muted-foreground text-xs">{design.productType}</span>
+        <span className="text-muted-foreground text-xs">
+          {t(`landing.productTypes.${design.productTypeKey}`, { defaultValue: design.productType })}
+        </span>
       </div>
     ))}
   </div>
-);
+  );
+};
 
 const VideoVisual = () => (
   <div className="bg-surface-strong border-surface-strong relative mx-auto aspect-9/16 w-40 overflow-hidden rounded-[1.75rem] border-4 shadow-lg lg:w-44">
@@ -47,7 +55,9 @@ const VideoVisual = () => (
   </div>
 );
 
-const ListingVisual = () => (
+const ListingVisual = () => {
+  const { t } = useTranslation("common");
+  return (
   <div className="flex flex-col gap-3 rounded-lg border p-3">
     <div className="flex items-start justify-between gap-3">
       <p className="line-clamp-2 text-sm font-semibold">
@@ -64,21 +74,26 @@ const ListingVisual = () => (
           {tag}
         </span>
       ))}
-      <span className="bg-muted rounded-md px-2 py-0.5 text-[11px] font-medium">+ 7 more</span>
+      <span className="bg-muted rounded-md px-2 py-0.5 text-[11px] font-medium">{t("featuresPage.visuals.moreTags")}</span>
     </div>
   </div>
-);
+  );
+};
 
-const BatchVisual = () => (
+const BatchVisual = () => {
+  const { t } = useTranslation("common");
+  return (
   <div className="flex flex-col gap-3 rounded-lg border p-3">
-    {BATCH_ROWS.map((row) => (
+    {BATCH_ROWS.map((row, index) => (
       <div key={row.name} className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between gap-3 text-xs">
           <span className="flex min-w-0 items-center gap-1.5 font-medium">
             <FileSpreadsheet className="text-brand size-3.5 shrink-0" />
             <span className="truncate">{row.name}</span>
           </span>
-          <span className="text-muted-foreground shrink-0">{row.status}</span>
+          <span className="text-muted-foreground shrink-0">
+            {t(`featuresPage.visuals.batchStatuses.${index}`, { defaultValue: row.status })}
+          </span>
         </div>
         <span className="bg-muted h-1.5 overflow-hidden rounded-full">
           <span className={cn("bg-brand block h-full rounded-full", row.progressClass)} />
@@ -86,9 +101,12 @@ const BatchVisual = () => (
       </div>
     ))}
   </div>
-);
+  );
+};
 
-const PlatformsVisual = () => (
+const PlatformsVisual = () => {
+  const { t } = useTranslation("common");
+  return (
   <div className="grid gap-3 sm:grid-cols-2">
     {CONNECTED_PLATFORMS.map((platform) => (
       <div key={platform.name} className="flex items-center gap-3 rounded-lg border p-3">
@@ -97,12 +115,15 @@ const PlatformsVisual = () => (
         </span>
         <div className="min-w-0">
           <p className="text-sm font-semibold">{platform.name}</p>
-          <p className="text-muted-foreground truncate text-xs">{platform.detail}</p>
+          <p className="text-muted-foreground truncate text-xs">
+            {t(`featuresPage.visuals.platformDetails.${platform.name.toLowerCase()}`, { defaultValue: platform.detail })}
+          </p>
         </div>
       </div>
     ))}
   </div>
-);
+  );
+};
 
 export const FEATURE_VISUALS: Record<FeatureVisualId, ComponentType> = {
   design: DesignVisual,

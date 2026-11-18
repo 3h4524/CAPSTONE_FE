@@ -326,7 +326,11 @@
   --color-wf-cat-output: var(--wf-cat-output);
   --color-wf-cat-output-soft: var(--wf-cat-output-soft);
   --color-wf-cat-output-line: var(--wf-cat-output-line);
-  --font-display: var(--font-display);
+  /* One system font everywhere; `font-display` stays as a name so headings keep their class. */
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  /* Workflow canvas nodes only: small text that reads better in Inter. */
+  --font-canvas: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
@@ -338,7 +342,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   }
   p {
     @apply text-foreground;

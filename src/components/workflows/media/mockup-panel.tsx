@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ImageOff, PackageSearch } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { SectionLoading } from "@/components/commons/loading/section-loading";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import { useWorkflowStore } from "@/stores/workflow";
 import type { AiPromptTrace, GenerateVideoConfig } from "@/types/video-workflow";
 
 export const MockupPanel = ({ review }: { review: boolean }) => {
+  const { t } = useTranslation("common");
   const input = useWorkflowStore(state => state.nodes.find(n => n.data.type === "product-input"));
   const mockup = useWorkflowStore(state => state.nodes.find(n => n.data.type === "apply-mockup"));
   const productId = readString(input?.data.config.productId);
@@ -72,7 +74,7 @@ export const MockupPanel = ({ review }: { review: boolean }) => {
   };
   const choose = (id: string, checked: boolean) => {
     if (!mockup) return;
-    if (checked && selected.length >= MAX_VIDEO_MOCKUPS) { showToast("warning", "Choose at most eight mockups."); return; }
+    if (checked && selected.length >= MAX_VIDEO_MOCKUPS) { showToast("warning", t("workflowMedia.mockupPanel.maxMockups")); return; }
     useWorkflowStore.getState().updateNodeConfig(mockup.id, { ...mockup.data.config, mockupIds: checked ? [...selected, id] : selected.filter(x => x !== id) });
   };
   const resumeWithCostConfirmation = async (config: GenerateVideoConfig, expectedStoryboardFingerprint?: string) => {
@@ -90,7 +92,7 @@ export const MockupPanel = ({ review }: { review: boolean }) => {
     if (!run) return;
     const videoNode = useWorkflowStore.getState().nodes.find(n => n.data.type === "generate-video");
     const parsed = generateVideoConfigSchema.safeParse(videoNode?.data.config);
-    if (!parsed.success) { showToast("warning", parsed.error.issues[0]?.message ?? "Check video settings."); return; }
+    if (!parsed.success) { showToast("warning", parsed.error.issues[0]?.message ?? t("workflowMedia.runStatus.checkVideoSettings")); return; }
     const hasAiScenes = parsed.data.mode === "ai_shot" &&
       (!parsed.data.aiScenes?.length || parsed.data.aiScenes.some(scene => scene.mode !== "standard"));
     if (!hasAiScenes) { await resumeWithCostConfirmation(parsed.data); return; }
@@ -102,35 +104,35 @@ export const MockupPanel = ({ review }: { review: boolean }) => {
         artworkGroupKey: readString(mockup?.data.config.artworkGroupKey),
       });
       const prompts = board.scenes.flatMap(scene => scene.aiPromptTrace == null ? [] : [{ sceneOrder: scene.sceneOrder, trace: scene.aiPromptTrace }]);
-      if (prompts.length === 0) { showToast("warning", "The AI prompt preview is not available. Check the selected scenes."); return; }
+      if (prompts.length === 0) { showToast("warning", t("workflowMedia.mockupPanel.promptPreviewUnavailable")); return; }
       setPromptReview({ config: parsed.data, fingerprint: board.fingerprint, prompts });
     } catch (error) { showToast("error", getErrorMessage(error)); }
   };
   usePanelContinueCommand(review && run?.status === "waiting_for_input" && !isActing && !isPreviewing, () => void continueWithMockups());
   if (!productId && !run) {
     return review
-      ? <PanelEmptyState icon={PackageSearch} title="Choose the product for the video above." description="Its mock-ups are listed here for review." />
-      : <PanelEmptyState icon={PackageSearch} title="Select a product in Product Input first." description="The video is made for one product of the batch." />;
+      ? <PanelEmptyState icon={PackageSearch} title={t("workflowMedia.mockupPanel.reviewEmptyTitle")} description={t("workflowMedia.mockupPanel.reviewEmptyDescription")} />
+      : <PanelEmptyState icon={PackageSearch} title={t("workflowMedia.modelPhotoSection.emptyTitle")} description={t("workflowMedia.mockupPanel.emptyDescription")} />;
   }
   return <div className="@container space-y-5">
     {!review && <MockupUploadForm productId={run?.productId ?? productId} />}
     <ModelPhotoMockupForm productId={run?.productId ?? productId} assets={visibleAssets ?? []} />
     <LifestyleMockupForm garments={lifestyleGarmentsOf(visibleAssets ?? [])} />
-    {artworkGroups.length > 1 && <div className="space-y-2"><Label htmlFor="mockup-artwork-group">Artwork group</Label><Select value={activeGroup} onValueChange={selectArtworkGroup}><SelectTrigger id="mockup-artwork-group" className="bg-card w-full"><SelectValue /></SelectTrigger><SelectContent>{artworkGroups.map(group => <SelectItem key={group} value={group}>{artworkGroupLabel(group, artworkGroups)}</SelectItem>)}</SelectContent></Select></div>}
+    {artworkGroups.length > 1 && <div className="space-y-2"><Label htmlFor="mockup-artwork-group">{t("workflowMedia.mockupPanel.artworkGroup")}</Label><Select value={activeGroup} onValueChange={selectArtworkGroup}><SelectTrigger id="mockup-artwork-group" className="bg-card w-full"><SelectValue /></SelectTrigger><SelectContent>{artworkGroups.map(group => <SelectItem key={group} value={group}>{artworkGroupLabel(group, artworkGroups)}</SelectItem>)}</SelectContent></Select></div>}
     <div className="space-y-3">
       <div className="flex items-baseline justify-between gap-2">
-        <p className="text-ink-900 text-sm font-medium">{review ? "Mock-ups to review" : "Available mock-ups"}</p>
-        {selected.length > 0 && <p className="text-ink-700 text-xs font-medium tabular-nums">{`${selected.length}/${MAX_VIDEO_MOCKUPS} selected`}</p>}
+        <p className="text-ink-900 text-sm font-medium">{review ? t("workflowMedia.mockupPanel.toReview") : t("workflowMedia.mockupPanel.available")}</p>
+        {selected.length > 0 && <p className="text-ink-700 text-xs font-medium tabular-nums">{t("workflowMedia.mockupPanel.selectedCount", { selected: selected.length, max: MAX_VIDEO_MOCKUPS })}</p>}
       </div>
-      {!selected.length && <p className="text-muted-foreground -mt-2 text-xs">Automatic: up to 8 approved mockups from one artwork group.</p>}
-      {isPending ? <SectionLoading label="Loading mockups" className="py-8" />
-        : isError ? <PanelNotice tone="error" action={<Button type="button" variant="outline" size="sm" className="bg-card h-7 px-3 text-xs hover:translate-y-0" onClick={() => refetch()}>Reload mockups</Button>}>Mock-ups could not be loaded.</PanelNotice>
-          : !visibleAssets?.length ? <PanelEmptyState icon={ImageOff} title="No mockups yet. Upload images in Apply Mockup." />
+      {!selected.length && <p className="text-muted-foreground -mt-2 text-xs">{t("workflowMedia.mockupPanel.automaticHint")}</p>}
+      {isPending ? <SectionLoading label={t("workflowMedia.mockupPanel.loading")} className="py-8" />
+        : isError ? <PanelNotice tone="error" action={<Button type="button" variant="outline" size="sm" className="bg-card h-7 px-3 text-xs hover:translate-y-0" onClick={() => refetch()}>{t("workflowMedia.mockupPanel.reload")}</Button>}>{t("workflowMedia.mockupPanel.loadError")}</PanelNotice>
+          : !visibleAssets?.length ? <PanelEmptyState icon={ImageOff} title={t("workflowMedia.mockupPanel.emptyList")} />
             : <div className="grid gap-3 @md:grid-cols-2">{visibleAssets.map(asset => <MockupCard key={asset.id} asset={asset} review={review} selectable={!review && !isRunning} selected={selected.includes(asset.id)} onSelect={choose} />)}</div>}
     </div>
     {review && run?.status === "waiting_for_input" && (
       <div className="bg-card/95 sticky bottom-0 -mx-5 border-t px-5 py-3 backdrop-blur">
-        <Button type="button" className="w-full hover:translate-y-0" disabled={isActing || isPreviewing} onClick={() => void continueWithMockups()}>{isPreviewing ? "Preparing prompt preview…" : "Review prompt before creating video"}</Button>
+        <Button type="button" className="w-full hover:translate-y-0" disabled={isActing || isPreviewing} onClick={() => void continueWithMockups()}>{isPreviewing ? t("workflowMedia.mockupPanel.preparingPreview") : t("workflowMedia.mockupPanel.reviewPrompt")}</Button>
       </div>
     )}
     {promptReview && <AiPromptReviewDialog open prompts={promptReview.prompts} isContinuing={isConfirming || isActing} onOpenChange={open => { if (!open && !isConfirming && !isActing) setPromptReview(null); }} onContinue={() => void resumeWithCostConfirmation(promptReview.config, promptReview.fingerprint)} />}

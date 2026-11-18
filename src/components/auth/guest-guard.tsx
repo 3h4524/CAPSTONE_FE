@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 import { Spinner } from "@/components/ui/spinner";
 import { resolveSignedInLanding } from "@/helpers/auth-return-url";
@@ -13,6 +14,7 @@ type GuestGuardProps = {
 };
 
 export const GuestGuard = ({ children, returnUrl }: GuestGuardProps) => {
+  const { t } = useTranslation("common");
   const router = useRouter();
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const user = useAuthStore((state) => state.user);
@@ -28,7 +30,7 @@ export const GuestGuard = ({ children, returnUrl }: GuestGuardProps) => {
       <div
         className="flex min-h-40 items-center justify-center"
         role="status"
-        aria-label="Checking sign-in"
+        aria-label={t("auth.checkingSignIn")}
       >
         <Spinner className="size-6" />
       </div>

@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
 
 import { Reveal } from "@/components/commons/animations/reveal";
-import { Container } from "@/components/commons/layout/container";
-import { SectionHeading } from "@/components/commons/layout/section-heading";
 import { CtaSection } from "@/components/features/sections/cta-section";
 import { DuoSection } from "@/components/features/sections/duo-section";
+import { IntroSection } from "@/components/features/sections/intro-section";
 import { PlatformsSection } from "@/components/features/sections/platforms-section";
 import { ShowcaseSection } from "@/components/features/sections/showcase-section";
 import { SpotlightSection } from "@/components/features/sections/spotlight-section";
 import {
   BATCH_FEATURE,
   DESIGN_FEATURE,
-  FEATURES_INTRO,
   LISTING_FEATURE,
   PLATFORMS_FEATURE,
   VIDEO_FEATURE,
@@ -28,15 +26,7 @@ export const metadata: Metadata = getPageMetadata({
 const FeaturesPage = () => {
   return (
     <main className="flex flex-col">
-      <section className="bg-landing-glow border-b py-14 md:py-16">
-        <Container>
-          <SectionHeading
-            level="h1"
-            title={FEATURES_INTRO.title}
-            description={FEATURES_INTRO.description}
-          />
-        </Container>
-      </section>
+      <IntroSection />
       <Reveal>
         <SpotlightSection feature={DESIGN_FEATURE} />
       </Reveal>

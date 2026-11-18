@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { Clapperboard, Play } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -8,6 +11,7 @@ const VIDEO_FRAME_SRC = "/images/dashboard/hero-merch-v4.webp";
 
 /** A player showing a vertical 9:16 promo, the format Podivo renders, over a blurred copy of its frame. */
 export const VideoCreationVisual = () => {
+  const { t } = useTranslation("common");
   return (
     <Card className="gap-4 overflow-hidden p-0 shadow-lg" aria-hidden="true">
       <div className="bg-surface-strong relative flex aspect-video items-center justify-center overflow-hidden">
@@ -23,7 +27,7 @@ export const VideoCreationVisual = () => {
           </span>
         </div>
         <div className="absolute inset-x-5 top-5 flex items-center justify-between gap-3">
-          <Badge className="bg-white/15 text-white">Etsy video</Badge>
+          <Badge className="bg-white/15 text-white">{t("featuresPage.visuals.etsyVideo")}</Badge>
           <Badge className="bg-white/15 text-white">0:12</Badge>
         </div>
       </div>
@@ -32,7 +36,7 @@ export const VideoCreationVisual = () => {
           <Clapperboard className="text-brand size-4" />
           sunset-tee-promo.mp4
         </p>
-        <Badge variant="outline">9:16 vertical</Badge>
+        <Badge variant="outline">{t("featuresPage.visuals.verticalCut")}</Badge>
       </div>
     </Card>
   );

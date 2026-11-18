@@ -34,7 +34,8 @@ const toneOf = (value: string, tone?: string): Tone => {
   return "amber";
 };
 
-const formatTicketStatus = (status: string) => {
+// Readable label for a ticket or batch-job status: "partially_completed" reads "Partially completed".
+const formatStatus = (status: string) => {
   const s = status.toLowerCase().replace(/_/g, " ");
   switch (s) {
     case "open":
@@ -57,9 +58,9 @@ const JobStatus = ({ job }: { job: BatchJobDto }) => {
   const tone = toneOf(job.status, job.tone);
   const finished = job.progressPercentage === "100%";
   return (
-    <span className="text-ink-700 inline-flex items-center gap-1.5 capitalize">
-      <span className={`size-1.5 rounded-full ${DOT[tone]}`} aria-hidden="true" />
-      {job.status.toLowerCase()}
+    <span className="text-ink-700 inline-flex items-center gap-1.5">
+      <span className={`size-1.5 shrink-0 rounded-full ${DOT[tone]}`} aria-hidden="true" />
+      {formatStatus(job.status)}
       {!finished && tone !== "rose" && (
         <span className="text-ink-400 text-xs tabular-nums">{job.progressPercentage}</span>
       )}
@@ -137,11 +138,13 @@ const BatchJobsPanel = ({
       <table className="w-full min-w-[620px] table-fixed text-left text-sm">
         <thead className="border-ink-100 bg-ink-50/60 text-ink-500 border-y text-xs">
           <tr>
-            <th className="w-[43%] px-5 py-2 font-medium">Batch</th>
-            <th className="w-[19%] px-4 py-2 font-medium whitespace-nowrap">Seller</th>
-            <th className="w-[11%] px-4 py-2 text-left font-medium whitespace-nowrap">Products</th>
+            {/* Status gets the room for "Partially completed"; every cell stays inside its column, so the
+                fixed-layout table never grows a sideways scrollbar on a desktop. */}
+            <th className="w-[38%] px-5 py-2 font-medium">Batch</th>
+            <th className="w-[18%] px-4 py-2 font-medium whitespace-nowrap">Seller</th>
+            <th className="w-[10%] px-4 py-2 text-left font-medium whitespace-nowrap">Products</th>
             <th className="w-[12%] px-4 py-2 text-left font-medium whitespace-nowrap">AI cost</th>
-            <th className="w-[15%] px-5 py-2 font-medium whitespace-nowrap">Status</th>
+            <th className="w-[22%] px-5 py-2 font-medium whitespace-nowrap">Status</th>
           </tr>
         </thead>
         <tbody className="divide-ink-100 divide-y">
@@ -164,14 +167,14 @@ const BatchJobsPanel = ({
                     {job.createdAt && ` · ${timeAgo(job.createdAt, now)}`}
                   </p>
                 </td>
-                <td className="text-ink-600 px-4 py-2.5 whitespace-nowrap">{job.userName}</td>
+                <td className="text-ink-600 truncate px-4 py-2.5" title={job.userName}>{job.userName}</td>
                 <td className="text-ink-700 px-4 py-2.5 text-left whitespace-nowrap tabular-nums">
                   {job.itemCount.toLocaleString()}
                 </td>
                 <td className="text-ink-700 px-4 py-2.5 text-left whitespace-nowrap tabular-nums">
                   {job.aiCostUsd ? formatUsd(job.aiCostUsd) : "—"}
                 </td>
-                <td className="px-5 py-2.5 whitespace-nowrap">
+                <td className="px-5 py-2.5">
                   <JobStatus job={job} />
                 </td>
               </tr>
@@ -222,7 +225,7 @@ const TicketsPanel = ({ tickets }: { tickets: SupportTicketDto[] }) => {
               <div className="flex shrink-0 items-center gap-3 max-md:w-full max-md:justify-between">
                 <span className="text-ink-600 inline-flex w-24 items-center gap-1.5 text-xs">
                   <span className={`size-1.5 rounded-full ${DOT[tone]}`} aria-hidden="true" />
-                  {formatTicketStatus(ticket.status)}
+                  {formatStatus(ticket.status)}
                 </span>
                 <Link
                   href={`/admin/support-tickets?ticketId=${ticket.id}`}

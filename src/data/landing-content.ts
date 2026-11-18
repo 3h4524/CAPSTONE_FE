@@ -42,6 +42,8 @@ export interface WorkflowStep {
 export interface PreviewDesign {
   name: string;
   productType: string;
+  /** Translation key under landing.productTypes. */
+  productTypeKey: "tshirt" | "poster" | "toteBag" | "mug";
   imageSrc: string;
 }
 
@@ -77,10 +79,10 @@ export const HERO_CONTENT = {
 
 /** Sample artwork from the built-in design templates, shown in the product previews. */
 export const PREVIEW_DESIGNS: PreviewDesign[] = [
-  { name: "Desert Horizon", productType: "T-shirt", imageSrc: "/images/design-templates/desert-horizon.webp" },
-  { name: "Campfire Crest", productType: "Poster", imageSrc: "/images/design-templates/campfire-crest.webp" },
-  { name: "Blue Garden", productType: "Tote bag", imageSrc: "/images/design-templates/blue-garden.webp" },
-  { name: "Coffee Geometry", productType: "Mug", imageSrc: "/images/design-templates/coffee-geometry.webp" },
+  { name: "Desert Horizon", productType: "T-shirt", productTypeKey: "tshirt", imageSrc: "/images/design-templates/desert-horizon.webp" },
+  { name: "Campfire Crest", productType: "Poster", productTypeKey: "poster", imageSrc: "/images/design-templates/campfire-crest.webp" },
+  { name: "Blue Garden", productType: "Tote bag", productTypeKey: "toteBag", imageSrc: "/images/design-templates/blue-garden.webp" },
+  { name: "Coffee Geometry", productType: "Mug", productTypeKey: "mug", imageSrc: "/images/design-templates/coffee-geometry.webp" },
 ];
 
 export const HERO_PREVIEW = {
@@ -242,7 +244,7 @@ export const FAQS: Faq[] = [
   {
     question: "What do the plans include?",
     answer:
-      "Each plan comes with a monthly quota for designs, mockups, videos, and listings. Pro adds AI video, lifestyle mockups, and automatic approval. You can check your remaining usage at any time.",
+      "Each plan comes with a monthly quota for designs, mockups, videos, and listings. Higher plans add AI video, lifestyle mockups, and automatic approval. You can check your remaining usage at any time.",
   },
   {
     question: "How does support work?",

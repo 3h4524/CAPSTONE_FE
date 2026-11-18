@@ -16,7 +16,7 @@ export const DuoSection = ({ listing, batch }: DuoSectionProps) => {
       <Container className="grid gap-6 lg:grid-cols-5 lg:gap-8">
         <article
           id={listing.id}
-          className="border-border bg-background flex scroll-mt-32 flex-col gap-5 rounded-2xl border p-6 shadow-sm md:p-8 lg:col-span-3"
+          className="border-border bg-background flex min-w-0 scroll-mt-32 flex-col gap-5 rounded-2xl border p-6 shadow-sm md:p-8 lg:col-span-3"
         >
           <div className="flex items-center gap-3">
             <span className="bg-brand-soft text-brand-ink flex size-10 shrink-0 items-center justify-center rounded-lg">
@@ -49,7 +49,7 @@ export const DuoSection = ({ listing, batch }: DuoSectionProps) => {
         </article>
         <article
           id={batch.id}
-          className="border-border bg-brand-soft flex scroll-mt-32 flex-col gap-5 rounded-2xl border p-6 shadow-sm md:p-8 lg:col-span-2"
+          className="border-border bg-brand-soft flex min-w-0 scroll-mt-32 flex-col gap-5 rounded-2xl border p-6 shadow-sm md:p-8 lg:col-span-2"
         >
           <div className="flex items-center gap-3">
             <span className="bg-card text-brand-ink flex size-10 shrink-0 items-center justify-center rounded-lg border">

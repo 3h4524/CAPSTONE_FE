@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Container } from "@/components/commons/layout/container";
 import { SectionHeading } from "@/components/commons/layout/section-heading";
@@ -22,23 +25,24 @@ const TILE_LAYOUT: Record<FeatureVisualId, string> = {
 };
 
 export const EcosystemSection = () => {
+  const { t } = useTranslation("common");
   return (
     <section id="features" className="bg-muted/40 scroll-mt-16 border-y py-12 md:py-24">
       <Container>
         <SectionHeading
-          title={ECOSYSTEM_CONTENT.title}
-          description={ECOSYSTEM_CONTENT.description}
+          title={t("landing.ecosystem.title", { defaultValue: ECOSYSTEM_CONTENT.title })}
+          description={t("landing.ecosystem.description", { defaultValue: ECOSYSTEM_CONTENT.description })}
           className="mb-10 md:mb-14"
         >
           <Button variant="outline" asChild>
             <Link href={ECOSYSTEM_CONTENT.cta.href}>
-              {ECOSYSTEM_CONTENT.cta.label}
+              {t("landing.ecosystem.cta", { defaultValue: ECOSYSTEM_CONTENT.cta.label })}
               <ArrowRight aria-hidden="true" />
             </Link>
           </Button>
         </SectionHeading>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {ECOSYSTEM_FEATURES.map((feature) => {
+          {ECOSYSTEM_FEATURES.map((feature, index) => {
             const Visual = FEATURE_VISUALS[feature.id];
             return (
               <Card
@@ -53,8 +57,12 @@ export const EcosystemSection = () => {
                     <feature.icon className="size-5" strokeWidth={2} aria-hidden="true" />
                   </span>
                   <div className="flex flex-col gap-1">
-                    <h3 className="font-display text-brand-ink font-semibold">{feature.title}</h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                    <h3 className="font-display text-brand-ink font-semibold">
+                      {t(`landing.ecosystem.features.${index}.title`, { defaultValue: feature.title })}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {t(`landing.ecosystem.features.${index}.description`, { defaultValue: feature.description })}
+                    </p>
                   </div>
                 </div>
                 <div

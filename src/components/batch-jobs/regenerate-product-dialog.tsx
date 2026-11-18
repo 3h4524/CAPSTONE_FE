@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 import { FormInputField } from "@/components/commons/forms/form-input-field";
@@ -74,6 +75,7 @@ export const RegenerateProductDialog = ({
   defaults,
   onOpenChange,
 }: RegenerateProductDialogProps) => {
+  const { t } = useTranslation("common");
   const { mutate: regenerate, isPending } = useRegenerateBatchJobProduct();
   const {
     register,
@@ -103,7 +105,7 @@ export const RegenerateProductDialog = ({
 
   const values = watch();
   const ownPrompt = values.customPrompt.trim().length > 0;
-  const designs = `${designCount} new design${designCount === 1 ? "" : "s"}`;
+  const designs = t("batchJobs.regenerate.newDesigns", { count: designCount });
 
   const submit = handleSubmit((input) => {
     if (!product) return;
@@ -128,10 +130,9 @@ export const RegenerateProductDialog = ({
     <Dialog open={product !== null} onOpenChange={(open) => !isPending && onOpenChange(open)}>
       <DialogContent className="max-h-[85dvh] w-[calc(100%-2rem)] max-w-xl overflow-y-auto">
         <DialogHeader className="text-left">
-          <DialogTitle>Edit &amp; regenerate</DialogTitle>
+          <DialogTitle>{t("batchJobs.images.editRegenerate")}</DialogTitle>
           <DialogDescription>
-            {product?.productName}: change what the design is made from, then generate it again. The
-            current designs are kept.
+            {t("batchJobs.regenerate.description", { name: product?.productName ?? "" })}
           </DialogDescription>
         </DialogHeader>
         <form id="regenerate-product-form" onSubmit={submit} className="space-y-4">
@@ -140,15 +141,14 @@ export const RegenerateProductDialog = ({
           <div className="space-y-1.5">
             <FormTextareaField
               id="regenerate-custom-prompt"
-              label="Image prompt"
-              placeholder="Leave empty to use the design template"
+              label={t("batchJobs.regenerate.imagePrompt")}
+              placeholder={t("batchJobs.regenerate.imagePromptPlaceholder")}
               registration={register("customPrompt")}
               error={errors.customPrompt}
               rows={4}
             />
             <p className="text-muted-foreground text-xs">
-              Replaces the design template and the art style for this product. Describe the image
-              and its style; put any words to print in Design text.
+              {t("batchJobs.regenerate.imagePromptHint")}
             </p>
             {customPromptWarnings(values.customPrompt, values.designText, product?.productType).map(
               (warning) => (
@@ -161,66 +161,62 @@ export const RegenerateProductDialog = ({
           <div className="space-y-1.5">
             <FormInputField
               id="regenerate-design-text"
-              label="Design text"
+              label={t("batchJobs.regenerate.designText")}
               type="text"
-              placeholder={ownPrompt ? "Leave empty for no words" : "e.g. GO HIGHER"}
+              placeholder={ownPrompt ? t("batchJobs.regenerate.noWords") : t("batchJobs.regenerate.designTextExample")}
               registration={register("designText")}
               error={errors.designText}
               maxLength={100}
             />
             <p className="text-muted-foreground text-xs">
-              The exact words printed on the design. With a lettering template, leaving it empty
-              prints the product name; with an image prompt, it prints no words.
+              {t("batchJobs.regenerate.designTextHint")}
             </p>
           </div>
           <Accordion type="single" collapsible>
             <AccordionItem value="more-options">
-              <AccordionTrigger>More options</AccordionTrigger>
+              <AccordionTrigger>{t("batchJobs.regenerate.moreOptions")}</AccordionTrigger>
               <AccordionContent className="space-y-4 px-0.5">
                 {ownPrompt ? (
                   <p className="text-muted-foreground text-xs">
-                    The design template and the art style are not used with an image prompt.
+                    {t("batchJobs.regenerate.notUsedWithPrompt")}
                   </p>
                 ) : (
                   <>
                     <div className="space-y-1.5">
-                      <Label htmlFor="regenerate-template">Design template</Label>
+                      <Label htmlFor="regenerate-template">{t("batchJobs.regenerate.designTemplate")}</Label>
                       <DesignTemplateSelect
                         id="regenerate-template"
                         value={templateId}
-                        placeholder="Choose design template"
+                        placeholder={t("batchJobs.regenerate.chooseTemplate")}
                         onChange={setTemplateId}
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="regenerate-art-style">Art style</Label>
+                      <Label htmlFor="regenerate-art-style">{t("batchJobs.regenerate.artStyle")}</Label>
                       <StylePresetSelect
                         id="regenerate-art-style"
                         value={stylePresetId}
-                        placeholder="Choose art style"
-                        noneLabel="No style"
+                        placeholder={t("batchJobs.regenerate.chooseArtStyle")}
+                        noneLabel={t("batchJobs.regenerate.noStyle")}
                         onChange={setStylePresetId}
                       />
                     </div>
                     <p className="text-muted-foreground text-xs">
-                      First set to what the workflow uses now. A change here is kept for this
-                      product only.
+                      {t("batchJobs.regenerate.templateHint")}
                     </p>
                   </>
                 )}
                 <div className="space-y-1.5">
                   <FormTextareaField
                     id="regenerate-instructions"
-                    label="Extra instructions"
+                    label={t("batchJobs.regenerate.instructions")}
                     placeholder="e.g. warmer, nostalgic colors; add wildflowers around the lettering"
                     registration={register("instructions")}
                     error={errors.instructions}
                     rows={3}
                   />
                   <p className="text-muted-foreground text-xs">
-                    What to add or change in this design: its feel, colors or details. Used for
-                    this product in place of the workflow&apos;s extra instructions. Put words to
-                    print in Design text.
+                    {t("batchJobs.regenerate.instructionsHint")}
                   </p>
                 </div>
               </AccordionContent>
@@ -228,7 +224,7 @@ export const RegenerateProductDialog = ({
           </Accordion>
           <div className="space-y-1.5">
             <p id="regenerate-design-count" className="text-sm font-medium">
-              Number of designs
+              {t("batchJobs.regenerate.designCount")}
             </p>
             <div role="group" aria-labelledby="regenerate-design-count" className="flex gap-2">
               {DESIGN_COUNTS.map((count) => (
@@ -250,12 +246,11 @@ export const RegenerateProductDialog = ({
               ))}
             </div>
             <p className="text-muted-foreground text-xs">
-              For this product only. The job and the workflow keep their own Variants per product.
+              {t("batchJobs.regenerate.designCountHint")}
             </p>
           </div>
           <PanelNotice tone="warning">
-            Generating again makes {designs}. They count toward your plan&apos;s image quota and
-            your image provider charges for them, like any generation.
+            {t("batchJobs.regenerate.costWarning", { designs })}
           </PanelNotice>
         </form>
         <DialogFooter className="gap-2">
@@ -265,10 +260,10 @@ export const RegenerateProductDialog = ({
             onClick={() => onOpenChange(false)}
             disabled={isPending}
           >
-            Cancel
+            {t("batchJobs.regenerate.cancel")}
           </Button>
           <Button type="submit" form="regenerate-product-form" disabled={isPending}>
-            {isPending ? "Starting…" : "Regenerate"}
+            {isPending ? t("batchJobs.regenerate.starting") : t("batchJobs.regenerate.regenerate")}
           </Button>
         </DialogFooter>
       </DialogContent>

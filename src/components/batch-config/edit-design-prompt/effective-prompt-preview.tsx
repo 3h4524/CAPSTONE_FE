@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { MAX_EFFECTIVE_PROMPT_LENGTH } from "@/schemas/product-prompt";
 import { cn } from "@/utils/cn";
 
@@ -8,21 +10,22 @@ type EffectivePromptPreviewProps = {
 };
 
 export const EffectivePromptPreview = ({ prompt }: EffectivePromptPreviewProps) => {
+  const { t } = useTranslation("common");
   const overLimit = prompt.length > MAX_EFFECTIVE_PROMPT_LENGTH;
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-ink-500 text-xs font-semibold tracking-wide uppercase">Effective prompt preview</p>
+        <p className="text-ink-500 text-xs font-semibold tracking-wide uppercase">{t("batchConfig.preview.title")}</p>
         <p className={cn("text-xs font-medium tabular-nums", overLimit ? "text-red-600 dark:text-red-400" : "text-muted-foreground")} aria-live="polite">
           {prompt.length} / {MAX_EFFECTIVE_PROMPT_LENGTH}
         </p>
       </div>
       <div className={cn("bg-ink-50 rounded-xl p-4 text-sm whitespace-pre-wrap", overLimit && "ring-1 ring-red-500 ring-inset")}>
-        {prompt.length > 0 ? prompt : "Start typing to see the combined prompt."}
+        {prompt.length > 0 ? prompt : t("batchConfig.preview.empty")}
       </div>
       {overLimit && (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-400">The effective prompt must not exceed 1000 characters.</p>
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">{t("batchConfig.preview.overLimit", { max: MAX_EFFECTIVE_PROMPT_LENGTH })}</p>
       )}
     </div>
   );

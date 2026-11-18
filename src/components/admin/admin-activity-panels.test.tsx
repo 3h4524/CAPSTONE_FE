@@ -37,7 +37,7 @@ describe("AdminActivityPanels", () => {
     expect(within(row).getByText("Lan")).toBeInTheDocument();
     expect(within(row).getByText("31")).toBeInTheDocument();
     expect(within(row).getByText("$0.12")).toBeInTheDocument();
-    expect(within(row).getByText("completed")).toBeInTheDocument();
+    expect(within(row).getByText("Completed")).toBeInTheDocument();
     expect(
       screen.getByText(`1 most recent of ${new Intl.NumberFormat().format(7146)}`)
     ).toBeInTheDocument();

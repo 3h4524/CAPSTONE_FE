@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 import { AssistantChip } from "@/components/commons/assistant/assistant-chip";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,12 +31,10 @@ const changedNodeIds = (before: WorkflowNode[], after: WorkflowNode[], payload: 
   return [...new Set([...added, ...edited])];
 };
 
-const STATE_TEXT: Record<Exclude<AssistantClientActionState, "idle">, string> = {
-  applied: "Applied",
-  dismissed: "Dismissed",
-};
+
 
 export const AssistantCanvasPatchCard = ({ messageId, actionId, payload, state }: AssistantCanvasPatchCardProps) => {
+  const { t } = useTranslation("common");
   const pathname = usePathname();
   const nodes = useWorkflowStore((store) => store.nodes);
   const workflowId = useWorkflowStore((store) => store.workflowId);
@@ -53,17 +52,17 @@ export const AssistantCanvasPatchCard = ({ messageId, actionId, payload, state }
     if (result.applied > 0) applyGraphPatch(result.nodes, result.edges, changedNodeIds(currentNodes, result.nodes, payload));
     settle("applied");
     if (result.skipped.length === 0) {
-      showToast("success", "Changes applied. Remember to save.");
+      showToast("success", t("commons.assistant.cards.changesApplied"));
       return;
     }
     const reasons = result.skipped.map((skip) => skip.reason).join("; ");
-    showToast("warning", `${result.skipped.length} change(s) skipped: ${reasons}`);
+    showToast("warning", t("commons.assistant.cards.changesSkipped", { count: result.skipped.length, reasons }));
   };
 
   return (
     <Card className="gap-0 rounded-xl py-3 shadow-none">
       <CardContent className="flex flex-col gap-2.5 px-3">
-      <p className="text-ink-500 text-xs font-semibold tracking-wide uppercase">Proposed canvas changes</p>
+      <p className="text-ink-500 text-xs font-semibold tracking-wide uppercase">{t("commons.assistant.cards.proposedChanges")}</p>
       <ul className="text-ink-800 flex flex-col gap-1.5 text-sm">
         {changes.map((change, index) => (
           <li key={`${change.title}-${index}`} className="flex flex-col gap-0.5">
@@ -87,16 +86,16 @@ export const AssistantCanvasPatchCard = ({ messageId, actionId, payload, state }
             <Tooltip>
               <TooltipTrigger asChild>
                 <span>
-                  <AssistantChip label="Apply to canvas" variant="default" disabled={!canApply} onClick={apply} />
+                  <AssistantChip label={t("commons.assistant.cards.applyToCanvas")} variant="default" disabled={!canApply} onClick={apply} />
                 </span>
               </TooltipTrigger>
-              {canApply ? null : <TooltipContent>Open this workflow to apply</TooltipContent>}
+              {canApply ? null : <TooltipContent>{t("commons.assistant.cards.openToApply")}</TooltipContent>}
             </Tooltip>
           </TooltipProvider>
-          <AssistantChip label="Dismiss" variant="ghost" disabled={isStreaming} onClick={() => settle("dismissed")} />
+          <AssistantChip label={t("commons.assistant.cards.dismiss")} variant="ghost" disabled={isStreaming} onClick={() => settle("dismissed")} />
         </div>
       ) : (
-        <p className="text-ink-500 text-xs font-medium">{STATE_TEXT[state]}</p>
+        <p className="text-ink-500 text-xs font-medium">{t(`commons.assistant.cards.states.${state}`)}</p>
       )}
       </CardContent>
     </Card>

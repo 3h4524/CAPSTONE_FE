@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -7,13 +10,14 @@ import { PREVIEW_DESIGNS } from "@/data/landing-content";
 
 /** One row of finished designs: short enough to sit level with the text beside it. */
 export const DesignGenerationVisual = () => {
+  const { t } = useTranslation("common");
   return (
     <Card className="gap-4 p-5 shadow-lg" aria-hidden="true">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium">“vintage outdoors, warm print style”</p>
+        <p className="text-sm font-medium">{t("featuresPage.visuals.designPrompt")}</p>
         <Badge>
           <Sparkles className="size-3" />
-          {PREVIEW_DESIGNS.length} designs
+          {t("featuresPage.visuals.designCount", { count: PREVIEW_DESIGNS.length })}
         </Badge>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -32,14 +36,16 @@ export const DesignGenerationVisual = () => {
             </div>
             <div className="border-t px-2.5 py-2">
               <p className="truncate text-xs font-semibold">{design.name}</p>
-              <p className="text-muted-foreground text-[11px]">{design.productType}</p>
+              <p className="text-muted-foreground text-[11px]">
+                {t(`landing.productTypes.${design.productTypeKey}`, { defaultValue: design.productType })}
+              </p>
             </div>
           </div>
         ))}
       </div>
       <div className="flex items-center justify-between gap-3">
-        <Badge variant="outline">Print-ready PNG</Badge>
-        <Badge variant="outline">Mockups included</Badge>
+        <Badge variant="outline">{t("featuresPage.visuals.printReady")}</Badge>
+        <Badge variant="outline">{t("featuresPage.visuals.mockupsIncluded")}</Badge>
       </div>
     </Card>
   );

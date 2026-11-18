@@ -1,9 +1,19 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-import { SELECT_CLEARABLE_TRIGGER, SelectClearButton } from "@/components/commons/forms/select-clear-button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  SELECT_CLEARABLE_TRIGGER,
+  SelectClearButton,
+} from "@/components/commons/forms/select-clear-button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { OptionThumbnail } from "@/components/workflows/config-panel/fields/option-thumbnail";
 import { NodeControl } from "@/components/workflows/nodes/node-control";
 import type { WorkflowOption } from "@/types/workflow";
@@ -22,7 +32,8 @@ type NodeFieldProps = {
   ariaLabel?: string;
 };
 
-const getSecondLine = (option: WorkflowOption) => option.hint ?? option.description?.split(/(?<=\.)\s/)[0];
+const getSecondLine = (option: WorkflowOption) =>
+  option.hint ?? option.description?.split(/(?<=\.)\s/)[0];
 
 const fieldClassName =
   "border-wf-line bg-wf-muted/50 flex h-8 min-w-0 items-center gap-2 rounded-md border px-2.5";
@@ -38,6 +49,7 @@ export const NodeField = ({
   disabled = false,
   ariaLabel,
 }: NodeFieldProps) => {
+  const { t } = useTranslation("common");
   const interactive = Boolean(options && onChange && (options.length > 0 || value));
   const canClear = Boolean(noneLabel && value && !disabled);
   const withImages = Boolean(options?.some((option) => option.imageUrl !== undefined));
@@ -47,7 +59,7 @@ export const NodeField = ({
     return (
       <div className={fieldClassName} aria-busy="true">
         <span className="text-wf-faint min-w-0 flex-1 truncate text-[11px] leading-none">
-          {displayValue || "Loading…"}
+          {displayValue || t("workflowEditor.nodeField.loading")}
         </span>
         <Loader2 className="text-wf-faint size-3 shrink-0 animate-spin" aria-hidden="true" />
       </div>
@@ -74,7 +86,11 @@ export const NodeField = ({
   return (
     <NodeControl>
       {/* An empty value shows the placeholder, or what an empty field means. */}
-      <Select value={value ?? ""} onValueChange={(next) => next !== value && onChange?.(next)} disabled={disabled}>
+      <Select
+        value={value ?? ""}
+        onValueChange={(next) => next !== value && onChange?.(next)}
+        disabled={disabled}
+      >
         <div className="relative min-w-0">
           <SelectTrigger
             size="sm"
@@ -90,26 +106,40 @@ export const NodeField = ({
             </SelectValue>
           </SelectTrigger>
           {canClear && (
-            <SelectClearButton size="sm" label={`Clear: ${displayValue ?? "this choice"}`} onClear={() => onChange?.("")} />
+            <SelectClearButton
+              size="sm"
+              label={t("workflowEditor.nodeField.clear", {
+                value: displayValue ?? t("workflowEditor.nodeField.thisChoice"),
+              })}
+              onClear={() => onChange?.("")}
+            />
           )}
         </div>
         <SelectContent
           position="popper"
-          className="border-wf-line bg-wf-surface text-wf-ink w-72 max-w-[min(20rem,90vw)] min-w-(--radix-select-trigger-width)"
+          // The list opens in a portal outside the canvas, so it names the canvas font to match its node.
+          className="font-canvas border-wf-line bg-wf-surface text-wf-ink w-72 max-w-[min(20rem,90vw)] min-w-(--radix-select-trigger-width)"
         >
           {options?.map((option) => (
             <SelectItem
               key={option.value}
               value={option.value}
-              className={cn("focus:bg-wf-accent-soft focus:text-wf-ink text-[11px]", rich && "py-1.5 *:min-w-0")}
+              className={cn(
+                "focus:bg-wf-accent-soft focus:text-wf-ink text-[11px]",
+                rich && "py-1.5 *:min-w-0"
+              )}
             >
               {rich ? (
                 <span className="flex min-w-0 items-center gap-2">
                   {withImages && <OptionThumbnail imageUrl={option.imageUrl} className="size-8" />}
                   <span className="flex min-w-0 flex-col">
-                    <span className="truncate" title={option.label}>{option.label}</span>
+                    <span className="truncate" title={option.label}>
+                      {option.label}
+                    </span>
                     {getSecondLine(option) && (
-                      <span className="text-wf-faint truncate text-[10px]">{getSecondLine(option)}</span>
+                      <span className="text-wf-faint truncate text-[10px]">
+                        {getSecondLine(option)}
+                      </span>
                     )}
                   </span>
                 </span>

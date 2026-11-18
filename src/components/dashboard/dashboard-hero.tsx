@@ -3,7 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Compass } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
+import { HERO_MERCH_FRAME, HERO_PRIMARY_ACTION } from "@/components/commons/layout/merch-hero";
 import { describeGreeting } from "@/helpers/seller-dashboard";
 import { useAuthStore } from "@/stores/auth";
 import type { ActionItem } from "@/types/seller-dashboard";
@@ -15,8 +17,6 @@ type DashboardHeroProps = {
   onOpenActions: () => void;
 };
 
-const today = () =>
-  new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
 
 /** Extracts the first/given name so greetings remain concise and never get truncated. */
 const getFirstName = (fullName?: string | null): string => {
@@ -25,28 +25,23 @@ const getFirstName = (fullName?: string | null): string => {
   return parts[0] ?? "";
 };
 
-// Light: the product photo fades in from the left so its pale backdrop melts into the card.
-// Dark: the studio shot fills the whole right half, full card height, and a card-coloured scrim
-// on its left edge dissolves it into the dark surface (a mask would expose a grey smear instead).
-const MERCH_FRAME =
-  "[mask-image:linear-gradient(to_right,transparent_0%,black_15%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_15%)] dark:aspect-auto dark:w-[50%] dark:max-w-none dark:overflow-hidden dark:[mask-image:none] dark:[-webkit-mask-image:none]";
-
-// The one action as a soft pill with dark text: clear on the card, easy on the eye.
-// Dark: the brand-blue pill, like the other primary actions.
-const PRIMARY_ACTION =
-  "inline-flex items-center gap-1.5 max-sm:w-full max-sm:justify-center rounded-full bg-card px-4 py-2 text-ink-900 shadow-sm ring-1 ring-ink-300 backdrop-blur transition hover:-translate-y-0.5 hover:bg-ink-50 hover:shadow-md dark:bg-primary dark:text-primary-foreground dark:ring-0 dark:hover:bg-primary/90";
+// The photo frame and the action pill are shared with the Admin hero (commons/layout/merch-hero.ts).
+const MERCH_FRAME = HERO_MERCH_FRAME;
+const PRIMARY_ACTION = HERO_PRIMARY_ACTION;
 
 // What Sellers make, shown on phones where the wide product photo has no room.
 const MERCH_TILES = [
-  { label: "Plate", src: "/images/dashboard/merch-plate.webp" },
-  { label: "Satchel", src: "/images/dashboard/merch-satchel.webp" },
-  { label: "Floral Tee", src: "/images/dashboard/merch-tee.webp" },
-  { label: "Cap", src: "/images/dashboard/merch-cap.webp" },
-  { label: "Ceramic Mug", src: "/images/dashboard/merch-mug.webp" },
+  { labelKey: "dashboard.hero.tilePlate", src: "/images/dashboard/merch-plate.webp" },
+  { labelKey: "dashboard.hero.tileSatchel", src: "/images/dashboard/merch-satchel.webp" },
+  { labelKey: "dashboard.hero.tileFloralTee", src: "/images/dashboard/merch-tee.webp" },
+  { labelKey: "dashboard.hero.tileCap", src: "/images/dashboard/merch-cap.webp" },
+  { labelKey: "dashboard.hero.tileCeramicMug", src: "/images/dashboard/merch-mug.webp" },
 ];
 
 /** The welcome card: who is signed in, what needs them today, and the one next step. */
 export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
+  const { t, i18n } = useTranslation("common");
+  const today = () => new Date().toLocaleDateString(i18n.language, { weekday: "long", day: "numeric", month: "long" });
   const fullName = useAuthStore((state) => state.user?.fullName);
   const firstName = getFirstName(fullName);
 
@@ -81,16 +76,16 @@ export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
           className="text-ink-900 mt-1 truncate text-2xl font-bold tracking-tight"
           title={fullName ?? undefined}
         >
-          {firstName ? `Welcome back, ${firstName}` : "Welcome back"}
+          {firstName ? t("dashboard.hero.welcomeNamed", { name: firstName }) : t("dashboard.hero.welcome")}
         </h1>
         <p className="text-ink-700 mt-1 text-sm">{describeGreeting(items)}</p>
       </div>
 
       <ul className="bg-muted/40 ring-ink-200 relative z-10 mt-4 grid grid-cols-5 gap-1.5 rounded-xl p-2 ring-1 sm:hidden">
-        {MERCH_TILES.map(({ label, src }) => (
-          <li key={label} className="min-w-0 text-center">
+        {MERCH_TILES.map(({ labelKey, src }) => (
+          <li key={labelKey} className="min-w-0 text-center">
             <Image src={src} alt="" width={56} height={56} className="mx-auto aspect-square w-full max-w-14 rounded-lg object-cover" />
-            <span className="text-ink-700 mt-1 block text-[10px] leading-tight font-medium">{label}</span>
+            <span className="text-ink-700 mt-1 block text-[10px] leading-tight font-medium">{t(labelKey)}</span>
           </li>
         ))}
       </ul>
@@ -99,7 +94,7 @@ export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
       <div className="relative z-10 mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium max-sm:mt-4 dark:sm:mt-5 dark:sm:max-w-[48%] dark:sm:flex-col dark:sm:items-start dark:sm:gap-y-3">
         {items.length > 0 ? (
           <button type="button" onClick={onOpenActions} className={PRIMARY_ACTION}>
-            See what needs you
+            {t("dashboard.hero.seeWhat")}
             <span className="bg-ink-100 text-ink-700 dark:text-primary-foreground rounded-full px-1.5 text-[11px] font-semibold tabular-nums dark:bg-black/10">
               {items.length}
             </span>
@@ -107,7 +102,7 @@ export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
           </button>
         ) : (
           <Link href="/workflows" className={PRIMARY_ACTION}>
-            Start a new batch
+            {t("dashboard.hero.startBatch")}
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         )}
@@ -116,7 +111,7 @@ export const DashboardHero = ({ items, onOpenActions }: DashboardHeroProps) => {
           className="text-ink-900 dark:text-ink-700 dark:hover:text-foreground inline-flex items-center gap-1.5 transition hover:text-black max-sm:min-h-10 max-sm:w-full max-sm:justify-center"
         >
           <Compass className="size-4" aria-hidden="true" />
-          Find a niche in Market Radar
+          {t("dashboard.hero.findNiche")}
         </Link>
       </div>
     </section>

@@ -16,7 +16,7 @@ export const OgImageCard = ({ backgroundSrc, title = SITE_CONFIG.tagline, subtit
     style={{
       color: "#ffffff",
       display: "flex",
-      fontFamily: "Space Grotesk",
+      fontFamily: "Plus Jakarta Sans",
       height: "100%",
       position: "relative",
       width: "100%",

@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { NodeControl } from "@/components/workflows/nodes/node-control";
 import { cn } from "@/utils/cn";
@@ -15,13 +16,19 @@ type NodeCheckProps = {
 const boxClassName = (checked: boolean) =>
   cn(
     "grid size-3.5 shrink-0 place-items-center rounded-[3px] border",
-    checked ? "border-wf-accent bg-wf-accent text-wf-surface shadow-[0_0_10px_var(--wf-halo)]" : "border-wf-line"
+    checked
+      ? "border-wf-accent bg-wf-accent text-wf-surface shadow-[0_0_10px_var(--wf-halo)]"
+      : "border-wf-line"
   );
 
 export const NodeCheck = ({ label, checked, onChange, disabled = false }: NodeCheckProps) => {
+  const { t } = useTranslation("common");
   if (!onChange) {
     return (
-      <div className="text-wf-dim flex items-center gap-2 text-[11px]" aria-label={`${label}: ${checked ? "on" : "off"}`}>
+      <div
+        className="text-wf-dim flex items-center gap-2 text-[11px]"
+        aria-label={`${label}: ${checked ? t("workflowEditor.nodeCheck.on") : t("workflowEditor.nodeCheck.off")}`}
+      >
         <span aria-hidden="true" className={boxClassName(checked)}>
           {checked && <Check className="size-2.5" strokeWidth={3} />}
         </span>

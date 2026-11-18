@@ -1,10 +1,14 @@
+"use client";
+
 import { Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { CONNECTED_PLATFORMS } from "@/data/features-content";
 
 export const PlatformIntegrationsVisual = () => {
+  const { t } = useTranslation("common");
   return (
     <Card className="gap-4 p-5 shadow-lg" aria-hidden="true">
       <div className="grid grid-cols-2 gap-3">
@@ -15,10 +19,12 @@ export const PlatformIntegrationsVisual = () => {
           >
             <platform.icon className="text-brand-ink size-6" strokeWidth={1.75} />
             <p className="text-sm font-semibold">{platform.name}</p>
-            <p className="text-muted-foreground text-xs">{platform.detail}</p>
+            <p className="text-muted-foreground text-xs">
+              {t(`featuresPage.visuals.platformDetails.${platform.name.toLowerCase()}`, { defaultValue: platform.detail })}
+            </p>
             <Badge className="w-fit">
               <Check className="size-3" />
-              Connected
+              {t("featuresPage.visuals.connected")}
             </Badge>
           </div>
         ))}

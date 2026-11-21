@@ -1869,7 +1869,7 @@
         "standard": "Tiêu chuẩn",
         "generationModeAria": "Chế độ tạo của cảnh {{scene}}",
         "notInPlan": "Không có trong gói của bạn",
-        "aiVideoNotInPlan": "Gói của bạn không có video AI. Hãy chuyển cảnh này sang Tiêu chuẩn.",
+        "aiVideoNotInPlan": "Gói của bạn không có video AI. Hãy chuyển cảnh này sang Chuyển động ảnh.",
         "decreaseDurationAria": "Giảm thời lượng cảnh {{scene}}",
         "sceneDurationAria": "Thời lượng cảnh {{scene}}",
         "increaseDurationAria": "Tăng thời lượng cảnh {{scene}}",
@@ -1882,8 +1882,35 @@
         "choosePerScene": "Chọn theo từng cảnh",
         "aiVideoModelAria": "Mô hình video AI của cảnh {{scene}}",
         "default": "Mặc định",
-        "aiTemplate": "Mẫu AI",
-        "aiTemplateAria": "Mẫu AI của cảnh {{scene}}",
+        "aiTemplate": "Kiểu video",
+        "aiTemplateAria": "Kiểu video của cảnh {{scene}}",
+        "startFromTemplate": "Bắt đầu từ mẫu có sẵn",
+        "startFromTemplateDescription": "Một bộ cảnh làm sẵn để bắt đầu. Bạn vẫn có thể sửa, thêm hoặc xoá cảnh ở bên dưới.",
+        "customizedSuffix": "đã chỉnh",
+        "loadingShort": "Đang tải…",
+        "replaceScenesQuestion": "Thay {{count}} cảnh hiện tại bằng {{name}}?",
+        "replaceScenesDetail": "Khung hình bắt đầu đã chọn của các cảnh sẽ bị xoá. Định dạng xuất, người mẫu dùng chung, mockup dùng chung và chú thích vẫn giữ nguyên.",
+        "keepCurrentScenes": "Giữ các cảnh hiện tại",
+        "startFromScratch": "Tự dựng từ đầu",
+        "startFromScratchKeep": "Tự dựng danh sách cảnh. Các cảnh hiện có vẫn giữ nguyên.",
+        "startFromScratchDescription": "Thêm từng cảnh và chọn cách tạo cho mỗi cảnh.",
+        "packMeta": "{{count}} cảnh · {{seconds}} giây",
+        "tagAiVideo": "Video AI · dùng credit AI",
+        "tagPhotoMotion": "Chuyển động ảnh · không tốn phí AI",
+        "photoMotion": "Chuyển động ảnh",
+        "photoMotionDescription": "Phóng to và lia qua ảnh sản phẩm. Xong trong vài giây, không tốn phí AI.",
+        "aiVideoDescription": "AI biến ảnh thành một clip thật dài 4 đến 15 giây. Dùng credit AI.",
+        "aiVideoNeedsSeconds": "Cần ít nhất 4 giây. Hãy rút ngắn các cảnh khác trước.",
+        "lifestyleFramesDescription": "{{name}} bắt đầu từ ảnh lifestyle: người mẫu mặc sản phẩm. Ảnh được lưu ngay khi bạn bấm chọn.",
+        "thisStyle": "Kiểu này",
+        "noLifestyleImage": "Chưa có ảnh lifestyle nào được duyệt",
+        "noLifestyleImageDescription": "Tạo ảnh lifestyle của thiết kế này trên người mẫu ở bước Duyệt mockup rồi duyệt nó, hoặc chuyển cảnh này sang kiểu video khác.",
+        "noScenesTitle": "Chưa có cảnh nào",
+        "noScenesDescription": "Thêm cảnh đầu tiên, hoặc chọn một mẫu ở trên, để dựng video này.",
+        "addFirstScene": "Thêm cảnh đầu tiên",
+        "sharedStartFramesNote": "Khung hình bắt đầu là ảnh của từng sản phẩm, nên không đặt trong cài đặt chung. Mỗi sản phẩm bắt đầu từ mockup mặc định của nó ({{image}}). Chọn một sản phẩm ở Sản phẩm video để xem hoặc đổi khung hình bắt đầu.",
+        "sharedStartFramesLifestyle": "ảnh lifestyle của nó",
+        "sharedStartFramesDefault": "ảnh chính, hoặc ảnh lifestyle với cảnh có người mẫu",
         "shotTemplate": "Mẫu cảnh quay",
         "shotTemplateAria": "Mẫu cảnh quay của cảnh {{scene}}",
         "startFrameAria": "Khung hình mở đầu của cảnh {{scene}}",
@@ -1959,6 +1986,11 @@
         "noSourceDefault": "Hãy duyệt ít nhất một ảnh sản phẩm trước khi tạo cảnh này.",
         "noSourceFilterNote": "Hãy kiểm tra xem ảnh có nằm trong danh sách ảnh được phép và nhóm artwork đã chọn của bước Áp mock-up không.",
         "advancedSettings": "Máy quay, chuyển động và ánh sáng nâng cao",
+        "customPromptSection": "Nâng cao: prompt video",
+        "customPromptEdited": "Đã sửa",
+        "customPrompt": "Prompt video cho cảnh này",
+        "customPromptHint": "Bắt đầu từ prompt của template. Các từ trong {{braces}}, như {{example}}, được điền tự động cho cảnh này, và các quy tắc giữ nguyên sản phẩm luôn được thêm vào sau. Nội dung bạn viết ở đây sẽ được kiểm duyệt.",
+        "customPromptReset": "Dùng prompt của template",
         "settingAria": "{{setting}} của cảnh {{scene}}",
         "customDirection": "Chỉ dẫn tùy chỉnh",
         "viewPromptBlocks": "Xem các thành phần của prompt hoàn chỉnh | v{{version}}",
@@ -1972,7 +2004,7 @@
         "fullVideoEditing": "Chỉnh sửa toàn bộ video",
         "fullVideo": "Toàn bộ video",
         "aboutEstimates": "Về chi phí ước tính và khung hình chính",
-        "aboutEstimatesBody": "Ước tính AI giả định mỗi clip AI đều mới; báo giá cuối cùng sẽ tính đến các clip dùng lại được trước khi render. Cảnh Tiêu chuẩn dùng chuyển động máy quay mượt giữa các điểm khung hình đã chọn. Khung hình chính kết hợp người mẫu dùng chung, một ảnh sản phẩm gốc đã duyệt và tối đa hai ảnh tham chiếu (không bắt buộc). Hãy kiểm tra các clip AI và mọi khung hình chính đã tạo để đảm bảo đúng sản phẩm.",
+        "aboutEstimatesBody": "Ước tính AI giả định mỗi clip AI đều mới; báo giá cuối cùng sẽ tính đến các clip dùng lại được trước khi render. Cảnh Chuyển động ảnh dùng chuyển động máy quay mượt giữa các điểm khung hình đã chọn. Khung hình chính kết hợp người mẫu dùng chung, một ảnh sản phẩm gốc đã duyệt và tối đa hai ảnh tham chiếu (không bắt buộc). Hãy kiểm tra các clip AI và mọi khung hình chính đã tạo để đảm bảo đúng sản phẩm.",
         "closeImagePreview": "Đóng xem trước ảnh",
         "imagePreview": "Xem trước ảnh",
         "selectedStartFrameForScene": "Ảnh khung hình mở đầu đã chọn của cảnh {{scene}}",
@@ -2007,7 +2039,9 @@
         "videoFormats": {
           "portrait": "Dọc",
           "square": "Vuông",
-          "landscape": "Ngang"
+          "landscape": "Ngang",
+          "classic_landscape": "Ngang cổ điển",
+          "classic_portrait": "Dọc cổ điển"
         },
         "productCount_one": "{{count}} sản phẩm",
         "productCount_other": "{{count}} sản phẩm",
@@ -2123,7 +2157,7 @@
         "useManualReview": "Dùng duyệt thủ công",
         "aiVideoPro": "Video cảnh AI thuộc gói Pro. Gói của bạn dựng video Trình diễn chuẩn.",
         "useStandard": "Dùng Trình diễn chuẩn",
-        "landscapePro": "Video ngang thuộc gói Pro. Gói của bạn dựng video vuông và dọc.",
+        "landscapePro": "Khung video này thuộc gói Pro. Gói của bạn dựng video vuông và dọc.",
         "usePortrait": "Dùng khung dọc"
       },
       "validation": {
@@ -2190,8 +2224,8 @@
         "aria": "Cài đặt video của sản phẩm nào",
         "allProducts": "Tất cả sản phẩm",
         "allProductsShared": "Tất cả sản phẩm (cài đặt chung)",
-        "ownCount": "{{own}}/{{total}} sản phẩm có cài đặt riêng; các sản phẩm còn lại dùng cài đặt này.",
-        "everyProductShared": "Mọi sản phẩm đều dùng cài đặt này. Chọn một sản phẩm để đặt cài đặt video riêng cho nó.",
+        "ownCount": "{{own}}/{{total}} sản phẩm sẽ chạy có cài đặt riêng; các sản phẩm còn lại dùng cài đặt này.",
+        "everyProductShared": "{{total}} sản phẩm sẽ chạy đều dùng cài đặt này. Chọn một sản phẩm để đặt cài đặt video riêng cho nó.",
         "saveToShared": "Lưu để đưa {{name}} về lại cài đặt chung.",
         "unsaved": "{{name}} có thay đổi chưa lưu. Lưu sẽ giữ chúng cho riêng sản phẩm này; cài đặt chung giữ nguyên.",
         "hasOwn": "{{name}} có cài đặt riêng. Mọi thứ bên dưới chỉ áp dụng cho sản phẩm này.",
@@ -2354,8 +2388,10 @@
         "mockupOnce": "Mỗi mock-up chỉ được chọn một lần.",
         "sceneOrderOnce": "Mỗi mock-up chỉ dùng một lần trong thứ tự cảnh.",
         "framingOnce": "Mỗi mock-up chỉ được cấu hình khung hình một lần.",
+        "addScene": "Hãy thêm ít nhất một cảnh cho video.",
         "sceneInstructionsMax": "Chỉ dẫn cảnh phải dưới 500 ký tự.",
         "keyframeDirectionsMax": "Chỉ dẫn khung hình chính phải dưới 500 ký tự.",
+        "customVideoPromptMax": "Prompt video của mỗi cảnh phải dưới {{max}} ký tự.",
         "cropInsideImage": "Vùng cắt của khung hình mở đầu phải nằm trong ảnh.",
         "sharedDirectionMax": "Chỉ dẫn chung cho cảnh AI phải dưới 500 ký tự.",
         "chooseApprovedMockup": "Hãy chọn ít nhất một mock-up đã duyệt.",
@@ -3207,7 +3243,9 @@
         "noLongerWaiting": "Video này không còn chờ bạn duyệt.",
         "version": "Phiên bản {{version}}",
         "approveVideo": "Duyệt video",
-        "rejectVideo": "Từ chối video"
+        "rejectVideo": "Từ chối video",
+        "downloadVideo": "Tải video",
+        "downloadMp4": "Tải MP4"
       },
       "runGroup": {
         "runStatuses": {
@@ -3337,6 +3375,9 @@
         "approval": "Duyệt",
         "autoApproved": "Lượt chạy này tự động duyệt mọi thiết kế, nên chúng đi tiếp tới bước mock-up mà không cần duyệt.",
         "startedBeforeReview": "Lượt chạy này bắt đầu trước khi có thể duyệt thiết kế, nên chúng đi tiếp mà không cần duyệt.",
+        "heldForReview_one": "Hệ thống kiểm duyệt nội dung chưa kiểm tra được thiết kế của {{count}} sản phẩm, nên chúng chưa được tự động duyệt. Hãy duyệt tại đây: khi bạn duyệt, thiết kế sẽ được kiểm tra lại.",
+        "heldForReview_other": "Hệ thống kiểm duyệt nội dung chưa kiểm tra được thiết kế của {{count}} sản phẩm, nên chúng chưa được tự động duyệt. Hãy duyệt tại đây: khi bạn duyệt, mỗi thiết kế sẽ được kiểm tra lại.",
+        "heldToast": "Một số thiết kế chưa được kiểm tra tự động. Hãy duyệt chúng ở bước Design approval.",
         "reviewDesigns": "Duyệt thiết kế",
         "stillGenerating": "Thiết kế vẫn đang được tạo. Bạn có thể duyệt ngay khi tác vụ hoàn tất.",
         "approvedCount": "{{count}} đã duyệt",
@@ -3920,7 +3961,8 @@
           "passWithWarnings": "Đạt kèm cảnh báo",
           "passWithWarningsDetail": "Video đã đạt các mục kiểm tra bắt buộc. Hãy xem các cảnh báo Etsy bên dưới.",
           "pass": "Đạt",
-          "passDetail": "Các mục kiểm tra kỹ thuật và Etsy đã lưu đều đạt và đánh giá cảnh đã hoàn tất."
+          "passDetail": "Các mục kiểm tra kỹ thuật và Etsy đã lưu đều đạt và đánh giá cảnh đã hoàn tất.",
+          "passSkippedDetail": "Các mục kiểm tra kỹ thuật và Etsy đã lưu đều đạt. Bước chấm điểm cảnh tự động đã được bỏ qua."
         },
         "finalVideoQuality": "Chất lượng video cuối cùng",
         "etsyChecks": "Kiểm tra listing Etsy",
@@ -4397,8 +4439,28 @@
         "periodDays": "{{count}} ngày"
       },
       "onboarding": {
-        "title": "Bắt đầu lô đầu tiên",
-        "description": "Bốn bước từ CSV tới một listing sẵn sàng cho Etsy. Bảng điều khiển của bạn sẽ tự điền dần theo tiến độ.",
+        "title": "Chuẩn bị không gian làm việc",
+        "description": "Bốn bước từ kết nối nhà cung cấp tới lần chạy workflow đầu tiên. Mỗi bước tự đánh dấu khi bạn làm xong.",
+        "progress": "Đã xong {{done}}/{{count}}",
+        "dismiss": "Ẩn danh sách",
+        "steps": {
+          "apiKeys": {
+            "title": "Kết nối nhà cung cấp",
+            "description": "Thêm khoá Gemini, Ideogram hoặc Printify để tạo sản phẩm."
+          },
+          "batches": {
+            "title": "Tạo lô hàng",
+            "description": "Nhập CSV hoặc thêm sản phẩm thủ công."
+          },
+          "mockups": {
+            "title": "Thêm mẫu mock-up",
+            "description": "Tải ảnh sản phẩm của bạn lên hoặc chọn mẫu có sẵn."
+          },
+          "workflows": {
+            "title": "Chạy workflow",
+            "description": "Biến thiết kế đã duyệt thành mock-up, video và listing."
+          }
+        },
         "start": "Bắt đầu",
         "open": "Mở"
       },
@@ -4456,6 +4518,96 @@
         "unavailableTitle": "Bảng điều khiển tạm thời không khả dụng",
         "unavailableHint": "Hãy tải lại trang và thử lại.",
         "overview": "Tổng quan {{days}} ngày qua"
+      }
+    },
+    "pageGuides": {
+      "replay": "Xem hướng dẫn",
+      "locale": {
+        "back": "Quay lại",
+        "close": "Đóng",
+        "next": "Tiếp",
+        "last": "Xong",
+        "skip": "Bỏ qua"
+      },
+      "apiKeys": {
+        "steps": {
+          "connect": {
+            "title": "Kết nối dịch vụ",
+            "body": "Podivo chạy bằng tài khoản Gemini, Ideogram và Printify của bạn. Thêm khoá từng dịch vụ ở đây để lô có thể tạo ảnh."
+          },
+          "readiness": {
+            "title": "Sẵn sàng cho workflow",
+            "body": "Ba mảng này chạy toàn bộ pipeline. Dấu tích xanh nghĩa là lô có thể chạy từ đầu tới lúc đăng bán."
+          },
+          "add": {
+            "title": "Thêm kết nối",
+            "body": "Chọn nhà cung cấp, dán khoá và xác nhận. Bạn có thể thêm nhiều khoá và đổi qua lại bất cứ lúc nào."
+          },
+          "manage": {
+            "title": "Quản lý kết nối",
+            "body": "Kết nối lại khoá hết hạn, xem lần dùng gần nhất hoặc xoá. Danh sách trên bảng điều khiển tự tích khi có khoá hoạt động."
+          }
+        }
+      },
+      "batches": {
+        "steps": {
+          "start": {
+            "title": "Lô hàng",
+            "body": "Một lô gom các sản phẩm cùng dòng sản phẩm và cùng lần chạy."
+          },
+          "actions": {
+            "title": "Tạo hoặc nhập",
+            "body": "Tạo lô thủ công, hoặc nhập CSV mỗi dòng một sản phẩm. Lô cần có dòng sản phẩm trước khi chạy."
+          },
+          "list": {
+            "title": "Danh sách lô",
+            "body": "Mọi lô nằm ở đây kèm số sản phẩm theo trạng thái. Sau khi tạo, bạn chuyển giữa các lô ngay tại đây."
+          },
+          "products": {
+            "title": "Sản phẩm trong lô",
+            "body": "Mỗi dòng là một sản phẩm với trạng thái riêng. Sản phẩm lỗi có thể đưa về chờ mà không ảnh hưởng sản phẩm khác."
+          },
+          "help": {
+            "title": "Cách hoạt động",
+            "body": "Mở lại hướng dẫn từng bước mỗi khi cần nhìn cả pipeline trong một màn hình."
+          }
+        }
+      },
+      "mockups": {
+        "steps": {
+          "start": {
+            "title": "Thư viện mock-up",
+            "body": "Mock-up biến thiết kế phẳng thành ảnh sản phẩm; thư viện lưu ảnh sản phẩm và ảnh người mẫu để các lô dùng lại."
+          },
+          "tabs": {
+            "title": "Hai loại ảnh",
+            "body": "Ảnh sản phẩm đặt thiết kế lên sản phẩm; ảnh người mẫu thêm người mặc sản phẩm."
+          },
+          "templates": {
+            "title": "Ảnh sản phẩm",
+            "body": "Dùng mẫu có sẵn hoặc tải ảnh vùng in của bạn lên, rồi chọn màu áo khi chạy workflow."
+          },
+          "models": {
+            "title": "Ảnh người mẫu",
+            "body": "Mở tab này để tải lên hoặc tạo ảnh phong cách sống với người mặc sản phẩm."
+          }
+        }
+      },
+      "workflows": {
+        "steps": {
+          "start": {
+            "title": "Trình dựng workflow",
+            "body": "Canvas biến một lô thành thiết kế, mock-up, video và listing. Validate giúp tránh một lần chạy tốn tiền, còn Run chỉ hỏi chi phí một lần."
+          },
+          "palette": {
+            "title": "Bảng node",
+            "body": "Kéo node vào canvas, hoặc bấm để đặt. Pipeline mặc định đã nối sẵn chín bước cần thiết."
+          },
+          "canvas": {
+            "title": "Canvas",
+            "body": "Chọn node để sửa ở bên phải. Node hiện trạng thái trực tiếp khi lượt chạy đi qua."
+          }
+        }
       }
     },
     "shop": {
@@ -4922,34 +5074,27 @@
           "1": "Đang xử lý 61 / 84",
           "2": "Đang chờ"
         },
-        "variations": "4 biến thể",
-        "designTiles": {
-          "0": "Áo thun vintage",
-          "1": "Poster hoa",
-          "2": "Sticker cắt viền",
-          "3": "Túi tote canvas"
-        },
-        "transparentPng": "PNG nền trong suốt",
-        "printReady": "300 DPI sẵn sàng in",
+        "printReady": "PNG sẵn sàng in",
         "moreTags": "+ 7 thẻ khác",
         "listingChecks": {
           "0": "Tiêu đề giàu từ khóa",
           "1": "Đã điền 13 / 13 thẻ",
-          "2": "Đã đặt chất liệu + thuộc tính"
+          "2": "Điểm SEO kèm cách sửa rõ ràng"
         },
         "platformDetails": {
-          "etsy": "128 listing đang bán",
+          "etsy": "Bản nháp kèm đầy đủ tài nguyên",
           "printify": "Đã đồng bộ xử lý đơn"
         },
         "connected": "Đã kết nối",
-        "moreMarketplaces": "Sắp có thêm sàn thương mại",
-        "connect": "+ Kết nối",
         "etsyVideo": "Video Etsy",
-        "verticalCut": "Kèm bản dọc 9:16"
+        "verticalCut": "Video dọc 9:16",
+        "designPrompt": "“vintage outdoors, warm print style”",
+        "designCount": "{{count}} thiết kế",
+        "mockupsIncluded": "Kèm mock-up"
       },
       "cta": {
         "title": "Sẵn sàng ra mắt lô sản phẩm đầu tiên?",
-        "description": "Tải lên một ý tưởng sản phẩm và xem quy trình tạo, chấm điểm và đăng nó.",
+        "description": "Tải lên một ý tưởng sản phẩm và xem quy trình tạo, chấm điểm và gửi nó lên shop của bạn.",
         "primary": "Bắt đầu miễn phí",
         "secondary": "Về trang chủ"
       },
@@ -4957,42 +5102,42 @@
         "design": {
           "title": "Tạo thiết kế bằng AI",
           "tagline": "Tác phẩm gốc, theo yêu cầu",
-          "description": "Mô tả niche và ý tưởng sản phẩm một lần. Workflow AI tạo ra thiết kế gốc, sẵn sàng in kèm mock-up lifestyle trên áo quần, poster, sticker và túi tote.",
+          "description": "Mô tả niche và ý tưởng sản phẩm một lần. Quy trình AI tạo ra thiết kế gốc, sẵn sàng in, kèm mock-up trên áo thun, áo hoodie, cốc, poster và túi tote.",
           "bullets": {
             "0": "Từ prompt ra thiết kế trong vài phút, không cần nhà thiết kế",
             "1": "Xuất file sẵn sàng in với nền trong suốt",
-            "2": "Tự động tạo mock-up trên áo, poster, sticker và túi tote",
+            "2": "Tự động tạo mock-up trên áo thun, hoodie, cốc, poster và túi tote",
             "3": "Nhiều biến thể cho mỗi thiết kế để thử nghiệm đâu là bản bán chạy"
           }
         },
         "video": {
           "title": "Tạo video",
           "tagline": "Listing sinh động hơn",
-          "description": "Mỗi thiết kế đi kèm một video quảng bá ngắn: mock-up động được render theo định dạng sẵn sàng cho listing và định dạng dọc cho Etsy, TikTok và Reels.",
+          "description": "Biến mock-up đã duyệt thành video quảng bá ngắn: video trình diễn sản phẩm dạng dọc cho listing Etsy và mạng xã hội.",
           "bullets": {
             "0": "Tự tạo từ thiết kế của bạn, không cần kỹ năng dựng video",
-            "1": "Bản ngang sẵn sàng cho listing và bản dọc cho mạng xã hội",
+            "1": "Video dọc 9:16 cho listing Etsy và mạng xã hội",
             "2": "Hiệu ứng zoom, xoay và chuyển cảnh lifestyle",
-            "3": "Caption và hook khớp với nội dung listing"
+            "3": "Nhạc nền từ thư viện có sẵn"
           }
         },
         "listing": {
           "title": "Nội dung listing trên Etsy",
           "tagline": "Nội dung viết để xếp hạng",
-          "description": "Có ngay nội dung listing hoàn chỉnh tối ưu cho tìm kiếm trên Etsy: tiêu đề giàu từ khóa, mô tả thuyết phục, đủ 13 thẻ, chất liệu và thuộc tính.",
+          "description": "Có ngay nội dung listing hoàn chỉnh tối ưu cho tìm kiếm trên Etsy: tiêu đề giàu từ khóa, mô tả thuyết phục và đủ 13 thẻ, kèm điểm SEO trước khi bạn duyệt.",
           "bullets": {
             "0": "Tiêu đề SEO xây từ từ khóa người mua thực",
             "1": "Mô tả được cấu trúc để chuyển khách xem thành người mua",
-            "2": "Đủ bộ 13 thẻ cùng chất liệu và thuộc tính",
+            "2": "Đủ bộ 13 thẻ kèm điểm SEO và cách sửa rõ ràng",
             "3": "Giọng văn phù hợp với shop và niche của bạn"
           }
         },
         "batch": {
           "title": "Xử lý hàng loạt",
           "tagline": "Một lần tải lên, hàng trăm listing",
-          "description": "Thả một file CSV duy nhất với ý tưởng sản phẩm và để workflow chạy: thiết kế, video và nội dung listing được tạo cho cả lô trong khi bạn chỉ xem lại các ngoại lệ.",
+          "description": "Điền một file Excel mẫu với ý tưởng sản phẩm và để quy trình chạy: thiết kế, video và nội dung listing được tạo cho cả lô, bạn chỉ cần xem lại những chỗ cần thiết.",
           "bullets": {
-            "0": "Nhập CSV cho ý tưởng, niche và loại sản phẩm",
+            "0": "Nhập từ Excel tối đa 500 sản phẩm kèm niche và từ khóa",
             "1": "Tạo song song trên toàn bộ lô",
             "2": "Tiến trình trực tiếp từng item, tự thử lại khi lỗi",
             "3": "Hàng chờ duyệt chỉ nêu ra những gì cần bạn xử lý"
@@ -5000,15 +5145,19 @@
         },
         "platforms": {
           "title": "Tích hợp đa nền tảng",
-          "tagline": "Xuất bản mọi nơi chỉ với một cú nhấp",
-          "description": "Listing đã duyệt được đăng ngay từ Podivo. Thiết kế, mock-up, video và nội dung được đóng gói và đẩy lên Etsy cùng các sàn đã kết nối, tồn kho luôn đồng bộ.",
+          "tagline": "Từ studio đến shop chỉ với một cú nhấp",
+          "description": "Listing đã duyệt rời Podivo với đầy đủ tài nguyên. Thiết kế, mock-up, video và nội dung được gửi lên Etsy dưới dạng bản nháp, hoặc sang Printify để xử lý đơn và đăng bán.",
           "bullets": {
-            "0": "Đăng lên Etsy một cú nhấp với đầy đủ assets đi kèm",
+            "0": "Tạo bản nháp Etsy một cú nhấp kèm ảnh và video",
             "1": "Kết nối Printify để xử lý đơn liền mạch",
-            "2": "Listing luôn đồng bộ khi bạn sửa trong Podivo",
+            "2": "Đồng bộ sản phẩm Printify sau khi bạn sửa trong Podivo",
             "3": "Chế độ nháp để duyệt lần cuối trước khi đăng"
           }
         }
+      },
+      "intro": {
+        "title": "Mọi thứ Podivo tự động hóa",
+        "description": "Thiết kế, mock-up, video quảng bá, listing Etsy và chạy theo lô, kết nối trong một quy trình AI."
       }
     },
     "landing": {
@@ -5018,7 +5167,7 @@
         "items": {
           "0": {
             "title": "Tăng tốc vận hành",
-            "description": "Tự động hóa việc thủ công và xử lý trực tiếp khối lượng dữ liệu lớn, giảm việc vặt trong mùa cao điểm."
+            "description": "Chạy cả lô sản phẩm qua các bước tạo thiết kế, mock-up, video và listing, giảm việc thủ công trong mùa cao điểm."
           },
           "1": {
             "title": "Tiết kiệm chi phí",
@@ -5026,7 +5175,7 @@
           },
           "2": {
             "title": "Quản lý thông minh",
-            "description": "Theo dõi doanh thu, hàng đợi và hiệu quả vận hành theo thời gian thực."
+            "description": "Theo dõi doanh số shop, tiến độ tạo nội dung và mức dùng gói trên một bảng điều khiển."
           }
         }
       },
@@ -5058,7 +5207,7 @@
         },
         "apcsRows": {
           "0": {
-            "label": "Chuẩn bị CSV",
+            "label": "Chuẩn bị bảng tính",
             "value": "2 giờ"
           },
           "1": {
@@ -5070,7 +5219,7 @@
             "value": "3 giờ"
           },
           "3": {
-            "label": "Đăng bằng 1 cú nhấp",
+            "label": "Gửi lên shop bằng 1 cú nhấp",
             "value": "< 1 giờ"
           }
         },
@@ -5083,7 +5232,6 @@
         "primary": "Bắt đầu miễn phí"
       },
       "ecosystem": {
-        "eyebrow": "Tính năng",
         "title": "Mọi thứ bạn cần để ra mắt listing POD",
         "description": "Thiết kế, video, nội dung listing, chạy theo lô và đăng bán hợp nhất trong một quy trình AI.",
         "cta": "Khám phá mọi tính năng",
@@ -5094,7 +5242,7 @@
           },
           "1": {
             "title": "Tạo video",
-            "description": "Tự động tạo video quảng bá và video trình diễn mock-up từ thiết kế cho listing và mạng xã hội."
+            "description": "Tự động tạo video quảng bá dạng dọc và video trình diễn mock-up từ thiết kế cho listing và mạng xã hội."
           },
           "2": {
             "title": "Nội dung listing Etsy",
@@ -5102,11 +5250,11 @@
           },
           "3": {
             "title": "Xử lý theo lô",
-            "description": "Tải lên một lần bằng CSV và tạo hàng trăm thiết kế, video và listing trong một lượt chạy."
+            "description": "Nhập tối đa 500 sản phẩm từ một file Excel và tạo thiết kế, video, listing trong một lượt chạy."
           },
           "4": {
             "title": "Tích hợp nền tảng",
-            "description": "Đẩy listing đã duyệt thẳng lên Etsy và các sàn khác chỉ với một cú nhấp, kèm đầy đủ tài nguyên."
+            "description": "Gửi listing đã duyệt lên Etsy dưới dạng bản nháp kèm ảnh và video, hoặc đăng qua Printify."
           }
         }
       },
@@ -5116,57 +5264,81 @@
         "items": {
           "0": {
             "question": "Thiết lập mất bao lâu?",
-            "answer": "Tải lên lô đầu tiên mất 15 đến 30 phút. Đội ngũ của chúng tôi hỗ trợ bạn vận hành ngay trong ngày."
+            "answer": "Tạo tài khoản chỉ mất một phút. Điền file Excel mẫu cho lô đầu tiên thường mất 15 đến 30 phút."
           },
           "1": {
             "question": "Tôi có cần thêm phần cứng không?",
             "answer": "Không. Podivo chạy trên web, nên máy tính hiện có là đủ để quản lý việc tạo nội dung."
           },
           "2": {
-            "question": "Gói có bao gồm mọi thứ không?",
-            "answer": "Gói bao gồm lưu trữ, bảo mật và cập nhật tính năng, không có chi phí ẩn."
+            "question": "Các gói bao gồm những gì?",
+            "answer": "Mỗi gói có hạn mức hằng tháng cho thiết kế, mock-up, video và listing. Các gói cao hơn có thêm video AI, mock-up lifestyle và tự động duyệt. Bạn có thể xem phần hạn mức còn lại bất cứ lúc nào."
           },
           "3": {
             "question": "Hỗ trợ hoạt động thế nào?",
-            "answer": "Đội ngũ phản hồi 24/7 qua chat và email, sự cố nghiêm trọng được ưu tiên xử lý từ xa."
+            "answer": "Mở một ticket hỗ trợ từ bảng điều khiển, đính kèm ảnh chụp màn hình nếu cần, đội ngũ sẽ trả lời bạn ngay tại đó."
           }
         },
         "showFewer": "Thu gọn",
-        "showAll": "Xem cả {{count}} câu hỏi"
+        "showAll": "Xem cả {{count}} câu hỏi",
+        "supportHint": "Không tìm thấy câu trả lời?",
+        "supportCta": "Liên hệ hỗ trợ"
       },
       "hero": {
         "title": "Mở rộng đế chế POD với tốc độ AI",
         "description": "Biến ý tưởng sản phẩm thành thiết kế, nội dung và listing sẵn sàng cho Etsy chỉ trong vài phút với AI.",
         "primary": "Bắt đầu miễn phí",
         "secondary": "Xem cách hoạt động",
-        "imageAlt": "Bảng điều khiển Podivo Studio hiển thị tiến độ tạo thiết kế bằng AI và ảnh thu nhỏ mock-up sản phẩm"
+        "eyebrow": "Studio nội dung AI cho POD trên Etsy",
+        "titleLead": "Mở rộng đế chế POD với",
+        "titleHighlight": "tốc độ AI",
+        "worksWith": "Hoạt động cùng"
       },
       "workflow": {
-        "eyebrow": "Cách hoạt động",
-        "title": "Từ ý tưởng sản phẩm đến listing đã đăng trong 4 bước",
-        "description": "Tải lên một lần. Podivo chạy quy trình AI, chấm điểm SEO và đăng bán khắp nơi.",
+        "title": "Từ ý tưởng sản phẩm đến listing sẵn sàng cho Etsy trong 4 bước",
+        "description": "Tải lên một lần. Podivo chạy quy trình AI, chấm điểm SEO và gửi listing lên shop của bạn.",
         "steps": {
           "01": {
             "title": "Tải lên thông tin sản phẩm",
-            "description": "Nhập ý tưởng sản phẩm, niche và chi tiết, từng sản phẩm hoặc CSV hàng loạt, để khởi động quy trình.",
-            "imageAlt": "Dữ liệu bảng tính biến thành dòng hạt"
+            "description": "Nhập ý tưởng sản phẩm, niche và từ khóa, từng sản phẩm hoặc hàng loạt từ file Excel, để khởi động quy trình."
           },
           "02": {
             "title": "AI tạo tài nguyên",
-            "description": "Quy trình AI liên kết tạo thiết kế, ảnh mock-up, video quảng bá và trọn bộ nội dung listing với tiêu đề, mô tả và thẻ.",
-            "imageAlt": "AI tạo thiết kế và mock-up trang phục trên các tấm kính"
+            "description": "Quy trình AI liên kết tạo thiết kế, ảnh mock-up, video quảng bá và trọn bộ nội dung listing với tiêu đề, mô tả và thẻ."
           },
           "03": {
             "title": "Xem điểm SEO",
-            "description": "Mỗi listing có điểm SEO kèm cách sửa rõ ràng. Chỉ duyệt khi tiêu đề, thẻ và nội dung đã sẵn sàng để lên hạng.",
-            "imageAlt": "Bảng điều khiển hiển thị điểm SEO và kiểm tra chất lượng listing"
+            "description": "Mỗi listing có điểm SEO kèm cách sửa rõ ràng. Chỉ duyệt khi tiêu đề, thẻ và nội dung đã sẵn sàng để lên hạng."
           },
           "04": {
-            "title": "Đăng bán khắp nơi",
-            "description": "Đưa listing đã duyệt lên Etsy và các nền tảng khác chỉ với một cú nhấp, kèm đầy đủ tài nguyên.",
-            "imageAlt": "Biểu tượng cửa hàng với biểu đồ tăng trưởng và thông báo đăng bán"
+            "title": "Gửi lên shop của bạn",
+            "description": "Gửi listing đã duyệt lên Etsy dưới dạng bản nháp kèm đầy đủ tài nguyên, hoặc đăng qua Printify."
           }
+        },
+        "visuals": {
+          "product": "Sản phẩm",
+          "niche": "Niche",
+          "keywords": "Từ khóa",
+          "generating": "Đang tạo tài nguyên",
+          "seoChecks": {
+            "0": "Từ khóa trong tiêu đề",
+            "1": "Đã điền 13 / 13 thẻ",
+            "2": "Độ dài mô tả"
+          },
+          "attached": "Đã kèm ảnh + video"
         }
+      },
+      "preview": {
+        "batchDetail": "{{count}} sản phẩm",
+        "generating": "Đang tạo",
+        "tagsFilled": "Đã điền 13/13 thẻ",
+        "etsyDraft": "Bản nháp Etsy"
+      },
+      "productTypes": {
+        "tshirt": "Áo thun",
+        "poster": "Poster",
+        "toteBag": "Túi tote",
+        "mug": "Cốc"
       }
     },
     "batchJobs": {
@@ -5679,7 +5851,8 @@
             "paused": "Tạm dừng",
             "completed": "Hoàn tất",
             "failed": "Thất bại",
-            "cancelled": "Đã hủy"
+            "cancelled": "Đã hủy",
+            "partiallyCompleted": "Hoàn thành một phần"
           },
           "ticketStatus": {
             "open": "Mở",

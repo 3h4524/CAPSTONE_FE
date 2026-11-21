@@ -20,12 +20,15 @@ import { PhonePager } from "@/components/commons/data-display/phone-pager";
 import { StatusBadge } from "@/components/commons/data-display/status-badge";
 import { TruncatedTooltip } from "@/components/commons/data-display/truncated-tooltip";
 import { PageHeader } from "@/components/commons/layout/page-header";
+import { GuideReplayButton } from "@/components/commons/onboarding/guide-replay-button";
+import { PageGuide } from "@/components/commons/onboarding/page-guide";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { productLineTypes, productTypeLabels, statusDot, statuses, statusLabel } from "@/constants/batches";
+import { productServerErrors } from "@/helpers/batch-product-errors";
 import { lineTypesText, productLineName } from "@/helpers/product-lines";
 import { smoothScrollTo } from "@/helpers/smooth-scroll";
 import { useCreateBatch } from "@/hooks/mutations/use-create-batch";
@@ -203,23 +206,35 @@ export const BatchWorkspace = () => {
 
   const submitProduct = productForm.handleSubmit(async (values) => {
     if (!selectedBatch) return;
-    await saveProduct.mutateAsync({ batchId: selectedBatch.id, productId: editing?.id, ...toProductInput(values) });
+    try {
+      await saveProduct.mutateAsync({ batchId: selectedBatch.id, productId: editing?.id, ...toProductInput(values) });
+    } catch (error) {
+      // Marks the field the backend refused (a content-policy hit, a duplicate name, ...) and focuses the first one.
+      productServerErrors(error).forEach(({ field, message }, index) =>
+        productForm.setError(field ?? "root.server", { type: "server", message }, { shouldFocus: index === 0 && field !== null }));
+      return;
+    }
     setProductDialog(false);
   });
 
   return (
     <div className="w-full min-w-0 space-y-4 md:space-y-5 md:p-6">
-      <PageHeader
-        eyebrow={t("batches.workspace.eyebrow")}
-        title={t("batches.workspace.title")}
-        description={t("batches.workspace.description")}
-        actions={
-          <>
-            <Button variant="ghost" className="text-muted-foreground max-md:hidden" aria-expanded={showHelp} onClick={() => setShowHelp((open) => !open)}><CircleHelp className="mr-2 size-4" />{t("batches.summary.howItWorks")}<ChevronDown className={`ml-1 size-4 transition-transform ${showHelp ? "rotate-180" : ""}`} /></Button>
-            <Button size="page-action" onClick={openNewBatch}><Plus className="mr-2 size-4 max-md:mr-0" /><span>{t("batches.workspace.newBatch")}</span></Button>
-          </>
-        }
-      />
+      <div data-guide="batches.header">
+        <PageHeader
+          eyebrow={t("batches.workspace.eyebrow")}
+          title={t("batches.workspace.title")}
+          description={t("batches.workspace.description")}
+          actions={
+            <div className="flex flex-wrap items-center gap-2" data-guide="batches.actions">
+              <GuideReplayButton guideKey="batches" className="max-md:hidden" />
+              <Button data-guide="batches.help" variant="ghost" className="text-muted-foreground max-md:hidden" aria-expanded={showHelp} onClick={() => setShowHelp((open) => !open)}><CircleHelp className="mr-2 size-4" />{t("batches.summary.howItWorks")}<ChevronDown className={`ml-1 size-4 transition-transform ${showHelp ? "rotate-180" : ""}`} /></Button>
+              <Button size="page-action" onClick={openNewBatch}><Plus className="mr-2 size-4 max-md:mr-0" /><span>{t("batches.workspace.newBatch")}</span></Button>
+            </div>
+          }
+        />
+      </div>
+
+      <PageGuide guideKey="batches" />
 
       {showHelp && <section className="bg-muted/40 relative rounded-xl border" aria-label={t("batches.workspace.helpAria")}>
         <Button variant="ghost" size="icon" className="text-muted-foreground absolute top-2 right-2 size-7" aria-label={t("batches.workspace.hideHelp")} onClick={() => setShowHelp(false)}><X className="size-4" /></Button>
@@ -233,11 +248,11 @@ export const BatchWorkspace = () => {
       </section>}
 
       {batchesQuery.isLoading ? <p className="text-muted-foreground py-12 text-center">{t("batches.workspace.loading")}</p> : batchesQuery.isError ? <Card><CardContent className="py-12 text-center" role="alert">{t("batches.workspace.loadError")}</CardContent></Card> : batchCount === 0 ? (
-        <Card className="border-dashed"><CardContent className="flex flex-col items-center py-16 text-center"><div className="bg-primary/10 mb-4 flex size-12 items-center justify-center rounded-xl"><FileSpreadsheet className="text-primary size-6" /></div><h2 className="text-lg font-semibold">{t("batches.workspace.emptyTitle")}</h2><p className="text-muted-foreground mt-2 max-w-md text-sm">{t("batches.workspace.emptyDescription")}</p><Button className="mt-5" onClick={openNewBatch}><Plus className="mr-2 size-4" />{t("batches.workspace.createFirst")}</Button></CardContent></Card>
+        <Card className="border-dashed" data-guide="batches.list"><CardContent className="flex flex-col items-center py-16 text-center"><div className="bg-primary/10 mb-4 flex size-12 items-center justify-center rounded-xl"><FileSpreadsheet className="text-primary size-6" /></div><h2 className="text-lg font-semibold">{t("batches.workspace.emptyTitle")}</h2><p className="text-muted-foreground mt-2 max-w-md text-sm">{t("batches.workspace.emptyDescription")}</p><Button className="mt-5" onClick={openNewBatch}><Plus className="mr-2 size-4" />{t("batches.workspace.createFirst")}</Button></CardContent></Card>
       ) : (
         <div className="grid items-start gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-stretch xl:grid-cols-[20rem_minmax(0,1fr)]">
           {/* Side by side, the zero height keeps the list from growing the row: the detail panel alone sets it, and the list scrolls inside that height. */}
-          <aside className="bg-card flex flex-col overflow-hidden rounded-xl border max-md:hidden lg:h-0 lg:min-h-full">
+          <aside data-guide="batches.list" className="bg-card flex flex-col overflow-hidden rounded-xl border max-md:hidden lg:h-0 lg:min-h-full">
             <BatchListPanel batches={visibleBatches} batchCount={batchCount} search={batchSearch} onSearchChange={setBatchSearch} selectedId={selectedBatch?.id} onSelect={selectBatch} onEdit={openEditBatch} onDelete={setDeletingBatch} onAdd={openNewBatch} />
           </aside>
 
@@ -265,7 +280,7 @@ export const BatchWorkspace = () => {
               </div>
             </div>
 
-            <div className="space-y-4 pt-4 md:p-5">
+            <div className="space-y-4 pt-4 md:p-5" data-guide="batches.products">
               {!selectedBatch.productLine && <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"><span>This batch has no product line yet. Choose one before adding products or running it: a batch makes one line only.</span><Button variant="outline" size="sm" onClick={() => openEditBatch(selectedBatch)}><Pencil className="mr-1.5 size-3.5" />Choose line</Button></div>}
               {showStatusFilter && <div className="space-y-3">
                 <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1" role="tablist" aria-label={t("batches.workspace.filterStatusAria")}>

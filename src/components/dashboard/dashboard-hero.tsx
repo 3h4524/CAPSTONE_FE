@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Compass } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { HERO_MERCH_FRAME, HERO_PRIMARY_ACTION } from "@/components/commons/layout/merch-hero";
 import { describeGreeting } from "@/helpers/seller-dashboard";
 import { useAuthStore } from "@/stores/auth";
 import type { ActionItem } from "@/types/seller-dashboard";
@@ -24,16 +25,9 @@ const getFirstName = (fullName?: string | null): string => {
   return parts[0] ?? "";
 };
 
-// Light: the product photo fades in from the left so its pale backdrop melts into the card.
-// Dark: the studio shot fills the whole right half, full card height, and a card-coloured scrim
-// on its left edge dissolves it into the dark surface (a mask would expose a grey smear instead).
-const MERCH_FRAME =
-  "[mask-image:linear-gradient(to_right,transparent_0%,black_15%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_15%)] dark:aspect-auto dark:w-[50%] dark:max-w-none dark:overflow-hidden dark:[mask-image:none] dark:[-webkit-mask-image:none]";
-
-// The one action as a soft pill with dark text: clear on the card, easy on the eye.
-// Dark: the brand-blue pill, like the other primary actions.
-const PRIMARY_ACTION =
-  "inline-flex items-center gap-1.5 max-sm:w-full max-sm:justify-center rounded-full bg-card px-4 py-2 text-ink-900 shadow-sm ring-1 ring-ink-300 backdrop-blur transition hover:-translate-y-0.5 hover:bg-ink-50 hover:shadow-md dark:bg-primary dark:text-primary-foreground dark:ring-0 dark:hover:bg-primary/90";
+// The photo frame and the action pill are shared with the Admin hero (commons/layout/merch-hero.ts).
+const MERCH_FRAME = HERO_MERCH_FRAME;
+const PRIMARY_ACTION = HERO_PRIMARY_ACTION;
 
 // What Sellers make, shown on phones where the wide product photo has no room.
 const MERCH_TILES = [

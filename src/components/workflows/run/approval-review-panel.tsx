@@ -17,6 +17,7 @@ import {
   DESIGNS_READY_STATUSES,
   estimateMockupCount,
   extractMockupSelection,
+  productsAwaitingReview,
 } from "@/helpers/workflow-run";
 import { useSetImageApproval } from "@/hooks/mutations/use-set-image-approval";
 import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
@@ -56,12 +57,16 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
   const { data: templates } = useMockupTemplates();
   const [viewing, setViewing] = useState<number | null>(null);
 
-  const counts = countApprovals(job);
-  const manual = job.requireApproval === true;
   const designsReady = DESIGNS_READY_STATUSES.includes(job.status);
+  // With automatic approval, the products whose designs the content check could not look at wait for the Seller:
+  // they are reviewed here like a manual run (approving checks the design again).
+  const held = job.requireApproval === false && designsReady ? productsAwaitingReview(job) : [];
+  const manual = job.requireApproval === true || held.length > 0;
+  const reviewed = held.length > 0 ? { ...job, products: held } : job;
+  const counts = countApprovals(reviewed);
   const mockupNode = nodes.find((node) => node.data.type === "apply-mockup");
   const selection = mockupNode ? extractMockupSelection(mockupNode.data.config) : null;
-  const estimate = selection && templates ? estimateMockupCount(job, selection, templates) : null;
+  const estimate = selection && templates ? estimateMockupCount(reviewed, selection, templates) : null;
   const makingMockups = mockupState === "running";
 
   const decide = (designImageIds: string[] | null, status: ImageApprovalStatus) =>
@@ -99,11 +104,16 @@ export const ApprovalReviewPanel = ({ job }: { job: BatchJobDetail }) => {
     );
   }
 
-  const productsWithImages = job.products.filter((product) => product.images.length > 0);
+  const productsWithImages = reviewed.products.filter((product) => product.images.length > 0);
   const gallery = designLightboxImages(productsWithImages);
 
   return (
     <section className="space-y-4" aria-label={t("workflowEditor.approvalReview.reviewDesigns")}>
+      {held.length > 0 && (
+        <PanelNotice tone="warning">
+          {t("workflowEditor.approvalReview.heldForReview", { count: held.length })}
+        </PanelNotice>
+      )}
       <div className="bg-card/95 sticky top-0 z-10 -mx-5 space-y-3 border-y px-5 py-3 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-ink-900 text-sm font-semibold">

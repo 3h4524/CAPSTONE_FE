@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { deriveNodeStatuses, hasServerPart, runsPerDesign, showsInputProduct, supportsBatchVideos } from "@/helpers/workflow-run";
+import { deriveNodeStatuses, hasServerPart, runsPerDesign, showsInputProduct, supportsBatchVideos, videoRunProducts } from "@/helpers/workflow-run";
 import { buildWorkflowNode } from "@/test/factories";
 import type { WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
 
@@ -89,5 +89,26 @@ describe("showsInputProduct", () => {
 
   it("hides it when nothing in the workflow uses one product", () => {
     expect(showsInputProduct([])).toBe(false);
+  });
+});
+
+describe("videoRunProducts", () => {
+  const products = [
+    { id: "done", status: "approved" },
+    { id: "new", status: "pending" },
+    { id: "failed", status: "failed" },
+  ];
+
+  it("keeps only the pending products when the workflow makes designs", () => {
+    expect(videoRunProducts([step("design-image"), video({})], products).map((item) => item.id)).toEqual(["new"]);
+  });
+
+  it("keeps every product when nothing is pending", () => {
+    const finished = products.filter((item) => item.status !== "pending");
+    expect(videoRunProducts([step("design-image"), video({})], finished)).toEqual(finished);
+  });
+
+  it("keeps every product when the workflow only makes videos", () => {
+    expect(videoRunProducts([video({})], products)).toEqual(products);
   });
 });

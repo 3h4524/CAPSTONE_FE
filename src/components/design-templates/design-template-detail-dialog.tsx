@@ -219,7 +219,7 @@ export function DesignTemplateDetailDialog({
                       <p className="text-ink-500 mt-5 text-xs font-bold tracking-[0.12em] uppercase">
                         {t("designTemplates.negativePrompt")}
                       </p>
-                      <p className="mt-3 rounded-xl bg-slate-900 p-4 text-sm leading-6 [overflow-wrap:anywhere] whitespace-pre-wrap text-slate-200">
+                      <p className="border-ink-200 bg-card text-ink-700 mt-3 rounded-xl border p-4 text-sm leading-6 [overflow-wrap:anywhere] whitespace-pre-wrap">
                         {template.negativePrompt}
                       </p>
                     </>

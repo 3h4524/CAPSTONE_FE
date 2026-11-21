@@ -45,7 +45,7 @@ export const NodePalette = ({ onNodeAdded }: NodePaletteProps) => {
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div data-guide="workflows.palette" className="flex h-full flex-col">
       <div className="border-b px-4 py-3">
         <h2 className="text-ink-900 text-sm font-semibold">{t("workflowEditor.palette.title")}</h2>
         <p className="text-muted-foreground mt-0.5 text-xs">

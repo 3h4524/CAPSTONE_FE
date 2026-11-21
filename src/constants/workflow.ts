@@ -350,7 +350,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
       target: "etsy",
       template: "auto",
       templateVersion: 2,
-      outputFormat: "portrait",
+      outputFormat: "square",
       durationSeconds: 5,
       assetSelection: "automatic",
       selectedMockupIds: [],

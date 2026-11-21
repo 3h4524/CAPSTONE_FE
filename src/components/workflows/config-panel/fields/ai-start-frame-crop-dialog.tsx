@@ -7,16 +7,18 @@ import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { parseAspectRatio } from "@/helpers/workflow-config";
 import type { MockupAsset, Region } from "@/types/video-workflow";
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
 export function AiStartFrameCropDialog({
-  asset, sceneNumber, landscape, initialCrop, automaticCrop, onClose, onSave,
+  asset, sceneNumber, aspectRatio, initialCrop, automaticCrop, onClose, onSave,
 }: {
   asset: MockupAsset;
   sceneNumber: number;
-  landscape: boolean;
+  /** The video's output ratio, "4:3": the frame MiniMax starts from is cut to it. */
+  aspectRatio: string;
   initialCrop?: Region | null;
   automaticCrop?: Region | null;
   onClose: () => void;
@@ -24,7 +26,8 @@ export function AiStartFrameCropDialog({
 }) {
   const { t } = useTranslation("common");
   const imageRatio = asset.width / asset.height;
-  const targetRatio = landscape ? 16 / 9 : 9 / 16;
+  const [ratioWidth, ratioHeight] = parseAspectRatio(aspectRatio);
+  const targetRatio = ratioWidth / ratioHeight;
   const baseWidth = Math.min(1, targetRatio / imageRatio);
   const baseHeight = Math.min(1, imageRatio / targetRatio);
   const fitCrop = (region: Region): Region => {
@@ -57,7 +60,7 @@ export function AiStartFrameCropDialog({
         <div className="min-h-0 space-y-4 overflow-y-auto p-5">
           <div
             className="bg-muted relative mx-auto max-h-[45dvh] w-full cursor-grab touch-none overflow-hidden rounded-lg active:cursor-grabbing"
-            style={{ aspectRatio: landscape ? "16 / 9" : "9 / 16", maxWidth: landscape ? "min(100%, 80dvh)" : "min(240px, 25.3125dvh)" }}
+            style={{ aspectRatio: `${ratioWidth} / ${ratioHeight}`, maxWidth: `min(${targetRatio >= 1 ? "100%" : `${Math.round(426.67 * targetRatio)}px`}, ${+(45 * targetRatio).toFixed(4)}dvh)` }}
             onPointerDown={(event) => {
               if (event.button !== 0) return;
               const bounds = event.currentTarget.getBoundingClientRect();

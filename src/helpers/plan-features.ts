@@ -297,7 +297,10 @@ export const planIssues = (
         fix: { label: i18n.t("workflowConfig.planLock.useStandard"), patch: { mode: "standard" } },
       });
     }
-    if (config.outputFormat === "landscape" && !hasFeature(entitlements, "all_video_formats")) {
+    if (
+      ["landscape", "classic_landscape", "classic_portrait"].includes(String(config.outputFormat)) &&
+      !hasFeature(entitlements, "all_video_formats")
+    ) {
       issues.push({
         message: i18n.t("workflowConfig.planLock.landscapePro"),
         fix: { label: i18n.t("workflowConfig.planLock.usePortrait"), patch: { outputFormat: "portrait" } },

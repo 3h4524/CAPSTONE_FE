@@ -59,7 +59,7 @@ describe("VideoSceneQualityReview", () => {
       technical: { durationSeconds: 12, width: 1080, height: 1920, fps: 30, codec: "h264", pixelFormat: "yuv420p", bytes: 2097152, hasAudio: false, fullDecode: true },
       etsyCompliance: { status: "pass_with_warning", checks: [
         { key: "duration", status: "pass", detail: "12 seconds; policy is 5–15 seconds." },
-        { key: "aspectRatio", status: "warning", detail: "The output may be cropped." },
+        { key: "resolution", status: "warning", detail: "720×1280; Etsy recommends at least 1080 px." },
       ] },
     });
     renderPanel();
@@ -67,10 +67,10 @@ describe("VideoSceneQualityReview", () => {
     expect(screen.getByText("1080 × 1920")).toBeInTheDocument();
     expect(screen.getByText("2.00 MB")).toBeInTheDocument();
     expect(screen.getByText("12 seconds; policy is 5–15 seconds.")).toBeInTheDocument();
-    expect(screen.getByText("The output may be cropped.")).toBeInTheDocument();
+    expect(screen.getByText("720×1280; Etsy recommends at least 1080 px.")).toBeInTheDocument();
   });
 
-  it("leaves the audio check out and counts the rest", async () => {
+  it("leaves the audio and ratio checks out and counts the rest", async () => {
     getVideoQualitySummary.mockResolvedValue({
       videoId: video.id, status: "warning", scenes: [], technical: { fullDecode: true },
       etsyCompliance: { status: "pass_with_warning", checks: [
@@ -81,10 +81,50 @@ describe("VideoSceneQualityReview", () => {
       ] },
     });
     renderPanel();
-    expect(await screen.findByText("Aspect ratio")).toBeInTheDocument();
+    expect(await screen.findByText("File format")).toBeInTheDocument();
+    expect(screen.queryByText("Aspect ratio")).not.toBeInTheDocument();
+    expect(screen.queryByText("The output may be cropped.")).not.toBeInTheDocument();
     expect(screen.queryByText("No audio track is present.")).not.toBeInTheDocument();
     expect(screen.getByText(/2 passed/)).toBeInTheDocument();
-    expect(screen.getByText("1 to review")).toBeInTheDocument();
+    expect(screen.queryByText(/to review/)).not.toBeInTheDocument();
+  });
+
+  // Results saved before the ratio stopped being judged carry "pass_with_warning" only because of it.
+  it("does not warn about a ratio in an older result whose only warning was the ratio", async () => {
+    getVideoQualitySummary.mockResolvedValue({
+      videoId: video.id, status: "pass", scenes: [], technical: { fullDecode: true },
+      etsyCompliance: { status: "pass_with_warning", checks: [
+        { key: "duration", status: "pass", detail: "5 seconds; policy is 5–15 seconds." },
+        { key: "aspectRatio", status: "warning", detail: "The output may be cropped." },
+      ] },
+    });
+    renderPanel();
+    expect(await screen.findByText("Final video quality")).toBeInTheDocument();
+    expect(screen.queryByText("Pass with warnings")).not.toBeInTheDocument();
+    expect(screen.queryByText("The output may be cropped.")).not.toBeInTheDocument();
+  });
+
+  // Automatic scene scoring is off by default: the server records "skipped" and counts it as done.
+  it("passes a video whose checks passed and whose scene scoring was skipped", async () => {
+    getVideoQualitySummary.mockResolvedValue({
+      videoId: video.id, status: "completed", technical: { fullDecode: true },
+      scenes: [{ sceneOrder: 0, status: "skipped", detail: "Automatic scene evaluation is turned off.", metrics: {} }],
+      etsyCompliance: { status: "pass", checks: [{ key: "duration", status: "pass", detail: "9 seconds; policy is 5–15 seconds." }] },
+    });
+    renderPanel();
+    expect(await screen.findByText(/Automatic scene scoring was skipped/)).toBeInTheDocument();
+    expect(screen.queryByText("Needs review")).not.toBeInTheDocument();
+    expect(screen.queryByText(/missing or could not finish/)).not.toBeInTheDocument();
+  });
+
+  it("still asks for a review when a scene's scoring failed", async () => {
+    getVideoQualitySummary.mockResolvedValue({
+      videoId: video.id, status: "failed", technical: { fullDecode: true },
+      scenes: [{ sceneOrder: 0, status: "uncertain", detail: null, metrics: {} }],
+      etsyCompliance: { status: "pass", checks: [{ key: "duration", status: "pass", detail: "9 seconds; policy is 5–15 seconds." }] },
+    });
+    renderPanel();
+    expect(await screen.findByText("Needs review")).toBeInTheDocument();
   });
 
   it("explains missing Etsy data and displays scene measurements without pass thresholds", async () => {

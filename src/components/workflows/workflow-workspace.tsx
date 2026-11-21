@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { PageLoading } from "@/components/commons/layout/page-loading";
 import { SectionLoading } from "@/components/commons/loading/section-loading";
+import { PageGuide } from "@/components/commons/onboarding/page-guide";
 import { Button } from "@/components/ui/button";
 import { AllowanceBanner } from "@/components/workflows/allowance-banner";
 import { WorkflowCanvas } from "@/components/workflows/canvas/workflow-canvas";
@@ -263,6 +264,7 @@ export const WorkflowWorkspace = () => {
       className="flex min-h-0 flex-1 flex-col xl:pr-(--assistant-inset) [@media(min-height:560px)]:min-h-[560px]"
       style={{ "--assistant-inset": isAssistantOpen ? `${assistantWidth}px` : "0px" } as CSSProperties}
     >
+      <PageGuide guideKey="workflows" requiresDesktop />
       <WorkflowToolbar
         workflows={workflows}
         activeWorkflowId={activeWorkflowId}

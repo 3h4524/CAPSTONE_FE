@@ -50,6 +50,19 @@ export const hasListingSteps = (nodes: WorkflowNode[]) => nodes.some((node) => n
 export const hasBatchSteps = (nodes: WorkflowNode[]) =>
   nodes.some((node) => node.data.type === "prompt-synthesis" || node.data.type === "design-image");
 
+/**
+ * The products of the batch the next run makes videos for. Mirrors the server (`RunCostEstimateService`): a workflow
+ * that makes designs runs on the batch's pending products only, so a product finished by an earlier run gets no new
+ * video; with nothing pending, or without design steps, the run goes on with every product.
+ */
+export const videoRunProducts = <T extends { status: string }>(nodes: WorkflowNode[], products: T[]): T[] => {
+  const makesDesigns = nodes.some((node) =>
+    ["prompt-synthesis", "design-image", "design-approval"].includes(node.data.type)
+  );
+  const pending = products.filter((product) => product.status === "pending");
+  return makesDesigns && pending.length > 0 ? pending : products;
+};
+
 /** The workflow makes a video, so a run includes the server's video run. */
 export const hasVideoSteps = (nodes: WorkflowNode[]) => nodes.some((node) => node.data.type === "generate-video");
 
@@ -249,7 +262,9 @@ export const deriveNodeStatuses = (nodes: WorkflowNode[], run: RunSnapshot): Rec
         if (designsReady) {
           // Paused until the person approves designs and asks for the mock-ups (or, with no mock-up step, has reviewed them all).
           const waiting = run.job?.requireApproval === true && run.mockupState === "idle" && (hasMockupNode || countApprovals(run.job).pending > 0);
-          return waiting ? "waiting_for_review" : "success";
+          // Automatic approval left some designs for the Seller: their content check could not run.
+          const held = run.job?.requireApproval === false && productsAwaitingReview(run.job).length > 0;
+          return waiting || held ? "waiting_for_review" : "success";
         }
         return status === "failed" ? "skipped" : "idle";
       case "apply-mockup":
@@ -327,6 +342,17 @@ export const countApprovals = (job: BatchJobDetail): ApprovalCounts => {
   );
   return counts;
 };
+
+/**
+ * The products still waiting for the Seller: designs to review and none approved. With automatic approval these are the
+ * ones whose content check could not run (Gemini timed out or failed), which are never approved without the Seller.
+ */
+export const productsAwaitingReview = (job: BatchJobDetail) =>
+  job.products.filter(
+    (product) =>
+      product.images.some((image) => image.approvalStatus !== "approved" && image.approvalStatus !== "rejected") &&
+      !product.images.some((image) => image.approvalStatus === "approved")
+  );
 
 type EstimatedTemplate = { id: string; productType: string; allowRecolor: boolean };
 

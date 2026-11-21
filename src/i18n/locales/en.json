@@ -1869,7 +1869,7 @@
         "standard": "Standard",
         "generationModeAria": "Scene {{scene}} generation mode",
         "notInPlan": "Not included in your plan",
-        "aiVideoNotInPlan": "AI video is not included in your plan. Switch this scene to Standard.",
+        "aiVideoNotInPlan": "AI video is not included in your plan. Switch this scene to Photo motion.",
         "decreaseDurationAria": "Decrease scene {{scene}} duration",
         "sceneDurationAria": "Scene {{scene}} duration",
         "increaseDurationAria": "Increase scene {{scene}} duration",
@@ -1882,8 +1882,35 @@
         "choosePerScene": "Choose per scene",
         "aiVideoModelAria": "Scene {{scene}} AI video model",
         "default": "Default",
-        "aiTemplate": "AI template",
-        "aiTemplateAria": "Scene {{scene}} AI template",
+        "aiTemplate": "Video style",
+        "aiTemplateAria": "Scene {{scene}} video style",
+        "startFromTemplate": "Start from a template",
+        "startFromTemplateDescription": "A ready-made set of scenes to start from. You can still change, add or remove scenes below.",
+        "customizedSuffix": "customized",
+        "loadingShort": "Loading…",
+        "replaceScenesQuestion": "Replace your {{count}} current scenes with {{name}}?",
+        "replaceScenesDetail": "Their selected start frames are removed. Your output format, shared model, shared mockup and caption stay unchanged.",
+        "keepCurrentScenes": "Keep current scenes",
+        "startFromScratch": "Start from scratch",
+        "startFromScratchKeep": "Build your own list of scenes. The scenes you have now stay as they are.",
+        "startFromScratchDescription": "Add scenes one by one and choose how each one is made.",
+        "packMeta": "{{count}} scenes · {{seconds}}s",
+        "tagAiVideo": "AI video · uses AI credits",
+        "tagPhotoMotion": "Photo motion · no AI cost",
+        "photoMotion": "Photo motion",
+        "photoMotionDescription": "Zooms and pans across a product image. Ready in seconds, no AI cost.",
+        "aiVideoDescription": "AI brings the image to life as a real 4 to 15 second clip. Uses AI credits.",
+        "aiVideoNeedsSeconds": "Needs at least 4 seconds. Shorten the other scenes first.",
+        "lifestyleFramesDescription": "{{name}} starts from a lifestyle image: a model wearing the product. The selected image is saved when you click it.",
+        "thisStyle": "This style",
+        "noLifestyleImage": "No approved lifestyle image yet",
+        "noLifestyleImageDescription": "Make a lifestyle image of this design on a model at Mockup Approval and approve it, or switch this scene to another video style.",
+        "noScenesTitle": "No scenes yet",
+        "noScenesDescription": "Add the first scene, or pick a template above, to set up this video.",
+        "addFirstScene": "Add first scene",
+        "sharedStartFramesNote": "Start frames are product images, so they are not set in the shared settings. Each product starts from its default mockup ({{image}}). Choose a product in Video product to see or change its start frames.",
+        "sharedStartFramesLifestyle": "its lifestyle image",
+        "sharedStartFramesDefault": "its hero image, or its lifestyle image for a scene with a model",
         "shotTemplate": "Shot template",
         "shotTemplateAria": "Scene {{scene}} shot template",
         "startFrameAria": "Scene {{scene}} start frame",
@@ -1959,6 +1986,11 @@
         "noSourceDefault": "Approve at least one product image before generating this scene.",
         "noSourceFilterNote": "Also check that the image is included in Apply Mockup's allowed images and selected artwork group.",
         "advancedSettings": "Advanced camera, motion and lighting",
+        "customPromptSection": "Advanced: video prompt",
+        "customPromptEdited": "Edited",
+        "customPrompt": "Video prompt for this scene",
+        "customPromptHint": "Starts from the template's prompt. Words in {{braces}}, such as {{example}}, are filled in for this scene, and the product-preservation rules are always added after it. The content check reads what you write here.",
+        "customPromptReset": "Use the template's prompt",
         "settingAria": "Scene {{scene}} {{setting}}",
         "customDirection": "Custom direction",
         "viewPromptBlocks": "View compiled prompt building blocks | v{{version}}",
@@ -1972,7 +2004,7 @@
         "fullVideoEditing": "Full video editing",
         "fullVideo": "Full video",
         "aboutEstimates": "About estimates and keyframes",
-        "aboutEstimatesBody": "The AI estimate assumes each AI clip is new; the final quote accounts for reusable clips before rendering. Standard scenes use smooth camera movement between the selected framing points. Keyframes combine the shared model, an approved product source and up to two optional visual references. Review AI clips and every generated keyframe for product fidelity.",
+        "aboutEstimatesBody": "The AI estimate assumes each AI clip is new; the final quote accounts for reusable clips before rendering. Photo motion scenes use smooth camera movement between the selected framing points. Keyframes combine the shared model, an approved product source and up to two optional visual references. Review AI clips and every generated keyframe for product fidelity.",
         "closeImagePreview": "Close image preview",
         "imagePreview": "Image preview",
         "selectedStartFrameForScene": "Selected start frame image for scene {{scene}}",
@@ -2007,7 +2039,9 @@
         "videoFormats": {
           "portrait": "Portrait",
           "square": "Square",
-          "landscape": "Landscape"
+          "landscape": "Landscape",
+          "classic_landscape": "Classic landscape",
+          "classic_portrait": "Classic portrait"
         },
         "productCount_one": "{{count}} product",
         "productCount_other": "{{count}} products",
@@ -2123,7 +2157,7 @@
         "useManualReview": "Use manual review",
         "aiVideoPro": "AI Scene Video is part of Pro. Your plan renders Standard Showcase videos.",
         "useStandard": "Use Standard Showcase",
-        "landscapePro": "Landscape video is part of Pro. Your plan renders square and portrait.",
+        "landscapePro": "This video format is part of Pro. Your plan renders square and portrait.",
         "usePortrait": "Use portrait"
       },
       "validation": {
@@ -2190,8 +2224,8 @@
         "aria": "Which product's video settings",
         "allProducts": "All products",
         "allProductsShared": "All products (shared settings)",
-        "ownCount": "{{own}} of {{total}} products have their own settings; the others use these.",
-        "everyProductShared": "Every product uses these settings. Choose a product to give its video settings of its own.",
+        "ownCount": "{{own}} of the {{total}} products to run have their own settings; the others use these.",
+        "everyProductShared": "The {{total}} products to run use these settings. Choose a product to give its video settings of its own.",
         "saveToShared": "Save to put {{name}} back on the shared settings.",
         "unsaved": "Unsaved changes to {{name}}. Save keeps them for this product only; the shared settings stay as they are.",
         "hasOwn": "{{name}} has its own settings. Everything below applies to this product only.",
@@ -2354,8 +2388,10 @@
         "mockupOnce": "Select each mockup once.",
         "sceneOrderOnce": "Use each mockup once in the scene order.",
         "framingOnce": "Configure each mockup's framing once.",
+        "addScene": "Add at least one scene to the video.",
         "sceneInstructionsMax": "Keep scene instructions under 500 characters.",
         "keyframeDirectionsMax": "Keep keyframe directions under 500 characters.",
+        "customVideoPromptMax": "Keep each scene's video prompt under {{max}} characters.",
         "cropInsideImage": "The start frame crop must stay inside the image.",
         "sharedDirectionMax": "Keep shared AI scene direction under 500 characters.",
         "chooseApprovedMockup": "Choose at least one approved mockup.",
@@ -3207,7 +3243,9 @@
         "noLongerWaiting": "This video is no longer waiting for your review.",
         "version": "Version {{version}}",
         "approveVideo": "Approve video",
-        "rejectVideo": "Reject video"
+        "rejectVideo": "Reject video",
+        "downloadVideo": "Download video",
+        "downloadMp4": "Download MP4"
       },
       "runGroup": {
         "runStatuses": {
@@ -3337,6 +3375,9 @@
         "approval": "Approval",
         "autoApproved": "This run approves every design automatically, so they continue to the mock-ups without a review.",
         "startedBeforeReview": "This run started before designs could be reviewed, so they continue without approval.",
+        "heldForReview_one": "The content check could not look at the designs of {{count}} product, so they were not approved automatically. Review them here: approving checks the design again.",
+        "heldForReview_other": "The content check could not look at the designs of {{count}} products, so they were not approved automatically. Review them here: approving checks each design again.",
+        "heldToast": "Some designs could not be checked automatically. Approve them in Design approval.",
         "reviewDesigns": "Review designs",
         "stillGenerating": "The designs are still being generated. You can review them as soon as the job finishes.",
         "approvedCount": "{{count}} approved",
@@ -3920,7 +3961,8 @@
           "passWithWarnings": "Pass with warnings",
           "passWithWarningsDetail": "The video passed required checks. Review the Etsy warnings below.",
           "pass": "Pass",
-          "passDetail": "The saved technical and Etsy checks passed and scene evaluations are complete."
+          "passDetail": "The saved technical and Etsy checks passed and scene evaluations are complete.",
+          "passSkippedDetail": "The saved technical and Etsy checks passed. Automatic scene scoring was skipped."
         },
         "finalVideoQuality": "Final video quality",
         "etsyChecks": "Etsy listing checks",
@@ -4397,8 +4439,28 @@
         "periodDays": "{{count}} days"
       },
       "onboarding": {
-        "title": "Start your first batch",
-        "description": "Four steps from a CSV to a listing ready for Etsy. Your dashboard fills in as you go.",
+        "title": "Get your workspace ready",
+        "description": "Four steps from connecting a provider to your first workflow run. Each one ticks itself off as you do it.",
+        "progress": "{{done}} of {{count}} done",
+        "dismiss": "Hide checklist",
+        "steps": {
+          "apiKeys": {
+            "title": "Connect a provider",
+            "description": "Add a Gemini, Ideogram or Printify key so batches can generate."
+          },
+          "batches": {
+            "title": "Create a batch",
+            "description": "Import a CSV or add products by hand."
+          },
+          "mockups": {
+            "title": "Add mock-up templates",
+            "description": "Upload your product photos or pick from the system templates."
+          },
+          "workflows": {
+            "title": "Run a workflow",
+            "description": "Turn approved designs into mock-ups, video and a listing."
+          }
+        },
         "start": "Start",
         "open": "Open"
       },
@@ -4456,6 +4518,96 @@
         "unavailableTitle": "Your dashboard is temporarily unavailable",
         "unavailableHint": "Please refresh the page and try again.",
         "overview": "Overview of the last {{days}} days"
+      }
+    },
+    "pageGuides": {
+      "replay": "Show guide",
+      "locale": {
+        "back": "Back",
+        "close": "Close",
+        "next": "Next",
+        "last": "Done",
+        "skip": "Skip"
+      },
+      "apiKeys": {
+        "steps": {
+          "connect": {
+            "title": "Connect your services",
+            "body": "Podivo runs on your own Gemini, Ideogram and Printify accounts. Add each provider's key here so batches can generate."
+          },
+          "readiness": {
+            "title": "Workflow readiness",
+            "body": "These three stages drive every batch. A green check here means the pipeline can run from start to publish."
+          },
+          "add": {
+            "title": "Add a connection",
+            "body": "Pick a provider, paste its key and confirm. Add several keys and switch between them any time."
+          },
+          "manage": {
+            "title": "Manage connections",
+            "body": "Reconnect an expired key, check when it was last used or remove it. The dashboard checklist ticks itself once a key is active."
+          }
+        }
+      },
+      "batches": {
+        "steps": {
+          "start": {
+            "title": "Batches",
+            "body": "A batch groups the products that share one product line and one run."
+          },
+          "actions": {
+            "title": "Create or import",
+            "body": "Start a batch by hand, or import a CSV with one product per row. The batch needs a product line before anything runs."
+          },
+          "list": {
+            "title": "Your batches",
+            "body": "Every batch lives here with its product counts. Once you create one, this panel lists it and you can switch between them."
+          },
+          "products": {
+            "title": "Products in the batch",
+            "body": "Every row is a product with its own status. Failed products can go back to pending without touching the rest."
+          },
+          "help": {
+            "title": "How it works",
+            "body": "Reopen the numbered walkthrough whenever you need the pipeline in one screen."
+          }
+        }
+      },
+      "mockups": {
+        "steps": {
+          "start": {
+            "title": "Mock-up library",
+            "body": "Mock-ups turn a flat design into a product photo; the library keeps the product and model photos your batches reuse."
+          },
+          "tabs": {
+            "title": "Two kinds of photos",
+            "body": "Product photos place your design on the product; model photos add a person wearing it."
+          },
+          "templates": {
+            "title": "Product photos",
+            "body": "Use the system templates or upload your own print-area photo, then pick the garment colour when you run the workflow."
+          },
+          "models": {
+            "title": "Model photos",
+            "body": "Open this tab to upload or generate lifestyle photos of people wearing the product."
+          }
+        }
+      },
+      "workflows": {
+        "steps": {
+          "start": {
+            "title": "Workflow builder",
+            "body": "The canvas turns one batch into designs, mock-ups, a video and a listing. Validate saves you a paid run, and Run asks once for the cost."
+          },
+          "palette": {
+            "title": "Node palette",
+            "body": "Drag a node onto the canvas, or click it to place it. The default pipeline already wires the nine steps you need."
+          },
+          "canvas": {
+            "title": "Canvas",
+            "body": "Select a node to edit it on the right. Nodes show live status while a run moves through them."
+          }
+        }
       }
     },
     "shop": {
@@ -4922,34 +5074,27 @@
           "1": "Processing 61 / 84",
           "2": "Queued"
         },
-        "variations": "4 variations",
-        "designTiles": {
-          "0": "Vintage Tee",
-          "1": "Floral Poster",
-          "2": "Die-cut Sticker",
-          "3": "Canvas Tote"
-        },
-        "transparentPng": "Transparent PNG",
-        "printReady": "300 DPI print-ready",
+        "printReady": "Print-ready PNG",
         "moreTags": "+ 7 more",
         "listingChecks": {
           "0": "Keyword-rich title",
           "1": "13 / 13 tags filled",
-          "2": "Materials + attributes set"
+          "2": "SEO score with clear fixes"
         },
         "platformDetails": {
-          "etsy": "128 live listings",
+          "etsy": "Drafts with all assets",
           "printify": "Fulfillment synced"
         },
         "connected": "Connected",
-        "moreMarketplaces": "More marketplaces on the way",
-        "connect": "+ Connect",
         "etsyVideo": "Etsy video",
-        "verticalCut": "9:16 cut included"
+        "verticalCut": "9:16 vertical",
+        "designPrompt": "“vintage outdoors, warm print style”",
+        "designCount": "{{count}} designs",
+        "mockupsIncluded": "Mockups included"
       },
       "cta": {
         "title": "Ready to launch your first batch?",
-        "description": "Upload one product idea and watch the workflow generate, score, and publish it.",
+        "description": "Upload one product idea and watch the workflow generate, score, and send it to your shop.",
         "primary": "Get started for free",
         "secondary": "Back to home"
       },
@@ -4957,42 +5102,42 @@
         "design": {
           "title": "AI Design Generation",
           "tagline": "Original artwork, on demand",
-          "description": "Describe your niche and product idea once. The AI workflow produces original, print-ready designs plus lifestyle mockups across apparel, posters, stickers, and totes.",
+          "description": "Describe your niche and product idea once. The AI workflow produces original, print-ready designs plus mockups on t-shirts, hoodies, mugs, posters, and tote bags.",
           "bullets": {
             "0": "Prompt-to-design in minutes, no designer required",
             "1": "Print-ready exports with transparent backgrounds",
-            "2": "Auto mockups on shirts, posters, stickers, and totes",
+            "2": "Auto mockups on tees, hoodies, mugs, posters, and totes",
             "3": "Variations per design to test what sells"
           }
         },
         "video": {
           "title": "Video Creation",
           "tagline": "Listings that move",
-          "description": "Every design ships with a short promo video: animated mockup showcases rendered in listing-ready and vertical formats for Etsy, TikTok, and Reels.",
+          "description": "Turn approved mockups into short promo videos: animated product showcases rendered in vertical format for Etsy listings and social feeds.",
           "bullets": {
             "0": "Auto-generated from your designs, no editing skills needed",
-            "1": "Listing-ready landscape plus vertical social cuts",
+            "1": "Vertical 9:16 videos for Etsy listings and social feeds",
             "2": "Zoom, rotate, and lifestyle scene transitions",
-            "3": "Captions and hooks matched to the listing copy"
+            "3": "Background music from a built-in track library"
           }
         },
         "listing": {
           "title": "Etsy Listing Content",
           "tagline": "Copy written to rank",
-          "description": "Get complete listing copy tuned for Etsy search: keyword-rich titles, persuasive descriptions, all 13 tags, materials, and attributes filled in.",
+          "description": "Get complete listing copy tuned for Etsy search: keyword-rich titles, persuasive descriptions, and all 13 tags, with an SEO score before you approve.",
           "bullets": {
             "0": "SEO titles built from real buyer keywords",
             "1": "Descriptions structured to convert browsers to buyers",
-            "2": "Full 13-tag sets plus materials and attributes",
+            "2": "Full 13-tag sets with an SEO score and clear fixes",
             "3": "Tone matched to your shop and niche"
           }
         },
         "batch": {
           "title": "Batch Processing",
           "tagline": "One upload, hundreds of listings",
-          "description": "Drop a single CSV with your product ideas and let the workflow run: designs, videos, and listing content generated for the whole batch while you review by exception.",
+          "description": "Fill in one Excel template with your product ideas and let the workflow run: designs, videos, and listing content generated for the whole batch while you review by exception.",
           "bullets": {
-            "0": "CSV import for ideas, niches, and product types",
+            "0": "Excel import for up to 500 products with niches and keywords",
             "1": "Parallel generation across the entire batch",
             "2": "Live progress per item with retry on failures",
             "3": "Review queue that surfaces only what needs you"
@@ -5000,15 +5145,19 @@
         },
         "platforms": {
           "title": "Platform Integrations",
-          "tagline": "Publish everywhere in one click",
-          "description": "Approved listings go live straight from Podivo. Designs, mockups, videos, and copy are packaged and pushed to Etsy and connected marketplaces with inventory in sync.",
+          "tagline": "From studio to shop in one click",
+          "description": "Approved listings leave Podivo fully packaged. Designs, mockups, videos, and copy go to Etsy as a draft listing, or to Printify for fulfillment and publishing.",
           "bullets": {
-            "0": "One-click publish to Etsy with all assets attached",
+            "0": "One-click Etsy draft with images and video attached",
             "1": "Printify connection for seamless fulfillment",
-            "2": "Listings stay in sync when you edit in Podivo",
+            "2": "Sync Printify products after you edit in Podivo",
             "3": "Draft mode for final review before going live"
           }
         }
+      },
+      "intro": {
+        "title": "Everything Podivo automates",
+        "description": "Designs, mockups, promo videos, Etsy listings, and batch runs, connected in one AI workflow."
       }
     },
     "landing": {
@@ -5018,7 +5167,7 @@
         "items": {
           "0": {
             "title": "Accelerate Operations",
-            "description": "Automate manual tasks and process large volumes of data directly, cutting busywork during peak operations."
+            "description": "Run whole batches of products through design, mockup, video, and listing generation, cutting busywork during peak seasons."
           },
           "1": {
             "title": "Save Costs",
@@ -5026,7 +5175,7 @@
           },
           "2": {
             "title": "Smart Management",
-            "description": "Track revenue, queues, and operational performance in real time."
+            "description": "Track shop sales, generation progress, and plan usage from one dashboard."
           }
         }
       },
@@ -5058,7 +5207,7 @@
         },
         "apcsRows": {
           "0": {
-            "label": "CSV preparation",
+            "label": "Spreadsheet preparation",
             "value": "2 hours"
           },
           "1": {
@@ -5070,7 +5219,7 @@
             "value": "3 hours"
           },
           "3": {
-            "label": "1-click publish",
+            "label": "1-click send to shop",
             "value": "< 1 hour"
           }
         },
@@ -5083,7 +5232,6 @@
         "primary": "Get started for free"
       },
       "ecosystem": {
-        "eyebrow": "Features",
         "title": "Everything you need to launch POD listings",
         "description": "Designs, videos, listing copy, batch runs, and publishing unified in one AI workflow.",
         "cta": "Explore all features",
@@ -5094,7 +5242,7 @@
           },
           "1": {
             "title": "Video Creation",
-            "description": "Auto-generate promo videos and mockup showcases from your designs for listings and socials."
+            "description": "Auto-generate vertical promo videos and mockup showcases from your designs for listings and socials."
           },
           "2": {
             "title": "Etsy Listing Content",
@@ -5102,11 +5250,11 @@
           },
           "3": {
             "title": "Batch Processing",
-            "description": "Upload once via CSV and generate hundreds of designs, videos, and listings in a single run."
+            "description": "Import up to 500 products from one Excel sheet and generate designs, videos, and listings in a single run."
           },
           "4": {
             "title": "Platform Integrations",
-            "description": "Push approved listings straight to Etsy and other marketplaces in one click, assets included."
+            "description": "Send approved listings to Etsy as drafts with images and video attached, or publish through Printify."
           }
         }
       },
@@ -5116,57 +5264,81 @@
         "items": {
           "0": {
             "question": "How long does setup take?",
-            "answer": "Uploading your first batch takes 15 to 30 minutes. Our team helps you operate the same day."
+            "answer": "Creating an account takes a minute. Filling in the Excel template for your first batch usually takes 15 to 30 minutes."
           },
           "1": {
             "question": "Do I need additional hardware?",
             "answer": "No. Podivo runs on the web, so your existing computer is enough to manage generation."
           },
           "2": {
-            "question": "Does the plan cover everything?",
-            "answer": "The package includes storage, security, and feature updates with no hidden costs."
+            "question": "What do the plans include?",
+            "answer": "Each plan comes with a monthly quota for designs, mockups, videos, and listings. Higher plans add AI video, lifestyle mockups, and automatic approval. You can check your remaining usage at any time."
           },
           "3": {
             "question": "How does support work?",
-            "answer": "Our team replies 24/7 via chat and email, with critical issues prioritized for remote handling."
+            "answer": "Open a support ticket from your dashboard, attach screenshots if needed, and our team replies to you there."
           }
         },
         "showFewer": "Show fewer",
-        "showAll": "Show all {{count}} questions"
+        "showAll": "Show all {{count}} questions",
+        "supportHint": "Can't find your answer?",
+        "supportCta": "Contact support"
       },
       "hero": {
         "title": "Scale Your POD Empire at AI Speed",
         "description": "Turn product ideas into designs, copy, and Etsy-ready listings in minutes with AI.",
         "primary": "Get started for free",
         "secondary": "See how it works",
-        "imageAlt": "Podivo Studio dashboard showing AI design generation progress and product mockup thumbnails"
+        "eyebrow": "AI content studio for Etsy POD",
+        "titleLead": "Scale Your POD Empire at",
+        "titleHighlight": "AI Speed",
+        "worksWith": "Works with"
       },
       "workflow": {
-        "eyebrow": "How it works",
-        "title": "From product idea to published listing in 4 steps",
-        "description": "Upload once. Podivo runs the AI workflow, scores SEO, and publishes everywhere.",
+        "title": "From product idea to Etsy-ready listing in 4 steps",
+        "description": "Upload once. Podivo runs the AI workflow, scores SEO, and sends listings to your shop.",
         "steps": {
           "01": {
             "title": "Upload Product Info",
-            "description": "Drop in your product idea, niche, and details, single item or bulk CSV, to kick off the workflow.",
-            "imageAlt": "Spreadsheet data transforming into a stream of particles"
+            "description": "Add your product idea, niche, and keywords, one at a time or in bulk from an Excel sheet, to kick off the workflow."
           },
           "02": {
             "title": "AI Generates Assets",
-            "description": "The connected AI workflow creates designs, mockup images, promo video, and full listing copy with titles, descriptions, and tags.",
-            "imageAlt": "AI generating designs and apparel mockups on glass panels"
+            "description": "The connected AI workflow creates designs, mockup images, promo video, and full listing copy with titles, descriptions, and tags."
           },
           "03": {
             "title": "Review SEO Score",
-            "description": "Every listing gets an SEO score with clear fixes. Approve only when titles, tags, and copy are ready to rank.",
-            "imageAlt": "Dashboard showing SEO scores and listing quality checks"
+            "description": "Every listing gets an SEO score with clear fixes. Approve only when titles, tags, and copy are ready to rank."
           },
           "04": {
-            "title": "Publish Everywhere",
-            "description": "Push approved listings live to Etsy and other platforms in one click, assets included.",
-            "imageAlt": "Storefront icon with growth charts and publish notifications"
+            "title": "Send to Your Shop",
+            "description": "Send approved listings to Etsy as drafts with all assets attached, or publish them through Printify."
           }
+        },
+        "visuals": {
+          "product": "Product",
+          "niche": "Niche",
+          "keywords": "Keywords",
+          "generating": "Generating assets",
+          "seoChecks": {
+            "0": "Keywords in title",
+            "1": "13 / 13 tags filled",
+            "2": "Description length"
+          },
+          "attached": "Images + video attached"
         }
+      },
+      "preview": {
+        "batchDetail": "{{count}} products",
+        "generating": "Generating",
+        "tagsFilled": "13/13 tags filled",
+        "etsyDraft": "Etsy draft"
+      },
+      "productTypes": {
+        "tshirt": "T-shirt",
+        "poster": "Poster",
+        "toteBag": "Tote bag",
+        "mug": "Mug"
       }
     },
     "batchJobs": {
@@ -5672,14 +5844,15 @@
           "reply": "Reply",
           "priority": "{{priority}} priority",
           "jobStatus": {
-            "queued": "queued",
-            "pending": "pending",
-            "processing": "processing",
-            "running": "running",
-            "paused": "paused",
-            "completed": "completed",
-            "failed": "failed",
-            "cancelled": "cancelled"
+            "queued": "Queued",
+            "pending": "Pending",
+            "processing": "Processing",
+            "running": "Running",
+            "paused": "Paused",
+            "completed": "Completed",
+            "failed": "Failed",
+            "cancelled": "Cancelled",
+            "partiallyCompleted": "Partially completed"
           },
           "ticketStatus": {
             "open": "Open",

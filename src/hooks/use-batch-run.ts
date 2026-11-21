@@ -10,6 +10,7 @@ import { RUN_GROUP_PARAM } from "@/constants/run-group";
 import { getErrorMessage } from "@/helpers/error-message";
 import { countProductTypes } from "@/helpers/mockup-template";
 import { showWorkflowActionToast } from "@/helpers/toast";
+import { reportWorkflowContentIssues } from "@/helpers/workflow-content-issues";
 import { effectiveMockupTarget } from "@/helpers/workflow-graph";
 import {
   ACTIVE_JOB_STATUSES,
@@ -20,11 +21,14 @@ import {
   FINISHED_JOB_STATUSES,
   isRunBusy,
   narrowMockupSelection,
+  productsAwaitingReview,
   validateRunnable,
 } from "@/helpers/workflow-run";
 import { NothingPendingError, prepareRun, RunBlockedError } from "@/helpers/workflow-run-prepare";
 import { useBatchJob } from "@/hooks/queries/use-batch-job";
+import { i18n } from "@/i18n/client";
 import { useWorkflowStore } from "@/stores/workflow";
+import { useWorkflowContentIssuesStore } from "@/stores/workflow-content-issues";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 
@@ -209,11 +213,15 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
   useEffect(() => {
     const status = job?.status ?? null;
     if (previousStatus.current && ACTIVE_JOB_STATUSES.includes(previousStatus.current) && status && FINISHED_JOB_STATUSES.includes(status)) {
-      const needsReview = useWorkflowRunStore.getState().job?.requireApproval === true;
+      const finished = useWorkflowRunStore.getState().job;
+      const needsReview = finished?.requireApproval === true;
+      // Automatic approval leaves the designs whose content check could not run for the Seller.
+      const held = finished?.requireApproval === false && productsAwaitingReview(finished).length > 0;
       if (needsReview && status !== "failed") {
         // The panel stays where the person left it (often on the designs being made): the note says where to go next.
         showWorkflowActionToast("info", "Designs are ready. Approve the ones you want in Design approval, then continue to the mock-ups.");
-      } else if (status === "completed") showWorkflowActionToast("success", "Image generation finished.");
+      } else if (held && status !== "failed") showWorkflowActionToast("warning", i18n.t("workflowEditor.approvalReview.heldToast"));
+      else if (status === "completed") showWorkflowActionToast("success", "Image generation finished.");
       else if (status === "partially_completed") showWorkflowActionToast("warning", "Image generation finished, but some products failed. Open the Design image node to retry them.");
       else showWorkflowActionToast("error", "Image generation failed.");
       // The "Previous runs" list shows each run's status, so it must not keep the old one.
@@ -293,6 +301,7 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
           workflowId: activeWorkflowId,
         });
         showWorkflowActionToast("success", "Image generation started.");
+        useWorkflowContentIssuesStore.getState().clear();
       }
       run.setStep("watching");
       setRunParam(router, prepared.batchJobId, options.videoFollows);
@@ -310,6 +319,8 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
       }
       useWorkflowRunStore.getState().reset();
       showWorkflowActionToast("error", error instanceof RunBlockedError ? error.message : getErrorMessage(error));
+      // A content-policy refusal also marks the setting it names (the prompt step's extra instructions).
+      reportWorkflowContentIssues(error);
       return "blocked";
     }
   };

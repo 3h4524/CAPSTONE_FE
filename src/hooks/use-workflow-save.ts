@@ -2,14 +2,17 @@
 
 import { useCallback } from "react";
 
+import { getErrorMessage } from "@/helpers/error-message";
 import { sameConfig, withoutProductConfigs, withProductConfig } from "@/helpers/product-video-configs";
-import { showWorkflowActionToast } from "@/helpers/toast";
+import { showToast, showWorkflowActionToast } from "@/helpers/toast";
+import { reportWorkflowContentIssues } from "@/helpers/workflow-content-issues";
 import { toWorkflowDefinition } from "@/helpers/workflow-graph";
 import { useUpdateRunGroupDesignConfig } from "@/hooks/mutations/use-run-group-actions";
 import { useUpdateWorkflow } from "@/hooks/mutations/use-update-workflow";
 import { useRunGroup, useRunGroupId } from "@/hooks/queries/use-run-group";
 import type { WorkflowMetaFormValues } from "@/schemas/workflow";
 import { sharedGraphNodes, useWorkflowStore } from "@/stores/workflow";
+import { useWorkflowContentIssuesStore } from "@/stores/workflow-content-issues";
 import type { GenerateVideoConfig } from "@/types/video-workflow";
 import type { SaveWorkflowInput } from "@/types/workflow";
 import { useReactFlow } from "@xyflow/react";
@@ -55,6 +58,7 @@ export const useWorkflowSave = () => {
           { id: workflowId, input: buildSaveInput(meta) },
           {
             onSuccess: (saved) => {
+              useWorkflowContentIssuesStore.getState().clear();
               markSaved(saved);
               afterSaved?.();
               options?.onSaved?.();
@@ -62,6 +66,11 @@ export const useWorkflowSave = () => {
                 "success",
                 storedFor ? `${saved.name} was saved, with ${storedFor}'s own video settings.` : `${saved.name} was saved.`
               );
+            },
+            onError: (error) => {
+              showToast("error", getErrorMessage(error));
+              // A content-policy refusal also marks the scene text it names.
+              reportWorkflowContentIssues(error);
             },
           }
         );
@@ -108,6 +117,11 @@ export const useWorkflowSave = () => {
           onSuccess: () => {
             markDesignSaved(scoped.config);
             writeWorkflow(scoped.scope.label);
+          },
+          onError: (error) => {
+            showToast("error", getErrorMessage(error));
+            // The design's own scene text is checked when it is stored, like the workflow's.
+            reportWorkflowContentIssues(error);
           },
         }
       );

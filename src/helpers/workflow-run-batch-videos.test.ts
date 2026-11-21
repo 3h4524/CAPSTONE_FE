@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hasServerPart, runsPerDesign, showsInputProduct, supportsBatchVideos } from "@/helpers/workflow-run";
+import { deriveNodeStatuses, hasServerPart, runsPerDesign, showsInputProduct, supportsBatchVideos } from "@/helpers/workflow-run";
 import { buildWorkflowNode } from "@/test/factories";
 import type { WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
 
@@ -53,6 +53,22 @@ describe("runsPerDesign", () => {
   it("has nothing to run per design without Mockup Approval", () => {
     expect(runsPerDesign([listing])).toBe(false);
     expect(runsPerDesign([])).toBe(false);
+  });
+});
+
+describe("deriveNodeStatuses", () => {
+  const started = { step: "watching", job: null, mockupState: "idle" } as const;
+
+  it("leaves a listing written after Mockup Approval to the server's run", () => {
+    expect(deriveNodeStatuses([approval, listing, printify], started)).not.toHaveProperty(listing.id);
+  });
+
+  it("leaves a listing written beside a video to the server's run", () => {
+    expect(deriveNodeStatuses([video({ mode: "standard" }), listing], started)).not.toHaveProperty(listing.id);
+  });
+
+  it("skips a listing in a workflow that makes designs and has no server part", () => {
+    expect(deriveNodeStatuses([step("design-image"), listing], started)[listing.id]).toBe("skipped");
   });
 });
 

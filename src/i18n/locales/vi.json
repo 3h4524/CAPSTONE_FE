@@ -1126,6 +1126,7 @@
         "customAria": "Màu garment tùy chỉnh"
       },
       "templateCard": {
+        "ai": "AI",
         "realisticPrint": "In chân thực",
         "recolorable": "Đổi màu được",
         "madeWithAi": "Tạo bằng AI",
@@ -1184,10 +1185,35 @@
       },
       "generateModelPhoto": {
         "title": "Tạo ảnh người mẫu bằng AI",
-        "description": "AI tạo ảnh những người bạn chọn mặc áo thun trắng trơn. Ảnh được lưu cùng ảnh người mẫu của bạn, mock-up được đặt lên không cần AI, nên bản in giữ nguyên y hệt thiết kế.",
+        "description": "AI tạo ảnh những người bạn chọn mặc áo thun hoặc hoodie trắng trơn. Mock-up được đặt lên không cần AI, nên bản in giữ nguyên như thiết kế.",
         "productType": "Loại sản phẩm",
-        "costNote": "Một ảnh Ideogram (khoảng $0.03), tạo bằng Ideogram key của bạn, hoặc bằng key của hệ thống khi gói của bạn có tính năng này. Tạo mất tối đa một phút. Hãy kiểm tra ảnh trước khi dùng: nếu áo không được tìm thấy, hãy tạo ảnh khác.",
-        "pendingNote": "Đang tạo ảnh và tìm áo trên ảnh… mất tối đa một phút.",
+        "scene": "Bối cảnh",
+        "outfit": "Trang phục",
+        "pose": "Dáng",
+        "scenes": {
+          "studio_grey": "Studio xám",
+          "studio_beige": "Studio be",
+          "studio_dark": "Studio tối",
+          "street": "Đường phố",
+          "cafe": "Quán cà phê",
+          "park": "Công viên"
+        },
+        "outfits": {
+          "casual": "Thường ngày",
+          "streetwear": "Streetwear",
+          "minimal": "Tối giản",
+          "sporty": "Thể thao"
+        },
+        "poses": {
+          "standing": "Đứng",
+          "walking": "Đi bộ",
+          "leaning": "Tựa tường",
+          "seated": "Ngồi"
+        },
+        "lookNote": "Ngoại hình được chọn ngẫu nhiên, mỗi ảnh là một người mới.",
+        "placeNote": "Bối cảnh thật xử lý lâu hơn studio một chút.",
+        "costNote": "Khoảng $0.03 mỗi ảnh, dùng Ideogram key của bạn hoặc của hệ thống, tạo mất tối đa một phút. Nếu không tìm thấy áo trên ảnh, hãy tạo ảnh khác.",
+        "pendingNote": "Đang tạo ảnh và tìm sản phẩm trên ảnh… mất tối đa một phút.",
         "pending": "Đang tạo ảnh…",
         "makePhoto": "Tạo ảnh"
       },
@@ -2002,7 +2028,7 @@
         "videoForThisProduct": "Các cài đặt video này chỉ tạo video cho sản phẩm này.",
         "batchWithoutLine": "Lô này chưa có dòng sản phẩm. Hãy chọn ở trang Lô sản phẩm trước khi chạy.",
         "designRatioWhy": "Lô {{line}}: {{why}}",
-        "designRatioMismatch": "{{ratio}} không hợp với lô {{line}} này. Hãy chọn {{ratios}}."
+        "designRatioMismatch": "{{ratio}} vẫn chạy được, nhưng hình có thể in nhỏ hơn và chừa khoảng trống trên vùng in của lô {{line}} này. Vừa nhất là {{ratios}}."
       },
       "form": {
         "settingsLocked": "Cài đặt bị khóa khi lượt chạy đang diễn ra.",

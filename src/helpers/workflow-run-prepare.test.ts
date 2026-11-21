@@ -65,20 +65,16 @@ describe("productLineBlocksRun", () => {
   const tee = { name: "Surf tee", productType: "tshirt" as const };
   const hoodie = { name: "Surf hoodie", productType: "hoodie" as const };
 
-  it("runs T-shirts and hoodies together at a ratio that suits apparel", () => {
-    expect(productLineBlocksRun("apparel", "3:4", [tee, hoodie])).toBeNull();
+  it("runs T-shirts and hoodies together", () => {
+    expect(productLineBlocksRun("apparel", [tee, hoodie])).toBeNull();
   });
 
   it("refuses a batch without a product line", () => {
-    expect(productLineBlocksRun(null, "1:1", [tee])).toContain("no product line");
+    expect(productLineBlocksRun(null, [tee])).toContain("no product line");
   });
 
   it("names the pending products of another line", () => {
-    expect(productLineBlocksRun("apparel", "3:4", [tee, { name: "Surf mug", productType: "mug" }])).toContain("Surf mug is not");
-  });
-
-  it("refuses a design ratio the line cannot print", () => {
-    expect(productLineBlocksRun("phone_cases", "16:9", [{ name: "Case", productType: "phone_case" }])).toContain("Choose 9:16");
+    expect(productLineBlocksRun("apparel", [tee, { name: "Surf mug", productType: "mug" }])).toContain("Surf mug is not");
   });
 });
 

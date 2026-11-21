@@ -3548,9 +3548,6 @@
         "renamingOff": "Renaming steps is turned off"
       },
       "runView": {
-        "effects": "Effects",
-        "effectsHint": "Follow the running step with the camera and show its output as it is made",
-        "reducedMotion": "Effects are off because your device asks for reduced motion",
         "followRun": "Follow run",
         "hudStep": "Step {{current}} of {{total}}",
         "hudStarting": "Starting",
@@ -3566,7 +3563,17 @@
         "previewTitle": "Title",
         "previewTags": "Tags",
         "previewDescription": "Description",
-        "previewProduct": "Product {{current}}"
+        "previewProduct": "Product {{current}}",
+        "stop": "Stop",
+        "showPanels": "Show panels",
+        "focusRun": "Focus on the run",
+        "simulate": "Preview run",
+        "simulateHint": "Play a pretend run on this canvas to see the run effects. Nothing is sent or charged.",
+        "simulateUnavailable": "This canvas cannot be previewed: remove the loop between its steps first.",
+        "simulationBadge": "Preview",
+        "effects": "Effects",
+        "effectsHint": "Follow the running step with the camera and show its output as it is made",
+        "reducedMotion": "Effects are off because your device asks for reduced motion"
       }
     },
     "workflowMedia": {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Play, Redo2, Save, ShieldCheck, Square, Undo2 } from "lucide-react";
+import { Play, Redo2, Save, ShieldCheck, Sparkles, Square, Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { GuideReplayButton } from "@/components/commons/onboarding/guide-replay-button";
@@ -12,11 +12,13 @@ import { WorkflowActionsMenu } from "@/components/workflows/toolbar/workflow-act
 import { WorkflowBackButton } from "@/components/workflows/toolbar/workflow-back-button";
 import { WorkflowMetaDialog } from "@/components/workflows/toolbar/workflow-meta-dialog";
 import { WorkflowSwitcher } from "@/components/workflows/toolbar/workflow-switcher";
+import { RUN_SIMULATION_ENABLED } from "@/constants/run-simulation";
 import { NEW_WORKFLOW_NAME, STARTER_WORKFLOW_DEFINITION } from "@/constants/workflow";
 import { showToast, showWorkflowActionToast } from "@/helpers/toast";
 import { getCopyName, validateWorkflow } from "@/helpers/workflow-graph";
 import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
 import { useDeleteWorkflow } from "@/hooks/mutations/use-delete-workflow";
+import { useRunSimulation } from "@/hooks/use-run-simulation";
 import { useWorkflowCommands } from "@/hooks/use-workflow-commands";
 import { useWorkflowExecution } from "@/hooks/use-workflow-execution";
 import { useWorkflowSave } from "@/hooks/use-workflow-save";
@@ -66,6 +68,7 @@ export const WorkflowToolbar = ({
     isPending: isRunPending,
   } = useWorkflowExecution(activeWorkflowId, isEditorReady);
 
+  const { start: startSimulation } = useRunSimulation();
   const { t } = useTranslation("common");
   const isBusy =
     !isEditorReady || isRunning || isCreating || isSaving || isDeleting || isRunPending;
@@ -73,6 +76,7 @@ export const WorkflowToolbar = ({
   useWorkflowCommands(activeWorkflowId, isEditorReady, isBusy, {
     save: (options) => saveWorkflow(undefined, options),
     run: () => void startRun(),
+    stop: () => void cancelRun(),
     continueRun: (command) => void continueRun(command),
   });
 
@@ -191,6 +195,22 @@ export const WorkflowToolbar = ({
           <span className="hidden sm:inline">{t("workflowEditor.toolbar.validate")}</span>
         </Button>
         {showsPanelButtons && <RunEffectsToggle />}
+        {showsPanelButtons && RUN_SIMULATION_ENABLED && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="px-3"
+            title={t("workflowEditor.runView.simulateHint")}
+            onClick={() => {
+              if (!startSimulation()) showWorkflowActionToast("warning", t("workflowEditor.runView.simulateUnavailable"));
+            }}
+            disabled={isBusy}
+          >
+            <Sparkles aria-hidden="true" />
+            <span className="hidden sm:inline">{t("workflowEditor.runView.simulate")}</span>
+          </Button>
+        )}
         {isRunning ? (
           <Button
             type="button"

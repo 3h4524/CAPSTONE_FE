@@ -3548,9 +3548,6 @@
         "renamingOff": "Đã tắt tính năng đổi tên bước"
       },
       "runView": {
-        "effects": "Hiệu ứng",
-        "effectsHint": "Camera đi theo bước đang chạy và hiện kết quả ngay khi được tạo",
-        "reducedMotion": "Hiệu ứng đang tắt vì thiết bị của bạn yêu cầu giảm chuyển động",
         "followRun": "Theo dõi lần chạy",
         "hudStep": "Bước {{current}}/{{total}}",
         "hudStarting": "Đang bắt đầu",
@@ -3566,7 +3563,17 @@
         "previewTitle": "Tiêu đề",
         "previewTags": "Thẻ",
         "previewDescription": "Mô tả",
-        "previewProduct": "Sản phẩm {{current}}"
+        "previewProduct": "Sản phẩm {{current}}",
+        "stop": "Dừng",
+        "showPanels": "Hiện bảng điều khiển",
+        "focusRun": "Tập trung vào lần chạy",
+        "simulate": "Xem thử",
+        "simulateHint": "Chạy giả trên canvas này để xem hiệu ứng khi chạy. Không gửi đi và không tính phí.",
+        "simulateUnavailable": "Không xem thử được canvas này: hãy bỏ vòng lặp giữa các bước trước.",
+        "simulationBadge": "Xem thử",
+        "effects": "Hiệu ứng",
+        "effectsHint": "Camera đi theo bước đang chạy và hiện kết quả ngay khi được tạo",
+        "reducedMotion": "Hiệu ứng đang tắt vì thiết bị của bạn yêu cầu giảm chuyển động"
       }
     },
     "workflowMedia": {

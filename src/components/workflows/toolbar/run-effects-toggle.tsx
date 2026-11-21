@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { Sparkles } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { useTranslation } from "react-i18next";
 
@@ -32,8 +31,7 @@ export const RunEffectsToggle = () => {
       title={reduceMotion ? t("workflowEditor.runView.reducedMotion") : t("workflowEditor.runView.effectsHint")}
       className="hover:bg-muted flex h-8 cursor-pointer items-center gap-2 rounded-md px-2 text-sm font-medium"
     >
-      <Sparkles className="text-wf-accent size-4" aria-hidden="true" />
-      <span className="hidden md:inline">{t("workflowEditor.runView.effects")}</span>
+      <span>{t("workflowEditor.runView.effects")}</span>
       <Switch
         id="workflow-run-effects"
         size="sm"

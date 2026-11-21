@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { RUN_HUD_LINGER_MS } from "@/constants/workflow-run-effects";
 import { type RunHudPhase, summarizeRun, withLiveListing } from "@/helpers/workflow-run-view";
 import { useListingLive } from "@/hooks/use-listing-live";
 import { useRunEffects } from "@/hooks/use-run-effects";
+import { useRunSimulationStore } from "@/stores/run-simulation";
 import { useWorkflowStore } from "@/stores/workflow";
 import { cn } from "@/utils/cn";
 
@@ -24,6 +26,7 @@ export const RunHud = () => {
   const listingLive = useListingLive();
   const isRunning = useWorkflowStore((state) => state.isRunning);
   const nodes = useWorkflowStore((state) => state.nodes);
+  const simulating = useRunSimulationStore((state) => state.active);
   const active = isRunning || listingLive;
   const [wasActive, setWasActive] = useState(active);
   const [lingering, setLingering] = useState(false);
@@ -65,6 +68,11 @@ export const RunHud = () => {
           {t("workflowEditor.runView.hudStep", { current: summary.current, total: summary.total })}
         </span>
         <span className="text-wf-ink truncate font-semibold">{label}</span>
+        {simulating && (
+          <Badge variant="outline" className="text-wf-faint h-4 shrink-0 px-1.5 text-[9px] uppercase">
+            {t("workflowEditor.runView.simulationBadge")}
+          </Badge>
+        )}
         <span className={cn("ml-auto shrink-0 font-semibold tabular-nums", tone.text)}>{summary.percent}%</span>
       </div>
       <Progress value={summary.percent} className="bg-wf-line h-1" indicatorClassName={tone.bar} />

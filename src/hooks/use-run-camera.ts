@@ -7,10 +7,12 @@ import {
   RUN_CAMERA_PADDING,
   RUN_CAMERA_PULL_BACK_MS,
   RUN_CAMERA_PUSH_IN_MS,
+  RUN_FOCUS_TRANSITION_MS,
 } from "@/constants/workflow-run-effects";
 import { getRunFocusIds, widenForPreviews, withLiveListing } from "@/helpers/workflow-run-view";
 import { useListingLive } from "@/hooks/use-listing-live";
 import { useRunEffects } from "@/hooks/use-run-effects";
+import { useRunFocus } from "@/hooks/use-run-focus";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunViewStore } from "@/stores/workflow-run-view";
 import { useReactFlow } from "@xyflow/react";
@@ -22,14 +24,17 @@ export const useRunCamera = () => {
   const isRunning = useWorkflowStore((state) => state.isRunning);
   const followPaused = useWorkflowRunViewStore((state) => state.followPaused);
   const setFollowPaused = useWorkflowRunViewStore((state) => state.setFollowPaused);
+  const resetForRun = useWorkflowRunViewStore((state) => state.resetForRun);
+  const { focused } = useRunFocus();
   const focusKey = useWorkflowStore((state) => getRunFocusIds(withLiveListing(state.nodes, listingLive)).join(","));
   const active = isRunning || listingLive;
   const previousFocus = useRef<string[]>([]);
   const wasActive = useRef(active);
+  const wasFocused = useRef(focused);
 
   useEffect(() => {
-    if (active) setFollowPaused(false);
-  }, [active, setFollowPaused]);
+    if (active) resetForRun();
+  }, [active, resetForRun]);
 
   useEffect(() => {
     if (!effects || !active || followPaused || !focusKey) return;
@@ -41,14 +46,17 @@ export const useRunCamera = () => {
     };
     const leaving = previousFocus.current.filter((id) => !ids.includes(id));
     previousFocus.current = ids;
+    const layoutDelay = wasFocused.current === focused ? 0 : RUN_FOCUS_TRANSITION_MS;
+    wasFocused.current = focused;
+    const timers: number[] = [];
     if (leaving.length === 0) {
-      frame(ids, RUN_CAMERA_PUSH_IN_MS);
-      return;
+      timers.push(window.setTimeout(() => frame(ids, RUN_CAMERA_PUSH_IN_MS), layoutDelay));
+    } else {
+      timers.push(window.setTimeout(() => frame([...leaving, ...ids], RUN_CAMERA_PULL_BACK_MS), layoutDelay));
+      timers.push(window.setTimeout(() => frame(ids, RUN_CAMERA_PUSH_IN_MS), layoutDelay + RUN_CAMERA_PULL_BACK_MS));
     }
-    frame([...leaving, ...ids], RUN_CAMERA_PULL_BACK_MS);
-    const pushIn = window.setTimeout(() => frame(ids, RUN_CAMERA_PUSH_IN_MS), RUN_CAMERA_PULL_BACK_MS);
-    return () => window.clearTimeout(pushIn);
-  }, [effects, active, followPaused, focusKey, fitBounds, getNodesBounds]);
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [effects, active, followPaused, focusKey, focused, fitBounds, getNodesBounds]);
 
   useEffect(() => {
     const finished = wasActive.current && !active;
@@ -56,7 +64,11 @@ export const useRunCamera = () => {
     if (!finished) return;
     previousFocus.current = [];
     if (!effects || focusKey) return;
-    void fitView({ duration: RUN_CAMERA_OUTRO_MS, padding: 0.2, maxZoom: 1 });
+    const outro = window.setTimeout(
+      () => void fitView({ duration: RUN_CAMERA_OUTRO_MS, padding: 0.2, maxZoom: 1 }),
+      RUN_FOCUS_TRANSITION_MS
+    );
+    return () => window.clearTimeout(outro);
   }, [active, effects, focusKey, fitView]);
 
   const pauseFollow = () => {

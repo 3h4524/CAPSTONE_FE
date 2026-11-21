@@ -29,11 +29,13 @@ import { useWorkflow } from "@/hooks/queries/use-workflow";
 import { useWorkflows } from "@/hooks/queries/use-workflows";
 import { BATCH_JOB_PARAM } from "@/hooks/use-batch-run";
 import { useIsPhone } from "@/hooks/use-is-phone";
+import { useRunFocus } from "@/hooks/use-run-focus";
 import { VIDEO_RUN_PARAM } from "@/hooks/use-workflow-runtime";
 import { useAssistantStore } from "@/stores/assistant";
 import { usePopupStore } from "@/stores/popup";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
+import { cn } from "@/utils/cn";
 
 const DEFAULT_WORKFLOW_DESCRIPTION =
   "A batch → designs → design approval → mock-ups → mock-up approval → Standard video → video review → ZIP.";
@@ -55,6 +57,7 @@ export const WorkflowWorkspace = () => {
   const isAssistantOpen = useAssistantStore(isDockedPanelOpen);
   const assistantWidth = useAssistantStore((state) => state.panelWidth);
   const showNodePanel = hasSelectedNode || !isAssistantOpen;
+  const { focused: runFocused } = useRunFocus();
   const loadWorkflow = useWorkflowStore((state) => state.loadWorkflow);
   const resetEditor = useWorkflowStore((state) => state.reset);
   const productId = useWorkflowStore((state) => {
@@ -265,18 +268,36 @@ export const WorkflowWorkspace = () => {
       style={{ "--assistant-inset": isAssistantOpen ? `${assistantWidth}px` : "0px" } as CSSProperties}
     >
       <PageGuide guideKey="workflows" requiresDesktop />
-      <WorkflowToolbar
-        workflows={workflows}
-        activeWorkflowId={activeWorkflowId}
-        isEditorReady={isEditorReady}
-        onOpenWorkflow={openWorkflow}
-        guardUnsavedChanges={guardUnsavedChanges}
-        showsPanelButtons={!showsStepList}
-      />
+      <div
+        inert={runFocused}
+        className={cn(
+          "grid transition-[grid-template-rows,opacity] duration-500 ease-out motion-reduce:transition-none",
+          runFocused ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
+        )}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <WorkflowToolbar
+            workflows={workflows}
+            activeWorkflowId={activeWorkflowId}
+            isEditorReady={isEditorReady}
+            onOpenWorkflow={openWorkflow}
+            guardUnsavedChanges={guardUnsavedChanges}
+            showsPanelButtons={!showsStepList}
+          />
+        </div>
+      </div>
       <AllowanceBanner />
       <div className="flex min-h-0 flex-1">
-        <aside className="hidden w-64 shrink-0 border-r lg:block">
-          <NodePalette />
+        <aside
+          inert={runFocused}
+          className={cn(
+            "hidden shrink-0 overflow-hidden border-r transition-[width,opacity] duration-500 ease-out motion-reduce:transition-none lg:block",
+            runFocused ? "w-0 border-r-0 opacity-0" : "w-64 opacity-100"
+          )}
+        >
+          <div className="h-full w-64">
+            <NodePalette />
+          </div>
         </aside>
         <div className="bg-ink-100/70 relative min-w-0 flex-1">
           {isEditorReady ? (
@@ -304,6 +325,13 @@ export const WorkflowWorkspace = () => {
           )}
         </div>
         {showNodePanel ? (
+          <div
+            inert={runFocused}
+            className={cn(
+              "flex shrink-0 overflow-hidden transition-[max-width,opacity] duration-500 ease-out motion-reduce:transition-none",
+              runFocused ? "max-w-0 opacity-0" : "max-w-[760px] opacity-100"
+            )}
+          >
           <ResizableAside
             label={t("workflowEditor.workspace.nodePanel")}
             storageKey="apcs.workflows.panel-width"
@@ -314,6 +342,7 @@ export const WorkflowWorkspace = () => {
           >
             <NodeConfigPanel />
           </ResizableAside>
+          </div>
         ) : null}
       </div>
     </div>

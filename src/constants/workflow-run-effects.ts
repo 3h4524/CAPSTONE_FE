@@ -17,3 +17,5 @@ export const RUN_PREVIEW_WIDTH = 248;
 export const PROCESS_TRAVEL_MS = 900;
 
 export const RUN_HUD_LINGER_MS = 4000;
+
+export const RUN_FOCUS_TRANSITION_MS = 500;

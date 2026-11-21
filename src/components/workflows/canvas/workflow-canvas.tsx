@@ -3,7 +3,9 @@
 import { type DragEvent, type PointerEvent as ReactPointerEvent, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
+import { FocusRunButton } from "@/components/workflows/canvas/focus-run-button";
 import { FollowRunButton } from "@/components/workflows/canvas/follow-run-button";
+import { RunFocusControls } from "@/components/workflows/canvas/run-focus-controls";
 import { RunHud } from "@/components/workflows/canvas/run-hud";
 import { SelectionToolbar } from "@/components/workflows/canvas/selection-toolbar";
 import { ShortcutCheatsheet } from "@/components/workflows/canvas/shortcut-cheatsheet";
@@ -244,6 +246,8 @@ export const WorkflowCanvas = () => {
         <MiniMap pannable zoomable className="hidden! md:block!" />
       </ReactFlow>
       <RunHud />
+      <RunFocusControls />
+      <FocusRunButton />
       <FollowRunButton />
       <SelectionToolbar />
       <ShortcutCheatsheet />

@@ -4480,7 +4480,7 @@
       },
       "onboarding": {
         "title": "Chuẩn bị không gian làm việc",
-        "description": "Bốn bước từ kết nối nhà cung cấp tới lần chạy workflow đầu tiên. Mỗi bước tự đánh dấu khi bạn làm xong.",
+        "description": "Bốn bước từ kết nối nhà cung cấp tới lần chạy workflow đầu tiên.",
         "progress": "Đã xong {{done}}/{{count}}",
         "dismiss": "Ẩn danh sách",
         "steps": {

@@ -3,9 +3,11 @@
 import { ProcessToken } from "@/components/workflows/canvas/process-token";
 import { useProcessTravel } from "@/hooks/use-process-travel";
 import type { WorkflowCanvasEdge } from "@/types/workflow";
-import { BaseEdge, type EdgeProps, getBezierPath } from "@xyflow/react";
+import { BaseEdge, type EdgeProps, getSmoothStepPath } from "@xyflow/react";
 
-const EDGE_CURVATURE = 0.35;
+const EDGE_CORNER_RADIUS = 14;
+
+const EDGE_HANDLE_OFFSET = 20;
 
 const strokeFor = (selected: boolean, lit: boolean) => {
   if (selected) return "var(--wf-accent)";
@@ -27,14 +29,15 @@ export const WorkflowEdge = ({
   const effects = data?.effects === true;
   const passed = data?.sourceStatus === "success";
   const { travel, arrive } = useProcessTravel(passed, effects);
-  const [path] = getBezierPath({
+  const [path] = getSmoothStepPath({
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
-    curvature: EDGE_CURVATURE,
+    borderRadius: EDGE_CORNER_RADIUS,
+    offset: EDGE_HANDLE_OFFSET,
   });
   const lit = effects && travel === "arrived";
   const docked = lit && data?.targetStatus === "idle";
@@ -48,6 +51,7 @@ export const WorkflowEdge = ({
           stroke: strokeFor(selected, lit),
           strokeWidth: selected || lit ? 2.25 : 1.75,
           strokeLinecap: "round",
+          strokeLinejoin: "round",
           transition: "stroke 0.35s ease",
           ...style,
         }}

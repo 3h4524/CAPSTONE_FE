@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import {
+  RUN_CAMERA_EASING,
   RUN_CAMERA_OUTRO_MS,
   RUN_CAMERA_PADDING,
   RUN_CAMERA_PULL_BACK_MS,
@@ -15,7 +16,10 @@ import { useRunEffects } from "@/hooks/use-run-effects";
 import { useRunFocus } from "@/hooks/use-run-focus";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunViewStore } from "@/stores/workflow-run-view";
+import { cubicBezier } from "@/utils/cubic-bezier";
 import { useReactFlow } from "@xyflow/react";
+
+const cameraEase = cubicBezier(...RUN_CAMERA_EASING);
 
 export const useRunCamera = () => {
   const { fitBounds, fitView, getNodesBounds } = useReactFlow();
@@ -42,7 +46,12 @@ export const useRunCamera = () => {
     const frame = (frameIds: string[], duration: number) => {
       const nodes = useWorkflowStore.getState().nodes.filter((node) => frameIds.includes(node.id));
       if (nodes.length === 0) return;
-      void fitBounds(widenForPreviews(getNodesBounds(nodes), nodes), { duration, padding: RUN_CAMERA_PADDING });
+      void fitBounds(widenForPreviews(getNodesBounds(nodes), nodes), {
+        duration,
+        padding: RUN_CAMERA_PADDING,
+        ease: cameraEase,
+        interpolate: "linear",
+      });
     };
     const leaving = previousFocus.current.filter((id) => !ids.includes(id));
     previousFocus.current = ids;
@@ -65,7 +74,14 @@ export const useRunCamera = () => {
     previousFocus.current = [];
     if (!effects || focusKey) return;
     const outro = window.setTimeout(
-      () => void fitView({ duration: RUN_CAMERA_OUTRO_MS, padding: 0.2, maxZoom: 1 }),
+      () =>
+        void fitView({
+          duration: RUN_CAMERA_OUTRO_MS,
+          padding: 0.2,
+          maxZoom: 1,
+          ease: cameraEase,
+          interpolate: "linear",
+        }),
       RUN_FOCUS_TRANSITION_MS
     );
     return () => window.clearTimeout(outro);

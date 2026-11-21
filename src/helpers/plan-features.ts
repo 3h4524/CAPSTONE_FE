@@ -22,7 +22,9 @@ export type PlanFeatureCode =
   | "daily_video_cap"
   | "workflow_listing"
   | "workflow_publish"
-  | "zip_export";
+  | "zip_export"
+  | "market_radar_full"
+  | "daily_opportunity_analysis_cap";
 
 export type PlanFeatureDefinition = {
   code: PlanFeatureCode;
@@ -175,6 +177,22 @@ export const PLAN_FEATURES: PlanFeatureDefinition[] = [
     kind: "flag",
     group: "Workflow",
     description: "Download a finished product's files as a ZIP.",
+  },
+  {
+    code: "market_radar_full",
+    label: "Full Market Radar",
+    kind: "flag",
+    group: "Market Radar",
+    description:
+      "Every opportunity of the radar with its niche's competitors, keywords, charts, action plan and risks, an on-demand refresh and the AI analysis. Without it a Seller sees the top three opportunities.",
+  },
+  {
+    code: "daily_opportunity_analysis_cap",
+    label: "Daily opportunity analyses",
+    kind: "limit",
+    group: "Market Radar",
+    description:
+      "Most AI analyses of opportunities a Seller asks for per day. An analysis whose evidence has not changed is reused and does not count. Leave empty for no cap.",
   },
 ];
 

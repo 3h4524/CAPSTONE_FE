@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { WORKFLOW_CANVAS_SHORTCUTS } from "@/constants/workflow";
+import { useRunFocus } from "@/hooks/use-run-focus";
 
 const SHORTCUT_KEYS: Record<string, string> = {
   "Select multiple nodes": "selectMultiple",
@@ -32,6 +33,8 @@ const KEY_LABELS: Record<string, string> = { Click: "click", Drag: "drag" };
 
 export const ShortcutCheatsheet = () => {
   const { t } = useTranslation("common");
+  const { active: runActive } = useRunFocus();
+  if (runActive) return null;
   return (
     <Dialog>
       <DialogTrigger asChild>

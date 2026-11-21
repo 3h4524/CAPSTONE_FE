@@ -14,15 +14,15 @@ type EdgeWaypointHandlesProps = {
   source: WorkflowPosition;
   target: WorkflowPosition;
   waypoints: WorkflowPosition[];
-  stepCenter: WorkflowPosition;
+  pathCenter: WorkflowPosition | null;
 };
 
 const HANDLE_CLASS_NAME =
-  "nodrag nopan pointer-events-auto absolute top-0 left-0 rounded-full border-2 shadow-sm transition-transform hover:scale-125";
+  "nodrag nopan pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 shadow-sm transition-[scale,background-color] hover:scale-125 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wf-accent";
 
-const at = (point: WorkflowPosition) => ({ transform: `translate(-50%, -50%) translate(${point.x}px, ${point.y}px)` });
+const at = (point: WorkflowPosition) => ({ left: point.x, top: point.y });
 
-export const EdgeWaypointHandles = ({ edgeId, source, target, waypoints, stepCenter }: EdgeWaypointHandlesProps) => {
+export const EdgeWaypointHandles = ({ edgeId, source, target, waypoints, pathCenter }: EdgeWaypointHandlesProps) => {
   const { t } = useTranslation("common");
   const startDrag = useEdgeWaypointDrag(edgeId);
   const updateEdgeWaypoints = useWorkflowStore((state) => state.updateEdgeWaypoints);
@@ -38,14 +38,15 @@ export const EdgeWaypointHandles = ({ edgeId, source, target, waypoints, stepCen
   return (
     <EdgeLabelRenderer>
       {waypoints.length === 0 ? (
+        pathCenter && (
         <button
           type="button"
           aria-label={t("workflowEditor.canvas.bendEdge")}
-          title={t("workflowEditor.canvas.bendEdge")}
           className={cn(HANDLE_CLASS_NAME, "bg-wf-surface border-wf-accent size-3 cursor-move")}
-          style={at(stepCenter)}
+          style={at(pathCenter)}
           onPointerDown={(event) => startDrag(event, (point) => stepWaypoints(source, target, point))}
         />
+        )
       ) : (
         <>
           {points.slice(0, -1).map((start, segment) => {
@@ -55,7 +56,6 @@ export const EdgeWaypointHandles = ({ edgeId, source, target, waypoints, stepCen
                 key={`segment-${segment}`}
                 type="button"
                 aria-label={t("workflowEditor.canvas.addBend")}
-                title={t("workflowEditor.canvas.addBend")}
                 className={cn(HANDLE_CLASS_NAME, "bg-wf-accent/40 size-2.5 cursor-copy border-transparent")}
                 style={at(ghost)}
                 onPointerDown={(event) =>
@@ -69,7 +69,6 @@ export const EdgeWaypointHandles = ({ edgeId, source, target, waypoints, stepCen
               key={`waypoint-${index}`}
               type="button"
               aria-label={t("workflowEditor.canvas.moveBend")}
-              title={t("workflowEditor.canvas.moveBend")}
               className={cn(HANDLE_CLASS_NAME, "bg-wf-surface border-wf-accent size-3 cursor-move")}
               style={at(waypoint)}
               onPointerDown={(event) => startDrag(event, moveWaypoint(waypoints, index))}

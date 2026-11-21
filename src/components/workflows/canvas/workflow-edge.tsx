@@ -1,6 +1,6 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import { type MouseEvent, useLayoutEffect, useRef, useState } from "react";
 
 import { EdgeWaypointHandles } from "@/components/workflows/canvas/edge-waypoint-handles";
 import { ProcessToken } from "@/components/workflows/canvas/process-token";
@@ -15,7 +15,7 @@ import {
 } from "@/helpers/edge-waypoints";
 import { useProcessTravel } from "@/hooks/use-process-travel";
 import { useWorkflowStore } from "@/stores/workflow";
-import type { WorkflowCanvasEdge } from "@/types/workflow";
+import type { WorkflowCanvasEdge, WorkflowPosition } from "@/types/workflow";
 import { BaseEdge, type EdgeProps, getSmoothStepPath, useReactFlow } from "@xyflow/react";
 
 const strokeFor = (selected: boolean, lit: boolean) => {
@@ -41,6 +41,8 @@ export const WorkflowEdge = ({
   const { screenToFlowPosition } = useReactFlow();
   const updateEdgeWaypoints = useWorkflowStore((state) => state.updateEdgeWaypoints);
   const editable = data?.editable === true;
+  const hitRef = useRef<SVGPathElement>(null);
+  const [pathCenter, setPathCenter] = useState<WorkflowPosition | null>(null);
   const waypoints = readWaypoints(data);
   const source = { x: sourceX, y: sourceY };
   const target = { x: targetX, y: targetY };
@@ -56,6 +58,13 @@ export const WorkflowEdge = ({
   });
   const path =
     waypoints.length > 0 ? buildRoundedPath([source, ...waypoints, target], EDGE_CORNER_RADIUS) : stepPath;
+
+  useLayoutEffect(() => {
+    const hit = hitRef.current;
+    if (!hit) return;
+    const middle = hit.getPointAtLength(hit.getTotalLength() / 2);
+    setPathCenter({ x: middle.x, y: middle.y });
+  }, [path, editable]);
 
   const addBend = (event: MouseEvent<SVGPathElement>) => {
     event.stopPropagation();
@@ -84,6 +93,7 @@ export const WorkflowEdge = ({
       />
       {editable && (
         <path
+          ref={hitRef}
           d={path}
           fill="none"
           stroke="transparent"
@@ -98,7 +108,7 @@ export const WorkflowEdge = ({
           source={source}
           target={target}
           waypoints={waypoints}
-          stepCenter={{ x: stepCenterX, y: stepCenterY }}
+          pathCenter={pathCenter}
         />
       )}
       {effects && travel === "travelling" && <ProcessToken edgeId={id} path={path} onArrive={arrive} />}

@@ -22,7 +22,9 @@ export type PlanFeatureCode =
   | "daily_video_cap"
   | "workflow_listing"
   | "workflow_publish"
-  | "zip_export";
+  | "zip_export"
+  | "market_radar_full"
+  | "daily_opportunity_analysis_cap";
 
 export type PlanFeatureDefinition = {
   code: PlanFeatureCode;
@@ -31,6 +33,13 @@ export type PlanFeatureDefinition = {
   group: string;
   description: string;
 };
+
+const marketRadarFeature = (
+  code: PlanFeatureCode,
+  label: string,
+  kind: PlanFeatureDefinition["kind"],
+  description: string
+): PlanFeatureDefinition => ({ code, label, kind, group: "Market Radar", description });
 
 // Mirrors PlanFeatures.All on the backend, in the same order.
 export const PLAN_FEATURES: PlanFeatureDefinition[] = [
@@ -176,6 +185,18 @@ export const PLAN_FEATURES: PlanFeatureDefinition[] = [
     group: "Workflow",
     description: "Download a finished product's files as a ZIP.",
   },
+  marketRadarFeature(
+    "market_radar_full",
+    "Full Market Radar",
+    "flag",
+    "Every opportunity of the radar with its niche's competitors, keywords, charts, action plan and risks, an on-demand refresh and the AI analysis. Without it a Seller sees the top three opportunities."
+  ),
+  marketRadarFeature(
+    "daily_opportunity_analysis_cap",
+    "Daily opportunity analyses",
+    "limit",
+    "Most AI analyses of opportunities a Seller asks for per day. An analysis whose evidence has not changed is reused and does not count. Leave empty for no cap."
+  ),
 ];
 
 // The features with the labels, groups and order the Admin set in the catalog. Only codes the

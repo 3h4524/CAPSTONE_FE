@@ -527,6 +527,8 @@ export interface RunGroupStep {
   stage: string | null;
   progress: number;
   error: string | null;
+  /** What the seller should check on the step's result. Absent from an older API. */
+  warnings?: string[] | null;
 }
 export interface RunGroupTarget {
   key: string;

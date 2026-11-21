@@ -234,7 +234,8 @@ export type RunSnapshot = { step: RunStep; job: BatchJobDetail | null; mockupSta
 
 // The statuses the batch part of a run gives its nodes: from the job on the server once it exists, from
 // the runner's own step before that. Nodes no backend can run are skipped as soon as a run exists.
-// The video steps are left out: the server's video run reports those.
+// The video steps are left out: the server's video run reports those. So is a listing the server writes after Mockup
+// Approval; Listing content shows as skipped only in a workflow that never reaches that part.
 export const deriveNodeStatuses = (nodes: WorkflowNode[], run: RunSnapshot): Record<string, WorkflowNodeStatus> => {
   const hasRun = run.step !== "idle" || run.job !== null;
   const status = run.job?.status ?? "";
@@ -277,8 +278,11 @@ export const deriveNodeStatuses = (nodes: WorkflowNode[], run: RunSnapshot): Rec
     }
   };
 
+  const serverWritesListing = hasServerPart(nodes);
   return Object.fromEntries(
-    nodes.filter((node) => !isVideoRunNode(node.data.type)).map((node) => [node.id, statusOf(node.data.type)])
+    nodes
+      .filter((node) => !isVideoRunNode(node.data.type) && !(node.data.type === "generate-listing" && serverWritesListing))
+      .map((node) => [node.id, statusOf(node.data.type)])
   );
 };
 

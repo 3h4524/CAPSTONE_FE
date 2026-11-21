@@ -107,6 +107,12 @@ describe("mergeDraggedWaypoint", () => {
     ]);
   });
 
+  it("merges anywhere inside the 20 px drop radius", () => {
+    expect(mergeDraggedWaypoint([{ x: 200, y: 100 }, { x: 214, y: 112 }], 1, source, target)).toEqual([
+      { x: 200, y: 100 },
+    ]);
+  });
+
   it("keeps bends that are apart", () => {
     const waypoints = [{ x: 0, y: 100 }, { x: 200, y: 100 }];
     expect(mergeDraggedWaypoint(waypoints, 1, source, target)).toEqual(waypoints);

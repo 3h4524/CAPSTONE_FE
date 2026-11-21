@@ -24,7 +24,7 @@ type EdgeWaypointHandlesProps = {
 };
 
 const HANDLE_CLASS_NAME =
-  "nodrag nopan pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 shadow-sm transition-[scale,background-color] hover:scale-125 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wf-accent";
+  "nodrag nopan pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 shadow-sm transition-[scale,background-color] hover:scale-125 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wf-accent before:absolute before:top-1/2 before:left-1/2 before:size-6 before:-translate-x-1/2 before:-translate-y-1/2 before:rounded-full before:content-[''] [@media(pointer:coarse)]:before:size-11";
 
 const at = (point: WorkflowPosition) => ({ left: point.x, top: point.y });
 

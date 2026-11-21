@@ -7,9 +7,10 @@ import { useTranslation } from "react-i18next";
 
 import { NodeControl } from "@/components/workflows/nodes/node-control";
 import {
+  generateProgressOf,
+  generateStatusOf,
   STOPPED,
   useGroupVideos,
-  videoStatusOf,
   WITH_VIDEO,
 } from "@/hooks/queries/use-group-videos";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
@@ -63,9 +64,10 @@ export const RunGroupVideoStrip = ({ fallback }: { fallback: ReactNode }) => {
 
   if (targets.length === 0) return <>{fallback}</>;
 
-  const done = targets.filter((target) => videoStatusOf(target) === "completed").length;
+  // Counted by the Generate Video step alone: a video being exported or published is already made.
+  const done = targets.filter((target) => generateStatusOf(target) === "completed").length;
   const toReview = targets.filter(
-    (target) => videoStatusOf(target) === "waiting_for_review"
+    (target) => generateStatusOf(target) === "waiting_for_review"
   ).length;
 
   return (
@@ -183,13 +185,14 @@ const VideoTile = ({
   onOpen: () => void;
 }) => {
   const { t } = useTranslation("common");
-  const status = videoStatusOf(target);
+  // The tile is this node's: its status and progress are Generate Video's, never those of Export ZIP after it.
+  const status = generateStatusOf(target);
   const aspect =
     ASPECT[target.config?.outputFormat ?? video?.outputFormat ?? "portrait"] ?? ASPECT.portrait;
   const stopped = STOPPED.has(status);
   const made = WITH_VIDEO.has(status);
   const thumbnail = made ? video?.thumbnailUrl : null;
-  const progress = Math.max(0, Math.min(100, Math.round(target.progress)));
+  const progress = Math.max(0, Math.min(100, Math.round(generateProgressOf(target))));
   const label = made
     ? status === "completed"
       ? t("workflowEditor.runGroup.runStatuses.completed")

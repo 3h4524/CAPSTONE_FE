@@ -10,7 +10,7 @@ import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { useQueryClient } from "@tanstack/react-query";
 
 type RunChanged = { runId: string; groupId: string | null; status: string; revision: number };
-type RunProgress = { runId: string; groupId: string | null; stage: string; progress: number };
+type RunProgress = { runId: string; groupId: string | null; stage: string; progress: number; nodeType?: string | null };
 
 const same = (left: string | null | undefined, right: string | null | undefined) =>
   Boolean(left && right) && left!.toLowerCase() === right!.toLowerCase();
@@ -83,11 +83,19 @@ export const useRunGroupSync = (groupId: string | null) => {
     });
     connection.on("RunProgress", (change: RunProgress) => {
       if (!same(change.groupId, groupId)) return;
+      const nodeType = change.nodeType ?? (change.stage === "Exporting" ? "export-zip" : "generate-video");
+      const field = nodeType === "export-zip" ? "exportZip" : "generateVideo";
       queryClient.setQueryData<RunGroup>(runGroupKeys.detail(groupId), (group) =>
         group && {
           ...group,
           targets: group.targets.map((target) =>
-            same(target.runId, change.runId) ? { ...target, stage: change.stage, progress: change.progress } : target
+            same(target.runId, change.runId) ? {
+              ...target,
+              ...(target.currentStep === nodeType ? { stage: change.stage, progress: change.progress } : {}),
+              ...(target[field]?.status === "running" ? {
+                [field]: { ...target[field], stage: change.stage, progress: change.progress },
+              } : {}),
+            } : target
           ),
         }
       );
@@ -95,7 +103,7 @@ export const useRunGroupSync = (groupId: string | null) => {
         run && {
           ...run,
           nodes: run.nodes.map((node) =>
-            node.status === "running" ? { ...node, stage: change.stage, progress: change.progress } : node
+            node.nodeType === nodeType && node.status === "running" ? { ...node, stage: change.stage, progress: change.progress } : node
           ),
         }
       );

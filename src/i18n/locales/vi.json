@@ -3227,7 +3227,8 @@
           "approved": "Đã duyệt",
           "processing": "Đang dựng",
           "queued": "Đang chờ",
-          "stopped": "Đã dừng"
+          "stopped": "Đã dừng",
+          "rejected": "Đã từ chối"
         },
         "renderingProgress": "Đang dựng {{progress}}%",
         "failed": "Thất bại",
@@ -3239,6 +3240,15 @@
         "showVideos": "Hiển thị video",
         "nothingWaiting": "Không có video nào chờ duyệt.",
         "noneApproved": "Chưa có video nào được duyệt.",
+        "noneRejected": "Không có video nào bị từ chối.",
+        "rejectedCount": "{{count}} bị từ chối",
+        "continue": "Tiếp tục",
+        "continued": "Đã duyệt xong. Các sản phẩm đang được xuất.",
+        "continueAfterRender": "Bấm Tiếp tục khi mọi video đã dựng xong.",
+        "continueAfterDecisions": "Duyệt hoặc từ chối mọi video, rồi bấm Tiếp tục.",
+        "continueApproved": "Mọi video đã được duyệt: Tiếp tục sẽ xuất chúng cùng sản phẩm.",
+        "continueRejected_one": "Tiếp tục sẽ xuất các video đã duyệt. Video bị từ chối được bỏ ra; sản phẩm của nó vẫn được xuất.",
+        "continueRejected_other": "Tiếp tục sẽ xuất các video đã duyệt. {{count}} video bị từ chối được bỏ ra; sản phẩm của chúng vẫn được xuất.",
         "stripLabel": "Video của lượt chạy này",
         "noLongerWaiting": "Video này không còn chờ bạn duyệt.",
         "version": "Phiên bản {{version}}",
@@ -3420,7 +3430,7 @@
         "manualHints": {
           "designApproval": "Duyệt các thiết kế đã tạo trước khi tạo mock-up.",
           "approvalGate": "Duyệt phiên bản mock-up hiện tại trước khi dựng video.",
-          "reviewVideo": "Duyệt bản dựng hoàn chỉnh trước khi xuất."
+          "reviewVideo": "Duyệt hoặc từ chối từng video, rồi bấm Tiếp tục. Video bị từ chối không có trong ZIP của sản phẩm."
         },
         "autoHints": {
           "designApproval": "Mọi thiết kế được tạo sẽ đi thẳng tới bước mock-up.",

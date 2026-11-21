@@ -12,6 +12,7 @@ import { getWorkflowNodeDefinition } from "@/helpers/workflow-config";
 import { isRunnableNode } from "@/helpers/workflow-run";
 import { hasRunPreview } from "@/helpers/workflow-run-view";
 import { useGroupPrintify } from "@/hooks/queries/use-group-printify";
+import { useGroupStepProgress } from "@/hooks/queries/use-group-step-progress";
 import { useGroupVideoProgress } from "@/hooks/queries/use-group-video-progress";
 import { useListingLive } from "@/hooks/use-listing-live";
 import { useRunEffects } from "@/hooks/use-run-effects";
@@ -48,6 +49,7 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
   const workflowIsRunning = useWorkflowStore((state) => state.isRunning);
   const groupProgress = useGroupVideoProgress();
   const printifyProgress = useGroupPrintify();
+  const stepProgress = useGroupStepProgress(data.type);
   const effects = useRunEffects();
   const listingLive = useListingLive();
   const connectionState = useConnection((connection) => {
@@ -69,7 +71,9 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
   const batch = data.type === "generate-video" ? groupProgress : null;
   // Push to Printify runs beside the videos of a batch: it shows its own steps, never the render.
   const printifyBatch = data.type === "publish-printify" ? printifyProgress : null;
-  const status = batch?.active || listingStreaming ? "running" : (printifyBatch?.status ?? data.status);
+  // A step of a batch (Generate Video, Review Video, Export ZIP) reports its own checkpoints across the videos.
+  const status =
+    stepProgress?.status ?? (batch?.active || listingStreaming ? "running" : (printifyBatch?.status ?? data.status));
   const { popping, endPop } = useStatusPop(status);
   const definition = getWorkflowNodeDefinition(data.type);
   if (!definition) return null;
@@ -84,7 +88,7 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
   const isConnectionTarget = connectionTargetValid || connectionTargetInvalid;
   const progress = Math.max(
     0,
-    Math.min(100, batch ? batch.progress : printifyBatch ? 0 : (data.progress ?? 0))
+    Math.min(100, stepProgress?.progress ?? (batch ? batch.progress : printifyBatch ? 0 : (data.progress ?? 0)))
   );
   const pillLabel = pill
     ? t(`workflowEditor.nodeStatuses.${status}`, { defaultValue: pill.label })

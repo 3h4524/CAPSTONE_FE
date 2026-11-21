@@ -208,7 +208,7 @@ describe("GroupVideoList approval", () => {
     expect(mocks.continueReview).toHaveBeenCalledWith({ groupId: "group", expectedRevision: 1 }, expect.anything());
   });
 
-  it("holds Continue until every video is decided", async () => {
+  it("holds Continue until every video is decided", () => {
     mocks.group = group([target(0, "waiting_for_review")]);
     withQuery(<GroupVideoList />);
 
@@ -216,7 +216,7 @@ describe("GroupVideoList approval", () => {
     expect(screen.getByText("Approve or reject every video, then Continue.")).toBeInTheDocument();
   });
 
-  it("holds Continue while a video is still being made", async () => {
+  it("holds Continue while a video is still being made", () => {
     decided("approved");
     mocks.group = group([target(0, "waiting_for_review"), target(1, "running", 40)]);
     withQuery(<GroupVideoList />);

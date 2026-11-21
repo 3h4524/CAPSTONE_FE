@@ -3,11 +3,12 @@ import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { showWorkflowActionToast } from "@/helpers/toast";
-import { isBatchRunNode, isServerRunNode, toCanvasStatus } from "@/helpers/workflow-run";
+import { hasListingSteps, isBatchRunNode, isServerRunNode, toCanvasStatus } from "@/helpers/workflow-run";
 import { useStartWorkflowRun } from "@/hooks/mutations/use-start-workflow-run";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { useWorkflowRun } from "@/hooks/queries/use-workflow-run";
 import { NEXT_PART_PARAM } from "@/hooks/use-batch-run";
+import { useListingStream } from "@/hooks/use-listing-stream";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { WorkflowNodeRun } from "@/types/video-workflow";
 import type { WorkflowNodeData } from "@/types/workflow";
@@ -30,6 +31,7 @@ export const useWorkflowRuntime = () => {
   const { mutate: action, isPending: isActing } = useWorkflowRunAction();
   const workflowId = useWorkflowStore(state => state.workflowId);
   const setVideoRunId = useWorkflowStore(state => state.setVideoRunId);
+  const { openStream: openListingStream } = useListingStream();
   // The URL decides when it changes: a run entering it is followed, and one leaving it is closed. Only a change counts,
   // since a run closed here leaves the store before it leaves the URL, and would otherwise be put back meanwhile.
   const previousUrlRunId = useRef<string | null>(null);
@@ -45,7 +47,8 @@ export const useWorkflowRuntime = () => {
     const state = useWorkflowStore.getState();
     if (!state.workflowId) return;
     if (state.isDirty) { showWorkflowActionToast("warning", "Save your configuration before running."); return; }
-    start({ workflowId: state.workflowId, revision: state.revision, key: uuid() }, { onSuccess: result => {
+    const listingStreamId = hasListingSteps(state.nodes) ? openListingStream() : undefined;
+    start({ workflowId: state.workflowId, revision: state.revision, key: uuid(), listingStreamId }, { onSuccess: result => {
       // The listing is written while the run starts. Failing it does not stop a video, so it is easy to miss.
       if (result.nodes.some(node => node.nodeType === "generate-listing" && node.status === "failed"))
         showWorkflowActionToast("warning", `Listing content could not be generated. Open the Listing content node to try again${result.status === "failed" ? "." : "; the video steps go on."}`);

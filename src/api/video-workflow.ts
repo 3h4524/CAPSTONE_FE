@@ -61,15 +61,18 @@ export const startWorkflowRun = async ({
   workflowId,
   revision,
   key,
+  listingStreamId,
 }: {
   workflowId: string;
   revision: number;
   key: string;
+  listingStreamId?: string;
 }) =>
   (
     await api.post<WorkflowRun>(`/api/workflows/${workflowId}/runs`, {
       expectedWorkflowRevision: revision,
       idempotencyKey: key,
+      listingStreamId,
     })
   ).data;
 export const getWorkflowRun = async (id: string) =>

@@ -3546,6 +3546,27 @@
         "stepsNotConnected": "Các bước này chưa được nối với nhau",
         "noSettingsToUpdate": "Không có cài đặt nào để cập nhật",
         "renamingOff": "Đã tắt tính năng đổi tên bước"
+      },
+      "runView": {
+        "effects": "Hiệu ứng",
+        "effectsHint": "Camera đi theo bước đang chạy và hiện kết quả ngay khi được tạo",
+        "reducedMotion": "Hiệu ứng đang tắt vì thiết bị của bạn yêu cầu giảm chuyển động",
+        "followRun": "Theo dõi lần chạy",
+        "hudStep": "Bước {{current}}/{{total}}",
+        "hudStarting": "Đang bắt đầu",
+        "hudAllDone": "Đã xong tất cả các bước",
+        "hudFailed": "{{names}} thất bại",
+        "hudNeedsYou": "{{names}} cần bạn xử lý",
+        "previewDesigns": "Thiết kế",
+        "previewListing": "Nội dung listing",
+        "previewLive": "Trực tiếp",
+        "previewWriting": "Đang viết",
+        "previewDone": "Xong",
+        "previewFailed": "Thất bại",
+        "previewTitle": "Tiêu đề",
+        "previewTags": "Thẻ",
+        "previewDescription": "Mô tả",
+        "previewProduct": "Sản phẩm {{current}}"
       }
     },
     "workflowMedia": {

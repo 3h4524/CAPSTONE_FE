@@ -3546,6 +3546,27 @@
         "stepsNotConnected": "Those steps are not connected",
         "noSettingsToUpdate": "No settings to update",
         "renamingOff": "Renaming steps is turned off"
+      },
+      "runView": {
+        "effects": "Effects",
+        "effectsHint": "Follow the running step with the camera and show its output as it is made",
+        "reducedMotion": "Effects are off because your device asks for reduced motion",
+        "followRun": "Follow run",
+        "hudStep": "Step {{current}} of {{total}}",
+        "hudStarting": "Starting",
+        "hudAllDone": "All steps done",
+        "hudFailed": "{{names}} failed",
+        "hudNeedsYou": "{{names}} needs you",
+        "previewDesigns": "Designs",
+        "previewListing": "Listing content",
+        "previewLive": "Live",
+        "previewWriting": "Writing",
+        "previewDone": "Done",
+        "previewFailed": "Failed",
+        "previewTitle": "Title",
+        "previewTags": "Tags",
+        "previewDescription": "Description",
+        "previewProduct": "Product {{current}}"
       }
     },
     "workflowMedia": {

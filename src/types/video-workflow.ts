@@ -620,6 +620,7 @@ export interface RunAction {
   expectedStoryboardFingerprint?: string;
   aiShotQuoteToken?: string;
   sceneOrder?: number;
+  listingStreamId?: string;
 }
 export interface AiShotQuote {
   token: string;

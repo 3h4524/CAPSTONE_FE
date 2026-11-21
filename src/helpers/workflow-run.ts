@@ -358,3 +358,6 @@ export const toCanvasStatus = (status: string): WorkflowNodeStatus => {
     default: return "idle";
   }
 };
+
+export const getJobImageUrls = (job: BatchJobDetail | null) =>
+  job?.products.flatMap((product) => product.images.map((image) => image.imageUrl)) ?? [];

@@ -1,0 +1,67 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
+import {
+  RUN_CAMERA_OUTRO_MS,
+  RUN_CAMERA_PADDING,
+  RUN_CAMERA_PULL_BACK_MS,
+  RUN_CAMERA_PUSH_IN_MS,
+} from "@/constants/workflow-run-effects";
+import { getRunFocusIds, widenForPreviews, withLiveListing } from "@/helpers/workflow-run-view";
+import { useListingLive } from "@/hooks/use-listing-live";
+import { useRunEffects } from "@/hooks/use-run-effects";
+import { useWorkflowStore } from "@/stores/workflow";
+import { useWorkflowRunViewStore } from "@/stores/workflow-run-view";
+import { useReactFlow } from "@xyflow/react";
+
+export const useRunCamera = () => {
+  const { fitBounds, fitView, getNodesBounds } = useReactFlow();
+  const effects = useRunEffects();
+  const listingLive = useListingLive();
+  const isRunning = useWorkflowStore((state) => state.isRunning);
+  const followPaused = useWorkflowRunViewStore((state) => state.followPaused);
+  const setFollowPaused = useWorkflowRunViewStore((state) => state.setFollowPaused);
+  const focusKey = useWorkflowStore((state) => getRunFocusIds(withLiveListing(state.nodes, listingLive)).join(","));
+  const active = isRunning || listingLive;
+  const previousFocus = useRef<string[]>([]);
+  const wasActive = useRef(active);
+
+  useEffect(() => {
+    if (active) setFollowPaused(false);
+  }, [active, setFollowPaused]);
+
+  useEffect(() => {
+    if (!effects || !active || followPaused || !focusKey) return;
+    const ids = focusKey.split(",");
+    const frame = (frameIds: string[], duration: number) => {
+      const nodes = useWorkflowStore.getState().nodes.filter((node) => frameIds.includes(node.id));
+      if (nodes.length === 0) return;
+      void fitBounds(widenForPreviews(getNodesBounds(nodes), nodes), { duration, padding: RUN_CAMERA_PADDING });
+    };
+    const leaving = previousFocus.current.filter((id) => !ids.includes(id));
+    previousFocus.current = ids;
+    if (leaving.length === 0) {
+      frame(ids, RUN_CAMERA_PUSH_IN_MS);
+      return;
+    }
+    frame([...leaving, ...ids], RUN_CAMERA_PULL_BACK_MS);
+    const pushIn = window.setTimeout(() => frame(ids, RUN_CAMERA_PUSH_IN_MS), RUN_CAMERA_PULL_BACK_MS);
+    return () => window.clearTimeout(pushIn);
+  }, [effects, active, followPaused, focusKey, fitBounds, getNodesBounds]);
+
+  useEffect(() => {
+    const finished = wasActive.current && !active;
+    wasActive.current = active;
+    if (!finished) return;
+    previousFocus.current = [];
+    if (!effects || focusKey) return;
+    void fitView({ duration: RUN_CAMERA_OUTRO_MS, padding: 0.2, maxZoom: 1 });
+  }, [active, effects, focusKey, fitView]);
+
+  const pauseFollow = () => {
+    if (effects && active && !followPaused) setFollowPaused(true);
+  };
+
+  return { pauseFollow };
+};

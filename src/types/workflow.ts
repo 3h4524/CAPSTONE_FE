@@ -83,6 +83,14 @@ export type WorkflowNode = Node<WorkflowNodeData, "workflow">;
 
 export type WorkflowEdge = Edge;
 
+export type WorkflowEdgeData = {
+  sourceStatus?: WorkflowNodeStatus;
+  targetStatus?: WorkflowNodeStatus;
+  effects?: boolean;
+};
+
+export type WorkflowCanvasEdge = Edge<WorkflowEdgeData, "process">;
+
 export interface WorkflowIssue {
   id: string;
   nodeId: string | null;

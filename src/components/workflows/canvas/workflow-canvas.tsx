@@ -3,9 +3,11 @@
 import { type DragEvent, type PointerEvent as ReactPointerEvent, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
+import { FollowRunButton } from "@/components/workflows/canvas/follow-run-button";
+import { RunHud } from "@/components/workflows/canvas/run-hud";
 import { SelectionToolbar } from "@/components/workflows/canvas/selection-toolbar";
 import { ShortcutCheatsheet } from "@/components/workflows/canvas/shortcut-cheatsheet";
-import { WorkflowFloatingEdge } from "@/components/workflows/canvas/workflow-floating-edge";
+import { WorkflowEdge } from "@/components/workflows/canvas/workflow-edge";
 import { NodeView } from "@/components/workflows/nodes/node-view";
 import { NODE_CARD_WIDTHS, WORKFLOW_DND_MIME } from "@/constants/workflow";
 import { showWorkflowActionToast } from "@/helpers/toast";
@@ -16,11 +18,16 @@ import {
   getConnectionIssue,
   isConnectionAllowed,
 } from "@/helpers/workflow-graph";
+import { withLiveListing } from "@/helpers/workflow-run-view";
 import { useCanvasShortcuts } from "@/hooks/use-canvas-shortcuts";
+import { useListingLive } from "@/hooks/use-listing-live";
+import { useRunCamera } from "@/hooks/use-run-camera";
+import { useRunEffects } from "@/hooks/use-run-effects";
 import { useSelectModifierHeld } from "@/hooks/use-select-modifier-held";
 import { useWorkflowSave } from "@/hooks/use-workflow-save";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowConnectionStore } from "@/stores/workflow-connection";
+import type { WorkflowCanvasEdge } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 import {
   Background,
@@ -29,7 +36,6 @@ import {
   Controls,
   type Edge,
   type EdgeTypes,
-  MarkerType,
   MiniMap,
   type NodeTypes,
   ReactFlow,
@@ -38,12 +44,9 @@ import {
 
 const NODE_TYPES: NodeTypes = { workflow: NodeView };
 
-const EDGE_TYPES: EdgeTypes = { floating: WorkflowFloatingEdge };
+const EDGE_TYPES: EdgeTypes = { process: WorkflowEdge };
 
-const DEFAULT_EDGE_OPTIONS = {
-  type: "floating",
-  markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: "var(--wf-faint)" },
-};
+const DEFAULT_EDGE_OPTIONS = { type: "process" };
 
 const DELETE_KEYS = ["Backspace", "Delete"];
 
@@ -96,13 +99,22 @@ export const WorkflowCanvas = () => {
   const selectModifierHeld = useSelectModifierHeld();
 
   useCanvasShortcuts({ saveWorkflow });
+  const effects = useRunEffects();
+  const listingLive = useListingLive();
+  const { pauseFollow } = useRunCamera();
 
-  const runningNodeIds = new Set(
-    nodes.filter((node) => node.data.status === "running").map((node) => node.id)
+  const statusById = new Map(
+    withLiveListing(nodes, listingLive).map((node) => [node.id, node.data.status])
   );
-  const displayedEdges = edges.map((edge) => ({
+  const displayedEdges: WorkflowCanvasEdge[] = edges.map((edge) => ({
     ...edge,
-    animated: runningNodeIds.has(edge.target),
+    type: "process",
+    animated: !effects && statusById.get(edge.target) === "running",
+    data: {
+      sourceStatus: statusById.get(edge.source),
+      targetStatus: statusById.get(edge.target),
+      effects,
+    },
   }));
 
   const allowDrop = (event: DragEvent<HTMLDivElement>) => {
@@ -208,6 +220,9 @@ export const WorkflowCanvas = () => {
           selectNodes(selectedNodes.map((node) => node.id))
         }
         onPaneClick={clearCanvasSelection}
+        onMoveStart={(event) => {
+          if (event) pauseFollow();
+        }}
         onNodeDragStart={beginNodeDrag}
         onNodeDragStop={commitNodeDrag}
         onDragOver={allowDrop}
@@ -228,6 +243,8 @@ export const WorkflowCanvas = () => {
         <Controls showInteractive={false} />
         <MiniMap pannable zoomable className="hidden! md:block!" />
       </ReactFlow>
+      <RunHud />
+      <FollowRunButton />
       <SelectionToolbar />
       <ShortcutCheatsheet />
     </div>

@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { GuideReplayButton } from "@/components/commons/onboarding/guide-replay-button";
 import { Button } from "@/components/ui/button";
 import { EditorPanelSheets } from "@/components/workflows/toolbar/editor-panel-sheets";
+import { RunEffectsToggle } from "@/components/workflows/toolbar/run-effects-toggle";
 import { WorkflowActionsMenu } from "@/components/workflows/toolbar/workflow-actions-menu";
 import { WorkflowBackButton } from "@/components/workflows/toolbar/workflow-back-button";
 import { WorkflowMetaDialog } from "@/components/workflows/toolbar/workflow-meta-dialog";
@@ -189,6 +190,7 @@ export const WorkflowToolbar = ({
           <ShieldCheck aria-hidden="true" />
           <span className="hidden sm:inline">{t("workflowEditor.toolbar.validate")}</span>
         </Button>
+        {showsPanelButtons && <RunEffectsToggle />}
         {isRunning ? (
           <Button
             type="button"

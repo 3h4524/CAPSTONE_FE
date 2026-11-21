@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildRoundedPath,
+  findMergeTarget,
   insertWaypoint,
   mergeDraggedWaypoint,
   nearestSegment,
@@ -116,5 +117,26 @@ describe("mergeDraggedWaypoint", () => {
   it("keeps bends that are apart", () => {
     const waypoints = [{ x: 0, y: 100 }, { x: 200, y: 100 }];
     expect(mergeDraggedWaypoint(waypoints, 1, source, target)).toEqual(waypoints);
+  });
+});
+
+describe("findMergeTarget", () => {
+  const source = { x: 0, y: 0 };
+  const target = { x: 400, y: 400 };
+
+  it("names the bend a drop would merge into, so both can light up", () => {
+    expect(findMergeTarget([{ x: 200, y: 100 }, { x: 210, y: 108 }], 1, source, target)).toEqual({
+      kind: "waypoint",
+      index: 0,
+    });
+  });
+
+  it("names the edge end a drop would merge into", () => {
+    expect(findMergeTarget([{ x: 5, y: 5 }], 0, source, target)).toEqual({ kind: "source" });
+    expect(findMergeTarget([{ x: 390, y: 395 }], 0, source, target)).toEqual({ kind: "target" });
+  });
+
+  it("finds nothing while the bend is clear of everything", () => {
+    expect(findMergeTarget([{ x: 200, y: 100 }, { x: 260, y: 100 }], 1, source, target)).toBeNull();
   });
 });

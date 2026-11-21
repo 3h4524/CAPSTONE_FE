@@ -16,7 +16,8 @@ export const useEdgeWaypointDrag = (edgeId: string) => {
   return (
     event: ReactPointerEvent,
     toWaypoints: (point: WorkflowPosition) => WorkflowPosition[],
-    settle?: (waypoints: WorkflowPosition[]) => WorkflowPosition[]
+    settle?: (waypoints: WorkflowPosition[]) => WorkflowPosition[],
+    onEnd?: () => void
   ) => {
     if (event.button !== 0) return;
     event.stopPropagation();
@@ -35,6 +36,7 @@ export const useEdgeWaypointDrag = (edgeId: string) => {
         if (settled.length !== current.length) setEdgeWaypoints(edgeId, settled);
       }
       commitEdgeEdit();
+      onEnd?.();
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", end);

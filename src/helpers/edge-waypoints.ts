@@ -88,23 +88,37 @@ export const offsetWaypoints = (data: unknown, offset: number) => {
   return waypoints.length > 0 ? waypoints.map((point) => ({ x: point.x + offset, y: point.y + offset })) : undefined;
 };
 
+export type MergeTarget = { kind: "source" } | { kind: "target" } | { kind: "waypoint"; index: number };
+
+export const findMergeTarget = (
+  waypoints: WorkflowPosition[],
+  index: number,
+  source: WorkflowPosition,
+  target: WorkflowPosition
+): MergeTarget | null => {
+  const dragged = waypoints[index];
+  if (!dragged) return null;
+  const close = (point: WorkflowPosition) => distance(dragged, point) <= EDGE_WAYPOINT_MERGE;
+  if (close(source)) return { kind: "source" };
+  if (close(target)) return { kind: "target" };
+  const nearest = waypoints
+    .map((point, position) => ({ point, position }))
+    .filter(({ point, position }) => position !== index && close(point))
+    .sort((a, b) => distance(dragged, a.point) - distance(dragged, b.point))[0];
+  return nearest ? { kind: "waypoint", index: nearest.position } : null;
+};
+
 export const mergeDraggedWaypoint = (
   waypoints: WorkflowPosition[],
   index: number,
   source: WorkflowPosition,
   target: WorkflowPosition
 ) => {
-  const dragged = waypoints[index];
-  if (!dragged) return waypoints;
-  const close = (point: WorkflowPosition) => distance(dragged, point) <= EDGE_WAYPOINT_MERGE;
-  if (close(source)) return waypoints.slice(index + 1);
-  if (close(target)) return waypoints.slice(0, index);
-  const others = waypoints.map((point, position) => ({ point, position })).filter(({ position }) => position !== index);
-  const nearest = others
-    .filter(({ point }) => close(point))
-    .sort((a, b) => distance(dragged, a.point) - distance(dragged, b.point))[0];
-  if (!nearest) return waypoints;
-  return nearest.position < index
-    ? [...waypoints.slice(0, nearest.position + 1), ...waypoints.slice(index + 1)]
-    : [...waypoints.slice(0, index), ...waypoints.slice(nearest.position)];
+  const merge = findMergeTarget(waypoints, index, source, target);
+  if (!merge) return waypoints;
+  if (merge.kind === "source") return waypoints.slice(index + 1);
+  if (merge.kind === "target") return waypoints.slice(0, index);
+  return merge.index < index
+    ? [...waypoints.slice(0, merge.index + 1), ...waypoints.slice(index + 1)]
+    : [...waypoints.slice(0, index), ...waypoints.slice(merge.index)];
 };

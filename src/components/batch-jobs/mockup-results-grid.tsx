@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next";
 
 import { HorizontalStrip } from "@/components/commons/data-display/horizontal-strip";
 import { ImageLightbox } from "@/components/commons/data-display/image-lightbox";
-import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
 import { MockupSidesStrip } from "@/components/mockups/mockup-sides-strip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -70,6 +69,8 @@ export const MockupResultsGrid = ({
   const groups = groupMockupColors(cards);
   const withSides = cards.some((card) => card.sides.length > 1);
   const withColors = groups.some((group) => group.colors.length > 1);
+  // Every card has the same rows, so their names and edit buttons line up across the row.
+  const showColorRow = groups.some((group) => group.colors.length > 1 || Boolean(cardColor(group.colors[0])));
   const templatesById = new Map(withViewTemplates(templates ?? []).map((item) => [item.id, item]));
   const photoOf = (templateId: string) => {
     const photo = templatesById.get(templateId);
@@ -177,11 +178,11 @@ export const MockupResultsGrid = ({
               <div
                 key={group.key}
                 className={cn(
-                  "group overflow-hidden rounded-lg border",
+                  "group flex flex-col overflow-hidden rounded-lg border",
                   strip && "w-40 shrink-0 snap-start"
                 )}
               >
-                <div>
+                <div className="flex flex-1 flex-col">
                   {/* Opens the mock-up large on the page rather than in a new tab. */}
                   <Button
                     type="button"
@@ -200,53 +201,50 @@ export const MockupResultsGrid = ({
                     />
                   </Button>
                   {/* Under the picture, so they never cover the garment. */}
-                  {group.colors.length > 1 && (
-                    <div
-                      role="tablist"
-                      aria-label={t("batchJobs.mockups.garmentColors")}
-                      className="bg-ink-50 flex flex-wrap justify-center gap-1.5 border-b px-2 py-1.5"
-                    >
-                      {group.colors.map((item) => {
-                        const hex = cardColor(item);
-                        const name = hex ? garmentColorName(hex) : t("batchJobs.mockups.photoColor");
-                        return (
-                          <button
-                            key={item.key}
-                            type="button"
-                            role="tab"
-                            aria-selected={item.key === card.key}
-                            aria-label={t("batchJobs.mockups.showIn", { name })}
-                            title={name}
-                            onClick={() =>
-                              setShownColors((current) => ({ ...current, [group.key]: item.key }))
-                            }
-                            className={cn(
-                              "border-ink-300 size-5 shrink-0 rounded-full border transition",
-                              item.key === card.key
-                                ? "ring-2 ring-slate-900 ring-offset-1"
-                                : "hover:border-slate-500",
-                              !hex && "bg-card"
-                            )}
-                            style={hex ? { backgroundColor: hex } : undefined}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                  {stripSides.length > 1 && (
+                  <div className="bg-ink-50 flex-1 border-b">
+                    {showColorRow && (
+                      <div
+                        role="tablist"
+                        aria-label={t("batchJobs.mockups.garmentColors")}
+                        className="flex flex-wrap justify-center gap-1.5 border-b px-2 py-1.5"
+                      >
+                        {group.colors.map((item) => {
+                          const hex = cardColor(item);
+                          const name = hex ? garmentColorName(hex) : t("batchJobs.mockups.photoColor");
+                          return (
+                            <button
+                              key={item.key}
+                              type="button"
+                              role="tab"
+                              aria-selected={item.key === card.key}
+                              aria-label={t("batchJobs.mockups.showIn", { name })}
+                              title={name}
+                              onClick={() =>
+                                setShownColors((current) => ({ ...current, [group.key]: item.key }))
+                              }
+                              className={cn(
+                                "border-ink-300 size-5 shrink-0 rounded-full border transition",
+                                item.key === card.key
+                                  ? "ring-2 ring-slate-900 ring-offset-1"
+                                  : "hover:border-slate-500",
+                                !hex && "bg-card"
+                              )}
+                              style={hex ? { backgroundColor: hex } : undefined}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
                     <MockupSidesStrip
                       size="sm"
-                      className="bg-ink-50 justify-center rounded-none border-0 border-b px-2 py-1.5 shadow-none"
+                      className="bg-ink-50 justify-center rounded-none border-0 px-2 py-1.5 shadow-none"
                       active={shown.view}
                       onSelect={chooseSide}
                       sides={stripSides}
                     />
-                  )}
+                  </div>
                 </div>
-                <div className="text-muted-foreground flex items-center gap-1.5 p-2 text-xs">
-                  {mockupImage.garmentColor && group.colors.length === 1 && (
-                    <GarmentColorSwatch hex={mockupImage.garmentColor} />
-                  )}
+                <div className="text-muted-foreground flex min-h-12 items-center gap-1.5 p-2 text-xs">
                   <span className="min-w-0 flex-1 truncate">{productName}</span>
                   {group.colors.some((item) => item.sides.some((side) => side.image.override)) && (
                     <Badge

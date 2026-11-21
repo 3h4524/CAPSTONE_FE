@@ -12,6 +12,7 @@ import { MockupTemplateFormDialog } from "@/components/mockups/mockup-template-f
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
+import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
 import {
   carryColors,
   defaultTemplateColors,
@@ -42,8 +43,8 @@ type MockupTemplatePickerContentProps = {
   onApply: (selectedIds: string[], templateColors: TemplateColors, templateBackgrounds: TemplateBackgrounds) => void;
   onClose: () => void;
   /**
-   * The mock-ups are for a Printify product: only templates linked to Printify are offered, exactly one is chosen
-   * (a Printify product is made on one blueprint), and its colors are the blueprint's Printify colors.
+   * The mock-ups are for a Printify product: only templates linked to Printify are offered, one per product type
+   * (each product is made on one blueprint), and their colors are the blueprint's Printify colors.
    */
   printifyOnly?: boolean;
 };
@@ -75,10 +76,9 @@ export const MockupTemplatePickerContent = ({
   const typeOf = (id: string) => templates.find((item) => item.id === id)?.productType.toLowerCase();
   // One template per product type. A selection saved before this rule keeps the first template of each type.
   const firstOfType = (id: string, index: number, ids: string[]) => ids.findIndex((other) => typeOf(other) === typeOf(id)) === index;
-  const [draftIds, setDraftIds] = useState(() => {
-    const kept = initialIds.filter((id) => usable(id)).filter((id, index, ids) => firstOfType(id, index, ids));
-    return printifyOnly ? kept.slice(0, 1) : kept;
-  });
+  const [draftIds, setDraftIds] = useState(() =>
+    initialIds.filter((id) => usable(id)).filter((id, index, ids) => firstOfType(id, index, ids))
+  );
   const leftOut = offered.filter((template) => initialIds.includes(template.id) && !usable(template.id));
   const usableIds = initialIds.filter((id) => usable(id));
   const extraOfType = templates.filter((template) => usableIds.includes(template.id) && !usableIds.filter((id, index, ids) => firstOfType(id, index, ids)).includes(template.id));
@@ -108,13 +108,10 @@ export const MockupTemplatePickerContent = ({
   // Ticking a template unticks the other one of its product type: each type is made on one template.
   const toggleId = (id: string) => {
     const adding = !draftIds.includes(id);
-    // A Printify product is made on one blueprint, so ticking a Printify template unticks every other one.
     setDraftIds((previous) =>
       previous.includes(id)
         ? previous.filter((item) => item !== id)
-        : printifyOnly
-          ? [id]
-          : [...previous.filter((item) => typeOf(item) !== typeOf(id)), id]
+        : [...previous.filter((item) => typeOf(item) !== typeOf(id)), id]
     );
     setFocusedId(id);
 
@@ -320,20 +317,25 @@ export const MockupTemplatePickerContent = ({
       </div>
       <p className="text-muted-foreground text-xs" aria-live="polite">
         {printifyOnly
-          ? draftIds.length === 1
-            ? t("batchSetup.mockup.printifySelected")
+          ? draftIds.length > 0
+            ? t("batchSetup.mockup.printifySelected", { count: draftIds.length })
             : t("batchSetup.mockup.choosePrintify")
           : t("batchSetup.mockup.selectedOf", { count: draftIds.length, max: MAX_MOCKUP_SELECTION })}
-        {printifyOnly
-          ? ""
-          : tooMany
+        {tooMany
           ? ` — ${t("batchSetup.mockup.removeSome")}`
           : draftIds.length === 0
-            ? ` — ${t("batchSetup.mockup.selectOne")}`
-            : uncovered.length > 0
-              ? ` — ${t("batchSetup.mockup.uncovered", { types: uncovered.map((group) => productTypeLabel(group.type)).join(", ") })}`
-              : ""}
+            ? printifyOnly ? "" : ` — ${t("batchSetup.mockup.selectOne")}`
+            : ""}
       </p>
+      <div aria-live="polite" className="empty:hidden">
+        {draftIds.length > 0 && uncovered.length > 0 && (
+          <PanelNotice tone="warning">
+            {t("batchSetup.mockup.uncovered", {
+              types: uncovered.map((group) => t(`batches.productTypes.${group.type}`, { defaultValue: productTypeLabel(group.type) })).join(", "),
+            })}
+          </PanelNotice>
+        )}
+      </div>
       {extraOfType.length > 0 && (
         <p className="text-muted-foreground text-xs">
           {t("batchSetup.mockup.onePerType", { names: extraOfType.map((template) => template.name).join(", ") })}
@@ -351,7 +353,7 @@ export const MockupTemplatePickerContent = ({
       )}
       <DialogFooter className="gap-2">
         <Button type="button" variant="ghost" onClick={onClose}>{t("batchSetup.cancel")}</Button>
-        <Button type="button" disabled={pending || draftIds.length === 0 || tooMany || (printifyOnly && draftIds.length !== 1)} onClick={apply}>
+        <Button type="button" disabled={pending || draftIds.length === 0 || tooMany} onClick={apply}>
           {t("batchSetup.mockup.apply")}
         </Button>
       </DialogFooter>

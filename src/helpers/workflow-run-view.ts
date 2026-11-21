@@ -74,3 +74,28 @@ export const withLiveListing = (nodes: WorkflowNode[], listingLive: boolean) =>
           : node
       )
     : nodes;
+
+export const centerOf = (points: { x: number; y: number }[]) =>
+  points.length === 0
+    ? null
+    : {
+        x: points.reduce((sum, point) => sum + point.x, 0) / points.length,
+        y: points.reduce((sum, point) => sum + point.y, 0) / points.length,
+      };
+
+export const approachViewport = (
+  current: { x: number; y: number; zoom: number },
+  focus: { x: number; y: number },
+  size: { width: number; height: number },
+  zoom: number,
+  smoothing: number
+) => {
+  const nextZoom = current.zoom + (zoom - current.zoom) * smoothing;
+  const targetX = size.width / 2 - focus.x * nextZoom;
+  const targetY = size.height / 2 - focus.y * nextZoom;
+  return {
+    x: current.x + (targetX - current.x) * smoothing,
+    y: current.y + (targetY - current.y) * smoothing,
+    zoom: nextZoom,
+  };
+};

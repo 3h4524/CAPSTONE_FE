@@ -3506,7 +3506,10 @@
         }
       },
       "canvas": {
-        "cannotConnect": "Node đó không thể nhận kết nối này."
+        "cannotConnect": "Node đó không thể nhận kết nối này.",
+        "bendEdge": "Kéo để bẻ cong đường nối",
+        "addBend": "Kéo để thêm điểm gập",
+        "moveBend": "Kéo để di chuyển điểm gập, nhấp đúp để xoá"
       },
       "steps": {
         "addStep": "Thêm bước",

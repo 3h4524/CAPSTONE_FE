@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import { RUN_PREVIEW_GAP, RUN_PREVIEW_WIDTH } from "@/constants/workflow-run-effects";
 import { createWorkflowNode } from "@/helpers/workflow-graph";
-import { getRunFocusIds, summarizeRun, widenForPreviews, withLiveListing } from "@/helpers/workflow-run-view";
+import {
+  approachViewport,
+  centerOf,
+  getRunFocusIds,
+  summarizeRun,
+  widenForPreviews,
+  withLiveListing,
+} from "@/helpers/workflow-run-view";
 import type { WorkflowNode, WorkflowNodeStatus, WorkflowNodeType } from "@/types/workflow";
 
 const node = (type: WorkflowNodeType, status: WorkflowNodeStatus, progress = 0): WorkflowNode => {
@@ -78,5 +85,34 @@ describe("widenForPreviews", () => {
 
   it("leaves other nodes as they are", () => {
     expect(widenForPreviews(bounds, [node("generate-video", "running")])).toEqual(bounds);
+  });
+});
+
+describe("centerOf", () => {
+  it("is the dot itself when one dot travels", () => {
+    expect(centerOf([{ x: 40, y: 90 }])).toEqual({ x: 40, y: 90 });
+  });
+
+  it("is halfway between two dots", () => {
+    expect(centerOf([{ x: 0, y: 100 }, { x: 200, y: 300 }])).toEqual({ x: 100, y: 200 });
+  });
+
+  it("has nothing to follow without dots", () => {
+    expect(centerOf([])).toBeNull();
+  });
+});
+
+describe("approachViewport", () => {
+  const size = { width: 800, height: 600 };
+
+  it("lands with the focus in the middle of the canvas once settled", () => {
+    const settled = approachViewport({ x: 400 - 100 * 1.5, y: 300 - 50 * 1.5, zoom: 1.5 }, { x: 100, y: 50 }, size, 1.5, 0.2);
+    expect(settled).toEqual({ x: 250, y: 225, zoom: 1.5 });
+  });
+
+  it("moves only part of the way each frame", () => {
+    const next = approachViewport({ x: 0, y: 0, zoom: 1 }, { x: 0, y: 0 }, size, 1, 0.25);
+    expect(next.x).toBeCloseTo(100);
+    expect(next.y).toBeCloseTo(75);
   });
 });

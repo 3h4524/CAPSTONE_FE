@@ -4,25 +4,36 @@ import { useEffect, useRef } from "react";
 
 import {
   RUN_CAMERA_EASING,
+  RUN_CAMERA_FOLLOW_SMOOTHING,
+  RUN_CAMERA_MAX_ZOOM,
   RUN_CAMERA_OUTRO_MS,
   RUN_CAMERA_PADDING,
-  RUN_CAMERA_PULL_BACK_MS,
   RUN_CAMERA_PUSH_IN_MS,
   RUN_FOCUS_TRANSITION_MS,
 } from "@/constants/workflow-run-effects";
-import { getRunFocusIds, widenForPreviews, withLiveListing } from "@/helpers/workflow-run-view";
+import {
+  approachViewport,
+  centerOf,
+  getRunFocusIds,
+  widenForPreviews,
+  withLiveListing,
+} from "@/helpers/workflow-run-view";
 import { useListingLive } from "@/hooks/use-listing-live";
 import { useRunEffects } from "@/hooks/use-run-effects";
 import { useRunFocus } from "@/hooks/use-run-focus";
+import { useProcessDotsStore } from "@/stores/process-dots";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunViewStore } from "@/stores/workflow-run-view";
 import { cubicBezier } from "@/utils/cubic-bezier";
-import { useReactFlow } from "@xyflow/react";
+import { useReactFlow, useStore } from "@xyflow/react";
 
 const cameraEase = cubicBezier(...RUN_CAMERA_EASING);
 
 export const useRunCamera = () => {
-  const { fitBounds, fitView, getNodesBounds } = useReactFlow();
+  const { fitBounds, fitView, getNodesBounds, getViewport, setViewport } = useReactFlow();
+  const width = useStore((state) => state.width);
+  const height = useStore((state) => state.height);
+  const dotsTravelling = useProcessDotsStore((state) => Object.keys(state.dots).length > 0);
   const effects = useRunEffects();
   const listingLive = useListingLive();
   const isRunning = useWorkflowStore((state) => state.isRunning);
@@ -32,7 +43,6 @@ export const useRunCamera = () => {
   const { focused } = useRunFocus();
   const focusKey = useWorkflowStore((state) => getRunFocusIds(withLiveListing(state.nodes, listingLive)).join(","));
   const active = isRunning || listingLive;
-  const previousFocus = useRef<string[]>([]);
   const wasActive = useRef(active);
   const wasFocused = useRef(focused);
 
@@ -41,7 +51,7 @@ export const useRunCamera = () => {
   }, [active, resetForRun]);
 
   useEffect(() => {
-    if (!effects || !active || followPaused || !focusKey) return;
+    if (!effects || !active || followPaused || !focusKey || dotsTravelling) return;
     const ids = focusKey.split(",");
     const frame = (frameIds: string[], duration: number) => {
       const nodes = useWorkflowStore.getState().nodes.filter((node) => frameIds.includes(node.id));
@@ -53,25 +63,31 @@ export const useRunCamera = () => {
         interpolate: "linear",
       });
     };
-    const leaving = previousFocus.current.filter((id) => !ids.includes(id));
-    previousFocus.current = ids;
     const layoutDelay = wasFocused.current === focused ? 0 : RUN_FOCUS_TRANSITION_MS;
     wasFocused.current = focused;
-    const timers: number[] = [];
-    if (leaving.length === 0) {
-      timers.push(window.setTimeout(() => frame(ids, RUN_CAMERA_PUSH_IN_MS), layoutDelay));
-    } else {
-      timers.push(window.setTimeout(() => frame([...leaving, ...ids], RUN_CAMERA_PULL_BACK_MS), layoutDelay));
-      timers.push(window.setTimeout(() => frame(ids, RUN_CAMERA_PUSH_IN_MS), layoutDelay + RUN_CAMERA_PULL_BACK_MS));
-    }
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [effects, active, followPaused, focusKey, focused, fitBounds, getNodesBounds]);
+    const timer = window.setTimeout(() => frame(ids, RUN_CAMERA_PUSH_IN_MS), layoutDelay);
+    return () => window.clearTimeout(timer);
+  }, [effects, active, followPaused, focusKey, focused, dotsTravelling, fitBounds, getNodesBounds]);
+
+  useEffect(() => {
+    if (!effects || !active || followPaused || !dotsTravelling) return;
+    let frame = 0;
+    const follow = () => {
+      const focus = centerOf(Object.values(useProcessDotsStore.getState().dots));
+      if (!focus) return;
+      void setViewport(
+        approachViewport(getViewport(), focus, { width, height }, RUN_CAMERA_MAX_ZOOM, RUN_CAMERA_FOLLOW_SMOOTHING)
+      );
+      frame = requestAnimationFrame(follow);
+    };
+    frame = requestAnimationFrame(follow);
+    return () => cancelAnimationFrame(frame);
+  }, [effects, active, followPaused, dotsTravelling, width, height, getViewport, setViewport]);
 
   useEffect(() => {
     const finished = wasActive.current && !active;
     wasActive.current = active;
     if (!finished) return;
-    previousFocus.current = [];
     if (!effects || focusKey) return;
     const outro = window.setTimeout(
       () =>

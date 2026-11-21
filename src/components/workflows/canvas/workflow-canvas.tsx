@@ -113,6 +113,8 @@ export const WorkflowCanvas = () => {
     type: "process",
     animated: !effects && statusById.get(edge.target) === "running",
     data: {
+      ...edge.data,
+      editable: !isRunning,
       sourceStatus: statusById.get(edge.source),
       targetStatus: statusById.get(edge.target),
       effects,

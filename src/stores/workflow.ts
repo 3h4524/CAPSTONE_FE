@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 import { DUPLICATE_NODE_OFFSET, HISTORY_GROUP_WINDOW_MS, HISTORY_LIMIT, NODE_MOVE_DIRTY_THRESHOLD } from "@/constants/workflow";
+import { readWaypoints } from "@/helpers/edge-waypoints";
 import { duplicateWorkflowSelection, toWorkflowEdges, toWorkflowNodes, withUniqueLabels } from "@/helpers/workflow-graph";
 import type {
   WorkflowDetail,
@@ -9,6 +10,7 @@ import type {
   WorkflowNodeConfig,
   WorkflowNodeData,
   WorkflowNodeStatus,
+  WorkflowPosition,
 } from "@/types/workflow";
 import {
   addEdge,
@@ -103,6 +105,10 @@ export type WorkflowEditorState = {
   redo: () => void;
   beginNodeDrag: () => void;
   commitNodeDrag: () => void;
+  beginEdgeEdit: () => void;
+  setEdgeWaypoints: (edgeId: string, waypoints: WorkflowPosition[]) => void;
+  commitEdgeEdit: () => void;
+  updateEdgeWaypoints: (edgeId: string, waypoints: WorkflowPosition[]) => void;
   setNodeStatus: (nodeId: string, status: WorkflowNodeStatus) => void;
   setNodeRuntime: (
     nodeId: string,
@@ -149,6 +155,7 @@ const INITIAL_STATE = {
 };
 
 let dragSnapshot: HistorySnapshot | null = null;
+let edgeSnapshot: HistorySnapshot | null = null;
 
 const takeSnapshot = (state: Pick<WorkflowEditorState, "nodes" | "edges" | "selectedNodeIds">): HistorySnapshot => ({
   nodes: state.nodes,
@@ -200,6 +207,9 @@ const withNodeConfig = (nodes: WorkflowNode[], nodeId: string, config: WorkflowN
 export const sharedGraphNodes = (state: Pick<WorkflowEditorState, "nodes" | "designScope">) =>
   state.designScope ? withNodeConfig(state.nodes, state.designScope.nodeId, state.designScope.sharedConfig) : state.nodes;
 
+const edgeSignature = (edge: WorkflowEdge) =>
+  `${edge.id}:${edge.source}:${edge.target}:${JSON.stringify(readWaypoints(edge.data))}`;
+
 const hasMeaningfulGraphChanges = (
   before: Pick<WorkflowEditorState, "nodes" | "edges">,
   after: Pick<WorkflowEditorState, "nodes" | "edges">
@@ -218,9 +228,12 @@ const hasMeaningfulGraphChanges = (
     );
   });
   if (nodesChanged) return true;
-  const afterEdges = new Set(after.edges.map((edge) => `${edge.id}:${edge.source}:${edge.target}`));
-  return before.edges.some((edge) => !afterEdges.has(`${edge.id}:${edge.source}:${edge.target}`));
+  const afterEdges = new Set(after.edges.map(edgeSignature));
+  return before.edges.some((edge) => !afterEdges.has(edgeSignature(edge)));
 };
+
+const withEdgeWaypoints = (edges: WorkflowEdge[], edgeId: string, waypoints: WorkflowPosition[]) =>
+  edges.map((edge) => (edge.id === edgeId ? { ...edge, data: { ...edge.data, waypoints } } : edge));
 
 export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
   ...INITIAL_STATE,
@@ -475,6 +488,37 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
       dragSnapshot = null;
       if (!stashed || !hasNodePositionsChanged(stashed.nodes, state.nodes)) return state;
       return pushSnapshot(state, stashed, "structure");
+    }),
+
+  beginEdgeEdit: () => {
+    edgeSnapshot = takeSnapshot(get());
+  },
+
+  setEdgeWaypoints: (edgeId, waypoints) =>
+    set((state) => {
+      if (state.isRunning) return state;
+      const edges = withEdgeWaypoints(state.edges, edgeId, waypoints);
+      return { edges, isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes: state.nodes, edges }) };
+    }),
+
+  commitEdgeEdit: () =>
+    set((state) => {
+      const stashed = edgeSnapshot;
+      edgeSnapshot = null;
+      if (!stashed || stashed.edges.map(edgeSignature).join("|") === state.edges.map(edgeSignature).join("|"))
+        return state;
+      return pushSnapshot(state, stashed, "structure");
+    }),
+
+  updateEdgeWaypoints: (edgeId, waypoints) =>
+    set((state) => {
+      if (state.isRunning) return state;
+      const edges = withEdgeWaypoints(state.edges, edgeId, waypoints);
+      return {
+        edges,
+        isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes: state.nodes, edges }),
+        ...pushHistory(state, "structure", false),
+      };
     }),
 
   setNodeStatus: (nodeId, status) =>

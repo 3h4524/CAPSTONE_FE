@@ -557,6 +557,10 @@ export interface RunGroupTarget {
   videoStatus?: string | null;
   /** The design's Push to Printify step, apart from the video; null before it has a run or without that step. */
   printify?: RunGroupStep | null;
+  /** Each video step reports its own progress, independently of export and publishing. */
+  generateVideo?: RunGroupStep | null;
+  reviewVideo?: RunGroupStep | null;
+  exportZip?: RunGroupStep | null;
   currentStep: string | null;
   stage: string | null;
   progress: number;

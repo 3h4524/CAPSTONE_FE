@@ -6,11 +6,12 @@ import { useWorkflowStore } from "@/stores/workflow";
 import type { RunGroup, RunGroupTarget } from "@/types/video-workflow";
 import type { WorkflowNode } from "@/types/workflow";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { NodeProps } from "@xyflow/react";
 
 const mocks = vi.hoisted(() => ({
   group: null as RunGroup | null,
+  groupId: undefined as string | null | undefined,
   run: null as unknown,
   getExport: vi.fn(),
   downloadGroup: vi.fn(),
@@ -19,7 +20,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/components/workflows/nodes/node-frame", () => ({ NodeFrame: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 vi.mock("@/hooks/queries/use-run-group", () => ({
-  useRunGroupId: () => mocks.group?.id ?? null,
+  useRunGroupId: () => mocks.groupId === undefined ? mocks.group?.id ?? null : mocks.groupId,
   useRunGroup: () => ({ data: mocks.group }),
 }));
 vi.mock("@/api/run-groups", () => ({ getRunGroupExport: mocks.getExport, downloadRunGroupExport: mocks.downloadGroup }));
@@ -41,21 +42,31 @@ const group = (targets: RunGroupTarget[]): RunGroup => ({
   targets,
 });
 
-const card = () =>
-  render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+const card = () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const content = () => (
+    <QueryClientProvider client={client}>
       <ExportZipCard
         {...({ id: "export", selected: false, data: { type: "export-zip", label: "Export ZIP", config: {}, status: "succeeded" } } as unknown as NodeProps<WorkflowNode>)}
       />
     </QueryClientProvider>
   );
+  const view = render(content());
+  return { ...view, refresh: () => view.rerender(content()) };
+};
 
 describe("ExportZipCard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.group = null;
+    mocks.groupId = undefined;
     useWorkflowStore.setState({ workflowId: "wf" });
     // The canvas follows one video of the run: its own package must not be what the button downloads.
-    mocks.run = { nodes: [{ nodeId: "export", nodeType: "export-zip", status: "succeeded", output: { exportId: "one-video" } }] };
+    mocks.run = { nodes: [
+      { nodeId: "video", nodeType: "generate-video", status: "succeeded", output: {} },
+      { nodeId: "review", nodeType: "review-video", status: "succeeded", output: {} },
+      { nodeId: "export", nodeType: "export-zip", status: "succeeded", output: { exportId: "one-video" } },
+    ] };
   });
 
   it("downloads every video of a batch video run in one ZIP", async () => {
@@ -75,12 +86,14 @@ describe("ExportZipCard", () => {
     vi.unstubAllGlobals();
   });
 
-  it("says how many videos are packaged while others still render", async () => {
+  it("does not offer a partial ZIP while another video is still rendering", async () => {
     mocks.group = group([target(0, "completed"), target(1, "running")]);
     mocks.getExport.mockResolvedValue({ groupId: "group", ready: 1, videos: 2 });
     card();
 
-    expect(await screen.findByText("1 of 2 videos are packaged.")).toBeInTheDocument();
+    await waitFor(() => expect(mocks.getExport).toHaveBeenCalledWith("group"));
+    expect(screen.queryByRole("button", { name: "Download ZIP" })).not.toBeInTheDocument();
+    expect(screen.queryByText("ZIP ready")).not.toBeInTheDocument();
   });
 
   it("downloads the run's own package outside a batch video run", () => {
@@ -91,5 +104,115 @@ describe("ExportZipCard", () => {
 
     expect(mocks.downloadOne).toHaveBeenCalledWith({ id: "one-video", zip: true }, expect.anything());
     expect(mocks.getExport).not.toHaveBeenCalled();
+  });
+
+  it("hides a ready ZIP from an earlier attempt while another video is rendering", async () => {
+    mocks.group = group([target(0, "completed"), target(1, "running")]);
+    mocks.getExport.mockResolvedValue({ groupId: "group", ready: 2, videos: 2 });
+    card();
+    await waitFor(() => expect(mocks.getExport).toHaveBeenCalledWith("group"));
+    await act(async () => {});
+
+    expect(screen.queryByRole("button", { name: "Download ZIP" })).not.toBeInTheDocument();
+    expect(screen.queryByText("ZIP ready")).not.toBeInTheDocument();
+  });
+
+  it.each(["generateVideo", "reviewVideo", "exportZip"] as const)(
+    "hides cached packages while the current %s step is unfinished",
+    async (field) => {
+      const item = target(0, "completed");
+      item.generateVideo = item.reviewVideo = item.exportZip = { status: "succeeded", stage: null, progress: 100, error: null };
+      item[field] = { status: "running", stage: null, progress: 10, error: null };
+      mocks.group = group([item]);
+      mocks.getExport.mockResolvedValue({ groupId: "group", ready: 1, videos: 1 });
+      card();
+      await waitFor(() => expect(mocks.getExport).toHaveBeenCalledWith("group"));
+      await act(async () => {});
+
+      expect(screen.queryByRole("button", { name: "Download ZIP" })).not.toBeInTheDocument();
+    }
+  );
+
+  it("hides a summary that does not include every current video", async () => {
+    mocks.group = group([target(0, "completed"), target(1, "completed")]);
+    mocks.getExport.mockResolvedValue({ groupId: "group", ready: 1, videos: 1 });
+    card();
+    await waitFor(() => expect(mocks.getExport).toHaveBeenCalledWith("group"));
+    await act(async () => {});
+
+    expect(screen.queryByRole("button", { name: "Download ZIP" })).not.toBeInTheDocument();
+  });
+
+  it("does not fall back to a single video ZIP while the group is loading", () => {
+    mocks.groupId = "group";
+    card();
+
+    expect(screen.queryByRole("button", { name: "Download ZIP" })).not.toBeInTheDocument();
+  });
+
+  it("does not fall back to a single video ZIP while the group waits to start", () => {
+    mocks.group = { ...group([target(0, "queued")]), status: "waiting_for_targets" };
+    card();
+
+    expect(screen.queryByRole("button", { name: "Download ZIP" })).not.toBeInTheDocument();
+  });
+
+  it.each(["generate-video", "review-video"])(
+    "hides a single run's previous export while %s is unfinished",
+    (type) => {
+      mocks.run = { nodes: [
+        { nodeId: "upstream", nodeType: type, status: "running", output: {} },
+        { nodeId: "export", nodeType: "export-zip", status: "succeeded", output: { exportId: "old-export" } },
+      ] };
+      card();
+
+      expect(screen.queryByRole("button", { name: "Download ZIP" })).not.toBeInTheDocument();
+    }
+  );
+
+  it("hides the button immediately when rendering restarts and restores it only after export finishes", async () => {
+    const item = target(0, "completed");
+    item.generateVideo = item.reviewVideo = item.exportZip = { status: "succeeded", stage: null, progress: 100, error: null };
+    mocks.group = group([item]);
+    mocks.getExport.mockResolvedValue({ groupId: "group", ready: 1, videos: 1 });
+    const view = card();
+    expect(await screen.findByRole("button", { name: "Download ZIP" })).toBeInTheDocument();
+
+    const running = { status: "running", stage: null, progress: 10, error: null };
+    mocks.group = group([{ ...item, generateVideo: running }]);
+    view.refresh();
+    expect(screen.queryByRole("button", { name: "Download ZIP" })).not.toBeInTheDocument();
+
+    mocks.group = group([{ ...item, exportZip: running }]);
+    view.refresh();
+    await act(async () => {});
+    expect(screen.queryByRole("button", { name: "Download ZIP" })).not.toBeInTheDocument();
+
+    mocks.group = group([item]);
+    view.refresh();
+    expect(await screen.findByRole("button", { name: "Download ZIP" })).toBeInTheDocument();
+  });
+
+  it("waits for the run's group even when only the child run is present in the URL", () => {
+    mocks.groupId = null;
+    mocks.run = { ...(mocks.run as object), runGroupId: "group" };
+    card();
+
+    expect(screen.queryByRole("button", { name: "Download ZIP" })).not.toBeInTheDocument();
+  });
+
+  it("hides cached group results when the selected video's newer state is still rendering", async () => {
+    mocks.group = group([target(0, "completed")]);
+    mocks.run = { id: "run-0", nodes: [
+      { nodeId: "video", nodeType: "generate-video", status: "running", output: {} },
+      { nodeId: "review", nodeType: "review-video", status: "succeeded", output: {} },
+      { nodeId: "export", nodeType: "export-zip", status: "succeeded", output: { exportId: "old-export" } },
+    ] };
+    mocks.getExport.mockResolvedValue({ groupId: "group", ready: 1, videos: 1 });
+    card();
+    await waitFor(() => expect(mocks.getExport).toHaveBeenCalledWith("group"));
+    await act(async () => {});
+
+    expect(screen.queryByRole("button", { name: "Download ZIP" })).not.toBeInTheDocument();
   });
 });

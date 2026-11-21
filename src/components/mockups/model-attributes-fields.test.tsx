@@ -133,8 +133,66 @@ describe("GenerateModelPhotoDialog", () => {
       {
         productType: "tshirt",
         attributes: { people: "single", ageGroup: "senior", gender: "female" },
+        style: { scene: "studio_grey", outfit: "casual", pose: "standing" },
       },
       expect.anything()
     );
+  });
+
+  it("sends the scene, outfit and pose chosen", async () => {
+    mocks.generate.mockClear();
+    const user = userEvent.setup();
+    render(
+      <GenerateModelPhotoDialog
+        open
+        scope="seller"
+        productType="hoodie"
+        initial={{ people: "single", ageGroup: "adult", gender: "male" }}
+        onClose={vi.fn()}
+      />
+    );
+
+    const pick = async (menu: string, option: string) => {
+      await user.click(screen.getByRole("combobox", { name: menu }));
+      await user.click(screen.getByRole("option", { name: option }));
+    };
+    await pick("Scene", "Café");
+    await pick("Outfit", "Streetwear");
+    await pick("Pose", "Seated");
+    expect(screen.getByText(/real places take a little longer/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /make photo/i }));
+
+    expect(mocks.generate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        productType: "hoodie",
+        style: { scene: "cafe", outfit: "streetwear", pose: "seated" },
+      }),
+      expect.anything()
+    );
+  });
+
+  it("offers only what a person can wear or carry, and a group only standing or walking", async () => {
+    const user = userEvent.setup();
+    render(
+      <GenerateModelPhotoDialog
+        open
+        scope="seller"
+        productType="mug"
+        initial={{ people: "single", ageGroup: "adult", gender: "male" }}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("combobox", { name: /product type/i })).toHaveTextContent("T-shirt");
+    await user.click(screen.getByRole("combobox", { name: /product type/i }));
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["T-shirt", "Hoodie"]);
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("combobox", { name: "Pose" }));
+    await user.click(screen.getByRole("option", { name: "Seated" }));
+    await user.click(screen.getByRole("button", { name: "Several people" }));
+
+    expect(screen.getByRole("combobox", { name: "Pose" })).toHaveTextContent("Standing");
+    await user.click(screen.getByRole("combobox", { name: "Pose" }));
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Standing", "Walking"]);
   });
 });

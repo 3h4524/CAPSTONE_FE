@@ -17,15 +17,15 @@ export const productLineLabels: Record<ProductLine, string> = { apparel: "Appare
 export const productLineOf = (type: string | null | undefined): ProductLine | null =>
   productLines.find((line) => (productLineTypes[line] as string[]).includes((type ?? "").toLowerCase())) ?? null;
 
-// The design aspect ratios that suit each line's print area, the first the one a new run should use. A chest print is
-// taller than wide, a mug print wraps around the mug, a phone case is tall; a ratio outside the list leaves most of
-// the print area empty or crops the artwork.
-export const productLineRatios: Record<ProductLine, { ratios: string[]; why: string }> = {
-  apparel: { ratios: ["3:4", "1:1"], why: "A chest print is a little taller than wide." },
-  bags: { ratios: ["1:1", "3:4"], why: "A tote's print area is about square." },
-  drinkware: { ratios: ["16:9", "1:1"], why: "A mug print wraps around the mug; 1:1 fits one side." },
-  wall_art: { ratios: ["3:4", "4:3", "1:1"], why: "Posters print at 3:4 portrait, 4:3 landscape or square." },
-  phone_cases: { ratios: ["9:16"], why: "A phone case is tall and narrow." },
+// The design aspect ratios closest to each line's print area, the first the one a new run should use. A chest print is
+// taller than wide, a mug print wraps around the mug, a phone case is tall. Any ratio can still run: a design is fitted
+// whole inside the print area, so one outside the list prints smaller and leaves space around it.
+export const productLineRatios: Record<ProductLine, { ratios: string[] }> = {
+  apparel: { ratios: ["3:4", "1:1"] },
+  bags: { ratios: ["1:1", "3:4"] },
+  drinkware: { ratios: ["16:9", "1:1"] },
+  wall_art: { ratios: ["3:4", "4:3", "1:1"] },
+  phone_cases: { ratios: ["9:16"] },
 };
 // Every product falls under exactly one of these, so the counters add up to the batch's product count.
 export const statuses = ["pending", "queued", "processing", "review", "completed", "failed"] as const;

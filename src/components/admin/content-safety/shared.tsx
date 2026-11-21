@@ -93,7 +93,7 @@ export const DECISIONS: Record<ModerationDecision, Tone> = {
   },
   unchecked: {
     icon: CircleDashed,
-    className: "bg-ink-100 text-ink-700 ring-ink-200 dark:bg-ink-500/20 dark:text-ink-300 dark:ring-ink-500/30",
+    className: "bg-ink-100 text-ink-700 ring-ink-200",
   },
 };
 
@@ -116,10 +116,10 @@ export const DECIDERS: Record<ModerationDecider, { className: string }> = {
     className: "bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:ring-indigo-500/30",
   },
   error: {
-    className: "bg-ink-100 text-ink-700 ring-ink-200 dark:bg-ink-500/20 dark:text-ink-300 dark:ring-ink-500/30",
+    className: "bg-ink-100 text-ink-700 ring-ink-200",
   },
   disabled: {
-    className: "bg-ink-100 text-ink-700 ring-ink-200 dark:bg-ink-500/20 dark:text-ink-300 dark:ring-ink-500/30",
+    className: "bg-ink-100 text-ink-700 ring-ink-200",
   },
 };
 
@@ -153,7 +153,7 @@ export const CategoryChips = ({ categories }: { categories: ModerationCategory[]
       {categories.map((category) => (
         <span
           key={category}
-          className="border-ink-200 text-ink-700 bg-ink-50 dark:bg-ink-800/40 dark:text-ink-200 dark:border-ink-700 rounded-md border px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap"
+          className="border-ink-200 text-ink-700 bg-ink-50 rounded-md border px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap"
         >
           {t(CATEGORY_LABEL_KEYS[category])}
         </span>
@@ -207,7 +207,7 @@ export const PanelMessage = ({
       tone === "error" ? "text-rose-700 dark:text-rose-300" : "text-ink-500"
     )}
   >
-    <p className="text-ink-800 dark:text-ink-100 text-sm font-semibold">{title}</p>
+    <p className="text-ink-800 text-sm font-semibold">{title}</p>
     {description ? <p className="max-w-md text-[13px] leading-relaxed">{description}</p> : null}
     {action}
   </div>

@@ -11,6 +11,7 @@ import { ApprovalFlow } from "@/components/workflows/config-panel/approval-flow"
 import { DesignOutputPreview } from "@/components/workflows/config-panel/design-output-preview";
 import { DesignScopeSelect } from "@/components/workflows/config-panel/design-scope-select";
 import { AiShotOptions } from "@/components/workflows/config-panel/fields/ai-shot-options";
+import { ContentIssueMessage } from "@/components/workflows/config-panel/fields/content-issue";
 import { PreviousRunsSelect } from "@/components/workflows/config-panel/fields/previous-runs-select";
 import { VideoProductSelect } from "@/components/workflows/config-panel/fields/video-product-select";
 import { PanelFooter } from "@/components/workflows/config-panel/layout/panel-footer";
@@ -43,6 +44,7 @@ import { useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useNodeOverview } from "@/hooks/use-node-overview";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
+import { useWorkflowContentIssuesStore } from "@/stores/workflow-content-issues";
 import type { WorkflowField, WorkflowNode, WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -91,6 +93,9 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
   const overview = useNodeOverview(node);
   const settingsLocked = isRunning && !(waitingReview && node.data.type === "generate-video");
   const isPublishNode = node.data.type === "publish-printify" || node.data.type === "publish-etsy";
+  const nodeContentIssue = useWorkflowContentIssuesStore(
+    (state) => state.issues.find((issue) => issue.nodeId === node.id && issue.field === null)?.message
+  );
 
   const form = useForm<WorkflowNodeConfig, unknown, WorkflowNodeConfig>({
     resolver: zodResolver(workflowNodeConfigSchemas[node.data.type]),
@@ -113,6 +118,7 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
     return field ? (
       <NodeConfigField
         key={field.name}
+        nodeId={node.id}
         nodeType={node.data.type}
         field={field}
         control={control}
@@ -127,7 +133,7 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
       : definition.fields;
   const { grouped, rest } = groupPanelFields(panelFields, NODE_PANEL_SECTIONS[node.data.type]);
   const renderField = (field: WorkflowField) => (
-    <NodeConfigField key={field.name} nodeType={node.data.type} field={field} control={control} />
+    <NodeConfigField key={field.name} nodeId={node.id} nodeType={node.data.type} field={field} control={control} />
   );
 
   // The scene editor writes directly to the workflow store. Reset only when a
@@ -193,6 +199,12 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
             }
           }}
         />
+        {/* Refused text with no field of its own on screen (a scene's hidden directions). */}
+        {nodeContentIssue && (
+          <div className="border-destructive/30 bg-destructive/5 mx-5 mt-4 rounded-lg border px-3 py-2.5">
+            <ContentIssueMessage message={nodeContentIssue} />
+          </div>
+        )}
         {settingsLocked && definition.fields.length > 0 && (
           <div className="px-5 pt-4">
             <PanelNotice tone="info">

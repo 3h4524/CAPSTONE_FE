@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   listRunVideos: vi.fn(),
   getWorkflowRun: vi.fn(),
   act: vi.fn(),
+  download: vi.fn(),
 }));
 
 vi.mock("@/hooks/queries/use-run-group", () => ({
@@ -26,6 +27,9 @@ vi.mock("@/hooks/use-workflow-runtime", () => ({
 }));
 vi.mock("@/hooks/mutations/use-workflow-run-action", () => ({
   useWorkflowRunAction: () => ({ mutate: mocks.act }),
+}));
+vi.mock("@/hooks/mutations/use-media-download", () => ({
+  useMediaDownload: () => ({ mutate: mocks.download, isPending: false }),
 }));
 vi.mock("@/api/video-workflow", () => ({
   listRunVideos: mocks.listRunVideos,
@@ -161,6 +165,26 @@ describe("GroupVideoList approval", () => {
     await vi.waitFor(() =>
       expect(mocks.act).toHaveBeenCalledWith(expect.objectContaining({ action: "reject_video", videoId: "v" }), expect.anything())
     );
+  });
+
+  it("downloads a finished video's MP4, approved or still waiting for review", async () => {
+    mocks.listRunVideos.mockResolvedValue([{ id: "v", version: 2, thumbnailUrl: "/thumb.png", previewUrl: "/video.mp4", outputFormat: "square", reviewRevision: 4 } as PromoVideo]);
+    mocks.group = group([target(0, "completed"), target(1, "waiting_for_review")]);
+    withQuery(<GroupVideoList />);
+
+    await vi.waitFor(() =>
+      expect(screen.getAllByRole("button", { name: "Download video" }).every((button) => !(button as HTMLButtonElement).disabled)).toBe(true)
+    );
+    await userEvent.click(screen.getAllByRole("button", { name: "Download video" })[1]!);
+
+    expect(mocks.download).toHaveBeenCalledWith({ id: "v", zip: false }, expect.anything());
+  });
+
+  it("offers no download before a video is rendered", () => {
+    mocks.group = group([target(0, "running", 10)]);
+    withQuery(<GroupVideoList />);
+
+    expect(screen.getByRole("button", { name: "Download video" })).toBeDisabled();
   });
 
   it("does not offer a decision on a video that is not waiting for review", () => {

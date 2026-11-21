@@ -5,7 +5,7 @@ import { approveBatch, batchKeys, listBatches, listBatchProducts } from "@/api/b
 import { designTemplateKeys, getDesignTemplate } from "@/api/design-templates";
 import { listMockupTemplates, mockupTemplateKeys } from "@/api/mockup-templates";
 import { getEntitlementsRequest } from "@/api/subscription";
-import { productLineLabels, productLineOf, productLineRatios } from "@/constants/batches";
+import { productLineLabels, productLineOf } from "@/constants/batches";
 import { allowanceBlocksRun } from "@/helpers/allowance";
 import { missingDesignTextWarning, thinInputWarning } from "@/helpers/design-text";
 import { countProductTypes, productTypeLabel } from "@/helpers/mockup-template";
@@ -65,17 +65,12 @@ export const failedProductsBlockRun = (products: Pick<Product, "status">[]): str
 // share one aspect ratio, and its mock-ups, videos and listings are of one kind. Mirrors the backend's ApproveAsync.
 export const productLineBlocksRun = (
   line: ProductLine | null,
-  aspectRatio: string,
   pending: Pick<Product, "name" | "productType">[]
 ): string | null => {
   if (!line) return "This batch has no product line yet. Edit it on the Batches page and choose what it makes, then run it.";
   const outside = pending.filter((product) => productLineOf(product.productType) !== line).map((product) => product.name);
   if (outside.length > 0) {
     return `This is a ${productLineLabels[line].toLowerCase()} batch, but ${outside.slice(0, 5).join(", ")} ${outside.length === 1 ? "is" : "are"} not. Move or delete those pending products on the Batches page.`;
-  }
-  const { ratios, why } = productLineRatios[line];
-  if (!ratios.includes(aspectRatio)) {
-    return `A ${aspectRatio} design does not suit a ${productLineLabels[line].toLowerCase()} batch. ${why} Choose ${ratios.join(" or ")} in Design image.`;
   }
   return null;
 };
@@ -117,7 +112,7 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
   }
   const pendingIds = new Set(pending.map((product) => product.id));
   const batches = await queryClient.fetchQuery({ queryKey: batchKeys.all, queryFn: listBatches, ...fresh });
-  const lineProblem = productLineBlocksRun(batches.find((batch) => batch.id === plan.batchId)?.productLine ?? null, plan.aspectRatio, pending);
+  const lineProblem = productLineBlocksRun(batches.find((batch) => batch.id === plan.batchId)?.productLine ?? null, pending);
   if (lineProblem) throw new RunBlockedError(lineProblem);
 
   let reusableDraftId: string | null = null;

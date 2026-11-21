@@ -20,7 +20,9 @@ import { cn } from "@/utils/cn";
 export const VIDEOS_PER_PAGE = 4;
 export const ASPECT: Record<string, string> = {
   portrait: "9 / 16",
+  classic_portrait: "3 / 4",
   square: "1 / 1",
+  classic_landscape: "4 / 3",
   landscape: "16 / 9",
 };
 

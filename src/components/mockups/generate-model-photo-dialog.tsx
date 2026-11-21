@@ -25,8 +25,18 @@ import {
 } from "@/components/ui/select";
 import { getErrorMessage } from "@/helpers/error-message";
 import { cleanAttributes, isCompleteAttributes } from "@/helpers/model-attributes";
+import {
+  DEFAULT_MODEL_PHOTO_STYLE,
+  isStudioScene,
+  MODEL_PHOTO_OUTFITS,
+  MODEL_PHOTO_PRODUCT_TYPES,
+  MODEL_PHOTO_SCENES,
+  modelPhotoProductType,
+  type ModelPhotoStyle,
+  posesFor,
+  styleFor,
+} from "@/helpers/model-photo-styles";
 import { useGenerateModelPhoto } from "@/hooks/mutations/use-model-photo-mutations";
-import { productTypes } from "@/schemas/batches";
 import type { MockupTemplate, ModelAttributes, ModelPhotoFilter } from "@/types/mockup-templates";
 
 type GenerateModelPhotoDialogProps = {
@@ -39,6 +49,41 @@ type GenerateModelPhotoDialogProps = {
   onGenerated?: (photo: MockupTemplate) => void;
 };
 
+/** A labelled menu of a few choices. */
+const OptionSelect = <T extends string>({
+  id,
+  label,
+  value,
+  options,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  disabled: boolean;
+  onChange: (value: T) => void;
+}) => (
+  <div className="space-y-1.5">
+    <Label htmlFor={id} className="text-ink-700 text-xs font-medium">
+      {label}
+    </Label>
+    <Select value={value} onValueChange={(next) => next && onChange(next as T)} disabled={disabled}>
+      <SelectTrigger id={id} className="w-full">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+);
+
 const startFrom = (initial?: ModelPhotoFilter): ModelAttributes =>
   cleanAttributes({
     people: initial?.people ?? "single",
@@ -48,8 +93,9 @@ const startFrom = (initial?: ModelPhotoFilter): ModelAttributes =>
   });
 
 /**
- * Makes a model photo with AI: the people chosen, in a plain white t-shirt on a grey studio backdrop. It is kept like
- * an uploaded one, so mock-ups are then put on it without AI.
+ * Makes a model photo with AI: the people chosen, wearing a plain white t-shirt or hoodie,
+ * in the scene, outfit and pose chosen; their looks are picked at random each time. It is kept like an uploaded
+ * one, so mock-ups are then put on it without AI.
  */
 export const GenerateModelPhotoDialog = ({
   open,
@@ -61,7 +107,9 @@ export const GenerateModelPhotoDialog = ({
 }: GenerateModelPhotoDialogProps) => {
   const { t } = useTranslation("common");
   const [attributes, setAttributes] = useState<ModelAttributes>(() => startFrom(initial));
-  const [type, setType] = useState(productType);
+  const [type, setType] = useState(() => modelPhotoProductType(productType));
+  const [style, setStyle] = useState<ModelPhotoStyle>(DEFAULT_MODEL_PHOTO_STYLE);
+  const group = attributes.people === "group";
   const { mutate: generate, isPending } = useGenerateModelPhoto(scope);
   // Why the last try failed, shown in the dialog itself: a toast is easy to miss behind it.
   const [failure, setFailure] = useState<string | null>(null);
@@ -82,27 +130,52 @@ export const GenerateModelPhotoDialog = ({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <ModelAttributesFields value={attributes} onChange={setAttributes} disabled={isPending} />
-          <div className="space-y-1.5">
-            <Label htmlFor="generate-model-product-type">{t("mockups.generateModelPhoto.productType")}</Label>
-            <Select
+          <ModelAttributesFields
+            value={attributes}
+            onChange={(next) => {
+              setAttributes(next);
+              setStyle((current) => styleFor(current, next.people === "group"));
+            }}
+            disabled={isPending}
+          />
+          {/* The product and the look side by side: four short menus rather than rows of chips. */}
+          <div className="border-ink-200 grid grid-cols-1 gap-3 border-t pt-4 sm:grid-cols-2">
+            <OptionSelect
+              id="generate-model-product-type"
+              label={t("mockups.generateModelPhoto.productType")}
               value={type}
-              onValueChange={(value) => value && setType(value)}
+              options={MODEL_PHOTO_PRODUCT_TYPES.map((value) => ({ value, label: t(`mockups.productTypes.${value}`) }))}
               disabled={isPending}
-            >
-              <SelectTrigger id="generate-model-product-type" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {productTypes.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {t(`mockups.productTypes.${option}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={setType}
+            />
+            <OptionSelect
+              id="generate-model-scene"
+              label={t("mockups.generateModelPhoto.scene")}
+              value={style.scene}
+              options={MODEL_PHOTO_SCENES.map((value) => ({ value, label: t(`mockups.generateModelPhoto.scenes.${value}`) }))}
+              disabled={isPending}
+              onChange={(scene) => setStyle({ ...style, scene })}
+            />
+            <OptionSelect
+              id="generate-model-outfit"
+              label={t("mockups.generateModelPhoto.outfit")}
+              value={style.outfit}
+              options={MODEL_PHOTO_OUTFITS.map((value) => ({ value, label: t(`mockups.generateModelPhoto.outfits.${value}`) }))}
+              disabled={isPending}
+              onChange={(outfit) => setStyle({ ...style, outfit })}
+            />
+            <OptionSelect
+              id="generate-model-pose"
+              label={t("mockups.generateModelPhoto.pose")}
+              value={style.pose}
+              options={posesFor(group).map((value) => ({ value, label: t(`mockups.generateModelPhoto.poses.${value}`) }))}
+              disabled={isPending}
+              onChange={(pose) => setStyle({ ...style, pose })}
+            />
           </div>
           <p className="text-muted-foreground text-xs leading-relaxed">
+            {t("mockups.generateModelPhoto.lookNote")}
+            {!isStudioScene(style.scene) && ` ${t("mockups.generateModelPhoto.placeNote")}`}{" "}
             {t("mockups.generateModelPhoto.costNote")}
           </p>
           {isPending && (
@@ -126,7 +199,7 @@ export const GenerateModelPhotoDialog = ({
             onClick={() => {
               setFailure(null);
               generate(
-                { productType: type, attributes: cleanAttributes(attributes) },
+                { productType: type, attributes: cleanAttributes(attributes), style },
                 {
                   onSuccess: (photo) => {
                     onGenerated?.(photo);

@@ -26,7 +26,7 @@ export const OffendersTable = ({ offenders }: { offenders: ModerationOffender[] 
           <li key={offender.userId} className="border-ink-200 rounded-lg border p-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-ink-900 dark:text-ink-50 truncate text-sm font-semibold">
+                <p className="text-ink-900 truncate text-sm font-semibold">
                   {index + 1}. {offender.fullName || offender.email}
                 </p>
                 <p className="text-ink-500 truncate text-xs">{offender.email}</p>
@@ -68,7 +68,7 @@ export const OffendersTable = ({ offenders }: { offenders: ModerationOffender[] 
             <TableRow key={offender.userId}>
               <TableCell className="text-ink-500 tabular-nums">{index + 1}</TableCell>
               <TableCell>
-                <p className="text-ink-900 dark:text-ink-50 font-medium">{offender.fullName || "—"}</p>
+                <p className="text-ink-900 font-medium">{offender.fullName || "—"}</p>
                 <p className="text-ink-500 text-xs">{offender.email}</p>
               </TableCell>
               <TableCell className="text-right font-semibold text-rose-700 tabular-nums dark:text-rose-300">

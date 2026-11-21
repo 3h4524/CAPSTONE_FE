@@ -23,6 +23,8 @@ export interface AiVideoSceneOptions {
   studioFrameId?: string | null;
   studioPrompt?: string | null;
   studioReferenceHashes?: string[] | null;
+  /** The seller's own wording of the scene's template prompt; null or absent uses the template's. */
+  customPrompt?: string | null;
   standardMotionPreset?: SceneMotion | null;
   standardBaseCrop?: Region | null;
   standardStartCrop?: Region | null;

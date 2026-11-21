@@ -13,6 +13,7 @@ import {
   sanitizeNodeLabel,
   summarizeNodeConfig,
 } from "@/helpers/workflow-config";
+import { generateVideoConfigSchema } from "@/schemas/workflow";
 
 const nodeDefinitions = Object.values(WORKFLOW_NODE_DEFINITIONS);
 const nodeTypes = nodeDefinitions.map((definition) => definition.type);
@@ -190,6 +191,18 @@ describe("normalizeNodeConfig", () => {
     expect(loaded.aiScenes).toEqual(scenes);
     expect(loaded.aiGlobalInstructions).toBe("Soft light");
     expect(loaded.videoEdit).toEqual({ music: null });
+  });
+
+  // The backend writes Generate Video's standard options as null when none were set; the schema needs an object.
+  it("gives a settings object the backend left as null its default", () => {
+    const loaded = normalizeNodeConfig("generate-video", { standardOptions: null, aiShotOptions: null });
+
+    expect(loaded.standardOptions).toEqual(
+      WORKFLOW_NODE_DEFINITIONS["generate-video"].defaultConfig.standardOptions
+    );
+    // A fresh node still needs a scene; neither setting should fail on its own.
+    const issues = generateVideoConfigSchema.safeParse(loaded).error?.issues ?? [];
+    expect(issues.filter((issue) => ["standardOptions", "aiShotOptions"].includes(String(issue.path[0])))).toEqual([]);
   });
 
   it("drops fields that belong to another node type", () => {

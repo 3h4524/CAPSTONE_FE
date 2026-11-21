@@ -261,7 +261,9 @@ export const deriveNodeStatuses = (nodes: WorkflowNode[], run: RunSnapshot): Rec
         if (designsReady) {
           // Paused until the person approves designs and asks for the mock-ups (or, with no mock-up step, has reviewed them all).
           const waiting = run.job?.requireApproval === true && run.mockupState === "idle" && (hasMockupNode || countApprovals(run.job).pending > 0);
-          return waiting ? "waiting_for_review" : "success";
+          // Automatic approval left some designs for the Seller: their content check could not run.
+          const held = run.job?.requireApproval === false && productsAwaitingReview(run.job).length > 0;
+          return waiting || held ? "waiting_for_review" : "success";
         }
         return status === "failed" ? "skipped" : "idle";
       case "apply-mockup":
@@ -336,6 +338,17 @@ export const countApprovals = (job: BatchJobDetail): ApprovalCounts => {
   );
   return counts;
 };
+
+/**
+ * The products still waiting for the Seller: designs to review and none approved. With automatic approval these are the
+ * ones whose content check could not run (Gemini timed out or failed), which are never approved without the Seller.
+ */
+export const productsAwaitingReview = (job: BatchJobDetail) =>
+  job.products.filter(
+    (product) =>
+      product.images.some((image) => image.approvalStatus !== "approved" && image.approvalStatus !== "rejected") &&
+      !product.images.some((image) => image.approvalStatus === "approved")
+  );
 
 type EstimatedTemplate = { id: string; productType: string; allowRecolor: boolean };
 

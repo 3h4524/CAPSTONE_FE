@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ChoiceButtons } from "@/components/workflows/config-panel/fields/choice-buttons";
 import { ChoiceCards } from "@/components/workflows/config-panel/fields/choice-cards";
+import { CONTENT_ISSUE_CLASS, ContentIssueMessage } from "@/components/workflows/config-panel/fields/content-issue";
 import { DesignRatioChoices } from "@/components/workflows/config-panel/fields/design-ratio-choices";
 import { MockupSelectionField } from "@/components/workflows/config-panel/fields/mockup-selection-field";
 import { OptionSelect } from "@/components/workflows/config-panel/fields/option-select";
@@ -16,10 +17,13 @@ import { ProductSelect } from "@/components/workflows/config-panel/fields/produc
 import { SourceSelect } from "@/components/workflows/config-panel/fields/source-select";
 import { getVideoOutputFormat, getVideoOutputFormats } from "@/helpers/video-output-formats";
 import { parseAspectRatio, readBoolean, readNumber, readString, readStringArray } from "@/helpers/workflow-config";
+import { useContentIssue, useWorkflowContentIssuesStore } from "@/stores/workflow-content-issues";
 import type { WorkflowField, WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 
 type NodeConfigFieldProps = {
+  /** The node the field belongs to, so a setting the content check refused can be marked. */
+  nodeId?: string;
   nodeType: WorkflowNodeType;
   field: WorkflowField;
   control: Control<WorkflowNodeConfig, unknown, WorkflowNodeConfig>;
@@ -67,8 +71,11 @@ const translatedField = (field: WorkflowField, text: (key: string, fallback: str
   }
 };
 
-export const NodeConfigField = ({ nodeType, field: sourceField, control, videoMode }: NodeConfigFieldProps) => {
+export const NodeConfigField = ({ nodeId, nodeType, field: sourceField, control, videoMode }: NodeConfigFieldProps) => {
   const { t } = useTranslation("common");
+  // Text the content check refused when the workflow was saved or run: marked until the seller changes it.
+  const contentIssue = useContentIssue(nodeId ?? "", sourceField.name);
+  const resolveContentIssue = useWorkflowContentIssuesStore((state) => state.resolve);
   const base = `workflowEditor.fields.${nodeType}.${sourceField.name.replaceAll(".", "_")}`;
   const field = translatedField(sourceField, (key, fallback) => t(`${base}.${key}`, { defaultValue: fallback }));
   const optionalTag = <span className="text-muted-foreground ml-1 text-xs font-normal">{t("workflowConfig.fields.optional")}</span>;
@@ -173,17 +180,22 @@ export const NodeConfigField = ({ nodeType, field: sourceField, control, videoMo
             const tooLong = field.maxLength !== undefined && text.trim().length > field.maxLength;
             return (
               <FormItem>
-                <FormLabel>{field.label}{optionalTag}</FormLabel>
+                <FormLabel className={cn(contentIssue && "text-destructive")}>{field.label}{optionalTag}</FormLabel>
                 <FormControl>
                   <Textarea
                     rows={3}
-                    className="bg-card min-h-20 resize-y"
+                    className={cn("bg-card min-h-20 resize-y", contentIssue && CONTENT_ISSUE_CLASS)}
                     placeholder={field.placeholder}
                     value={text}
-                    onChange={controller.onChange}
+                    onChange={(event) => {
+                      controller.onChange(event);
+                      if (contentIssue && nodeId) resolveContentIssue(nodeId, field.name);
+                    }}
                     onBlur={controller.onBlur}
+                    {...(contentIssue ? { "aria-invalid": true } : {})}
                   />
                 </FormControl>
+                {contentIssue && <ContentIssueMessage message={contentIssue} />}
                 {(field.description || field.maxLength !== undefined) && (
                   <div className="flex items-start justify-between gap-3">
                     {field.description ? <FormDescription className={DESCRIPTION_CLASS}>{field.description}</FormDescription> : <span />}

@@ -13,15 +13,13 @@ import { useGroupPrintify } from "@/hooks/queries/use-group-printify";
 import { useGroupVideoProgress } from "@/hooks/queries/use-group-video-progress";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowConnectionStore } from "@/stores/workflow-connection";
+import { useNodeHasContentIssue } from "@/stores/workflow-content-issues";
 import type { WorkflowNodeData } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 import { Handle, Position, useConnection } from "@xyflow/react";
 
 const HANDLE_CLASS_NAME =
   "group/connect flex! size-2.5! cursor-crosshair! items-center! justify-center! border-0! bg-transparent! before:absolute before:size-10 before:rounded-full before:content-['']";
-
-const HANDLE_DOT_CLASS_NAME =
-  "border-wf-accent/70 bg-card pointer-events-none absolute size-2.5 rounded-full border shadow-sm transition-[transform,background-color,border-color] duration-150 group-hover/connect:scale-125 motion-reduce:transition-none";
 
 const HANDLE_ACTION_CLASS_NAME =
   "bg-wf-surface text-wf-accent border-wf-line pointer-events-none absolute grid size-7 scale-90 place-items-center rounded-full border opacity-0 shadow-md transition-[opacity,transform,background-color,color,box-shadow] duration-200 ease-out group-hover/connect:scale-105 group-hover/connect:bg-wf-accent group-hover/connect:text-wf-surface motion-reduce:transition-none";
@@ -57,6 +55,8 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
   const acceptsConnectionFrom = useWorkflowConnectionStore((state) =>
     state.connectableNodeIds.includes(nodeId) ? state.sourceHandleType : null
   );
+  // A setting of this step the content check refused when the workflow was saved or run.
+  const hasContentIssue = useNodeHasContentIssue(nodeId);
   const definition = getWorkflowNodeDefinition(data.type);
   if (!definition) return null;
   const theme = WORKFLOW_CATEGORY_THEME[definition.category];
@@ -94,7 +94,9 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
       ? connectionTargetInvalid
         ? "border-wf-fail hover:border-wf-fail ring-wf-fail/25 z-20 ring-4"
         : "border-wf-ok hover:border-wf-ok ring-wf-ok/25 z-20 ring-4"
-      : isRunning && "border-wf-accent ring-wf-accent/20 z-10 ring-2"
+      : hasContentIssue
+        ? "border-wf-fail hover:border-wf-fail ring-wf-fail/25 z-10 ring-2"
+        : isRunning && "border-wf-accent ring-wf-accent/20 z-10 ring-2"
   );
 
   return (
@@ -112,7 +114,6 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
             "before:size-6! [@media(pointer:coarse)]:before:size-11!"
           )}
         >
-          <span className={HANDLE_DOT_CLASS_NAME} />
           <span
             className={cn(
               HANDLE_ACTION_CLASS_NAME,
@@ -127,7 +128,12 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
       )}
 
       <article className={frame}>
-        <div className={cn("flex items-center gap-2 border-b px-2.5 py-2", theme.header)}>
+        <div
+          className={cn(
+            "flex items-center gap-2 rounded-t-[calc(var(--radius-xl)-1px)] border-b px-2.5 py-2",
+            theme.header
+          )}
+        >
           <NodeName label={data.label} Icon={definition.icon} iconClassName={theme.icon} />
           {!runnable && data.status === "idle" ? (
             <span className="border-ink-200 bg-card/80 text-ink-500 shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] leading-none font-semibold tracking-wide uppercase">
@@ -166,7 +172,6 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
           aria-label={t("workflowEditor.nodeFrame.connectFrom", { label: data.label })}
           className={HANDLE_CLASS_NAME}
         >
-          <span className={HANDLE_DOT_CLASS_NAME} />
           <span
             className={cn(
               HANDLE_ACTION_CLASS_NAME,

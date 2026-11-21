@@ -5,7 +5,7 @@ import { useWorkflowStore } from "@/stores/workflow";
 import type { Entitlements } from "@/types/subscription";
 import type { AiVideoSceneOptions, MockupAsset, VideoPackDefinition } from "@/types/video-workflow";
 import type { WorkflowNode } from "@/types/workflow";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 let entitlements: Entitlements | undefined;
@@ -463,11 +463,9 @@ describe("AiShotOptions video template of Standard scenes", () => {
     });
     render(<AiShotOptions nodeId="video" disabled={false} onChange={onChange} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Browse templates" }));
     await userEvent.click(within(await screen.findByRole("radiogroup", { name: "Video template" })).getByRole("radio", { name: /Rotating Showcase/ }));
-    // Applying a template closes the picker.
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     // A new node has no scenes yet, so the template fills them in without asking to replace any.
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     const [scenes, seconds] = onChange.mock.calls.at(-1)!;
     expect(seconds).toBe(14);
@@ -484,7 +482,7 @@ describe("AiShotOptions video template of Standard scenes", () => {
     expect(config).not.toHaveProperty("sharedMockupId");
   });
 
-  it("explains each template in the picker: how many scenes, how long, and whether it costs AI credits", async () => {
+  it("lists each template in the panel: how many scenes, how long, and whether it costs AI credits", async () => {
     packs = [rotatingShowcase, { ...rotatingShowcase, code: "product_on_model_pack", name: "Product on Model", requiresCharacter: true,
       scenes: [{ id: "a", mode: "ai", durationSeconds: 4, templateCode: "lifestyle_in_use", subtemplateCode: "natural_motion" }] }];
     useWorkflowStore.setState({
@@ -492,11 +490,8 @@ describe("AiShotOptions video template of Standard scenes", () => {
     });
     render(<AiShotOptions nodeId="video" disabled={false} onChange={vi.fn()} />);
 
-    // The panel shows only what is in use; the templates are in the picker.
-    expect(screen.getByText("Start from scratch")).toBeVisible();
-    expect(screen.queryByRole("radiogroup", { name: "Video template" })).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Browse templates" }));
-
+    // The templates are listed in the panel itself, without a picker to open.
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     const templates = within(await screen.findByRole("radiogroup", { name: "Video template" }));
     expect(templates.getByRole("radio", { name: /Start from scratch/ })).toHaveAttribute("aria-checked", "true");
     const rotating = templates.getByRole("radio", { name: /Rotating Showcase/ });
@@ -531,13 +526,13 @@ describe("AiShotOptions video template of Standard scenes", () => {
     });
     render(<AiShotOptions nodeId="video" disabled={false} onChange={vi.fn()} />);
 
-    expect(screen.getByText("Rotating Showcase")).toBeVisible();
-    expect(screen.getByText("4 scenes · 14s")).toBeVisible();
+    const selected = screen.getByRole("radio", { name: /Rotating Showcase/ });
+    expect(selected).toHaveAttribute("aria-checked", "true");
+    expect(within(selected).getByText("4 scenes · 14s")).toBeVisible();
     expect(screen.queryByText(/customized/)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Change" })).toBeVisible();
   });
 
-  it("asks inside the picker before a template replaces scenes already set up, and keeps them on No", async () => {
+  it("asks in a dialog before a template replaces scenes already set up, and keeps them on No", async () => {
     packs = [rotatingShowcase];
     useWorkflowStore.setState({
       nodes: [{ id: "video", type: "workflow", position: { x: 0, y: 0 },
@@ -545,18 +540,64 @@ describe("AiShotOptions video template of Standard scenes", () => {
     });
     render(<AiShotOptions nodeId="video" disabled={false} onChange={vi.fn()} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Browse templates" }));
-    const picker = await screen.findByRole("dialog");
-    await userEvent.click(within(picker).getByRole("radio", { name: /Rotating Showcase/ }));
+    const templates = within(await screen.findByRole("radiogroup", { name: "Video template" }));
+    await userEvent.click(templates.getByRole("radio", { name: /Rotating Showcase/ }));
 
-    expect(within(picker).getByRole("alert")).toHaveTextContent("Replace your 1 current scenes with Rotating Showcase?");
-    await userEvent.click(within(picker).getByRole("button", { name: "Keep current scenes" }));
-    expect(within(picker).queryByRole("alert")).not.toBeInTheDocument();
+    const dialog = await screen.findByRole("dialog", { name: "Replace your 1 current scenes with Rotating Showcase?" });
+    expect(within(dialog).getByText("4 scenes · 14s")).toBeVisible();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Keep current scenes" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(useWorkflowStore.getState().nodes[0]!.data.config.aiScenes as AiVideoSceneOptions[]).toHaveLength(1);
 
-    await userEvent.click(within(picker).getByRole("radio", { name: /Rotating Showcase/ }));
-    await userEvent.click(within(picker).getByRole("button", { name: "Replace scenes" }));
+    await userEvent.click(templates.getByRole("radio", { name: /Rotating Showcase/ }));
+    await userEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Replace scenes" }));
     expect(useWorkflowStore.getState().nodes[0]!.data.config.aiScenes as AiVideoSceneOptions[]).toHaveLength(4);
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+});
+
+describe("AiShotOptions custom video prompt", () => {
+  const showcase = {
+    code: "cinematic_product_showcase", version: 1, name: "Cinematic Showcase", description: "A showcase.", requiresLifestyle: false,
+    requiresDetail: false, defaults: scene("ai"), allowedSettings: {}, promptVersion: 5,
+    basePrompt: "One continuous {{DURATION}}-second showcase of the product.",
+  };
+  const savedScene = () => (useWorkflowStore.getState().nodes[0]!.data.config.aiScenes as AiVideoSceneOptions[])[0]!;
+
+  beforeEach(() => {
+    entitlements = undefined;
+    previewDesign = null;
+    packs = [];
+    assets = [];
+    useWorkflowStore.setState({ designScope: null });
+    vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
+    aiTemplates = [showcase];
+  });
+  afterEach(() => {
+    aiTemplates = [];
+  });
+
+  it("starts from the template's prompt and keeps only the seller's own wording", () => {
+    renderWithScene("ai");
+
+    const prompt = screen.getByRole("textbox", { name: /Video prompt for this scene/ });
+    expect(prompt).toHaveValue(showcase.basePrompt);
+    expect(screen.queryByRole("combobox", { name: /Scene 1 framing/ })).not.toBeInTheDocument();
+
+    fireEvent.change(prompt, { target: { value: "A slow turn on a wooden table." } });
+    expect(savedScene().customPrompt).toBe("A slow turn on a wooden table.");
+
+    // Writing the template's own words back stores nothing, so a newer template version still applies.
+    fireEvent.change(prompt, { target: { value: showcase.basePrompt } });
+    expect(savedScene().customPrompt).toBeNull();
+  });
+
+  it("puts the template's prompt back on request", async () => {
+    renderWithScene("ai", { customPrompt: "My own words." });
+
+    expect(screen.getByRole("textbox", { name: /Video prompt for this scene/ })).toHaveValue("My own words.");
+    await userEvent.click(screen.getByRole("button", { name: "Use the template's prompt" }));
+
+    expect(savedScene().customPrompt).toBeNull();
   });
 });

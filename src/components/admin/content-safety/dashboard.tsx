@@ -5,7 +5,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { BarChart3, ListFilter, ShieldBan, SlidersHorizontal } from "lucide-react";
 import { Trans, useTranslation } from "react-i18next";
 
-import { AdminShell } from "@/components/admin/admin-shell";
 import { BlocklistPanel } from "@/components/admin/content-safety/blocklist/blocklist-panel";
 import { LogPanel } from "@/components/admin/content-safety/log/log-panel";
 import { OverviewPanel } from "@/components/admin/content-safety/overview/overview-panel";
@@ -43,44 +42,43 @@ export const ContentSafetyDashboard = () => {
     [pathname, router, searchParams]
   );
 
+  // The admin layout already mounts AdminShell around every admin page; wrapping again nests a second shell.
   return (
-    <AdminShell>
-      <div className="flex flex-col gap-6 max-md:gap-4">
-        <header className="flex flex-col gap-1.5">
-          <h2 className="font-display text-ink-900 text-xl font-bold tracking-tight max-md:text-lg sm:text-2xl">
-            {t("admin.contentSafety.dashboard.title")}
-          </h2>
-          <p className="text-ink-600 max-w-3xl text-sm leading-relaxed max-md:hidden">
-            <Trans
-              i18nKey="admin.contentSafety.dashboard.description"
-              components={{ strong: <strong className="text-ink-800 font-semibold" /> }}
-            />
-          </p>
-        </header>
+    <div className="flex flex-col gap-6 max-md:gap-4">
+      <header className="flex flex-col gap-1.5">
+        <h2 className="font-display text-ink-900 text-xl font-bold tracking-tight max-md:text-lg sm:text-2xl">
+          {t("admin.contentSafety.dashboard.title")}
+        </h2>
+        <p className="text-ink-600 max-w-3xl text-sm leading-relaxed max-md:hidden">
+          <Trans
+            i18nKey="admin.contentSafety.dashboard.description"
+            components={{ strong: <strong className="text-ink-800 font-semibold" /> }}
+          />
+        </p>
+      </header>
 
-        <Tabs value={tab} onValueChange={openTab} className="gap-5 max-md:gap-3">
-          <TabsList className="bg-ink-200/70 h-11 w-full overflow-x-auto sm:w-fit">
-            {TABS.map(({ value, labelKey, icon: Icon }) => (
-              <TabsTrigger key={value} value={value} className="px-4 text-sm max-md:px-2">
-                <Icon aria-hidden="true" />
-                <span className="max-sm:sr-only">{t(labelKey)}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          <TabsContent value="overview">
-            <OverviewPanel onOpenLog={() => openTab("log")} />
-          </TabsContent>
-          <TabsContent value="log">
-            <LogPanel />
-          </TabsContent>
-          <TabsContent value="blocklist">
-            <BlocklistPanel />
-          </TabsContent>
-          <TabsContent value="settings">
-            <SettingsPanel />
-          </TabsContent>
-        </Tabs>
-      </div>
-    </AdminShell>
+      <Tabs value={tab} onValueChange={openTab} className="gap-5 max-md:gap-3">
+        <TabsList className="bg-ink-200/70 h-11 w-full overflow-x-auto sm:w-fit">
+          {TABS.map(({ value, labelKey, icon: Icon }) => (
+            <TabsTrigger key={value} value={value} className="px-4 text-sm max-md:px-2">
+              <Icon aria-hidden="true" />
+              <span className="max-sm:sr-only">{t(labelKey)}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <TabsContent value="overview">
+          <OverviewPanel onOpenLog={() => openTab("log")} />
+        </TabsContent>
+        <TabsContent value="log">
+          <LogPanel />
+        </TabsContent>
+        <TabsContent value="blocklist">
+          <BlocklistPanel />
+        </TabsContent>
+        <TabsContent value="settings">
+          <SettingsPanel />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };

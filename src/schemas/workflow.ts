@@ -4,6 +4,8 @@ import { i18n } from "@/i18n/client";
 import type { WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
 
 const AI_ADVANCED_CONTROLS_ENABLED = false;
+/** The longest wording a seller may give an AI scene's template prompt (the backend's limit too). */
+export const MAX_CUSTOM_VIDEO_PROMPT = 2000;
 
 type NumberLabel = "timelineFrame" | "fadeIn" | "fadeOut" | "variants" | "videoDuration" | "sceneDuration" | "transitionDuration";
 
@@ -252,22 +254,26 @@ export const generateVideoConfigSchema = z
     fallbackToStandard: z.boolean(),
     aiCharacterModelId: z.string().uuid().nullable().optional(),
     sharedMockupId: z.string().uuid().nullable().optional(),
-    aiShotOptions: z
-      .object({
-        coverage: z.enum(["single_scene", "full_video"]),
-        concept: z.enum([
-          "product_cinematic",
-          "material_detail",
-          "lifestyle_motion",
-          "product_in_use",
-        ]),
-        sceneIndex: z.number().int().min(0).max(3),
-        mockupId: z.string().uuid().nullable(),
-        prompt: z.string().trim().max(300).nullable(),
-        rightsConfirmed: z.boolean(),
-        fullSceneMockupIds: z.array(z.string().uuid()).max(2).nullable(),
-      })
-      .optional(),
+    // The backend writes this legacy setting as null when it is not used (always, once a node has aiScenes).
+    aiShotOptions: z.preprocess(
+      nullAsMissing,
+      z
+        .object({
+          coverage: z.enum(["single_scene", "full_video"]),
+          concept: z.enum([
+            "product_cinematic",
+            "material_detail",
+            "lifestyle_motion",
+            "product_in_use",
+          ]),
+          sceneIndex: z.number().int().min(0).max(3),
+          mockupId: z.string().uuid().nullable(),
+          prompt: z.string().trim().max(300).nullable(),
+          rightsConfirmed: z.boolean(),
+          fullSceneMockupIds: z.array(z.string().uuid()).max(2).nullable(),
+        })
+        .optional()
+    ),
     aiScenes: z.preprocess(
       nullAsMissing,
       z
@@ -299,6 +305,13 @@ export const generateVideoConfigSchema = z
             .nullable()
             .optional(),
           studioReferenceHashes: z.array(z.string().length(64)).max(3).nullable().optional(),
+          // Matches AiVideoPromptCompiler.MaximumCustomPromptCharacters.
+          customPrompt: z
+            .string()
+            .trim()
+            .max(MAX_CUSTOM_VIDEO_PROMPT, { error: () => i18n.t("workflowConfig.schema.customVideoPromptMax", { max: MAX_CUSTOM_VIDEO_PROMPT }) })
+            .nullable()
+            .optional(),
           standardMotionPreset: z.preprocess(
             normalizeLegacyStandardMotion,
             z.enum(standardSceneMotions).nullable().optional()

@@ -46,6 +46,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AiStartFrameCropDialog } from "@/components/workflows/config-panel/fields/ai-start-frame-crop-dialog";
+import { CONTENT_ISSUE_CLASS, ContentIssueMessage } from "@/components/workflows/config-panel/fields/content-issue";
 import { SceneVideoResult } from "@/components/workflows/config-panel/fields/scene-video-result";
 import {
   getStandardBaseCrop,
@@ -53,6 +54,11 @@ import {
   StandardMotionEditor,
   StandardMotionPreview,
 } from "@/components/workflows/config-panel/fields/standard-motion-editor";
+import {
+  VideoTemplateList,
+  type VideoTemplateOption,
+} from "@/components/workflows/config-panel/fields/video-template-list";
+import { VideoTemplateThumbnail } from "@/components/workflows/config-panel/fields/video-template-thumbnail";
 import { VideoTimelineEditor } from "@/components/workflows/media/video-timeline-editor";
 import { type AiCharacter, getAiCharacter } from "@/constants/ai-characters";
 import { confirmAiShot } from "@/helpers/confirm-ai-shot";
@@ -79,8 +85,9 @@ import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowSave } from "@/hooks/use-workflow-save";
 import { i18n } from "@/i18n/client";
-import { generateVideoConfigSchema } from "@/schemas/workflow";
+import { generateVideoConfigSchema, MAX_CUSTOM_VIDEO_PROMPT } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
+import { useWorkflowContentIssuesStore } from "@/stores/workflow-content-issues";
 import type {
   AiSceneVideo,
   AiVideoSceneOptions,
@@ -90,6 +97,7 @@ import type {
   Region,
   VideoPackDefinition,
 } from "@/types/video-workflow";
+import { cn } from "@/utils/cn";
 
 type LegacyOptions = NonNullable<GenerateVideoConfig["aiShotOptions"]>;
 type ScenePromptPreview = {
@@ -456,10 +464,14 @@ export function AiShotOptions({
   } | null>(null);
   const [isSharedMockupPickerOpen, setIsSharedMockupPickerOpen] = useState(false);
   const [pendingPack, setPendingPack] = useState<VideoPackDefinition | null>(null);
-  const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
   const [batchQuote, setBatchQuote] = useState<BatchFrameQuote[] | null>(null);
   const [batchFrameState, setBatchFrameState] = useState<BatchFrameState>({});
   const [isPreparingAllFrames, setIsPreparingAllFrames] = useState(false);
+  // Scene text the content check refused when the workflow was saved, marked until the seller changes it.
+  const contentIssues = useWorkflowContentIssuesStore((state) => state.issues);
+  const resolveContentIssue = useWorkflowContentIssuesStore((state) => state.resolve);
+  const sceneContentIssue = (index: number, field: string) =>
+    contentIssues.find((issue) => issue.nodeId === nodeId && issue.field === `aiScenes.${index}.${field}`)?.message;
   const [isApprovingAllFrames, setIsApprovingAllFrames] = useState(false);
   const [framePicker, setFramePicker] = useState<{
     sceneIndex: number;
@@ -1184,7 +1196,6 @@ export function AiShotOptions({
     });
     setBatchFrameState({});
     setPendingPack(null);
-    setIsTemplatePickerOpen(false);
     queueMicrotask(() => saveWorkflow());
     showToast("success", t("workflowConfig.aiShot.packAdded", { name: pack.name, sceneCount: nextScenes.length }));
   };
@@ -1541,19 +1552,10 @@ export function AiShotOptions({
           );
         }))
   );
-  type TemplateOption = {
-    code: string;
-    icon: typeof Plus;
-    name: string;
-    meta: string | null;
-    description: string;
-    tag: { label: string; ai: boolean } | null;
-    pack?: VideoPackDefinition;
-  };
+  type TemplateOption = VideoTemplateOption;
   const templateOptions: TemplateOption[] = [
     {
       code: "custom",
-      icon: Plus,
       name: t("workflowConfig.aiShot.startFromScratch"),
       meta: null,
       description: scenes.length > 0 ? t("workflowConfig.aiShot.startFromScratchKeep") : t("workflowConfig.aiShot.startFromScratchDescription"),
@@ -1563,7 +1565,6 @@ export function AiShotOptions({
       const usesAi = pack.scenes.some((scene) => scene.mode !== "standard");
       return {
         code: pack.code,
-        icon: usesAi ? Sparkles : ImageIcon,
         name: pack.name,
         meta: t("workflowConfig.aiShot.packMeta", { count: pack.scenes.length, seconds: pack.totalDurationSeconds }),
         description: pack.description,
@@ -1575,20 +1576,18 @@ export function AiShotOptions({
   const currentTemplate =
     templateOptions.find((option) => option.code === (selectedVideoPack ? selectedVideoPack.code : "custom")) ??
     templateOptions[0]!;
-  const CurrentTemplateIcon = currentTemplate.icon;
   const templatesLoading = arePacksLoading || isPending;
   const chooseTemplate = (option: TemplateOption) => {
     if (option.code === currentTemplate.code) {
-      setIsTemplatePickerOpen(false);
+      setPendingPack(null);
       return;
     }
     if (!option.pack) {
       setPendingPack(null);
       writePackConfiguration(scenes, { template: "auto", templateVersion: 2 });
-      setIsTemplatePickerOpen(false);
       return;
     }
-    // Replacing scenes the seller already set up is confirmed at the foot of the picker (see `pendingPack`).
+    // Replacing scenes the seller already set up is confirmed just below the list (see `pendingPack`).
     requestVideoPack(option.pack);
   };
   const generatedOrReusableCount = Object.values(batchFrameState).filter((state) =>
@@ -1612,37 +1611,58 @@ export function AiShotOptions({
             {t("workflowConfig.aiShot.startFromTemplateDescription")}
           </p>
         </div>
-        <div className="flex items-center gap-3 rounded-lg border p-3">
-          <span className="bg-primary/10 text-primary grid size-9 shrink-0 place-items-center rounded-lg">
-            <CurrentTemplateIcon aria-hidden="true" className="size-4" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="flex flex-wrap items-baseline gap-x-2">
-              <span className="text-sm font-semibold">
-                {currentTemplate.name}
-              </span>
-              {currentTemplate.meta && (
-                <span className="text-muted-foreground text-xs tabular-nums">
-                  {currentTemplate.meta}
-                  {isPackCustomized && ` · ${t("workflowConfig.aiShot.customizedSuffix")}`}
-                </span>
-              )}
-            </p>
-            <p className="text-muted-foreground truncate text-xs">
-              {currentTemplate.tag?.label ?? t("workflowConfig.aiShot.ownScenesSummary")}
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="shrink-0 hover:translate-y-0"
-            disabled={disabled || templatesLoading}
-            onClick={() => setIsTemplatePickerOpen(true)}
-          >
-            {templatesLoading ? t("workflowConfig.aiShot.loadingShort") : selectedVideoPack ? t("workflowConfig.aiShot.changeTemplate") : t("workflowConfig.aiShot.browseTemplates")}
-          </Button>
-        </div>
+        <VideoTemplateList
+          options={templateOptions}
+          selectedCode={currentTemplate.code}
+          pendingCode={pendingPack?.code}
+          customized={isPackCustomized}
+          loading={templatesLoading}
+          disabled={disabled}
+          onChoose={chooseTemplate}
+        />
+        {/* Replacing scenes the seller already set up is confirmed in a dialog before anything changes. */}
+        <Dialog
+          open={pendingPack !== null}
+          onOpenChange={(open) => {
+            if (!open) setPendingPack(null);
+          }}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {pendingPack &&
+                  t("workflowConfig.aiShot.replaceScenesQuestion", { count: scenes.length, name: pendingPack.name })}
+              </DialogTitle>
+              <DialogDescription>{t("workflowConfig.aiShot.replaceScenesDetail")}</DialogDescription>
+            </DialogHeader>
+            {pendingPack && (
+              <div className="bg-muted/40 flex items-center gap-3 rounded-lg border p-3">
+                <VideoTemplateThumbnail
+                  code={pendingPack.code}
+                  ai={pendingPack.scenes.some((scene) => scene.mode !== "standard")}
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{pendingPack.name}</p>
+                  <p className="text-muted-foreground text-xs tabular-nums">
+                    {t("workflowConfig.aiShot.packMeta", {
+                      count: pendingPack.scenes.length,
+                      seconds: pendingPack.totalDurationSeconds,
+                    })}
+                  </p>
+                  <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs">{pendingPack.description}</p>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setPendingPack(null)}>
+                {t("workflowConfig.aiShot.keepCurrentScenes")}
+              </Button>
+              <Button type="button" onClick={() => pendingPack && applyVideoPack(pendingPack)}>
+                {t("workflowConfig.aiShot.replaceScenes")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         {selectedVideoPack && isPackCustomized && (
           <p className="text-muted-foreground text-xs leading-relaxed">
             {t("workflowConfig.aiShot.packCustomizedNote")}
@@ -1650,87 +1670,6 @@ export function AiShotOptions({
         )}
       </section>
       {afterTemplate}
-      <Dialog
-        open={isTemplatePickerOpen}
-        onOpenChange={(open) => {
-          setIsTemplatePickerOpen(open);
-          if (!open) setPendingPack(null);
-        }}
-      >
-        <DialogContent className="flex max-h-[85dvh] max-w-3xl flex-col gap-0 overflow-hidden p-0">
-          <DialogHeader className="border-b px-5 py-4 text-left">
-            <DialogTitle>{t("workflowConfig.aiShot.chooseTemplateTitle")}</DialogTitle>
-            <DialogDescription>
-              {t("workflowConfig.aiShot.chooseTemplateDescription")}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="min-h-0 overflow-y-auto p-5">
-            <div role="radiogroup" aria-label={t("workflowConfig.aiShot.videoTemplate")} className="grid gap-3 sm:grid-cols-2">
-              {templateOptions.map((option) => {
-                const selected = option.code === currentTemplate.code;
-                const pending = pendingPack?.code === option.code;
-                const Icon = option.icon;
-                return (
-                  <button
-                    key={option.code}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    disabled={disabled}
-                    onClick={() => chooseTemplate(option)}
-                    className={`focus-visible:ring-ring flex w-full items-start gap-3 rounded-lg border p-3.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-primary bg-primary/5" : pending ? "border-amber-500 bg-amber-50/60 dark:bg-amber-950/20" : "hover:bg-muted/50"}`}
-                  >
-                    <span
-                      className={`grid size-9 shrink-0 place-items-center rounded-lg ${selected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-                    >
-                      <Icon aria-hidden="true" className="size-4" />
-                    </span>
-                    <span className="min-w-0 flex-1 space-y-1">
-                      <span className="flex flex-wrap items-baseline gap-x-2">
-                        <span className="text-sm font-semibold">{option.name}</span>
-                        {option.meta && (
-                          <span className="text-muted-foreground text-xs tabular-nums">{option.meta}</span>
-                        )}
-                      </span>
-                      <span className="text-muted-foreground block text-xs leading-snug">{option.description}</span>
-                      {option.tag && (
-                        <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${option.tag.ai ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
-                        >
-                          {option.tag.label}
-                        </span>
-                      )}
-                    </span>
-                    {selected && <Check aria-hidden="true" className="text-primary mt-0.5 size-4 shrink-0" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          {/* Asked here rather than in a second dialog on top of the picker. */}
-          {pendingPack && (
-            <div
-              role="alert"
-              className="flex flex-col gap-3 border-t bg-amber-50/70 px-5 py-4 sm:flex-row sm:items-center dark:bg-amber-950/20"
-            >
-              <p className="min-w-0 flex-1 text-xs leading-relaxed">
-                <span className="font-semibold">
-                  {t("workflowConfig.aiShot.replaceScenesQuestion", { count: scenes.length, name: pendingPack.name })}
-                </span>{" "}
-                {t("workflowConfig.aiShot.replaceScenesDetail")}
-              </p>
-              <div className="flex shrink-0 gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => setPendingPack(null)}>
-                  {t("workflowConfig.aiShot.keepCurrentScenes")}
-                </Button>
-                <Button type="button" size="sm" onClick={() => applyVideoPack(pendingPack)}>
-                  {t("workflowConfig.aiShot.replaceScenes")}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
       {sharedBatchSettings && scenes.length > 0 && (
         <p className="text-muted-foreground bg-muted/30 rounded-lg border border-dashed p-3 text-xs leading-relaxed">
           {t("workflowConfig.aiShot.sharedStartFramesNote", {
@@ -2645,6 +2584,8 @@ export function AiShotOptions({
                           nextTemplate.defaultSubtemplateCode ??
                           null,
                         extraInstructions: null,
+                        // A prompt the seller rewrote belongs to the template it was written from.
+                        customPrompt: null,
                         rightsConfirmed: nextTemplate.requiresLifestyle
                           ? scene.rightsConfirmed
                           : false,
@@ -2701,6 +2642,7 @@ export function AiShotOptions({
                           studioPrompt:
                             nextSubtemplate.startFramePrompt ?? scene.studioPrompt,
                           studioReferenceHashes: [],
+                          customPrompt: null,
                         });
                       }}
                     >
@@ -3046,7 +2988,7 @@ export function AiShotOptions({
                           </label>
                           <label className="block space-y-1.5 text-xs font-medium">
                             <span className="flex items-baseline justify-between gap-3">
-                              <span>
+                              <span className={cn(sceneContentIssue(index, "studioPrompt") && "text-destructive")}>
                                 {t("workflowConfig.aiShot.customKeyframePrompt")}{" "}
                                 <span className="text-muted-foreground font-normal">
                                   {t("workflowConfig.aiShot.optional")}
@@ -3060,15 +3002,23 @@ export function AiShotOptions({
                               disabled={disabled}
                               maxLength={500}
                               value={scene.studioPrompt ?? ""}
-                              onChange={(event) =>
+                              onChange={(event) => {
                                 changeScene(index, {
                                   studioPrompt: event.currentTarget.value || null,
                                   studioFrameId: null,
-                                })
-                              }
+                                });
+                                if (sceneContentIssue(index, "studioPrompt")) resolveContentIssue(nodeId, `aiScenes.${index}.studioPrompt`);
+                              }}
                               placeholder={t("workflowConfig.aiShot.keyframePromptPlaceholder")}
-                              className="bg-background min-h-24 w-full resize-y rounded-md border p-2.5 text-sm leading-relaxed font-normal"
+                              aria-invalid={sceneContentIssue(index, "studioPrompt") ? true : undefined}
+                              className={cn(
+                                "bg-background min-h-24 w-full resize-y rounded-md border p-2.5 text-sm leading-relaxed font-normal",
+                                sceneContentIssue(index, "studioPrompt") && CONTENT_ISSUE_CLASS
+                              )}
                             />
+                            {sceneContentIssue(index, "studioPrompt") && (
+                              <ContentIssueMessage message={sceneContentIssue(index, "studioPrompt")!} />
+                            )}
                           </label>
                           <div className="space-y-1.5">
                             <p className="text-xs font-medium">
@@ -3437,6 +3387,74 @@ export function AiShotOptions({
                     : ""}
                 </p>
               )}
+              {/* The seller may reword the scene's template prompt; the product-preservation rules still follow it. */}
+              {scene.mode !== "standard" && template && (() => {
+                const templatePrompt = subtemplate?.basePrompt ?? template.basePrompt ?? "";
+                const customized = scene.customPrompt !== null && scene.customPrompt !== undefined;
+                const promptIssue = sceneContentIssue(index, "customPrompt");
+                const value = scene.customPrompt ?? templatePrompt;
+                return (
+                  <details className="group bg-muted/20 rounded-md border p-2" open={customized || Boolean(promptIssue) || undefined}>
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-semibold">
+                      <span className="flex items-center gap-2">
+                        {t("workflowConfig.aiShot.customPromptSection")}
+                        {customized && (
+                          <Badge variant="outline" className="text-[10px] font-medium">
+                            {t("workflowConfig.aiShot.customPromptEdited")}
+                          </Badge>
+                        )}
+                      </span>
+                      <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden="true" />
+                    </summary>
+                    <label className="mt-3 block space-y-1.5 text-xs font-medium">
+                      <span className="flex items-baseline justify-between gap-3">
+                        <span className={cn(promptIssue && "text-destructive")}>{t("workflowConfig.aiShot.customPrompt")}</span>
+                        <span className="text-muted-foreground shrink-0 text-[11px] font-normal tabular-nums">
+                          {value.length}/{MAX_CUSTOM_VIDEO_PROMPT}
+                        </span>
+                      </span>
+                      <textarea
+                        disabled={disabled}
+                        maxLength={MAX_CUSTOM_VIDEO_PROMPT}
+                        value={value}
+                        onChange={(event) => {
+                          const next = event.currentTarget.value;
+                          // Back to the template's own words: nothing is stored, so a newer template version applies.
+                          changeScene(index, { customPrompt: next === templatePrompt ? null : next });
+                          if (promptIssue) resolveContentIssue(nodeId, `aiScenes.${index}.customPrompt`);
+                        }}
+                        aria-invalid={promptIssue ? true : undefined}
+                        className={cn(
+                          "bg-background min-h-40 w-full resize-y rounded-md border p-2.5 font-mono text-xs leading-relaxed font-normal",
+                          promptIssue && CONTENT_ISSUE_CLASS
+                        )}
+                      />
+                    </label>
+                    {promptIssue && <ContentIssueMessage message={promptIssue} />}
+                    <div className="mt-1.5 flex items-start justify-between gap-3">
+                      <p className="text-muted-foreground text-[11px] leading-relaxed">
+                        {t("workflowConfig.aiShot.customPromptHint", {
+                          braces: "{{ }}",
+                          example: "{{DURATION}}",
+                          interpolation: { escapeValue: false },
+                        })}
+                      </p>
+                      {customized && (
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          className="h-auto shrink-0 px-0 text-xs"
+                          disabled={disabled}
+                          onClick={() => changeScene(index, { customPrompt: null })}
+                        >
+                          {t("workflowConfig.aiShot.customPromptReset")}
+                        </Button>
+                      )}
+                    </div>
+                  </details>
+                );
+              })()}
               {scene.mode !== "standard" && AI_ADVANCED_CONTROLS_ENABLED && (
                 <details className="group bg-muted/20 rounded-md border p-2">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-semibold">

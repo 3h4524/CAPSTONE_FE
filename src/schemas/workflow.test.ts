@@ -457,6 +457,15 @@ describe("generateVideoConfigSchema", () => {
     expect(result.success && [result.data.selectedMockupIds, result.data.sceneOrder]).toEqual([[], []]);
   });
 
+  // The backend writes the legacy single-shot setting as null when unused; the config panel showed
+  // "expected object, received null" for it.
+  it("reads AI shot options the backend left as null as not set", () => {
+    const result = generateVideoConfigSchema.safeParse({ ...valid, aiShotOptions: null });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.aiShotOptions).toBeUndefined();
+  });
+
   // A run's or a design's settings come back from the backend with every list it left out as null; the storyboard
   // preview showed "expected array, received null" for them.
   it("reads lists and settings the backend left as null as not set", () => {

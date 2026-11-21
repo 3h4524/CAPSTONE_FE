@@ -43,7 +43,7 @@ const CATEGORY_HINT_KEYS: Partial<Record<ModerationCategory, string>> = {
 const Notice = ({ children }: { children: React.ReactNode }) => (
   <div
     role="status"
-    className="border-ink-200 bg-ink-50 text-ink-700 dark:bg-ink-800/40 dark:text-ink-200 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm"
+    className="border-ink-200 bg-ink-50 text-ink-700 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm"
   >
     <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
     <div>{children}</div>
@@ -109,7 +109,7 @@ export const SettingsPanel = () => {
       >
         <div className="flex items-center justify-between gap-4">
           <div>
-            <label htmlFor="moderation-enabled" className="text-ink-800 dark:text-ink-100 text-sm font-semibold">
+            <label htmlFor="moderation-enabled" className="text-ink-800 text-sm font-semibold">
               {t("admin.contentSafety.settings.enabledLabel")}
             </label>
             <p className="text-ink-500 text-xs leading-relaxed">
@@ -133,7 +133,7 @@ export const SettingsPanel = () => {
           {data.thresholds.map((threshold) => (
             <li key={threshold.category} className="grid gap-3 py-3 sm:grid-cols-[1fr_auto] sm:items-center">
               <div>
-                <p className="text-ink-800 dark:text-ink-100 flex items-center gap-1.5 text-sm font-semibold">
+                <p className="text-ink-800 flex items-center gap-1.5 text-sm font-semibold">
                   {t(CATEGORY_LABEL_KEYS[threshold.category])}
                   {threshold.locked ? (
                     <Lock className="text-ink-400 size-3.5" aria-label={t("admin.contentSafety.settings.lockedAria")} />
@@ -146,7 +146,7 @@ export const SettingsPanel = () => {
                 </p>
               </div>
               {threshold.locked ? (
-                <span className="text-ink-600 bg-ink-100 dark:bg-ink-800/60 justify-self-start rounded-lg px-3 py-1.5 text-xs font-semibold sm:justify-self-end">
+                <span className="text-ink-600 bg-ink-100 justify-self-start rounded-lg px-3 py-1.5 text-xs font-semibold sm:justify-self-end">
                   {t("admin.contentSafety.settings.blocksAtAny")}
                 </span>
               ) : (
@@ -157,7 +157,7 @@ export const SettingsPanel = () => {
                   }
                   disabled={!editable}
                   aria-label={t("admin.contentSafety.settings.thresholdAria", { category: t(CATEGORY_LABEL_KEYS[threshold.category]) })}
-                  className="bg-ink-100 dark:bg-ink-800/60 inline-flex gap-1 justify-self-start rounded-lg p-1 sm:justify-self-end"
+                  className="bg-ink-100 inline-flex gap-1 justify-self-start rounded-lg p-1 sm:justify-self-end"
                 >
                   {(["high", "medium"] as const).map((value) => (
                     <label

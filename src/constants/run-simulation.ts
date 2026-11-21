@@ -37,5 +37,3 @@ export const SIMULATION_LISTING = {
 };
 
 export const RUN_SIMULATION_ENABLED = process.env.NEXT_PUBLIC_WORKFLOW_RUN_SIMULATION === "true";
-
-export const WORKFLOW_EFFECT_STORAGE_KEY = "workflowEffect";

@@ -13,6 +13,40 @@ import { useQueries } from "@tanstack/react-query";
  */
 export const videoStatusOf = (target: Pick<RunGroupTarget, "runStatus" | "videoStatus">) => target.videoStatus ?? target.runStatus ?? "";
 
+type GenerateFields = Pick<RunGroupTarget, "runStatus" | "videoStatus" | "progress"> &
+  Partial<Pick<RunGroupTarget, "generateVideo" | "reviewVideo">>;
+
+/**
+ * Where a design's Generate Video step is, on its own: the steps after it (Review Video, Export ZIP, publishing) never
+ * make a finished video read as being made again. A made video reads "waiting_for_review" while its review waits for
+ * the seller and "completed" otherwise. Older APIs without the step fall back to the video's status.
+ */
+export const generateStatusOf = (target: GenerateFields): string => {
+  const step = target.generateVideo;
+  if (!step) return videoStatusOf(target);
+  switch (step.status) {
+    case "succeeded":
+      return target.reviewVideo?.status === "waiting_for_review" ? "waiting_for_review" : "completed";
+    case "running":
+    case "failed":
+    case "cancelled":
+    case "waiting_for_input":
+      return step.status;
+    default: {
+      // Not started: still at the steps before it (mock-ups, their approval), or stopped there.
+      const status = videoStatusOf(target);
+      return STOPPED.has(status) ? status : "queued";
+    }
+  }
+};
+
+/** How far a design's Generate Video step is, 0-100, apart from the steps after it. */
+export const generateProgressOf = (target: GenerateFields): number => {
+  const step = target.generateVideo;
+  if (!step) return target.progress;
+  return step.status === "succeeded" ? 100 : step.progress;
+};
+
 /** A run in these states has a rendered video to show. */
 export const WITH_VIDEO = new Set(["waiting_for_review", "completed"]);
 /** A run in these states stopped before its video was finished. */
@@ -55,6 +89,23 @@ export type GroupVideoState = "queued" | "processing" | "review" | "approved" | 
  * publish steps, and its run is running again meanwhile: it is still approved, not being made.
  */
 const AFTER_VIDEO_STEPS: string[] = ["export-zip", ...PUBLISH_NODE_TYPES];
+
+export type GroupVideoDecision = GroupVideoState | "rejected";
+
+/**
+ * Where one design's video is, with the seller's decision on it. In a batch a decision is only recorded until Continue
+ * (the run still waits at Review Video), so a decided video reads approved or rejected already; a rejected one stays
+ * rejected after Continue, when its product is exported without it.
+ */
+export const groupVideoDecision = ({ target, video }: GroupVideo): GroupVideoDecision => {
+  const state = groupVideoState(target);
+  if ((state === "review" || state === "approved") && video?.approvalStatus === "rejected") return "rejected";
+  if (state === "review" && video?.approvalStatus === "approved") return "approved";
+  return state;
+};
+
+/** The video still waits at Review Video: its decision can be made or changed until Continue. */
+export const awaitsContinue = (target: Parameters<typeof groupVideoState>[0]) => groupVideoState(target) === "review";
 
 export const groupVideoState = (target: Pick<RunGroupTarget, "runStatus" | "videoStatus" | "currentStep"> & Partial<Pick<RunGroupTarget, "reviewVideo">>): GroupVideoState => {
   const status = videoStatusOf(target);

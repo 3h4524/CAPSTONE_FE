@@ -3227,7 +3227,8 @@
           "approved": "Approved",
           "processing": "Rendering",
           "queued": "Queued",
-          "stopped": "Stopped"
+          "stopped": "Stopped",
+          "rejected": "Rejected"
         },
         "renderingProgress": "Rendering {{progress}}%",
         "failed": "Failed",
@@ -3239,6 +3240,15 @@
         "showVideos": "Show videos",
         "nothingWaiting": "Nothing is waiting for review.",
         "noneApproved": "No video is approved yet.",
+        "noneRejected": "No video is rejected.",
+        "rejectedCount": "{{count}} rejected",
+        "continue": "Continue",
+        "continued": "Review done. The products are being exported.",
+        "continueAfterRender": "Continue once every video has been made.",
+        "continueAfterDecisions": "Approve or reject every video, then Continue.",
+        "continueApproved": "Every video is approved: Continue exports them with their products.",
+        "continueRejected_one": "Continue exports the approved videos. The rejected one is left out; its product is still exported.",
+        "continueRejected_other": "Continue exports the approved videos. The {{count}} rejected ones are left out; their products are still exported.",
         "stripLabel": "Videos of this run",
         "noLongerWaiting": "This video is no longer waiting for your review.",
         "version": "Version {{version}}",
@@ -3420,7 +3430,7 @@
         "manualHints": {
           "designApproval": "Review generated designs before mock-ups are created.",
           "approvalGate": "Approve the current mock-up revisions before rendering.",
-          "reviewVideo": "Review the finished cut before it is exported."
+          "reviewVideo": "Approve or reject each video, then Continue. A rejected video is left out of its product's ZIP."
         },
         "autoHints": {
           "designApproval": "Every generated design goes straight to mock-ups.",

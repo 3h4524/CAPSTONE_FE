@@ -25,7 +25,8 @@ export const groupVideoProgress = (targets: (Pick<RunGroupTarget, "runId" | "run
     // The video's own status: Push to Printify, beside it, neither holds the bar back nor fails it.
     const status = videoStatusOf(target);
     if (rendered({ ...target, currentStep: target.currentStep ?? null }) || SETTLED.has(status)) return sum + 100;
-    if (status === "running") return sum + Math.max(0, Math.min(100, target.progress));
+    // The render's own progress: the run's current step could be another one.
+    if (status === "running") return sum + Math.max(0, Math.min(100, target.generateVideo?.progress ?? target.progress));
     return sum;
   }, 0);
   return Math.floor(total / runs.length);

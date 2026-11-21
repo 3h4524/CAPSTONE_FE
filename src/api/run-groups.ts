@@ -90,6 +90,13 @@ export const confirmRunGroup = async ({
   aiShotQuoteToken?: string;
 }) => (await api.post<RunGroup>(`/api/run-groups/${groupId}/confirm`, { expectedRevision, aiShotQuoteToken })).data;
 
+/**
+ * Goes on from Review Video once every video of the batch is approved or rejected: approved ones are exported with their
+ * product, rejected ones are left out and their product is exported without a video.
+ */
+export const continueRunGroupReview = async ({ groupId, expectedRevision }: { groupId: string; expectedRevision: number }) =>
+  (await api.post<RunGroup>(`/api/run-groups/${groupId}/continue-review`, { expectedRevision })).data;
+
 /** How many videos of a batch video run have a package ready to download together. */
 export type RunGroupExportSummary = { groupId: string; ready: number; videos: number };
 

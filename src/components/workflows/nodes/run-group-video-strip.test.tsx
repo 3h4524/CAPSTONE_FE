@@ -83,6 +83,26 @@ describe("RunGroupVideoStrip", () => {
     expect(mocks.listRunVideos).toHaveBeenCalledWith("run-0");
   });
 
+  it("keeps a made video finished while its run exports, apart from Export ZIP's progress", async () => {
+    const step = (status: string, progress = 0) => ({ status, stage: null, progress, error: null });
+    mocks.group = group([
+      { ...target(0, "running", 40), currentStep: "export-zip", videoStatus: "running",
+        generateVideo: step("succeeded", 100), reviewVideo: step("succeeded", 100), exportZip: step("running", 40) },
+      { ...target(1, "running", 0), currentStep: "export-zip", videoStatus: "running",
+        generateVideo: step("succeeded", 100), reviewVideo: step("succeeded", 100), exportZip: step("pending") },
+      { ...target(2, "running", 80), videoStatus: "running",
+        generateVideo: step("running", 80), reviewVideo: step("pending"), exportZip: step("pending") },
+    ]);
+    renderStrip();
+
+    const made = screen.getByRole("button", { name: "Tee · Design 1: Done" });
+    await waitFor(() => expect(made.querySelector("img")).toHaveAttribute("src", "/thumb.png"));
+    expect(screen.getByRole("button", { name: "Tee · Design 2: Done" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tee · Design 3: Processing 80%" })).toBeInTheDocument();
+    expect(screen.queryByText("40%")).not.toBeInTheDocument();
+    expect(screen.queryByText("0%")).not.toBeInTheDocument();
+  });
+
   it("puts four videos on a page and moves to the next with the arrow", async () => {
     mocks.group = group(Array.from({ length: 6 }, (_, index) => target(index, "running", 10)));
     renderStrip();

@@ -51,12 +51,7 @@ export const VideoFields = ({ nodeId, data, disabled = false }: VideoFieldsProps
   return (
     <>
       <NodeSegmented
-        options={getVideoOutputFormats(mode).map((item) => ({
-          value: item.value,
-          label: t(`workflowConfig.fields.videoFormats.${item.value}`, {
-            defaultValue: item.label,
-          }),
-        }))}
+        options={getVideoOutputFormats(mode).map((item) => ({ value: item.value, label: item.aspectRatio }))}
         value={format.value}
         onChange={(next) => updateNodeConfig(nodeId, { ...data.config, outputFormat: next })}
         disabled={disabled}

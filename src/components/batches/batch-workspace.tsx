@@ -28,6 +28,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { productLineTypes, productTypeLabels, statusDot, statuses, statusLabel } from "@/constants/batches";
+import { productServerErrors } from "@/helpers/batch-product-errors";
 import { lineTypesText, productLineName } from "@/helpers/product-lines";
 import { smoothScrollTo } from "@/helpers/smooth-scroll";
 import { useCreateBatch } from "@/hooks/mutations/use-create-batch";
@@ -205,7 +206,14 @@ export const BatchWorkspace = () => {
 
   const submitProduct = productForm.handleSubmit(async (values) => {
     if (!selectedBatch) return;
-    await saveProduct.mutateAsync({ batchId: selectedBatch.id, productId: editing?.id, ...toProductInput(values) });
+    try {
+      await saveProduct.mutateAsync({ batchId: selectedBatch.id, productId: editing?.id, ...toProductInput(values) });
+    } catch (error) {
+      // Marks the field the backend refused (a content-policy hit, a duplicate name, ...) and focuses the first one.
+      productServerErrors(error).forEach(({ field, message }, index) =>
+        productForm.setError(field ?? "root.server", { type: "server", message }, { shouldFocus: index === 0 && field !== null }));
+      return;
+    }
     setProductDialog(false);
   });
 

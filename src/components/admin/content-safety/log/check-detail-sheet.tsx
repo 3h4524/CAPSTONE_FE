@@ -51,7 +51,7 @@ const HighlightedText = ({ text, evidence }: { text: string; evidence: string[] 
 const Meta = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="grid grid-cols-[120px_1fr] gap-2 text-sm">
     <dt className="text-ink-500">{label}</dt>
-    <dd className="text-ink-800 dark:text-ink-100 min-w-0 break-words">{children}</dd>
+    <dd className="text-ink-800 min-w-0 break-words">{children}</dd>
   </div>
 );
 
@@ -100,19 +100,19 @@ export const CheckDetailSheet = ({
             </div>
 
             <section className="space-y-2">
-              <h3 className="text-ink-900 dark:text-ink-50 text-sm font-semibold">{t("admin.contentSafety.sheet.whatFound")}</h3>
+              <h3 className="text-ink-900 text-sm font-semibold">{t("admin.contentSafety.sheet.whatFound")}</h3>
               {data.findings.length === 0 ? (
                 <p className="text-ink-500 text-sm">{t("admin.contentSafety.sheet.noConcern")}</p>
               ) : (
                 <ul className="space-y-2">
                   {data.findings.map((finding, index) => (
                     <li key={index} className="border-ink-200 rounded-lg border px-3 py-2 text-sm">
-                      <p className="text-ink-900 dark:text-ink-50 font-medium">
+                      <p className="text-ink-900 font-medium">
                         {t(CATEGORY_LABEL_KEYS[finding.category])}
                         <span className="text-ink-500 font-normal"> · {t(FINDING_SEVERITY_KEYS[finding.severity])}</span>
                       </p>
                       {finding.field ? <p className="text-ink-500 text-xs">{t("admin.contentSafety.sheet.inField", { field: finding.field })}</p> : null}
-                      {finding.evidence ? <p className="text-ink-700 dark:text-ink-200 mt-1 text-xs">“{finding.evidence}”</p> : null}
+                      {finding.evidence ? <p className="text-ink-700 mt-1 text-xs">“{finding.evidence}”</p> : null}
                     </li>
                   ))}
                 </ul>
@@ -121,9 +121,9 @@ export const CheckDetailSheet = ({
             </section>
 
             <section className="space-y-2">
-              <h3 className="text-ink-900 dark:text-ink-50 text-sm font-semibold">{t("admin.contentSafety.sheet.sellerText")}</h3>
+              <h3 className="text-ink-900 text-sm font-semibold">{t("admin.contentSafety.sheet.sellerText")}</h3>
               {data.contentExcerpt ? (
-                <p className="bg-ink-50 dark:bg-ink-800/40 text-ink-800 dark:text-ink-100 rounded-lg p-3 text-sm leading-relaxed whitespace-pre-wrap">
+                <p className="bg-ink-50 text-ink-800 rounded-lg p-3 text-sm leading-relaxed whitespace-pre-wrap">
                   <HighlightedText
                     text={data.contentExcerpt}
                     evidence={data.findings.map((finding) => finding.evidence ?? "")}

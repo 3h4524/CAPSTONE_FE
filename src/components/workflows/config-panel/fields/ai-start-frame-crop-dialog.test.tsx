@@ -15,7 +15,7 @@ const asset = {
 describe("AI start frame crop", () => {
   it("saves an in-bounds portrait crop with the selected zoom and position", async () => {
     const onSave = vi.fn();
-    render(<AiStartFrameCropDialog asset={asset} sceneNumber={1} landscape={false} onClose={vi.fn()} onSave={onSave} />);
+    render(<AiStartFrameCropDialog asset={asset} sceneNumber={1} aspectRatio="9:16" onClose={vi.fn()} onSave={onSave} />);
 
     fireEvent.change(screen.getByRole("slider", { name: /Zoom/ }), { target: { value: "2" } });
     fireEvent.change(screen.getByRole("slider", { name: /Horizontal position/ }), { target: { value: "1" } });
@@ -32,7 +32,7 @@ describe("AI start frame crop", () => {
   it("resets a saved crop and closes without saving when cancelled", async () => {
     const onSave = vi.fn();
     const onClose = vi.fn();
-    render(<AiStartFrameCropDialog asset={asset} sceneNumber={1} landscape={false} initialCrop={{ x: 0.2, y: 0.2, width: 0.3, height: 0.4 }} onClose={onClose} onSave={onSave} />);
+    render(<AiStartFrameCropDialog asset={asset} sceneNumber={1} aspectRatio="9:16" initialCrop={{ x: 0.2, y: 0.2, width: 0.3, height: 0.4 }} onClose={onClose} onSave={onSave} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Reset" }));
     await userEvent.click(screen.getByRole("button", { name: "Save crop" }));
@@ -44,7 +44,7 @@ describe("AI start frame crop", () => {
 
   it("previews the existing automatic detail crop and keeps it on reset", async () => {
     const onSave = vi.fn();
-    render(<AiStartFrameCropDialog asset={asset} sceneNumber={1} landscape={false} automaticCrop={{ x: 0.2, y: 0.1, width: 0.5, height: 0.5 }} onClose={vi.fn()} onSave={onSave} />);
+    render(<AiStartFrameCropDialog asset={asset} sceneNumber={1} aspectRatio="9:16" automaticCrop={{ x: 0.2, y: 0.1, width: 0.5, height: 0.5 }} onClose={vi.fn()} onSave={onSave} />);
     expect(screen.getByRole("slider", { name: /Zoom/ })).toHaveValue("2");
     fireEvent.change(screen.getByRole("slider", { name: /Zoom/ }), { target: { value: "3" } });
     await userEvent.click(screen.getByRole("button", { name: "Reset" }));

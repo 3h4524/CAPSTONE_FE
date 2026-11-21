@@ -100,7 +100,7 @@ const Excerpt = ({ item }: { item: ModerationCheckListItem }) => {
   const { t } = useTranslation("common");
   const missingText = t(item.direction === "output" ? "admin.contentSafety.log.imageKeepsNoText" : "admin.contentSafety.common.allowedTextNotKept");
   return item.excerptPreview ? (
-    <span className="text-ink-700 dark:text-ink-200 line-clamp-2 max-w-72 text-xs">{item.excerptPreview}</span>
+    <span className="text-ink-700 line-clamp-2 max-w-72 text-xs">{item.excerptPreview}</span>
   ) : (
     <span className="text-ink-400 text-xs" title={missingText}>
       —<span className="sr-only">{missingText}</span>
@@ -237,14 +237,14 @@ export const LogPanel = () => {
                       <DecisionBadge decision={item.decision} />
                       <span className="text-ink-500 text-xs">{formatDateTime(item.createdAt)}</span>
                     </div>
-                    <p className="text-ink-900 dark:text-ink-50 mt-2 truncate text-sm font-medium">
+                    <p className="text-ink-900 mt-2 truncate text-sm font-medium">
                       {item.userEmail ?? t("admin.contentSafety.log.unknownSeller")}
                     </p>
                     <p className="text-ink-500 text-xs">
                       {featureLabel(item.feature)} · {subjectLabel(item.subjectType)} · {t(DECIDER_LABEL_KEYS[item.decidedBy])}
                     </p>
                     {item.excerptPreview ? (
-                      <p className="text-ink-700 dark:text-ink-200 mt-1.5 line-clamp-2 text-xs">{item.excerptPreview}</p>
+                      <p className="text-ink-700 mt-1.5 line-clamp-2 text-xs">{item.excerptPreview}</p>
                     ) : null}
                   </button>
                 </li>
@@ -282,10 +282,10 @@ export const LogPanel = () => {
                     >
                       <TableCell className="text-ink-600 text-xs whitespace-nowrap">{formatDateTime(item.createdAt)}</TableCell>
                       <TableCell className="max-w-52">
-                        <p className="text-ink-900 dark:text-ink-50 truncate text-sm">{item.userEmail ?? "—"}</p>
+                        <p className="text-ink-900 truncate text-sm">{item.userEmail ?? "—"}</p>
                       </TableCell>
                       <TableCell className="text-xs">
-                        <p className="text-ink-800 dark:text-ink-100">{featureLabel(item.feature)}</p>
+                        <p className="text-ink-800">{featureLabel(item.feature)}</p>
                         <p className="text-ink-500">{subjectLabel(item.subjectType)}</p>
                       </TableCell>
                       <TableCell>

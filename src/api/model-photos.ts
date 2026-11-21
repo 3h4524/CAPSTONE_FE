@@ -1,6 +1,7 @@
 import { api } from "@/api/client";
 import type { PrintQuad } from "@/helpers/mockup-template";
 import { filterParams } from "@/helpers/model-attributes";
+import type { ModelPhotoStyle } from "@/helpers/model-photo-styles";
 import type {
   GarmentMaskPreview,
   MockupTemplate,
@@ -50,7 +51,7 @@ export const listLibraryModelPhotos = async (
 /** Makes a model photo with AI, on the caller's Ideogram key or the platform's (when their plan includes it), and keeps it. */
 export const generateModelPhoto = async (
   scope: ModelPhotoScope,
-  input: { productType: string; attributes: ModelAttributes }
+  input: { productType: string; attributes: ModelAttributes; style?: ModelPhotoStyle }
 ): Promise<MockupTemplate> =>
   (await api.post<MockupTemplate>(`${basePath(scope)}/generate`, input)).data;
 

@@ -23,6 +23,8 @@ export interface AiVideoSceneOptions {
   studioFrameId?: string | null;
   studioPrompt?: string | null;
   studioReferenceHashes?: string[] | null;
+  /** The seller's own wording of the scene's template prompt; null or absent uses the template's. */
+  customPrompt?: string | null;
   standardMotionPreset?: SceneMotion | null;
   standardBaseCrop?: Region | null;
   standardStartCrop?: Region | null;
@@ -525,6 +527,8 @@ export interface RunGroupStep {
   stage: string | null;
   progress: number;
   error: string | null;
+  /** What the seller should check on the step's result. Absent from an older API. */
+  warnings?: string[] | null;
 }
 export interface RunGroupTarget {
   key: string;

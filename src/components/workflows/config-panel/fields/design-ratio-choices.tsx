@@ -7,7 +7,7 @@ import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-no
 import { productLineRatios } from "@/constants/batches";
 import { listWords, productLineName } from "@/helpers/product-lines";
 import { parseAspectRatio } from "@/helpers/workflow-config";
-import { ratioOptionsFor, useWorkflowProductLine } from "@/hooks/use-workflow-product-line";
+import { useWorkflowProductLine } from "@/hooks/use-workflow-product-line";
 import type { WorkflowOption } from "@/types/workflow";
 
 type DesignRatioChoicesProps = {
@@ -17,17 +17,16 @@ type DesignRatioChoicesProps = {
   onChange: (value: string) => void;
 };
 
-// The design's aspect ratio, out of the ones that suit the print area of the batch's product line.
+// The design's aspect ratio. Any of them can run; a note says when another fits the batch's print area better.
 export const DesignRatioChoices = ({ options, value, label, onChange }: DesignRatioChoicesProps) => {
   const { t } = useTranslation("common");
   const line = useWorkflowProductLine();
-  const shown = ratioOptionsFor(options, line);
   const fit = line ? productLineRatios[line] : null;
 
   return (
     <div className="min-w-0 space-y-1.5">
       <ChoiceButtons
-        choices={shown.map((option) => ({ ...option, ratio: parseAspectRatio(option.value) }))}
+        choices={options.map((option) => ({ ...option, ratio: parseAspectRatio(option.value) }))}
         value={value}
         label={label}
         onChange={onChange}
@@ -38,7 +37,7 @@ export const DesignRatioChoices = ({ options, value, label, onChange }: DesignRa
         </p>
       )}
       {line && fit && value && !fit.ratios.includes(value) && (
-        <PanelNotice tone="warning">
+        <PanelNotice>
           {t("workflowConfig.fields.designRatioMismatch", { ratio: value, line: productLineName(line).toLocaleLowerCase(), ratios: listWords(fit.ratios, "disjunction") })}
         </PanelNotice>
       )}

@@ -2,7 +2,13 @@
 
 import { useTranslation } from "react-i18next";
 
-import { insertWaypoint, midpoint, snapWaypoint, stepWaypoints } from "@/helpers/edge-waypoints";
+import {
+  insertWaypoint,
+  mergeDraggedWaypoint,
+  midpoint,
+  snapWaypoint,
+  stepWaypoints,
+} from "@/helpers/edge-waypoints";
 import { useEdgeWaypointDrag } from "@/hooks/use-edge-waypoint-drag";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { WorkflowPosition } from "@/types/workflow";
@@ -27,6 +33,7 @@ export const EdgeWaypointHandles = ({ edgeId, source, target, waypoints, pathCen
   const startDrag = useEdgeWaypointDrag(edgeId);
   const updateEdgeWaypoints = useWorkflowStore((state) => state.updateEdgeWaypoints);
   const points = [source, ...waypoints, target];
+  const mergeAt = (index: number) => (list: WorkflowPosition[]) => mergeDraggedWaypoint(list, index, source, target);
 
   const moveWaypoint = (list: WorkflowPosition[], index: number) => (point: WorkflowPosition) => {
     const all = [source, ...list, target];
@@ -59,7 +66,7 @@ export const EdgeWaypointHandles = ({ edgeId, source, target, waypoints, pathCen
                 className={cn(HANDLE_CLASS_NAME, "bg-wf-accent/40 size-2.5 cursor-copy border-transparent")}
                 style={at(ghost)}
                 onPointerDown={(event) =>
-                  startDrag(event, moveWaypoint(insertWaypoint(waypoints, segment, ghost), segment))
+                  startDrag(event, moveWaypoint(insertWaypoint(waypoints, segment, ghost), segment), mergeAt(segment))
                 }
               />
             );
@@ -71,7 +78,7 @@ export const EdgeWaypointHandles = ({ edgeId, source, target, waypoints, pathCen
               aria-label={t("workflowEditor.canvas.moveBend")}
               className={cn(HANDLE_CLASS_NAME, "bg-wf-surface border-wf-accent size-3 cursor-move")}
               style={at(waypoint)}
-              onPointerDown={(event) => startDrag(event, moveWaypoint(waypoints, index))}
+              onPointerDown={(event) => startDrag(event, moveWaypoint(waypoints, index), mergeAt(index))}
               onDoubleClick={(event) => {
                 event.stopPropagation();
                 updateEdgeWaypoints(

@@ -2,6 +2,7 @@
 
 import type { PointerEvent as ReactPointerEvent } from "react";
 
+import { readWaypoints } from "@/helpers/edge-waypoints";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { WorkflowPosition } from "@/types/workflow";
 import { useReactFlow } from "@xyflow/react";
@@ -12,7 +13,11 @@ export const useEdgeWaypointDrag = (edgeId: string) => {
   const setEdgeWaypoints = useWorkflowStore((state) => state.setEdgeWaypoints);
   const commitEdgeEdit = useWorkflowStore((state) => state.commitEdgeEdit);
 
-  return (event: ReactPointerEvent, toWaypoints: (point: WorkflowPosition) => WorkflowPosition[]) => {
+  return (
+    event: ReactPointerEvent,
+    toWaypoints: (point: WorkflowPosition) => WorkflowPosition[],
+    settle?: (waypoints: WorkflowPosition[]) => WorkflowPosition[]
+  ) => {
     if (event.button !== 0) return;
     event.stopPropagation();
     event.preventDefault();
@@ -23,6 +28,12 @@ export const useEdgeWaypointDrag = (edgeId: string) => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", end);
       window.removeEventListener("pointercancel", end);
+      if (settle) {
+        const edge = useWorkflowStore.getState().edges.find((item) => item.id === edgeId);
+        const current = readWaypoints(edge?.data);
+        const settled = settle(current);
+        if (settled.length !== current.length) setEdgeWaypoints(edgeId, settled);
+      }
       commitEdgeEdit();
     };
     window.addEventListener("pointermove", move);

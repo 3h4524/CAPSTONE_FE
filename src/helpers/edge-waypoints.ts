@@ -1,4 +1,4 @@
-import { EDGE_WAYPOINT_ALIGN, EDGE_WAYPOINT_GRID } from "@/constants/workflow-edges";
+import { EDGE_WAYPOINT_ALIGN, EDGE_WAYPOINT_GRID, EDGE_WAYPOINT_MERGE } from "@/constants/workflow-edges";
 import type { WorkflowPosition } from "@/types/workflow";
 
 const isPoint = (value: unknown): value is WorkflowPosition =>
@@ -86,4 +86,25 @@ export const midpoint = (a: WorkflowPosition, b: WorkflowPosition) => ({ x: (a.x
 export const offsetWaypoints = (data: unknown, offset: number) => {
   const waypoints = readWaypoints(data);
   return waypoints.length > 0 ? waypoints.map((point) => ({ x: point.x + offset, y: point.y + offset })) : undefined;
+};
+
+export const mergeDraggedWaypoint = (
+  waypoints: WorkflowPosition[],
+  index: number,
+  source: WorkflowPosition,
+  target: WorkflowPosition
+) => {
+  const dragged = waypoints[index];
+  if (!dragged) return waypoints;
+  const close = (point: WorkflowPosition) => distance(dragged, point) <= EDGE_WAYPOINT_MERGE;
+  if (close(source)) return waypoints.slice(index + 1);
+  if (close(target)) return waypoints.slice(0, index);
+  const others = waypoints.map((point, position) => ({ point, position })).filter(({ position }) => position !== index);
+  const nearest = others
+    .filter(({ point }) => close(point))
+    .sort((a, b) => distance(dragged, a.point) - distance(dragged, b.point))[0];
+  if (!nearest) return waypoints;
+  return nearest.position < index
+    ? [...waypoints.slice(0, nearest.position + 1), ...waypoints.slice(index + 1)]
+    : [...waypoints.slice(0, index), ...waypoints.slice(nearest.position)];
 };

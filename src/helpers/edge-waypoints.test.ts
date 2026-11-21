@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildRoundedPath,
   insertWaypoint,
+  mergeDraggedWaypoint,
   nearestSegment,
   offsetWaypoints,
   readWaypoints,
@@ -77,5 +78,37 @@ describe("offsetWaypoints", () => {
   it("moves copied waypoints with the copied nodes", () => {
     expect(offsetWaypoints({ waypoints: [{ x: 10, y: 20 }] }, 48)).toEqual([{ x: 58, y: 68 }]);
     expect(offsetWaypoints({}, 48)).toBeUndefined();
+  });
+});
+
+describe("mergeDraggedWaypoint", () => {
+  const source = { x: 0, y: 0 };
+  const target = { x: 400, y: 400 };
+
+  it("merges a bend dropped on the next bend into one", () => {
+    const waypoints = [{ x: 0, y: 100 }, { x: 196, y: 104 }, { x: 200, y: 100 }, { x: 400, y: 300 }];
+    expect(mergeDraggedWaypoint(waypoints, 1, source, target)).toEqual([
+      { x: 0, y: 100 },
+      { x: 200, y: 100 },
+      { x: 400, y: 300 },
+    ]);
+  });
+
+  it("merges a bend dropped on the previous bend and drops the loop between them", () => {
+    const waypoints = [{ x: 0, y: 100 }, { x: 200, y: 100 }, { x: 200, y: 200 }, { x: 3, y: 97 }];
+    expect(mergeDraggedWaypoint(waypoints, 3, source, target)).toEqual([{ x: 0, y: 100 }]);
+  });
+
+  it("removes a bend dropped on either end of the edge", () => {
+    const waypoints = [{ x: 2, y: 3 }, { x: 200, y: 100 }];
+    expect(mergeDraggedWaypoint(waypoints, 0, source, target)).toEqual([{ x: 200, y: 100 }]);
+    expect(mergeDraggedWaypoint([{ x: 200, y: 100 }, { x: 398, y: 404 }], 1, source, target)).toEqual([
+      { x: 200, y: 100 },
+    ]);
+  });
+
+  it("keeps bends that are apart", () => {
+    const waypoints = [{ x: 0, y: 100 }, { x: 200, y: 100 }];
+    expect(mergeDraggedWaypoint(waypoints, 1, source, target)).toEqual(waypoints);
   });
 });

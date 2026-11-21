@@ -8,7 +8,7 @@ import { batchKeys } from "@/api/batches";
 import { applyBatchMockupTemplates, generateAllBatchMockups, getBatchJobMockups, getBatchMockupSelection, listMockupTemplates, mockupTemplateKeys } from "@/api/mockup-templates";
 import { RUN_GROUP_PARAM } from "@/constants/run-group";
 import { getErrorMessage } from "@/helpers/error-message";
-import { countProductTypes } from "@/helpers/mockup-template";
+import { countProductTypes, printifySelectionIssue } from "@/helpers/mockup-template";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { reportWorkflowContentIssues } from "@/helpers/workflow-content-issues";
 import { effectiveMockupTarget } from "@/helpers/workflow-graph";
@@ -109,20 +109,21 @@ export const saveRunMockupSelection = async (batchJobId: string): Promise<boolea
   try {
     let templates: Awaited<ReturnType<typeof listMockupTemplates>> | undefined;
     const allTemplates = async () => (templates ??= await listMockupTemplates());
-    // Mock-ups of a Printify product come from one template linked to Printify, so they show what Printify prints.
-    if (node && effectiveMockupTarget(node, nodes, edges) === "printify") {
-      const chosen = (await allTemplates()).filter((template) => selection.templateIds.includes(template.id));
-      if (selection.templateIds.length !== 1 || chosen.length !== 1 || !chosen[0].printify) {
-        showWorkflowActionToast("error", "The mock-ups are for a Printify product: choose exactly one Printify template on Apply mock-up first.");
-        return false;
-      }
-    }
     // The job takes only the templates its own products can use (see narrowMockupSelection).
     const job = useWorkflowRunStore.getState().job;
     if (job?.id === batchJobId) {
       selection = narrowMockupSelection(selection, await allTemplates(), countProductTypes(job.products));
       if (selection.templateIds.length === 0) {
         showWorkflowActionToast("error", "None of the chosen mock-up templates is for this run's products. Choose a template for them in the node's Settings first.");
+        return false;
+      }
+    }
+    // Mock-ups of a Printify product come from one linked template per product type, so they show what Printify prints.
+    if (node && effectiveMockupTarget(node, nodes, edges) === "printify") {
+      const { templateIds } = selection;
+      const chosen = (await allTemplates()).filter((template) => templateIds.includes(template.id));
+      if (chosen.length !== templateIds.length || printifySelectionIssue(chosen)) {
+        showWorkflowActionToast("error", "The mock-ups are for a Printify product: choose one Printify template for each product type on Apply mock-up first.");
         return false;
       }
     }
@@ -268,7 +269,9 @@ export const useBatchRun = (activeWorkflowId: string | null, isEditorReady: bool
     run.begin(activeWorkflowId);
 
     try {
-      const prepared = await prepareRun(plan, queryClient);
+      const mockupNode = nodes.find((item) => item.data.type === "apply-mockup");
+      const printifyMockups = mockupNode !== undefined && effectiveMockupTarget(mockupNode, nodes, edges) === "printify";
+      const prepared = await prepareRun(plan, queryClient, printifyMockups);
       if (isStopped()) return "blocked";
       for (const warning of prepared.warnings) showWorkflowActionToast("warning", warning);
       useWorkflowRunStore.setState({ batchJobId: prepared.batchJobId });

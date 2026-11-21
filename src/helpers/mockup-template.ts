@@ -24,6 +24,23 @@ export const countProductTypes = (products: { productType?: string | null }[]) =
     return counts;
   }, {});
 
+/**
+ * Why these chosen templates cannot make Printify products, or null. A product is made on one Printify blueprint and
+ * uses only the template of its own type, so a batch of T-shirts and hoodies takes one linked template per type.
+ */
+export const printifySelectionIssue = (
+  chosen: Pick<MockupTemplate, "productType" | "printify">[]
+): "none" | "notLinked" | "sameType" | null => {
+  if (chosen.length === 0) return "none";
+  if (chosen.some((template) => !template.printify)) return "notLinked";
+  const types = chosen.map((template) => template.productType.toLowerCase());
+  return new Set(types).size < types.length ? "sameType" : null;
+};
+
+/** The product types (lowercase) that none of the chosen templates is for: their products would get no mock-up. */
+export const uncoveredProductTypes = (productTypes: string[], chosen: Pick<MockupTemplate, "productType">[]) =>
+  productTypes.filter((type) => !chosen.some((template) => template.productType.toLowerCase() === type));
+
 // Mirrors the backend's MockupRules.ParsePrintArea shape: {"x":..,"y":..,"width":..,"height":..}.
 export const parsePrintArea = (json: string): MockupPrintArea | null => {
   try {

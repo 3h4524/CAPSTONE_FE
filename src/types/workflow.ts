@@ -40,6 +40,7 @@ export interface WorkflowDefinitionEdge {
   id: string;
   source: string;
   target: string;
+  waypoints?: WorkflowPosition[] | null;
 }
 
 export interface WorkflowDefinition {
@@ -82,6 +83,16 @@ export type WorkflowNodeData = {
 export type WorkflowNode = Node<WorkflowNodeData, "workflow">;
 
 export type WorkflowEdge = Edge;
+
+export type WorkflowEdgeData = {
+  waypoints?: WorkflowPosition[];
+  editable?: boolean;
+  sourceStatus?: WorkflowNodeStatus;
+  targetStatus?: WorkflowNodeStatus;
+  effects?: boolean;
+};
+
+export type WorkflowCanvasEdge = Edge<WorkflowEdgeData, "process">;
 
 export interface WorkflowIssue {
   id: string;

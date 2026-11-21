@@ -8,6 +8,7 @@ import { NodeMockupField } from "@/components/workflows/nodes/node-mockup-field"
 import { RunGroupVideoStrip } from "@/components/workflows/nodes/run-group-video-strip";
 import { VideoFields } from "@/components/workflows/nodes/video-fields";
 import { VideoNodePreview } from "@/components/workflows/nodes/video-node-preview";
+import { getJobImageUrls } from "@/helpers/workflow-run";
 import { useGroupVideoProgress } from "@/hooks/queries/use-group-video-progress";
 import { useNodeSettingsLocked } from "@/hooks/use-node-settings-locked";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
@@ -22,7 +23,7 @@ export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
   const disabled = useNodeSettingsLocked(data.type);
   const images =
     data.type === "design-image"
-      ? (job?.products.flatMap((product) => product.images.map((image) => image.imageUrl)) ?? [])
+      ? getJobImageUrls(job)
       : data.type === "apply-mockup"
         ? (mockupResult?.images.map((image) => image.mockupImageUrl) ?? [])
         : [];

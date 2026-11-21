@@ -7,6 +7,7 @@ import {
   RUN_ORDER,
   WORKFLOW_NODE_DEFINITIONS,
 } from "@/constants/workflow";
+import { offsetWaypoints, readWaypoints } from "@/helpers/edge-waypoints";
 import { getWorkflowNodeDefinition, normalizeNodeConfig, readString } from "@/helpers/workflow-config";
 import { findMissingMockupTemplates, isRunnableNode, publishesWithoutVideo, supportsBatchVideos } from "@/helpers/workflow-run";
 import { i18n } from "@/i18n/client";
@@ -361,7 +362,15 @@ export const duplicateWorkflowSelection = (
     const nextSource = nextIdByOldId.get(edge.source);
     const nextTarget = nextIdByOldId.get(edge.target);
     if (!nextSource || !nextTarget) return;
-    duplicatedEdges.push({ ...edge, id: uuid(), source: nextSource, target: nextTarget, selected: false });
+    const waypoints = offsetWaypoints(edge.data, offset);
+    duplicatedEdges.push({
+      ...edge,
+      id: uuid(),
+      source: nextSource,
+      target: nextTarget,
+      selected: false,
+      data: waypoints ? { ...edge.data, waypoints } : edge.data,
+    });
   });
   return { nodes: duplicatedNodes, edges: duplicatedEdges, addedNodeIds };
 };
@@ -380,7 +389,12 @@ export const toWorkflowNodes = (definition: WorkflowDefinition): WorkflowNode[] 
   }));
 
 export const toWorkflowEdges = (definition: WorkflowDefinition): WorkflowEdge[] =>
-  definition.edges.map((edge) => ({ id: edge.id, source: edge.source, target: edge.target }));
+  definition.edges.map((edge) => {
+    const waypoints = readWaypoints(edge);
+    return waypoints.length > 0
+      ? { id: edge.id, source: edge.source, target: edge.target, data: { waypoints } }
+      : { id: edge.id, source: edge.source, target: edge.target };
+  });
 
 export const toWorkflowDefinition = (
   nodes: WorkflowNode[],
@@ -395,7 +409,12 @@ export const toWorkflowDefinition = (
     position: { x: Math.round(node.position.x), y: Math.round(node.position.y) },
     config: node.data.config,
   })),
-  edges: edges.map((edge) => ({ id: edge.id, source: edge.source, target: edge.target })),
+  edges: edges.map((edge) => {
+    const waypoints = readWaypoints(edge.data).map((point) => ({ x: Math.round(point.x), y: Math.round(point.y) }));
+    return waypoints.length > 0
+      ? { id: edge.id, source: edge.source, target: edge.target, waypoints }
+      : { id: edge.id, source: edge.source, target: edge.target };
+  }),
   viewport,
 });
 

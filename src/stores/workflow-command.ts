@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type WorkflowCommandKind = "save" | "run" | "continue";
+export type WorkflowCommandKind = "save" | "run" | "continue" | "stop";
 
 export type WorkflowCommand = {
   id: string;

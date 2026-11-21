@@ -18,6 +18,10 @@ if (!i18n.isInitialized) {
     interpolation: { escapeValue: false },
     returnNull: false,
   });
+} else {
+  Object.entries(resources).forEach(([locale, bundle]) =>
+    i18n.addResourceBundle(locale, "common", bundle.common, true, true)
+  );
 }
 
 export const normalizeLocale = (value: string | null | undefined): AppLocale =>

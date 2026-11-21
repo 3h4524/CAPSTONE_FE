@@ -34,6 +34,13 @@ export type PlanFeatureDefinition = {
   description: string;
 };
 
+const marketRadarFeature = (
+  code: PlanFeatureCode,
+  label: string,
+  kind: PlanFeatureDefinition["kind"],
+  description: string
+): PlanFeatureDefinition => ({ code, label, kind, group: "Market Radar", description });
+
 // Mirrors PlanFeatures.All on the backend, in the same order.
 export const PLAN_FEATURES: PlanFeatureDefinition[] = [
   {
@@ -178,22 +185,18 @@ export const PLAN_FEATURES: PlanFeatureDefinition[] = [
     group: "Workflow",
     description: "Download a finished product's files as a ZIP.",
   },
-  {
-    code: "market_radar_full",
-    label: "Full Market Radar",
-    kind: "flag",
-    group: "Market Radar",
-    description:
-      "Every opportunity of the radar with its niche's competitors, keywords, charts, action plan and risks, an on-demand refresh and the AI analysis. Without it a Seller sees the top three opportunities.",
-  },
-  {
-    code: "daily_opportunity_analysis_cap",
-    label: "Daily opportunity analyses",
-    kind: "limit",
-    group: "Market Radar",
-    description:
-      "Most AI analyses of opportunities a Seller asks for per day. An analysis whose evidence has not changed is reused and does not count. Leave empty for no cap.",
-  },
+  marketRadarFeature(
+    "market_radar_full",
+    "Full Market Radar",
+    "flag",
+    "Every opportunity of the radar with its niche's competitors, keywords, charts, action plan and risks, an on-demand refresh and the AI analysis. Without it a Seller sees the top three opportunities."
+  ),
+  marketRadarFeature(
+    "daily_opportunity_analysis_cap",
+    "Daily opportunity analyses",
+    "limit",
+    "Most AI analyses of opportunities a Seller asks for per day. An analysis whose evidence has not changed is reused and does not count. Leave empty for no cap."
+  ),
 ];
 
 // The features with the labels, groups and order the Admin set in the catalog. Only codes the

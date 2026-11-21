@@ -284,10 +284,11 @@ export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
       issues.push({ id: `config-${node.id}`, nodeId: node.id, message: i18n.t("workflowConfig.checks.configIssue", { label: node.data.label, issue: firstIssue?.message ?? i18n.t("workflowConfig.checks.checkSettings") }) });
     }
 
-    // A Printify product is made on one blueprint, so its mock-ups come from exactly one Printify template.
+    // Printify mock-ups need a template. One per product type is checked where the templates are loaded: in the picker
+    // and before a run (printifySelectionIssue).
     if (node.data.type === "apply-mockup" && effectiveMockupTarget(node, nodes, edges) === "printify") {
       const chosen = Array.isArray(node.data.config.mockupTemplateIds) ? node.data.config.mockupTemplateIds.length : 0;
-      if (chosen !== 1)
+      if (chosen === 0)
         issues.push({ id: `printify-template-${node.id}`, nodeId: node.id, message: i18n.t("workflowConfig.checks.printifyTemplate", { label: node.data.label }) });
     }
 

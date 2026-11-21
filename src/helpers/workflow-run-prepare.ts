@@ -8,12 +8,12 @@ import { getEntitlementsRequest } from "@/api/subscription";
 import { productLineLabels, productLineOf } from "@/constants/batches";
 import { allowanceBlocksRun } from "@/helpers/allowance";
 import { missingDesignTextWarning, thinInputWarning } from "@/helpers/design-text";
-import { countProductTypes, productTypeLabel } from "@/helpers/mockup-template";
+import { countProductTypes, printifySelectionIssue, productTypeLabel, uncoveredProductTypes } from "@/helpers/mockup-template";
 import { featureLimit, hasFeature } from "@/helpers/plan-features";
 import { ACTIVE_JOB_STATUSES, narrowMockupSelection, type RunPlan } from "@/helpers/workflow-run";
 import { ALLOWANCES_QUERY_KEY } from "@/hooks/queries/use-allowances";
 import { ENTITLEMENTS_QUERY_KEY } from "@/hooks/queries/use-entitlements";
-import { getCurrentLocale } from "@/i18n/client";
+import { getCurrentLocale, i18n } from "@/i18n/client";
 import type { Product, ProductLine } from "@/types/batches";
 import type { Entitlements } from "@/types/subscription";
 import type { QueryClient } from "@tanstack/react-query";
@@ -83,7 +83,7 @@ export const needsOwnImageKey = (entitlements: Entitlements, imageProvider: stri
 // Runs every check the backend would make when the job starts, before anything is created, so a
 // run that cannot work fails with a clear message and leaves no stray job behind. Then returns the
 // draft job to configure: an existing one, or a new one from the batch's pending products.
-export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promise<PreparedRun> => {
+export const prepareRun = async (plan: RunPlan, queryClient: QueryClient, printifyMockups = false): Promise<PreparedRun> => {
   const fresh = { staleTime: 0 };
 
   const jobs = await queryClient.fetchQuery({
@@ -131,6 +131,7 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
 
   const productTypes = countProductTypes(pending);
   const productCount = pending.length;
+  let uncoveredWarning: string | null = null;
 
   if (plan.mockup) {
     const templates = await queryClient.fetchQuery({
@@ -147,6 +148,18 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
     if (plan.mockup.templateIds.length > 0 && usable.templateIds.length === 0) {
       const waiting = Object.keys(productTypes).map(productTypeLabel).join(", ");
       throw new RunBlockedError(`None of the chosen mock-up templates is for the products waiting in this batch (${waiting}). Choose a template for them in Apply mock-up.`);
+    }
+    // A workflow saved earlier may still hold two templates of one type, or one no longer linked to Printify.
+    const chosen = templates.filter((template) => usable.templateIds.includes(template.id));
+    if (printifyMockups && printifySelectionIssue(chosen)) {
+      throw new RunBlockedError("The mock-ups are for a Printify product: choose one Printify template for each product type on Apply mock-up.");
+    }
+    // The run still goes on for the types that have a template; the seller is told which ones get no mock-up.
+    const uncovered = chosen.length > 0 ? uncoveredProductTypes(Object.keys(productTypes), chosen) : [];
+    if (uncovered.length > 0) {
+      uncoveredWarning = i18n.t("batchSetup.mockup.uncovered", {
+        types: uncovered.map((type) => i18n.t(`batches.productTypes.${type}`, { defaultValue: productTypeLabel(type) })).join(", "),
+      });
     }
     plan.mockup = usable;
   }
@@ -179,7 +192,7 @@ export const prepareRun = async (plan: RunPlan, queryClient: QueryClient): Promi
   });
   if (overAllowance) throw new RunBlockedError(overAllowance);
 
-  const warnings = [await designTextWarning(plan, pending, queryClient), thinInputWarning(pending, plan.imageProvider)].filter(
+  const warnings = [uncoveredWarning, await designTextWarning(plan, pending, queryClient), thinInputWarning(pending, plan.imageProvider)].filter(
     (warning): warning is string => warning !== null
   );
 

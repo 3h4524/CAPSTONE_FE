@@ -197,7 +197,7 @@ export function PrintifyPublishSettings({ node, disabled }: { node: WorkflowNode
   const mockupConfig = useWorkflowStore((state) => state.nodes.find((item) => item.data.type === "apply-mockup")?.data.config);
   const chosen = readPrintifyProducts(mockupConfig);
   const fromMockup = Object.keys(chosen).length > 0;
-  // Apply mock-up before this step is locked to one Printify template in its Printify colors, so the product always
+  // Apply mock-up before this step is locked to one Printify template per type in its Printify colors, so the product always
   // follows the mock-ups: choosing another one here would ship a garment the listing does not show.
   const hasApplyMockup = mockupConfig !== undefined;
   // As the server reads it: unset, a node with a product keeps it and one without reads the approved mock-ups.

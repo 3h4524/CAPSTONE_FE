@@ -983,17 +983,17 @@ describe("Printify mock-ups", () => {
     expect(effectiveMockupTarget(mockup, nodes, edges)).toBe("printify");
   });
 
-  it("need exactly one template", () => {
+  it("need a template, and may have one for each product type", () => {
     const one = withPrintify(VALID_CONFIGS["apply-mockup"]);
     expect(validateWorkflow(one.nodes, one.edges).filter((issue) => issue.id === "printify-template-mockup")).toEqual([]);
 
+    // A T-shirt template and a hoodie template; the types are checked where the templates are loaded.
     const two = withPrintify({ ...VALID_CONFIGS["apply-mockup"], mockupTemplateIds: ["mockup-1", "mockup-2"] });
-    expect(validateWorkflow(two.nodes, two.edges).filter((issue) => issue.id === "printify-template-mockup")).toEqual([
-      { id: "printify-template-mockup", nodeId: "mockup", message: "Apply mock-up: choose exactly one Printify template." },
-    ]);
+    expect(validateWorkflow(two.nodes, two.edges).filter((issue) => issue.id === "printify-template-mockup")).toEqual([]);
 
-    // For the ZIP, several templates are fine.
-    const zip = withPrintify({ ...VALID_CONFIGS["apply-mockup"], mockupTemplateIds: ["mockup-1", "mockup-2"] }, false);
-    expect(validateWorkflow(zip.nodes, zip.edges).filter((issue) => issue.id === "printify-template-mockup")).toEqual([]);
+    const none = withPrintify({ ...VALID_CONFIGS["apply-mockup"], mockupTemplateIds: [] });
+    expect(validateWorkflow(none.nodes, none.edges).filter((issue) => issue.id === "printify-template-mockup")).toEqual([
+      { id: "printify-template-mockup", nodeId: "mockup", message: "Apply mock-up: choose one Printify template for each product type." },
+    ]);
   });
 });

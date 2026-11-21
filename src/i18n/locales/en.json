@@ -4471,7 +4471,7 @@
       },
       "onboarding": {
         "title": "Get your workspace ready",
-        "description": "Four steps from connecting a provider to your first workflow run. Each one ticks itself off as you do it.",
+        "description": "Four steps from connecting a provider to your first workflow run.",
         "progress": "{{done}} of {{count}} done",
         "dismiss": "Hide checklist",
         "steps": {

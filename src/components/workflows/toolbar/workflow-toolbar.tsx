@@ -20,6 +20,7 @@ import { useCreateWorkflow } from "@/hooks/mutations/use-create-workflow";
 import { useDeleteWorkflow } from "@/hooks/mutations/use-delete-workflow";
 import { useRunSimulation } from "@/hooks/use-run-simulation";
 import { useWorkflowCommands } from "@/hooks/use-workflow-commands";
+import { useWorkflowEffectEnabled } from "@/hooks/use-workflow-effect-enabled";
 import { useWorkflowExecution } from "@/hooks/use-workflow-execution";
 import { useWorkflowSave } from "@/hooks/use-workflow-save";
 import type { WorkflowMetaFormValues } from "@/schemas/workflow";
@@ -48,6 +49,7 @@ export const WorkflowToolbar = ({
   showsPanelButtons = true,
 }: WorkflowToolbarProps) => {
   const [metaDialogMode, setMetaDialogMode] = useState<MetaDialogMode | null>(null);
+  const workflowEffectEnabled = useWorkflowEffectEnabled();
   const openPopup = usePopupStore((state) => state.openPopup);
   const name = useWorkflowStore((state) => state.name);
   const description = useWorkflowStore((state) => state.description);
@@ -195,7 +197,7 @@ export const WorkflowToolbar = ({
           <span className="hidden sm:inline">{t("workflowEditor.toolbar.validate")}</span>
         </Button>
         {showsPanelButtons && <RunEffectsToggle />}
-        {showsPanelButtons && RUN_SIMULATION_ENABLED && (
+        {showsPanelButtons && RUN_SIMULATION_ENABLED && workflowEffectEnabled && (
           <Button
             type="button"
             variant="ghost"

@@ -3573,7 +3573,10 @@
         }
       },
       "canvas": {
-        "cannotConnect": "That node cannot accept this connection."
+        "cannotConnect": "That node cannot accept this connection.",
+        "bendEdge": "Drag to bend this connection",
+        "addBend": "Drag to add a bend",
+        "moveBend": "Drag to move this bend, double-click to remove it"
       },
       "steps": {
         "addStep": "Add step",
@@ -3613,6 +3616,34 @@
         "stepsNotConnected": "Those steps are not connected",
         "noSettingsToUpdate": "No settings to update",
         "renamingOff": "Renaming steps is turned off"
+      },
+      "runView": {
+        "followRun": "Follow run",
+        "hudStep": "Step {{current}} of {{total}}",
+        "hudStarting": "Starting",
+        "hudAllDone": "All steps done",
+        "hudFailed": "{{names}} failed",
+        "hudNeedsYou": "{{names}} needs you",
+        "previewDesigns": "Designs",
+        "previewListing": "Listing content",
+        "previewLive": "Live",
+        "previewWriting": "Writing",
+        "previewDone": "Done",
+        "previewFailed": "Failed",
+        "previewTitle": "Title",
+        "previewTags": "Tags",
+        "previewDescription": "Description",
+        "previewProduct": "Product {{current}}",
+        "stop": "Stop",
+        "showPanels": "Show panels",
+        "focusRun": "Focus on the run",
+        "simulate": "Preview run",
+        "simulateHint": "Play a pretend run on this canvas to see the run effects. Nothing is sent or charged.",
+        "simulateUnavailable": "This canvas cannot be previewed: remove the loop between its steps first.",
+        "simulationBadge": "Preview",
+        "effects": "Effects",
+        "effectsHint": "Follow the running step with the camera and show its output as it is made",
+        "reducedMotion": "Effects are off because your device asks for reduced motion"
       }
     },
     "workflowMedia": {

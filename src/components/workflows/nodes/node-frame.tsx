@@ -5,12 +5,17 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { NodeName } from "@/components/workflows/nodes/node-name";
+import { RunPreviewCallout } from "@/components/workflows/nodes/preview/run-preview-callout";
 import { WORKFLOW_CATEGORY_THEME } from "@/constants/workflow-category-theme";
 import { NODE_STATUS_PILLS } from "@/constants/workflow-status";
 import { getWorkflowNodeDefinition } from "@/helpers/workflow-config";
 import { isRunnableNode } from "@/helpers/workflow-run";
+import { hasRunPreview } from "@/helpers/workflow-run-view";
 import { useGroupPrintify } from "@/hooks/queries/use-group-printify";
 import { useGroupVideoProgress } from "@/hooks/queries/use-group-video-progress";
+import { useListingLive } from "@/hooks/use-listing-live";
+import { useRunEffects } from "@/hooks/use-run-effects";
+import { useStatusPop } from "@/hooks/use-status-pop";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowConnectionStore } from "@/stores/workflow-connection";
 import { useNodeHasContentIssue } from "@/stores/workflow-content-issues";
@@ -43,6 +48,8 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
   const workflowIsRunning = useWorkflowStore((state) => state.isRunning);
   const groupProgress = useGroupVideoProgress();
   const printifyProgress = useGroupPrintify();
+  const effects = useRunEffects();
+  const listingLive = useListingLive();
   const connectionState = useConnection((connection) => {
     if (!connection.inProgress) return "idle";
     if (connection.fromNode.id === nodeId) return "source";
@@ -57,14 +64,16 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
   );
   // A setting of this step the content check refused when the workflow was saved or run.
   const hasContentIssue = useNodeHasContentIssue(nodeId);
-  const definition = getWorkflowNodeDefinition(data.type);
-  if (!definition) return null;
-  const theme = WORKFLOW_CATEGORY_THEME[definition.category];
+  const listingStreaming = data.type === "generate-listing" && listingLive && data.status === "idle";
   // While a batch video run makes its videos, Generate Video reports the batch: one video's run is only a share.
   const batch = data.type === "generate-video" ? groupProgress : null;
   // Push to Printify runs beside the videos of a batch: it shows its own steps, never the render.
   const printifyBatch = data.type === "publish-printify" ? printifyProgress : null;
-  const status = batch?.active ? "running" : (printifyBatch?.status ?? data.status);
+  const status = batch?.active || listingStreaming ? "running" : (printifyBatch?.status ?? data.status);
+  const { popping, endPop } = useStatusPop(status);
+  const definition = getWorkflowNodeDefinition(data.type);
+  if (!definition) return null;
+  const theme = WORKFLOW_CATEGORY_THEME[definition.category];
   const pill = status === "idle" ? null : NODE_STATUS_PILLS[status];
   const isRunning = status === "running";
   const runnable = isRunnableNode(data.type);
@@ -85,6 +94,18 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
       ? `${pillLabel ?? t("workflowEditor.nodeStatuses.running")} ${Math.round(progress)}%`
       : pillLabel;
 
+  const runActive = workflowIsRunning || listingLive;
+  const waiting = status === "waiting_for_input" || status === "waiting_for_review";
+  const dimmed = effects && runActive && status === "idle";
+  const runEffects = cn(
+    effects && isRunning && "animate-wf-run-glow",
+    effects && popping && "animate-wf-run-pop",
+    effects && status === "failed" && "animate-wf-run-shake ring-wf-fail/30 ring-4",
+    effects && waiting && "border-wf-warn animate-wf-run-attention"
+  );
+  const keepsPreview = runActive || data.type === "generate-listing";
+  const showsPreview = effects && keepsPreview && hasRunPreview(data.type) && status !== "idle";
+
   const frame = cn(
     "bg-wf-surface relative w-full rounded-xl border shadow-[0_1px_2px_rgba(15,23,42,0.05),0_18px_36px_-28px_rgba(15,23,42,0.35)]",
     theme.frame,
@@ -96,11 +117,19 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
         : "border-wf-ok hover:border-wf-ok ring-wf-ok/25 z-20 ring-4"
       : hasContentIssue
         ? "border-wf-fail hover:border-wf-fail ring-wf-fail/25 z-10 ring-2"
-        : isRunning && "border-wf-accent ring-wf-accent/20 z-10 ring-2"
+        : isRunning && "border-wf-accent ring-wf-accent/20 z-10 ring-2",
+    runEffects
   );
 
   return (
-    <div className={cn("group/node relative", widthClassName)}>
+    <div
+      className={cn(
+        "group/node relative transition-[opacity,filter] duration-500",
+        widthClassName,
+        dimmed && "opacity-40 grayscale",
+        showsPreview && "z-20"
+      )}
+    >
       {definition.hasInput && (
         <Handle
           type="target"
@@ -127,7 +156,7 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
         </Handle>
       )}
 
-      <article className={frame}>
+      <article className={frame} onAnimationEnd={endPop}>
         <div
           className={cn(
             "flex items-center gap-2 rounded-t-[calc(var(--radius-xl)-1px)] border-b px-2.5 py-2",
@@ -161,7 +190,17 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
         </div>
 
         <div className="pt-2.5">{children}</div>
+        {effects && isRunning && (
+          <span className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden rounded-b-xl" aria-hidden="true">
+            <span
+              className="from-wf-accent to-wf-cat-ai block h-full bg-gradient-to-r transition-[width] duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </span>
+        )}
       </article>
+
+      {showsPreview && <RunPreviewCallout type={data.type} status={status} />}
 
       {definition.hasOutput && (
         <Handle

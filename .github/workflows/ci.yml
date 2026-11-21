@@ -112,3 +112,65 @@ jobs:
         run: |
           echo "::error::High or critical findings. Upgrade the package, or add an entry with a reason and an expiry date to security-acceptances.json."
           exit 1
+
+  sonar:
+    name: Sonar check for pull requests
+    if: github.event_name == 'pull_request' && startsWith(github.base_ref, 'merge-version-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    env:
+      WIF_PROVIDER: projects/1035893227434/locations/global/workloadIdentityPools/github/providers/github-actions
+      DEPLOYER_SA: apcs-deployer@apcs-prod.iam.gserviceaccount.com
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Load build settings
+        run: grep -vE '^\s*(#|$)' deploy/fe.build.env >> "$GITHUB_ENV"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER_SA }}
+
+      - name: Read the Sonar token
+        id: secrets
+        uses: google-github-actions/get-secretmanager-secrets@2b5f97c5a4b9c105e64646762ad4fc3f5128e6f5 # v2
+        with:
+          secrets: token:${{ env.GCP_PROJECT }}/sonar-token
+
+      - name: Analyze
+        if: env.SONAR_PROJECT_KEY != ''
+        uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65 # v8.4.1
+        env:
+          SONAR_TOKEN: ${{ steps.secrets.outputs.token }}
+        with:
+          args: >-
+            -Dsonar.organization=${{ env.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }}
+            -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
+            -Dsonar.pullrequest.branch=${{ github.head_ref }}
+            -Dsonar.pullrequest.base=${{ github.base_ref }}
+
+      - name: Check security findings in new code
+        if: env.SONAR_PROJECT_KEY != ''
+        env:
+          SONAR_TOKEN: ${{ steps.secrets.outputs.token }}
+        run: ./deploy/sonar-security-gate.sh .scannerwork/report-task.txt
+
+      - name: Comment on the pull request
+        if: always() && env.SONAR_PROJECT_KEY != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          SONAR_TOKEN: ${{ steps.secrets.outputs.token }}
+        run: ./deploy/sonar-pr-comment.sh

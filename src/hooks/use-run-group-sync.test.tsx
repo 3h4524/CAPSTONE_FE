@@ -107,4 +107,31 @@ describe("useRunGroupSync", () => {
     act(() => { mocks.handlers.reconnecting(); });
     expect(useRunGroupLive.getState().connectedGroupId).toBeNull();
   });
+
+  it("applies export progress only to export even when rendering data is stale", async () => {
+    const batch = group("run-1");
+    batch.targets[0].generateVideo = { status: "running", stage: "Rendering", progress: 90, error: null };
+    batch.targets[0].exportZip = { status: "running", stage: "Exporting", progress: 0, error: null };
+    mocks.cache.set(JSON.stringify(["run-groups", "group-1"]), batch);
+    mocks.cache.set(JSON.stringify(["workflow-runs", "run-1"]), {
+      nodes: [
+        { nodeType: "generate-video", status: "running", stage: "Rendering", progress: 90 },
+        { nodeType: "export-zip", status: "running", stage: "Exporting", progress: 0 },
+        { nodeType: "publish-printify", status: "running", stage: "Publishing", progress: 20 },
+      ],
+    } as WorkflowRun);
+    renderHook(() => useRunGroupSync("group-1"));
+    await waitFor(() => expect(useRunGroupLive.getState().connectedGroupId).toBe("group-1"));
+
+    act(() => { mocks.handlers.RunProgress({ runId: "run-1", groupId: "group-1", nodeType: "export-zip", stage: "Planning", progress: 10 } as never); });
+
+    const updatedGroup = mocks.cache.get(JSON.stringify(["run-groups", "group-1"])) as RunGroup;
+    expect(updatedGroup.targets[0]).toMatchObject({
+      currentStep: "generate-video", stage: "Planning", progress: 5,
+      generateVideo: { stage: "Rendering", progress: 90 },
+      exportZip: { stage: "Planning", progress: 10 },
+    });
+    const updatedRun = mocks.cache.get(JSON.stringify(["workflow-runs", "run-1"])) as WorkflowRun;
+    expect(updatedRun.nodes.map((node) => node.progress)).toEqual([90, 10, 20]);
+  });
 });

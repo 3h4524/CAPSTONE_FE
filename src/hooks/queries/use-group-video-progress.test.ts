@@ -29,4 +29,15 @@ describe("groupVideoProgress", () => {
     expect(groupVideoProgress([{ runId: null, runStatus: null, progress: 0 }, run("completed")])).toBe(100);
     expect(groupVideoProgress([])).toBe(0);
   });
+
+  it("does not use export progress as video rendering progress", () => {
+    expect(groupVideoProgress([
+      { ...run("running", 10), currentStep: "export-zip" },
+      { ...run("running", 40), currentStep: "generate-video" },
+    ])).toBe(70);
+    expect(groupVideoProgress([
+      { ...run("running", 10), currentStep: "export-zip" },
+      { ...run("running", 0), currentStep: "review-video" },
+    ])).toBe(100);
+  });
 });

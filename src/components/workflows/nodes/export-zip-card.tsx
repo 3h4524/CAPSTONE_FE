@@ -14,26 +14,38 @@ import { videoStatusOf } from "@/hooks/queries/use-group-videos";
 import { useRunGroup, useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowStore } from "@/stores/workflow";
+import type { RunGroupTarget } from "@/types/video-workflow";
 import type { WorkflowNode } from "@/types/workflow";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { NodeProps } from "@xyflow/react";
 
 /**
  * The packages of a batch video run, one per video, downloaded as one ZIP with a folder per product. Null outside an
- * open batch video run whose videos have started.
+ * open batch video run. Keep its scope while it loads so a child's old ZIP cannot appear instead.
  */
-const useGroupExport = () => {
-  const groupId = useRunGroupId();
+const targetExportFinished = (target: RunGroupTarget) => {
+  if (!target.runId) return false;
+  // Older APIs only provide the video run's status. Current checkpoints take precedence over old packages.
+  const completed = videoStatusOf(target) === "completed";
+  return [target.generateVideo, target.reviewVideo, target.exportZip].every((step) =>
+    step ? step.status === "succeeded" : completed
+  );
+};
+
+const useGroupExport = (runGroupId?: string | null) => {
+  const urlGroupId = useRunGroupId();
+  const groupId = urlGroupId ?? runGroupId ?? null;
   const workflowId = useWorkflowStore((state) => state.workflowId);
   const { data: group } = useRunGroup(groupId);
   const active =
-    group && group.workflowId === workflowId && group.status !== "waiting_for_targets"
+    group && group.id === groupId && group.workflowId === workflowId && group.status !== "waiting_for_targets"
       ? group
       : null;
-  // Asked again as videos finish, since each one's package is made when its run completes.
+  // Each step change refreshes the summary, including exports that finish while publishing continues.
   const { t } = useTranslation("common");
-  const finished =
-    active?.targets.filter((target) => videoStatusOf(target) === "completed").length ?? 0;
+  const finished = active?.targets.map((target) =>
+    `${target.runId}:${videoStatusOf(target)}:${target.generateVideo?.status}:${target.reviewVideo?.status}:${target.exportZip?.status}`
+  ).join("|") ?? "";
   const { data: summary } = useQuery({
     // Not under the group's own key: reading the group again (every change of a run) must not ask this too.
     queryKey: ["run-group-export", active?.id ?? null, finished],
@@ -49,14 +61,17 @@ const useGroupExport = () => {
         `${t("workflowEditor.exportZip.downloadFailed")} ${getErrorMessage(error)}`
       ),
   });
-  return active ? { summary, download, isPending } : null;
+  const ready = Boolean(active && active.status !== "cancelled" && active.targets.length > 0 &&
+    active.targets.every(targetExportFinished) && summary?.groupId === active.id &&
+    summary.videos === active.targets.length && summary.ready === summary.videos);
+  return groupId ? { summary, ready, runIds: active?.targets.map((target) => target.runId) ?? [], download, isPending } : null;
 };
 
 export const ExportZipCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
   const { t } = useTranslation("common");
   const { run } = useWorkflowRuntime();
   const { mutate: download, isPending: isDownloading } = useMediaDownload();
-  const groupExport = useGroupExport();
+  const groupExport = useGroupExport(run?.runGroupId);
   const exportStep = run?.nodes.find(
     (step) => step.nodeId === id && step.nodeType === "export-zip"
   );
@@ -68,9 +83,12 @@ export const ExportZipCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =
 
   // A batch video run downloads every video's package together; a single video run, its own.
   const summary = groupExport?.summary;
+  const runFinished = ["generate-video", "review-video"].every((type) =>
+    run?.nodes.find((step) => step.nodeType === type)?.status === "succeeded"
+  ) && exportStep?.status === "succeeded";
   const isReady = groupExport
-    ? Boolean(summary && summary.ready > 0)
-    : exportStep?.status === "succeeded" && typeof exportId === "string" && exportId.length > 0;
+    ? groupExport.ready && (!run || !groupExport.runIds.includes(run.id) || runFinished)
+    : runFinished && typeof exportId === "string" && exportId.length > 0;
   const isPending = groupExport ? groupExport.isPending : isDownloading;
   const caption = !groupExport
     ? t("workflowEditor.exportZip.assetsPackaged")
@@ -78,6 +96,7 @@ export const ExportZipCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =
       ? t("workflowEditor.exportZip.somePackaged", { ready: summary.ready, total: summary.videos })
       : t("workflowEditor.exportZip.allPackaged", { count: summary?.ready ?? 0 });
   const startDownload = () => {
+    if (!isReady) return;
     if (groupExport) {
       groupExport.download();
       return;

@@ -36,7 +36,7 @@ export const useGroupVideos = (): { group: RunGroup | null; videos: GroupVideo[]
   const workflowId = useWorkflowStore((state) => state.workflowId);
   const group = data && data.workflowId === workflowId ? data : null;
   const targets = group?.targets.filter((target) => target.runId) ?? [];
-  const made = targets.filter((target) => WITH_VIDEO.has(videoStatusOf(target)));
+  const made = targets.filter((target) => target.generateVideo?.status === "succeeded" || WITH_VIDEO.has(videoStatusOf(target)));
   const lists = useQueries({
     queries: made.map((target) => ({
       queryKey: videoWorkflowKeys.videos(target.runId),
@@ -56,9 +56,9 @@ export type GroupVideoState = "queued" | "processing" | "review" | "approved" | 
  */
 const AFTER_VIDEO_STEPS: string[] = ["export-zip", ...PUBLISH_NODE_TYPES];
 
-export const groupVideoState = (target: Pick<RunGroupTarget, "runStatus" | "videoStatus" | "currentStep">): GroupVideoState => {
+export const groupVideoState = (target: Pick<RunGroupTarget, "runStatus" | "videoStatus" | "currentStep"> & Partial<Pick<RunGroupTarget, "reviewVideo">>): GroupVideoState => {
   const status = videoStatusOf(target);
-  if (status === "completed" || (status === "running" && AFTER_VIDEO_STEPS.includes(target.currentStep ?? ""))) return "approved";
+  if (target.reviewVideo?.status === "succeeded" || status === "completed" || (status === "running" && AFTER_VIDEO_STEPS.includes(target.currentStep ?? ""))) return "approved";
   if (status === "waiting_for_review") return "review";
   if (STOPPED.has(status)) return "stopped";
   return status === "queued" ? "queued" : "processing";

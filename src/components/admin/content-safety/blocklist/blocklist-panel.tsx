@@ -289,7 +289,7 @@ export const BlocklistPanel = () => {
                 <li key={term.id} className="border-ink-200 rounded-lg border p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-ink-900 dark:text-ink-50 truncate font-semibold">{term.term}</p>
+                      <p className="text-ink-900 truncate font-semibold">{term.term}</p>
                       <p className="text-ink-500 mt-0.5 text-xs">
                         {t(CATEGORY_LABEL_KEYS[term.category])} · {t(term.matchType === "phrase" ? "admin.contentSafety.matchType.phrase" : "admin.contentSafety.matchType.wordShort")}
                         {term.matchUnaccented ? ` · ${t("admin.contentSafety.matchType.alsoWithoutAccents")}` : ""}
@@ -330,7 +330,7 @@ export const BlocklistPanel = () => {
                   {visibleTerms.map((term) => (
                     <TableRow key={term.id} className={cn(!term.isActive && "opacity-60")}>
                       <TableCell>
-                        <p className="text-ink-900 dark:text-ink-50 font-semibold">{term.term}</p>
+                        <p className="text-ink-900 font-semibold">{term.term}</p>
                         {term.note ? <p className="text-ink-500 max-w-64 truncate text-xs">{term.note}</p> : null}
                       </TableCell>
                       <TableCell className="text-ink-700">{t(CATEGORY_LABEL_KEYS[term.category])}</TableCell>
@@ -420,7 +420,7 @@ export const BlocklistPanel = () => {
             {allowlist.data.map((item) => (
               <li key={item.id} className={cn("flex items-center gap-3 py-2.5", !item.isActive && "opacity-60")}>
                 <div className="min-w-0 flex-1">
-                  <p className="text-ink-900 dark:text-ink-50 font-medium">{item.phrase}</p>
+                  <p className="text-ink-900 font-medium">{item.phrase}</p>
                   {item.note ? <p className="text-ink-500 truncate text-xs">{item.note}</p> : null}
                 </div>
                 <Switch

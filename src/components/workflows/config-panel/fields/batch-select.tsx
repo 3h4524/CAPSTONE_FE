@@ -32,7 +32,7 @@ export const BatchSelect = ({ value, placeholder, onChange }: BatchSelectProps) 
   const pendingCount = products?.filter((product) => product.status === "pending").length;
   const chosen = batches?.find((batch) => batch.id === value);
 
-  // The design ratio follows the batch: one that does not suit its product line's print area becomes the line's own.
+  // Choosing a batch moves the design ratio to its product line's closest one; the seller can still pick any other.
   const choose = (batchId: string) => {
     onChange(batchId);
     const line = batches?.find((batch) => batch.id === batchId)?.productLine;

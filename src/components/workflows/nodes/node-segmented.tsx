@@ -14,8 +14,14 @@ type NodeSegmentedProps = {
   disabled?: boolean;
 };
 
+// A soft track with a light raised chip for the choice: the same look as the other segmented pickers
+// in the app, so the choice reads clearly without shouting.
+const trackClassName = "bg-ink-100 flex h-8 items-stretch gap-0.5 rounded-lg p-0.5";
+
 const segmentClassName =
-  "min-w-0 flex-1 truncate px-1 py-1.5 text-center text-[10px] leading-none transition-colors disabled:cursor-not-allowed disabled:opacity-50";
+  "flex min-w-0 flex-1 items-center justify-center truncate rounded-md border border-transparent px-1.5 text-[11px] leading-none font-medium transition-[background-color,border-color,color,box-shadow] duration-150 motion-reduce:transition-none";
+
+const selectedClassName = "bg-card border-ink-200 text-ink-900 font-semibold shadow-sm";
 
 export const NodeSegmented = ({
   options,
@@ -30,7 +36,7 @@ export const NodeSegmented = ({
   if (!onChange) {
     return (
       <div
-        className="border-wf-line flex overflow-hidden rounded-md border"
+        className={trackClassName}
         aria-label={`${ariaLabel}: ${selected?.label ?? t("workflowEditor.nodeSegmented.notSet")}`}
       >
         {options.map((option) => (
@@ -39,9 +45,7 @@ export const NodeSegmented = ({
             aria-hidden="true"
             className={cn(
               segmentClassName,
-              option.value === value
-                ? "bg-wf-accent text-wf-surface font-semibold shadow-[0_0_12px_var(--wf-halo)]"
-                : "text-wf-dim"
+              option.value === value ? selectedClassName : "text-ink-500"
             )}
           >
             {option.label}
@@ -53,11 +57,7 @@ export const NodeSegmented = ({
 
   return (
     <NodeControl>
-      <div
-        className="border-wf-line flex overflow-hidden rounded-md border"
-        role="radiogroup"
-        aria-label={ariaLabel}
-      >
+      <div className={trackClassName} role="radiogroup" aria-label={ariaLabel}>
         {options.map((option) => (
           <button
             key={option.value}
@@ -68,9 +68,10 @@ export const NodeSegmented = ({
             onClick={() => onChange(option.value)}
             className={cn(
               segmentClassName,
+              "focus-visible:ring-primary/30 cursor-pointer outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50",
               option.value === value
-                ? "bg-wf-accent text-wf-surface font-semibold shadow-[0_0_12px_var(--wf-halo)]"
-                : "text-wf-dim hover:text-wf-ink"
+                ? selectedClassName
+                : "text-ink-600 hover:text-ink-900"
             )}
           >
             {option.label}

@@ -42,6 +42,7 @@ export const ContentSafetyDashboard = () => {
     [pathname, router, searchParams]
   );
 
+  // The admin layout already mounts AdminShell around every admin page; wrapping again nests a second shell.
   return (
     <div className="flex flex-col gap-6 max-md:gap-4">
       <header className="flex flex-col gap-1.5">

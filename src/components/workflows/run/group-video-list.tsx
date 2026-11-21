@@ -3,20 +3,24 @@
 import { useState } from "react";
 import Image from "next/image";
 import type { TFunction } from "i18next";
-import { AlertTriangle, ArrowRight, Check, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, Download, Loader2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { runGroupKeys } from "@/api/run-groups";
-import { getWorkflowRun } from "@/api/video-workflow";
+import { getWorkflowRun, listRunVideos, videoWorkflowKeys } from "@/api/video-workflow";
 import { Button } from "@/components/ui/button";
 import { ScrollStrip } from "@/components/workflows/run/mockup-strip";
 import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
+import { useMediaDownload } from "@/hooks/mutations/use-media-download";
+import { useContinueRunGroupReview } from "@/hooks/mutations/use-run-group-actions";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import {
+  awaitsContinue,
+  generateProgressOf,
   type GroupVideo,
-  type GroupVideoState,
-  groupVideoState,
+  type GroupVideoDecision,
+  groupVideoDecision,
   useGroupVideos,
   videoStatusOf,
 } from "@/hooks/queries/use-group-videos";
@@ -24,11 +28,11 @@ import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { cn } from "@/utils/cn";
 
-type Filter = "all" | "review" | "approved";
+type Filter = "all" | "review" | "approved" | "rejected";
 
 // The same palette as the cards of Mockup Approval: a decision still to make is slate, approved emerald, a failure rose;
 // a video being made takes the navy of the product.
-const STATE: Record<GroupVideoState, { labelKey: string; pill: string; bar: string }> = {
+const STATE: Record<GroupVideoDecision, { labelKey: string; pill: string; bar: string }> = {
   review: {
     labelKey: "workflowEditor.groupVideos.states.review",
     pill: "bg-ink-100 text-ink-600",
@@ -49,6 +53,11 @@ const STATE: Record<GroupVideoState, { labelKey: string; pill: string; bar: stri
     pill: "bg-ink-100 text-ink-600",
     bar: "bg-ink-300",
   },
+  rejected: {
+    labelKey: "workflowEditor.groupVideos.states.rejected",
+    pill: "bg-rose-100 text-rose-700",
+    bar: "bg-rose-400",
+  },
   stopped: {
     labelKey: "workflowEditor.groupVideos.states.stopped",
     pill: "bg-rose-100 text-rose-700",
@@ -56,12 +65,12 @@ const STATE: Record<GroupVideoState, { labelKey: string; pill: string; bar: stri
   },
 };
 /** The order the summary bar draws its parts in: settled work first, as it reads left to right. */
-const BAR_ORDER: GroupVideoState[] = ["approved", "review", "processing", "queued", "stopped"];
+const BAR_ORDER: GroupVideoDecision[] = ["approved", "rejected", "review", "processing", "queued", "stopped"];
 
-const stateLabel = (item: GroupVideo, state: GroupVideoState, t: TFunction) =>
+const stateLabel = (item: GroupVideo, state: GroupVideoDecision, t: TFunction) =>
   state === "processing"
     ? t("workflowEditor.groupVideos.renderingProgress", {
-        progress: Math.round(item.target.progress),
+        progress: Math.round(generateProgressOf(item.target)),
       })
     : state === "stopped" && videoStatusOf(item.target) === "failed"
       ? t("workflowEditor.groupVideos.failed")
@@ -70,37 +79,61 @@ const stateLabel = (item: GroupVideo, state: GroupVideoState, t: TFunction) =>
 /**
  * Review Video while a batch video run is open: every design's video at once, how far the review is, and the one being
  * reviewed below. Choosing a video opens its run, so the player and the approve / reject controls under the list are
- * that video's. "Review next" steps through the ones still waiting.
+ * that video's. "Review next" steps through the ones still waiting. As at Mockup Approval, approving or rejecting only
+ * records the decision; Continue then goes on with every video at once: an approved one is exported with its product,
+ * a rejected one is left out and its product exported without it.
  */
 export const GroupVideoList = () => {
   const { t } = useTranslation("common");
   const { group, videos } = useGroupVideos();
   const { runId, selectRun } = useWorkflowRuntime();
   const [filter, setFilter] = useState<Filter>("all");
+  const { mutate: continueReview, isPending: isContinuing } = useContinueRunGroupReview();
+  const client = useAppQueryClient();
   if (videos.length === 0) return null;
 
-  const states = videos.map((item) => groupVideoState(item.target));
-  const count = (state: GroupVideoState) => states.filter((value) => value === state).length;
+  const states = videos.map(groupVideoDecision);
+  const count = (state: GroupVideoDecision) => states.filter((value) => value === state).length;
   const approved = count("approved");
+  const rejected = count("rejected");
   const toReview = count("review");
-  const shown = videos.filter((_, index) =>
-    filter === "all"
-      ? true
-      : filter === "review"
-        ? states[index] === "review"
-        : states[index] === "approved"
-  );
+  const shown = videos.filter((_, index) => filter === "all" || states[index] === filter);
   const currentIndex = videos.findIndex((item) => item.target.runId === runId);
   // The next one waiting after the open video, wrapping round, so repeated presses walk through them all.
   const nextToReview = [
     ...videos.slice(currentIndex + 1),
     ...videos.slice(0, currentIndex + 1),
-  ].find((item) => groupVideoState(item.target) === "review" && item.target.runId !== runId);
+  ].find((item) => groupVideoDecision(item) === "review" && item.target.runId !== runId);
+  // Continue is offered while videos wait at Review Video, and goes once each is decided and none is still being made.
+  const awaiting = videos.filter((item) => awaitsContinue(item.target)).length;
+  const stillMaking = count("processing") + count("queued");
+  const canContinue = Boolean(group) && awaiting > 0 && toReview === 0 && stillMaking === 0 && !isContinuing;
+  const continueHint =
+    stillMaking > 0
+      ? t("workflowEditor.groupVideos.continueAfterRender")
+      : toReview > 0
+        ? t("workflowEditor.groupVideos.continueAfterDecisions")
+        : rejected > 0
+          ? t("workflowEditor.groupVideos.continueRejected", { count: rejected })
+          : t("workflowEditor.groupVideos.continueApproved");
+  const goOn = () =>
+    group &&
+    continueReview(
+      { groupId: group.id, expectedRevision: group.revision },
+      {
+        onSuccess: () => {
+          showToast("success", t("workflowEditor.groupVideos.continued"));
+          for (const item of videos)
+            if (item.target.runId) void client.invalidateQueries({ queryKey: videoWorkflowKeys.videos(item.target.runId) });
+        },
+      }
+    );
 
   const filters: { value: Filter; label: string; count: number }[] = [
     { value: "all", label: t("workflowEditor.groupVideos.filterAll"), count: videos.length },
     { value: "review", label: t("workflowEditor.groupVideos.states.review"), count: toReview },
     { value: "approved", label: t("workflowEditor.groupVideos.states.approved"), count: approved },
+    { value: "rejected", label: t("workflowEditor.groupVideos.states.rejected"), count: rejected },
   ];
 
   return (
@@ -116,6 +149,8 @@ export const GroupVideoList = () => {
             </h3>
             <p className="text-muted-foreground mt-0.5 text-xs tabular-nums">
               {t("workflowEditor.groupVideos.approvedOf", { approved, total: videos.length })}
+              {rejected > 0 &&
+                ` · ${t("workflowEditor.groupVideos.rejectedCount", { count: rejected })}`}
               {toReview > 0 &&
                 ` · ${t("workflowEditor.groupVideos.waitingForYou", { count: toReview })}`}
             </p>
@@ -133,6 +168,23 @@ export const GroupVideoList = () => {
             </Button>
           )}
         </div>
+        {awaiting > 0 && (
+          <div className="bg-muted/60 flex items-center justify-between gap-3 rounded-lg px-3 py-2">
+            <p className="text-muted-foreground text-xs leading-relaxed">{continueHint}</p>
+            <Button
+              type="button"
+              size="sm"
+              className="h-8 shrink-0 gap-1.5 text-xs hover:translate-y-0"
+              disabled={!canContinue}
+              onClick={goOn}
+            >
+              {isContinuing && (
+                <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+              )}
+              {t("workflowEditor.groupVideos.continue")}
+            </Button>
+          </div>
+        )}
         {/* One part per state, as wide as its share: the review at a glance. Described in words just above. */}
         <div className="bg-muted flex h-1.5 gap-px overflow-hidden rounded-full" aria-hidden="true">
           {BAR_ORDER.map((state) =>
@@ -177,7 +229,9 @@ export const GroupVideoList = () => {
         <p className="text-muted-foreground border-t px-4 py-6 text-center text-xs">
           {filter === "review"
             ? t("workflowEditor.groupVideos.nothingWaiting")
-            : t("workflowEditor.groupVideos.noneApproved")}
+            : filter === "rejected"
+              ? t("workflowEditor.groupVideos.noneRejected")
+              : t("workflowEditor.groupVideos.noneApproved")}
         </p>
       ) : (
         <div className="border-t pt-3">
@@ -216,28 +270,39 @@ const VideoCard = ({
   const { target, video } = item;
   const client = useAppQueryClient();
   const { mutate: act } = useWorkflowRunAction();
+  const { mutate: download, isPending: isDownloading } = useMediaDownload();
   const [isDeciding, setIsDeciding] = useState(false);
-  const state = groupVideoState(target);
+  const state = groupVideoDecision(item);
   const label = stateLabel(item, state, t);
-  const progress = Math.max(0, Math.min(100, Math.round(target.progress)));
-  const thumbnail = state === "review" || state === "approved" ? video?.thumbnailUrl : null;
+  const progress = Math.max(0, Math.min(100, Math.round(generateProgressOf(target))));
+  const made = state === "review" || state === "approved" || state === "rejected";
+  const thumbnail = made ? video?.thumbnailUrl : null;
   const approved = state === "approved";
-  const canDecide = state === "review" && Boolean(video) && !isDeciding;
-  const refreshGroup = () => {
+  const rejected = state === "rejected";
+  // Until Continue the decision can be made or changed; after it, it is final.
+  const open = awaitsContinue(target) && Boolean(video) && !isDeciding;
+  const canApprove = open && !approved;
+  const canReject = open && !rejected;
+  // A finished video can be saved whatever its review says: the MP4 the review panel downloads.
+  const canDownload = Boolean(video?.previewUrl) && made && !isDownloading;
+  const refresh = () => {
     if (groupId) void client.invalidateQueries({ queryKey: runGroupKeys.detail(groupId) });
+    // The video's approval and review revision change with every decision.
+    if (target.runId) void client.invalidateQueries({ queryKey: videoWorkflowKeys.videos(target.runId) });
   };
 
   const decide = async (approve: boolean) => {
     if (!video || !target.runId) return;
     setIsDeciding(true);
     try {
-      // The run's revision moves with every change, so it is read fresh rather than taken from an older list.
-      const run = await getWorkflowRun(target.runId);
-      const candidateId = run.nodes.find((node) => node.nodeType === "review-video")?.output
-        .videoId;
-      if (run.status !== "waiting_for_review" || candidateId !== video.id) {
+      // The run's revision and the video's review revision move with every decision, so both are read fresh rather
+      // than taken from an older list.
+      const [run, runVideos] = await Promise.all([getWorkflowRun(target.runId), listRunVideos(target.runId)]);
+      const review = run.nodes.find((node) => node.nodeType === "review-video");
+      const current = runVideos.find((item) => item.id === video.id);
+      if (run.status !== "waiting_for_review" || review?.output.videoId !== video.id || !current) {
         showToast("warning", t("workflowEditor.groupVideos.noLongerWaiting"));
-        refreshGroup();
+        refresh();
         setIsDeciding(false);
         return;
       }
@@ -247,9 +312,9 @@ const VideoCard = ({
           expectedRevision: run.revision,
           action: approve ? "approve_video" : "reject_video",
           videoId: video.id,
-          reviewRevision: video.reviewRevision,
+          reviewRevision: current.reviewRevision,
         },
-        { onSuccess: refreshGroup, onSettled: () => setIsDeciding(false) }
+        { onSettled: () => { refresh(); setIsDeciding(false); } }
       );
     } catch (error) {
       showToast("error", getErrorMessage(error));
@@ -263,7 +328,7 @@ const VideoCard = ({
         className={cn(
           "bg-card flex h-full flex-col overflow-hidden rounded-lg border transition-[border-color,box-shadow] duration-200 motion-reduce:transition-none",
           state === "approved" && "border-emerald-300",
-          state === "stopped" && "border-rose-300",
+          (state === "stopped" || rejected) && "border-rose-300",
           active && "border-primary ring-primary ring-1"
         )}
       >
@@ -330,7 +395,7 @@ const VideoCard = ({
               aria-label={t("workflowEditor.groupVideos.approveVideo")}
               aria-pressed={approved}
               title={t("workflowEditor.groupVideos.approveVideo")}
-              disabled={!canDecide}
+              disabled={!canApprove}
               onClick={() => void decide(true)}
               className={approved ? "disabled:opacity-100" : undefined}
             >
@@ -338,14 +403,34 @@ const VideoCard = ({
             </Button>
             <Button
               type="button"
-              variant="outline"
+              variant={rejected ? "destructive" : "outline"}
               size="icon-sm"
               aria-label={t("workflowEditor.groupVideos.rejectVideo")}
+              aria-pressed={rejected}
               title={t("workflowEditor.groupVideos.rejectVideo")}
-              disabled={!canDecide}
+              disabled={!canReject}
               onClick={() => void decide(false)}
+              className={rejected ? "disabled:opacity-100" : undefined}
             >
               <X aria-hidden="true" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              aria-label={t("workflowEditor.groupVideos.downloadVideo")}
+              title={t("workflowEditor.groupVideos.downloadMp4")}
+              disabled={!canDownload}
+              onClick={() =>
+                video &&
+                download(
+                  { id: video.id, zip: false },
+                  // A failed request is reported by the mutation hook itself.
+                  { onSuccess: (url) => window.location.assign(url) }
+                )
+              }
+            >
+              <Download aria-hidden="true" />
             </Button>
           </div>
         </div>

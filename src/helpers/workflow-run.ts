@@ -50,6 +50,19 @@ export const hasListingSteps = (nodes: WorkflowNode[]) => nodes.some((node) => n
 export const hasBatchSteps = (nodes: WorkflowNode[]) =>
   nodes.some((node) => node.data.type === "prompt-synthesis" || node.data.type === "design-image");
 
+/**
+ * The products of the batch the next run makes videos for. Mirrors the server (`RunCostEstimateService`): a workflow
+ * that makes designs runs on the batch's pending products only, so a product finished by an earlier run gets no new
+ * video; with nothing pending, or without design steps, the run goes on with every product.
+ */
+export const videoRunProducts = <T extends { status: string }>(nodes: WorkflowNode[], products: T[]): T[] => {
+  const makesDesigns = nodes.some((node) =>
+    ["prompt-synthesis", "design-image", "design-approval"].includes(node.data.type)
+  );
+  const pending = products.filter((product) => product.status === "pending");
+  return makesDesigns && pending.length > 0 ? pending : products;
+};
+
 /** The workflow makes a video, so a run includes the server's video run. */
 export const hasVideoSteps = (nodes: WorkflowNode[]) => nodes.some((node) => node.data.type === "generate-video");
 
@@ -221,7 +234,8 @@ export type RunSnapshot = { step: RunStep; job: BatchJobDetail | null; mockupSta
 
 // The statuses the batch part of a run gives its nodes: from the job on the server once it exists, from
 // the runner's own step before that. Nodes no backend can run are skipped as soon as a run exists.
-// The video steps are left out: the server's video run reports those.
+// The video steps are left out: the server's video run reports those. So is a listing the server writes after Mockup
+// Approval; Listing content shows as skipped only in a workflow that never reaches that part.
 export const deriveNodeStatuses = (nodes: WorkflowNode[], run: RunSnapshot): Record<string, WorkflowNodeStatus> => {
   const hasRun = run.step !== "idle" || run.job !== null;
   const status = run.job?.status ?? "";
@@ -248,7 +262,9 @@ export const deriveNodeStatuses = (nodes: WorkflowNode[], run: RunSnapshot): Rec
         if (designsReady) {
           // Paused until the person approves designs and asks for the mock-ups (or, with no mock-up step, has reviewed them all).
           const waiting = run.job?.requireApproval === true && run.mockupState === "idle" && (hasMockupNode || countApprovals(run.job).pending > 0);
-          return waiting ? "waiting_for_review" : "success";
+          // Automatic approval left some designs for the Seller: their content check could not run.
+          const held = run.job?.requireApproval === false && productsAwaitingReview(run.job).length > 0;
+          return waiting || held ? "waiting_for_review" : "success";
         }
         return status === "failed" ? "skipped" : "idle";
       case "apply-mockup":
@@ -262,8 +278,11 @@ export const deriveNodeStatuses = (nodes: WorkflowNode[], run: RunSnapshot): Rec
     }
   };
 
+  const serverWritesListing = hasServerPart(nodes);
   return Object.fromEntries(
-    nodes.filter((node) => !isVideoRunNode(node.data.type)).map((node) => [node.id, statusOf(node.data.type)])
+    nodes
+      .filter((node) => !isVideoRunNode(node.data.type) && !(node.data.type === "generate-listing" && serverWritesListing))
+      .map((node) => [node.id, statusOf(node.data.type)])
   );
 };
 
@@ -324,6 +343,17 @@ export const countApprovals = (job: BatchJobDetail): ApprovalCounts => {
   return counts;
 };
 
+/**
+ * The products still waiting for the Seller: designs to review and none approved. With automatic approval these are the
+ * ones whose content check could not run (Gemini timed out or failed), which are never approved without the Seller.
+ */
+export const productsAwaitingReview = (job: BatchJobDetail) =>
+  job.products.filter(
+    (product) =>
+      product.images.some((image) => image.approvalStatus !== "approved" && image.approvalStatus !== "rejected") &&
+      !product.images.some((image) => image.approvalStatus === "approved")
+  );
+
 type EstimatedTemplate = { id: string; productType: string; allowRecolor: boolean };
 
 // How many mock-ups the approved designs would make: each approved design on every selected template of its
@@ -358,3 +388,6 @@ export const toCanvasStatus = (status: string): WorkflowNodeStatus => {
     default: return "idle";
   }
 };
+
+export const getJobImageUrls = (job: BatchJobDetail | null) =>
+  job?.products.flatMap((product) => product.images.map((image) => image.imageUrl)) ?? [];

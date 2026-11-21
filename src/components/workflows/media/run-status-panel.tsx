@@ -167,6 +167,7 @@ const GroupPrintifyStatus = ({ batch }: { batch: GroupPrintify }) => {
           </span>
         </p>
         {step.status === "failed" && step.error && <p className="text-rose-700 dark:text-rose-300" role="alert">{step.error}</p>}
+        {step.warnings?.length ? <ul className="list-disc space-y-0.5 pl-4 text-amber-800 dark:text-amber-300">{step.warnings.map(item => <li key={item}>{item}</li>)}</ul> : null}
         {canRetry && <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => void retry(target.runId!)}>{t("workflowMedia.runStatus.retryPushToPrintify")}</Button>}
       </div>;
     })}

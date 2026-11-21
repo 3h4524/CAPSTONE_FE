@@ -28,8 +28,8 @@ const ChartTooltip = ({ active, label, payload }: { active?: boolean; label?: st
   const values = Object.fromEntries(payload.map((entry) => [String(entry.dataKey), Number(entry.value ?? 0)]));
   const total = SERIES.reduce((sum, series) => sum + (values[series.key] ?? 0), 0);
   return (
-    <div className="border-ink-200 bg-card text-ink-800 dark:text-ink-100 min-w-44 rounded-lg border px-3 py-2 text-xs shadow-lg">
-      <p className="text-ink-900 dark:text-ink-50 mb-1.5 font-semibold">{shortDate(label)}</p>
+    <div className="border-ink-200 bg-card text-ink-800 min-w-44 rounded-lg border px-3 py-2 text-xs shadow-lg">
+      <p className="text-ink-900 mb-1.5 font-semibold">{shortDate(label)}</p>
       <ul className="space-y-1">
         {[...SERIES].reverse().map((series) => (
           <li key={series.key} className="flex items-center justify-between gap-4">

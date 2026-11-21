@@ -23,6 +23,8 @@ export interface AiVideoSceneOptions {
   studioFrameId?: string | null;
   studioPrompt?: string | null;
   studioReferenceHashes?: string[] | null;
+  /** The seller's own wording of the scene's template prompt; null or absent uses the template's. */
+  customPrompt?: string | null;
   standardMotionPreset?: SceneMotion | null;
   standardBaseCrop?: Region | null;
   standardStartCrop?: Region | null;
@@ -525,6 +527,8 @@ export interface RunGroupStep {
   stage: string | null;
   progress: number;
   error: string | null;
+  /** What the seller should check on the step's result. Absent from an older API. */
+  warnings?: string[] | null;
 }
 export interface RunGroupTarget {
   key: string;
@@ -553,6 +557,10 @@ export interface RunGroupTarget {
   videoStatus?: string | null;
   /** The design's Push to Printify step, apart from the video; null before it has a run or without that step. */
   printify?: RunGroupStep | null;
+  /** Each video step reports its own progress, independently of export and publishing. */
+  generateVideo?: RunGroupStep | null;
+  reviewVideo?: RunGroupStep | null;
+  exportZip?: RunGroupStep | null;
   currentStep: string | null;
   stage: string | null;
   progress: number;
@@ -620,6 +628,7 @@ export interface RunAction {
   expectedStoryboardFingerprint?: string;
   aiShotQuoteToken?: string;
   sceneOrder?: number;
+  listingStreamId?: string;
 }
 export interface AiShotQuote {
   token: string;

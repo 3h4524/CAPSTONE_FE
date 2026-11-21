@@ -19,6 +19,7 @@ import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action"
 import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useEntitlements } from "@/hooks/queries/use-entitlements";
 import { useQuery } from "@/hooks/queries/use-query";
+import { useListingStream } from "@/hooks/use-listing-stream";
 import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -105,6 +106,7 @@ export const ListingContentResultPanel = () => {
   };
 
   const { mutate: act, isPending: isRetrying } = useWorkflowRunAction();
+  const { openStream: openListingStream } = useListingStream();
   const listingStep = run?.nodes.find((node) => node.nodeType === "generate-listing");
   const workflowOutput = listingStep?.output as Partial<ListingContentResult> | undefined;
   // The listing failing does not stop the video, so it is written again from here while the run goes on.
@@ -196,7 +198,14 @@ export const ListingContentResultPanel = () => {
               size="sm"
               variant="outline"
               disabled={isRetrying || mutation.isPending || run.status === "running"}
-              onClick={() => act({ runId: run.id, expectedRevision: run.revision, action: "retry_listing" })}
+              onClick={() =>
+                act({
+                  runId: run.id,
+                  expectedRevision: run.revision,
+                  action: "retry_listing",
+                  listingStreamId: openListingStream(),
+                })
+              }
             >
               {isRetrying ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
               {isRetrying ? t("workflowConfig.listing.generating") : t("workflowConfig.listing.tryAgain")}

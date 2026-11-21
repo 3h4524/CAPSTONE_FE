@@ -47,6 +47,7 @@ const validNodeConfigs: Record<WorkflowNodeType, Record<string, unknown>> = {
     aiGlobalInstructions: null,
     aiStudioMode: "direct",
     aiStudioLayout: "hanging_window",
+    aiScenes: [{ mode: "standard", mockupId: null, templateCode: "cinematic_product_showcase", durationSeconds: 12, framing: "medium", cameraAngle: "three_quarter", cameraMovement: "push_in", subjectMotion: "none", motionIntensity: "subtle", lighting: "soft_studio", extraInstructions: null, rightsConfirmed: false }],
   },
   "review-video": { mode: "manual" },
   "generate-listing": { model: "gpt-4o", tone: "friendly", includeSeoScore: true },
@@ -438,6 +439,7 @@ describe("generateVideoConfigSchema", () => {
     aiGlobalInstructions: null,
     aiStudioMode: "direct",
     aiStudioLayout: "hanging_window",
+    aiScenes: [{ mode: "standard", mockupId: null, templateCode: "cinematic_product_showcase", durationSeconds: 12, framing: "medium", cameraAngle: "three_quarter", cameraMovement: "push_in", subjectMotion: "none", motionIntensity: "subtle", lighting: "soft_studio", extraInstructions: null, rightsConfirmed: false }],
   };
 
   it("accepts a fully populated config", () => {
@@ -453,6 +455,47 @@ describe("generateVideoConfigSchema", () => {
 
     expect(result.success).toBe(true);
     expect(result.success && [result.data.selectedMockupIds, result.data.sceneOrder]).toEqual([[], []]);
+  });
+
+  // The backend writes the legacy single-shot setting as null when unused; the config panel showed
+  // "expected object, received null" for it.
+  it("reads AI shot options the backend left as null as not set", () => {
+    const result = generateVideoConfigSchema.safeParse({ ...valid, aiShotOptions: null });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.aiShotOptions).toBeUndefined();
+  });
+
+  // A run's or a design's settings come back from the backend with every list it left out as null; the storyboard
+  // preview showed "expected array, received null" for them.
+  it("reads lists and settings the backend left as null as not set", () => {
+    // Mock-ups chosen by id, as before the scene editor: a video without scenes.
+    const result = generateVideoConfigSchema.safeParse({
+      ...valid,
+      sceneOrder: ["11111111-1111-4111-8111-111111111111"],
+      standardScenes: null,
+      sceneMotionPresets: null,
+      aiScenes: null,
+      productConfigs: null,
+      videoEdit: null,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.standardScenes).toBeUndefined();
+    expect(result.success && result.data.sceneMotionPresets).toBeUndefined();
+    expect(result.success && result.data.aiScenes).toBeUndefined();
+    expect(result.success && result.data.productConfigs).toBeUndefined();
+    expect(result.success && result.data.videoEdit).toBeUndefined();
+  });
+
+  it("reads video edits whose overlays the backend left as null as having none", () => {
+    const result = generateVideoConfigSchema.safeParse({
+      ...valid,
+      videoEdit: { version: 1, music: null, overlays: null },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.videoEdit?.overlays).toEqual([]);
   });
 
   it.each(["auto", "product_showcase", "design_detail", "variant_showcase"] as const)(
@@ -517,6 +560,8 @@ describe("generateVideoConfigSchema", () => {
   it("accepts the ai_shot mode with its scene settings", () => {
     const result = generateVideoConfigSchema.safeParse({
       ...valid,
+      // An AI shot saved before the scene editor: no scene list.
+      aiScenes: undefined,
       mode: "ai_shot",
       durationSeconds: 15,
       aiShotOptions: {
@@ -560,10 +605,17 @@ describe("generateVideoConfigSchema", () => {
     expect(generateVideoConfigSchema.safeParse({ ...valid, mode: "ai_shot", durationSeconds: 5, aiScenes: [scene] }).success).toBe(true);
   });
 
-  it("requires the ai shot scene settings when the mode is ai_shot", () => {
-    const result = generateVideoConfigSchema.safeParse({ ...valid, mode: "ai_shot" });
+  it("requires a scene when the mode is ai_shot", () => {
+    const result = generateVideoConfigSchema.safeParse({ ...valid, mode: "ai_shot", aiScenes: [] });
 
-    expectIssue(result, "aiShotOptions", "Configure at least one AI video scene.");
+    expectIssue(result, "aiScenes", "Add at least one scene to the video.");
+  });
+
+  // A new Generate Video node starts without scenes; the seller adds the first one before the video can run.
+  it("requires a scene on a new video", () => {
+    const result = generateVideoConfigSchema.safeParse({ ...valid, aiScenes: undefined });
+
+    expectIssue(result, "aiScenes", "Add at least one scene to the video.");
   });
 
   it.each(["auto", "", "Standard", 1])("rejects %j as a mode", (mode) => {

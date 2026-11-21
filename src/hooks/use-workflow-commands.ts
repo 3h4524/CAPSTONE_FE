@@ -9,6 +9,7 @@ import { useWorkflowCommandStore,type WorkflowCommand } from "@/stores/workflow-
 type WorkflowCommandHandlers = {
   save: (options?: { onSaved?: () => void }) => void;
   run: () => void;
+  stop: () => void;
   continueRun: (command: WorkflowCommand) => void;
 };
 
@@ -33,6 +34,10 @@ export const useWorkflowCommands = (
     clear(command.id);
     if (command.kind === "continue") {
       latest.current.continueRun(command);
+      return;
+    }
+    if (command.kind === "stop") {
+      latest.current.stop();
       return;
     }
     if (busy.current) {

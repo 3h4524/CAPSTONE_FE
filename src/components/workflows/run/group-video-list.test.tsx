@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => ({
   listRunVideos: vi.fn(),
   getWorkflowRun: vi.fn(),
   act: vi.fn(),
+  download: vi.fn(),
+  continueReview: vi.fn(),
 }));
 
 vi.mock("@/hooks/queries/use-run-group", () => ({
@@ -26,6 +28,12 @@ vi.mock("@/hooks/use-workflow-runtime", () => ({
 }));
 vi.mock("@/hooks/mutations/use-workflow-run-action", () => ({
   useWorkflowRunAction: () => ({ mutate: mocks.act }),
+}));
+vi.mock("@/hooks/mutations/use-run-group-actions", () => ({
+  useContinueRunGroupReview: () => ({ mutate: mocks.continueReview, isPending: false }),
+}));
+vi.mock("@/hooks/mutations/use-media-download", () => ({
+  useMediaDownload: () => ({ mutate: mocks.download, isPending: false }),
 }));
 vi.mock("@/api/video-workflow", () => ({
   listRunVideos: mocks.listRunVideos,
@@ -161,6 +169,93 @@ describe("GroupVideoList approval", () => {
     await vi.waitFor(() =>
       expect(mocks.act).toHaveBeenCalledWith(expect.objectContaining({ action: "reject_video", videoId: "v" }), expect.anything())
     );
+  });
+
+  const decided = (approvalStatus: string) =>
+    mocks.listRunVideos.mockResolvedValue([{ id: "v", version: 2, thumbnailUrl: "/thumb.png", outputFormat: "square", reviewRevision: 5, approvalStatus } as PromoVideo]);
+
+  it("shows a rejected video as rejected and lets the decision change before Continue", async () => {
+    decided("rejected");
+    mocks.group = group([target(0, "waiting_for_review")]);
+    withQuery(<GroupVideoList />);
+
+    const list = within(screen.getByRole("list"));
+    expect(await list.findByText("Rejected")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reject video" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Reject video" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Approve video" })).toBeEnabled();
+  });
+
+  it("shows an approved video still waiting for Continue as approved, and lets it be rejected", async () => {
+    decided("approved");
+    mocks.group = group([target(0, "waiting_for_review")]);
+    withQuery(<GroupVideoList />);
+
+    expect(await within(screen.getByRole("list")).findByText("Approved")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Approve video" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Reject video" })).toBeEnabled();
+  });
+
+  it("continues once every video is approved or rejected", async () => {
+    decided("approved");
+    mocks.group = group([target(0, "waiting_for_review"), target(1, "waiting_for_review")]);
+    withQuery(<GroupVideoList />);
+
+    const goOn = screen.getByRole("button", { name: "Continue" });
+    await vi.waitFor(() => expect(goOn).toBeEnabled());
+    await userEvent.click(goOn);
+
+    expect(mocks.continueReview).toHaveBeenCalledWith({ groupId: "group", expectedRevision: 1 }, expect.anything());
+  });
+
+  it("holds Continue until every video is decided", () => {
+    mocks.group = group([target(0, "waiting_for_review")]);
+    withQuery(<GroupVideoList />);
+
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+    expect(screen.getByText("Approve or reject every video, then Continue.")).toBeInTheDocument();
+  });
+
+  it("holds Continue while a video is still being made", () => {
+    decided("approved");
+    mocks.group = group([target(0, "waiting_for_review"), target(1, "running", 40)]);
+    withQuery(<GroupVideoList />);
+
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+    expect(screen.getByText("Continue once every video has been made.")).toBeInTheDocument();
+  });
+
+  it("keeps a rejected video rejected and locked after Continue", async () => {
+    decided("rejected");
+    const step = (status: string) => ({ status, stage: null, progress: 0, error: null });
+    mocks.group = group([{ ...target(0, "running", 30, "export-zip"), generateVideo: step("succeeded"),
+      reviewVideo: step("succeeded"), exportZip: step("running") }]);
+    withQuery(<GroupVideoList />);
+
+    expect(await within(screen.getByRole("list")).findByText("Rejected")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Approve video" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Reject video" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
+  });
+
+  it("downloads a finished video's MP4, approved or still waiting for review", async () => {
+    mocks.listRunVideos.mockResolvedValue([{ id: "v", version: 2, thumbnailUrl: "/thumb.png", previewUrl: "/video.mp4", outputFormat: "square", reviewRevision: 4 } as PromoVideo]);
+    mocks.group = group([target(0, "completed"), target(1, "waiting_for_review")]);
+    withQuery(<GroupVideoList />);
+
+    await vi.waitFor(() =>
+      expect(screen.getAllByRole("button", { name: "Download video" }).every((button) => !(button as HTMLButtonElement).disabled)).toBe(true)
+    );
+    await userEvent.click(screen.getAllByRole("button", { name: "Download video" })[1]!);
+
+    expect(mocks.download).toHaveBeenCalledWith({ id: "v", zip: false }, expect.anything());
+  });
+
+  it("offers no download before a video is rendered", () => {
+    mocks.group = group([target(0, "running", 10)]);
+    withQuery(<GroupVideoList />);
+
+    expect(screen.getByRole("button", { name: "Download video" })).toBeDisabled();
   });
 
   it("does not offer a decision on a video that is not waiting for review", () => {

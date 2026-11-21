@@ -135,6 +135,16 @@ describe("planIssues", () => {
     expect(issue.fix?.patch).toEqual({ outputFormat: "portrait" });
   });
 
+  it.each(["classic_landscape", "classic_portrait"])("offers portrait when %s is not in the plan", (outputFormat) => {
+    const [issue] = planIssues(entitlements(), "generate-video", { mode: "standard", outputFormat });
+
+    expect(issue.fix?.patch).toEqual({ outputFormat: "portrait" });
+  });
+
+  it("lets a plan without all video formats keep square", () => {
+    expect(planIssues(entitlements(), "generate-video", { mode: "standard", outputFormat: "square" })).toEqual([]);
+  });
+
   it("caps the variants at the plan's limit", () => {
     const [issue] = planIssues(entitlements(), "design-image", { variants: 4 });
 
@@ -178,5 +188,15 @@ describe("catalogFeatures", () => {
     ]);
 
     expect(features.map((feature) => feature.code)).toEqual(PLAN_FEATURES.map((feature) => feature.code));
+  });
+
+  it("keeps the Market Radar flag and its daily cap, so an Admin can set them on a plan", () => {
+    const features = catalogFeatures([
+      { code: "market_radar_full", label: "Radar", description: "", group: "Market Radar", kind: "flag", unit: null, sortOrder: 90 },
+      { code: "daily_opportunity_analysis_cap", label: "Analyses", description: "", group: "Market Radar", kind: "limit", unit: "per day", sortOrder: 91 },
+    ]);
+
+    expect(features.find((feature) => feature.code === "market_radar_full")).toMatchObject({ label: "Radar", kind: "flag" });
+    expect(features.find((feature) => feature.code === "daily_opportunity_analysis_cap")).toMatchObject({ label: "Analyses", kind: "limit" });
   });
 });

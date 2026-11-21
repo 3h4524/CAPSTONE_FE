@@ -151,7 +151,7 @@ export const TermDialog = ({ target, onClose }: { target: TermDialogTarget; onCl
                       >
                         <RadioGroupItem id={`term-severity-${option.value}`} value={option.value} className="mt-0.5" />
                         <span>
-                          <span className="text-ink-800 dark:text-ink-100 block text-sm font-semibold">{t(option.titleKey)}</span>
+                          <span className="text-ink-800 block text-sm font-semibold">{t(option.titleKey)}</span>
                           <span className="text-ink-500 block text-xs leading-relaxed">{t(option.hintKey)}</span>
                         </span>
                       </label>

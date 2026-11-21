@@ -1126,6 +1126,7 @@
         "customAria": "Màu garment tùy chỉnh"
       },
       "templateCard": {
+        "ai": "AI",
         "realisticPrint": "In chân thực",
         "recolorable": "Đổi màu được",
         "madeWithAi": "Tạo bằng AI",
@@ -1184,10 +1185,35 @@
       },
       "generateModelPhoto": {
         "title": "Tạo ảnh người mẫu bằng AI",
-        "description": "AI tạo ảnh những người bạn chọn mặc áo thun trắng trơn. Ảnh được lưu cùng ảnh người mẫu của bạn, mock-up được đặt lên không cần AI, nên bản in giữ nguyên y hệt thiết kế.",
+        "description": "AI tạo ảnh những người bạn chọn mặc áo thun hoặc hoodie trắng trơn. Mock-up được đặt lên không cần AI, nên bản in giữ nguyên như thiết kế.",
         "productType": "Loại sản phẩm",
-        "costNote": "Một ảnh Ideogram (khoảng $0.03), tạo bằng Ideogram key của bạn, hoặc bằng key của hệ thống khi gói của bạn có tính năng này. Tạo mất tối đa một phút. Hãy kiểm tra ảnh trước khi dùng: nếu áo không được tìm thấy, hãy tạo ảnh khác.",
-        "pendingNote": "Đang tạo ảnh và tìm áo trên ảnh… mất tối đa một phút.",
+        "scene": "Bối cảnh",
+        "outfit": "Trang phục",
+        "pose": "Dáng",
+        "scenes": {
+          "studio_grey": "Studio xám",
+          "studio_beige": "Studio be",
+          "studio_dark": "Studio tối",
+          "street": "Đường phố",
+          "cafe": "Quán cà phê",
+          "park": "Công viên"
+        },
+        "outfits": {
+          "casual": "Thường ngày",
+          "streetwear": "Streetwear",
+          "minimal": "Tối giản",
+          "sporty": "Thể thao"
+        },
+        "poses": {
+          "standing": "Đứng",
+          "walking": "Đi bộ",
+          "leaning": "Tựa tường",
+          "seated": "Ngồi"
+        },
+        "lookNote": "Ngoại hình được chọn ngẫu nhiên, mỗi ảnh là một người mới.",
+        "placeNote": "Bối cảnh thật xử lý lâu hơn studio một chút.",
+        "costNote": "Khoảng $0.03 mỗi ảnh, dùng Ideogram key của bạn hoặc của hệ thống, tạo mất tối đa một phút. Nếu không tìm thấy áo trên ảnh, hãy tạo ảnh khác.",
+        "pendingNote": "Đang tạo ảnh và tìm sản phẩm trên ảnh… mất tối đa một phút.",
         "pending": "Đang tạo ảnh…",
         "makePhoto": "Tạo ảnh"
       },
@@ -1843,7 +1869,7 @@
         "standard": "Tiêu chuẩn",
         "generationModeAria": "Chế độ tạo của cảnh {{scene}}",
         "notInPlan": "Không có trong gói của bạn",
-        "aiVideoNotInPlan": "Gói của bạn không có video AI. Hãy chuyển cảnh này sang Tiêu chuẩn.",
+        "aiVideoNotInPlan": "Gói của bạn không có video AI. Hãy chuyển cảnh này sang Chuyển động ảnh.",
         "decreaseDurationAria": "Giảm thời lượng cảnh {{scene}}",
         "sceneDurationAria": "Thời lượng cảnh {{scene}}",
         "increaseDurationAria": "Tăng thời lượng cảnh {{scene}}",
@@ -1856,8 +1882,35 @@
         "choosePerScene": "Chọn theo từng cảnh",
         "aiVideoModelAria": "Mô hình video AI của cảnh {{scene}}",
         "default": "Mặc định",
-        "aiTemplate": "Mẫu AI",
-        "aiTemplateAria": "Mẫu AI của cảnh {{scene}}",
+        "aiTemplate": "Kiểu video",
+        "aiTemplateAria": "Kiểu video của cảnh {{scene}}",
+        "startFromTemplate": "Bắt đầu từ mẫu có sẵn",
+        "startFromTemplateDescription": "Một bộ cảnh làm sẵn để bắt đầu. Bạn vẫn có thể sửa, thêm hoặc xoá cảnh ở bên dưới.",
+        "customizedSuffix": "đã chỉnh",
+        "loadingShort": "Đang tải…",
+        "replaceScenesQuestion": "Thay {{count}} cảnh hiện tại bằng {{name}}?",
+        "replaceScenesDetail": "Khung hình bắt đầu đã chọn của các cảnh sẽ bị xoá. Định dạng xuất, người mẫu dùng chung, mockup dùng chung và chú thích vẫn giữ nguyên.",
+        "keepCurrentScenes": "Giữ các cảnh hiện tại",
+        "startFromScratch": "Tự dựng từ đầu",
+        "startFromScratchKeep": "Tự dựng danh sách cảnh. Các cảnh hiện có vẫn giữ nguyên.",
+        "startFromScratchDescription": "Thêm từng cảnh và chọn cách tạo cho mỗi cảnh.",
+        "packMeta": "{{count}} cảnh · {{seconds}} giây",
+        "tagAiVideo": "Video AI · dùng credit AI",
+        "tagPhotoMotion": "Chuyển động ảnh · không tốn phí AI",
+        "photoMotion": "Chuyển động ảnh",
+        "photoMotionDescription": "Phóng to và lia qua ảnh sản phẩm. Xong trong vài giây, không tốn phí AI.",
+        "aiVideoDescription": "AI biến ảnh thành một clip thật dài 4 đến 15 giây. Dùng credit AI.",
+        "aiVideoNeedsSeconds": "Cần ít nhất 4 giây. Hãy rút ngắn các cảnh khác trước.",
+        "lifestyleFramesDescription": "{{name}} bắt đầu từ ảnh lifestyle: người mẫu mặc sản phẩm. Ảnh được lưu ngay khi bạn bấm chọn.",
+        "thisStyle": "Kiểu này",
+        "noLifestyleImage": "Chưa có ảnh lifestyle nào được duyệt",
+        "noLifestyleImageDescription": "Tạo ảnh lifestyle của thiết kế này trên người mẫu ở bước Duyệt mockup rồi duyệt nó, hoặc chuyển cảnh này sang kiểu video khác.",
+        "noScenesTitle": "Chưa có cảnh nào",
+        "noScenesDescription": "Thêm cảnh đầu tiên, hoặc chọn một mẫu ở trên, để dựng video này.",
+        "addFirstScene": "Thêm cảnh đầu tiên",
+        "sharedStartFramesNote": "Khung hình bắt đầu là ảnh của từng sản phẩm, nên không đặt trong cài đặt chung. Mỗi sản phẩm bắt đầu từ mockup mặc định của nó ({{image}}). Chọn một sản phẩm ở Sản phẩm video để xem hoặc đổi khung hình bắt đầu.",
+        "sharedStartFramesLifestyle": "ảnh lifestyle của nó",
+        "sharedStartFramesDefault": "ảnh chính, hoặc ảnh lifestyle với cảnh có người mẫu",
         "shotTemplate": "Mẫu cảnh quay",
         "shotTemplateAria": "Mẫu cảnh quay của cảnh {{scene}}",
         "startFrameAria": "Khung hình mở đầu của cảnh {{scene}}",
@@ -1933,6 +1986,11 @@
         "noSourceDefault": "Hãy duyệt ít nhất một ảnh sản phẩm trước khi tạo cảnh này.",
         "noSourceFilterNote": "Hãy kiểm tra xem ảnh có nằm trong danh sách ảnh được phép và nhóm artwork đã chọn của bước Áp mock-up không.",
         "advancedSettings": "Máy quay, chuyển động và ánh sáng nâng cao",
+        "customPromptSection": "Nâng cao: prompt video",
+        "customPromptEdited": "Đã sửa",
+        "customPrompt": "Prompt video cho cảnh này",
+        "customPromptHint": "Bắt đầu từ prompt của template. Các từ trong {{braces}}, như {{example}}, được điền tự động cho cảnh này, và các quy tắc giữ nguyên sản phẩm luôn được thêm vào sau. Nội dung bạn viết ở đây sẽ được kiểm duyệt.",
+        "customPromptReset": "Dùng prompt của template",
         "settingAria": "{{setting}} của cảnh {{scene}}",
         "customDirection": "Chỉ dẫn tùy chỉnh",
         "viewPromptBlocks": "Xem các thành phần của prompt hoàn chỉnh | v{{version}}",
@@ -1946,7 +2004,7 @@
         "fullVideoEditing": "Chỉnh sửa toàn bộ video",
         "fullVideo": "Toàn bộ video",
         "aboutEstimates": "Về chi phí ước tính và khung hình chính",
-        "aboutEstimatesBody": "Ước tính AI giả định mỗi clip AI đều mới; báo giá cuối cùng sẽ tính đến các clip dùng lại được trước khi render. Cảnh Tiêu chuẩn dùng chuyển động máy quay mượt giữa các điểm khung hình đã chọn. Khung hình chính kết hợp người mẫu dùng chung, một ảnh sản phẩm gốc đã duyệt và tối đa hai ảnh tham chiếu (không bắt buộc). Hãy kiểm tra các clip AI và mọi khung hình chính đã tạo để đảm bảo đúng sản phẩm.",
+        "aboutEstimatesBody": "Ước tính AI giả định mỗi clip AI đều mới; báo giá cuối cùng sẽ tính đến các clip dùng lại được trước khi render. Cảnh Chuyển động ảnh dùng chuyển động máy quay mượt giữa các điểm khung hình đã chọn. Khung hình chính kết hợp người mẫu dùng chung, một ảnh sản phẩm gốc đã duyệt và tối đa hai ảnh tham chiếu (không bắt buộc). Hãy kiểm tra các clip AI và mọi khung hình chính đã tạo để đảm bảo đúng sản phẩm.",
         "closeImagePreview": "Đóng xem trước ảnh",
         "imagePreview": "Xem trước ảnh",
         "selectedStartFrameForScene": "Ảnh khung hình mở đầu đã chọn của cảnh {{scene}}",
@@ -1981,7 +2039,9 @@
         "videoFormats": {
           "portrait": "Dọc",
           "square": "Vuông",
-          "landscape": "Ngang"
+          "landscape": "Ngang",
+          "classic_landscape": "Ngang cổ điển",
+          "classic_portrait": "Dọc cổ điển"
         },
         "productCount_one": "{{count}} sản phẩm",
         "productCount_other": "{{count}} sản phẩm",
@@ -2002,7 +2062,7 @@
         "videoForThisProduct": "Các cài đặt video này chỉ tạo video cho sản phẩm này.",
         "batchWithoutLine": "Lô này chưa có dòng sản phẩm. Hãy chọn ở trang Lô sản phẩm trước khi chạy.",
         "designRatioWhy": "Lô {{line}}: {{why}}",
-        "designRatioMismatch": "{{ratio}} không hợp với lô {{line}} này. Hãy chọn {{ratios}}."
+        "designRatioMismatch": "{{ratio}} vẫn chạy được, nhưng hình có thể in nhỏ hơn và chừa khoảng trống trên vùng in của lô {{line}} này. Vừa nhất là {{ratios}}."
       },
       "form": {
         "settingsLocked": "Cài đặt bị khóa khi lượt chạy đang diễn ra.",
@@ -2097,7 +2157,7 @@
         "useManualReview": "Dùng duyệt thủ công",
         "aiVideoPro": "Video cảnh AI thuộc gói Pro. Gói của bạn dựng video Trình diễn chuẩn.",
         "useStandard": "Dùng Trình diễn chuẩn",
-        "landscapePro": "Video ngang thuộc gói Pro. Gói của bạn dựng video vuông và dọc.",
+        "landscapePro": "Khung video này thuộc gói Pro. Gói của bạn dựng video vuông và dọc.",
         "usePortrait": "Dùng khung dọc"
       },
       "validation": {
@@ -2164,8 +2224,8 @@
         "aria": "Cài đặt video của sản phẩm nào",
         "allProducts": "Tất cả sản phẩm",
         "allProductsShared": "Tất cả sản phẩm (cài đặt chung)",
-        "ownCount": "{{own}}/{{total}} sản phẩm có cài đặt riêng; các sản phẩm còn lại dùng cài đặt này.",
-        "everyProductShared": "Mọi sản phẩm đều dùng cài đặt này. Chọn một sản phẩm để đặt cài đặt video riêng cho nó.",
+        "ownCount": "{{own}}/{{total}} sản phẩm sẽ chạy có cài đặt riêng; các sản phẩm còn lại dùng cài đặt này.",
+        "everyProductShared": "{{total}} sản phẩm sẽ chạy đều dùng cài đặt này. Chọn một sản phẩm để đặt cài đặt video riêng cho nó.",
         "saveToShared": "Lưu để đưa {{name}} về lại cài đặt chung.",
         "unsaved": "{{name}} có thay đổi chưa lưu. Lưu sẽ giữ chúng cho riêng sản phẩm này; cài đặt chung giữ nguyên.",
         "hasOwn": "{{name}} có cài đặt riêng. Mọi thứ bên dưới chỉ áp dụng cho sản phẩm này.",
@@ -2328,8 +2388,10 @@
         "mockupOnce": "Mỗi mock-up chỉ được chọn một lần.",
         "sceneOrderOnce": "Mỗi mock-up chỉ dùng một lần trong thứ tự cảnh.",
         "framingOnce": "Mỗi mock-up chỉ được cấu hình khung hình một lần.",
+        "addScene": "Hãy thêm ít nhất một cảnh cho video.",
         "sceneInstructionsMax": "Chỉ dẫn cảnh phải dưới 500 ký tự.",
         "keyframeDirectionsMax": "Chỉ dẫn khung hình chính phải dưới 500 ký tự.",
+        "customVideoPromptMax": "Prompt video của mỗi cảnh phải dưới {{max}} ký tự.",
         "cropInsideImage": "Vùng cắt của khung hình mở đầu phải nằm trong ảnh.",
         "sharedDirectionMax": "Chỉ dẫn chung cho cảnh AI phải dưới 500 ký tự.",
         "chooseApprovedMockup": "Hãy chọn ít nhất một mock-up đã duyệt.",
@@ -3165,7 +3227,8 @@
           "approved": "Đã duyệt",
           "processing": "Đang dựng",
           "queued": "Đang chờ",
-          "stopped": "Đã dừng"
+          "stopped": "Đã dừng",
+          "rejected": "Đã từ chối"
         },
         "renderingProgress": "Đang dựng {{progress}}%",
         "failed": "Thất bại",
@@ -3177,11 +3240,22 @@
         "showVideos": "Hiển thị video",
         "nothingWaiting": "Không có video nào chờ duyệt.",
         "noneApproved": "Chưa có video nào được duyệt.",
+        "noneRejected": "Không có video nào bị từ chối.",
+        "rejectedCount": "{{count}} bị từ chối",
+        "continue": "Tiếp tục",
+        "continued": "Đã duyệt xong. Các sản phẩm đang được xuất.",
+        "continueAfterRender": "Bấm Tiếp tục khi mọi video đã dựng xong.",
+        "continueAfterDecisions": "Duyệt hoặc từ chối mọi video, rồi bấm Tiếp tục.",
+        "continueApproved": "Mọi video đã được duyệt: Tiếp tục sẽ xuất chúng cùng sản phẩm.",
+        "continueRejected_one": "Tiếp tục sẽ xuất các video đã duyệt. Video bị từ chối được bỏ ra; sản phẩm của nó vẫn được xuất.",
+        "continueRejected_other": "Tiếp tục sẽ xuất các video đã duyệt. {{count}} video bị từ chối được bỏ ra; sản phẩm của chúng vẫn được xuất.",
         "stripLabel": "Video của lượt chạy này",
         "noLongerWaiting": "Video này không còn chờ bạn duyệt.",
         "version": "Phiên bản {{version}}",
         "approveVideo": "Duyệt video",
-        "rejectVideo": "Từ chối video"
+        "rejectVideo": "Từ chối video",
+        "downloadVideo": "Tải video",
+        "downloadMp4": "Tải MP4"
       },
       "runGroup": {
         "runStatuses": {
@@ -3311,6 +3385,9 @@
         "approval": "Duyệt",
         "autoApproved": "Lượt chạy này tự động duyệt mọi thiết kế, nên chúng đi tiếp tới bước mock-up mà không cần duyệt.",
         "startedBeforeReview": "Lượt chạy này bắt đầu trước khi có thể duyệt thiết kế, nên chúng đi tiếp mà không cần duyệt.",
+        "heldForReview_one": "Hệ thống kiểm duyệt nội dung chưa kiểm tra được thiết kế của {{count}} sản phẩm, nên chúng chưa được tự động duyệt. Hãy duyệt tại đây: khi bạn duyệt, thiết kế sẽ được kiểm tra lại.",
+        "heldForReview_other": "Hệ thống kiểm duyệt nội dung chưa kiểm tra được thiết kế của {{count}} sản phẩm, nên chúng chưa được tự động duyệt. Hãy duyệt tại đây: khi bạn duyệt, mỗi thiết kế sẽ được kiểm tra lại.",
+        "heldToast": "Một số thiết kế chưa được kiểm tra tự động. Hãy duyệt chúng ở bước Design approval.",
         "reviewDesigns": "Duyệt thiết kế",
         "stillGenerating": "Thiết kế vẫn đang được tạo. Bạn có thể duyệt ngay khi tác vụ hoàn tất.",
         "approvedCount": "{{count}} đã duyệt",
@@ -3353,7 +3430,7 @@
         "manualHints": {
           "designApproval": "Duyệt các thiết kế đã tạo trước khi tạo mock-up.",
           "approvalGate": "Duyệt phiên bản mock-up hiện tại trước khi dựng video.",
-          "reviewVideo": "Duyệt bản dựng hoàn chỉnh trước khi xuất."
+          "reviewVideo": "Duyệt hoặc từ chối từng video, rồi bấm Tiếp tục. Video bị từ chối không có trong ZIP của sản phẩm."
         },
         "autoHints": {
           "designApproval": "Mọi thiết kế được tạo sẽ đi thẳng tới bước mock-up.",
@@ -3506,7 +3583,10 @@
         }
       },
       "canvas": {
-        "cannotConnect": "Node đó không thể nhận kết nối này."
+        "cannotConnect": "Node đó không thể nhận kết nối này.",
+        "bendEdge": "Kéo để bẻ cong đường nối",
+        "addBend": "Kéo để thêm điểm gập",
+        "moveBend": "Kéo để di chuyển điểm gập, nhấp đúp để xoá"
       },
       "steps": {
         "addStep": "Thêm bước",
@@ -3546,6 +3626,34 @@
         "stepsNotConnected": "Các bước này chưa được nối với nhau",
         "noSettingsToUpdate": "Không có cài đặt nào để cập nhật",
         "renamingOff": "Đã tắt tính năng đổi tên bước"
+      },
+      "runView": {
+        "followRun": "Theo dõi lần chạy",
+        "hudStep": "Bước {{current}}/{{total}}",
+        "hudStarting": "Đang bắt đầu",
+        "hudAllDone": "Đã xong tất cả các bước",
+        "hudFailed": "{{names}} thất bại",
+        "hudNeedsYou": "{{names}} cần bạn xử lý",
+        "previewDesigns": "Thiết kế",
+        "previewListing": "Nội dung listing",
+        "previewLive": "Trực tiếp",
+        "previewWriting": "Đang viết",
+        "previewDone": "Xong",
+        "previewFailed": "Thất bại",
+        "previewTitle": "Tiêu đề",
+        "previewTags": "Thẻ",
+        "previewDescription": "Mô tả",
+        "previewProduct": "Sản phẩm {{current}}",
+        "stop": "Dừng",
+        "showPanels": "Hiện bảng điều khiển",
+        "focusRun": "Tập trung vào lần chạy",
+        "simulate": "Xem thử",
+        "simulateHint": "Chạy giả trên canvas này để xem hiệu ứng khi chạy. Không gửi đi và không tính phí.",
+        "simulateUnavailable": "Không xem thử được canvas này: hãy bỏ vòng lặp giữa các bước trước.",
+        "simulationBadge": "Xem thử",
+        "effects": "Hiệu ứng",
+        "effectsHint": "Camera đi theo bước đang chạy và hiện kết quả ngay khi được tạo",
+        "reducedMotion": "Hiệu ứng đang tắt vì thiết bị của bạn yêu cầu giảm chuyển động"
       }
     },
     "workflowMedia": {
@@ -3894,7 +4002,8 @@
           "passWithWarnings": "Đạt kèm cảnh báo",
           "passWithWarningsDetail": "Video đã đạt các mục kiểm tra bắt buộc. Hãy xem các cảnh báo Etsy bên dưới.",
           "pass": "Đạt",
-          "passDetail": "Các mục kiểm tra kỹ thuật và Etsy đã lưu đều đạt và đánh giá cảnh đã hoàn tất."
+          "passDetail": "Các mục kiểm tra kỹ thuật và Etsy đã lưu đều đạt và đánh giá cảnh đã hoàn tất.",
+          "passSkippedDetail": "Các mục kiểm tra kỹ thuật và Etsy đã lưu đều đạt. Bước chấm điểm cảnh tự động đã được bỏ qua."
         },
         "finalVideoQuality": "Chất lượng video cuối cùng",
         "etsyChecks": "Kiểm tra listing Etsy",

@@ -7,8 +7,8 @@ import { NodeFrame } from "@/components/workflows/nodes/node-frame";
 import { NodeReadonlyText } from "@/components/workflows/nodes/node-readonly-text";
 import { NodeSegmented } from "@/components/workflows/nodes/node-segmented";
 import { getSelectFieldLabel, getSelectFieldOptions, readString } from "@/helpers/workflow-config";
-import { countApprovals } from "@/helpers/workflow-run";
-import { groupVideoState, useGroupVideos } from "@/hooks/queries/use-group-videos";
+import { countApprovals, productsAwaitingReview } from "@/helpers/workflow-run";
+import { groupVideoDecision, useGroupVideos } from "@/hooks/queries/use-group-videos";
 import { useNodeSettingsLocked } from "@/hooks/use-node-settings-locked";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
@@ -28,17 +28,22 @@ export const ApprovalCard = ({ id, data, selected }: NodeProps<WorkflowNode>) =>
   const { videos } = useGroupVideos();
   // Design approval counts its designs; Review Video counts the videos of the open batch video run, a failed one
   // standing where a rejected design does. Without a batch video run Review Video has nothing to count.
-  const videoStates = videos.map((item) => groupVideoState(item.target));
+  const videoStates = videos.map(groupVideoDecision);
+  const rejectedVideos = videoStates.filter((state) => state === "rejected").length;
+  // With automatic approval, only the products whose content check could not run are left to count.
+  const heldProducts = data.type === "design-approval" && job?.requireApproval === false ? productsAwaitingReview(job) : [];
   const counts =
     data.type === "design-approval" && job?.requireApproval === true
       ? { ...countApprovals(job), rejectedKey: "workflowEditor.approvalCard.rejected" }
+      : job && heldProducts.length > 0
+        ? { ...countApprovals({ ...job, products: heldProducts }), rejectedKey: "workflowEditor.approvalCard.rejected" }
       : data.type === "review-video" && videoStates.length > 0
         ? {
             approved: videoStates.filter((state) => state === "approved").length,
-            rejected: videoStates.filter((state) => state === "stopped").length,
-            pending: videoStates.filter((state) => state !== "approved" && state !== "stopped")
+            rejected: rejectedVideos + videoStates.filter((state) => state === "stopped").length,
+            pending: videoStates.filter((state) => state !== "approved" && state !== "rejected" && state !== "stopped")
               .length,
-            rejectedKey: "workflowEditor.approvalCard.failed",
+            rejectedKey: rejectedVideos > 0 ? "workflowEditor.approvalCard.rejected" : "workflowEditor.approvalCard.failed",
           }
         : null;
   const mode = readString(data.config.mode);

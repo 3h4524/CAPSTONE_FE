@@ -12,8 +12,10 @@ describe("useWorkflowCommands", () => {
   const save = vi.fn();
   const run = vi.fn();
   const continueRun = vi.fn();
+  const stop = vi.fn();
 
   beforeEach(() => {
+    stop.mockReset();
     save.mockReset();
     run.mockReset();
     continueRun.mockReset();
@@ -23,7 +25,7 @@ describe("useWorkflowCommands", () => {
   });
 
   const mount = (isEditorReady = true, isBusy = false, workflowId = "wf-1") =>
-    renderHook(() => useWorkflowCommands(workflowId, isEditorReady, isBusy, { save, run, continueRun }));
+    renderHook(() => useWorkflowCommands(workflowId, isEditorReady, isBusy, { save, run, stop, continueRun }));
 
   it("runs the open workflow once and clears the request", () => {
     mount();
@@ -46,6 +48,15 @@ describe("useWorkflowCommands", () => {
     expect(run).toHaveBeenCalledTimes(1);
   });
 
+  it("stops the run even while the workflow is busy", () => {
+    mount(true, true);
+
+    act(() => useWorkflowCommandStore.getState().request({ id: "c1", workflowId: "wf-1", kind: "stop" }));
+
+    expect(stop).toHaveBeenCalledTimes(1);
+    expect(showWorkflowActionToast).not.toHaveBeenCalled();
+  });
+
   it("saves on a save request", () => {
     mount();
 
@@ -56,7 +67,7 @@ describe("useWorkflowCommands", () => {
   });
 
   it("ignores a request for another workflow and waits for the editor", () => {
-    const { rerender } = renderHook(({ ready }) => useWorkflowCommands("wf-1", ready, false, { save, run, continueRun }), { initialProps: { ready: false } });
+    const { rerender } = renderHook(({ ready }) => useWorkflowCommands("wf-1", ready, false, { save, run, stop, continueRun }), { initialProps: { ready: false } });
 
     act(() => useWorkflowCommandStore.getState().request({ id: "c1", workflowId: "wf-1", kind: "run" }));
     expect(run).not.toHaveBeenCalled();

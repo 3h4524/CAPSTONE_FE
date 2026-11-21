@@ -4,6 +4,8 @@ import { i18n } from "@/i18n/client";
 import type { WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
 
 const AI_ADVANCED_CONTROLS_ENABLED = false;
+/** The longest wording a seller may give an AI scene's template prompt (the backend's limit too). */
+export const MAX_CUSTOM_VIDEO_PROMPT = 2000;
 
 type NumberLabel = "timelineFrame" | "fadeIn" | "fadeOut" | "variants" | "videoDuration" | "sceneDuration" | "transitionDuration";
 
@@ -66,6 +68,8 @@ const legacyAiCameraMotionAliases: Record<string, StandardSceneMotion> = {
 };
 const normalizeLegacyStandardMotion = (value: unknown) =>
   typeof value === "string" ? (legacyAiCameraMotionAliases[value] ?? value) : value;
+// The backend writes a list or setting it left out as null (a design's own settings, a run's): that is not set.
+const nullAsMissing = (value: unknown) => value ?? undefined;
 const MIN_VIDEO_DURATION_SECONDS = 5;
 const MAX_VIDEO_DURATION_SECONDS = 15;
 const MAX_VIDEO_FRAMES = MAX_VIDEO_DURATION_SECONDS * 30;
@@ -115,7 +119,7 @@ const videoEditSchema = z
         muted: z.boolean(),
       })
       .nullable(),
-    overlays: z.array(videoOverlaySchema).max(12),
+    overlays: z.preprocess((overlays) => overlays ?? [], z.array(videoOverlaySchema).max(12)),
   })
   .optional();
 
@@ -189,7 +193,10 @@ export const generateVideoConfigSchema = z
     // legacy field remains for stored workflow compatibility and AI fallback only.
     template: z.string().trim().min(1, { error: () => i18n.t("workflowConfig.schema.chooseVideoTemplate") }).default("auto"),
     templateVersion: z.number().int().min(1).max(2).optional(),
-    outputFormat: z.enum(["square", "portrait", "landscape"]).catch("portrait").default("portrait"),
+    outputFormat: z
+      .enum(["square", "portrait", "landscape", "classic_landscape", "classic_portrait"])
+      .catch("square")
+      .default("square"),
     durationSeconds: wholeNumber("videoDuration", MIN_VIDEO_DURATION_SECONDS, MAX_VIDEO_DURATION_SECONDS),
     assetSelection: z.enum(["automatic", "manual"]),
     // The backend keeps these as null when no mock-up is picked (a design's own settings, a run's): that is none.
@@ -210,21 +217,24 @@ export const generateVideoConfigSchema = z
           { error: () => i18n.t("workflowConfig.schema.sceneOrderOnce") }
         )
     ),
-    standardScenes: z
-      .array(
-        z.object({
-          mockupId: z.string().uuid(),
-          baseCrop: videoRegionSchema.nullable().optional(),
-          startCrop: videoRegionSchema.nullable().optional(),
-          endCrop: videoRegionSchema.nullable().optional(),
-        })
-      )
-      .max(4)
-      .refine(
-        (scenes) => new Set(scenes.map((scene) => scene.mockupId)).size === scenes.length,
-        { error: () => i18n.t("workflowConfig.schema.framingOnce") }
-      )
-      .optional(),
+    standardScenes: z.preprocess(
+      nullAsMissing,
+      z
+        .array(
+          z.object({
+            mockupId: z.string().uuid(),
+            baseCrop: videoRegionSchema.nullable().optional(),
+            startCrop: videoRegionSchema.nullable().optional(),
+            endCrop: videoRegionSchema.nullable().optional(),
+          })
+        )
+        .max(4)
+        .refine(
+          (scenes) => new Set(scenes.map((scene) => scene.mockupId)).size === scenes.length,
+          { error: () => i18n.t("workflowConfig.schema.framingOnce") }
+        )
+        .optional()
+    ),
     textOverlay: z.string().max(120),
     standardOptions: z.object({
       motionPreset: z.preprocess(
@@ -234,30 +244,39 @@ export const generateVideoConfigSchema = z
       crop: z.literal("safe"),
       transition: videoTransitionSchema,
     }),
-    sceneMotionPresets: z
-      .array(z.preprocess(normalizeLegacyStandardMotion, z.enum(standardSceneMotions).nullable()))
-      .max(4)
-      .optional(),
+    sceneMotionPresets: z.preprocess(
+      nullAsMissing,
+      z
+        .array(z.preprocess(normalizeLegacyStandardMotion, z.enum(standardSceneMotions).nullable()))
+        .max(4)
+        .optional()
+    ),
     fallbackToStandard: z.boolean(),
     aiCharacterModelId: z.string().uuid().nullable().optional(),
     sharedMockupId: z.string().uuid().nullable().optional(),
-    aiShotOptions: z
-      .object({
-        coverage: z.enum(["single_scene", "full_video"]),
-        concept: z.enum([
-          "product_cinematic",
-          "material_detail",
-          "lifestyle_motion",
-          "product_in_use",
-        ]),
-        sceneIndex: z.number().int().min(0).max(3),
-        mockupId: z.string().uuid().nullable(),
-        prompt: z.string().trim().max(300).nullable(),
-        rightsConfirmed: z.boolean(),
-        fullSceneMockupIds: z.array(z.string().uuid()).max(2).nullable(),
-      })
-      .optional(),
-    aiScenes: z
+    // The backend writes this legacy setting as null when it is not used (always, once a node has aiScenes).
+    aiShotOptions: z.preprocess(
+      nullAsMissing,
+      z
+        .object({
+          coverage: z.enum(["single_scene", "full_video"]),
+          concept: z.enum([
+            "product_cinematic",
+            "material_detail",
+            "lifestyle_motion",
+            "product_in_use",
+          ]),
+          sceneIndex: z.number().int().min(0).max(3),
+          mockupId: z.string().uuid().nullable(),
+          prompt: z.string().trim().max(300).nullable(),
+          rightsConfirmed: z.boolean(),
+          fullSceneMockupIds: z.array(z.string().uuid()).max(2).nullable(),
+        })
+        .optional()
+    ),
+    aiScenes: z.preprocess(
+      nullAsMissing,
+      z
       .array(
         z.object({
           mode: z.enum(["ai", "standard"]).default("ai"),
@@ -286,6 +305,13 @@ export const generateVideoConfigSchema = z
             .nullable()
             .optional(),
           studioReferenceHashes: z.array(z.string().length(64)).max(3).nullable().optional(),
+          // Matches AiVideoPromptCompiler.MaximumCustomPromptCharacters.
+          customPrompt: z
+            .string()
+            .trim()
+            .max(MAX_CUSTOM_VIDEO_PROMPT, { error: () => i18n.t("workflowConfig.schema.customVideoPromptMax", { max: MAX_CUSTOM_VIDEO_PROMPT }) })
+            .nullable()
+            .optional(),
           standardMotionPreset: z.preprocess(
             normalizeLegacyStandardMotion,
             z.enum(standardSceneMotions).nullable().optional()
@@ -307,7 +333,8 @@ export const generateVideoConfigSchema = z
         })
       )
       .max(4)
-      .optional(),
+      .optional()
+    ),
     aiGlobalInstructions: AI_ADVANCED_CONTROLS_ENABLED
       ? z
           .string()
@@ -323,10 +350,13 @@ export const generateVideoConfigSchema = z
       .default("hanging_window"),
     aiStudioSourceMockupId: z.string().uuid().nullable().optional(),
     aiStudioFrameId: z.string().uuid().nullable().optional(),
-    videoEdit: videoEditSchema,
+    videoEdit: z.preprocess(nullAsMissing, videoEditSchema),
     // Before a batch run, some products' own Generate Video settings (product id to a whole config), each checked when
     // it is edited (see `ProductScopeSelect`).
-    productConfigs: z.record(z.string().uuid(), z.record(z.string(), z.unknown())).optional(),
+    productConfigs: z.preprocess(
+      nullAsMissing,
+      z.record(z.string().uuid(), z.record(z.string(), z.unknown())).optional()
+    ),
   })
   .superRefine((value, ctx) => {
     if (value.assetSelection === "manual" && value.selectedMockupIds.length === 0)
@@ -344,6 +374,15 @@ export const generateVideoConfigSchema = z
         path: ["template"],
         message: i18n.t("workflowConfig.schema.supportedAiTemplate"),
       });
+    // A new video has no scenes until the seller adds one; settings from before the scene editor (a legacy AI shot,
+    // or Standard mock-ups chosen by id) still describe a video on their own.
+    const hasLegacyVideo =
+      Boolean(value.aiShotOptions) ||
+      (value.mode === "standard" && (value.sceneOrder.length > 0 || value.selectedMockupIds.length > 0));
+    if (!value.aiScenes?.length && !hasLegacyVideo) {
+      ctx.addIssue({ code: "custom", path: ["aiScenes"], message: i18n.t("workflowConfig.schema.addScene") });
+      return;
+    }
     if (value.mode !== "ai_shot") return;
     if (value.aiScenes?.length) {
       if (value.aiScenes.length > 4)

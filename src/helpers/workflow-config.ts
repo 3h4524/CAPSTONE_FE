@@ -84,12 +84,14 @@ const getSchemaKeys = (type: WorkflowNodeType): string[] => {
 
 // Keeps only the keys the node still declares (in its fields, its defaults or its schema), over its defaults, so a
 // workflow saved before a key existed (or after one was removed) still loads into a config the schema accepts.
-// A text value saved as null (an older product change cleared `artworkGroupKey` that way) takes its default.
+// A text value saved as null (an older product change cleared `artworkGroupKey` that way) takes its default, and so
+// does a settings object the backend wrote as null (Generate Video's `standardOptions` when none was set).
 export const normalizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNodeConfig): WorkflowNodeConfig => {
   const definition = WORKFLOW_NODE_DEFINITIONS[type];
   const normalized: WorkflowNodeConfig = { ...definition.defaultConfig };
   new Set([...Object.keys(definition.defaultConfig), ...definition.fields.flatMap(getFieldKeys), ...getSchemaKeys(type)]).forEach((key) => {
-    if (config[key] === null && typeof normalized[key] === "string") return;
+    const fallback = normalized[key];
+    if (config[key] === null && (typeof fallback === "string" || (typeof fallback === "object" && fallback !== null && !Array.isArray(fallback)))) return;
     if (key in config) normalized[key] = config[key];
   });
   // Design image makes one design per product; a workflow saved when it could make more makes one too.

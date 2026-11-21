@@ -27,7 +27,7 @@ const readJsonString = (text: string, start: number) => {
     if (code === "u") {
       const hex = text.slice(index + 2, index + 6);
       if (!/^[0-9a-fA-F]{4}$/.test(hex)) break;
-      value += String.fromCharCode(parseInt(hex, 16));
+      value += String.fromCharCode(Number.parseInt(hex, 16));
       index += 5;
       continue;
     }

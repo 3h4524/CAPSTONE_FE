@@ -1126,6 +1126,7 @@
         "customAria": "Custom garment color"
       },
       "templateCard": {
+        "ai": "AI",
         "realisticPrint": "Realistic print",
         "recolorable": "Recolorable",
         "madeWithAi": "Made with AI",
@@ -1184,10 +1185,35 @@
       },
       "generateModelPhoto": {
         "title": "Make a model photo with AI",
-        "description": "AI makes a photo of the people you choose in a plain white t-shirt. It is kept with your model photos, and mock-ups are put on it without AI, so the print stays exactly as designed.",
+        "description": "AI makes a photo of the people you choose in a plain white t-shirt or hoodie. Mock-ups are put on it without AI, so the print stays exactly as designed.",
         "productType": "Product type",
-        "costNote": "One Ideogram image (about $0.03), made on your own key, or on the platform's keys when your plan includes them. Making it takes up to a minute. Check the photo before you use it: if the shirt is not found, make another.",
-        "pendingNote": "Making the photo and finding the shirt on it… this takes up to a minute.",
+        "scene": "Scene",
+        "outfit": "Outfit",
+        "pose": "Pose",
+        "scenes": {
+          "studio_grey": "Grey studio",
+          "studio_beige": "Beige studio",
+          "studio_dark": "Dark studio",
+          "street": "City street",
+          "cafe": "Café",
+          "park": "Park"
+        },
+        "outfits": {
+          "casual": "Casual",
+          "streetwear": "Streetwear",
+          "minimal": "Minimal",
+          "sporty": "Sporty"
+        },
+        "poses": {
+          "standing": "Standing",
+          "walking": "Walking",
+          "leaning": "Leaning",
+          "seated": "Seated"
+        },
+        "lookNote": "Looks are picked at random, so every photo is a new person.",
+        "placeNote": "Real places take a little longer to process than a studio.",
+        "costNote": "About $0.03 per photo, on your Ideogram key or the platform's, and up to a minute to make. If the garment isn't found on it, make another.",
+        "pendingNote": "Making the photo and finding the garment on it… this takes up to a minute.",
         "pending": "Making the photo…",
         "makePhoto": "Make photo"
       },
@@ -2036,7 +2062,7 @@
         "videoForThisProduct": "These video settings make this product's video only.",
         "batchWithoutLine": "This batch has no product line yet. Choose one on the Batches page before running it.",
         "designRatioWhy": "{{line}} batch: {{why}}",
-        "designRatioMismatch": "{{ratio}} does not suit this {{line}} batch. Choose {{ratios}}."
+        "designRatioMismatch": "{{ratio}} can still run, but the design may print smaller and leave space in the print area of this {{line}} batch. The closest fit is {{ratios}}."
       },
       "form": {
         "settingsLocked": "Settings are locked while the run is in progress.",

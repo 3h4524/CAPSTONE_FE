@@ -9,6 +9,7 @@ import { runGroupKeys } from "@/api/run-groups";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
+import { lifestyleGarmentsOf, LifestyleMockupForm } from "@/components/workflows/media/lifestyle-mockup-form";
 import { ModelPhotoMockupForm } from "@/components/workflows/media/model-photo-mockup-form";
 import {
   MockupStripCard,
@@ -26,6 +27,7 @@ import {
 } from "@/hooks/mutations/use-run-group-actions";
 import { useAiVideoTemplates } from "@/hooks/queries/use-ai-video-templates";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
+import { usePrintWithoutAi } from "@/hooks/queries/use-print-without-ai";
 import { useRunGroup, useRunGroupId } from "@/hooks/queries/use-run-group";
 import { usePanelContinueCommand } from "@/hooks/use-panel-continue-command";
 import { useAppQueryClient } from "@/hooks/use-query-client";
@@ -312,6 +314,7 @@ const ProductSection = ({
   showsModelPhoto?: boolean;
 }) => {
   const { t } = useTranslation("common");
+  const printWithoutAi = usePrintWithoutAi();
   const client = useAppQueryClient();
   const productId = targets[0].productId;
   const { data: assets, isPending, dataUpdatedAt } = useMockupAssets(productId);
@@ -363,7 +366,11 @@ const ProductSection = ({
             {t("workflowEditor.runGroup.putOnModelPhoto", { name: targets[0].productName })}
           </summary>
           <div className="bg-ink-50/50 border-t p-3">
-            <ModelPhotoMockupForm productId={productId} assets={assets ?? []} />
+            {printWithoutAi ? (
+              <ModelPhotoMockupForm productId={productId} assets={assets ?? []} />
+            ) : (
+              <LifestyleMockupForm garments={lifestyleGarmentsOf(assets ?? [])} />
+            )}
           </div>
         </details>
       )}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { batchJobKeys } from "@/api/batch-jobs";
 import { notificationApi } from "@/api/notifications";
 import { supportTicketKeys } from "@/api/support-tickets";
 import { isTransientHubError, signalrLogger } from "@/helpers/signalr-logger";
@@ -53,6 +54,11 @@ export const useNotificationHub = () => {
           queryClient.invalidateQueries({ queryKey: adminSupportTicketsKeys.lists() });
           // Một batch xong hay lỗi đều đổi số liệu và việc cần làm trên Dashboard
           queryClient.invalidateQueries({ queryKey: sellerDashboardKeys.all });
+        });
+
+        // A design was saved or its job moved on: read the job now rather than at its next poll.
+        sharedConnection.on("DesignJobChanged", (batchJobId: string) => {
+          queryClient.invalidateQueries({ queryKey: batchJobKeys.detail(batchJobId) });
         });
 
         try {

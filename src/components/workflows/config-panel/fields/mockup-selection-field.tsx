@@ -16,12 +16,13 @@ import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-no
 import { defaultTemplateColors, type TemplateColors } from "@/helpers/garment-colors";
 import type { TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
 import { countProductTypes, printifySelectionIssue, productTypeLabel, uncoveredProductTypes } from "@/helpers/mockup-template";
-import { readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
+import { readTemplateBackgrounds, readTemplateColors, readTemplatePlacements } from "@/helpers/workflow-config";
 import { hasPrintifyDownstream, type MockupTarget } from "@/helpers/workflow-graph";
 import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
+import type { TemplatePlacements } from "@/types/mockup-templates";
 import type { WorkflowNodeConfig } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 
@@ -30,6 +31,8 @@ type MockupSelectionFieldProps = {
   templateColorsName: string;
   /** Config key of the background chosen per template. */
   templateBackgroundsName: string;
+  /** Config key of where this workflow puts the design on each template. */
+  templatePlacementsName: string;
   /** Config key of what the mock-ups are for: "zip" or "printify". */
   targetName: string;
   value: string[];
@@ -55,12 +58,13 @@ const useWorkflowBatchId = () =>
     return typeof batchId === "string" ? batchId : "";
   });
 
-export const MockupSelectionField = ({ templateColorsName, templateBackgroundsName, targetName, value, onChange }: MockupSelectionFieldProps) => {
+export const MockupSelectionField = ({ templateColorsName, templateBackgroundsName, templatePlacementsName, targetName, value, onChange }: MockupSelectionFieldProps) => {
   const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const { control, setValue } = useFormContext<WorkflowNodeConfig>();
   const templateColors = readTemplateColors(useWatch({ control, name: templateColorsName }));
   const templateBackgrounds = readTemplateBackgrounds(useWatch({ control, name: templateBackgroundsName }));
+  const templatePlacements = readTemplatePlacements(useWatch({ control, name: templatePlacementsName }));
   const printifyLocked = usePrintifyLocked();
   const storedTarget: MockupTarget = useWatch({ control, name: targetName }) === "printify" ? "printify" : "zip";
   const target: MockupTarget = printifyLocked ? "printify" : storedTarget;
@@ -101,10 +105,11 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
     ? uncoveredProductTypes(runTypes, selectedTemplates)
     : [];
 
-  const apply =(templateIds: string[], colorsByTemplate: TemplateColors, backgroundsByTemplate: TemplateBackgrounds) => {
+  const apply = (templateIds: string[], colorsByTemplate: TemplateColors, backgroundsByTemplate: TemplateBackgrounds, placements: TemplatePlacements) => {
     onChange(templateIds);
     setValue(templateColorsName, colorsByTemplate, { shouldDirty: true, shouldValidate: true });
     setValue(templateBackgroundsName, backgroundsByTemplate, { shouldDirty: true, shouldValidate: true });
+    setValue(templatePlacementsName, placements, { shouldDirty: true, shouldValidate: true });
     setOpen(false);
   };
 
@@ -191,7 +196,7 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
         {value.length === 0 ? t("workflowConfig.mockupSelection.chooseTemplates") : t("workflowConfig.mockupSelection.changeTemplates")}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-4xl flex-col overflow-hidden">
+        <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-5xl flex-col overflow-hidden sm:max-w-5xl">
           <DialogHeader className="text-left">
             <DialogTitle>{printify ? t("workflowConfig.mockupSelection.choosePrintifyTitle") : t("workflowConfig.mockupSelection.chooseMockupTitle")}</DialogTitle>
             <DialogDescription>
@@ -206,6 +211,7 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
               initialIds={value}
               initialTemplateColors={templateColors}
               initialTemplateBackgrounds={templateBackgrounds}
+              initialTemplatePlacements={templatePlacements}
               pending={false}
               productTypeCounts={productTypeCounts && Object.keys(productTypeCounts).length > 0 ? productTypeCounts : undefined}
               sampleDesignUrl={sampleDesignUrl}

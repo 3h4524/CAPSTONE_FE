@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { ImageLightbox } from "@/components/commons/data-display/image-lightbox";
 import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
+import { MockupKindBadge } from "@/components/mockups/mockup-kind-badge";
 import { PhotoSourceTag } from "@/components/mockups/model-attributes-fields";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -54,11 +55,7 @@ export const MockupTemplateListItem = ({
   // Only what sets this photo apart is a tag; the usual (a model photo's automatic placement, its print maps) is not.
   const featureClass = "text-ink-600 border-ink-200 font-normal";
   const features = [
-    template.printify && (
-      <Badge key="printify" variant="outline" className={featureClass} title={[template.printify.blueprintTitle, template.printify.printProviderTitle].filter(Boolean).join(" · ")}>
-        Printify
-      </Badge>
-    ),
+    !isModel && <MockupKindBadge key="kind" template={template} />,
     !isModel && template.realisticPrintReady && (
       <Badge key="realistic" variant="outline" className={featureClass}>{t("mockups.templateCard.realisticPrint")}</Badge>
     ),

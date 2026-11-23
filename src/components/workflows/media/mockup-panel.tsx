@@ -24,6 +24,7 @@ import { readString, readStringArray } from "@/helpers/workflow-config";
 import { usePreviewVideoStoryboard } from "@/hooks/mutations/use-preview-video-storyboard";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
+import { usePrintWithoutAi } from "@/hooks/queries/use-print-without-ai";
 import { usePanelContinueCommand } from "@/hooks/use-panel-continue-command";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { generateVideoConfigSchema } from "@/schemas/workflow";
@@ -32,6 +33,7 @@ import type { AiPromptTrace, GenerateVideoConfig } from "@/types/video-workflow"
 
 export const MockupPanel = ({ review }: { review: boolean }) => {
   const { t } = useTranslation("common");
+  const printWithoutAi = usePrintWithoutAi();
   const input = useWorkflowStore(state => state.nodes.find(n => n.data.type === "product-input"));
   const mockup = useWorkflowStore(state => state.nodes.find(n => n.data.type === "apply-mockup"));
   const productId = readString(input?.data.config.productId);
@@ -116,7 +118,7 @@ export const MockupPanel = ({ review }: { review: boolean }) => {
   }
   return <div className="@container space-y-5">
     {!review && <MockupUploadForm productId={run?.productId ?? productId} />}
-    <ModelPhotoMockupForm productId={run?.productId ?? productId} assets={visibleAssets ?? []} />
+    {printWithoutAi && <ModelPhotoMockupForm productId={run?.productId ?? productId} assets={visibleAssets ?? []} />}
     <LifestyleMockupForm garments={lifestyleGarmentsOf(visibleAssets ?? [])} />
     {artworkGroups.length > 1 && <div className="space-y-2"><Label htmlFor="mockup-artwork-group">{t("workflowMedia.mockupPanel.artworkGroup")}</Label><Select value={activeGroup} onValueChange={selectArtworkGroup}><SelectTrigger id="mockup-artwork-group" className="bg-card w-full"><SelectValue /></SelectTrigger><SelectContent>{artworkGroups.map(group => <SelectItem key={group} value={group}>{artworkGroupLabel(group, artworkGroups)}</SelectItem>)}</SelectContent></Select></div>}
     <div className="space-y-3">

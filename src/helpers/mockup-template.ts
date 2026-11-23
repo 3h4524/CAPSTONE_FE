@@ -1,4 +1,12 @@
-import type { MockupArea, MockupAreaSourceKind, MockupPrintArea, MockupPrintLayout, MockupTemplate, MockupView } from "@/types/mockup-templates";
+import type {
+  MockupArea,
+  MockupAreaSourceKind,
+  MockupPrintArea,
+  MockupPrintLayout,
+  MockupTemplate,
+  MockupTemplatePlacement,
+  MockupView,
+} from "@/types/mockup-templates";
 
 export const MAX_MOCKUP_SELECTION = 5;
 
@@ -219,6 +227,31 @@ export const parsePrintLayout = (json: string): MockupPrintLayout | null => {
   }
   return { view: isView(parsed.view) ? parsed.view : "front", areas };
 };
+
+/** Where the template itself puts the design: its main print area. */
+export const templatePlacementOf = (template: Pick<MockupTemplate, "printAreaConfig">): MockupTemplatePlacement | null => {
+  const main = parsePrintLayout(template.printAreaConfig)?.areas[0];
+  return main ? { x: main.x, y: main.y, width: main.width, height: main.height, rotation: main.rotation } : null;
+};
+
+/** Whether two print positions put the design in the same place. */
+export const samePlacement = (left: MockupTemplatePlacement, right: MockupTemplatePlacement) =>
+  left.x === right.x &&
+  left.y === right.y &&
+  left.width === right.width &&
+  left.height === right.height &&
+  normalizeRotation(left.rotation) === normalizeRotation(right.rotation);
+
+/** Mirrors MockupRules.WithPlacement: the template's areas with the main one where the seller's run puts it. */
+export const withTemplatePlacement = (layout: MockupPrintLayout, placement: MockupTemplatePlacement | null | undefined): MockupPrintLayout =>
+  placement
+    ? {
+        ...layout,
+        areas: layout.areas.map((area) =>
+          area.key === MAIN_AREA_KEY ? { ...area, ...placement, rotation: normalizeRotation(placement.rotation) } : area
+        ),
+      }
+    : layout;
 
 /** What a print area is called on screen. */
 export const areaLabel = (area: Pick<MockupArea, "key" | "name">, index: number) =>

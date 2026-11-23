@@ -9,6 +9,7 @@ import type {
   MockupOverride,
   MockupTemplate,
   MockupView,
+  TemplatePlacements,
 } from "@/types/mockup-templates";
 
 /** Who manages the templates: a seller their own, an admin the shared ones every seller can use. */
@@ -39,9 +40,10 @@ export const applyBatchMockupTemplates = async (
   garmentColors: string[] = [],
   templateColors: Record<string, string[]> = {},
   templateBackgrounds: Record<string, Record<string, string>> = {},
-  areaSources: Record<string, Record<string, MockupAreaSource>> = {}
+  areaSources: Record<string, Record<string, MockupAreaSource>> = {},
+  templatePlacements: TemplatePlacements = {}
 ): Promise<BatchMockupSelection> =>
-  (await api.put<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { templateIds, garmentColors, templateColors, templateBackgrounds, areaSources })).data;
+  (await api.put<BatchMockupSelection>(`/api/batch-jobs/${batchJobId}/mockups`, { templateIds, garmentColors, templateColors, templateBackgrounds, areaSources, templatePlacements })).data;
 
 export type SaveMockupTemplateInput = {
   name: string;

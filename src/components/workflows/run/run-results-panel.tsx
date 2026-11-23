@@ -319,6 +319,7 @@ export const RunResultsPanel = ({ node }: { node: WorkflowNode }) => {
         onOpenChange={(nextOpen) => !nextOpen && setEditing(null)}
         onSaved={showEdited}
         printifyOnly={printifyMockups}
+        templatePlacements={mockupResult?.templatePlacements}
       />
       <RegenerateProductDialog
         batchJobId={job.id}

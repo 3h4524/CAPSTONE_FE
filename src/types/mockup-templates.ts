@@ -12,6 +12,12 @@ export interface ModelAttributes {
   groupType?: ModelGroupType | null;
 }
 
+/** What the app offers for model photos. */
+export type ModelPhotoOptions = {
+  /** Whether a mock-up can be put on a model photo without AI. */
+  printWithoutAi: boolean;
+};
+
 /** Narrows the model photos listed; a part left out matches any. */
 export type ModelPhotoFilter = Partial<ModelAttributes>;
 
@@ -86,6 +92,8 @@ export interface BatchMockupSelection {
   templateBackgrounds?: Record<string, Record<string, string>>;
   /** What each print area of a template prints, keyed by template id and then area key. */
   areaSources?: Record<string, Record<string, MockupAreaSource>> | null;
+  /** Where this job puts the design on each template's main print area, keyed by template id. */
+  templatePlacements?: TemplatePlacements | null;
 }
 
 export interface MockupPrintArea {
@@ -94,6 +102,15 @@ export interface MockupPrintArea {
   width: number;
   height: number;
 }
+
+/** Where a seller's run puts the design on a template. The template, which may be shared, stays as it is. */
+export interface MockupTemplatePlacement extends MockupPrintArea {
+  /** Degrees the design is turned about the area's center, clockwise, from -180 to 180. */
+  rotation: number;
+}
+
+/** The print position chosen per template, keyed by template id. */
+export type TemplatePlacements = Record<string, MockupTemplatePlacement>;
 
 /** Which side of the garment a template photo shows. */
 export type MockupView = "front" | "back" | "left" | "right" | "side";
@@ -184,6 +201,8 @@ export interface GenerateAllMockupsResult {
   errors: string[];
   images: MockupImage[];
   removed?: RemovedMockupSlot[] | null;
+  /** Where the job puts the design on its templates: a mock-up not moved on its own starts from this. */
+  templatePlacements?: TemplatePlacements | null;
 }
 
 export interface GarmentMaskPreview {

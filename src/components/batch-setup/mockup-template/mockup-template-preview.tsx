@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { parsePrintArea } from "@/helpers/mockup-template";
 import { previewFallbackFor } from "@/helpers/preview-fallback";
-import type { MockupTemplate } from "@/types/mockup-templates";
+import type { MockupTemplate, MockupTemplatePlacement } from "@/types/mockup-templates";
 import { cn } from "@/utils/cn";
 
 type MockupTemplatePreviewProps = {
@@ -15,6 +15,8 @@ type MockupTemplatePreviewProps = {
   color?: string | null;
   /** The background to show the garment on; needs the template's garment mask. */
   background?: string | null;
+  /** Where this workflow puts the design, when it is not where the template has it. */
+  placement?: MockupTemplatePlacement;
   /** A generated design to place in the print area; without one the area is only outlined. */
   designUrl?: string | null;
   className?: string;
@@ -24,13 +26,13 @@ const percent = (value: number, total: number) => `${(value / total) * 100}%`;
 
 // The template's own photo with its print area outlined and, when known, a real design placed in it,
 // so a seller can see what the garment looks like and where the artwork would land.
-export const MockupTemplatePreview = ({ template, color, background, designUrl, className }: MockupTemplatePreviewProps) => {
+export const MockupTemplatePreview = ({ template, color, background, placement, designUrl, className }: MockupTemplatePreviewProps) => {
   // Kept per photo: the panel reuses this preview for every template pointed at, and one broken photo
   // must not leave the fallback over the next template's working one.
   const { t } = useTranslation("common");
   const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null);
   const photoFailed = failedPhotoUrl === template.baseImageUrl;
-  const area = parsePrintArea(template.printAreaConfig);
+  const area = placement ?? parsePrintArea(template.printAreaConfig);
   const width = template.outputWidthPx || 1;
   const height = template.outputHeightPx || 1;
   const tint = color && template.allowRecolor && template.garmentMaskUrl ? { color, maskUrl: template.garmentMaskUrl } : null;
@@ -81,7 +83,13 @@ export const MockupTemplatePreview = ({ template, color, background, designUrl, 
             "absolute overflow-hidden border-2 border-dashed border-white/90 shadow-[0_0_0_1px_rgb(0_0_0/0.4),inset_0_0_0_1px_rgb(0_0_0/0.25)]",
             !designUrl && "bg-white/10"
           )}
-          style={{ left: percent(area.x, width), top: percent(area.y, height), width: percent(area.width, width), height: percent(area.height, height) }}
+          style={{
+            left: percent(area.x, width),
+            top: percent(area.y, height),
+            width: percent(area.width, width),
+            height: percent(area.height, height),
+            transform: placement?.rotation ? `rotate(${placement.rotation}deg)` : undefined,
+          }}
           data-testid="print-area"
         >
           {designUrl && (

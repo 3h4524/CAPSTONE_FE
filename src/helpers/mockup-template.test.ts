@@ -14,6 +14,7 @@ import {
   quadFromArea,
   sortMockupList,
   uncoveredProductTypes,
+  withTemplatePlacement,
 } from "@/helpers/mockup-template";
 import { buildMockupTemplate } from "@/test/factories";
 
@@ -70,6 +71,21 @@ describe("printifySelectionIssue", () => {
     expect(printifySelectionIssue([])).toBe("none");
     expect(printifySelectionIssue([{ productType: "tshirt", printify: null }])).toBe("notLinked");
     expect(printifySelectionIssue([{ productType: "tshirt", printify }, { productType: "TShirt", printify }])).toBe("sameType");
+  });
+});
+
+describe("withTemplatePlacement", () => {
+  const main = { key: "main", name: null, x: 10, y: 20, width: 30, height: 40, rotation: 0, source: "same" as const };
+  const sleeve = { ...main, key: "sleeve", source: "none" as const };
+
+  it("moves the main area only, and nothing without a position", () => {
+    const layout = { view: "front" as const, areas: [main, sleeve] };
+
+    expect(withTemplatePlacement(layout, { x: 1, y: 2, width: 3, height: 4, rotation: 15 }).areas).toEqual([
+      { ...main, x: 1, y: 2, width: 3, height: 4, rotation: 15 },
+      sleeve,
+    ]);
+    expect(withTemplatePlacement(layout, null)).toBe(layout);
   });
 });
 

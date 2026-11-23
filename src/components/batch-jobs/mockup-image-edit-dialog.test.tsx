@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   saveMany: vi.fn(),
   reset: vi.fn(),
   templates: [] as unknown[],
+  editorFrame: undefined as unknown,
 }));
 
 vi.mock("@/api/mockup-templates", () => ({
@@ -23,7 +24,12 @@ vi.mock("@/hooks/queries/use-mockup-templates", () => ({
   useMockupTemplates: () => ({ data: mocks.templates, isPending: false }),
 }));
 // The photo editor measures a live image; what is saved does not depend on it.
-vi.mock("@/components/mockups/print-area-editor", () => ({ PrintAreaEditor: () => null }));
+vi.mock("@/components/mockups/print-area-editor", () => ({
+  PrintAreaEditor: ({ frame }: { frame?: unknown }) => {
+    mocks.editorFrame = frame;
+    return null;
+  },
+}));
 
 const FRONT = "11111111-1111-4111-8111-111111111111";
 const BACK = "22222222-2222-4222-8222-222222222222";
@@ -115,6 +121,48 @@ describe("MockupImageEditDialog", () => {
       )
     ).toBe(true);
     expect(mocks.saveOne).not.toHaveBeenCalled();
+  });
+
+  it("holds the back of a Printify template to its print area, moving in a position saved past it", async () => {
+    mocks.templates = [{ ...tee, printify: { colors: [{ name: "White", hex: "#FFFFFF" }] } }];
+    mocks.saveOne.mockResolvedValue({
+      generatedCount: 0,
+      noDesignImageCount: 0,
+      noCompatibleTemplateCount: 0,
+      errors: [],
+      images: [],
+    });
+    const front = mockup("front", FRONT);
+    const backMockup = {
+      ...mockup("back", BACK),
+      override: {
+        mockupTemplateId: BACK,
+        garmentColor: "#FFFFFF",
+        backgroundColor: null,
+        printArea: { x: 350, y: 100, width: 200, height: 200 },
+      },
+    } as MockupImage;
+    renderWithQuery(
+      <MockupImageEditDialog
+        batchJobId="job-1"
+        image={backMockup}
+        images={[front, backMockup]}
+        productName="Dragon Tee"
+        productType="tshirt"
+        designImageUrl={null}
+        onOpenChange={vi.fn()}
+        onSaved={vi.fn()}
+      />
+    );
+
+    await userEvent.click(await screen.findByRole("button", { name: "Save" }));
+
+    expect(mocks.editorFrame).toMatchObject({ x: 100, y: 100, width: 300, height: 300 });
+    await waitFor(() => expect(mocks.saveOne).toHaveBeenCalledTimes(1));
+    expect(mocks.saveOne.mock.calls[0][1]).toMatchObject({
+      slotKey: backMockup.slotKey,
+      override: { printArea: { x: 200, y: 100, width: 200, height: 200 } },
+    });
   });
 
   it("removes the side taken off and recolors the one kept", async () => {

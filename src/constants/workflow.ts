@@ -300,6 +300,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         name: "mockupTemplateIds",
         templateColorsName: "templateColors",
         templateBackgroundsName: "templateBackgrounds",
+        templatePlacementsName: "templatePlacements",
         targetName: "mockupTarget",
         label: "Mock-up templates",
       },

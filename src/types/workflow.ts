@@ -140,6 +140,8 @@ export type WorkflowField =
       name: string;
       templateColorsName: string;
       templateBackgroundsName: string;
+      /** Config key of where this workflow puts the design on each template. */
+      templatePlacementsName: string;
       /** Config key of what the mock-ups are for: "zip" (export only) or "printify" (a Printify product). */
       targetName: string;
       label: string;

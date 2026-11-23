@@ -253,6 +253,7 @@ export const NodeConfigField = ({ nodeId, nodeType, field: sourceField, control,
                 <MockupSelectionField
                   templateColorsName={field.templateColorsName}
                   templateBackgroundsName={field.templateBackgroundsName}
+                  templatePlacementsName={field.templatePlacementsName}
                   targetName={field.targetName}
                   value={readStringArray(controller.value)}
                   onChange={controller.onChange}

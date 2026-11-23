@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { garmentColorName } from "@/helpers/garment-colors";
 import { backgroundKeys, resolveBackground } from "@/helpers/mockup-backgrounds";
 import { parsePrintArea } from "@/helpers/mockup-template";
-import type { MockupTemplate } from "@/types/mockup-templates";
+import type { MockupTemplate, MockupTemplatePlacement } from "@/types/mockup-templates";
 import { cn } from "@/utils/cn";
 
 type MockupTemplateDetailProps = {
@@ -18,6 +18,8 @@ type MockupTemplateDetailProps = {
   colors?: string[];
   /** The backgrounds picked for this template, by garment color; the preview shows the one of the color it is in. */
   backgrounds?: Record<string, string>;
+  /** Where this workflow puts the design, when it is not where the template has it. */
+  placement?: MockupTemplatePlacement;
   /** A generated design to show inside the print area. */
   designUrl?: string | null;
   /** The garment color to show the template in; the first picked one when it is not among them. */
@@ -25,7 +27,7 @@ type MockupTemplateDetailProps = {
   onShowColor?: (hex: string) => void;
 };
 
-export const MockupTemplateDetail = ({ template, colors = [], backgrounds, designUrl, shownColor, onShowColor }: MockupTemplateDetailProps) => {
+export const MockupTemplateDetail = ({ template, colors = [], backgrounds, placement, designUrl, shownColor, onShowColor }: MockupTemplateDetailProps) => {
   const { t } = useTranslation("common");
 
   if (!template) {
@@ -37,7 +39,7 @@ export const MockupTemplateDetail = ({ template, colors = [], backgrounds, desig
     );
   }
 
-  const area = parsePrintArea(template.printAreaConfig);
+  const area = placement ?? parsePrintArea(template.printAreaConfig);
   const pickedColor = colors.find((hex) => hex.toLowerCase() === shownColor?.toLowerCase()) ?? colors[0];
   const previewColor = pickedColor ?? template.garmentColor;
   const background = resolveBackground(backgrounds, backgroundKeys(pickedColor ? [pickedColor] : [])[0]);
@@ -45,7 +47,7 @@ export const MockupTemplateDetail = ({ template, colors = [], backgrounds, desig
   return (
     <ScrollArea className="h-full [&>[data-radix-scroll-area-viewport]>div]:block!">
       <div className="bg-ink-50 flex flex-col gap-4 rounded-xl p-5" aria-live="polite">
-        <MockupTemplatePreview template={template} color={previewColor} background={background} designUrl={designUrl} />
+        <MockupTemplatePreview template={template} color={previewColor} background={background} placement={placement} designUrl={designUrl} />
         <div>
           <p className="text-ink-900 font-semibold">{template.name}</p>
           <div className="mt-2 flex flex-wrap gap-1.5">

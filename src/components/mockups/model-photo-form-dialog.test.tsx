@@ -37,7 +37,7 @@ describe("ModelPhotoFormDialog", () => {
     vi.clearAllMocks();
     mocks.printWithoutAi = false;
     mocks.preview.mockResolvedValue({ recolorable: false, reason: null, maskDataUrl: null });
-    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response(new Blob(["photo"], { type: "image/jpeg" })))));
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve({ blob: () => Promise.resolve(new Blob(["photo"], { type: "image/jpeg" })) })));
   });
 
   afterEach(() => vi.unstubAllGlobals());

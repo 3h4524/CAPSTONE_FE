@@ -16,8 +16,9 @@ import type { ModelAttributes, ModelPhotoFilter } from "@/types/mockup-templates
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-const mocks = vi.hoisted(() => ({ generate: vi.fn() }));
+const mocks = vi.hoisted(() => ({ generate: vi.fn(), printWithoutAi: false }));
 
+vi.mock("@/hooks/queries/use-print-without-ai", () => ({ usePrintWithoutAi: () => mocks.printWithoutAi }));
 vi.mock("@/hooks/mutations/use-model-photo-mutations", () => ({
   useGenerateModelPhoto: () => ({ mutate: mocks.generate, isPending: false }),
 }));
@@ -159,7 +160,7 @@ describe("GenerateModelPhotoDialog", () => {
     await pick("Scene", "Café");
     await pick("Outfit", "Streetwear");
     await pick("Pose", "Seated");
-    expect(screen.getByText(/real places take a little longer/i)).toBeInTheDocument();
+    expect(screen.queryByText(/real places take a little longer/i)).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /make photo/i }));
 
     expect(mocks.generate).toHaveBeenCalledWith(
@@ -169,6 +170,25 @@ describe("GenerateModelPhotoDialog", () => {
       }),
       expect.anything()
     );
+  });
+
+  it("says a real place takes longer only while the garment is found on the photo", async () => {
+    mocks.printWithoutAi = true;
+    const user = userEvent.setup();
+    render(
+      <GenerateModelPhotoDialog
+        open
+        scope="seller"
+        initial={{ people: "single", ageGroup: "adult", gender: "male" }}
+        onClose={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Scene" }));
+    await user.click(screen.getByRole("option", { name: "Café" }));
+
+    expect(screen.getByText(/real places take a little longer/i)).toBeInTheDocument();
+    mocks.printWithoutAi = false;
   });
 
   it("offers only what a person can wear or carry, and a group only standing or walking", async () => {

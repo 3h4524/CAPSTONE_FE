@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useTranslation } from "react-i18next";
 
 import { GarmentColorSwatch } from "@/components/mockups/garment-color-picker";
+import { MockupKindBadge } from "@/components/mockups/mockup-kind-badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { previewFallbackFor } from "@/helpers/preview-fallback";
 import type { MockupTemplate } from "@/types/mockup-templates";
@@ -53,7 +54,7 @@ export const MockupTemplateCard = ({ template, selected, onToggle, onFocusTempla
   >
     <Checkbox checked={selected} onCheckedChange={() => onToggle(template.id)} aria-label={template.name} className="mt-1" />
     <TemplateThumbnail template={template} />
-    <span className="min-w-0">
+    <span className="min-w-0 flex-1">
       <span className="text-ink-900 block truncate text-sm font-semibold">{template.name}</span>
       <span className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1.5 text-xs">
         <span className="line-clamp-2">{template.productType}</span>
@@ -63,6 +64,7 @@ export const MockupTemplateCard = ({ template, selected, onToggle, onFocusTempla
           <GarmentColorSwatch key={hex} hex={hex} />
         ))}
       </span>
+      <MockupKindBadge template={template} className="mt-1 max-w-full truncate" />
     </span>
   </label>
   );

@@ -43,4 +43,42 @@ describe("RunPreviewCallout", () => {
     expect(aside).not.toHaveClass("pointer-events-none");
     expect(screen.getByText("Designs")).toBeInTheDocument();
   });
+
+  it("renders widened callout for apply-mockup when multiple designs exist", () => {
+    useWorkflowStore.setState({
+      nodes: [
+        {
+          id: "node-2",
+          position: { x: 0, y: 0 },
+          data: { type: "apply-mockup", label: "Apply mockup", config: {} },
+        } as WorkflowNode,
+      ],
+    });
+    useWorkflowRunStore.setState({
+      job: {
+        products: [
+          {
+            id: "p1",
+            productName: "T-Shirt",
+            images: [
+              { id: "d1", imageUrl: "https://img/d1.png", variationIndex: 0 },
+              { id: "d2", imageUrl: "https://img/d2.png", variationIndex: 1 },
+            ],
+          },
+        ],
+      } as never,
+    });
+
+    const { container } = render(
+      <RunPreviewCallout
+        nodeId="node-2"
+        data={{ type: "apply-mockup", label: "Apply mockup", config: {} } as WorkflowNodeData}
+        status="success"
+        progress={100}
+      />
+    );
+
+    const aside = container.querySelector("aside");
+    expect(aside).toHaveStyle({ width: "420px" });
+  });
 });

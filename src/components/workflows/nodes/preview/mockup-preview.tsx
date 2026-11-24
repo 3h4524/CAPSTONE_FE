@@ -2,7 +2,6 @@
 
 import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,6 +11,7 @@ import { getMockupImageUrls } from "@/helpers/workflow-run";
 import { useRunSimulationStore } from "@/stores/run-simulation";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { WorkflowNodeStatus } from "@/types/workflow";
+import { cn } from "@/utils/cn";
 
 type MockupPreviewProps = {
   status: WorkflowNodeStatus;
@@ -125,21 +125,13 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
   );
   const currentTab = groups[currentIndex]?.id ?? groups[0].id;
 
-  const scrollVertical = (direction: "up" | "down") => {
-    if (!tabsListRef.current) return;
-    tabsListRef.current.scrollBy({
-      top: direction === "up" ? -60 : 60,
-      behavior: "smooth",
-    });
-  };
-
   return (
     <div className="w-full max-w-full min-w-0">
       <Tabs
         orientation="vertical"
         value={currentTab}
         onValueChange={setSelectedTabId}
-        className="flex w-full min-w-0 flex-row items-start gap-2"
+        className="flex w-full min-w-0 flex-row items-start gap-3"
       >
         <div className="min-w-0 flex-1">
           {groups.map((group) => (
@@ -153,21 +145,15 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
           ))}
         </div>
 
-        <div className="flex w-9 shrink-0 flex-col items-center pt-5">
-          {groups.length > 5 && (
-            <button
-              type="button"
-              onClick={() => scrollVertical("up")}
-              className="text-wf-dim hover:text-wf-ink mb-1 p-0.5"
-              aria-label="Scroll up"
-            >
-              <ChevronUp className="size-3" />
-            </button>
-          )}
+        <div className="flex w-[136px] shrink-0 flex-col gap-1.5">
+          <div className="text-wf-dim flex items-center justify-between px-1 text-[10px] font-semibold tracking-wider uppercase">
+            <span>{t("workflowEditor.runView.designs", "Designs")}</span>
+            <span className="text-wf-faint tabular-nums">({groups.length})</span>
+          </div>
 
           <TabsList
             ref={tabsListRef}
-            className="bg-wf-line/25 no-scrollbar flex! h-auto! max-h-[195px] min-h-0 w-full! flex-col! gap-1.5 overflow-y-auto scroll-smooth rounded-lg p-1"
+            className="no-scrollbar flex! h-auto! max-h-[250px] min-h-0 w-full! flex-col! gap-1.5 overflow-y-auto scroll-smooth bg-transparent! p-0!"
           >
             {groups.map((group, index) => (
               <TabsTrigger
@@ -181,39 +167,39 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
                     behavior: "smooth",
                   });
                 }}
-                className="group/tab border-wf-line/50 hover:border-wf-accent data-[state=active]:border-wf-accent data-[state=active]:ring-wf-accent data-[state=active]:ring-1.5 relative size-7 shrink-0 overflow-hidden rounded-md border p-0 transition-all focus-visible:outline-hidden data-[state=active]:scale-105"
-              >
-                {group.designThumbnail ? (
-                  <Image
-                    src={group.designThumbnail}
-                    alt=""
-                    fill
-                    sizes="28px"
-                    unoptimized
-                    className="object-cover"
-                  />
-                ) : (
-                  <span className="text-wf-dim text-[10px] font-bold">
-                    {index + 1}
-                  </span>
+                className={cn(
+                  "group/chip border-wf-line/60 bg-wf-surface/80 text-wf-ink/80 hover:border-wf-accent/40 hover:bg-wf-line/20 hover:text-wf-ink",
+                  "data-[state=active]:border-wf-accent data-[state=active]:bg-wf-surface! data-[state=active]:text-wf-ink! data-[state=active]:ring-1.5 data-[state=active]:ring-wf-accent/30 data-[state=active]:shadow-xs",
+                  "flex! h-9! w-full! shrink-0 cursor-pointer items-center justify-start! gap-2 rounded-lg border px-2.5 text-left transition-all"
                 )}
-                <span className="absolute right-0 bottom-0 rounded-tl bg-black/75 px-1 py-px text-[7px] leading-none font-semibold text-white tabular-nums">
-                  {index + 1}
+              >
+                <div className="border-wf-line/50 relative size-5 shrink-0 overflow-hidden rounded-sm border">
+                  {group.designThumbnail ? (
+                    <Image
+                      src={group.designThumbnail}
+                      alt=""
+                      fill
+                      sizes="20px"
+                      unoptimized
+                      className="object-cover"
+                    />
+                  ) : (
+                    <span className="text-wf-dim grid h-full place-items-center text-[10px] font-bold">
+                      {index + 1}
+                    </span>
+                  )}
+                </div>
+
+                <span className="flex-1 truncate text-xs font-medium">
+                  {group.label}
+                </span>
+
+                <span className="text-wf-dim group-data-[state=active]/chip:text-wf-accent shrink-0 text-[10px] font-medium tabular-nums">
+                  ({group.items.length})
                 </span>
               </TabsTrigger>
             ))}
           </TabsList>
-
-          {groups.length > 5 && (
-            <button
-              type="button"
-              onClick={() => scrollVertical("down")}
-              className="text-wf-dim hover:text-wf-ink mt-1 p-0.5"
-              aria-label="Scroll down"
-            >
-              <ChevronDown className="size-3" />
-            </button>
-          )}
         </div>
       </Tabs>
     </div>

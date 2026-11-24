@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import { apiPath, findCalls, recordApiCalls } from "../support/api";
@@ -14,6 +14,11 @@ const FIXTURE_XLSX = path.resolve(__dirname, "../fixtures/product-import.xlsx");
  * re-rendering and the item is never "stable" long enough for a normal click, and it can open
  * outside the viewport; the keyboard activates the item either way.
  */
+const chooseApparelLine = async (page: Page, dialog: Locator) => {
+  await dialog.getByRole("combobox", { name: "Product line *" }).click();
+  await page.getByRole("option", { name: /^Apparel/ }).click();
+};
+
 const deleteBatchFromCard = async (page: Page, batchName: string) => {
   const cardHeading = page.getByRole("heading", { name: batchName, level: 3 });
   await cardHeading.evaluate((element) => element.scrollIntoView({ block: "center" }));
@@ -53,6 +58,7 @@ test.describe("product batches", () => {
         dialog.getByRole("heading", { name: "Create product batch" })
       ).toBeVisible();
       await dialog.getByLabel("Batch name *").fill(batchName);
+      await chooseApparelLine(page, dialog);
       await dialog.getByLabel("Default niche").fill("hiking and camping");
 
       const [response] = await Promise.all([
@@ -130,6 +136,7 @@ test.describe("product batches", () => {
 
     const createDialog = page.getByRole("dialog");
     await createDialog.getByLabel("Batch name *").fill(batchName);
+    await chooseApparelLine(page, createDialog);
     await createDialog.getByRole("button", { name: "Create batch" }).click();
     await expect(page.getByRole("heading", { name: batchName, level: 3 })).toBeVisible();
 
@@ -168,10 +175,10 @@ test.describe("product batches", () => {
 
     await test.step("both fixture products are listed for the batch", async () => {
       await expect(page.getByText("E2E Trail Tee")).toBeVisible();
-      await expect(page.getByText("E2E Sunset Mug")).toBeVisible();
+      await expect(page.getByText("E2E Sunset Hoodie")).toBeVisible();
       const productsTable = page.getByRole("table");
       await expect(productsTable.getByText("T-shirt", { exact: true })).toBeVisible();
-      await expect(productsTable.getByText("Mug", { exact: true })).toBeVisible();
+      await expect(productsTable.getByText("Hoodie", { exact: true })).toBeVisible();
     });
 
     await test.step("the products endpoint agrees with the UI", async () => {
@@ -218,6 +225,7 @@ test.describe("product batches", () => {
 
     const createDialog = page.getByRole("dialog");
     await createDialog.getByLabel("Batch name *").fill(batchName);
+    await chooseApparelLine(page, createDialog);
     await createDialog.getByRole("button", { name: "Create batch" }).click();
     await expect(page.getByRole("heading", { name: batchName, level: 3 })).toBeVisible();
 

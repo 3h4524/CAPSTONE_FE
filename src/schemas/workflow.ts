@@ -177,7 +177,20 @@ export const applyMockupConfigSchema = z.object({
       ),
     ])
   ),
-  // What the mock-ups are for: export only, or a Printify product (one Printify template, checked with the graph).
+  // Where this workflow puts the design on a template, kept here so a shared template is never changed.
+  templatePlacements: z
+    .record(
+      z.string(),
+      z.object({
+        x: z.number().int().min(0),
+        y: z.number().int().min(0),
+        width: z.number().int().positive(),
+        height: z.number().int().positive(),
+        rotation: z.number().min(-180).max(180),
+      })
+    )
+    .optional(),
+  // What the mock-ups are for: export only, or a Printify product (one Printify template per type).
   // A workflow saved before the choice existed is "zip".
   mockupTarget: z.enum(["zip", "printify"]).default("zip"),
   mockupIds: z.array(z.string().uuid()).max(8),

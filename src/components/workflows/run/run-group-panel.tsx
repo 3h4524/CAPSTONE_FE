@@ -9,15 +9,24 @@ import { runGroupKeys } from "@/api/run-groups";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
+import { lifestyleGarmentsOf, LifestyleMockupForm } from "@/components/workflows/media/lifestyle-mockup-form";
 import { ModelPhotoMockupForm } from "@/components/workflows/media/model-photo-mockup-form";
 import {
+  groupProductMockups,
   MockupStripCard,
   MockupStripSkeleton,
+  ModelPhotoPendingCard,
+  type ProductColorChoice,
+  ProductMockupCard,
+  type ProductMockupColor,
   ScrollStrip,
 } from "@/components/workflows/run/mockup-strip";
 import { getErrorMessage } from "@/helpers/error-message";
+import { templateSidesIndex } from "@/helpers/mockup-sides";
+import { withViewTemplates } from "@/helpers/mockup-template";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { hasVideoSteps } from "@/helpers/workflow-run";
+import { useReviewDesignMockups } from "@/hooks/mutations/use-review-design-mockups";
 import { useReviewMockupAsset } from "@/hooks/mutations/use-review-mockup-asset";
 import {
   useCancelRunGroup,
@@ -26,6 +35,8 @@ import {
 } from "@/hooks/mutations/use-run-group-actions";
 import { useAiVideoTemplates } from "@/hooks/queries/use-ai-video-templates";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
+import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
+import { usePrintWithoutAi } from "@/hooks/queries/use-print-without-ai";
 import { useRunGroup, useRunGroupId } from "@/hooks/queries/use-run-group";
 import { usePanelContinueCommand } from "@/hooks/use-panel-continue-command";
 import { useAppQueryClient } from "@/hooks/use-query-client";
@@ -71,6 +82,57 @@ export const designMockups = (
       asset.role !== "VideoScene"
   );
 
+/** A mock-up made from a template on Apply mock-up, not an AI image or an uploaded photo. */
+const isComposite = (asset: MockupAsset) => asset.sourceType === "generated";
+
+/** The composites of a design as product cards (see groupProductMockups), each named after its template. */
+const useProductCards = (mockups: MockupAsset[]) => {
+  const { data: templates } = useMockupTemplates();
+  const index = templateSidesIndex(templates ?? []);
+  const names = new Map(withViewTemplates(templates ?? []).map((item) => [item.id, item.name]));
+  return {
+    cards: groupProductMockups(mockups.filter(isComposite), index),
+    nameOf: (card: ProductMockupCard, fallback: string) =>
+      (card.templateId && names.get(card.templateId)) || fallback,
+  };
+};
+
+/**
+ * A design's mock-ups as the strip shows them: one card per garment template for the composites, which go on as one
+ * product (every color and side of it, picked on the card), then each AI image or uploaded photo on its own.
+ */
+const MockupCards = ({
+  mockups,
+  name,
+  readOnly = false,
+  choiceFor,
+}: {
+  mockups: MockupAsset[];
+  name: string;
+  readOnly?: boolean;
+  /** Lets a color of a card be left out, at Mockup Approval. */
+  choiceFor?: (card: ProductMockupCard) => ProductColorChoice;
+}) => {
+  const { cards, nameOf } = useProductCards(mockups);
+  return (
+    <>
+      {cards.map((card) => (
+        <ProductMockupCard
+          key={card.key}
+          card={card}
+          name={nameOf(card, name)}
+          choice={choiceFor?.(card)}
+        />
+      ))}
+      {mockups
+        .filter((asset) => !isComposite(asset))
+        .map((asset) => (
+          <MockupStripCard key={asset.id} asset={asset} readOnly={readOnly} />
+        ))}
+    </>
+  );
+};
+
 const byProduct = (targets: RunGroupTarget[]) => {
   const groups = new Map<string, RunGroupTarget[]>();
   targets.forEach((target) =>
@@ -87,10 +149,8 @@ export const RunGroupPanel = () => {
   const groupId = useRunGroupId();
   const { data: group, isPending, isError, refetch } = useRunGroup(groupId);
   if (!groupId) return null;
-  if (isPending)
-    return (
-      <p className="text-muted-foreground text-xs">{t("workflowEditor.runGroup.loadingDesigns")}</p>
-    );
+  // The products take a moment to load: their cards are drawn first, so the wait does not read as a broken panel.
+  if (isPending) return <RunGroupSkeleton label={t("workflowEditor.runGroup.loadingDesigns")} />;
   if (isError || !group)
     return (
       <PanelNotice
@@ -110,6 +170,48 @@ export const RunGroupPanel = () => {
     <GroupProgress group={group} />
   );
 };
+
+/** Two product cards in the shape of the real ones (thumbnail, name, the approve and skip buttons, a row of mock-ups). */
+const RunGroupSkeleton = ({ label }: { label: string }) => (
+  <div aria-busy="true" aria-live="polite" className="space-y-3">
+    <span className="sr-only">{label}</span>
+    {[0, 1].map((card) => (
+      <div
+        key={card}
+        aria-hidden="true"
+        className="bg-card space-y-3 overflow-hidden rounded-lg border py-3"
+      >
+        <div className="flex animate-pulse items-center gap-3 px-3 motion-reduce:animate-none">
+          <div className="bg-muted size-11 shrink-0 rounded-md" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="bg-muted h-3.5 w-36 rounded" />
+            <div className="bg-muted h-3 w-48 rounded" />
+            <div className="bg-muted h-1 w-full max-w-48 rounded-full" />
+          </div>
+          <div className="bg-muted h-6 w-16 shrink-0 rounded-full" />
+        </div>
+        <div className="flex animate-pulse gap-2 px-3 motion-reduce:animate-none">
+          <div className="bg-muted h-8 w-32 rounded-md" />
+          <div className="bg-muted h-8 w-28 rounded-md" />
+        </div>
+        <div className="flex gap-3 overflow-hidden px-3">
+          {[0, 1, 2].map((mockup) => (
+            <div
+              key={mockup}
+              className="bg-card w-44 shrink-0 animate-pulse overflow-hidden rounded-lg border motion-reduce:animate-none"
+            >
+              <div className="bg-muted aspect-square" />
+              <div className="space-y-2 p-2">
+                <div className="bg-muted h-3 w-24 rounded" />
+                <div className="bg-muted h-5 w-16 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 const ChooseDesigns = ({ group }: { group: RunGroup }) => {
   const { t } = useTranslation("common");
@@ -161,13 +263,23 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
   };
 
   // A design held up by a missing model photo does not lock Continue: Continue makes that photo again first.
+  // Continue waits only for what it needs. An automatic Mockup Approval is started by the server once it has made
+  // everything, so it is left alone until then. A manual one can go on with the designs whose model photo is done,
+  // and only a chosen design whose photo is still being made holds it back.
+  const automaticApproval = useWorkflowStore(
+    (state) => state.nodes.find((node) => node.data.type === "approval-gate")?.data.config.mode === "auto"
+  );
+  const waitingForPhotos = group.targets.some(
+    (target) => target.selected && target.modelPhoto === "pending"
+  );
   const canStart =
     group.selectedCount > 0 &&
     !tooMany &&
     !isDirty &&
     !isConfirming &&
     !isCancelling &&
-    group.preparing !== true;
+    !waitingForPhotos &&
+    !(group.preparing === true && automaticApproval);
   usePanelContinueCommand(canStart, start);
 
   if (group.targets.length === 0)
@@ -228,9 +340,11 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
         <PanelNotice tone="info">
           <span className="inline-flex items-center gap-2">
             <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-            {withVideo
-              ? t("workflowEditor.runGroup.preparingVideo")
-              : t("workflowEditor.runGroup.preparing")}
+            {!automaticApproval
+              ? t("workflowEditor.runGroup.preparingManual")
+              : withVideo
+                ? t("workflowEditor.runGroup.preparingVideo")
+                : t("workflowEditor.runGroup.preparing")}
           </span>
         </PanelNotice>
       )}
@@ -312,6 +426,7 @@ const ProductSection = ({
   showsModelPhoto?: boolean;
 }) => {
   const { t } = useTranslation("common");
+  const printWithoutAi = usePrintWithoutAi();
   const client = useAppQueryClient();
   const productId = targets[0].productId;
   const { data: assets, isPending, dataUpdatedAt } = useMockupAssets(productId);
@@ -363,7 +478,11 @@ const ProductSection = ({
             {t("workflowEditor.runGroup.putOnModelPhoto", { name: targets[0].productName })}
           </summary>
           <div className="bg-ink-50/50 border-t p-3">
-            <ModelPhotoMockupForm productId={productId} assets={assets ?? []} />
+            {printWithoutAi ? (
+              <ModelPhotoMockupForm productId={productId} assets={assets ?? []} />
+            ) : (
+              <LifestyleMockupForm garments={lifestyleGarmentsOf(assets ?? [])} />
+            )}
           </div>
         </details>
       )}
@@ -420,18 +539,71 @@ const DesignRow = ({
 }) => {
   const { t } = useTranslation("common");
   const { mutateAsync: review } = useReviewMockupAsset();
+  const { mutateAsync: reviewDesign } = useReviewDesignMockups();
   const [isReviewing, setIsReviewing] = useState(false);
   const usedScenes = scenesByMockup(target);
   const mockups = usedFirst(unordered, usedScenes);
   const usedCount = mockups.filter((asset) => usedScenes.has(asset.id)).length;
+  // The mock-ups made on Apply mock-up: every color and side of them goes on, or not, as one product.
+  const composites = mockups.filter((asset) => isComposite(asset));
+  const { cards } = useProductCards(mockups);
+  // A color can be left out of the product, with every side of it. Until it is turned on or off here, a color is off
+  // when it was saved as rejected while the rest of the product was not.
+  const [turnedOff, setTurnedOff] = useState<Record<string, boolean>>({});
+  const skipped = composites.every((asset) => asset.approvalStatus === "rejected");
+  const colorId = (card: ProductMockupCard, color: ProductMockupColor) => `${card.key}|${color.key}`;
+  const isOff = (card: ProductMockupCard, color: ProductMockupColor) =>
+    turnedOff[colorId(card, color)] ??
+    (!skipped && color.sides.every((side) => side.asset.approvalStatus === "rejected"));
+  const colorCount = cards.reduce((count, card) => count + card.colors.length, 0);
+  const colorsOn = cards.reduce(
+    (count, card) => count + card.colors.filter((color) => !isOff(card, color)).length,
+    0
+  );
+  const choiceFor =
+    colorCount > 1
+      ? (card: ProductMockupCard): ProductColorChoice => {
+          const colorOf = (key: string) => card.colors.find((color) => color.key === key);
+          return {
+            isOff: (key) => {
+              const color = colorOf(key);
+              return color ? isOff(card, color) : false;
+            },
+            toggle: (key) => {
+              const color = colorOf(key);
+              if (color)
+                setTurnedOff((current) => ({ ...current, [colorId(card, color)]: !isOff(card, color) }));
+            },
+            canTurnOff: colorsOn > 1,
+          };
+        }
+      : undefined;
+  const leftOut = cards.flatMap((card) =>
+    card.colors
+      .filter((color) => isOff(card, color))
+      .flatMap((color) => color.sides.map((side) => side.asset.id))
+  );
+  const photoPending = target.modelPhoto === "pending";
 
   const reviewAll = async (approved: boolean) => {
     setIsReviewing(true);
     try {
-      for (const asset of mockups.filter(
-        (item) => item.approvalStatus !== (approved ? "approved" : "rejected")
-      ))
-        await review({ id: asset.id, revision: asset.revision, approved });
+      if (composites.length > 0)
+        await reviewDesign({
+          productId: target.productId,
+          artworkGroupKey: target.artworkGroupKey,
+          approved,
+          leftOut: approved ? leftOut : [],
+        });
+      // AI images and photos (the model photo a scene with a person starts from) are reviewed one by one. Approving the
+      // product approves the ones waiting for review too; one the seller rejected stays rejected, unless the product
+      // has no composite (then it is approved photo by photo, as before). Skipping the product rejects them all.
+      const singles = mockups.filter((item) => {
+        if (isComposite(item)) return false;
+        if (!approved) return item.approvalStatus !== "rejected";
+        return item.approvalStatus === "pending" || (composites.length === 0 && item.approvalStatus !== "approved");
+      });
+      for (const asset of singles) await review({ id: asset.id, revision: asset.revision, approved });
     } catch (error) {
       showWorkflowActionToast("error", getErrorMessage(error));
     } finally {
@@ -543,7 +715,9 @@ const DesignRow = ({
           onClick={() => reviewAll(true)}
         >
           <Check className="size-3.5" aria-hidden="true" />
-          {t("workflowEditor.runGroup.approveAll")}
+          {asProduct
+            ? t("workflowEditor.runGroup.approveProduct")
+            : t("workflowEditor.runGroup.approveDesign")}
         </Button>
         <Button
           type="button"
@@ -571,7 +745,7 @@ const DesignRow = ({
 
       {isLoading ? (
         <MockupStripSkeleton />
-      ) : mockups.length === 0 ? (
+      ) : mockups.length === 0 && !photoPending ? (
         <p className="text-muted-foreground px-3 text-xs">
           {asProduct
             ? t("workflowEditor.runGroup.productNoMockups")
@@ -582,12 +756,26 @@ const DesignRow = ({
           label={t("workflowEditor.runGroup.mockupsOf", {
             name: asProduct ? target.productName : target.designLabel,
           })}
-          itemCount={mockups.length}
+          itemCount={mockups.length + (photoPending ? 1 : 0)}
         >
-          {mockups.map((asset) => (
-            <MockupStripCard key={asset.id} asset={asset} />
-          ))}
+          <MockupCards
+            mockups={mockups}
+            name={asProduct ? target.productName : target.designLabel}
+            choiceFor={choiceFor}
+          />
+          {/* The model photo is still being made: its card takes the place the photo will have. */}
+          {photoPending && <ModelPhotoPendingCard />}
         </ScrollStrip>
+      )}
+      {composites.length > 0 && (
+        <p className="text-muted-foreground px-3 text-xs">
+          {t("workflowEditor.runGroup.reviewWhole")}
+        </p>
+      )}
+      {target.modelPhoto === "missing" && (
+        <p className="px-3 text-xs text-amber-700 dark:text-amber-400">
+          {t("workflowEditor.runGroup.modelPhotoMissing")}
+        </p>
       )}
     </li>
   );
@@ -744,9 +932,7 @@ const ApprovedMockups = ({ target }: { target: RunGroupTarget }) => {
         })}
         itemCount={approved.length}
       >
-        {approved.map((asset) => (
-          <MockupStripCard key={asset.id} asset={asset} readOnly />
-        ))}
+        <MockupCards mockups={approved} name={target.productName} readOnly />
       </ScrollStrip>
     </div>
   );

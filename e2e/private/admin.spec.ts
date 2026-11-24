@@ -6,6 +6,7 @@ import { expect, request, test } from "@playwright/test";
 import { E2E_API_BASE_URL } from "../support/auth";
 import { readLatestAdminOtp } from "../support/otp";
 import { openPrivateRoute, pageHeading } from "../support/private";
+import { setEnglishInterface } from "../support/profile";
 
 const ADMIN_EMAIL = "demo.admin@apcs.test";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "Passw0rdTest1!";
@@ -37,6 +38,7 @@ const authenticateAdmin = async () => {
     if (!verify.ok()) {
       throw new Error(`Admin 2FA verification failed with ${verify.status()}: ${await verify.text()}`);
     }
+    await setEnglishInterface(api);
     await api.storageState({ path: ADMIN_STATE_PATH });
   } finally {
     await api.dispose();
@@ -115,4 +117,50 @@ test.describe("admin pages", () => {
     await expect(page.getByText("Failed to load user list.")).toHaveCount(0);
     expect(consoleErrors, "console errors on /admin/users").toEqual([]);
   });
+
+  test("test reports dashboard renders heading, metrics and run tests dialog", async ({ page }) => {
+    const consoleErrors = captureConsoleErrors(page);
+    await openPrivateRoute(page, "/admin/test-reports");
+    await expect(pageHeading(page, "End-to-end test reports")).toBeVisible();
+
+    const runTestsButton = page.getByRole("button", { name: "Run tests" });
+    await expect(runTestsButton).toBeVisible();
+    await runTestsButton.click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("heading", { name: "Run the end-to-end suite" })).toBeVisible();
+    await expect(dialog.getByRole("radio", { name: /headless/i })).toBeVisible();
+    await expect(dialog.getByRole("radio", { name: /headed/i })).toBeVisible();
+    await expect(dialog.getByRole("radio", { name: /debug/i })).toBeVisible();
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(dialog).toBeHidden();
+
+    expect(consoleErrors, "console errors on /admin/test-reports").toEqual([]);
+  });
+
+  test("test reports detail renders breadcrumbs and navigation", async ({ page }) => {
+    const consoleErrors = captureConsoleErrors(page);
+    await openPrivateRoute(page, "/admin/test-reports/non-existent-run");
+    await expect(page.getByRole("link", { name: "All test reports" })).toBeVisible();
+    expect(consoleErrors, "console errors on /admin/test-reports/[runId]").toEqual([]);
+  });
+
+  test("mockup templates library renders heading and printify actions", async ({ page }) => {
+    const consoleErrors = captureConsoleErrors(page);
+    await openPrivateRoute(page, "/admin/mockup-templates");
+    await expect(page.getByRole("heading", { name: "Mock-up template library" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Create from Printify" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "New template" })).toBeVisible();
+    expect(consoleErrors, "console errors on /admin/mockup-templates").toEqual([]);
+  });
+
+  test("model photos library renders heading, make with AI and upload actions", async ({ page }) => {
+    const consoleErrors = captureConsoleErrors(page);
+    await openPrivateRoute(page, "/admin/model-photos");
+    await expect(pageHeading(page, "Model photo library")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Make with AI" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "New model photo" })).toBeVisible();
+    expect(consoleErrors, "console errors on /admin/model-photos").toEqual([]);
+  });
 });
+

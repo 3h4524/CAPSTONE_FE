@@ -12,6 +12,7 @@ import { usePreviewVideoStoryboard } from "@/hooks/mutations/use-preview-video-s
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { usePreviewDesign } from "@/hooks/queries/use-preview-design";
 import { useRunGroupId } from "@/hooks/queries/use-run-group";
+import { useRunSceneVideos } from "@/hooks/queries/use-run-scene-videos";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { generateVideoConfigSchema } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -81,6 +82,17 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
   const previewDesign = usePreviewDesign();
   const productId = designRun?.productId ?? previewDesign?.productId ?? inputProductId;
   const { data: assets = [] } = useMockupAssets(productId);
+  // The AI clips the open run has made: an AI scene plays its clip, as in the full video editor, instead of its still start frame.
+  const { data: sceneVideos = [] } = useRunSceneVideos(run?.id ?? null);
+  const clips = useMemo(
+    () =>
+      Object.fromEntries(
+        sceneVideos
+          .filter((clip) => clip.status === "stored" && clip.previewUrl)
+          .map((clip) => [clip.sceneOrder, clip.previewUrl as string])
+      ) as Record<number, string>,
+    [sceneVideos]
+  );
   const { mutate: preview, isPending } = usePreviewVideoStoryboard(true);
   const previewRef = useRef(preview);
   previewRef.current = preview;
@@ -217,6 +229,7 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
               board={board}
               assets={assets}
               config={node.data.config as GenerateVideoConfig}
+              clips={clips}
             />
             <p className="text-muted-foreground text-xs font-medium capitalize" aria-live="polite">
               {board.template.replaceAll("_", " ")} · {board.aspectRatio} · {board.width}×

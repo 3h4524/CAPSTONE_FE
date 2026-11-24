@@ -15,6 +15,7 @@ import {
   MockupBackgroundPicker,
   MockupBackgroundSwatch,
 } from "@/components/mockups/mockup-background-picker";
+import { MockupKindBadge } from "@/components/mockups/mockup-kind-badge";
 import { MockupPhotoPreview } from "@/components/mockups/mockup-photo-preview";
 import { MockupSidesStrip } from "@/components/mockups/mockup-sides-strip";
 import { PrintAreaEditor } from "@/components/mockups/print-area-editor";
@@ -75,6 +76,7 @@ import {
   resolveMockupAreas,
   sameAreas,
   templateView,
+  withTemplatePlacement,
   withViewTemplates,
 } from "@/helpers/mockup-template";
 import { useMutation } from "@/hooks/mutations/use-mutation";
@@ -87,6 +89,7 @@ import type {
   MockupPrintArea,
   MockupView,
   RemovedMockupSlot,
+  TemplatePlacements,
 } from "@/types/mockup-templates";
 
 type MockupImageEditDialogProps = {
@@ -108,6 +111,8 @@ type MockupImageEditDialogProps = {
   onSaved: (result: GenerateAllMockupsResult, changedCount: number) => void;
   /** The mock-ups are for a Printify product: only templates linked to Printify can be chosen. */
   printifyOnly?: boolean;
+  /** Where the job puts the design on its templates: a mock-up not moved on its own is shown there. */
+  templatePlacements?: TemplatePlacements | null;
 };
 
 // How a side's print areas were set, on the template photo they were set on: every area as the seller left it, or (as
@@ -150,6 +155,7 @@ export const MockupImageEditDialog = ({
   onOpenChange,
   onSaved,
   printifyOnly = false,
+  templatePlacements,
 }: MockupImageEditDialogProps) => {
   const { t } = useTranslation("common");
   const open = image !== null;
@@ -267,6 +273,20 @@ export const MockupImageEditDialog = ({
     ? (colors.find((hex) => sameColor(hex, shownColor)) ?? colors[0] ?? null)
     : null;
   const photoOf = (view: MockupView) => (main ? templateForView(main, view) : null);
+  // Printify prints a side only inside its own print area, measured on that side's photo.
+  const printifyFrameOf = (view: MockupView) => {
+    const sidePhoto = main?.printify ? photoOf(view) : null;
+    return sidePhoto ? parsePrintifyFrame(sidePhoto.printAreaConfig) : null;
+  };
+  // A position saved before its side was held to that print area.
+  const isPastFrame = (view: MockupView, setup: MockupOverride) => {
+    const frame = printifyFrameOf(view);
+    const area = setup.areas?.find((item) => item.key === MAIN_AREA_KEY);
+    const box = area ?? setup.printArea;
+    if (!frame || !box) return false;
+    const fitted = keepInFrame(box, area?.rotation ?? 0, frame);
+    return !fitted || Math.abs(fitted.x - box.x) > 1 || Math.abs(fitted.y - box.y) > 1;
+  };
   // The chosen template's other sides this mock-up was not made with (it was made on a template with fewer): shown,
   // and made beside it when saved.
   const addedViews: MockupView[] = main
@@ -277,7 +297,17 @@ export const MockupImageEditDialog = ({
     const layout = photo ? parsePrintLayout(photo.printAreaConfig) : null;
     if (!photo || !layout) return [];
     const mine = own && edits[view]?.templateId === photo.id ? edits[view] : null;
-    return resolveMockupAreas(layout, mine?.own, mine?.movedMain);
+    const placedLayout = withTemplatePlacement(layout, templatePlacements?.[photo.id]);
+    const resolved = resolveMockupAreas(placedLayout, mine?.own, mine?.movedMain);
+    const frame = printifyFrameOf(view);
+    if (!frame || !mine) return resolved;
+    // Moved inside Printify's print area, or back where the template puts it when it is too big to fit.
+    const start = resolveMockupAreas(placedLayout, null, null).find((item) => item.key === MAIN_AREA_KEY);
+    return resolved.map((item) => {
+      if (item.key !== MAIN_AREA_KEY) return item;
+      const fitted = keepInFrame(item, item.rotation, frame);
+      return fitted ? { ...item, ...fitted } : (start ?? item);
+    });
   };
   // The background of a side in one garment color: its own until that color's is changed here; a color new here
   // starts with the photo's own.
@@ -299,15 +329,17 @@ export const MockupImageEditDialog = ({
     const own = base !== null && base.mockupTemplateId === photo.id ? base : null;
     let printArea: MockupPrintArea | null = null;
     let areas: MockupArea[] | null = null;
-    if (own && !touchedViews.includes(view)) {
+    if (own && !touchedViews.includes(view) && !isPastFrame(view, own)) {
       printArea = own.printArea ?? null;
       areas = own.areas ?? null;
     } else {
       const placed = areasOf(view);
-      const moved = !sameAreas(placed, areasOf(view, false));
-      // One straight area printing the design is kept as a moved print area, as before there were several.
+      const startingAreas = areasOf(view, false);
+      const moved = !sameAreas(placed, startingAreas);
+      // One straight area printing the design is kept as a moved print area, as before there were several. Straightened
+      // from a turn the job gave it, it needs its areas: a moved print area keeps the turn it started with.
       const plainMove =
-        placed.length === 1 && placed[0].rotation === 0 && placed[0].source === "same";
+        placed.length === 1 && placed[0].rotation === 0 && placed[0].source === "same" && startingAreas[0]?.rotation === 0;
       // Left where the template puts them, the design follows the template's print areas.
       printArea =
         moved && plainMove
@@ -629,11 +661,9 @@ export const MockupImageEditDialog = ({
   const shownSides = sides.filter((side) => photoOf(side.view));
   const showSides = shownSides.length + addedViews.length > 1;
   const showColors = colorCards.length > 1;
-  // A Printify template's front keeps Printify's print area: it stays put and the design moves inside it, starting
+  // Each side of a Printify template keeps Printify's print area: it stays put and the design moves inside it, starting
   // where the template puts it.
-  const printifyFront = Boolean(main?.printify) && activeView === "front";
-  const frontPhoto = printifyFront ? photoOf(activeView) : null;
-  const printifyArea = frontPhoto ? parsePrintifyFrame(frontPhoto.printAreaConfig) : null;
+  const printifyArea = printifyFrameOf(activeView);
   const printifyFrame = active?.key === MAIN_AREA_KEY ? printifyArea : null;
   // Typed positions are held to the Printify print area too; one that cannot fit in it is not taken.
   const setAreasInFrame = (next: MockupArea[]) => {
@@ -876,7 +906,10 @@ export const MockupImageEditDialog = ({
             {/* Settings beside the photo: the template, color and background go to every side. */}
             <aside className="space-y-4 border-t px-5 py-4 md:overflow-y-auto md:border-t-0 md:border-l">
               <div className="space-y-2">
-                <Label htmlFor="mockup-edit-template">{t("batchJobs.editMockup.template")}</Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="mockup-edit-template">{t("batchJobs.editMockup.template")}</Label>
+                  {main && <MockupKindBadge template={main} />}
+                </div>
                 <Select value={mainId} onValueChange={chooseTemplate} disabled={busy}>
                   <SelectTrigger id="mockup-edit-template" className="w-full">
                     <SelectValue placeholder={t("batchJobs.editMockup.chooseTemplate")} />
@@ -891,6 +924,7 @@ export const MockupImageEditDialog = ({
                             · {t("batchJobs.editMockup.sidesCount", { count: item.views.length + 1 })}
                           </span>
                         )}
+                        <MockupKindBadge template={item} className="ml-1" />
                       </SelectItem>
                     ))}
                   </SelectContent>

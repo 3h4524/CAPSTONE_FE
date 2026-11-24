@@ -19,6 +19,7 @@ import {
   readStringArray,
   readTemplateBackgrounds,
   readTemplateColors,
+  readTemplatePlacements,
 } from "@/helpers/workflow-config";
 import { hasPrintifyDownstream } from "@/helpers/workflow-graph";
 import { useBatchProducts } from "@/hooks/queries/use-batch-products";
@@ -112,7 +113,7 @@ export const NodeMockupField = ({ nodeId, data, disabled = false }: NodeMockupFi
       </NodeControl>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-4xl flex-col overflow-hidden p-4 sm:p-6">
+        <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-5xl flex-col overflow-hidden p-4 sm:max-w-5xl sm:p-6">
           <DialogHeader>
             <DialogTitle>
               {printify
@@ -139,15 +140,17 @@ export const NodeMockupField = ({ nodeId, data, disabled = false }: NodeMockupFi
               initialIds={selectedIds}
               initialTemplateColors={readTemplateColors(data.config.templateColors)}
               initialTemplateBackgrounds={readTemplateBackgrounds(data.config.templateBackgrounds)}
+              initialTemplatePlacements={readTemplatePlacements(data.config.templatePlacements)}
               pending={false}
               productTypeCounts={counts}
               sampleDesignUrl={sampleDesignUrl}
-              onApply={(nextIds, nextColors, nextBackgrounds) => {
+              onApply={(nextIds, nextColors, nextBackgrounds, nextPlacements) => {
                 updateNodeConfig(nodeId, {
                   ...data.config,
                   mockupTemplateIds: nextIds,
                   templateColors: nextColors,
                   templateBackgrounds: nextBackgrounds,
+                  templatePlacements: nextPlacements,
                 });
                 setOpen(false);
               }}

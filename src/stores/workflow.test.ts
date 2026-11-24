@@ -427,6 +427,60 @@ describe("updateNodeConfig", () => {
   });
 });
 
+describe("normalizeNodeConfig", () => {
+  beforeEach(() => {
+    useWorkflowStore.setState(initialState, true);
+  });
+
+  it("fills in defaults on a saved workflow without making it unsaved, and keeps them in what is saved", () => {
+    seedGraph([node("node-1")], []);
+
+    useWorkflowStore.getState().normalizeNodeConfig("node-1", { name: "Mug design", outputFormat: "3:4" });
+
+    const state = useWorkflowStore.getState();
+    expect(state.nodes[0]?.data.config).toEqual({ name: "Mug design", outputFormat: "3:4" });
+    expect(state.savedGraph.nodes[0]?.data.config).toEqual({ name: "Mug design", outputFormat: "3:4" });
+    expect(state.isDirty).toBe(false);
+  });
+
+  it("is not a step the seller can undo", () => {
+    seedGraph([node("node-1")], []);
+    const before = useWorkflowStore.getState().past.length;
+
+    useWorkflowStore.getState().normalizeNodeConfig("node-1", { name: "Mug design", outputFormat: "3:4" });
+
+    expect(useWorkflowStore.getState().past.length).toBe(before);
+  });
+
+  it("does not hide a change the seller made: with something unsaved it counts like any other", () => {
+    seedGraph([node("node-1")], []);
+    useWorkflowStore.getState().updateNodeConfig("node-1", { name: "Mug design", batchId: "batch-7" });
+
+    useWorkflowStore.getState().normalizeNodeConfig("node-1", { name: "Mug design", batchId: "batch-7", outputFormat: "3:4" });
+
+    const state = useWorkflowStore.getState();
+    expect(state.isDirty).toBe(true);
+    expect(state.savedGraph.nodes[0]?.data.config).toEqual({ name: "Mug design" });
+  });
+
+  it("keeps the editor clean when nothing changes", () => {
+    seedGraph([node("node-1")], []);
+
+    useWorkflowStore.getState().normalizeNodeConfig("node-1", { name: "Mug design" });
+
+    expect(useWorkflowStore.getState().isDirty).toBe(false);
+  });
+
+  it("leaves the node unsaved after a later change of the seller's, as that change is theirs", () => {
+    seedGraph([node("node-1")], []);
+    useWorkflowStore.getState().normalizeNodeConfig("node-1", { name: "Mug design", outputFormat: "3:4" });
+
+    useWorkflowStore.getState().updateNodeConfig("node-1", { name: "Mug design", outputFormat: "16:9" });
+
+    expect(useWorkflowStore.getState().isDirty).toBe(true);
+  });
+});
+
 describe("removeNode", () => {
   beforeEach(() => {
     useWorkflowStore.setState(initialState, true);

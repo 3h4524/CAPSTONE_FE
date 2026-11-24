@@ -259,7 +259,8 @@ export const saveSellerResearchProfile = async (input: SellerResearchProfileInpu
   (await api.put<SellerResearchProfile>("/api/market-opportunities/profile", input)).data;
 
 export const listSellerOpportunities = async (state?: string) =>
-  (await api.get<SellerOpportunity[]>("/api/market-opportunities", { params: state ? { state } : undefined })).data;
+  // Match the refresh response so a reload keeps the same ranking and counts.
+  (await api.get<SellerOpportunity[]>("/api/market-opportunities", { params: { limit: 100, ...(state ? { state } : {}) } })).data;
 
 export const refreshSellerOpportunities = async () =>
   (await api.post<SellerOpportunity[]>("/api/market-opportunities/refresh")).data;

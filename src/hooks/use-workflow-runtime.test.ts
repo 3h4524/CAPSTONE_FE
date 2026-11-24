@@ -7,6 +7,21 @@ describe("videoSyncedStatus", () => {
     expect(videoSyncedStatus("approval-gate", undefined, true, true)).toMatchObject({ status: "running" });
   });
 
+  it("words the step by what it is doing: approving by itself, or preparing the mock-ups for the seller to review", () => {
+    expect(videoSyncedStatus("approval-gate", undefined, true, "approving")).toMatchObject({ status: "running", stage: "Approving mock-ups" });
+    expect(videoSyncedStatus("approval-gate", undefined, true, "preparing")).toMatchObject({ status: "running", stage: "Preparing mock-ups" });
+  });
+
+  it("shows a manual Mockup Approval as waiting for the seller once the mock-ups can be reviewed", () => {
+    expect(videoSyncedStatus("approval-gate", undefined, true, "review")).toMatchObject({ status: "waiting_for_input", stage: "Review mock-ups" });
+  });
+
+  it("does not let a phase hide what the video run says about the step", () => {
+    const step = { status: "succeeded", stage: null, progress: 100 } as Parameters<typeof videoSyncedStatus>[1];
+    expect(videoSyncedStatus("approval-gate", step, true, "review")).toMatchObject({ status: "success" });
+    expect(videoSyncedStatus("approval-gate", undefined, true, null)).toMatchObject({ status: "idle" });
+  });
+
   it("leaves the other video steps waiting meanwhile", () => {
     expect(videoSyncedStatus("generate-video", undefined, true, true)).toMatchObject({ status: "idle" });
     expect(videoSyncedStatus("review-video", undefined, true, true)).toMatchObject({ status: "idle" });

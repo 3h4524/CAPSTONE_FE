@@ -1,6 +1,7 @@
 import { WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
 import { DEFAULT_BACKGROUND_KEY, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
+import type { TemplatePlacements } from "@/types/mockup-templates";
 import type { WorkflowField, WorkflowNodeConfig, WorkflowNodeDefinition, WorkflowNodeType } from "@/types/workflow";
 
 export const readString = (value: unknown): string => (typeof value === "string" ? value : "");
@@ -31,6 +32,19 @@ export const readTemplateBackgrounds = (value: unknown): TemplateBackgrounds =>
           .filter(([, backgrounds]) => Object.keys(backgrounds).length > 0)
       )
     : {};
+
+// The print position chosen per template; one that cannot be read is left out, so the template's own is used.
+export const readTemplatePlacements = (value: unknown): TemplatePlacements => {
+  if (!isRecord(value)) return {};
+  const placements: TemplatePlacements = {};
+  for (const [templateId, placement] of Object.entries(value)) {
+    if (!isRecord(placement)) continue;
+    const [x, y, width, height] = [placement.x, placement.y, placement.width, placement.height].map(readNumber);
+    if (x === undefined || y === undefined || !width || !height || x < 0 || y < 0 || width < 0 || height < 0) continue;
+    placements[templateId] = { x, y, width, height, rotation: readNumber(placement.rotation) ?? 0 };
+  }
+  return placements;
+};
 
 export const readBoolean = (value: unknown): boolean => value === true;
 

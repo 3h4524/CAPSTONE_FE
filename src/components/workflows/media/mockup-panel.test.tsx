@@ -24,6 +24,7 @@ vi.mock("@/components/workflows/media/lifestyle-mockup-form", () => ({ Lifestyle
 vi.mock("@/components/workflows/media/mockup-card", () => ({ MockupCard: () => null }));
 vi.mock("@/components/workflows/media/mockup-upload-form", () => ({ MockupUploadForm: () => null }));
 vi.mock("@/components/workflows/media/model-photo-mockup-form", () => ({ ModelPhotoMockupForm: () => null }));
+vi.mock("@/hooks/queries/use-print-without-ai", () => ({ usePrintWithoutAi: () => false }));
 vi.mock("@/helpers/confirm-ai-shot", () => ({ confirmAiShot: mocks.confirmAiShot }));
 vi.mock("@/helpers/error-message", () => ({ getErrorMessage: () => "Request failed" }));
 vi.mock("@/helpers/toast", () => ({ showToast: mocks.showToast }));

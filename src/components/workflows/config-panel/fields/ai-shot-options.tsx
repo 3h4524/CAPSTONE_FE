@@ -4,14 +4,12 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   ArrowDown,
-  BadgeCheck,
   Check,
   ChevronDown,
   Clapperboard,
   Copy,
   GripVertical,
   ImageIcon,
-  LoaderCircle,
   Lock,
   Minus,
   Pencil,
@@ -81,6 +79,7 @@ import { usePreviewDesign } from "@/hooks/queries/use-preview-design";
 import { useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useRunSceneVideos } from "@/hooks/queries/use-run-scene-videos";
 import { useVideoPacks } from "@/hooks/queries/use-video-packs";
+import { useApplyVideoEdit } from "@/hooks/use-apply-video-edit";
 import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowSave } from "@/hooks/use-workflow-save";
@@ -108,17 +107,8 @@ type ScenePromptPreview = {
   durationSeconds?: number;
 };
 const AI_ADVANCED_CONTROLS_ENABLED = false;
-const PRODUCT_ON_MODEL_PACK = "product_on_model_pack";
 const MIN_VIDEO_DURATION_SECONDS = 5;
 const MAX_VIDEO_DURATION_SECONDS = 15;
-type BatchFrameStatus = "idle" | "quoting" | "reused" | "generating" | "generated" | "failed";
-type BatchFrameState = Record<number, { status: BatchFrameStatus; message?: string }>;
-type BatchFrameQuote = {
-  sceneIndex: number;
-  fingerprint: string;
-  estimatedCostUsd: number;
-  existingFrame: MockupAsset | null;
-};
 const BASE_SCENE: AiVideoSceneOptions = {
   mode: "standard",
   mockupId: null,
@@ -304,12 +294,11 @@ const normalizeReferenceHashes = (
 
 const buildProductOnModelScenes = (
   pack: VideoPackDefinition,
-  catalog: AiVideoTemplateDefinition[],
-  sharedMockupId: string | null
+  catalog: AiVideoTemplateDefinition[]
 ): AiVideoSceneOptions[] =>
   pack.scenes.map((definition): AiVideoSceneOptions => {
-    // A Standard scene has no AI shot to prepare: no start frame or shared mock-up, only its timing and camera motion.
-    // Its image is picked per scene (or per design in a batch run), as for a scene added by hand.
+    // Every scene of a pack is an ordinary scene: its image is picked per scene (or, in a batch run, each design's own
+    // image is used, its model photo for a scene with a person), as for a scene added by hand.
     if (definition.mode === "standard")
       return {
         ...BASE_SCENE,
@@ -331,12 +320,12 @@ const buildProductOnModelScenes = (
       templateCode: definition.templateCode ?? defaults.templateCode,
       subtemplateCode: definition.subtemplateCode ?? defaults.subtemplateCode ?? null,
       durationSeconds: definition.durationSeconds,
-      mockupId: sharedMockupId,
+      mockupId: null,
       rightsConfirmed: true,
-      startFrameMode: "studio",
+      startFrameMode: "direct",
       studioLayout: "none",
       studioFrameId: null,
-      studioPrompt: subtemplate?.startFramePrompt ?? null,
+      studioPrompt: null,
       studioReferenceHashes: [],
       transitionIn: definition.transitionIn ?? "cut",
       transitionDurationFrames: definition.transitionDurationFrames ?? 0,
@@ -462,17 +451,12 @@ export function AiShotOptions({
     sceneIndex: number;
     onConfirm: (confirmed: boolean) => void;
   } | null>(null);
-  const [isSharedMockupPickerOpen, setIsSharedMockupPickerOpen] = useState(false);
   const [pendingPack, setPendingPack] = useState<VideoPackDefinition | null>(null);
-  const [batchQuote, setBatchQuote] = useState<BatchFrameQuote[] | null>(null);
-  const [batchFrameState, setBatchFrameState] = useState<BatchFrameState>({});
-  const [isPreparingAllFrames, setIsPreparingAllFrames] = useState(false);
   // Scene text the content check refused when the workflow was saved, marked until the seller changes it.
   const contentIssues = useWorkflowContentIssuesStore((state) => state.issues);
   const resolveContentIssue = useWorkflowContentIssuesStore((state) => state.resolve);
   const sceneContentIssue = (index: number, field: string) =>
     contentIssues.find((issue) => issue.nodeId === nodeId && issue.field === `aiScenes.${index}.${field}`)?.message;
-  const [isApprovingAllFrames, setIsApprovingAllFrames] = useState(false);
   const [framePicker, setFramePicker] = useState<{
     sceneIndex: number;
     view: "library" | "create";
@@ -525,13 +509,13 @@ export function AiShotOptions({
   const queryClient = useAppQueryClient();
   const {
     mutate: reviewStudioFrame,
-    mutateAsync: reviewStudioFrameAsync,
     isPending: isReviewingStudioFrame,
   } = useReviewMockupAsset();
   const { saveWorkflow } = useWorkflowSave();
   const sceneRunId = run?.id ?? null;
   const { data: sceneVideos = [] } = useRunSceneVideos(sceneRunId);
   const { mutateAsync: actOnRun } = useWorkflowRunAction();
+  const { canApply: canApplyEdit, apply: applyEdit, isApplying: isApplyingEdit } = useApplyVideoEdit();
   const chosenMockupIds = designRun ? EMPTY_IDS : readStringArray(applyMockupNode?.data.config.mockupIds);
   const artworkGroupKey =
     designRun?.artworkGroupKey ??
@@ -569,10 +553,8 @@ export function AiShotOptions({
   const legacyStudioMode = node?.data.config.aiStudioMode === "studio";
   const selectedPackCode = readString(node?.data.config.template);
   const selectedVideoPack = videoPacks.find((pack) => pack.code === selectedPackCode);
-  const isProductOnModelPack = selectedPackCode === PRODUCT_ON_MODEL_PACK;
   // A pack of Standard scenes only: no AI, character or shared mock-up.
   const isStandardPack = Boolean(selectedVideoPack?.scenes.every((scene) => scene.mode === "standard"));
-  const sharedMockupId = readString(node?.data.config.sharedMockupId) || null;
   const currentApproved = allAssets.filter(
     (asset) => asset.approvalStatus === "approved" && asset.approvedRevision === asset.revision
   );
@@ -602,9 +584,6 @@ export function AiShotOptions({
       .filter((id): id is string => Boolean(id))
   );
   const allOriginalApproved = currentApproved.filter((asset) => !isStudioFrame(asset));
-  const sharedMockupOptions = allOriginalApproved.filter(
-    (asset) => !effectiveArtworkGroupKey || asset.artworkGroupKey === effectiveArtworkGroupKey
-  );
   const originalApproved = allOriginalApproved
     .filter(
       (asset) =>
@@ -672,28 +651,6 @@ export function AiShotOptions({
         : "ai_shot"
       : node?.data.config.mode;
   const outputFormat = getVideoOutputFormat(node?.data.config.outputFormat, outputMode).value;
-  const sharedMockup = sharedMockupId
-    ? sharedMockupOptions.find((asset) => asset.id === sharedMockupId)
-    : undefined;
-  const packFrameStates = scenes.map((scene, index) => {
-    const frame = scene.studioFrameId
-      ? allAssets.find((asset) => asset.id === scene.studioFrameId)
-      : undefined;
-    const metadata = frame ? studioMetadata(frame) : undefined;
-    const isCurrent = Boolean(
-      frame &&
-        metadata &&
-        metadata.sourceMockupId === sharedMockupId &&
-        sharedMockup &&
-        metadata.sourceRevision === sharedMockup.revision
-    );
-    return { index, frame, isCurrent, approved: Boolean(isCurrent && frame?.approvalStatus === "approved" && frame.approvedRevision === frame.revision) };
-  });
-  const allPackFramesApproved =
-    isProductOnModelPack &&
-    scenes.length === 3 &&
-    scenes.every((scene) => scene.mode === "ai") &&
-    packFrameStates.every((state) => state.approved);
 
   useEffect(() => {
     if (!node || scenes.length > 0) return;
@@ -903,7 +860,12 @@ export function AiShotOptions({
     // a change of its settings, so it neither asks to be saved nor gives the product settings of its own.
     const scope = store.designScope;
     const untouchedProduct = scope?.kind === "product" && sameConfig(node.data.config, scope.baseConfig);
-    store.updateNodeConfig(nodeId, normalizedConfig);
+    // Opening the panel fills in defaults (empty instructions, start images, template settings): that is not a change of
+    // the seller's, so on a workflow with nothing unsaved it does not make it unsaved. Otherwise Continue at Mockup
+    // Approval, which needs the saved workflow, would lock just because the seller looked at Generate Video. Changing
+    // the video mode is different (it changes how the saved settings are read), so it still has to be saved.
+    if (node.data.config.mode === normalizedMode) store.normalizeNodeConfig(nodeId, normalizedConfig);
+    else store.updateNodeConfig(nodeId, normalizedConfig);
     onChange(normalizedScenes, seconds, sharedInstructions);
     if (untouchedProduct) store.markDesignSaved(useWorkflowStore.getState().nodes.find((item) => item.id === nodeId)?.data.config ?? normalizedConfig);
   }, [
@@ -963,6 +925,8 @@ export function AiShotOptions({
         config: parsed.data,
         mockupIds: effectiveChosenMockupIds,
         artworkGroupKey: effectiveArtworkGroupKey,
+        // One design's run of a batch: its scenes take that design's images on the server, not the ones set up on the canvas.
+        forDesign: Boolean(designRun),
       });
       const shot = storyboard.aiShots?.find((item) => item.sceneOrder === sceneOrder);
       if (!shot) {
@@ -1174,7 +1138,8 @@ export function AiShotOptions({
   ) => {
     const seconds = nextScenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
     const currentNode = useWorkflowStore.getState().nodes.find((item) => item.id === nodeId);
-    const { aiShotOptions: _legacy, ...cleanConfig } = currentNode?.data.config ?? node.data.config;
+    // A shared mock-up was the start-frame source of an older Product on Model pack; scenes now use their own images.
+    const { aiShotOptions: _legacy, sharedMockupId: _shared, ...cleanConfig } = currentNode?.data.config ?? node.data.config;
     useWorkflowStore.getState().updateNodeConfig(nodeId, {
       ...cleanConfig,
       ...changes,
@@ -1186,15 +1151,13 @@ export function AiShotOptions({
     onChange(nextScenes, seconds, null);
   };
   const applyVideoPack = (pack: VideoPackDefinition) => {
-    const nextScenes = buildProductOnModelScenes(pack, catalog, sharedMockupId);
+    const nextScenes = buildProductOnModelScenes(pack, catalog);
     const standardOnly = nextScenes.every((scene) => scene.mode === "standard");
     writePackConfiguration(nextScenes, {
       mode: standardOnly ? "standard" : "ai_shot",
       template: pack.code,
       templateVersion: pack.version,
-      ...(standardOnly ? {} : { sharedMockupId }),
     });
-    setBatchFrameState({});
     setPendingPack(null);
     queueMicrotask(() => saveWorkflow());
     showToast("success", t("workflowConfig.aiShot.packAdded", { name: pack.name, sceneCount: nextScenes.length }));
@@ -1212,236 +1175,6 @@ export function AiShotOptions({
       return;
     }
     applyVideoPack(pack);
-  };
-  const chooseSharedMockup = (mockupId: string) => {
-    const nextScenes = scenes.map((scene) => ({
-      ...scene,
-      mockupId,
-      startFrameMode: isProductOnModelPack ? ("studio" as const) : scene.startFrameMode,
-      studioFrameId: null,
-      aiStartFrameCrop: null,
-      studioReferenceHashes: [],
-      standardBaseCrop: null,
-      standardStartCrop: null,
-      standardEndCrop: null,
-      standardStartScale: null,
-      standardEndScale: null,
-      standardStartRotation: null,
-      standardEndRotation: null,
-    }));
-    writePackConfiguration(nextScenes, { sharedMockupId: mockupId });
-    setBatchFrameState({});
-    setIsSharedMockupPickerOpen(false);
-    queueMicrotask(() => saveWorkflow());
-    showToast("success", t("workflowConfig.aiShot.sharedMockupUpdated"));
-  };
-  const persistGeneratedPackFrame = (index: number, source: MockupAsset, frame: MockupAsset) => {
-    const currentNode = useWorkflowStore.getState().nodes.find((item) => item.id === nodeId);
-    if (!currentNode) return;
-    const currentScenes = (currentNode.data.config.aiScenes as AiVideoSceneOptions[] | undefined) ?? [];
-    const nextScenes = currentScenes.map((scene, position) =>
-      position === index
-        ? {
-            ...scene,
-            startFrameMode: "studio" as const,
-            mockupId: source.id,
-            studioLayout: "none" as const,
-            studioFrameId: frame.id,
-            aiStartFrameCrop: scene.studioFrameId === frame.id && scene.mockupId === source.id
-              ? scene.aiStartFrameCrop : null,
-            studioReferenceHashes:
-              studioMetadata(frame)?.references?.map((reference) => reference.contentHash) ?? [],
-            standardBaseCrop: null,
-            standardStartCrop: null,
-            standardEndCrop: null,
-            standardStartScale: null,
-            standardEndScale: null,
-            standardStartRotation: null,
-            standardEndRotation: null,
-          }
-        : scene
-    );
-    writePackConfiguration(nextScenes, { sharedMockupId: source.id });
-    queueMicrotask(() => saveWorkflow());
-  };
-  const buildPackFramePrompt = (scene: AiVideoSceneOptions) =>
-    [
-      "Use user reference 1 as the one on-camera adult. Match that person's identity, facial features, body proportions, hair and skin tone; do not retain a different person from the product image.",
-      scene.studioPrompt?.trim(),
-    ]
-      .filter(Boolean)
-      .join(" ");
-  const quotePackFrames = async (requestedIndexes?: number[]) => {
-    if (!isProductOnModelPack || !productId || !sharedMockup) {
-      showToast("error", t("workflowConfig.aiShot.chooseSharedMockupFirst"));
-      return;
-    }
-    if (!selectedAiCharacter) {
-      showToast("error", t("workflowConfig.aiShot.chooseSharedModelFirst"));
-      return;
-    }
-    const indexes = requestedIndexes ?? scenes.map((_, index) => index);
-    if (indexes.length === 0) return;
-    setIsPreparingAllFrames(true);
-    setBatchFrameState((current) => ({
-      ...current,
-      ...Object.fromEntries(indexes.map((index) => [index, { status: "quoting" as const }])),
-    }));
-    try {
-      const characterReference = await loadCharacterReference(selectedAiCharacter);
-      const results = await Promise.allSettled(
-        indexes.map(async (index): Promise<BatchFrameQuote> => {
-          const scene = scenes[index];
-          if (!scene) throw new Error(t("workflowConfig.aiShot.sceneUnavailable", { scene: index + 1 }));
-          const quote = await quoteAiStudioFrame({
-            productId,
-            sourceMockupId: sharedMockup.id,
-            layout: "none",
-            outputFormat,
-            customPrompt: buildPackFramePrompt(scene),
-            templateCode: scene.templateCode,
-            references: [characterReference],
-            referenceRightsConfirmed: true,
-          });
-          return {
-            sceneIndex: index,
-            fingerprint: quote.fingerprint,
-            estimatedCostUsd: quote.estimatedCostUsd,
-            existingFrame: quote.existingFrame,
-          };
-        })
-      );
-      const quotes = results
-        .filter((result): result is PromiseFulfilledResult<BatchFrameQuote> => result.status === "fulfilled")
-        .map((result) => result.value);
-      const failures = results
-        .map((result, position) => ({ result, index: indexes[position]! }))
-        .filter(
-          (item): item is { result: PromiseRejectedResult; index: number } =>
-            item.result.status === "rejected"
-        );
-      if (quotes.length > 0) setBatchQuote(quotes);
-      setBatchFrameState((current) => ({
-        ...current,
-        ...Object.fromEntries(
-          quotes.map((quote) => [
-            quote.sceneIndex,
-            { status: quote.existingFrame ? ("reused" as const) : ("idle" as const) },
-          ])
-        ),
-        ...Object.fromEntries(
-          failures.map(({ index, result }) => [
-            index,
-            { status: "failed" as const, message: getErrorMessage(result.reason) },
-          ])
-        ),
-      }));
-      if (failures.length > 0)
-        showToast(
-          "warning",
-          t("workflowConfig.aiShot.quoteFailures", { failed: failures.length })
-        );
-    } catch (error) {
-      const message = getErrorMessage(error);
-      setBatchFrameState((current) => ({
-        ...current,
-        ...Object.fromEntries(indexes.map((index) => [index, { status: "failed" as const, message }])),
-      }));
-      showToast("error", message);
-    } finally {
-      setIsPreparingAllFrames(false);
-    }
-  };
-  const confirmGenerateAllPackFrames = async () => {
-    if (!batchQuote || !productId || !sharedMockup || !selectedAiCharacter) return;
-    setBatchQuote(null);
-    setIsPreparingAllFrames(true);
-    const characterReference = await loadCharacterReference(selectedAiCharacter).catch((error) => {
-      showToast("error", getErrorMessage(error));
-      return null;
-    });
-    if (!characterReference) {
-      setIsPreparingAllFrames(false);
-      return;
-    }
-    const saveFrame = (quote: BatchFrameQuote, frame: MockupAsset, status: BatchFrameStatus) => {
-      queryClient.setQueryData<MockupAsset[]>(videoWorkflowKeys.assets(productId), (old) => [
-        frame,
-        ...(old ?? []).filter((asset) => asset.id !== frame.id),
-      ]);
-      persistGeneratedPackFrame(quote.sceneIndex, sharedMockup, frame);
-      setBatchFrameState((current) => ({ ...current, [quote.sceneIndex]: { status } }));
-    };
-    for (const quote of batchQuote.filter((item) => item.existingFrame)) {
-      saveFrame(quote, quote.existingFrame!, "reused");
-    }
-    const work = batchQuote.filter((item) => !item.existingFrame);
-    let cursor = 0;
-    let failedCount = 0;
-    const worker = async () => {
-      while (cursor < work.length) {
-        const quote = work[cursor++];
-        const scene = scenes[quote.sceneIndex];
-        if (!scene) continue;
-        setBatchFrameState((current) => ({
-          ...current,
-          [quote.sceneIndex]: { status: "generating" },
-        }));
-        try {
-          const result = await generateAiStudioFrame({
-            productId,
-            sourceMockupId: sharedMockup.id,
-            layout: "none",
-            outputFormat,
-            customPrompt: buildPackFramePrompt(scene),
-            templateCode: scene.templateCode,
-            references: [characterReference],
-            referenceRightsConfirmed: true,
-            expectedFingerprint: quote.fingerprint,
-            confirmedEstimatedCostUsd: quote.estimatedCostUsd,
-          });
-          saveFrame(quote, result.frame, result.reused ? "reused" : "generated");
-        } catch (error) {
-          failedCount += 1;
-          setBatchFrameState((current) => ({
-            ...current,
-            [quote.sceneIndex]: { status: "failed", message: getErrorMessage(error) },
-          }));
-        }
-      }
-    };
-    await Promise.all(Array.from({ length: Math.min(2, work.length) }, worker));
-    setIsPreparingAllFrames(false);
-    showToast(
-      failedCount > 0 ? "warning" : "success",
-      failedCount > 0
-        ? t("workflowConfig.aiShot.framesNeedAttention")
-        : t("workflowConfig.aiShot.framesReady")
-    );
-  };
-  const approveAllPackFrames = async () => {
-    const pending = packFrameStates.filter(
-      (state) => state.isCurrent && state.frame?.approvalStatus === "pending"
-    );
-    if (pending.length === 0) return;
-    setIsApprovingAllFrames(true);
-    const results = await Promise.allSettled(
-      pending.map((state) =>
-        reviewStudioFrameAsync({
-          id: state.frame!.id,
-          revision: state.frame!.revision,
-          approved: true,
-        })
-      )
-    );
-    const failed = results.filter((result) => result.status === "rejected").length;
-    setIsApprovingAllFrames(false);
-    showToast(
-      failed > 0 ? "warning" : "success",
-      failed > 0
-        ? t("workflowConfig.aiShot.framesPartlyApproved", { approved: pending.length - failed, failed })
-        : t("workflowConfig.aiShot.framesAllApproved")
-    );
   };
   const chooseReferenceFile = (sceneIndex: number) => {
     referenceUploadSceneIndex.current = sceneIndex;
@@ -1590,12 +1323,6 @@ export function AiShotOptions({
     // Replacing scenes the seller already set up is confirmed just below the list (see `pendingPack`).
     requestVideoPack(option.pack);
   };
-  const generatedOrReusableCount = Object.values(batchFrameState).filter((state) =>
-    ["reused", "generated"].includes(state.status)
-  ).length;
-  const failedFrameIndexes = Object.entries(batchFrameState)
-    .filter(([, state]) => state.status === "failed")
-    .map(([index]) => Number(index));
 
   const roleLabel = (role: string) => t(`workflowMedia.assetRoles.${role}`, { defaultValue: role });
 
@@ -1673,220 +1400,11 @@ export function AiShotOptions({
       {sharedBatchSettings && scenes.length > 0 && (
         <p className="text-muted-foreground bg-muted/30 rounded-lg border border-dashed p-3 text-xs leading-relaxed">
           {t("workflowConfig.aiShot.sharedStartFramesNote", {
-            image: isProductOnModelPack
+            image: scenes.some((scene) => scene.mode === "ai" && scene.templateCode === "lifestyle_in_use")
               ? t("workflowConfig.aiShot.sharedStartFramesLifestyle")
               : t("workflowConfig.aiShot.sharedStartFramesDefault"),
           })}
         </p>
-      )}
-      {isProductOnModelPack && !sharedBatchSettings && (
-        <>
-          <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label={t("workflowConfig.aiShot.sharedMockup")}>
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="bg-muted relative h-14 w-11 shrink-0 overflow-hidden rounded-md border">
-                {sharedMockup ? (
-                  <Image
-                    src={sharedMockup.previewUrl}
-                    alt=""
-                    fill
-                    sizes="44px"
-                    unoptimized
-                    className="object-contain"
-                  />
-                ) : (
-                  <ImageIcon aria-hidden="true" className="text-muted-foreground absolute inset-0 m-auto size-5" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold">{t("workflowConfig.aiShot.sharedMockup")}</p>
-                <p className="text-muted-foreground truncate text-xs" title={sharedMockup?.variantKey ?? undefined}>
-                  {sharedMockup
-                    ? `${roleLabel(sharedMockup.role)} · ${sharedMockup.variantKey || `${sharedMockup.width} × ${sharedMockup.height}`}`
-                    : t("workflowConfig.aiShot.chooseSharedMockupHint")}
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={disabled || areAssetsLoading || sharedMockupOptions.length === 0}
-                onClick={() => setIsSharedMockupPickerOpen(true)}
-              >
-                {sharedMockup ? t("workflowConfig.aiShot.change") : t("workflowConfig.aiShot.chooseMockup")}
-              </Button>
-            </div>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              {t("workflowConfig.aiShot.sharedMockupNote")}
-            </p>
-          </section>
-          <Dialog open={isSharedMockupPickerOpen} onOpenChange={setIsSharedMockupPickerOpen}>
-            <DialogContent className="flex max-h-[85dvh] max-w-3xl flex-col overflow-hidden p-0">
-              <DialogHeader className="border-b px-5 py-5 text-left">
-                <DialogTitle>{t("workflowConfig.aiShot.chooseSharedMockupTitle")}</DialogTitle>
-                <DialogDescription>
-                  {t("workflowConfig.aiShot.chooseSharedMockupDescription")}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="min-h-0 overflow-y-auto p-5">
-                {sharedMockupOptions.length === 0 ? (
-                  <div className="bg-muted/30 flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
-                    <p className="text-sm font-semibold">{t("workflowConfig.aiShot.noApprovedMockups")}</p>
-                    <p className="text-muted-foreground mt-1 max-w-sm text-xs leading-relaxed">
-                      {t("workflowConfig.aiShot.noApprovedMockupsDescription")}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {sharedMockupOptions.map((asset) => {
-                      const selected = asset.id === sharedMockupId;
-                      return (
-                        <button
-                          key={asset.id}
-                          type="button"
-                          aria-pressed={selected}
-                          disabled={disabled}
-                          onClick={() => chooseSharedMockup(asset.id)}
-                          className={`focus-visible:ring-ring group bg-muted relative aspect-[3/4] overflow-hidden rounded-xl border-2 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:hover:-translate-y-0.5 ${selected ? "border-primary ring-primary/25 ring-2" : "hover:border-foreground/25 border-transparent"}`}
-                        >
-                          <Image
-                            src={asset.previewUrl}
-                            alt={t("workflowConfig.aiShot.mockupAlt", { role: roleLabel(asset.role) })}
-                            fill
-                            sizes="(max-width: 640px) 45vw, 260px"
-                            unoptimized
-                            className="object-contain transition-transform duration-300 group-hover:scale-[1.025]"
-                          />
-                          <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-3 pt-10 pb-3 text-xs font-semibold text-white">
-                            {roleLabel(asset.role)}{asset.variantKey ? ` · ${asset.variantKey}` : ""}
-                          </span>
-                          {selected && (
-                            <span className="bg-primary text-primary-foreground absolute top-2.5 right-2.5 grid size-7 place-items-center rounded-full shadow-sm">
-                              <Check aria-hidden="true" className="size-4" />
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
-          <section className="bg-muted/20 space-y-3 rounded-lg border p-3" aria-label={t("workflowConfig.aiShot.startFramePreparation")}>
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold">{t("workflowConfig.aiShot.startFramePreparation")}</p>
-                <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
-                  {t("workflowConfig.aiShot.startFramePreparationDescription")}
-                </p>
-              </div>
-              <div className="text-muted-foreground shrink-0 text-xs tabular-nums" aria-live="polite">
-                {t("workflowConfig.aiShot.readyCount", { ready: generatedOrReusableCount })}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {packFrameStates.map(({ index, frame, isCurrent, approved: frameApproved }) => {
-                const progress = batchFrameState[index];
-                const label = frameApproved
-                  ? t("workflowConfig.aiShot.packFrameStatus.approved")
-                  : progress?.status === "generating"
-                    ? t("workflowConfig.aiShot.packFrameStatus.generating")
-                    : progress?.status === "failed"
-                      ? t("workflowConfig.aiShot.packFrameStatus.failed")
-                      : frame && isCurrent
-                        ? t("workflowConfig.aiShot.packFrameStatus.review")
-                        : t("workflowConfig.aiShot.packFrameStatus.missing");
-                return (
-                  <div key={index} className="bg-background overflow-hidden rounded-lg border">
-                    <div className="bg-muted relative aspect-[4/3]">
-                      {frame ? (
-                        <Image
-                          src={frame.previewUrl}
-                          alt={t("workflowConfig.aiShot.startFrameForSceneAlt", { scene: index + 1 })}
-                          fill
-                          sizes="(max-width: 640px) 45vw, 180px"
-                          unoptimized
-                          className="object-contain"
-                        />
-                      ) : progress?.status === "generating" || progress?.status === "quoting" ? (
-                        <span className="bg-muted-foreground/10 absolute inset-0 animate-pulse" />
-                      ) : null}
-                    </div>
-                    <div className="flex items-center justify-between gap-2 px-2.5 py-2">
-                      <span className="truncate text-xs font-medium">{t("workflowConfig.aiShot.sceneLabel", { scene: index + 1 })}</span>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${frameApproved ? "bg-emerald-100 text-emerald-800" : progress?.status === "failed" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
-                        {label}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                disabled={disabled || isPreparingAllFrames || !sharedMockup || !selectedAiCharacter}
-                onClick={() => void quotePackFrames()}
-              >
-                {isPreparingAllFrames ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : <Sparkles aria-hidden="true" />}
-                {t("workflowConfig.aiShot.generateAllStartFrames")}
-              </Button>
-              {failedFrameIndexes.length > 0 && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={disabled || isPreparingAllFrames}
-                  onClick={() => void quotePackFrames(failedFrameIndexes)}
-                >
-                  {t("workflowConfig.aiShot.retryFailed")}
-                </Button>
-              )}
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={disabled || isApprovingAllFrames || packFrameStates.every((state) => state.approved || !state.frame)}
-                onClick={() => void approveAllPackFrames()}
-              >
-                {isApprovingAllFrames ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : <BadgeCheck aria-hidden="true" />}
-                {t("workflowConfig.aiShot.approveAll")}
-              </Button>
-              {allPackFramesApproved && (
-                <span className="flex items-center gap-1 text-xs font-medium text-emerald-700">
-                  <Check aria-hidden="true" className="size-3.5" /> {t("workflowConfig.aiShot.readyForVideo")}
-                </span>
-              )}
-            </div>
-          </section>
-          <Dialog open={batchQuote !== null} onOpenChange={(open) => !open && setBatchQuote(null)}>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>{t("workflowConfig.aiShot.confirmGenerationTitle")}</DialogTitle>
-                <DialogDescription>
-                  {t("workflowConfig.aiShot.confirmGenerationDescription")}
-                </DialogDescription>
-              </DialogHeader>
-              {batchQuote && (() => {
-                const reusable = batchQuote.filter((quote) => quote.existingFrame).length;
-                const newFrames = batchQuote.length - reusable;
-                const cost = batchQuote.reduce((sum, quote) => sum + (quote.existingFrame ? 0 : quote.estimatedCostUsd), 0);
-                return (
-                  <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                    <div className="bg-muted/50 rounded-md border p-3"><p className="text-muted-foreground text-xs">{t("workflowConfig.aiShot.quoteNew")}</p><p className="mt-1 font-semibold">{newFrames}</p></div>
-                    <div className="bg-muted/50 rounded-md border p-3"><p className="text-muted-foreground text-xs">{t("workflowConfig.aiShot.quoteReuse")}</p><p className="mt-1 font-semibold">{reusable}</p></div>
-                    <div className="bg-muted/50 rounded-md border p-3"><p className="text-muted-foreground text-xs">{t("workflowConfig.aiShot.quoteEstimated")}</p><p className="mt-1 font-semibold">${cost.toFixed(2)}</p></div>
-                  </div>
-                );
-              })()}
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setBatchQuote(null)}>{t("workflowConfig.aiShot.cancel")}</Button>
-                <Button type="button" onClick={() => void confirmGenerateAllPackFrames()}>{t("workflowConfig.aiShot.generateFrames")}</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </>
       )}
       <section className="space-y-3" aria-label={t("workflowConfig.aiShot.sceneSetup")}>
         <input
@@ -2234,7 +1752,6 @@ export function AiShotOptions({
             run &&
               !sceneVideo &&
               otherAiScenesAreStored &&
-              (!isProductOnModelPack || allPackFramesApproved) &&
               ["waiting_for_review", "waiting_for_input", "failed"].includes(run.status) &&
               regeneratingSceneIndex === null
           );
@@ -2304,11 +1821,6 @@ export function AiShotOptions({
                   <span className="sr-only">{t("workflowConfig.aiShot.sceneSrPrefix")}</span>
                   {index + 1}
                 </h3>
-                {isProductOnModelPack && (
-                  <span className="bg-primary/10 text-primary inline-flex h-8 items-center rounded-md px-2.5 text-xs font-semibold">
-                    {t("workflowConfig.aiShot.aiVideo")}
-                  </span>
-                )}
                 {aiVideoLocked && scene.mode !== "standard" && (
                   <Badge
                     variant="outline"
@@ -2423,7 +1935,7 @@ export function AiShotOptions({
                     size="icon-sm"
                     aria-label={t("workflowConfig.aiShot.copySceneAria", { scene: index + 1 })}
                     title={t("workflowConfig.aiShot.copyScene")}
-                    disabled={disabled || isProductOnModelPack || !canDuplicate}
+                    disabled={disabled || !canDuplicate}
                     onClick={() => copyScene(index)}
                   >
                     <Copy aria-hidden="true" />
@@ -2433,7 +1945,7 @@ export function AiShotOptions({
                     variant="ghost"
                     size="icon-sm"
                     aria-label={t("workflowConfig.aiShot.removeSceneAria", { scene: index + 1 })}
-                    disabled={disabled || isProductOnModelPack || scenes.length <= 1}
+                    disabled={disabled || scenes.length <= 1}
                     onClick={() => removeScene(index)}
                     className="text-destructive hover:text-destructive"
                   >
@@ -2442,7 +1954,7 @@ export function AiShotOptions({
                 </div>
               </header>
               {/* How the scene is made, below the header so each choice can say what it does. */}
-              {!isProductOnModelPack && (() => {
+              {(() => {
                 const aiUnavailable = otherDuration + 4 > MAX_VIDEO_DURATION_SECONDS;
                 const chooseMode = (mode: "standard" | "ai") => {
                   if (mode === scene.mode) return;
@@ -2561,7 +2073,7 @@ export function AiShotOptions({
                   </div>
                 </div>
               )}
-              {scene.mode !== "standard" && !isProductOnModelPack && (
+              {scene.mode !== "standard" && (
                 <label className="flex flex-col gap-2 text-xs font-medium">
                   <span>{t("workflowConfig.aiShot.aiTemplate")}</span>
                   <Select
@@ -2635,8 +2147,8 @@ export function AiShotOptions({
                           subtemplateCode: nextSubtemplate.code,
                           durationSeconds: scene.durationSeconds,
                           mockupId: scene.mockupId,
-                          rightsConfirmed: isProductOnModelPack ? true : scene.rightsConfirmed,
-                          startFrameMode: isProductOnModelPack ? "studio" : scene.startFrameMode,
+                          rightsConfirmed: scene.rightsConfirmed,
+                          startFrameMode: scene.startFrameMode,
                           studioLayout: scene.studioLayout,
                           studioFrameId: null,
                           studioPrompt:
@@ -2665,7 +2177,7 @@ export function AiShotOptions({
                   )}
                 </div>
               )}
-              {!isProductOnModelPack && !sharedBatchSettings && (
+              {!sharedBatchSettings && (
                 <section
                   className="space-y-3 rounded-md border p-3"
                   aria-label={t("workflowConfig.aiShot.startFrameAria", { scene: index + 1 })}
@@ -3248,17 +2760,6 @@ export function AiShotOptions({
                 </Dialog>
                 </section>
               )}
-              {isProductOnModelPack && editableAiFrame && (
-                <div className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
-                  <div>
-                    <p className="text-sm font-semibold">{t("workflowConfig.aiShot.startFrame")}</p>
-                    <p className="text-muted-foreground text-xs">{scene.aiStartFrameCrop ? t("workflowConfig.aiShot.cropApplied") : t("workflowConfig.aiShot.approvedKeyframe")}</p>
-                  </div>
-                  <Button type="button" variant="ghost" size="sm" aria-label={t("workflowConfig.aiShot.editStartFrame")} className="text-muted-foreground hover:text-foreground h-9 gap-1.5 px-2.5 text-xs shadow-none hover:translate-y-0" disabled={disabled} onClick={() => setCropEditor({ sceneIndex: index, asset: editableAiFrame })}>
-                    <Pencil aria-hidden="true" className="size-3.5" /> {t("workflowConfig.aiShot.edit")}
-                  </Button>
-                </div>
-              )}
               {scene.mode !== "standard" && (
                 <>
                   {!sharedBatchSettings && (
@@ -3629,13 +3130,19 @@ export function AiShotOptions({
         <section aria-label={t("workflowConfig.aiShot.fullVideoEditing")} className="space-y-2 pt-1">
           <p className="text-sm font-semibold">{t("workflowConfig.aiShot.fullVideo")}</p>
           <VideoTimelineEditor
-            disabled={disabled}
+            disabled={disabled || isApplyingEdit}
             config={node.data.config as GenerateVideoConfig}
             assets={allAssets}
             sceneVideos={sceneVideos}
             onSave={(next) => {
               useWorkflowStore.getState().updateNodeConfig(nodeId, next);
               onChange(next.aiScenes ?? [], next.durationSeconds, next.aiGlobalInstructions ?? null);
+              // The joined video already waits at Review Video: the edit goes to it too, or approving it would
+              // render and export the video as it was before the edit.
+              if (canApplyEdit)
+                void applyEdit(next).then((applied) => {
+                  if (applied) showToast("success", t("workflowMedia.videoReview.editApplied"));
+                });
             }}
           />
         </section>

@@ -47,6 +47,7 @@ import {
 import { cleanAttributes, isCompleteAttributes } from "@/helpers/model-attributes";
 import { showToast } from "@/helpers/toast";
 import { useSaveModelPhoto } from "@/hooks/mutations/use-model-photo-mutations";
+import { usePrintWithoutAi } from "@/hooks/queries/use-print-without-ai";
 import { productTypes } from "@/schemas/batches";
 import { type MockupTemplateFormValues, mockupTemplateSchema } from "@/schemas/mockup-template";
 import type {
@@ -77,9 +78,10 @@ type ModelPhotoFormDialogProps = {
 };
 
 /**
- * Creates or changes a model photo: a person wearing a plain, light garment. The garment is found automatically
- * (the seller can select it by hand instead), so only it is recolored and printed on. Designs are placed
- * automatically by measuring the shirt, or in a print area the seller marks.
+ * Creates or changes a model photo: a person wearing a plain, light garment. When mock-ups can be put on it without
+ * AI, the garment is found automatically (the seller can select it by hand instead), so only it is recolored and
+ * printed on, and designs are placed by measuring the shirt or in a print area the seller marks. Otherwise the photo
+ * and who is in it are all there is to fill in.
  */
 export const ModelPhotoFormDialog = ({
   open,
@@ -88,6 +90,7 @@ export const ModelPhotoFormDialog = ({
   onClose,
 }: ModelPhotoFormDialogProps) => {
   const { t } = useTranslation("common");
+  const printWithoutAi = usePrintWithoutAi(scope);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoObjectUrl, setPhotoObjectUrl] = useState<string | null>(null);
   const [photoSize, setPhotoSize] = useState<{ width: number; height: number } | null>(null);
@@ -137,8 +140,9 @@ export const ModelPhotoFormDialog = ({
       height: area?.height ?? 100,
     });
     setPhotoFile(null);
-    setGarmentMode(photo ? "saved" : "auto");
-    setFromSaved(photo !== null);
+    // A photo saved while printing without AI was off has no garment yet, so it is found on it.
+    setGarmentMode(photo?.garmentMaskUrl ? "saved" : "auto");
+    setFromSaved(Boolean(photo?.garmentMaskUrl));
     setSelection(null);
     setSelectionError(null);
     setFileError(null);
@@ -181,7 +185,7 @@ export const ModelPhotoFormDialog = ({
   // The server finds the person on the photo, so a click on a white shirt does not spill onto a white wall.
   useEffect(() => {
     setPerson(null);
-    if (!open || !shownPhoto) {
+    if (!open || !shownPhoto || !printWithoutAi) {
       setPersonPending(false);
       return;
     }
@@ -207,7 +211,7 @@ export const ModelPhotoFormDialog = ({
       }
     })();
     return () => controller.abort();
-  }, [open, shownPhoto, photoFile, savedPhotoUrl, scope]);
+  }, [open, shownPhoto, photoFile, savedPhotoUrl, scope, printWithoutAi]);
 
   // Finding it automatically needs the server to have found it on the preview; otherwise it is selected by hand.
   const garmentFound = Boolean(person?.garmentDataUrl);
@@ -277,7 +281,7 @@ export const ModelPhotoFormDialog = ({
   const pending = isSaving || isEncoding;
   // Selecting by hand from the saved garment and changing nothing keeps the saved garment.
   const keepGarment = mode === "saved" || (mode === "manual" && fromSaved && !selection);
-  const findGarment = mode === "auto";
+  const findGarment = printWithoutAi && mode === "auto";
 
   // Starts the garment over from the one found automatically, which the server finds again on saving.
   const startFromFoundGarment = () => {
@@ -302,6 +306,7 @@ export const ModelPhotoFormDialog = ({
       return;
     }
     if (
+      printWithoutAi &&
       !keepGarment &&
       !findGarment &&
       (!selection || selection.coverage < MIN_SELECTION_COVERAGE)
@@ -314,13 +319,13 @@ export const ModelPhotoFormDialog = ({
       return;
     }
     // Corners only matter when the design goes in a print area marked by hand, and only when it is not a rectangle.
-    const printQuad = !autoPlacement && quad && !isRectangleQuad(quad) ? quad : null;
+    const printQuad = printWithoutAi && !autoPlacement && quad && !isRectangleQuad(quad) ? quad : null;
     if (printQuad && shownSize && !isValidQuad(printQuad, shownSize.width, shownSize.height)) {
       showToast("warning", t("mockups.modelPhotoForm.placementError"));
       return;
     }
     let garmentSelection: Blob | null = null;
-    if (mode === "manual" && selection) {
+    if (printWithoutAi && mode === "manual" && selection) {
       try {
         setIsEncoding(true);
         garmentSelection = await selectionToPng(selection);
@@ -343,7 +348,7 @@ export const ModelPhotoFormDialog = ({
         photo: photoFile,
         garmentSelection,
         findGarment,
-        autoPlacement,
+        autoPlacement: printWithoutAi ? autoPlacement : true,
         printQuad,
         attributes: cleanAttributes(attributes),
       },
@@ -357,7 +362,7 @@ export const ModelPhotoFormDialog = ({
         <DialogHeader className="text-left">
           <DialogTitle>{creating ? t("mockups.modelPhotoForm.titleNew") : t("mockups.modelPhotoForm.titleEdit", { name: photo?.name ?? "" })}</DialogTitle>
           <DialogDescription>
-            {t("mockups.modelPhotoForm.description")}
+            {t(printWithoutAi ? "mockups.modelPhotoForm.description" : "mockups.modelPhotoForm.descriptionAi")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
@@ -432,7 +437,7 @@ export const ModelPhotoFormDialog = ({
                   {t("mockups.modelPhotoForm.photoTooSmall", { width: shownSize.width, height: shownSize.height, minSide: MIN_SHARP_PHOTO_SIDE })}
                 </p>
               )}
-              {shownPhoto && (
+              {printWithoutAi && shownPhoto && (
                 <section className="space-y-2" aria-labelledby="model-photo-garment">
                   <div>
                     <p id="model-photo-garment" className="text-ink-900 text-sm font-medium">
@@ -505,7 +510,7 @@ export const ModelPhotoFormDialog = ({
                   )}
                 </section>
               )}
-              {shownPhoto && shownSize && (
+              {printWithoutAi && shownPhoto && shownSize && (
                 <section className="space-y-3" aria-labelledby="model-photo-placement">
                   <p id="model-photo-placement" className="text-ink-900 text-sm font-medium">
                     {t("mockups.modelPhotoForm.placementTitle")}

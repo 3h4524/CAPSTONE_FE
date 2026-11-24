@@ -332,6 +332,10 @@ export const VideoSceneQualityReview = ({ runId, video, showObservationForm = fa
   // nothing for the seller to do about it: only a scene that failed, was left unscored or is unclear holds the video back.
   const hasIncompleteScenes = sceneStates.some(({ status }) => !["completed", "skipped"].includes(status));
   const hasSkippedScenes = sceneStates.some(({ status }) => status === "skipped");
+  // Every scene skipped means automatic scoring (VBench, OCR) is off: there are no scores to show and nothing to run again, so the
+  // scene list and its evaluation bar are left out. The observation form still needs the list to choose its scene.
+  const scoringIsOff = sceneStates.length > 0 && sceneStates.every(({ status }) => status === "skipped");
+  const showSceneEvaluations = !scoringIsOff || showObservationForm;
   const etsyChecks = etsy?.checks.filter((check) => !HIDDEN_ETSY_CHECKS.has(check.key)) ?? [];
   const etsyToReview = etsyChecks.filter((check) => ["warning", "pass_with_warning", "uncertain", "fail", "failed"].includes(check.status)).length;
   const etsyPassed = etsyChecks.filter((check) => statusTone(check.status) === "pass").length;
@@ -455,7 +459,7 @@ export const VideoSceneQualityReview = ({ runId, video, showObservationForm = fa
 
       {qualitySummary}
 
-      <div className="space-y-2">
+      {showSceneEvaluations && <div className="space-y-2">
         <div><h5 className="text-sm font-semibold">{t("workflowMedia.quality.sceneEvaluations")}</h5><p className="text-muted-foreground mt-1 text-xs">{t("workflowMedia.quality.sceneEvaluationsDescription")}</p></div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" aria-label={t("workflowMedia.quality.chooseScene")}>
           {sceneStates.map(({ scene, status, metrics }) => {
@@ -465,9 +469,9 @@ export const VideoSceneQualityReview = ({ runId, video, showObservationForm = fa
             return <button key={scene.sceneOrder} type="button" aria-pressed={selected} onClick={() => setSceneOrder(scene.sceneOrder)} className={`focus-visible:ring-ring flex min-h-20 items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none ${selected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}><span className="min-w-0"><span className="block text-sm font-semibold">{t("workflowMedia.quality.sceneTitle", { scene: scene.sceneOrder + 1 })}</span><span className="text-muted-foreground block truncate text-xs">{scene.role ? t(`workflowMedia.assetRoles.${scene.role}`, { defaultValue: scene.role }) : t("workflowMedia.quality.aiScene")}</span><span className="mt-1 block"><StatusPill label={sceneStatusLabel(status)} tone={tone} /></span></span>{score !== null && <span className="shrink-0 text-right"><span className="block text-lg font-semibold tabular-nums">{Math.round(score * 100)}<span className="text-muted-foreground text-xs font-normal">/100</span></span><span className="text-muted-foreground block text-[11px]">{t("workflowMedia.quality.vbenchGuide")}</span></span>}</button>;
           })}
         </div>
-      </div>
+      </div>}
 
-      <div className="bg-muted/35 flex flex-wrap items-center justify-between gap-3 rounded-lg p-3">
+      {!scoringIsOff && <div className="bg-muted/35 flex flex-wrap items-center justify-between gap-3 rounded-lg p-3">
         <div className="text-xs"><span className="text-muted-foreground">{t("workflowMedia.quality.sceneEvaluation", { scene: selectedScene.sceneOrder + 1 })}</span><span className="font-semibold">{sceneStatusLabel(quality.data?.evaluation?.status ?? "not_applicable")}</span>{quality.data?.evaluation?.detail && <p className="text-muted-foreground mt-1 max-w-xl leading-relaxed">{quality.data.evaluation.detail}</p>}</div>
         <div className="flex flex-wrap items-center gap-2">
         {quality.data?.evaluation && Object.keys(quality.data.evaluation.metrics).length > 0 && <SceneQualityResult key={selectedScene.sceneOrder} metrics={quality.data.evaluation.metrics} sceneNumber={selectedScene.sceneOrder + 1} />}
@@ -475,7 +479,7 @@ export const VideoSceneQualityReview = ({ runId, video, showObservationForm = fa
           <RefreshCw className={evaluation.isPending ? "animate-spin" : ""} aria-hidden="true" /> {evaluation.isPending ? t("workflowMedia.quality.queueing") : t("workflowMedia.quality.runAgain")}
         </Button>
         </div>
-      </div>
+      </div>}
 
       {showObservationForm && <>
       <div className="grid gap-3 sm:grid-cols-2">

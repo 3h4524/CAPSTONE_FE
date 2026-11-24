@@ -61,15 +61,23 @@ export type GroupVideo = {
 };
 
 /**
- * The videos of the batch video run open on the canvas, one per design that got a run, with each run's latest
- * rendered video. Shared by the Generate Video and Review Video nodes and panels, so they agree and fetch each list
- * once. Empty without such a run (or before its videos start).
+ * The designs of the batch video run open on the canvas that got a run, without fetching any of their videos: for a
+ * view that loads one design's video at a time. Empty without such a run (or before its videos start).
  */
-export const useGroupVideos = (): { group: RunGroup | null; videos: GroupVideo[] } => {
+export const useVideoGroupTargets = (): { group: RunGroup | null; targets: RunGroupTarget[] } => {
   const { data } = useRunGroup(useRunGroupId());
   const workflowId = useWorkflowStore((state) => state.workflowId);
   const group = data && data.workflowId === workflowId ? data : null;
-  const targets = group?.targets.filter((target) => target.runId) ?? [];
+  return { group, targets: group?.targets.filter((target) => target.runId) ?? [] };
+};
+
+/**
+ * The videos of the batch video run open on the canvas, one per design that got a run, with each run's latest
+ * rendered video. Shared by the Review Video node and panels, so they agree and fetch each list once. Empty without
+ * such a run (or before its videos start).
+ */
+export const useGroupVideos = (): { group: RunGroup | null; videos: GroupVideo[] } => {
+  const { group, targets } = useVideoGroupTargets();
   const made = targets.filter((target) => target.generateVideo?.status === "succeeded" || WITH_VIDEO.has(videoStatusOf(target)));
   const lists = useQueries({
     queries: made.map((target) => ({

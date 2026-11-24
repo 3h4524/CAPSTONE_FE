@@ -1,10 +1,11 @@
 import { BATCH_RUN_NODE_TYPES, PUBLISH_NODE_TYPES, RUNNABLE_NODE_TYPES, VIDEO_RUN_NODE_TYPES } from "@/constants/workflow";
 import { backgroundKeys, backgroundsFor, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
-import { readString, readStringArray, readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
+import { readString, readStringArray, readTemplateBackgrounds, readTemplateColors, readTemplatePlacements } from "@/helpers/workflow-config";
 import { i18n } from "@/i18n/client";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type { MockupState, RunStep } from "@/stores/workflow-run";
 import type { BatchJobDetail, ImageProvider } from "@/types/batch-jobs";
+import type { GenerateAllMockupsResult, TemplatePlacements } from "@/types/mockup-templates";
 import type { WorkflowEdge, WorkflowIssue, WorkflowNode, WorkflowNodeConfig, WorkflowNodeStatus, WorkflowNodeType } from "@/types/workflow";
 
 export const ACTIVE_JOB_STATUSES = ["queued", "running", "paused"];
@@ -18,6 +19,8 @@ export type MockupSelection = {
   garmentColors: string[];
   templateColors: Record<string, string[]>;
   templateBackgrounds: TemplateBackgrounds;
+  /** Where this workflow puts the design on a template; only the ones moved from the template's own. */
+  templatePlacements?: TemplatePlacements;
 };
 
 export type RunPlan = {
@@ -104,7 +107,7 @@ export const supportsBatchVideos = (nodes: WorkflowNode[]) => {
   const [video] = findByType(nodes, "generate-video");
   if (!video) return false;
   const config = video.data.config;
-  if (readString(config.template) === "product_on_model_pack") return false;
+  // The Product on Model pack is an ordinary scene list too: its scenes with a person use each design's model photo.
   const scenes = Array.isArray(config.aiScenes) ? (config.aiScenes as { mode?: unknown }[]) : [];
   // An AI video maps to every design through its scene list; the legacy single-shot settings name one product's image.
   return (readString(config.mode) || "standard") === "ai_shot"
@@ -307,7 +310,16 @@ export const extractMockupSelection = (config: WorkflowNodeConfig): MockupSelect
       .map(([id, byColor]) => [id, backgroundsFor(byColor, backgroundKeys(templateColors[id] ?? []))] as const)
       .filter(([, byColor]) => Object.keys(byColor).length > 0)
   );
-  return { templateIds, garmentColors: [], templateColors, templateBackgrounds };
+  const templatePlacements = Object.fromEntries(
+    Object.entries(readTemplatePlacements(config.templatePlacements)).filter(([id]) => templateIds.includes(id))
+  );
+  return {
+    templateIds,
+    garmentColors: [],
+    templateColors,
+    templateBackgrounds,
+    ...(Object.keys(templatePlacements).length > 0 ? { templatePlacements } : {}),
+  };
 };
 
 // A template is only ever used for products of its own type, and the backend refuses one that no product of
@@ -325,7 +337,13 @@ export const narrowMockupSelection = (
     return type === undefined || type in productTypes;
   });
   const kept = <T>(byTemplate: Record<string, T>) => Object.fromEntries(Object.entries(byTemplate).filter(([id]) => templateIds.includes(id)));
-  return { ...selection, templateIds, templateColors: kept(selection.templateColors), templateBackgrounds: kept(selection.templateBackgrounds) };
+  return {
+    ...selection,
+    templateIds,
+    templateColors: kept(selection.templateColors),
+    templateBackgrounds: kept(selection.templateBackgrounds),
+    ...(selection.templatePlacements ? { templatePlacements: kept(selection.templatePlacements) } : {}),
+  };
 };
 
 export type ApprovalCounts = { pending: number; approved: number; rejected: number };
@@ -391,3 +409,6 @@ export const toCanvasStatus = (status: string): WorkflowNodeStatus => {
 
 export const getJobImageUrls = (job: BatchJobDetail | null) =>
   job?.products.flatMap((product) => product.images.map((image) => image.imageUrl)) ?? [];
+
+export const getMockupImageUrls = (result: GenerateAllMockupsResult | null) =>
+  result?.images.map((image) => image.mockupImageUrl) ?? [];

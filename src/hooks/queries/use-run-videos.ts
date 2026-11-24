@@ -16,7 +16,10 @@ export const useRunVideos = (runId: string | null) => {
     refetchInterval: query => {
       const videos = query.state.data;
       const allDone = Boolean(videos?.length) && videos!.every(video => FINISHED_VIDEO_STATUSES.includes(video.status));
-      return working && !allDone ? ACTIVE_RUN_POLL_MS : false;
+      // A video whose file is being made in the background (it was approved, and a step needs the file) is watched until it has it,
+      // even while the run waits for the seller in a batch.
+      const rendering = Boolean(videos?.some(video => video.status === "rendering"));
+      return (working && !allDone) || rendering ? ACTIVE_RUN_POLL_MS : false;
     },
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: "always",

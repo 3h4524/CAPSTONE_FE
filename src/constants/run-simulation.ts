@@ -11,9 +11,11 @@ export const SIMULATION_TICK_MS = 80;
 
 export const SIMULATION_CHUNK_SIZE = 9;
 
-export const SIMULATION_RESET_MS = 6000;
-
 export const SIMULATION_PRODUCT_ID = "simulation";
+
+export const SIMULATION_IMAGE_COUNT = 9;
+
+export const SIMULATION_IMAGE_HUES = [28, 200, 330, 150, 45, 270, 180, 15, 90];
 
 export const SIMULATION_LISTING = {
   title: "Watercolor Cat Mug 11oz, Cute Tabby Coffee Cup, Gift for Cat Lovers",

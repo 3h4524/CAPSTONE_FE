@@ -6,6 +6,7 @@ import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { NodeControl } from "@/components/workflows/nodes/node-control";
+import { videoPosterUrl } from "@/helpers/video-poster";
 import {
   generateProgressOf,
   generateStatusOf,
@@ -191,7 +192,7 @@ const VideoTile = ({
     ASPECT[target.config?.outputFormat ?? video?.outputFormat ?? "portrait"] ?? ASPECT.portrait;
   const stopped = STOPPED.has(status);
   const made = WITH_VIDEO.has(status);
-  const thumbnail = made ? video?.thumbnailUrl : null;
+  const thumbnail = made ? videoPosterUrl(video) : null;
   const progress = Math.max(0, Math.min(100, Math.round(generateProgressOf(target))));
   const label = made
     ? status === "completed"

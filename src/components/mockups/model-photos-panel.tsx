@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Plus, Sparkles, UserRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -19,6 +19,7 @@ import { ModelPhotoFormDialog } from "@/components/mockups/model-photo-form-dial
 import { Button } from "@/components/ui/button";
 import { useDeleteModelPhoto } from "@/hooks/mutations/use-model-photo-mutations";
 import { useModelPhotos } from "@/hooks/queries/use-model-photos";
+import { usePrintWithoutAi } from "@/hooks/queries/use-print-without-ai";
 import { usePopupStore } from "@/stores/popup";
 import type { MockupTemplate, ModelPhotoFilter } from "@/types/mockup-templates";
 import { cn } from "@/utils/cn";
@@ -29,6 +30,7 @@ import { cn } from "@/utils/cn";
  */
 export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
   const { t } = useTranslation("common");
+  const printWithoutAi = usePrintWithoutAi(scope);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<MockupTemplate | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -45,11 +47,38 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
     isError,
     refetch,
   } = useModelPhotos(scope, undefined, true, filter);
-  const photos = allPhotos && filterBySource(allPhotos, source);
+  // The photo just made comes first, whatever the name order or the filters, so it can be told from the others. It may
+  // not be in the list yet while the list is being read again.
+  const [justMade, setJustMade] = useState<MockupTemplate | null>(null);
+  const justMadeId = justMade?.id ?? null;
+  const justMadeCard = useRef<HTMLDivElement>(null);
+  const listed = allPhotos && filterBySource(allPhotos, source);
+  const newest = justMade && (allPhotos?.find((photo) => photo.id === justMade.id) ?? justMade);
+  const photos = listed && newest ? [newest, ...listed.filter((photo) => photo.id !== newest.id)] : listed;
   const { mutate: deletePhoto, isPending: isDeleting } = useDeleteModelPhoto(scope);
   const openPopup = usePopupStore((state) => state.openPopup);
   const canChange = (photo: MockupTemplate) =>
     scope === "admin" ? photo.isSystemTemplate : photo.isMine;
+
+  useEffect(() => {
+    if (!justMadeId) return;
+    // Once the dialog has closed and handed the focus back, which would scroll away from the card.
+    const timer = window.setTimeout(() => {
+      const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      justMadeCard.current?.scrollIntoView?.({ behavior: still ? "auto" : "smooth", block: "center" });
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [justMadeId]);
+
+  const changeFilter = (next: ModelPhotoFilter) => {
+    setJustMade(null);
+    setFilter(next);
+  };
+
+  const changeSource = (next: PhotoSource | null) => {
+    setJustMade(null);
+    setSource(next);
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -66,7 +95,10 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
       title: t("mockups.modelPhotosPanel.deleteTitle", { name: photo.name }),
       description: t("mockups.modelPhotosPanel.deleteDescription"),
       positiveLabel: t("mockups.delete"),
-      onPositive: () => deletePhoto(photo.id),
+      onPositive: () => {
+        if (photo.id === justMadeId) setJustMade(null);
+        deletePhoto(photo.id);
+      },
     });
 
   return (
@@ -75,7 +107,7 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
         <p className="text-muted-foreground max-w-2xl text-sm max-md:hidden">
           {scope === "admin"
             ? t("mockups.modelPhotosPanel.adminIntro")
-            : t("mockups.modelPhotosPanel.sellerIntro")}
+            : t(printWithoutAi ? "mockups.modelPhotosPanel.sellerIntro" : "mockups.modelPhotosPanel.sellerIntroAi")}
         </p>
         <div className="flex flex-wrap gap-2 max-md:grid max-md:w-full max-md:grid-cols-2">
           <Button
@@ -104,8 +136,8 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
         <ChevronDown className={cn("text-ink-400 size-4 transition-transform", areFiltersOpen && "rotate-180")} aria-hidden="true" />
       </button>
       <div className={cn("flex flex-wrap gap-x-6 gap-y-3", !areFiltersOpen && "max-md:hidden")}>
-        {scope === "seller" && <PhotoSourceFilter value={source} onChange={setSource} />}
-        <ModelPhotoFilterBar value={filter} onChange={setFilter} />
+        {scope === "seller" && <PhotoSourceFilter value={source} onChange={changeSource} />}
+        <ModelPhotoFilterBar value={filter} onChange={changeFilter} />
       </div>
       {isPending ? (
         <SectionLoading label={t("mockups.modelPhotosPanel.loadingPhotos")} />
@@ -147,20 +179,35 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
         </div>
       ) : (
         <MockupCardGrid
-          key={JSON.stringify({ filter, source })}
+          key={JSON.stringify({ filter, source, justMadeId })}
           items={photos}
           pagerLabel={t("mockups.cardGrid.modelPhotosLabel")}
           className={cn(scope === "seller" && "xl:grid-cols-4")}
-          renderItem={(photo) => (
-            <MockupTemplateListItem
-              key={photo.id}
-              template={photo}
-              busy={isDeleting}
-              editable={canChange(photo)}
-              onEdit={openEdit}
-              onDelete={askDelete}
-            />
-          )}
+          renderItem={(photo) => {
+            const card = (
+              <MockupTemplateListItem
+                key={photo.id}
+                template={photo}
+                busy={isDeleting}
+                editable={canChange(photo)}
+                onEdit={openEdit}
+                onDelete={askDelete}
+              />
+            );
+            if (photo.id !== justMadeId) return card;
+            return (
+              <div
+                key={photo.id}
+                ref={justMadeCard}
+                className="ring-primary ring-offset-background relative grid rounded-xl ring-2 ring-offset-2"
+              >
+                <span className="bg-primary text-primary-foreground absolute -top-2.5 left-1/2 z-10 -translate-x-1/2 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap shadow-sm">
+                  {t("mockups.modelPhotosPanel.justMade")}
+                </span>
+                {card}
+              </div>
+            );
+          }}
         />
       )}
       <ModelPhotoFormDialog
@@ -175,6 +222,7 @@ export const ModelPhotosPanel = ({ scope }: { scope: ModelPhotoScope }) => {
           scope={scope}
           initial={filter}
           onClose={() => setGenerating(false)}
+          onGenerated={setJustMade}
         />
       )}
     </div>

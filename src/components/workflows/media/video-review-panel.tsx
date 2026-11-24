@@ -19,23 +19,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ComposedVideoPreview } from "@/components/workflows/media/composed-video-preview";
 import { PreloadedVideo } from "@/components/workflows/media/preloaded-video";
 import { VideoPreviewFrame } from "@/components/workflows/media/video-preview-frame";
 import { VideoSceneQualityReview } from "@/components/workflows/media/video-scene-quality-review";
 import { VideoTimelineEditor } from "@/components/workflows/media/video-timeline-editor";
-import { confirmAiShot } from "@/helpers/confirm-ai-shot";
-import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
-import { readString, readStringArray } from "@/helpers/workflow-config";
 import { useMediaDownload } from "@/hooks/mutations/use-media-download";
-import { usePreviewVideoStoryboard } from "@/hooks/mutations/use-preview-video-storyboard";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
 import { useRunSceneVideos } from "@/hooks/queries/use-run-scene-videos";
 import { useRunVideos } from "@/hooks/queries/use-run-videos";
 import { useWorkflowVideoRuns } from "@/hooks/queries/use-workflow-video-runs";
+import { useApplyVideoEdit } from "@/hooks/use-apply-video-edit";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
-import { generateVideoConfigSchema } from "@/schemas/workflow";
 import { useWorkflowStore } from "@/stores/workflow";
 import type { GenerateVideoConfig, VideoRunSummary } from "@/types/video-workflow";
 
@@ -149,7 +146,7 @@ export const VideoReviewPanel = () => {
   const { data: videos, isPending } = useRunVideos(runId);
   const { data: sceneVideos = [] } = useRunSceneVideos(runId);
   const { mutate: action, isPending: isActing } = useWorkflowRunAction();
-  const { mutateAsync: previewStoryboard, isPending: isPreviewing } = usePreviewVideoStoryboard();
+  const { apply: applyEdit, isApplying: isPreviewing } = useApplyVideoEdit();
   const { mutate: download, isPending: isDownloading } = useMediaDownload();
   const [viewedId, setViewedId] = useState<string | null>(null);
   const [editedTimelineConfigs, setEditedTimelineConfigs] = useState<
@@ -183,9 +180,6 @@ export const VideoReviewPanel = () => {
   const generate = useWorkflowStore((state) =>
     state.nodes.find((n) => n.data.type === "generate-video")
   );
-  const mockup = useWorkflowStore((state) =>
-    state.nodes.find((n) => n.data.type === "apply-mockup")
-  );
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
   const { data: editAssets = [] } = useMockupAssets(run?.productId ?? "");
   const timelineConfig =
@@ -193,37 +187,25 @@ export const VideoReviewPanel = () => {
     video?.config ??
     (generate?.data.config as GenerateVideoConfig | undefined);
   const candidateId = run?.nodes.find((n) => n.nodeType === "review-video")?.output.videoId;
+  // A video can be decided on once its scenes are all there: it need not have a file yet, the file is made after it is approved.
   const canReview =
     run?.status === "waiting_for_review" &&
     video?.id === candidateId &&
-    video?.status === "completed";
+    (video?.status === "completed" || video?.status === "ready" || video?.status === "rendering");
+  // A video with no file yet is not rendered again: the edit only plans it afresh, reusing the AI clips already stored.
+  const rerenderLabel = t(
+    video && video.status !== "completed" ? "workflowMedia.videoReview.applyChanges" : "workflowMedia.videoReview.rerender"
+  );
   const rerender = async () => {
-    if (!run || !timelineConfig) return;
-    const parsed = generateVideoConfigSchema.safeParse(timelineConfig);
-    if (!parsed.success) {
-      showToast("warning", parsed.error.issues[0]?.message ?? t("workflowMedia.runStatus.checkVideoSettings"));
-      return;
-    }
-    try {
-      const storyboard = await previewStoryboard({
-        productId: run.productId,
-        config: parsed.data,
-        mockupIds: video?.mockupIds ?? readStringArray(mockup?.data.config.mockupIds),
-        artworkGroupKey: video?.artworkGroupKey ?? readString(mockup?.data.config.artworkGroupKey),
-      });
-      const token = await confirmAiShot(run.id, parsed.data);
-      if (token === null) return;
-      action({
-        runId: run.id,
-        expectedRevision: run.revision,
-        action: "rerender",
-        config: parsed.data,
-        expectedStoryboardFingerprint: storyboard.fingerprint,
-        aiShotQuoteToken: token,
-      });
-    } catch (error) {
-      showToast("error", getErrorMessage(error));
-    }
+    if (timelineConfig) await applyEdit(timelineConfig);
+  };
+  // Saving the full-video edit applies it to the video waiting here at once: approving the version shown before
+  // would render (and export) it without the edit.
+  const saveEdit = async (next: GenerateVideoConfig) => {
+    if (video) setEditedTimelineConfigs((current) => ({ ...current, [video.id]: next }));
+    if (generate) updateNodeConfig(generate.id, next);
+    if (!canReview) return;
+    if (await applyEdit(next)) showToast("success", t("workflowMedia.videoReview.editApplied"));
   };
   if (!runId)
     return (
@@ -310,6 +292,8 @@ export const VideoReviewPanel = () => {
               label={t("workflowMedia.videoReview.finalVideoVersion", { version: video.version })}
             />
           </VideoPreviewFrame>
+        ) : video.preview ? (
+          <ComposedVideoPreview video={video} />
         ) : (
           <div className="bg-muted/35 text-muted-foreground flex min-h-40 flex-col items-center justify-center gap-2 rounded-lg px-4 text-center">
             <Film className="size-5" aria-hidden="true" />
@@ -347,7 +331,7 @@ export const VideoReviewPanel = () => {
             size="icon-sm"
             aria-label={t("workflowMedia.videoReview.approveVideo")}
             title={t("workflowMedia.videoReview.approveVideo")}
-            disabled={!canReview || isActing || video.approvalStatus === "approved"}
+            disabled={!canReview || isActing || isPreviewing || video.approvalStatus === "approved"}
             onClick={() =>
               run &&
               action({
@@ -367,7 +351,7 @@ export const VideoReviewPanel = () => {
             variant="outline"
             aria-label={t("workflowMedia.videoReview.rejectVideo")}
             title={t("workflowMedia.videoReview.rejectVideo")}
-            disabled={!canReview || isActing || video.approvalStatus === "rejected"}
+            disabled={!canReview || isActing || isPreviewing || video.approvalStatus === "rejected"}
             onClick={() =>
               run &&
               action({
@@ -401,8 +385,8 @@ export const VideoReviewPanel = () => {
             type="button"
             size="icon-sm"
             variant="outline"
-            aria-label={isPreviewing ? t("workflowMedia.videoReview.checkingStoryboard") : t("workflowMedia.videoReview.rerender")}
-            title={isPreviewing ? t("workflowMedia.videoReview.checkingStoryboardDots") : t("workflowMedia.videoReview.rerender")}
+            aria-label={isPreviewing ? t("workflowMedia.videoReview.checkingStoryboard") : rerenderLabel}
+            title={isPreviewing ? t("workflowMedia.videoReview.checkingStoryboardDots") : rerenderLabel}
             disabled={!canReview || isActing || isPreviewing}
             onClick={rerender}
           >
@@ -413,13 +397,8 @@ export const VideoReviewPanel = () => {
               config={timelineConfig}
               assets={editAssets}
               sceneVideos={sceneVideos}
-              disabled={isActing}
-              onSave={(next) => {
-                if (video) {
-                  setEditedTimelineConfigs((current) => ({ ...current, [video.id]: next }));
-                }
-                updateNodeConfig(generate.id, next);
-              }}
+              disabled={isActing || isPreviewing}
+              onSave={(next) => void saveEdit(next)}
             />
           )}
         </div>

@@ -4,22 +4,29 @@ import { useCallback } from "react";
 
 import {
   SIMULATION_CHUNK_SIZE,
+  SIMULATION_IMAGE_COUNT,
+  SIMULATION_IMAGE_HUES,
   SIMULATION_LISTING,
   SIMULATION_PRODUCT_ID,
-  SIMULATION_RESET_MS,
   SIMULATION_STEP_MS,
   SIMULATION_TICK_MS,
 } from "@/constants/run-simulation";
 import { PROCESS_TRAVEL_MS } from "@/constants/workflow-run-effects";
-import { chunkText, findCycleNodes, getPredecessors } from "@/helpers/run-simulation";
+import {
+  chunkText,
+  findCycleNodes,
+  getPredecessors,
+  sampleDesignImage,
+  sampleMockupImage,
+} from "@/helpers/run-simulation";
 import { getWorkflowNodeDefinition } from "@/helpers/workflow-config";
 import { useListingStreamStore } from "@/stores/listing-stream";
 import { useRunSimulationStore } from "@/stores/run-simulation";
 import { useWorkflowStore } from "@/stores/workflow";
+import type { WorkflowNodeType } from "@/types/workflow";
 import { uuid } from "@/utils/uuid";
 
 let simulationToken = 0;
-let resetTimer: number | null = null;
 
 class SimulationStopped extends Error {}
 
@@ -55,6 +62,19 @@ const streamListing = async (duration: number, token: number) => {
   });
 };
 
+const SAMPLE_IMAGES: Partial<Record<WorkflowNodeType, string[]>> = {
+  "design-image": SIMULATION_IMAGE_HUES.map(sampleDesignImage),
+  "apply-mockup": SIMULATION_IMAGE_HUES.map(sampleMockupImage),
+};
+
+const revealImages = (type: WorkflowNodeType, fraction: number) => {
+  const images = SAMPLE_IMAGES[type];
+  if (!images) return;
+  const count = Math.min(SIMULATION_IMAGE_COUNT, Math.floor(fraction * (SIMULATION_IMAGE_COUNT + 1)));
+  if ((useRunSimulationStore.getState().images[type]?.length ?? -1) === count) return;
+  useRunSimulationStore.getState().setImages(type, images.slice(0, count));
+};
+
 const runStep = async (nodeId: string, token: number) => {
   const { nodes, setNodeRuntime } = useWorkflowStore.getState();
   const node = nodes.find((item) => item.id === nodeId);
@@ -67,6 +87,18 @@ const runStep = async (nodeId: string, token: number) => {
   for (let elapsed = 0; elapsed < total; elapsed += SIMULATION_TICK_MS) {
     await wait(SIMULATION_TICK_MS, token);
     setNodeRuntime(nodeId, { status: "running", progress: Math.min(99, Math.round((elapsed / total) * 100)) });
+    revealImages(node.data.type, elapsed / total);
+  }
+  revealImages(node.data.type, 1);
+  if (node.data.type === "generate-video") {
+    useRunSimulationStore.getState().setVideo({
+      id: "sim-v1",
+      version: 1,
+      width: 1080,
+      height: 1920,
+      previewUrl: "/video-templates/product-showcase-v2.mp4",
+      thumbnailUrl: "/video-templates/product-showcase-v2.mp4",
+    });
   }
   if (streaming) await streaming;
   setNodeRuntime(nodeId, { status: "success", progress: 100 });
@@ -86,9 +118,9 @@ export const useRunSimulation = () => {
     if (isRunning || nodes.length === 0) return false;
     const predecessors = getPredecessors(nodes, edges);
     if (findCycleNodes(predecessors).size > 0) return false;
-    if (resetTimer !== null) window.clearTimeout(resetTimer);
     const token = ++simulationToken;
     resetStatuses();
+    useRunSimulationStore.getState().clearImages();
     useListingStreamStore.getState().open(uuid());
     useRunSimulationStore.getState().setActive(true);
     setRunning(true);
@@ -110,14 +142,7 @@ export const useRunSimulation = () => {
     };
 
     void Promise.all(nodes.map((node) => runFrom(node.id)))
-      .then(() => {
-        finish();
-        resetTimer = window.setTimeout(() => {
-          if (token === simulationToken && !useWorkflowStore.getState().isRunning) {
-            useWorkflowStore.getState().resetStatuses();
-          }
-        }, SIMULATION_RESET_MS);
-      })
+      .then(finish)
       .catch((error: unknown) => {
         if (!(error instanceof SimulationStopped)) throw error;
       });
@@ -128,6 +153,7 @@ export const useRunSimulation = () => {
     if (!useRunSimulationStore.getState().active) return;
     simulationToken++;
     finish();
+    useRunSimulationStore.getState().clearImages();
     useWorkflowStore.getState().resetStatuses();
   }, []);
 

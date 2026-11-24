@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { batchJobKeys, listBatchJobs } from "@/api/batch-jobs";
-import { batchKeys, listBatchProducts } from "@/api/batches";
 import { importGeneratedMockups } from "@/api/generated-mockups";
 import { getRunGroup, listRunGroups, runGroupKeys } from "@/api/run-groups";
 import { videoWorkflowKeys } from "@/api/video-workflow";
@@ -27,7 +26,8 @@ import { ACTIVE_RUN_GROUP_STATUSES, useRunGroup } from "@/hooks/queries/use-run-
 import { useShopConnections } from "@/hooks/queries/use-shop-connections";
 import { applySelectionAndGenerateMockups, BATCH_JOB_PARAM, NEXT_PART_PARAM, useBatchRun } from "@/hooks/use-batch-run";
 import { useRunGroupSync } from "@/hooks/use-run-group-sync";
-import { useVideoRunSync, useWorkflowRuntime, VIDEO_RUN_PARAM } from "@/hooks/use-workflow-runtime";
+import { type MockupApprovalPhase, useVideoRunSync, useWorkflowRuntime, VIDEO_RUN_PARAM } from "@/hooks/use-workflow-runtime";
+import { useRunSimulationStore } from "@/stores/run-simulation";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowCommandStore,type WorkflowCommand } from "@/stores/workflow-command";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
@@ -57,17 +57,6 @@ const importMockups = async (queryClient: QueryClient, productIds: string[]) => 
   }
   if (failed > 0)
     showWorkflowActionToast("warning", `${failed} mock-up${failed === 1 ? "" : "s"} could not be added for the videos. Add them again at Mockup Approval.`);
-};
-
-// The products whose designs can get a video: the design job's, or every product of the batch.
-const videoProducts = async (queryClient: QueryClient, batchJobId: string | null) => {
-  const job = useWorkflowRunStore.getState().job;
-  if (batchJobId && job?.products.length)
-    return job.products.map((product) => product.productId).filter((id): id is string => Boolean(id));
-  const batchId = readString(findNode("product-input")?.data.config.batchId);
-  if (!batchId) return [];
-  const products = await queryClient.fetchQuery({ queryKey: batchKeys.products(batchId), queryFn: () => listBatchProducts(batchId) });
-  return products.map((product) => product.id);
 };
 
 const timeOf = (value: string | null | undefined) => (value ? Date.parse(value) : Number.NaN);
@@ -157,19 +146,34 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   // A group waiting at Mockup Approval leaves the settings open: the scenes saved there are the ones it uses.
   // ... as does one still being made ready in the background, before its videos start by themselves.
   const groupWorking = group?.status === "running" || group?.preparing === true;
-  // From the mock-ups being done to the batch video run being started (their import first): the Run goes on.
+  // From the mock-ups being done to the batch video run being started: the Run goes on.
   const [isLaunchingVideo, setIsLaunchingVideo] = useState(false);
   const isRunning = batch.isBusy || video.isRunning || groupWorking || isStartingGroup || isLaunchingVideo;
   // Mockup Approval is the step at work until the videos' runs exist: the mock-ups are imported, approved and the model
   // photos made, with no node otherwise showing it.
-  useVideoRunSync(hasBatchRun, group?.preparing === true || isLaunchingVideo);
+  // An automatic Mockup Approval approves them by itself and the seller waits. A manual one has nothing to review while
+  // the mock-ups are stored as video sources, and from then on they are there to review, model photos still being made
+  // included: they arrive in the strip one by one, so the step is not shown as running.
+  const automaticApproval = useWorkflowStore(
+    (state) => state.nodes.find((node) => node.data.type === "approval-gate")?.data.config.mode === "auto"
+  );
+  const waitingForReview = group?.workflowId === activeWorkflowId && group?.status === "waiting_for_targets";
+  const approvalPhase: MockupApprovalPhase | null = isLaunchingVideo
+    ? automaticApproval ? "approving" : "preparing"
+    : waitingForReview && automaticApproval
+      ? group?.preparing ? "approving" : null
+      : waitingForReview ? "review" : null;
+  useVideoRunSync(hasBatchRun, approvalPhase);
   useEffect(() => {
     setRunning(isRunning);
+    if (isRunning) useRunSimulationStore.getState().clearImages();
   }, [isRunning, setRunning]);
 
   // An automatic Mockup Approval approves the mock-ups on the server: their cards read them again when the run moves
-  // on (prepared, started, finished), not on every change, since each read signs their image links anew.
-  const groupPhase = group ? `${group.id}:${group.status}:${group.preparing ? "preparing" : ""}` : null;
+  // on (prepared, started, finished), not on every change, since each read signs their image links anew. The same when
+  // the mock-ups of a design change in number (a model photo was made), so the new one is there to review.
+  const mockupTotal = group?.targets.reduce((sum, target) => sum + target.mockupCount, 0) ?? 0;
+  const groupPhase = group ? `${group.id}:${group.status}:${group.preparing ? "preparing" : ""}:${mockupTotal}` : null;
   useEffect(() => {
     if (groupPhase) void queryClient.invalidateQueries({ queryKey: ["mockup-assets"] });
   }, [groupPhase, queryClient]);
@@ -241,8 +245,9 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       const withVideo = hasVideoSteps(nodes);
       setIsLaunchingVideo(true);
       try {
-        await importMockups(queryClient, await videoProducts(queryClient, jobId));
-        // The cost was shown on Run: the model photos and AI clips are made from here without asking again.
+        // The server stores the mock-ups as video sources and, at the same time, makes the model photos from the
+        // composites, so the group is started at once instead of after the mock-ups are stored. The cost was shown on
+        // Run: the model photos and AI clips are made from here without asking again.
         const started = await startGroup({ workflowId, revision, key: uuid(), batchJobId: jobId });
         useWorkflowStore.getState().setVideoRunId(null);
         const query = new URLSearchParams(window.location.search);
@@ -250,7 +255,12 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
         query.delete(NEXT_PART_PARAM);
         query.delete(VIDEO_RUN_PARAM);
         router.replace(`/workflows?${query.toString()}`, { scroll: false });
-        if (started.preparing) {
+        if (started.preparing && findNode("approval-gate")?.data.config.mode !== "auto") {
+          // Manual: nothing starts by itself. The mock-ups are there to review while the model photos are being made.
+          const gate = findNode("approval-gate");
+          if (gate) selectNode(gate.id);
+          showWorkflowActionToast("info", "The mock-ups appear for review as they are stored. Model photos for the scenes with a person follow as they are made.");
+        } else if (started.preparing) {
           showWorkflowActionToast("info", withVideo ? "Getting the videos ready. They start by themselves." : "Approving the mock-ups. The run goes on by itself.");
         } else if (started.status === "waiting_for_targets") {
           const gate = findNode("approval-gate");

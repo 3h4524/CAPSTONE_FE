@@ -89,6 +89,7 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
     (["export-zip", "publish-etsy"] as const).find((type) => state.nodes.some((n) => n.data.type === type)) ?? "export-zip"
   );
   const updateNodeConfig = useWorkflowStore((state) => state.updateNodeConfig);
+  const normalizeNodeConfig = useWorkflowStore((state) => state.normalizeNodeConfig);
   const selectNode = useWorkflowStore((state) => state.selectNode);
   const overview = useNodeOverview(node);
   const settingsLocked = isRunning && !(waitingReview && node.data.type === "generate-video");
@@ -171,10 +172,12 @@ export const NodeConfigForm = ({ node, showHeader = true, showResults = true }: 
         : node.data.config.mode;
     const normalizedFormat = getVideoOutputFormat(currentFormat, effectiveMode).value;
     if (currentFormat !== normalizedFormat) {
+      // A default the panel fills in, not a change of the seller's: it must not make the workflow unsaved just by being
+      // opened. Written to the store first, so the form's own change notification below finds nothing left to write.
+      normalizeNodeConfig(node.id, { ...node.data.config, outputFormat: normalizedFormat });
       setValue("outputFormat", normalizedFormat, { shouldDirty: true, shouldValidate: true });
-      updateNodeConfig(node.id, { ...node.data.config, outputFormat: normalizedFormat });
     }
-  }, [node.id, node.data.config, node.data.type, updateNodeConfig, setValue]);
+  }, [node.id, node.data.config, node.data.type, normalizeNodeConfig, setValue]);
 
   return (
     <div className="bg-card flex h-full flex-col">

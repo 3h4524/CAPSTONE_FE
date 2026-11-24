@@ -12,6 +12,9 @@ export const RUN_PREVIEW_GAP = 16;
 
 export const RUN_PREVIEW_WIDTH = 248;
 
+/** About as tall as a preview gets (a portrait video with its header): used to find room for it on the canvas. */
+export const RUN_PREVIEW_HEIGHT = 380;
+
 export const RUN_PREVIEW_TILES = 4;
 
 export const RUN_PREVIEW_NODE_Z = 10;

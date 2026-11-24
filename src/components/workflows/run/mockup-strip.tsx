@@ -2,7 +2,7 @@
 
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { AlertTriangle, Check, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { AlertTriangle, Check, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { MockupSidesStrip } from "@/components/mockups/mockup-sides-strip";
@@ -483,6 +483,32 @@ export const ProductMockupCard = ({
             {stateLabel}
           </span>
         </div>
+      </div>
+    </li>
+  );
+};
+
+/**
+ * Stands in a design's strip for its model photo while the server is still making it, the size of a real card so the
+ * photo replaces it without anything moving. The other mock-ups of the design can be reviewed meanwhile.
+ */
+export const ModelPhotoPendingCard = () => {
+  const { t } = useTranslation("common");
+  return (
+    <li
+      aria-busy="true"
+      aria-label={t("workflowEditor.mockupStrip.modelPhotoPending")}
+      className="bg-card flex w-44 shrink-0 snap-start flex-col overflow-hidden rounded-lg border border-dashed"
+    >
+      <div className="bg-muted flex aspect-square w-full animate-pulse flex-col items-center justify-center gap-2 p-3 text-center motion-reduce:animate-none">
+        <Loader2 className="text-muted-foreground size-5 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+        <p className="text-muted-foreground text-xs leading-snug">
+          {t("workflowEditor.mockupStrip.modelPhotoPending")}
+        </p>
+      </div>
+      <div className="space-y-2 p-2">
+        <div className="bg-muted h-3 w-16 animate-pulse rounded motion-reduce:animate-none" />
+        <div className="bg-muted h-8 animate-pulse rounded-md motion-reduce:animate-none" />
       </div>
     </li>
   );

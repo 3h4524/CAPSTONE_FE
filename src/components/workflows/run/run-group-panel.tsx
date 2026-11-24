@@ -15,6 +15,7 @@ import {
   groupProductMockups,
   MockupStripCard,
   MockupStripSkeleton,
+  ModelPhotoPendingCard,
   type ProductColorChoice,
   ProductMockupCard,
   type ProductMockupColor,
@@ -222,13 +223,23 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
   };
 
   // A design held up by a missing model photo does not lock Continue: Continue makes that photo again first.
+  // Continue waits only for what it needs. An automatic Mockup Approval is started by the server once it has made
+  // everything, so it is left alone until then. A manual one can go on with the designs whose model photo is done,
+  // and only a chosen design whose photo is still being made holds it back.
+  const automaticApproval = useWorkflowStore(
+    (state) => state.nodes.find((node) => node.data.type === "approval-gate")?.data.config.mode === "auto"
+  );
+  const waitingForPhotos = group.targets.some(
+    (target) => target.selected && target.modelPhoto === "pending"
+  );
   const canStart =
     group.selectedCount > 0 &&
     !tooMany &&
     !isDirty &&
     !isConfirming &&
     !isCancelling &&
-    group.preparing !== true;
+    !waitingForPhotos &&
+    !(group.preparing === true && automaticApproval);
   usePanelContinueCommand(canStart, start);
 
   if (group.targets.length === 0)
@@ -289,9 +300,11 @@ const ChooseDesigns = ({ group }: { group: RunGroup }) => {
         <PanelNotice tone="info">
           <span className="inline-flex items-center gap-2">
             <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-            {withVideo
-              ? t("workflowEditor.runGroup.preparingVideo")
-              : t("workflowEditor.runGroup.preparing")}
+            {!automaticApproval
+              ? t("workflowEditor.runGroup.preparingManual")
+              : withVideo
+                ? t("workflowEditor.runGroup.preparingVideo")
+                : t("workflowEditor.runGroup.preparing")}
           </span>
         </PanelNotice>
       )}
@@ -530,6 +543,7 @@ const DesignRow = ({
       .filter((color) => isOff(card, color))
       .flatMap((color) => color.sides.map((side) => side.asset.id))
   );
+  const photoPending = target.modelPhoto === "pending";
 
   const reviewAll = async (approved: boolean) => {
     setIsReviewing(true);
@@ -691,7 +705,7 @@ const DesignRow = ({
 
       {isLoading ? (
         <MockupStripSkeleton />
-      ) : mockups.length === 0 ? (
+      ) : mockups.length === 0 && !photoPending ? (
         <p className="text-muted-foreground px-3 text-xs">
           {asProduct
             ? t("workflowEditor.runGroup.productNoMockups")
@@ -702,18 +716,25 @@ const DesignRow = ({
           label={t("workflowEditor.runGroup.mockupsOf", {
             name: asProduct ? target.productName : target.designLabel,
           })}
-          itemCount={mockups.length}
+          itemCount={mockups.length + (photoPending ? 1 : 0)}
         >
           <MockupCards
             mockups={mockups}
             name={asProduct ? target.productName : target.designLabel}
             choiceFor={choiceFor}
           />
+          {/* The model photo is still being made: its card takes the place the photo will have. */}
+          {photoPending && <ModelPhotoPendingCard />}
         </ScrollStrip>
       )}
       {composites.length > 0 && (
         <p className="text-muted-foreground px-3 text-xs">
           {t("workflowEditor.runGroup.reviewWhole")}
+        </p>
+      )}
+      {target.modelPhoto === "missing" && (
+        <p className="px-3 text-xs text-amber-700 dark:text-amber-400">
+          {t("workflowEditor.runGroup.modelPhotoMissing")}
         </p>
       )}
     </li>

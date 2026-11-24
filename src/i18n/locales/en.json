@@ -3230,6 +3230,12 @@
             "label": "SEO score",
             "description": "Score each listing from 0 to 100 with improvement tips."
           }
+        },
+        "export-zip": {
+          "includeFinalVideo": {
+            "label": "Render the final video",
+            "description": "Turn off for a faster export: the ZIP then has the video of each scene only, without the final video."
+          }
         }
       },
       "groupVideos": {
@@ -3273,6 +3279,8 @@
           "queued": "Queued",
           "running": "Rendering",
           "waiting_for_input": "Needs attention",
+          "ready": "Preview",
+          "rendering": "Rendering the file",
           "waiting_for_review": "Ready to review",
           "completed": "Done",
           "failed": "Failed",
@@ -3294,6 +3302,8 @@
         "sceneWarnings_other": "{{count}} scenes could not use the image you chose and will use another one.",
         "preparingVideo": "Getting the videos ready: approving the mock-ups and making the model photos of scenes with a person. The videos start by themselves.",
         "preparing": "Approving the mock-ups. The run goes on by itself.",
+        "preparingManual": "Making the model photos of the scenes with a person. Review the mock-ups meanwhile: each photo appears in its design when it is ready.",
+        "modelPhotoMissing": "The model photo of this design was not made. Continue tries again.",
         "autoNotStartedVideo": "Mockup Approval is on Approve automatically, but the videos did not start.",
         "autoNotStarted": "Mockup Approval is on Approve automatically, but the run did not start.",
         "tooManyVideo": "{{selected}} designs are chosen; one run makes at most {{maximum}} videos. Reject the mock-ups of the designs to leave out.",
@@ -3383,7 +3393,8 @@
         "sellColor": "Sell in {{name}}",
         "leftOut": "Left out",
         "colorLeftOut": "{{name}} (left out)",
-        "lastColor": "Keep at least one color. To leave the whole product out, skip it."
+        "lastColor": "Keep at least one color. To leave the whole product out, skip it.",
+        "modelPhotoPending": "Making the model photo…"
       },
       "runResults": {
         "product": "Product",
@@ -3663,6 +3674,8 @@
         "hudFailed": "{{names}} failed",
         "hudNeedsYou": "{{names}} needs you",
         "previewDesigns": "Designs",
+        "previewClips": "AI clips",
+        "previewScene": "Scene {{scene}}",
         "previewListing": "Listing content",
         "previewLive": "Live",
         "previewWriting": "Writing",
@@ -3918,6 +3931,10 @@
         "versionOption": "Version {{version}} · {{status}}",
         "finalVideoVersion": "Final video version {{version}}",
         "preparing": "The joined preview is being prepared.",
+        "composedPreview": "Preview of the video, assembled from its scenes in your browser.",
+        "composedPreviewNote": "The video file is made in the background when a step needs it: Export ZIP with its final video option, or Publish to Etsy.",
+        "composedPreviewWaiting": "An AI scene of this video is not available yet.",
+        "rendering": "The final video is being rendered in the background.",
         "version": "Version",
         "review": "Review",
         "revision": "Revision {{revision}}",
@@ -3930,6 +3947,8 @@
         "checkingStoryboard": "Checking storyboard",
         "checkingStoryboardDots": "Checking storyboard…",
         "rerender": "Re-render video",
+        "applyChanges": "Apply changes",
+        "editApplied": "Your edits were applied to the video waiting for review. Approve the new version to export it.",
         "onlyCurrent": "Only the current completed version can be approved. Older versions remain available from the version menu."
       },
       "quality": {

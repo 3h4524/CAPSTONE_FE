@@ -2138,7 +2138,8 @@
           "printifyProduct": "Printify product"
         },
         "notLinkedToPrintify": "A chosen template is not linked to Printify. Change templates and pick a Printify one.",
-        "chooseOnePrintify": "Choose one Printify template for each product type.",        "mockupsAreFor": "The mock-ups are for",
+        "chooseOnePrintify": "Choose one Printify template for each product type.",
+        "mockupsAreFor": "The mock-ups are for",
         "mockupsAreForAria": "What the mock-ups are for",
         "printifyLockedHint": "Push to Printify is connected, so the mock-ups show the Printify product: one Printify template per product type, in its Printify colors.",
         "printifyHint": "One Printify template per product type, in its Printify colors, so the mock-ups show what Printify prints.",
@@ -3342,6 +3343,9 @@
         "rejectDesign": "Reject every mock-up of this design so it is left out",
         "skipProduct": "Skip product",
         "skipDesign": "Skip design",
+        "approveProduct": "Approve product",
+        "approveDesign": "Approve design",
+        "reviewWhole": "Approving takes every side of the colors left on. Untick a color on its card to leave it out; to drop a side, change it on Apply mock-up.",
         "productNoMockups": "This product has no mock-ups yet.",
         "designNoMockups": "This design has no mock-ups yet.",
         "mockupsOf": "Mock-ups of {{name}}",
@@ -3376,6 +3380,20 @@
         "rejectMockup": "Reject mock-up",
         "reject": "Reject",
         "loading": "Loading mock-ups",
+        "colors": "Garment colors",
+        "photoColor": "Photo’s own color",
+        "showIn": "Show in {{name}}",
+        "views": {
+          "front": "Front",
+          "back": "Back",
+          "left": "Left sleeve",
+          "right": "Right sleeve",
+          "side": "Side"
+        },
+        "sellColor": "Sell in {{name}}",
+        "leftOut": "Left out",
+        "colorLeftOut": "{{name}} (left out)",
+        "lastColor": "Keep at least one color. To leave the whole product out, skip it.",
         "modelPhotoPending": "Making the model photo…"
       },
       "runResults": {

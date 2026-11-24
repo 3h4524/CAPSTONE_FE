@@ -2138,7 +2138,8 @@
           "printifyProduct": "Sản phẩm Printify"
         },
         "notLinkedToPrintify": "Một mẫu đã chọn chưa liên kết với Printify. Hãy đổi mẫu và chọn một mẫu Printify.",
-        "chooseOnePrintify": "Hãy chọn một mẫu Printify cho mỗi loại sản phẩm.",        "mockupsAreFor": "Mock-up dùng cho",
+        "chooseOnePrintify": "Hãy chọn một mẫu Printify cho mỗi loại sản phẩm.",
+        "mockupsAreFor": "Mock-up dùng cho",
         "mockupsAreForAria": "Mục đích của mock-up",
         "printifyLockedHint": "Bước Đẩy lên Printify đã được nối nên mock-up thể hiện sản phẩm Printify: mỗi loại sản phẩm một mẫu Printify với các màu của Printify.",
         "printifyHint": "Mỗi loại sản phẩm một mẫu Printify với các màu của Printify, để mock-up thể hiện đúng thứ Printify in.",
@@ -3342,6 +3343,9 @@
         "rejectDesign": "Từ chối mọi mock-up của thiết kế này để loại thiết kế ra",
         "skipProduct": "Bỏ qua sản phẩm",
         "skipDesign": "Bỏ qua thiết kế",
+        "approveProduct": "Duyệt sản phẩm",
+        "approveDesign": "Duyệt thiết kế",
+        "reviewWhole": "Duyệt là duyệt mọi mặt của các màu đang được tick. Bỏ tick một màu trên thẻ để không bán màu đó; muốn bỏ một mặt, hãy sửa ở bước Apply mock-up.",
         "productNoMockups": "Sản phẩm này chưa có mock-up.",
         "designNoMockups": "Thiết kế này chưa có mock-up.",
         "mockupsOf": "Mock-up của {{name}}",
@@ -3376,6 +3380,20 @@
         "rejectMockup": "Từ chối mock-up",
         "reject": "Từ chối",
         "loading": "Đang tải mock-up",
+        "colors": "Màu áo",
+        "photoColor": "Màu gốc của ảnh",
+        "showIn": "Xem màu {{name}}",
+        "views": {
+          "front": "Mặt trước",
+          "back": "Mặt sau",
+          "left": "Tay áo trái",
+          "right": "Tay áo phải",
+          "side": "Mặt bên"
+        },
+        "sellColor": "Bán màu {{name}}",
+        "leftOut": "Không bán",
+        "colorLeftOut": "{{name}} (không bán)",
+        "lastColor": "Giữ ít nhất một màu. Muốn bỏ cả sản phẩm, hãy bấm Skip product.",
         "modelPhotoPending": "Đang tạo ảnh người mẫu…"
       },
       "runResults": {

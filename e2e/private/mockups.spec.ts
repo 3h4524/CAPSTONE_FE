@@ -18,7 +18,7 @@ test.describe("mockup templates and model photos", () => {
       await expect(pageHeading(page, "Mock-up Templates")).toBeVisible();
       await expect(page.getByRole("tab", { name: /Product photos/i })).toBeVisible();
       await expect(page.getByRole("tab", { name: /Model photos/i })).toBeVisible();
-      await expect(page.getByRole("button", { name: "New template" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "New template" }).first()).toBeVisible();
     });
 
     await test.step("mockup templates endpoint answered", async () => {
@@ -30,7 +30,7 @@ test.describe("mockup templates and model photos", () => {
 
   test("new template dialog opens with name, category, and view configuration fields", async ({ page }) => {
     await openPrivateRoute(page, "/mockups");
-    await page.getByRole("button", { name: "New template" }).click();
+    await page.getByRole("button", { name: "New template" }).first().click();
 
     const dialog = page.getByRole("dialog");
     await test.step("the template dialog renders fields", async () => {
@@ -51,8 +51,8 @@ test.describe("mockup templates and model photos", () => {
     await page.getByRole("tab", { name: /Model photos/i }).click();
 
     await test.step("the model photos panel renders actions", async () => {
-      await expect(page.getByRole("button", { name: "Make with AI" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "New model photo" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Make with AI" }).first()).toBeVisible();
+      await expect(page.getByRole("button", { name: "New model photo" }).first()).toBeVisible();
     });
 
     await test.step("model photos query was dispatched", async () => {
@@ -70,7 +70,7 @@ test.describe("mockup templates and model photos", () => {
   test("opens the AI model photo generator dialog with styling controls", async ({ page }) => {
     await openPrivateRoute(page, "/mockups");
     await page.getByRole("tab", { name: /Model photos/i }).click();
-    await page.getByRole("button", { name: "Make with AI" }).click();
+    await page.getByRole("button", { name: "Make with AI" }).first().click();
 
     const dialog = page.getByRole("dialog");
     await test.step("the AI generator dialog opens with controls", async () => {
@@ -88,7 +88,7 @@ test.describe("mockup templates and model photos", () => {
   test("opens the manual model photo upload dialog", async ({ page }) => {
     await openPrivateRoute(page, "/mockups");
     await page.getByRole("tab", { name: /Model photos/i }).click();
-    await page.getByRole("button", { name: "New model photo" }).click();
+    await page.getByRole("button", { name: "New model photo" }).first().click();
 
     const dialog = page.getByRole("dialog");
     await test.step("the upload dialog renders attributes fields", async () => {

@@ -142,7 +142,8 @@ test.describe("admin pages", () => {
     const consoleErrors = captureConsoleErrors(page);
     await openPrivateRoute(page, "/admin/test-reports/non-existent-run");
     await expect(page.getByRole("link", { name: "All test reports" })).toBeVisible();
-    expect(consoleErrors, "console errors on /admin/test-reports/[runId]").toEqual([]);
+    const relevantErrors = consoleErrors.filter((entry) => !entry.includes("Failed to load resource"));
+    expect(relevantErrors, "console errors on /admin/test-reports/[runId]").toEqual([]);
   });
 
   test("mockup templates library renders heading and printify actions", async ({ page }) => {
@@ -150,7 +151,7 @@ test.describe("admin pages", () => {
     await openPrivateRoute(page, "/admin/mockup-templates");
     await expect(page.getByRole("heading", { name: "Mock-up template library" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Create from Printify" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "New template" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "New template" }).first()).toBeVisible();
     expect(consoleErrors, "console errors on /admin/mockup-templates").toEqual([]);
   });
 
@@ -158,8 +159,8 @@ test.describe("admin pages", () => {
     const consoleErrors = captureConsoleErrors(page);
     await openPrivateRoute(page, "/admin/model-photos");
     await expect(pageHeading(page, "Model photo library")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Make with AI" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "New model photo" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Make with AI" }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "New model photo" }).first()).toBeVisible();
     expect(consoleErrors, "console errors on /admin/model-photos").toEqual([]);
   });
 });

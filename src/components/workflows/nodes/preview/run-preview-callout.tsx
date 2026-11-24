@@ -67,12 +67,12 @@ export const RunPreviewCallout = (props: RunPreviewCalloutProps) => {
   return (
     <aside
       className={cn(
-        "bg-wf-surface border-wf-line animate-in fade-in absolute z-20 rounded-xl border p-2.5 shadow-xl empty:hidden",
+        "bg-wf-surface border-wf-line animate-in fade-in absolute z-20 overflow-hidden rounded-xl border p-2.5 shadow-xl empty:hidden",
         SIDE_CLASS_NAMES[side]
       )}
       style={{ width: RUN_PREVIEW_WIDTH, [SIDE_MARGINS[side]]: RUN_PREVIEW_GAP }}
     >
-      <NodeControl>{content}</NodeControl>
+      <NodeControl className="w-full max-w-full min-w-0 overflow-hidden">{content}</NodeControl>
     </aside>
   );
 };

@@ -38,17 +38,16 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
 
   const groups = useMemo<DesignMockupGroup[]>(() => {
     if (simulated && simulated.length > 0) {
-      const perTab = Math.max(1, Math.ceil(simulated.length / 3));
-      const tabCounts = [perTab, perTab, Math.max(1, simulated.length - perTab * 2)];
-      const tabLabels = ["Design 1", "Design 2", "Design 3"];
-      const shortLabels = ["D1", "D2", "D3"];
+      const tabCounts = [3, 2, 2, 2];
+      const tabLabels = ["Design 1", "Design 2", "Design 3", "Design 4"];
+      const shortLabels = ["D1", "D2", "D3", "D4"];
       const templateNames = ["Black T-shirt", "White T-shirt", "Ceramic Mug", "Hoodie", "Tote Bag"];
 
       let offset = 0;
       const simGroups: DesignMockupGroup[] = [];
 
-      for (let i = 0; i < 3; i++) {
-        const count = tabCounts[i];
+      for (let i = 0; i < 4; i++) {
+        const count = tabCounts[i] ?? 2;
         const slice = simulated.slice(offset, offset + count);
         offset += count;
 
@@ -178,6 +177,14 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
                 key={group.id}
                 value={group.id}
                 aria-label={group.label}
+                onClick={(e) => {
+                  if (!isGrid) {
+                    (e.currentTarget as HTMLElement).scrollIntoView({
+                      inline: "center",
+                      behavior: "smooth",
+                    });
+                  }
+                }}
                 className={cn(
                   "data-[state=active]:bg-wf-surface data-[state=active]:text-wf-ink text-wf-dim flex h-6 items-center justify-center gap-1 rounded px-1 text-[10px] font-medium transition-all",
                   isGrid ? "w-full min-w-0" : "shrink-0 px-2"

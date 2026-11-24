@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { batchJobKeys, listBatchJobs } from "@/api/batch-jobs";
-import { batchKeys, listBatchProducts } from "@/api/batches";
 import { importGeneratedMockups } from "@/api/generated-mockups";
 import { getRunGroup, listRunGroups, runGroupKeys } from "@/api/run-groups";
 import { videoWorkflowKeys } from "@/api/video-workflow";
@@ -58,17 +57,6 @@ const importMockups = async (queryClient: QueryClient, productIds: string[]) => 
   }
   if (failed > 0)
     showWorkflowActionToast("warning", `${failed} mock-up${failed === 1 ? "" : "s"} could not be added for the videos. Add them again at Mockup Approval.`);
-};
-
-// The products whose designs can get a video: the design job's, or every product of the batch.
-const videoProducts = async (queryClient: QueryClient, batchJobId: string | null) => {
-  const job = useWorkflowRunStore.getState().job;
-  if (batchJobId && job?.products.length)
-    return job.products.map((product) => product.productId).filter((id): id is string => Boolean(id));
-  const batchId = readString(findNode("product-input")?.data.config.batchId);
-  if (!batchId) return [];
-  const products = await queryClient.fetchQuery({ queryKey: batchKeys.products(batchId), queryFn: () => listBatchProducts(batchId) });
-  return products.map((product) => product.id);
 };
 
 const timeOf = (value: string | null | undefined) => (value ? Date.parse(value) : Number.NaN);
@@ -158,7 +146,7 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   // A group waiting at Mockup Approval leaves the settings open: the scenes saved there are the ones it uses.
   // ... as does one still being made ready in the background, before its videos start by themselves.
   const groupWorking = group?.status === "running" || group?.preparing === true;
-  // From the mock-ups being done to the batch video run being started (their import first): the Run goes on.
+  // From the mock-ups being done to the batch video run being started: the Run goes on.
   const [isLaunchingVideo, setIsLaunchingVideo] = useState(false);
   const isRunning = batch.isBusy || video.isRunning || groupWorking || isStartingGroup || isLaunchingVideo;
   // Mockup Approval is the step at work until the videos' runs exist: the mock-ups are imported, approved and the model
@@ -257,8 +245,9 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
       const withVideo = hasVideoSteps(nodes);
       setIsLaunchingVideo(true);
       try {
-        await importMockups(queryClient, await videoProducts(queryClient, jobId));
-        // The cost was shown on Run: the model photos and AI clips are made from here without asking again.
+        // The server stores the mock-ups as video sources and, at the same time, makes the model photos from the
+        // composites, so the group is started at once instead of after the mock-ups are stored. The cost was shown on
+        // Run: the model photos and AI clips are made from here without asking again.
         const started = await startGroup({ workflowId, revision, key: uuid(), batchJobId: jobId });
         useWorkflowStore.getState().setVideoRunId(null);
         const query = new URLSearchParams(window.location.search);
@@ -270,7 +259,7 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
           // Manual: nothing starts by itself. The mock-ups are there to review while the model photos are being made.
           const gate = findNode("approval-gate");
           if (gate) selectNode(gate.id);
-          showWorkflowActionToast("info", "Review the mock-ups now. Model photos for the scenes with a person appear as they are made.");
+          showWorkflowActionToast("info", "The mock-ups appear for review as they are stored. Model photos for the scenes with a person follow as they are made.");
         } else if (started.preparing) {
           showWorkflowActionToast("info", withVideo ? "Getting the videos ready. They start by themselves." : "Approving the mock-ups. The run goes on by itself.");
         } else if (started.status === "waiting_for_targets") {

@@ -4,6 +4,7 @@ import type {
   TestReportFilter,
   TestReportList,
   TestReportRun,
+  TestReportRunMode,
 } from "@/types/admin-test-reports";
 
 export const getAdminTestReports = async (
@@ -31,8 +32,13 @@ export const getAdminTestReport = async (
   return data;
 };
 
-export const startAdminTestReportRun = async (): Promise<TestReportRun> => {
-  const { data } = await api.post<TestReportRun>("/api/admin/test-reports/runs");
+export const startAdminTestReportRun = async (
+  payload?: { mode?: TestReportRunMode }
+): Promise<TestReportRun> => {
+  const { data } = await api.post<TestReportRun>(
+    "/api/admin/test-reports/runs",
+    payload?.mode ? { mode: payload.mode } : {}
+  );
   return data;
 };
 

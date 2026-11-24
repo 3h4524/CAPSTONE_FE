@@ -129,6 +129,9 @@ test.describe("admin pages", () => {
 
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByRole("heading", { name: "Run the end-to-end suite" })).toBeVisible();
+    await expect(dialog.getByRole("radio", { name: /headless/i })).toBeVisible();
+    await expect(dialog.getByRole("radio", { name: /headed/i })).toBeVisible();
+    await expect(dialog.getByRole("radio", { name: /debug/i })).toBeVisible();
     await dialog.getByRole("button", { name: "Cancel" }).click();
     await expect(dialog).toBeHidden();
 

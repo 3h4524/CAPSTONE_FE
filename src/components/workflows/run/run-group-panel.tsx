@@ -149,10 +149,8 @@ export const RunGroupPanel = () => {
   const groupId = useRunGroupId();
   const { data: group, isPending, isError, refetch } = useRunGroup(groupId);
   if (!groupId) return null;
-  if (isPending)
-    return (
-      <p className="text-muted-foreground text-xs">{t("workflowEditor.runGroup.loadingDesigns")}</p>
-    );
+  // The products take a moment to load: their cards are drawn first, so the wait does not read as a broken panel.
+  if (isPending) return <RunGroupSkeleton label={t("workflowEditor.runGroup.loadingDesigns")} />;
   if (isError || !group)
     return (
       <PanelNotice
@@ -172,6 +170,48 @@ export const RunGroupPanel = () => {
     <GroupProgress group={group} />
   );
 };
+
+/** Two product cards in the shape of the real ones (thumbnail, name, the approve and skip buttons, a row of mock-ups). */
+const RunGroupSkeleton = ({ label }: { label: string }) => (
+  <div aria-busy="true" aria-live="polite" className="space-y-3">
+    <span className="sr-only">{label}</span>
+    {[0, 1].map((card) => (
+      <div
+        key={card}
+        aria-hidden="true"
+        className="bg-card space-y-3 overflow-hidden rounded-lg border py-3"
+      >
+        <div className="flex animate-pulse items-center gap-3 px-3 motion-reduce:animate-none">
+          <div className="bg-muted size-11 shrink-0 rounded-md" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="bg-muted h-3.5 w-36 rounded" />
+            <div className="bg-muted h-3 w-48 rounded" />
+            <div className="bg-muted h-1 w-full max-w-48 rounded-full" />
+          </div>
+          <div className="bg-muted h-6 w-16 shrink-0 rounded-full" />
+        </div>
+        <div className="flex animate-pulse gap-2 px-3 motion-reduce:animate-none">
+          <div className="bg-muted h-8 w-32 rounded-md" />
+          <div className="bg-muted h-8 w-28 rounded-md" />
+        </div>
+        <div className="flex gap-3 overflow-hidden px-3">
+          {[0, 1, 2].map((mockup) => (
+            <div
+              key={mockup}
+              className="bg-card w-44 shrink-0 animate-pulse overflow-hidden rounded-lg border motion-reduce:animate-none"
+            >
+              <div className="bg-muted aspect-square" />
+              <div className="space-y-2 p-2">
+                <div className="bg-muted h-3 w-24 rounded" />
+                <div className="bg-muted h-5 w-16 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 const ChooseDesigns = ({ group }: { group: RunGroup }) => {
   const { t } = useTranslation("common");
@@ -555,14 +595,14 @@ const DesignRow = ({
           approved,
           leftOut: approved ? leftOut : [],
         });
-      // AI images and uploaded photos keep their own review; skipping the product rejects them too, and a design of
-      // uploaded photos only is approved photo by photo.
-      const singles = mockups.filter(
-        (item) =>
-          !isComposite(item) &&
-          (!approved || composites.length === 0) &&
-          item.approvalStatus !== (approved ? "approved" : "rejected")
-      );
+      // AI images and photos (the model photo a scene with a person starts from) are reviewed one by one. Approving the
+      // product approves the ones waiting for review too; one the seller rejected stays rejected, unless the product
+      // has no composite (then it is approved photo by photo, as before). Skipping the product rejects them all.
+      const singles = mockups.filter((item) => {
+        if (isComposite(item)) return false;
+        if (!approved) return item.approvalStatus !== "rejected";
+        return item.approvalStatus === "pending" || (composites.length === 0 && item.approvalStatus !== "approved");
+      });
       for (const asset of singles) await review({ id: asset.id, revision: asset.revision, approved });
     } catch (error) {
       showWorkflowActionToast("error", getErrorMessage(error));

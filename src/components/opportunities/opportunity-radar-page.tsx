@@ -21,6 +21,7 @@ import {
   type SellerMarketInsight,
   type SellerNicheMarketInsight,
   type SellerOpportunity,
+  type SellerResearchProfile,
   type SellerResearchProfileInput,
   updateSellerOpportunityState,
 } from "@/api/market-opportunities";
@@ -63,6 +64,15 @@ const initialProfile: SellerResearchProfileInput = {
   minimumPrice: null,
   maximumPrice: null,
 };
+const isConfiguredProfile = (value?: SellerResearchProfile | null) => Boolean(value && (
+  value.shopGoal?.trim()
+  || value.targetAudiences.length > 0
+  || value.preferredCategories.length > 0
+  || value.excludedCategories.length > 0
+  || value.preferredKeywords.length > 0
+  || value.minimumPrice != null
+  || value.maximumPrice != null
+));
 const apparelProfilePreset: SellerResearchProfileInput = {
   shopGoal: "Find profitable handmade apparel and personalized clothing products.",
   targetAudiences: ["women", "men", "couples", "gift buyers"],
@@ -143,14 +153,14 @@ export function OpportunityRadarPage() {
     queryFn: getSellerResearchProfile,
     enabled: canLoadSellerData,
   });
+  const hasProfile = isConfiguredProfile(profileQuery.data);
   const opportunitiesQuery = useQuery({
     queryKey: opportunityQueryKey(userId, activeState),
     queryFn: () => listSellerOpportunities(activeState === "all" ? undefined : activeState),
-    enabled: canLoadSellerData,
+    enabled: canLoadSellerData && hasProfile,
   });
   // The unfiltered list feeds the tab counts and the hero; on the All tab it is the same query.
-  const allQuery = useQuery({ queryKey: [...opportunityKey, userId, "all"], queryFn: () => listSellerOpportunities(), enabled: canLoadSellerData });
-  const hasProfile = Boolean(profileQuery.data?.profileVersion);
+  const allQuery = useQuery({ queryKey: [...opportunityKey, userId, "all"], queryFn: () => listSellerOpportunities(), enabled: canLoadSellerData && hasProfile });
   // What the plan opens: without the whole radar the server sends its three best opportunities and no competitors,
   // keywords, charts or plans, and the page draws locks where those would be.
   const accessQuery = useQuery({ queryKey: ["market-radar-access", userId], queryFn: getMarketRadarAccess, enabled: canLoadSellerData });
@@ -219,6 +229,7 @@ export function OpportunityRadarPage() {
     mutationFn: saveSellerResearchProfile,
     onSuccess: (data) => {
       queryClient.setQueryData(sellerProfileQueryKey, data);
+      queryClient.invalidateQueries({ queryKey: [...opportunityKey, userId] });
       queryClient.invalidateQueries({ queryKey: marketInsightKey(userId) });
       setProfileOpen(false);
        toast.success(t("marketRadar.saveProfile"));
@@ -452,7 +463,7 @@ export function OpportunityRadarPage() {
           title={t("marketRadar.title")}
           description={t("marketRadar.subtitle")}
           actions={
-            <Button type="button" variant="primaryBlue" className={rankingIsStale ? "shrink-0 ring-2 ring-amber-400/70 ring-offset-2" : "shrink-0"} onClick={() => refreshMutation.mutate()} disabled={refreshMutation.isPending}>
+            <Button type="button" variant="primaryBlue" className={rankingIsStale ? "shrink-0 ring-2 ring-amber-400/70 ring-offset-2" : "shrink-0"} onClick={() => refreshMutation.mutate()} disabled={refreshMutation.isPending || !hasProfile}>
               <RefreshCw className={refreshMutation.isPending ? "size-4 animate-spin" : "size-4"} />
               <span className="max-md:sr-only">{refreshMutation.isPending ? t("marketRadar.refreshing") : t("marketRadar.refresh")}</span>
             </Button>

@@ -172,6 +172,24 @@ export const reviewMockupAsset = async ({
       approved,
     })
   ).data;
+export const reviewDesignMockupAssets = async ({
+  productId,
+  designImageId,
+  approvedMockupAssetIds,
+  rejectedMockupAssetIds,
+}: {
+  productId: string;
+  designImageId: string;
+  approvedMockupAssetIds: string[];
+  rejectedMockupAssetIds: string[];
+}) =>
+  (
+    await api.post<MockupAsset[]>(`/api/products/${productId}/mockup-assets/review-design`, {
+      designImageId,
+      approvedMockupAssetIds,
+      rejectedMockupAssetIds,
+    })
+  ).data;
 export const listRunVideos = async (id: string) =>
   (await api.get<PromoVideo[]>(`/api/workflow-runs/${id}/videos`)).data;
 export const listRunSceneVideos = async (id: string) =>

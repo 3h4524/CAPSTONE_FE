@@ -16,6 +16,7 @@ import { useGroupVideos } from "@/hooks/queries/use-group-videos";
 import { useRunSceneVideos } from "@/hooks/queries/use-run-scene-videos";
 import { useRunVideos } from "@/hooks/queries/use-run-videos";
 import { useVideoRunId } from "@/hooks/use-video-run-id";
+import { useRunSimulationStore } from "@/stores/run-simulation";
 import type { GenerateVideoConfig, PromoVideo } from "@/types/video-workflow";
 import type { WorkflowNodeData, WorkflowNodeStatus } from "@/types/workflow";
 
@@ -37,7 +38,8 @@ export const VideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
   const runId = openRunId ?? design?.target.runId ?? null;
   const { data: clips = [] } = useRunSceneVideos(runId);
   const { data: runVideos } = useRunVideos(runId);
-  const video = groupVideos.length > 0 ? (design?.video ?? runVideos?.[0]) : runVideos?.[0];
+  const simulatedVideo = useRunSimulationStore((state) => state.video);
+  const video = (groupVideos.length > 0 ? (design?.video ?? runVideos?.[0]) : runVideos?.[0]) ?? simulatedVideo;
   const running = status === "running";
   const tone = previewToneOf(status);
   const doneLabel =
@@ -76,7 +78,11 @@ export const VideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
           )}
         </div>
         {video.previewUrl ? (
-          <VideoPreviewFrame width={video.width} height={video.height} maxHeightRem={22}>
+          <VideoPreviewFrame
+            width={video.width ?? 1080}
+            height={video.height ?? 1920}
+            maxHeightRem={22}
+          >
             <video
               src={video.previewUrl}
               poster={video.thumbnailUrl ?? undefined}
@@ -87,9 +93,9 @@ export const VideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
               aria-label={t("workflowEditor.videoPreview.alt", { version: video.version })}
             />
           </VideoPreviewFrame>
-        ) : (
-          <ComposedVideoPreview video={video} compact />
-        )}
+        ) : video.id ? (
+          <ComposedVideoPreview video={video as PromoVideo} compact />
+        ) : null}
         <VideoCinemaModal
           video={cinemaVideo}
           videoUrl={cinemaUrl}

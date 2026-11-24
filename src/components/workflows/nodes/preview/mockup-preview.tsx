@@ -28,11 +28,41 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
   const mockupResult = useWorkflowRunStore((state) => state.mockupResult);
   const job = useWorkflowRunStore((state) => state.job);
   const simulated = useRunSimulationStore((state) => state.images["apply-mockup"]);
+  const simulatedDesigns = useRunSimulationStore((state) => state.images["design-image"]);
 
   const [selectedTabId, setSelectedTabId] = useState<string>("");
 
   const groups = useMemo<DesignMockupGroup[]>(() => {
-    if (simulated) return [];
+    if (simulated && simulated.length > 0) {
+      const perTab = Math.max(1, Math.ceil(simulated.length / 3));
+      const tabCounts = [perTab, perTab, Math.max(1, simulated.length - perTab * 2)];
+      const tabLabels = ["Design 1", "Design 2", "Design 3"];
+      const templateNames = ["Black T-shirt", "White T-shirt", "Ceramic Mug", "Hoodie", "Tote Bag"];
+
+      let offset = 0;
+      const simGroups: DesignMockupGroup[] = [];
+
+      for (let i = 0; i < 3; i++) {
+        const count = tabCounts[i];
+        const slice = simulated.slice(offset, offset + count);
+        offset += count;
+
+        if (slice.length > 0 || status === "running") {
+          simGroups.push({
+            id: `sim-design-${i + 1}`,
+            label: tabLabels[i],
+            designThumbnail: simulatedDesigns?.[i] ?? undefined,
+            items: slice.map((url, sIndex) => ({
+              url,
+              label: templateNames[(offset + sIndex) % templateNames.length],
+              subLabel: tabLabels[i],
+            })),
+          });
+        }
+      }
+
+      return simGroups;
+    }
 
     const mockupImages = mockupResult?.images ?? [];
     const designImages = job?.products.flatMap((product) => product.images) ?? [];
@@ -75,20 +105,10 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
     }
 
     return [];
-  }, [simulated, mockupResult, job]);
-
-  if (simulated) {
-    return (
-      <ImageGridPreview
-        label={t("workflowEditor.runView.previewMockups")}
-        images={simulated}
-        status={status}
-      />
-    );
-  }
+  }, [simulated, simulatedDesigns, mockupResult, job, status]);
 
   if (groups.length <= 1) {
-    const singleItems = groups[0]?.items ?? getMockupImageUrls(mockupResult);
+    const singleItems = groups[0]?.items ?? (simulated ?? getMockupImageUrls(mockupResult));
     return (
       <ImageGridPreview
         label={t("workflowEditor.runView.previewMockups")}

@@ -1,13 +1,28 @@
-import { RUN_PREVIEW_GAP, RUN_PREVIEW_HEIGHT, RUN_PREVIEW_WIDTH } from "@/constants/workflow-run-effects";
+import {
+  RUN_PREVIEW_GAP,
+  RUN_PREVIEW_HEIGHT,
+  RUN_PREVIEW_NODE_Z,
+  RUN_PREVIEW_RUNNING_NODE_Z,
+  RUN_PREVIEW_WIDTH,
+} from "@/constants/workflow-run-effects";
 import { isRunnableNode } from "@/helpers/workflow-run";
 import type { WorkflowNode, WorkflowNodeStatus, WorkflowNodeType } from "@/types/workflow";
 import type { Rect } from "@xyflow/react";
+
+export type PreviewTone = "live" | "done" | "failed";
 
 const ATTENTION_STATUSES: WorkflowNodeStatus[] = ["waiting_for_input", "waiting_for_review", "failed"];
 
 const FINISHED_STATUSES: WorkflowNodeStatus[] = ["success", "skipped"];
 
-const PREVIEW_NODE_TYPES: WorkflowNodeType[] = ["design-image", "generate-listing", "generate-video"];
+const PREVIEW_NODE_TYPES: WorkflowNodeType[] = [
+  "design-image",
+  "generate-listing",
+  "apply-mockup",
+  "generate-video",
+  "publish-etsy",
+  "publish-printify",
+];
 
 export type RunHudPhase = "running" | "attention" | "failed" | "done";
 
@@ -20,6 +35,27 @@ export type RunHudSummary = {
 };
 
 export const hasRunPreview = (type: WorkflowNodeType) => PREVIEW_NODE_TYPES.includes(type);
+
+export const previewToneOf = (status: WorkflowNodeStatus): PreviewTone =>
+  status === "running" ? "live" : status === "failed" ? "failed" : "done";
+
+const hostOf = (value: unknown) => {
+  if (typeof value !== "string") return null;
+  try {
+    return new URL(value).host;
+  } catch {
+    return null;
+  }
+};
+
+export const readPublishOutput = (output: Record<string, unknown> | undefined) => ({
+  madeAs: typeof output?.madeAs === "string" ? output.madeAs : null,
+  etsyHost: hostOf(output?.etsyUrl),
+  mediaAttached: typeof output?.mediaAttached === "number" ? output.mediaAttached : 0,
+  warnings: Array.isArray(output?.warnings)
+    ? output.warnings.filter((item): item is string => typeof item === "string")
+    : [],
+});
 
 export const getRunFocusIds = (nodes: WorkflowNode[], busyNodeIds: string[] = []) => {
   const active = nodes
@@ -128,6 +164,13 @@ export const summarizeRun = (nodes: WorkflowNode[]): RunHudSummary | null => {
     names: named.map((node) => node.data.label),
   };
 };
+
+export const raisePreviewNodes = (nodes: WorkflowNode[], statusById: Map<string, WorkflowNodeStatus>) =>
+  nodes.map((node) => {
+    const status = statusById.get(node.id) ?? node.data.status;
+    if (!hasRunPreview(node.data.type) || status === "idle") return node;
+    return { ...node, zIndex: status === "running" ? RUN_PREVIEW_RUNNING_NODE_Z : RUN_PREVIEW_NODE_Z };
+  });
 
 export const withLiveListing = (nodes: WorkflowNode[], listingLive: boolean) =>
   listingLive

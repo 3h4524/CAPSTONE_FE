@@ -1,4 +1,12 @@
-import type { MockupArea, MockupAreaSourceKind, MockupPrintArea, MockupPrintLayout, MockupTemplate, MockupView } from "@/types/mockup-templates";
+import type {
+  MockupArea,
+  MockupAreaSourceKind,
+  MockupPrintArea,
+  MockupPrintLayout,
+  MockupTemplate,
+  MockupTemplatePlacement,
+  MockupView,
+} from "@/types/mockup-templates";
 
 export const MAX_MOCKUP_SELECTION = 5;
 
@@ -23,6 +31,23 @@ export const countProductTypes = (products: { productType?: string | null }[]) =
     if (type) counts[type] = (counts[type] ?? 0) + 1;
     return counts;
   }, {});
+
+/**
+ * Why these chosen templates cannot make Printify products, or null. A product is made on one Printify blueprint and
+ * uses only the template of its own type, so a batch of T-shirts and hoodies takes one linked template per type.
+ */
+export const printifySelectionIssue = (
+  chosen: Pick<MockupTemplate, "productType" | "printify">[]
+): "none" | "notLinked" | "sameType" | null => {
+  if (chosen.length === 0) return "none";
+  if (chosen.some((template) => !template.printify)) return "notLinked";
+  const types = chosen.map((template) => template.productType.toLowerCase());
+  return new Set(types).size < types.length ? "sameType" : null;
+};
+
+/** The product types (lowercase) that none of the chosen templates is for: their products would get no mock-up. */
+export const uncoveredProductTypes = (productTypes: string[], chosen: Pick<MockupTemplate, "productType">[]) =>
+  productTypes.filter((type) => !chosen.some((template) => template.productType.toLowerCase() === type));
 
 // Mirrors the backend's MockupRules.ParsePrintArea shape: {"x":..,"y":..,"width":..,"height":..}.
 export const parsePrintArea = (json: string): MockupPrintArea | null => {
@@ -202,6 +227,31 @@ export const parsePrintLayout = (json: string): MockupPrintLayout | null => {
   }
   return { view: isView(parsed.view) ? parsed.view : "front", areas };
 };
+
+/** Where the template itself puts the design: its main print area. */
+export const templatePlacementOf = (template: Pick<MockupTemplate, "printAreaConfig">): MockupTemplatePlacement | null => {
+  const main = parsePrintLayout(template.printAreaConfig)?.areas[0];
+  return main ? { x: main.x, y: main.y, width: main.width, height: main.height, rotation: main.rotation } : null;
+};
+
+/** Whether two print positions put the design in the same place. */
+export const samePlacement = (left: MockupTemplatePlacement, right: MockupTemplatePlacement) =>
+  left.x === right.x &&
+  left.y === right.y &&
+  left.width === right.width &&
+  left.height === right.height &&
+  normalizeRotation(left.rotation) === normalizeRotation(right.rotation);
+
+/** Mirrors MockupRules.WithPlacement: the template's areas with the main one where the seller's run puts it. */
+export const withTemplatePlacement = (layout: MockupPrintLayout, placement: MockupTemplatePlacement | null | undefined): MockupPrintLayout =>
+  placement
+    ? {
+        ...layout,
+        areas: layout.areas.map((area) =>
+          area.key === MAIN_AREA_KEY ? { ...area, ...placement, rotation: normalizeRotation(placement.rotation) } : area
+        ),
+      }
+    : layout;
 
 /** What a print area is called on screen. */
 export const areaLabel = (area: Pick<MockupArea, "key" | "name">, index: number) =>

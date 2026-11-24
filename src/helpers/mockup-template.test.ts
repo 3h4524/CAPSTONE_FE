@@ -8,10 +8,13 @@ import {
   MAX_MOCKUP_SELECTION,
   parsePrintifyFrame,
   parsePrintQuad,
+  printifySelectionIssue,
   type PrintQuad,
   quadBounds,
   quadFromArea,
   sortMockupList,
+  uncoveredProductTypes,
+  withTemplatePlacement,
 } from "@/helpers/mockup-template";
 import { buildMockupTemplate } from "@/test/factories";
 
@@ -54,6 +57,42 @@ describe("isAutomaticPlacement", () => {
     expect(isAutomaticPlacement('{"x":1,"y":2,"width":3,"height":4,"unit":"px"}')).toBe(false);
     expect(isAutomaticPlacement('{"auto":"true"}')).toBe(false);
     expect(isAutomaticPlacement("not json")).toBe(false);
+  });
+});
+
+describe("printifySelectionIssue", () => {
+  const printify = { blueprintId: 1, blueprintTitle: "Tee", printProviderId: 1, printProviderTitle: "Provider", defaultSizes: [], colors: [] };
+
+  it("accepts one linked template for each product type", () => {
+    expect(printifySelectionIssue([{ productType: "tshirt", printify }, { productType: "hoodie", printify }])).toBeNull();
+  });
+
+  it("names what is wrong with the choice", () => {
+    expect(printifySelectionIssue([])).toBe("none");
+    expect(printifySelectionIssue([{ productType: "tshirt", printify: null }])).toBe("notLinked");
+    expect(printifySelectionIssue([{ productType: "tshirt", printify }, { productType: "TShirt", printify }])).toBe("sameType");
+  });
+});
+
+describe("withTemplatePlacement", () => {
+  const main = { key: "main", name: null, x: 10, y: 20, width: 30, height: 40, rotation: 0, source: "same" as const };
+  const sleeve = { ...main, key: "sleeve", source: "none" as const };
+
+  it("moves the main area only, and nothing without a position", () => {
+    const layout = { view: "front" as const, areas: [main, sleeve] };
+
+    expect(withTemplatePlacement(layout, { x: 1, y: 2, width: 3, height: 4, rotation: 15 }).areas).toEqual([
+      { ...main, x: 1, y: 2, width: 3, height: 4, rotation: 15 },
+      sleeve,
+    ]);
+    expect(withTemplatePlacement(layout, null)).toBe(layout);
+  });
+});
+
+describe("uncoveredProductTypes", () => {
+  it("lists the product types no chosen template is for", () => {
+    expect(uncoveredProductTypes(["tshirt", "hoodie"], [{ productType: "TShirt" }])).toEqual(["hoodie"]);
+    expect(uncoveredProductTypes(["tshirt", "hoodie"], [{ productType: "tshirt" }, { productType: "hoodie" }])).toEqual([]);
   });
 });
 

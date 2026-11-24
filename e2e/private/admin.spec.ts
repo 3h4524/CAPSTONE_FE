@@ -6,6 +6,7 @@ import { expect, request, test } from "@playwright/test";
 import { E2E_API_BASE_URL } from "../support/auth";
 import { readLatestAdminOtp } from "../support/otp";
 import { openPrivateRoute, pageHeading } from "../support/private";
+import { setEnglishInterface } from "../support/profile";
 
 const ADMIN_EMAIL = "demo.admin@apcs.test";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "Passw0rdTest1!";
@@ -37,6 +38,7 @@ const authenticateAdmin = async () => {
     if (!verify.ok()) {
       throw new Error(`Admin 2FA verification failed with ${verify.status()}: ${await verify.text()}`);
     }
+    await setEnglishInterface(api);
     await api.storageState({ path: ADMIN_STATE_PATH });
   } finally {
     await api.dispose();

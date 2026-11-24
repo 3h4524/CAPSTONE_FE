@@ -20,7 +20,7 @@ import {
   getConnectionIssue,
   isConnectionAllowed,
 } from "@/helpers/workflow-graph";
-import { withLiveListing } from "@/helpers/workflow-run-view";
+import { raisePreviewNodes, withLiveListing } from "@/helpers/workflow-run-view";
 import { useCanvasShortcuts } from "@/hooks/use-canvas-shortcuts";
 import { useListingLive } from "@/hooks/use-listing-live";
 import { useRunCamera } from "@/hooks/use-run-camera";
@@ -108,6 +108,7 @@ export const WorkflowCanvas = () => {
   const statusById = new Map(
     withLiveListing(nodes, listingLive).map((node) => [node.id, node.data.status])
   );
+  const displayedNodes = effects ? raisePreviewNodes(nodes, statusById) : nodes;
   const displayedEdges: WorkflowCanvasEdge[] = edges.map((edge) => ({
     ...edge,
     type: "process",
@@ -186,7 +187,7 @@ export const WorkflowCanvas = () => {
       onPointerLeave={() => hoverConnection(null, null)}
     >
       <ReactFlow
-        nodes={nodes}
+        nodes={displayedNodes}
         edges={displayedEdges}
         nodeTypes={NODE_TYPES}
         edgeTypes={EDGE_TYPES}

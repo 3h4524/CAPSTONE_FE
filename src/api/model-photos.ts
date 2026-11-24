@@ -1,12 +1,14 @@
 import { api } from "@/api/client";
 import type { PrintQuad } from "@/helpers/mockup-template";
 import { filterParams } from "@/helpers/model-attributes";
+import { readModelPhotoStream } from "@/helpers/model-photo-stream";
 import type { ModelPhotoStyle } from "@/helpers/model-photo-styles";
 import type {
   GarmentMaskPreview,
   MockupTemplate,
   ModelAttributes,
   ModelPhotoFilter,
+  ModelPhotoOptions,
 } from "@/types/mockup-templates";
 
 /** Who manages the model photos: a seller their own, an admin the shared library. */
@@ -21,7 +23,12 @@ export const modelPhotoKeys = {
     [...modelPhotoKeys.all, productType ?? "all", filterParams(filter)] as const,
   library: (filter?: ModelPhotoFilter) =>
     [...modelPhotoKeys.all, "library", filterParams(filter)] as const,
+  options: (scope: ModelPhotoScope) => [...modelPhotoKeys.all, "options", scope] as const,
 };
+
+/** What the app offers for model photos. */
+export const getModelPhotoOptions = async (scope: ModelPhotoScope): Promise<ModelPhotoOptions> =>
+  (await api.get<ModelPhotoOptions>(`${basePath(scope)}/options`)).data;
 
 /** The model photos a seller can use: the shared library and their own, narrowed to who is in them. */
 export const listModelPhotos = async (
@@ -48,12 +55,22 @@ export const listLibraryModelPhotos = async (
     })
   ).data;
 
-/** Makes a model photo with AI, on the caller's Ideogram key or the platform's (when their plan includes it), and keeps it. */
+/**
+ * Makes a model photo with AI, on the caller's Ideogram key or the platform's (when their plan includes it), and keeps
+ * it. `onPreview` gets a temporary link to the photo as soon as it is drawn, while it is still being saved.
+ */
 export const generateModelPhoto = async (
   scope: ModelPhotoScope,
-  input: { productType: string; attributes: ModelAttributes; style?: ModelPhotoStyle }
-): Promise<MockupTemplate> =>
-  (await api.post<MockupTemplate>(`${basePath(scope)}/generate`, input)).data;
+  input: { productType: string; attributes: ModelAttributes; style?: ModelPhotoStyle },
+  onPreview?: (url: string) => void
+): Promise<MockupTemplate> => {
+  const response = await api.post<ReadableStream<Uint8Array>>(`${basePath(scope)}/generate/stream`, input, {
+    adapter: "fetch",
+    responseType: "stream",
+    headers: { Accept: "text/event-stream" },
+  });
+  return readModelPhotoStream(response.data, onPreview);
+};
 
 /** Finds the person on a photo that is not saved yet; the mask's opacity is the person. */
 export const previewModelPhoto = async (

@@ -15,13 +15,14 @@ import { PanelEmptyState } from "@/components/workflows/config-panel/layout/pane
 import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
 import { defaultTemplateColors, type TemplateColors } from "@/helpers/garment-colors";
 import type { TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
-import { countProductTypes, productTypeLabel } from "@/helpers/mockup-template";
-import { readTemplateBackgrounds, readTemplateColors } from "@/helpers/workflow-config";
+import { countProductTypes, printifySelectionIssue, productTypeLabel, uncoveredProductTypes } from "@/helpers/mockup-template";
+import { readTemplateBackgrounds, readTemplateColors, readTemplatePlacements } from "@/helpers/workflow-config";
 import { hasPrintifyDownstream, type MockupTarget } from "@/helpers/workflow-graph";
 import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
+import type { TemplatePlacements } from "@/types/mockup-templates";
 import type { WorkflowNodeConfig } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 
@@ -30,6 +31,8 @@ type MockupSelectionFieldProps = {
   templateColorsName: string;
   /** Config key of the background chosen per template. */
   templateBackgroundsName: string;
+  /** Config key of where this workflow puts the design on each template. */
+  templatePlacementsName: string;
   /** Config key of what the mock-ups are for: "zip" or "printify". */
   targetName: string;
   value: string[];
@@ -55,12 +58,13 @@ const useWorkflowBatchId = () =>
     return typeof batchId === "string" ? batchId : "";
   });
 
-export const MockupSelectionField = ({ templateColorsName, templateBackgroundsName, targetName, value, onChange }: MockupSelectionFieldProps) => {
+export const MockupSelectionField = ({ templateColorsName, templateBackgroundsName, templatePlacementsName, targetName, value, onChange }: MockupSelectionFieldProps) => {
   const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const { control, setValue } = useFormContext<WorkflowNodeConfig>();
   const templateColors = readTemplateColors(useWatch({ control, name: templateColorsName }));
   const templateBackgrounds = readTemplateBackgrounds(useWatch({ control, name: templateBackgroundsName }));
+  const templatePlacements = readTemplatePlacements(useWatch({ control, name: templatePlacementsName }));
   const printifyLocked = usePrintifyLocked();
   const storedTarget: MockupTarget = useWatch({ control, name: targetName }) === "printify" ? "printify" : "zip";
   const target: MockupTarget = printifyLocked ? "printify" : storedTarget;
@@ -72,14 +76,6 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
   const { data: templates, isPending, isError } = useMockupTemplates();
   const { data: products } = useBatchProducts(batchId);
   const selectedTemplates = (templates ?? []).filter((template) => value.includes(template.id));
-  // A Printify product needs exactly one template linked to Printify.
-  const printifyProblem = !printify || isPending || !templates
-    ? null
-    : selectedTemplates.some((template) => !template.printify)
-      ? t("workflowConfig.mockupSelection.notLinkedToPrintify")
-      : selectedTemplates.length !== 1
-        ? t("workflowConfig.mockupSelection.chooseOnePrintify")
-        : null;
 
   // Only the product types the run will make mock-ups for are offered: the pending products if there
   // are any, else the ones in the run being viewed, else everything in the batch.
@@ -92,11 +88,28 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
         : products
           ? countProductTypes(products)
           : undefined;
+  const runTypes = productTypeCounts && Object.keys(productTypeCounts).length > 0 ? Object.keys(productTypeCounts) : null;
+  const typeOf = (template: { productType: string }) => template.productType.toLowerCase();
 
-  const apply = (templateIds: string[], colorsByTemplate: TemplateColors, backgroundsByTemplate: TemplateBackgrounds) => {
+  // Each product type of the run is made on one template linked to Printify; one chosen for another type is not used.
+  const printifyIssue = !printify || isPending || !templates
+    ? null
+    : printifySelectionIssue(runTypes ? selectedTemplates.filter((template) => runTypes.includes(typeOf(template))) : selectedTemplates);
+  const printifyProblem = printifyIssue === "notLinked"
+    ? t("workflowConfig.mockupSelection.notLinkedToPrintify")
+    : printifyIssue
+      ? t("workflowConfig.mockupSelection.chooseOnePrintify")
+      : null;
+  // The batch has a product type no chosen template is for: its products would get no mock-up.
+  const uncoveredTypes = runTypes && selectedTemplates.length > 0 && !printifyProblem
+    ? uncoveredProductTypes(runTypes, selectedTemplates)
+    : [];
+
+  const apply = (templateIds: string[], colorsByTemplate: TemplateColors, backgroundsByTemplate: TemplateBackgrounds, placements: TemplatePlacements) => {
     onChange(templateIds);
     setValue(templateColorsName, colorsByTemplate, { shouldDirty: true, shouldValidate: true });
     setValue(templateBackgroundsName, backgroundsByTemplate, { shouldDirty: true, shouldValidate: true });
+    setValue(templatePlacementsName, placements, { shouldDirty: true, shouldValidate: true });
     setOpen(false);
   };
 
@@ -171,12 +184,19 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
       )}
       {isError && <PanelNotice tone="error">{t("workflowConfig.mockupSelection.loadError")}</PanelNotice>}
       {printifyProblem && <PanelNotice tone="warning">{printifyProblem}</PanelNotice>}
+      {uncoveredTypes.length > 0 && (
+        <PanelNotice tone="warning">
+          {t("batchSetup.mockup.uncovered", {
+            types: uncoveredTypes.map((type) => t(`batches.productTypes.${type}`, { defaultValue: productTypeLabel(type) })).join(", "),
+          })}
+        </PanelNotice>
+      )}
       <Button type="button" variant="outline" size="sm" className="w-full hover:translate-y-0" disabled={isPending || isError} onClick={() => setOpen(true)}>
         {value.length === 0 ? <Plus aria-hidden="true" /> : <Pencil aria-hidden="true" />}
         {value.length === 0 ? t("workflowConfig.mockupSelection.chooseTemplates") : t("workflowConfig.mockupSelection.changeTemplates")}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-4xl flex-col overflow-hidden">
+        <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-5xl flex-col overflow-hidden sm:max-w-5xl">
           <DialogHeader className="text-left">
             <DialogTitle>{printify ? t("workflowConfig.mockupSelection.choosePrintifyTitle") : t("workflowConfig.mockupSelection.chooseMockupTitle")}</DialogTitle>
             <DialogDescription>
@@ -191,6 +211,7 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
               initialIds={value}
               initialTemplateColors={templateColors}
               initialTemplateBackgrounds={templateBackgrounds}
+              initialTemplatePlacements={templatePlacements}
               pending={false}
               productTypeCounts={productTypeCounts && Object.keys(productTypeCounts).length > 0 ? productTypeCounts : undefined}
               sampleDesignUrl={sampleDesignUrl}

@@ -7,6 +7,10 @@ import {
   centerOf,
   choosePreviewSide,
   getRunFocusIds,
+  hasRunPreview,
+  previewToneOf,
+  raisePreviewNodes,
+  readPublishOutput,
   summarizeRun,
   widenForPreviews,
   withLiveListing,
@@ -128,6 +132,60 @@ describe("choosePreviewSide", () => {
       { x: 0, y: -400, width: 400, height: 400 },
     ];
     expect(choosePreviewSide(node, crowded)).toBe("right");
+  });
+});
+
+describe("hasRunPreview", () => {
+  it("gives the steps that make something to look at a preview", () => {
+    expect(hasRunPreview("apply-mockup")).toBe(true);
+    expect(hasRunPreview("generate-video")).toBe(true);
+    expect(hasRunPreview("publish-printify")).toBe(true);
+    expect(hasRunPreview("design-approval")).toBe(false);
+  });
+});
+
+describe("raisePreviewNodes", () => {
+  it("lifts a step showing a preview above its neighbours, the running one highest", () => {
+    const nodes = [
+      node("generate-video", "running"),
+      node("apply-mockup", "success"),
+      node("design-image", "idle"),
+      node("review-video", "running"),
+    ];
+    const [running, done, idle, other] = raisePreviewNodes(
+      nodes,
+      new Map(nodes.map((item) => [item.id, item.data.status]))
+    );
+    expect(running.zIndex).toBeGreaterThan(done.zIndex ?? 0);
+    expect(done.zIndex).toBeGreaterThan(0);
+    expect(idle.zIndex).toBeUndefined();
+    expect(other.zIndex).toBeUndefined();
+  });
+});
+
+describe("previewToneOf", () => {
+  it("reads running as live and failed as failed", () => {
+    expect(previewToneOf("running")).toBe("live");
+    expect(previewToneOf("failed")).toBe("failed");
+    expect(previewToneOf("success")).toBe("done");
+  });
+});
+
+describe("readPublishOutput", () => {
+  it("keeps only the fields it can read", () => {
+    expect(
+      readPublishOutput({
+        madeAs: "Unisex tee",
+        etsyUrl: "https://www.etsy.com/listing/1",
+        mediaAttached: 3,
+        warnings: ["Tag too long", 4],
+      })
+    ).toEqual({ madeAs: "Unisex tee", etsyHost: "www.etsy.com", mediaAttached: 3, warnings: ["Tag too long"] });
+  });
+
+  it("ignores a link it cannot parse", () => {
+    expect(readPublishOutput({ etsyUrl: "not a url" }).etsyHost).toBeNull();
+    expect(readPublishOutput(undefined)).toEqual({ madeAs: null, etsyHost: null, mediaAttached: 0, warnings: [] });
   });
 });
 

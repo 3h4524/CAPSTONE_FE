@@ -284,8 +284,8 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     // (Workflows saved with the old shared `garmentColors` list lose it when they load.)
     // `templateBackgrounds` holds the background color of the templates that do not keep their photo's own.
     // `mockupIds` and `artworkGroupKey` are the video's choice among the finished mock-ups, made at Mockup Approval.
-    // `mockupTarget` says what the mock-ups are for: "zip" (export only) or "printify" (one Printify template, in
-    // its Printify colors). A Push to Printify step after this node makes it "printify" whatever is stored.
+    // `mockupTarget` says what the mock-ups are for: "zip" (export only) or "printify" (one Printify template per
+    // product type, in its Printify colors). A Push to Printify step after this node makes it "printify" whatever is stored.
     defaultConfig: {
       mockupTemplateIds: [],
       templateColors: {},
@@ -300,6 +300,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         name: "mockupTemplateIds",
         templateColorsName: "templateColors",
         templateBackgroundsName: "templateBackgrounds",
+        templatePlacementsName: "templatePlacements",
         targetName: "mockupTarget",
         label: "Mock-up templates",
       },

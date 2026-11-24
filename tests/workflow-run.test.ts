@@ -227,6 +227,12 @@ test("the mock-up selection sends colors only for the templates that are selecte
   assert.deepEqual(extractMockupSelection({ mockupTemplateIds: [id], templateColors: { [id]: ["#FFFFFF", "#111111"] }, templateBackgrounds: { [id]: { default: "#22262E", "#111111": "#FFFFFF" } } }).templateBackgrounds, { [id]: { "#FFFFFF": "#22262E", "#111111": "#FFFFFF" } });
 });
 
+test("the mock-up selection sends print positions only for the templates that are selected", () => {
+  const placement = { x: 10, y: 20, width: 30, height: 40, rotation: 5 };
+  const selection = extractMockupSelection({ mockupTemplateIds: [id], templateColors: {}, templateBackgrounds: {}, templatePlacements: { [id]: placement, [other]: placement } });
+  assert.deepEqual(selection.templatePlacements, { [id]: placement });
+});
+
 test("approvals are counted per design and estimate the mock-ups they make", () => {
   assert.deepEqual(countApprovals(job({})), { pending: 1, approved: 1, rejected: 1 });
   const approved = job({}, [product("p1", "tshirt", [image("a", "approved"), image("b", "approved"), image("x", "rejected")]), product("p2", "mug", [image("c", "approved")])]);

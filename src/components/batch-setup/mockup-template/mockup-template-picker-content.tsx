@@ -5,6 +5,7 @@ import { Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { MockupBackgroundChoice } from "@/components/batch-setup/mockup-template/mockup-background-choice";
+import { type MockupPlacementChoice, MockupPlacementDialog } from "@/components/batch-setup/mockup-template/mockup-placement-dialog";
 import { MockupTemplateCard } from "@/components/batch-setup/mockup-template/mockup-template-card";
 import { MockupTemplateDetail } from "@/components/batch-setup/mockup-template/mockup-template-detail";
 import { GarmentColorPicker } from "@/components/mockups/garment-color-picker";
@@ -12,6 +13,7 @@ import { MockupTemplateFormDialog } from "@/components/mockups/mockup-template-f
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
+import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
 import {
   carryColors,
   defaultTemplateColors,
@@ -22,8 +24,8 @@ import {
   type TemplateColors,
 } from "@/helpers/garment-colors";
 import { backgroundKeys, backgroundsFor, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
-import { MAX_MOCKUP_SELECTION, productTypeLabel } from "@/helpers/mockup-template";
-import type { MockupTemplate } from "@/types/mockup-templates";
+import { MAX_MOCKUP_SELECTION, productTypeLabel, templatePlacementOf } from "@/helpers/mockup-template";
+import type { MockupTemplate, TemplatePlacements } from "@/types/mockup-templates";
 
 type MockupTemplatePickerContentProps = {
   templates: MockupTemplate[];
@@ -34,16 +36,18 @@ type MockupTemplatePickerContentProps = {
   initialTemplateColors?: TemplateColors;
   /** Backgrounds picked per template, keyed by template id and then by garment color. */
   initialTemplateBackgrounds?: TemplateBackgrounds;
+  /** Where this workflow puts the design on a template, keyed by template id. */
+  initialTemplatePlacements?: TemplatePlacements;
   pending: boolean;
   /** Product types in the batch job (lowercase) with how many products each has. */
   productTypeCounts?: Record<string, number>;
   /** A generated design shown inside each template's print area in the preview. */
   sampleDesignUrl?: string | null;
-  onApply: (selectedIds: string[], templateColors: TemplateColors, templateBackgrounds: TemplateBackgrounds) => void;
+  onApply: (selectedIds: string[], templateColors: TemplateColors, templateBackgrounds: TemplateBackgrounds, templatePlacements: TemplatePlacements) => void;
   onClose: () => void;
   /**
-   * The mock-ups are for a Printify product: only templates linked to Printify are offered, exactly one is chosen
-   * (a Printify product is made on one blueprint), and its colors are the blueprint's Printify colors.
+   * The mock-ups are for a Printify product: only templates linked to Printify are offered, one per product type
+   * (each product is made on one blueprint), and their colors are the blueprint's Printify colors.
    */
   printifyOnly?: boolean;
 };
@@ -54,6 +58,7 @@ export const MockupTemplatePickerContent = ({
   initialColors = [],
   initialTemplateColors,
   initialTemplateBackgrounds = {},
+  initialTemplatePlacements = {},
   pending,
   productTypeCounts,
   sampleDesignUrl,
@@ -75,10 +80,9 @@ export const MockupTemplatePickerContent = ({
   const typeOf = (id: string) => templates.find((item) => item.id === id)?.productType.toLowerCase();
   // One template per product type. A selection saved before this rule keeps the first template of each type.
   const firstOfType = (id: string, index: number, ids: string[]) => ids.findIndex((other) => typeOf(other) === typeOf(id)) === index;
-  const [draftIds, setDraftIds] = useState(() => {
-    const kept = initialIds.filter((id) => usable(id)).filter((id, index, ids) => firstOfType(id, index, ids));
-    return printifyOnly ? kept.slice(0, 1) : kept;
-  });
+  const [draftIds, setDraftIds] = useState(() =>
+    initialIds.filter((id) => usable(id)).filter((id, index, ids) => firstOfType(id, index, ids))
+  );
   const leftOut = offered.filter((template) => initialIds.includes(template.id) && !usable(template.id));
   const usableIds = initialIds.filter((id) => usable(id));
   const extraOfType = templates.filter((template) => usableIds.includes(template.id) && !usableIds.filter((id, index, ids) => firstOfType(id, index, ids)).includes(template.id));
@@ -96,6 +100,9 @@ export const MockupTemplatePickerContent = ({
     )
   );
   const [draftBackgrounds, setDraftBackgrounds] = useState<TemplateBackgrounds>(initialTemplateBackgrounds);
+  // Kept on the workflow, never on the template: a system template is shared with every seller.
+  const [draftPlacements, setDraftPlacements] = useState<TemplatePlacements>(initialTemplatePlacements);
+  const [placingId, setPlacingId] = useState<string | null>(null);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   // The garment color each template is shown in. The preview and the background choice both follow it, so
   // switching the color in either one shows the same garment and the background that goes with it.
@@ -105,23 +112,24 @@ export const MockupTemplatePickerContent = ({
   const [editing, setEditing] = useState<{ template: MockupTemplate; open: boolean } | null>(null);
   const tooMany = draftIds.length > MAX_MOCKUP_SELECTION;
 
+  // The colors a template starts in when it is ticked: the one its garment already has.
+  const startColorsOf = (template: MockupTemplate) =>
+    template.printify ? printifyStartColors(template) : defaultTemplateColors(template);
+
   // Ticking a template unticks the other one of its product type: each type is made on one template.
   const toggleId = (id: string) => {
     const adding = !draftIds.includes(id);
-    // A Printify product is made on one blueprint, so ticking a Printify template unticks every other one.
     setDraftIds((previous) =>
       previous.includes(id)
         ? previous.filter((item) => item !== id)
-        : printifyOnly
-          ? [id]
-          : [...previous.filter((item) => typeOf(item) !== typeOf(id)), id]
+        : [...previous.filter((item) => typeOf(item) !== typeOf(id)), id]
     );
     setFocusedId(id);
 
     // A template ticked for the first time starts with the color its garment already has ticked.
     const template = templates.find((item) => item.id === id);
     if (adding && template && (draftColors[id] ?? []).length === 0) {
-      const defaults = template.printify ? printifyStartColors(template) : defaultTemplateColors(template);
+      const defaults = startColorsOf(template);
       if (defaults.length > 0) setDraftColors((previous) => ({ ...previous, [id]: defaults }));
     }
   };
@@ -185,8 +193,31 @@ export const MockupTemplatePickerContent = ({
           .filter((template) => template.allowBackground && draftIds.includes(template.id))
           .map((template) => [template.id, backgroundsFor(draftBackgrounds[template.id], backgroundKeysOf(template))] as const)
           .filter(([, backgrounds]) => Object.keys(backgrounds).length > 0)
-      )
+      ),
+      Object.fromEntries(Object.entries(draftPlacements).filter(([id]) => draftIds.includes(id)))
     );
+
+  const savePlacement = (templateId: string, { placement, colors, backgrounds, shownColor }: MockupPlacementChoice) => {
+    // The pencil is on every template: one set up before it was ticked is meant to be used. Ticked first, so the colors
+    // chosen in the form are the ones it keeps.
+    if (!draftIds.includes(templateId)) toggleId(templateId);
+    setDraftPlacements((previous) => {
+      const { [templateId]: _replaced, ...others } = previous;
+      return placement ? { ...others, [templateId]: placement } : others;
+    });
+    setDraftColors((previous) => ({ ...previous, [templateId]: colors }));
+    setDraftBackgrounds((previous) => ({ ...previous, [templateId]: backgrounds }));
+    if (shownColor) showColor(templateId, shownColor);
+    setFocusedId(templateId);
+    setPlacingId(null);
+  };
+  const placingTemplate = templates.find((template) => template.id === placingId) ?? null;
+  // A template not ticked yet opens in the colors ticking it would give it.
+  const placingColors = !placingTemplate?.allowRecolor
+    ? []
+    : draftIds.includes(placingTemplate.id) || (draftColors[placingTemplate.id] ?? []).length > 0
+      ? (draftColors[placingTemplate.id] ?? [])
+      : startColorsOf(placingTemplate);
 
   return (
     <>
@@ -220,6 +251,10 @@ export const MockupTemplatePickerContent = ({
                     const colors = draftColors[template.id] ?? [];
                     // The template's own color is offered back only where any color can be picked.
                     const ownColor = template.printify ? undefined : defaultTemplateColors(template)[0];
+                    // The seller's own template is edited itself. A system one is shared, so its pencil moves the design
+                    // for this workflow alone; so does an own one already moved here, to be able to move it back.
+                    const editsTemplate = template.isMine && !draftPlacements[template.id];
+                    const canEdit = editsTemplate || templatePlacementOf(template) !== null;
                     return (
                       <div key={template.id} className="flex flex-col gap-2">
                         <div className="flex items-start gap-1">
@@ -237,17 +272,23 @@ export const MockupTemplatePickerContent = ({
                                 {template.printify.printProviderTitle ? ` · ${template.printify.printProviderTitle}` : ""}
                               </p>
                             )}
+                            {draftPlacements[template.id] && (
+                              <p className="text-muted-foreground mt-1 pl-1 text-xs">{t("batchSetup.mockup.placementMoved")}</p>
+                            )}
                           </div>
-                          {/* Only the seller's own templates can be changed; the list refreshes when the edit is saved. */}
-                          {template.isMine && (
+                          {canEdit && (
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon-sm"
-                              aria-label={t("batchSetup.mockup.editName", { name: template.name })}
-                              title={t("batchSetup.mockup.editTemplate")}
+                              aria-label={
+                                editsTemplate
+                                  ? t("batchSetup.mockup.editName", { name: template.name })
+                                  : t("batchSetup.mockup.editPlacementOf", { name: template.name })
+                              }
+                              title={editsTemplate ? t("batchSetup.mockup.editTemplate") : t("batchSetup.mockup.editPlacement")}
                               disabled={pending}
-                              onClick={() => setEditing({ template, open: true })}
+                              onClick={() => (editsTemplate ? setEditing({ template, open: true }) : setPlacingId(template.id))}
                             >
                               <Pencil className="size-4" />
                             </Button>
@@ -261,7 +302,10 @@ export const MockupTemplatePickerContent = ({
                               selected={colors}
                               max={MAX_GARMENT_COLORS}
                               disabled={pending}
-                              onToggle={(hex) => toggleColor(template.id, hex)}
+                              onToggle={(hex) => {
+                                toggleColor(template.id, hex);
+                                setFocusedId(template.id);
+                              }}
                               palette={template.printify?.colors}
                               allowCustom={!template.printify}
                             />
@@ -296,7 +340,11 @@ export const MockupTemplatePickerContent = ({
                               // The preview moves to this template, so the garment is seen on the background being chosen.
                               setFocusedId(template.id);
                             }}
-                            onChange={(key, hex) => setBackground(template, key, hex)}
+                            onChange={(key, hex) => {
+                              setBackground(template, key, hex);
+                              // The preview moves here too, or a background picked for one template shows on no garment.
+                              setFocusedId(template.id);
+                            }}
                           />
                         )}
                       </div>
@@ -312,6 +360,7 @@ export const MockupTemplatePickerContent = ({
             template={focusedTemplate}
             colors={focusedTemplate ? (draftColors[focusedTemplate.id] ?? []) : []}
             backgrounds={focusedTemplate?.allowBackground ? draftBackgrounds[focusedTemplate.id] : undefined}
+            placement={focusedTemplate ? draftPlacements[focusedTemplate.id] : undefined}
             designUrl={sampleDesignUrl}
             shownColor={focusedTemplate ? shownColorOf(focusedTemplate) : undefined}
             onShowColor={(hex) => focusedTemplate && showColor(focusedTemplate.id, hex)}
@@ -320,20 +369,25 @@ export const MockupTemplatePickerContent = ({
       </div>
       <p className="text-muted-foreground text-xs" aria-live="polite">
         {printifyOnly
-          ? draftIds.length === 1
-            ? t("batchSetup.mockup.printifySelected")
+          ? draftIds.length > 0
+            ? t("batchSetup.mockup.printifySelected", { count: draftIds.length })
             : t("batchSetup.mockup.choosePrintify")
           : t("batchSetup.mockup.selectedOf", { count: draftIds.length, max: MAX_MOCKUP_SELECTION })}
-        {printifyOnly
-          ? ""
-          : tooMany
+        {tooMany
           ? ` — ${t("batchSetup.mockup.removeSome")}`
           : draftIds.length === 0
-            ? ` — ${t("batchSetup.mockup.selectOne")}`
-            : uncovered.length > 0
-              ? ` — ${t("batchSetup.mockup.uncovered", { types: uncovered.map((group) => productTypeLabel(group.type)).join(", ") })}`
-              : ""}
+            ? printifyOnly ? "" : ` — ${t("batchSetup.mockup.selectOne")}`
+            : ""}
       </p>
+      <div aria-live="polite" className="empty:hidden">
+        {draftIds.length > 0 && uncovered.length > 0 && (
+          <PanelNotice tone="warning">
+            {t("batchSetup.mockup.uncovered", {
+              types: uncovered.map((group) => t(`batches.productTypes.${group.type}`, { defaultValue: productTypeLabel(group.type) })).join(", "),
+            })}
+          </PanelNotice>
+        )}
+      </div>
       {extraOfType.length > 0 && (
         <p className="text-muted-foreground text-xs">
           {t("batchSetup.mockup.onePerType", { names: extraOfType.map((template) => template.name).join(", ") })}
@@ -351,10 +405,23 @@ export const MockupTemplatePickerContent = ({
       )}
       <DialogFooter className="gap-2">
         <Button type="button" variant="ghost" onClick={onClose}>{t("batchSetup.cancel")}</Button>
-        <Button type="button" disabled={pending || draftIds.length === 0 || tooMany || (printifyOnly && draftIds.length !== 1)} onClick={apply}>
+        <Button type="button" disabled={pending || draftIds.length === 0 || tooMany} onClick={apply}>
           {t("batchSetup.mockup.apply")}
         </Button>
       </DialogFooter>
+      {placingTemplate && (
+        <MockupPlacementDialog
+          key={placingTemplate.id}
+          template={placingTemplate}
+          placement={draftPlacements[placingTemplate.id] ?? null}
+          colors={placingColors}
+          shownColor={shownColorOf(placingTemplate)}
+          backgrounds={draftBackgrounds[placingTemplate.id]}
+          designUrl={sampleDesignUrl}
+          onSave={(choice) => savePlacement(placingTemplate.id, choice)}
+          onClose={() => setPlacingId(null)}
+        />
+      )}
       <MockupTemplateFormDialog
         open={editing?.open ?? false}
         template={editing?.template ?? null}

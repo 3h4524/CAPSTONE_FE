@@ -12,6 +12,7 @@ import {
 import { showToast } from "@/helpers/toast";
 import { useMutation } from "@/hooks/mutations/use-mutation";
 import { useAppQueryClient } from "@/hooks/use-query-client";
+import type { MockupTemplate } from "@/types/mockup-templates";
 
 export type SaveModelPhotoVariables = SaveModelPhotoInput & { id: string | null };
 
@@ -28,15 +29,26 @@ export const useSaveModelPhoto = (scope: ModelPhotoScope) => {
   });
 };
 
+type GenerateModelPhotoCallbacks = {
+  /** The photo's link, as soon as it is drawn. */
+  onPreview?: (url: string) => void;
+  /** The saved photo. Called even when the dialog that started it has been closed meanwhile. */
+  onSaved?: (photo: MockupTemplate) => void;
+};
+
 /** Makes a model photo with AI and keeps it; it then shows in the lists. */
-export const useGenerateModelPhoto = (scope: ModelPhotoScope) => {
+export const useGenerateModelPhoto = (
+  scope: ModelPhotoScope,
+  { onPreview, onSaved }: GenerateModelPhotoCallbacks = {}
+) => {
   const queryClient = useAppQueryClient();
   return useMutation({
     mutationFn: (input: Parameters<typeof generateModelPhoto>[1]) =>
-      generateModelPhoto(scope, input),
+      generateModelPhoto(scope, input, onPreview),
     onSuccess: (photo) => {
       queryClient.invalidateQueries({ queryKey: modelPhotoKeys.all });
       showToast("success", `${photo.name} was made and added to your model photos.`);
+      onSaved?.(photo);
     },
   });
 };

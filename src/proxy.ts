@@ -2,16 +2,31 @@ import { type NextRequest,NextResponse } from "next/server";
 
 const REFRESH_COOKIE = "__Host-apcs_refresh";
 
-const PUBLIC_PATHS = new Set([
-  "/",
-  "/features",
-  "/forgot-password",
-  "/reset-password",
-  "/verify-email",
-  "/etsy/callback",
-  "/opengraph-image",
-  "/twitter-image",
-]);
+const PRIVATE_SECTIONS = [
+  "/admin",
+  "/api-keys",
+  "/batch-jobs",
+  "/batches",
+  "/change-password",
+  "/dashboard",
+  "/design-templates",
+  "/market-insights",
+  "/market-opportunities",
+  "/mockups",
+  "/profile",
+  "/prompt-editor",
+  "/settings",
+  "/shop",
+  "/styles",
+  "/subscription",
+  "/support",
+  "/unauthorized",
+  "/usage",
+  "/workflows",
+];
+
+const isPrivatePath = (pathname: string) =>
+  PRIVATE_SECTIONS.some((section) => pathname === section || pathname.startsWith(`${section}/`));
 
 const GUEST_ONLY_PATHS = new Set([
   "/login",
@@ -38,7 +53,7 @@ export const proxy = (request: NextRequest) => {
     return NextResponse.next();
   }
 
-  if (!PUBLIC_PATHS.has(pathname) && !hasRefreshCookie) {
+  if (isPrivatePath(pathname) && !hasRefreshCookie) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = `?returnUrl=${encodeURIComponent(`${pathname}${search}`)}`;

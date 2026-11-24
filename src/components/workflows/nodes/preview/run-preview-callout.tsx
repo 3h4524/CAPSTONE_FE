@@ -1,18 +1,24 @@
 "use client";
 
+import type { ReactNode } from "react";
+
+import { NodeControl } from "@/components/workflows/nodes/node-control";
 import { DesignPreview } from "@/components/workflows/nodes/preview/design-preview";
 import { ListingPreview } from "@/components/workflows/nodes/preview/listing-preview";
+import { MockupPreview } from "@/components/workflows/nodes/preview/mockup-preview";
+import { PublishPreview } from "@/components/workflows/nodes/preview/publish-preview";
 import { VideoPreview } from "@/components/workflows/nodes/preview/video-preview";
 import { RUN_PREVIEW_GAP, RUN_PREVIEW_WIDTH } from "@/constants/workflow-run-effects";
 import { previewSideOf, type RunPreviewSide } from "@/helpers/workflow-run-view";
 import { useWorkflowStore } from "@/stores/workflow";
-import type { WorkflowNodeStatus, WorkflowNodeType } from "@/types/workflow";
+import type { WorkflowNodeData, WorkflowNodeStatus } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 
 type RunPreviewCalloutProps = {
   nodeId: string;
-  type: WorkflowNodeType;
+  data: WorkflowNodeData;
   status: WorkflowNodeStatus;
+  progress: number;
 };
 
 const SIDE_CLASS_NAMES: Record<RunPreviewSide, string> = {
@@ -22,38 +28,54 @@ const SIDE_CLASS_NAMES: Record<RunPreviewSide, string> = {
   top: "bottom-full left-0 slide-in-from-bottom-2",
 };
 
-const SIDE_MARGINS: Record<RunPreviewSide, "marginLeft" | "marginRight" | "marginTop" | "marginBottom"> = {
+const SIDE_MARGINS: Record<
+  RunPreviewSide,
+  "marginLeft" | "marginRight" | "marginTop" | "marginBottom"
+> = {
   right: "marginLeft",
   left: "marginRight",
   bottom: "marginTop",
   top: "marginBottom",
 };
 
-export const RunPreviewCallout = ({ nodeId, type, status }: RunPreviewCalloutProps) => {
+const previewContent = ({ nodeId, data, status, progress }: RunPreviewCalloutProps): ReactNode => {
+  switch (data.type) {
+    case "design-image":
+      return <DesignPreview status={status} />;
+    case "generate-listing":
+      return <ListingPreview />;
+    case "apply-mockup":
+      return <MockupPreview status={status} />;
+    case "generate-video":
+      return <VideoPreview data={data} status={status} progress={progress} />;
+    case "publish-etsy":
+    case "publish-printify":
+      return <PublishPreview nodeId={nodeId} data={data} status={status} progress={progress} />;
+    default:
+      return null;
+  }
+};
+
+export const RunPreviewCallout = (props: RunPreviewCalloutProps) => {
   // Beside the node where no other node is: on the right, else on the left, below or above.
   const side = useWorkflowStore((state) => {
-    const node = state.nodes.find((candidate) => candidate.id === nodeId);
+    const node = state.nodes.find((candidate) => candidate.id === props.nodeId);
     return node ? previewSideOf(node, state.nodes) : "right";
   });
-  const content =
-    type === "design-image" ? (
-      <DesignPreview status={status} />
-    ) : type === "generate-listing" ? (
-      <ListingPreview />
-    ) : type === "generate-video" ? (
-      <VideoPreview status={status} />
-    ) : null;
+  const content = previewContent(props);
   if (!content) return null;
+  const interactive = props.data.type === "generate-video";
 
   return (
     <aside
       className={cn(
-        "bg-wf-surface border-wf-line animate-in fade-in pointer-events-none absolute z-20 rounded-xl border p-2.5 shadow-xl empty:hidden",
-        SIDE_CLASS_NAMES[side]
+        "bg-wf-surface border-wf-line animate-in fade-in absolute z-20 rounded-xl border p-2.5 shadow-xl empty:hidden",
+        SIDE_CLASS_NAMES[side],
+        !interactive && "pointer-events-none"
       )}
       style={{ width: RUN_PREVIEW_WIDTH, [SIDE_MARGINS[side]]: RUN_PREVIEW_GAP }}
     >
-      {content}
+      {interactive ? <NodeControl>{content}</NodeControl> : content}
     </aside>
   );
 };

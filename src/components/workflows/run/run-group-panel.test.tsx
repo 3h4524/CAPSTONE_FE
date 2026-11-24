@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   confirm: vi.fn(),
   resume: vi.fn(),
   assets: [] as MockupAsset[],
+  printWithoutAi: true,
 }));
 
 vi.mock("@/hooks/queries/use-run-group", () => ({
@@ -30,6 +31,11 @@ vi.mock("@/hooks/mutations/use-review-mockup-asset", () => ({ useReviewMockupAss
 vi.mock("@/hooks/use-query-client", () => ({ useAppQueryClient: () => ({ setQueryData: vi.fn(), invalidateQueries: vi.fn() }) }));
 vi.mock("@/hooks/queries/use-ai-video-templates", () => ({
   useAiVideoTemplates: () => ({ data: [{ code: "lifestyle_in_use", requiresLifestyle: true }, { code: "cinematic_product_showcase", requiresLifestyle: false }] }),
+}));
+vi.mock("@/hooks/queries/use-print-without-ai", () => ({ usePrintWithoutAi: () => mocks.printWithoutAi }));
+vi.mock("@/components/workflows/media/lifestyle-mockup-form", () => ({
+  LifestyleMockupForm: () => <p>AI form for the model photo</p>,
+  lifestyleGarmentsOf: () => [],
 }));
 vi.mock("@/components/workflows/media/model-photo-mockup-form", () => ({
   ModelPhotoMockupForm: ({ productId }: { productId: string }) => <p>model photo form for {productId}</p>,
@@ -71,6 +77,7 @@ describe("RunGroupPanel: starting the videos", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.assets = [];
+    mocks.printWithoutAi = true;
     mocks.group = group();
     showCanvas(standard);
   });
@@ -113,6 +120,15 @@ describe("RunGroupPanel: starting the videos", () => {
     render(<RunGroupPanel />);
 
     expect(screen.getByText("model photo form for p")).toBeInTheDocument();
+  });
+
+  it("offers the AI form for the model photo while printing without AI is off", () => {
+    mocks.printWithoutAi = false;
+    showCanvas(person);
+    render(<RunGroupPanel />);
+
+    expect(screen.getByText("AI form for the model photo")).toBeInTheDocument();
+    expect(screen.queryByText("model photo form for p")).not.toBeInTheDocument();
   });
 
   it("names the design that cannot be rendered and why, and lets Continue make its model photo again", () => {

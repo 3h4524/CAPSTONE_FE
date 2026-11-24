@@ -12,13 +12,20 @@ import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-no
 import { lifestyleGarmentsOf, LifestyleMockupForm } from "@/components/workflows/media/lifestyle-mockup-form";
 import { ModelPhotoMockupForm } from "@/components/workflows/media/model-photo-mockup-form";
 import {
+  groupProductMockups,
   MockupStripCard,
   MockupStripSkeleton,
+  type ProductColorChoice,
+  ProductMockupCard,
+  type ProductMockupColor,
   ScrollStrip,
 } from "@/components/workflows/run/mockup-strip";
 import { getErrorMessage } from "@/helpers/error-message";
+import { templateSidesIndex } from "@/helpers/mockup-sides";
+import { withViewTemplates } from "@/helpers/mockup-template";
 import { showWorkflowActionToast } from "@/helpers/toast";
 import { hasVideoSteps } from "@/helpers/workflow-run";
+import { useReviewDesignMockups } from "@/hooks/mutations/use-review-design-mockups";
 import { useReviewMockupAsset } from "@/hooks/mutations/use-review-mockup-asset";
 import {
   useCancelRunGroup,
@@ -27,6 +34,7 @@ import {
 } from "@/hooks/mutations/use-run-group-actions";
 import { useAiVideoTemplates } from "@/hooks/queries/use-ai-video-templates";
 import { useMockupAssets } from "@/hooks/queries/use-mockup-assets";
+import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
 import { usePrintWithoutAi } from "@/hooks/queries/use-print-without-ai";
 import { useRunGroup, useRunGroupId } from "@/hooks/queries/use-run-group";
 import { usePanelContinueCommand } from "@/hooks/use-panel-continue-command";
@@ -72,6 +80,57 @@ export const designMockups = (
       (asset.artworkGroupKey ?? asset.productId) === target.artworkGroupKey &&
       asset.role !== "VideoScene"
   );
+
+/** A mock-up made from a template on Apply mock-up, not an AI image or an uploaded photo. */
+const isComposite = (asset: MockupAsset) => asset.sourceType === "generated";
+
+/** The composites of a design as product cards (see groupProductMockups), each named after its template. */
+const useProductCards = (mockups: MockupAsset[]) => {
+  const { data: templates } = useMockupTemplates();
+  const index = templateSidesIndex(templates ?? []);
+  const names = new Map(withViewTemplates(templates ?? []).map((item) => [item.id, item.name]));
+  return {
+    cards: groupProductMockups(mockups.filter(isComposite), index),
+    nameOf: (card: ProductMockupCard, fallback: string) =>
+      (card.templateId && names.get(card.templateId)) || fallback,
+  };
+};
+
+/**
+ * A design's mock-ups as the strip shows them: one card per garment template for the composites, which go on as one
+ * product (every color and side of it, picked on the card), then each AI image or uploaded photo on its own.
+ */
+const MockupCards = ({
+  mockups,
+  name,
+  readOnly = false,
+  choiceFor,
+}: {
+  mockups: MockupAsset[];
+  name: string;
+  readOnly?: boolean;
+  /** Lets a color of a card be left out, at Mockup Approval. */
+  choiceFor?: (card: ProductMockupCard) => ProductColorChoice;
+}) => {
+  const { cards, nameOf } = useProductCards(mockups);
+  return (
+    <>
+      {cards.map((card) => (
+        <ProductMockupCard
+          key={card.key}
+          card={card}
+          name={nameOf(card, name)}
+          choice={choiceFor?.(card)}
+        />
+      ))}
+      {mockups
+        .filter((asset) => !isComposite(asset))
+        .map((asset) => (
+          <MockupStripCard key={asset.id} asset={asset} readOnly={readOnly} />
+        ))}
+    </>
+  );
+};
 
 const byProduct = (targets: RunGroupTarget[]) => {
   const groups = new Map<string, RunGroupTarget[]>();
@@ -427,18 +486,70 @@ const DesignRow = ({
 }) => {
   const { t } = useTranslation("common");
   const { mutateAsync: review } = useReviewMockupAsset();
+  const { mutateAsync: reviewDesign } = useReviewDesignMockups();
   const [isReviewing, setIsReviewing] = useState(false);
   const usedScenes = scenesByMockup(target);
   const mockups = usedFirst(unordered, usedScenes);
   const usedCount = mockups.filter((asset) => usedScenes.has(asset.id)).length;
+  // The mock-ups made on Apply mock-up: every color and side of them goes on, or not, as one product.
+  const composites = mockups.filter((asset) => isComposite(asset));
+  const { cards } = useProductCards(mockups);
+  // A color can be left out of the product, with every side of it. Until it is turned on or off here, a color is off
+  // when it was saved as rejected while the rest of the product was not.
+  const [turnedOff, setTurnedOff] = useState<Record<string, boolean>>({});
+  const skipped = composites.every((asset) => asset.approvalStatus === "rejected");
+  const colorId = (card: ProductMockupCard, color: ProductMockupColor) => `${card.key}|${color.key}`;
+  const isOff = (card: ProductMockupCard, color: ProductMockupColor) =>
+    turnedOff[colorId(card, color)] ??
+    (!skipped && color.sides.every((side) => side.asset.approvalStatus === "rejected"));
+  const colorCount = cards.reduce((count, card) => count + card.colors.length, 0);
+  const colorsOn = cards.reduce(
+    (count, card) => count + card.colors.filter((color) => !isOff(card, color)).length,
+    0
+  );
+  const choiceFor =
+    colorCount > 1
+      ? (card: ProductMockupCard): ProductColorChoice => {
+          const colorOf = (key: string) => card.colors.find((color) => color.key === key);
+          return {
+            isOff: (key) => {
+              const color = colorOf(key);
+              return color ? isOff(card, color) : false;
+            },
+            toggle: (key) => {
+              const color = colorOf(key);
+              if (color)
+                setTurnedOff((current) => ({ ...current, [colorId(card, color)]: !isOff(card, color) }));
+            },
+            canTurnOff: colorsOn > 1,
+          };
+        }
+      : undefined;
+  const leftOut = cards.flatMap((card) =>
+    card.colors
+      .filter((color) => isOff(card, color))
+      .flatMap((color) => color.sides.map((side) => side.asset.id))
+  );
 
   const reviewAll = async (approved: boolean) => {
     setIsReviewing(true);
     try {
-      for (const asset of mockups.filter(
-        (item) => item.approvalStatus !== (approved ? "approved" : "rejected")
-      ))
-        await review({ id: asset.id, revision: asset.revision, approved });
+      if (composites.length > 0)
+        await reviewDesign({
+          productId: target.productId,
+          artworkGroupKey: target.artworkGroupKey,
+          approved,
+          leftOut: approved ? leftOut : [],
+        });
+      // AI images and uploaded photos keep their own review; skipping the product rejects them too, and a design of
+      // uploaded photos only is approved photo by photo.
+      const singles = mockups.filter(
+        (item) =>
+          !isComposite(item) &&
+          (!approved || composites.length === 0) &&
+          item.approvalStatus !== (approved ? "approved" : "rejected")
+      );
+      for (const asset of singles) await review({ id: asset.id, revision: asset.revision, approved });
     } catch (error) {
       showWorkflowActionToast("error", getErrorMessage(error));
     } finally {
@@ -550,7 +661,9 @@ const DesignRow = ({
           onClick={() => reviewAll(true)}
         >
           <Check className="size-3.5" aria-hidden="true" />
-          {t("workflowEditor.runGroup.approveAll")}
+          {asProduct
+            ? t("workflowEditor.runGroup.approveProduct")
+            : t("workflowEditor.runGroup.approveDesign")}
         </Button>
         <Button
           type="button"
@@ -591,10 +704,17 @@ const DesignRow = ({
           })}
           itemCount={mockups.length}
         >
-          {mockups.map((asset) => (
-            <MockupStripCard key={asset.id} asset={asset} />
-          ))}
+          <MockupCards
+            mockups={mockups}
+            name={asProduct ? target.productName : target.designLabel}
+            choiceFor={choiceFor}
+          />
         </ScrollStrip>
+      )}
+      {composites.length > 0 && (
+        <p className="text-muted-foreground px-3 text-xs">
+          {t("workflowEditor.runGroup.reviewWhole")}
+        </p>
       )}
     </li>
   );
@@ -751,9 +871,7 @@ const ApprovedMockups = ({ target }: { target: RunGroupTarget }) => {
         })}
         itemCount={approved.length}
       >
-        {approved.map((asset) => (
-          <MockupStripCard key={asset.id} asset={asset} readOnly />
-        ))}
+        <MockupCards mockups={approved} name={target.productName} readOnly />
       </ScrollStrip>
     </div>
   );

@@ -172,6 +172,26 @@ export const reviewMockupAsset = async ({
       approved,
     })
   ).data;
+/** Approves or rejects every color and side of a design's mock-ups at once; returns the product's mock-ups. */
+export const reviewDesignMockups = async ({
+  productId,
+  artworkGroupKey,
+  approved,
+  leftOut = [],
+}: {
+  productId: string;
+  artworkGroupKey: string;
+  approved: boolean;
+  /** The mock-ups of the colors left out of the product: they are rejected while the rest is approved. */
+  leftOut?: string[];
+}) =>
+  (
+    await api.post<MockupAsset[]>(`/api/products/${productId}/mockup-assets/review-design`, {
+      artworkGroupKey,
+      approved,
+      leftOut,
+    })
+  ).data;
 export const listRunVideos = async (id: string) =>
   (await api.get<PromoVideo[]>(`/api/workflow-runs/${id}/videos`)).data;
 export const listRunSceneVideos = async (id: string) =>

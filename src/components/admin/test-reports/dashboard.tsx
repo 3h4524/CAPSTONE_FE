@@ -152,7 +152,9 @@ export const TestReportsDashboard = () => {
         open={isRunDialogOpen}
         onOpenChange={setIsRunDialogOpen}
         isPending={isPending}
-        onConfirm={() => startRun(undefined, { onSettled: () => setIsRunDialogOpen(false) })}
+        onConfirm={(mode) =>
+          startRun({ mode }, { onSettled: () => setIsRunDialogOpen(false) })
+        }
       />
     </>
   );

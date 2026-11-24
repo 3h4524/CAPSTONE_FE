@@ -1,5 +1,7 @@
 export type TestReportStatus = "running" | "passed" | "failed" | "error";
 
+export type TestReportRunMode = "headless" | "headed" | "debug";
+
 export type TestReportSpecStatus =
   | "passed"
   | "failed"

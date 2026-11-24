@@ -9,6 +9,8 @@ import { MockupPreview } from "@/components/workflows/nodes/preview/mockup-previ
 import { PublishPreview } from "@/components/workflows/nodes/preview/publish-preview";
 import { VideoPreview } from "@/components/workflows/nodes/preview/video-preview";
 import { RUN_PREVIEW_GAP, RUN_PREVIEW_WIDTH } from "@/constants/workflow-run-effects";
+import { previewSideOf, type RunPreviewSide } from "@/helpers/workflow-run-view";
+import { useWorkflowStore } from "@/stores/workflow";
 import type { WorkflowNodeData, WorkflowNodeStatus } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 
@@ -17,6 +19,23 @@ type RunPreviewCalloutProps = {
   data: WorkflowNodeData;
   status: WorkflowNodeStatus;
   progress: number;
+};
+
+const SIDE_CLASS_NAMES: Record<RunPreviewSide, string> = {
+  right: "top-0 left-full slide-in-from-left-2",
+  left: "top-0 right-full slide-in-from-right-2",
+  bottom: "top-full left-0 slide-in-from-top-2",
+  top: "bottom-full left-0 slide-in-from-bottom-2",
+};
+
+const SIDE_MARGINS: Record<
+  RunPreviewSide,
+  "marginLeft" | "marginRight" | "marginTop" | "marginBottom"
+> = {
+  right: "marginLeft",
+  left: "marginRight",
+  bottom: "marginTop",
+  top: "marginBottom",
 };
 
 const previewContent = ({ nodeId, data, status, progress }: RunPreviewCalloutProps): ReactNode => {
@@ -38,6 +57,11 @@ const previewContent = ({ nodeId, data, status, progress }: RunPreviewCalloutPro
 };
 
 export const RunPreviewCallout = (props: RunPreviewCalloutProps) => {
+  // Beside the node where no other node is: on the right, else on the left, below or above.
+  const side = useWorkflowStore((state) => {
+    const node = state.nodes.find((candidate) => candidate.id === props.nodeId);
+    return node ? previewSideOf(node, state.nodes) : "right";
+  });
   const content = previewContent(props);
   if (!content) return null;
   const interactive = props.data.type === "generate-video";
@@ -45,10 +69,11 @@ export const RunPreviewCallout = (props: RunPreviewCalloutProps) => {
   return (
     <aside
       className={cn(
-        "bg-wf-surface border-wf-line animate-in fade-in slide-in-from-left-2 absolute top-0 left-full z-20 rounded-xl border p-2.5 shadow-xl empty:hidden",
+        "bg-wf-surface border-wf-line animate-in fade-in absolute z-20 rounded-xl border p-2.5 shadow-xl empty:hidden",
+        SIDE_CLASS_NAMES[side],
         !interactive && "pointer-events-none"
       )}
-      style={{ width: RUN_PREVIEW_WIDTH, marginLeft: RUN_PREVIEW_GAP }}
+      style={{ width: RUN_PREVIEW_WIDTH, [SIDE_MARGINS[side]]: RUN_PREVIEW_GAP }}
     >
       {interactive ? <NodeControl>{content}</NodeControl> : content}
     </aside>

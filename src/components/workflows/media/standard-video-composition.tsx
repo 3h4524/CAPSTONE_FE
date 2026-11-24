@@ -1,6 +1,7 @@
 "use client";
 
-import { AbsoluteFill, Audio, Sequence, useCurrentFrame } from "remotion";
+import type { ReactNode } from "react";
+import { AbsoluteFill, Audio, Sequence, useCurrentFrame, Video } from "remotion";
 
 import type { VideoStoryboard } from "@/types/video-workflow";
 import {
@@ -16,7 +17,44 @@ export type StandardVideoPreviewProps = {
   sources: Record<string, StandardVideoSource>;
   musicUrl?: string;
   musicDurationInFrames?: number;
+  /** The AI clip each AI scene already has, by scene order: it plays in place of the scene's still start frame. */
+  clips?: Record<number, string>;
 };
+
+/** Frames an AI clip is loaded ahead of its scene, so it is ready to play when the scene starts. */
+const CLIP_PREMOUNT_FRAMES = 30;
+
+/**
+ * An AI scene's clip, as the full video editor and the render draw it: muted, from the scene's trim, covering the frame at
+ * its crop position. It stays on its last frame while the next scene's transition plays over it.
+ */
+const PreviewAiClip = ({ src, scene, from, holdFrames }: { src: string; scene: VideoStoryboard["scenes"][number]; from: number; holdFrames: number }) => (
+  <Sequence
+    from={from}
+    durationInFrames={scene.durationFrames}
+    premountFor={CLIP_PREMOUNT_FRAMES}
+    postmountFor={holdFrames}
+    styleWhilePremounted={{ opacity: 1 }}
+    styleWhilePostmounted={{ opacity: 1 }}
+  >
+    <Video
+      src={src}
+      trimBefore={scene.trimStartFrames ?? 0}
+      durationInFrames={scene.durationFrames}
+      muted
+      pauseWhenBuffering
+      preload="auto"
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        objectPosition: `${(scene.aiCropPosition?.x ?? 0.5) * 100}% ${(scene.aiCropPosition?.y ?? 0.5) * 100}%`,
+      }}
+    />
+  </Sequence>
+);
 
 const PreviewShot = ({
   scene,
@@ -24,12 +62,15 @@ const PreviewShot = ({
   width,
   height,
   frame,
+  clip,
 }: {
   scene: StandardVideoScene;
   source: StandardVideoSource;
   width: number;
   height: number;
   frame: number;
+  /** Drawn over the still image and under the caption: an AI scene's clip. */
+  clip?: ReactNode;
 }) => {
   const { crop, opacity, rotation, scale, containScale } = getSceneFrame(scene, frame);
   const inset = Math.round(Math.min(width, height) * 0.074);
@@ -66,6 +107,7 @@ const PreviewShot = ({
           second media sequence. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img key={source.url} src={source.url} alt="" draggable={false} style={style} />
+      {clip}
       {scene.text && (
         <div
           style={{
@@ -95,6 +137,7 @@ export const StandardVideoPreview = ({
   sources,
   musicUrl,
   musicDurationInFrames,
+  clips,
 }: StandardVideoPreviewProps) => {
   const frame = useCurrentFrame();
   let offset = 0;
@@ -110,29 +153,34 @@ export const StandardVideoPreview = ({
           storyboard.scenes[index + 1]?.transitionFrames ?? fallbackOverlap;
         const renderDuration = legacy ? scene.durationFrames : scene.durationFrames + nextOverlapFrames;
         const localFrame = frame - from;
-        if (localFrame < 0 || localFrame >= renderDuration) return null;
+        const clip = scene.generationStrategy === "ai_shot" ? clips?.[scene.sceneOrder] : undefined;
+        // A scene with a clip is mounted a little early, hidden, so its video has loaded by the time it shows.
+        const premounted = clip !== undefined && localFrame < 0;
+        if (localFrame < (clip ? -CLIP_PREMOUNT_FRAMES : 0) || localFrame >= renderDuration) return null;
         const source = sources[scene.mockupId];
         if (!source) throw new Error("Missing storyboard preview source");
         return (
-          <TransitionLayer
-            key={`${scene.sceneOrder}-${scene.mockupId}`}
-            frame={localFrame}
-            sceneIndex={index}
-            durationFrames={scene.durationFrames}
-            transitionIn={scene.transition}
-            transitionOut={storyboard.scenes[index + 1]?.transition ?? "none"}
-            overlapFrames={overlapFrames}
-            nextOverlapFrames={nextOverlapFrames}
-            legacy={legacy}
-          >
-            <PreviewShot
-              scene={scene}
-              source={source}
-              width={storyboard.width}
-              height={storyboard.height}
-              frame={Math.min(localFrame, scene.durationFrames - 1)}
-            />
-          </TransitionLayer>
+          <AbsoluteFill key={`${scene.sceneOrder}-${scene.mockupId}`} style={premounted ? { opacity: 0 } : undefined}>
+            <TransitionLayer
+              frame={Math.max(0, localFrame)}
+              sceneIndex={index}
+              durationFrames={scene.durationFrames}
+              transitionIn={scene.transition}
+              transitionOut={storyboard.scenes[index + 1]?.transition ?? "none"}
+              overlapFrames={overlapFrames}
+              nextOverlapFrames={nextOverlapFrames}
+              legacy={legacy}
+            >
+              <PreviewShot
+                scene={scene}
+                source={source}
+                width={storyboard.width}
+                height={storyboard.height}
+                frame={Math.min(Math.max(0, localFrame), scene.durationFrames - 1)}
+                clip={clip && <PreviewAiClip src={clip} scene={scene} from={from} holdFrames={renderDuration - scene.durationFrames} />}
+              />
+            </TransitionLayer>
+          </AbsoluteFill>
         );
       })}
       <PreviewOverlays storyboard={storyboard} />

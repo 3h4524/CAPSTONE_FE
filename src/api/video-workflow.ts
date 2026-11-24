@@ -172,22 +172,24 @@ export const reviewMockupAsset = async ({
       approved,
     })
   ).data;
-export const reviewDesignMockupAssets = async ({
+/** Approves or rejects every color and side of a design's mock-ups at once; returns the product's mock-ups. */
+export const reviewDesignMockups = async ({
   productId,
-  designImageId,
-  approvedMockupAssetIds,
-  rejectedMockupAssetIds,
+  artworkGroupKey,
+  approved,
+  leftOut = [],
 }: {
   productId: string;
-  designImageId: string;
-  approvedMockupAssetIds: string[];
-  rejectedMockupAssetIds: string[];
+  artworkGroupKey: string;
+  approved: boolean;
+  /** The mock-ups of the colors left out of the product: they are rejected while the rest is approved. */
+  leftOut?: string[];
 }) =>
   (
     await api.post<MockupAsset[]>(`/api/products/${productId}/mockup-assets/review-design`, {
-      designImageId,
-      approvedMockupAssetIds,
-      rejectedMockupAssetIds,
+      artworkGroupKey,
+      approved,
+      leftOut,
     })
   ).data;
 export const listRunVideos = async (id: string) =>

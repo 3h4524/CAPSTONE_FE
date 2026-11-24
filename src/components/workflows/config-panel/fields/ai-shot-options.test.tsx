@@ -51,6 +51,9 @@ vi.mock("@/hooks/use-query-client", () => ({
   useAppQueryClient: () => ({ invalidateQueries: vi.fn() }),
 }));
 vi.mock("@/hooks/use-workflow-runtime", () => ({ useWorkflowRuntime: () => ({ run: null }) }));
+vi.mock("@/hooks/use-apply-video-edit", () => ({
+  useApplyVideoEdit: () => ({ canApply: false, apply: vi.fn(), isApplying: false }),
+}));
 vi.mock("@/hooks/use-workflow-save", () => ({
   useWorkflowSave: () => ({ saveWorkflow: vi.fn() }),
 }));
@@ -268,6 +271,35 @@ describe("AiShotOptions plan lock", () => {
     expect(screen.getByText("Main mock-up (automatic)")).toBeVisible();
     expect(screen.getByAltText("Motion preview for scene 1")).toHaveAttribute("src", "/black.png");
     expect(screen.getByText(/Not saved yet/)).toBeVisible();
+  });
+
+  // Settings saved without `aiGlobalInstructions`, which the panel fills in on opening: not a change of the seller's.
+  const openSavedScene = (dirty: boolean) => {
+    assets = [{ ...hero("black"), previewUrl: "/black.png" }];
+    previewDesign = { productId: "product", artworkGroupKey: "group", scoped: false, scenes: [{ sceneIndex: 0, mockupId: "black", previewUrl: null, warning: null, overridden: false }] };
+    const video = {
+      id: "video",
+      type: "workflow",
+      position: { x: 0, y: 0 },
+      data: { type: "generate-video", config: { mode: "standard", outputFormat: "square", aiScenes: [{ ...scene("standard"), mockupId: "black" }] } },
+    } as unknown as WorkflowNode;
+    useWorkflowStore.setState({ nodes: [video], savedGraph: { nodes: [video], edges: [] }, designScope: null, isDirty: dirty });
+    render(<AiShotOptions nodeId="video" disabled={false} onChange={vi.fn()} />);
+  };
+
+  it("filling in the settings it opens with does not make a saved workflow unsaved, so Continue stays open", () => {
+    openSavedScene(false);
+
+    const state = useWorkflowStore.getState();
+    expect(state.nodes[0]?.data.config).toHaveProperty("aiGlobalInstructions", null);
+    expect(state.savedGraph.nodes[0]?.data.config).toHaveProperty("aiGlobalInstructions", null);
+    expect(state.isDirty).toBe(false);
+  });
+
+  it("leaves a workflow that was already unsaved as it is", () => {
+    openSavedScene(true);
+
+    expect(useWorkflowStore.getState().isDirty).toBe(true);
   });
 
   const renderBatchScene = (productScope: string | null) => {

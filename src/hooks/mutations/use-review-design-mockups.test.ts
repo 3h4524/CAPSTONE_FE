@@ -26,7 +26,7 @@ const mockAssets: MockupAsset[] = [
     productId: "prod-1",
     sourceType: "template",
     role: "primary",
-    artworkGroupKey: null,
+    artworkGroupKey: "design-1",
     variantKey: null,
     revision: 1,
     approvalStatus: "approved",
@@ -42,7 +42,7 @@ const mockAssets: MockupAsset[] = [
     productId: "prod-1",
     sourceType: "lifestyle",
     role: "lifestyle",
-    artworkGroupKey: null,
+    artworkGroupKey: "design-1",
     variantKey: null,
     revision: 1,
     approvalStatus: "rejected",
@@ -76,18 +76,18 @@ describe("useReviewDesignMockups", () => {
     act(() => {
       result.current.mutate({
         productId: "prod-1",
-        designImageId: "design-1",
-        approvedMockupAssetIds: ["asset-1"],
-        rejectedMockupAssetIds: ["asset-2"],
+        artworkGroupKey: "design-1",
+        approved: true,
+        leftOut: ["asset-2"],
       });
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(capturedBody).toEqual({
-      designImageId: "design-1",
-      approvedMockupAssetIds: ["asset-1"],
-      rejectedMockupAssetIds: ["asset-2"],
+      artworkGroupKey: "design-1",
+      approved: true,
+      leftOut: ["asset-2"],
     });
 
     const cached = queryClient.getQueryData<MockupAsset[]>(videoWorkflowKeys.assets("prod-1"));

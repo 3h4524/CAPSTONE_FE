@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { RunGroupPanel } from "@/components/workflows/run/run-group-panel";
 import { useWorkflowStore } from "@/stores/workflow";
-import { buildWorkflowNode } from "@/test/factories";
+import { buildMockupTemplate, buildWorkflowNode } from "@/test/factories";
 import type { GenerateVideoConfig, MockupAsset, RunGroup } from "@/types/video-workflow";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const mocks = vi.hoisted(() => ({
@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   resume: vi.fn(),
   assets: [] as MockupAsset[],
   printWithoutAi: true,
+  reviewDesign: vi.fn(),
+  templates: [] as unknown[],
 }));
 
 vi.mock("@/hooks/queries/use-run-group", () => ({
@@ -28,6 +30,8 @@ vi.mock("@/hooks/use-workflow-runtime", () => ({ useWorkflowRuntime: () => ({ se
 vi.mock("@/hooks/use-sync-generated-mockups", () => ({ useSyncGeneratedMockups: () => false }));
 vi.mock("@/hooks/queries/use-mockup-assets", () => ({ useMockupAssets: () => ({ data: mocks.assets, isPending: false, dataUpdatedAt: 0 }) }));
 vi.mock("@/hooks/mutations/use-review-mockup-asset", () => ({ useReviewMockupAsset: () => ({ mutateAsync: vi.fn() }) }));
+vi.mock("@/hooks/queries/use-mockup-templates", () => ({ useMockupTemplates: () => ({ data: mocks.templates }) }));
+vi.mock("@/hooks/mutations/use-review-design-mockups", () => ({ useReviewDesignMockups: () => ({ mutateAsync: mocks.reviewDesign }) }));
 vi.mock("@/hooks/use-query-client", () => ({ useAppQueryClient: () => ({ setQueryData: vi.fn(), invalidateQueries: vi.fn() }) }));
 vi.mock("@/hooks/queries/use-ai-video-templates", () => ({
   useAiVideoTemplates: () => ({ data: [{ code: "lifestyle_in_use", requiresLifestyle: true }, { code: "cinematic_product_showcase", requiresLifestyle: false }] }),
@@ -59,11 +63,17 @@ const group = (ownConfig: GenerateVideoConfig | null = null): RunGroup => ({
   }],
 });
 
-const showCanvas = (config: GenerateVideoConfig) => {
-  const nodes = [buildWorkflowNode({
-    id: "video",
-    data: { type: "generate-video", label: "Generate Video", config: config as never, status: "idle" },
-  })];
+const showCanvas = (config: GenerateVideoConfig, approval: "auto" | "manual" = "manual") => {
+  const nodes = [
+    buildWorkflowNode({
+      id: "gate",
+      data: { type: "approval-gate", label: "Mockup Approval", config: { mode: approval } as never, status: "idle" },
+    }),
+    buildWorkflowNode({
+      id: "video",
+      data: { type: "generate-video", label: "Generate Video", config: config as never, status: "idle" },
+    }),
+  ];
   useWorkflowStore.setState({ nodes, edges: [], savedGraph: { nodes, edges: [] }, isDirty: false, designScope: null });
 };
 
@@ -135,7 +145,8 @@ describe("RunGroupPanel: starting the videos", () => {
     expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
 
-  it("says the model photos are being made, and keeps Continue off until they are", () => {
+  it("says an automatic run is getting ready by itself, and keeps Continue off until it is", () => {
+    showCanvas(standard, "auto");
     const preparing = group();
     preparing.preparing = true;
     mocks.group = preparing;
@@ -143,6 +154,47 @@ describe("RunGroupPanel: starting the videos", () => {
 
     expect(screen.getByText(/Getting the videos ready/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+  });
+
+  it("stands in for a model photo still being made with a placeholder card, and keeps Continue off for that design", () => {
+    showCanvas(person);
+    const preparing = group();
+    preparing.preparing = true;
+    preparing.targets[0].modelPhoto = "pending";
+    mocks.group = preparing;
+    render(<RunGroupPanel />);
+
+    expect(screen.getByText("Making the model photo…")).toBeInTheDocument();
+    expect(screen.getByText(/Review the mock-ups meanwhile/)).toBeInTheDocument();
+    expect(screen.queryByText(/Getting the videos ready/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+  });
+
+  it("lets a manual run go on with a design whose model photo is made while another's is still being made", () => {
+    showCanvas(person);
+    const preparing = group();
+    preparing.preparing = true;
+    preparing.selectedCount = 1;
+    preparing.targets[0].modelPhoto = "ready";
+    preparing.targets.push({ ...preparing.targets[0], key: "q:d", productId: "q", productName: "Dune Tee", selected: false, approvedCount: 0, modelPhoto: "pending" });
+    mocks.group = preparing;
+    render(<RunGroupPanel />);
+
+    // The other design is not chosen, so what is still being made for it holds nothing back.
+    expect(screen.getAllByText("Making the model photo…")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
+  });
+
+  it("says a model photo that was not made will be tried again by Continue", () => {
+    showCanvas(person);
+    const missing = group();
+    missing.targets[0].modelPhoto = "missing";
+    mocks.group = missing;
+    render(<RunGroupPanel />);
+
+    expect(screen.getByText(/model photo of this design was not made/)).toBeInTheDocument();
+    expect(screen.queryByText("Making the model photo…")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
 
   it("says why a run set to approve automatically is still waiting", () => {
@@ -160,6 +212,85 @@ const mockup = (id: string, approvalStatus: string) =>
     id, productId: "p", artworkGroupKey: "d", role: "Hero", approvalStatus, previewUrl: `https://cdn.test/${id}.png`,
     width: 100, height: 100, variantKey: "#FFFFFF", warnings: [], revision: 1,
   }) as unknown as MockupAsset;
+
+describe("RunGroupPanel: reviewing a product", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    showCanvas(standard);
+    mocks.group = group();
+    mocks.templates = [];
+  });
+
+  const hoodie = (status = "approved") => {
+    mocks.templates = [
+      buildMockupTemplate({
+        id: "hoodie",
+        name: "Pullover hoodie",
+        productType: "hoodie",
+        views: [buildMockupTemplate({ id: "hoodie-back", printAreaConfig: '{"x":10,"y":10,"width":180,"height":180,"view":"back","mainTemplateId":"hoodie"}' })],
+      }),
+    ];
+    const made = (id: string, templateId: string, color: string) =>
+      ({ ...mockup(id, status), sourceType: "generated", mockupTemplateId: templateId, variantKey: color }) as MockupAsset;
+    mocks.assets = [
+      made("white-back", "hoodie-back", "#FFFFFF"),
+      made("white-front", "hoodie", "#FFFFFF"),
+      made("black-back", "hoodie-back", "#1A1A1A"),
+      made("black-front", "hoodie", "#1A1A1A"),
+    ];
+  };
+
+  it("shows the product as one card, its colors and sides picked on it as on Apply mock-up", async () => {
+    hoodie();
+    render(<RunGroupPanel />);
+
+    const strip = screen.getByRole("list", { name: "Mock-ups of June Rose Tee" });
+    expect(within(strip).getAllByRole("listitem")).toHaveLength(1);
+    expect(within(strip).getByText("Pullover hoodie")).toBeInTheDocument();
+    expect(within(strip).getByRole("img", { name: /pullover hoodie \(front\)/i })).toHaveAttribute("src", "https://cdn.test/white-front.png");
+
+    await userEvent.click(within(strip).getByRole("tab", { name: "Back" }));
+    await userEvent.click(within(strip).getByRole("tab", { name: "Show in Black" }));
+
+    expect(within(strip).getByRole("img", { name: /pullover hoodie \(back\)/i })).toHaveAttribute("src", "https://cdn.test/black-back.png");
+  });
+
+  it("leaves a color out with every side of it, and keeps the last color on", async () => {
+    hoodie("pending");
+    render(<RunGroupPanel />);
+    const strip = screen.getByRole("list", { name: "Mock-ups of June Rose Tee" });
+
+    await userEvent.click(within(strip).getByRole("tab", { name: "Show in Black" }));
+    await userEvent.click(within(strip).getByRole("checkbox", { name: "Sell in Black" }));
+    expect(within(strip).getByText("Left out")).toBeInTheDocument();
+    await userEvent.click(within(strip).getByRole("tab", { name: "Show in White" }));
+    expect(within(strip).getByRole("checkbox", { name: "Sell in White" })).toBeDisabled();
+
+    await userEvent.click(screen.getByRole("button", { name: "Approve product" }));
+
+    expect(mocks.reviewDesign).toHaveBeenCalledWith({
+      productId: "p",
+      artworkGroupKey: "d",
+      approved: true,
+      leftOut: ["black-front", "black-back"],
+    });
+  });
+
+  it("approves every color and side of the product at once, and leaves AI photos to their own review", async () => {
+    mocks.assets = [
+      { ...mockup("front", "pending"), sourceType: "generated" },
+      { ...mockup("back", "pending"), sourceType: "generated" },
+      { ...mockup("lifestyle", "pending"), sourceType: "uploaded", role: "Lifestyle" },
+    ] as MockupAsset[];
+    render(<RunGroupPanel />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Approve product" }));
+
+    expect(mocks.reviewDesign).toHaveBeenCalledTimes(1);
+    expect(mocks.reviewDesign).toHaveBeenCalledWith({ productId: "p", artworkGroupKey: "d", approved: true, leftOut: [] });
+    expect(screen.getAllByRole("button", { name: "Approve mock-up" })).toHaveLength(1);
+  });
+});
 
 describe("RunGroupPanel: once the videos started", () => {
   beforeEach(() => {

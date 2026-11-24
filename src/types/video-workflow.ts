@@ -348,7 +348,30 @@ export interface ScenePlan {
   trimStartFrames?: number;
   trimEndFrames?: number;
   transitionFrames?: number;
+  aiCropPosition?: { x: number; y: number } | null;
 }
+/** An approved mock-up as the browser draws it into the video: a short-lived signed link and its size. */
+export interface VideoPreviewSource {
+  url: string;
+  width: number;
+  height: number;
+}
+/**
+ * What the browser needs to play a video that has no file yet, with the composition the media worker renders. The links are
+ * short-lived: the videos query is refetched before they lapse.
+ */
+export interface VideoPreviewData {
+  storyboard: VideoStoryboard;
+  /** Each scene's mock-up, by mock-up id. */
+  sources: Record<string, VideoPreviewSource>;
+  /** The stored AI clip of each AI scene, by scene order. */
+  clips: Record<string, string>;
+}
+/**
+ * `ready`: the scenes are all there and the video plays in the browser, but no file exists yet. `rendering`: the file is being made
+ * in the background because a step needs it. `completed`: the file exists.
+ */
+export type PromoVideoStatus = "pending" | "queued" | "ready" | "rendering" | "completed" | "failed";
 export interface PromoVideo {
   id: string;
   runId: string;
@@ -369,6 +392,8 @@ export interface PromoVideo {
   config?: GenerateVideoConfig | null;
   artworkGroupKey?: string | null;
   mockupIds?: string[] | null;
+  /** Present while the video has no file (`ready` or `rendering`). */
+  preview?: VideoPreviewData | null;
 }
 export interface AiSceneVideo {
   sceneOrder: number;
@@ -569,7 +594,14 @@ export interface RunGroupTarget {
   config: GenerateVideoConfig | null;
   /** The design has settings of its own instead of the workflow's shared ones. */
   hasOwnConfig: boolean;
+  /**
+   * Where the design's model photo is while the run waits at Mockup Approval, for a design whose scenes show a person:
+   * `pending` while the server is making it (a placeholder card stands for it), `missing` when nothing is making it and
+   * the next Continue tries again. Absent or null for a design that needs none; absent from an older API.
+   */
+  modelPhoto?: ModelPhotoState | null;
 }
+export type ModelPhotoState = "ready" | "pending" | "missing";
 export type RunGroupStatus = "waiting_for_targets" | "running" | "completed" | "cancelled";
 export interface RunGroup {
   id: string;

@@ -34,9 +34,12 @@ const mockRun: TestReportRun = {
 };
 
 describe("useAdminTestReportRun", () => {
-  it("starts a test run with explicit execution mode", async () => {
+  it.each([
+    { mode: "headed" as const, expected: { mode: "headed" } },
+    { mode: "debug" as const, expected: { mode: "debug" } },
+    { mode: undefined, expected: {} },
+  ])("starts a test run with mode $mode", async ({ mode, expected }) => {
     let capturedBody: unknown = null;
-
     server.use(
       http.post(RUNS_URL, async ({ request }) => {
         capturedBody = await request.json();
@@ -45,52 +48,15 @@ describe("useAdminTestReportRun", () => {
     );
 
     const { result } = renderQueryHook(() => useAdminTestReportRun());
-
     act(() => {
-      result.current.mutate({ mode: "headed" });
+      if (mode) {
+        result.current.mutate({ mode });
+      } else {
+        result.current.mutate();
+      }
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(capturedBody).toEqual({ mode: "headed" });
-  });
-
-  it("starts a test run with debug mode", async () => {
-    let capturedBody: unknown = null;
-
-    server.use(
-      http.post(RUNS_URL, async ({ request }) => {
-        capturedBody = await request.json();
-        return HttpResponse.json(mockRun, { status: 202 });
-      })
-    );
-
-    const { result } = renderQueryHook(() => useAdminTestReportRun());
-
-    act(() => {
-      result.current.mutate({ mode: "debug" });
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(capturedBody).toEqual({ mode: "debug" });
-  });
-
-  it("starts a test run without variables", async () => {
-    let capturedBody: unknown = null;
-
-    server.use(
-      http.post(RUNS_URL, async ({ request }) => {
-        capturedBody = await request.json();
-        return HttpResponse.json(mockRun, { status: 202 });
-      })
-    );
-
-    const { result } = renderQueryHook(() => useAdminTestReportRun());
-
-    act(() => {
-      result.current.mutate();
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(capturedBody).toEqual({});
+    expect(capturedBody).toEqual(expected);
   });
 });

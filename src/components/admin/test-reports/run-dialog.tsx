@@ -17,6 +17,27 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { TestReportRunMode } from "@/types/admin-test-reports";
 
+const RUN_MODES = [
+  {
+    value: "headless" as const,
+    icon: EyeOff,
+    titleKey: "admin.testReports.runDialog.modeHeadlessTitle",
+    descKey: "admin.testReports.runDialog.modeHeadlessDescription",
+  },
+  {
+    value: "headed" as const,
+    icon: Eye,
+    titleKey: "admin.testReports.runDialog.modeHeadedTitle",
+    descKey: "admin.testReports.runDialog.modeHeadedDescription",
+  },
+  {
+    value: "debug" as const,
+    icon: Bug,
+    titleKey: "admin.testReports.runDialog.modeDebugTitle",
+    descKey: "admin.testReports.runDialog.modeDebugDescription",
+  },
+];
+
 type TestReportRunDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -32,10 +53,6 @@ export const TestReportRunDialog = ({
 }: TestReportRunDialogProps) => {
   const { t } = useTranslation("common");
   const [mode, setMode] = useState<TestReportRunMode>("headless");
-
-  const handleConfirm = () => {
-    onConfirm(mode);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -60,71 +77,30 @@ export const TestReportRunDialog = ({
             className="grid gap-2.5"
             disabled={isPending}
           >
-            <label
-              htmlFor="mode-headless"
-              className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
-                mode === "headless"
-                  ? "border-primary/50 bg-primary/5 dark:bg-primary/10"
-                  : "border-ink-200 hover:bg-muted/50"
-              }`}
-            >
-              <RadioGroupItem value="headless" id="mode-headless" className="mt-0.5" />
-              <div className="flex-1 space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <EyeOff className="text-ink-500 size-4" />
-                  <span className="text-ink-900 text-sm font-medium">
-                    {t("admin.testReports.runDialog.modeHeadlessTitle")}
-                  </span>
+            {RUN_MODES.map(({ value, icon: ModeIcon, titleKey, descKey }) => (
+              <label
+                key={value}
+                htmlFor={`mode-${value}`}
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                  mode === value
+                    ? "border-primary/50 bg-primary/5 dark:bg-primary/10"
+                    : "border-ink-200 hover:bg-muted/50"
+                }`}
+              >
+                <RadioGroupItem value={value} id={`mode-${value}`} className="mt-0.5" />
+                <div className="flex-1 space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <ModeIcon className="text-ink-500 size-4" />
+                    <span className="text-ink-900 text-sm font-medium">
+                      {t(titleKey)}
+                    </span>
+                  </div>
+                  <p className="text-ink-500 text-xs">
+                    {t(descKey)}
+                  </p>
                 </div>
-                <p className="text-ink-500 text-xs">
-                  {t("admin.testReports.runDialog.modeHeadlessDescription")}
-                </p>
-              </div>
-            </label>
-
-            <label
-              htmlFor="mode-headed"
-              className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
-                mode === "headed"
-                  ? "border-primary/50 bg-primary/5 dark:bg-primary/10"
-                  : "border-ink-200 hover:bg-muted/50"
-              }`}
-            >
-              <RadioGroupItem value="headed" id="mode-headed" className="mt-0.5" />
-              <div className="flex-1 space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <Eye className="text-ink-500 size-4" />
-                  <span className="text-ink-900 text-sm font-medium">
-                    {t("admin.testReports.runDialog.modeHeadedTitle")}
-                  </span>
-                </div>
-                <p className="text-ink-500 text-xs">
-                  {t("admin.testReports.runDialog.modeHeadedDescription")}
-                </p>
-              </div>
-            </label>
-
-            <label
-              htmlFor="mode-debug"
-              className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
-                mode === "debug"
-                  ? "border-primary/50 bg-primary/5 dark:bg-primary/10"
-                  : "border-ink-200 hover:bg-muted/50"
-              }`}
-            >
-              <RadioGroupItem value="debug" id="mode-debug" className="mt-0.5" />
-              <div className="flex-1 space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <Bug className="text-ink-500 size-4" />
-                  <span className="text-ink-900 text-sm font-medium">
-                    {t("admin.testReports.runDialog.modeDebugTitle")}
-                  </span>
-                </div>
-                <p className="text-ink-500 text-xs">
-                  {t("admin.testReports.runDialog.modeDebugDescription")}
-                </p>
-              </div>
-            </label>
+              </label>
+            ))}
           </RadioGroup>
         </div>
 
@@ -152,7 +128,7 @@ export const TestReportRunDialog = ({
           >
             {t("admin.testReports.runDialog.cancel")}
           </Button>
-          <Button type="button" onClick={handleConfirm} disabled={isPending}>
+          <Button type="button" onClick={() => onConfirm(mode)} disabled={isPending}>
             {t("admin.testReports.runDialog.confirm")}
           </Button>
         </DialogFooter>

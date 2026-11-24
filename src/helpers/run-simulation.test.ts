@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { chunkText, findCycleNodes, getPredecessors } from "@/helpers/run-simulation";
+import {
+  chunkText,
+  findCycleNodes,
+  getPredecessors,
+  sampleDesignImage,
+  sampleMockupImage,
+} from "@/helpers/run-simulation";
 import { createWorkflowNode } from "@/helpers/workflow-graph";
 import type { WorkflowEdge } from "@/types/workflow";
 
@@ -38,5 +44,17 @@ describe("chunkText", () => {
     const chunks = chunkText("abcdefghij", 4);
     expect(chunks).toEqual(["abcd", "efgh", "ij"]);
     expect(chunks.join("")).toBe("abcdefghij");
+  });
+});
+
+describe("sample images", () => {
+  it("are inline SVGs that need no request", () => {
+    expect(sampleDesignImage(28)).toMatch(/^data:image\/svg\+xml;utf8,/);
+    expect(sampleMockupImage(28)).toMatch(/^data:image\/svg\+xml;utf8,/);
+  });
+
+  it("differ per hue, so the preview keys stay unique", () => {
+    expect(sampleDesignImage(28)).not.toBe(sampleDesignImage(200));
+    expect(sampleMockupImage(28)).not.toBe(sampleDesignImage(28));
   });
 });

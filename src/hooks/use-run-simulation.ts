@@ -4,17 +4,26 @@ import { useCallback } from "react";
 
 import {
   SIMULATION_CHUNK_SIZE,
+  SIMULATION_IMAGE_COUNT,
+  SIMULATION_IMAGE_HUES,
   SIMULATION_LISTING,
   SIMULATION_PRODUCT_ID,
   SIMULATION_STEP_MS,
   SIMULATION_TICK_MS,
 } from "@/constants/run-simulation";
 import { PROCESS_TRAVEL_MS } from "@/constants/workflow-run-effects";
-import { chunkText, findCycleNodes, getPredecessors } from "@/helpers/run-simulation";
+import {
+  chunkText,
+  findCycleNodes,
+  getPredecessors,
+  sampleDesignImage,
+  sampleMockupImage,
+} from "@/helpers/run-simulation";
 import { getWorkflowNodeDefinition } from "@/helpers/workflow-config";
 import { useListingStreamStore } from "@/stores/listing-stream";
 import { useRunSimulationStore } from "@/stores/run-simulation";
 import { useWorkflowStore } from "@/stores/workflow";
+import type { WorkflowNodeType } from "@/types/workflow";
 import { uuid } from "@/utils/uuid";
 
 let simulationToken = 0;
@@ -53,6 +62,19 @@ const streamListing = async (duration: number, token: number) => {
   });
 };
 
+const SAMPLE_IMAGES: Partial<Record<WorkflowNodeType, string[]>> = {
+  "design-image": SIMULATION_IMAGE_HUES.map(sampleDesignImage),
+  "apply-mockup": SIMULATION_IMAGE_HUES.map(sampleMockupImage),
+};
+
+const revealImages = (type: WorkflowNodeType, fraction: number) => {
+  const images = SAMPLE_IMAGES[type];
+  if (!images) return;
+  const count = Math.min(SIMULATION_IMAGE_COUNT, Math.floor(fraction * (SIMULATION_IMAGE_COUNT + 1)));
+  if ((useRunSimulationStore.getState().images[type]?.length ?? -1) === count) return;
+  useRunSimulationStore.getState().setImages(type, images.slice(0, count));
+};
+
 const runStep = async (nodeId: string, token: number) => {
   const { nodes, setNodeRuntime } = useWorkflowStore.getState();
   const node = nodes.find((item) => item.id === nodeId);
@@ -65,7 +87,9 @@ const runStep = async (nodeId: string, token: number) => {
   for (let elapsed = 0; elapsed < total; elapsed += SIMULATION_TICK_MS) {
     await wait(SIMULATION_TICK_MS, token);
     setNodeRuntime(nodeId, { status: "running", progress: Math.min(99, Math.round((elapsed / total) * 100)) });
+    revealImages(node.data.type, elapsed / total);
   }
+  revealImages(node.data.type, 1);
   if (streaming) await streaming;
   setNodeRuntime(nodeId, { status: "success", progress: 100 });
 };
@@ -86,6 +110,7 @@ export const useRunSimulation = () => {
     if (findCycleNodes(predecessors).size > 0) return false;
     const token = ++simulationToken;
     resetStatuses();
+    useRunSimulationStore.getState().clearImages();
     useListingStreamStore.getState().open(uuid());
     useRunSimulationStore.getState().setActive(true);
     setRunning(true);
@@ -118,6 +143,7 @@ export const useRunSimulation = () => {
     if (!useRunSimulationStore.getState().active) return;
     simulationToken++;
     finish();
+    useRunSimulationStore.getState().clearImages();
     useWorkflowStore.getState().resetStatuses();
   }, []);
 

@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,7 +12,6 @@ import { getMockupImageUrls } from "@/helpers/workflow-run";
 import { useRunSimulationStore } from "@/stores/run-simulation";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { WorkflowNodeStatus } from "@/types/workflow";
-import { cn } from "@/utils/cn";
 
 type MockupPreviewProps = {
   status: WorkflowNodeStatus;
@@ -21,7 +20,6 @@ type MockupPreviewProps = {
 type DesignMockupGroup = {
   id: string;
   label: string;
-  shortLabel: string;
   designThumbnail?: string;
   items: PreviewImageItem[];
 };
@@ -40,7 +38,6 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
     if (simulated && simulated.length > 0) {
       const tabCounts = [3, 2, 2, 2];
       const tabLabels = ["Design 1", "Design 2", "Design 3", "Design 4"];
-      const shortLabels = ["D1", "D2", "D3", "D4"];
       const templateNames = ["Black T-shirt", "White T-shirt", "Ceramic Mug", "Hoodie", "Tote Bag"];
 
       let offset = 0;
@@ -55,7 +52,6 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
           simGroups.push({
             id: `sim-design-${i + 1}`,
             label: tabLabels[i],
-            shortLabel: shortLabels[i],
             designThumbnail: simulatedDesigns?.[i] ?? undefined,
             items: slice.map((url, sIndex) => ({
               url,
@@ -73,7 +69,6 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
     const designImages = job?.products.flatMap((product) => product.images) ?? [];
 
     if (designImages.length > 0) {
-      const count = designImages.length;
       return designImages.map((design, index) => {
         const matching = mockupImages.filter((mockup) => mockup.designImageId === design.id);
         const items: PreviewImageItem[] = matching.map((mockup, mIndex) => ({
@@ -85,7 +80,6 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
         return {
           id: design.id,
           label: `Design ${index + 1}`,
-          shortLabel: count <= 2 ? `Design ${index + 1}` : `D${index + 1}`,
           designThumbnail: design.imageUrl,
           items,
         };
@@ -104,13 +98,9 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
         groupedByDesign.set(designKey, current);
       });
 
-      const entries = Array.from(groupedByDesign.entries());
-      const count = entries.length;
-
-      return entries.map(([designKey, items], index) => ({
+      return Array.from(groupedByDesign.entries()).map(([designKey, items], index) => ({
         id: designKey,
         label: `Design ${index + 1}`,
-        shortLabel: count <= 2 ? `Design ${index + 1}` : `D${index + 1}`,
         items,
       }));
     }
@@ -135,104 +125,96 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
   );
   const currentTab = groups[currentIndex]?.id ?? groups[0].id;
 
-  const scrollTabs = (direction: "left" | "right") => {
+  const scrollVertical = (direction: "up" | "down") => {
     if (!tabsListRef.current) return;
     tabsListRef.current.scrollBy({
-      left: direction === "left" ? -80 : 80,
+      top: direction === "up" ? -60 : 60,
       behavior: "smooth",
     });
   };
 
-  const isGrid = groups.length <= 3;
-
   return (
-    <div className="grid max-w-full min-w-0 gap-2 overflow-hidden">
-      <Tabs value={currentTab} onValueChange={setSelectedTabId} className="w-full min-w-0 gap-2">
-        <div className="relative flex max-w-full min-w-0 items-center">
-          {!isGrid && (
+    <div className="max-w-full min-w-0">
+      <Tabs
+        orientation="vertical"
+        value={currentTab}
+        onValueChange={setSelectedTabId}
+        className="flex w-full min-w-0 flex-row items-start gap-1.5"
+      >
+        <div className="min-w-0 flex-1">
+          {groups.map((group) => (
+            <TabsContent key={group.id} value={group.id} className="mt-0 max-w-full min-w-0">
+              <ImageGridPreview
+                label={group.label}
+                images={group.items}
+                status={status}
+              />
+            </TabsContent>
+          ))}
+        </div>
+
+        <div className="flex w-8 shrink-0 flex-col items-center pt-6">
+          {groups.length > 5 && (
             <button
               type="button"
-              onClick={() => scrollTabs("left")}
-              className="bg-wf-surface/90 hover:bg-wf-surface text-wf-dim absolute left-0 z-10 grid size-6 place-items-center rounded-l shadow-xs"
-              aria-label="Scroll left"
+              onClick={() => scrollVertical("up")}
+              className="text-wf-dim hover:text-wf-ink mb-0.5 p-0.5"
+              aria-label="Scroll up"
             >
-              <ChevronLeft className="size-3" />
+              <ChevronUp className="size-3" />
             </button>
           )}
 
           <TabsList
             ref={tabsListRef}
-            className={cn(
-              "bg-wf-line/30 no-scrollbar min-w-0 rounded-md p-0.5",
-              isGrid
-                ? cn(
-                    "grid h-7 w-full gap-1",
-                    groups.length === 2 ? "grid-cols-2" : "grid-cols-3"
-                  )
-                : "flex h-7 w-full justify-start gap-1 overflow-x-auto scroll-smooth px-6"
-            )}
+            className="bg-wf-line/25 no-scrollbar flex h-auto max-h-[190px] min-h-0 w-full flex-col gap-1.5 overflow-y-auto scroll-smooth rounded-md p-0.5"
           >
-            {groups.map((group) => (
+            {groups.map((group, index) => (
               <TabsTrigger
                 key={group.id}
                 value={group.id}
                 aria-label={group.label}
+                title={`${group.label} (${group.items.length})`}
                 onClick={(e) => {
-                  if (!isGrid) {
-                    (e.currentTarget as HTMLElement).scrollIntoView({
-                      inline: "center",
-                      behavior: "smooth",
-                    });
-                  }
+                  (e.currentTarget as HTMLElement).scrollIntoView({
+                    block: "nearest",
+                    behavior: "smooth",
+                  });
                 }}
-                className={cn(
-                  "data-[state=active]:bg-wf-surface data-[state=active]:text-wf-ink text-wf-dim flex h-6 items-center justify-center gap-1 rounded px-1 text-[10px] font-medium transition-all",
-                  isGrid ? "w-full min-w-0" : "shrink-0 px-2"
-                )}
+                className="group/tab data-[state=active]:border-wf-accent data-[state=active]:ring-wf-accent relative size-7 shrink-0 overflow-hidden rounded-md border border-transparent p-0 transition-all focus-visible:outline-hidden data-[state=active]:scale-105 data-[state=active]:ring-1"
               >
-                {group.designThumbnail && (
-                  <span className="relative size-3.5 shrink-0 overflow-hidden rounded-xs">
-                    <Image
-                      src={group.designThumbnail}
-                      alt=""
-                      fill
-                      sizes="14px"
-                      unoptimized
-                      className="object-cover"
-                    />
+                {group.designThumbnail ? (
+                  <Image
+                    src={group.designThumbnail}
+                    alt=""
+                    fill
+                    sizes="28px"
+                    unoptimized
+                    className="object-cover"
+                  />
+                ) : (
+                  <span className="text-wf-dim text-[10px] font-bold">
+                    {index + 1}
                   </span>
                 )}
-                <span className="truncate">{group.shortLabel}</span>
-                {group.items.length > 0 && (
-                  <span className="text-wf-faint text-[9px] tabular-nums">
-                    ({group.items.length})
-                  </span>
-                )}
+                <span className="absolute right-0 bottom-0 rounded-tl bg-black/75 px-1 py-px text-[7px] leading-none font-semibold text-white tabular-nums">
+                  {index + 1}
+                </span>
               </TabsTrigger>
             ))}
           </TabsList>
 
-          {!isGrid && (
+          {groups.length > 5 && (
             <button
               type="button"
-              onClick={() => scrollTabs("right")}
-              className="bg-wf-surface/90 hover:bg-wf-surface text-wf-dim absolute right-0 z-10 grid size-6 place-items-center rounded-r shadow-xs"
-              aria-label="Scroll right"
+              onClick={() => scrollVertical("down")}
+              className="text-wf-dim hover:text-wf-ink mt-0.5 p-0.5"
+              aria-label="Scroll down"
             >
-              <ChevronRight className="size-3" />
+              <ChevronDown className="size-3" />
             </button>
           )}
         </div>
-
-        {groups.map((group) => (
-          <TabsContent key={group.id} value={group.id} className="mt-0 max-w-full min-w-0">
-            <ImageGridPreview
-              label={group.label}
-              images={group.items}
-              status={status}
-            />
-          </TabsContent>
-        ))}
       </Tabs>
     </div>
   );

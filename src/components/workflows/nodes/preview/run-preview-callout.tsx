@@ -57,25 +57,22 @@ const previewContent = ({ nodeId, data, status, progress }: RunPreviewCalloutPro
 };
 
 export const RunPreviewCallout = (props: RunPreviewCalloutProps) => {
-  // Beside the node where no other node is: on the right, else on the left, below or above.
   const side = useWorkflowStore((state) => {
     const node = state.nodes.find((candidate) => candidate.id === props.nodeId);
     return node ? previewSideOf(node, state.nodes) : "right";
   });
   const content = previewContent(props);
   if (!content) return null;
-  const interactive = props.data.type === "generate-video";
 
   return (
     <aside
       className={cn(
         "bg-wf-surface border-wf-line animate-in fade-in absolute z-20 rounded-xl border p-2.5 shadow-xl empty:hidden",
-        SIDE_CLASS_NAMES[side],
-        !interactive && "pointer-events-none"
+        SIDE_CLASS_NAMES[side]
       )}
       style={{ width: RUN_PREVIEW_WIDTH, [SIDE_MARGINS[side]]: RUN_PREVIEW_GAP }}
     >
-      {interactive ? <NodeControl>{content}</NodeControl> : content}
+      <NodeControl>{content}</NodeControl>
     </aside>
   );
 };

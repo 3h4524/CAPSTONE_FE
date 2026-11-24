@@ -1,6 +1,7 @@
 "use client";
 
-import { CircleAlert } from "lucide-react";
+import { useState } from "react";
+import { CircleAlert, Maximize2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,13 +9,14 @@ import { ComposedVideoPreview } from "@/components/workflows/media/composed-vide
 import { VideoPreviewFrame } from "@/components/workflows/media/video-preview-frame";
 import { PreviewStatus } from "@/components/workflows/nodes/preview/preview-status";
 import { SingleVideoPreview } from "@/components/workflows/nodes/preview/single-video-preview";
+import { VideoCinemaModal } from "@/components/workflows/nodes/preview/video-cinema-modal";
 import { RunGroupVideoStrip } from "@/components/workflows/nodes/run-group-video-strip";
 import { previewToneOf } from "@/helpers/workflow-run-view";
 import { useGroupVideos } from "@/hooks/queries/use-group-videos";
 import { useRunSceneVideos } from "@/hooks/queries/use-run-scene-videos";
 import { useRunVideos } from "@/hooks/queries/use-run-videos";
 import { useVideoRunId } from "@/hooks/use-video-run-id";
-import type { GenerateVideoConfig } from "@/types/video-workflow";
+import type { GenerateVideoConfig, PromoVideo } from "@/types/video-workflow";
 import type { WorkflowNodeData, WorkflowNodeStatus } from "@/types/workflow";
 
 type VideoPreviewProps = {
@@ -23,15 +25,9 @@ type VideoPreviewProps = {
   progress: number;
 };
 
-/**
- * Beside Generate Video while it runs: each AI scene as the provider makes it (a placeholder while it is made, its clip once it
- * is stored), then the whole video once it is made, played as at Review Video. A video with no AI scene, or not made yet, shows
- * the video's progress (the batch's videos in a batch video run).
- */
 export const VideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
   const { t } = useTranslation("common");
   const config = data.config as GenerateVideoConfig;
-  // In a batch video run, the design open on the canvas, or else the first design with a video.
   const { videos: groupVideos } = useGroupVideos();
   const openRunId = useVideoRunId();
   const design =
@@ -49,14 +45,35 @@ export const VideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
       ? t("workflowEditor.runView.previewFailed")
       : t("workflowEditor.runView.previewDone");
 
-  // Made: the whole video, its file once rendered, else drawn from its scenes as Review Video does.
-  if (!running && video && (video.previewUrl || video.preview))
+  const [cinemaOpen, setCinemaOpen] = useState(false);
+  const [cinemaVideo, setCinemaVideo] = useState<Partial<PromoVideo> | null>(null);
+  const [cinemaUrl, setCinemaUrl] = useState<string | null>(null);
+  const [cinemaTitle, setCinemaTitle] = useState<string | undefined>(undefined);
+
+  const openCinema = (url: string | null, vid: Partial<PromoVideo> | null, title?: string) => {
+    setCinemaUrl(url);
+    setCinemaVideo(vid);
+    setCinemaTitle(title);
+    setCinemaOpen(true);
+  };
+
+  if (!running && video && (video.previewUrl || video.preview)) {
     return (
       <div className="grid gap-2">
         <div className="text-wf-dim flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase">
           {t("workflowEditor.runView.previewVideo")}
           <span className="text-wf-faint tabular-nums">v{video.version}</span>
           <PreviewStatus tone={tone} label={doneLabel} />
+          {video.previewUrl && (
+            <button
+              type="button"
+              onClick={() => openCinema(video.previewUrl ?? null, video, `Video v${video.version}`)}
+              className="hover:text-wf-ink text-wf-faint ml-auto rounded p-0.5"
+              aria-label="Expand video"
+            >
+              <Maximize2 className="size-3" />
+            </button>
+          )}
         </div>
         {video.previewUrl ? (
           <VideoPreviewFrame width={video.width} height={video.height} maxHeightRem={22}>
@@ -73,8 +90,16 @@ export const VideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
         ) : (
           <ComposedVideoPreview video={video} compact />
         )}
+        <VideoCinemaModal
+          video={cinemaVideo}
+          videoUrl={cinemaUrl}
+          title={cinemaTitle}
+          open={cinemaOpen}
+          onOpenChange={setCinemaOpen}
+        />
       </div>
     );
+  }
 
   const aiScenes =
     config?.mode === "ai_shot"
@@ -83,6 +108,7 @@ export const VideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
         )
       : [];
   const madeClips = clips.filter((clip) => aiScenes.includes(clip.sceneOrder));
+
   if (aiScenes.length > 0 && (running || madeClips.length > 0)) {
     const stored = madeClips.filter((clip) => clip.status === "stored" && clip.previewUrl).length;
     return (
@@ -101,11 +127,11 @@ export const VideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
           {aiScenes.map((sceneOrder) => {
             const clip = madeClips.find((item) => item.sceneOrder === sceneOrder);
             const label = t("workflowEditor.runView.previewScene", { scene: sceneOrder + 1 });
-            if (clip?.status === "stored" && clip.previewUrl)
+            if (clip?.status === "stored" && clip.previewUrl) {
               return (
                 <div
                   key={sceneOrder}
-                  className="border-wf-line animate-in fade-in zoom-in-95 relative aspect-[3/4] overflow-hidden rounded-md border bg-black duration-500"
+                  className="group border-wf-line animate-in fade-in zoom-in-95 relative aspect-[3/4] overflow-hidden rounded-md border bg-black duration-500"
                 >
                   <video
                     src={clip.previewUrl}
@@ -118,9 +144,18 @@ export const VideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
                     aria-label={label}
                   />
                   <SceneLabel label={label} />
+                  <button
+                    type="button"
+                    onClick={() => openCinema(clip.previewUrl, null, label)}
+                    className="absolute top-1 right-1 rounded bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/90"
+                    aria-label={`Expand ${label}`}
+                  >
+                    <Maximize2 className="size-2.5" />
+                  </button>
                 </div>
               );
-            if (clip?.status === "failed")
+            }
+            if (clip?.status === "failed") {
               return (
                 <div
                   key={sceneOrder}
@@ -131,7 +166,7 @@ export const VideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
                   <SceneLabel label={label} />
                 </div>
               );
-            // Not made yet: a placeholder while the step runs, an empty frame once it stopped without the clip.
+            }
             return running ? (
               <div key={sceneOrder} className="relative">
                 <Skeleton className="bg-wf-line/70 aspect-[3/4] rounded-md" />
@@ -147,6 +182,13 @@ export const VideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
             );
           })}
         </div>
+        <VideoCinemaModal
+          video={cinemaVideo}
+          videoUrl={cinemaUrl}
+          title={cinemaTitle}
+          open={cinemaOpen}
+          onOpenChange={setCinemaOpen}
+        />
       </div>
     );
   }
@@ -162,6 +204,13 @@ export const VideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
       </div>
       <RunGroupVideoStrip
         fallback={<SingleVideoPreview data={data} status={status} progress={progress} />}
+      />
+      <VideoCinemaModal
+        video={cinemaVideo}
+        videoUrl={cinemaUrl}
+        title={cinemaTitle}
+        open={cinemaOpen}
+        onOpenChange={setCinemaOpen}
       />
     </div>
   );

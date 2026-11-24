@@ -5,7 +5,7 @@ import { i18n } from "@/i18n/client";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
 import type { MockupState, RunStep } from "@/stores/workflow-run";
 import type { BatchJobDetail, ImageProvider } from "@/types/batch-jobs";
-import type { TemplatePlacements } from "@/types/mockup-templates";
+import type { GenerateAllMockupsResult, TemplatePlacements } from "@/types/mockup-templates";
 import type { WorkflowEdge, WorkflowIssue, WorkflowNode, WorkflowNodeConfig, WorkflowNodeStatus, WorkflowNodeType } from "@/types/workflow";
 
 export const ACTIVE_JOB_STATUSES = ["queued", "running", "paused"];
@@ -409,3 +409,6 @@ export const toCanvasStatus = (status: string): WorkflowNodeStatus => {
 
 export const getJobImageUrls = (job: BatchJobDetail | null) =>
   job?.products.flatMap((product) => product.images.map((image) => image.imageUrl)) ?? [];
+
+export const getMockupImageUrls = (result: GenerateAllMockupsResult | null) =>
+  result?.images.map((image) => image.mockupImageUrl) ?? [];

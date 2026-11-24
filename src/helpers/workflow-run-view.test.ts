@@ -5,6 +5,7 @@ import { createWorkflowNode } from "@/helpers/workflow-graph";
 import {
   approachViewport,
   centerOf,
+  choosePreviewSide,
   getRunFocusIds,
   summarizeRun,
   widenForPreviews,
@@ -14,7 +15,7 @@ import type { WorkflowNode, WorkflowNodeStatus, WorkflowNodeType } from "@/types
 
 const node = (type: WorkflowNodeType, status: WorkflowNodeStatus, progress = 0): WorkflowNode => {
   const created = createWorkflowNode(type, { x: 0, y: 0 });
-  return { ...created, data: { ...created.data, status, progress } };
+  return { ...created, measured: { width: 200, height: 100 }, data: { ...created.data, status, progress } };
 };
 
 describe("getRunFocusIds", () => {
@@ -83,8 +84,50 @@ describe("widenForPreviews", () => {
     );
   });
 
+  it("makes room for the clips beside Generate Video", () => {
+    expect(widenForPreviews(bounds, [node("generate-video", "running")]).width).toBe(
+      200 + RUN_PREVIEW_GAP + RUN_PREVIEW_WIDTH
+    );
+  });
+
   it("leaves other nodes as they are", () => {
-    expect(widenForPreviews(bounds, [node("generate-video", "running")])).toEqual(bounds);
+    expect(widenForPreviews(bounds, [node("review-video", "running")])).toEqual(bounds);
+  });
+
+  it("makes room on the left when the preview goes there", () => {
+    const video = node("generate-video", "running");
+    const neighbour = { ...node("publish-printify", "running"), position: { x: 260, y: 0 } };
+    const widened = widenForPreviews(bounds, [video], [video, neighbour]);
+    expect(widened.x).toBe(-RUN_PREVIEW_GAP - RUN_PREVIEW_WIDTH);
+    expect(widened.x + widened.width).toBe(200);
+  });
+});
+
+describe("choosePreviewSide", () => {
+  const node = { x: 0, y: 0, width: 200, height: 300 };
+
+  it("puts the preview on the right when nothing is there", () => {
+    expect(choosePreviewSide(node, [{ x: -600, y: 0, width: 200, height: 300 }])).toBe("right");
+  });
+
+  it("moves it to the left when a node is on the right", () => {
+    expect(choosePreviewSide(node, [{ x: 280, y: 40, width: 240, height: 120 }])).toBe("left");
+  });
+
+  it("puts it below, then above, when both sides are taken", () => {
+    const sides = [{ x: 280, y: 0, width: 240, height: 300 }, { x: -400, y: 0, width: 240, height: 300 }];
+    expect(choosePreviewSide(node, sides)).toBe("bottom");
+    expect(choosePreviewSide(node, [...sides, { x: 0, y: 340, width: 200, height: 200 }])).toBe("top");
+  });
+
+  it("takes the side that covers the least when every side covers a node", () => {
+    const crowded = [
+      { x: 220, y: 0, width: 40, height: 40 },
+      { x: -400, y: 0, width: 400, height: 400 },
+      { x: 0, y: 320, width: 400, height: 400 },
+      { x: 0, y: -400, width: 400, height: 400 },
+    ];
+    expect(choosePreviewSide(node, crowded)).toBe("right");
   });
 });
 

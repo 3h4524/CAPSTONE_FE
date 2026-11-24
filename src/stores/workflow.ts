@@ -92,6 +92,13 @@ export type WorkflowEditorState = {
   applyGraphPatch: (nodes: WorkflowNode[], edges: WorkflowEdge[], focusNodeIds?: string[]) => void;
   renameNode: (nodeId: string, label: string) => void;
   updateNodeConfig: (nodeId: string, config: WorkflowNodeConfig) => void;
+  /**
+   * Fills in what a panel works out by itself when it opens (a default output format, default start images...), which
+   * the seller did not change. On a workflow with nothing unsaved it is not an unsaved change either: Save would only
+   * write what the server already assumes, and asking for it would lock whatever waits for a saved workflow (Continue at
+   * Mockup Approval). With something unsaved already, it counts like any other change.
+   */
+  normalizeNodeConfig: (nodeId: string, config: WorkflowNodeConfig) => void;
   removeNode: (nodeId: string) => void;
   selectNode: (nodeId: string | null) => void;
   selectNodes: (nodeIds: string[]) => void;
@@ -323,6 +330,30 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
         nodes,
         isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes, edges: state.edges }),
         ...pushHistory(state, "config", true),
+      };
+    }),
+
+  normalizeNodeConfig: (nodeId, config) =>
+    set((state) => {
+      const target = state.nodes.find((node) => node.id === nodeId);
+      if (!target || JSON.stringify(target.data.config) === JSON.stringify(config)) return state;
+      const nodes = withNodeConfig(state.nodes, nodeId, config);
+      if (state.isDirty) {
+        return {
+          nodes,
+          isDirty: hasMeaningfulGraphChanges(state.savedGraph, { nodes, edges: state.edges }),
+          ...pushHistory(state, "config", true),
+        };
+      }
+      // Nothing was unsaved: the saved graph takes the filled-in settings too, so they stay a part of what is saved. No
+      // history step either: undo is for the seller's own changes.
+      const savedGraph = { ...state.savedGraph, nodes: withNodeConfig(state.savedGraph.nodes, nodeId, config) };
+      const scope = state.designScope?.nodeId === nodeId ? { ...state.designScope, baseConfig: config } : state.designScope;
+      return {
+        nodes,
+        savedGraph,
+        designScope: scope,
+        isDirty: hasMeaningfulGraphChanges(savedGraph, { nodes, edges: state.edges }),
       };
     }),
 

@@ -54,9 +54,10 @@ export const useRunCamera = () => {
     if (!effects || !active || followPaused || !focusKey || dotsTravelling) return;
     const ids = focusKey.split(",");
     const frame = (frameIds: string[], duration: number) => {
-      const nodes = useWorkflowStore.getState().nodes.filter((node) => frameIds.includes(node.id));
+      const canvas = useWorkflowStore.getState().nodes;
+      const nodes = canvas.filter((node) => frameIds.includes(node.id));
       if (nodes.length === 0) return;
-      void fitBounds(widenForPreviews(getNodesBounds(nodes), nodes), {
+      void fitBounds(widenForPreviews(getNodesBounds(nodes), nodes, canvas), {
         duration,
         padding: RUN_CAMERA_PADDING,
         ease: cameraEase,

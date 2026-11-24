@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Film } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { videoPosterUrl } from "@/helpers/video-poster";
 import { useRunVideos } from "@/hooks/queries/use-run-videos";
 import { useWorkflowStore } from "@/stores/workflow";
 
@@ -17,11 +18,13 @@ export const VideoNodePreview = () => {
   const { data: videos } = useRunVideos(runId);
   const video = videos?.[0];
 
-  if (video?.thumbnailUrl) {
+  // A video without a file yet shows its first scene: the mock-up the video starts from.
+  const poster = videoPosterUrl(video);
+  if (video && poster) {
     return (
       <div className="relative aspect-[2/1] w-full overflow-hidden rounded-sm">
         <Image
-          src={video.thumbnailUrl}
+          src={poster}
           alt={t("workflowEditor.videoPreview.alt", { version: video.version })}
           fill
           unoptimized

@@ -84,19 +84,37 @@ export const useWorkflowRuntime = () => {
 
 type SyncedStatus = Pick<WorkflowNodeData, "status" | "stage" | "progress">;
 
-/** What the open video run (or the run being made ready) says about one step; null when it says nothing about it. */
+/**
+ * What Mockup Approval is doing before the videos' runs exist:
+ * - `preparing`: the mock-ups are being stored as video sources, so there is nothing to review yet (manual mode).
+ * - `approving`: the server approves the mock-ups by itself and makes the model photos (automatic mode).
+ * - `review`: the mock-ups are there to review; any model photos still being made arrive in them one by one (manual mode).
+ */
+export type MockupApprovalPhase = "preparing" | "approving" | "review";
+
+const APPROVAL_PHASE_STATUS: Record<MockupApprovalPhase, SyncedStatus> = {
+  preparing: { status: "running", stage: "Preparing mock-ups", progress: 0 },
+  approving: { status: "running", stage: "Approving mock-ups", progress: 0 },
+  review: { status: "waiting_for_input", stage: "Review mock-ups", progress: 0 },
+};
+
+/**
+ * What the open video run (or the run being made ready) says about one step; null when it says nothing about it.
+ * `approvingMockups` as `true` is the `approving` phase.
+ */
 export const videoSyncedStatus = (
   type: WorkflowNodeData["type"],
   step: Pick<WorkflowNodeRun, "status" | "stage" | "progress"> | undefined,
   hasBatchRun: boolean,
-  approvingMockups: boolean
+  approvingMockups: boolean | MockupApprovalPhase | null
 ): SyncedStatus | null => {
   let next: SyncedStatus | null = null;
   if (isServerRunNode(type)) next = step ? { status: toCanvasStatus(step.status), stage: step.stage, progress: step.progress } : { status: "idle", stage: null, progress: 0 };
   // Without a batch job these steps show what the video run recorded, and nothing once it is closed.
   else if (!hasBatchRun && isBatchRunNode(type)) next = { status: step ? toCanvasStatus(step.status) : "idle", stage: null, progress: 0 };
-  // Until the videos' runs exist nothing else shows that the run is working.
-  if (approvingMockups && type === "approval-gate" && next?.status === "idle") next = { status: "running", stage: "Approving mock-ups", progress: 0 };
+  // Until the videos' runs exist nothing else shows what Mockup Approval is doing.
+  const phase = approvingMockups === true ? "approving" : approvingMockups || null;
+  if (phase && type === "approval-gate" && next?.status === "idle") next = { ...APPROVAL_PHASE_STATUS[phase] };
   return next;
 };
 
@@ -104,10 +122,10 @@ export const videoSyncedStatus = (
 // never write the same step: the video run owns the video steps, and the steps before them only while no batch
 // job is open (the run records Product Input and Apply Mockup as done, and never touches the design steps).
 /**
- * @param approvingMockups The batch video run is being made ready on the server (its mock-ups approved automatically
- * and the model photos of its scenes with a person made) and has no video run yet: Mockup Approval is the step at work.
+ * @param approvingMockups What Mockup Approval is doing while the batch video run has no video run yet (see
+ * `MockupApprovalPhase`); `true` means the server approves the mock-ups and makes the model photos by itself.
  */
-export const useVideoRunSync = (hasBatchRun: boolean, approvingMockups = false) => {
+export const useVideoRunSync = (hasBatchRun: boolean, approvingMockups: boolean | MockupApprovalPhase | null = false) => {
   const { run } = useWorkflowRuntime();
   // Changes when the canvas gets its nodes, so a run that loaded first is still shown.
   const nodeSignature = useWorkflowStore(state => state.nodes.map(node => `${node.id}:${node.data.type}`).join("|"));

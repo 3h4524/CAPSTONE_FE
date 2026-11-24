@@ -81,6 +81,7 @@ import { usePreviewDesign } from "@/hooks/queries/use-preview-design";
 import { useRunGroupId } from "@/hooks/queries/use-run-group";
 import { useRunSceneVideos } from "@/hooks/queries/use-run-scene-videos";
 import { useVideoPacks } from "@/hooks/queries/use-video-packs";
+import { useApplyVideoEdit } from "@/hooks/use-apply-video-edit";
 import { useAppQueryClient } from "@/hooks/use-query-client";
 import { useWorkflowRuntime } from "@/hooks/use-workflow-runtime";
 import { useWorkflowSave } from "@/hooks/use-workflow-save";
@@ -532,6 +533,7 @@ export function AiShotOptions({
   const sceneRunId = run?.id ?? null;
   const { data: sceneVideos = [] } = useRunSceneVideos(sceneRunId);
   const { mutateAsync: actOnRun } = useWorkflowRunAction();
+  const { canApply: canApplyEdit, apply: applyEdit, isApplying: isApplyingEdit } = useApplyVideoEdit();
   const chosenMockupIds = designRun ? EMPTY_IDS : readStringArray(applyMockupNode?.data.config.mockupIds);
   const artworkGroupKey =
     designRun?.artworkGroupKey ??
@@ -903,7 +905,12 @@ export function AiShotOptions({
     // a change of its settings, so it neither asks to be saved nor gives the product settings of its own.
     const scope = store.designScope;
     const untouchedProduct = scope?.kind === "product" && sameConfig(node.data.config, scope.baseConfig);
-    store.updateNodeConfig(nodeId, normalizedConfig);
+    // Opening the panel fills in defaults (empty instructions, start images, template settings): that is not a change of
+    // the seller's, so on a workflow with nothing unsaved it does not make it unsaved. Otherwise Continue at Mockup
+    // Approval, which needs the saved workflow, would lock just because the seller looked at Generate Video. Changing
+    // the video mode is different (it changes how the saved settings are read), so it still has to be saved.
+    if (node.data.config.mode === normalizedMode) store.normalizeNodeConfig(nodeId, normalizedConfig);
+    else store.updateNodeConfig(nodeId, normalizedConfig);
     onChange(normalizedScenes, seconds, sharedInstructions);
     if (untouchedProduct) store.markDesignSaved(useWorkflowStore.getState().nodes.find((item) => item.id === nodeId)?.data.config ?? normalizedConfig);
   }, [
@@ -963,6 +970,8 @@ export function AiShotOptions({
         config: parsed.data,
         mockupIds: effectiveChosenMockupIds,
         artworkGroupKey: effectiveArtworkGroupKey,
+        // One design's run of a batch: its scenes take that design's images on the server, not the ones set up on the canvas.
+        forDesign: Boolean(designRun),
       });
       const shot = storyboard.aiShots?.find((item) => item.sceneOrder === sceneOrder);
       if (!shot) {
@@ -3629,13 +3638,19 @@ export function AiShotOptions({
         <section aria-label={t("workflowConfig.aiShot.fullVideoEditing")} className="space-y-2 pt-1">
           <p className="text-sm font-semibold">{t("workflowConfig.aiShot.fullVideo")}</p>
           <VideoTimelineEditor
-            disabled={disabled}
+            disabled={disabled || isApplyingEdit}
             config={node.data.config as GenerateVideoConfig}
             assets={allAssets}
             sceneVideos={sceneVideos}
             onSave={(next) => {
               useWorkflowStore.getState().updateNodeConfig(nodeId, next);
               onChange(next.aiScenes ?? [], next.durationSeconds, next.aiGlobalInstructions ?? null);
+              // The joined video already waits at Review Video: the edit goes to it too, or approving it would
+              // render and export the video as it was before the edit.
+              if (canApplyEdit)
+                void applyEdit(next).then((applied) => {
+                  if (applied) showToast("success", t("workflowMedia.videoReview.editApplied"));
+                });
             }}
           />
         </section>

@@ -204,7 +204,7 @@ export const NodeFrame = ({ nodeId, data, selected, widthClassName, children }: 
         )}
       </article>
 
-      {showsPreview && <RunPreviewCallout type={data.type} status={status} />}
+      {showsPreview && <RunPreviewCallout nodeId={nodeId} type={data.type} status={status} />}
 
       {definition.hasOutput && (
         <Handle

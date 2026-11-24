@@ -392,7 +392,10 @@ export interface PromoVideo {
   config?: GenerateVideoConfig | null;
   artworkGroupKey?: string | null;
   mockupIds?: string[] | null;
-  /** Present while the video has no file (`ready` or `rendering`). */
+  /**
+   * The video's scenes and their signed links: present while it has no file (`ready`, `rendering`) and once rendered
+   * (`completed`), so each scene can still be shown on its own. A rendered video plays from `previewUrl`.
+   */
   preview?: VideoPreviewData | null;
 }
 export interface AiSceneVideo {

@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { VideoPreview } from "@/components/workflows/nodes/preview/video-preview";
+import type * as GroupVideos from "@/hooks/queries/use-group-videos";
+import { useRunSimulationStore } from "@/stores/run-simulation";
 import type { AiSceneVideo, PromoVideo } from "@/types/video-workflow";
 import type { WorkflowNodeData } from "@/types/workflow";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 const state = vi.hoisted(() => ({
   config: undefined as unknown,
@@ -12,6 +14,10 @@ const state = vi.hoisted(() => ({
   runIds: [] as (string | null)[],
   url: "run=run-1",
   group: [] as { target: { runId: string }; video?: Partial<PromoVideo> }[],
+  // The designs of a batch video run, as the canvas reads them without loading their videos.
+  targets: [] as Record<string, unknown>[],
+  videosByRun: {} as Record<string, Partial<PromoVideo>[]>,
+  videoRunIds: [] as (string | null)[],
 }));
 
 vi.mock("@/hooks/use-video-run-id", () => ({
@@ -34,9 +40,19 @@ vi.mock("@/hooks/queries/use-run-scene-videos", () => ({
     return { data: state.clips };
   },
 }));
-vi.mock("@/hooks/queries/use-run-videos", () => ({ useRunVideos: () => ({ data: state.videos }) }));
-vi.mock("@/hooks/queries/use-group-videos", () => ({
+vi.mock("@/hooks/queries/use-run-videos", () => ({
+  useRunVideos: (runId: string | null) => {
+    state.videoRunIds.push(runId);
+    return { data: (runId && state.videosByRun[runId]) || state.videos };
+  },
+}));
+vi.mock("@/hooks/queries/use-group-videos", async (importOriginal) => ({
+  ...(await importOriginal<typeof GroupVideos>()),
   useGroupVideos: () => ({ group: null, videos: state.group }),
+  useVideoGroupTargets: () => ({ group: null, targets: state.targets }),
+}));
+vi.mock("@/components/workflows/nodes/preview/scene-previews", () => ({
+  ScenePreviews: ({ video }: { video: PromoVideo }) => <div data-testid="scenes" data-video={video.id} />,
 }));
 vi.mock("@/components/workflows/media/composed-video-preview", () => ({
   ComposedVideoPreview: ({ video, compact }: { video: PromoVideo; compact?: boolean }) => (
@@ -61,6 +77,9 @@ describe("VideoPreview", () => {
     state.runIds = [];
     state.url = "run=run-1";
     state.group = [];
+    state.targets = [];
+    state.videosByRun = {};
+    state.videoRunIds = [];
   });
 
   it("shows a placeholder for each AI scene while its clip is being made", () => {
@@ -112,7 +131,21 @@ describe("VideoPreview", () => {
     expect(screen.getByTestId("progress")).toHaveTextContent("40%");
   });
 
-  it("plays the whole video once it is made, its file when rendered", () => {
+  it("plays the sample video of a preview run, and opens it in the large player", () => {
+    useRunSimulationStore.setState({ video: { previewUrl: "/video-templates/sample.mp4", thumbnailUrl: null } });
+    try {
+      const { container } = render(<VideoPreview data={data()} progress={100} status="success" />);
+
+      expect(container.querySelector("video")).toHaveAttribute("src", "/video-templates/sample.mp4");
+      expect(screen.queryByTestId("scenes")).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Expand video" }));
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    } finally {
+      useRunSimulationStore.setState({ video: null });
+    }
+  });
+
+  it("shows each scene of the video once it is made, not the whole video, whether or not it has a file", () => {
     state.videos = [
       {
         id: "v1",
@@ -123,20 +156,17 @@ describe("VideoPreview", () => {
         thumbnailUrl: "https://img/v1.png",
       },
     ];
-    const { container } = render(<VideoPreview data={data()} progress={40} status="success" />);
+    const { container, unmount } = render(<VideoPreview data={data()} progress={40} status="success" />);
     expect(screen.getByText("Video")).toBeInTheDocument();
     expect(screen.getByText("v2")).toBeInTheDocument();
-    const video = container.querySelector("video");
-    expect(video).toHaveAttribute("src", "https://videos/v1.mp4");
-    expect(video).toHaveAttribute("controls");
-    expect(screen.queryByText("Scene 2")).not.toBeInTheDocument();
-  });
+    expect(screen.getByTestId("scenes")).toHaveAttribute("data-video", "v1");
+    expect(container.querySelector("video")).toBeNull();
+    unmount();
 
-  it("draws the whole video from its scenes when it has no file yet, as Review Video does", () => {
     state.videos = [
       {
-        id: "v1",
-        version: 1,
+        id: "v3",
+        version: 3,
         width: 1080,
         height: 1440,
         previewUrl: null,
@@ -144,8 +174,8 @@ describe("VideoPreview", () => {
       },
     ];
     render(<VideoPreview data={data()} progress={40} status="waiting_for_review" />);
-    expect(screen.getByTestId("composed")).toHaveAttribute("data-video", "v1");
-    expect(screen.getByTestId("composed")).toHaveAttribute("data-compact", "true");
+    expect(screen.getByTestId("scenes")).toHaveAttribute("data-video", "v3");
+    expect(screen.queryByTestId("composed")).not.toBeInTheDocument();
   });
 
   it("keeps showing the clips while the step runs, even when a video exists", () => {
@@ -154,10 +184,9 @@ describe("VideoPreview", () => {
     expect(screen.getByText("AI clips")).toBeInTheDocument();
   });
 
-  it("in a batch run with no design open, follows the first design that has a video", () => {
+  it("in a batch run of one design with no design open, follows the design that has a video", () => {
     state.url = "";
     state.group = [
-      { target: { runId: "design-a" } },
       {
         target: { runId: "design-b" },
         video: {
@@ -169,8 +198,52 @@ describe("VideoPreview", () => {
         },
       },
     ];
-    const { container } = render(<VideoPreview data={data()} progress={40} status="success" />);
-    expect(state.runIds).toContain("design-b");
-    expect(container.querySelector("video")).toHaveAttribute("src", "https://videos/b.mp4");
+    render(<VideoPreview data={data()} progress={40} status="success" />);
+    expect(screen.getByTestId("scenes")).toHaveAttribute("data-video", "vb");
+  });
+
+  describe("with several designs", () => {
+    const design = (runId: string, name: string, generate: string, progress = 0) => ({
+      runId,
+      productName: name,
+      designLabel: "Design 1",
+      previewUrl: `https://mockups/${runId}.png`,
+      runStatus: generate === "succeeded" ? "waiting_for_review" : "running",
+      progress,
+      config: null,
+      generateVideo: { status: generate, stage: null, progress, error: null },
+    });
+
+    beforeEach(() => {
+      state.url = "";
+      state.targets = [design("design-a", "Tee", "running", 40), design("design-b", "Hoodie", "succeeded", 100)];
+      state.videosByRun = {
+        "design-b": [{ id: "vb", runId: "design-b", version: 2, width: 1080, height: 1440, previewUrl: "https://videos/b.mp4" }],
+      };
+    });
+
+    it("picks a design by its mock-up and shows its scenes, loading only its video", () => {
+      render(<VideoPreview data={data()} progress={40} status="success" />);
+
+      expect(screen.getByRole("button", { name: "Product 1: Tee · Design 1" })).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByRole("button", { name: "Product 2: Hoodie · Design 1" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByTestId("scenes")).toHaveAttribute("data-video", "vb");
+      // The whole video is not played: its scenes are.
+      expect(document.querySelector("video[src='https://videos/b.mp4']")).toBeNull();
+      expect(state.videoRunIds).toContain("design-b");
+      expect(state.videoRunIds).not.toContain("design-a");
+    });
+
+    it("loads another design's video only when it is picked", () => {
+      render(<VideoPreview data={data()} progress={40} status="success" />);
+
+      fireEvent.click(screen.getByRole("button", { name: "Product 1: Tee · Design 1" }));
+
+      expect(state.videoRunIds).toContain("design-a");
+      expect(screen.getByRole("button", { name: "Product 1: Tee · Design 1" })).toHaveAttribute("aria-pressed", "true");
+      // Still being made: its AI scenes as the provider makes them.
+      expect(screen.queryByTestId("scenes")).not.toBeInTheDocument();
+      expect(screen.getByText("Scene 2")).toBeInTheDocument();
+    });
   });
 });

@@ -26,8 +26,8 @@ describe("supportsBatchVideos", () => {
     expect(supportsBatchVideos([video({ mode: "standard", aiScenes: [{ mode: "standard" }, { mode: "ai" }] })])).toBe(false);
   });
 
-  it("refuses the Product on Model pack", () => {
-    expect(supportsBatchVideos([video({ mode: "standard", template: "product_on_model_pack" })])).toBe(false);
+  it("accepts the Product on Model pack, an ordinary scene list", () => {
+    expect(supportsBatchVideos([video({ mode: "ai_shot", template: "product_on_model_pack", aiScenes: [{ mode: "ai" }, { mode: "ai" }] })])).toBe(true);
   });
 
   it("is false without a Generate Video step", () => {
@@ -41,7 +41,8 @@ describe("runsPerDesign", () => {
   });
 
   it("runs a video that fits one product only for that product", () => {
-    expect(runsPerDesign([approval, video({ mode: "standard", template: "product_on_model_pack" })])).toBe(false);
+    // The legacy single-shot AI settings (no scene list) name one product's image.
+    expect(runsPerDesign([approval, video({ mode: "ai_shot" })])).toBe(false);
   });
 
   it("runs publishing or listing content without a video for each design approved at Mockup Approval", () => {

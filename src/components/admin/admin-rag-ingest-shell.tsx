@@ -130,9 +130,10 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
 
   return (
     <>
-      <div className="flex flex-col justify-between gap-4 max-md:gap-3 md:flex-row md:items-end">
+      {/* The tabs sit beside the title only where both fit on one line; otherwise they go under it. They never wrap. */}
+      <div className="flex flex-col justify-between gap-4 max-md:gap-3 xl:flex-row xl:items-end">
         <PageHeader
-          className={cn((activeTab === "documents" || activeTab === "search") && "max-md:hidden")}
+          className={cn("min-w-0", (activeTab === "documents" || activeTab === "search") && "max-md:hidden")}
           eyebrow={t("admin.dashboard.ragIngest.eyebrow")}
           title={
             activeTab === "research"
@@ -145,14 +146,14 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
               : t("admin.dashboard.ragIngest.descriptionRag")
           }
         />
-        <div className="border-ink-200 bg-card flex flex-wrap rounded-lg border p-1 shadow-sm max-md:grid max-md:grid-cols-4 max-md:gap-1">
+        <div className="border-ink-200 bg-card flex shrink-0 self-start overflow-x-auto rounded-lg border p-1 shadow-sm max-md:grid max-md:grid-cols-4 max-md:gap-1 max-md:self-stretch xl:self-auto">
           {RAG_TABS.map((tab) => (
             <Button
               key={tab.value}
               type="button"
               size="sm"
               variant={activeTab === tab.value ? "default" : "ghost"}
-              className="max-md:min-h-10 max-md:min-w-0 max-md:px-1 max-md:text-xs"
+              className="whitespace-nowrap max-md:min-h-10 max-md:min-w-0 max-md:px-1 max-md:text-xs"
               onClick={() => setActiveTab(tab.value)}
             >
               <span className="max-md:hidden">{t(tab.labelKey)}</span>

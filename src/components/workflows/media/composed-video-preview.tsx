@@ -17,11 +17,12 @@ import type { PromoVideo, VideoPreviewData } from "@/types/video-workflow";
 import { Player } from "@remotion/player";
 import { useQueryClient } from "@tanstack/react-query";
 
-const FPS = 30;
+export const FPS = 30;
 /** The links in the preview are signed for ten minutes: ask for fresh ones well before they lapse. */
-const REFRESH_LINKS_MS = 4 * 60_000;
+export const REFRESH_LINKS_MS = 4 * 60_000;
 
-const toComposition = (preview: VideoPreviewData): CompositionProps => {
+/** The composition props of a video's scenes, from the links the API signed for them. */
+export const toComposition = (preview: VideoPreviewData): CompositionProps => {
   const board = preview.storyboard;
   const storyboard: CompositionStoryboard = {
     width: board.width,

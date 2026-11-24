@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { RunGroupPanel } from "@/components/workflows/run/run-group-panel";
 import { useWorkflowStore } from "@/stores/workflow";
@@ -14,12 +14,14 @@ const mocks = vi.hoisted(() => ({
   assets: [] as MockupAsset[],
   printWithoutAi: true,
   reviewDesign: vi.fn(),
+  groupPending: false,
+  review: vi.fn(),
   templates: [] as unknown[],
 }));
 
 vi.mock("@/hooks/queries/use-run-group", () => ({
-  useRunGroupId: () => mocks.group?.id ?? null,
-  useRunGroup: () => ({ data: mocks.group, isPending: false, isError: false, refetch: vi.fn() }),
+  useRunGroupId: () => (mocks.groupPending ? "loading-group" : (mocks.group?.id ?? null)),
+  useRunGroup: () => ({ data: mocks.groupPending ? undefined : mocks.group, isPending: mocks.groupPending, isError: false, refetch: vi.fn() }),
 }));
 vi.mock("@/hooks/mutations/use-run-group-actions", () => ({
   useConfirmRunGroup: () => ({ mutate: mocks.confirm, isPending: false }),
@@ -29,7 +31,7 @@ vi.mock("@/hooks/mutations/use-run-group-actions", () => ({
 vi.mock("@/hooks/use-workflow-runtime", () => ({ useWorkflowRuntime: () => ({ selectRun: vi.fn() }) }));
 vi.mock("@/hooks/use-sync-generated-mockups", () => ({ useSyncGeneratedMockups: () => false }));
 vi.mock("@/hooks/queries/use-mockup-assets", () => ({ useMockupAssets: () => ({ data: mocks.assets, isPending: false, dataUpdatedAt: 0 }) }));
-vi.mock("@/hooks/mutations/use-review-mockup-asset", () => ({ useReviewMockupAsset: () => ({ mutateAsync: vi.fn() }) }));
+vi.mock("@/hooks/mutations/use-review-mockup-asset", () => ({ useReviewMockupAsset: () => ({ mutateAsync: mocks.review }) }));
 vi.mock("@/hooks/queries/use-mockup-templates", () => ({ useMockupTemplates: () => ({ data: mocks.templates }) }));
 vi.mock("@/hooks/mutations/use-review-design-mockups", () => ({ useReviewDesignMockups: () => ({ mutateAsync: mocks.reviewDesign }) }));
 vi.mock("@/hooks/use-query-client", () => ({ useAppQueryClient: () => ({ setQueryData: vi.fn(), invalidateQueries: vi.fn() }) }));
@@ -276,11 +278,12 @@ describe("RunGroupPanel: reviewing a product", () => {
     });
   });
 
-  it("approves every color and side of the product at once, and leaves AI photos to their own review", async () => {
+  it("approves every color and side of the product and its model photo at once, leaving a rejected photo rejected", async () => {
     mocks.assets = [
       { ...mockup("front", "pending"), sourceType: "generated" },
       { ...mockup("back", "pending"), sourceType: "generated" },
       { ...mockup("lifestyle", "pending"), sourceType: "uploaded", role: "Lifestyle" },
+      { ...mockup("refused", "rejected"), sourceType: "uploaded", role: "Lifestyle" },
     ] as MockupAsset[];
     render(<RunGroupPanel />);
 
@@ -288,7 +291,8 @@ describe("RunGroupPanel: reviewing a product", () => {
 
     expect(mocks.reviewDesign).toHaveBeenCalledTimes(1);
     expect(mocks.reviewDesign).toHaveBeenCalledWith({ productId: "p", artworkGroupKey: "d", approved: true, leftOut: [] });
-    expect(screen.getAllByRole("button", { name: "Approve mock-up" })).toHaveLength(1);
+    expect(mocks.review).toHaveBeenCalledTimes(1);
+    expect(mocks.review).toHaveBeenCalledWith(expect.objectContaining({ id: "lifestyle", approved: true }));
   });
 });
 
@@ -325,5 +329,21 @@ describe("RunGroupPanel: once the videos started", () => {
     render(<RunGroupPanel />);
 
     expect(screen.queryByRole("button", { name: "Resume" })).not.toBeInTheDocument();
+  });
+});
+
+describe("RunGroupPanel: while the run's products load", () => {
+  afterEach(() => {
+    mocks.groupPending = false;
+  });
+
+  it("draws placeholder product cards instead of a blank panel", () => {
+    mocks.groupPending = true;
+    render(<RunGroupPanel />);
+
+    const busy = screen.getByText("Loading the designs of this run…").closest("[aria-busy='true']");
+    expect(busy).not.toBeNull();
+    expect(busy!.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "Approve product" })).not.toBeInTheDocument();
   });
 });

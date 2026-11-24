@@ -56,6 +56,11 @@ const previewContent = ({ nodeId, data, status, progress }: RunPreviewCalloutPro
   }
 };
 
+const previewWidthOf = (type: WorkflowNodeData["type"]): number => {
+  if (type === "apply-mockup") return 288;
+  return RUN_PREVIEW_WIDTH;
+};
+
 export const RunPreviewCallout = (props: RunPreviewCalloutProps) => {
   const side = useWorkflowStore((state) => {
     const node = state.nodes.find((candidate) => candidate.id === props.nodeId);
@@ -70,7 +75,7 @@ export const RunPreviewCallout = (props: RunPreviewCalloutProps) => {
         "bg-wf-surface border-wf-line animate-in fade-in absolute z-20 overflow-hidden rounded-xl border p-2.5 shadow-xl empty:hidden",
         SIDE_CLASS_NAMES[side]
       )}
-      style={{ width: RUN_PREVIEW_WIDTH, [SIDE_MARGINS[side]]: RUN_PREVIEW_GAP }}
+      style={{ width: previewWidthOf(props.data.type), [SIDE_MARGINS[side]]: RUN_PREVIEW_GAP }}
     >
       <NodeControl className="w-full max-w-full min-w-0 overflow-hidden">{content}</NodeControl>
     </aside>

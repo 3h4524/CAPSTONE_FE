@@ -134,16 +134,16 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
   };
 
   return (
-    <div className="max-w-full min-w-0">
+    <div className="w-full max-w-full min-w-0">
       <Tabs
         orientation="vertical"
         value={currentTab}
         onValueChange={setSelectedTabId}
-        className="flex w-full min-w-0 flex-row items-start gap-1.5"
+        className="flex w-full min-w-0 flex-row items-start gap-2"
       >
         <div className="min-w-0 flex-1">
           {groups.map((group) => (
-            <TabsContent key={group.id} value={group.id} className="mt-0 max-w-full min-w-0">
+            <TabsContent key={group.id} value={group.id} className="mt-0 w-full max-w-full min-w-0">
               <ImageGridPreview
                 label={group.label}
                 images={group.items}
@@ -153,12 +153,12 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
           ))}
         </div>
 
-        <div className="flex w-8 shrink-0 flex-col items-center pt-6">
+        <div className="flex w-9 shrink-0 flex-col items-center pt-5">
           {groups.length > 5 && (
             <button
               type="button"
               onClick={() => scrollVertical("up")}
-              className="text-wf-dim hover:text-wf-ink mb-0.5 p-0.5"
+              className="text-wf-dim hover:text-wf-ink mb-1 p-0.5"
               aria-label="Scroll up"
             >
               <ChevronUp className="size-3" />
@@ -167,7 +167,7 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
 
           <TabsList
             ref={tabsListRef}
-            className="bg-wf-line/25 no-scrollbar flex h-auto max-h-[190px] min-h-0 w-full flex-col gap-1.5 overflow-y-auto scroll-smooth rounded-md p-0.5"
+            className="bg-wf-line/25 no-scrollbar flex! h-auto! max-h-[195px] min-h-0 w-full! flex-col! gap-1.5 overflow-y-auto scroll-smooth rounded-lg p-1"
           >
             {groups.map((group, index) => (
               <TabsTrigger
@@ -181,7 +181,7 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
                     behavior: "smooth",
                   });
                 }}
-                className="group/tab data-[state=active]:border-wf-accent data-[state=active]:ring-wf-accent relative size-7 shrink-0 overflow-hidden rounded-md border border-transparent p-0 transition-all focus-visible:outline-hidden data-[state=active]:scale-105 data-[state=active]:ring-1"
+                className="group/tab border-wf-line/50 hover:border-wf-accent data-[state=active]:border-wf-accent data-[state=active]:ring-wf-accent data-[state=active]:ring-1.5 relative size-7 shrink-0 overflow-hidden rounded-md border p-0 transition-all focus-visible:outline-hidden data-[state=active]:scale-105"
               >
                 {group.designThumbnail ? (
                   <Image
@@ -208,7 +208,7 @@ export const MockupPreview = ({ status }: MockupPreviewProps) => {
             <button
               type="button"
               onClick={() => scrollVertical("down")}
-              className="text-wf-dim hover:text-wf-ink mt-0.5 p-0.5"
+              className="text-wf-dim hover:text-wf-ink mt-1 p-0.5"
               aria-label="Scroll down"
             >
               <ChevronDown className="size-3" />

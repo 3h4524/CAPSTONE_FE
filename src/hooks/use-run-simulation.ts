@@ -90,6 +90,16 @@ const runStep = async (nodeId: string, token: number) => {
     revealImages(node.data.type, elapsed / total);
   }
   revealImages(node.data.type, 1);
+  if (node.data.type === "generate-video") {
+    useRunSimulationStore.getState().setVideo({
+      id: "sim-v1",
+      version: 1,
+      width: 1080,
+      height: 1920,
+      previewUrl: "/video-templates/product-showcase-v2.mp4",
+      thumbnailUrl: "/video-templates/product-showcase-v2.mp4",
+    });
+  }
   if (streaming) await streaming;
   setNodeRuntime(nodeId, { status: "success", progress: 100 });
 };

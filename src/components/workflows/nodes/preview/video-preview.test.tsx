@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { VideoPreview } from "@/components/workflows/nodes/preview/video-preview";
 import type * as GroupVideos from "@/hooks/queries/use-group-videos";
+import { useRunSimulationStore } from "@/stores/run-simulation";
 import type { AiSceneVideo, PromoVideo } from "@/types/video-workflow";
 import type { WorkflowNodeData } from "@/types/workflow";
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -128,6 +129,20 @@ describe("VideoPreview", () => {
     expect(screen.getByText("Video")).toBeInTheDocument();
     expect(screen.getByText("Rendering")).toBeInTheDocument();
     expect(screen.getByTestId("progress")).toHaveTextContent("40%");
+  });
+
+  it("plays the sample video of a preview run, and opens it in the large player", () => {
+    useRunSimulationStore.setState({ video: { previewUrl: "/video-templates/sample.mp4", thumbnailUrl: null } });
+    try {
+      const { container } = render(<VideoPreview data={data()} progress={100} status="success" />);
+
+      expect(container.querySelector("video")).toHaveAttribute("src", "/video-templates/sample.mp4");
+      expect(screen.queryByTestId("scenes")).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Expand video" }));
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    } finally {
+      useRunSimulationStore.setState({ video: null });
+    }
   });
 
   it("shows each scene of the video once it is made, not the whole video, whether or not it has a file", () => {

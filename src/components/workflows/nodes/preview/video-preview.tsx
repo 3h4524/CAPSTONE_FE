@@ -2,13 +2,15 @@
 
 import { type ReactNode, useState } from "react";
 import Image from "next/image";
-import { CircleAlert, ImageIcon } from "lucide-react";
+import { CircleAlert, ImageIcon, Maximize2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { VideoPreviewFrame } from "@/components/workflows/media/video-preview-frame";
 import { PreviewStatus } from "@/components/workflows/nodes/preview/preview-status";
 import { ScenePreviews } from "@/components/workflows/nodes/preview/scene-previews";
 import { SingleVideoPreview } from "@/components/workflows/nodes/preview/single-video-preview";
+import { VideoCinemaModal } from "@/components/workflows/nodes/preview/video-cinema-modal";
 import { RunGroupVideoStrip } from "@/components/workflows/nodes/run-group-video-strip";
 import { previewToneOf } from "@/helpers/workflow-run-view";
 import {
@@ -21,7 +23,8 @@ import {
 import { useRunSceneVideos } from "@/hooks/queries/use-run-scene-videos";
 import { useRunVideos } from "@/hooks/queries/use-run-videos";
 import { useVideoRunId } from "@/hooks/use-video-run-id";
-import type { GenerateVideoConfig, RunGroupTarget } from "@/types/video-workflow";
+import { useRunSimulationStore } from "@/stores/run-simulation";
+import type { GenerateVideoConfig, PromoVideo, RunGroupTarget } from "@/types/video-workflow";
 import type { WorkflowNodeData, WorkflowNodeStatus } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 
@@ -54,7 +57,11 @@ const OneVideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
     groupVideos[0];
   const runId = openRunId ?? design?.target.runId ?? null;
   const { data: runVideos } = useRunVideos(runId);
-  const video = groupVideos.length > 0 ? (design?.video ?? runVideos?.[0]) : runVideos?.[0];
+  // "Preview run" on the canvas plays a sample video when there is no real one.
+  const simulatedVideo = useRunSimulationStore((state) => state.video);
+  const video: Partial<PromoVideo> | undefined =
+    (groupVideos.length > 0 ? (design?.video ?? runVideos?.[0]) : runVideos?.[0]) ?? simulatedVideo ?? undefined;
+  const cinema = useCinema();
   const running = status === "running";
   const tone = previewToneOf(status);
   const doneLabel =
@@ -62,25 +69,54 @@ const OneVideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
       ? t("workflowEditor.runView.previewFailed")
       : t("workflowEditor.runView.previewDone");
 
-  // Made: each of its scenes on its own (Photo motion and AI alike), not the whole video. Without scene data (an
-  // older API) `ScenePreviews` plays the whole video instead.
+  // Made: each of its scenes on its own (Photo motion and AI alike), not the whole video; the whole video opens in the
+  // large player. Without scene data (an older API) `ScenePreviews` plays the whole video, and so does a sample video.
   if (!running && video && (video.previewUrl || video.preview))
     return (
       <div className="grid gap-2">
         <div className="text-wf-dim flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase">
           {t("workflowEditor.runView.previewVideo")}
-          <span className="text-wf-faint tabular-nums">v{video.version}</span>
+          {video.version != null && <span className="text-wf-faint tabular-nums">v{video.version}</span>}
           <PreviewStatus tone={tone} label={doneLabel} />
+          {video.previewUrl && (
+            <ExpandButton
+              label={t("workflowEditor.runView.previewExpandVideo")}
+              onClick={() =>
+                cinema.open(
+                  video.previewUrl ?? null,
+                  video,
+                  t("workflowEditor.runView.previewVideoVersion", { version: video.version ?? 1 })
+                )
+              }
+            />
+          )}
         </div>
-        <ScenePreviews video={video} />
+        {video.id ? (
+          <ScenePreviews video={video as PromoVideo} />
+        ) : (
+          <VideoPreviewFrame width={video.width ?? 1080} height={video.height ?? 1920} maxHeightRem={22}>
+            <video
+              src={video.previewUrl ?? undefined}
+              poster={video.thumbnailUrl ?? undefined}
+              className="size-full object-contain"
+              controls
+              playsInline
+              preload="metadata"
+              aria-label={t("workflowEditor.videoPreview.alt", { version: video.version ?? 1 })}
+            />
+          </VideoPreviewFrame>
+        )}
+        {cinema.modal}
       </div>
     );
 
   return (
-    <LiveClips
+    <>
+      <LiveClips
       runId={runId}
       config={config}
       running={running}
+      onExpand={(url, label) => cinema.open(url, null, label)}
       header={(stored, total) => (
         <div className="text-wf-dim flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase">
           {t("workflowEditor.runView.previewClips")}
@@ -108,6 +144,8 @@ const OneVideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
         </div>
       }
     />
+      {cinema.modal}
+    </>
   );
 };
 
@@ -133,6 +171,7 @@ const GroupVideoPreview = ({
     targets[0]!;
   const { data: videos } = useRunVideos(target.runId);
   const video = made(target) ? videos?.[0] : undefined;
+  const cinema = useCinema();
   const generate = generateStatusOf(target);
   const tone = previewToneOf(status);
   const doneLabel =
@@ -149,6 +188,12 @@ const GroupVideoPreview = ({
           tone={tone}
           label={tone === "live" ? t("workflowEditor.runView.previewRendering") : doneLabel}
         />
+        {video?.previewUrl && (
+          <ExpandButton
+            label={t("workflowEditor.runView.previewExpandVideo")}
+            onClick={() => cinema.open(video.previewUrl, video, `${target.productName} · ${target.designLabel}`)}
+          />
+        )}
       </div>
       <div
         role="group"
@@ -193,9 +238,11 @@ const GroupVideoPreview = ({
           runId={target.runId}
           config={target.config ?? (data.config as GenerateVideoConfig)}
           running={generate === "running"}
+          onExpand={(url, label) => cinema.open(url, null, label)}
           fallback={<DesignProgress target={target} />}
         />
       )}
+      {cinema.modal}
     </div>
   );
 };
@@ -236,12 +283,15 @@ const LiveClips = ({
   config,
   running,
   header,
+  onExpand,
   fallback,
 }: {
   runId: string | null;
   config: GenerateVideoConfig | undefined;
   running: boolean;
   header?: (stored: number, total: number) => ReactNode;
+  /** Opens a stored clip in the large player. */
+  onExpand?: (url: string, label: string) => void;
   fallback: ReactNode;
 }) => {
   const { t } = useTranslation("common");
@@ -266,7 +316,7 @@ const LiveClips = ({
             return (
               <div
                 key={sceneOrder}
-                className="border-wf-line animate-in fade-in zoom-in-95 relative aspect-[3/4] overflow-hidden rounded-md border bg-black duration-500"
+                className="group border-wf-line animate-in fade-in zoom-in-95 relative aspect-[3/4] overflow-hidden rounded-md border bg-black duration-500"
               >
                 <video
                   src={clip.previewUrl}
@@ -279,6 +329,16 @@ const LiveClips = ({
                   aria-label={label}
                 />
                 <SceneLabel label={label} />
+                {onExpand && clip.previewUrl && (
+                  <button
+                    type="button"
+                    onClick={() => onExpand(clip.previewUrl ?? "", label)}
+                    className="absolute top-1 right-1 rounded bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/90 focus-visible:opacity-100"
+                    aria-label={t("workflowEditor.runView.previewExpandScene", { scene: label })}
+                  >
+                    <Maximize2 className="size-2.5" aria-hidden="true" />
+                  </button>
+                )}
               </div>
             );
           if (clip?.status === "failed")
@@ -316,4 +376,39 @@ const SceneLabel = ({ label }: { label: string }) => (
   <span className="bg-wf-surface/90 text-wf-dim absolute bottom-1 left-1 rounded-sm px-1 py-0.5 text-[9px] font-medium tracking-wide">
     {label}
   </span>
+);
+
+/** The large player a preview opens its video, or one clip, in (`VideoCinemaModal`), with what it shows. */
+const useCinema = () => {
+  const [state, setState] = useState<{
+    open: boolean;
+    url: string | null;
+    video: Partial<PromoVideo> | null;
+    title?: string;
+  }>({ open: false, url: null, video: null });
+  return {
+    open: (url: string | null, video: Partial<PromoVideo> | null, title?: string) =>
+      setState({ open: true, url, video, title }),
+    modal: (
+      <VideoCinemaModal
+        video={state.video}
+        videoUrl={state.url}
+        title={state.title}
+        open={state.open}
+        onOpenChange={(open) => setState((current) => ({ ...current, open }))}
+      />
+    ),
+  };
+};
+
+const ExpandButton = ({ label, onClick }: { label: string; onClick: () => void }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="hover:text-wf-ink text-wf-faint nodrag ml-auto rounded p-0.5"
+    aria-label={label}
+    title={label}
+  >
+    <Maximize2 className="size-3" aria-hidden="true" />
+  </button>
 );

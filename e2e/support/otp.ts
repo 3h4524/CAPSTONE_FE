@@ -1,10 +1,9 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-const HOME = process.env.HOME ?? "/home/nhat";
-const DEFAULT_MAIL_FILE = path.join(HOME, "fpt", "CAPSTONE_BE-ui-enhance", "scripts", "e2e", ".run", "mail.jsonl");
+const DEFAULT_MAIL_FILE = path.resolve(process.cwd(), "..", "CAPSTONE_BE", "scripts", "e2e", ".run", "mail.jsonl");
 
-export const MAIL_FILE_PATH = process.env.E2E_MAIL_FILE ?? DEFAULT_MAIL_FILE;
+export const MAIL_FILE_PATH = process.env.E2E_MAIL_FILE ?? process.env.E2E_SMTP_FILE ?? DEFAULT_MAIL_FILE;
 
 type MailLine = {
   subject?: unknown;

@@ -28,6 +28,7 @@ import { useShopConnections } from "@/hooks/queries/use-shop-connections";
 import { applySelectionAndGenerateMockups, BATCH_JOB_PARAM, NEXT_PART_PARAM, useBatchRun } from "@/hooks/use-batch-run";
 import { useRunGroupSync } from "@/hooks/use-run-group-sync";
 import { useVideoRunSync, useWorkflowRuntime, VIDEO_RUN_PARAM } from "@/hooks/use-workflow-runtime";
+import { useRunSimulationStore } from "@/stores/run-simulation";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowCommandStore,type WorkflowCommand } from "@/stores/workflow-command";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
@@ -165,6 +166,7 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   useVideoRunSync(hasBatchRun, group?.preparing === true || isLaunchingVideo);
   useEffect(() => {
     setRunning(isRunning);
+    if (isRunning) useRunSimulationStore.getState().clearImages();
   }, [isRunning, setRunning]);
 
   // An automatic Mockup Approval approves the mock-ups on the server: their cards read them again when the run moves

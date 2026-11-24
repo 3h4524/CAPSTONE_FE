@@ -1,20 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
 import { Film } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { useRunVideos } from "@/hooks/queries/use-run-videos";
-import { useWorkflowStore } from "@/stores/workflow";
+import { useVideoRunId } from "@/hooks/use-video-run-id";
 
 export const VideoNodePreview = () => {
   const { t } = useTranslation("common");
-  // Both hooks are always called: `??` would skip the second one while the URL has a run, and React fails when it comes back.
-  const urlRunId = useSearchParams().get("run");
-  const storedRunId = useWorkflowStore((state) => state.videoRunId);
-  const runId = urlRunId ?? storedRunId;
-  const { data: videos } = useRunVideos(runId);
+  const { data: videos } = useRunVideos(useVideoRunId());
   const video = videos?.[0];
 
   if (video?.thumbnailUrl) {

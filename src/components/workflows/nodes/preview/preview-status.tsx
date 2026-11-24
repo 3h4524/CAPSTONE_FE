@@ -1,8 +1,7 @@
 "use client";
 
+import type { PreviewTone } from "@/helpers/workflow-run-view";
 import { cn } from "@/utils/cn";
-
-export type PreviewTone = "live" | "done" | "failed";
 
 const TONE_CLASS_NAMES: Record<PreviewTone, string> = {
   live: "text-wf-process before:motion-safe:animate-pulse",

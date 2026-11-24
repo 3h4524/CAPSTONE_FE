@@ -8,9 +8,10 @@ import { NodeMockupField } from "@/components/workflows/nodes/node-mockup-field"
 import { RunGroupVideoStrip } from "@/components/workflows/nodes/run-group-video-strip";
 import { VideoFields } from "@/components/workflows/nodes/video-fields";
 import { VideoNodePreview } from "@/components/workflows/nodes/video-node-preview";
-import { getJobImageUrls } from "@/helpers/workflow-run";
+import { getJobImageUrls, getMockupImageUrls } from "@/helpers/workflow-run";
 import { useGroupVideoProgress } from "@/hooks/queries/use-group-video-progress";
 import { useNodeSettingsLocked } from "@/hooks/use-node-settings-locked";
+import { useRunPreviewVisible } from "@/hooks/use-run-preview-visible";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { WorkflowNode } from "@/types/workflow";
 import type { NodeProps } from "@xyflow/react";
@@ -21,13 +22,14 @@ export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
   const job = useWorkflowRunStore((state) => state.job);
   const mockupResult = useWorkflowRunStore((state) => state.mockupResult);
   const disabled = useNodeSettingsLocked(data.type);
+  const previewVisible = useRunPreviewVisible(data);
   const images =
     data.type === "design-image"
       ? getJobImageUrls(job)
       : data.type === "apply-mockup"
-        ? (mockupResult?.images.map((image) => image.mockupImageUrl) ?? [])
+        ? getMockupImageUrls(mockupResult)
         : [];
-  const shown = images.slice(0, MAX_THUMBNAILS);
+  const shown = previewVisible ? [] : images.slice(0, MAX_THUMBNAILS);
   // A batch video run fills the bar with all of its videos, not the one run the canvas follows.
   const groupProgress = useGroupVideoProgress();
   const batch = data.type === "generate-video" && groupProgress?.active ? groupProgress : null;
@@ -44,7 +46,7 @@ export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
         )}
         {data.type === "generate-video" && <VideoFields nodeId={id} data={data} disabled={disabled} />}
 
-        {progress > 0 && (data.type === "design-image" || data.type === "generate-video") && (
+        {!previewVisible && progress > 0 && (data.type === "design-image" || data.type === "generate-video") && (
           <div className="bg-wf-line h-1 overflow-hidden rounded-full" aria-hidden="true">
             <span className="bg-wf-accent block h-full" style={{ width: `${progress}%` }} />
           </div>
@@ -61,7 +63,7 @@ export const ImageCard = ({ id, data, selected }: NodeProps<WorkflowNode>) => {
         )}
 
         {/* A batch video run shows every design's video; otherwise the one run's preview. */}
-        {data.type === "generate-video" && <RunGroupVideoStrip fallback={<VideoNodePreview />} />}
+        {data.type === "generate-video" && !previewVisible && <RunGroupVideoStrip fallback={<VideoNodePreview />} />}
       </div>
     </NodeFrame>
   );

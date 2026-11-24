@@ -12,6 +12,14 @@ export const RUN_PREVIEW_GAP = 16;
 
 export const RUN_PREVIEW_WIDTH = 248;
 
+export const RUN_PREVIEW_TILES = 4;
+
+export const RUN_PREVIEW_NODE_Z = 10;
+
+export const RUN_PREVIEW_RUNNING_NODE_Z = 20;
+
+export const RUN_PREVIEW_VIDEO_MAX_HEIGHT = 208;
+
 export const PROCESS_TRAVEL_MS = 900;
 
 export const RUN_HUD_LINGER_MS = 4000;

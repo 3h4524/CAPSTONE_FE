@@ -11,6 +11,7 @@ import {
   readSellerCredentials,
   SELLER_CREDENTIALS_MISSING_MESSAGE,
 } from "./support/auth";
+import { setEnglishInterface, skipPageGuides } from "./support/profile";
 
 type LoginResponse = {
   user?: { id: string; email: string; fullName: string; roles: string[] };
@@ -66,6 +67,14 @@ setup("authenticate seller", async () => {
   if (!result.user) {
     await api.dispose();
     throw new Error("Seller login returned no user payload");
+  }
+
+  try {
+    await setEnglishInterface(api);
+    await skipPageGuides(api);
+  } catch (error) {
+    await api.dispose();
+    throw error;
   }
 
   await api.storageState({ path: AUTH_STATE_PATH });

@@ -107,7 +107,7 @@ export const supportsBatchVideos = (nodes: WorkflowNode[]) => {
   const [video] = findByType(nodes, "generate-video");
   if (!video) return false;
   const config = video.data.config;
-  if (readString(config.template) === "product_on_model_pack") return false;
+  // The Product on Model pack is an ordinary scene list too: its scenes with a person use each design's model photo.
   const scenes = Array.isArray(config.aiScenes) ? (config.aiScenes as { mode?: unknown }[]) : [];
   // An AI video maps to every design through its scene list; the legacy single-shot settings name one product's image.
   return (readString(config.mode) || "standard") === "ai_shot"

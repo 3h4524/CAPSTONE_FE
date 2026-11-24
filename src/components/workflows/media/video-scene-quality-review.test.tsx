@@ -117,6 +117,32 @@ describe("VideoSceneQualityReview", () => {
     expect(screen.queryByText(/missing or could not finish/)).not.toBeInTheDocument();
   });
 
+  it("leaves out the scene evaluations when scoring is off, and keeps the final video's checks", async () => {
+    getVideoQualitySummary.mockResolvedValue({
+      videoId: video.id, status: "completed", technical: { fullDecode: true },
+      scenes: [{ sceneOrder: 0, status: "skipped", detail: "Automatic scene evaluation is turned off.", metrics: {} }],
+      etsyCompliance: { status: "pass", checks: [{ key: "duration", status: "pass", detail: "9 seconds; policy is 5–15 seconds." }] },
+    });
+    renderPanel();
+    expect(await screen.findByText("Final video quality")).toBeInTheDocument();
+    expect(await screen.findByText("9 seconds; policy is 5–15 seconds.")).toBeInTheDocument();
+    expect(screen.queryByText("Scene evaluations")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Scene 1/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Run again" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Automatic scene evaluation is turned off/)).not.toBeInTheDocument();
+  });
+
+  it("shows the scene evaluations while a scene has been scored or is being scored", async () => {
+    getVideoQualitySummary.mockResolvedValue({
+      videoId: video.id, status: "completed", technical: { fullDecode: true },
+      scenes: [{ sceneOrder: 0, status: "completed", detail: null, metrics: {} }],
+      etsyCompliance: { status: "pass", checks: [{ key: "duration", status: "pass", detail: "9 seconds; policy is 5–15 seconds." }] },
+    });
+    renderPanel();
+    expect(await screen.findByText("Scene evaluations")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Run again" })).toBeInTheDocument();
+  });
+
   it("still asks for a review when a scene's scoring failed", async () => {
     getVideoQualitySummary.mockResolvedValue({
       videoId: video.id, status: "failed", technical: { fullDecode: true },

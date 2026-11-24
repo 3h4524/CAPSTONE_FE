@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollStrip } from "@/components/workflows/run/mockup-strip";
 import { getErrorMessage } from "@/helpers/error-message";
 import { showToast } from "@/helpers/toast";
+import { videoPosterUrl } from "@/helpers/video-poster";
 import { useMediaDownload } from "@/hooks/mutations/use-media-download";
 import { useContinueRunGroupReview } from "@/hooks/mutations/use-run-group-actions";
 import { useWorkflowRunAction } from "@/hooks/mutations/use-workflow-run-action";
@@ -276,7 +277,7 @@ const VideoCard = ({
   const label = stateLabel(item, state, t);
   const progress = Math.max(0, Math.min(100, Math.round(generateProgressOf(target))));
   const made = state === "review" || state === "approved" || state === "rejected";
-  const thumbnail = made ? video?.thumbnailUrl : null;
+  const thumbnail = made ? videoPosterUrl(video) : null;
   const approved = state === "approved";
   const rejected = state === "rejected";
   // Until Continue the decision can be made or changed; after it, it is final.

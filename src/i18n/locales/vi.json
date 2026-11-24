@@ -3229,6 +3229,12 @@
             "label": "Điểm SEO",
             "description": "Chấm điểm từng listing từ 0 đến 100 kèm gợi ý cải thiện."
           }
+        },
+        "export-zip": {
+          "includeFinalVideo": {
+            "label": "Dựng video tổng",
+            "description": "Tắt để xuất nhanh hơn: ZIP chỉ gồm video của từng cảnh, không có video tổng."
+          }
         }
       },
       "groupVideos": {
@@ -3272,6 +3278,8 @@
           "queued": "Đang chờ",
           "running": "Đang dựng",
           "waiting_for_input": "Cần xử lý",
+          "ready": "Xem trước",
+          "rendering": "Đang dựng file",
           "waiting_for_review": "Sẵn sàng duyệt",
           "completed": "Xong",
           "failed": "Thất bại",
@@ -3293,6 +3301,8 @@
         "sceneWarnings_other": "{{count}} cảnh không dùng được ảnh bạn chọn và sẽ dùng ảnh khác.",
         "preparingVideo": "Đang chuẩn bị video: duyệt mock-up và tạo ảnh người mẫu cho các cảnh có người. Video sẽ tự bắt đầu.",
         "preparing": "Đang duyệt mock-up. Lượt chạy sẽ tự tiếp tục.",
+        "preparingManual": "Đang tạo ảnh người mẫu cho các cảnh có người. Bạn có thể duyệt mock-up trong lúc chờ: mỗi ảnh sẽ hiện trong thiết kế của nó khi tạo xong.",
+        "modelPhotoMissing": "Chưa tạo được ảnh người mẫu của thiết kế này. Nhấn Tiếp tục để thử lại.",
         "autoNotStartedVideo": "Bước Duyệt mock-up đang ở chế độ Tự động duyệt, nhưng video chưa bắt đầu.",
         "autoNotStarted": "Bước Duyệt mock-up đang ở chế độ Tự động duyệt, nhưng lượt chạy chưa bắt đầu.",
         "tooManyVideo": "Đã chọn {{selected}} thiết kế; mỗi lượt chạy chỉ tạo tối đa {{maximum}} video. Hãy từ chối mock-up của các thiết kế cần loại ra.",
@@ -3365,7 +3375,8 @@
         "approve": "Duyệt",
         "rejectMockup": "Từ chối mock-up",
         "reject": "Từ chối",
-        "loading": "Đang tải mock-up"
+        "loading": "Đang tải mock-up",
+        "modelPhotoPending": "Đang tạo ảnh người mẫu…"
       },
       "runResults": {
         "product": "Sản phẩm",
@@ -3645,6 +3656,8 @@
         "hudFailed": "{{names}} thất bại",
         "hudNeedsYou": "{{names}} cần bạn xử lý",
         "previewDesigns": "Thiết kế",
+        "previewClips": "Clip AI",
+        "previewScene": "Cảnh {{scene}}",
         "previewListing": "Nội dung listing",
         "previewLive": "Trực tiếp",
         "previewWriting": "Đang viết",
@@ -3900,6 +3913,10 @@
         "versionOption": "Phiên bản {{version}} · {{status}}",
         "finalVideoVersion": "Video cuối cùng phiên bản {{version}}",
         "preparing": "Đang chuẩn bị bản xem trước video ghép.",
+        "composedPreview": "Bản xem trước video, được ghép từ các cảnh ngay trên trình duyệt.",
+        "composedPreviewNote": "File video được dựng ở nền khi có bước cần đến: Export ZIP có bật video tổng, hoặc Publish to Etsy.",
+        "composedPreviewWaiting": "Một cảnh AI của video này chưa sẵn sàng.",
+        "rendering": "Video tổng đang được dựng ở nền.",
         "version": "Phiên bản",
         "review": "Duyệt",
         "revision": "Bản sửa {{revision}}",
@@ -3912,6 +3929,8 @@
         "checkingStoryboard": "Đang kiểm tra storyboard",
         "checkingStoryboardDots": "Đang kiểm tra storyboard…",
         "rerender": "Dựng lại video",
+        "applyChanges": "Áp dụng thay đổi",
+        "editApplied": "Đã áp dụng chỉnh sửa vào video đang chờ duyệt. Hãy duyệt phiên bản mới để xuất video.",
         "onlyCurrent": "Chỉ có thể duyệt phiên bản hoàn tất hiện tại. Các phiên bản cũ vẫn có trong menu phiên bản."
       },
       "quality": {

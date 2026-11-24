@@ -116,10 +116,13 @@ export const StoryboardPlayer = ({
   board,
   assets,
   config,
+  clips,
 }: {
   board: VideoStoryboard;
   assets: MockupAsset[];
   config: GenerateVideoConfig;
+  /** The AI clip each AI scene already has, by scene order: the preview plays it instead of the still start frame. */
+  clips?: Record<number, string>;
 }) => {
   const { t } = useTranslation("common");
   const effectiveVideoEdit = config.videoEdit ?? board.videoEdit;
@@ -270,7 +273,7 @@ export const StoryboardPlayer = ({
       <Player
         key={`${board.fingerprint}:${sourceRevisionKey}:${framingRevisionKey}:${music?.trackId ?? "silent"}:${musicUrl ?? "no-source"}`}
         component={StandardVideoPreview}
-        inputProps={{ storyboard: previewBoard, sources, musicUrl, musicDurationInFrames }}
+        inputProps={{ storyboard: previewBoard, sources, musicUrl, musicDurationInFrames, clips }}
         durationInFrames={board.outputDurationFrames ?? board.durationSeconds * 30}
         compositionWidth={board.width}
         compositionHeight={board.height}

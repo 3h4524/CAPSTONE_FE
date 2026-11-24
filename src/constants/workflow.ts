@@ -469,8 +469,17 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     hasInput: true,
     // Push to Printify or Publish to Etsy may follow the ZIP.
     hasOutput: true,
-    defaultConfig: {},
-    fields: [],
+    // The video of every scene is always packaged. The final video is made (in the background) only when this is on.
+    defaultConfig: { includeFinalVideo: true },
+    fields: [
+      {
+        kind: "switch",
+        name: "includeFinalVideo",
+        label: "Render the final video",
+        description:
+          "Turn off for a faster export: the ZIP then has the video of each scene only, without the final video.",
+      },
+    ],
   },
   "publish-etsy": {
     type: "publish-etsy",

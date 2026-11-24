@@ -27,7 +27,7 @@ import { ACTIVE_RUN_GROUP_STATUSES, useRunGroup } from "@/hooks/queries/use-run-
 import { useShopConnections } from "@/hooks/queries/use-shop-connections";
 import { applySelectionAndGenerateMockups, BATCH_JOB_PARAM, NEXT_PART_PARAM, useBatchRun } from "@/hooks/use-batch-run";
 import { useRunGroupSync } from "@/hooks/use-run-group-sync";
-import { useVideoRunSync, useWorkflowRuntime, VIDEO_RUN_PARAM } from "@/hooks/use-workflow-runtime";
+import { type MockupApprovalPhase, useVideoRunSync, useWorkflowRuntime, VIDEO_RUN_PARAM } from "@/hooks/use-workflow-runtime";
 import { useRunSimulationStore } from "@/stores/run-simulation";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowCommandStore,type WorkflowCommand } from "@/stores/workflow-command";
@@ -163,15 +163,29 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
   const isRunning = batch.isBusy || video.isRunning || groupWorking || isStartingGroup || isLaunchingVideo;
   // Mockup Approval is the step at work until the videos' runs exist: the mock-ups are imported, approved and the model
   // photos made, with no node otherwise showing it.
-  useVideoRunSync(hasBatchRun, group?.preparing === true || isLaunchingVideo);
+  // An automatic Mockup Approval approves them by itself and the seller waits. A manual one has nothing to review while
+  // the mock-ups are stored as video sources, and from then on they are there to review, model photos still being made
+  // included: they arrive in the strip one by one, so the step is not shown as running.
+  const automaticApproval = useWorkflowStore(
+    (state) => state.nodes.find((node) => node.data.type === "approval-gate")?.data.config.mode === "auto"
+  );
+  const waitingForReview = group?.workflowId === activeWorkflowId && group?.status === "waiting_for_targets";
+  const approvalPhase: MockupApprovalPhase | null = isLaunchingVideo
+    ? automaticApproval ? "approving" : "preparing"
+    : waitingForReview && automaticApproval
+      ? group?.preparing ? "approving" : null
+      : waitingForReview ? "review" : null;
+  useVideoRunSync(hasBatchRun, approvalPhase);
   useEffect(() => {
     setRunning(isRunning);
     if (isRunning) useRunSimulationStore.getState().clearImages();
   }, [isRunning, setRunning]);
 
   // An automatic Mockup Approval approves the mock-ups on the server: their cards read them again when the run moves
-  // on (prepared, started, finished), not on every change, since each read signs their image links anew.
-  const groupPhase = group ? `${group.id}:${group.status}:${group.preparing ? "preparing" : ""}` : null;
+  // on (prepared, started, finished), not on every change, since each read signs their image links anew. The same when
+  // the mock-ups of a design change in number (a model photo was made), so the new one is there to review.
+  const mockupTotal = group?.targets.reduce((sum, target) => sum + target.mockupCount, 0) ?? 0;
+  const groupPhase = group ? `${group.id}:${group.status}:${group.preparing ? "preparing" : ""}:${mockupTotal}` : null;
   useEffect(() => {
     if (groupPhase) void queryClient.invalidateQueries({ queryKey: ["mockup-assets"] });
   }, [groupPhase, queryClient]);
@@ -252,7 +266,12 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
         query.delete(NEXT_PART_PARAM);
         query.delete(VIDEO_RUN_PARAM);
         router.replace(`/workflows?${query.toString()}`, { scroll: false });
-        if (started.preparing) {
+        if (started.preparing && findNode("approval-gate")?.data.config.mode !== "auto") {
+          // Manual: nothing starts by itself. The mock-ups are there to review while the model photos are being made.
+          const gate = findNode("approval-gate");
+          if (gate) selectNode(gate.id);
+          showWorkflowActionToast("info", "Review the mock-ups now. Model photos for the scenes with a person appear as they are made.");
+        } else if (started.preparing) {
           showWorkflowActionToast("info", withVideo ? "Getting the videos ready. They start by themselves." : "Approving the mock-ups. The run goes on by itself.");
         } else if (started.status === "waiting_for_targets") {
           const gate = findNode("approval-gate");

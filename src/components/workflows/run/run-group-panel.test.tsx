@@ -59,11 +59,17 @@ const group = (ownConfig: GenerateVideoConfig | null = null): RunGroup => ({
   }],
 });
 
-const showCanvas = (config: GenerateVideoConfig) => {
-  const nodes = [buildWorkflowNode({
-    id: "video",
-    data: { type: "generate-video", label: "Generate Video", config: config as never, status: "idle" },
-  })];
+const showCanvas = (config: GenerateVideoConfig, approval: "auto" | "manual" = "manual") => {
+  const nodes = [
+    buildWorkflowNode({
+      id: "gate",
+      data: { type: "approval-gate", label: "Mockup Approval", config: { mode: approval } as never, status: "idle" },
+    }),
+    buildWorkflowNode({
+      id: "video",
+      data: { type: "generate-video", label: "Generate Video", config: config as never, status: "idle" },
+    }),
+  ];
   useWorkflowStore.setState({ nodes, edges: [], savedGraph: { nodes, edges: [] }, isDirty: false, designScope: null });
 };
 
@@ -135,7 +141,8 @@ describe("RunGroupPanel: starting the videos", () => {
     expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
 
-  it("says the model photos are being made, and keeps Continue off until they are", () => {
+  it("says an automatic run is getting ready by itself, and keeps Continue off until it is", () => {
+    showCanvas(standard, "auto");
     const preparing = group();
     preparing.preparing = true;
     mocks.group = preparing;
@@ -143,6 +150,47 @@ describe("RunGroupPanel: starting the videos", () => {
 
     expect(screen.getByText(/Getting the videos ready/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+  });
+
+  it("stands in for a model photo still being made with a placeholder card, and keeps Continue off for that design", () => {
+    showCanvas(person);
+    const preparing = group();
+    preparing.preparing = true;
+    preparing.targets[0].modelPhoto = "pending";
+    mocks.group = preparing;
+    render(<RunGroupPanel />);
+
+    expect(screen.getByText("Making the model photo…")).toBeInTheDocument();
+    expect(screen.getByText(/Review the mock-ups meanwhile/)).toBeInTheDocument();
+    expect(screen.queryByText(/Getting the videos ready/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+  });
+
+  it("lets a manual run go on with a design whose model photo is made while another's is still being made", () => {
+    showCanvas(person);
+    const preparing = group();
+    preparing.preparing = true;
+    preparing.selectedCount = 1;
+    preparing.targets[0].modelPhoto = "ready";
+    preparing.targets.push({ ...preparing.targets[0], key: "q:d", productId: "q", productName: "Dune Tee", selected: false, approvedCount: 0, modelPhoto: "pending" });
+    mocks.group = preparing;
+    render(<RunGroupPanel />);
+
+    // The other design is not chosen, so what is still being made for it holds nothing back.
+    expect(screen.getAllByText("Making the model photo…")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
+  });
+
+  it("says a model photo that was not made will be tried again by Continue", () => {
+    showCanvas(person);
+    const missing = group();
+    missing.targets[0].modelPhoto = "missing";
+    mocks.group = missing;
+    render(<RunGroupPanel />);
+
+    expect(screen.getByText(/model photo of this design was not made/)).toBeInTheDocument();
+    expect(screen.queryByText("Making the model photo…")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
 
   it("says why a run set to approve automatically is still waiting", () => {

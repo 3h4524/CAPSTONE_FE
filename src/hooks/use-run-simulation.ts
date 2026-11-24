@@ -6,7 +6,6 @@ import {
   SIMULATION_CHUNK_SIZE,
   SIMULATION_LISTING,
   SIMULATION_PRODUCT_ID,
-  SIMULATION_RESET_MS,
   SIMULATION_STEP_MS,
   SIMULATION_TICK_MS,
 } from "@/constants/run-simulation";
@@ -19,7 +18,6 @@ import { useWorkflowStore } from "@/stores/workflow";
 import { uuid } from "@/utils/uuid";
 
 let simulationToken = 0;
-let resetTimer: number | null = null;
 
 class SimulationStopped extends Error {}
 
@@ -86,7 +84,6 @@ export const useRunSimulation = () => {
     if (isRunning || nodes.length === 0) return false;
     const predecessors = getPredecessors(nodes, edges);
     if (findCycleNodes(predecessors).size > 0) return false;
-    if (resetTimer !== null) window.clearTimeout(resetTimer);
     const token = ++simulationToken;
     resetStatuses();
     useListingStreamStore.getState().open(uuid());
@@ -110,14 +107,7 @@ export const useRunSimulation = () => {
     };
 
     void Promise.all(nodes.map((node) => runFrom(node.id)))
-      .then(() => {
-        finish();
-        resetTimer = window.setTimeout(() => {
-          if (token === simulationToken && !useWorkflowStore.getState().isRunning) {
-            useWorkflowStore.getState().resetStatuses();
-          }
-        }, SIMULATION_RESET_MS);
-      })
+      .then(finish)
       .catch((error: unknown) => {
         if (!(error instanceof SimulationStopped)) throw error;
       });

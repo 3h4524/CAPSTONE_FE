@@ -9,6 +9,7 @@ import { getVideoOutputFormat } from "@/helpers/video-output-formats";
 import { useRunVideos } from "@/hooks/queries/use-run-videos";
 import { useVideoRunId } from "@/hooks/use-video-run-id";
 import type { WorkflowNodeData, WorkflowNodeStatus } from "@/types/workflow";
+import { cn } from "@/utils/cn";
 
 type SingleVideoPreviewProps = {
   data: WorkflowNodeData;
@@ -22,7 +23,8 @@ export const SingleVideoPreview = ({ data, status, progress }: SingleVideoPrevie
   const video = status === "running" ? undefined : videos?.[0];
   const format = getVideoOutputFormat(video?.outputFormat ?? data.config.outputFormat);
   const portrait = format.width < format.height;
-  const percent = Math.round(progress);
+  const running = status === "running";
+  const percent = running ? Math.round(progress) : 100;
 
   return (
     <div
@@ -54,11 +56,16 @@ export const SingleVideoPreview = ({ data, status, progress }: SingleVideoPrevie
         />
       ) : (
         <>
-          <span aria-hidden="true" className="bg-wf-line/70 absolute inset-0 animate-pulse" />
+          <span
+            aria-hidden="true"
+            className={cn("bg-wf-line/70 absolute inset-0", running && "animate-pulse")}
+          />
           <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-2 text-center">
             <span className="text-wf-ink text-lg leading-none font-semibold tabular-nums">{percent}%</span>
             <span className="text-wf-faint line-clamp-2 text-[10px] leading-snug">
-              {data.stage ?? t("workflowEditor.videoStrip.processing")}
+              {running
+                ? (data.stage ?? t("workflowEditor.videoStrip.processing"))
+                : t("workflowEditor.runView.previewDone")}
             </span>
           </span>
           <Progress

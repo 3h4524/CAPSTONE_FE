@@ -11,8 +11,6 @@ export const SIMULATION_TICK_MS = 80;
 
 export const SIMULATION_CHUNK_SIZE = 9;
 
-export const SIMULATION_RESET_MS = 6000;
-
 export const SIMULATION_PRODUCT_ID = "simulation";
 
 export const SIMULATION_LISTING = {

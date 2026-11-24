@@ -48,8 +48,9 @@ setup("authenticate seller", async () => {
   });
 
   if (!response.ok()) {
+    const errorBody = await response.text();
     await api.dispose();
-    throw new Error(`Seller login failed with ${response.status()}: ${await response.text()}`);
+    throw new Error(`Seller login failed with ${response.status()}: ${errorBody}`);
   }
 
   const result = (await response.json()) as LoginResponse;

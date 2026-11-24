@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useMemo } from "react";
 
 import { NodeControl } from "@/components/workflows/nodes/node-control";
 import { DesignPreview } from "@/components/workflows/nodes/preview/design-preview";
@@ -10,7 +10,9 @@ import { PublishPreview } from "@/components/workflows/nodes/preview/publish-pre
 import { VideoPreview } from "@/components/workflows/nodes/preview/video-preview";
 import { RUN_PREVIEW_GAP, RUN_PREVIEW_WIDTH } from "@/constants/workflow-run-effects";
 import { previewSideOf, type RunPreviewSide } from "@/helpers/workflow-run-view";
+import { useRunSimulationStore } from "@/stores/run-simulation";
 import { useWorkflowStore } from "@/stores/workflow";
+import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { WorkflowNodeData, WorkflowNodeStatus } from "@/types/workflow";
 import { cn } from "@/utils/cn";
 
@@ -57,25 +59,38 @@ const previewContent = ({ nodeId, data, status, progress }: RunPreviewCalloutPro
 };
 
 export const RunPreviewCallout = (props: RunPreviewCalloutProps) => {
-  // Beside the node where no other node is: on the right, else on the left, below or above.
   const side = useWorkflowStore((state) => {
     const node = state.nodes.find((candidate) => candidate.id === props.nodeId);
     return node ? previewSideOf(node, state.nodes) : "right";
   });
+  const simulatedMockups = useRunSimulationStore((state) => state.images["apply-mockup"]);
+  const mockupResult = useWorkflowRunStore((state) => state.mockupResult);
+  const job = useWorkflowRunStore((state) => state.job);
+
+  const hasMultipleDesigns = useMemo(() => {
+    if (props.data.type !== "apply-mockup") return false;
+    if (simulatedMockups && simulatedMockups.length > 0) return true;
+    const designImages = job?.products.flatMap((product) => product.images) ?? [];
+    if (designImages.length > 1) return true;
+    const mockupImages = mockupResult?.images ?? [];
+    const uniqueDesigns = new Set(mockupImages.map((m) => m.designImageId).filter(Boolean));
+    return uniqueDesigns.size > 1;
+  }, [props.data.type, simulatedMockups, job, mockupResult]);
+
   const content = previewContent(props);
   if (!content) return null;
-  const interactive = props.data.type === "generate-video";
+
+  const width = hasMultipleDesigns ? 420 : RUN_PREVIEW_WIDTH;
 
   return (
     <aside
       className={cn(
-        "bg-wf-surface border-wf-line animate-in fade-in absolute z-20 rounded-xl border p-2.5 shadow-xl empty:hidden",
-        SIDE_CLASS_NAMES[side],
-        !interactive && "pointer-events-none"
+        "bg-wf-surface border-wf-line animate-in fade-in absolute z-20 overflow-hidden rounded-xl border p-3 shadow-xl empty:hidden",
+        SIDE_CLASS_NAMES[side]
       )}
-      style={{ width: RUN_PREVIEW_WIDTH, [SIDE_MARGINS[side]]: RUN_PREVIEW_GAP }}
+      style={{ width, [SIDE_MARGINS[side]]: RUN_PREVIEW_GAP }}
     >
-      {interactive ? <NodeControl>{content}</NodeControl> : content}
+      <NodeControl className="w-full max-w-full min-w-0 overflow-hidden">{content}</NodeControl>
     </aside>
   );
 };

@@ -354,20 +354,25 @@ const UploadPhoto = ({
   );
 };
 
-// The model photos to dress (the shared ones and the Seller's own), narrowed to the people wanted; one is chosen.
-const LibraryModelPicker = ({
+/**
+ * The model photos to dress (the shared ones and the Seller's own), narrowed to the people wanted, and to one product
+ * type when `productType` is given; one is chosen.
+ */
+export const LibraryModelPicker = ({
   value,
   onChange,
   disabled,
+  productType,
 }: {
   value: string | undefined;
   onChange: (id: string) => void;
   disabled: boolean;
+  productType?: string;
 }) => {
   const { t } = useTranslation("common");
   const [filter, setFilter] = useState<ModelPhotoFilter>({});
   const [source, setSource] = useState<PhotoSource | null>(null);
-  const { data: allPhotos, isPending, isError } = useModelPhotos("seller", undefined, true, filter);
+  const { data: allPhotos, isPending, isError } = useModelPhotos("seller", productType, true, filter);
   const photos = allPhotos && filterBySource(allPhotos, source);
   // The filters are folded away: most people just pick a photo.
   const [filtering, setFiltering] = useState(false);

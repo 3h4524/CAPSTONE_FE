@@ -274,6 +274,18 @@ export const planIssues = (
   if ((nodeType === "publish-etsy" || nodeType === "publish-printify") && !hasFeature(entitlements, "workflow_publish")) {
     issues.push({ message: i18n.t("workflowConfig.planLock.publishPro") });
   }
+  if (
+    nodeType === "apply-mockup" &&
+    typeof config.modelPhotos === "object" &&
+    config.modelPhotos !== null &&
+    Object.keys(config.modelPhotos).length > 0 &&
+    !hasFeature(entitlements, "lifestyle_mockup")
+  ) {
+    issues.push({
+      message: i18n.t("workflowConfig.planLock.modelPhotosPro"),
+      fix: { label: i18n.t("workflowConfig.planLock.removeModelPhotos"), patch: { modelPhotos: {} } },
+    });
+  }
   if (nodeType === "design-image") {
     const maxVariations = featureLimit(entitlements, "design_variations");
     if (typeof maxVariations === "number" && Number(config.variants) > maxVariations) {

@@ -156,6 +156,9 @@ export const reviewVideoConfigSchema = z.object({
   mode: z.enum(["manual", "auto"], { error: () => i18n.t("workflowConfig.schema.chooseVideoApproval") }),
 });
 
+/** Product types one workflow can choose a model photo for at most (as the backend allows). */
+export const MAX_MODEL_PHOTO_TYPES = 10;
+
 export const applyMockupConfigSchema = z.object({
   // May be empty: a video can also be made from uploaded mock-ups alone. A run that generates designs asks for at least one.
   mockupTemplateIds: z.array(z.string()).max(5, { error: () => i18n.t("workflowConfig.schema.mockupTemplatesMax") }),
@@ -193,6 +196,14 @@ export const applyMockupConfigSchema = z.object({
   // What the mock-ups are for: export only, or a Printify product (one Printify template per type).
   // A workflow saved before the choice existed is "zip".
   mockupTarget: z.enum(["zip", "printify"]).default("zip"),
+  // Per product type, the model photo AI dresses in each design's main mock-up when the run has made it. Optional:
+  // a workflow saved before it existed has none.
+  modelPhotos: z
+    .record(z.string(), z.string().uuid({ error: () => i18n.t("workflowConfig.schema.chooseModelPhoto") }))
+    .refine((photos) => Object.keys(photos).length <= MAX_MODEL_PHOTO_TYPES, {
+      error: () => i18n.t("workflowConfig.schema.modelPhotosMax", { count: MAX_MODEL_PHOTO_TYPES }),
+    })
+    .optional(),
   mockupIds: z.array(z.string().uuid()).max(8),
   artworkGroupKey: z.string().max(100),
 });

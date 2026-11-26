@@ -117,6 +117,20 @@ describe("planIssues", () => {
     expect(isNodeLocked(undefined, "generate-listing")).toBe(false);
   });
 
+  it("offers to remove the model photos of Apply mock-up when AI lifestyle images are not in the plan", () => {
+    const pro = entitlements({
+      features: [{ code: "lifestyle_mockup", label: "", kind: "flag", group: "", isEnabled: true, limitValue: null }],
+    });
+    const chosen = { modelPhotos: { tshirt: "11111111-1111-4111-8111-111111111111" } };
+
+    const [issue] = planIssues(entitlements(), "apply-mockup", chosen);
+
+    expect(issue.message).toMatch(/model photos are part of Pro/);
+    expect(issue.fix?.patch).toEqual({ modelPhotos: {} });
+    expect(planIssues(pro, "apply-mockup", chosen)).toEqual([]);
+    expect(planIssues(entitlements(), "apply-mockup", { modelPhotos: {} })).toEqual([]);
+  });
+
   it("offers Standard Showcase when AI video is not in the plan", () => {
     const [issue] = planIssues(entitlements(), "generate-video", {
       mode: "ai_shot",

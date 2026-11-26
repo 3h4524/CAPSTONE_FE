@@ -293,6 +293,8 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
       mockupTarget: "zip",
       mockupIds: [],
       artworkGroupKey: "",
+      // Per product type, the model photo AI dresses in each design's main mock-up (one per design); none by default.
+      modelPhotos: {},
     },
     fields: [
       {
@@ -304,6 +306,7 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
         targetName: "mockupTarget",
         label: "Mock-up templates",
       },
+      { kind: "model-photo-selection", name: "modelPhotos", label: "Model photos (AI)" },
     ],
   },
   "approval-gate": {

@@ -2169,7 +2169,9 @@
         "aiVideoPro": "AI Scene Video is part of Pro. Your plan renders Standard Showcase videos.",
         "useStandard": "Use Standard Showcase",
         "landscapePro": "This video format is part of Pro. Your plan renders square and portrait.",
-        "usePortrait": "Use portrait"
+        "usePortrait": "Use portrait",
+        "modelPhotosPro": "AI model photos are part of Pro.",
+        "removeModelPhotos": "Remove model photos"
       },
       "validation": {
         "title": "Workflow checks",
@@ -2445,7 +2447,9 @@
         "wholeNumber": "The {{label}} must be a whole number.",
         "numberMin": "The {{label}} must be at least {{min}}.",
         "numberMax": "The {{label}} cannot exceed {{max}}.",
-        "aiSceneDuration": "AI scene {{scene}} must be between 4 and 15 seconds."
+        "aiSceneDuration": "AI scene {{scene}} must be between 4 and 15 seconds.",
+        "chooseModelPhoto": "Choose a model photo for each product type, or remove it.",
+        "modelPhotosMax": "Choose model photos for at most {{count}} product types."
       },
       "overview": {
         "productStatuses": {
@@ -2524,6 +2528,21 @@
         "title_other": "Generate {{count}} AI clips?",
         "description": "Only the clips your change needs are made; the ones already made are kept. Made with {{models}}. The final result may differ from the source image.",
         "generate": "Generate"
+      },
+      "modelPhotoSelection": {
+        "description": "AI (Ideogram) dresses the model photo you choose in each design's main mock-up once the run has made it: one image per design, billed per image. The images wait at Mockup Approval with the other mock-ups. A product type without a photo gets none.",
+        "proOnly": "AI model photos are part of Pro. Remove them to run the workflow on your plan.",
+        "chooseBatchFirst": "Choose a batch in Product Input to see its product types.",
+        "listLabel": "Model photo per product type",
+        "chooseTitle": "Choose a model photo for {{type}}",
+        "chooseDescription": "The shared library and your own model photos. Each design of this product type is put on the photo you choose.",
+        "none": "No model photo",
+        "gone": "This model photo is no longer available. Choose another one.",
+        "loading": "Loading model photo…",
+        "notUsed": "Not used in this run",
+        "choose": "Choose",
+        "change": "Change",
+        "remove": "Remove the model photo for {{type}}"
       }
     },
     "batches": {
@@ -3141,6 +3160,9 @@
         "apply-mockup": {
           "mockupTemplateIds": {
             "label": "Mock-up templates"
+          },
+          "modelPhotos": {
+            "label": "Model photos (AI)"
           }
         },
         "approval-gate": {

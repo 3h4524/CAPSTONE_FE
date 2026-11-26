@@ -365,6 +365,22 @@ describe("applyMockupConfigSchema", () => {
     }
   });
 
+  it("accepts a model photo per product type, and none from a workflow saved before", () => {
+    const modelPhotos = { tshirt: "11111111-1111-4111-8111-111111111111" };
+
+    expect(applyMockupConfigSchema.safeParse({ ...base, modelPhotos }).success).toBe(true);
+    expect(applyMockupConfigSchema.safeParse(base).success).toBe(true);
+  });
+
+  it("rejects a model photo that is not a photo id, and more product types than the backend allows", () => {
+    const tooMany = Object.fromEntries(
+      Array.from({ length: 11 }, (_, index) => [`type${index}`, "11111111-1111-4111-8111-111111111111"])
+    );
+
+    expect(applyMockupConfigSchema.safeParse({ ...base, modelPhotos: { tshirt: "" } }).success).toBe(false);
+    expect(applyMockupConfigSchema.safeParse({ ...base, modelPhotos: tooMany }).success).toBe(false);
+  });
+
   it("accepts an empty template list because the mock-ups may be uploaded instead", () => {
     const result = applyMockupConfigSchema.safeParse({ ...base, mockupTemplateIds: [] });
 

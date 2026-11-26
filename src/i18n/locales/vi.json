@@ -2169,7 +2169,9 @@
         "aiVideoPro": "Video cảnh AI thuộc gói Pro. Gói của bạn dựng video Trình diễn chuẩn.",
         "useStandard": "Dùng Trình diễn chuẩn",
         "landscapePro": "Khung video này thuộc gói Pro. Gói của bạn dựng video vuông và dọc.",
-        "usePortrait": "Dùng khung dọc"
+        "usePortrait": "Dùng khung dọc",
+        "modelPhotosPro": "Ảnh người mẫu AI thuộc gói Pro.",
+        "removeModelPhotos": "Bỏ ảnh người mẫu"
       },
       "validation": {
         "title": "Kiểm tra quy trình",
@@ -2445,7 +2447,9 @@
         "wholeNumber": "Giá trị {{label}} phải là số nguyên.",
         "numberMin": "Giá trị {{label}} phải ít nhất là {{min}}.",
         "numberMax": "Giá trị {{label}} không được vượt quá {{max}}.",
-        "aiSceneDuration": "Cảnh AI {{scene}} phải dài từ 4 đến 15 giây."
+        "aiSceneDuration": "Cảnh AI {{scene}} phải dài từ 4 đến 15 giây.",
+        "chooseModelPhoto": "Hãy chọn ảnh người mẫu cho từng loại sản phẩm, hoặc bỏ chọn.",
+        "modelPhotosMax": "Chỉ chọn ảnh người mẫu cho tối đa {{count}} loại sản phẩm."
       },
       "overview": {
         "productStatuses": {
@@ -2524,6 +2528,21 @@
         "title_other": "Tạo {{count}} clip AI?",
         "description": "Chỉ tạo những clip mà thay đổi của bạn cần; các clip đã có được giữ lại. Tạo bằng {{models}}. Kết quả cuối có thể khác với ảnh nguồn.",
         "generate": "Tạo"
+      },
+      "modelPhotoSelection": {
+        "description": "AI (Ideogram) mặc mock-up chính của từng thiết kế lên ảnh người mẫu bạn chọn ngay khi lượt chạy tạo xong mock-up: mỗi thiết kế một ảnh, tính phí theo ảnh. Ảnh chờ duyệt ở bước Duyệt mock-up cùng các mock-up khác. Loại sản phẩm không chọn ảnh thì không tạo.",
+        "proOnly": "Ảnh người mẫu AI thuộc gói Pro. Hãy bỏ chọn để chạy quy trình với gói hiện tại.",
+        "chooseBatchFirst": "Chọn lô sản phẩm ở Product Input để xem các loại sản phẩm.",
+        "listLabel": "Ảnh người mẫu theo loại sản phẩm",
+        "chooseTitle": "Chọn ảnh người mẫu cho {{type}}",
+        "chooseDescription": "Thư viện chung và ảnh người mẫu của bạn. Mọi thiết kế thuộc loại sản phẩm này được mặc lên ảnh bạn chọn.",
+        "none": "Không dùng ảnh người mẫu",
+        "gone": "Ảnh người mẫu này không còn dùng được. Hãy chọn ảnh khác.",
+        "loading": "Đang tải ảnh người mẫu…",
+        "notUsed": "Không dùng trong lượt chạy này",
+        "choose": "Chọn",
+        "change": "Đổi",
+        "remove": "Bỏ ảnh người mẫu của {{type}}"
       }
     },
     "batches": {
@@ -3141,6 +3160,9 @@
         "apply-mockup": {
           "mockupTemplateIds": {
             "label": "Mẫu mock-up"
+          },
+          "modelPhotos": {
+            "label": "Ảnh người mẫu (AI)"
           }
         },
         "approval-gate": {

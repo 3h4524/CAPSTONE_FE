@@ -146,6 +146,8 @@ export type WorkflowField =
       targetName: string;
       label: string;
     }
+  /** The model photo AI dresses in each design's mock-up, per product type (optional, paid per image). */
+  | { kind: "model-photo-selection"; name: string; label: string }
   | { kind: "number"; name: string; label: string; min: number; max: number; unit?: string }
   | { kind: "switch"; name: string; label: string; description: string }
   | { kind: "textarea"; name: string; label: string; placeholder: string; description?: string; maxLength?: number };

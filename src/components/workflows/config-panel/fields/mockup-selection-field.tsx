@@ -15,11 +15,11 @@ import { PanelEmptyState } from "@/components/workflows/config-panel/layout/pane
 import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
 import { defaultTemplateColors, type TemplateColors } from "@/helpers/garment-colors";
 import type { TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
-import { countProductTypes, printifySelectionIssue, productTypeLabel, uncoveredProductTypes } from "@/helpers/mockup-template";
+import { printifySelectionIssue, productTypeLabel, uncoveredProductTypes } from "@/helpers/mockup-template";
 import { readTemplateBackgrounds, readTemplateColors, readTemplatePlacements } from "@/helpers/workflow-config";
 import { hasPrintifyDownstream, type MockupTarget } from "@/helpers/workflow-graph";
-import { useBatchProducts } from "@/hooks/queries/use-batch-products";
 import { useMockupTemplates } from "@/hooks/queries/use-mockup-templates";
+import { useRunProductTypeCounts, useWorkflowBatchId } from "@/hooks/use-run-product-types";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
 import type { TemplatePlacements } from "@/types/mockup-templates";
@@ -51,13 +51,6 @@ const usePrintifyLocked = () =>
     return node ? hasPrintifyDownstream(node.id, state.nodes, state.edges) : false;
   });
 
-// The batch the workflow reads from decides which product types the templates must cover.
-const useWorkflowBatchId = () =>
-  useWorkflowStore((state) => {
-    const batchId = state.nodes.find((node) => node.data.type === "product-input")?.data.config.batchId;
-    return typeof batchId === "string" ? batchId : "";
-  });
-
 export const MockupSelectionField = ({ templateColorsName, templateBackgroundsName, templatePlacementsName, targetName, value, onChange }: MockupSelectionFieldProps) => {
   const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
@@ -69,25 +62,16 @@ export const MockupSelectionField = ({ templateColorsName, templateBackgroundsNa
   const storedTarget: MockupTarget = useWatch({ control, name: targetName }) === "printify" ? "printify" : "zip";
   const target: MockupTarget = printifyLocked ? "printify" : storedTarget;
   const printify = target === "printify";
+  // The batch the workflow reads from decides which product types the templates must cover.
   const batchId = useWorkflowBatchId();
   const runJob = useWorkflowRunStore((state) => state.job);
   // A generated design of the batch's latest run, shown in each template's print area while choosing.
   const sampleDesignUrl = runJob?.batchId === batchId ? runJob.products.find((product) => product.images.length > 0)?.images[0]?.imageUrl : undefined;
   const { data: templates, isPending, isError } = useMockupTemplates();
-  const { data: products } = useBatchProducts(batchId);
   const selectedTemplates = (templates ?? []).filter((template) => value.includes(template.id));
 
-  // Only the product types the run will make mock-ups for are offered: the pending products if there
-  // are any, else the ones in the run being viewed, else everything in the batch.
-  const pendingProducts = products?.filter((product) => product.status === "pending") ?? [];
-  const productTypeCounts =
-    pendingProducts.length > 0
-      ? countProductTypes(pendingProducts)
-      : runJob?.batchId === batchId
-        ? countProductTypes(runJob.products)
-        : products
-          ? countProductTypes(products)
-          : undefined;
+  // Only the product types the run will make mock-ups for are offered.
+  const productTypeCounts = useRunProductTypeCounts();
   const runTypes = productTypeCounts && Object.keys(productTypeCounts).length > 0 ? Object.keys(productTypeCounts) : null;
   const typeOf = (template: { productType: string }) => template.productType.toLowerCase();
 

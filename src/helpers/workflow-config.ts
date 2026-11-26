@@ -16,6 +16,12 @@ export const readTemplateColors = (value: unknown): Record<string, string[]> =>
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 
+/** Apply mock-up's model photo per product type; anything that is not a photo id is left out. */
+export const readModelPhotos = (value: unknown): Record<string, string> =>
+  isRecord(value)
+    ? Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1] !== ""))
+    : {};
+
 // A template saved with one plain color (before backgrounds went per garment color) has it as its default.
 export const readTemplateBackgrounds = (value: unknown): TemplateBackgrounds =>
   isRecord(value)
@@ -140,6 +146,10 @@ export const summarizeNodeConfig = (type: WorkflowNodeType, config: WorkflowNode
           ...(colors > 0 ? [`${colors} garment color${colors === 1 ? "" : "s"}`] : []),
           ...(Object.keys(readTemplateBackgrounds(config[field.templateBackgroundsName])).length > 0 ? ["Custom background"] : []),
         ];
+      }
+      case "model-photo-selection": {
+        const count = Object.keys(readModelPhotos(value)).length;
+        return count === 0 ? [] : [`${field.label}: ${count} product type${count === 1 ? "" : "s"}`];
       }
       case "number": {
         const amount = readNumber(value);

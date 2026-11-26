@@ -12,11 +12,12 @@ import { ChoiceCards } from "@/components/workflows/config-panel/fields/choice-c
 import { CONTENT_ISSUE_CLASS, ContentIssueMessage } from "@/components/workflows/config-panel/fields/content-issue";
 import { DesignRatioChoices } from "@/components/workflows/config-panel/fields/design-ratio-choices";
 import { MockupSelectionField } from "@/components/workflows/config-panel/fields/mockup-selection-field";
+import { ModelPhotoSelectionField } from "@/components/workflows/config-panel/fields/model-photo-selection-field";
 import { OptionSelect } from "@/components/workflows/config-panel/fields/option-select";
 import { ProductSelect } from "@/components/workflows/config-panel/fields/product-select";
 import { SourceSelect } from "@/components/workflows/config-panel/fields/source-select";
 import { getVideoOutputFormat, getVideoOutputFormats } from "@/helpers/video-output-formats";
-import { parseAspectRatio, readBoolean, readNumber, readString, readStringArray } from "@/helpers/workflow-config";
+import { parseAspectRatio, readBoolean, readModelPhotos, readNumber, readString, readStringArray } from "@/helpers/workflow-config";
 import { useContentIssue, useWorkflowContentIssuesStore } from "@/stores/workflow-content-issues";
 import type { WorkflowField, WorkflowNodeConfig, WorkflowNodeType } from "@/types/workflow";
 import { cn } from "@/utils/cn";
@@ -258,6 +259,14 @@ export const NodeConfigField = ({ nodeId, nodeType, field: sourceField, control,
                   value={readStringArray(controller.value)}
                   onChange={controller.onChange}
                 />
+                <FormMessage />
+              </FormItem>
+            );
+          case "model-photo-selection":
+            return (
+              <FormItem>
+                <FormLabel>{field.label}{optionalTag}</FormLabel>
+                <ModelPhotoSelectionField value={readModelPhotos(controller.value)} onChange={controller.onChange} />
                 <FormMessage />
               </FormItem>
             );

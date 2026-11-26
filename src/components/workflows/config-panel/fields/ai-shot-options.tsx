@@ -514,6 +514,10 @@ export function AiShotOptions({
   const { saveWorkflow } = useWorkflowSave();
   const sceneRunId = run?.id ?? null;
   const { data: sceneVideos = [] } = useRunSceneVideos(sceneRunId);
+  // The full video plays the AI clips already made. A batch video run opens no design's run by itself, so without an
+  // open run the clips are the previewed design's (the scene actions above still need a run to be opened).
+  const previewClipRunId = designRun?.id ?? previewDesign?.runId ?? sceneRunId;
+  const { data: previewSceneVideos = [] } = useRunSceneVideos(previewClipRunId);
   const { mutateAsync: actOnRun } = useWorkflowRunAction();
   const { canApply: canApplyEdit, apply: applyEdit, isApplying: isApplyingEdit } = useApplyVideoEdit();
   const chosenMockupIds = designRun ? EMPTY_IDS : readStringArray(applyMockupNode?.data.config.mockupIds);
@@ -3133,7 +3137,7 @@ export function AiShotOptions({
             disabled={disabled || isApplyingEdit}
             config={node.data.config as GenerateVideoConfig}
             assets={allAssets}
-            sceneVideos={sceneVideos}
+            sceneVideos={previewSceneVideos}
             onSave={(next) => {
               useWorkflowStore.getState().updateNodeConfig(nodeId, next);
               onChange(next.aiScenes ?? [], next.durationSeconds, next.aiGlobalInstructions ?? null);

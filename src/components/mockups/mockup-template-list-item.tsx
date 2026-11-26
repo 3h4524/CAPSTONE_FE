@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { garmentColorName } from "@/helpers/garment-colors";
 import { isAutomaticPlacement, mockupViewLabel, parsePrintLayout, templateView } from "@/helpers/mockup-template";
-import { modelAttributesLabel } from "@/helpers/model-attributes";
+import { modelAttributesLabel, modelCategory } from "@/helpers/model-attributes";
 import { photoEdgeColor } from "@/helpers/photo-edge-color";
 import type { MockupTemplate } from "@/types/mockup-templates";
 import { cn } from "@/utils/cn";
@@ -47,9 +47,11 @@ export const MockupTemplateListItem = ({
   const [brokenImageUrl, setBrokenImageUrl] = useState<string | null>(null);
   const isImageBroken = brokenImageUrl === template.baseImageUrl;
   const isModel = template.kind === "model";
-  // What the photo is, as one quiet line of text rather than a row of tags: the product, then who is in it.
+  // What the photo is, as one quiet line of text rather than a row of tags: the product, then who is in it. A model
+  // photo names its group: a t-shirt's and a hoodie's are both apparel, used for either.
+  const productType = isModel ? modelCategory(template.productType) : template.productType;
   const summary = [
-    t(`mockups.productTypes.${template.productType}`, { defaultValue: template.productType }),
+    t(`mockups.productTypes.${productType}`, { defaultValue: productType }),
     isModel ? modelAttributesLabel(template.attributes) : null,
   ].filter(Boolean).join(" · ");
   // Only what sets this photo apart is a tag; the usual (a model photo's automatic placement, its print maps) is not.

@@ -1097,6 +1097,7 @@
       "adjustGarmentArea": "Adjust garment area",
       "done": "Done",
       "productTypes": {
+        "apparel": "Apparel",
         "tshirt": "T-shirt",
         "hoodie": "Hoodie",
         "mug": "Mug",
@@ -1188,9 +1189,9 @@
       },
       "generateModelPhoto": {
         "title": "Make a model photo with AI",
-        "description": "AI makes a photo of the people you choose in a plain white t-shirt or hoodie. Mock-ups are put on it without AI, so the print stays exactly as designed.",
-        "descriptionAi": "AI makes a photo of the people you choose in a plain white t-shirt or hoodie. Your mock-ups are then put on it with AI.",
-        "productType": "Product type",
+        "description": "AI makes a photo of the people you choose in a plain white t-shirt or hoodie. It is an apparel model, used for t-shirts and hoodies alike. Mock-ups are put on it without AI, so the print stays exactly as designed.",
+        "descriptionAi": "AI makes a photo of the people you choose in a plain white t-shirt or hoodie. It is an apparel model, used for t-shirts and hoodies alike. Your mock-ups are then put on it with AI.",
+        "productType": "Garment worn",
         "scene": "Scene",
         "outfit": "Outfit",
         "pose": "Pose",
@@ -2515,6 +2516,8 @@
         "missingOutput": "Add at least one output step such as Export ZIP.",
         "unreachable": "{{label}} is not connected to the Product input.",
         "configIssue": "{{label}}: {{issue}}",
+        "videoDuration": "the video is {{total}} seconds long, but a video must be {{min}}–{{max}} seconds. Make a scene longer or add one before running.",
+        "productVideoDuration": "a product's own video settings: {{issue}}",
         "checkSettings": "check its settings.",
         "printifyTemplate": "{{label}}: choose one Printify template for each product type.",
         "needsApproval": "{{label}} needs a Mockup Approval step before it."
@@ -2530,12 +2533,16 @@
         "generate": "Generate"
       },
       "modelPhotoSelection": {
-        "description": "AI (Ideogram) dresses the model photo you choose in each design's main mock-up once the run has made it: one image per design, billed per image. The images wait at Mockup Approval with the other mock-ups. A product type without a photo gets none.",
+        "description": "AI (Ideogram) dresses the model photo you choose in each design's main mock-up once the run has made it: one image per design, billed per image. The images wait at Mockup Approval with the other mock-ups. T-shirts and hoodies share one apparel photo. A product type without a photo gets none.",
         "proOnly": "AI model photos are part of Pro. Remove them to run the workflow on your plan.",
         "chooseBatchFirst": "Choose a batch in Product Input to see its product types.",
         "listLabel": "Model photo per product type",
         "chooseTitle": "Choose a model photo for {{type}}",
-        "chooseDescription": "The shared library and your own model photos. Each design of this product type is put on the photo you choose.",
+        "chooseDescription": "Upload a photo of people, or pick one of the model photos. Each design of this product type is put on the photo you choose.",
+        "uploadNote": "The photo is kept with your own model photos, so you can pick it again in other workflows.",
+        "uploadedName": "Uploaded photo",
+        "usePhoto": "Use this photo",
+        "saving": "Saving photo…",
         "none": "No model photo",
         "gone": "This model photo is no longer available. Choose another one.",
         "loading": "Loading model photo…",
@@ -2655,6 +2662,7 @@
         "published": "Completed"
       },
       "productTypes": {
+        "apparel": "Apparel",
         "tshirt": "T-shirt",
         "hoodie": "Hoodie",
         "mug": "Mug",

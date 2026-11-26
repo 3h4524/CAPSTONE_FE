@@ -255,10 +255,58 @@ const GarmentChooser = ({
   );
 };
 
-const SOURCE_OPTIONS: { value: "upload" | "library"; labelKey: "uploadLabel" | "libraryLabel"; hintKey: "uploadHint" | "libraryHint" }[] = [
+/** Where the people to dress come from: a photo the Seller uploads, or one of the model photos. */
+export type PeopleSource = "upload" | "library";
+
+const SOURCE_OPTIONS: { value: PeopleSource; labelKey: "uploadLabel" | "libraryLabel"; hintKey: "uploadHint" | "libraryHint" }[] = [
   { value: "upload", labelKey: "uploadLabel", hintKey: "uploadHint" },
   { value: "library", labelKey: "libraryLabel", hintKey: "libraryHint" },
 ];
+
+/** The two ways to choose the people to dress, side by side: upload a photo, or pick a model photo. */
+export const PeopleSourceSwitch = ({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: PeopleSource;
+  onChange: (value: PeopleSource) => void;
+  disabled: boolean;
+}) => {
+  const { t } = useTranslation("common");
+  return (
+    <div
+      role="group"
+      aria-label={t("workflowMedia.lifestyle.peopleToDress")}
+      className="bg-ink-100 grid grid-cols-2 gap-1 rounded-lg p-1"
+    >
+      {SOURCE_OPTIONS.map((option) => {
+        const picked = value === option.value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={picked}
+            aria-label={t(`workflowMedia.lifestyle.${option.labelKey}`)}
+            disabled={disabled}
+            onClick={() => onChange(option.value)}
+            className={cn(
+              "rounded-md px-2 py-1.5 text-left transition-colors disabled:opacity-60",
+              picked ? "bg-card ring-ink-200 shadow-sm ring-1" : "hover:bg-card/60"
+            )}
+          >
+            <span className={cn("block text-xs font-semibold", picked ? "text-ink-900" : "text-ink-600")}>
+              {t(`workflowMedia.lifestyle.${option.labelKey}`)}
+            </span>
+            <span className="text-muted-foreground block text-[11px] leading-snug">
+              {t(`workflowMedia.lifestyle.${option.hintKey}`)}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
 // One numbered step of the form: what to do, then the controls for it.
 const Step = ({
@@ -287,7 +335,7 @@ const Step = ({
 );
 
 // The photo to upload as a drop area; once chosen, it is shown with a way to change it.
-const UploadPhoto = ({
+export const UploadPhoto = ({
   value,
   onChange,
   disabled,
@@ -599,43 +647,7 @@ export const LifestyleMockupForm = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <div
-                          role="group"
-                          aria-label={t("workflowMedia.lifestyle.peopleToDress")}
-                          className="bg-ink-100 grid grid-cols-2 gap-1 rounded-lg p-1"
-                        >
-                          {SOURCE_OPTIONS.map((option) => {
-                            const picked = field.value === option.value;
-                            return (
-                              <button
-                                key={option.value}
-                                type="button"
-                                aria-pressed={picked}
-                                aria-label={t(`workflowMedia.lifestyle.${option.labelKey}`)}
-                                disabled={isPending}
-                                onClick={() => field.onChange(option.value)}
-                                className={cn(
-                                  "rounded-md px-2 py-1.5 text-left transition-colors disabled:opacity-60",
-                                  picked
-                                    ? "bg-card ring-ink-200 shadow-sm ring-1"
-                                    : "hover:bg-card/60"
-                                )}
-                              >
-                                <span
-                                  className={cn(
-                                    "block text-xs font-semibold",
-                                    picked ? "text-ink-900" : "text-ink-600"
-                                  )}
-                                >
-                                  {t(`workflowMedia.lifestyle.${option.labelKey}`)}
-                                </span>
-                                <span className="text-muted-foreground block text-[11px] leading-snug">
-                                  {t(`workflowMedia.lifestyle.${option.hintKey}`)}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
+                        <PeopleSourceSwitch value={field.value} onChange={field.onChange} disabled={isPending} />
                       </FormControl>
                     </FormItem>
                   )}

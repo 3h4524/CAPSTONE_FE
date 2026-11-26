@@ -34,7 +34,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { getErrorMessage } from "@/helpers/error-message";
 import { isGarmentColor } from "@/helpers/garment-colors";
 import { productTypeLabel } from "@/helpers/mockup-template";
-import { modelAttributesLabel } from "@/helpers/model-attributes";
+import { modelAttributesLabel, modelCategory } from "@/helpers/model-attributes";
 import { showToast } from "@/helpers/toast";
 import { useGenerateModelPhotoMockup } from "@/hooks/mutations/use-generate-model-photo-mockup";
 import { useImportGeneratedMockups } from "@/hooks/mutations/use-import-generated-mockups";
@@ -300,7 +300,7 @@ const ModelPhotoMockupFields = ({
                 <PhotoSourceTag system={photo.isSystemTemplate} className="absolute top-1 left-1" />
                 <span className="text-ink-700 block truncate px-1.5 py-1 text-[11px]">
                   {modelAttributesLabel(photo.attributes) ?? photo.name} ·{" "}
-                  {t(`batches.productTypes.${photo.productType.toLowerCase()}`, { defaultValue: productTypeLabel(photo.productType) })}
+                  {t(`batches.productTypes.${modelCategory(photo.productType)}`, { defaultValue: productTypeLabel(photo.productType) })}
                 </span>
                 {modelPhotoId === photo.id && (
                   <span className="bg-primary text-primary-foreground absolute top-1 right-1 flex size-5 items-center justify-center rounded-full">

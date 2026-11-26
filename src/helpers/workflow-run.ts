@@ -1,5 +1,6 @@
 import { BATCH_RUN_NODE_TYPES, PUBLISH_NODE_TYPES, RUNNABLE_NODE_TYPES, VIDEO_RUN_NODE_TYPES } from "@/constants/workflow";
 import { backgroundKeys, backgroundsFor, type TemplateBackgrounds } from "@/helpers/mockup-backgrounds";
+import { readProductConfigs } from "@/helpers/product-video-configs";
 import { readString, readStringArray, readTemplateBackgrounds, readTemplateColors, readTemplatePlacements } from "@/helpers/workflow-config";
 import { i18n } from "@/i18n/client";
 import { workflowNodeConfigSchemas } from "@/schemas/workflow";
@@ -121,6 +122,74 @@ export const supportsBatchVideos = (nodes: WorkflowNode[]) => {
  */
 export const runsPerDesign = (nodes: WorkflowNode[]) =>
   hasVideoSteps(nodes) ? supportsBatchVideos(nodes) : continuesWithoutVideo(nodes);
+
+// The server's VideoDurationPolicy (GenerateVideoConfigValidator).
+const MIN_VIDEO_SECONDS = 5;
+const MAX_VIDEO_SECONDS = 15;
+const MIN_AI_SCENE_SECONDS = 4;
+
+const isConfigRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const seconds = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : 0);
+
+/**
+ * Why one Generate Video settings would make a video the server refuses for its length, or null: an AI scene is
+ * 4–15 seconds, and the video (its scenes together) 5–15 seconds.
+ */
+export const videoDurationProblem = (config: WorkflowNodeConfig): string | null => {
+  const scenes = Array.isArray(config.aiScenes) ? config.aiScenes.filter(isConfigRecord) : [];
+  if (scenes.length > 0) {
+    const shortAiScene = scenes.findIndex((scene) => {
+      const duration = seconds(scene.durationSeconds);
+      return scene.mode !== "standard" && (duration < MIN_AI_SCENE_SECONDS || duration > MAX_VIDEO_SECONDS);
+    });
+    if (shortAiScene >= 0) return i18n.t("workflowConfig.schema.aiSceneDuration", { scene: shortAiScene + 1 });
+  }
+  const total = scenes.length > 0
+    ? scenes.reduce((sum, scene) => sum + seconds(scene.durationSeconds), 0)
+    : seconds(config.durationSeconds);
+  if (total < MIN_VIDEO_SECONDS || total > MAX_VIDEO_SECONDS)
+    return i18n.t("workflowConfig.checks.videoDuration", { total, min: MIN_VIDEO_SECONDS, max: MAX_VIDEO_SECONDS });
+  return null;
+};
+
+/** The first product of the batch whose own video settings make a video of the wrong length. */
+export const findProductVideoDurationIssue = (nodes: WorkflowNode[]): WorkflowIssue | null => {
+  const [video] = findByType(nodes, "generate-video");
+  if (!video) return null;
+  for (const own of Object.values(readProductConfigs(video.data.config))) {
+    const problem = videoDurationProblem(own);
+    if (problem)
+      return {
+        id: `video-product-duration-${video.id}`,
+        nodeId: video.id,
+        message: i18n.t("workflowConfig.checks.configIssue", {
+          label: video.data.label,
+          issue: i18n.t("workflowConfig.checks.productVideoDuration", { issue: problem }),
+        }),
+      };
+  }
+  return null;
+};
+
+/**
+ * Checked when Run is pressed, before any design is generated: the server only reads the video settings once the
+ * mock-ups are made, so a video of the wrong length would otherwise stop the run at Mockup Approval after the designs
+ * and mock-ups were already paid for. Covers the shared settings and every product's own.
+ */
+export const findVideoDurationIssue = (nodes: WorkflowNode[]): WorkflowIssue | null => {
+  const [video] = findByType(nodes, "generate-video");
+  if (!video) return null;
+  const shared = videoDurationProblem(video.data.config);
+  if (shared)
+    return {
+      id: `video-duration-${video.id}`,
+      nodeId: video.id,
+      message: i18n.t("workflowConfig.checks.configIssue", { label: video.data.label, issue: shared }),
+    };
+  return findProductVideoDurationIssue(nodes);
+};
 
 const reachableFrom = (startId: string, edges: WorkflowEdge[]) => {
   const visited = new Set<string>();

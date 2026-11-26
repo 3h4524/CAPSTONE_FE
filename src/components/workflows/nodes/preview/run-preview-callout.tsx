@@ -10,6 +10,7 @@ import { PublishPreview } from "@/components/workflows/nodes/preview/publish-pre
 import { VideoPreview } from "@/components/workflows/nodes/preview/video-preview";
 import { RUN_PREVIEW_GAP, RUN_PREVIEW_WIDTH } from "@/constants/workflow-run-effects";
 import { previewSideOf, type RunPreviewSide } from "@/helpers/workflow-run-view";
+import { useVideoGroupTargets } from "@/hooks/queries/use-group-videos";
 import { useRunSimulationStore } from "@/stores/run-simulation";
 import { useWorkflowStore } from "@/stores/workflow";
 import { useWorkflowRunStore } from "@/stores/workflow-run";
@@ -66,8 +67,11 @@ export const RunPreviewCallout = (props: RunPreviewCalloutProps) => {
   const simulatedMockups = useRunSimulationStore((state) => state.images["apply-mockup"]);
   const mockupResult = useWorkflowRunStore((state) => state.mockupResult);
   const job = useWorkflowRunStore((state) => state.job);
+  // A batch video run with several designs lists them beside the video, as Apply mock-up does its designs.
+  const { targets: videoTargets } = useVideoGroupTargets();
 
   const hasMultipleDesigns = useMemo(() => {
+    if (props.data.type === "generate-video") return videoTargets.length > 1;
     if (props.data.type !== "apply-mockup") return false;
     if (simulatedMockups && simulatedMockups.length > 0) return true;
     const designImages = job?.products.flatMap((product) => product.images) ?? [];
@@ -75,7 +79,7 @@ export const RunPreviewCallout = (props: RunPreviewCalloutProps) => {
     const mockupImages = mockupResult?.images ?? [];
     const uniqueDesigns = new Set(mockupImages.map((m) => m.designImageId).filter(Boolean));
     return uniqueDesigns.size > 1;
-  }, [props.data.type, simulatedMockups, job, mockupResult]);
+  }, [props.data.type, simulatedMockups, job, mockupResult, videoTargets.length]);
 
   const content = previewContent(props);
   if (!content) return null;
@@ -85,7 +89,8 @@ export const RunPreviewCallout = (props: RunPreviewCalloutProps) => {
   return (
     <aside
       className={cn(
-        "bg-wf-surface border-wf-line animate-in fade-in absolute z-20 overflow-hidden rounded-xl border p-3 shadow-xl empty:hidden",
+        // A preview with nothing to show yet renders nothing inside its wrapper: no empty frame is drawn then.
+        "bg-wf-surface border-wf-line animate-in fade-in absolute z-20 overflow-hidden rounded-xl border p-3 shadow-xl empty:hidden has-[>div:empty]:hidden",
         SIDE_CLASS_NAMES[side]
       )}
       style={{ width, [SIDE_MARGINS[side]]: RUN_PREVIEW_GAP }}

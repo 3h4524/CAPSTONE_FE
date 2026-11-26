@@ -15,6 +15,7 @@ import { showWorkflowActionToast } from "@/helpers/toast";
 import { readString } from "@/helpers/workflow-config";
 import {
   extractMockupSelection,
+  findVideoDurationIssue,
   hasBatchSteps,
   hasListingSteps,
   hasServerPart,
@@ -342,6 +343,14 @@ export const useWorkflowExecution = (activeWorkflowId: string | null, isEditorRe
     if (unpublishable) {
       showWorkflowActionToast("error", publishConnectionIssue(unpublishable.data.type, connections)!.message);
       selectNode(unpublishable.id);
+      return;
+    }
+    // The server reads the video settings only once the mock-ups are made: a video of the wrong length is stopped
+    // here, before any design or mock-up is paid for, instead of at Mockup Approval.
+    const durationIssue = findVideoDurationIssue(nodes);
+    if (durationIssue) {
+      showWorkflowActionToast("error", durationIssue.message);
+      if (durationIssue.nodeId) selectNode(durationIssue.nodeId);
       return;
     }
     const listingOnly = hasListingSteps(nodes) && !hasBatchSteps(nodes) && !wantsServerPart;

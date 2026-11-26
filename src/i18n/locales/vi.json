@@ -1097,6 +1097,7 @@
       "adjustGarmentArea": "Điều chỉnh vùng garment",
       "done": "Xong",
       "productTypes": {
+        "apparel": "Quần áo",
         "tshirt": "T-shirt",
         "hoodie": "Hoodie",
         "mug": "Ly",
@@ -1188,9 +1189,9 @@
       },
       "generateModelPhoto": {
         "title": "Tạo ảnh người mẫu bằng AI",
-        "description": "AI tạo ảnh những người bạn chọn mặc áo thun hoặc hoodie trắng trơn. Mock-up được đặt lên không cần AI, nên bản in giữ nguyên như thiết kế.",
-        "descriptionAi": "AI tạo ảnh những người bạn chọn mặc áo thun hoặc hoodie trắng trơn. Sau đó mock-up được đặt lên ảnh bằng AI.",
-        "productType": "Loại sản phẩm",
+        "description": "AI tạo ảnh những người bạn chọn mặc áo thun hoặc hoodie trắng trơn. Đây là người mẫu quần áo, dùng chung cho cả áo thun lẫn hoodie. Mock-up được đặt lên không cần AI, nên bản in giữ nguyên như thiết kế.",
+        "descriptionAi": "AI tạo ảnh những người bạn chọn mặc áo thun hoặc hoodie trắng trơn. Đây là người mẫu quần áo, dùng chung cho cả áo thun lẫn hoodie. Sau đó mock-up được đặt lên ảnh bằng AI.",
+        "productType": "Áo người mẫu mặc",
         "scene": "Bối cảnh",
         "outfit": "Trang phục",
         "pose": "Dáng",
@@ -2515,6 +2516,8 @@
         "missingOutput": "Hãy thêm ít nhất một bước đầu ra, ví dụ Xuất ZIP.",
         "unreachable": "{{label}} chưa được nối với Đầu vào sản phẩm.",
         "configIssue": "{{label}}: {{issue}}",
+        "videoDuration": "video hiện dài {{total}} giây, nhưng video phải dài từ {{min}} đến {{max}} giây. Hãy tăng thời lượng cảnh hoặc thêm cảnh trước khi chạy.",
+        "productVideoDuration": "cấu hình video riêng của một sản phẩm: {{issue}}",
         "checkSettings": "hãy kiểm tra cài đặt.",
         "printifyTemplate": "{{label}}: hãy chọn một mẫu Printify cho mỗi loại sản phẩm.",
         "needsApproval": "{{label}} cần một bước Duyệt mock-up trước nó."
@@ -2530,12 +2533,16 @@
         "generate": "Tạo"
       },
       "modelPhotoSelection": {
-        "description": "AI (Ideogram) mặc mock-up chính của từng thiết kế lên ảnh người mẫu bạn chọn ngay khi lượt chạy tạo xong mock-up: mỗi thiết kế một ảnh, tính phí theo ảnh. Ảnh chờ duyệt ở bước Duyệt mock-up cùng các mock-up khác. Loại sản phẩm không chọn ảnh thì không tạo.",
+        "description": "AI (Ideogram) mặc mock-up chính của từng thiết kế lên ảnh người mẫu bạn chọn ngay khi lượt chạy tạo xong mock-up: mỗi thiết kế một ảnh, tính phí theo ảnh. Ảnh chờ duyệt ở bước Duyệt mock-up cùng các mock-up khác. Áo thun và hoodie dùng chung một ảnh quần áo. Loại sản phẩm không chọn ảnh thì không tạo.",
         "proOnly": "Ảnh người mẫu AI thuộc gói Pro. Hãy bỏ chọn để chạy quy trình với gói hiện tại.",
         "chooseBatchFirst": "Chọn lô sản phẩm ở Product Input để xem các loại sản phẩm.",
         "listLabel": "Ảnh người mẫu theo loại sản phẩm",
         "chooseTitle": "Chọn ảnh người mẫu cho {{type}}",
-        "chooseDescription": "Thư viện chung và ảnh người mẫu của bạn. Mọi thiết kế thuộc loại sản phẩm này được mặc lên ảnh bạn chọn.",
+        "chooseDescription": "Tải lên ảnh có người, hoặc chọn một ảnh người mẫu có sẵn. Mỗi thiết kế của loại sản phẩm này được đặt lên ảnh bạn chọn.",
+        "uploadNote": "Ảnh được lưu cùng các ảnh người mẫu của bạn, nên có thể chọn lại ở các quy trình khác.",
+        "uploadedName": "Ảnh tải lên",
+        "usePhoto": "Dùng ảnh này",
+        "saving": "Đang lưu ảnh…",
         "none": "Không dùng ảnh người mẫu",
         "gone": "Ảnh người mẫu này không còn dùng được. Hãy chọn ảnh khác.",
         "loading": "Đang tải ảnh người mẫu…",
@@ -2655,6 +2662,7 @@
         "published": "Hoàn thành"
       },
       "productTypes": {
+        "apparel": "Quần áo",
         "tshirt": "T-shirt",
         "hoodie": "Hoodie",
         "mug": "Ly",

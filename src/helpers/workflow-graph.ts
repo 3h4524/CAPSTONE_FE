@@ -9,7 +9,13 @@ import {
 } from "@/constants/workflow";
 import { offsetWaypoints, readWaypoints } from "@/helpers/edge-waypoints";
 import { getWorkflowNodeDefinition, normalizeNodeConfig, readString } from "@/helpers/workflow-config";
-import { findMissingMockupTemplates, isRunnableNode, publishesWithoutVideo, supportsBatchVideos } from "@/helpers/workflow-run";
+import {
+  findMissingMockupTemplates,
+  findProductVideoDurationIssue,
+  isRunnableNode,
+  publishesWithoutVideo,
+  supportsBatchVideos,
+} from "@/helpers/workflow-run";
 import { i18n } from "@/i18n/client";
 import { nodeConfigSchemaIn } from "@/schemas/workflow";
 import type {
@@ -255,6 +261,9 @@ export const validateWorkflow = (nodes: WorkflowNode[], edges: WorkflowEdge[]): 
   issues.push(...printifyIssues(nodes, edges));
   const missingTemplates = findMissingMockupTemplates(nodes);
   if (missingTemplates) issues.push(missingTemplates);
+  // The shared video settings are checked with the node's own settings below; a product's own ones only here.
+  const productDuration = findProductVideoDurationIssue(nodes);
+  if (productDuration) issues.push(productDuration);
   const inputNodes = nodes.filter((node) => node.data.type === "product-input");
 
   if (inputNodes.length === 0) {

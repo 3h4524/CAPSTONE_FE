@@ -203,8 +203,8 @@ describe("GenerateModelPhotoDialog", () => {
       />
     );
 
-    expect(screen.getByRole("combobox", { name: /product type/i })).toHaveTextContent("T-shirt");
-    await user.click(screen.getByRole("combobox", { name: /product type/i }));
+    expect(screen.getByRole("combobox", { name: /garment worn/i })).toHaveTextContent("T-shirt");
+    await user.click(screen.getByRole("combobox", { name: /garment worn/i }));
     expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["T-shirt", "Hoodie"]);
     await user.keyboard("{Escape}");
     await user.click(screen.getByRole("combobox", { name: "Pose" }));

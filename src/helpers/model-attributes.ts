@@ -54,6 +54,18 @@ export const modelAttributesLabel = (attributes?: ModelAttributes | null) => {
   return parts.filter(Boolean).join(" · ") || i18n.t("workflowMedia.modelAttributes.people.single");
 };
 
+/** The product types whose model photos stand in for one another (the backend's MockupRules.ApparelTypes). */
+export const APPAREL_TYPES = ["tshirt", "hoodie"] as const;
+
+/**
+ * The group a model photo belongs to: "apparel" for a t-shirt or a hoodie, which share their model photos, the
+ * product type itself (lower case) otherwise.
+ */
+export const modelCategory = (productType?: string | null) => {
+  const type = (productType ?? "").toLowerCase();
+  return (APPAREL_TYPES as readonly string[]).includes(type) ? "apparel" : type;
+};
+
 /** Whether the attributes say all a photo needs: an age group and gender for one person, a kind for a group. */
 export const isCompleteAttributes = (attributes: ModelAttributes) =>
   attributes.people === "group"

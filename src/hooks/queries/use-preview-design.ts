@@ -13,6 +13,8 @@ export interface PreviewDesign {
   scenes: RunGroupScenePreview[];
   /** The design was chosen in Generate Video, so the node shows its own settings and nothing else may override it. */
   scoped: boolean;
+  /** The run that made this design's video, once the videos have started: its AI clips play in the previews. */
+  runId: string | null;
 }
 
 /**
@@ -28,7 +30,13 @@ export const usePreviewDesign = (): PreviewDesign | null => {
     const scoped = scopeKey ? group?.targets.find((candidate) => candidate.key === scopeKey) : undefined;
     const target = scoped ?? group?.targets.find((candidate) => candidate.approvedCount > 0) ?? group?.targets[0];
     return target
-      ? { productId: target.productId, artworkGroupKey: target.artworkGroupKey, scenes: target.scenes, scoped: Boolean(scoped) }
+      ? {
+          productId: target.productId,
+          artworkGroupKey: target.artworkGroupKey,
+          scenes: target.scenes,
+          scoped: Boolean(scoped),
+          runId: target.runId ?? null,
+        }
       : null;
   }, [group, scopeKey]);
 };

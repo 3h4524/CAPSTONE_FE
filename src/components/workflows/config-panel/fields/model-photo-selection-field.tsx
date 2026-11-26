@@ -6,19 +6,29 @@ import { UserRound, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PanelNotice } from "@/components/workflows/config-panel/layout/panel-notice";
-import { LibraryModelPicker } from "@/components/workflows/media/lifestyle-mockup-form";
+import {
+  LibraryModelPicker,
+  type PeopleSource,
+  PeopleSourceSwitch,
+  UploadPhoto,
+} from "@/components/workflows/media/lifestyle-mockup-form";
 import { productTypeLabel } from "@/helpers/mockup-template";
-import { modelAttributesLabel } from "@/helpers/model-attributes";
+import { APPAREL_TYPES, modelAttributesLabel, modelCategory } from "@/helpers/model-attributes";
 import { hasFeature } from "@/helpers/plan-features";
+import { useSaveModelPhoto } from "@/hooks/mutations/use-model-photo-mutations";
 import { useEntitlements } from "@/hooks/queries/use-entitlements";
 import { useModelPhotos } from "@/hooks/queries/use-model-photos";
 import { useRunProductTypeCounts } from "@/hooks/use-run-product-types";
 import { cn } from "@/utils/cn";
 
 type ModelPhotoSelectionFieldProps = {
-  /** The model photo chosen per product type (lower case); a type left out gets none. */
+  /**
+   * The model photo chosen per group of product types (lower case): "apparel" for t-shirts and hoodies, the type
+   * itself otherwise. A group left out gets none.
+   */
   value: Record<string, string>;
   onChange: (value: Record<string, string>) => void;
 };
@@ -33,34 +43,42 @@ export const ModelPhotoSelectionField = ({ value, onChange }: ModelPhotoSelectio
   const { data: entitlements } = useEntitlements();
   const locked = entitlements !== undefined && !hasFeature(entitlements, "lifestyle_mockup");
   const [choosing, setChoosing] = useState<string | null>(null);
-  // The run's product types, then one chosen for a type the run no longer has, so it can still be removed.
-  const types = [...new Set([...Object.keys(counts ?? {}), ...Object.keys(value)])];
+  // One row per group of product types: a t-shirt and a hoodie share their model photos (apparel). The run's groups
+  // come first, then one chosen for a group the run no longer has, so it can still be removed.
+  const runCategories = new Set(Object.keys(counts ?? {}).map(modelCategory));
+  const categories = [...new Set([...runCategories, ...Object.keys(value).map(modelCategory)])];
+  // A workflow saved before the groups kept a top's photo under "tshirt" or "hoodie": it shows under apparel, the
+  // group's own key first, as the run reads it.
+  const photoOf = (category: string) =>
+    value[category] ?? Object.entries(value).find(([key]) => modelCategory(key) === category)?.[1];
   const typeName = (type: string) => t(`batches.productTypes.${type}`, { defaultValue: productTypeLabel(type) });
+  const without = (category: string) =>
+    Object.fromEntries(Object.entries(value).filter(([key]) => modelCategory(key) !== category));
 
-  const choose = (type: string, id: string) => {
-    onChange({ ...value, [type]: id });
+  const choose = (category: string, id: string) => {
+    onChange({ ...without(category), [category]: id });
     setChoosing(null);
   };
-  const remove = (type: string) => onChange(Object.fromEntries(Object.entries(value).filter(([key]) => key !== type)));
+  const remove = (category: string) => onChange(without(category));
 
   return (
     <div className="min-w-0 space-y-2">
       <p className="text-muted-foreground text-xs leading-relaxed">{t("workflowConfig.modelPhotoSelection.description")}</p>
       {locked && <PanelNotice tone="warning">{t("workflowConfig.modelPhotoSelection.proOnly")}</PanelNotice>}
-      {types.length === 0 ? (
+      {categories.length === 0 ? (
         <p className="text-muted-foreground text-xs">{t("workflowConfig.modelPhotoSelection.chooseBatchFirst")}</p>
       ) : (
         <ul className="bg-card divide-y overflow-hidden rounded-lg border" aria-label={t("workflowConfig.modelPhotoSelection.listLabel")}>
-          {types.map((type) => (
+          {categories.map((category) => (
             <ModelPhotoRow
-              key={type}
-              productType={type}
-              label={typeName(type)}
-              photoId={value[type]}
-              unused={counts !== undefined && !(type in counts)}
+              key={category}
+              productType={category}
+              label={typeName(category)}
+              photoId={photoOf(category)}
+              unused={counts !== undefined && !runCategories.has(category)}
               locked={locked}
-              onChoose={() => setChoosing(type)}
-              onRemove={() => remove(type)}
+              onChoose={() => setChoosing(category)}
+              onRemove={() => remove(category)}
             />
           ))}
         </ul>
@@ -74,15 +92,87 @@ export const ModelPhotoSelectionField = ({ value, onChange }: ModelPhotoSelectio
             <DialogDescription>{t("workflowConfig.modelPhotoSelection.chooseDescription")}</DialogDescription>
           </DialogHeader>
           {choosing && (
-            <LibraryModelPicker
-              productType={choosing}
-              value={value[choosing]}
-              disabled={false}
-              onChange={(id) => choose(choosing, id)}
+            <ChooseModelPhoto
+              key={choosing}
+              category={choosing}
+              value={photoOf(choosing)}
+              onChosen={(id) => choose(choosing, id)}
             />
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
+
+/**
+ * The people a group's designs are put on, chosen as in the AI lifestyle image form: a photo the seller uploads, or one
+ * of the model photos. A workflow keeps only a model photo's id, so an uploaded photo is saved with the seller's own
+ * model photos (as a t-shirt's for apparel) and that one is chosen.
+ */
+const ChooseModelPhoto = ({
+  category,
+  value,
+  onChosen,
+}: {
+  category: string;
+  value: string | undefined;
+  onChosen: (id: string) => void;
+}) => {
+  const { t } = useTranslation("common");
+  // A photo already chosen is one of the model photos; otherwise the upload comes first, as in the lifestyle form.
+  const [source, setSource] = useState<PeopleSource>(value ? "library" : "upload");
+  const [file, setFile] = useState<File | undefined>();
+  const [rights, setRights] = useState(false);
+  const { mutateAsync: save, isPending } = useSaveModelPhoto("seller");
+
+  const upload = async () => {
+    if (!file) return;
+    const base = file.name.replace(/\.[^.]+$/, "").trim() || t("workflowConfig.modelPhotoSelection.uploadedName");
+    const photo = await save({
+      id: null,
+      // Unique among the seller's photos: the same file can be uploaded for another workflow.
+      name: `${base.slice(0, 100)} · ${Math.random().toString(36).slice(2, 8)}`,
+      productType: category === "apparel" ? APPAREL_TYPES[0] : category,
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      photo: file,
+      garmentSelection: null,
+      findGarment: true,
+      autoPlacement: true,
+      printQuad: null,
+      attributes: null,
+    }).catch(() => null);
+    if (photo) onChosen(photo.id);
+  };
+
+  return (
+    <div className="min-w-0 space-y-3">
+      <PeopleSourceSwitch value={source} onChange={setSource} disabled={isPending} />
+      {source === "library" ? (
+        <LibraryModelPicker productType={category} value={value} disabled={isPending} onChange={onChosen} />
+      ) : (
+        <div className="space-y-3">
+          <UploadPhoto value={file} onChange={setFile} disabled={isPending} />
+          <label className="flex items-start gap-2">
+            <Checkbox
+              checked={rights}
+              disabled={isPending}
+              onCheckedChange={(checked) => setRights(checked === true)}
+              className="mt-0.5"
+            />
+            <span className="text-ink-700 text-xs leading-relaxed">{t("workflowMedia.lifestyle.rightsConfirm")}</span>
+          </label>
+          <p className="text-muted-foreground text-xs">{t("workflowConfig.modelPhotoSelection.uploadNote")}</p>
+          <div className="flex justify-end">
+            <Button type="button" size="sm" disabled={!file || !rights || isPending} onClick={upload}>
+              {isPending ? t("workflowConfig.modelPhotoSelection.saving") : t("workflowConfig.modelPhotoSelection.usePhoto")}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

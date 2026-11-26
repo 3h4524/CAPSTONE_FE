@@ -150,9 +150,10 @@ const OneVideoPreview = ({ data, status, progress }: VideoPreviewProps) => {
 };
 
 /**
- * A batch video run with several designs: a row of their mock-ups to pick one, and the picked design's scenes below,
- * each on its own (Photo motion and AI alike), without the whole video. Only the picked design's video is loaded:
- * another design's video and media are fetched when the seller picks it.
+ * A batch video run with several designs, laid out like Apply mock-up's preview: the picked design's scenes on the
+ * left, each on its own (Photo motion and AI alike), without the whole video, and the list of designs on the right to
+ * pick one. Only the picked design's video is loaded: another design's video and media are fetched when the seller
+ * picks it.
  */
 const GroupVideoPreview = ({
   targets,
@@ -180,71 +181,98 @@ const GroupVideoPreview = ({
       : t("workflowEditor.runView.previewDone");
 
   return (
-    <div className="grid gap-2">
-      <div className="text-wf-dim flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase">
-        {t("workflowEditor.runView.previewVideo")}
-        {video && <span className="text-wf-faint tabular-nums">v{video.version}</span>}
-        <PreviewStatus
-          tone={tone}
-          label={tone === "live" ? t("workflowEditor.runView.previewRendering") : doneLabel}
-        />
-        {video?.previewUrl && (
-          <ExpandButton
-            label={t("workflowEditor.runView.previewExpandVideo")}
-            onClick={() => cinema.open(video.previewUrl, video, `${target.productName} · ${target.designLabel}`)}
+    <div className="flex w-full max-w-full min-w-0 flex-row items-start gap-3">
+      <div className="grid min-w-0 flex-1 gap-2">
+        <div className="text-wf-dim flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase">
+          {t("workflowEditor.runView.previewVideo")}
+          {video && <span className="text-wf-faint tabular-nums">v{video.version}</span>}
+          <PreviewStatus
+            tone={tone}
+            label={tone === "live" ? t("workflowEditor.runView.previewRendering") : doneLabel}
+          />
+          {video?.previewUrl && (
+            <ExpandButton
+              label={t("workflowEditor.runView.previewExpandVideo")}
+              onClick={() => cinema.open(video.previewUrl, video, `${target.productName} · ${target.designLabel}`)}
+            />
+          )}
+        </div>
+        <p className="text-wf-faint truncate text-[10px]" title={`${target.productName} · ${target.designLabel}`}>
+          {target.productName} · {target.designLabel}
+        </p>
+        {video && (video.preview || video.previewUrl) ? (
+          <ScenePreviews video={video} />
+        ) : (
+          <LiveClips
+            runId={target.runId}
+            config={target.config ?? (data.config as GenerateVideoConfig)}
+            running={generate === "running"}
+            onExpand={(url, label) => cinema.open(url, null, label)}
+            fallback={<DesignProgress target={target} />}
           />
         )}
       </div>
-      <div
-        role="group"
-        aria-label={t("workflowEditor.runView.previewChooseProduct")}
-        className="nodrag nowheel flex gap-1.5 overflow-x-auto pb-0.5"
-      >
-        {targets.map((item, index) => {
-          const selected = item.runId === target.runId;
-          const name = `${item.productName} · ${item.designLabel}`;
-          return (
-            <button
-              key={item.runId}
-              type="button"
-              aria-pressed={selected}
-              aria-label={t("workflowEditor.runView.previewProductAria", { index: index + 1, name })}
-              title={name}
-              onClick={() => setPickedRunId(item.runId)}
-              className={cn(
-                "bg-wf-muted focus-visible:ring-wf-accent relative size-10 shrink-0 overflow-hidden rounded-md outline-none focus-visible:ring-2",
-                selected ? "ring-wf-accent ring-2" : "hover:ring-wf-accent/45 ring-1 ring-black/[0.07]"
-              )}
-            >
-              {item.previewUrl ? (
-                <Image src={item.previewUrl} alt="" fill sizes="40px" unoptimized className="object-cover" />
-              ) : (
-                <ImageIcon className="text-wf-faint absolute inset-0 m-auto size-4" aria-hidden="true" />
-              )}
-              {STOPPED.has(generateStatusOf(item)) && (
-                <span className="bg-wf-fail absolute top-0.5 right-0.5 size-1.5 rounded-full" aria-hidden="true" />
-              )}
-            </button>
-          );
-        })}
+
+      <div className="flex w-[136px] shrink-0 flex-col gap-1.5">
+        <div className="text-wf-dim flex items-center justify-between px-1 text-[10px] font-semibold tracking-wider uppercase">
+          <span>{t("workflowEditor.runView.designs", "Designs")}</span>
+          <span className="text-wf-faint tabular-nums">({targets.length})</span>
+        </div>
+        <div
+          role="group"
+          aria-label={t("workflowEditor.runView.previewChooseProduct")}
+          className="nodrag nowheel no-scrollbar flex max-h-[250px] min-h-0 flex-col gap-1.5 overflow-y-auto scroll-smooth"
+        >
+          {targets.map((item, index) => {
+            const selected = item.runId === target.runId;
+            const name = `${item.productName} · ${item.designLabel}`;
+            return (
+              <button
+                key={item.runId}
+                type="button"
+                aria-pressed={selected}
+                aria-label={t("workflowEditor.runView.previewProductAria", { index: index + 1, name })}
+                title={name}
+                onClick={(event) => {
+                  setPickedRunId(item.runId);
+                  event.currentTarget.scrollIntoView({ block: "nearest", behavior: "smooth" });
+                }}
+                className={cn(
+                  "border-wf-line/60 bg-wf-surface/80 text-wf-ink/80 hover:border-wf-accent/40 hover:bg-wf-line/20 hover:text-wf-ink",
+                  "focus-visible:ring-wf-accent flex h-9 w-full shrink-0 cursor-pointer items-center gap-2 rounded-lg border px-2.5 text-left transition-all outline-none focus-visible:ring-2",
+                  selected && "border-wf-accent bg-wf-surface text-wf-ink ring-wf-accent/30 shadow-xs ring-1"
+                )}
+              >
+                <span className="border-wf-line/50 bg-wf-muted relative size-5 shrink-0 overflow-hidden rounded-sm border">
+                  {item.previewUrl ? (
+                    <Image src={item.previewUrl} alt="" fill sizes="20px" unoptimized className="object-cover" />
+                  ) : (
+                    <ImageIcon className="text-wf-faint absolute inset-0 m-auto size-3" aria-hidden="true" />
+                  )}
+                </span>
+                <span className="flex-1 truncate text-xs font-medium">{item.productName}</span>
+                <DesignStatusDot target={item} />
+              </button>
+            );
+          })}
+        </div>
       </div>
-      <p className="text-wf-faint truncate text-[10px]" title={`${target.productName} · ${target.designLabel}`}>
-        {target.productName} · {target.designLabel}
-      </p>
-      {video && (video.preview || video.previewUrl) ? (
-        <ScenePreviews video={video} />
-      ) : (
-        <LiveClips
-          runId={target.runId}
-          config={target.config ?? (data.config as GenerateVideoConfig)}
-          running={generate === "running"}
-          onExpand={(url, label) => cinema.open(url, null, label)}
-          fallback={<DesignProgress target={target} />}
-        />
-      )}
       {cinema.modal}
     </div>
   );
+};
+
+/** Where a design's video is, as a dot in the list: made, being made, waiting, or stopped. */
+const DesignStatusDot = ({ target }: { target: RunGroupTarget }) => {
+  const status = generateStatusOf(target);
+  const tone = STOPPED.has(status)
+    ? "bg-wf-fail"
+    : ["completed", "waiting_for_review"].includes(status)
+      ? "bg-wf-ok"
+      : status === "running"
+        ? "bg-wf-accent animate-pulse"
+        : "bg-wf-line";
+  return <span className={cn("size-1.5 shrink-0 rounded-full", tone)} aria-hidden="true" />;
 };
 
 /** Where a design's video is while it has none to show: its progress, or why it stopped. */

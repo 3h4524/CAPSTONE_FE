@@ -82,8 +82,10 @@ export const StoryboardPanel = ({ node }: { node: WorkflowNode }) => {
   const previewDesign = usePreviewDesign();
   const productId = designRun?.productId ?? previewDesign?.productId ?? inputProductId;
   const { data: assets = [] } = useMockupAssets(productId);
-  // The AI clips the open run has made: an AI scene plays its clip, as in the full video editor, instead of its still start frame.
-  const { data: sceneVideos = [] } = useRunSceneVideos(run?.id ?? null);
+  // The AI clips the shown design's run has made: an AI scene plays its clip, as in the full video editor, instead of its
+  // still start frame. A batch video run opens no design's run by itself, so the previewed design's run is used then.
+  const clipRunId = designRun?.id ?? previewDesign?.runId ?? run?.id ?? null;
+  const { data: sceneVideos = [] } = useRunSceneVideos(clipRunId);
   const clips = useMemo(
     () =>
       Object.fromEntries(

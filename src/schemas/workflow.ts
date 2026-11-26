@@ -407,7 +407,9 @@ export const generateVideoConfigSchema = z
       ctx.addIssue({ code: "custom", path: ["aiScenes"], message: i18n.t("workflowConfig.schema.addScene") });
       return;
     }
-    if (value.mode !== "ai_shot") return;
+    // Every scene list, AI or Standard: the server refuses an AI scene under 4 seconds and a video outside 5–15 seconds
+    // whatever the mode (GenerateVideoConfigValidator).
+    const total = value.aiScenes?.reduce((sum, scene) => sum + scene.durationSeconds, 0) ?? 0;
     if (value.aiScenes?.length) {
       if (value.aiScenes.length > 4)
         ctx.addIssue({ code: "custom", path: ["aiScenes"], message: i18n.t("workflowConfig.schema.scenesMax") });
@@ -422,13 +424,15 @@ export const generateVideoConfigSchema = z
           });
         }
       });
-      const total = value.aiScenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
       if (total < MIN_VIDEO_DURATION_SECONDS || total > MAX_VIDEO_DURATION_SECONDS)
         ctx.addIssue({
           code: "custom",
           path: ["aiScenes"],
           message: i18n.t("workflowConfig.schema.scenesTotal"),
         });
+    }
+    if (value.mode !== "ai_shot") return;
+    if (value.aiScenes?.length) {
       if (value.durationSeconds !== total)
         ctx.addIssue({
           code: "custom",

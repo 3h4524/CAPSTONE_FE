@@ -272,7 +272,14 @@ export const evaluateRag = async (payload: RagEvaluationRequest) => {
   return data;
 };
 
-export const getRagCorpusHealth = async (params: { contentType?: string; staleDays?: number } = {}) => {
+export type RagCorpusHealthFilters = { contentType?: string; staleDays?: number };
+
+export const ragCorpusHealthPrefix = ["admin", "rag", "corpus-health"] as const;
+
+export const ragCorpusHealthKey = (filters: RagCorpusHealthFilters) =>
+  [...ragCorpusHealthPrefix, filters] as const;
+
+export const getRagCorpusHealth = async (params: RagCorpusHealthFilters = {}) => {
   const search = new URLSearchParams();
   if (params.contentType) search.set("contentType", params.contentType);
   if (params.staleDays) search.set("staleDays", String(params.staleDays));

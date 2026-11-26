@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, ChevronDown, FileText, Info, Loader2, RotateCcw, Upload } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { ingestRagDocument, type RagIngestRequest } from "@/api/rag";
 import { AdminMarketResearchPanel } from "@/components/admin/admin-market-research-panel";
 import { AdminRagDocumentsPanel } from "@/components/admin/admin-rag-documents-panel";
 import { RagSearchPlayground } from "@/components/admin/rag-search-playground";
@@ -19,24 +18,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { RAG_MANUAL_CONTENT_TYPE_OPTIONS } from "@/constants/rag";
 import { showToast } from "@/helpers/toast";
-import { useMutation } from "@/hooks/mutations/use-mutation";
+import { useIngestRagDocument } from "@/hooks/mutations/use-ingest-rag-document";
 import { useAdminShellOptions } from "@/hooks/use-admin-shell-options";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import { cn } from "@/utils/cn";
 
-const CONTENT_TYPES = [
-  ["listing", "admin.dashboard.ragIngest.contentTypes.listings"],
-  ["policy", "admin.dashboard.ragIngest.contentTypes.policies"],
-  ["keyword", "admin.dashboard.ragIngest.contentTypes.keywords"],
-  ["faq", "admin.dashboard.ragIngest.contentTypes.faq"],
-  ["image", "admin.dashboard.ragIngest.contentTypes.image"],
-  ["video", "admin.dashboard.ragIngest.contentTypes.video"],
-] as const;
-
 const ACCEPTED_FILES = ".txt,.md,.csv,.json,.html,.htm";
 
 type AdminRagTab = "ingest" | "research" | "documents" | "search";
+type ManualRagContentType = (typeof RAG_MANUAL_CONTENT_TYPE_OPTIONS)[number][0];
 
 const RAG_TABS: { value: AdminRagTab; labelKey: string; shortLabelKey: string }[] = [
   { value: "ingest", labelKey: "admin.dashboard.ragIngest.tabs.ingest", shortLabelKey: "admin.dashboard.ragIngest.tabs.ingestShort" },
@@ -53,6 +45,8 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
   const { t } = useTranslation("common");
   const inputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<AdminRagTab>(initialTab);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [submittedDocumentId, setSubmittedDocumentId] = useState<string | null>(null);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [fileName, setFileName] = useState("");
   const [title, setTitle] = useState("");
@@ -61,7 +55,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
   const [sourceUrl, setSourceUrl] = useState("");
   const [version, setVersion] = useState("");
   const [language, setLanguage] = useState("en");
-  const [contentType, setContentType] = useState<RagIngestRequest["contentType"]>("listing");
+  const [contentType, setContentType] = useState<ManualRagContentType>("listing");
   const [content, setContent] = useState("");
   const isPhone = useIsPhone();
   // Only the title and type are required, so a phone keeps the optional fields one tap away.
@@ -71,14 +65,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
     title: t(activeTab === "research" ? "navigation.admin.items.marketInsights" : "navigation.admin.items.ragKnowledgeBase"),
   });
 
-  const mutation = useMutation({
-    mutationFn: ingestRagDocument,
-    onSuccess: ({ documentId }) => {
-      showToast("success", t("admin.dashboard.ragIngest.ingestSuccess", { id: documentId.slice(0, 8) }));
-      setFileName("");
-      setContent("");
-    },
-  });
+  const { mutate: ingestDocument, isPending: isIngesting } = useIngestRagDocument();
 
   const handleFile = async (file: File) => {
     const extension = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`;
@@ -98,6 +85,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
   };
 
   const resetForm = () => {
+    setSubmittedDocumentId(null);
     setIsDraggingFile(false);
     setFileName("");
     setTitle("");
@@ -116,7 +104,8 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
       return;
     }
 
-    mutation.mutate({
+    setSubmittedDocumentId(null);
+    ingestDocument({
       title: title.trim(),
       sourceId: sourceId.trim() || undefined,
       sourceType: sourceType.trim() || "manual",
@@ -125,6 +114,12 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
       language,
       content,
       contentType,
+    }, {
+      onSuccess: ({ documentId }) => {
+        setSubmittedDocumentId(documentId);
+        setFileName("");
+        setContent("");
+      },
     });
   };
 
@@ -190,7 +185,7 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                   variant="ghost"
                   size="sm"
                   onClick={resetForm}
-                  disabled={mutation.isPending}
+                  disabled={isIngesting}
                 >
                   <RotateCcw className="size-3.5" /> {t("admin.dashboard.ragIngest.resetButton")}
                 </Button>
@@ -320,11 +315,16 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
               <Field label={t("admin.dashboard.ragIngest.fieldContentType")} required>
                 <Select
                   value={contentType}
-                  onValueChange={(value) =>
-                    setContentType(value as RagIngestRequest["contentType"])
-                  }
+                  onValueChange={(value) => {
+                    const option = RAG_MANUAL_CONTENT_TYPE_OPTIONS.find(([type]) => type === value);
+                    if (option) setContentType(option[0]);
+                  }}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    className="w-full"
+                    aria-label={t("admin.dashboard.ragIngest.fieldContentType")}
+                    aria-describedby="rag-video-review-hint"
+                  >
                     <SelectValue placeholder={t("admin.dashboard.ragIngest.selectContentType")} />
                   </SelectTrigger>
                   <SelectContent
@@ -332,13 +332,16 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                     align="start"
                     className="z-[100] w-[var(--radix-select-trigger-width)]"
                   >
-                    {CONTENT_TYPES.map(([value, labelKey]) => (
+                    {RAG_MANUAL_CONTENT_TYPE_OPTIONS.map(([value, labelKey]) => (
                       <SelectItem key={value} value={value}>
                         {t(labelKey)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                <span id="rag-video-review-hint" className="text-ink-500 mt-1 block text-[11px] font-normal">
+                  {t("admin.dashboard.ragIngest.videoReviewHint")}
+                </span>
               </Field>
               <button
                 type="button"
@@ -400,34 +403,52 @@ const AdminRagIngestShell = ({ initialTab = "ingest" }: AdminRagIngestShellProps
                 type="button"
                 className="w-full"
                 onClick={submit}
-                disabled={mutation.isPending || !content.trim() || !title.trim()}
+                disabled={isIngesting || !content.trim() || !title.trim()}
               >
-                {mutation.isPending ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" /> {t("admin.dashboard.ragIngest.ingesting")}
-                  </>
-                ) : (
-                  <>
-                    <Upload className="size-4" /> {t("admin.dashboard.ragIngest.ingestButton")}
-                  </>
-                )}
+                {isIngesting ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+                {t("admin.dashboard.ragIngest.ingestButton")}
               </Button>
-              <p className="text-ink-500 mt-3 text-center text-[11px] leading-4">
-                {!title.trim() || !content.trim()
-                  ? t("admin.dashboard.ragIngest.hintMissing", {
-                      missing: !title.trim()
-                        ? !content.trim()
-                          ? t("admin.dashboard.ragIngest.hintBoth")
-                          : t("admin.dashboard.ragIngest.hintTitle")
-                        : t("admin.dashboard.ragIngest.hintContent"),
-                    })
-                  : t("admin.dashboard.ragIngest.readyHint")}
-              </p>
+              {submittedDocumentId ? (
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border p-2">
+                  <p role="status" className="text-ink-700 text-xs">
+                    {t("admin.dashboard.ragIngest.ingestSuccess")}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedDocumentId(submittedDocumentId);
+                      setActiveTab("documents");
+                    }}
+                  >
+                    {t("admin.dashboard.ragIngest.viewDocument")}
+                    <ArrowRight aria-hidden="true" className="size-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-ink-500 mt-3 text-center text-[11px] leading-4">
+                  {!title.trim() || !content.trim()
+                    ? t("admin.dashboard.ragIngest.hintMissing", {
+                        missing: !title.trim()
+                          ? !content.trim()
+                            ? t("admin.dashboard.ragIngest.hintBoth")
+                            : t("admin.dashboard.ragIngest.hintTitle")
+                          : t("admin.dashboard.ragIngest.hintContent"),
+                      })
+                    : t("admin.dashboard.ragIngest.readyHint")}
+                </p>
+              )}
             </div>
           </aside>
         </div>
         <div className={activeTab === "documents" ? "mt-6 max-md:mt-3" : "hidden"}>
-          <AdminRagDocumentsPanel onIngest={() => setActiveTab("ingest")} />
+          <AdminRagDocumentsPanel
+            isActive={activeTab === "documents"}
+            selectedId={selectedDocumentId}
+            onSelect={setSelectedDocumentId}
+            onIngest={() => setActiveTab("ingest")}
+          />
         </div>
         <div className={activeTab === "search" ? "mt-6 max-md:mt-3" : "hidden"}>
           <RagSearchPlayground />

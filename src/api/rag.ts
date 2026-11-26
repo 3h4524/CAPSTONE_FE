@@ -300,8 +300,14 @@ export const evaluateListingRetrieval = async (productId: string) => {
   return data;
 };
 
+export const ragAdminDocumentsPrefix = ["admin", "rag", "documents"] as const;
+export const ragAdminDocumentPrefix = ["admin", "rag", "document"] as const;
+
 export const ragAdminDocumentsKey = (status?: string, sourceId?: string) =>
-  ["admin", "rag", "documents", { status, sourceId }] as const;
+  [...ragAdminDocumentsPrefix, { status, sourceId }] as const;
+
+export const ragAdminDocumentKey = (documentId: string | null) =>
+  [...ragAdminDocumentPrefix, documentId] as const;
 
 export const getAdminRagDocuments = async (params: { status?: string; sourceId?: string } = {}) => {
   const search = new URLSearchParams();

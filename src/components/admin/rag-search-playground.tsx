@@ -4,46 +4,48 @@ import { useState } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { type RagSearchDiagnostics, type RagSearchRequest, searchRagWithDiagnostics } from "@/api/rag";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { RAG_CONTENT_TYPE_OPTIONS } from "@/constants/rag";
 import { showToast } from "@/helpers/toast";
+import { useSearchRagDiagnostics } from "@/hooks/mutations/use-search-rag-diagnostics";
+
+const ALL_CONTENT_TYPES = "all";
 
 const RagSearchPlayground = () => {
   const { t } = useTranslation("common");
   const [query, setQuery] = useState("");
-  const [contentType, setContentType] = useState("");
+  const [contentType, setContentType] = useState(ALL_CONTENT_TYPES);
   const [platform, setPlatform] = useState("");
   const [niche, setNiche] = useState("");
   const [minimumViralScore, setMinimumViralScore] = useState("");
   const [topK, setTopK] = useState("5");
-  const [isSearching, setIsSearching] = useState(false);
-  const [diagnostics, setDiagnostics] = useState<RagSearchDiagnostics | null>(null);
+  const {
+    mutate: search,
+    data: diagnostics,
+    isPending: isSearching,
+    isError: hasSearchError,
+  } = useSearchRagDiagnostics();
 
-  const runSearch = async () => {
+  const runSearch = () => {
     if (!query.trim()) {
       showToast("error", t("admin.rag.searchPlayground.enterQuery"));
       return;
     }
-    setIsSearching(true);
-    try {
-      const request: RagSearchRequest = {
-        query: query.trim(),
-        topK: Number(topK) || 5,
-        contentType: contentType || undefined,
-        platform: platform || undefined,
-        niche: niche || undefined,
-        minimumViralScore: minimumViralScore ? Number(minimumViralScore) : undefined,
-      };
-      setDiagnostics(await searchRagWithDiagnostics(request));
-    } catch {
-      showToast("error", t("admin.rag.searchPlayground.searchFailed"));
-    } finally {
-      setIsSearching(false);
-    }
+    search({
+      query: query.trim(),
+      topK: Number(topK) || 5,
+      contentType: contentType === ALL_CONTENT_TYPES ? undefined : contentType,
+      platform: platform.trim() || undefined,
+      niche: niche.trim() || undefined,
+      minimumViralScore: minimumViralScore ? Number(minimumViralScore) : undefined,
+    });
   };
 
   return (
@@ -62,20 +64,46 @@ const RagSearchPlayground = () => {
           <CardDescription className="mt-1 text-xs">{t("admin.rag.searchPlayground.queryAndFiltersDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 pt-5 max-md:px-4">
-          <Textarea value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("admin.rag.searchPlayground.queryPlaceholder")} className="min-h-24 text-sm max-md:text-base" />
+          <Textarea value={query} onChange={(event) => setQuery(event.target.value)} aria-label={t("admin.rag.searchPlayground.queryLabel")} placeholder={t("admin.rag.searchPlayground.queryPlaceholder")} className="min-h-24 text-sm max-md:text-base" />
           <div className="grid gap-3 max-md:grid-cols-2 max-md:gap-2 md:grid-cols-2 lg:grid-cols-5 max-md:[&>:last-child]:col-span-2">
-            <Input value={contentType} onChange={(event) => setContentType(event.target.value)} placeholder={t("admin.rag.searchPlayground.contentTypePlaceholder")} />
-            <Input value={platform} onChange={(event) => setPlatform(event.target.value)} placeholder={t("admin.rag.searchPlayground.platformPlaceholder")} />
-            <Input value={niche} onChange={(event) => setNiche(event.target.value)} placeholder={t("admin.rag.searchPlayground.nichePlaceholder")} />
-            <Input value={minimumViralScore} onChange={(event) => setMinimumViralScore(event.target.value)} type="number" min="0" max="100" placeholder={t("admin.rag.searchPlayground.minViralScorePlaceholder")} />
-            <Input value={topK} onChange={(event) => setTopK(event.target.value)} type="number" min="1" max="50" placeholder={t("admin.rag.searchPlayground.topKPlaceholder")} />
+            <Select value={contentType} onValueChange={setContentType}>
+              <SelectTrigger className="w-full min-w-0" aria-label={t("admin.rag.searchPlayground.contentTypePlaceholder")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_CONTENT_TYPES}>{t("admin.rag.shared.allContentTypes")}</SelectItem>
+                {RAG_CONTENT_TYPE_OPTIONS.map(([value, labelKey]) => (
+                  <SelectItem key={value} value={value}>{t(labelKey)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input value={platform} onChange={(event) => setPlatform(event.target.value)} aria-label={t("admin.rag.searchPlayground.platformPlaceholder")} placeholder={t("admin.rag.searchPlayground.platformPlaceholder")} />
+            <Input value={niche} onChange={(event) => setNiche(event.target.value)} aria-label={t("admin.rag.searchPlayground.nichePlaceholder")} placeholder={t("admin.rag.searchPlayground.nichePlaceholder")} />
+            <Input value={minimumViralScore} onChange={(event) => setMinimumViralScore(event.target.value)} type="number" min="0" max="100" aria-label={t("admin.rag.searchPlayground.minViralScorePlaceholder")} placeholder={t("admin.rag.searchPlayground.minViralScorePlaceholder")} />
+            <Input value={topK} onChange={(event) => setTopK(event.target.value)} type="number" min="1" max="50" aria-label={t("admin.rag.searchPlayground.topKPlaceholder")} placeholder={t("admin.rag.searchPlayground.topKPlaceholder")} />
           </div>
-          <Button type="button" className="max-md:w-full" onClick={runSearch} disabled={isSearching}><Search className="size-4" /> {isSearching ? t("admin.rag.searchPlayground.searching") : t("admin.rag.searchPlayground.runRetrieval")}</Button>
+          <Button type="button" className="max-md:w-full" onClick={runSearch} disabled={isSearching}>
+            <Search className="size-4" /> {t("admin.rag.searchPlayground.runRetrieval")}
+          </Button>
         </CardContent>
       </Card>
 
+      {isSearching && (
+        <div role="status" className="space-y-2">
+          <span className="sr-only">{t("admin.rag.searchPlayground.searching")}</span>
+          <Skeleton className="h-28 w-full" />
+        </div>
+      )}
+      {hasSearchError && (
+        <Alert variant="destructive" role="alert">
+          <AlertDescription>{t("admin.rag.searchPlayground.searchFailed")}</AlertDescription>
+        </Alert>
+      )}
       {diagnostics && (
         <>
+          <p className="text-ink-700 text-sm font-medium [overflow-wrap:anywhere]">
+            {t("admin.rag.searchPlayground.resultsFor", { query: diagnostics.query })}
+          </p>
           <div className="grid gap-3 max-md:grid-cols-2 max-md:gap-2 sm:grid-cols-2 lg:grid-cols-5 max-md:[&>:last-child]:col-span-2">
             <Metric label={t("admin.rag.searchPlayground.metricDuration")} value={`${diagnostics.durationMs.toFixed(0)} ms`} />
             <Metric label={t("admin.rag.searchPlayground.metricVectorCandidates")} value={String(diagnostics.vectorCandidateCount)} />

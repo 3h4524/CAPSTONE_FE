@@ -1,7 +1,8 @@
 import { WORKFLOW_NODE_DEFINITIONS } from "@/constants/workflow";
 import { describeCanvasOperation } from "@/helpers/assistant-canvas-patch";
+import { getSelectFieldLabel } from "@/helpers/workflow-config";
 import type { AssistantCanvasOperation } from "@/types/assistant";
-import type { WorkflowField, WorkflowNode } from "@/types/workflow";
+import type { WorkflowField, WorkflowNode, WorkflowNodeType } from "@/types/workflow";
 
 const MAX_TEXT_LENGTH = 60;
 const SHORT_ID_LENGTH = 8;
@@ -24,11 +25,11 @@ const readPath = (config: ConfigObject, path: string): unknown =>
 
 const clip = (text: string) => (text.length > MAX_TEXT_LENGTH ? `${text.slice(0, MAX_TEXT_LENGTH)}…` : text);
 
-const formatValue = (field: WorkflowField | undefined, value: unknown): string => {
+const formatValue = (nodeType: WorkflowNodeType, field: WorkflowField | undefined, value: unknown): string => {
   if (value === undefined || value === null || value === "") {
     return field?.kind === "source-select" && field.noneLabel ? field.noneLabel : "not set";
   }
-  if (field?.kind === "select") return field.options.find((option) => option.value === value)?.label ?? String(value);
+  if (field?.kind === "select") return getSelectFieldLabel(nodeType, field.name, value) ?? String(value);
   if (field?.kind === "switch") return value === true ? "On" : "Off";
   if (field?.kind === "number") return field.unit ? `${String(value)} ${field.unit}` : String(value);
   if (field?.kind === "source-select" || field?.kind === "product-select") return `item ${String(value).slice(0, SHORT_ID_LENGTH)}…`;
@@ -44,7 +45,8 @@ const describeConfigChanges = (operation: AssistantCanvasOperation, nodes: Workf
   return flatten(operation.config).map(([path, next]) => {
     const field = fields.find((item) => item.name === path);
     const label = field?.label ?? path;
-    return `${label}: ${formatValue(field, readPath(node.data.config, path))} → ${formatValue(field, next)}`;
+    const previous = formatValue(node.data.type, field, readPath(node.data.config, path));
+    return `${label}: ${previous} → ${formatValue(node.data.type, field, next)}`;
   });
 };
 

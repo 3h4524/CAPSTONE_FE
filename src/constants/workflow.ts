@@ -431,15 +431,15 @@ export const WORKFLOW_NODE_DEFINITIONS: Record<WorkflowNodeType, WorkflowNodeDef
     category: "ai",
     hasInput: true,
     hasOutput: true,
-    defaultConfig: { model: "gpt-4o", tone: "friendly", includeSeoScore: true },
+    defaultConfig: { model: "gemini-3.5-flash-lite", tone: "friendly", includeSeoScore: true },
     fields: [
       {
         kind: "select",
         name: "model",
         label: "Language model",
         options: [
-          { value: "gpt-4o", label: "GPT-4o" },
-          { value: "gemini", label: "Gemini" },
+          { value: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash Lite" },
+          { value: "gemini-3.5-flash", label: "Gemini 3.5 Flash" },
         ],
       },
       {

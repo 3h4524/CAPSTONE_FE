@@ -653,7 +653,7 @@ describe("generateListingConfigSchema", () => {
     expect(result.success && result.data).toEqual(valid);
   });
 
-  it.each(["gpt-4o", "gemini"] as const)("accepts the language model %s", (model) => {
+  it.each(["gemini-3.5-flash-lite", "gemini-3.5-flash", "gpt-4o", "gemini"] as const)("accepts the language model %s", (model) => {
     const result = generateListingConfigSchema.safeParse({ ...valid, model });
 
     expect(result.success).toBe(true);

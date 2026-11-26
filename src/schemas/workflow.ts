@@ -500,7 +500,7 @@ export const videoAssetSelectionSchema = z
   });
 
 export const generateListingConfigSchema = z.object({
-  model: z.enum(["gpt-4o", "gemini"], { error: () => i18n.t("workflowConfig.schema.chooseLanguageModel") }),
+  model: z.enum(["gemini-3.5-flash-lite", "gemini-3.5-flash", "gpt-4o", "gemini"], { error: () => i18n.t("workflowConfig.schema.chooseLanguageModel") }),
   tone: z.enum(["friendly", "professional", "playful"], { error: () => i18n.t("workflowConfig.schema.chooseTone") }),
   includeSeoScore: z.boolean(),
 });

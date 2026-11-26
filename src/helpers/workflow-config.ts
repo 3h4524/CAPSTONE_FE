@@ -79,8 +79,16 @@ export const getSelectFieldOptions = (type: WorkflowNodeType, name: string) => {
   return field?.kind === "select" ? field.options : [];
 };
 
+const LEGACY_LISTING_MODEL_LABELS = new Map([
+  ["gpt-4o", "GPT-4o"],
+  ["gemini", "Gemini"],
+]);
+
 export const getSelectFieldLabel = (type: WorkflowNodeType, name: string, value: unknown) =>
-  getSelectFieldOptions(type, name).find((option) => option.value === value)?.label;
+  getSelectFieldOptions(type, name).find((option) => option.value === value)?.label ??
+  (type === "generate-listing" && name === "model" && typeof value === "string"
+    ? LEGACY_LISTING_MODEL_LABELS.get(value)
+    : undefined);
 
 // A field named "standardOptions.transition" edits a value inside the `standardOptions` key.
 const getFieldKeys = (field: WorkflowField): string[] =>

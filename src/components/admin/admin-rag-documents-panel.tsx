@@ -60,15 +60,17 @@ const STATUS_LABEL_KEYS: Record<string, string> = {
 const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
 type AdminRagDocumentsPanelProps = {
+  isActive: boolean;
+  selectedId: string | null;
+  onSelect: (documentId: string | null) => void;
   onIngest: () => void;
 };
 
-const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
+const AdminRagDocumentsPanel = ({ isActive, selectedId, onSelect, onIngest }: AdminRagDocumentsPanelProps) => {
   const { t } = useTranslation("common");
   const [status, setStatus] = useState("");
   const [sourceId, setSourceId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState("10");
   const documentsQuery = useAdminRagDocuments({
@@ -76,7 +78,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
     sourceId: sourceId || undefined,
   });
   const detailQuery = useAdminRagDocument(selectedId);
-  const activateMutation = useActivateAdminRagDocument();
+  const { mutate: activateDocument, isPending: isActivatingDocument } = useActivateAdminRagDocument();
   const isPhone = useIsPhone();
   const filteredDocuments = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -113,12 +115,8 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
     <DocumentDetail
       detail={detailQuery.data.document}
       chunks={detailQuery.data.chunks}
-      onActivate={() =>
-        activateMutation.mutate(detailQuery.data.document.id, {
-          onSuccess: () => void detailQuery.refetch(),
-        })
-      }
-      isActivating={activateMutation.isPending}
+      onActivate={() => activateDocument(detailQuery.data.document.id)}
+      isActivating={isActivatingDocument}
     />
   ) : (
     <PanelMessage text={t("admin.dashboard.ragDocuments.detailUnavailable")} />
@@ -215,7 +213,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
             <ul className="space-y-2">
               {visibleDocuments.map((document) => (
                 <li key={document.id}>
-                  <DocumentCard document={document} onSelect={() => setSelectedId(document.id)} />
+                  <DocumentCard document={document} onSelect={() => onSelect(document.id)} />
                 </li>
               ))}
             </ul>
@@ -237,7 +235,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
                     key={document.id}
                     document={document}
                     isSelected={selectedId === document.id}
-                    onSelect={() => setSelectedId(document.id)}
+                    onSelect={() => onSelect(document.id)}
                   />
                 ))}
               </TableBody>
@@ -257,7 +255,7 @@ const AdminRagDocumentsPanel = ({ onIngest }: AdminRagDocumentsPanelProps) => {
 
         {/* Below a long list the detail would open out of sight, so a phone shows it over the list. */}
         {isPhone ? (
-          <Dialog open={Boolean(selectedId)} onOpenChange={(open) => !open && setSelectedId(null)}>
+          <Dialog open={isActive && Boolean(selectedId)} onOpenChange={(open) => !open && onSelect(null)}>
             <DialogContent className="grid-cols-[minmax(0,1fr)] p-4" aria-describedby={undefined}>
               <DialogTitle className="sr-only">{t("admin.dashboard.ragDocuments.dialogDetailTitle")}</DialogTitle>
               {detailPanel}
@@ -481,19 +479,17 @@ const DocumentDetail = ({
           </ul>
         </div>
       )}
-      {detail.status !== "ready" &&
-        detail.status !== "processing" &&
-        detail.status !== "queued" && (
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-4 w-full"
-            onClick={onActivate}
-            disabled={isActivating}
-          >
-            <Check className="size-4" /> {t("admin.dashboard.ragDocuments.activateVersion")}
-          </Button>
-        )}
+      {detail.status === "superseded" && detail.chunkCount > 0 && (
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-4 w-full"
+          onClick={onActivate}
+          disabled={isActivating}
+        >
+          <Check className="size-4" /> {t("admin.dashboard.ragDocuments.activateVersion")}
+        </Button>
+      )}
       <div className="mt-5">
         <div className="flex items-center justify-between gap-3">
           <div>

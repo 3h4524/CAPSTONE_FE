@@ -1,24 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { AlertTriangle, CheckCircle2, Database, RefreshCw, RotateCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import {
-  getRagCorpusHealth,
-  type RagCorpusHealthResponse,
-  reingestRagDocuments,
-} from "@/api/rag";
 import { RagCardAbout } from "@/components/admin/rag-card-about";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { showToast } from "@/helpers/toast";
+import { useReingestRagDocuments } from "@/hooks/mutations/use-reingest-rag-documents";
+import { useRagCorpusHealth } from "@/hooks/queries/use-rag-corpus-health";
 
 const contentTypes = ["", "listing", "policy", "image", "video", "keyword"];
 const ALL_CONTENT_TYPES = "all";
+const MAX_STALE_DAYS = 3650;
+const REINGEST_BATCH_LIMIT = 100;
 
 const CONTENT_TYPE_LABEL_KEYS: Record<string, string> = {
   listing: "admin.rag.contentTypes.listing",
@@ -38,47 +39,34 @@ const SEVERITY_STYLE: Record<string, string> = {
 const RagCorpusHealthPanel = () => {
   const { t } = useTranslation("common");
   const [contentType, setContentType] = useState("");
-  const [staleDays, setStaleDays] = useState(30);
-  const [health, setHealth] = useState<RagCorpusHealthResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isReingesting, setIsReingesting] = useState(false);
+  const [staleDaysInput, setStaleDaysInput] = useState("30");
+  const staleDays = Number(staleDaysInput);
+  const hasValidStaleDays = Number.isInteger(staleDays) && staleDays >= 1 && staleDays <= MAX_STALE_DAYS;
+  const filters = { contentType: contentType || undefined, staleDays };
+  const {
+    data: currentHealth,
+    isFetching: isFetchingHealth,
+    isError: hasHealthError,
+    refetch: refreshHealth,
+  } = useRagCorpusHealth(filters, hasValidStaleDays);
+  const { mutate: reingestDocuments, isPending: isReingesting } = useReingestRagDocuments();
+  const health = hasValidStaleDays && !hasHealthError ? currentHealth : undefined;
+  const canReingest = Boolean(health) && !isFetchingHealth && !isReingesting;
 
-  const loadHealth = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      setHealth(await getRagCorpusHealth({ contentType: contentType || undefined, staleDays }));
-    } catch {
-      showToast("error", t("admin.rag.corpusHealth.loadError"));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [contentType, staleDays, t]);
+  const reingestRecommended = () => {
+    if (!canReingest || !window.confirm(t("admin.rag.corpusHealth.reingestConfirm"))) return;
 
-  useEffect(() => {
-    void loadHealth();
-  }, [loadHealth]);
-
-  const reingestRecommended = async () => {
-    if (!window.confirm(t("admin.rag.corpusHealth.reingestConfirm"))) return;
-    setIsReingesting(true);
-    try {
-      const response = await reingestRagDocuments({
-        contentType: contentType || undefined,
-        staleDays,
-        maxDocuments: 100,
-      });
-      showToast(
-        "success",
-        response.queuedCount > 0
-          ? t("admin.rag.corpusHealth.queuedForReingest", { count: response.queuedCount })
-          : t("admin.rag.corpusHealth.noReingestNeeded")
-      );
-      await loadHealth();
-    } catch {
-      showToast("error", t("admin.rag.corpusHealth.reingestError"));
-    } finally {
-      setIsReingesting(false);
-    }
+    reingestDocuments({ ...filters, maxDocuments: REINGEST_BATCH_LIMIT }, {
+      onSuccess: ({ queuedCount }) => {
+        showToast(
+          "success",
+          queuedCount > 0
+            ? t("admin.rag.corpusHealth.queuedForReingest", { count: queuedCount })
+            : t("admin.rag.corpusHealth.noReingestNeeded")
+        );
+      },
+      onError: () => showToast("error", t("admin.rag.corpusHealth.reingestError")),
+    });
   };
 
   const currentModelCoverage = health && health.totalChunks > 0
@@ -137,26 +125,41 @@ const RagCorpusHealthPanel = () => {
               <Input
                 type="number"
                 min={1}
-                max={3650}
-                value={staleDays}
-                onChange={(event) => setStaleDays(Math.max(1, Number(event.target.value) || 1))}
+                max={MAX_STALE_DAYS}
+                value={staleDaysInput}
+                onChange={(event) => setStaleDaysInput(event.target.value)}
                 className="h-6 w-14 rounded-sm border-0 bg-transparent px-1 py-0 text-center font-semibold shadow-none focus-visible:ring-1 max-md:h-9 max-md:text-base"
                 aria-label={t("admin.rag.corpusHealth.staleDaysAria")}
+                aria-invalid={!hasValidStaleDays}
               />
               {t("admin.rag.corpusHealth.days")}
             </label>
-            <Button type="button" variant="outline" size="sm" className="max-md:min-h-10 max-md:px-2" onClick={() => void loadHealth()} disabled={isLoading}>
-              <RefreshCw className={`size-3.5 ${isLoading ? "animate-spin" : ""}`} />
+            <Button type="button" variant="outline" size="sm" className="max-md:min-h-10 max-md:px-2" onClick={() => void refreshHealth()} disabled={!hasValidStaleDays || isFetchingHealth}>
+              <RefreshCw className={`size-3.5 ${isFetchingHealth ? "animate-spin" : ""}`} />
               {t("admin.rag.corpusHealth.refresh")}
             </Button>
-            <Button type="button" size="sm" className="max-md:min-h-10 max-md:px-2" onClick={() => void reingestRecommended()} disabled={isReingesting}>
-              <RotateCw className="size-3.5" />
-              {isReingesting ? t("admin.rag.corpusHealth.queueing") : t("admin.rag.corpusHealth.reingestIssues")}
+            <Button type="button" size="sm" className="max-md:min-h-10 max-md:px-2" onClick={reingestRecommended} disabled={!canReingest}>
+              <RotateCw className={`size-3.5 ${isReingesting ? "animate-spin" : ""}`} />
+              {t("admin.rag.corpusHealth.reingestIssues")}
             </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-5 max-md:space-y-4 max-md:px-4">
+        {(!hasValidStaleDays || (hasHealthError && !isFetchingHealth)) && (
+          <Alert variant="destructive" role="alert">
+            <AlertDescription>
+              {hasValidStaleDays
+                ? t("admin.rag.corpusHealth.loadError")
+                : t("admin.rag.corpusHealth.invalidStaleDays", { max: MAX_STALE_DAYS })}
+            </AlertDescription>
+          </Alert>
+        )}
+        {!health && isFetchingHealth && hasValidStaleDays && (
+          <div role="status" aria-label={t("admin.rag.corpusHealth.loadingHealth")}>
+            <Skeleton className="h-24 w-full" />
+          </div>
+        )}
         {health && (
           <>
             <div className="grid gap-3 max-md:grid-cols-2 max-md:gap-2 sm:grid-cols-2 lg:grid-cols-6">
